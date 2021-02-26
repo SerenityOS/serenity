@@ -140,8 +140,8 @@ private:
     virtual void flush_writes() override;
 
     BlockIndex first_block_index() const;
-    InodeIndex find_a_free_inode(GroupIndex preferred_group = 0);
-    Vector<BlockIndex> allocate_blocks(GroupIndex preferred_group_index, size_t count);
+    KResultOr<InodeIndex> find_a_free_inode(GroupIndex preferred_group = 0);
+    KResultOr<Vector<BlockIndex>> allocate_blocks(GroupIndex preferred_group_index, size_t count);
     GroupIndex group_index_from_inode(InodeIndex) const;
     GroupIndex group_index_from_block_index(BlockIndex) const;
 
@@ -149,7 +149,7 @@ private:
     Vector<BlockIndex> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
     KResult write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
 
-    bool get_inode_allocation_state(InodeIndex) const;
+    KResultOr<bool> get_inode_allocation_state(InodeIndex) const;
     KResult set_inode_allocation_state(InodeIndex, bool);
     KResult set_block_allocation_state(BlockIndex, bool);
 
@@ -188,7 +188,7 @@ private:
         Bitmap bitmap(u32 blocks_per_group) { return Bitmap::wrap(buffer.data(), blocks_per_group); }
     };
 
-    CachedBitmap& get_bitmap_block(BlockIndex);
+    KResultOr<CachedBitmap*> get_bitmap_block(BlockIndex);
     KResult update_bitmap_block(BlockIndex bitmap_block, size_t bit_index, bool new_state, u32& super_block_counter, u16& group_descriptor_counter);
 
     Vector<OwnPtr<CachedBitmap>> m_cached_bitmaps;
