@@ -180,7 +180,6 @@ NonnullRefPtr<Inode> Ext2FS::root_inode() const
 
 bool Ext2FS::find_block_containing_inode(InodeIndex inode, BlockIndex& block_index, unsigned& offset) const
 {
-    LOCKER(m_lock);
     auto& super_block = this->super_block();
 
     if (inode != EXT2_ROOT_INO && inode < EXT2_FIRST_INO(&super_block))
