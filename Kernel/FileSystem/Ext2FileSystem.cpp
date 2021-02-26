@@ -237,7 +237,7 @@ KResult Ext2FSInode::flush_block_list()
     if (m_block_list.is_empty()) {
         m_raw_inode.i_blocks = 0;
         memset(m_raw_inode.i_block, 0, sizeof(m_raw_inode.i_block));
-        fs().write_ext2_inode(index(), m_raw_inode);
+        set_metadata_dirty(true);
         return KSuccess;
     }
 
@@ -274,7 +274,7 @@ KResult Ext2FSInode::flush_block_list()
             for (size_t i = 0; i < min((size_t)EXT2_NDIR_BLOCKS, m_block_list.size()); ++i)
                 dbgln("   + {}", m_block_list[i]);
         }
-        fs().write_ext2_inode(index(), m_raw_inode);
+        set_metadata_dirty(true);
         inode_dirty = false;
     }
 
@@ -291,7 +291,7 @@ KResult Ext2FSInode::flush_block_list()
         m_raw_inode.i_block[EXT2_IND_BLOCK] = new_indirect_block.value();
         if (inode_dirty) {
             dbgln_if(EXT2_DEBUG, "Ext2FS: Adding the indirect block to i_block array of inode {}", index());
-            fs().write_ext2_inode(index(), m_raw_inode);
+            set_metadata_dirty(true);
             inode_dirty = false;
         }
     }
@@ -331,7 +331,7 @@ KResult Ext2FSInode::flush_block_list()
         m_raw_inode.i_block[EXT2_DIND_BLOCK] = new_dindirect_block.value();
         if (inode_dirty) {
             dbgln_if(EXT2_DEBUG, "Ext2FS: Adding the doubly-indirect block to i_block array of inode {}", index());
-            fs().write_ext2_inode(index(), m_raw_inode);
+            set_metadata_dirty(true);
             inode_dirty = false;
         }
     }
