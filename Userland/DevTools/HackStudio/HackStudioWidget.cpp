@@ -313,7 +313,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action()
 {
-    return GUI::Action::create("Add new file to project...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
+    return GUI::Action::create("New file...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         String filename;
         if (GUI::InputBox::show(window(), filename, "Enter name of new file:", "Add new file to project") != GUI::InputBox::ExecOK)
             return;
@@ -328,7 +328,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
 {
-    return GUI::Action::create("Add new directory to project...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const GUI::Action&) {
+    return GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const GUI::Action&) {
         String directory_name;
         if (GUI::InputBox::show(window(), directory_name, "Enter name of new directory:", "Add new folder to project") != GUI::InputBox::ExecOK)
             return;
@@ -393,7 +393,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_project_action()
 {
-    return GUI::Action::create("Create new project...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const GUI::Action&) {
+    return GUI::Action::create("New project...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/hackstudio-project.png"), [this](const GUI::Action&) {
         auto dialog = NewProjectDialog::construct(window());
         dialog->set_icon(window()->icon());
         auto result = dialog->exec();
@@ -883,6 +883,7 @@ void HackStudioWidget::create_project_menubar(GUI::MenuBar& menubar)
     auto& project_menu = menubar.add_menu("Project");
     project_menu.add_action(*m_new_file_action);
     project_menu.add_action(*m_new_directory_action);
+    project_menu.add_separator();
     project_menu.add_action(*create_set_autocomplete_mode_action());
 }
 
@@ -893,33 +894,6 @@ void HackStudioWidget::create_edit_menubar(GUI::MenuBar& menubar)
         reveal_action_tab(*m_find_in_files_widget);
         m_find_in_files_widget->focus_textbox_and_select_all();
     }));
-
-    edit_menu.add_separator();
-
-    m_wrapping_mode_actions.set_exclusive(true);
-    auto& wrapping_mode_menu = edit_menu.add_submenu("Wrapping mode");
-    m_no_wrapping_action = GUI::Action::create_checkable("No wrapping", [&](auto&) {
-        for (auto& wrapper : m_all_editor_wrappers)
-            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
-    });
-    m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap anywhere", [&](auto&) {
-        for (auto& wrapper : m_all_editor_wrappers)
-            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
-    });
-    m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at words", [&](auto&) {
-        for (auto& wrapper : m_all_editor_wrappers)
-            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
-    });
-
-    m_wrapping_mode_actions.add_action(*m_no_wrapping_action);
-    m_wrapping_mode_actions.add_action(*m_wrap_anywhere_action);
-    m_wrapping_mode_actions.add_action(*m_wrap_at_words_action);
-
-    wrapping_mode_menu.add_action(*m_no_wrapping_action);
-    wrapping_mode_menu.add_action(*m_wrap_anywhere_action);
-    wrapping_mode_menu.add_action(*m_wrap_at_words_action);
-
-    m_wrap_anywhere_action->set_checked(true);
 
     edit_menu.add_separator();
 
@@ -956,6 +930,33 @@ void HackStudioWidget::create_view_menubar(GUI::MenuBar& menubar)
     auto& view_menu = menubar.add_menu("View");
     view_menu.add_action(hide_action_tabs_action);
     view_menu.add_action(open_locator_action);
+    view_menu.add_separator();
+
+    m_wrapping_mode_actions.set_exclusive(true);
+    auto& wrapping_mode_menu = view_menu.add_submenu("Wrapping mode");
+    m_no_wrapping_action = GUI::Action::create_checkable("No wrapping", [&](auto&) {
+        for (auto& wrapper : m_all_editor_wrappers)
+            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
+    });
+    m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap anywhere", [&](auto&) {
+        for (auto& wrapper : m_all_editor_wrappers)
+            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
+    });
+    m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at words", [&](auto&) {
+        for (auto& wrapper : m_all_editor_wrappers)
+            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
+    });
+
+    m_wrapping_mode_actions.add_action(*m_no_wrapping_action);
+    m_wrapping_mode_actions.add_action(*m_wrap_anywhere_action);
+    m_wrapping_mode_actions.add_action(*m_wrap_at_words_action);
+
+    wrapping_mode_menu.add_action(*m_no_wrapping_action);
+    wrapping_mode_menu.add_action(*m_wrap_anywhere_action);
+    wrapping_mode_menu.add_action(*m_wrap_at_words_action);
+
+    m_no_wrapping_action->set_checked(true);
+
     view_menu.add_separator();
     view_menu.add_action(*m_add_editor_action);
     view_menu.add_action(*m_remove_current_editor_action);
