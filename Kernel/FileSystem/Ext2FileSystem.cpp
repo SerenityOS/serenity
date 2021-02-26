@@ -543,10 +543,8 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     dbgln_if(EXT2_DEBUG, "Ext2FS: Inode {} has no more links, time to delete!", inode.index());
 
     // Mark all blocks used by this inode as free.
-    if (inode.m_block_list.is_empty())
-        inode.m_block_list = block_list_for_inode(inode.m_raw_inode, true);
-
-    for (auto block_index : inode.m_block_list) {
+    auto block_list = block_list_for_inode(inode.m_raw_inode, true);
+    for (auto block_index : block_list) {
         VERIFY(block_index <= super_block().s_blocks_count);
         if (block_index.value()) {
             auto result = set_block_allocation_state(block_index, false);
