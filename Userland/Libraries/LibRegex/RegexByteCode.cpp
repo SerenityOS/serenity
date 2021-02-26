@@ -701,21 +701,35 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
 
     for (size_t i = 0; i < arguments_count(); ++i) {
         auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
-        result.empend(String::format("type=%lu [%s]", (size_t)compare_type, character_compare_type_name(compare_type)));
+        result.empend(String::formatted("type={} [{}]", (size_t)compare_type, character_compare_type_name(compare_type)));
 
         auto compared_against_string_start_offset = state().string_position > 0 ? state().string_position - 1 : state().string_position;
 
         if (compare_type == CharacterCompareType::Char) {
-            char ch = m_bytecode->at(offset++);
-            result.empend(String::format("value='%c'", ch));
-            if (!view.is_null() && view.length() > state().string_position)
-                result.empend(String::format(
-                    "compare against: '%s'",
-                    view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string().characters()));
+            auto ch = m_bytecode->at(offset++);
+            auto is_ascii = isascii(ch) && isprint(ch);
+            if (is_ascii)
+                result.empend(String::formatted("value='{:c}'", static_cast<char>(ch)));
+            else
+                result.empend(String::formatted("value={:x}", ch));
+
+            if (!view.is_null() && view.length() > state().string_position) {
+                if (is_ascii) {
+                    result.empend(String::formatted(
+                        "compare against: '{}'",
+                        view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
+                } else {
+                    auto str = view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string();
+                    u8 buf[8] { 0 };
+                    __builtin_memcpy(buf, str.characters(), min(str.length(), sizeof(buf)));
+                    result.empend(String::formatted("compare against: {:x},{:x},{:x},{:x},{:x},{:x},{:x},{:x}",
+                        buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]));
+                }
+            }
         } else if (compare_type == CharacterCompareType::NamedReference) {
             auto ptr = (const char*)m_bytecode->at(offset++);
             auto length = m_bytecode->at(offset++);
-            result.empend(String::format("name='%.*s'", (int)length, ptr));
+            result.empend(String::formatted("name='{}'", StringView { ptr, (size_t)length }));
         } else if (compare_type == CharacterCompareType::Reference) {
             auto ref = m_bytecode->at(offset++);
             result.empend(String::formatted("number={}", ref));
@@ -724,25 +738,25 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
             StringBuilder str_builder;
             for (size_t i = 0; i < length; ++i)
                 str_builder.append(m_bytecode->at(offset++));
-            result.empend(String::format("value=\"%.*s\"", (int)length, str_builder.string_view().characters_without_null_termination()));
+            result.empend(String::formatted("value=\"{}\"", str_builder.string_view().substring_view(0, length)));
             if (!view.is_null() && view.length() > state().string_position)
-                result.empend(String::format(
-                    "compare against: \"%s\"",
-                    input.value().view.substring_view(compared_against_string_start_offset, compared_against_string_start_offset + length > view.length() ? 0 : length).to_string().characters()));
+                result.empend(String::formatted(
+                    "compare against: \"{}\"",
+                    input.value().view.substring_view(compared_against_string_start_offset, compared_against_string_start_offset + length > view.length() ? 0 : length).to_string()));
         } else if (compare_type == CharacterCompareType::CharClass) {
             auto character_class = (CharClass)m_bytecode->at(offset++);
-            result.empend(String::format("ch_class=%lu [%s]", (size_t)character_class, character_class_name(character_class)));
+            result.empend(String::formatted("ch_class={} [{}]", (size_t)character_class, character_class_name(character_class)));
             if (!view.is_null() && view.length() > state().string_position)
-                result.empend(String::format(
-                    "compare against: '%s'",
-                    input.value().view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string().characters()));
+                result.empend(String::formatted(
+                    "compare against: '{}'",
+                    input.value().view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
         } else if (compare_type == CharacterCompareType::CharRange) {
             auto value = (CharRange)m_bytecode->at(offset++);
-            result.empend(String::format("ch_range='%c'-'%c'", value.from, value.to));
+            result.empend(String::formatted("ch_range='{:c}'-'{:c}'", value.from, value.to));
             if (!view.is_null() && view.length() > state().string_position)
-                result.empend(String::format(
-                    "compare against: '%s'",
-                    input.value().view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string().characters()));
+                result.empend(String::formatted(
+                    "compare against: '{}'",
+                    input.value().view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
         }
     }
     return result;
