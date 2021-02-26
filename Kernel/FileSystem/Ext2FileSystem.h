@@ -76,12 +76,12 @@ private:
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResult truncate(u64) override;
-
     virtual KResultOr<int> get_block_address(int) override;
 
     KResult write_directory(const Vector<Ext2FSDirectoryEntry>&);
     bool populate_lookup_cache() const;
     KResult resize(u64);
+    KResult flush_block_list();
 
     Ext2FS& fs();
     const Ext2FS& fs() const;
@@ -147,7 +147,6 @@ private:
 
     Vector<BlockIndex> block_list_for_inode_impl(const ext2_inode&, bool include_block_list_blocks = false) const;
     Vector<BlockIndex> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
-    KResult write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
 
     KResultOr<bool> get_inode_allocation_state(InodeIndex) const;
     KResult set_inode_allocation_state(InodeIndex, bool);
