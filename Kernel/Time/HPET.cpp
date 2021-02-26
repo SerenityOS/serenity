@@ -74,6 +74,10 @@ struct [[gnu::packed]] TimerStructure {
     volatile u32 interrupt_routing;
     HPETRegister comparator_value;
     volatile u64 fsb_interrupt_route;
+};
+
+struct [[gnu::packed]] TimerStructureWithReserved {
+    TimerStructure timer;
     u64 reserved;
 };
 
@@ -92,13 +96,24 @@ struct [[gnu::packed]] HPETRegistersBlock {
     u8 reserved2[0xF0 - 0x28];
     HPETRegister main_counter_value;
     u64 reserved3;
-    TimerStructure timers[3];
-    u8 reserved4[0x400 - 0x160];
+    TimerStructureWithReserved timers[3];
+    TimerStructure timers2[29];
+
+    ALWAYS_INLINE TimerStructure& get_timer_by_index(unsigned index)
+    {
+        VERIFY(index < 32);
+        if (index < 3)
+            return timers[index].timer;
+        return timers2[index - 3];
+    }
 };
 
+static_assert(sizeof(TimerStructure) == 0x18);
+static_assert(sizeof(TimerStructureWithReserved) == 0x20);
 static_assert(__builtin_offsetof(HPETRegistersBlock, main_counter_value) == 0xf0);
 static_assert(__builtin_offsetof(HPETRegistersBlock, timers[0]) == 0x100);
 static_assert(__builtin_offsetof(HPETRegistersBlock, timers[1]) == 0x120);
+static_assert(sizeof(HPETRegistersBlock) == 0x418);
 
 static u64 read_register_safe64(const HPETRegister& reg)
 {
@@ -166,7 +181,7 @@ UNMAP_AFTER_INIT bool HPET::check_for_exisiting_periodic_timers()
 
     size_t timers_count = ((registers->capabilities.attributes >> 8) & 0x1f) + 1;
     for (size_t index = 0; index < timers_count; index++) {
-        if (registers->timers[index].capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable)
+        if (registers->get_timer_by_index(index).capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable)
             return true;
     }
     return false;
@@ -197,7 +212,7 @@ void HPET::update_periodic_comparator_value()
     regs.main_counter_value.low = 0;
     regs.main_counter_value.high = 0;
     for (auto& comparator : m_comparators) {
-        auto& timer = regs.timers[comparator.comparator_number()];
+        auto& timer = regs.get_timer_by_index(comparator.comparator_number());
         if (!comparator.is_enabled())
             continue;
         if (comparator.is_periodic()) {
@@ -236,7 +251,7 @@ void HPET::update_non_periodic_comparator_value(const HPETComparator& comparator
     VERIFY(!comparator.is_periodic());
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& regs = registers();
-    auto& timer = regs.timers[comparator.comparator_number()];
+    auto& timer = regs.get_timer_by_index(comparator.comparator_number());
     u64 value = frequency() / comparator.ticks_per_second();
     // NOTE: If the main counter passes this new value before we finish writing it, we will never receive an interrupt!
     u64 new_counter_value = read_register_safe64(regs.main_counter_value) + value;
@@ -284,7 +299,7 @@ void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
 #endif
     disable(comparator);
     VERIFY(comparator.comparator_number() <= m_comparators.size());
-    auto& timer = registers().timers[comparator.comparator_number()];
+    auto& timer = registers().get_timer_by_index(comparator.comparator_number());
     auto capabilities = timer.capabilities;
     VERIFY(capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable);
     timer.capabilities = capabilities | (u32)HPETFlags::TimerConfiguration::GeneratePeriodicInterrupt;
@@ -298,7 +313,7 @@ void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
 #endif
     disable(comparator);
     VERIFY(comparator.comparator_number() <= m_comparators.size());
-    auto& timer = registers().timers[comparator.comparator_number()];
+    auto& timer = registers().get_timer_by_index(comparator.comparator_number());
     auto capabilities = timer.capabilities;
     VERIFY(capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable);
     timer.capabilities = capabilities & ~(u32)HPETFlags::TimerConfiguration::GeneratePeriodicInterrupt;
@@ -312,7 +327,7 @@ void HPET::disable(const HPETComparator& comparator)
     klog() << "HPET: Disable comparator " << comparator.comparator_number() << ".";
 #endif
     VERIFY(comparator.comparator_number() <= m_comparators.size());
-    auto& timer = registers().timers[comparator.comparator_number()];
+    auto& timer = registers().get_timer_by_index(comparator.comparator_number());
     timer.capabilities = timer.capabilities & ~(u32)HPETFlags::TimerConfiguration::InterruptEnable;
 }
 void HPET::enable(const HPETComparator& comparator)
@@ -321,7 +336,7 @@ void HPET::enable(const HPETComparator& comparator)
     klog() << "HPET: Enable comparator " << comparator.comparator_number() << ".";
 #endif
     VERIFY(comparator.comparator_number() <= m_comparators.size());
-    auto& timer = registers().timers[comparator.comparator_number()];
+    auto& timer = registers().get_timer_by_index(comparator.comparator_number());
     timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::InterruptEnable;
 }
 
@@ -329,7 +344,7 @@ Vector<unsigned> HPET::capable_interrupt_numbers(const HPETComparator& comparato
 {
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     Vector<unsigned> capable_interrupts;
-    auto& comparator_registers = registers().timers[comparator.comparator_number()];
+    auto& comparator_registers = registers().get_timer_by_index(comparator.comparator_number());
     u32 interrupt_bitfield = comparator_registers.interrupt_routing;
     for (size_t index = 0; index < 32; index++) {
         if (interrupt_bitfield & 1)
@@ -343,7 +358,7 @@ Vector<unsigned> HPET::capable_interrupt_numbers(u8 comparator_number)
 {
     VERIFY(comparator_number <= m_comparators.size());
     Vector<unsigned> capable_interrupts;
-    auto& comparator_registers = registers().timers[comparator_number];
+    auto& comparator_registers = registers().get_timer_by_index(comparator_number);
     u32 interrupt_bitfield = comparator_registers.interrupt_routing;
     for (size_t index = 0; index < 32; index++) {
         if (interrupt_bitfield & 1)
@@ -356,14 +371,14 @@ Vector<unsigned> HPET::capable_interrupt_numbers(u8 comparator_number)
 void HPET::set_comparator_irq_vector(u8 comparator_number, u8 irq_vector)
 {
     VERIFY(comparator_number <= m_comparators.size());
-    auto& comparator_registers = registers().timers[comparator_number];
+    auto& comparator_registers = registers().get_timer_by_index(comparator_number);
     comparator_registers.capabilities = comparator_registers.capabilities | (irq_vector << 9);
 }
 
-bool HPET::is_periodic_capable(u8 comparator_number) const
+bool HPET::is_periodic_capable(u8 comparator_number)
 {
     VERIFY(comparator_number <= m_comparators.size());
-    auto& comparator_registers = registers().timers[comparator_number];
+    auto& comparator_registers = registers().get_timer_by_index(comparator_number);
     return comparator_registers.capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable;
 }
 
@@ -415,8 +430,9 @@ UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
     klog() << "HPET: Timers count - " << timers_count;
     klog() << "HPET: Main counter size: " << ((regs.capabilities.attributes & (u32)HPETFlags::Attributes::Counter64BitCapable) ? "64 bit" : "32 bit");
     for (size_t i = 0; i < timers_count; i++) {
-        bool capable_64_bit = regs.timers[i].capabilities & (u32)HPETFlags::TimerConfiguration::Timer64BitsCapable;
-        klog() << "HPET: Timer[" << i << "] comparator size: " << (capable_64_bit ? "64 bit" : "32 bit") << " mode: " << ((!capable_64_bit || (regs.timers[i].capabilities & (u32)HPETFlags::TimerConfiguration::Force32BitMode)) ? "32 bit" : "64 bit");
+        auto& timer = regs.get_timer_by_index(i);
+        bool capable_64_bit = timer.capabilities & (u32)HPETFlags::TimerConfiguration::Timer64BitsCapable;
+        klog() << "HPET: Timer[" << i << "] comparator size: " << (capable_64_bit ? "64 bit" : "32 bit") << " mode: " << ((!capable_64_bit || (timer.capabilities & (u32)HPETFlags::TimerConfiguration::Force32BitMode)) ? "32 bit" : "64 bit");
     }
     VERIFY(timers_count >= 2);
 
