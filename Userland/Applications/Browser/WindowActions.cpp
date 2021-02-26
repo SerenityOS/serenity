@@ -70,8 +70,9 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_about();
         },
         &window);
+
     m_show_bookmarks_bar_action = GUI::Action::create_checkable(
-        "Show bookmarks bar",
+        "Bookmarks bar", { Mod_Ctrl, Key_B },
         [this](auto& action) {
             if (on_show_bookmarks_bar)
                 on_show_bookmarks_bar(action);
