@@ -55,6 +55,10 @@ set(KERNEL_SOURCES
     Storage/Partition/MBRPartitionTable.cpp
     Storage/Partition/PartitionTable.cpp
     Storage/StorageDevice.cpp
+    Storage/AHCIController.cpp
+    Storage/AHCIPort.cpp
+    Storage/AHCIPortHandler.cpp
+    Storage/SATADiskDevice.cpp
     Storage/IDEController.cpp
     Storage/IDEChannel.cpp
     Storage/PATADiskDevice.cpp

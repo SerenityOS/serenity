@@ -198,6 +198,10 @@
 #cmakedefine01 PATA_DEBUG
 #endif
 
+#ifndef AHCI_DEBUG
+#cmakedefine01 AHCI_DEBUG
+#endif
+
 #ifndef PCI_DEBUG
 #cmakedefine01 PCI_DEBUG
 #endif
