@@ -49,11 +49,10 @@ LinkLabel::LinkLabel(String text)
 
 void LinkLabel::setup_actions()
 {
-    m_open_action = CommonActions::make_open_action([this](auto&) {
+    m_open_action = GUI::Action::create("Show in File Manager", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"), [&](const GUI::Action&) {
         if (on_click)
             on_click();
-    },
-        this);
+    });
 
     m_copy_action = CommonActions::make_copy_action([this](auto&) { Clipboard::the().set_plain_text(text()); }, this);
 }
