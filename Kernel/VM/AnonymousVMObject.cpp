@@ -81,6 +81,11 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size, Alloc
     return adopt(*new AnonymousVMObject(size, commit));
 }
 
+NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_pages(NonnullRefPtrVector<PhysicalPage> physical_pages)
+{
+    return adopt(*new AnonymousVMObject(physical_pages));
+}
+
 NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_page(PhysicalPage& page)
 {
     return adopt(*new AnonymousVMObject(page));
@@ -125,6 +130,15 @@ AnonymousVMObject::AnonymousVMObject(PhysicalPage& page)
     , m_volatile_ranges_cache({ 0, page_count() })
 {
     physical_pages()[0] = page;
+}
+
+AnonymousVMObject::AnonymousVMObject(NonnullRefPtrVector<PhysicalPage> physical_pages)
+    : VMObject()
+    , m_volatile_ranges_cache({ 0, page_count() })
+{
+    for (auto& page : physical_pages) {
+        m_physical_pages.append(page);
+    }
 }
 
 AnonymousVMObject::AnonymousVMObject(const AnonymousVMObject& other)
