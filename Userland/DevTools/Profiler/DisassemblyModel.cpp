@@ -97,7 +97,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         auto insn = disassembler.next();
         if (!insn.has_value())
             break;
-        FlatPtr address_in_profiled_program = symbol.value().value() + offset_into_symbol;
+        FlatPtr address_in_profiled_program = base_address + symbol.value().value() + offset_into_symbol;
 
         auto disassembly = insn.value().to_string(address_in_profiled_program, &symbol_provider);
 
