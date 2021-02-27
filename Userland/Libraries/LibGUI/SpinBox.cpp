@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/ControlBoxButton.h>
+#include <LibGUI/Button.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
 
@@ -52,11 +52,13 @@ SpinBox::SpinBox()
         set_value(m_value - 1);
     };
 
-    m_increment_button = add<ControlBoxButton>(ControlBoxButton::UpArrow);
+    m_increment_button = add<Button>();
+    m_increment_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png"));
     m_increment_button->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_increment_button->on_click = [this](auto) { set_value(m_value + 1); };
     m_increment_button->set_auto_repeat_interval(150);
-    m_decrement_button = add<ControlBoxButton>(ControlBoxButton::DownArrow);
+    m_decrement_button = add<Button>();
+    m_decrement_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png"));
     m_decrement_button->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_decrement_button->on_click = [this](auto) { set_value(m_value - 1); };
     m_decrement_button->set_auto_repeat_interval(150);
