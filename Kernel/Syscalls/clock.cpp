@@ -34,11 +34,12 @@ KResultOr<int> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec
 {
     REQUIRE_PROMISE(stdio);
 
-    auto ts = TimeManagement::the().current_time(clock_id);
-    if (ts.is_error())
-        return ts.error();
+    auto time = TimeManagement::the().current_time(clock_id);
+    if (time.is_error())
+        return time.error();
 
-    if (!copy_to_user(user_ts, &ts.value()))
+    auto ts = time.value().to_timespec();
+    if (!copy_to_user(user_ts, &ts))
         return EFAULT;
     return 0;
 }
@@ -56,8 +57,7 @@ KResultOr<int> Process::sys$clock_settime(clockid_t clock_id, Userspace<const ti
 
     switch (clock_id) {
     case CLOCK_REALTIME:
-        // FIXME: Should use AK::Time internally
-        TimeManagement::the().set_epoch_time(ts->to_timespec());
+        TimeManagement::the().set_epoch_time(ts.value());
         break;
     default:
         return EINVAL;

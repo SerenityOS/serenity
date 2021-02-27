@@ -64,8 +64,7 @@ Time Timer::now(bool is_firing) const
             break;
         }
     }
-    // FIXME: Should use AK::Time internally
-    return Time::from_timespec(TimeManagement::the().current_time(clock_id).value());
+    return TimeManagement::the().current_time(clock_id).value();
 }
 
 TimerQueue& TimerQueue::the()
@@ -80,8 +79,7 @@ UNMAP_AFTER_INIT TimerQueue::TimerQueue()
 
 RefPtr<Timer> TimerQueue::add_timer_without_id(clockid_t clock_id, const Time& deadline, Function<void()>&& callback)
 {
-    // FIXME: Should use AK::Time internally
-    if (deadline <= Time::from_timespec(TimeManagement::the().current_time(clock_id).value()))
+    if (deadline <= TimeManagement::the().current_time(clock_id).value())
         return {};
 
     // Because timer handlers can execute on any processor and there is
@@ -139,8 +137,7 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 
 TimerId TimerQueue::add_timer(clockid_t clock_id, const Time& deadline, Function<void()>&& callback)
 {
-    // FIXME: Should use AK::Time internally
-    auto expires = Time::from_timespec(TimeManagement::the().current_time(clock_id).value());
+    auto expires = TimeManagement::the().current_time(clock_id).value();
     expires = expires + deadline;
     return add_timer(adopt(*new Timer(clock_id, expires, move(callback))));
 }

@@ -28,6 +28,7 @@
 
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
+#include <AK/Time.h>
 #include <AK/Types.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
@@ -53,15 +54,15 @@ public:
     static TimeManagement& the();
 
     static bool is_valid_clock_id(clockid_t);
-    KResultOr<timespec> current_time(clockid_t) const;
-    timespec monotonic_time(TimePrecision = TimePrecision::Coarse) const;
-    timespec monotonic_time_raw() const
+    KResultOr<Time> current_time(clockid_t) const;
+    Time monotonic_time(TimePrecision = TimePrecision::Coarse) const;
+    Time monotonic_time_raw() const
     {
         // TODO: implement
         return monotonic_time(TimePrecision::Precise);
     }
-    timespec epoch_time(TimePrecision = TimePrecision::Precise) const;
-    void set_epoch_time(timespec);
+    Time epoch_time(TimePrecision = TimePrecision::Precise) const;
+    void set_epoch_time(Time);
     time_t ticks_per_second() const;
     time_t boot_time() const;
 
@@ -75,9 +76,13 @@ public:
     static bool is_hpet_periodic_mode_allowed();
 
     u64 uptime_ms() const;
-    static timeval now_as_timeval();
+    static Time now();
 
+    // FIXME: Should use AK::Time internally
+    // FIXME: Also, most likely broken, because it does not check m_update[12] for in-progress updates.
     timespec remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
+    // FIXME: Should use AK::Time internally
+    // FIXME: Also, most likely broken, because it does not check m_update[12] for in-progress updates.
     void set_remaining_epoch_time_adjustment(const timespec& adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
 
     bool can_query_precise_time() const { return m_can_query_precise_time; }
@@ -95,6 +100,7 @@ private:
     Atomic<u32> m_update1 { 0 };
     u32 m_ticks_this_second { 0 };
     u64 m_seconds_since_boot { 0 };
+    // FIXME: Should use AK::Time internally
     timespec m_epoch_time { 0, 0 };
     timespec m_remaining_epoch_time_adjustment { 0, 0 };
     Atomic<u32> m_update2 { 0 };
