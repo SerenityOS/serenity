@@ -44,12 +44,12 @@ struct Array {
     constexpr const T& at(size_t index) const
     {
         VERIFY(index < size());
-        return (*this)[index];
+        return __data[index];
     }
     constexpr T& at(size_t index)
     {
         VERIFY(index < size());
-        return (*this)[index];
+        return __data[index];
     }
 
     constexpr const T& front() const { return at(0); }
@@ -60,8 +60,8 @@ struct Array {
 
     constexpr bool is_empty() const { return size() == 0; }
 
-    constexpr const T& operator[](size_t index) const { return __data[index]; }
-    constexpr T& operator[](size_t index) { return __data[index]; }
+    constexpr const T& operator[](size_t index) const { return at(index); }
+    constexpr T& operator[](size_t index) { return at(index); }
 
     template<typename T2, size_t Size2>
     constexpr bool operator==(const Array<T2, Size2>& other) const { return span() == other.span(); }
