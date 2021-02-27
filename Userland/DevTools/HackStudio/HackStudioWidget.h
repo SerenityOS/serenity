@@ -65,6 +65,12 @@ public:
     String currently_open_file() const { return m_currently_open_file; }
     void initialize_menubar(GUI::MenuBar&);
 
+    Locator& locator()
+    {
+        VERIFY(m_locator);
+        return *m_locator;
+    }
+
 private:
     static String get_full_path_of_serenity_source(const String& file);
 

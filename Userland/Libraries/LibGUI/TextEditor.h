@@ -174,7 +174,7 @@ public:
 
     void set_cursor_and_focus_line(size_t line, size_t column);
     void set_cursor(size_t line, size_t column);
-    void set_cursor(const TextPosition&);
+    virtual void set_cursor(const TextPosition&);
 
     const Syntax::Highlighter* syntax_highlighter() const;
     void set_syntax_highlighter(OwnPtr<Syntax::Highlighter>);

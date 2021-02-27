@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "Editor.h"
 #include "HackStudio.h"
 #include "HackStudioWidget.h"
 #include "Project.h"
@@ -153,7 +154,13 @@ GUI::TextEditor& current_editor()
 
 void open_file(const String& file_name)
 {
-    return s_hack_studio_widget->open_file(file_name);
+    s_hack_studio_widget->open_file(file_name);
+}
+
+void open_file(const String& file_name, size_t line, size_t column)
+{
+    s_hack_studio_widget->open_file(file_name);
+    s_hack_studio_widget->current_editor_wrapper().editor().set_cursor({ line, column });
 }
 
 RefPtr<EditorWrapper> current_editor_wrapper()
@@ -178,6 +185,11 @@ String currently_open_file()
 void set_current_editor_wrapper(RefPtr<EditorWrapper> wrapper)
 {
     s_hack_studio_widget->set_current_editor_wrapper(wrapper);
+}
+
+Locator& locator()
+{
+    return s_hack_studio_widget->locator();
 }
 
 }
