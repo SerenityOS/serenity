@@ -27,6 +27,7 @@
 #include "ParserAutoComplete.h"
 #include <AK/Assertions.h>
 #include <AK/HashTable.h>
+#include <DevTools/HackStudio/LanguageServers/Cpp/ClientConnection.h>
 #include <LibCpp/AST.h>
 #include <LibCpp/Lexer.h>
 #include <LibCpp/Parser.h>
@@ -35,8 +36,8 @@
 
 namespace LanguageServers::Cpp {
 
-ParserAutoComplete::ParserAutoComplete(const FileDB& filedb)
-    : AutoCompleteEngine(filedb)
+ParserAutoComplete::ParserAutoComplete(ClientConnection& connection, const FileDB& filedb)
+    : AutoCompleteEngine(connection, filedb)
 {
 }
 
@@ -71,6 +72,9 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
 #ifdef CPP_LANGUAGE_SERVER_DEBUG
     root->dump(0);
 #endif
+
+    update_declared_symbols(*document_data);
+
     return move(document_data);
 }
 
@@ -79,8 +83,9 @@ void ParserAutoComplete::set_document_data(const String& file, OwnPtr<DocumentDa
     m_documents.set(filedb().to_absolute_path(file), move(data));
 }
 
-ParserAutoComplete::DocumentData::DocumentData(String&& _text, const String& filename)
-    : text(move(_text))
+ParserAutoComplete::DocumentData::DocumentData(String&& _text, const String& _filename)
+    : filename(_filename)
+    , text(move(_text))
     , preprocessor(text.view())
     , parser(preprocessor.process().view(), filename)
 {
@@ -358,6 +363,28 @@ RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& 
         }
     }
     return {};
+}
+
+void ParserAutoComplete::update_declared_symbols(const DocumentData& document)
+{
+    Vector<GUI::AutocompleteProvider::Declaration> declarations;
+    for (auto& decl : document.parser.root_node()->declarations()) {
+        declarations.append({ decl.name(), { document.filename, decl.start().line, decl.start().column }, type_of_declaration(decl) });
+    }
+    set_declarations_of_document(document.filename, move(declarations));
+}
+
+GUI::AutocompleteProvider::DeclarationType ParserAutoComplete::type_of_declaration(const Declaration& decl)
+{
+    if (decl.is_struct())
+        return GUI::AutocompleteProvider::DeclarationType::Struct;
+    if (decl.is_class())
+        return GUI::AutocompleteProvider::DeclarationType::Class;
+    if (decl.is_function())
+        return GUI::AutocompleteProvider::DeclarationType::Function;
+    if (decl.is_variable_declaration())
+        return GUI::AutocompleteProvider::DeclarationType::Variable;
+    return GUI::AutocompleteProvider::DeclarationType::Variable;
 }
 
 }

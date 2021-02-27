@@ -28,6 +28,7 @@
 
 #include "AutoCompleteEngine.h"
 #include "FileDB.h"
+#include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <DevTools/HackStudio/AutoCompleteResponse.h>
@@ -42,7 +43,7 @@ using namespace ::Cpp;
 
 class ParserAutoComplete : public AutoCompleteEngine {
 public:
-    ParserAutoComplete(const FileDB& filedb);
+    ParserAutoComplete(ClientConnection&, const FileDB& filedb);
 
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) override;
     virtual void on_edit(const String& file) override;
@@ -52,6 +53,7 @@ public:
 private:
     struct DocumentData {
         DocumentData(String&& text, const String& filename);
+        String filename;
         String text;
         Preprocessor preprocessor;
         Parser parser;
@@ -80,6 +82,8 @@ private:
 
     OwnPtr<DocumentData> create_document_data_for(const String& file);
     String document_path_from_include_path(const StringView& include_path) const;
+    void update_declared_symbols(const DocumentData&);
+    GUI::AutocompleteProvider::DeclarationType type_of_declaration(const Declaration&);
 
     HashMap<String, OwnPtr<DocumentData>> m_documents;
 };
