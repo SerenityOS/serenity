@@ -64,4 +64,51 @@ inline bool decode(IPC::Decoder& decoder, GUI::AutocompleteProvider::Entry& resp
     return ok;
 }
 
+template<>
+inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::ProjectLocation& location)
+{
+    encoder << location.file;
+    encoder << (u64)location.line;
+    encoder << (u64)location.column;
+    return true;
+}
+
+template<>
+inline bool decode(Decoder& decoder, GUI::AutocompleteProvider::ProjectLocation& location)
+{
+    u64 line = 0;
+    u64 column = 0;
+    if (!decoder.decode(location.file))
+        return false;
+    if (!decoder.decode(line))
+        return false;
+    if (!decoder.decode(column))
+        return false;
+
+    location.line = line;
+    location.column = column;
+
+    return true;
+}
+
+template<>
+inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::Declaration& declaration)
+{
+    encoder << declaration.name;
+    if (!encode(encoder, declaration.position))
+        return false;
+    return true;
+}
+
+template<>
+inline bool decode(Decoder& decoder, GUI::AutocompleteProvider::Declaration& declaration)
+{
+    if (!decoder.decode(declaration.name))
+        return false;
+
+    if (!decode(decoder, declaration.position))
+        return false;
+    return true;
+}
+
 }

@@ -7,8 +7,7 @@ endpoint LanguageServer = 8001
     FileEditRemoveText(String file_name, i32 start_line, i32 start_column, i32 end_line, i32 end_column) =|
     SetFileContent(String file_name, String content) =|
 
-    AutoCompleteSuggestions(String file_name, i32 cursor_line, i32 cursor_column) =|
+    AutoCompleteSuggestions(GUI::AutocompleteProvider::ProjectLocation location) =|
     SetAutoCompleteMode(String mode) =|
-    FindDeclaration(String file_name, i32 line, i32 column) =|
-
+    FindDeclaration(GUI::AutocompleteProvider::ProjectLocation location) =|
 }
