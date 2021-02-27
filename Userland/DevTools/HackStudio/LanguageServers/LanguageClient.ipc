@@ -1,5 +1,5 @@
 endpoint LanguageClient = 8002
 {
     AutoCompleteSuggestions(Vector<GUI::AutocompleteProvider::Entry> suggestions) =|
-    DeclarationLocation(String file_name, i32 line, i32 column) =|
+    DeclarationLocation(GUI::AutocompleteProvider::ProjectLocation location) =|
 }

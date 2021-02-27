@@ -29,6 +29,7 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
+#include <LibIPC/Decoder.h>
 
 namespace GUI {
 
@@ -53,6 +54,17 @@ public:
         size_t partial_input_length { 0 };
         CompletionKind kind { CompletionKind::Identifier };
         Language language { Language::Unspecified };
+    };
+
+    struct ProjectLocation {
+        String file;
+        size_t line { 0 };
+        size_t column { 0 };
+    };
+
+    struct Declaration {
+        String name;
+        ProjectLocation position;
     };
 
     virtual void provide_completions(Function<void(Vector<Entry>)>) = 0;
