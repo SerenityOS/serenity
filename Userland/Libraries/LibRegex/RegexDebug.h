@@ -129,8 +129,10 @@ public:
         for (size_t i = 0; i < length; ++i) {
             builder.append('=');
         }
+        auto str = builder.to_string();
+        VERIFY(!str.is_empty());
 
-        fprintf(m_file, "%s\n", builder.to_string().characters());
+        fprintf(m_file, "%s\n", str.characters());
         fflush(m_file);
 
         builder.clear();
