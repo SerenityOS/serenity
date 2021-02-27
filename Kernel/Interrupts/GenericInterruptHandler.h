@@ -43,8 +43,16 @@ enum class HandlerType : u8 {
 class GenericInterruptHandler {
 public:
     static GenericInterruptHandler& from(u8 interrupt_number);
-    virtual ~GenericInterruptHandler();
+    virtual ~GenericInterruptHandler()
+    {
+        VERIFY(!m_registered);
+    }
     virtual void handle_interrupt(const RegisterState& regs) = 0;
+
+    void will_be_destroyed();
+    bool is_registered() const { return m_registered; }
+    void register_interrupt_handler();
+    void unregister_interrupt_handler();
 
     u8 interrupt_number() const { return m_interrupt_number; }
 
@@ -74,5 +82,6 @@ private:
     Atomic<u32, AK::MemoryOrder::memory_order_relaxed> m_invoking_count { 0 };
     u8 m_interrupt_number { 0 };
     bool m_disable_remap { false };
+    bool m_registered { false };
 };
 }
