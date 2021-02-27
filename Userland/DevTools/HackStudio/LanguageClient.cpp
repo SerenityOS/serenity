@@ -25,6 +25,8 @@
  */
 
 #include "LanguageClient.h"
+#include "HackStudio.h"
+#include "Locator.h"
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
@@ -48,11 +50,6 @@ void ServerConnection::handle(const Messages::LanguageClient::DeclarationLocatio
         return;
     }
     m_language_client->declaration_found(message.location().file, message.location().line, message.location().column);
-}
-
-void ServerConnection::handle(const Messages::LanguageClient::DeclarationList& message)
-{
-    (void)message;
 }
 
 void ServerConnection::die()
@@ -158,6 +155,10 @@ void ServerConnection::remove_instance_for_project(const String& project_path)
     auto key = LexicalPath { project_path }.string();
     s_instances_for_projects.remove(key);
 }
+void ServerConnection::handle(const Messages::LanguageClient::DeclarationsInDocument& message)
+{
+    locator().set_declared_symbols(message.filename(), message.declarations());
+}
 
 void LanguageClient::search_declaration(const String& path, size_t line, size_t column)
 {
@@ -173,7 +174,6 @@ void LanguageClient::declaration_found(const String& file, size_t line, size_t c
         dbgln("on_declaration_found callback is not set");
         return;
     }
-    dbgln("calling on_declaration_found");
     on_declaration_found(file, line, column);
 }
 
