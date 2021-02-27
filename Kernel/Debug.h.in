@@ -302,6 +302,10 @@
 #cmakedefine01 UHCI_VERBOSE_DEBUG
 #endif
 
+#ifndef USB_DEBUG
+#cmakedefine01 USB_DEBUG
+#endif
+
 #ifndef VFS_DEBUG
 #cmakedefine01 VFS_DEBUG
 #endif
