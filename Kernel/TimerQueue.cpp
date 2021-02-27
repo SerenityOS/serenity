@@ -38,24 +38,13 @@ namespace Kernel {
 static AK::Singleton<TimerQueue> s_the;
 static SpinLock<u8> g_timerqueue_lock;
 
-ALWAYS_INLINE static u64 time_to_ns(const timespec& ts)
-{
-    return (u64)ts.tv_sec * 1000000000ull + ts.tv_nsec;
-}
-
-ALWAYS_INLINE static timespec ns_to_time(u64 ns)
-{
-    return { (time_t)(ns / 1000000000ull), (long)(ns % 1000000000ull) };
-}
-
 timespec Timer::remaining() const
 {
-    if (m_remaining == 0)
-        return {};
-    return ns_to_time(m_remaining);
+    // FIXME: Should use AK::Time internally
+    return m_remaining.to_timespec();
 }
 
-u64 Timer::now(bool is_firing) const
+Time Timer::now(bool is_firing) const
 {
     // NOTE: If is_firing is true then TimePrecision::Precise isn't really useful here.
     // We already have a quite precise time stamp because we just updated the time in the
@@ -76,7 +65,8 @@ u64 Timer::now(bool is_firing) const
             break;
         }
     }
-    return time_to_ns(TimeManagement::the().current_time(clock_id).value());
+    // FIXME: Should use AK::Time internally
+    return Time::from_timespec(TimeManagement::the().current_time(clock_id).value());
 }
 
 TimerQueue& TimerQueue::the()
@@ -99,7 +89,7 @@ RefPtr<Timer> TimerQueue::add_timer_without_id(clockid_t clock_id, const timespe
     // *must* be a RefPtr<Timer>. Otherwise calling cancel_timer() could
     // inadvertently cancel another timer that has been created between
     // returning from the timer handler and a call to cancel_timer().
-    auto timer = adopt(*new Timer(clock_id, time_to_ns(deadline), move(callback)));
+    auto timer = adopt(*new Timer(clock_id, Time::from_timespec(deadline), move(callback)));
 
     ScopedSpinLock lock(g_timerqueue_lock);
     timer->m_id = 0; // Don't generate a timer id
@@ -119,7 +109,7 @@ TimerId TimerQueue::add_timer(NonnullRefPtr<Timer>&& timer)
 
 void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 {
-    u64 timer_expiration = timer->m_expires;
+    Time timer_expiration = timer->m_expires;
 
     VERIFY(!timer->is_queued());
 
@@ -149,9 +139,10 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 
 TimerId TimerQueue::add_timer(clockid_t clock_id, timeval& deadline, Function<void()>&& callback)
 {
+    // FIXME: Should use AK::Time internally
     auto expires = TimeManagement::the().current_time(clock_id).value();
     timespec_add_timeval(expires, deadline, expires);
-    return add_timer(adopt(*new Timer(clock_id, time_to_ns(expires), move(callback))));
+    return add_timer(adopt(*new Timer(clock_id, Time::from_timespec(expires), move(callback))));
 }
 
 bool TimerQueue::cancel_timer(TimerId id)
@@ -299,7 +290,7 @@ void TimerQueue::update_next_timer_due(Queue& queue)
     if (auto* next_timer = queue.list.head())
         queue.next_timer_due = next_timer->m_expires;
     else
-        queue.next_timer_due = 0;
+        queue.next_timer_due = {};
 }
 
 }
