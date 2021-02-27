@@ -91,6 +91,7 @@ public:
 protected:
     virtual void handle(const Messages::LanguageClient::AutoCompleteSuggestions&) override;
     virtual void handle(const Messages::LanguageClient::DeclarationLocation&) override;
+    virtual void handle(const Messages::LanguageClient::DeclarationsInDocument&) override;
 
     String m_project_path;
     WeakPtr<LanguageClient> m_language_client;

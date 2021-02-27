@@ -59,6 +59,8 @@ private:
     virtual void handle(const Messages::LanguageServer::SetAutoCompleteMode&) override;
     virtual void handle(const Messages::LanguageServer::FindDeclaration&) override;
 
+    static void set_declarations_of_document_callback(ClientConnection&, const String&, Vector<GUI::AutocompleteProvider::Declaration>&&);
+
     FileDB m_filedb;
     OwnPtr<AutoCompleteEngine> m_autocomplete_engine;
 };

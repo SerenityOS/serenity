@@ -137,13 +137,19 @@ public:
     virtual bool is_variable_declaration() const { return false; }
     virtual bool is_parameter() const { return false; }
     virtual bool is_struct_or_class() const { return false; }
+    virtual bool is_struct() const { return false; }
+    virtual bool is_class() const { return false; }
     virtual bool is_function() const { return false; }
+    const StringView& name() const { return m_name; }
+
+    StringView m_name;
 
 protected:
     Declaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : Statement(parent, start, end, filename)
     {
     }
+
 };
 
 class InvalidDeclaration : public Declaration {
@@ -163,7 +169,6 @@ public:
     virtual const char* class_name() const override { return "FunctionDeclaration"; }
     virtual void dump(size_t indent) const override;
     virtual bool is_function() const override { return true; }
-    const StringView& name() const { return m_name; }
     RefPtr<FunctionDefinition> definition() { return m_definition; }
 
     FunctionDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
@@ -173,7 +178,6 @@ public:
 
     virtual NonnullRefPtrVector<Declaration> declarations() const override;
 
-    StringView m_name;
     RefPtr<Type> m_return_type;
     NonnullRefPtrVector<Parameter> m_parameters;
     RefPtr<FunctionDefinition> m_definition;
@@ -184,7 +188,6 @@ public:
     virtual ~VariableOrParameterDeclaration() override = default;
     virtual bool is_variable_or_parameter_declaration() const override { return true; }
 
-    StringView m_name;
     RefPtr<Type> m_type;
 
 protected:
@@ -492,6 +495,8 @@ public:
     virtual const char* class_name() const override { return "StructOrClassDeclaration"; }
     virtual void dump(size_t indent) const override;
     virtual bool is_struct_or_class() const override { return true; }
+    virtual bool is_struct() const override { return m_type == Type::Struct; }
+    virtual bool is_class() const override { return m_type == Type::Class; }
 
     enum class Type {
         Struct,
@@ -505,7 +510,6 @@ public:
     }
 
     StructOrClassDeclaration::Type m_type;
-    StringView m_name;
     NonnullRefPtrVector<MemberDeclaration> m_members;
 };
 

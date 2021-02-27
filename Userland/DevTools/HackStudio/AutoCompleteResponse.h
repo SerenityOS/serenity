@@ -110,7 +110,7 @@ inline bool decode(Decoder& decoder, GUI::AutocompleteProvider::Declaration& dec
     if (!decode(decoder, declaration.position))
         return false;
     u32 type;
-    if (!decoder.decode( type))
+    if (!decoder.decode(type))
         return false;
 
     declaration.type = static_cast<GUI::AutocompleteProvider::DeclarationType>(type);

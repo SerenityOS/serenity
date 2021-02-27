@@ -39,7 +39,7 @@ using namespace ::Cpp;
 
 class LexerAutoComplete : public AutoCompleteEngine {
 public:
-    LexerAutoComplete(const FileDB& filedb);
+    LexerAutoComplete(ClientConnection&, const FileDB& filedb);
 
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) override;
 
