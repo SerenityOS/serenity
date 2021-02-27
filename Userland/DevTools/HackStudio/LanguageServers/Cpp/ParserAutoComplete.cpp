@@ -317,7 +317,7 @@ void ParserAutoComplete::file_opened([[maybe_unused]] const String& file)
     set_document_data(file, create_document_data_for(file));
 }
 
-Optional<AutoCompleteEngine::ProjectPosition> ParserAutoComplete::find_declaration_of(const String& file_name, const GUI::TextPosition& identifier_position)
+Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_declaration_of(const String& file_name, const GUI::TextPosition& identifier_position)
 {
     const auto& document = get_or_create_document_data(file_name);
     auto node = document.parser.node_at(Cpp::Position { identifier_position.line(), identifier_position.column() });
@@ -329,7 +329,7 @@ Optional<AutoCompleteEngine::ProjectPosition> ParserAutoComplete::find_declarati
     if (!decl)
         return {};
 
-    return ProjectPosition { decl->filename(), decl->start().line, decl->start().column };
+    return GUI::AutocompleteProvider::ProjectLocation { decl->filename(), decl->start().line, decl->start().column };
 }
 
 RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& document_data, const ASTNode& node) const

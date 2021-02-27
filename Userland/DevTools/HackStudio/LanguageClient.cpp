@@ -40,13 +40,19 @@ void ServerConnection::handle(const Messages::LanguageClient::AutoCompleteSugges
     }
     m_language_client->provide_autocomplete_suggestions(message.suggestions());
 }
+
 void ServerConnection::handle(const Messages::LanguageClient::DeclarationLocation& message)
 {
     if (!m_language_client) {
         dbgln("Language Server connection has no attached language client");
         return;
     }
-    m_language_client->declaration_found(message.file_name(), message.line(), message.column());
+    m_language_client->declaration_found(message.location().file, message.location().line, message.location().column);
+}
+
+void ServerConnection::handle(const Messages::LanguageClient::DeclarationList& message)
+{
+    (void)message;
 }
 
 void ServerConnection::die()
@@ -90,7 +96,7 @@ void LanguageClient::request_autocomplete(const String& path, size_t cursor_line
     if (!m_server_connection)
         return;
     set_active_client();
-    m_server_connection->post_message(Messages::LanguageServer::AutoCompleteSuggestions(path, cursor_line, cursor_column));
+    m_server_connection->post_message(Messages::LanguageServer::AutoCompleteSuggestions(GUI::AutocompleteProvider::ProjectLocation { path, cursor_line, cursor_column }));
 }
 
 void LanguageClient::provide_autocomplete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>& suggestions)
@@ -158,7 +164,7 @@ void LanguageClient::search_declaration(const String& path, size_t line, size_t 
     if (!m_server_connection)
         return;
     set_active_client();
-    m_server_connection->post_message(Messages::LanguageServer::FindDeclaration(path, line, column));
+    m_server_connection->post_message(Messages::LanguageServer::FindDeclaration(GUI::AutocompleteProvider::ProjectLocation { path, line, column }));
 }
 
 void LanguageClient::declaration_found(const String& file, size_t line, size_t column)

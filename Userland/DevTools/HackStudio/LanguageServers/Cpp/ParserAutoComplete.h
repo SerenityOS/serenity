@@ -47,7 +47,7 @@ public:
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) override;
     virtual void on_edit(const String& file) override;
     virtual void file_opened([[maybe_unused]] const String& file) override;
-    virtual Optional<ProjectPosition> find_declaration_of(const String& file_name, const GUI::TextPosition& identifier_position) override;
+    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String& file_name, const GUI::TextPosition& identifier_position) override;
 
 private:
     struct DocumentData {

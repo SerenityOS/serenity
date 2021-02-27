@@ -135,23 +135,23 @@ void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText
 void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSuggestions& message)
 {
 #if SH_LANGUAGE_SERVER_DEBUG
-    dbgln("AutoCompleteSuggestions for: {} {}:{}", message.file_name(), message.cursor_line(), message.cursor_column());
+    dbgln("AutoCompleteSuggestions for: {} {}:{}", message.location().file, message.location().line, message.location().column);
 #endif
 
-    auto document = document_for(message.file_name());
+    auto document = document_for(message.location().file);
     if (!document) {
-        dbgln("file {} has not been opened", message.file_name());
+        dbgln("file {} has not been opened", message.location().file);
         return;
     }
 
     auto& lines = document->lines();
     size_t offset = 0;
 
-    if (message.cursor_line() > 0) {
-        for (auto i = 0; i < message.cursor_line(); ++i)
+    if (message.location().line > 0) {
+        for (size_t i = 0; i < message.location().line; ++i)
             offset += lines[i].length() + 1;
     }
-    offset += message.cursor_column();
+    offset += message.location().column;
 
     auto suggestions = m_autocomplete.get_suggestions(document->text(), offset);
     post_message(Messages::LanguageClient::AutoCompleteSuggestions(move(suggestions)));

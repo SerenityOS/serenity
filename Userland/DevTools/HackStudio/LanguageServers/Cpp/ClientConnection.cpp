@@ -100,17 +100,17 @@ void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText
 void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSuggestions& message)
 {
 #if CPP_LANGUAGE_SERVER_DEBUG
-    dbgln("AutoCompleteSuggestions for: {} {}:{}", message.file_name(), message.cursor_line(), message.cursor_column());
+    dbgln("AutoCompleteSuggestions for: {} {}:{}", message.location().file, message.location().line, message.location().column);
 #endif
 
-    auto document = m_filedb.get(message.file_name());
+    auto document = m_filedb.get(message.location().file);
     if (!document) {
-        dbgln("file {} has not been opened", message.file_name());
+        dbgln("file {} has not been opened", message.location().file);
         return;
     }
 
-    GUI::TextPosition autocomplete_position = { (size_t)message.cursor_line(), (size_t)max(message.cursor_column(), message.cursor_column() - 1) };
-    Vector<GUI::AutocompleteProvider::Entry> suggestions = m_autocomplete_engine->get_suggestions(message.file_name(), autocomplete_position);
+    GUI::TextPosition autocomplete_position = { (size_t)message.location().line, (size_t)max(message.location().column, message.location().column - 1) };
+    Vector<GUI::AutocompleteProvider::Entry> suggestions = m_autocomplete_engine->get_suggestions(message.location().file, autocomplete_position);
     post_message(Messages::LanguageClient::AutoCompleteSuggestions(move(suggestions)));
 }
 
@@ -139,21 +139,21 @@ void ClientConnection::handle(const Messages::LanguageServer::SetAutoCompleteMod
 
 void ClientConnection::handle(const Messages::LanguageServer::FindDeclaration& message)
 {
-    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "FindDeclaration: {} {}:{}", message.file_name(), message.line(), message.column());
-    auto document = m_filedb.get(message.file_name());
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "FindDeclaration: {} {}:{}", message.location().file, message.location().line, message.location().column);
+    auto document = m_filedb.get(message.location().file);
     if (!document) {
-        dbgln("file {} has not been opened", message.file_name());
+        dbgln("file {} has not been opened", message.location().file);
         return;
     }
 
-    GUI::TextPosition identifier_position = { (size_t)message.line(), (size_t)message.column() };
-    auto location = m_autocomplete_engine->find_declaration_of(message.file_name(), identifier_position);
+    GUI::TextPosition identifier_position = { (size_t)message.location().line, (size_t)message.location().column };
+    auto location = m_autocomplete_engine->find_declaration_of(message.location().file, identifier_position);
     if (!location.has_value()) {
         dbgln("could not find declaration");
         return;
     }
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "declaration location: {} {}:{}", location.value().file, location.value().line, location.value().column);
-    post_message(Messages::LanguageClient::DeclarationLocation(location.value().file, location.value().line, location.value().column));
+    post_message(Messages::LanguageClient::DeclarationLocation(GUI::AutocompleteProvider::ProjectLocation { location.value().file, location.value().line, location.value().column }));
 }
 
 }
