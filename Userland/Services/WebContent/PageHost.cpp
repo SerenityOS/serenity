@@ -113,6 +113,11 @@ void PageHost::page_did_change_selection()
     m_client.post_message(Messages::WebContentClient::DidChangeSelection());
 }
 
+void PageHost::page_did_request_cursor_change(Gfx::StandardCursor cursor)
+{
+    m_client.post_message(Messages::WebContentClient::DidRequestCursorChange((u32)cursor));
+}
+
 void PageHost::page_did_layout()
 {
     auto* layout_root = this->layout_root();

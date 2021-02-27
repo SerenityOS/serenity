@@ -56,6 +56,7 @@ private:
     virtual Gfx::Palette palette() const override;
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
     virtual void page_did_change_selection() override;
+    virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
     virtual void page_did_layout() override;
     virtual void page_did_change_title(const String&) override;
     virtual void page_did_request_scroll_into_view(const Gfx::IntRect&) override;
