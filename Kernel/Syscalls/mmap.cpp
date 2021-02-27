@@ -494,9 +494,6 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
     // Try again while checkin multiple regions at a time
     // slow: without caching
     const auto& regions = space().find_regions_intersecting(range_to_unmap);
-    // if there still no regions found error out
-    if (!regions.size())
-        return EINVAL;
 
     // check if any of the regions is not mmaped, to not accientally
     // error-out with just half a region map left
@@ -529,6 +526,7 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
     for (auto* new_region : new_regions) {
         new_region->map(space().page_directory());
     }
+
     return 0;
 }
 
