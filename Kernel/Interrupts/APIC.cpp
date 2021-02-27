@@ -87,7 +87,8 @@ public:
 
     static void initialize(u8 interrupt_number)
     {
-        new APICIPIInterruptHandler(interrupt_number);
+        auto* handler = new APICIPIInterruptHandler(interrupt_number);
+        handler->register_interrupt_handler();
     }
 
     virtual void handle_interrupt(const RegisterState&) override;
@@ -117,7 +118,8 @@ public:
 
     static void initialize(u8 interrupt_number)
     {
-        new APICErrInterruptHandler(interrupt_number);
+        auto* handler = new APICErrInterruptHandler(interrupt_number);
+        handler->register_interrupt_handler();
     }
 
     virtual void handle_interrupt(const RegisterState&) override;

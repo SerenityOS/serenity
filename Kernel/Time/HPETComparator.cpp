@@ -33,7 +33,9 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<HPETComparator> HPETComparator::create(u8 number, u8 irq, bool periodic_capable)
 {
-    return adopt(*new HPETComparator(number, irq, periodic_capable));
+    auto timer = adopt(*new HPETComparator(number, irq, periodic_capable));
+    timer->register_interrupt_handler();
+    return timer;
 }
 
 UNMAP_AFTER_INIT HPETComparator::HPETComparator(u8 number, u8 irq, bool periodic_capable)
