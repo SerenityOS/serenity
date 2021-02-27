@@ -54,6 +54,7 @@
 
 namespace Kernel {
 
+// FIXME: Should use AK::Time internally
 timeval kgettimeofday();
 void kgettimeofday(timeval&);
 

@@ -383,7 +383,7 @@ int Process::alloc_fd(int first_candidate_fd)
 
 timeval kgettimeofday()
 {
-    return TimeManagement::now_as_timeval();
+    return TimeManagement::now().to_timeval();
 }
 
 void kgettimeofday(timeval& tv)
