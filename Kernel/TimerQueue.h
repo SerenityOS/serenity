@@ -36,7 +36,7 @@
 
 namespace Kernel {
 
-typedef u64 TimerId;
+TYPEDEF_DISTINCT_ORDERED_ID(u64, TimerId);
 
 class Timer : public RefCounted<Timer>
     , public InlineLinkedListNode<Timer> {
