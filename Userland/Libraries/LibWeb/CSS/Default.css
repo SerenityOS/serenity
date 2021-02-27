@@ -2,6 +2,10 @@ html {
     font-family: sans-serif;
 }
 
+a {
+    cursor: pointer;
+}
+
 head,
 link,
 meta,
