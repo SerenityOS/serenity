@@ -36,9 +36,8 @@ KResultOr<unsigned> Process::sys$alarm(unsigned seconds)
     if (auto alarm_timer = move(m_alarm_timer)) {
         if (TimerQueue::the().cancel_timer(*alarm_timer)) {
             // The timer hasn't fired. Round up the remaining time (if any)
-            timespec remaining;
-            timespec_add(alarm_timer->remaining(), { 0, 1000000000 - 1 }, remaining);
-            previous_alarm_remaining = remaining.tv_sec;
+            Time remaining = alarm_timer->remaining() + Time::from_nanoseconds(999'999'999);
+            previous_alarm_remaining = remaining.to_truncated_seconds();
         }
         // We had an existing alarm, must return a non-zero value here!
         if (previous_alarm_remaining == 0)
@@ -46,8 +45,9 @@ KResultOr<unsigned> Process::sys$alarm(unsigned seconds)
     }
 
     if (seconds > 0) {
-        auto deadline = TimeManagement::the().current_time(CLOCK_REALTIME_COARSE).value();
-        timespec_add(deadline, { seconds, 0 }, deadline);
+        // FIXME: Should use AK::Time internally
+        auto deadline = Time::from_timespec(TimeManagement::the().current_time(CLOCK_REALTIME_COARSE).value());
+        deadline = deadline + Time::from_seconds(seconds);
         m_alarm_timer = TimerQueue::the().add_timer_without_id(CLOCK_REALTIME_COARSE, deadline, [this]() {
             [[maybe_unused]] auto rc = send_signal(SIGALRM, nullptr);
         });

@@ -38,10 +38,9 @@ namespace Kernel {
 static AK::Singleton<TimerQueue> s_the;
 static SpinLock<u8> g_timerqueue_lock;
 
-timespec Timer::remaining() const
+Time Timer::remaining() const
 {
-    // FIXME: Should use AK::Time internally
-    return m_remaining.to_timespec();
+    return m_remaining;
 }
 
 Time Timer::now(bool is_firing) const
@@ -79,9 +78,10 @@ UNMAP_AFTER_INIT TimerQueue::TimerQueue()
     m_ticks_per_second = TimeManagement::the().ticks_per_second();
 }
 
-RefPtr<Timer> TimerQueue::add_timer_without_id(clockid_t clock_id, const timespec& deadline, Function<void()>&& callback)
+RefPtr<Timer> TimerQueue::add_timer_without_id(clockid_t clock_id, const Time& deadline, Function<void()>&& callback)
 {
-    if (deadline <= TimeManagement::the().current_time(clock_id).value())
+    // FIXME: Should use AK::Time internally
+    if (deadline <= Time::from_timespec(TimeManagement::the().current_time(clock_id).value()))
         return {};
 
     // Because timer handlers can execute on any processor and there is
@@ -89,7 +89,7 @@ RefPtr<Timer> TimerQueue::add_timer_without_id(clockid_t clock_id, const timespe
     // *must* be a RefPtr<Timer>. Otherwise calling cancel_timer() could
     // inadvertently cancel another timer that has been created between
     // returning from the timer handler and a call to cancel_timer().
-    auto timer = adopt(*new Timer(clock_id, Time::from_timespec(deadline), move(callback)));
+    auto timer = adopt(*new Timer(clock_id, deadline, move(callback)));
 
     ScopedSpinLock lock(g_timerqueue_lock);
     timer->m_id = 0; // Don't generate a timer id

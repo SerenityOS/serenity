@@ -55,7 +55,7 @@ public:
         VERIFY(!is_queued());
     }
 
-    timespec remaining() const;
+    Time remaining() const;
 
 private:
     TimerId m_id;
@@ -92,8 +92,7 @@ public:
     static TimerQueue& the();
 
     TimerId add_timer(NonnullRefPtr<Timer>&&);
-    // FIXME: Should use AK::Time internally
-    RefPtr<Timer> add_timer_without_id(clockid_t, const timespec&, Function<void()>&&);
+    RefPtr<Timer> add_timer_without_id(clockid_t, const Time&, Function<void()>&&);
     TimerId add_timer(clockid_t, timeval& timeout, Function<void()>&& callback);
     bool cancel_timer(TimerId id);
     bool cancel_timer(Timer&);

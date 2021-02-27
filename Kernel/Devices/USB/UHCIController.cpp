@@ -398,10 +398,8 @@ void UHCIController::do_debug_transfer()
 void UHCIController::spawn_port_proc()
 {
     RefPtr<Thread> usb_hotplug_thread;
-    timespec sleep_time {};
 
-    sleep_time.tv_sec = 1;
-    Process::create_kernel_process(usb_hotplug_thread, "UHCIHotplug", [&, sleep_time] {
+    Process::create_kernel_process(usb_hotplug_thread, "UHCIHotplug", [&] {
         for (;;) {
             for (int port = 0; port < UHCI_ROOT_PORT_COUNT; port++) {
                 u16 port_data = 0;
@@ -448,7 +446,7 @@ void UHCIController::spawn_port_proc()
                     }
                 }
             }
-            (void)Thread::current()->sleep(sleep_time);
+            (void)Thread::current()->sleep(Time::from_seconds(1));
         }
     });
 }
