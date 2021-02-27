@@ -123,9 +123,7 @@ KResultOr<int> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> use
                 return EFAULT;
             clockid_t clock_id = (params.futex_op & FUTEX_CLOCK_REALTIME) ? CLOCK_REALTIME_COARSE : CLOCK_MONOTONIC_COARSE;
             bool is_absolute = cmd != FUTEX_WAIT;
-            // FIXME: Should use AK::Time internally
-            timespec timeout_copy = timeout_time->to_timespec();
-            timeout = Thread::BlockTimeout(is_absolute, &timeout_copy, nullptr, clock_id);
+            timeout = Thread::BlockTimeout(is_absolute, &timeout_time.value(), nullptr, clock_id);
         }
         if (cmd == FUTEX_WAIT_BITSET && params.val3 == FUTEX_BITSET_MATCH_ANY)
             cmd = FUTEX_WAIT;

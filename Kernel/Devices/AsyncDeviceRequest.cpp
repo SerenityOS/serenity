@@ -68,7 +68,7 @@ void AsyncDeviceRequest::request_finished()
     m_queue.wake_all();
 }
 
-auto AsyncDeviceRequest::wait(timeval* timeout) -> RequestWaitResult
+auto AsyncDeviceRequest::wait(Time* timeout) -> RequestWaitResult
 {
     VERIFY(!m_parent_request);
     auto request_result = get_request_result();
