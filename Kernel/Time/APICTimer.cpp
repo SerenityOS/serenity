@@ -38,12 +38,12 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT APICTimer* APICTimer::initialize(u8 interrupt_number, HardwareTimerBase& calibration_source)
 {
-    auto* timer = new APICTimer(interrupt_number, nullptr);
+    auto timer = adopt(*new APICTimer(interrupt_number, nullptr));
+    timer->register_interrupt_handler();
     if (!timer->calibrate(calibration_source)) {
-        delete timer;
         return nullptr;
     }
-    return timer;
+    return &timer.leak_ref();
 }
 
 UNMAP_AFTER_INIT APICTimer::APICTimer(u8 interrupt_number, Function<void(const RegisterState&)> callback)
