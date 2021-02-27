@@ -42,8 +42,7 @@ Thread::BlockTimeout::BlockTimeout(bool is_absolute, const Time* time, const Tim
             m_time = *time;
             m_should_block = true;
         }
-        // FIXME: Should use AK::Time internally
-        m_start_time = start_time ? *start_time : Time::from_timespec(TimeManagement::the().current_time(clock_id).value());
+        m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id).value();
         if (!is_absolute)
             m_time = m_time + m_start_time;
     }
@@ -349,8 +348,7 @@ void Thread::SleepBlocker::calculate_remaining()
 {
     if (!m_remaining)
         return;
-    // FIXME: Should use AK::Time internally
-    auto time_now = Time::from_timespec(TimeManagement::the().current_time(m_deadline.clock_id()).value());
+    auto time_now = TimeManagement::the().current_time(m_deadline.clock_id()).value();
     if (time_now < m_deadline.absolute_time())
         *m_remaining = m_deadline.absolute_time() - time_now;
     else
