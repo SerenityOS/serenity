@@ -247,7 +247,9 @@ void init_stage2(void*)
 
     PCI::initialize();
 
-    bool text_mode = kernel_command_line().lookup("boot_mode").value_or("graphical") == "text";
+    auto boot_mode = kernel_command_line().lookup("boot_mode").value_or("graphical");
+    // FIXME: Richer boot mode options would be nice instead of adding more strcmp here
+    bool text_mode = boot_mode == "text" || boot_mode == "self-test";
 
     if (text_mode) {
         dbgln("Text mode enabled");
