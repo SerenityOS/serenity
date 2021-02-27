@@ -320,17 +320,19 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
             m_data[line_offset + x0i + 1] += directed_dy * area;
         } else {
             float dydx = 1.0 / dxdy;
+            if (dydx < 0)
+                dydx = -dydx;
+
             float x0_right = 1.0 - (x0 - x0_floor);
             u32 x1_floor_i = floor(x1);
             float area_upto_here = 0.5 * x0_right * x0_right * dydx;
             m_data[line_offset + x0i] += direction * area_upto_here;
             for (u32 x = x0i + 1; x < x1_floor_i; x++) {
-                x0_right += 1.0;
-                float total_area_here = 0.5 * x0_right * x0_right * dydx;
-                m_data[line_offset + x] += direction * (total_area_here - area_upto_here);
-                area_upto_here = total_area_here;
+                m_data[line_offset + x] += direction * dydx;
+                area_upto_here += dydx;
             }
-            m_data[line_offset + x1_floor_i] += direction * (dy - area_upto_here);
+            float remaining_area = (dy - area_upto_here);
+            m_data[line_offset + x1_floor_i] += direction * remaining_area;
         }
 
         x_cur = x_next;
