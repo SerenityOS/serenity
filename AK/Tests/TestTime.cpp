@@ -202,4 +202,18 @@ TEST_CASE(subtraction)
     EXPECT_SUBTRACTION(-0x7fff'ffff'ffff'ffff, 999'999'995, 1, 999'999'996, (i64)-0x8000'0000'0000'0000, 0);
 }
 
+TEST_CASE(truncation)
+{
+    EXPECT_EQ(TIME(2, 800'000'000).to_truncated_seconds(), 2);
+    EXPECT_EQ(TIME(-2, -800'000'000).to_truncated_seconds(), -2);
+
+    EXPECT_EQ(TIME(0, 0).to_truncated_seconds(), 0);
+    EXPECT_EQ(TIME(1, 999'999'999).to_truncated_seconds(), 1);
+    EXPECT_EQ(TIME(1, 1'000'000'000).to_truncated_seconds(), 2);
+    EXPECT_EQ(TIME(-2, 0).to_truncated_seconds(), -2);
+
+    EXPECT_EQ(Time::min().to_truncated_seconds(), (i64)-0x8000'0000'0000'0000);
+    EXPECT_EQ(Time::max().to_truncated_seconds(), 0x7fff'ffff'ffff'ffff);
+}
+
 TEST_MAIN(Time)
