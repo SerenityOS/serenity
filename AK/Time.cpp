@@ -72,6 +72,10 @@ unsigned day_of_week(int year, unsigned month, int day)
     return (year + year / 4 - year / 100 + year / 400 + seek_table[month - 1] + day) % 7;
 }
 
+Time Time::from_nanoseconds(i32 nanoseconds)
+{
+    return Time::from_timespec({ 0, nanoseconds });
+};
 ALWAYS_INLINE static i32 sane_mod(i32& numerator, i32 denominator)
 {
     VERIFY(2 <= denominator && denominator <= 1'000'000'000);
@@ -102,6 +106,14 @@ Time Time::from_timeval(const struct timeval& tv)
     return Time::from_half_sanitized(tv.tv_sec, extra_secs, usecs * 1'000);
 }
 
+i64 Time::to_truncated_seconds() const
+{
+    VERIFY(m_nanoseconds < 1'000'000'000);
+    if (m_seconds < 0 && m_nanoseconds)
+        return m_seconds + 1;
+    else
+        return m_seconds;
+}
 timespec Time::to_timespec() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
@@ -170,6 +182,23 @@ Time Time::operator-(const Time& other) const
     if (m_seconds >= 0)
         return Time::max();
     return Time { (m_seconds + 0x4000'0000'0000'0000) + 0x4000'0000'0000'0000, m_nanoseconds };
+}
+
+bool Time::operator<(const Time& other) const
+{
+    return m_seconds < other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds < other.m_nanoseconds);
+}
+bool Time::operator<=(const Time& other) const
+{
+    return m_seconds < other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds <= other.m_nanoseconds);
+}
+bool Time::operator>(const Time& other) const
+{
+    return m_seconds > other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds > other.m_nanoseconds);
+}
+bool Time::operator>=(const Time& other) const
+{
+    return m_seconds > other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds >= other.m_nanoseconds);
 }
 
 Time Time::from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds)

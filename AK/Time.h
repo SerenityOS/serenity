@@ -82,15 +82,20 @@ inline int years_to_days_since_epoch(int year)
  */
 class Time {
 public:
+    Time() = default;
     Time(const Time&) = default;
 
-    static Time from_seconds(i64 seconds) { return Time(seconds, 0); };
+    static Time from_seconds(i64 seconds) { return Time(seconds, 0); }
+    static Time from_nanoseconds(i32 nanoseconds);
     static Time from_timespec(const struct timespec&);
     static Time from_timeval(const struct timeval&);
     static Time min() { return Time(-0x8000'0000'0000'0000LL, 0); };
     static Time zero() { return Time(0, 0); };
     static Time max() { return Time(0x7fff'ffff'ffff'ffffLL, 999'999'999); };
 
+    // Truncates "2.8 seconds" to 2 seconds.
+    // Truncates "-2.8 seconds" to -2 seconds.
+    i64 to_truncated_seconds() const;
     timespec to_timespec() const;
     timeval to_timeval() const;
 
@@ -98,6 +103,10 @@ public:
     bool operator!=(const Time& other) const { return !(*this == other); }
     Time operator+(const Time& other) const;
     Time operator-(const Time& other) const;
+    bool operator<(const Time& other) const;
+    bool operator<=(const Time& other) const;
+    bool operator>(const Time& other) const;
+    bool operator>=(const Time& other) const;
 
 private:
     explicit Time(i64 seconds, u32 nanoseconds)
