@@ -22,7 +22,6 @@ set(SOURCES
     ColumnsView.cpp
     ComboBox.cpp
     Command.cpp
-    ControlBoxButton.cpp
     Desktop.cpp
     Dialog.cpp
     DisplayLink.cpp
