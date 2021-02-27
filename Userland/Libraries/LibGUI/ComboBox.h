@@ -33,7 +33,6 @@
 namespace GUI {
 
 class ComboBoxEditor;
-class ControlBoxButton;
 
 class ComboBox : public Frame {
     C_OBJECT(ComboBox);
@@ -74,7 +73,7 @@ private:
     void navigate_relative(int);
 
     RefPtr<ComboBoxEditor> m_editor;
-    RefPtr<ControlBoxButton> m_open_button;
+    RefPtr<Button> m_open_button;
     RefPtr<Window> m_list_window;
     RefPtr<ListView> m_list_view;
     Optional<ModelIndex> m_selected_index;
