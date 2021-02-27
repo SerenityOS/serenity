@@ -74,6 +74,15 @@ void WebContentClient::handle(const Messages::WebContentClient::DidChangeSelecti
     m_view.notify_server_did_change_selection({});
 }
 
+void WebContentClient::handle(const Messages::WebContentClient::DidRequestCursorChange& message)
+{
+    if (message.cursor_type() < 0 || message.cursor_type() >= (i32)Gfx::StandardCursor::__Count) {
+        dbgln("DidRequestCursorChange: Bad cursor type");
+        return;
+    }
+    m_view.notify_server_did_request_cursor_change({}, (Gfx::StandardCursor)message.cursor_type());
+}
+
 void WebContentClient::handle(const Messages::WebContentClient::DidLayout& message)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidLayout! content_size={}", message.content_size());
