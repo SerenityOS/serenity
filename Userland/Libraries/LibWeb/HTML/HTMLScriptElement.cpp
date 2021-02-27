@@ -40,6 +40,7 @@ namespace Web::HTML {
 
 HTMLScriptElement::HTMLScriptElement(DOM::Document& document, QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
+    , m_script_filename("(document)")
 {
 }
 
@@ -89,7 +90,7 @@ void HTMLScriptElement::execute_script()
         else
             dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running inline script");
 
-        document().run_javascript(m_script_source);
+        document().run_javascript(m_script_source, m_script_filename);
 
         document().set_current_script({}, old_current_script);
     } else {
@@ -229,6 +230,7 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
 
         if (m_script_type == ScriptType::Classic) {
             // FIXME: This load should be made asynchronous and the parser should spin an event loop etc.
+            m_script_filename = url.basename();
             ResourceLoader::the().load_sync(
                 url,
                 [this, url](auto data, auto&) {
