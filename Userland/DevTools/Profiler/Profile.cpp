@@ -28,12 +28,12 @@
 #include "DisassemblyModel.h"
 #include "ProfileModel.h"
 #include <AK/HashTable.h>
+#include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/QuickSort.h>
 #include <AK/RefPtr.h>
 #include <LibCore/File.h>
 #include <LibELF/Image.h>
-#include <stdio.h>
 #include <sys/stat.h>
 
 static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
@@ -77,14 +77,14 @@ void Profile::rebuild_tree()
     u32 filtered_event_count = 0;
     Vector<NonnullRefPtr<ProfileNode>> roots;
 
-    auto find_or_create_root = [&roots](const String& symbol, u32 address, u32 offset, u64 timestamp) -> ProfileNode& {
+    auto find_or_create_root = [&roots](FlyString object_name, String symbol, u32 address, u32 offset, u64 timestamp) -> ProfileNode& {
         for (size_t i = 0; i < roots.size(); ++i) {
             auto& root = roots[i];
             if (root->symbol() == symbol) {
                 return root;
             }
         }
-        auto new_root = ProfileNode::create(symbol, address, offset, timestamp);
+        auto new_root = ProfileNode::create(move(object_name), move(symbol), address, offset, timestamp);
         roots.append(new_root);
         return new_root;
     };
@@ -135,6 +135,7 @@ void Profile::rebuild_tree()
         if (!m_show_top_functions) {
             ProfileNode* node = nullptr;
             for_each_frame([&](const Frame& frame, bool is_innermost_frame) {
+                auto& object_name = frame.object_name;
                 auto& symbol = frame.symbol;
                 auto& address = frame.address;
                 auto& offset = frame.offset;
@@ -143,9 +144,9 @@ void Profile::rebuild_tree()
                     return IterationDecision::Break;
 
                 if (!node)
-                    node = &find_or_create_root(symbol, address, offset, event.timestamp);
+                    node = &find_or_create_root(object_name, symbol, address, offset, event.timestamp);
                 else
-                    node = &node->find_or_create_child(symbol, address, offset, event.timestamp);
+                    node = &node->find_or_create_child(object_name, symbol, address, offset, event.timestamp);
 
                 node->increment_event_count();
                 if (is_innermost_frame) {
@@ -160,6 +161,7 @@ void Profile::rebuild_tree()
                 ProfileNode* root = nullptr;
                 for (size_t j = i; j < event.frames.size(); ++j) {
                     auto& frame = event.frames.at(j);
+                    auto& object_name = frame.object_name;
                     auto& symbol = frame.symbol;
                     auto& address = frame.address;
                     auto& offset = frame.offset;
@@ -167,11 +169,11 @@ void Profile::rebuild_tree()
                         break;
 
                     if (!node) {
-                        node = &find_or_create_root(symbol, address, offset, event.timestamp);
+                        node = &find_or_create_root(object_name, symbol, address, offset, event.timestamp);
                         root = node;
                         root->will_track_seen_events(m_events.size());
                     } else {
-                        node = &node->find_or_create_child(symbol, address, offset, event.timestamp);
+                        node = &node->find_or_create_child(object_name, symbol, address, offset, event.timestamp);
                     }
 
                     if (!root->has_seen_event(event_index)) {
@@ -257,6 +259,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             auto& frame = stack_array.at(i);
             auto ptr = frame.to_number<u32>();
             u32 offset = 0;
+            FlyString object_name;
             String symbol;
 
             if (ptr >= 0xc0000000) {
@@ -266,10 +269,15 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
                     symbol = "??";
                 }
             } else {
-                symbol = library_metadata->symbolicate(ptr, offset);
+                if (auto* library = library_metadata->library_containing(ptr)) {
+                    object_name = library->name;
+                    symbol = library->elf.symbolicate(ptr - library->base, &offset);
+                } else {
+                    symbol = "??";
+                }
             }
 
-            event.frames.append({ symbol, ptr, offset });
+            event.frames.append({ object_name, symbol, ptr, offset });
         }
 
         if (event.frames.size() < 2)
@@ -391,9 +399,17 @@ const Profile::LibraryMetadata::Library* Profile::LibraryMetadata::library_conta
     return nullptr;
 }
 
-String Profile::LibraryMetadata::symbolicate(FlatPtr ptr, u32& offset) const
+ProfileNode::ProfileNode(const String& object_name, String symbol, u32 address, u32 offset, u64 timestamp)
+    : m_symbol(move(symbol))
+    , m_address(address)
+    , m_offset(offset)
+    , m_timestamp(timestamp)
 {
-    if (auto* library = library_containing(ptr))
-        return String::formatted("[{}] {}", library->name, library->elf.symbolicate(ptr - library->base, &offset));
-    return "??";
+    String object;
+    if (object_name.ends_with(": .text")) {
+        object = object_name.view().substring_view(0, object_name.length() - 7);
+    } else {
+        object = object_name;
+    }
+    m_object_name = LexicalPath(object).basename();
 }

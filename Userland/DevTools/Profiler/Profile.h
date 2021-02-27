@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Bitmap.h>
+#include <AK/FlyString.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
@@ -43,9 +44,9 @@ class DisassemblyModel;
 
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
-    static NonnullRefPtr<ProfileNode> create(const String& symbol, u32 address, u32 offset, u64 timestamp)
+    static NonnullRefPtr<ProfileNode> create(FlyString object_name, String symbol, u32 address, u32 offset, u64 timestamp)
     {
-        return adopt(*new ProfileNode(symbol, address, offset, timestamp));
+        return adopt(*new ProfileNode(move(object_name), move(symbol), address, offset, timestamp));
     }
 
     // These functions are only relevant for root nodes
@@ -57,6 +58,7 @@ public:
     bool has_seen_event(size_t event_index) const { return m_seen_events.get(event_index); }
     void did_see_event(size_t event_index) { m_seen_events.set(event_index, true); }
 
+    const FlyString& object_name() const { return m_object_name; }
     const String& symbol() const { return m_symbol; }
     u32 address() const { return m_address; }
     u32 offset() const { return m_offset; }
@@ -77,7 +79,7 @@ public:
         m_children.append(child);
     }
 
-    ProfileNode& find_or_create_child(const String& symbol, u32 address, u32 offset, u64 timestamp)
+    ProfileNode& find_or_create_child(FlyString object_name, String symbol, u32 address, u32 offset, u64 timestamp)
     {
         for (size_t i = 0; i < m_children.size(); ++i) {
             auto& child = m_children[i];
@@ -85,7 +87,7 @@ public:
                 return child;
             }
         }
-        auto new_child = ProfileNode::create(symbol, address, offset, timestamp);
+        auto new_child = ProfileNode::create(move(object_name), move(symbol), address, offset, timestamp);
         add_child(new_child);
         return new_child;
     };
@@ -109,15 +111,10 @@ public:
     }
 
 private:
-    explicit ProfileNode(const String& symbol, u32 address, u32 offset, u64 timestamp)
-        : m_symbol(symbol)
-        , m_address(address)
-        , m_offset(offset)
-        , m_timestamp(timestamp)
-    {
-    }
+    explicit ProfileNode(const String& object_name, String symbol, u32 address, u32 offset, u64 timestamp);
 
     ProfileNode* m_parent { nullptr };
+    FlyString m_object_name;
     String m_symbol;
     u32 m_address { 0 };
     u32 m_offset { 0 };
@@ -142,6 +139,7 @@ public:
     const Vector<NonnullRefPtr<ProfileNode>>& roots() const { return m_roots; }
 
     struct Frame {
+        FlyString object_name;
         String symbol;
         u32 address { 0 };
         u32 offset { 0 };

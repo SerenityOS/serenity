@@ -100,6 +100,8 @@ String ProfileModel::column_name(int column) const
         return m_profile.show_percentages() ? "% Samples" : "# Samples";
     case Column::SelfCount:
         return m_profile.show_percentages() ? "% Self" : "# Self";
+    case Column::ObjectName:
+        return "Object";
     case Column::StackFrame:
         return "Stack Frame";
     default:
@@ -134,6 +136,8 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
                 return ((float)node->self_count() / (float)m_profile.filtered_event_count()) * 100.0f;
             return node->self_count();
         }
+        if (index.column() == Column::ObjectName)
+            return node->object_name();
         if (index.column() == Column::StackFrame)
             return node->symbol();
         return {};

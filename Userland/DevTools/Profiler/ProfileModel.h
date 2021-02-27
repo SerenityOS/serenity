@@ -40,6 +40,7 @@ public:
     enum Column {
         SampleCount,
         SelfCount,
+        ObjectName,
         StackFrame,
         __Count
     };
