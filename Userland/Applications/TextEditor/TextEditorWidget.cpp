@@ -305,7 +305,7 @@ TextEditorWidget::TextEditorWidget()
                 return;
         }
 
-        open_sesame(open_path.value());
+        open_file(open_path.value());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -582,7 +582,7 @@ void TextEditorWidget::update_title()
     window()->set_title(builder.to_string());
 }
 
-void TextEditorWidget::open_sesame(const String& path)
+void TextEditorWidget::open_file(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly) && file->error() != ENOENT) {
@@ -629,7 +629,7 @@ void TextEditorWidget::drop_event(GUI::DropEvent& event)
             GUI::MessageBox::show(window(), "TextEditor can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error);
             return;
         }
-        open_sesame(urls.first().path());
+        open_file(urls.first().path());
     }
 }
 

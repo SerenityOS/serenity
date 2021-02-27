@@ -40,7 +40,7 @@ class TextEditorWidget final : public GUI::Widget {
     C_OBJECT(TextEditorWidget)
 public:
     virtual ~TextEditorWidget() override;
-    void open_sesame(const String& path);
+    void open_file(const String& path);
     bool request_close();
 
     GUI::TextEditor& editor() { return *m_editor; }
