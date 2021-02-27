@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "IndividualSampleModel.h"
 #include "Profile.h"
 #include "ProfileTimelineWidget.h"
 #include <LibCore/ArgsParser.h>
@@ -44,6 +45,7 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/ProcessChooser.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
@@ -100,7 +102,12 @@ int main(int argc, char** argv)
 
     main_widget.add<ProfileTimelineWidget>(*profile);
 
-    auto& bottom_splitter = main_widget.add<GUI::VerticalSplitter>();
+    auto& tab_widget = main_widget.add<GUI::TabWidget>();
+
+    auto& tree_tab = tab_widget.add_tab<GUI::Widget>("Call Tree");
+    tree_tab.set_layout<GUI::VerticalBoxLayout>();
+    tree_tab.layout()->set_margins({ 4, 4, 4, 4 });
+    auto& bottom_splitter = tree_tab.add<GUI::VerticalSplitter>();
 
     auto& tree_view = bottom_splitter.add<GUI::TreeView>();
     tree_view.set_should_fill_selected_rows(true);
@@ -112,6 +119,20 @@ int main(int argc, char** argv)
     tree_view.on_selection = [&](auto& index) {
         profile->set_disassembly_index(index);
         disassembly_view.set_model(profile->disassembly_model());
+    };
+
+    auto& samples_tab = tab_widget.add_tab<GUI::Widget>("Samples");
+    samples_tab.set_layout<GUI::VerticalBoxLayout>();
+    samples_tab.layout()->set_margins({ 4, 4, 4, 4 });
+
+    auto& samples_splitter = samples_tab.add<GUI::HorizontalSplitter>();
+    auto& samples_table_view = samples_splitter.add<GUI::TableView>();
+    samples_table_view.set_model(profile->samples_model());
+
+    auto& individual_sample_view = samples_splitter.add<GUI::TableView>();
+    samples_table_view.on_selection = [&](const GUI::ModelIndex& index) {
+        auto model = IndividualSampleModel::create(*profile, index.data(GUI::ModelRole::Custom).to_integer<size_t>());
+        individual_sample_view.set_model(move(model));
     };
 
     auto menubar = GUI::MenuBar::construct();
