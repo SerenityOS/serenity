@@ -41,6 +41,7 @@
 
 class ProfileModel;
 class DisassemblyModel;
+class SamplesModel;
 
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
@@ -132,6 +133,7 @@ public:
     ~Profile();
 
     GUI::Model& model();
+    GUI::Model& samples_model();
     GUI::Model* disassembly_model();
 
     void set_disassembly_index(const GUI::ModelIndex&);
@@ -154,6 +156,7 @@ public:
         Vector<Frame> frames;
     };
 
+    u32 first_filtered_event_index() const { return m_first_filtered_event_index; }
     u32 filtered_event_count() const { return m_filtered_event_count; }
 
     const Vector<Event>& events() const { return m_events; }
@@ -200,6 +203,19 @@ public:
 
     const LibraryMetadata& libraries() const { return *m_library_metadata; }
 
+    template<typename Callback>
+    void for_each_event_in_filter_range(Callback callback)
+    {
+        for (auto& event : m_events) {
+            if (has_timestamp_filter_range()) {
+                auto timestamp = event.timestamp;
+                if (timestamp < m_timestamp_filter_range_start || timestamp > m_timestamp_filter_range_end)
+                    continue;
+            }
+            callback(event);
+        }
+    }
+
 private:
     Profile(String executable_path, Vector<Event>, NonnullOwnPtr<LibraryMetadata>);
 
@@ -208,12 +224,14 @@ private:
     String m_executable_path;
 
     RefPtr<ProfileModel> m_model;
+    RefPtr<SamplesModel> m_samples_model;
     RefPtr<DisassemblyModel> m_disassembly_model;
 
     GUI::ModelIndex m_disassembly_index;
 
     Vector<NonnullRefPtr<ProfileNode>> m_roots;
     u32 m_filtered_event_count { 0 };
+    size_t m_first_filtered_event_index { 0 };
     u64 m_first_timestamp { 0 };
     u64 m_last_timestamp { 0 };
 
