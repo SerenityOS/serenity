@@ -49,6 +49,12 @@ class HardwareTimerBase
 public:
     virtual ~HardwareTimerBase() { }
 
+    // We need to create a virtual will_be_destroyed here because we derive
+    // from RefCounted<HardwareTimerBase> here, which means that RefCounted<>
+    // will only call will_be_destroyed if we define it here. The derived
+    // classes then should forward this to e.g. GenericInterruptHandler.
+    virtual void will_be_destroyed() = 0;
+
     virtual const char* model() const = 0;
     virtual HardwareTimerType timer_type() const = 0;
     virtual Function<void(const RegisterState&)> set_callback(Function<void(const RegisterState&)>) = 0;
@@ -73,6 +79,11 @@ class HardwareTimer<IRQHandler>
     : public HardwareTimerBase
     , public IRQHandler {
 public:
+    virtual void will_be_destroyed() override
+    {
+        IRQHandler::will_be_destroyed();
+    }
+
     virtual const char* purpose() const override
     {
         if (TimeManagement::the().is_system_timer(*this))
@@ -115,6 +126,11 @@ class HardwareTimer<GenericInterruptHandler>
     : public HardwareTimerBase
     , public GenericInterruptHandler {
 public:
+    virtual void will_be_destroyed() override
+    {
+        GenericInterruptHandler::will_be_destroyed();
+    }
+
     virtual const char* purpose() const override
     {
         return model();
