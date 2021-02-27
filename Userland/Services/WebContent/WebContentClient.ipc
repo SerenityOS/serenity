@@ -5,6 +5,7 @@ endpoint WebContentClient = 90
     DidPaint(Gfx::IntRect content_rect, i32 bitmap_id) =|
     DidInvalidateContentRect(Gfx::IntRect content_rect) =|
     DidChangeSelection() =|
+    DidRequestCursorChange(i32 cursor_type) =|
     DidLayout(Gfx::IntSize content_size) =|
     DidChangeTitle(String title) =|
     DidRequestScrollIntoView(Gfx::IntRect rect) =|
