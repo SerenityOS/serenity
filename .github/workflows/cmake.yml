@@ -110,6 +110,8 @@ jobs:
         SERENITY_RUN: "ci"
       run: ninja run
       timeout-minutes: 10
+      # FIXME: When stable, remove continue on error. (See issue #5541)
+      continue-on-error: true
     - name: Print target logs
       if: ${{ !cancelled() && matrix.debug-macros == 'NORMAL_DEBUG'}}
       working-directory: ${{ github.workspace }}/Build
