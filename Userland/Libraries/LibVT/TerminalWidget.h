@@ -37,6 +37,8 @@
 #include <LibVT/Range.h>
 #include <LibVT/Terminal.h>
 
+namespace VT {
+
 class TerminalWidget final
     : public GUI::Frame
     , public VT::TerminalClient {
@@ -221,3 +223,5 @@ private:
 
     Gfx::IntPoint m_left_mousedown_position;
 };
+
+}
