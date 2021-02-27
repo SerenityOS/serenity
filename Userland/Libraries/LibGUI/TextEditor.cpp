@@ -505,9 +505,6 @@ void TextEditor::paint_event(PaintEvent& event)
                     color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
                 painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, color);
             } else {
-                VERIFY(m_wrapping_mode == WrappingMode::NoWrap);
-                // FIXME: Support wrapping
-
                 auto unspanned_color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
                 if (is_displayonly() && (is_focused() || has_visible_list()))
                     unspanned_color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
@@ -519,11 +516,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 auto draw_text_helper = [&](size_t start, size_t end, RefPtr<Gfx::Font>& font, Color& color, Optional<Color> background_color = {}, bool underline = false) {
                     size_t length = end - start + 1;
                     auto text = visual_line_text.substring_view(start, length);
-                    size_t width = 0;
-                    for (size_t i = 0; i < length; i++) {
-                        width += font->glyph_width(text.code_points()[i]) + font->glyph_spacing();
-                    }
-                    span_rect.set_width(width);
+                    span_rect.set_width(font->width(text));
                     if (background_color.has_value()) {
                         painter.fill_rect(span_rect, background_color.value());
                     }
@@ -531,7 +524,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     if (underline) {
                         painter.draw_line(span_rect.bottom_left().translated(0, 1), span_rect.bottom_right().translated(0, 1), color);
                     }
-                    span_rect.move_by(width, 0);
+                    span_rect.move_by(span_rect.width(), 0);
                 };
                 for (;;) {
                     if (span_index >= document().spans().size()) {
@@ -539,52 +532,49 @@ void TextEditor::paint_event(PaintEvent& event)
                     }
                     auto& span = document().spans()[span_index];
                     if (span.range.end().line() < line_index) {
-                        dbgln("spans not sorted (span end {}:{} is before current line {}) => ignoring", span.range.start().line(), span.range.start().column(), line_index);
+                        dbgln("spans not sorted (span end {}:{} is before current line {}) => ignoring", span.range.end().line(), span.range.end().column(), line_index);
                         ++span_index;
                         continue;
                     }
-                    if (span.range.start().line() > line_index) {
+                    if (span.range.start().line() > line_index
+                        || (span.range.start().line() == line_index && span.range.start().column() >= start_of_visual_line + visual_line_text.length())) {
                         // no more spans in this line, moving on
                         break;
                     }
-                    if (span.range.start().column() < next_column) {
-                        dbgln("spans not sorted (span start {}:{} is before current position {}:{}) => ignoring", span.range.start().line(), span.range.start().column(), line_index, next_column);
-                        ++span_index;
-                        continue;
-                    }
-                    size_t span_start;
-                    if (span.range.start().line() < line_index) {
-                        span_start = 0;
-                    } else {
-                        span_start = span.range.start().column();
-                    }
-                    size_t span_end;
-                    if (span.range.end().line() > line_index) {
-                        if (visual_line_text.length() == 0) {
-                            // subtracting 1 would wrap around
-                            // scince there is nothing to draw here just move on
-                            break;
-                        }
-                        span_end = visual_line_text.length() - 1;
-                    } else {
-                        span_end = span.range.end().column();
-                    }
-                    if (span_end >= visual_line_text.length()) {
-                        if (span_end == visual_line_text.length()) {
-                            // span includes the new line character, silenty clamp
-                        } else {
-                            dbgln("span from {}:{} to {}:{} extens beyond end of line => clamping (line length is {})", span.range.start().line(), span.range.start().column(), span.range.end().line(), span.range.end().column(), visual_line_text.length());
-                        }
-                        span_end = visual_line_text.length() - 1;
-                    }
-                    if (span_start > span_end) {
-                        if (span_end == span_start - 1) {
+                    if (span.range.start().line() == span.range.end().line() && span.range.end().column() < span.range.start().column()) {
+                        if (span.range.end().column() == span.range.start().column() - 1) {
                             // span length is zero, just ignore
                         } else {
                             dbgln("span form {}:{} to {}:{} has negative length => ignoring", span.range.start().line(), span.range.start().column(), span.range.end().line(), span.range.end().column());
                         }
                         ++span_index;
                         continue;
+                    }
+                    if (span.range.end().line() == line_index && span.range.end().column() < start_of_visual_line + next_column) {
+                        dbgln("spans not sorted (span end {}:{} is before current position {}:{}) => ignoring",
+                            span.range.end().line(), span.range.end().column(), line_index, start_of_visual_line + next_column);
+                        ++span_index;
+                        continue;
+                    }
+                    size_t span_start;
+                    if (span.range.start().line() < line_index || span.range.start().column() < start_of_visual_line) {
+                        span_start = 0;
+                    } else {
+                        span_start = span.range.start().column() - start_of_visual_line;
+                    }
+                    size_t span_end;
+                    bool span_consumned;
+                    if (span.range.end().line() > line_index || span.range.end().column() >= start_of_visual_line + visual_line_text.length()) {
+                        if (visual_line_text.length() == 0) {
+                            // subtracting 1 would wrap around
+                            // scince there is nothing to draw here just move on
+                            break;
+                        }
+                        span_end = visual_line_text.length() - 1;
+                        span_consumned = false;
+                    } else {
+                        span_end = span.range.end().column() - start_of_visual_line;
+                        span_consumned = true;
                     }
                     if (span_start != next_column) {
                         // draw unspanned text between spans
@@ -597,7 +587,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     }
                     draw_text_helper(span_start, span_end, font, span.attributes.color, span.attributes.background_color, span.attributes.underline);
                     next_column = span_end + 1;
-                    if (span.range.end().line() > line_index) {
+                    if (!span_consumned) {
                         // continue with same span on next line
                         break;
                     } else {
@@ -607,6 +597,16 @@ void TextEditor::paint_event(PaintEvent& event)
                 // draw unspanned text after last span
                 if (next_column < visual_line_text.length()) {
                     draw_text_helper(next_column, visual_line_text.length() - 1, unspanned_font, unspanned_color);
+                }
+                // consume all spans that should end this line
+                // this is necessary since the spans can include the new line character
+                while (is_last_visual_line && span_index < document().spans().size()) {
+                    auto& span = document().spans()[span_index];
+                    if (span.range.end().line() == line_index) {
+                        ++span_index;
+                    } else {
+                        break;
+                    }
                 }
             }
 
