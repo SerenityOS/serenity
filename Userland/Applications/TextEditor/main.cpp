@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     }
 
     if (file_to_edit)
-        text_widget.open_sesame(file_to_edit);
+        text_widget.open_file(file_to_edit);
     else
         text_widget.update_title();
 
