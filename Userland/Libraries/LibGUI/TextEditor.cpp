@@ -455,6 +455,16 @@ void TextEditor::paint_event(PaintEvent& event)
     text_clip_rect.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
     painter.add_clip_rect(text_clip_rect);
 
+    size_t span_index = 0;
+    if (document().has_spans()) {
+        for (;;) {
+            if (span_index >= document().spans().size() || document().spans()[span_index].range.end().line() >= first_visible_line) {
+                break;
+            }
+            ++span_index;
+        }
+    }
+
     for (size_t line_index = first_visible_line; line_index <= last_visible_line; ++line_index) {
         auto& line = this->line(line_index);
 
@@ -495,35 +505,108 @@ void TextEditor::paint_event(PaintEvent& event)
                     color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
                 painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, color);
             } else {
-                Gfx::IntRect character_rect = { visual_line_rect.location(), { 0, line_height() } };
-                for (size_t i = 0; i < visual_line_text.length(); ++i) {
-                    u32 code_point = visual_line_text.substring_view(i, 1).code_points()[0];
-                    RefPtr<Gfx::Font> font = this->font();
-                    Color color;
-                    Optional<Color> background_color;
-                    bool underline = false;
-                    TextPosition physical_position(line_index, start_of_visual_line + i);
-                    // FIXME: This is *horribly* inefficient.
-                    for (auto& span : document().spans()) {
-                        if (!span.range.contains(physical_position))
-                            continue;
-                        color = span.attributes.color;
-                        if (span.attributes.bold) {
-                            if (auto bold_font = Gfx::FontDatabase::the().get(font->family(), font->presentation_size(), 700))
-                                font = bold_font;
-                        }
-                        background_color = span.attributes.background_color;
-                        underline = span.attributes.underline;
+                VERIFY(m_wrapping_mode == WrappingMode::NoWrap);
+                // FIXME: Support wrapping
+
+                auto unspanned_color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
+                if (is_displayonly() && (is_focused() || has_visible_list()))
+                    unspanned_color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
+                RefPtr<Gfx::Font> unspanned_font = this->font();
+
+                size_t next_column = 0;
+                Gfx::IntRect span_rect = { visual_line_rect.location(), { 0, line_height() } };
+
+                auto draw_text_helper = [&](size_t start, size_t end, RefPtr<Gfx::Font>& font, Color& color, Optional<Color> background_color = {}, bool underline = false) {
+                    size_t length = end - start + 1;
+                    auto text = visual_line_text.substring_view(start, length);
+                    size_t width = 0;
+                    for (size_t i = 0; i < length; i++) {
+                        width += font->glyph_width(text.code_points()[i]) + font->glyph_spacing();
+                    }
+                    span_rect.set_width(width);
+                    if (background_color.has_value()) {
+                        painter.fill_rect(span_rect, background_color.value());
+                    }
+                    painter.draw_text(span_rect, text, *font, m_text_alignment, color);
+                    if (underline) {
+                        painter.draw_line(span_rect.bottom_left().translated(0, 1), span_rect.bottom_right().translated(0, 1), color);
+                    }
+                    span_rect.move_by(width, 0);
+                };
+                for (;;) {
+                    if (span_index >= document().spans().size()) {
                         break;
                     }
-                    character_rect.set_width(font->glyph_width(code_point) + font->glyph_spacing());
-                    if (background_color.has_value())
-                        painter.fill_rect(character_rect, background_color.value());
-                    painter.draw_text(character_rect, visual_line_text.substring_view(i, 1), *font, m_text_alignment, color);
-                    if (underline) {
-                        painter.draw_line(character_rect.bottom_left().translated(0, 1), character_rect.bottom_right().translated(0, 1), color);
+                    auto& span = document().spans()[span_index];
+                    if (span.range.end().line() < line_index) {
+                        dbgln("spans not sorted (span end {}:{} is before current line {}) => ignoring", span.range.start().line(), span.range.start().column(), line_index);
+                        ++span_index;
+                        continue;
                     }
-                    character_rect.move_by(character_rect.width(), 0);
+                    if (span.range.start().line() > line_index) {
+                        // no more spans in this line, moving on
+                        break;
+                    }
+                    if (span.range.start().column() < next_column) {
+                        dbgln("spans not sorted (span start {}:{} is before current position {}:{}) => ignoring", span.range.start().line(), span.range.start().column(), line_index, next_column);
+                        ++span_index;
+                        continue;
+                    }
+                    size_t span_start;
+                    if (span.range.start().line() < line_index) {
+                        span_start = 0;
+                    } else {
+                        span_start = span.range.start().column();
+                    }
+                    size_t span_end;
+                    if (span.range.end().line() > line_index) {
+                        if (visual_line_text.length() == 0) {
+                            // subtracting 1 would wrap around
+                            // scince there is nothing to draw here just move on
+                            break;
+                        }
+                        span_end = visual_line_text.length() - 1;
+                    } else {
+                        span_end = span.range.end().column();
+                    }
+                    if (span_end >= visual_line_text.length()) {
+                        if (span_end == visual_line_text.length()) {
+                            // span includes the new line character, silenty clamp
+                        } else {
+                            dbgln("span from {}:{} to {}:{} extens beyond end of line => clamping (line length is {})", span.range.start().line(), span.range.start().column(), span.range.end().line(), span.range.end().column(), visual_line_text.length());
+                        }
+                        span_end = visual_line_text.length() - 1;
+                    }
+                    if (span_start > span_end) {
+                        if (span_end == span_start - 1) {
+                            // span length is zero, just ignore
+                        } else {
+                            dbgln("span form {}:{} to {}:{} has negative length => ignoring", span.range.start().line(), span.range.start().column(), span.range.end().line(), span.range.end().column());
+                        }
+                        ++span_index;
+                        continue;
+                    }
+                    if (span_start != next_column) {
+                        // draw unspanned text between spans
+                        draw_text_helper(next_column, span_start - 1, unspanned_font, unspanned_color);
+                    }
+                    auto font = unspanned_font;
+                    if (span.attributes.bold) {
+                        if (auto bold_font = Gfx::FontDatabase::the().get(font->family(), font->presentation_size(), 700))
+                            font = bold_font;
+                    }
+                    draw_text_helper(span_start, span_end, font, span.attributes.color, span.attributes.background_color, span.attributes.underline);
+                    next_column = span_end + 1;
+                    if (span.range.end().line() > line_index) {
+                        // continue with same span on next line
+                        break;
+                    } else {
+                        ++span_index;
+                    }
+                }
+                // draw unspanned text after last span
+                if (next_column < visual_line_text.length()) {
+                    draw_text_helper(next_column, visual_line_text.length() - 1, unspanned_font, unspanned_color);
                 }
             }
 
