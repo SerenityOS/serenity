@@ -522,19 +522,16 @@ void Editor::on_navigatable_link_click(const GUI::TextDocumentSpan& span)
     navigate_to_include_if_available(header_path);
 }
 
-void Editor::open_and_set_cursor(const String& file, size_t line, size_t column)
-{
-    if (code_document().file_path() != file)
-        on_open(file);
-    set_cursor(GUI::TextPosition { line, column });
-}
-
 void Editor::on_identifier_click(const GUI::TextDocumentSpan& span)
 {
     m_language_client->on_declaration_found = [this](const String& file, size_t line, size_t column) {
-        open_and_set_cursor(file, line, column);
+        HackStudio::open_file(file, line, column);
     };
     m_language_client->search_declaration(code_document().file_path(), span.range.start().line(), span.range.start().column());
+}
+void Editor::set_cursor(const GUI::TextPosition& a_position)
+{
+    TextEditor::set_cursor(a_position);
 }
 
 }

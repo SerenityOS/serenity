@@ -27,6 +27,7 @@
 #pragma once
 
 #include "Debugger/BreakpointCallback.h"
+#include "LanguageClient.h"
 #include <AK/Function.h>
 #include <AK/Vector.h>
 #include <LibGUI/Widget.h>
@@ -48,6 +49,7 @@ public:
     const GUI::Label& filename_label() const { return *m_filename_label; }
 
     void set_editor_has_focus(Badge<Editor>, bool);
+    LanguageClient& language_client();
 
 private:
     EditorWrapper();
