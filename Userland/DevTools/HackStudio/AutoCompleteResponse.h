@@ -97,6 +97,7 @@ inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::Declaratio
     encoder << declaration.name;
     if (!encode(encoder, declaration.position))
         return false;
+    encoder << (u32)declaration.type;
     return true;
 }
 
@@ -108,6 +109,11 @@ inline bool decode(Decoder& decoder, GUI::AutocompleteProvider::Declaration& dec
 
     if (!decode(decoder, declaration.position))
         return false;
+    u32 type;
+    if (!decoder.decode( type))
+        return false;
+
+    declaration.type = static_cast<GUI::AutocompleteProvider::DeclarationType>(type);
     return true;
 }
 
