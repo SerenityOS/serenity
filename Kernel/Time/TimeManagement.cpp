@@ -64,7 +64,7 @@ bool TimeManagement::is_valid_clock_id(clockid_t clock_id)
     };
 }
 
-KResultOr<timespec> TimeManagement::current_time(clockid_t clock_id) const
+KResultOr<Time> TimeManagement::current_time(clockid_t clock_id) const
 {
     switch (clock_id) {
     case CLOCK_MONOTONIC:
@@ -87,14 +87,15 @@ bool TimeManagement::is_system_timer(const HardwareTimerBase& timer) const
     return &timer == m_system_timer.ptr();
 }
 
-void TimeManagement::set_epoch_time(timespec ts)
+void TimeManagement::set_epoch_time(Time ts)
 {
     InterruptDisabler disabler;
-    m_epoch_time = ts;
+    // FIXME: Should use AK::Time internally
+    m_epoch_time = ts.to_timespec();
     m_remaining_epoch_time_adjustment = { 0, 0 };
 }
 
-timespec TimeManagement::monotonic_time(TimePrecision precision) const
+Time TimeManagement::monotonic_time(TimePrecision precision) const
 {
     // This is the time when last updated by an interrupt.
     u64 seconds;
@@ -122,10 +123,10 @@ timespec TimeManagement::monotonic_time(TimePrecision precision) const
     VERIFY(ticks < m_time_ticks_per_second);
     u64 ns = ((u64)ticks * 1000000000ull) / m_time_ticks_per_second;
     VERIFY(ns < 1000000000ull);
-    return { (long)seconds, (long)ns };
+    return Time::from_timespec({ (i64)seconds, (i32)ns });
 }
 
-timespec TimeManagement::epoch_time(TimePrecision) const
+Time TimeManagement::epoch_time(TimePrecision) const
 {
     // TODO: Take into account precision
     timespec ts;
@@ -134,12 +135,14 @@ timespec TimeManagement::epoch_time(TimePrecision) const
         update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
         ts = m_epoch_time;
     } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
-    return ts;
+    return Time::from_timespec(ts);
 }
 
 u64 TimeManagement::uptime_ms() const
 {
-    auto mtime = monotonic_time();
+    auto mtime = monotonic_time().to_timespec();
+    // This overflows after 292 million years of uptime.
+    // Since this is only used for performance timestamps and sys$times, that's probably enough.
     u64 ms = mtime.tv_sec * 1000ull;
     ms += mtime.tv_nsec / 1000000;
     return ms;
@@ -211,12 +214,9 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
     }
 }
 
-timeval TimeManagement::now_as_timeval()
+Time TimeManagement::now()
 {
-    timespec ts = s_the.ptr()->epoch_time();
-    timeval tv;
-    timespec_to_timeval(ts, tv);
-    return tv;
+    return s_the.ptr()->epoch_time();
 }
 
 Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_periodic_timers()
