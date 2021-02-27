@@ -149,7 +149,6 @@ protected:
         : Statement(parent, start, end, filename)
     {
     }
-
 };
 
 class InvalidDeclaration : public Declaration {

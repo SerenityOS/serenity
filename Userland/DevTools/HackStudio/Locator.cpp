@@ -27,6 +27,7 @@
 #include "Locator.h"
 #include "HackStudio.h"
 #include "Project.h"
+#include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/TableView.h>
@@ -37,7 +38,18 @@ namespace HackStudio {
 
 class LocatorSuggestionModel final : public GUI::Model {
 public:
-    explicit LocatorSuggestionModel(Vector<String>&& suggestions)
+    struct Suggestion {
+        static Suggestion create_filename(const String& filename);
+        static Suggestion create_symbol_declaration(const GUI::AutocompleteProvider::Declaration&);
+
+        bool is_filename() const { return as_filename.has_value(); }
+        bool is_symbol_declaration() const { return as_symbol_declaration.has_value(); }
+
+        Optional<String> as_filename;
+        Optional<GUI::AutocompleteProvider::Declaration> as_symbol_declaration;
+    };
+
+    explicit LocatorSuggestionModel(Vector<Suggestion>&& suggestions)
         : m_suggestions(move(suggestions))
     {
     }
@@ -45,6 +57,7 @@ public:
     enum Column {
         Icon,
         Name,
+        Filename,
         __Column_Count,
     };
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_suggestions.size(); }
@@ -52,19 +65,62 @@ public:
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
         auto& suggestion = m_suggestions.at(index.row());
-        if (role == GUI::ModelRole::Display) {
+        if (role != GUI::ModelRole::Display)
+            return {};
+
+        if (suggestion.is_filename()) {
             if (index.column() == Column::Name)
-                return suggestion;
+                return suggestion.as_filename.value();
+            if (index.column() == Column::Filename)
+                return "";
             if (index.column() == Column::Icon)
-                return GUI::FileIconProvider::icon_for_path(suggestion);
+                return GUI::FileIconProvider::icon_for_path(suggestion.as_filename.value());
+        }
+        if (suggestion.is_symbol_declaration()) {
+            if (index.column() == Column::Name)
+                return suggestion.as_symbol_declaration.value().name;
+            if (index.column() == Column::Filename)
+                return suggestion.as_symbol_declaration.value().position.file;
+            if (index.column() == Column::Icon) {
+                static GUI::Icon struct_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Struct.png"));
+                static GUI::Icon class_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Class.png"));
+                static GUI::Icon function_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Function.png"));
+                static GUI::Icon variable_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Variable.png"));
+                switch (suggestion.as_symbol_declaration.value().type) {
+                case GUI::AutocompleteProvider::DeclarationType::Struct:
+                    return struct_icon;
+                case GUI::AutocompleteProvider::DeclarationType::Class:
+                    return class_icon;
+                case GUI::AutocompleteProvider::DeclarationType::Function:
+                    return function_icon;
+                case GUI::AutocompleteProvider::DeclarationType::Variable:
+                    return variable_icon;
+                }
+                return {};
+            }
         }
         return {};
     }
     virtual void update() override {};
 
+    const Vector<Suggestion>& suggestions() const { return m_suggestions; }
+
 private:
-    Vector<String> m_suggestions;
+    Vector<Suggestion> m_suggestions;
 };
+
+LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_filename(const String& filename)
+{
+    LocatorSuggestionModel::Suggestion s;
+    s.as_filename = filename;
+    return s;
+}
+LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_symbol_declaration(const GUI::AutocompleteProvider::Declaration& decl)
+{
+    LocatorSuggestionModel::Suggestion s;
+    s.as_symbol_declaration = decl;
+    return s;
+}
 
 Locator::Locator()
 {
@@ -128,9 +184,16 @@ Locator::~Locator()
 
 void Locator::open_suggestion(const GUI::ModelIndex& index)
 {
-    auto filename_index = m_suggestion_view->model()->index(index.row(), LocatorSuggestionModel::Column::Name);
-    auto filename = filename_index.data().to_string();
-    open_file(filename);
+    auto& model = reinterpret_cast<LocatorSuggestionModel&>(*m_suggestion_view->model());
+    auto suggestion = model.suggestions()[index.row()];
+    if (suggestion.is_filename()) {
+        auto filename = suggestion.as_filename.value();
+        open_file(filename);
+    }
+    if (suggestion.is_symbol_declaration()) {
+        auto position = suggestion.as_symbol_declaration.value().position;
+        open_file(position.file, position.line, position.column);
+    }
     close();
 }
 
@@ -151,14 +214,25 @@ void Locator::close()
 void Locator::update_suggestions()
 {
     auto typed_text = m_textbox->text();
-    Vector<String> suggestions;
+    Vector<LocatorSuggestionModel::Suggestion> suggestions;
     project().for_each_text_file([&](auto& file) {
         if (file.name().contains(typed_text, CaseSensitivity::CaseInsensitive))
-            suggestions.append(file.name());
+            suggestions.append(LocatorSuggestionModel::Suggestion::create_filename(file.name()));
     });
+
+    for (auto& item : m_document_to_declarations) {
+        for (auto& decl : item.value) {
+            if (decl.name.contains(typed_text, CaseSensitivity::CaseInsensitive))
+                suggestions.append((LocatorSuggestionModel::Suggestion::create_symbol_declaration(decl)));
+        }
+    }
+
     dbgln("I have {} suggestion(s):", suggestions.size());
     for (auto& s : suggestions) {
-        dbgln("    {}", s);
+        if (s.is_filename())
+            dbgln("    {}", s.as_filename.value());
+        if (s.is_symbol_declaration())
+            dbgln("    {} ({})", s.as_symbol_declaration.value().name, s.as_symbol_declaration.value().position.file);
     }
 
     bool has_suggestions = !suggestions.is_empty();
@@ -173,6 +247,10 @@ void Locator::update_suggestions()
     m_popup_window->move_to(screen_relative_rect().top_left().translated(0, -m_popup_window->height()));
     dbgln("Popup rect: {}", m_popup_window->rect());
     m_popup_window->show();
+}
+void Locator::set_declared_symbols(const String& filename, const Vector<GUI::AutocompleteProvider::Declaration>& declarations)
+{
+    m_document_to_declarations.set(filename, declarations);
 }
 
 }
