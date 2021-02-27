@@ -38,7 +38,7 @@ void SyncTask::spawn()
         dbgln("SyncTask is running");
         for (;;) {
             VFS::the().sync();
-            (void)Thread::current()->sleep({ 1, 0 });
+            (void)Thread::current()->sleep(Time::from_seconds(1));
         }
     });
 }

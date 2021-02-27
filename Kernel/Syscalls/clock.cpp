@@ -94,13 +94,12 @@ KResultOr<int> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_na
 
     bool was_interrupted;
     if (is_absolute) {
-        // FIXME: Should use AK::Time internally
-        was_interrupted = Thread::current()->sleep_until(params.clock_id, requested_sleep->to_timespec()).was_interrupted();
+        was_interrupted = Thread::current()->sleep_until(params.clock_id, requested_sleep.value()).was_interrupted();
     } else {
-        timespec remaining_sleep;
-        // FIXME: Should use AK::Time internally
-        was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep->to_timespec(), &remaining_sleep).was_interrupted();
-        if (was_interrupted && params.remaining_sleep && !copy_to_user(params.remaining_sleep, &remaining_sleep))
+        Time remaining_sleep;
+        was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep.value(), &remaining_sleep).was_interrupted();
+        timespec remaining_sleep_ts = remaining_sleep.to_timespec();
+        if (was_interrupted && params.remaining_sleep && !copy_to_user(params.remaining_sleep, &remaining_sleep_ts))
             return EFAULT;
     }
     if (was_interrupted)

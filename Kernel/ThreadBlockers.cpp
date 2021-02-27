@@ -33,6 +33,22 @@
 
 namespace Kernel {
 
+Thread::BlockTimeout::BlockTimeout(bool is_absolute, const Time* time, const Time* start_time, clockid_t clock_id)
+    : m_clock_id(clock_id)
+    , m_infinite(!time)
+{
+    if (!m_infinite) {
+        if (*time > Time::zero()) {
+            m_time = *time;
+            m_should_block = true;
+        }
+        // FIXME: Should use AK::Time internally
+        m_start_time = start_time ? *start_time : Time::from_timespec(TimeManagement::the().current_time(clock_id).value());
+        if (!is_absolute)
+            m_time = m_time + m_start_time;
+    }
+}
+
 bool Thread::Blocker::set_block_condition(Thread::BlockCondition& block_condition, void* data)
 {
     VERIFY(!m_block_condition);
@@ -270,7 +286,9 @@ auto Thread::WriteBlocker::override_timeout(const BlockTimeout& timeout) -> cons
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_send_timeout()) {
-            m_timeout = BlockTimeout(false, &socket.send_timeout(), timeout.start_time(), timeout.clock_id());
+            // FIXME: Should use AK::Time internally
+            Time send_timeout = Time::from_timeval(socket.send_timeout());
+            m_timeout = BlockTimeout(false, &send_timeout, timeout.start_time(), timeout.clock_id());
             if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
                 return m_timeout;
         }
@@ -289,7 +307,9 @@ auto Thread::ReadBlocker::override_timeout(const BlockTimeout& timeout) -> const
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_receive_timeout()) {
-            m_timeout = BlockTimeout(false, &socket.receive_timeout(), timeout.start_time(), timeout.clock_id());
+            // FIXME: Should use AK::Time internally
+            Time receive_timeout = Time::from_timeval(socket.receive_timeout());
+            m_timeout = BlockTimeout(false, &receive_timeout, timeout.start_time(), timeout.clock_id());
             if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
                 return m_timeout;
         }
@@ -297,7 +317,7 @@ auto Thread::ReadBlocker::override_timeout(const BlockTimeout& timeout) -> const
     return timeout;
 }
 
-Thread::SleepBlocker::SleepBlocker(const BlockTimeout& deadline, timespec* remaining)
+Thread::SleepBlocker::SleepBlocker(const BlockTimeout& deadline, Time* remaining)
     : m_deadline(deadline)
     , m_remaining(remaining)
 {
@@ -329,9 +349,10 @@ void Thread::SleepBlocker::calculate_remaining()
 {
     if (!m_remaining)
         return;
-    auto time_now = TimeManagement::the().current_time(m_deadline.clock_id()).value();
+    // FIXME: Should use AK::Time internally
+    auto time_now = Time::from_timespec(TimeManagement::the().current_time(m_deadline.clock_id()).value());
     if (time_now < m_deadline.absolute_time())
-        timespec_sub(m_deadline.absolute_time(), time_now, *m_remaining);
+        *m_remaining = m_deadline.absolute_time() - time_now;
     else
         *m_remaining = {};
 }
