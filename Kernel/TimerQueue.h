@@ -31,6 +31,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/Time.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
@@ -43,7 +44,7 @@ class Timer : public RefCounted<Timer>
     friend class InlineLinkedListNode<Timer>;
 
 public:
-    Timer(clockid_t clock_id, u64 expires, Function<void()>&& callback)
+    Timer(clockid_t clock_id, Time expires, Function<void()>&& callback)
         : m_clock_id(clock_id)
         , m_expires(expires)
         , m_callback(move(callback))
@@ -59,8 +60,8 @@ public:
 private:
     TimerId m_id;
     clockid_t m_clock_id;
-    u64 m_expires;
-    u64 m_remaining { 0 };
+    Time m_expires;
+    Time m_remaining {};
     Function<void()> m_callback;
     Timer* m_next { nullptr };
     Timer* m_prev { nullptr };
@@ -80,7 +81,7 @@ private:
     }
     bool is_queued() const { return m_queued; }
     void set_queued(bool queued) { m_queued = queued; }
-    u64 now(bool) const;
+    Time now(bool) const;
 };
 
 class TimerQueue {
@@ -91,6 +92,7 @@ public:
     static TimerQueue& the();
 
     TimerId add_timer(NonnullRefPtr<Timer>&&);
+    // FIXME: Should use AK::Time internally
     RefPtr<Timer> add_timer_without_id(clockid_t, const timespec&, Function<void()>&&);
     TimerId add_timer(clockid_t, timeval& timeout, Function<void()>&& callback);
     bool cancel_timer(TimerId id);
@@ -104,7 +106,7 @@ public:
 private:
     struct Queue {
         InlineLinkedList<Timer> list;
-        u64 next_timer_due { 0 };
+        Time next_timer_due {};
     };
     void remove_timer_locked(Queue&, Timer&);
     void update_next_timer_due(Queue&);
