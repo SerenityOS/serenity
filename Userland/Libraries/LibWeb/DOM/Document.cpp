@@ -546,9 +546,9 @@ JS::Interpreter& Document::interpreter()
     return *m_interpreter;
 }
 
-JS::Value Document::run_javascript(const StringView& source)
+JS::Value Document::run_javascript(const StringView& source, const StringView& filename)
 {
-    auto parser = JS::Parser(JS::Lexer(source));
+    auto parser = JS::Parser(JS::Lexer(source, filename));
     auto program = parser.parse_program();
     if (parser.has_errors()) {
         parser.print_errors();
