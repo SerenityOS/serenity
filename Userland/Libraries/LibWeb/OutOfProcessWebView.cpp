@@ -229,6 +229,11 @@ void OutOfProcessWebView::notify_server_did_change_selection(Badge<WebContentCli
     request_repaint();
 }
 
+void OutOfProcessWebView::notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor)
+{
+    set_override_cursor(cursor);
+}
+
 void OutOfProcessWebView::notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size)
 {
     set_content_size(content_size);
