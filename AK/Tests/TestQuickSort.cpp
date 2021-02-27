@@ -60,7 +60,7 @@ TEST_CASE(sorts_without_copy)
     for (size_t i = 0; i < 64; ++i)
         array[i].value = (64 - i) % 32 + 32;
 
-    AK::single_pivot_quick_sort(&array[0], &array[64], [](auto& a, auto& b) { return a.value < b.value; });
+    AK::single_pivot_quick_sort(array.begin(), array.end(), [](auto& a, auto& b) { return a.value < b.value; });
 
     for (size_t i = 0; i < 63; ++i)
         EXPECT(array[i].value <= array[i + 1].value);
