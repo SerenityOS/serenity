@@ -177,7 +177,7 @@ static pid_t run_command(int ptm_fd, String command)
     return pid;
 }
 
-static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
+static RefPtr<GUI::Window> create_settings_window(VT::TerminalWidget& terminal)
 {
     auto window = GUI::Window::construct();
     window->set_window_type(GUI::WindowType::ToolWindow);
@@ -194,25 +194,25 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     auto& no_bell_radio = *settings.find_descendant_of_type_named<GUI::RadioButton>("no_bell_radio");
 
     switch (terminal.bell_mode()) {
-    case TerminalWidget::BellMode::Visible:
+    case VT::TerminalWidget::BellMode::Visible:
         visual_bell_radio.set_checked(true);
         break;
-    case TerminalWidget::BellMode::AudibleBeep:
+    case VT::TerminalWidget::BellMode::AudibleBeep:
         beep_bell_radio.set_checked(true);
         break;
-    case TerminalWidget::BellMode::Disabled:
+    case VT::TerminalWidget::BellMode::Disabled:
         no_bell_radio.set_checked(true);
         break;
     }
 
     beep_bell_radio.on_checked = [&terminal](bool) {
-        terminal.set_bell_mode(TerminalWidget::BellMode::AudibleBeep);
+        terminal.set_bell_mode(VT::TerminalWidget::BellMode::AudibleBeep);
     };
     visual_bell_radio.on_checked = [&terminal](bool) {
-        terminal.set_bell_mode(TerminalWidget::BellMode::Visible);
+        terminal.set_bell_mode(VT::TerminalWidget::BellMode::Visible);
     };
     no_bell_radio.on_checked = [&terminal](bool) {
-        terminal.set_bell_mode(TerminalWidget::BellMode::Disabled);
+        terminal.set_bell_mode(VT::TerminalWidget::BellMode::Disabled);
     };
 
     auto& slider = *settings.find_descendant_of_type_named<GUI::OpacitySlider>("background_opacity_slider");
@@ -230,7 +230,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     return window;
 }
 
-static RefPtr<GUI::Window> create_find_window(TerminalWidget& terminal)
+static RefPtr<GUI::Window> create_find_window(VT::TerminalWidget& terminal)
 {
     auto window = GUI::Window::construct();
     window->set_window_type(GUI::WindowType::ToolWindow);
@@ -365,7 +365,7 @@ int main(int argc, char** argv)
     window->set_background_color(Color::Black);
     window->set_double_buffering_enabled(false);
 
-    auto& terminal = window->set_main_widget<TerminalWidget>(ptm_fd, true, config);
+    auto& terminal = window->set_main_widget<VT::TerminalWidget>(ptm_fd, true, config);
     terminal.on_command_exit = [&] {
         app->quit(0);
     };
@@ -381,11 +381,11 @@ int main(int argc, char** argv)
 
     auto bell = config->read_entry("Window", "Bell", "Visible");
     if (bell == "AudibleBeep") {
-        terminal.set_bell_mode(TerminalWidget::BellMode::AudibleBeep);
+        terminal.set_bell_mode(VT::TerminalWidget::BellMode::AudibleBeep);
     } else if (bell == "Disabled") {
-        terminal.set_bell_mode(TerminalWidget::BellMode::Disabled);
+        terminal.set_bell_mode(VT::TerminalWidget::BellMode::Disabled);
     } else {
-        terminal.set_bell_mode(TerminalWidget::BellMode::Visible);
+        terminal.set_bell_mode(VT::TerminalWidget::BellMode::Visible);
     }
 
     RefPtr<GUI::Window> settings_window;

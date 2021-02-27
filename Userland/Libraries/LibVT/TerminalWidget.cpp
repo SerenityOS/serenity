@@ -58,6 +58,8 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+namespace VT {
+
 void TerminalWidget::set_pty_master_fd(int fd)
 {
     m_ptm_fd = fd;
@@ -1129,4 +1131,6 @@ void TerminalWidget::set_font_and_resize_to_fit(const Gfx::Font& font)
 {
     set_font(font);
     resize(widget_size_for_font(font));
+}
+
 }
