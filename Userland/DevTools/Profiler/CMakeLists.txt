@@ -1,9 +1,11 @@
 set(SOURCES
     DisassemblyModel.cpp
     main.cpp
-    Profile.cpp
+        IndividualSampleModel.cpp
+        Profile.cpp
     ProfileModel.cpp
-    ProfileTimelineWidget.cpp
+        ProfileTimelineWidget.cpp
+        SamplesModel.cpp
 )
 
 serenity_app(Profiler ICON app-profiler)

@@ -27,6 +27,7 @@
 #include "Profile.h"
 #include "DisassemblyModel.h"
 #include "ProfileModel.h"
+#include "SamplesModel.h"
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
@@ -55,6 +56,7 @@ Profile::Profile(String executable_path, Vector<Event> events, NonnullOwnPtr<Lib
     m_last_timestamp = m_events.last().timestamp;
 
     m_model = ProfileModel::create(*this);
+    m_samples_model = SamplesModel::create(*this);
 
     for (auto& event : m_events) {
         m_deepest_stack_depth = max((u32)event.frames.size(), m_deepest_stack_depth);
@@ -70,6 +72,11 @@ Profile::~Profile()
 GUI::Model& Profile::model()
 {
     return *m_model;
+}
+
+GUI::Model& Profile::samples_model()
+{
+    return *m_samples_model;
 }
 
 void Profile::rebuild_tree()
@@ -91,18 +98,14 @@ void Profile::rebuild_tree()
 
     HashTable<FlatPtr> live_allocations;
 
-    for (auto& event : m_events) {
-        if (has_timestamp_filter_range()) {
-            auto timestamp = event.timestamp;
-            if (timestamp < m_timestamp_filter_range_start || timestamp > m_timestamp_filter_range_end)
-                continue;
-        }
-
+    for_each_event_in_filter_range([&](auto& event) {
         if (event.type == "malloc")
             live_allocations.set(event.ptr);
         else if (event.type == "free")
             live_allocations.remove(event.ptr);
-    }
+    });
+
+    Optional<size_t> first_filtered_event_index;
 
     for (size_t event_index = 0; event_index < m_events.size(); ++event_index) {
         auto& event = m_events.at(event_index);
@@ -111,6 +114,9 @@ void Profile::rebuild_tree()
             if (timestamp < m_timestamp_filter_range_start || timestamp > m_timestamp_filter_range_end)
                 continue;
         }
+
+        if (!first_filtered_event_index.has_value())
+            first_filtered_event_index = event_index;
 
         if (event.type == "malloc" && !live_allocations.contains(event.ptr))
             continue;
@@ -197,6 +203,7 @@ void Profile::rebuild_tree()
     sort_profile_nodes(roots);
 
     m_filtered_event_count = filtered_event_count;
+    m_first_filtered_event_index = first_filtered_event_index.value_or(0);
     m_roots = move(roots);
     m_model->update();
 }
@@ -307,6 +314,7 @@ void Profile::set_timestamp_filter_range(u64 start, u64 end)
     m_timestamp_filter_range_end = max(start, end);
 
     rebuild_tree();
+    m_samples_model->update();
 }
 
 void Profile::clear_timestamp_filter_range()
@@ -315,6 +323,7 @@ void Profile::clear_timestamp_filter_range()
         return;
     m_has_timestamp_filter_range = false;
     rebuild_tree();
+    m_samples_model->update();
 }
 
 void Profile::set_inverted(bool inverted)
