@@ -76,7 +76,7 @@ public:
 
     void add_sub_request(NonnullRefPtr<AsyncDeviceRequest>);
 
-    [[nodiscard]] RequestWaitResult wait(timeval* = nullptr);
+    [[nodiscard]] RequestWaitResult wait(Time* = nullptr);
 
     void do_start(Badge<Device>)
     {

@@ -208,44 +208,17 @@ public:
             : m_infinite(true)
         {
         }
-        explicit BlockTimeout(bool is_absolute, const timeval* time, const timespec* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE)
-            : m_clock_id(clock_id)
-            , m_infinite(!time)
-        {
-            if (!m_infinite) {
-                if (time->tv_sec > 0 || time->tv_usec > 0) {
-                    timeval_to_timespec(*time, m_time);
-                    m_should_block = true;
-                }
-                m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id).value();
-                if (!is_absolute)
-                    timespec_add(m_time, m_start_time, m_time);
-            }
-        }
-        explicit BlockTimeout(bool is_absolute, const timespec* time, const timespec* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE)
-            : m_clock_id(clock_id)
-            , m_infinite(!time)
-        {
-            if (!m_infinite) {
-                if (time->tv_sec > 0 || time->tv_nsec > 0) {
-                    m_time = *time;
-                    m_should_block = true;
-                }
-                m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id).value();
-                if (!is_absolute)
-                    timespec_add(m_time, m_start_time, m_time);
-            }
-        }
+        explicit BlockTimeout(bool is_absolute, const Time* time, const Time* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE);
 
-        const timespec& absolute_time() const { return m_time; }
-        const timespec* start_time() const { return !m_infinite ? &m_start_time : nullptr; }
+        const Time& absolute_time() const { return m_time; }
+        const Time* start_time() const { return !m_infinite ? &m_start_time : nullptr; }
         clockid_t clock_id() const { return m_clock_id; }
         bool is_infinite() const { return m_infinite; }
         bool should_block() const { return m_infinite || m_should_block; };
 
     private:
-        timespec m_time { 0, 0 };
-        timespec m_start_time { 0, 0 };
+        Time m_time {};
+        Time m_start_time {};
         clockid_t m_clock_id { CLOCK_MONOTONIC_COARSE };
         bool m_infinite { false };
         bool m_should_block { false };
@@ -640,7 +613,7 @@ public:
 
     class SleepBlocker final : public Blocker {
     public:
-        explicit SleepBlocker(const BlockTimeout&, timespec* = nullptr);
+        explicit SleepBlocker(const BlockTimeout&, Time* = nullptr);
         virtual const char* state_string() const override { return "Sleeping"; }
         virtual Type blocker_type() const override { return Type::Sleep; }
         virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
@@ -652,7 +625,7 @@ public:
         void calculate_remaining();
 
         BlockTimeout m_deadline;
-        timespec* m_remaining;
+        Time* m_remaining;
     };
 
     class SelectBlocker final : public FileBlocker {
@@ -955,13 +928,13 @@ public:
         return block<Thread::QueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
     }
 
-    BlockResult sleep(clockid_t, const timespec&, timespec* = nullptr);
-    BlockResult sleep(const timespec& duration, timespec* remaining_time = nullptr)
+    BlockResult sleep(clockid_t, const Time&, Time* = nullptr);
+    BlockResult sleep(const Time& duration, Time* remaining_time = nullptr)
     {
         return sleep(CLOCK_MONOTONIC_COARSE, duration, remaining_time);
     }
-    BlockResult sleep_until(clockid_t, const timespec&);
-    BlockResult sleep_until(const timespec& duration)
+    BlockResult sleep_until(clockid_t, const Time&);
+    BlockResult sleep_until(const Time& duration)
     {
         return sleep_until(CLOCK_MONOTONIC_COARSE, duration);
     }
