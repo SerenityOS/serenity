@@ -26,11 +26,20 @@
 
 #include "AutoCompleteEngine.h"
 
-AutoCompleteEngine::AutoCompleteEngine(const FileDB& filedb)
-    : m_filedb(filedb)
+namespace LanguageServers::Cpp {
+
+AutoCompleteEngine::AutoCompleteEngine(ClientConnection& connection, const FileDB& filedb)
+    : m_connection(connection)
+    , m_filedb(filedb)
 {
 }
 
 AutoCompleteEngine::~AutoCompleteEngine()
 {
+}
+void AutoCompleteEngine::set_declarations_of_document(const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
+{
+    VERIFY(set_declarations_of_document_callback);
+    set_declarations_of_document_callback(m_connection, filename, move(declarations));
+}
 }

@@ -31,9 +31,13 @@
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/TextPosition.h>
 
+namespace LanguageServers::Cpp {
+
+class ClientConnection;
+
 class AutoCompleteEngine {
 public:
-    AutoCompleteEngine(const FileDB& filedb);
+    AutoCompleteEngine(ClientConnection&, const FileDB& filedb);
     virtual ~AutoCompleteEngine();
 
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) = 0;
@@ -44,9 +48,15 @@ public:
 
     virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String&, const GUI::TextPosition&) { return {}; };
 
+public:
+    Function<void(ClientConnection&, String, Vector<GUI::AutocompleteProvider::Declaration>)> set_declarations_of_document_callback;
+
 protected:
     const FileDB& filedb() const { return m_filedb; }
+    void set_declarations_of_document(const String&, Vector<GUI::AutocompleteProvider::Declaration>&&);
 
 private:
+    ClientConnection& m_connection;
     const FileDB& m_filedb;
 };
+}
