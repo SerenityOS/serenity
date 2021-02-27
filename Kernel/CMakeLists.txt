@@ -47,6 +47,9 @@ set(KERNEL_SOURCES
     VirtIO/VirtIO.cpp
     VirtIO/VirtIOQueue.cpp
     VirtIO/VirtIOConsole.cpp
+    Devices/USB/USBDevice.cpp
+    Devices/USB/USBPipe.cpp
+    Devices/USB/USBTransfer.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
     Devices/HID/I8042Controller.cpp
