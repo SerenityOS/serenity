@@ -84,6 +84,13 @@ ConsoleWidget::ConsoleWidget()
 
         print_source_line(js_source);
 
+        if (on_js_input)
+            on_js_input(js_source);
+
+        // no interpreter being set means we are running in multi-process mode
+        if (!m_interpreter)
+            return;
+
         auto parser = JS::Parser(JS::Lexer(js_source));
         auto program = parser.parse_program();
 
@@ -128,6 +135,15 @@ ConsoleWidget::ConsoleWidget()
 
 ConsoleWidget::~ConsoleWidget()
 {
+}
+
+void ConsoleWidget::handle_js_console_output(const String& method, const String& line)
+{
+    if (method == "html") {
+        print_html(line);
+    } else if (method == "clear") {
+        clear_output();
+    }
 }
 
 void ConsoleWidget::set_interpreter(WeakPtr<JS::Interpreter> interpreter)
