@@ -202,7 +202,7 @@ private:
         u32 ack_number { 0 };
         ByteBuffer buffer;
         int tx_counter { 0 };
-        timeval tx_time { 0, 0 };
+        Time tx_time {};
     };
 
     Lock m_not_acked_lock { "TCPSocket unacked packets" };

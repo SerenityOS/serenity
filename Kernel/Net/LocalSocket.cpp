@@ -307,7 +307,7 @@ DoubleBuffer* LocalSocket::send_buffer_for(FileDescription& description)
     return nullptr;
 }
 
-KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_size, int, Userspace<sockaddr*>, Userspace<socklen_t*>, timeval&)
+KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_size, int, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&)
 {
     auto* socket_buffer = receive_buffer_for(description);
     if (!socket_buffer)

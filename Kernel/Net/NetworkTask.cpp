@@ -44,10 +44,10 @@
 namespace Kernel {
 
 static void handle_arp(const EthernetFrameHeader&, size_t frame_size);
-static void handle_ipv4(const EthernetFrameHeader&, size_t frame_size, const timeval& packet_timestamp);
-static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&, const timeval& packet_timestamp);
-static void handle_udp(const IPv4Packet&, const timeval& packet_timestamp);
-static void handle_tcp(const IPv4Packet&, const timeval& packet_timestamp);
+static void handle_ipv4(const EthernetFrameHeader&, size_t frame_size, const Time& packet_timestamp);
+static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&, const Time& packet_timestamp);
+static void handle_udp(const IPv4Packet&, const Time& packet_timestamp);
+static void handle_tcp(const IPv4Packet&, const Time& packet_timestamp);
 
 [[noreturn]] static void NetworkTask_main(void*);
 
@@ -81,7 +81,7 @@ void NetworkTask_main(void*)
         };
     });
 
-    auto dequeue_packet = [&pending_packets](u8* buffer, size_t buffer_size, timeval& packet_timestamp) -> size_t {
+    auto dequeue_packet = [&pending_packets](u8* buffer, size_t buffer_size, Time& packet_timestamp) -> size_t {
         if (pending_packets == 0)
             return 0;
         size_t packet_size = 0;
@@ -100,7 +100,7 @@ void NetworkTask_main(void*)
     size_t buffer_size = 64 * KiB;
     auto buffer_region = MM.allocate_kernel_region(buffer_size, "Kernel Packet Buffer", Region::Access::Read | Region::Access::Write);
     auto buffer = (u8*)buffer_region->vaddr().get();
-    timeval packet_timestamp;
+    Time packet_timestamp;
 
     klog() << "NetworkTask: Enter main loop.";
     for (;;) {
@@ -205,7 +205,7 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
     }
 }
 
-void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const timeval& packet_timestamp)
+void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const Time& packet_timestamp)
 {
     constexpr size_t minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet);
     if (frame_size < minimum_ipv4_frame_size) {
@@ -242,7 +242,7 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const timeva
     }
 }
 
-void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
+void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 {
     auto& icmp_header = *static_cast<const ICMPHeader*>(ipv4_packet.payload());
 #if ICMP_DEBUG
@@ -290,7 +290,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
     }
 }
 
-void handle_udp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
+void handle_udp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 {
     if (ipv4_packet.payload_size() < sizeof(UDPPacket)) {
         klog() << "handle_udp: Packet too small (" << ipv4_packet.payload_size() << ", need " << sizeof(UDPPacket) << ")";
@@ -319,7 +319,7 @@ void handle_udp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
     socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
 }
 
-void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
+void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 {
     if (ipv4_packet.payload_size() < sizeof(TCPPacket)) {
         klog() << "handle_tcp: IPv4 payload is too small to be a TCP packet (" << ipv4_packet.payload_size() << ", need " << sizeof(TCPPacket) << ")";
