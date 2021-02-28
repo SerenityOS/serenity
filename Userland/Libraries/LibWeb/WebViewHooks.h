@@ -47,6 +47,7 @@ public:
     Function<void(const URL&)> on_url_drop;
     Function<void(DOM::Document*)> on_set_document;
     Function<void(const URL&, const String&)> on_get_source;
+    Function<void(const String& method, const String& line)> on_js_console_output;
 };
 
 }
