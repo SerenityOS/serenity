@@ -73,7 +73,7 @@
 using namespace FileManager;
 
 static int run_in_desktop_mode(RefPtr<Core::ConfigFile>);
-static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_location);
+static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_location, String entry_focused_on_init);
 static void do_copy(const Vector<String>& selected_file_paths, FileUtils::FileOperation file_operation);
 static void do_paste(const String& target_directory, GUI::Window* window);
 static void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* window);
@@ -124,7 +124,12 @@ int main(int argc, char** argv)
     if (initial_location.is_empty())
         initial_location = "/";
 
-    return run_in_windowed_mode(move(config), initial_location);
+    // the second command-line argument is the name of the entry we wan't the focus to be on
+    String focused_entry;
+    if (argc >= 3)
+        focused_entry = argv[2];
+
+    return run_in_windowed_mode(move(config), initial_location, focused_entry);
 }
 
 void do_copy(const Vector<String>& selected_file_paths, FileUtils::FileOperation file_operation)
@@ -316,7 +321,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
     return GUI::Application::the()->exec();
 }
 
-int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_location)
+int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_location, String entry_focused_on_init)
 {
     auto window = GUI::Window::construct();
     window->set_title("File Manager");
@@ -1039,6 +1044,12 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     } else {
         directory_view.set_view_mode(DirectoryView::ViewMode::Icon);
         view_as_icons_action->set_checked(true);
+    }
+
+    if (!entry_focused_on_init.is_empty()) {
+        auto matches = directory_view.current_view().model()->matches(entry_focused_on_init, GUI::Model::MatchesFlag::MatchFull | GUI::Model::MatchesFlag::FirstMatchOnly);
+        if (!matches.is_empty())
+            directory_view.current_view().set_cursor(matches.first(), GUI::AbstractView::SelectionUpdate::Set);
     }
 
     // Write window position to config file on close request.
