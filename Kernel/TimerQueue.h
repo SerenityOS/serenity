@@ -93,7 +93,7 @@ public:
 
     TimerId add_timer(NonnullRefPtr<Timer>&&);
     RefPtr<Timer> add_timer_without_id(clockid_t, const Time&, Function<void()>&&);
-    TimerId add_timer(clockid_t, timeval& timeout, Function<void()>&& callback);
+    TimerId add_timer(clockid_t, const Time& timeout, Function<void()>&& callback);
     bool cancel_timer(TimerId id);
     bool cancel_timer(Timer&);
     bool cancel_timer(NonnullRefPtr<Timer>&& timer)
