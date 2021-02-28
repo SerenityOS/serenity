@@ -193,14 +193,13 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
         }
     }
 
-    // FIXME: Should use AK::Time internally
-    m_packet_queue.append({ buffer.value(), kgettimeofday().to_timeval() });
+    m_packet_queue.append({ buffer.value(), kgettimeofday() });
 
     if (on_receive)
         on_receive();
 }
 
-size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, timeval& packet_timestamp)
+size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, Time& packet_timestamp)
 {
     InterruptDisabler disabler;
     if (m_packet_queue.is_empty())
