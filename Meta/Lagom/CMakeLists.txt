@@ -121,6 +121,11 @@ if (BUILD_LAGOM)
         target_link_libraries(test-js_lagom Lagom)
         target_link_libraries(test-js_lagom stdc++)
         target_link_libraries(test-js_lagom pthread)
+        add_test(
+            NAME JS
+            COMMAND test-js_lagom --show-progress=false
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
 
         add_executable(test-crypto_lagom ../../Userland/Utilities/test-crypto.cpp)
         set_target_properties(test-crypto_lagom PROPERTIES OUTPUT_NAME test-crypto)
@@ -136,6 +141,11 @@ if (BUILD_LAGOM)
         set_target_properties(test-compress_lagom PROPERTIES OUTPUT_NAME test-compress)
         target_link_libraries(test-compress_lagom Lagom)
         target_link_libraries(test-compress_lagom stdc++)
+        add_test(
+            NAME Compress
+            COMMAND test-compress_lagom
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
 
         add_executable(disasm_lagom ../../Userland/Utilities/disasm.cpp)
         set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)

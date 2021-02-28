@@ -177,15 +177,7 @@ jobs:
     - name: Run CMake tests
       working-directory: ${{ github.workspace }}/Meta/Lagom/Build
       run: CTEST_OUTPUT_ON_FAILURE=1 ninja test || ${{ matrix.allow-test-failure }}
-      timeout-minutes: 2
-      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
-    - name: Run JS tests
-      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
-      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
-      run: DISABLE_DBG_OUTPUT=1 ./test-js || ${{ matrix.allow-test-failure }}
-    - name: Run LibCompress tests
-      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
-      run: ./test-compress
+      timeout-minutes: 4
       if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
 
   notify_irc:
