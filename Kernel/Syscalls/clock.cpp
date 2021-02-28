@@ -135,7 +135,7 @@ KResultOr<int> Process::sys$adjtime(Userspace<const timeval*> user_delta, Usersp
 KResultOr<int> Process::sys$gettimeofday(Userspace<timeval*> user_tv)
 {
     REQUIRE_PROMISE(stdio);
-    auto tv = kgettimeofday();
+    auto tv = kgettimeofday().to_timeval();
     if (!copy_to_user(user_tv, &tv))
         return EFAULT;
     return 0;

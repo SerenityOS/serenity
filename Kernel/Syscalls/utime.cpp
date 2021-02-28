@@ -41,8 +41,9 @@ KResultOr<int> Process::sys$utime(Userspace<const char*> user_path, size_t path_
         if (!copy_from_user(&buf, user_buf))
             return EFAULT;
     } else {
-        auto now = kgettimeofday();
-        buf = { now.tv_sec, now.tv_sec };
+        auto now = kgettimeofday().to_truncated_seconds();
+        // Not a bug!
+        buf = { now, now };
     }
     return VFS::the().utime(path.value(), current_directory(), buf.actime, buf.modtime);
 }
