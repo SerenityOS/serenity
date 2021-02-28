@@ -71,7 +71,7 @@ GUI::Variant IndividualSampleModel::data(const GUI::ModelIndex& index, GUI::Mode
 
     if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::Address)
-            return String::formatted("{:08x}", frame.address);
+            return String::formatted("{:p}", frame.address);
 
         if (index.column() == Column::Symbol) {
             return frame.symbol;
