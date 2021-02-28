@@ -66,6 +66,7 @@ public:
         FirstMatchOnly = 1 << 0,
         CaseInsensitive = 1 << 1,
         MatchAtStart = 1 << 2,
+        MatchFull = 1 << 3,
     };
 
     virtual ~Model();
@@ -112,6 +113,8 @@ protected:
     static bool string_matches(const StringView& str, const StringView& needle, unsigned flags)
     {
         auto case_sensitivity = (flags & CaseInsensitive) ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive;
+        if (flags & MatchFull)
+            return str.length() == needle.length() && str.starts_with(needle, case_sensitivity);
         if (flags & MatchAtStart)
             return str.starts_with(needle, case_sensitivity);
         return str.contains(needle, case_sensitivity);
