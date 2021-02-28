@@ -51,6 +51,8 @@ public:
 
     void debug_request(const String& request, const String& argument = {});
     void get_source();
+    void js_console_initialize();
+    void js_console_input(const String& js_source);
 
     void notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size);
     void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id);
@@ -70,6 +72,7 @@ public:
     bool notify_server_did_request_confirm(Badge<WebContentClient>, const String& message);
     String notify_server_did_request_prompt(Badge<WebContentClient>, const String& message, const String& default_);
     void notify_server_did_get_source(const URL& url, const String& source);
+    void notify_server_did_js_console_output(const String& method, const String& line);
 
 private:
     OutOfProcessWebView();
