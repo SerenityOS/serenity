@@ -38,9 +38,12 @@ HashMap<String, TokenType> Lexer::s_three_char_tokens;
 HashMap<String, TokenType> Lexer::s_two_char_tokens;
 HashMap<char, TokenType> Lexer::s_single_char_tokens;
 
-Lexer::Lexer(StringView source)
+Lexer::Lexer(StringView source, StringView filename, size_t line_number, size_t line_column)
     : m_source(source)
-    , m_current_token(TokenType::Eof, {}, StringView(nullptr), StringView(nullptr), 0, 0)
+    , m_current_token(TokenType::Eof, {}, StringView(nullptr), StringView(nullptr), filename, 0, 0)
+    , m_filename(filename)
+    , m_line_number(line_number)
+    , m_line_column(line_column)
 {
     if (s_keywords.is_empty()) {
         s_keywords.set("await", TokenType::Await);
@@ -635,6 +638,7 @@ Token Lexer::next()
         token_message,
         m_source.substring_view(trivia_start - 1, value_start - trivia_start),
         m_source.substring_view(value_start - 1, m_position - value_start),
+        m_filename,
         value_start_line_number,
         value_start_column_number);
 
