@@ -572,7 +572,7 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
 
     // NOTE: After this point, the inode metadata is wiped.
     memset(&inode.m_raw_inode, 0, sizeof(ext2_inode));
-    inode.m_raw_inode.i_dtime = kgettimeofday().tv_sec;
+    inode.m_raw_inode.i_dtime = kgettimeofday().to_truncated_seconds();
     write_ext2_inode(inode.index(), inode.m_raw_inode);
 
     // Mark the inode as free.
@@ -1429,14 +1429,14 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
         return ENOENT;
 
     ext2_inode e2inode {};
-    auto now = kgettimeofday();
+    auto now = kgettimeofday().to_truncated_seconds();
     e2inode.i_mode = mode;
     e2inode.i_uid = uid;
     e2inode.i_gid = gid;
     e2inode.i_size = 0;
-    e2inode.i_atime = now.tv_sec;
-    e2inode.i_ctime = now.tv_sec;
-    e2inode.i_mtime = now.tv_sec;
+    e2inode.i_atime = now;
+    e2inode.i_ctime = now;
+    e2inode.i_mtime = now;
     e2inode.i_dtime = 0;
     e2inode.i_flags = 0;
 

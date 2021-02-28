@@ -381,9 +381,9 @@ int Process::alloc_fd(int first_candidate_fd)
     return -EMFILE;
 }
 
-timeval kgettimeofday()
+Time kgettimeofday()
 {
-    return TimeManagement::now().to_timeval();
+    return TimeManagement::now();
 }
 
 siginfo_t Process::wait_info()

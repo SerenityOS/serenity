@@ -114,10 +114,10 @@ NonnullRefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, InodeMetadata metadata, 
 NonnullRefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
 {
     InodeMetadata metadata;
-    auto now = kgettimeofday();
-    metadata.atime = now.tv_sec;
-    metadata.ctime = now.tv_sec;
-    metadata.mtime = now.tv_sec;
+    auto now = kgettimeofday().to_truncated_seconds();
+    metadata.atime = now;
+    metadata.ctime = now;
+    metadata.mtime = now;
     metadata.mode = S_IFDIR | S_ISVTX | 0777;
     return create(fs, metadata, { fs.fsid(), 1 });
 }
@@ -280,15 +280,15 @@ KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(const String& name, mod
     if (dev != 0)
         return ENOTSUP;
 
-    struct timeval now = kgettimeofday();
+    time_t now = kgettimeofday().to_truncated_seconds();
 
     InodeMetadata metadata;
     metadata.mode = mode;
     metadata.uid = uid;
     metadata.gid = gid;
-    metadata.atime = now.tv_sec;
-    metadata.ctime = now.tv_sec;
-    metadata.mtime = now.tv_sec;
+    metadata.atime = now;
+    metadata.ctime = now;
+    metadata.mtime = now;
 
     auto child = TmpFSInode::create(fs(), metadata, identifier());
     auto result = add_child(child, name, mode);

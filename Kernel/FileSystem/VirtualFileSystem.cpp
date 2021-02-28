@@ -346,7 +346,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
         KResult result = inode.truncate(0);
         if (result.is_error())
             return result;
-        inode.set_mtime(kgettimeofday().tv_sec);
+        inode.set_mtime(kgettimeofday().to_truncated_seconds());
     }
     auto description = FileDescription::create(custody);
     if (!description.is_error()) {

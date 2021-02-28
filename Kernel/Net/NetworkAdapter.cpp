@@ -193,7 +193,8 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
         }
     }
 
-    m_packet_queue.append({ buffer.value(), kgettimeofday() });
+    // FIXME: Should use AK::Time internally
+    m_packet_queue.append({ buffer.value(), kgettimeofday().to_timeval() });
 
     if (on_receive)
         on_receive();
