@@ -251,6 +251,13 @@ Tab::Tab(Type type)
         view_source(url.to_string(), source);
     };
 
+    hooks().on_js_console_output = [this](auto& method, auto& line) {
+        if (m_console_window) {
+            auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
+            console_widget->handle_js_console_output(method, line);
+        }
+    };
+
     // FIXME: Support JS console in multi-process mode.
     if (m_type == Type::InProcessWebView) {
         hooks().on_set_document = [this](auto* document) {
@@ -376,7 +383,21 @@ Tab::Tab(Type type)
                 m_console_window->show();
                 m_console_window->move_to_front();
             } else {
-                TODO();
+                if (!m_console_window) {
+                    m_console_window = GUI::Window::construct();
+                    m_console_window->resize(500, 300);
+                    m_console_window->set_title("JS Console");
+                    m_console_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-javascript.png"));
+                    m_console_window->set_main_widget<ConsoleWidget>();
+                }
+                auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
+                console_widget->on_js_input = [this](const String& js_source) {
+                    m_web_content_view->js_console_input(js_source);
+                };
+                console_widget->clear_output();
+                m_web_content_view->js_console_initialize();
+                m_console_window->show();
+                m_console_window->move_to_front();
             }
         },
         this));
