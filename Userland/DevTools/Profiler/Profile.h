@@ -184,8 +184,6 @@ public:
     public:
         LibraryMetadata(JsonArray regions);
 
-        String symbolicate(FlatPtr ptr, u32& offset) const;
-
         struct Library {
             FlatPtr base;
             size_t size;
