@@ -31,7 +31,7 @@
 
 class PhysicalAddress {
 public:
-    PhysicalAddress() { }
+    PhysicalAddress() = default;
     explicit PhysicalAddress(FlatPtr address)
         : m_address(address)
     {

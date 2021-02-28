@@ -43,7 +43,7 @@ namespace Kernel {
 
 class I8042Device {
 public:
-    virtual ~I8042Device() { }
+    virtual ~I8042Device() = default;
 
     virtual void irq_handle_byte_read(u8 byte) = 0;
     virtual void enable_interrupts() = 0;

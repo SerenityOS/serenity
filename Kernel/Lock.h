@@ -48,7 +48,7 @@ public:
         : m_name(name)
     {
     }
-    ~Lock() { }
+    ~Lock() = default;
 
     void lock(Mode = Mode::Exclusive);
 #if LOCK_DEBUG
@@ -144,7 +144,7 @@ private:
 template<typename T>
 class Lockable {
 public:
-    Lockable() { }
+    Lockable() = default;
     Lockable(T&& resource)
         : m_resource(move(resource))
     {

@@ -40,7 +40,7 @@ TYPEDEF_DISTINCT_ORDERED_ID(unsigned, InodeIndex);
 
 class InodeIdentifier {
 public:
-    InodeIdentifier() { }
+    InodeIdentifier() = default;
     InodeIdentifier(u32 fsid, InodeIndex inode)
         : m_fsid(fsid)
         , m_index(inode)

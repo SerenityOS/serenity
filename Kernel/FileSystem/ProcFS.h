@@ -58,7 +58,7 @@ private:
     ProcFS();
 
     struct ProcFSDirectoryEntry {
-        ProcFSDirectoryEntry() { }
+        ProcFSDirectoryEntry() = default;
         ProcFSDirectoryEntry(const char* a_name, unsigned a_proc_file_type, bool a_supervisor_only, bool (*read_callback)(InodeIdentifier, KBufferBuilder&) = nullptr, ssize_t (*write_callback)(InodeIdentifier, const UserOrKernelBuffer&, size_t) = nullptr, RefPtr<ProcFSInode>&& a_inode = nullptr)
             : name(a_name)
             , proc_file_type(a_proc_file_type)

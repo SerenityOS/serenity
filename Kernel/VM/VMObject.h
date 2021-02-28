@@ -41,7 +41,7 @@ class PhysicalPage;
 
 class VMObjectDeletedHandler {
 public:
-    virtual ~VMObjectDeletedHandler() { }
+    virtual ~VMObjectDeletedHandler() = default;
     virtual void vmobject_deleted(VMObject&) = 0;
 };
 

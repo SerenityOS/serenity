@@ -56,7 +56,7 @@ public:
 private:
     template<typename T>
     friend class KResultOr;
-    KResult() { }
+    KResult() = default;
 
     int m_error { 0 };
 };
