@@ -252,7 +252,7 @@ KResultOr<ssize_t> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> us
     auto data_buffer = UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len);
     if (!data_buffer.has_value())
         return EFAULT;
-    timeval timestamp = { 0, 0 };
+    Time timestamp {};
     auto result = socket.recvfrom(*description, data_buffer.value(), iovs[0].iov_len, flags, user_addr, user_addr_length, timestamp);
     if (flags & MSG_DONTWAIT)
         description->set_blocking(original_blocking);
@@ -276,7 +276,7 @@ KResultOr<ssize_t> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> us
         if (msg.msg_controllen < control_length) {
             msg_flags |= MSG_CTRUNC;
         } else {
-            cmsg_timestamp = { { control_length, SOL_SOCKET, SCM_TIMESTAMP }, timestamp };
+            cmsg_timestamp = { { control_length, SOL_SOCKET, SCM_TIMESTAMP }, timestamp.to_timeval() };
             if (!copy_to_user(msg.msg_control, &cmsg_timestamp, control_length))
                 return EFAULT;
         }

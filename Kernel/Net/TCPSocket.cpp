@@ -238,14 +238,13 @@ void TCPSocket::send_outgoing_packets()
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     VERIFY(!routing_decision.is_zero());
 
-    // FIXME: Should use AK::Time internally
-    auto now = kgettimeofday().to_timeval();
+    auto now = kgettimeofday();
 
     LOCKER(m_not_acked_lock, Lock::Mode::Shared);
     for (auto& packet : m_not_acked) {
-        timeval diff;
-        timeval_sub(packet.tx_time, now, diff);
-        if (diff.tv_sec == 0 && diff.tv_usec <= 500000)
+        // FIXME: This doesn't look correct to me. Bug?
+        auto diff = packet.tx_time - now;
+        if (diff <= Time::from_nanoseconds(500'000'000))
             continue;
         packet.tx_time = now;
         packet.tx_counter++;
