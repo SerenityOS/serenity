@@ -40,9 +40,12 @@ public:
     virtual ~ConsoleWidget();
 
     void set_interpreter(WeakPtr<JS::Interpreter>);
+    void handle_js_console_output(const String& method, const String& line);
     void print_source_line(const StringView&);
     void print_html(const StringView&);
     void clear_output();
+
+    Function<void(const String&)> on_js_input;
 
 private:
     ConsoleWidget();
