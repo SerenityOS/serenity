@@ -136,6 +136,11 @@ void WebContentClient::handle(const Messages::WebContentClient::DidGetSource& me
     m_view.notify_server_did_get_source(message.url(), message.source());
 }
 
+void WebContentClient::handle(const Messages::WebContentClient::DidJSConsoleOutput& message)
+{
+    m_view.notify_server_did_js_console_output(message.method(), message.line());
+}
+
 OwnPtr<Messages::WebContentClient::DidRequestAlertResponse> WebContentClient::handle(const Messages::WebContentClient::DidRequestAlert& message)
 {
     m_view.notify_server_did_request_alert({}, message.message());

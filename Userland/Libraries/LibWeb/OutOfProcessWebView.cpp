@@ -320,6 +320,12 @@ void OutOfProcessWebView::notify_server_did_get_source(const URL& url, const Str
         on_get_source(url, source);
 }
 
+void OutOfProcessWebView::notify_server_did_js_console_output(const String& method, const String& line)
+{
+    if (on_js_console_output)
+        on_js_console_output(method, line);
+}
+
 void OutOfProcessWebView::did_scroll()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));
@@ -349,6 +355,16 @@ void OutOfProcessWebView::debug_request(const String& request, const String& arg
 void OutOfProcessWebView::get_source()
 {
     client().post_message(Messages::WebContentServer::GetSource());
+}
+
+void OutOfProcessWebView::js_console_initialize()
+{
+    client().post_message(Messages::WebContentServer::JSConsoleInitialize());
+}
+
+void OutOfProcessWebView::js_console_input(const String& js_source)
+{
+    client().post_message(Messages::WebContentServer::JSConsoleInput(js_source));
 }
 
 }
