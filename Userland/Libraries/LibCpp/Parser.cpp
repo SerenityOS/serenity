@@ -24,6 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#undef CPP_DEBUG
+#define CPP_DEBUG 1
+
 #ifdef CPP_DEBUG
 #    define DEBUG_SPAM
 #endif
@@ -226,9 +229,11 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(ASTNode& parent)
 
 bool Parser::match_variable_declaration()
 {
+    SCOPE_LOGGER();
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
 
+    parse_type_qualifiers();
     // Type
     if (!peek(Token::Type::KnownType).has_value() && !peek(Token::Type::Identifier).has_value())
         return false;
@@ -255,12 +260,12 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& p
 {
     SCOPE_LOGGER();
     auto var = create_ast_node<VariableDeclaration>(parent, position(), {});
-    auto type_token = consume();
-    if (type_token.type() != Token::Type::KnownType && type_token.type() != Token::Type::Identifier) {
+    if (!match_variable_declaration()) {
         error("unexpected token for variable type");
-        var->set_end(type_token.end());
+        var->set_end(position());
         return var;
     }
+    var->m_type = parse_type(var);
     auto identifier_token = consume(Token::Type::Identifier);
     RefPtr<Expression> initial_value;
 
@@ -270,7 +275,6 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& p
     }
 
     var->set_end(position());
-    var->m_type = create_ast_node<Type>(var, type_token.m_start, type_token.m_end, text_of_token(type_token));
     var->m_name = text_of_token(identifier_token);
     var->m_initial_value = move(initial_value);
 
@@ -983,8 +987,10 @@ bool Parser::match_boolean_literal()
 NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
 {
     SCOPE_LOGGER();
+    auto qualifiers = parse_type_qualifiers();
     auto token = consume();
     auto type = create_ast_node<Type>(parent, token.start(), token.end(), text_of_token(token));
+    type->m_qualifiers = move(qualifiers);
     if (token.type() != Token::Type::KnownType && token.type() != Token::Type::Identifier) {
         error(String::formatted("unexpected token for type: {}", token.to_string()));
         return type;
@@ -1032,5 +1038,23 @@ NonnullRefPtr<IfStatement> Parser::parse_if_statement(ASTNode& parent)
         if_statement->set_end(if_statement->m_then->end());
     }
     return if_statement;
+}
+Vector<StringView> Parser::parse_type_qualifiers()
+{
+    SCOPE_LOGGER();
+    Vector<StringView> qualifiers;
+    while (!done()) {
+        auto token = peek();
+        if (token.type() != Token::Type::Keyword)
+            break;
+        auto text = text_of_token(token);
+        if (text == "static" || text == "const") {
+            qualifiers.append(text);
+            consume();
+        } else {
+            break;
+        }
+    }
+    return qualifiers;
 }
 }
