@@ -92,7 +92,7 @@ inline const LogStream& operator<<(const LogStream& stream, const ID value)
 }
 struct Address {
 public:
-    Address() { }
+    Address() = default;
     Address(u16 seg)
         : m_seg(seg)
         , m_bus(0)

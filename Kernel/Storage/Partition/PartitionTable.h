@@ -52,7 +52,7 @@ public:
     Optional<DiskPartitionMetadata> partition(unsigned index);
     size_t partitions_count() const { return m_partitions.size(); }
     virtual Type type() const = 0;
-    virtual ~PartitionTable() { }
+    virtual ~PartitionTable() = default;
     virtual bool is_valid() const = 0;
 
     Vector<DiskPartitionMetadata> partitions() const { return m_partitions; }

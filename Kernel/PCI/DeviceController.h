@@ -34,7 +34,7 @@ class PCI::DeviceController {
 public:
     Address pci_address() const { return m_pci_address; };
 
-    virtual ~DeviceController() { }
+    virtual ~DeviceController() = default;
     void enable_pin_based_interrupts() const;
     void disable_pin_based_interrupts() const;
 

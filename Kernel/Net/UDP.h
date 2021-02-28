@@ -32,8 +32,8 @@ namespace Kernel {
 
 class [[gnu::packed]] UDPPacket {
 public:
-    UDPPacket() { }
-    ~UDPPacket() { }
+    UDPPacket() = default;
+    ~UDPPacket() = default;
 
     u16 source_port() const { return m_source_port; }
     void set_source_port(u16 port) { m_source_port = port; }

@@ -101,7 +101,7 @@ inline void delay(size_t microseconds)
 
 class IOAddress {
 public:
-    IOAddress() { }
+    IOAddress() = default;
     explicit IOAddress(u16 address)
         : m_address(address)
     {

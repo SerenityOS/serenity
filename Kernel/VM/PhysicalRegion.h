@@ -39,7 +39,7 @@ class PhysicalRegion : public RefCounted<PhysicalRegion> {
 
 public:
     static NonnullRefPtr<PhysicalRegion> create(PhysicalAddress lower, PhysicalAddress upper);
-    ~PhysicalRegion() { }
+    ~PhysicalRegion() = default;
 
     void expand(PhysicalAddress lower, PhysicalAddress upper);
     unsigned finalize_capacity();

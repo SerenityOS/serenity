@@ -180,7 +180,7 @@ private:
 template<typename SocketType>
 class SocketHandle {
 public:
-    SocketHandle() { }
+    SocketHandle() = default;
 
     SocketHandle(NonnullRefPtr<SocketType>&& socket)
         : m_socket(move(socket))

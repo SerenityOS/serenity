@@ -33,8 +33,8 @@
 
 class [[gnu::packed]] EthernetFrameHeader {
 public:
-    EthernetFrameHeader() { }
-    ~EthernetFrameHeader() { }
+    EthernetFrameHeader() = default;
+    ~EthernetFrameHeader() = default;
 
     MACAddress destination() const { return m_destination; }
     void set_destination(const MACAddress& address) { m_destination = address; }

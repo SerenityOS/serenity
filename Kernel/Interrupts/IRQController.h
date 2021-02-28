@@ -39,7 +39,7 @@ enum class IRQControllerType {
 
 class IRQController : public RefCounted<IRQController> {
 public:
-    virtual ~IRQController() { }
+    virtual ~IRQController() = default;
 
     virtual void enable(const GenericInterruptHandler&) = 0;
     virtual void disable(const GenericInterruptHandler&) = 0;
@@ -57,7 +57,7 @@ public:
     virtual IRQControllerType type() const = 0;
 
 protected:
-    IRQController() { }
+    IRQController() = default;
     virtual void initialize() = 0;
     bool m_hard_disabled { false };
 };

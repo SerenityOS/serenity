@@ -39,7 +39,7 @@ public:
     explicit KBufferBuilder(bool can_expand = false);
     explicit KBufferBuilder(RefPtr<KBufferImpl>&, bool can_expand = false);
     KBufferBuilder(KBufferBuilder&&) = default;
-    ~KBufferBuilder() { }
+    ~KBufferBuilder() = default;
 
     void append(const StringView&);
     void append(char);

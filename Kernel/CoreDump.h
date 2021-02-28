@@ -41,7 +41,7 @@ class CoreDump {
 public:
     static OwnPtr<CoreDump> create(NonnullRefPtr<Process>, const String& output_path);
 
-    ~CoreDump();
+    ~CoreDump() = default;
     [[nodiscard]] KResult write();
 
 private:
