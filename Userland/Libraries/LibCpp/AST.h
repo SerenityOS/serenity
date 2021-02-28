@@ -226,6 +226,7 @@ public:
     }
 
     StringView m_name;
+    Vector<StringView> m_qualifiers;
 };
 
 class Pointer : public Type {
