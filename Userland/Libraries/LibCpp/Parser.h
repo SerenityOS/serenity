@@ -160,6 +160,7 @@ private:
     RefPtr<TranslationUnit> m_root_node;
     NonnullRefPtrVector<ASTNode> m_nodes;
     Vector<String> m_errors;
+    Vector<StringView> parse_type_qualifiers();
 };
 
 }

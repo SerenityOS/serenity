@@ -82,7 +82,10 @@ void Type::dump(size_t indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    outln("{}", m_name);
+    String qualifiers_string;
+    if(!m_qualifiers.is_empty())
+        qualifiers_string = String::formatted("[{}] ", String::join(" ", m_qualifiers));
+    outln("{}{}", qualifiers_string, m_name);
 }
 
 void Parameter::dump(size_t indent) const
