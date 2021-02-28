@@ -62,6 +62,7 @@ Value Interpreter::run(GlobalObject& global_object, const Program& program)
     VM::InterpreterExecutionScope scope(*this);
 
     CallFrame global_call_frame;
+    global_call_frame.current_node = &program;
     global_call_frame.this_value = &global_object;
     static FlyString global_execution_context_name = "(global execution context)";
     global_call_frame.function_name = global_execution_context_name;
@@ -140,6 +141,7 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
 
 void Interpreter::enter_node(const ASTNode& node)
 {
+    vm().call_frame().current_node = &node;
     vm().push_ast_node(node);
 }
 

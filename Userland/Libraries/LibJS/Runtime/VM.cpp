@@ -211,6 +211,7 @@ Reference VM::get_reference(const FlyString& name)
 Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject& global_object)
 {
     CallFrame call_frame;
+    call_frame.current_node = function.vm().node_stack().last();
     call_frame.is_strict_mode = function.is_strict_mode();
 
     push_call_frame(call_frame, function.global_object());
@@ -285,10 +286,11 @@ void VM::throw_exception(Exception* exception)
         dbgln("Throwing JavaScript Error: {}, {}", error.name(), error.message());
 
         for (ssize_t i = m_call_stack.size() - 1; i >= 0; --i) {
+            const auto& source_range = m_call_stack[i]->current_node->source_range();
             auto function_name = m_call_stack[i]->function_name;
             if (function_name.is_empty())
                 function_name = "<anonymous>";
-            dbgln("  {}", function_name);
+            dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
         }
     }
 
@@ -333,6 +335,7 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     VERIFY(!exception());
 
     CallFrame call_frame;
+    call_frame.current_node = function.vm().node_stack().last();
     call_frame.is_strict_mode = function.is_strict_mode();
     call_frame.function_name = function.name();
     call_frame.this_value = function.bound_this().value_or(this_value);
