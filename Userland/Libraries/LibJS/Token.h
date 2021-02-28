@@ -181,11 +181,12 @@ enum class TokenCategory {
 
 class Token {
 public:
-    Token(TokenType type, String message, StringView trivia, StringView value, size_t line_number, size_t line_column)
+    Token(TokenType type, String message, StringView trivia, StringView value, StringView filename, size_t line_number, size_t line_column)
         : m_type(type)
         , m_message(message)
         , m_trivia(trivia)
         , m_value(value)
+        , m_filename(filename)
         , m_line_number(line_number)
         , m_line_column(line_column)
     {
@@ -200,6 +201,7 @@ public:
     const String& message() const { return m_message; }
     const StringView& trivia() const { return m_trivia; }
     const StringView& value() const { return m_value; }
+    const StringView& filename() const { return m_filename; }
     size_t line_number() const { return m_line_number; }
     size_t line_column() const { return m_line_column; }
     double double_value() const;
@@ -222,6 +224,7 @@ private:
     String m_message;
     StringView m_trivia;
     StringView m_value;
+    StringView m_filename;
     size_t m_line_number;
     size_t m_line_column;
 };
