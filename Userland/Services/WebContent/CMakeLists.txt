@@ -5,6 +5,7 @@ set(SOURCES
     ClientConnection.cpp
     main.cpp
     PageHost.cpp
+    WebContentConsoleClient.cpp
     WebContentServerEndpoint.h
     WebContentClientEndpoint.h
 )

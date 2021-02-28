@@ -22,4 +22,6 @@ endpoint WebContentServer = 89
 
     DebugRequest(String request, String argument) =|
     GetSource() =|
+    JSConsoleInitialize() =|
+    JSConsoleInput(String js_source) =|
 }

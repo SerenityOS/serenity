@@ -28,9 +28,11 @@
 
 #include <AK/HashMap.h>
 #include <LibIPC/ClientConnection.h>
+#include <LibJS/Forward.h>
 #include <LibWeb/Forward.h>
 #include <WebContent/Forward.h>
 #include <WebContent/WebContentClientEndpoint.h>
+#include <WebContent/WebContentConsoleClient.h>
 #include <WebContent/WebContentServerEndpoint.h>
 
 namespace WebContent {
@@ -65,11 +67,12 @@ private:
     virtual void handle(const Messages::WebContentServer::RemoveBackingStore&) override;
     virtual void handle(const Messages::WebContentServer::DebugRequest&) override;
     virtual void handle(const Messages::WebContentServer::GetSource&) override;
+    virtual void handle(const Messages::WebContentServer::JSConsoleInitialize&) override;
+    virtual void handle(const Messages::WebContentServer::JSConsoleInput&) override;
 
     void flush_pending_paint_requests();
 
     NonnullOwnPtr<PageHost> m_page_host;
-
     struct PaintRequest {
         Gfx::IntRect content_rect;
         NonnullRefPtr<Gfx::Bitmap> bitmap;
@@ -79,6 +82,9 @@ private:
     RefPtr<Core::Timer> m_paint_flush_timer;
 
     HashMap<i32, NonnullRefPtr<Gfx::Bitmap>> m_backing_stores;
+
+    WeakPtr<JS::Interpreter> m_interpreter;
+    OwnPtr<WebContentConsoleClient> m_console_client;
 };
 
 }

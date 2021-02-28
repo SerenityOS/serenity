@@ -28,7 +28,10 @@
 #include <AK/Debug.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibJS/Console.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Parser.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
@@ -214,6 +217,25 @@ void ClientConnection::handle(const Messages::WebContentServer::GetSource&)
     if (auto* doc = page().main_frame().document()) {
         post_message(Messages::WebContentClient::DidGetSource(doc->url(), doc->source()));
     }
+}
+
+void ClientConnection::handle(const Messages::WebContentServer::JSConsoleInitialize&)
+{
+    if (auto* document = page().main_frame().document()) {
+        auto interpreter = document->interpreter().make_weak_ptr();
+        if (m_interpreter.ptr() == interpreter.ptr())
+            return;
+
+        m_interpreter = interpreter;
+        m_console_client = make<WebContentConsoleClient>(interpreter->global_object().console(), interpreter, *this);
+        interpreter->global_object().console().set_client(*m_console_client.ptr());
+    }
+}
+
+void ClientConnection::handle(const Messages::WebContentServer::JSConsoleInput& message)
+{
+    if (m_console_client)
+        m_console_client->handle_input(message.js_source());
 }
 
 }
