@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -325,7 +325,7 @@ Position Sheet::offset_relative_to(const Position& base, const Position& offset,
     return { new_column, new_row };
 }
 
-void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to)
+void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to, CopyOperation copy_operation)
 {
     auto copy_to = [&](auto& source_position, Position target_position) {
         auto& target_cell = ensure(target_position);
@@ -337,6 +337,8 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
         }
 
         target_cell.copy_from(*source_cell);
+        if (copy_operation == CopyOperation::Cut)
+            source_cell->set_data("");
     };
 
     if (from.size() == to.size()) {

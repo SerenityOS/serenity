@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -157,13 +157,16 @@ int main(int argc, char* argv[])
     };
 
     auto& edit_menu = menubar->add_menu("Edit");
-    edit_menu.add_action(GUI::CommonActions::make_copy_action([&](auto&) {
+
+    auto clipboard_action = [&](bool is_cut) {
         /// text/x-spreadsheet-data:
+        /// - action: copy/cut
         /// - currently selected cell
         /// - selected cell+
         auto& cells = spreadsheet_widget.current_worksheet().selected_cells();
         VERIFY(!cells.is_empty());
         StringBuilder text_builder, url_builder;
+        url_builder.append(is_cut ? "cut\n" : "copy\n");
         bool first = true;
         auto cursor = spreadsheet_widget.current_selection_cursor();
         if (cursor) {
@@ -190,10 +193,13 @@ int main(int argc, char* argv[])
         }
         HashMap<String, String> metadata;
         metadata.set("text/x-spreadsheet-data", url_builder.to_string());
+        dbgln(url_builder.to_string());
 
         GUI::Clipboard::the().set_data(text_builder.string_view().bytes(), "text/plain", move(metadata));
-    },
-        window));
+    };
+
+    edit_menu.add_action(GUI::CommonActions::make_copy_action([&] { clipboard_action(false); }, window));
+    edit_menu.add_action(GUI::CommonActions::make_cut_action([&] { clipboard_action(true); }, window));
     edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
         ScopeGuard update_after_paste { [&] { spreadsheet_widget.update(); } };
 
@@ -203,8 +209,10 @@ int main(int argc, char* argv[])
         if (auto spreadsheet_data = data.metadata.get("text/x-spreadsheet-data"); spreadsheet_data.has_value()) {
             Vector<Spreadsheet::Position> source_positions, target_positions;
             auto& sheet = spreadsheet_widget.current_worksheet();
+            auto lines = spreadsheet_data.value().split_view('\n');
+            auto action = lines.take_first();
 
-            for (auto& line : spreadsheet_data.value().split_view('\n')) {
+            for (auto& line : lines) {
                 dbgln("Paste line '{}'", line);
                 auto position = sheet.position_from_url(line);
                 if (position.has_value())
@@ -218,7 +226,7 @@ int main(int argc, char* argv[])
                 return;
 
             auto first_position = source_positions.take_first();
-            sheet.copy_cells(move(source_positions), move(target_positions), first_position);
+            sheet.copy_cells(move(source_positions), move(target_positions), first_position, action == "cut" ? Spreadsheet::Sheet::CopyOperation::Cut : Spreadsheet::Sheet::CopyOperation::Copy);
         } else {
             for (auto& cell : spreadsheet_widget.current_worksheet().selected_cells())
                 spreadsheet_widget.current_worksheet().ensure(cell).set_data(StringView { data.data.data(), data.data.size() });

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -140,7 +140,12 @@ public:
 
     const Workbook& workbook() const { return m_workbook; }
 
-    void copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to = {});
+    enum class CopyOperation {
+        Copy,
+        Cut
+    };
+
+    void copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to = {}, CopyOperation copy_operation = CopyOperation::Copy);
 
     /// Gives the bottom-right corner of the smallest bounding box containing all the written data.
     Position written_data_bounds() const;
