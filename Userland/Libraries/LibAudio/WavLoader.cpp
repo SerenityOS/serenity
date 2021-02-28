@@ -192,8 +192,8 @@ bool WavLoaderPlugin::parse_header()
     u16 audio_format = read_u16();
     CHECK_OK("Audio format");     // incomplete read check
     ok = ok && audio_format == 1; // WAVE_FORMAT_PCM
+    CHECK_OK("Audio format");     // value check
     VERIFY(audio_format == 1);
-    CHECK_OK("Audio format"); // value check
 
     m_num_channels = read_u16();
     ok = ok && (m_num_channels == 1 || m_num_channels == 2);
@@ -211,8 +211,8 @@ bool WavLoaderPlugin::parse_header()
     m_bits_per_sample = read_u16();
     CHECK_OK("Bits per sample"); // incomplete read check
     ok = ok && (m_bits_per_sample == 8 || m_bits_per_sample == 16 || m_bits_per_sample == 24);
-    VERIFY(m_bits_per_sample == 8 || m_bits_per_sample == 16 || m_bits_per_sample == 24);
     CHECK_OK("Bits per sample"); // value check
+    VERIFY(m_bits_per_sample == 8 || m_bits_per_sample == 16 || m_bits_per_sample == 24);
 
     // Read chunks until we find DATA
     bool found_data = false;
