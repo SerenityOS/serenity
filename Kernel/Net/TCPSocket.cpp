@@ -242,8 +242,7 @@ void TCPSocket::send_outgoing_packets()
 
     LOCKER(m_not_acked_lock, Lock::Mode::Shared);
     for (auto& packet : m_not_acked) {
-        // FIXME: This doesn't look correct to me. Bug?
-        auto diff = packet.tx_time - now;
+        auto diff = now - packet.tx_time;
         if (diff <= Time::from_nanoseconds(500'000'000))
             continue;
         packet.tx_time = now;
