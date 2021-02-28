@@ -378,6 +378,7 @@ apic_ap_start32_2:
 .global apic_ap_start_size
 apic_ap_start_size:
     .2byte end_apic_ap_start - apic_ap_start
+.align 4
 ap_cpu_id:
     .4byte 0x0
 ap_cpu_gdt:
