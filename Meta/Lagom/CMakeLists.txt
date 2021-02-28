@@ -177,13 +177,6 @@ if (BUILD_LAGOM)
                 # FIXME: Only TestJSON needs this property
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../AK/Tests
             )
-
-            set_tests_properties(
-                ${name}_lagom
-                PROPERTIES
-                    FAIL_REGULAR_EXPRESSION
-                    "FAIL"
-            )
         endforeach()
 
         foreach(source ${LIBREGEX_TESTS})
@@ -194,13 +187,6 @@ if (BUILD_LAGOM)
                 NAME ${name}_lagom
                 COMMAND ${name}_lagom
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            )
-
-            set_tests_properties(
-                ${name}_lagom
-                PROPERTIES
-                    FAIL_REGULAR_EXPRESSION
-                    "FAIL"
             )
         endforeach()
     endif()
