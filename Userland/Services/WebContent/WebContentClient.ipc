@@ -18,4 +18,5 @@ endpoint WebContentClient = 90
     DidRequestConfirm(String message) => (bool result)
     DidRequestPrompt(String message, String default_) => (String response)
     DidGetSource(URL url, String source) =|
+    DidJSConsoleOutput(String method, String line) =|
 }
