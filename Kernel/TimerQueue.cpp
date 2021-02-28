@@ -137,12 +137,12 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
     }
 }
 
-TimerId TimerQueue::add_timer(clockid_t clock_id, timeval& deadline, Function<void()>&& callback)
+TimerId TimerQueue::add_timer(clockid_t clock_id, const Time& deadline, Function<void()>&& callback)
 {
     // FIXME: Should use AK::Time internally
-    auto expires = TimeManagement::the().current_time(clock_id).value();
-    timespec_add_timeval(expires, deadline, expires);
-    return add_timer(adopt(*new Timer(clock_id, Time::from_timespec(expires), move(callback))));
+    auto expires = Time::from_timespec(TimeManagement::the().current_time(clock_id).value());
+    expires = expires + deadline;
+    return add_timer(adopt(*new Timer(clock_id, expires, move(callback))));
 }
 
 bool TimerQueue::cancel_timer(TimerId id)
