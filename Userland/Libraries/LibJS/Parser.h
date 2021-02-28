@@ -222,6 +222,7 @@ private:
 
     Vector<Position> m_rule_starts;
     ParserState m_parser_state;
+    FlyString m_filename;
     Vector<ParserState> m_saved_state;
 };
 }

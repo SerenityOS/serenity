@@ -36,11 +36,12 @@ namespace JS {
 
 class Lexer {
 public:
-    explicit Lexer(StringView source);
+    explicit Lexer(StringView source, StringView filename = "(unknown)", size_t line_number = 1, size_t line_column = 0);
 
     Token next();
 
     const StringView& source() const { return m_source; };
+    const StringView& filename() const { return m_filename; };
 
 private:
     void consume();
@@ -65,6 +66,8 @@ private:
     size_t m_position { 0 };
     Token m_current_token;
     char m_current_char { 0 };
+
+    StringView m_filename;
     size_t m_line_number { 1 };
     size_t m_line_column { 0 };
 
