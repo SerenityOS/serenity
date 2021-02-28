@@ -58,9 +58,7 @@ public:
         // at the end of the memory block.
         VERIFY(m_total_chunks * CHUNK_SIZE + (m_total_chunks + 7) / 8 <= memory_size);
     }
-    ~Heap()
-    {
-    }
+    ~Heap() = default;
 
     static size_t calculate_memory_for_bytes(size_t bytes)
     {

@@ -68,7 +68,7 @@ public:
 
 private:
     PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);
-    ~PhysicalPage() { }
+    ~PhysicalPage() = default;
 
     void return_to_freelist() const;
 

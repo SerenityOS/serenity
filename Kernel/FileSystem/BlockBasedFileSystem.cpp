@@ -51,7 +51,7 @@ public:
         }
     }
 
-    ~DiskCache() { }
+    ~DiskCache() = default;
 
     bool is_dirty() const { return m_dirty; }
     void set_dirty(bool b) { m_dirty = b; }

@@ -47,7 +47,7 @@ class HardwareTimer;
 class HardwareTimerBase
     : public RefCounted<HardwareTimerBase> {
 public:
-    virtual ~HardwareTimerBase() { }
+    virtual ~HardwareTimerBase() = default;
 
     // We need to create a virtual will_be_destroyed here because we derive
     // from RefCounted<HardwareTimerBase> here, which means that RefCounted<>
