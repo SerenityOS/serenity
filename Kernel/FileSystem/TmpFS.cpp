@@ -280,8 +280,7 @@ KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(const String& name, mod
     if (dev != 0)
         return ENOTSUP;
 
-    struct timeval now;
-    kgettimeofday(now);
+    struct timeval now = kgettimeofday();
 
     InodeMetadata metadata;
     metadata.mode = mode;
