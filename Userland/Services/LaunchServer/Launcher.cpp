@@ -41,7 +41,7 @@
 namespace LaunchServer {
 
 static Launcher* s_the;
-static bool spawn(String executable, String argument);
+static bool spawn(String executable, const Vector<String>& arguments);
 
 String Handler::name_from_executable(const StringView& executable)
 {
@@ -191,14 +191,18 @@ bool Launcher::open_with_handler_name(const URL& url, const String& handler_name
         argument = url.path();
     else
         argument = url.to_string();
-    return spawn(handler.executable, argument);
+    return spawn(handler.executable, { argument });
 }
 
-bool spawn(String executable, String argument)
+bool spawn(String executable, const Vector<String>& arguments)
 {
+    Vector<const char*> argv { executable.characters() };
+    for (auto& arg : arguments)
+        argv.append(arg.characters());
+    argv.append(nullptr);
+
     pid_t child_pid;
-    const char* argv[] = { executable.characters(), argument.characters(), nullptr };
-    if ((errno = posix_spawn(&child_pid, executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
+    if ((errno = posix_spawn(&child_pid, executable.characters(), nullptr, nullptr, const_cast<char**>(argv.data()), environ))) {
         perror("posix_spawn");
         return false;
     } else {
@@ -225,16 +229,16 @@ bool Launcher::open_with_user_preferences(const HashMap<String, String>& user_pr
 {
     auto program_path = user_preferences.get(key);
     if (program_path.has_value())
-        return spawn(program_path.value(), argument);
+        return spawn(program_path.value(), { argument });
 
     // There wasn't a handler for this, so try the fallback instead
     program_path = user_preferences.get("*");
     if (program_path.has_value())
-        return spawn(program_path.value(), argument);
+        return spawn(program_path.value(), { argument });
 
     // Absolute worst case, try the provided default program, if any
     if (!default_program.is_empty())
-        return spawn(default_program, argument);
+        return spawn(default_program, { argument });
 
     return false;
 }
@@ -295,7 +299,7 @@ bool Launcher::open_file_url(const URL& url)
 
     // TODO: Make directory opening configurable
     if (S_ISDIR(st.st_mode))
-        return spawn("/bin/FileManager", url.path());
+        return spawn("/bin/FileManager", { url.path() });
 
     if ((st.st_mode & S_IFMT) == S_IFREG && st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
         return spawn(url.path(), {});
