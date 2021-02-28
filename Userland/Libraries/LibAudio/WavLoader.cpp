@@ -125,7 +125,7 @@ bool WavLoaderPlugin::parse_header()
                 ok = false;
         } else {
             *m_stream >> value;
-            if (m_stream->has_any_error())
+            if (m_stream->handle_any_error())
                 ok = false;
         }
         return value;
@@ -139,7 +139,7 @@ bool WavLoaderPlugin::parse_header()
                 ok = false;
         } else {
             *m_stream >> value;
-            if (m_stream->has_any_error())
+            if (m_stream->handle_any_error())
                 ok = false;
         }
         return value;
@@ -153,7 +153,7 @@ bool WavLoaderPlugin::parse_header()
                 ok = false;
         } else {
             *m_stream >> value;
-            if (m_stream->has_any_error())
+            if (m_stream->handle_any_error())
                 ok = false;
         }
         return value;
