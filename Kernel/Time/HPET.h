@@ -46,6 +46,8 @@ public:
     static HPET& the();
 
     u64 frequency() const { return m_frequency; }
+    u64 raw_counter_ticks_to_ns(u64) const;
+    u64 ns_to_raw_counter_ticks(u64) const;
 
     const NonnullRefPtrVector<HPETComparator>& comparators() const { return m_comparators; }
     void disable(const HPETComparator&);
@@ -60,6 +62,7 @@ public:
     void disable_periodic_interrupt(const HPETComparator& comparator);
 
     u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
+    u64 read_main_counter_unsafe() const;
     u64 read_main_counter() const;
 
     Vector<unsigned> capable_interrupt_numbers(u8 comparator_number);
@@ -75,7 +78,7 @@ private:
     bool is_periodic_capable(u8 comparator_number);
     void set_comparators_to_optimal_interrupt_state(size_t timers_count);
 
-    u64 calculate_ticks_in_nanoseconds() const;
+    u64 nanoseconds_to_raw_ticks() const;
 
     PhysicalAddress find_acpi_hpet_registers_block();
     explicit HPET(PhysicalAddress acpi_hpet);

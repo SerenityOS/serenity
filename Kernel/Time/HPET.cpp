@@ -38,7 +38,7 @@ namespace Kernel {
 
 #define ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD 0x05F5E100
 #define NANOSECOND_PERIOD_TO_HERTZ(x) 1000000000 / x
-#define MEGAHERTZ_TO_HERTZ(x) (x / 1000000)
+#define HERTZ_TO_MEGAHERTZ(x) (x / 1000000)
 
 namespace HPETFlags {
 enum class Attributes {
@@ -220,7 +220,7 @@ void HPET::update_periodic_comparator_value()
             // way to resume periodic timers properly because we reset the main counter
             // and we can only write the period into the comparator value...
             timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::ValueSet;
-            u64 value = frequency() / comparator.ticks_per_second();
+            u64 value = ns_to_raw_counter_ticks(1000000000ull / comparator.ticks_per_second());
             dbgln_if(HPET_DEBUG, "HPET: Update periodic comparator {} comparator value to {} main value was: {}",
                 comparator.comparator_number(),
                 value,
@@ -250,11 +250,10 @@ void HPET::update_non_periodic_comparator_value(const HPETComparator& comparator
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(!comparator.is_periodic());
     VERIFY(comparator.comparator_number() <= m_comparators.size());
-    auto& regs = registers();
-    auto& timer = regs.get_timer_by_index(comparator.comparator_number());
+    auto& timer = registers().get_timer_by_index(comparator.comparator_number());
     u64 value = frequency() / comparator.ticks_per_second();
     // NOTE: If the main counter passes this new value before we finish writing it, we will never receive an interrupt!
-    u64 new_counter_value = read_register_safe64(regs.main_counter_value) + value;
+    u64 new_counter_value = read_main_counter() + value;
     timer.comparator_value.high = (u32)(new_counter_value >> 32);
     timer.comparator_value.low = (u32)new_counter_value;
 }
@@ -262,7 +261,7 @@ void HPET::update_non_periodic_comparator_value(const HPETComparator& comparator
 u64 HPET::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
 {
     // Should only be called by the time keeper interrupt handler!
-    u64 current_value = read_register_safe64(registers().main_counter_value);
+    u64 current_value = read_main_counter();
     u64 delta_ticks = m_main_counter_drift;
     if (current_value >= m_main_counter_last_read)
         delta_ticks += current_value - m_main_counter_last_read;
@@ -286,10 +285,15 @@ u64 HPET::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool quer
     return (delta_ticks * 1000000000ull) / ticks_per_second;
 }
 
-u64 HPET::read_main_counter() const
+u64 HPET::read_main_counter_unsafe() const
 {
     auto& main_counter = registers().main_counter_value;
     return ((u64)main_counter.high << 32) | (u64)main_counter.low;
+}
+
+u64 HPET::read_main_counter() const
+{
+    return read_register_safe64(registers().main_counter_value);
 }
 
 void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
@@ -405,10 +409,15 @@ HPETRegistersBlock& HPET::registers()
     return *(HPETRegistersBlock*)m_hpet_mmio_region->vaddr().offset(m_physical_acpi_hpet_registers.offset_in_page()).as_ptr();
 }
 
-u64 HPET::calculate_ticks_in_nanoseconds() const
+u64 HPET::raw_counter_ticks_to_ns(u64 raw_ticks) const
 {
     // ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD == 100 nanoseconds
-    return ((u64)registers().capabilities.main_counter_tick_period * 100ull) / ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD;
+    return (raw_ticks * (u64)registers().capabilities.main_counter_tick_period * 100ull) / ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD;
+}
+
+u64 HPET::ns_to_raw_counter_ticks(u64 ns) const
+{
+    return (ns * 1000000ull) / (u64)registers().capabilities.main_counter_tick_period;
 }
 
 UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
@@ -438,8 +447,8 @@ UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
 
     global_disable();
 
-    m_frequency = NANOSECOND_PERIOD_TO_HERTZ(calculate_ticks_in_nanoseconds());
-    klog() << "HPET: frequency " << m_frequency << " Hz (" << MEGAHERTZ_TO_HERTZ(m_frequency) << " MHz) resolution: " << calculate_ticks_in_nanoseconds() << "ns";
+    m_frequency = NANOSECOND_PERIOD_TO_HERTZ(raw_counter_ticks_to_ns(1));
+    klog() << "HPET: frequency " << m_frequency << " Hz (" << HERTZ_TO_MEGAHERTZ(m_frequency) << " MHz) resolution: " << raw_counter_ticks_to_ns(1) << "ns";
     VERIFY(regs.capabilities.main_counter_tick_period <= ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD);
 
     // Reset the counter, just in case... (needs to match m_main_counter_last_read)
