@@ -67,7 +67,7 @@ public:
     KResult send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl);
     KResult send_ipv4_fragmented(const MACAddress&, const IPv4Address&, IPv4Protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl);
 
-    size_t dequeue_packet(u8* buffer, size_t buffer_size, timeval& packet_timestamp);
+    size_t dequeue_packet(u8* buffer, size_t buffer_size, Time& packet_timestamp);
 
     bool has_queued_packets() const { return !m_packet_queue.is_empty(); }
 
@@ -96,7 +96,7 @@ private:
 
     struct PacketWithTimestamp {
         KBuffer packet;
-        timeval timestamp;
+        Time timestamp;
     };
 
     SinglyLinkedList<PacketWithTimestamp> m_packet_queue;

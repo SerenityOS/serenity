@@ -269,7 +269,7 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
     return nreceived;
 }
 
-KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, timeval& packet_timestamp)
+KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, Time& packet_timestamp)
 {
     Locker locker(lock());
     ReceivedPacket packet;
@@ -352,7 +352,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
     return protocol_receive(ReadonlyBytes { packet.data.value().data(), packet.data.value().size() }, buffer, buffer_length, flags);
 }
 
-KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, timeval& packet_timestamp)
+KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, Time& packet_timestamp)
 {
     if (user_addr_length) {
         socklen_t addr_length;
@@ -377,7 +377,7 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKerne
     return nreceived;
 }
 
-bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet, const timeval& packet_timestamp)
+bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet, const Time& packet_timestamp)
 {
     LOCKER(lock());
 

@@ -285,8 +285,7 @@ auto Thread::WriteBlocker::override_timeout(const BlockTimeout& timeout) -> cons
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_send_timeout()) {
-            // FIXME: Should use AK::Time internally
-            Time send_timeout = Time::from_timeval(socket.send_timeout());
+            Time send_timeout = socket.send_timeout();
             m_timeout = BlockTimeout(false, &send_timeout, timeout.start_time(), timeout.clock_id());
             if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
                 return m_timeout;
@@ -306,8 +305,7 @@ auto Thread::ReadBlocker::override_timeout(const BlockTimeout& timeout) -> const
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_receive_timeout()) {
-            // FIXME: Should use AK::Time internally
-            Time receive_timeout = Time::from_timeval(socket.receive_timeout());
+            Time receive_timeout = socket.receive_timeout();
             m_timeout = BlockTimeout(false, &receive_timeout, timeout.start_time(), timeout.clock_id());
             if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
                 return m_timeout;

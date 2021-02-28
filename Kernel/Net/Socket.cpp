@@ -110,8 +110,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
             auto timeout = copy_time_from_user(static_ptr_cast<const timeval*>(user_value));
             if (!timeout.has_value())
                 return EFAULT;
-            // FIXME: Should use AK::Time internally
-            m_send_timeout = timeout->to_timeval();
+            m_send_timeout = timeout.value();
         }
         return KSuccess;
     case SO_RCVTIMEO:
@@ -121,8 +120,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
             auto timeout = copy_time_from_user(static_ptr_cast<const timeval*>(user_value));
             if (!timeout.has_value())
                 return EFAULT;
-            // FIXME: Should use AK::Time internally
-            m_receive_timeout = timeout->to_timeval();
+            m_receive_timeout = timeout.value();
         }
         return KSuccess;
     case SO_BINDTODEVICE: {
@@ -178,8 +176,11 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
     case SO_SNDTIMEO:
         if (size < sizeof(timeval))
             return EINVAL;
-        if (!copy_to_user(static_ptr_cast<timeval*>(value), &m_send_timeout))
-            return EFAULT;
+        {
+            timeval tv = m_send_timeout.to_timeval();
+            if (!copy_to_user(static_ptr_cast<timeval*>(value), &tv))
+                return EFAULT;
+        }
         size = sizeof(timeval);
         if (!copy_to_user(value_size, &size))
             return EFAULT;
@@ -187,8 +188,11 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
     case SO_RCVTIMEO:
         if (size < sizeof(timeval))
             return EINVAL;
-        if (!copy_to_user(static_ptr_cast<timeval*>(value), &m_receive_timeout))
-            return EFAULT;
+        {
+            timeval tv = m_send_timeout.to_timeval();
+            if (!copy_to_user(static_ptr_cast<timeval*>(value), &tv))
+                return EFAULT;
+        }
         size = sizeof(timeval);
         if (!copy_to_user(value_size, &size))
             return EFAULT;
@@ -243,8 +247,8 @@ KResultOr<size_t> Socket::read(FileDescription& description, size_t, UserOrKerne
 {
     if (is_shut_down_for_reading())
         return 0;
-    timeval tv;
-    return recvfrom(description, buffer, size, 0, {}, 0, tv);
+    Time t {};
+    return recvfrom(description, buffer, size, 0, {}, 0, t);
 }
 
 KResultOr<size_t> Socket::write(FileDescription& description, size_t, const UserOrKernelBuffer& data, size_t size)
