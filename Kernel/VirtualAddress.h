@@ -31,7 +31,7 @@
 
 class VirtualAddress {
 public:
-    VirtualAddress() { }
+    VirtualAddress() = default;
     explicit VirtualAddress(FlatPtr address)
         : m_address(address)
     {

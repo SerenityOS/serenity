@@ -40,7 +40,7 @@ namespace Kernel {
 
 class FileDescriptionData {
 public:
-    virtual ~FileDescriptionData() { }
+    virtual ~FileDescriptionData() = default;
 };
 
 class FileDescription : public RefCounted<FileDescription> {

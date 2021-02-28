@@ -62,10 +62,6 @@ CoreDump::CoreDump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription
 {
 }
 
-CoreDump::~CoreDump()
-{
-}
-
 RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, const String& output_path)
 {
     LexicalPath lexical_path(output_path);

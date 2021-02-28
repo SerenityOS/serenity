@@ -37,7 +37,8 @@ namespace Kernel {
 struct GUIDPartitionHeader;
 class GUIDPartitionTable final : public MBRPartitionTable {
 public:
-    virtual ~GUIDPartitionTable() {};
+    virtual ~GUIDPartitionTable() = default;
+    ;
 
     static Result<NonnullOwnPtr<GUIDPartitionTable>, PartitionTable::Error> try_to_initialize(const StorageDevice&);
     explicit GUIDPartitionTable(const StorageDevice&);
