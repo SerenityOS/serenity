@@ -56,6 +56,7 @@ struct ScopeFrame {
 };
 
 struct CallFrame {
+    const ASTNode* current_node;
     FlyString function_name;
     Value this_value;
     Vector<Value> arguments;
