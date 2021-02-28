@@ -238,7 +238,8 @@ void TCPSocket::send_outgoing_packets()
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     VERIFY(!routing_decision.is_zero());
 
-    auto now = kgettimeofday();
+    // FIXME: Should use AK::Time internally
+    auto now = kgettimeofday().to_timeval();
 
     LOCKER(m_not_acked_lock, Lock::Mode::Shared);
     for (auto& packet : m_not_acked) {

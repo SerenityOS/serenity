@@ -77,7 +77,7 @@ void SlavePTY::on_master_write(const UserOrKernelBuffer& buffer, ssize_t size)
 
 ssize_t SlavePTY::on_tty_write(const UserOrKernelBuffer& data, ssize_t size)
 {
-    m_time_of_last_write = kgettimeofday().tv_sec;
+    m_time_of_last_write = kgettimeofday().to_truncated_seconds();
     return m_master->on_slave_write(data, size);
 }
 

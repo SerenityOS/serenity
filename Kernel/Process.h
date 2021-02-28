@@ -54,8 +54,7 @@
 
 namespace Kernel {
 
-// FIXME: Should use AK::Time internally
-timeval kgettimeofday();
+Time kgettimeofday();
 
 #define ENUMERATE_PLEDGE_PROMISES         \
     __ENUMERATE_PLEDGE_PROMISE(stdio)     \
