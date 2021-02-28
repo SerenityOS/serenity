@@ -231,7 +231,7 @@ Optional<MousePacket> VMWareBackdoor::receive_mouse_packet()
     int buttons = (command.ax & 0xFFFF);
     int x = (command.bx);
     int y = (command.cx);
-    int z = (command.dx);
+    int z = (i8)(command.dx); // signed 8 bit value only!
 
     if constexpr (PS2MOUSE_DEBUG) {
         dbgln("Absolute Mouse: Buttons {:x}", buttons);
