@@ -386,11 +386,6 @@ timeval kgettimeofday()
     return TimeManagement::now().to_timeval();
 }
 
-void kgettimeofday(timeval& tv)
-{
-    tv = kgettimeofday();
-}
-
 siginfo_t Process::wait_info()
 {
     siginfo_t siginfo {};
