@@ -36,6 +36,7 @@ struct Position {
 };
 
 struct SourceRange {
+    StringView filename;
     Position start;
     Position end;
 };
