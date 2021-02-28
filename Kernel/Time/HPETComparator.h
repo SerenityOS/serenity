@@ -51,6 +51,9 @@ public:
     virtual void set_periodic() override;
     virtual void set_non_periodic() override;
     virtual void disable() override;
+    virtual bool can_query_raw() const override { return true; }
+    virtual u64 current_raw() const override;
+    virtual u64 raw_to_ns(u64) const override;
 
     virtual void reset_to_default_ticks_per_second() override;
     virtual bool try_to_set_frequency(size_t frequency) override;
