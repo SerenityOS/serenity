@@ -1,0 +1,10 @@
+# SerenityOS Tips
+# Did you know...
+Pressing Ctrl+Alt+Space at an insertion caret pops up the emoji picker.
+Holding Super while scrolling the mouse wheel over a window adjusts its transparency.
+Browser has built-in ad blocking. Filter content by adding new domains to ~/.config/BrowserContentFiltering.txt
+Default file and protocol associations can be changed in ~/.config/LaunchServer.ini
+Text Editor has multiple viewing modes; edit and preview HTML and Markdown in real time.
+It can help to get a second pair of $ Eyes on a problem. Or fifty: $ Eyes -n 100
+Highlighted text in Terminal can be launched or right-clicked for more context.
+Focus can be cycled between windows by pressing and holding Super+Tab. Shift reverses the order.

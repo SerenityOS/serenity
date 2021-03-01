@@ -27,5 +27,6 @@ alias ws=WebServer
 alias sl=Solitaire
 alias wv=WebView
 alias ue=UserspaceEmulator
+alias welcome=Serendipity
 
 alias ll='ls -l'
