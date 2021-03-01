@@ -242,7 +242,7 @@ public:
     KResultOr<int> sys$close(int fd);
     KResultOr<ssize_t> sys$read(int fd, Userspace<u8*>, ssize_t);
     KResultOr<ssize_t> sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count);
-    KResultOr<ssize_t> sys$write(int fd, const u8*, ssize_t);
+    KResultOr<ssize_t> sys$write(int fd, Userspace<const u8*>, ssize_t);
     KResultOr<ssize_t> sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count);
     KResultOr<int> sys$fstat(int fd, Userspace<stat*>);
     KResultOr<int> sys$stat(Userspace<const Syscall::SC_stat_params*>);
