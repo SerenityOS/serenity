@@ -253,11 +253,11 @@ public:
     KResultOr<pid_t> sys$waitid(Userspace<const Syscall::SC_waitid_params*>);
     KResultOr<FlatPtr> sys$mmap(Userspace<const Syscall::SC_mmap_params*>);
     KResultOr<FlatPtr> sys$mremap(Userspace<const Syscall::SC_mremap_params*>);
-    KResultOr<int> sys$munmap(void*, size_t size);
+    KResultOr<int> sys$munmap(Userspace<void*>, size_t);
     KResultOr<int> sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*>);
-    KResultOr<int> sys$mprotect(void*, size_t, int prot);
-    KResultOr<int> sys$madvise(void*, size_t, int advice);
-    KResultOr<int> sys$msyscall(void*);
+    KResultOr<int> sys$mprotect(Userspace<void*>, size_t, int prot);
+    KResultOr<int> sys$madvise(Userspace<void*>, size_t, int advice);
+    KResultOr<int> sys$msyscall(Userspace<void*>);
     KResultOr<int> sys$purge(int mode);
     KResultOr<int> sys$select(Userspace<const Syscall::SC_select_params*>);
     KResultOr<int> sys$poll(Userspace<const Syscall::SC_poll_params*>);
