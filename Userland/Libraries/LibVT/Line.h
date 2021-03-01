@@ -89,7 +89,7 @@ public:
     ~Line();
 
     struct Cell {
-        u32 code_point {};
+        u32 code_point { ' ' };
         Attribute attribute;
     };
 
