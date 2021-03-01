@@ -38,13 +38,13 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
     return result;
 }
 
-pid_t Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_params)
+KResultOr<pid_t> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_params)
 {
     REQUIRE_PROMISE(proc);
 
     Syscall::SC_waitid_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     switch (params.idtype) {
     case P_ALL:
@@ -62,7 +62,7 @@ pid_t Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_param
         return siginfo_or_error.error();
 
     if (!copy_to_user(params.infop, &siginfo_or_error.value()))
-        return -EFAULT;
+        return EFAULT;
     return 0;
 }
 

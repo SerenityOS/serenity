@@ -69,7 +69,7 @@ asm(
 
 namespace Syscall {
 
-static int handle(RegisterState&, u32 function, u32 arg1, u32 arg2, u32 arg3);
+static KResultOr<FlatPtr> handle(RegisterState&, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3);
 
 UNMAP_AFTER_INIT void initialize()
 {
@@ -78,14 +78,15 @@ UNMAP_AFTER_INIT void initialize()
 }
 
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-typedef int (Process::*Handler)(u32, u32, u32);
+typedef KResultOr<FlatPtr> (Process::*Handler)(FlatPtr, FlatPtr, FlatPtr);
+typedef KResultOr<FlatPtr> (Process::*HandlerWithRegisterState)(RegisterState&);
 #define __ENUMERATE_SYSCALL(x) reinterpret_cast<Handler>(&Process::sys$##x),
 static Handler s_syscall_table[] = {
     ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
 };
 #undef __ENUMERATE_SYSCALL
 
-int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
+KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
 {
     VERIFY_INTERRUPTS_ENABLED();
     auto current_thread = Thread::current();
@@ -102,18 +103,17 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
         }
 
         if (function == SC_exit)
-            process.sys$exit((int)arg1);
+            process.sys$exit(arg1);
         else
             process.sys$exit_thread(arg1);
         VERIFY_NOT_REACHED();
-        return 0;
     }
 
-    if (function == SC_fork)
-        return process.sys$fork(regs);
-
-    if (function == SC_sigreturn)
-        return process.sys$sigreturn(regs);
+    if (function == SC_fork || function == SC_sigreturn) {
+        // These syscalls want the RegisterState& rather than individual parameters.
+        auto handler = (HandlerWithRegisterState)s_syscall_table[function];
+        return (process.*(handler))(regs);
+    }
 
     if (function >= Function::__Count) {
         dbgln("Unknown syscall {} requested ({:08x}, {:08x}, {:08x})", function, arg1, arg2, arg3);
@@ -162,7 +162,7 @@ void syscall_handler(TrapFrame* trap)
     asm volatile(""
                  : "=m"(*ptr));
 
-    static constexpr u32 iopl_mask = 3u << 12;
+    static constexpr FlatPtr iopl_mask = 3u << 12;
 
     if ((regs.eflags & (iopl_mask)) != 0) {
         PANIC("Syscall from process with IOPL != 0");
@@ -192,11 +192,16 @@ void syscall_handler(TrapFrame* trap)
         handle_crash(regs, "Syscall from non-syscall region", SIGSEGV);
     }
 
-    u32 function = regs.eax;
-    u32 arg1 = regs.edx;
-    u32 arg2 = regs.ecx;
-    u32 arg3 = regs.ebx;
-    regs.eax = Syscall::handle(regs, function, arg1, arg2, arg3);
+    auto function = regs.eax;
+    auto arg1 = regs.edx;
+    auto arg2 = regs.ecx;
+    auto arg3 = regs.ebx;
+
+    auto result = Syscall::handle(regs, function, arg1, arg2, arg3);
+    if (result.is_error())
+        regs.eax = result.error();
+    else
+        regs.eax = result.value();
 
     process.big_lock().unlock();
 

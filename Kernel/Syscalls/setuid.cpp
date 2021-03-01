@@ -28,12 +28,12 @@
 
 namespace Kernel {
 
-int Process::sys$seteuid(uid_t euid)
+KResultOr<int> Process::sys$seteuid(uid_t euid)
 {
     REQUIRE_PROMISE(id);
 
     if (euid != m_uid && euid != m_suid && !is_superuser())
-        return -EPERM;
+        return EPERM;
 
     if (m_euid != euid)
         set_dumpable(false);
@@ -41,12 +41,12 @@ int Process::sys$seteuid(uid_t euid)
     return 0;
 }
 
-int Process::sys$setegid(gid_t egid)
+KResultOr<int> Process::sys$setegid(gid_t egid)
 {
     REQUIRE_PROMISE(id);
 
     if (egid != m_gid && egid != m_sgid && !is_superuser())
-        return -EPERM;
+        return EPERM;
 
     if (m_egid != egid)
         set_dumpable(false);
@@ -55,12 +55,12 @@ int Process::sys$setegid(gid_t egid)
     return 0;
 }
 
-int Process::sys$setuid(uid_t uid)
+KResultOr<int> Process::sys$setuid(uid_t uid)
 {
     REQUIRE_PROMISE(id);
 
     if (uid != m_uid && uid != m_euid && !is_superuser())
-        return -EPERM;
+        return EPERM;
 
     if (m_euid != uid)
         set_dumpable(false);
@@ -71,12 +71,12 @@ int Process::sys$setuid(uid_t uid)
     return 0;
 }
 
-int Process::sys$setgid(gid_t gid)
+KResultOr<int> Process::sys$setgid(gid_t gid)
 {
     REQUIRE_PROMISE(id);
 
     if (gid != m_gid && gid != m_egid && !is_superuser())
-        return -EPERM;
+        return EPERM;
 
     if (m_egid != gid)
         set_dumpable(false);
@@ -87,7 +87,7 @@ int Process::sys$setgid(gid_t gid)
     return 0;
 }
 
-int Process::sys$setresuid(uid_t ruid, uid_t euid, uid_t suid)
+KResultOr<int> Process::sys$setresuid(uid_t ruid, uid_t euid, uid_t suid)
 {
     REQUIRE_PROMISE(id);
 
@@ -100,7 +100,7 @@ int Process::sys$setresuid(uid_t ruid, uid_t euid, uid_t suid)
 
     auto ok = [this](uid_t id) { return id == m_uid || id == m_euid || id == m_suid; };
     if ((!ok(ruid) || !ok(euid) || !ok(suid)) && !is_superuser())
-        return -EPERM;
+        return EPERM;
 
     if (m_euid != euid)
         set_dumpable(false);
@@ -111,7 +111,7 @@ int Process::sys$setresuid(uid_t ruid, uid_t euid, uid_t suid)
     return 0;
 }
 
-int Process::sys$setresgid(gid_t rgid, gid_t egid, gid_t sgid)
+KResultOr<int> Process::sys$setresgid(gid_t rgid, gid_t egid, gid_t sgid)
 {
     REQUIRE_PROMISE(id);
 
@@ -124,7 +124,7 @@ int Process::sys$setresgid(gid_t rgid, gid_t egid, gid_t sgid)
 
     auto ok = [this](gid_t id) { return id == m_gid || id == m_egid || id == m_sgid; };
     if ((!ok(rgid) || !ok(egid) || !ok(sgid)) && !is_superuser())
-        return -EPERM;
+        return EPERM;
 
     if (m_egid != egid)
         set_dumpable(false);
@@ -135,13 +135,13 @@ int Process::sys$setresgid(gid_t rgid, gid_t egid, gid_t sgid)
     return 0;
 }
 
-int Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> user_gids)
+KResultOr<int> Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> user_gids)
 {
     REQUIRE_PROMISE(id);
     if (count < 0)
-        return -EINVAL;
+        return EINVAL;
     if (!is_superuser())
-        return -EPERM;
+        return EPERM;
 
     if (!count) {
         m_extra_gids.clear();
@@ -151,7 +151,7 @@ int Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> user_gids)
     Vector<gid_t> gids;
     gids.resize(count);
     if (!copy_n_from_user(gids.data(), user_gids, count))
-        return -EFAULT;
+        return EFAULT;
 
     HashTable<gid_t> unique_extra_gids;
     for (auto& gid : gids) {

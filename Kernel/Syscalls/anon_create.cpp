@@ -31,15 +31,15 @@
 
 namespace Kernel {
 
-int Process::sys$anon_create(size_t size, int options)
+KResultOr<int> Process::sys$anon_create(size_t size, int options)
 {
     REQUIRE_PROMISE(stdio);
 
     if (!size)
-        return -EINVAL;
+        return EINVAL;
 
     if (size % PAGE_SIZE)
-        return -EINVAL;
+        return EINVAL;
 
     int new_fd = alloc_fd();
     if (new_fd < 0)
@@ -47,7 +47,7 @@ int Process::sys$anon_create(size_t size, int options)
 
     auto vmobject = AnonymousVMObject::create_with_size(size, AllocationStrategy::Reserve);
     if (!vmobject)
-        return -ENOMEM;
+        return ENOMEM;
 
     auto anon_file = AnonymousFile::create(vmobject.release_nonnull());
     auto description_or_error = FileDescription::create(*anon_file);

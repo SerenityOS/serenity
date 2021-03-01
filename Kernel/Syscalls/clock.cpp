@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-int Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
+KResultOr<int> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -39,42 +39,42 @@ int Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
         return ts.error();
 
     if (!copy_to_user(user_ts, &ts.value()))
-        return -EFAULT;
+        return EFAULT;
     return 0;
 }
 
-int Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> user_ts)
+KResultOr<int> Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> user_ts)
 {
     REQUIRE_PROMISE(settime);
 
     if (!is_superuser())
-        return -EPERM;
+        return EPERM;
 
     timespec ts;
     if (!copy_from_user(&ts, user_ts))
-        return -EFAULT;
+        return EFAULT;
 
     switch (clock_id) {
     case CLOCK_REALTIME:
         TimeManagement::the().set_epoch_time(ts);
         break;
     default:
-        return -EINVAL;
+        return EINVAL;
     }
     return 0;
 }
 
-int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*> user_params)
+KResultOr<int> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_clock_nanosleep_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     timespec requested_sleep;
     if (!copy_from_user(&requested_sleep, params.requested_sleep))
-        return -EFAULT;
+        return EFAULT;
 
     bool is_absolute;
     switch (params.flags) {
@@ -85,11 +85,11 @@ int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_par
         is_absolute = true;
         break;
     default:
-        return -EINVAL;
+        return EINVAL;
     }
 
     if (!TimeManagement::is_valid_clock_id(params.clock_id))
-        return -EINVAL;
+        return EINVAL;
 
     bool was_interrupted;
     if (is_absolute) {
@@ -98,33 +98,33 @@ int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_par
         timespec remaining_sleep;
         was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep, &remaining_sleep).was_interrupted();
         if (was_interrupted && params.remaining_sleep && !copy_to_user(params.remaining_sleep, &remaining_sleep))
-            return -EFAULT;
+            return EFAULT;
     }
     if (was_interrupted)
-        return -EINTR;
+        return EINTR;
     return 0;
 }
 
-int Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval*> user_old_delta)
+KResultOr<int> Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval*> user_old_delta)
 {
     if (user_old_delta) {
         timespec old_delta_ts = TimeManagement::the().remaining_epoch_time_adjustment();
         timeval old_delta;
         timespec_to_timeval(old_delta_ts, old_delta);
         if (!copy_to_user(user_old_delta, &old_delta))
-            return -EFAULT;
+            return EFAULT;
     }
 
     if (user_delta) {
         REQUIRE_PROMISE(settime);
         if (!is_superuser())
-            return -EPERM;
+            return EPERM;
         timeval delta;
         if (!copy_from_user(&delta, user_delta))
-            return -EFAULT;
+            return EFAULT;
 
         if (delta.tv_usec < 0 || delta.tv_usec >= 1'000'000)
-            return -EINVAL;
+            return EINVAL;
 
         timespec delta_ts;
         timeval_to_timespec(delta, delta_ts);
@@ -134,12 +134,12 @@ int Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval
     return 0;
 }
 
-int Process::sys$gettimeofday(Userspace<timeval*> user_tv)
+KResultOr<int> Process::sys$gettimeofday(Userspace<timeval*> user_tv)
 {
     REQUIRE_PROMISE(stdio);
     auto tv = kgettimeofday();
     if (!copy_to_user(user_tv, &tv))
-        return -EFAULT;
+        return EFAULT;
     return 0;
 }
 

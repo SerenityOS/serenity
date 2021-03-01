@@ -160,12 +160,12 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
     return KSuccess;
 }
 
-int Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
+KResultOr<int> Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
 {
     REQUIRE_PROMISE(ptrace);
     Syscall::SC_ptrace_params params {};
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
     auto result = handle_ptrace(params, *this);
     return result.is_error() ? result.error().error() : result.value();
 }

@@ -31,36 +31,36 @@
 
 namespace Kernel {
 
-int Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
+KResultOr<int> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(tty);
     auto description = file_description(fd);
     if (!description)
-        return -EBADF;
+        return EBADF;
     if (!description->is_tty())
-        return -ENOTTY;
+        return ENOTTY;
     auto tty_name = description->tty()->tty_name();
     if (size < tty_name.length() + 1)
-        return -ERANGE;
+        return ERANGE;
     if (!copy_to_user(buffer, tty_name.characters(), tty_name.length() + 1))
-        return -EFAULT;
+        return EFAULT;
     return 0;
 }
 
-int Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
+KResultOr<int> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(tty);
     auto description = file_description(fd);
     if (!description)
-        return -EBADF;
+        return EBADF;
     auto* master_pty = description->master_pty();
     if (!master_pty)
-        return -ENOTTY;
+        return ENOTTY;
     auto pts_name = master_pty->pts_name();
     if (size < pts_name.length() + 1)
-        return -ERANGE;
+        return ERANGE;
     if (!copy_to_user(buffer, pts_name.characters(), pts_name.length() + 1))
-        return -EFAULT;
+        return EFAULT;
     return 0;
 }
 

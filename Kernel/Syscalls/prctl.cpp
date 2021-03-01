@@ -29,7 +29,7 @@
 
 namespace Kernel {
 
-int Process::sys$prctl(int option, FlatPtr arg1, [[maybe_unused]] FlatPtr arg2)
+KResultOr<int> Process::sys$prctl(int option, FlatPtr arg1, [[maybe_unused]] FlatPtr arg2)
 {
     switch (option) {
     case PR_GET_DUMPABLE:
@@ -38,7 +38,7 @@ int Process::sys$prctl(int option, FlatPtr arg1, [[maybe_unused]] FlatPtr arg2)
         set_dumpable(arg1);
         return 0;
     default:
-        return -EINVAL;
+        return EINVAL;
     }
     return 0;
 }

@@ -35,10 +35,10 @@ namespace Kernel {
 
 extern HashMap<String, OwnPtr<Module>>* g_modules;
 
-int Process::sys$module_load(Userspace<const char*> user_path, size_t path_length)
+KResultOr<int> Process::sys$module_load(Userspace<const char*> user_path, size_t path_length)
 {
     if (!is_superuser())
-        return -EPERM;
+        return EPERM;
 
     REQUIRE_NO_PROMISES;
 
@@ -59,7 +59,7 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
 
     auto elf_image = make<ELF::Image>(storage.data(), storage.size());
     if (!elf_image->parse())
-        return -ENOEXEC;
+        return ENOEXEC;
 
     HashMap<String, u8*> section_storage_by_name;
 
@@ -124,12 +124,12 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
     });
 
     if (missing_symbols)
-        return -EINVAL;
+        return EINVAL;
 
     auto* text_base = section_storage_by_name.get(".text").value_or(nullptr);
     if (!text_base) {
         dbgln("No .text section found in module!");
-        return -EINVAL;
+        return EINVAL;
     }
 
     elf_image->for_each_symbol([&](const ELF::Image::Symbol& symbol) {
@@ -147,11 +147,11 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
     });
 
     if (!module->module_init)
-        return -EINVAL;
+        return EINVAL;
 
     if (g_modules->contains(module->name)) {
         dbgln("a module with the name {} is already loaded; please unload it first", module->name);
-        return -EEXIST;
+        return EEXIST;
     }
 
     module->module_init();
@@ -162,20 +162,20 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
     return 0;
 }
 
-int Process::sys$module_unload(Userspace<const char*> user_name, size_t name_length)
+KResultOr<int> Process::sys$module_unload(Userspace<const char*> user_name, size_t name_length)
 {
     if (!is_superuser())
-        return -EPERM;
+        return EPERM;
 
     REQUIRE_NO_PROMISES;
 
     auto module_name = copy_string_from_user(user_name, name_length);
     if (module_name.is_null())
-        return -EFAULT;
+        return EFAULT;
 
     auto it = g_modules->find(module_name);
     if (it == g_modules->end())
-        return -ENOENT;
+        return ENOENT;
 
     if (it->value->module_fini)
         it->value->module_fini();

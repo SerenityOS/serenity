@@ -30,36 +30,36 @@
 
 namespace Kernel {
 
-ssize_t Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count)
+KResultOr<ssize_t> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count)
 {
     REQUIRE_PROMISE(stdio);
     if (iov_count < 0)
-        return -EINVAL;
+        return EINVAL;
 
     // Arbitrary pain threshold.
     if (iov_count > (int)MiB)
-        return -EFAULT;
+        return EFAULT;
 
     u64 total_length = 0;
     Vector<iovec, 32> vecs;
     vecs.resize(iov_count);
     if (!copy_n_from_user(vecs.data(), iov, iov_count))
-        return -EFAULT;
+        return EFAULT;
     for (auto& vec : vecs) {
         total_length += vec.iov_len;
         if (total_length > NumericLimits<i32>::max())
-            return -EINVAL;
+            return EINVAL;
     }
 
     auto description = file_description(fd);
     if (!description)
-        return -EBADF;
+        return EBADF;
 
     if (!description->is_readable())
-        return -EBADF;
+        return EBADF;
 
     if (description->is_directory())
-        return -EISDIR;
+        return EISDIR;
 
     int nread = 0;
     for (auto& vec : vecs) {
@@ -67,15 +67,15 @@ ssize_t Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_c
             if (!description->can_read()) {
                 auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
                 if (Thread::current()->block<Thread::ReadBlocker>({}, *description, unblock_flags).was_interrupted())
-                    return -EINTR;
+                    return EINTR;
                 if (!((u32)unblock_flags & (u32)Thread::FileBlocker::BlockFlags::Read))
-                    return -EAGAIN;
+                    return EAGAIN;
                 // TODO: handle exceptions in unblock_flags
             }
         }
         auto buffer = UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len);
         if (!buffer.has_value())
-            return -EFAULT;
+            return EFAULT;
         auto result = description->read(buffer.value(), vec.iov_len);
         if (result.is_error())
             return result.error();
@@ -85,34 +85,34 @@ ssize_t Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_c
     return nread;
 }
 
-ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
+KResultOr<ssize_t> Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
 {
     REQUIRE_PROMISE(stdio);
     if (size < 0)
-        return -EINVAL;
+        return EINVAL;
     if (size == 0)
         return 0;
     dbgln_if(IO_DEBUG, "sys$read({}, {}, {})", fd, buffer.ptr(), size);
     auto description = file_description(fd);
     if (!description)
-        return -EBADF;
+        return EBADF;
     if (!description->is_readable())
-        return -EBADF;
+        return EBADF;
     if (description->is_directory())
-        return -EISDIR;
+        return EISDIR;
     if (description->is_blocking()) {
         if (!description->can_read()) {
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
             if (Thread::current()->block<Thread::ReadBlocker>({}, *description, unblock_flags).was_interrupted())
-                return -EINTR;
+                return EINTR;
             if (!((u32)unblock_flags & (u32)Thread::FileBlocker::BlockFlags::Read))
-                return -EAGAIN;
+                return EAGAIN;
             // TODO: handle exceptions in unblock_flags
         }
     }
     auto user_buffer = UserOrKernelBuffer::for_user_buffer(buffer, size);
     if (!user_buffer.has_value())
-        return -EFAULT;
+        return EFAULT;
     auto result = description->read(user_buffer.value(), size);
     if (result.is_error())
         return result.error();

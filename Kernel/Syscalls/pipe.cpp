@@ -30,14 +30,14 @@
 
 namespace Kernel {
 
-int Process::sys$pipe(int pipefd[2], int flags)
+KResultOr<int> Process::sys$pipe(int pipefd[2], int flags)
 {
     REQUIRE_PROMISE(stdio);
     if (number_of_open_file_descriptors() + 2 > max_open_file_descriptors())
-        return -EMFILE;
+        return EMFILE;
     // Reject flags other than O_CLOEXEC.
     if ((flags & O_CLOEXEC) != flags)
-        return -EINVAL;
+        return EINVAL;
 
     u32 fd_flags = (flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
     auto fifo = FIFO::create(m_uid);
@@ -53,13 +53,13 @@ int Process::sys$pipe(int pipefd[2], int flags)
     m_fds[reader_fd].set(open_reader_result.release_value(), fd_flags);
     m_fds[reader_fd].description()->set_readable(true);
     if (!copy_to_user(&pipefd[0], &reader_fd))
-        return -EFAULT;
+        return EFAULT;
 
     int writer_fd = alloc_fd();
     m_fds[writer_fd].set(open_writer_result.release_value(), fd_flags);
     m_fds[writer_fd].description()->set_writable(true);
     if (!copy_to_user(&pipefd[1], &writer_fd))
-        return -EFAULT;
+        return EFAULT;
 
     return 0;
 }

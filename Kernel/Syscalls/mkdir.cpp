@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-int Process::sys$mkdir(Userspace<const char*> user_path, size_t path_length, mode_t mode)
+KResultOr<int> Process::sys$mkdir(Userspace<const char*> user_path, size_t path_length, mode_t mode)
 {
     REQUIRE_PROMISE(cpath);
     auto path = get_syscall_path_argument(user_path, path_length);

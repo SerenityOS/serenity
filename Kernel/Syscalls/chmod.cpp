@@ -31,7 +31,7 @@
 
 namespace Kernel {
 
-int Process::sys$chmod(Userspace<const char*> user_path, size_t path_length, mode_t mode)
+KResultOr<int> Process::sys$chmod(Userspace<const char*> user_path, size_t path_length, mode_t mode)
 {
     REQUIRE_PROMISE(fattr);
     auto path = get_syscall_path_argument(user_path, path_length);
@@ -40,12 +40,12 @@ int Process::sys$chmod(Userspace<const char*> user_path, size_t path_length, mod
     return VFS::the().chmod(path.value(), mode, current_directory());
 }
 
-int Process::sys$fchmod(int fd, mode_t mode)
+KResultOr<int> Process::sys$fchmod(int fd, mode_t mode)
 {
     REQUIRE_PROMISE(fattr);
     auto description = file_description(fd);
     if (!description)
-        return -EBADF;
+        return EBADF;
     return description->chmod(mode);
 }
 

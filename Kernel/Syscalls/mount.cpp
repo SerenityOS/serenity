@@ -36,24 +36,24 @@
 
 namespace Kernel {
 
-int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
+KResultOr<int> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
 {
     if (!is_superuser())
-        return -EPERM;
+        return EPERM;
 
     REQUIRE_NO_PROMISES;
 
     Syscall::SC_mount_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     auto source_fd = params.source_fd;
     auto target = copy_string_from_user(params.target);
     if (target.is_null())
-        return -EFAULT;
+        return EFAULT;
     auto fs_type = copy_string_from_user(params.fs_type);
     if (fs_type.is_null())
-        return -EFAULT;
+        return EFAULT;
 
     auto description = file_description(source_fd);
     if (!description.is_null())
@@ -75,10 +75,10 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
     if (params.flags & MS_BIND) {
         // We're doing a bind mount.
         if (description.is_null())
-            return -EBADF;
+            return EBADF;
         if (!description->custody()) {
             // We only support bind-mounting inodes, not arbitrary files.
-            return -ENODEV;
+            return ENODEV;
         }
         return VFS::the().bind_mount(*description->custody(), target_custody, params.flags);
     }
@@ -87,12 +87,12 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
 
     if (fs_type == "ext2" || fs_type == "Ext2FS") {
         if (description.is_null())
-            return -EBADF;
+            return EBADF;
         if (!description->file().is_block_device())
-            return -ENOTBLK;
+            return ENOTBLK;
         if (!description->file().is_seekable()) {
             dbgln("mount: this is not a seekable file");
-            return -ENODEV;
+            return ENODEV;
         }
 
         dbgln("mount: attempting to mount {} on {}", description->absolute_path(), target);
@@ -100,7 +100,7 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
         fs = Ext2FS::create(*description);
     } else if (fs_type == "9p" || fs_type == "Plan9FS") {
         if (description.is_null())
-            return -EBADF;
+            return EBADF;
 
         fs = Plan9FS::create(*description);
     } else if (fs_type == "proc" || fs_type == "ProcFS") {
@@ -112,12 +112,12 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
     } else if (fs_type == "tmp" || fs_type == "TmpFS") {
         fs = TmpFS::create();
     } else {
-        return -ENODEV;
+        return ENODEV;
     }
 
     if (!fs->initialize()) {
         dbgln("mount: failed to initialize {} filesystem, fd={}", fs_type, source_fd);
-        return -ENODEV;
+        return ENODEV;
     }
 
     auto result = VFS::the().mount(fs.release_nonnull(), target_custody, params.flags);
@@ -128,10 +128,10 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
     return result;
 }
 
-int Process::sys$umount(Userspace<const char*> user_mountpoint, size_t mountpoint_length)
+KResultOr<int> Process::sys$umount(Userspace<const char*> user_mountpoint, size_t mountpoint_length)
 {
     if (!is_superuser())
-        return -EPERM;
+        return EPERM;
 
     REQUIRE_NO_PROMISES;
 

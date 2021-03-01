@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-long Process::sys$sysconf(int name)
+KResultOr<long> Process::sys$sysconf(int name)
 {
     switch (name) {
     case _SC_NPROCESSORS_CONF:
@@ -45,7 +45,7 @@ long Process::sys$sysconf(int name)
     case _SC_GETPW_R_SIZE_MAX:
         return 4096; // idk
     default:
-        return -EINVAL;
+        return EINVAL;
     }
 }
 

@@ -30,14 +30,14 @@
 
 namespace Kernel {
 
-int Process::sys$mknod(Userspace<const Syscall::SC_mknod_params*> user_params)
+KResultOr<int> Process::sys$mknod(Userspace<const Syscall::SC_mknod_params*> user_params)
 {
     REQUIRE_PROMISE(dpath);
     Syscall::SC_mknod_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
     if (!is_superuser() && !is_regular_file(params.mode) && !is_fifo(params.mode) && !is_socket(params.mode))
-        return -EPERM;
+        return EPERM;
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();

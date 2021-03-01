@@ -102,13 +102,13 @@ void Process::clear_futex_queues_on_exec()
     m_futex_queues.clear();
 }
 
-int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
+KResultOr<int> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
 {
     REQUIRE_PROMISE(thread);
 
     Syscall::SC_futex_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     Thread::BlockTimeout timeout;
     u32 cmd = params.futex_op & FUTEX_CMD_MASK;
@@ -120,7 +120,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         if (params.timeout) {
             timespec ts_stimeout { 0, 0 };
             if (!copy_from_user(&ts_stimeout, params.timeout))
-                return -EFAULT;
+                return EFAULT;
             clockid_t clock_id = (params.futex_op & FUTEX_CLOCK_REALTIME) ? CLOCK_REALTIME_COARSE : CLOCK_MONOTONIC_COARSE;
             bool is_absolute = cmd != FUTEX_WAIT;
             timeout = Thread::BlockTimeout(is_absolute, &ts_stimeout, nullptr, clock_id);
@@ -146,7 +146,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
     if (!is_private) {
         auto region = space().find_region_containing(Range { VirtualAddress { user_address_or_offset }, sizeof(u32) });
         if (!region)
-            return -EFAULT;
+            return EFAULT;
         vmobject = region->vmobject();
         user_address_or_offset = region->offset_in_vmobject_from_vaddr(VirtualAddress(user_address_or_offset));
 
@@ -156,7 +156,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         case FUTEX_WAKE_OP: {
             auto region2 = space().find_region_containing(Range { VirtualAddress { user_address_or_offset2 }, sizeof(u32) });
             if (!region2)
-                return -EFAULT;
+                return EFAULT;
             vmobject2 = region2->vmobject();
             user_address_or_offset2 = region->offset_in_vmobject_from_vaddr(VirtualAddress(user_address_or_offset2));
             break;
@@ -226,10 +226,10 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
     auto do_wait = [&](u32 bitset) -> int {
         auto user_value = user_atomic_load_relaxed(params.userspace_address);
         if (!user_value.has_value())
-            return -EFAULT;
+            return EFAULT;
         if (user_value.value() != params.val) {
             dbgln("futex wait: EAGAIN. user value: {:p} @ {:p} != val: {}", user_value.value(), params.userspace_address, params.val);
-            return -EAGAIN;
+            return EAGAIN;
         }
         atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
 
@@ -248,7 +248,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
             remove_futex_queue(vmobject, user_address_or_offset);
         }
         if (block_result == Thread::BlockResult::InterruptedByTimeout) {
-            return -ETIMEDOUT;
+            return ETIMEDOUT;
         }
         return 0;
     };
@@ -256,9 +256,9 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
     auto do_requeue = [&](Optional<u32> val3) -> int {
         auto user_value = user_atomic_load_relaxed(params.userspace_address);
         if (!user_value.has_value())
-            return -EFAULT;
+            return EFAULT;
         if (val3.has_value() && val3.value() != user_value.value())
-            return -EAGAIN;
+            return EAGAIN;
         atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
 
         int woken_or_requeued = 0;
@@ -315,10 +315,10 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
             oldval = user_atomic_fetch_xor_relaxed(params.userspace_address2, op_arg);
             break;
         default:
-            return -EINVAL;
+            return EINVAL;
         }
         if (!oldval.has_value())
-            return -EFAULT;
+            return EFAULT;
         atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
         int result = do_wake(vmobject.ptr(), user_address_or_offset, params.val, {});
         if (params.val2 > 0) {
@@ -343,7 +343,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
                 compare_result = (oldval.value() >= _FUTEX_CMP_ARG(params.val3));
                 break;
             default:
-                return -EINVAL;
+                return EINVAL;
             }
             if (compare_result)
                 result += do_wake(vmobject2.ptr(), user_address_or_offset2, params.val2, {});
@@ -360,16 +360,16 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
     case FUTEX_WAIT_BITSET:
         VERIFY(params.val3 != FUTEX_BITSET_MATCH_ANY); // we should have turned it into FUTEX_WAIT
         if (params.val3 == 0)
-            return -EINVAL;
+            return EINVAL;
         return do_wait(params.val3);
 
     case FUTEX_WAKE_BITSET:
         VERIFY(params.val3 != FUTEX_BITSET_MATCH_ANY); // we should have turned it into FUTEX_WAKE
         if (params.val3 == 0)
-            return -EINVAL;
+            return EINVAL;
         return do_wake(vmobject.ptr(), user_address_or_offset, params.val, params.val3);
     }
-    return -ENOSYS;
+    return ENOSYS;
 }
 
 }

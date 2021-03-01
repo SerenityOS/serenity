@@ -31,10 +31,10 @@
 
 namespace Kernel {
 
-int Process::sys$reboot()
+KResultOr<int> Process::sys$reboot()
 {
     if (!is_superuser())
-        return -EPERM;
+        return EPERM;
 
     REQUIRE_NO_PROMISES;
 
@@ -51,10 +51,10 @@ int Process::sys$reboot()
     return 0;
 }
 
-int Process::sys$halt()
+KResultOr<int> Process::sys$halt()
 {
     if (!is_superuser())
-        return -EPERM;
+        return EPERM;
 
     REQUIRE_NO_PROMISES;
 
