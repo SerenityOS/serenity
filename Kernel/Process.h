@@ -261,7 +261,7 @@ public:
     KResultOr<int> sys$purge(int mode);
     KResultOr<int> sys$select(const Syscall::SC_select_params*);
     KResultOr<int> sys$poll(Userspace<const Syscall::SC_poll_params*>);
-    KResultOr<ssize_t> sys$get_dir_entries(int fd, void*, ssize_t);
+    KResultOr<ssize_t> sys$get_dir_entries(int fd, Userspace<void*>, ssize_t);
     KResultOr<int> sys$getcwd(Userspace<char*>, size_t);
     KResultOr<int> sys$chdir(Userspace<const char*>, size_t);
     KResultOr<int> sys$fchdir(int fd);
