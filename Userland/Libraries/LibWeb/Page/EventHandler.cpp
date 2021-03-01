@@ -139,7 +139,8 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
 
     auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
     if (result.layout_node) {
-        result.layout_node->handle_mousewheel({}, position, buttons, modifiers, wheel_delta);
+        if (result.layout_node->handle_mousewheel({}, position, buttons, modifiers, wheel_delta))
+            return true;
         return true;
     }
 
