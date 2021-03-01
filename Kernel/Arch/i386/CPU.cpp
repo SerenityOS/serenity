@@ -829,6 +829,24 @@ FlatPtr read_dr6()
     return dr6;
 }
 
+#define XCR_XFEATURE_ENABLED_MASK 0
+
+UNMAP_AFTER_INIT u64 read_xcr0()
+{
+    u32 eax, edx;
+    asm volatile("xgetbv"
+                 : "=a"(eax), "=d"(edx)
+                 : "c"(XCR_XFEATURE_ENABLED_MASK));
+    return eax + ((u64)edx << 32);
+}
+
+UNMAP_AFTER_INIT void write_xcr0(u64 value)
+{
+    u32 eax = value;
+    u32 edx = value >> 32;
+    asm volatile("xsetbv" ::"a"(eax), "d"(edx), "c"(XCR_XFEATURE_ENABLED_MASK));
+}
+
 READONLY_AFTER_INIT FPUState Processor::s_clean_fpu_state;
 
 READONLY_AFTER_INIT static Vector<Processor*>* s_processors;
@@ -893,6 +911,10 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         set_feature(CPUFeature::SSE4_1);
     if (processor_info.ecx() & (1 << 20))
         set_feature(CPUFeature::SSE4_2);
+    if (processor_info.ecx() & (1 << 26))
+        set_feature(CPUFeature::XSAVE);
+    if (processor_info.ecx() & (1 << 28))
+        set_feature(CPUFeature::AVX);
     if (processor_info.ecx() & (1 << 30))
         set_feature(CPUFeature::RDRAND);
     if (processor_info.edx() & (1 << 11)) {
@@ -989,6 +1011,13 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
     if (has_feature(CPUFeature::TSC)) {
         write_cr4(read_cr4() | 0x4);
     }
+
+    if (has_feature(CPUFeature::XSAVE) && has_feature(CPUFeature::AVX)) {
+        // Turn on CR4.OSXSAVE
+        write_cr4(read_cr4() | 0x40000);
+        // Turn on AVX flags
+        write_xcr0(read_xcr0() | 0x7);
+    }
 }
 
 String Processor::features_string() const
@@ -1039,6 +1068,10 @@ String Processor::features_string() const
             return "sse4.1";
         case CPUFeature::SSE4_2:
             return "sse4.2";
+        case CPUFeature::XSAVE:
+            return "xsave";
+        case CPUFeature::AVX:
+            return "avx";
             // no default statement here intentionally so that we get
             // a warning if a new feature is forgotten to be added here
         }

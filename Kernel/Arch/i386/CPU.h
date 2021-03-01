@@ -505,10 +505,12 @@ FlatPtr read_cr0();
 FlatPtr read_cr2();
 FlatPtr read_cr3();
 FlatPtr read_cr4();
+u64 read_xcr0();
 
 void write_cr0(FlatPtr);
 void write_cr3(FlatPtr);
 void write_cr4(FlatPtr);
+void write_xcr0(u64);
 
 FlatPtr read_dr6();
 
@@ -575,6 +577,8 @@ enum class CPUFeature : u32 {
     SSSE3 = (1 << 18),
     SSE4_1 = (1 << 19),
     SSE4_2 = (1 << 20),
+    XSAVE = (1 << 21),
+    AVX = (1 << 22),
 };
 
 class Thread;
