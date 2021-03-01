@@ -93,7 +93,7 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
     auto& process = current_thread->process();
     current_thread->did_syscall();
 
-    if (function == SC_exit || function == SC_exit_thread) {
+    if (function == SC_abort || function == SC_exit || function == SC_exit_thread) {
         // These syscalls need special handling since they never return to the caller.
 
         if (auto* tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
