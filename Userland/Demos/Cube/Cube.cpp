@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -43,6 +44,8 @@
 
 const int WIDTH = 200;
 const int HEIGHT = 200;
+
+static bool flag_hide_window_frame = false;
 
 class Cube final : public GUI::Widget {
     C_OBJECT(Cube)
@@ -238,6 +241,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    Core::ArgsParser parser;
+    parser.set_general_help("Create a window with a spinning cube.");
+    parser.add_option(flag_hide_window_frame, "Hide window frame", "hide-window", 'h');
+    parser.parse(argc, argv);
+
     auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(true);
     window->set_title("Cube");
@@ -261,6 +269,8 @@ int main(int argc, char** argv)
     auto show_window_frame_action = GUI::Action::create_checkable("Show window frame", [&](auto& action) {
         cube.set_show_window_frame(action.is_checked());
     });
+
+    cube.set_show_window_frame(!flag_hide_window_frame);
     show_window_frame_action->set_checked(cube.show_window_frame());
     app_menu.add_action(move(show_window_frame_action));
     app_menu.add_separator();
