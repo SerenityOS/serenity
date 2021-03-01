@@ -112,7 +112,10 @@ public:
 
     virtual ~LanguageClient()
     {
-        m_server_connection->detach();
+        // m_server_connection is nullified if the server crashes
+        if (m_server_connection)
+            m_server_connection->detach();
+
         VERIFY(m_previous_client.ptr() != this);
         if (m_previous_client)
             m_server_connection->attach(*m_previous_client);
