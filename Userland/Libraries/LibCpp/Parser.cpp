@@ -136,6 +136,8 @@ NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration(ASTNode& p
         func_end = body->end();
     } else {
         func_end = position();
+        if (match_attribute_specification())
+            consume_attribute_specification(); // we don't use the value of __attribute__
         consume(Token::Type::Semicolon);
     }
 
@@ -544,6 +546,11 @@ bool Parser::match_function_declaration()
 
     if (peek(Token::Type::Semicolon).has_value() || peek(Token::Type::LeftCurly).has_value())
         return true;
+
+    if (match_attribute_specification()) {
+        consume_attribute_specification();
+        return peek(Token::Type::Semicolon).has_value();
+    }
 
     return false;
 }
@@ -1057,4 +1064,27 @@ Vector<StringView> Parser::parse_type_qualifiers()
     }
     return qualifiers;
 }
+bool Parser::match_attribute_specification()
+{
+    return text_of_token(peek()) == "__attribute__";
+}
+void Parser::consume_attribute_specification()
+{
+    consume(); // __attribute__
+    consume(Token::Type::LeftParen);
+    size_t left_count = 1;
+    while (!done()) {
+        auto token = consume();
+        if (token.type() == Token::Type::LeftParen) {
+            ++left_count;
+        }
+        if (token.type() == Token::Type::RightParen) {
+            --left_count;
+        }
+        if(left_count == 0)
+            return;
+    }
+}
+
+
 }
