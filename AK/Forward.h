@@ -51,6 +51,7 @@ class InputMemoryStream;
 class DuplexMemoryStream;
 class OutputStream;
 class InputBitStream;
+class OutputBitStream;
 class OutputMemoryStream;
 
 template<size_t Capacity>
@@ -160,6 +161,7 @@ using AK::NonnullOwnPtrVector;
 using AK::NonnullRefPtr;
 using AK::NonnullRefPtrVector;
 using AK::Optional;
+using AK::OutputBitStream;
 using AK::OutputMemoryStream;
 using AK::OutputStream;
 using AK::OwnPtr;
