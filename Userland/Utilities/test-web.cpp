@@ -41,6 +41,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/JSONObject.h>
+#include <LibTest/Results.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -48,26 +49,6 @@
 #include <sys/time.h>
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
-
-enum class TestResult {
-    Pass,
-    Fail,
-    Skip,
-};
-
-struct JSTest {
-    String name;
-    TestResult result;
-    String details;
-};
-
-struct JSSuite {
-    String name;
-    // A failed test takes precedence over a skipped test, which both have
-    // precedence over a passed test
-    TestResult most_severe_test_result { TestResult::Pass };
-    Vector<JSTest> tests {};
-};
 
 struct ParserError {
     JS::Parser::Error error;
@@ -80,8 +61,8 @@ struct JSFileResult {
     double time_taken { 0 };
     // A failed test takes precedence over a skipped test, which both have
     // precedence over a passed test
-    TestResult most_severe_test_result { TestResult::Pass };
-    Vector<JSSuite> suites {};
+    Test::Result most_severe_test_result { Test::Result::Pass };
+    Vector<Test::Suite> suites {};
     Vector<String> logged_messages {};
 };
 
@@ -394,12 +375,12 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             }
 
             test_json.value().as_object().for_each_member([&](const String& suite_name, const JsonValue& suite_value) {
-                JSSuite suite { suite_name };
+                Test::Suite suite { suite_name };
 
                 VERIFY(suite_value.is_object());
 
                 suite_value.as_object().for_each_member([&](const String& test_name, const JsonValue& test_value) {
-                    JSTest test { test_name, TestResult::Fail, "" };
+                    Test::Case test { test_name, Test::Result::Fail, "" };
 
                     VERIFY(test_value.is_object());
                     VERIFY(test_value.as_object().has("result"));
@@ -408,32 +389,32 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
                     VERIFY(result.is_string());
                     auto result_string = result.as_string();
                     if (result_string == "pass") {
-                        test.result = TestResult::Pass;
+                        test.result = Test::Result::Pass;
                         m_counts.tests_passed++;
                     } else if (result_string == "fail") {
-                        test.result = TestResult::Fail;
+                        test.result = Test::Result::Fail;
                         m_counts.tests_failed++;
-                        suite.most_severe_test_result = TestResult::Fail;
+                        suite.most_severe_test_result = Test::Result::Fail;
                         VERIFY(test_value.as_object().has("details"));
                         auto details = test_value.as_object().get("details");
                         VERIFY(result.is_string());
                         test.details = details.as_string();
                     } else {
-                        test.result = TestResult::Skip;
-                        if (suite.most_severe_test_result == TestResult::Pass)
-                            suite.most_severe_test_result = TestResult::Skip;
+                        test.result = Test::Result::Skip;
+                        if (suite.most_severe_test_result == Test::Result::Pass)
+                            suite.most_severe_test_result = Test::Result::Skip;
                         m_counts.tests_skipped++;
                     }
 
                     suite.tests.append(test);
                 });
 
-                if (suite.most_severe_test_result == TestResult::Fail) {
+                if (suite.most_severe_test_result == Test::Result::Fail) {
                     m_counts.suites_failed++;
-                    file_result.most_severe_test_result = TestResult::Fail;
+                    file_result.most_severe_test_result = Test::Result::Fail;
                 } else {
-                    if (suite.most_severe_test_result == TestResult::Skip && file_result.most_severe_test_result == TestResult::Pass)
-                        file_result.most_severe_test_result = TestResult::Skip;
+                    if (suite.most_severe_test_result == Test::Result::Skip && file_result.most_severe_test_result == Test::Result::Pass)
+                        file_result.most_severe_test_result = Test::Result::Skip;
                     m_counts.suites_passed++;
                 }
 
@@ -500,12 +481,12 @@ static void print_modifiers(Vector<Modifier> modifiers)
 
 void TestRunner::print_file_result(const JSFileResult& file_result) const
 {
-    if (file_result.most_severe_test_result == TestResult::Fail || file_result.error.has_value()) {
+    if (file_result.most_severe_test_result == Test::Result::Fail || file_result.error.has_value()) {
         print_modifiers({ BG_RED, FG_BLACK, FG_BOLD });
         printf(" FAIL ");
         print_modifiers({ CLEAR });
     } else {
-        if (m_print_times || file_result.most_severe_test_result != TestResult::Pass) {
+        if (m_print_times || file_result.most_severe_test_result != Test::Result::Pass) {
             print_modifiers({ BG_GREEN, FG_BLACK, FG_BOLD });
             printf(" PASS ");
             print_modifiers({ CLEAR });
@@ -561,12 +542,12 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
         return;
     }
 
-    if (file_result.most_severe_test_result != TestResult::Pass) {
+    if (file_result.most_severe_test_result != Test::Result::Pass) {
         for (auto& suite : file_result.suites) {
-            if (suite.most_severe_test_result == TestResult::Pass)
+            if (suite.most_severe_test_result == Test::Result::Pass)
                 continue;
 
-            bool failed = suite.most_severe_test_result == TestResult::Fail;
+            bool failed = suite.most_severe_test_result == Test::Result::Fail;
 
             print_modifiers({ FG_GRAY, FG_BOLD });
 
@@ -596,12 +577,12 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
             print_modifiers({ CLEAR });
 
             for (auto& test : suite.tests) {
-                if (test.result == TestResult::Pass)
+                if (test.result == Test::Result::Pass)
                     continue;
 
                 print_modifiers({ FG_GRAY, FG_BOLD });
                 printf("         Test:   ");
-                if (test.result == TestResult::Fail) {
+                if (test.result == Test::Result::Fail) {
                     print_modifiers({ CLEAR, FG_RED });
                     printf("%s (failed):\n", test.name.characters());
                     printf("                 %s\n", test.details.characters());
