@@ -31,13 +31,13 @@
 
 namespace Kernel {
 
-int Process::sys$realpath(Userspace<const Syscall::SC_realpath_params*> user_params)
+KResultOr<int> Process::sys$realpath(Userspace<const Syscall::SC_realpath_params*> user_params)
 {
     REQUIRE_PROMISE(rpath);
 
     Syscall::SC_realpath_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
@@ -52,7 +52,7 @@ int Process::sys$realpath(Userspace<const Syscall::SC_realpath_params*> user_par
     size_t ideal_size = absolute_path.length() + 1;
     auto size_to_copy = min(ideal_size, params.buffer.size);
     if (!copy_to_user(params.buffer.data, absolute_path.characters(), size_to_copy))
-        return -EFAULT;
+        return EFAULT;
     // Note: we return the whole size here, not the copied size.
     return ideal_size;
 };

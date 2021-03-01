@@ -30,20 +30,20 @@
 
 namespace Kernel {
 
-int Process::sys$fcntl(int fd, int cmd, u32 arg)
+KResultOr<int> Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
     REQUIRE_PROMISE(stdio);
     dbgln_if(IO_DEBUG, "sys$fcntl: fd={}, cmd={}, arg={}", fd, cmd, arg);
     auto description = file_description(fd);
     if (!description)
-        return -EBADF;
+        return EBADF;
     // NOTE: The FD flags are not shared between FileDescription objects.
     //       This means that dup() doesn't copy the FD_CLOEXEC flag!
     switch (cmd) {
     case F_DUPFD: {
         int arg_fd = (int)arg;
         if (arg_fd < 0)
-            return -EINVAL;
+            return EINVAL;
         int new_fd = alloc_fd(arg_fd);
         if (new_fd < 0)
             return new_fd;
@@ -63,7 +63,7 @@ int Process::sys$fcntl(int fd, int cmd, u32 arg)
     case F_ISTTY:
         return description->is_tty();
     default:
-        return -EINVAL;
+        return EINVAL;
     }
     return 0;
 }

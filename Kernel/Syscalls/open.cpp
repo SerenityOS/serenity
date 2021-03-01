@@ -32,21 +32,21 @@
 
 namespace Kernel {
 
-int Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
+KResultOr<int> Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
 {
     Syscall::SC_open_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     int dirfd = params.dirfd;
     int options = params.options;
     u16 mode = params.mode;
 
     if (options & O_NOFOLLOW_NOERROR)
-        return -EINVAL;
+        return EINVAL;
 
     if (options & O_UNLINK_INTERNAL)
-        return -EINVAL;
+        return EINVAL;
 
     if (options & O_WRONLY)
         REQUIRE_PROMISE(wpath);
@@ -74,11 +74,11 @@ int Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
     } else {
         auto base_description = file_description(dirfd);
         if (!base_description)
-            return -EBADF;
+            return EBADF;
         if (!base_description->is_directory())
-            return -ENOTDIR;
+            return ENOTDIR;
         if (!base_description->custody())
-            return -EINVAL;
+            return EINVAL;
         base = base_description->custody();
     }
 
@@ -88,20 +88,20 @@ int Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
     auto description = result.value();
 
     if (description->inode() && description->inode()->socket())
-        return -ENXIO;
+        return ENXIO;
 
     u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
     m_fds[fd].set(move(description), fd_flags);
     return fd;
 }
 
-int Process::sys$close(int fd)
+KResultOr<int> Process::sys$close(int fd)
 {
     REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
     dbgln_if(IO_DEBUG, "sys$close({}) {}", fd, description.ptr());
     if (!description)
-        return -EBADF;
+        return EBADF;
     int rc = description->close();
     m_fds[fd] = {};
     return rc;

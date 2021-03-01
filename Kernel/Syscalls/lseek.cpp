@@ -29,12 +29,12 @@
 
 namespace Kernel {
 
-int Process::sys$lseek(int fd, off_t offset, int whence)
+KResultOr<int> Process::sys$lseek(int fd, off_t offset, int whence)
 {
     REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
     if (!description)
-        return -EBADF;
+        return EBADF;
     return description->seek(offset, whence);
 }
 

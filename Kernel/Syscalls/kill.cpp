@@ -117,7 +117,7 @@ KResult Process::do_killself(int signal)
     return KSuccess;
 }
 
-int Process::sys$kill(pid_t pid_or_pgid, int signal)
+KResultOr<int> Process::sys$kill(pid_t pid_or_pgid, int signal)
 {
     if (pid_or_pgid == m_pid.value())
         REQUIRE_PROMISE(stdio);
@@ -125,10 +125,10 @@ int Process::sys$kill(pid_t pid_or_pgid, int signal)
         REQUIRE_PROMISE(proc);
 
     if (signal < 0 || signal >= 32)
-        return -EINVAL;
+        return EINVAL;
     if (pid_or_pgid < -1) {
         if (pid_or_pgid == NumericLimits<i32>::min())
-            return -EINVAL;
+            return EINVAL;
         return do_killpg(-pid_or_pgid, signal);
     }
     if (pid_or_pgid == -1)
@@ -140,17 +140,17 @@ int Process::sys$kill(pid_t pid_or_pgid, int signal)
     ScopedSpinLock lock(g_processes_lock);
     auto peer = Process::from_pid(pid_or_pgid);
     if (!peer)
-        return -ESRCH;
+        return ESRCH;
     return do_kill(*peer, signal);
 }
 
-int Process::sys$killpg(pid_t pgrp, int signum)
+KResultOr<int> Process::sys$killpg(pid_t pgrp, int signum)
 {
     REQUIRE_PROMISE(proc);
     if (signum < 1 || signum >= 32)
-        return -EINVAL;
+        return EINVAL;
     if (pgrp < 0)
-        return -EINVAL;
+        return EINVAL;
 
     return do_killpg(pgrp, signum);
 }

@@ -214,7 +214,7 @@ static KResultOr<FlatPtr> get_interpreter_load_offset(const Elf32_Ehdr& main_pro
     }
 
     if (main_program_header.e_type != ET_EXEC)
-        return -EINVAL;
+        return EINVAL;
 
     auto main_program_load_range_result = get_required_load_range(main_program_description);
     if (main_program_load_range_result.is_error())
@@ -245,7 +245,7 @@ static KResultOr<FlatPtr> get_interpreter_load_offset(const Elf32_Ehdr& main_pro
 
     // If main program is too big and leaves us without enough space for adequate loader randmoization
     if (selected_range.end - selected_range.start < minimum_interpreter_load_offset_randomization_size)
-        return -E2BIG;
+        return E2BIG;
 
     return random_load_offset_in_range(selected_range.start, selected_range.end - selected_range.start);
 }
@@ -876,7 +876,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     return KSuccess;
 }
 
-int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
+KResultOr<int> Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
 {
     REQUIRE_PROMISE(exec);
 
@@ -884,10 +884,10 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
     //       On success, the kernel stack will be lost.
     Syscall::SC_execve_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
-        return -E2BIG;
+        return E2BIG;
 
     String path;
     {
@@ -919,11 +919,11 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
 
     Vector<String> arguments;
     if (!copy_user_strings(params.arguments, arguments))
-        return -EFAULT;
+        return EFAULT;
 
     Vector<String> environment;
     if (!copy_user_strings(params.environment, environment))
-        return -EFAULT;
+        return EFAULT;
 
     auto result = exec(move(path), move(arguments), move(environment));
     VERIFY(result.is_error()); // We should never continue after a successful exec!

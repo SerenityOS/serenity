@@ -28,58 +28,58 @@
 
 namespace Kernel {
 
-uid_t Process::sys$getuid()
+KResultOr<uid_t> Process::sys$getuid()
 {
     REQUIRE_PROMISE(stdio);
     return m_uid;
 }
 
-gid_t Process::sys$getgid()
+KResultOr<gid_t> Process::sys$getgid()
 {
     REQUIRE_PROMISE(stdio);
     return m_gid;
 }
 
-uid_t Process::sys$geteuid()
+KResultOr<uid_t> Process::sys$geteuid()
 {
     REQUIRE_PROMISE(stdio);
     return m_euid;
 }
 
-gid_t Process::sys$getegid()
+KResultOr<gid_t> Process::sys$getegid()
 {
     REQUIRE_PROMISE(stdio);
     return m_egid;
 }
 
-int Process::sys$getresuid(Userspace<uid_t*> ruid, Userspace<uid_t*> euid, Userspace<uid_t*> suid)
+KResultOr<int> Process::sys$getresuid(Userspace<uid_t*> ruid, Userspace<uid_t*> euid, Userspace<uid_t*> suid)
 {
     REQUIRE_PROMISE(stdio);
     if (!copy_to_user(ruid, &m_uid) || !copy_to_user(euid, &m_euid) || !copy_to_user(suid, &m_suid))
-        return -EFAULT;
+        return EFAULT;
     return 0;
 }
 
-int Process::sys$getresgid(Userspace<gid_t*> rgid, Userspace<gid_t*> egid, Userspace<gid_t*> sgid)
+KResultOr<int> Process::sys$getresgid(Userspace<gid_t*> rgid, Userspace<gid_t*> egid, Userspace<gid_t*> sgid)
 {
     REQUIRE_PROMISE(stdio);
     if (!copy_to_user(rgid, &m_gid) || !copy_to_user(egid, &m_egid) || !copy_to_user(sgid, &m_sgid))
-        return -EFAULT;
+        return EFAULT;
     return 0;
 }
 
-int Process::sys$getgroups(ssize_t count, Userspace<gid_t*> user_gids)
+KResultOr<int> Process::sys$getgroups(ssize_t count, Userspace<gid_t*> user_gids)
 {
     REQUIRE_PROMISE(stdio);
     if (count < 0)
-        return -EINVAL;
+        return EINVAL;
     if (!count)
         return m_extra_gids.size();
     if (count != (int)m_extra_gids.size())
-        return -EINVAL;
+        return EINVAL;
 
     if (!copy_to_user(user_gids, m_extra_gids.data(), sizeof(gid_t) * count))
-        return -EFAULT;
+        return EFAULT;
     return 0;
 }
 

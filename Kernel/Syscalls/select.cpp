@@ -32,22 +32,22 @@
 
 namespace Kernel {
 
-int Process::sys$select(const Syscall::SC_select_params* user_params)
+KResultOr<int> Process::sys$select(const Syscall::SC_select_params* user_params)
 {
     REQUIRE_PROMISE(stdio);
     Syscall::SC_select_params params;
 
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     if (params.nfds < 0)
-        return -EINVAL;
+        return EINVAL;
 
     Thread::BlockTimeout timeout;
     if (params.timeout) {
         timespec timeout_copy;
         if (!copy_from_user(&timeout_copy, params.timeout))
-            return -EFAULT;
+            return EFAULT;
         timeout = Thread::BlockTimeout(false, &timeout_copy);
     }
 
@@ -57,7 +57,7 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
     if (params.sigmask) {
         sigset_t sigmask_copy;
         if (!copy_from_user(&sigmask_copy, params.sigmask))
-            return -EFAULT;
+            return EFAULT;
         previous_signal_mask = current_thread->update_signal_mask(sigmask_copy);
     }
     ScopeGuard rollback_signal_mask([&]() {
@@ -67,11 +67,11 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
 
     fd_set fds_read, fds_write, fds_except;
     if (params.readfds && !copy_from_user(&fds_read, params.readfds))
-        return -EFAULT;
+        return EFAULT;
     if (params.writefds && !copy_from_user(&fds_write, params.writefds))
-        return -EFAULT;
+        return EFAULT;
     if (params.exceptfds && !copy_from_user(&fds_except, params.exceptfds))
-        return -EFAULT;
+        return EFAULT;
 
     Thread::SelectBlocker::FDVector fds_info;
     Vector<int> fds;
@@ -89,7 +89,7 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
         auto description = file_description(fd);
         if (!description) {
             dbgln("sys$select: Bad fd number {}", fd);
-            return -EBADF;
+            return EBADF;
         }
         fds_info.append({ description.release_nonnull(), (Thread::FileBlocker::BlockFlags)block_flags });
         fds.append(fd);
@@ -100,7 +100,7 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
 
     if (current_thread->block<Thread::SelectBlocker>(timeout, fds_info).was_interrupted()) {
         dbgln_if(POLL_SELECT_DEBUG, "select was interrupted");
-        return -EINTR;
+        return EINTR;
     }
 
     if (params.readfds)
@@ -130,47 +130,47 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
     }
 
     if (params.readfds && !copy_to_user(params.readfds, &fds_read))
-        return -EFAULT;
+        return EFAULT;
     if (params.writefds && !copy_to_user(params.writefds, &fds_write))
-        return -EFAULT;
+        return EFAULT;
     if (params.exceptfds && !copy_to_user(params.exceptfds, &fds_except))
-        return -EFAULT;
+        return EFAULT;
     return marked_fd_count;
 }
 
-int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
+KResultOr<int> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
     // FIXME: Return -EINVAL if timeout is invalid.
     Syscall::SC_poll_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     if (params.nfds >= m_max_open_file_descriptors)
-        return -ENOBUFS;
+        return ENOBUFS;
 
     Thread::BlockTimeout timeout;
     if (params.timeout) {
         timespec timeout_copy;
         if (!copy_from_user(&timeout_copy, params.timeout))
-            return -EFAULT;
+            return EFAULT;
         timeout = Thread::BlockTimeout(false, &timeout_copy);
     }
 
     sigset_t sigmask = {};
     if (params.sigmask && !copy_from_user(&sigmask, params.sigmask))
-        return -EFAULT;
+        return EFAULT;
 
     Vector<pollfd> fds_copy;
     if (params.nfds > 0) {
         Checked nfds_checked = sizeof(pollfd);
         nfds_checked *= params.nfds;
         if (nfds_checked.has_overflow())
-            return -EFAULT;
+            return EFAULT;
         fds_copy.resize(params.nfds);
         if (!copy_from_user(fds_copy.data(), &params.fds[0], nfds_checked.value()))
-            return -EFAULT;
+            return EFAULT;
     }
 
     Thread::SelectBlocker::FDVector fds_info;
@@ -179,7 +179,7 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
         auto description = file_description(pfd.fd);
         if (!description) {
             dbgln("sys$poll: Bad fd number {}", pfd.fd);
-            return -EBADF;
+            return EBADF;
         }
         u32 block_flags = (u32)Thread::FileBlocker::BlockFlags::Exception; // always want POLLERR, POLLHUP, POLLNVAL
         if (pfd.events & POLLIN)
@@ -205,7 +205,7 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
         dbgln("polling on {} fds, timeout={}", fds_info.size(), params.timeout);
 
     if (current_thread->block<Thread::SelectBlocker>(timeout, fds_info).was_interrupted())
-        return -EINTR;
+        return EINTR;
 
     int fds_with_revents = 0;
 
@@ -243,7 +243,7 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
     }
 
     if (params.nfds > 0 && !copy_to_user(&params.fds[0], fds_copy.data(), params.nfds * sizeof(pollfd)))
-        return -EFAULT;
+        return EFAULT;
 
     return fds_with_revents;
 }

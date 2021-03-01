@@ -30,39 +30,39 @@
 
 namespace Kernel {
 
-int Process::sys$sendfd(int sockfd, int fd)
+KResultOr<int> Process::sys$sendfd(int sockfd, int fd)
 {
     REQUIRE_PROMISE(sendfd);
     auto socket_description = file_description(sockfd);
     if (!socket_description)
-        return -EBADF;
+        return EBADF;
     if (!socket_description->is_socket())
-        return -ENOTSOCK;
+        return ENOTSOCK;
     auto& socket = *socket_description->socket();
     if (!socket.is_local())
-        return -EAFNOSUPPORT;
+        return EAFNOSUPPORT;
     if (!socket.is_connected())
-        return -ENOTCONN;
+        return ENOTCONN;
 
     auto passing_descriptor = file_description(fd);
     if (!passing_descriptor)
-        return -EBADF;
+        return EBADF;
 
     auto& local_socket = static_cast<LocalSocket&>(socket);
     return local_socket.sendfd(*socket_description, *passing_descriptor);
 }
 
-int Process::sys$recvfd(int sockfd, int options)
+KResultOr<int> Process::sys$recvfd(int sockfd, int options)
 {
     REQUIRE_PROMISE(recvfd);
     auto socket_description = file_description(sockfd);
     if (!socket_description)
-        return -EBADF;
+        return EBADF;
     if (!socket_description->is_socket())
-        return -ENOTSOCK;
+        return ENOTSOCK;
     auto& socket = *socket_description->socket();
     if (!socket.is_local())
-        return -EAFNOSUPPORT;
+        return EAFNOSUPPORT;
 
     int new_fd = alloc_fd();
     if (new_fd < 0)

@@ -28,14 +28,14 @@
 
 namespace Kernel {
 
-int Process::sys$disown(ProcessID pid)
+KResultOr<int> Process::sys$disown(ProcessID pid)
 {
     REQUIRE_PROMISE(proc);
     auto process = Process::from_pid(pid);
     if (!process)
-        return -ESRCH;
+        return ESRCH;
     if (process->ppid() != this->pid())
-        return -ECHILD;
+        return ECHILD;
     process->m_ppid = 0;
     process->disowned_by_waiter(*this);
     return 0;

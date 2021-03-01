@@ -29,13 +29,13 @@
 
 namespace Kernel {
 
-int Process::sys$beep()
+KResultOr<int> Process::sys$beep()
 {
     PCSpeaker::tone_on(440);
     auto result = Thread::current()->sleep({ 0, 200 });
     PCSpeaker::tone_off();
     if (result.was_interrupted())
-        return -EINTR;
+        return EINTR;
     return 0;
 }
 
