@@ -245,6 +245,11 @@ void OutOfProcessWebView::notify_server_did_change_title(Badge<WebContentClient>
         on_title_change(title);
 }
 
+void OutOfProcessWebView::notify_server_did_request_scroll(Badge<WebContentClient>, int wheel_delta)
+{
+    vertical_scrollbar().set_value(vertical_scrollbar().value() + wheel_delta * 20);
+}
+
 void OutOfProcessWebView::notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect& rect)
 {
     scroll_into_view(rect, true, true);

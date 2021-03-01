@@ -8,6 +8,7 @@ endpoint WebContentClient = 90
     DidRequestCursorChange(i32 cursor_type) =|
     DidLayout(Gfx::IntSize content_size) =|
     DidChangeTitle(String title) =|
+    DidRequestScroll(int wheel_delta) =|
     DidRequestScrollIntoView(Gfx::IntRect rect) =|
     DidHoverLink(URL url) =|
     DidUnhoverLink() =|
