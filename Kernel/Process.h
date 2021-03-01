@@ -279,7 +279,7 @@ public:
     KResultOr<pid_t> sys$fork(RegisterState&);
     KResultOr<int> sys$execve(Userspace<const Syscall::SC_execve_params*>);
     KResultOr<int> sys$dup2(int old_fd, int new_fd);
-    KResultOr<int> sys$sigaction(int signum, const sigaction* act, sigaction* old_act);
+    KResultOr<int> sys$sigaction(int signum, Userspace<const sigaction*> act, Userspace<sigaction*> old_act);
     KResultOr<int> sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set);
     KResultOr<int> sys$sigpending(Userspace<sigset_t*>);
     KResultOr<int> sys$getgroups(ssize_t, Userspace<gid_t*>);

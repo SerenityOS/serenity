@@ -69,23 +69,27 @@ KResultOr<int> Process::sys$sigpending(Userspace<sigset_t*> set)
     return 0;
 }
 
-KResultOr<int> Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
+KResultOr<int> Process::sys$sigaction(int signum, Userspace<const sigaction*> user_act, Userspace<sigaction*> user_old_act)
 {
     REQUIRE_PROMISE(sigaction);
     if (signum < 1 || signum >= 32 || signum == SIGKILL || signum == SIGSTOP)
         return EINVAL;
+
+    sigaction act {};
+    if (!copy_from_user(&act, user_act))
+        return EFAULT;
+
     InterruptDisabler disabler; // FIXME: This should use a narrower lock. Maybe a way to ignore signals temporarily?
     auto& action = Thread::current()->m_signal_action_data[signum];
-    if (old_act) {
-        if (!copy_to_user(&old_act->sa_flags, &action.flags))
-            return EFAULT;
-        if (!copy_to_user(&old_act->sa_sigaction, &action.handler_or_sigaction, sizeof(action.handler_or_sigaction)))
+    if (user_old_act) {
+        sigaction old_act {};
+        old_act.sa_flags = action.flags;
+        old_act.sa_sigaction = reinterpret_cast<decltype(old_act.sa_sigaction)>(action.handler_or_sigaction.as_ptr());
+        if (!copy_to_user(user_old_act, &old_act))
             return EFAULT;
     }
-    if (!copy_from_user(&action.flags, &act->sa_flags))
-        return EFAULT;
-    if (!copy_from_user(&action.handler_or_sigaction, &act->sa_sigaction, sizeof(action.handler_or_sigaction)))
-        return EFAULT;
+    action.flags = act.sa_flags;
+    action.handler_or_sigaction = VirtualAddress { reinterpret_cast<void*>(act.sa_sigaction) };
     return 0;
 }
 
