@@ -67,7 +67,7 @@ public:
     }
 
     WeakPtr<LanguageClient> language_client() { return m_language_client; }
-    const String& projcet_path() const { return m_project_path; }
+    const String& project_path() const { return m_project_path; }
 
     template<typename ConcreteType>
     static NonnullRefPtr<ServerConnection> get_or_create(const String& project_path)
