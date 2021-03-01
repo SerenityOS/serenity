@@ -182,6 +182,8 @@ private:
     mutable bool m_item_data_cache_valid { false };
 
     bool m_changing_selection { false };
+
+    bool m_had_valid_size { false };
 };
 
 }
