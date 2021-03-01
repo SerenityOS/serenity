@@ -145,7 +145,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
     if (!copy_from_user(&params, user_params))
         return EFAULT;
 
-    void* addr = (void*)params.addr;
+    FlatPtr addr = params.addr;
     size_t size = params.size;
     size_t alignment = params.alignment;
     int prot = params.prot;
@@ -288,7 +288,7 @@ static KResultOr<Range> expand_range_to_page_boundaries(FlatPtr address, size_t 
     return Range { base, end - base.get() };
 }
 
-KResultOr<int> Process::sys$mprotect(void* addr, size_t size, int prot)
+KResultOr<int> Process::sys$mprotect(Userspace<void*> addr, size_t size, int prot)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -296,7 +296,7 @@ KResultOr<int> Process::sys$mprotect(void* addr, size_t size, int prot)
         REQUIRE_PROMISE(prot_exec);
     }
 
-    auto range_or_error = expand_range_to_page_boundaries((FlatPtr)addr, size);
+    auto range_or_error = expand_range_to_page_boundaries(addr, size);
     if (range_or_error.is_error())
         return range_or_error.error();
 
@@ -366,11 +366,11 @@ KResultOr<int> Process::sys$mprotect(void* addr, size_t size, int prot)
     return EINVAL;
 }
 
-KResultOr<int> Process::sys$madvise(void* address, size_t size, int advice)
+KResultOr<int> Process::sys$madvise(Userspace<void*> address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
 
-    auto range_or_error = expand_range_to_page_boundaries((FlatPtr)address, size);
+    auto range_or_error = expand_range_to_page_boundaries(address, size);
     if (range_or_error.is_error())
         return range_or_error.error();
 
@@ -445,14 +445,14 @@ KResultOr<int> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_n
     return 0;
 }
 
-KResultOr<int> Process::sys$munmap(void* addr, size_t size)
+KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
 {
     REQUIRE_PROMISE(stdio);
 
     if (!size)
         return EINVAL;
 
-    auto range_or_error = expand_range_to_page_boundaries((FlatPtr)addr, size);
+    auto range_or_error = expand_range_to_page_boundaries(addr, size);
     if (range_or_error.is_error())
         return range_or_error.error();
 
@@ -582,7 +582,7 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(size_t size)
     return m_master_tls_region.unsafe_ptr()->vaddr().get();
 }
 
-KResultOr<int> Process::sys$msyscall(void* address)
+KResultOr<int> Process::sys$msyscall(Userspace<void*> address)
 {
     if (space().enforces_syscall_regions())
         return EPERM;
