@@ -137,13 +137,13 @@ static bool validate_inode_mmap_prot(const Process& process, int prot, const Ino
     return true;
 }
 
-FlatPtr Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
+KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_mmap_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     void* addr = (void*)params.addr;
     size_t size = params.size;
@@ -162,27 +162,27 @@ FlatPtr Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     }
 
     if (alignment & ~PAGE_MASK)
-        return -EINVAL;
+        return EINVAL;
 
     if (page_round_up_would_wrap(size))
-        return -EINVAL;
+        return EINVAL;
 
     if (!is_user_range(VirtualAddress(addr), page_round_up(size)))
-        return -EFAULT;
+        return EFAULT;
 
     String name;
     if (params.name.characters) {
         if (params.name.length > PATH_MAX)
-            return -ENAMETOOLONG;
+            return ENAMETOOLONG;
         name = copy_string_from_user(params.name);
         if (name.is_null())
-            return -EFAULT;
+            return EFAULT;
     }
 
     if (size == 0)
-        return -EINVAL;
+        return EINVAL;
     if ((FlatPtr)addr & ~PAGE_MASK)
-        return -EINVAL;
+        return EINVAL;
 
     bool map_shared = flags & MAP_SHARED;
     bool map_anonymous = flags & MAP_ANONYMOUS;
@@ -193,19 +193,19 @@ FlatPtr Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     bool map_randomized = flags & MAP_RANDOMIZED;
 
     if (map_shared && map_private)
-        return -EINVAL;
+        return EINVAL;
 
     if (!map_shared && !map_private)
-        return -EINVAL;
+        return EINVAL;
 
     if (map_fixed && map_randomized)
-        return -EINVAL;
+        return EINVAL;
 
     if (!validate_mmap_prot(prot, map_stack, map_anonymous))
-        return -EINVAL;
+        return EINVAL;
 
     if (map_stack && (!map_private || !map_anonymous))
-        return -EINVAL;
+        return EINVAL;
 
     Region* region = nullptr;
     Optional<Range> range;
@@ -223,7 +223,7 @@ FlatPtr Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     }
 
     if (!range.has_value())
-        return -ENOMEM;
+        return ENOMEM;
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
@@ -233,24 +233,24 @@ FlatPtr Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
         region = region_or_error.value();
     } else {
         if (offset < 0)
-            return -EINVAL;
+            return EINVAL;
         if (static_cast<size_t>(offset) & ~PAGE_MASK)
-            return -EINVAL;
+            return EINVAL;
         auto description = file_description(fd);
         if (!description)
-            return -EBADF;
+            return EBADF;
         if (description->is_directory())
-            return -ENODEV;
+            return ENODEV;
         // Require read access even when read protection is not requested.
         if (!description->is_readable())
-            return -EACCES;
+            return EACCES;
         if (map_shared) {
             if ((prot & PROT_WRITE) && !description->is_writable())
-                return -EACCES;
+                return EACCES;
         }
         if (description->inode()) {
             if (!validate_inode_mmap_prot(*this, prot, *description->inode(), map_shared))
-                return -EACCES;
+                return EACCES;
         }
 
         auto region_or_error = description->mmap(*this, range.value(), static_cast<size_t>(offset), prot, map_shared);
@@ -260,7 +260,7 @@ FlatPtr Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     }
 
     if (!region)
-        return -ENOMEM;
+        return ENOMEM;
     region->set_mmap(true);
     if (map_shared)
         region->set_shared(true);
@@ -288,7 +288,7 @@ static KResultOr<Range> expand_range_to_page_boundaries(FlatPtr address, size_t 
     return Range { base, end - base.get() };
 }
 
-int Process::sys$mprotect(void* addr, size_t size, int prot)
+KResultOr<int> Process::sys$mprotect(void* addr, size_t size, int prot)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -302,21 +302,21 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
 
     auto range_to_mprotect = range_or_error.value();
     if (!range_to_mprotect.size())
-        return -EINVAL;
+        return EINVAL;
 
     if (!is_user_range(range_to_mprotect))
-        return -EFAULT;
+        return EFAULT;
 
     if (auto* whole_region = space().find_region_from_range(range_to_mprotect)) {
         if (!whole_region->is_mmap())
-            return -EPERM;
+            return EPERM;
         if (!validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region))
-            return -EINVAL;
+            return EINVAL;
         if (whole_region->access() == prot_to_region_access_flags(prot))
             return 0;
         if (whole_region->vmobject().is_inode()
             && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(whole_region->vmobject()).inode(), whole_region->is_shared())) {
-            return -EACCES;
+            return EACCES;
         }
         whole_region->set_readable(prot & PROT_READ);
         whole_region->set_writable(prot & PROT_WRITE);
@@ -329,14 +329,14 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
     // Check if we can carve out the desired range from an existing region
     if (auto* old_region = space().find_region_containing(range_to_mprotect)) {
         if (!old_region->is_mmap())
-            return -EPERM;
+            return EPERM;
         if (!validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region))
-            return -EINVAL;
+            return EINVAL;
         if (old_region->access() == prot_to_region_access_flags(prot))
             return 0;
         if (old_region->vmobject().is_inode()
             && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(old_region->vmobject()).inode(), old_region->is_shared())) {
-            return -EACCES;
+            return EACCES;
         }
 
         // This vector is the region(s) adjacent to our range.
@@ -363,10 +363,10 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
 
     // FIXME: We should also support mprotect() across multiple regions. (#175) (#964)
 
-    return -EINVAL;
+    return EINVAL;
 }
 
-int Process::sys$madvise(void* address, size_t size, int advice)
+KResultOr<int> Process::sys$madvise(void* address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -377,31 +377,31 @@ int Process::sys$madvise(void* address, size_t size, int advice)
     auto range_to_madvise = range_or_error.value();
 
     if (!range_to_madvise.size())
-        return -EINVAL;
+        return EINVAL;
 
     if (!is_user_range(range_to_madvise))
-        return -EFAULT;
+        return EFAULT;
 
     auto* region = space().find_region_from_range(range_to_madvise);
     if (!region)
-        return -EINVAL;
+        return EINVAL;
     if (!region->is_mmap())
-        return -EPERM;
+        return EPERM;
     bool set_volatile = advice & MADV_SET_VOLATILE;
     bool set_nonvolatile = advice & MADV_SET_NONVOLATILE;
     if (set_volatile && set_nonvolatile)
-        return -EINVAL;
+        return EINVAL;
     if (set_volatile || set_nonvolatile) {
         if (!region->vmobject().is_anonymous())
-            return -EPERM;
+            return EPERM;
         bool was_purged = false;
         switch (region->set_volatile(VirtualAddress(address), size, set_volatile, was_purged)) {
         case Region::SetVolatileError::Success:
             break;
         case Region::SetVolatileError::NotPurgeable:
-            return -EPERM;
+            return EPERM;
         case Region::SetVolatileError::OutOfMemory:
-            return -ENOMEM;
+            return ENOMEM;
         }
         if (set_nonvolatile)
             return was_purged ? 1 : 0;
@@ -409,26 +409,26 @@ int Process::sys$madvise(void* address, size_t size, int advice)
     }
     if (advice & MADV_GET_VOLATILE) {
         if (!region->vmobject().is_anonymous())
-            return -EPERM;
+            return EPERM;
         return region->is_volatile(VirtualAddress(address), size) ? 0 : 1;
     }
-    return -EINVAL;
+    return EINVAL;
 }
 
-int Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
+KResultOr<int> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_set_mmap_name_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     if (params.name.length > PATH_MAX)
-        return -ENAMETOOLONG;
+        return ENAMETOOLONG;
 
     auto name = copy_string_from_user(params.name);
     if (name.is_null())
-        return -EFAULT;
+        return EFAULT;
 
     auto range_or_error = expand_range_to_page_boundaries((FlatPtr)params.addr, params.size);
     if (range_or_error.is_error())
@@ -438,19 +438,19 @@ int Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*
 
     auto* region = space().find_region_from_range(range);
     if (!region)
-        return -EINVAL;
+        return EINVAL;
     if (!region->is_mmap())
-        return -EPERM;
+        return EPERM;
     region->set_name(move(name));
     return 0;
 }
 
-int Process::sys$munmap(void* addr, size_t size)
+KResultOr<int> Process::sys$munmap(void* addr, size_t size)
 {
     REQUIRE_PROMISE(stdio);
 
     if (!size)
-        return -EINVAL;
+        return EINVAL;
 
     auto range_or_error = expand_range_to_page_boundaries((FlatPtr)addr, size);
     if (range_or_error.is_error())
@@ -459,11 +459,11 @@ int Process::sys$munmap(void* addr, size_t size)
     auto range_to_unmap = range_or_error.value();
 
     if (!is_user_range(range_to_unmap))
-        return -EFAULT;
+        return EFAULT;
 
     if (auto* whole_region = space().find_region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
-            return -EPERM;
+            return EPERM;
         bool success = space().deallocate_region(*whole_region);
         VERIFY(success);
         return 0;
@@ -471,7 +471,7 @@ int Process::sys$munmap(void* addr, size_t size)
 
     if (auto* old_region = space().find_region_containing(range_to_unmap)) {
         if (!old_region->is_mmap())
-            return -EPERM;
+            return EPERM;
 
         auto new_regions = space().split_region_around_range(*old_region, range_to_unmap);
 
@@ -491,16 +491,16 @@ int Process::sys$munmap(void* addr, size_t size)
 
     // FIXME: We should also support munmap() across multiple regions. (#175)
 
-    return -EINVAL;
+    return EINVAL;
 }
 
-FlatPtr Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
+KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_mremap_params params {};
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     auto range_or_error = expand_range_to_page_boundaries((FlatPtr)params.old_address, params.old_size);
     if (range_or_error.is_error())
@@ -510,10 +510,10 @@ FlatPtr Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_par
 
     auto* old_region = space().find_region_from_range(old_range);
     if (!old_region)
-        return -EINVAL;
+        return EINVAL;
 
     if (!old_region->is_mmap())
-        return -EPERM;
+        return EPERM;
 
     if (old_region->vmobject().is_shared_inode() && params.flags & MAP_PRIVATE && !(params.flags & (MAP_ANONYMOUS | MAP_NORESERVE))) {
         auto range = old_region->range();
@@ -536,21 +536,21 @@ FlatPtr Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_par
     }
 
     dbgln("sys$mremap: Unimplemented remap request (flags={})", params.flags);
-    return -ENOTIMPL;
+    return ENOTIMPL;
 }
 
-FlatPtr Process::sys$allocate_tls(size_t size)
+KResultOr<FlatPtr> Process::sys$allocate_tls(size_t size)
 {
     REQUIRE_PROMISE(stdio);
 
     if (!size)
-        return -EINVAL;
+        return EINVAL;
 
     if (!m_master_tls_region.is_null())
-        return -EEXIST;
+        return EEXIST;
 
     if (thread_count() != 1)
-        return -EFAULT;
+        return EFAULT;
 
     Thread* main_thread = nullptr;
     for_each_thread([&main_thread](auto& thread) {
@@ -561,7 +561,7 @@ FlatPtr Process::sys$allocate_tls(size_t size)
 
     auto range = space().allocate_range({}, size);
     if (!range.has_value())
-        return -ENOMEM;
+        return ENOMEM;
 
     auto region_or_error = space().allocate_region(range.value(), String(), PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
@@ -573,7 +573,7 @@ FlatPtr Process::sys$allocate_tls(size_t size)
 
     auto tsr_result = main_thread->make_thread_specific_region({});
     if (tsr_result.is_error())
-        return -EFAULT;
+        return EFAULT;
 
     auto& tls_descriptor = Processor::current().get_gdt_entry(GDT_SELECTOR_TLS);
     tls_descriptor.set_base(main_thread->thread_specific_data());
@@ -582,10 +582,10 @@ FlatPtr Process::sys$allocate_tls(size_t size)
     return m_master_tls_region.unsafe_ptr()->vaddr().get();
 }
 
-int Process::sys$msyscall(void* address)
+KResultOr<int> Process::sys$msyscall(void* address)
 {
     if (space().enforces_syscall_regions())
-        return -EPERM;
+        return EPERM;
 
     if (!address) {
         space().set_enforces_syscall_regions(true);
@@ -593,14 +593,14 @@ int Process::sys$msyscall(void* address)
     }
 
     if (!is_user_address(VirtualAddress { address }))
-        return -EFAULT;
+        return EFAULT;
 
     auto* region = space().find_region_containing(Range { VirtualAddress { address }, 1 });
     if (!region)
-        return -EINVAL;
+        return EINVAL;
 
     if (!region->is_mmap())
-        return -EINVAL;
+        return EINVAL;
 
     region->set_syscall_region(true);
     return 0;

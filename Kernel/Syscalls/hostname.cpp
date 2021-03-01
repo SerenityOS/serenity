@@ -31,32 +31,32 @@ namespace Kernel {
 extern String* g_hostname;
 extern Lock* g_hostname_lock;
 
-int Process::sys$gethostname(Userspace<char*> buffer, ssize_t size)
+KResultOr<int> Process::sys$gethostname(Userspace<char*> buffer, ssize_t size)
 {
     REQUIRE_PROMISE(stdio);
     if (size < 0)
-        return -EINVAL;
+        return EINVAL;
     LOCKER(*g_hostname_lock, Lock::Mode::Shared);
     if ((size_t)size < (g_hostname->length() + 1))
-        return -ENAMETOOLONG;
+        return ENAMETOOLONG;
     if (!copy_to_user(buffer, g_hostname->characters(), g_hostname->length() + 1))
-        return -EFAULT;
+        return EFAULT;
     return 0;
 }
 
-int Process::sys$sethostname(Userspace<const char*> hostname, ssize_t length)
+KResultOr<int> Process::sys$sethostname(Userspace<const char*> hostname, ssize_t length)
 {
     REQUIRE_NO_PROMISES;
     if (!is_superuser())
-        return -EPERM;
+        return EPERM;
     if (length < 0)
-        return -EINVAL;
+        return EINVAL;
     LOCKER(*g_hostname_lock, Lock::Mode::Exclusive);
     if (length > 64)
-        return -ENAMETOOLONG;
+        return ENAMETOOLONG;
     auto copied_hostname = copy_string_from_user(hostname, length);
     if (copied_hostname.is_null())
-        return -EFAULT;
+        return EFAULT;
     *g_hostname = move(copied_hostname);
     return 0;
 }

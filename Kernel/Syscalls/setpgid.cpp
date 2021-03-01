@@ -29,7 +29,7 @@
 
 namespace Kernel {
 
-pid_t Process::sys$getsid(pid_t pid)
+KResultOr<pid_t> Process::sys$getsid(pid_t pid)
 {
     REQUIRE_PROMISE(proc);
     if (pid == 0)
@@ -37,13 +37,13 @@ pid_t Process::sys$getsid(pid_t pid)
     ScopedSpinLock lock(g_processes_lock);
     auto process = Process::from_pid(pid);
     if (!process)
-        return -ESRCH;
+        return ESRCH;
     if (m_sid != process->m_sid)
-        return -EPERM;
+        return EPERM;
     return process->m_sid.value();
 }
 
-pid_t Process::sys$setsid()
+KResultOr<pid_t> Process::sys$setsid()
 {
     REQUIRE_PROMISE(proc);
     InterruptDisabler disabler;
@@ -53,7 +53,7 @@ pid_t Process::sys$setsid()
         return IterationDecision::Break;
     });
     if (found_process_with_same_pgid_as_my_pid)
-        return -EPERM;
+        return EPERM;
     // Create a new Session and a new ProcessGroup.
     m_sid = m_pid.value();
     m_pg = ProcessGroup::create(ProcessGroupID(m_pid.value()));
@@ -61,7 +61,7 @@ pid_t Process::sys$setsid()
     return m_sid.value();
 }
 
-pid_t Process::sys$getpgid(pid_t pid)
+KResultOr<pid_t> Process::sys$getpgid(pid_t pid)
 {
     REQUIRE_PROMISE(proc);
     if (pid == 0)
@@ -69,11 +69,11 @@ pid_t Process::sys$getpgid(pid_t pid)
     ScopedSpinLock lock(g_processes_lock); // FIXME: Use a ProcessHandle
     auto process = Process::from_pid(pid);
     if (!process)
-        return -ESRCH;
+        return ESRCH;
     return process->pgid().value();
 }
 
-pid_t Process::sys$getpgrp()
+KResultOr<pid_t> Process::sys$getpgrp()
 {
     REQUIRE_PROMISE(stdio);
     return pgid().value();
@@ -93,32 +93,32 @@ SessionID Process::get_sid_from_pgid(ProcessGroupID pgid)
     return sid;
 }
 
-int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
+KResultOr<int> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 {
     REQUIRE_PROMISE(proc);
     ScopedSpinLock lock(g_processes_lock); // FIXME: Use a ProcessHandle
     ProcessID pid = specified_pid ? ProcessID(specified_pid) : m_pid;
     if (specified_pgid < 0) {
         // The value of the pgid argument is less than 0, or is not a value supported by the implementation.
-        return -EINVAL;
+        return EINVAL;
     }
     auto process = Process::from_pid(pid);
     if (!process)
-        return -ESRCH;
+        return ESRCH;
     if (process != this && process->ppid() != m_pid) {
         // The value of the pid argument does not match the process ID
         // of the calling process or of a child process of the calling process.
-        return -ESRCH;
+        return ESRCH;
     }
     if (process->is_session_leader()) {
         // The process indicated by the pid argument is a session leader.
-        return -EPERM;
+        return EPERM;
     }
     if (process->ppid() == m_pid && process->sid() != sid()) {
         // The value of the pid argument matches the process ID of a child
         // process of the calling process and the child process is not in
         // the same session as the calling process.
-        return -EPERM;
+        return EPERM;
     }
 
     ProcessGroupID new_pgid = specified_pgid ? ProcessGroupID(specified_pgid) : process->m_pid.value();
@@ -126,12 +126,12 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     SessionID new_sid = get_sid_from_pgid(new_pgid);
     if (new_sid != -1 && current_sid != new_sid) {
         // Can't move a process between sessions.
-        return -EPERM;
+        return EPERM;
     }
     if (new_sid == -1 && new_pgid != process->m_pid.value()) {
         // The value of the pgid argument is valid, but is not
         // the calling pid, and is not an existing process group.
-        return -EPERM;
+        return EPERM;
     }
     // FIXME: There are more EPERM conditions to check for here..
     process->m_pg = ProcessGroup::find_or_create(new_pgid);

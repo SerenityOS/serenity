@@ -31,7 +31,7 @@
 
 namespace Kernel {
 
-int Process::sys$watch_file(Userspace<const char*> user_path, size_t path_length)
+KResultOr<int> Process::sys$watch_file(Userspace<const char*> user_path, size_t path_length)
 {
     REQUIRE_PROMISE(rpath);
     auto path = get_syscall_path_argument(user_path, path_length);
@@ -46,7 +46,7 @@ int Process::sys$watch_file(Userspace<const char*> user_path, size_t path_length
     auto& inode = custody->inode();
 
     if (!inode.fs().supports_watchers())
-        return -ENOTSUP;
+        return ENOTSUP;
 
     int fd = alloc_fd();
     if (fd < 0)

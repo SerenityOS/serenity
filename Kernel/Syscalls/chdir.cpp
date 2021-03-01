@@ -31,7 +31,7 @@
 
 namespace Kernel {
 
-int Process::sys$chdir(Userspace<const char*> user_path, size_t path_length)
+KResultOr<int> Process::sys$chdir(Userspace<const char*> user_path, size_t path_length)
 {
     REQUIRE_PROMISE(rpath);
     auto path = get_syscall_path_argument(user_path, path_length);
@@ -44,24 +44,24 @@ int Process::sys$chdir(Userspace<const char*> user_path, size_t path_length)
     return 0;
 }
 
-int Process::sys$fchdir(int fd)
+KResultOr<int> Process::sys$fchdir(int fd)
 {
     REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
     if (!description)
-        return -EBADF;
+        return EBADF;
 
     if (!description->is_directory())
-        return -ENOTDIR;
+        return ENOTDIR;
 
     if (!description->metadata().may_execute(*this))
-        return -EACCES;
+        return EACCES;
 
     m_cwd = description->custody();
     return 0;
 }
 
-int Process::sys$getcwd(Userspace<char*> buffer, size_t size)
+KResultOr<int> Process::sys$getcwd(Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(rpath);
 
@@ -70,7 +70,7 @@ int Process::sys$getcwd(Userspace<char*> buffer, size_t size)
     size_t ideal_size = path.length() + 1;
     auto size_to_copy = min(ideal_size, size);
     if (!copy_to_user(buffer, path.characters(), size_to_copy))
-        return -EFAULT;
+        return EFAULT;
     // Note: we return the whole size here, not the copied size.
     return ideal_size;
 }

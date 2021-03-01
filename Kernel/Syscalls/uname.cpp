@@ -28,7 +28,7 @@
 
 namespace Kernel {
 
-int Process::sys$uname(Userspace<utsname*> user_buf)
+KResultOr<int> Process::sys$uname(Userspace<utsname*> user_buf)
 {
     extern String* g_hostname;
     extern Lock* g_hostname_lock;
@@ -37,7 +37,7 @@ int Process::sys$uname(Userspace<utsname*> user_buf)
 
     LOCKER(*g_hostname_lock, Lock::Mode::Shared);
     if (g_hostname->length() + 1 > sizeof(utsname::nodename))
-        return -ENAMETOOLONG;
+        return ENAMETOOLONG;
 
     utsname buf {};
     memcpy(buf.sysname, "SerenityOS", 11);
@@ -47,7 +47,7 @@ int Process::sys$uname(Userspace<utsname*> user_buf)
     memcpy(buf.nodename, g_hostname->characters(), g_hostname->length() + 1);
 
     if (!copy_to_user(user_buf, &buf))
-        return -EFAULT;
+        return EFAULT;
     return 0;
 }
 

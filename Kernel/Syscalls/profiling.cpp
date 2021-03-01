@@ -32,32 +32,32 @@
 
 namespace Kernel {
 
-int Process::sys$profiling_enable(pid_t pid)
+KResultOr<int> Process::sys$profiling_enable(pid_t pid)
 {
     REQUIRE_NO_PROMISES;
     ScopedSpinLock lock(g_processes_lock);
     auto process = Process::from_pid(pid);
     if (!process)
-        return -ESRCH;
+        return ESRCH;
     if (process->is_dead())
-        return -ESRCH;
+        return ESRCH;
     if (!is_superuser() && process->uid() != m_euid)
-        return -EPERM;
+        return EPERM;
     process->ensure_perf_events();
     process->set_profiling(true);
     return 0;
 }
 
-int Process::sys$profiling_disable(pid_t pid)
+KResultOr<int> Process::sys$profiling_disable(pid_t pid)
 {
     ScopedSpinLock lock(g_processes_lock);
     auto process = Process::from_pid(pid);
     if (!process)
-        return -ESRCH;
+        return ESRCH;
     if (!is_superuser() && process->uid() != m_euid)
-        return -EPERM;
+        return EPERM;
     if (!process->is_profiling())
-        return -EINVAL;
+        return EINVAL;
     process->set_profiling(false);
     return 0;
 }

@@ -29,27 +29,27 @@
 
 namespace Kernel {
 
-int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
+KResultOr<int> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
 {
     Syscall::SC_pledge_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     if (params.promises.length > 1024 || params.execpromises.length > 1024)
-        return -E2BIG;
+        return E2BIG;
 
     String promises;
     if (params.promises.characters) {
         promises = copy_string_from_user(params.promises);
         if (promises.is_null())
-            return -EFAULT;
+            return EFAULT;
     }
 
     String execpromises;
     if (params.execpromises.characters) {
         execpromises = copy_string_from_user(params.execpromises);
         if (execpromises.is_null())
-            return -EFAULT;
+            return EFAULT;
     }
 
     auto parse_pledge = [&](auto& pledge_spec, u32& mask) {
@@ -70,9 +70,9 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
     if (!promises.is_null()) {
         u32 new_promises = 0;
         if (!parse_pledge(promises, new_promises))
-            return -EINVAL;
+            return EINVAL;
         if (m_promises && (!new_promises || new_promises & ~m_promises))
-            return -EPERM;
+            return EPERM;
         m_has_promises = true;
         m_promises = new_promises;
     }
@@ -80,9 +80,9 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
     if (!execpromises.is_null()) {
         u32 new_execpromises = 0;
         if (!parse_pledge(execpromises, new_execpromises))
-            return -EINVAL;
+            return EINVAL;
         if (m_execpromises && (!new_execpromises || new_execpromises & ~m_execpromises))
-            return -EPERM;
+            return EPERM;
         m_has_execpromises = true;
         m_execpromises = new_execpromises;
     }

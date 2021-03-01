@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-int Process::sys$utime(Userspace<const char*> user_path, size_t path_length, Userspace<const struct utimbuf*> user_buf)
+KResultOr<int> Process::sys$utime(Userspace<const char*> user_path, size_t path_length, Userspace<const struct utimbuf*> user_buf)
 {
     REQUIRE_PROMISE(fattr);
     auto path = get_syscall_path_argument(user_path, path_length);
@@ -39,7 +39,7 @@ int Process::sys$utime(Userspace<const char*> user_path, size_t path_length, Use
     utimbuf buf;
     if (user_buf) {
         if (!copy_from_user(&buf, user_buf))
-            return -EFAULT;
+            return EFAULT;
     } else {
         auto now = kgettimeofday();
         buf = { now.tv_sec, now.tv_sec };

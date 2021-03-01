@@ -29,16 +29,16 @@
 
 namespace Kernel {
 
-int Process::sys$ftruncate(int fd, off_t length)
+KResultOr<int> Process::sys$ftruncate(int fd, off_t length)
 {
     REQUIRE_PROMISE(stdio);
     if (length < 0)
-        return -EINVAL;
+        return EINVAL;
     auto description = file_description(fd);
     if (!description)
-        return -EBADF;
+        return EBADF;
     if (!description->is_writable())
-        return -EBADF;
+        return EBADF;
     return description->truncate(static_cast<u64>(length));
 }
 

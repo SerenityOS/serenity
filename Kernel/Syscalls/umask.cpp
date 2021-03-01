@@ -28,7 +28,7 @@
 
 namespace Kernel {
 
-mode_t Process::sys$umask(mode_t mask)
+KResultOr<mode_t> Process::sys$umask(mode_t mask)
 {
     REQUIRE_PROMISE(stdio);
     auto old_mask = m_umask;

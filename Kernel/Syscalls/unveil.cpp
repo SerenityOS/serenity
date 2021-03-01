@@ -32,11 +32,11 @@
 
 namespace Kernel {
 
-int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
+KResultOr<int> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
 {
     Syscall::SC_unveil_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     if (!params.path.characters && !params.permissions.characters) {
         m_veil_state = VeilState::Locked;
@@ -44,24 +44,24 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
     }
 
     if (m_veil_state == VeilState::Locked)
-        return -EPERM;
+        return EPERM;
 
     if (!params.path.characters || !params.permissions.characters)
-        return -EINVAL;
+        return EINVAL;
 
     if (params.permissions.length > 5)
-        return -EINVAL;
+        return EINVAL;
 
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
 
     if (path.value().is_empty() || path.value().characters()[0] != '/')
-        return -EINVAL;
+        return EINVAL;
 
     auto permissions = copy_string_from_user(params.permissions);
     if (permissions.is_null())
-        return -EFAULT;
+        return EFAULT;
 
     // Let's work out permissions first...
     unsigned new_permissions = 0;
@@ -83,7 +83,7 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
             new_permissions |= UnveilAccess::Browse;
             break;
         default:
-            return -EINVAL;
+            return EINVAL;
         }
     }
 
@@ -114,7 +114,7 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
         // as that would be the first time this path is unveiled.
         if (old_permissions != UnveilAccess::None || !matching_node.permissions_inherited_from_root()) {
             if (new_permissions & ~old_permissions)
-                return -EPERM;
+                return EPERM;
         }
         matching_node.set_metadata({ matching_node.path(), (UnveilAccess)new_permissions, true, false });
         return 0;
