@@ -42,7 +42,9 @@ VM& Console::vm()
 
 Value Console::debug()
 {
+#ifdef __serenity__
     dbgln("\033[32;1m(js debug)\033[0m {}", vm().join_arguments());
+#endif
     if (m_client)
         return m_client->debug();
     return js_undefined();
@@ -50,7 +52,9 @@ Value Console::debug()
 
 Value Console::error()
 {
+#ifdef __serenity__
     dbgln("\033[32;1m(js error)\033[0m {}", vm().join_arguments());
+#endif
     if (m_client)
         return m_client->error();
     return js_undefined();
@@ -58,7 +62,9 @@ Value Console::error()
 
 Value Console::info()
 {
+#ifdef __serenity__
     dbgln("\033[32;1m(js info)\033[0m {}", vm().join_arguments());
+#endif
     if (m_client)
         return m_client->info();
     return js_undefined();
@@ -66,7 +72,9 @@ Value Console::info()
 
 Value Console::log()
 {
+#ifdef __serenity__
     dbgln("\033[32;1m(js log)\033[0m {}", vm().join_arguments());
+#endif
     if (m_client)
         return m_client->log();
     return js_undefined();
@@ -74,7 +82,9 @@ Value Console::log()
 
 Value Console::warn()
 {
+#ifdef __serenity__
     dbgln("\033[32;1m(js warn)\033[0m {}", vm().join_arguments());
+#endif
     if (m_client)
         return m_client->warn();
     return js_undefined();
