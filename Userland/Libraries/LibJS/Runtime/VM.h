@@ -134,6 +134,7 @@ public:
     const CallFrame& call_frame() const { return *m_call_stack.last(); }
     const Vector<CallFrame*>& call_stack() const { return m_call_stack; }
     Vector<CallFrame*>& call_stack() { return m_call_stack; }
+    const ASTNode* current_node() const { return !m_ast_nodes.is_empty() ? m_ast_nodes.last() : nullptr; }
     const Vector<const ASTNode*>& node_stack() const { return m_ast_nodes; }
 
     const ScopeObject* current_scope() const { return call_frame().scope; }
