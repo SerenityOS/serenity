@@ -72,7 +72,7 @@ private:
     void for_each_handler(const String& key, HashMap<String, String>& user_preferences, Function<bool(const Handler&)> f);
     void for_each_handler_for_path(const String&, Function<bool(const Handler&)> f);
     bool open_file_url(const URL&);
-    bool open_with_user_preferences(const HashMap<String, String>& user_preferences, const String key, const String argument, const String default_program = {});
+    bool open_with_user_preferences(const HashMap<String, String>& user_preferences, const String key, const AK::Vector<String> arguments, const String default_program = {});
     bool open_with_handler_name(const URL&, const String& handler_name);
 };
 }
