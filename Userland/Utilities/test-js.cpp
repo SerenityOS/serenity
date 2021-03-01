@@ -98,9 +98,10 @@ public:
         return s_the;
     }
 
-    TestRunner(String test_root, bool print_times)
+    TestRunner(String test_root, bool print_times, bool print_progress)
         : m_test_root(move(test_root))
         , m_print_times(print_times)
+        , m_print_progress(print_progress)
     {
         VERIFY(!s_the);
         s_the = this;
@@ -109,6 +110,8 @@ public:
     void run();
 
     const JSTestRunnerCounts& counts() const { return m_counts; }
+
+    bool is_printing_progress() const { return m_print_progress; }
 
 protected:
     static TestRunner* s_the;
@@ -120,6 +123,7 @@ protected:
 
     String m_test_root;
     bool m_print_times;
+    bool m_print_progress;
 
     double m_total_elapsed_time_in_ms { 0 };
     JSTestRunnerCounts m_counts;
@@ -166,9 +170,8 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::can_parse_source)
 static void cleanup_and_exit()
 {
     // Clear the taskbar progress.
-#ifdef __serenity__
-    warn("\033]9;-1;\033\\");
-#endif
+    if (TestRunner::the() && TestRunner::the()->is_printing_progress())
+        warn("\033]9;-1;\033\\");
     exit(1);
 }
 
@@ -219,14 +222,12 @@ void TestRunner::run()
     for (auto& path : test_paths) {
         ++progress_counter;
         print_file_result(run_file_test(path));
-#ifdef __serenity__
-        warn("\033]9;{};{};\033\\", progress_counter, test_paths.size());
-#endif
+        if (m_print_progress)
+            warn("\033]9;{};{};\033\\", progress_counter, test_paths.size());
     }
 
-#ifdef __serenity__
-    warn("\033]9;-1;\033\\");
-#endif
+    if (m_print_progress)
+        warn("\033]9;-1;\033\\");
 
     print_test_results();
 }
@@ -687,11 +688,32 @@ int main(int argc, char** argv)
 #endif
 
     bool print_times = false;
+    bool print_progress =
+#ifdef __serenity__
+        true; // Use OSC 9 to print progress
+#else
+        false;
+#endif
     bool test262_parser_tests = false;
     const char* specified_test_root = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
+    args_parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Show progress with OSC 9 (true, false)",
+        .long_name = "show-progress",
+        .short_name = 'p',
+        .accept_value = [&](auto* str) {
+            if (StringView { "true" } == str)
+                print_progress = true;
+            else if (StringView { "false" } == str)
+                print_progress = false;
+            else
+                return false;
+            return true;
+        },
+    });
     args_parser.add_option(collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
     args_parser.add_option(test262_parser_tests, "Run test262 parser tests", "test262-parser-tests", 0);
     args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
@@ -736,9 +758,9 @@ int main(int argc, char** argv)
     vm = JS::VM::create();
 
     if (test262_parser_tests)
-        Test262ParserTestRunner(test_root, print_times).run();
+        Test262ParserTestRunner(test_root, print_times, print_progress).run();
     else
-        TestRunner(test_root, print_times).run();
+        TestRunner(test_root, print_times, print_progress).run();
 
     vm = nullptr;
 
