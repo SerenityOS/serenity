@@ -206,13 +206,15 @@ int main(int argc, char** argv)
     auto& executable_link_label = *widget.find_descendant_of_type_named<GUI::LinkLabel>("executable_link");
     executable_link_label.set_text(LexicalPath::canonicalized_path(executable_path));
     executable_link_label.on_click = [&] {
-        Desktop::Launcher::open(URL::create_with_file_protocol(LexicalPath(executable_path).dirname()));
+        LexicalPath path { executable_path };
+        Desktop::Launcher::open(URL::create_with_file_protocol(path.dirname(), path.basename()));
     };
 
     auto& coredump_link_label = *widget.find_descendant_of_type_named<GUI::LinkLabel>("coredump_link");
     coredump_link_label.set_text(LexicalPath::canonicalized_path(coredump_path));
     coredump_link_label.on_click = [&] {
-        Desktop::Launcher::open(URL::create_with_file_protocol(LexicalPath(coredump_path).dirname()));
+        LexicalPath path { coredump_path };
+        Desktop::Launcher::open(URL::create_with_file_protocol(path.dirname(), path.basename()));
     };
 
     auto& arguments_label = *widget.find_descendant_of_type_named<GUI::Label>("arguments_label");
