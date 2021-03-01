@@ -72,6 +72,12 @@ void IconView::resize_event(ResizeEvent& event)
 {
     AbstractView::resize_event(event);
     update_content_size();
+
+    if (!m_had_valid_size) {
+        m_had_valid_size = true;
+        if (!selection().is_empty())
+            scroll_into_view(selection().first());
+    }
 }
 
 void IconView::reinit_item_cache() const
