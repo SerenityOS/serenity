@@ -113,8 +113,7 @@ PropertiesWindow::PropertiesWindow(const String& path, bool disable_rename, Wind
 
     auto properties = Vector<PropertyValuePair>();
     properties.append({ "Type:", get_description(m_mode) });
-    auto parent_link = URL::create_with_file_protocol(m_parent_path);
-    parent_link.set_fragment(m_name);
+    auto parent_link = URL::create_with_file_protocol(m_parent_path, m_name);
     properties.append(PropertyValuePair { "Location:", path, Optional(parent_link) });
 
     if (S_ISLNK(m_mode)) {
@@ -124,7 +123,7 @@ PropertiesWindow::PropertiesWindow(const String& path, bool disable_rename, Wind
         } else {
             auto link_directory = LexicalPath(link_destination);
             VERIFY(link_directory.is_valid());
-            auto link_parent = URL::create_with_file_protocol(link_directory.dirname());
+            auto link_parent = URL::create_with_file_protocol(link_directory.dirname(), link_directory.basename());
             properties.append({ "Link target:", link_destination, Optional(link_parent) });
         }
     }
