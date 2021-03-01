@@ -900,7 +900,7 @@ Value Object::call_native_property_getter(NativeProperty& property, Value this_v
 {
     auto& vm = this->vm();
     CallFrame call_frame;
-    call_frame.current_node = property.vm().node_stack().last();
+    call_frame.current_node = property.vm().current_node();
     call_frame.is_strict_mode = vm.in_strict_mode();
     call_frame.this_value = this_value;
     vm.push_call_frame(call_frame, global_object());
@@ -915,7 +915,7 @@ void Object::call_native_property_setter(NativeProperty& property, Value this_va
 {
     auto& vm = this->vm();
     CallFrame call_frame;
-    call_frame.current_node = property.vm().node_stack().last();
+    call_frame.current_node = property.vm().current_node();
     call_frame.is_strict_mode = vm.in_strict_mode();
     call_frame.this_value = this_value;
     vm.push_call_frame(call_frame, global_object());
