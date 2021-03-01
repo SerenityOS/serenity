@@ -161,6 +161,8 @@ private:
     NonnullRefPtrVector<ASTNode> m_nodes;
     Vector<String> m_errors;
     Vector<StringView> parse_type_qualifiers();
+    bool match_attribute_specification();
+    void consume_attribute_specification();
 };
 
 }
