@@ -90,10 +90,10 @@ int main(int argc, char** argv)
             auto full_path = LexicalPath::canonicalized_path(String::formatted("/usr/src/serenity/dummy/{}", symbol.filename));
             if (access(full_path.characters(), F_OK) == 0) {
                 linked = true;
-                out("\033]8;;file://{}{}\033\\", hostname, full_path);
+                out("\033]8;;file://{}{}?line_number={}\033\\", hostname, full_path, symbol.line_number);
             }
 
-            out("\033[34;1m{}\033[0m:{}", LexicalPath(symbol.filename).basename(), symbol.line_number);
+            out("\033[34;1m{}:{}\033[0m", LexicalPath(symbol.filename).basename(), symbol.line_number);
 
             if (linked)
                 out("\033]8;;\033\\");
