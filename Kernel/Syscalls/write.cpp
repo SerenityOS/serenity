@@ -114,7 +114,7 @@ KResultOr<ssize_t> Process::do_write(FileDescription& description, const UserOrK
     return total_nwritten;
 }
 
-KResultOr<ssize_t> Process::sys$write(int fd, const u8* data, ssize_t size)
+KResultOr<ssize_t> Process::sys$write(int fd, Userspace<const u8*> data, ssize_t size)
 {
     REQUIRE_PROMISE(stdio);
     if (size < 0)
@@ -129,7 +129,7 @@ KResultOr<ssize_t> Process::sys$write(int fd, const u8* data, ssize_t size)
     if (!description->is_writable())
         return EBADF;
 
-    auto buffer = UserOrKernelBuffer::for_user_buffer(const_cast<u8*>(data), (size_t)size);
+    auto buffer = UserOrKernelBuffer::for_user_buffer(data, static_cast<size_t>(size));
     if (!buffer.has_value())
         return EFAULT;
     return do_write(*description, buffer.value(), size);
