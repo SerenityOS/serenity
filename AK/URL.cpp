@@ -444,11 +444,12 @@ u16 URL::default_port_for_protocol(const String& protocol)
     return 0;
 }
 
-URL URL::create_with_file_protocol(const String& path)
+URL URL::create_with_file_protocol(const String& path, const String& fragment)
 {
     URL url;
     url.set_protocol("file");
     url.set_path(path);
+    url.set_fragment(fragment);
     return url;
 }
 
