@@ -2,7 +2,7 @@
 port=curl
 version=7.65.3
 useconfigure=true
-configopts="--disable-threaded-resolver"
+configopts="--disable-threaded-resolver --disable-ipv6"
 files="https://curl.se/download/curl-${version}.tar.bz2 curl-${version}.tar.bz2
 https://curl.se/download/curl-${version}.tar.bz2.asc curl-${version}.tar.bz2.asc"
 
