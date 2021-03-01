@@ -95,6 +95,11 @@ void WebContentClient::handle(const Messages::WebContentClient::DidChangeTitle& 
     m_view.notify_server_did_change_title({}, message.title());
 }
 
+void WebContentClient::handle(const Messages::WebContentClient::DidRequestScroll& message)
+{
+    m_view.notify_server_did_request_scroll({}, message.wheel_delta());
+}
+
 void WebContentClient::handle(const Messages::WebContentClient::DidRequestScrollIntoView& message)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidRequestScrollIntoView! rect={}", message.rect());
