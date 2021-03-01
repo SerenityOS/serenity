@@ -102,11 +102,19 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
             process.tracer_trap(*current_thread, regs); // this triggers SIGTRAP and stops the thread!
         }
 
-        if (function == SC_exit)
+        switch (function) {
+        case SC_abort:
+            process.sys$abort();
+            break;
+        case SC_exit:
             process.sys$exit(arg1);
-        else
+            break;
+        case SC_exit_thread:
             process.sys$exit_thread(arg1);
-        VERIFY_NOT_REACHED();
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
 
     if (function == SC_fork || function == SC_sigreturn) {
