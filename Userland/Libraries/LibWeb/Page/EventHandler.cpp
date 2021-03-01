@@ -141,6 +141,10 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
     if (result.layout_node) {
         if (result.layout_node->handle_mousewheel({}, position, buttons, modifiers, wheel_delta))
             return true;
+    }
+
+    if (auto* page = m_frame.page()) {
+        page->client().page_did_request_scroll(wheel_delta);
         return true;
     }
 
