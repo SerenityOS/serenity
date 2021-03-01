@@ -122,7 +122,7 @@ KResultOr<ssize_t> Process::sys$write(int fd, Userspace<const u8*> data, ssize_t
     if (size == 0)
         return 0;
 
-    dbgln_if(IO_DEBUG, "sys$write({}, {}, {})", fd, data, size);
+    dbgln_if(IO_DEBUG, "sys$write({}, {}, {})", fd, data.ptr(), size);
     auto description = file_description(fd);
     if (!description)
         return EBADF;
