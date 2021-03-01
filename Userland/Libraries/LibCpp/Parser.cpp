@@ -24,9 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#undef CPP_DEBUG
-#define CPP_DEBUG 1
-
 #ifdef CPP_DEBUG
 #    define DEBUG_SPAM
 #endif
@@ -560,20 +557,30 @@ Optional<NonnullRefPtrVector<Parameter>> Parser::parse_parameter_list(ASTNode& p
     SCOPE_LOGGER();
     NonnullRefPtrVector<Parameter> parameters;
     while (peek().m_type != Token::Type::RightParen && !eof()) {
-        auto type = parse_type(parent);
+        if (match_ellipsis()) {
+            auto last_dot = consume();
+            while (peek().type() == Token::Type::Dot)
+                last_dot = consume();
+            auto param = create_ast_node<Parameter>(parent, position(), last_dot.end(), StringView {});
+            param->m_is_ellipsis = true;
+            parameters.append(move(param));
+        } else {
+            auto type = parse_type(parent);
 
-        auto name_identifier = peek(Token::Type::Identifier);
-        if (name_identifier.has_value())
-            consume(Token::Type::Identifier);
+            auto name_identifier = peek(Token::Type::Identifier);
+            if (name_identifier.has_value())
+                consume(Token::Type::Identifier);
 
-        StringView name;
-        if (name_identifier.has_value())
-            name = text_of_token(name_identifier.value());
+            StringView name;
+            if (name_identifier.has_value())
+                name = text_of_token(name_identifier.value());
 
-        auto param = create_ast_node<Parameter>(parent, type->start(), name_identifier.has_value() ? name_identifier.value().m_end : type->end(), name);
+            auto param = create_ast_node<Parameter>(parent, type->start(), name_identifier.has_value() ? name_identifier.value().m_end : type->end(), name);
 
-        param->m_type = move(type);
-        parameters.append(move(param));
+            param->m_type = move(type);
+            parameters.append(move(param));
+        }
+
         if (peek(Token::Type::Comma).has_value())
             consume(Token::Type::Comma);
     }
@@ -640,12 +647,11 @@ Token Parser::consume()
     return m_tokens[m_state.token_index++];
 }
 
-Token Parser::peek() const
+Token Parser::peek(size_t offset) const
 {
-    if (eof()) {
+    if (m_state.token_index + offset >= m_tokens.size())
         return { Token::Type::EOF_TOKEN, position(), position() };
-    }
-    return m_tokens[m_state.token_index];
+    return m_tokens[m_state.token_index + offset];
 }
 
 Optional<Token> Parser::peek(Token::Type type) const
@@ -1081,10 +1087,16 @@ void Parser::consume_attribute_specification()
         if (token.type() == Token::Type::RightParen) {
             --left_count;
         }
-        if(left_count == 0)
+        if (left_count == 0)
             return;
     }
 }
 
+bool Parser::match_ellipsis()
+{
+    if (m_state.token_index > m_tokens.size() - 3)
+        return false;
+    return peek().type() == Token::Type::Dot && peek().type() == Token::Type::Dot && peek().type() == Token::Type::Dot;
+}
 
 }

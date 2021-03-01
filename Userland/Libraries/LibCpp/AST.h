@@ -202,13 +202,15 @@ public:
     virtual const char* class_name() const override { return "Parameter"; }
     virtual void dump(size_t indent) const override;
 
-    Parameter(ASTNode* parent, Optional<Position> start, Optional<Position> end, StringView name, const String& filename)
+    Parameter(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename, StringView name)
         : VariableOrParameterDeclaration(parent, start, end, filename)
     {
         m_name = name;
     }
 
     virtual bool is_parameter() const override { return true; }
+
+    bool m_is_ellipsis { false };
 };
 
 class Type : public ASTNode {

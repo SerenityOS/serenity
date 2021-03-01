@@ -83,7 +83,7 @@ void Type::dump(size_t indent) const
     ASTNode::dump(indent);
     print_indent(indent + 1);
     String qualifiers_string;
-    if(!m_qualifiers.is_empty())
+    if (!m_qualifiers.is_empty())
         qualifiers_string = String::formatted("[{}] ", String::join(" ", m_qualifiers));
     outln("{}{}", qualifiers_string, m_name);
 }
@@ -91,11 +91,16 @@ void Type::dump(size_t indent) const
 void Parameter::dump(size_t indent) const
 {
     ASTNode::dump(indent);
+    if (m_is_ellipsis) {
+        print_indent(indent + 1);
+        outln("...");
+    }
     if (!m_name.is_null()) {
         print_indent(indent);
         outln("{}", m_name);
     }
-    m_type->dump(indent + 1);
+    if (m_type)
+        m_type->dump(indent + 1);
 }
 
 void FunctionDefinition::dump(size_t indent) const
