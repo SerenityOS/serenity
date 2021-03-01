@@ -18,7 +18,7 @@ You can either install QEMU natively on windows and allow WSL to talk to it, or 
 
 - Install [Vcxsrv](https://sourceforge.net/projects/vcxsrv/) on Windows.
 - When you start up Vcxsrv, make sure to set the Display number to 0, and to Disable access control.
-- Before actually doing **make run**, you need to set the DISPLAY environmental variable as such:
+- Before actually doing **ninja run**, you need to set the DISPLAY environmental variable as such:
 
 ```bash
 export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
@@ -26,7 +26,7 @@ export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
 This is due to a bug in WSL2. For more information, microsoft/WSL#4106.
 - Connect to the window server from WSL.
 
-Now you can finally, **make run**.
+Now you can finally, **ninja run**.
 
 ### Using native QEMU install with WSL:
 
@@ -43,7 +43,7 @@ By default this will be located at `/mnt/c/Program Files/qemu/qemu-system-i386.e
 - Set the `SERENITY_DISK_IMAGE` environment variable to the full path of the SerenityOS disk image file from above. For example: \
 `export SERENITY_DISK_IMAGE='\\wsl$\Ubuntu-20.04\home\username\serenity\Build\_disk_image'`
 
-- `make run` as usual.
+- `ninja run` as usual.
 
 #### Hardware acceleration
 
@@ -62,7 +62,7 @@ To run SerenityOS in a WHPX-enabled QEMU VM:
 - Disable Virtual Machine eXtensions on the vCPU, otherwise some versions of QEMU will crash out with a "WHPX: Unexpected VP exit code 4" error: \
 `export SERENITY_QEMU_CPU="max,vmx=off"`
 
-- `make run` as usual.
+- `ninja run` as usual.
 
 #### Known issues with WHPX
 
@@ -100,4 +100,4 @@ In practice, this means cloning and building the project to somewhere such as `/
 If you're using the native Windows QEMU binary from the above steps, QEMU is not able to access the ext4 root partition of the
 WSL2 installation without going via the 9P network file share. The root of your WSL2 distro will begin at the network path `\\wsl$\{distro-name}`.
 
-Alternatively, you may prefer to copy `Build/_disk_image` and `Build/Kernel/Kernel` to a native Windows partition (e.g. `/mnt/c`) before running `make run`, in which case `SERENITY_DISK_IMAGE` will be a regular Windows path (e.g. `'D:\serenity\_disk_image'`)
+Alternatively, you may prefer to copy `Build/_disk_image` and `Build/Kernel/Kernel` to a native Windows partition (e.g. `/mnt/c`) before running `ninja run`, in which case `SERENITY_DISK_IMAGE` will be a regular Windows path (e.g. `'D:\serenity\_disk_image'`)
