@@ -111,7 +111,7 @@ private:
     Token consume(Token::Type);
     Token consume();
     Token consume_keyword(const String&);
-    Token peek() const;
+    Token peek(size_t offset = 0) const;
     Optional<Token> peek(Token::Type) const;
     Position position() const;
     StringView text_of_range(Position start, Position end) const;
@@ -163,6 +163,7 @@ private:
     Vector<StringView> parse_type_qualifiers();
     bool match_attribute_specification();
     void consume_attribute_specification();
+    bool match_ellipsis();
 };
 
 }
