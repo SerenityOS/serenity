@@ -225,7 +225,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         }
     }
 
-    vm.call_frame().current_node = vm.node_stack().last();
+    vm.call_frame().current_node = vm.current_node();
     Object* new_object = nullptr;
     Value result;
     if (is<NewExpression>(*this)) {
