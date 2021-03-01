@@ -259,7 +259,7 @@ public:
     KResultOr<int> sys$madvise(void*, size_t, int advice);
     KResultOr<int> sys$msyscall(void*);
     KResultOr<int> sys$purge(int mode);
-    KResultOr<int> sys$select(const Syscall::SC_select_params*);
+    KResultOr<int> sys$select(Userspace<const Syscall::SC_select_params*>);
     KResultOr<int> sys$poll(Userspace<const Syscall::SC_poll_params*>);
     KResultOr<ssize_t> sys$get_dir_entries(int fd, Userspace<void*>, ssize_t);
     KResultOr<int> sys$getcwd(Userspace<char*>, size_t);

@@ -32,10 +32,10 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$select(const Syscall::SC_select_params* user_params)
+KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
-    Syscall::SC_select_params params;
+    Syscall::SC_select_params params {};
 
     if (!copy_from_user(&params, user_params))
         return EFAULT;
