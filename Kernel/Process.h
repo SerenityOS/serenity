@@ -346,7 +346,7 @@ public:
     KResultOr<int> sys$pledge(Userspace<const Syscall::SC_pledge_params*>);
     KResultOr<int> sys$unveil(Userspace<const Syscall::SC_unveil_params*>);
     KResultOr<int> sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
-    KResultOr<int> sys$get_stack_bounds(FlatPtr* stack_base, size_t* stack_size);
+    KResultOr<int> sys$get_stack_bounds(Userspace<FlatPtr*> stack_base, Userspace<size_t*> stack_size);
     KResultOr<int> sys$ptrace(Userspace<const Syscall::SC_ptrace_params*>);
     KResultOr<int> sys$sendfd(int sockfd, int fd);
     KResultOr<int> sys$recvfd(int sockfd, int options);

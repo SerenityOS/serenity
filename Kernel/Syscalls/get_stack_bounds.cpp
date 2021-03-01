@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$get_stack_bounds(FlatPtr* user_stack_base, size_t* user_stack_size)
+KResultOr<int> Process::sys$get_stack_bounds(Userspace<FlatPtr*> user_stack_base, Userspace<size_t*> user_stack_size)
 {
     FlatPtr stack_pointer = Thread::current()->get_register_dump_from_stack().userspace_esp;
     auto* stack_region = space().find_region_containing(Range { VirtualAddress(stack_pointer), 1 });
