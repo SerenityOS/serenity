@@ -134,6 +134,9 @@ void Track::reset()
     memset(m_note_on, 0, sizeof(m_note_on));
     memset(m_power, 0, sizeof(m_power));
     memset(m_envelope, 0, sizeof(m_envelope));
+
+    for (size_t note = 0; note < note_count; ++note)
+        m_roll_iters[note] = m_roll_notes[note].begin();
 }
 
 String Track::set_recorded_sample(const StringView& path)
