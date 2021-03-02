@@ -34,8 +34,8 @@
 
 namespace Kernel {
 
-PerformanceEventBuffer::PerformanceEventBuffer()
-    : m_buffer(KBuffer::try_create_with_size(4 * MiB, Region::Access::Read | Region::Access::Write, "Performance events", AllocationStrategy::AllocateNow))
+PerformanceEventBuffer::PerformanceEventBuffer(NonnullOwnPtr<KBuffer> buffer)
+    : m_buffer(move(buffer))
 {
 }
 
@@ -169,6 +169,14 @@ bool PerformanceEventBuffer::to_json(KBufferBuilder& builder, ProcessID pid, con
     array.finish();
     object.finish();
     return true;
+}
+
+OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size_t buffer_size)
+{
+    auto buffer = KBuffer::try_create_with_size(buffer_size, Region::Access::Read | Region::Access::Write, "Performance events", AllocationStrategy::AllocateNow);
+    if (!buffer)
+        return {};
+    return adopt_own(*new PerformanceEventBuffer(buffer.release_nonnull()));
 }
 
 }

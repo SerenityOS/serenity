@@ -43,7 +43,8 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
         return ESRCH;
     if (!is_superuser() && process->uid() != m_euid)
         return EPERM;
-    process->ensure_perf_events();
+    if (!process->create_perf_events_buffer_if_needed())
+        return ENOMEM;
     process->set_profiling(true);
     return 0;
 }

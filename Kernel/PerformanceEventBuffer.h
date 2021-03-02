@@ -58,7 +58,7 @@ struct [[gnu::packed]] PerformanceEvent {
 
 class PerformanceEventBuffer {
 public:
-    PerformanceEventBuffer();
+    static OwnPtr<PerformanceEventBuffer> try_create_with_size(size_t buffer_size);
 
     KResult append(int type, FlatPtr arg1, FlatPtr arg2);
     KResult append_with_eip_and_ebp(u32 eip, u32 ebp, int type, FlatPtr arg1, FlatPtr arg2);
@@ -68,12 +68,7 @@ public:
         m_count = 0;
     }
 
-    size_t capacity() const
-    {
-        if (!m_buffer)
-            return 0;
-        return m_buffer->size() / sizeof(PerformanceEvent);
-    }
+    size_t capacity() const { return m_buffer->size() / sizeof(PerformanceEvent); }
     size_t count() const { return m_count; }
     const PerformanceEvent& at(size_t index) const
     {
@@ -84,10 +79,12 @@ public:
     bool to_json(KBufferBuilder&, ProcessID, const String& executable_path) const;
 
 private:
+    explicit PerformanceEventBuffer(NonnullOwnPtr<KBuffer>);
+
     PerformanceEvent& at(size_t index);
 
     size_t m_count { 0 };
-    OwnPtr<KBuffer> m_buffer;
+    NonnullOwnPtr<KBuffer> m_buffer;
 };
 
 }
