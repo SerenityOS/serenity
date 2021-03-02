@@ -124,7 +124,7 @@ KResultOr<int> Process::sys$kill(pid_t pid_or_pgid, int signal)
     else
         REQUIRE_PROMISE(proc);
 
-    if (signal < 0 || signal >= 32)
+    if (signal < 0 || signal >= NSIG)
         return EINVAL;
     if (pid_or_pgid < -1) {
         if (pid_or_pgid == NumericLimits<i32>::min())

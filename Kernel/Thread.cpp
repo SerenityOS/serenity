@@ -483,7 +483,7 @@ u32 Thread::pending_signals_for_state() const
 
 void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 {
-    VERIFY(signal < 32);
+    VERIFY(signal < NSIG);
     ScopedSpinLock scheduler_lock(g_scheduler_lock);
 
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
@@ -577,7 +577,7 @@ DispatchSignalResult Thread::dispatch_one_pending_signal()
         return DispatchSignalResult::Continue;
 
     u8 signal = 1;
-    for (; signal < 32; ++signal) {
+    for (; signal < NSIG; ++signal) {
         if (signal_candidates & (1 << (signal - 1))) {
             break;
         }
@@ -637,6 +637,7 @@ static DefaultSignalAction default_signal_action(u8 signal)
     case SIGXCPU:
     case SIGXFSZ:
     case SIGSYS:
+    case SIGUBSAN:
         return DefaultSignalAction::DumpCore;
     case SIGCONT:
         return DefaultSignalAction::Continue;
@@ -651,7 +652,7 @@ static DefaultSignalAction default_signal_action(u8 signal)
 
 bool Thread::should_ignore_signal(u8 signal) const
 {
-    VERIFY(signal < 32);
+    VERIFY(signal < NSIG);
     auto& action = m_signal_action_data[signal];
     if (action.handler_or_sigaction.is_null())
         return default_signal_action(signal) == DefaultSignalAction::Ignore;
@@ -662,7 +663,7 @@ bool Thread::should_ignore_signal(u8 signal) const
 
 bool Thread::has_signal_handler(u8 signal) const
 {
-    VERIFY(signal < 32);
+    VERIFY(signal < NSIG);
     auto& action = m_signal_action_data[signal];
     return !action.handler_or_sigaction.is_null();
 }
@@ -696,7 +697,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(g_scheduler_lock.own_lock());
-    VERIFY(signal > 0 && signal <= 32);
+    VERIFY(signal > 0 && signal <= NSIG);
     VERIFY(process().is_user_process());
     VERIFY(this == Thread::current());
 

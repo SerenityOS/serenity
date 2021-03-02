@@ -58,4 +58,5 @@
 #define SIGIO 29
 #define SIGINFO 30
 #define SIGSYS 31
-#define NSIG 32
+#define SIGUBSAN 32
+#define NSIG 33

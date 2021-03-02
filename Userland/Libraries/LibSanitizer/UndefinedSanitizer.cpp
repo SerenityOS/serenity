@@ -26,6 +26,8 @@
 
 #include <AK/Format.h>
 #include <AK/UndefinedSanitizer.h>
+#include <signal.h>
+#include <signal_numbers.h>
 #include <unistd.h>
 
 using namespace AK::UndefinedSanitizer;
@@ -36,10 +38,10 @@ static void print_location(const SourceLocation& location)
 {
     if (!location.filename()) {
         warnln("UBSAN: in unknown file");
-
     } else {
         warnln("UBSAN: at {}, line {}, column: {}", location.filename(), location.line(), location.column());
     }
+
     dump_backtrace();
 }
 
@@ -48,6 +50,7 @@ void __ubsan_handle_load_invalid_value(const InvalidValueData& data, ValueHandle
 {
     warnln("UBSAN: load-invalid-value: {} ({}-bit)", data.type.name(), data.type.bit_width());
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_nonnull_arg(const NonnullArgData&);
@@ -55,6 +58,7 @@ void __ubsan_handle_nonnull_arg(const NonnullArgData& data)
 {
     warnln("UBSAN: null pointer passed as argument {}, which is declared to never be null", data.argument_index);
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_nullability_arg(const NonnullArgData&);
@@ -62,6 +66,7 @@ void __ubsan_handle_nullability_arg(const NonnullArgData& data)
 {
     warnln("UBSAN: null pointer passed as argument {}, which is declared to never be null", data.argument_index);
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_nonnull_return_v1(const NonnullReturnData&, const SourceLocation&);
@@ -69,6 +74,7 @@ void __ubsan_handle_nonnull_return_v1(const NonnullReturnData&, const SourceLoca
 {
     warnln("UBSAN: null pointer return from function declared to never return null");
     print_location(location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_nullability_return_v1(const NonnullReturnData& data, const SourceLocation& location);
@@ -76,6 +82,7 @@ void __ubsan_handle_nullability_return_v1(const NonnullReturnData&, const Source
 {
     warnln("UBSAN: null pointer return from function declared to never return null");
     print_location(location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_vla_bound_not_positive(const VLABoundData&, ValueHandle);
@@ -83,6 +90,7 @@ void __ubsan_handle_vla_bound_not_positive(const VLABoundData& data, ValueHandle
 {
     warnln("UBSAN: VLA bound not positive {} ({}-bit)", data.type.name(), data.type.bit_width());
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_add_overflow(const OverflowData&, ValueHandle lhs, ValueHandle rhs);
@@ -91,6 +99,7 @@ void __ubsan_handle_add_overflow(const OverflowData& data, ValueHandle, ValueHan
     warnln("UBSAN: addition overflow, {} ({}-bit)", data.type.name(), data.type.bit_width());
 
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_sub_overflow(const OverflowData&, ValueHandle lhs, ValueHandle rhs);
@@ -99,6 +108,7 @@ void __ubsan_handle_sub_overflow(const OverflowData& data, ValueHandle, ValueHan
     warnln("UBSAN: subtraction overflow, {} ({}-bit)", data.type.name(), data.type.bit_width());
 
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_negate_overflow(const OverflowData&, ValueHandle);
@@ -108,6 +118,7 @@ void __ubsan_handle_negate_overflow(const OverflowData& data, ValueHandle)
     warnln("UBSAN: negation overflow, {} ({}-bit)", data.type.name(), data.type.bit_width());
 
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_mul_overflow(const OverflowData&, ValueHandle lhs, ValueHandle rhs);
@@ -115,6 +126,7 @@ void __ubsan_handle_mul_overflow(const OverflowData& data, ValueHandle, ValueHan
 {
     warnln("UBSAN: multiplication overflow, {} ({}-bit)", data.type.name(), data.type.bit_width());
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_shift_out_of_bounds(const ShiftOutOfBoundsData&, ValueHandle lhs, ValueHandle rhs);
@@ -122,6 +134,7 @@ void __ubsan_handle_shift_out_of_bounds(const ShiftOutOfBoundsData& data, ValueH
 {
     warnln("UBSAN: shift out of bounds, {} ({}-bit) shifted by {} ({}-bit)", data.lhs_type.name(), data.lhs_type.bit_width(), data.rhs_type.name(), data.rhs_type.bit_width());
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_divrem_overflow(const OverflowData&, ValueHandle lhs, ValueHandle rhs);
@@ -129,6 +142,7 @@ void __ubsan_handle_divrem_overflow(const OverflowData& data, ValueHandle, Value
 {
     warnln("UBSAN: divrem overlow, {} ({}-bit)", data.type.name(), data.type.bit_width());
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_out_of_bounds(const OutOfBoundsData&, ValueHandle);
@@ -136,6 +150,7 @@ void __ubsan_handle_out_of_bounds(const OutOfBoundsData& data, ValueHandle)
 {
     warnln("UBSAN: out of bounds access into array of {} ({}-bit), index type {} ({}-bit)", data.array_type.name(), data.array_type.bit_width(), data.index_type.name(), data.index_type.bit_width());
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_type_mismatch_v1(const TypeMismatchData&, ValueHandle);
@@ -168,6 +183,7 @@ void __ubsan_handle_type_mismatch_v1(const TypeMismatchData& data, ValueHandle p
     }
 
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_alignment_assumption(const AlignmentAssumptionData&, ValueHandle, ValueHandle, ValueHandle);
@@ -185,6 +201,7 @@ void __ubsan_handle_alignment_assumption(const AlignmentAssumptionData& data, Va
     }
     warnln("UBSAN: Assumption of pointer allignment failed");
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_builtin_unreachable(const UnreachableData&);
@@ -192,6 +209,7 @@ void __ubsan_handle_builtin_unreachable(const UnreachableData& data)
 {
     warnln("UBSAN: execution reached an unreachable program point");
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_missing_return(const UnreachableData&);
@@ -199,6 +217,7 @@ void __ubsan_handle_missing_return(const UnreachableData& data)
 {
     warnln("UBSAN: execution reached the end of a value-returning function without returning a value");
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_implicit_conversion(const ImplicitConversionData&, ValueHandle, ValueHandle);
@@ -209,6 +228,7 @@ void __ubsan_handle_implicit_conversion(const ImplicitConversionData& data, Valu
     warnln("UBSAN: implicit conversion from type {} ({}-bit, {}signed) to type {} ({}-bit, {}signed)",
         data.from_type.name(), data.from_type.bit_width(), src_signed, data.to_type.name(), data.to_type.bit_width(), dst_signed);
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_invalid_builtin(const InvalidBuiltinData);
@@ -216,6 +236,7 @@ void __ubsan_handle_invalid_builtin(const InvalidBuiltinData data)
 {
     warnln("UBSAN: passing invalid argument");
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 
 void __ubsan_handle_pointer_overflow(const PointerOverflowData&, ValueHandle, ValueHandle);
@@ -231,5 +252,6 @@ void __ubsan_handle_pointer_overflow(const PointerOverflowData& data, ValueHandl
         warnln("UBSAN: addition of unsigned offset to {:p} overflowed to {:p}", base, result);
     }
     print_location(data.location);
+    raise(SIGUBSAN);
 }
 }

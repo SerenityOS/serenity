@@ -160,6 +160,7 @@ const char* sys_siglist[NSIG] = {
     "I/O possible",
     "Power failure",
     "Bad system call",
+    "Killed by UBSAN",
 };
 
 int sigsetjmp(jmp_buf env, int savesigs)
@@ -221,6 +222,7 @@ static const char* signal_names[] = {
     "IO",
     "INFO",
     "SYS",
+    "UBSAN",
 };
 
 static_assert(sizeof(signal_names) == sizeof(const char*) * NSIG);

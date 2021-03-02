@@ -565,7 +565,7 @@ void Process::die()
 void Process::terminate_due_to_signal(u8 signal)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(signal < 32);
+    VERIFY(signal < NSIG);
     VERIFY(Process::current() == this);
     dbgln("Terminating {} due to signal {}", *this, signal);
     m_termination_status = 0;

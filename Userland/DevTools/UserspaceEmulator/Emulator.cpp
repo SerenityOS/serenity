@@ -1451,6 +1451,7 @@ static DefaultSignalAction default_signal_action(int signal)
     case SIGXCPU:
     case SIGXFSZ:
     case SIGSYS:
+    case SIGUBSAN:
         return DefaultSignalAction::DumpCore;
     case SIGCONT:
         return DefaultSignalAction::Continue;
