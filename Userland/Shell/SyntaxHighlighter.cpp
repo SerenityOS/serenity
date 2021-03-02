@@ -50,12 +50,6 @@ public:
     }
 
 private:
-    struct PositionAndLine {
-        size_t position { 0 };
-        size_t line { 0 };
-        size_t offset { 0 };
-    };
-
     AST::Position::Line offset_line(const AST::Position::Line& line, size_t offset)
     {
         // We need to look at the line(s) above.
@@ -64,7 +58,8 @@ private:
             offset -= new_line.line_column;
             --offset;
 
-            VERIFY(new_line.line_number > 0);
+            if (new_line.line_number == 0)
+                break;
             --new_line.line_number;
 
             auto line = m_document.line(new_line.line_number);
@@ -80,7 +75,7 @@ private:
         auto new_line = offset_line(line, offset);
         range.set_end({ new_line.line_number, new_line.line_column });
     }
-    void set_offset_range_start(GUI::TextRange& range, const AST::Position::Line& line, size_t offset = 1)
+    void set_offset_range_start(GUI::TextRange& range, const AST::Position::Line& line, size_t offset = 0)
     {
         auto new_line = offset_line(line, offset);
         range.set_start({ new_line.line_number, new_line.line_column });
@@ -89,7 +84,7 @@ private:
     GUI::TextDocumentSpan& span_for_node(const AST::Node* node)
     {
         GUI::TextDocumentSpan span;
-        span.range.set_start({ node->position().start_line.line_number, node->position().start_line.line_column });
+        set_offset_range_start(span.range, node->position().start_line);
         set_offset_range_end(span.range, node->position().end_line);
         span.data = (void*)static_cast<size_t>(node->kind());
         span.is_skippable = false;
@@ -120,7 +115,7 @@ private:
         }
 
         auto& span = span_for_node(node);
-        span.range.set_start({ node->and_position().start_line.line_number, node->and_position().start_line.line_column });
+        set_offset_range_start(span.range, node->and_position().start_line);
         set_offset_range_end(span.range, node->and_position().end_line);
         span.attributes.color = m_palette.syntax_punctuation();
         span.attributes.bold = true;
@@ -134,7 +129,7 @@ private:
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
-        set_offset_range_start(span.range, node->position().end_line);
+        set_offset_range_start(span.range, node->position().end_line, 1);
         span.attributes.color = m_palette.syntax_punctuation();
         span.attributes.bold = true;
     }
@@ -170,7 +165,7 @@ private:
 
         auto& end_span = span_for_node(node);
         end_span.attributes.color = m_palette.syntax_punctuation();
-        set_offset_range_start(end_span.range, node->position().end_line);
+        set_offset_range_start(end_span.range, node->position().end_line, 1);
         end_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::CloseParen);
     }
     virtual void visit(const AST::CloseFdRedirection* node) override
@@ -209,11 +204,11 @@ private:
 
         auto& start_span = span_for_node(node);
         start_span.attributes.color = m_palette.syntax_string();
-        set_offset_range_end(start_span.range, node->position().start_line, 0);
+        start_span.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column });
         start_span.is_skippable = true;
 
         auto& end_span = span_for_node(node);
-        set_offset_range_start(end_span.range, node->position().end_line);
+        set_offset_range_start(end_span.range, node->position().end_line, 1);
         end_span.attributes.color = m_palette.syntax_string();
         end_span.is_skippable = true;
 
@@ -233,14 +228,14 @@ private:
 
         // fn name
         auto& name_span = span_for_node(node);
-        name_span.range.set_start({ node->name().position.start_line.line_number, node->name().position.start_line.line_column });
+        set_offset_range_start(name_span.range, node->name().position.start_line);
         set_offset_range_end(name_span.range, node->name().position.end_line);
         name_span.attributes.color = m_palette.syntax_identifier();
 
         // arguments
         for (auto& arg : node->arguments()) {
             auto& name_span = span_for_node(node);
-            name_span.range.set_start({ arg.position.start_line.line_number, arg.position.start_line.line_column });
+            set_offset_range_start(name_span.range, arg.position.start_line);
             set_offset_range_end(name_span.range, arg.position.end_line);
             name_span.attributes.color = m_palette.syntax_identifier();
         }
@@ -262,7 +257,7 @@ private:
             auto& position = maybe_position.value();
 
             auto& in_span = span_for_node(node);
-            in_span.range.set_start({ position.start_line.line_number, position.start_line.line_column });
+            set_offset_range_start(in_span.range, position.start_line);
             set_offset_range_end(in_span.range, position.end_line);
             in_span.attributes.color = m_palette.syntax_keyword();
         }
@@ -287,7 +282,7 @@ private:
 
             auto& end_span = span_for_node(node);
             end_span.attributes.color = m_palette.syntax_punctuation();
-            set_offset_range_start(end_span.range, node->position().end_line);
+            set_offset_range_start(end_span.range, node->position().end_line, 1);
             end_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::CloseParen);
         }
     }
@@ -307,8 +302,8 @@ private:
             auto& position = maybe_position.value();
 
             auto& else_span = span_for_node(node);
-            else_span.range.set_start({ position.start_line.line_number, position.start_line.line_column });
-            set_offset_range_end(else_span.range, node->position().end_line);
+            set_offset_range_start(else_span.range, position.start_line);
+            set_offset_range_end(else_span.range, position.end_line);
             else_span.attributes.color = m_palette.syntax_keyword();
         }
     }
@@ -350,7 +345,7 @@ private:
         }
 
         auto& span = span_for_node(node);
-        span.range.set_start({ node->or_position().start_line.line_number, node->or_position().start_line.line_column });
+        set_offset_range_start(span.range, node->or_position().start_line);
         set_offset_range_end(span.range, node->or_position().end_line);
         span.attributes.color = m_palette.syntax_punctuation();
         span.attributes.bold = true;
@@ -363,10 +358,15 @@ private:
     {
         NodeVisitor::visit(node);
 
-        auto& span = span_for_node(node->start());
-        span.range.set_start(span.range.end());
-        set_offset_range_end(span.range, node->start()->position().end_line, 2);
-        span.attributes.color = m_palette.syntax_punctuation();
+        auto& start_span = span_for_node(node->start());
+        set_offset_range_start(start_span.range, node->start()->position().start_line, 1);
+        set_offset_range_end(start_span.range, node->start()->position().start_line, 0);
+        start_span.attributes.color = m_palette.syntax_punctuation();
+
+        auto& end_span = span_for_node(node->start());
+        set_offset_range_start(end_span.range, node->end()->position().end_line, 1);
+        set_offset_range_end(end_span.range, node->end()->position().end_line, 0);
+        end_span.attributes.color = m_palette.syntax_punctuation();
     }
     virtual void visit(const AST::ReadRedirection* node) override
     {
@@ -384,9 +384,11 @@ private:
         }
 
         for (auto& position : node->separator_positions()) {
+            if (position.start_offset == position.end_offset)
+                continue;
             auto& span = span_for_node(node);
-            span.range.set_start({ position.start_line.line_number, position.start_line.line_column });
-            set_offset_range_end(span.range, position.end_line);
+            set_offset_range_start(span.range, position.start_line);
+            set_offset_range_end(span.range, position.end_line, 1);
             span.attributes.color = m_palette.syntax_punctuation();
             span.attributes.bold = true;
             span.is_skippable = true;
@@ -453,7 +455,6 @@ private:
             auto& name_span = span_for_node(decl.name);
             name_span.attributes.color = m_palette.syntax_identifier();
 
-            decl.name->visit(*this);
             decl.value->visit(*this);
 
             auto& start_span = span_for_node(decl.name);
@@ -489,13 +490,9 @@ bool SyntaxHighlighter::is_identifier(void* token) const
         || kind == (size_t)AST::Node::Kind::Tilde;
 }
 
-bool SyntaxHighlighter::is_navigatable(void* token) const
+bool SyntaxHighlighter::is_navigatable(void*) const
 {
-    if (!token)
-        return false;
-
-    auto kind = static_cast<AugmentedTokenKind>((size_t)token);
-    return (size_t)kind == (size_t)AST::Node::Kind::BarewordLiteral;
+    return false;
 }
 
 void SyntaxHighlighter::rehighlight(const Palette& palette)
@@ -506,13 +503,12 @@ void SyntaxHighlighter::rehighlight(const Palette& palette)
     auto ast = parser.parse();
 
     Vector<GUI::TextDocumentSpan> spans;
-    GUI::TextPosition position { 0, 0 };
     HighlightVisitor visitor { spans, palette, m_client->get_document() };
 
     if (ast)
         ast->visit(visitor);
 
-    quick_sort(spans, [](auto& a, auto& b) { return a.range.start() < b.range.start(); });
+    quick_sort(spans, [](auto& a, auto& b) { return a.range.start() < b.range.start() && a.range.end() < b.range.end(); });
 
     m_client->do_set_spans(move(spans));
     m_has_brace_buddies = false;
