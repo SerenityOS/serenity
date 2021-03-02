@@ -67,9 +67,8 @@ private:
 
     bool rect_can_contain_children(const Gfx::IntRect& rect) const;
     bool rect_can_contain_label(const Gfx::IntRect& rect) const;
-    Gfx::IntRect inner_rect_for_frame(const Gfx::IntRect& rect) const;
 
-    enum class IsVisualLeaf {
+    enum class HasLabel {
         Yes,
         No
     };
@@ -80,7 +79,7 @@ private:
 
     template<typename Function>
     void lay_out_children(const TreeMapNode&, const Gfx::IntRect&, int depth, Function);
-    void paint_cell_frame(GUI::Painter&, const TreeMapNode&, const Gfx::IntRect&, int depth, bool fill) const;
+    void paint_cell_frame(GUI::Painter&, const TreeMapNode&, const Gfx::IntRect&, const Gfx::IntRect&, int depth, HasLabel has_label) const;
     Vector<int> path_to_position(const Gfx::IntPoint&);
 
     RefPtr<TreeMap> m_tree;

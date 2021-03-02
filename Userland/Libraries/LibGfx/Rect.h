@@ -196,6 +196,50 @@ public:
         return rect;
     }
 
+    Rect<T> take_from_right(T w)
+    {
+        if (w > width())
+            w = width();
+        Rect<T> rect = *this;
+        set_width(width() - w);
+        rect.set_x(x() + width());
+        rect.set_width(w);
+        return rect;
+    }
+
+    Rect<T> take_from_left(T w)
+    {
+        if (w > width())
+            w = width();
+        Rect<T> rect = *this;
+        set_x(x() + w);
+        set_width(width() - w);
+        rect.set_width(w);
+        return rect;
+    }
+
+    Rect<T> take_from_top(T h)
+    {
+        if (h > height())
+            h = height();
+        Rect<T> rect = *this;
+        set_y(y() + h);
+        set_height(height() - h);
+        rect.set_height(h);
+        return rect;
+    }
+
+    Rect<T> take_from_bottom(T h)
+    {
+        if (h > height())
+            h = height();
+        Rect<T> rect = *this;
+        set_height(height() - h);
+        rect.set_y(y() + height());
+        rect.set_height(h);
+        return rect;
+    }
+
     bool contains_vertically(T y) const
     {
         return y >= top() && y <= bottom();
