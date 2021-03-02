@@ -248,7 +248,7 @@ public:
 
     String to_string(GlobalObject&, bool legacy_null_to_empty_string = false) const;
     PrimitiveString* to_primitive_string(GlobalObject&);
-    Value to_primitive(PreferredType preferred_type = PreferredType::Default) const;
+    Value to_primitive(GlobalObject&, PreferredType preferred_type = PreferredType::Default) const;
     Object* to_object(GlobalObject&) const;
     Value to_numeric(GlobalObject&) const;
     Value to_number(GlobalObject&) const;

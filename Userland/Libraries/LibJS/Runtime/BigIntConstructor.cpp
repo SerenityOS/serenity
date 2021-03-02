@@ -57,7 +57,7 @@ BigIntConstructor::~BigIntConstructor()
 
 Value BigIntConstructor::call()
 {
-    auto primitive = vm().argument(0).to_primitive(Value::PreferredType::Number);
+    auto primitive = vm().argument(0).to_primitive(global_object(), Value::PreferredType::Number);
     if (vm().exception())
         return {};
     if (primitive.is_number()) {
