@@ -408,7 +408,7 @@ public:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) = 0;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&);
     Vector<Line::CompletionSuggestion> complete_for_editor(Shell& shell, size_t offset);
-    virtual HitTestResult hit_test_position(size_t offset)
+    virtual HitTestResult hit_test_position(size_t offset) const
     {
         if (m_position.contains(offset))
             return { this, nullptr, nullptr };
@@ -513,7 +513,7 @@ public:
     virtual ~PathRedirectionNode();
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
-    virtual HitTestResult hit_test_position(size_t offset) override;
+    virtual HitTestResult hit_test_position(size_t offset) const override;
     virtual bool is_command() const override { return true; }
     virtual bool is_list() const override { return true; }
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
@@ -541,7 +541,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
 
     NonnullRefPtr<Node> m_left;
     NonnullRefPtr<Node> m_right;
@@ -561,7 +561,7 @@ private:
     virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback) override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_list() const override { return true; }
     virtual RefPtr<Node> leftmost_trivial_literal() const override;
 
@@ -581,7 +581,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
 
     NonnullRefPtr<Node> m_command;
 };
@@ -618,7 +618,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
 
     NonnullRefPtrVector<Node> m_entries;
 };
@@ -636,7 +636,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
     virtual bool is_command() const override { return true; }
     virtual bool is_list() const override { return true; }
@@ -659,7 +659,7 @@ private:
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_list() const override { return true; }
     virtual RefPtr<Node> leftmost_trivial_literal() const override;
 
@@ -759,7 +759,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
 
     virtual bool is_bareword() const override { return m_inner->is_bareword(); }
     virtual bool is_command() const override { return is_list(); }
@@ -786,7 +786,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
 
     RefPtr<Node> m_inner;
 };
@@ -830,7 +830,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
     virtual bool would_execute() const override { return true; }
     virtual bool should_override_execution_in_current_process() const override { return true; }
@@ -856,7 +856,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool would_execute() const override { return true; }
     virtual bool should_override_execution_in_current_process() const override { return true; }
 
@@ -959,7 +959,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
     virtual bool is_execute() const override { return true; }
     virtual bool would_execute() const override { return true; }
@@ -984,7 +984,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool should_override_execution_in_current_process() const override { return true; }
 
     NonnullRefPtr<AST::Node> m_condition;
@@ -1008,7 +1008,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_command() const override { return true; }
     virtual bool is_list() const override { return true; }
     virtual RefPtr<Node> leftmost_trivial_literal() const override;
@@ -1041,7 +1041,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool would_execute() const override { return true; }
     virtual bool should_override_execution_in_current_process() const override { return true; }
 
@@ -1066,7 +1066,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
 
     NonnullRefPtr<Node> m_left;
     NonnullRefPtr<Node> m_right;
@@ -1087,7 +1087,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_command() const override { return true; }
 
     NonnullRefPtr<Node> m_left;
@@ -1108,7 +1108,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
 
     NonnullRefPtr<Node> m_start;
     NonnullRefPtr<Node> m_end;
@@ -1153,7 +1153,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_list() const override { return true; }
     virtual bool should_override_execution_in_current_process() const override { return true; }
 
@@ -1174,7 +1174,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool would_execute() const override { return false; }
     virtual bool should_override_execution_in_current_process() const override { return true; }
 
@@ -1195,7 +1195,7 @@ private:
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_simple_variable() const override { return true; }
 
     String m_name;
@@ -1215,7 +1215,7 @@ private:
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
 
     char m_name { -1 };
 };
@@ -1234,7 +1234,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
 
     NonnullRefPtr<Node> m_left;
@@ -1273,7 +1273,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
 
     NonnullRefPtr<Node> m_left;
     NonnullRefPtr<Node> m_right;
@@ -1293,7 +1293,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override { return { nullptr, nullptr, nullptr }; }
+    virtual HitTestResult hit_test_position(size_t) const override { return { nullptr, nullptr, nullptr }; }
     virtual bool is_syntax_error() const override { return true; }
     virtual const SyntaxError& syntax_error_node() const override;
 
@@ -1315,7 +1315,7 @@ private:
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_tilde() const override { return true; }
 
     String m_username;
@@ -1338,7 +1338,7 @@ private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
-    virtual HitTestResult hit_test_position(size_t) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_variable_decls() const override { return true; }
 
     Vector<Variable> m_variables;
