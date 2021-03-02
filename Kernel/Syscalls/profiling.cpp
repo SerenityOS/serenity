@@ -32,9 +32,25 @@
 
 namespace Kernel {
 
+PerformanceEventBuffer* g_global_perf_events;
+bool g_profiling_all_threads;
+
 KResultOr<int> Process::sys$profiling_enable(pid_t pid)
 {
     REQUIRE_NO_PROMISES;
+
+    if (pid == -1) {
+        if (!is_superuser())
+            return EPERM;
+        ScopedCritical critical;
+        if (g_global_perf_events)
+            g_global_perf_events->clear();
+        else
+            g_global_perf_events = PerformanceEventBuffer::try_create_with_size(32 * MiB).leak_ptr();
+        g_profiling_all_threads = true;
+        return 0;
+    }
+
     ScopedSpinLock lock(g_processes_lock);
     auto process = Process::from_pid(pid);
     if (!process)
@@ -51,6 +67,14 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
 
 KResultOr<int> Process::sys$profiling_disable(pid_t pid)
 {
+    if (pid == -1) {
+        if (!is_superuser())
+            return EPERM;
+        ScopedCritical critical;
+        g_profiling_all_threads = false;
+        return 0;
+    }
+
     ScopedSpinLock lock(g_processes_lock);
     auto process = Process::from_pid(pid);
     if (!process)

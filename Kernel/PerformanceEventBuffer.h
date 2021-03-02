@@ -78,8 +78,14 @@ public:
     OwnPtr<KBuffer> to_json(ProcessID, const String& executable_path) const;
     bool to_json(KBufferBuilder&, ProcessID, const String& executable_path) const;
 
+    // Used by full-system profile (/proc/profile)
+    bool to_json(KBufferBuilder&);
+
 private:
     explicit PerformanceEventBuffer(NonnullOwnPtr<KBuffer>);
+
+    template<typename Serializer>
+    bool to_json_impl(Serializer&) const;
 
     PerformanceEvent& at(size_t index);
 
