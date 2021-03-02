@@ -26,25 +26,53 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <LibGUI/TextPosition.h>
+#include <DevTools/HackStudio/LanguageServers/AutoCompleteEngine.h>
 #include <Shell/Shell.h>
 
 namespace LanguageServers::Shell {
 
-class AutoComplete {
+class AutoComplete : public AutoCompleteEngine {
 public:
-    AutoComplete()
-        : m_shell(::Shell::Shell::construct())
-    {
-    }
-
-    Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& code, size_t autocomplete_position);
+    AutoComplete(ClientConnection&, const FileDB& filedb);
+    virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& position) override;
+    virtual void on_edit(const String& file) override;
+    virtual void file_opened([[maybe_unused]] const String& file) override;
+    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String& file_name, const GUI::TextPosition& identifier_position) override;
 
 private:
-    NonnullRefPtr<::Shell::Shell> m_shell;
-};
+    struct DocumentData {
+        DocumentData(String&& text, String filename);
+        String filename;
+        String text;
+        NonnullRefPtr<::Shell::AST::Node> node;
 
+        const Vector<String>& sourced_paths() const;
+
+    private:
+        NonnullRefPtr<::Shell::AST::Node> parse() const;
+
+        mutable Optional<Vector<String>> all_sourced_paths {};
+    };
+
+    const DocumentData& get_document_data(const String& file) const;
+    const DocumentData& get_or_create_document_data(const String& file);
+    void set_document_data(const String& file, OwnPtr<DocumentData>&& data);
+
+    OwnPtr<DocumentData> create_document_data_for(const String& file);
+    String document_path_from_include_path(const StringView& include_path) const;
+    void update_declared_symbols(const DocumentData&);
+
+    static size_t resolve(const AutoComplete::DocumentData& document, const GUI::TextPosition& position);
+
+    ::Shell::Shell& shell()
+    {
+        if (s_shell)
+            return *s_shell;
+        s_shell = ::Shell::Shell::construct();
+        return *s_shell;
+    }
+
+    HashMap<String, OwnPtr<DocumentData>> m_documents;
+    static RefPtr<::Shell::Shell> s_shell;
+};
 }
