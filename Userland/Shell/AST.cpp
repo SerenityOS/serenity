@@ -303,7 +303,7 @@ void And::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetad
     m_right->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult And::hit_test_position(size_t offset)
+HitTestResult And::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -409,7 +409,7 @@ void ListConcatenate::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
     }
 }
 
-HitTestResult ListConcatenate::hit_test_position(size_t offset)
+HitTestResult ListConcatenate::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -471,7 +471,7 @@ void Background::highlight_in_editor(Line::Editor& editor, Shell& shell, Highlig
     m_command->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult Background::hit_test_position(size_t offset)
+HitTestResult Background::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -566,7 +566,7 @@ RefPtr<Value> BraceExpansion::run(RefPtr<Shell> shell)
     return create<ListValue>(move(values));
 }
 
-HitTestResult BraceExpansion::hit_test_position(size_t offset)
+HitTestResult BraceExpansion::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -631,7 +631,7 @@ void CastToCommand::highlight_in_editor(Line::Editor& editor, Shell& shell, High
     m_inner->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult CastToCommand::hit_test_position(size_t offset)
+HitTestResult CastToCommand::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -713,7 +713,7 @@ void CastToList::highlight_in_editor(Line::Editor& editor, Shell& shell, Highlig
         m_inner->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult CastToList::hit_test_position(size_t offset)
+HitTestResult CastToList::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -867,7 +867,7 @@ void DoubleQuotedString::highlight_in_editor(Line::Editor& editor, Shell& shell,
     m_inner->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult DoubleQuotedString::hit_test_position(size_t offset)
+HitTestResult DoubleQuotedString::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -915,7 +915,7 @@ void DynamicEvaluate::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
     m_inner->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult DynamicEvaluate::hit_test_position(size_t offset)
+HitTestResult DynamicEvaluate::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -1003,7 +1003,7 @@ void FunctionDeclaration::highlight_in_editor(Line::Editor& editor, Shell& shell
         m_block->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult FunctionDeclaration::hit_test_position(size_t offset)
+HitTestResult FunctionDeclaration::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -1155,7 +1155,7 @@ void ForLoop::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightM
         m_block->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult ForLoop::hit_test_position(size_t offset)
+HitTestResult ForLoop::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -1554,7 +1554,7 @@ void Execute::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightM
     m_command->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult Execute::hit_test_position(size_t offset)
+HitTestResult Execute::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -1648,7 +1648,7 @@ void IfCond::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMe
         m_false_branch->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult IfCond::hit_test_position(size_t offset)
+HitTestResult IfCond::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -1729,7 +1729,7 @@ void Join::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMeta
     m_right->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult Join::hit_test_position(size_t offset)
+HitTestResult Join::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -1891,7 +1891,7 @@ void MatchExpr::highlight_in_editor(Line::Editor& editor, Shell& shell, Highligh
     }
 }
 
-HitTestResult MatchExpr::hit_test_position(size_t offset)
+HitTestResult MatchExpr::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -1956,7 +1956,7 @@ void Or::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetada
     m_right->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult Or::hit_test_position(size_t offset)
+HitTestResult Or::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -2035,7 +2035,7 @@ void Pipe::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMeta
     m_right->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult Pipe::hit_test_position(size_t offset)
+HitTestResult Pipe::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -2094,7 +2094,7 @@ void PathRedirectionNode::highlight_in_editor(Line::Editor& editor, Shell& shell
     }
 }
 
-HitTestResult PathRedirectionNode::hit_test_position(size_t offset)
+HitTestResult PathRedirectionNode::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -2209,7 +2209,7 @@ void Range::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMet
     m_end->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult Range::hit_test_position(size_t offset)
+HitTestResult Range::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -2332,7 +2332,7 @@ void Sequence::highlight_in_editor(Line::Editor& editor, Shell& shell, Highlight
         entry.highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult Sequence::hit_test_position(size_t offset)
+HitTestResult Sequence::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -2388,7 +2388,7 @@ void Subshell::highlight_in_editor(Line::Editor& editor, Shell& shell, Highlight
         m_block->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult Subshell::hit_test_position(size_t offset)
+HitTestResult Subshell::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -2430,7 +2430,7 @@ void SimpleVariable::highlight_in_editor(Line::Editor& editor, Shell&, Highlight
     editor.stylize({ m_position.start_offset, m_position.end_offset }, move(style));
 }
 
-HitTestResult SimpleVariable::hit_test_position(size_t offset)
+HitTestResult SimpleVariable::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -2486,7 +2486,7 @@ Vector<Line::CompletionSuggestion> SpecialVariable::complete_for_editor(Shell&, 
     return {};
 }
 
-HitTestResult SpecialVariable::hit_test_position(size_t offset)
+HitTestResult SpecialVariable::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -2602,7 +2602,7 @@ Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& she
     return Node::complete_for_editor(shell, offset, hit_test_result);
 }
 
-HitTestResult Juxtaposition::hit_test_position(size_t offset)
+HitTestResult Juxtaposition::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -2691,7 +2691,7 @@ void StringPartCompose::highlight_in_editor(Line::Editor& editor, Shell& shell, 
     m_right->highlight_in_editor(editor, shell, metadata);
 }
 
-HitTestResult StringPartCompose::hit_test_position(size_t offset)
+HitTestResult StringPartCompose::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -2769,7 +2769,7 @@ void Tilde::highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata)
 {
 }
 
-HitTestResult Tilde::hit_test_position(size_t offset)
+HitTestResult Tilde::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
@@ -2900,7 +2900,7 @@ void VariableDeclarations::highlight_in_editor(Line::Editor& editor, Shell& shel
     }
 }
 
-HitTestResult VariableDeclarations::hit_test_position(size_t offset)
+HitTestResult VariableDeclarations::hit_test_position(size_t offset) const
 {
     if (!position().contains(offset))
         return {};
