@@ -474,6 +474,15 @@ static bool procfs$modules(InodeIdentifier, KBufferBuilder& builder)
     return true;
 }
 
+static bool procfs$profile(InodeIdentifier, KBufferBuilder& builder)
+{
+    extern PerformanceEventBuffer* g_global_perf_events;
+    if (!g_global_perf_events)
+        return false;
+
+    return g_global_perf_events->to_json(builder);
+}
+
 static bool procfs$pid_perf_events(InodeIdentifier identifier, KBufferBuilder& builder)
 {
     auto process = Process::from_pid(to_pid(identifier));
@@ -1703,6 +1712,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, false, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, true, procfs$cmdline };
     m_entries[FI_Root_modules] = { "modules", FI_Root_modules, true, procfs$modules };
+    m_entries[FI_Root_profile] = { "profile", FI_Root_profile, true, procfs$profile };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys, true };
     m_entries[FI_Root_net] = { "net", FI_Root_net, false };
 

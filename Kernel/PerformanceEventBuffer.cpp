@@ -98,6 +98,7 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(u32 eip, u32 ebp, int ty
     event.stack_size = min(sizeof(event.stack) / sizeof(FlatPtr), static_cast<size_t>(backtrace.size()));
     memcpy(event.stack, backtrace.data(), event.stack_size * sizeof(FlatPtr));
 
+    event.tid = Thread::current()->tid().value();
     event.timestamp = TimeManagement::the().uptime_ms();
     at(m_count++) = event;
     return KSuccess;
@@ -118,27 +119,9 @@ OwnPtr<KBuffer> PerformanceEventBuffer::to_json(ProcessID pid, const String& exe
     return builder.build();
 }
 
-bool PerformanceEventBuffer::to_json(KBufferBuilder& builder, ProcessID pid, const String& executable_path) const
+template<typename Serializer>
+bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
 {
-    auto process = Process::from_pid(pid);
-    VERIFY(process);
-    ScopedSpinLock locker(process->space().get_lock());
-
-    JsonObjectSerializer object(builder);
-    object.add("pid", pid.value());
-    object.add("executable", executable_path);
-
-    {
-        auto region_array = object.add_array("regions");
-        for (const auto& region : process->space().regions()) {
-            auto region_object = region_array.add_object();
-            region_object.add("base", region.vaddr().get());
-            region_object.add("size", region.size());
-            region_object.add("name", region.name());
-        }
-        region_array.finish();
-    }
-
     auto array = object.add_array("events");
     for (size_t i = 0; i < m_count; ++i) {
         auto& event = at(i);
@@ -169,6 +152,36 @@ bool PerformanceEventBuffer::to_json(KBufferBuilder& builder, ProcessID pid, con
     array.finish();
     object.finish();
     return true;
+}
+
+bool PerformanceEventBuffer::to_json(KBufferBuilder& builder)
+{
+    JsonObjectSerializer object(builder);
+    return to_json_impl(object);
+}
+
+bool PerformanceEventBuffer::to_json(KBufferBuilder& builder, ProcessID pid, const String& executable_path) const
+{
+    auto process = Process::from_pid(pid);
+    VERIFY(process);
+    ScopedSpinLock locker(process->space().get_lock());
+
+    JsonObjectSerializer object(builder);
+    object.add("pid", pid.value());
+    object.add("executable", executable_path);
+
+    {
+        auto region_array = object.add_array("regions");
+        for (const auto& region : process->space().regions()) {
+            auto region_object = region_array.add_object();
+            region_object.add("base", region.vaddr().get());
+            region_object.add("size", region.size());
+            region_object.add("name", region.name());
+        }
+        region_array.finish();
+    }
+
+    return to_json_impl(object);
 }
 
 OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size_t buffer_size)
