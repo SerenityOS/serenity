@@ -125,7 +125,6 @@
     M(ProxyHasExistingNonExtensible, "Proxy handler's has trap violates invariant: a property "                                         \
                                      "cannot be reported as non-existent if it exists on the target and the target is "                 \
                                      "non-extensible")                                                                                  \
-    M(ProxyInvalidTrap, "Proxy handler's {} trap wasn't undefined, null, or callable")                                                  \
     M(ProxyIsExtensibleReturn, "Proxy handler's isExtensible trap violates invariant: "                                                 \
                                "return value must match the target's extensibility")                                                    \
     M(ProxyPreventExtensionsReturn, "Proxy handler's preventExtensions trap violates "                                                  \
