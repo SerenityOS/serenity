@@ -5,4 +5,4 @@ set(SOURCES
 )
 
 serenity_bin(KeyboardMapper)
-target_link_libraries(KeyboardMapper LibGUI LibKeyboard)
+target_link_libraries(KeyboardMapper LibGUI LibKeyboard LibSanitizer)

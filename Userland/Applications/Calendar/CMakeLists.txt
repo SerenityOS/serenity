@@ -4,4 +4,4 @@ set(SOURCES
 )
 
 serenity_app(Calendar ICON app-calendar)
-target_link_libraries(Calendar LibGUI)
+target_link_libraries(Calendar LibGUI LibSanitizer)

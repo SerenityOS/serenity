@@ -3,4 +3,4 @@ set(SOURCES
 )
 
 serenity_app(MouseSettings ICON app-mouse)
-target_link_libraries(MouseSettings LibGUI)
+target_link_libraries(MouseSettings LibGUI LibSanitizer)

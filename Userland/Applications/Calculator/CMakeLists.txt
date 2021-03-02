@@ -8,4 +8,4 @@ set(SOURCES
 )
 
 serenity_app(Calculator ICON app-calculator)
-target_link_libraries(Calculator LibGUI)
+target_link_libraries(Calculator LibGUI LibSanitizer)

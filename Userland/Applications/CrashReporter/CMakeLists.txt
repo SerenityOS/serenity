@@ -7,4 +7,4 @@ set(SOURCES
 )
 
 serenity_app(CrashReporter ICON app-crash-reporter)
-target_link_libraries(CrashReporter LibCore LibCoreDump LibDesktop LibGUI)
+target_link_libraries(CrashReporter LibCore LibCoreDump LibDesktop LibGUI LibSanitizer)

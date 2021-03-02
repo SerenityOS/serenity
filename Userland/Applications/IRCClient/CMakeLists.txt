@@ -11,4 +11,4 @@ set(SOURCES
 )
 
 serenity_app(IRCClient ICON app-irc-client)
-target_link_libraries(IRCClient LibWeb LibGUI)
+target_link_libraries(IRCClient LibWeb LibGUI LibSanitizer)

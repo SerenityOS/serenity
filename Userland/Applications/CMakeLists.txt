@@ -1,3 +1,5 @@
+add_compile_options(-fsanitize=undefined -fno-sanitize=vptr)
+
 add_subdirectory(About)
 add_subdirectory(Browser)
 add_subdirectory(Calculator)

@@ -24,4 +24,4 @@ set(SOURCES
 )
 
 serenity_app(PixelPaint ICON app-pixel-paint)
-target_link_libraries(PixelPaint LibGUI LibGfx)
+target_link_libraries(PixelPaint LibGUI LibGfx LibSanitizer)

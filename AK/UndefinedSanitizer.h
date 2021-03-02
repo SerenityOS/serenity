@@ -28,7 +28,7 @@
 
 #include <AK/Types.h>
 
-namespace Kernel::UBSanitizer {
+namespace AK::UndefinedSanitizer {
 
 typedef void* ValueHandle;
 
