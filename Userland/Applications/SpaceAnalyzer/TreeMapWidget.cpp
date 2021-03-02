@@ -70,67 +70,59 @@ static bool node_is_leaf(const TreeMapNode& node)
 
 bool TreeMapWidget::rect_can_contain_label(const Gfx::IntRect& rect) const
 {
-    return rect.height() > font().presentation_size() && rect.width() > 20;
+    return rect.height() >= font().presentation_size() && rect.width() > 20;
 }
 
-bool TreeMapWidget::rect_can_contain_children(const Gfx::IntRect& rect) const
+void TreeMapWidget::paint_cell_frame(GUI::Painter& painter, const TreeMapNode& node, const Gfx::IntRect& cell_rect, const Gfx::IntRect& inner_rect, int depth, HasLabel has_label) const
 {
-    return rect.height() > 10 && rect.width() > 10;
-}
-
-Gfx::IntRect TreeMapWidget::inner_rect_for_frame(const Gfx::IntRect& rect) const
-{
-    const int margin = 5;
-    Gfx::IntRect tmp_rect = rect;
-    tmp_rect.shrink(2, 2); // border
-    tmp_rect.shrink(2, 2); // shading
-    if (rect_can_contain_label(tmp_rect)) {
-        tmp_rect.set_y(tmp_rect.y() + font().presentation_size() + margin);
-        tmp_rect.set_height(tmp_rect.height() - (font().presentation_size() + margin * 2));
-        tmp_rect.set_x(tmp_rect.x() + margin);
-        tmp_rect.set_width(tmp_rect.width() - margin * 2);
+    if (cell_rect.width() <= 2 || cell_rect.height() <= 2) {
+        painter.fill_rect(cell_rect, Color::Black);
+        return;
     }
-    return tmp_rect;
-}
+    Gfx::IntRect remainder = cell_rect;
 
-void TreeMapWidget::paint_cell_frame(GUI::Painter& painter, const TreeMapNode& node, const Gfx::IntRect& cell_rect, int depth, bool fill_frame) const
-{
-    const Gfx::IntRect border_rect = cell_rect.shrunken(2, 2);
-    const Gfx::IntRect outer_rect = border_rect.shrunken(2, 2);
-    const Gfx::IntRect inner_rect = inner_rect_for_frame(cell_rect);
-
-    painter.clear_clip_rect();
-    painter.add_clip_rect(cell_rect);
     Color color = colors[depth % (sizeof(colors) / sizeof(colors[0]))];
     if (m_selected_node_cache == &node) {
         color = color.darkened(0.8f);
     }
 
     // Draw borders.
-    painter.draw_rect(cell_rect, Color::Black, false);
-    painter.draw_line(border_rect.bottom_left(), border_rect.top_left(), color.lightened());
-    painter.draw_line(border_rect.top_left(), border_rect.top_right(), color.lightened());
-    painter.draw_line(border_rect.top_right(), border_rect.bottom_right(), color.darkened());
-    painter.draw_line(border_rect.bottom_left(), border_rect.bottom_right(), color.darkened());
+    painter.fill_rect(remainder.take_from_right(1), Color::Black);
+    painter.fill_rect(remainder.take_from_bottom(1), Color::Black);
+    // Draw highlights.
+    painter.fill_rect(remainder.take_from_right(1), color.darkened());
+    painter.fill_rect(remainder.take_from_bottom(1), color.darkened());
+    painter.fill_rect(remainder.take_from_top(1), color.lightened());
+    painter.fill_rect(remainder.take_from_left(1), color.lightened());
 
     // Paint the background.
-    if (fill_frame) {
-        painter.fill_rect(outer_rect, color);
+    if (inner_rect.is_empty()) {
+        painter.fill_rect(remainder, color);
     } else {
-        for (auto& shard : outer_rect.shatter(inner_rect)) {
+        // Draw black edges above and to the left of the inner_rect.
+        Gfx::IntRect border_rect = inner_rect.inflated(2, 2);
+        Gfx::IntRect hammer_rect = border_rect;
+        hammer_rect.set_width(hammer_rect.width() - 1);
+        hammer_rect.set_height(hammer_rect.height() - 1);
+        painter.fill_rect(border_rect.take_from_top(1), Color::Black);
+        painter.fill_rect(border_rect.take_from_left(1), Color::Black);
+        for (auto& shard : remainder.shatter(hammer_rect)) {
             painter.fill_rect(shard, color);
         }
     }
 
     // Paint text.
-    if (rect_can_contain_label(outer_rect)) {
-        Gfx::IntRect text_rect = outer_rect;
+    if (has_label == HasLabel::Yes) {
+        painter.clear_clip_rect();
+        painter.add_clip_rect(cell_rect);
+        Gfx::IntRect text_rect = remainder;
         text_rect.move_by(2, 2);
         painter.draw_text(text_rect, node.name(), font(), Gfx::TextAlignment::TopLeft, Color::Black);
         if (node_is_leaf(node)) {
             text_rect.move_by(0, font().presentation_size() + 1);
             painter.draw_text(text_rect, human_readable_size(node.area()), font(), Gfx::TextAlignment::TopLeft, Color::Black);
         }
+        painter.clear_clip_rect();
     }
 }
 
@@ -207,12 +199,26 @@ void TreeMapWidget::lay_out_children(const TreeMapNode& node, const Gfx::IntRect
                 int node_size = (long long int)main_dim * child.area() / placement_area;
                 Gfx::IntRect cell_rect = layout_rect;
                 cell_rect.set_secondary_size_for_orientation(orientation, node_size);
-                Gfx::IntRect inner_rect = inner_rect_for_frame(cell_rect);
-                bool is_visual_leaf = child.num_children() == 0 || !rect_can_contain_children(inner_rect);
-                callback(child, q, cell_rect, depth, is_visual_leaf ? IsVisualLeaf::Yes : IsVisualLeaf::No, IsRemainder::No);
+                Gfx::IntRect inner_rect;
+                HasLabel has_label = HasLabel::No;
+                if (child.num_children() != 0 && rect.height() >= 8 && rect.width() >= 8) {
+                    inner_rect = cell_rect;
+                    inner_rect.shrink(4, 4); // border and shading
+                    if (rect_can_contain_label(inner_rect)) {
+                        const int margin = 5;
+                        has_label = HasLabel::Yes;
+                        inner_rect.set_y(inner_rect.y() + font().presentation_size() + margin);
+                        inner_rect.set_height(inner_rect.height() - (font().presentation_size() + margin * 2));
+                        inner_rect.set_x(inner_rect.x() + margin);
+                        inner_rect.set_width(inner_rect.width() - margin * 2);
+                    }
+                } else if (rect_can_contain_label(cell_rect)) {
+                    has_label = HasLabel::Yes;
+                }
+                callback(child, q, cell_rect, inner_rect, depth, has_label, IsRemainder::No);
                 if (cell_rect.width() * cell_rect.height() < 16) {
                     remaining_nodes_are_too_small = true;
-                } else {
+                } else if (!inner_rect.is_empty()) {
                     lay_out_children(child, inner_rect, depth + 1, callback);
                 }
                 layout_rect.set_secondary_offset_for_orientation(orientation, layout_rect.secondary_offset_for_orientation(orientation) + node_size);
@@ -230,7 +236,7 @@ void TreeMapWidget::lay_out_children(const TreeMapNode& node, const Gfx::IntRect
 
     // If not the entire canvas was filled with nodes, fill the remaining area with a dither pattern.
     if (!canvas.is_empty()) {
-        callback(node, 0, canvas, depth, IsVisualLeaf::No, IsRemainder::Yes);
+        callback(node, 0, canvas, Gfx::IntRect(), depth, HasLabel::No, IsRemainder::Yes);
     }
 }
 
@@ -262,18 +268,17 @@ void TreeMapWidget::paint_event(GUI::PaintEvent& event)
     if (!node) {
         painter.fill_rect(frame_inner_rect(), Color::MidGray);
     } else if (node_is_leaf(*node)) {
-        paint_cell_frame(painter, *node, frame_inner_rect(), m_viewpoint - 1, true);
+        paint_cell_frame(painter, *node, frame_inner_rect(), Gfx::IntRect(), m_viewpoint - 1, HasLabel::Yes);
     } else {
-        lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](const TreeMapNode& node, int, const Gfx::IntRect& rect, int depth, IsVisualLeaf visual_leaf, IsRemainder remainder) {
+        lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](const TreeMapNode& node, int, const Gfx::IntRect& rect, const Gfx::IntRect& inner_rect, int depth, HasLabel has_label, IsRemainder remainder) {
             if (remainder == IsRemainder::No) {
-                bool fill = visual_leaf == IsVisualLeaf::Yes ? true : false;
-                paint_cell_frame(painter, node, rect, depth, fill);
+                paint_cell_frame(painter, node, rect, inner_rect, depth, has_label);
             } else {
                 Color color = colors[depth % (sizeof(colors) / sizeof(colors[0]))];
-                painter.clear_clip_rect();
-                painter.add_clip_rect(rect);
-                painter.draw_rect(rect, Color::Black);
-                painter.fill_rect_with_dither_pattern(rect.shrunken(2, 2), color, Color::Black);
+                Gfx::IntRect dither_rect = rect;
+                painter.fill_rect(dither_rect.take_from_right(1), Color::Black);
+                painter.fill_rect(dither_rect.take_from_bottom(1), Color::Black);
+                painter.fill_rect_with_dither_pattern(dither_rect, color, Color::Black);
             }
         });
     }
@@ -286,7 +291,7 @@ Vector<int> TreeMapWidget::path_to_position(const Gfx::IntPoint& position)
         return {};
     }
     Vector<int> path;
-    lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](const TreeMapNode&, int index, const Gfx::IntRect& rect, int, IsVisualLeaf, IsRemainder is_remainder) {
+    lay_out_children(*node, frame_inner_rect(), m_viewpoint, [&](const TreeMapNode&, int index, const Gfx::IntRect& rect, const Gfx::IntRect&, int, HasLabel, IsRemainder is_remainder) {
         if (is_remainder == IsRemainder::No && rect.contains(position)) {
             path.append(index);
         }
