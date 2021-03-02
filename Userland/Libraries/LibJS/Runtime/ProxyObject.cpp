@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
+ * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,17 +81,12 @@ Object* ProxyObject::prototype()
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return nullptr;
     }
-    auto trap = m_handler.get(vm.names.getPrototypeOf);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.getPrototypeOf);
     if (vm.exception())
         return nullptr;
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return m_target.prototype();
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "getPrototypeOf");
-        return nullptr;
-    }
-
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target));
+    auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target));
     if (vm.exception())
         return nullptr;
     if (!trap_result.is_object() && !trap_result.is_null()) {
@@ -131,17 +127,12 @@ bool ProxyObject::set_prototype(Object* object)
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return false;
     }
-    auto trap = m_handler.get(vm.names.setPrototypeOf);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.setPrototypeOf);
     if (vm.exception())
         return false;
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return m_target.set_prototype(object);
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "setPrototypeOf");
-        return false;
-    }
-
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), Value(object));
+    auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target), Value(object));
     if (vm.exception() || !trap_result.to_boolean())
         return false;
     if (m_target.is_extensible())
@@ -163,17 +154,12 @@ bool ProxyObject::is_extensible() const
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return false;
     }
-    auto trap = m_handler.get(vm.names.isExtensible);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.isExtensible);
     if (vm.exception())
         return false;
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return m_target.is_extensible();
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "isExtensible");
-        return {};
-    }
-
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target));
+    auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target));
     if (vm.exception())
         return false;
     if (trap_result.to_boolean() != m_target.is_extensible()) {
@@ -191,17 +177,12 @@ bool ProxyObject::prevent_extensions()
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return false;
     }
-    auto trap = m_handler.get(vm.names.preventExtensions);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.preventExtensions);
     if (vm.exception())
         return false;
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return m_target.prevent_extensions();
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "preventExtensions");
-        return {};
-    }
-
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target));
+    auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target));
     if (vm.exception())
         return false;
     if (trap_result.to_boolean() && m_target.is_extensible()) {
@@ -219,17 +200,12 @@ Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(const Prop
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return {};
     }
-    auto trap = m_handler.get(vm.names.getOwnPropertyDescriptor);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.getOwnPropertyDescriptor);
     if (vm.exception())
         return {};
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return m_target.get_own_property_descriptor(name);
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "getOwnPropertyDescriptor");
-        return {};
-    }
-
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm));
+    auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target), name.to_value(vm));
     if (vm.exception())
         return {};
     if (!trap_result.is_object() && !trap_result.is_undefined()) {
@@ -275,17 +251,12 @@ bool ProxyObject::define_property(const StringOrSymbol& property_name, const Obj
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return false;
     }
-    auto trap = m_handler.get(vm.names.defineProperty);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.defineProperty);
     if (vm.exception())
         return false;
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return m_target.define_property(property_name, descriptor, throw_exceptions);
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "defineProperty");
-        return false;
-    }
-
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), property_name.to_value(vm), Value(const_cast<Object*>(&descriptor)));
+    auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target), property_name.to_value(vm), Value(const_cast<Object*>(&descriptor)));
     if (vm.exception() || !trap_result.to_boolean())
         return false;
     auto target_desc = m_target.get_own_property_descriptor(property_name);
@@ -327,17 +298,12 @@ bool ProxyObject::has_property(const PropertyName& name) const
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return false;
     }
-    auto trap = m_handler.get(vm.names.has);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.has);
     if (vm.exception())
         return false;
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return m_target.has_property(name);
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "has");
-        return false;
-    }
-
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm));
+    auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target), name.to_value(vm));
     if (vm.exception())
         return false;
     if (!trap_result.to_boolean()) {
@@ -368,17 +334,12 @@ Value ProxyObject::get(const PropertyName& name, Value receiver) const
     }
     if (receiver.is_empty())
         receiver = Value(const_cast<ProxyObject*>(this));
-    auto trap = m_handler.get(vm.names.get);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.get);
     if (vm.exception())
         return {};
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return m_target.get(name, receiver);
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "get");
-        return {};
-    }
-
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm), receiver);
+    auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target), name.to_value(vm), receiver);
     if (vm.exception())
         return {};
     auto target_desc = m_target.get_own_property_descriptor(name);
@@ -406,16 +367,12 @@ bool ProxyObject::put(const PropertyName& name, Value value, Value receiver)
     }
     if (receiver.is_empty())
         receiver = Value(const_cast<ProxyObject*>(this));
-    auto trap = m_handler.get(vm.names.set);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.set);
     if (vm.exception())
         return false;
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return m_target.put(name, value, receiver);
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "set");
-        return false;
-    }
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm), value, receiver);
+    auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target), name.to_value(vm), value, receiver);
     if (vm.exception() || !trap_result.to_boolean())
         return false;
     auto target_desc = m_target.get_own_property_descriptor(name);
@@ -440,17 +397,12 @@ Value ProxyObject::delete_property(const PropertyName& name)
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return {};
     }
-    auto trap = m_handler.get(vm.names.deleteProperty);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.deleteProperty);
     if (vm.exception())
         return {};
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return m_target.delete_property(name);
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "deleteProperty");
-        return {};
-    }
-
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm));
+    auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target), name.to_value(vm));
     if (vm.exception())
         return {};
     if (!trap_result.to_boolean())
@@ -485,15 +437,11 @@ Value ProxyObject::call()
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return {};
     }
-    auto trap = m_handler.get(vm.names.apply);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.apply);
     if (vm.exception())
         return {};
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return static_cast<Function&>(m_target).call();
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "apply");
-        return {};
-    }
     MarkedValueList arguments(heap());
     arguments.append(Value(&m_target));
     arguments.append(Value(&m_handler));
@@ -504,7 +452,7 @@ Value ProxyObject::call()
     });
     arguments.append(arguments_array);
 
-    return vm.call(trap.as_function(), Value(&m_handler), move(arguments));
+    return vm.call(*trap, Value(&m_handler), move(arguments));
 }
 
 Value ProxyObject::construct(Function& new_target)
@@ -518,16 +466,11 @@ Value ProxyObject::construct(Function& new_target)
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return {};
     }
-    auto trap = m_handler.get(vm.names.construct);
+    auto trap = get_method(global_object(), Value(&m_handler), vm.names.construct);
     if (vm.exception())
         return {};
-    if (trap.is_empty() || trap.is_nullish())
+    if (!trap)
         return static_cast<Function&>(m_target).construct(new_target);
-    if (!trap.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "construct");
-        return {};
-    }
-
     MarkedValueList arguments(vm.heap());
     arguments.append(Value(&m_target));
     auto arguments_array = Array::create(global_object());
@@ -536,7 +479,7 @@ Value ProxyObject::construct(Function& new_target)
     });
     arguments.append(arguments_array);
     arguments.append(Value(&new_target));
-    auto result = vm.call(trap.as_function(), Value(&m_handler), move(arguments));
+    auto result = vm.call(*trap, Value(&m_handler), move(arguments));
     if (!result.is_object()) {
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyConstructBadReturnType);
         return {};
