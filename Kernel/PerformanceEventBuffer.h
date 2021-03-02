@@ -75,14 +75,24 @@ public:
         return const_cast<PerformanceEventBuffer&>(*this).at(index);
     }
 
-    OwnPtr<KBuffer> to_json(ProcessID, const String& executable_path) const;
-    bool to_json(KBufferBuilder&, ProcessID, const String& executable_path) const;
+    bool to_json(KBufferBuilder&) const;
 
-    // Used by full-system profile (/proc/profile)
-    bool to_json(KBufferBuilder&);
+    void add_process(const Process&);
 
 private:
     explicit PerformanceEventBuffer(NonnullOwnPtr<KBuffer>);
+
+    struct SampledProcess {
+        ProcessID pid;
+        String executable;
+        HashTable<ThreadID> threads;
+
+        struct Region {
+            String name;
+            Range range;
+        };
+        Vector<Region> regions;
+    };
 
     template<typename Serializer>
     bool to_json_impl(Serializer&) const;
@@ -91,6 +101,8 @@ private:
 
     size_t m_count { 0 };
     NonnullOwnPtr<KBuffer> m_buffer;
+
+    HashMap<ProcessID, NonnullOwnPtr<SampledProcess>> m_processes;
 };
 
 }
