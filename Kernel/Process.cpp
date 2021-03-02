@@ -448,10 +448,13 @@ bool Process::dump_perfcore()
     if (description_or_error.is_error())
         return false;
     auto& description = description_or_error.value();
-    auto json = m_perf_event_buffer->to_json(m_pid, m_executable ? m_executable->absolute_path() : "");
-    if (!json)
+    KBufferBuilder builder;
+    if (!m_perf_event_buffer->to_json(builder))
         return false;
 
+    auto json = builder.build();
+    if (!json)
+        return false;
     auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(json->data());
     return !description->write(json_buffer, json->size()).is_error();
 }
@@ -671,6 +674,7 @@ bool Process::create_perf_events_buffer_if_needed()
 {
     if (!m_perf_event_buffer) {
         m_perf_event_buffer = PerformanceEventBuffer::try_create_with_size(4 * MiB);
+        m_perf_event_buffer->add_process(*this);
     }
     return !!m_perf_event_buffer;
 }

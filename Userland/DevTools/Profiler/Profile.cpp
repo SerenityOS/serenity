@@ -47,10 +47,9 @@ static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
         child->sort_children();
 }
 
-Profile::Profile(String executable_path, Vector<Event> events, NonnullOwnPtr<LibraryMetadata> library_metadata)
-    : m_executable_path(move(executable_path))
+Profile::Profile(Vector<Process> processes, Vector<Event> events)
+    : m_processes(move(processes))
     , m_events(move(events))
-    , m_library_metadata(move(library_metadata))
 {
     m_first_timestamp = m_events.first().timestamp;
     m_last_timestamp = m_events.last().timestamp;
@@ -84,14 +83,14 @@ void Profile::rebuild_tree()
     u32 filtered_event_count = 0;
     Vector<NonnullRefPtr<ProfileNode>> roots;
 
-    auto find_or_create_root = [&roots](FlyString object_name, String symbol, u32 address, u32 offset, u64 timestamp) -> ProfileNode& {
+    auto find_or_create_root = [&roots](FlyString object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t pid) -> ProfileNode& {
         for (size_t i = 0; i < roots.size(); ++i) {
             auto& root = roots[i];
             if (root->symbol() == symbol) {
                 return root;
             }
         }
-        auto new_root = ProfileNode::create(move(object_name), move(symbol), address, offset, timestamp);
+        auto new_root = ProfileNode::create(move(object_name), move(symbol), address, offset, timestamp, pid);
         roots.append(new_root);
         return new_root;
     };
@@ -149,10 +148,11 @@ void Profile::rebuild_tree()
                 if (symbol.is_empty())
                     return IterationDecision::Break;
 
+                // FIXME: More cheating with intentional mixing of TID/PID here:
                 if (!node)
-                    node = &find_or_create_root(object_name, symbol, address, offset, event.timestamp);
+                    node = &find_or_create_root(object_name, symbol, address, offset, event.timestamp, event.tid);
                 else
-                    node = &node->find_or_create_child(object_name, symbol, address, offset, event.timestamp);
+                    node = &node->find_or_create_child(object_name, symbol, address, offset, event.timestamp, event.tid);
 
                 node->increment_event_count();
                 if (is_innermost_frame) {
@@ -174,12 +174,13 @@ void Profile::rebuild_tree()
                     if (symbol.is_empty())
                         break;
 
+                    // FIXME: More PID/TID mixing cheats here:
                     if (!node) {
-                        node = &find_or_create_root(object_name, symbol, address, offset, event.timestamp);
+                        node = &find_or_create_root(object_name, symbol, address, offset, event.timestamp, event.tid);
                         root = node;
                         root->will_track_seen_events(m_events.size());
                     } else {
-                        node = &node->find_or_create_child(object_name, symbol, address, offset, event.timestamp);
+                        node = &node->find_or_create_child(object_name, symbol, address, offset, event.timestamp, event.tid);
                     }
 
                     if (!root->has_seen_event(event_index)) {
@@ -219,11 +220,45 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         return String { "Invalid perfcore format (not a JSON object)" };
 
     auto& object = json.value().as_object();
-    auto executable_path = object.get("executable").to_string();
 
-    auto pid = object.get("pid");
-    if (!pid.is_u32())
-        return String { "Invalid perfcore format (no process ID)" };
+    auto processes_value = object.get("processes");
+    if (processes_value.is_null())
+        return String { "Invalid perfcore format (no processes)" };
+
+    if (!processes_value.is_array())
+        return String { "Invalid perfcore format (processes is not an array)" };
+
+    Vector<Process> sampled_processes;
+
+    for (auto& process_value : processes_value.as_array().values()) {
+        if (!process_value.is_object())
+            return String { "Invalid perfcore format (process value is not an object)" };
+        auto& process = process_value.as_object();
+        auto regions_value = process.get("regions");
+        if (!regions_value.is_array())
+            return String { "Invalid perfcore format (regions is not an array)" };
+
+        Process sampled_process {
+            .pid = (pid_t)process.get("pid").to_i32(),
+            .executable = process.get("executable").to_string(),
+            .threads = {},
+            .regions = {},
+            .library_metadata = make<LibraryMetadata>(regions_value.as_array()),
+        };
+
+        for (auto& region_value : regions_value.as_array().values()) {
+            if (!region_value.is_object())
+                return String { "Invalid perfcore format (region is not an object)" };
+            auto& region = region_value.as_object();
+            sampled_process.regions.append(Process::Region {
+                .name = region.get("name").to_string(),
+                .base = region.get("base").to_u32(),
+                .size = region.get("size").to_u32(),
+            });
+        }
+
+        sampled_processes.append(move(sampled_process));
+    }
 
     auto file_or_error = MappedFile::map("/boot/Kernel");
     OwnPtr<ELF::Image> kernel_elf;
@@ -234,15 +269,9 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     if (!events_value.is_array())
         return String { "Malformed profile (events is not an array)" };
 
-    auto regions_value = object.get("regions");
-    if (!regions_value.is_array() || regions_value.as_array().is_empty())
-        return String { "Malformed profile (regions is not an array, or it is empty)" };
-
     auto& perf_events = events_value.as_array();
     if (perf_events.is_empty())
         return String { "No events captured (targeted process was never on CPU)" };
-
-    auto library_metadata = make<LibraryMetadata>(regions_value.as_array());
 
     Vector<Event> events;
 
@@ -253,6 +282,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
 
         event.timestamp = perf_event.get("timestamp").to_number<u64>();
         event.type = perf_event.get("type").to_string();
+        event.tid = perf_event.get("tid").to_i32();
 
         if (event.type == "malloc") {
             event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
@@ -276,7 +306,15 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
                     symbol = "??";
                 }
             } else {
-                if (auto* library = library_metadata->library_containing(ptr)) {
+                auto it = sampled_processes.find_if([&](auto& entry) {
+                    // FIXME: This doesn't support multi-threaded programs!
+                    return entry.pid == event.tid;
+                });
+                // FIXME: This logic is kinda gnarly, find a way to clean it up.
+                LibraryMetadata* library_metadata {};
+                if (!it.is_end())
+                    library_metadata = it->library_metadata.ptr();
+                if (auto* library = library_metadata ? library_metadata->library_containing(ptr) : nullptr) {
                     object_name = library->name;
                     symbol = library->elf.symbolicate(ptr - library->base, &offset);
                 } else {
@@ -296,7 +334,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         events.append(move(event));
     }
 
-    return adopt_own(*new Profile(executable_path, move(events), move(library_metadata)));
+    return adopt_own(*new Profile(move(sampled_processes), move(events)));
 }
 
 void ProfileNode::sort_children()
@@ -363,7 +401,7 @@ GUI::Model* Profile::disassembly_model()
     return m_disassembly_model;
 }
 
-Profile::LibraryMetadata::LibraryMetadata(JsonArray regions)
+LibraryMetadata::LibraryMetadata(JsonArray regions)
     : m_regions(move(regions))
 {
     for (auto& region_value : m_regions.values()) {
@@ -391,12 +429,12 @@ Profile::LibraryMetadata::LibraryMetadata(JsonArray regions)
         auto elf = ELF::Image(file_or_error.value()->bytes());
         if (!elf.is_valid())
             continue;
-        auto library = make<Library>(base, size, name, file_or_error.release_value(), move(elf));
+        auto library = adopt_own(*new Library { base, size, name, file_or_error.release_value(), move(elf) });
         m_libraries.set(name, move(library));
     }
 }
 
-const Profile::LibraryMetadata::Library* Profile::LibraryMetadata::library_containing(FlatPtr ptr) const
+const LibraryMetadata::Library* LibraryMetadata::library_containing(FlatPtr ptr) const
 {
     for (auto& it : m_libraries) {
         if (!it.value)
@@ -408,8 +446,9 @@ const Profile::LibraryMetadata::Library* Profile::LibraryMetadata::library_conta
     return nullptr;
 }
 
-ProfileNode::ProfileNode(const String& object_name, String symbol, u32 address, u32 offset, u64 timestamp)
+ProfileNode::ProfileNode(const String& object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t pid)
     : m_symbol(move(symbol))
+    , m_pid(pid)
     , m_address(address)
     , m_offset(offset)
     , m_timestamp(timestamp)
@@ -421,4 +460,9 @@ ProfileNode::ProfileNode(const String& object_name, String symbol, u32 address, 
         object = object_name;
     }
     m_object_name = LexicalPath(object).basename();
+}
+
+const Process* ProfileNode::process(Profile& profile) const
+{
+    return profile.find_process(m_pid);
 }
