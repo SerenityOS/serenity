@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,43 +26,33 @@
 
 #pragma once
 
-#include "AutoCompleteEngine.h"
-#include "FileDB.h"
-#include <AK/HashMap.h>
-#include <AK/LexicalPath.h>
-#include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <LibIPC/ClientConnection.h>
-
-#include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
-#include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
+#include "LexerAutoComplete.h"
+#include "ParserAutoComplete.h"
+#include <DevTools/HackStudio/LanguageServers/ClientConnection.h>
 
 namespace LanguageServers::Cpp {
 
-class ClientConnection final
-    : public IPC::ClientConnection<LanguageClientEndpoint, LanguageServerEndpoint>
-    , public LanguageServerEndpoint {
+class ClientConnection final : public LanguageServers::ClientConnection {
     C_OBJECT(ClientConnection);
 
 public:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
-    ~ClientConnection() override;
+    ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
+        : LanguageServers::ClientConnection(move(socket), client_id)
+    {
+        m_autocomplete_engine = make<ParserAutoComplete>(*this, m_filedb);
+        m_autocomplete_engine->set_declarations_of_document_callback = &ClientConnection::set_declarations_of_document_callback;
+    }
 
-    virtual void die() override;
+    virtual ~ClientConnection() override = default;
 
 private:
-    virtual OwnPtr<Messages::LanguageServer::GreetResponse> handle(const Messages::LanguageServer::Greet&) override;
-    virtual void handle(const Messages::LanguageServer::FileOpened&) override;
-    virtual void handle(const Messages::LanguageServer::FileEditInsertText&) override;
-    virtual void handle(const Messages::LanguageServer::FileEditRemoveText&) override;
-    virtual void handle(const Messages::LanguageServer::SetFileContent&) override;
-    virtual void handle(const Messages::LanguageServer::AutoCompleteSuggestions&) override;
-    virtual void handle(const Messages::LanguageServer::SetAutoCompleteMode&) override;
-    virtual void handle(const Messages::LanguageServer::FindDeclaration&) override;
-
-    static void set_declarations_of_document_callback(ClientConnection&, const String&, Vector<GUI::AutocompleteProvider::Declaration>&&);
-
-    FileDB m_filedb;
-    OwnPtr<AutoCompleteEngine> m_autocomplete_engine;
+    virtual void handle(const Messages::LanguageServer::SetAutoCompleteMode& message) override
+    {
+        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "SetAutoCompleteMode: {}", message.mode());
+        if (message.mode() == "Parser")
+            m_autocomplete_engine = make<ParserAutoComplete>(*this, m_filedb);
+        else
+            m_autocomplete_engine = make<LexerAutoComplete>(*this, m_filedb);
+    }
 };
-
 }

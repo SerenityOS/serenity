@@ -26,12 +26,12 @@
 
 #pragma once
 
-#include "AutoCompleteEngine.h"
-#include "FileDB.h"
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <DevTools/HackStudio/AutoCompleteResponse.h>
+#include <DevTools/HackStudio/LanguageServers/AutoCompleteEngine.h>
+#include <DevTools/HackStudio/LanguageServers/FileDB.h>
 #include <LibCpp/AST.h>
 #include <LibCpp/Parser.h>
 #include <LibCpp/Preprocessor.h>

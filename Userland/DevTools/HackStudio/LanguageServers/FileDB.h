@@ -31,6 +31,8 @@
 #include <AK/String.h>
 #include <LibGUI/TextDocument.h>
 
+namespace LanguageServers {
+
 class FileDB final {
 public:
     RefPtr<const GUI::TextDocument> get(const String& file_name) const;
@@ -53,3 +55,5 @@ private:
     HashMap<String, NonnullRefPtr<GUI::TextDocument>> m_open_files;
     String m_project_root;
 };
+
+}

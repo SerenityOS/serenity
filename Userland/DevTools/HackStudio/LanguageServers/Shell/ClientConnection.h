@@ -27,43 +27,22 @@
 #pragma once
 
 #include "AutoComplete.h"
-#include <AK/HashMap.h>
-#include <AK/LexicalPath.h>
-#include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <LibGUI/TextDocument.h>
-#include <LibIPC/ClientConnection.h>
-
-#include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
-#include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
+#include <DevTools/HackStudio/LanguageServers/ClientConnection.h>
 
 namespace LanguageServers::Shell {
 
-class ClientConnection final
-    : public IPC::ClientConnection<LanguageClientEndpoint, LanguageServerEndpoint>
-    , public LanguageServerEndpoint {
+class ClientConnection final : public LanguageServers::ClientConnection {
     C_OBJECT(ClientConnection);
 
-public:
-    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
-    ~ClientConnection() override;
-
-    virtual void die() override;
+    ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
+        : LanguageServers::ClientConnection(move(socket), client_id)
+    {
+        m_autocomplete_engine = make<AutoComplete>(*this, m_filedb);
+        m_autocomplete_engine->set_declarations_of_document_callback = &ClientConnection::set_declarations_of_document_callback;
+    }
+    virtual ~ClientConnection() override = default;
 
 private:
-    virtual OwnPtr<Messages::LanguageServer::GreetResponse> handle(const Messages::LanguageServer::Greet&) override;
-    virtual void handle(const Messages::LanguageServer::FileOpened&) override;
-    virtual void handle(const Messages::LanguageServer::FileEditInsertText&) override;
-    virtual void handle(const Messages::LanguageServer::FileEditRemoveText&) override;
-    virtual void handle(const Messages::LanguageServer::SetFileContent&) override;
-    virtual void handle(const Messages::LanguageServer::AutoCompleteSuggestions&) override;
     virtual void handle(const Messages::LanguageServer::SetAutoCompleteMode&) override { }
-    virtual void handle(const Messages::LanguageServer::FindDeclaration&) override {};
-
-    RefPtr<GUI::TextDocument> document_for(const String& file_name);
-
-    HashMap<String, NonnullRefPtr<GUI::TextDocument>> m_open_files;
-
-    AutoComplete m_autocomplete;
 };
-
 }
