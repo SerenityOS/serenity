@@ -376,13 +376,30 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
             return;
 
         for (auto& file : files) {
-            if (1) {
-                // FIXME: Remove `file` from disk
-            } else {
+            struct stat st;
+            if (lstat(file.characters(), &st) < 0) {
                 GUI::MessageBox::show(window(),
-                    String::formatted("Removing file {} from the project failed.", file),
+                    String::formatted("lstat ({}) failed: {}", file, strerror(errno)),
                     "Removal failed",
                     GUI::MessageBox::Type::Error);
+                break;
+            }
+
+            bool is_directory = S_ISDIR(st.st_mode);
+            auto result = Core::File::remove(file, Core::File::RecursionMode::Allowed, false);
+            if (result.is_error()) {
+                auto& error = result.error();
+                if (is_directory) {
+                    GUI::MessageBox::show(window(),
+                        String::formatted("Removing directory {} from the project failed: {}", error.file, error.error_code),
+                        "Removal failed",
+                        GUI::MessageBox::Type::Error);
+                } else {
+                    GUI::MessageBox::show(window(),
+                        String::formatted("Removing file {} from the project failed: {}", error.file, error.error_code),
+                        "Removal failed",
+                        GUI::MessageBox::Type::Error);
+                }
                 break;
             }
         }
