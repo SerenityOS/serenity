@@ -139,6 +139,7 @@ class MarkedValueList;
 class NativeFunction;
 class NativeProperty;
 class PrimitiveString;
+class PropertyName;
 class Reference;
 class ScopeNode;
 class ScopeObject;

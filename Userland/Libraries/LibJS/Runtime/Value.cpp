@@ -1231,6 +1231,26 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         return TriState::False;
 }
 
+Function* get_method(GlobalObject& global_object, Value value, const PropertyName& property_name)
+{
+    // 7.3.10 GetMethod, https://tc39.es/ecma262/#sec-getmethod
+
+    auto& vm = global_object.vm();
+    auto* object = value.to_object(global_object);
+    if (vm.exception())
+        return nullptr;
+    auto property_value = object->get(property_name);
+    if (vm.exception())
+        return nullptr;
+    if (property_value.is_empty() || property_value.is_nullish())
+        return nullptr;
+    if (!property_value.is_function()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, property_value.to_string_without_side_effects());
+        return nullptr;
+    }
+    return &property_value.as_function();
+}
+
 size_t length_of_array_like(GlobalObject& global_object, const Object& object)
 {
     // 7.3.18 LengthOfArrayLike, https://tc39.es/ecma262/#sec-lengthofarraylike
