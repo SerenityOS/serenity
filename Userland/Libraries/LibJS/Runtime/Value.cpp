@@ -929,18 +929,15 @@ Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, rhs.to_string_without_side_effects());
         return {};
     }
-    auto has_instance_method = rhs.as_object().get(vm.well_known_symbol_has_instance());
-    if (!has_instance_method.is_empty()) {
-        if (!has_instance_method.is_function()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects());
-            return {};
-        }
-        auto has_instance_result = vm.call(has_instance_method.as_function(), rhs, lhs);
+    auto has_instance_method = get_method(global_object, Value(&rhs.as_object()), vm.well_known_symbol_has_instance());
+    if (vm.exception())
+        return {};
+    if (has_instance_method) {
+        auto has_instance_result = vm.call(*has_instance_method, rhs, lhs);
         if (vm.exception())
             return {};
         return Value(has_instance_result.to_boolean());
     }
-
     if (!rhs.is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, rhs.to_string_without_side_effects());
         return {};
