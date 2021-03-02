@@ -27,12 +27,12 @@
 #include "ParserAutoComplete.h"
 #include <AK/Assertions.h>
 #include <AK/HashTable.h>
-#include <DevTools/HackStudio/LanguageServers/Cpp/ClientConnection.h>
 #include <LibCpp/AST.h>
 #include <LibCpp/Lexer.h>
 #include <LibCpp/Parser.h>
 #include <LibCpp/Preprocessor.h>
 #include <LibRegex/Regex.h>
+#include <Userland/DevTools/HackStudio/LanguageServers/ClientConnection.h>
 
 namespace LanguageServers::Cpp {
 

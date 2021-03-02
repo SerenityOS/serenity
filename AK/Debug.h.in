@@ -238,6 +238,10 @@
 #cmakedefine01 KEYBOARD_SHORTCUTS_DEBUG
 #endif
 
+#ifndef LANGUAGE_SERVER_DEBUG
+#cmakedefine01 LANGUAGE_SERVER_DEBUG
+#endif
+
 #ifndef LEXER_DEBUG
 #cmakedefine01 LEXER_DEBUG
 #endif

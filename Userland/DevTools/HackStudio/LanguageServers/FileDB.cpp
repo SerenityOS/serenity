@@ -29,6 +29,8 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/File.h>
 
+namespace LanguageServers {
+
 RefPtr<const GUI::TextDocument> FileDB::get(const String& file_name) const
 {
     auto absolute_path = to_absolute_path(file_name);
@@ -126,9 +128,7 @@ void FileDB::on_file_edit_insert_text(const String& file_name, const String& ins
     GUI::TextPosition start_position { start_line, start_column };
     document->insert_at(start_position, inserted_text, &s_default_document_client);
 
-#if FILE_CONTENT_DEBUG
-    dbgln("{}", document->text());
-#endif
+    dbgln_if(FILE_CONTENT_DEBUG, "{}", document->text());
 }
 
 void FileDB::on_file_edit_remove_text(const String& file_name, size_t start_line, size_t start_column, size_t end_line, size_t end_column)
@@ -145,7 +145,7 @@ void FileDB::on_file_edit_remove_text(const String& file_name, size_t start_line
     };
 
     document->remove(range);
-#if FILE_CONTENT_DEBUG
-    dbgln("{}", document->text());
-#endif
+    dbgln_if(FILE_CONTENT_DEBUG, "{}", document->text());
+}
+
 }
