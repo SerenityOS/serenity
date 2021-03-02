@@ -26,6 +26,7 @@
 
 #include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>

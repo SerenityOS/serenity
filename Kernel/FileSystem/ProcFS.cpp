@@ -488,16 +488,10 @@ static bool procfs$pid_perf_events(InodeIdentifier identifier, KBufferBuilder& b
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
         return false;
-
     InterruptDisabler disabler;
-
-    if (!process->executable())
-        return false;
-
     if (!process->perf_events())
         return false;
-
-    return process->perf_events()->to_json(builder, process->pid(), process->executable()->absolute_path());
+    return process->perf_events()->to_json(builder);
 }
 
 static bool procfs$net_adapters(InodeIdentifier, KBufferBuilder& builder)

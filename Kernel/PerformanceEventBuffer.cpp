@@ -28,6 +28,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
+#include <Kernel/FileSystem/Custody.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
@@ -111,14 +112,6 @@ PerformanceEvent& PerformanceEventBuffer::at(size_t index)
     return events[index];
 }
 
-OwnPtr<KBuffer> PerformanceEventBuffer::to_json(ProcessID pid, const String& executable_path) const
-{
-    KBufferBuilder builder;
-    if (!to_json(builder, pid, executable_path))
-        return {};
-    return builder.build();
-}
-
 template<typename Serializer>
 bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
 {
@@ -154,32 +147,27 @@ bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
     return true;
 }
 
-bool PerformanceEventBuffer::to_json(KBufferBuilder& builder)
+bool PerformanceEventBuffer::to_json(KBufferBuilder& builder) const
 {
     JsonObjectSerializer object(builder);
-    return to_json_impl(object);
-}
 
-bool PerformanceEventBuffer::to_json(KBufferBuilder& builder, ProcessID pid, const String& executable_path) const
-{
-    auto process = Process::from_pid(pid);
-    VERIFY(process);
-    ScopedSpinLock locker(process->space().get_lock());
+    auto processes_array = object.add_array("processes");
+    for (auto& it : m_processes) {
+        auto& process = *it.value;
+        auto process_object = processes_array.add_object();
+        process_object.add("pid", process.pid.value());
+        process_object.add("executable", process.executable);
 
-    JsonObjectSerializer object(builder);
-    object.add("pid", pid.value());
-    object.add("executable", executable_path);
-
-    {
-        auto region_array = object.add_array("regions");
-        for (const auto& region : process->space().regions()) {
-            auto region_object = region_array.add_object();
-            region_object.add("base", region.vaddr().get());
-            region_object.add("size", region.size());
-            region_object.add("name", region.name());
+        auto regions_array = process_object.add_array("regions");
+        for (auto& region : process.regions) {
+            auto region_object = regions_array.add_object();
+            region_object.add("name", region.name);
+            region_object.add("base", region.range.base().get());
+            region_object.add("size", region.range.size());
         }
-        region_array.finish();
     }
+
+    processes_array.finish();
 
     return to_json_impl(object);
 }
@@ -190,6 +178,37 @@ OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size
     if (!buffer)
         return {};
     return adopt_own(*new PerformanceEventBuffer(buffer.release_nonnull()));
+}
+
+void PerformanceEventBuffer::add_process(const Process& process)
+{
+    // FIXME: What about threads that have died?
+
+    ScopedSpinLock locker(process.space().get_lock());
+
+    String executable;
+    if (process.executable())
+        executable = process.executable()->absolute_path();
+
+    auto sampled_process = adopt_own(*new SampledProcess {
+        .pid = process.pid().value(),
+        .executable = executable,
+        .threads = {},
+        .regions = {},
+    });
+    process.for_each_thread([&](auto& thread) {
+        sampled_process->threads.set(thread.tid());
+        return IterationDecision::Continue;
+    });
+
+    for (auto& region : process.space().regions()) {
+        sampled_process->regions.append(SampledProcess::Region {
+            .name = region.name(),
+            .range = region.range(),
+        });
+    }
+
+    m_processes.set(process.pid(), move(sampled_process));
 }
 
 }

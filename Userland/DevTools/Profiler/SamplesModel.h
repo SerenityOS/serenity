@@ -40,6 +40,8 @@ public:
     enum Column {
         SampleIndex,
         Timestamp,
+        ThreadID,
+        ExecutableName,
         InnermostStackFrame,
         __Count
     };

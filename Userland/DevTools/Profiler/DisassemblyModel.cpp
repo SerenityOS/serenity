@@ -68,7 +68,8 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         kernel_elf = make<ELF::Image>((const u8*)m_kernel_file->data(), m_kernel_file->size());
         elf = kernel_elf.ptr();
     } else {
-        auto library_data = profile.libraries().library_containing(node.address());
+        // FIXME: This is kinda rickety looking with all the -> -> ->
+        auto library_data = node.process(profile)->library_metadata->library_containing(node.address());
         if (!library_data) {
             dbgln("no library data");
             return;

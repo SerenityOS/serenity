@@ -57,6 +57,10 @@ String SamplesModel::column_name(int column) const
         return "#";
     case Column::Timestamp:
         return "Timestamp";
+    case Column::ThreadID:
+        return "TID";
+    case Column::ExecutableName:
+        return "Executable";
     case Column::InnermostStackFrame:
         return "Innermost Frame";
     default:
@@ -76,6 +80,16 @@ GUI::Variant SamplesModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::SampleIndex)
             return event_index;
+
+        if (index.column() == Column::ThreadID)
+            return event.tid;
+
+        if (index.column() == Column::ExecutableName) {
+            // FIXME: More abuse of the PID/TID relationship:
+            if (auto* process = m_profile.find_process(event.tid))
+                return process->executable;
+            return "";
+        }
 
         if (index.column() == Column::Timestamp) {
             return (u32)event.timestamp;
