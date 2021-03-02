@@ -26,10 +26,10 @@
 
 #pragma once
 
-#include "AutoCompleteEngine.h"
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <DevTools/HackStudio/AutoCompleteResponse.h>
+#include <DevTools/HackStudio/LanguageServers/AutoCompleteEngine.h>
 #include <LibCpp/Lexer.h>
 #include <LibGUI/TextPosition.h>
 

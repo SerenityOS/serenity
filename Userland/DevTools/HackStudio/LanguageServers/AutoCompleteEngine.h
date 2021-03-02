@@ -26,18 +26,18 @@
 
 #pragma once
 
+#include "../AutoCompleteResponse.h"
 #include "FileDB.h"
-#include <DevTools/HackStudio/AutoCompleteResponse.h>
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/TextPosition.h>
 
-namespace LanguageServers::Cpp {
+namespace LanguageServers {
 
 class ClientConnection;
 
 class AutoCompleteEngine {
 public:
-    AutoCompleteEngine(ClientConnection&, const FileDB& filedb);
+    AutoCompleteEngine(ClientConnection&, const FileDB& filedb, bool store_all_declarations = false);
     virtual ~AutoCompleteEngine();
 
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) = 0;
@@ -54,9 +54,12 @@ public:
 protected:
     const FileDB& filedb() const { return m_filedb; }
     void set_declarations_of_document(const String&, Vector<GUI::AutocompleteProvider::Declaration>&&);
+    const HashMap<String, Vector<GUI::AutocompleteProvider::Declaration>>& all_declarations() const { return m_all_declarations; }
 
 private:
     ClientConnection& m_connection;
+    HashMap<String, Vector<GUI::AutocompleteProvider::Declaration>> m_all_declarations;
     const FileDB& m_filedb;
+    bool m_store_all_declarations { false };
 };
 }

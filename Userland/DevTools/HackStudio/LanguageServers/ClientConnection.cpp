@@ -25,14 +25,12 @@
  */
 
 #include "ClientConnection.h"
-#include "LexerAutoComplete.h"
-#include "ParserAutoComplete.h"
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <LibCore/File.h>
 #include <LibGUI/TextDocument.h>
 
-namespace LanguageServers::Cpp {
+namespace LanguageServers {
 
 static HashMap<int, RefPtr<ClientConnection>> s_connections;
 
@@ -40,8 +38,6 @@ ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int 
     : IPC::ClientConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);
-    m_autocomplete_engine = make<ParserAutoComplete>(*this, m_filedb);
-    m_autocomplete_engine->set_declarations_of_document_callback = &ClientConnection::set_declarations_of_document_callback;
 }
 
 ClientConnection::~ClientConnection()
@@ -127,20 +123,9 @@ void ClientConnection::handle(const Messages::LanguageServer::SetFileContent& me
     m_autocomplete_engine->on_edit(message.file_name());
 }
 
-void ClientConnection::handle(const Messages::LanguageServer::SetAutoCompleteMode& message)
-{
-#ifdef CPP_LANGUAGE_SERVER_DEBUG
-    dbgln("SetAutoCompleteMode: {}", message.mode());
-#endif
-    if (message.mode() == "Parser")
-        m_autocomplete_engine = make<ParserAutoComplete>(*this, m_filedb);
-    else
-        m_autocomplete_engine = make<LexerAutoComplete>(*this, m_filedb);
-}
-
 void ClientConnection::handle(const Messages::LanguageServer::FindDeclaration& message)
 {
-    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "FindDeclaration: {} {}:{}", message.location().file, message.location().line, message.location().column);
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "FindDeclaration: {} {}:{}", message.location().file, message.location().line, message.location().column);
     auto document = m_filedb.get(message.location().file);
     if (!document) {
         dbgln("file {} has not been opened", message.location().file);
@@ -153,7 +138,7 @@ void ClientConnection::handle(const Messages::LanguageServer::FindDeclaration& m
         dbgln("could not find declaration");
         return;
     }
-    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "declaration location: {} {}:{}", location.value().file, location.value().line, location.value().column);
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "declaration location: {} {}:{}", location.value().file, location.value().line, location.value().column);
     post_message(Messages::LanguageClient::DeclarationLocation(GUI::AutocompleteProvider::ProjectLocation { location.value().file, location.value().line, location.value().column }));
 }
 

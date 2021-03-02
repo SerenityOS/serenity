@@ -26,11 +26,12 @@
 
 #include "AutoCompleteEngine.h"
 
-namespace LanguageServers::Cpp {
+namespace LanguageServers {
 
-AutoCompleteEngine::AutoCompleteEngine(ClientConnection& connection, const FileDB& filedb)
+AutoCompleteEngine::AutoCompleteEngine(ClientConnection& connection, const FileDB& filedb, bool should_store_all_declarations)
     : m_connection(connection)
     , m_filedb(filedb)
+    , m_store_all_declarations(should_store_all_declarations)
 {
 }
 
@@ -40,6 +41,8 @@ AutoCompleteEngine::~AutoCompleteEngine()
 void AutoCompleteEngine::set_declarations_of_document(const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
 {
     VERIFY(set_declarations_of_document_callback);
+    if (m_store_all_declarations)
+        m_all_declarations.set(filename, declarations);
     set_declarations_of_document_callback(m_connection, filename, move(declarations));
 }
 }
