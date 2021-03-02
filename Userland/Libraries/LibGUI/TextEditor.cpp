@@ -1317,8 +1317,9 @@ void TextEditor::did_change()
     m_undo_action->set_enabled(can_undo());
     m_redo_action->set_enabled(can_redo());
     if (m_autocomplete_box && !m_should_keep_autocomplete_box) {
-        m_autocomplete_timer->stop();
         m_autocomplete_box->close();
+        if (m_autocomplete_timer)
+            m_autocomplete_timer->stop();
     }
     if (!m_has_pending_change_notification) {
         m_has_pending_change_notification = true;
