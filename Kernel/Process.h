@@ -467,8 +467,6 @@ private:
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
 
-    PerformanceEventBuffer& ensure_perf_events();
-
     Process(RefPtr<Thread>& first_thread, const String& name, uid_t, gid_t, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     static ProcessID allocate_pid();
 
@@ -476,6 +474,7 @@ private:
     void kill_all_threads();
     bool dump_core();
     bool dump_perfcore();
+    bool create_perf_events_buffer_if_needed();
 
     KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header);
     KResultOr<ssize_t> do_write(FileDescription&, const UserOrKernelBuffer&, size_t);

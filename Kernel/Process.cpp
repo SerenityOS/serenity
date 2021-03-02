@@ -667,11 +667,12 @@ void Process::tracer_trap(Thread& thread, const RegisterState& regs)
     thread.send_urgent_signal_to_self(SIGTRAP);
 }
 
-PerformanceEventBuffer& Process::ensure_perf_events()
+bool Process::create_perf_events_buffer_if_needed()
 {
-    if (!m_perf_event_buffer)
-        m_perf_event_buffer = make<PerformanceEventBuffer>();
-    return *m_perf_event_buffer;
+    if (!m_perf_event_buffer) {
+        m_perf_event_buffer = PerformanceEventBuffer::try_create_with_size(4 * MiB);
+    }
+    return !!m_perf_event_buffer;
 }
 
 bool Process::remove_thread(Thread& thread)
