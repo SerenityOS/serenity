@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,6 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
-#include <Kernel/Random.h>
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/VM/MemoryManager.h>
 
@@ -137,10 +136,6 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
 
 }
 
-constexpr int RandomByteBufferSize = 256;
-u8 g_random_byte_buffer[RandomByteBufferSize];
-int g_random_byte_buffer_offset = RandomByteBufferSize;
-
 void syscall_handler(TrapFrame* trap)
 {
     auto& regs = *trap->regs;
@@ -160,13 +155,11 @@ void syscall_handler(TrapFrame* trap)
 
     // Apply a random offset in the range 0-255 to the stack pointer,
     // to make kernel stacks a bit less deterministic.
-    // Since this is very hot code, request random data in chunks instead of
-    // one byte at a time. This is a noticeable speedup.
-    if (g_random_byte_buffer_offset == RandomByteBufferSize) {
-        get_fast_random_bytes(g_random_byte_buffer, RandomByteBufferSize);
-        g_random_byte_buffer_offset = 0;
-    }
-    auto* ptr = (char*)__builtin_alloca(g_random_byte_buffer[g_random_byte_buffer_offset++]);
+    u32 lsw;
+    u32 msw;
+    read_tsc(lsw, msw);
+
+    auto* ptr = (char*)__builtin_alloca(lsw & 0xff);
     asm volatile(""
                  : "=m"(*ptr));
 
