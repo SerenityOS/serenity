@@ -694,6 +694,7 @@ void HackStudioWidget::create_project_tree_view(GUI::Widget& parent)
 {
     m_project_tree_view = parent.add<GUI::TreeView>();
     m_project_tree_view->set_model(m_project->model());
+    m_project_tree_view->set_selection_mode(GUI::AbstractView::SelectionMode::MultiSelection);
 
     for (int column_index = 0; column_index < m_project->model().column_count(); ++column_index)
         m_project_tree_view->set_column_hidden(column_index, true);
