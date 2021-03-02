@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -301,7 +301,7 @@ String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_s
     case Type::BigInt:
         return m_value.as_bigint->big_integer().to_base10();
     case Type::Object: {
-        auto primitive_value = to_primitive(PreferredType::String);
+        auto primitive_value = to_primitive(global_object, PreferredType::String);
         if (global_object.vm().exception())
             return {};
         return primitive_value.to_string(global_object);
@@ -336,10 +336,35 @@ bool Value::to_boolean() const
     }
 }
 
-Value Value::to_primitive(PreferredType preferred_type) const
+Value Value::to_primitive(GlobalObject& global_object, PreferredType preferred_type) const
 {
+    auto get_hint_for_preferred_type = [&]() -> String {
+        switch (preferred_type) {
+        case PreferredType::Default:
+            return "default";
+        case PreferredType::String:
+            return "string";
+        case PreferredType::Number:
+            return "number";
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
     if (is_object()) {
-        // FIXME: Also support @@toPrimitive
+        auto& vm = global_object.vm();
+        auto to_primitive_method = get_method(global_object, *this, vm.well_known_symbol_to_primitive());
+        if (vm.exception())
+            return {};
+        if (to_primitive_method) {
+            auto hint = get_hint_for_preferred_type();
+            auto result = vm.call(*to_primitive_method, *this, js_string(vm, hint));
+            if (vm.exception())
+                return {};
+            if (!result.is_object())
+                return result;
+            vm.throw_exception<TypeError>(global_object, ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
+            return {};
+        }
         if (preferred_type == PreferredType::Default)
             preferred_type = PreferredType::Number;
         return as_object().ordinary_to_primitive(preferred_type);
@@ -374,7 +399,7 @@ Object* Value::to_object(GlobalObject& global_object) const
 
 Value Value::to_numeric(GlobalObject& global_object) const
 {
-    auto primitive = to_primitive(Value::PreferredType::Number);
+    auto primitive = to_primitive(global_object, Value::PreferredType::Number);
     if (global_object.vm().exception())
         return {};
     if (primitive.is_bigint())
@@ -414,7 +439,7 @@ Value Value::to_number(GlobalObject& global_object) const
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "BigInt", "number");
         return {};
     case Type::Object: {
-        auto primitive = to_primitive(PreferredType::Number);
+        auto primitive = to_primitive(global_object, PreferredType::Number);
         if (global_object.vm().exception())
             return {};
         return primitive.to_number(global_object);
@@ -427,7 +452,7 @@ Value Value::to_number(GlobalObject& global_object) const
 BigInt* Value::to_bigint(GlobalObject& global_object) const
 {
     auto& vm = global_object.vm();
-    auto primitive = to_primitive(PreferredType::Number);
+    auto primitive = to_primitive(global_object, PreferredType::Number);
     if (vm.exception())
         return nullptr;
     switch (primitive.type()) {
@@ -789,10 +814,10 @@ Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 
 Value add(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_primitive = lhs.to_primitive();
+    auto lhs_primitive = lhs.to_primitive(global_object);
     if (global_object.vm().exception())
         return {};
-    auto rhs_primitive = rhs.to_primitive();
+    auto rhs_primitive = rhs.to_primitive(global_object);
     if (global_object.vm().exception())
         return {};
 
@@ -1094,11 +1119,19 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
     if (rhs.is_boolean())
         return abstract_eq(global_object, lhs, rhs.to_number(global_object.global_object()));
 
-    if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object())
-        return abstract_eq(global_object, lhs, rhs.to_primitive());
+    if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object()) {
+        auto rhs_primitive = rhs.to_primitive(global_object);
+        if (global_object.vm().exception())
+            return false;
+        return abstract_eq(global_object, lhs, rhs_primitive);
+    }
 
-    if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || lhs.is_bigint() || rhs.is_symbol()))
-        return abstract_eq(global_object, lhs.to_primitive(), rhs);
+    if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || lhs.is_bigint() || rhs.is_symbol())) {
+        auto lhs_primitive = lhs.to_primitive(global_object);
+        if (global_object.vm().exception())
+            return false;
+        return abstract_eq(global_object, lhs_primitive, rhs);
+    }
 
     if ((lhs.is_bigint() && rhs.is_number()) || (lhs.is_number() && rhs.is_bigint())) {
         if (lhs.is_nan() || lhs.is_infinity() || rhs.is_nan() || rhs.is_infinity())
@@ -1120,17 +1153,17 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
     Value y_primitive;
 
     if (left_first) {
-        x_primitive = lhs.to_primitive(Value::PreferredType::Number);
+        x_primitive = lhs.to_primitive(global_object, Value::PreferredType::Number);
         if (global_object.vm().exception())
             return {};
-        y_primitive = rhs.to_primitive(Value::PreferredType::Number);
+        y_primitive = rhs.to_primitive(global_object, Value::PreferredType::Number);
         if (global_object.vm().exception())
             return {};
     } else {
-        y_primitive = lhs.to_primitive(Value::PreferredType::Number);
+        y_primitive = lhs.to_primitive(global_object, Value::PreferredType::Number);
         if (global_object.vm().exception())
             return {};
-        x_primitive = rhs.to_primitive(Value::PreferredType::Number);
+        x_primitive = rhs.to_primitive(global_object, Value::PreferredType::Number);
         if (global_object.vm().exception())
             return {};
     }
