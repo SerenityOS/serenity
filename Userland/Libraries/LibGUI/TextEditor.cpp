@@ -531,6 +531,10 @@ void TextEditor::paint_event(PaintEvent& event)
                         break;
                     }
                     auto& span = document().spans()[span_index];
+                    if (!span.range.is_valid()) {
+                        ++span_index;
+                        continue;
+                    }
                     if (span.range.end().line() < line_index) {
                         dbgln("spans not sorted (span end {}:{} is before current line {}) => ignoring", span.range.end().line(), span.range.end().column(), line_index);
                         ++span_index;
@@ -561,6 +565,11 @@ void TextEditor::paint_event(PaintEvent& event)
                         span_start = 0;
                     } else {
                         span_start = span.range.start().column() - start_of_visual_line;
+                    }
+                    if (span_start < next_column) {
+                        dbgln("span started before the current position, maybe two spans overlap? (span start {} is before current position {}) => ignoring", span_start, next_column);
+                        ++span_index;
+                        continue;
                     }
                     size_t span_end;
                     bool span_consumned;
