@@ -432,7 +432,7 @@ struct SC_waitid_params {
 struct SC_stat_params {
     StringArgument path;
     struct stat* statbuf;
-    bool follow_symlinks;
+    int follow_symlinks;
 };
 
 struct SC_ptrace_params {
