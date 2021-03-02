@@ -28,17 +28,12 @@
 
 #include <math.h>
 
-#define EXPECT_CLOSE(a, b)              \
-    {                                   \
-        EXPECT(fabs(a - b) < 0.000001); \
-    }
-
 TEST_CASE(trig)
 {
     EXPECT_CLOSE(sin(1234), 0.601927);
     EXPECT_CLOSE(cos(1234), -0.798550);
     EXPECT_CLOSE(tan(1234), -0.753775);
-    EXPECT_CLOSE(sqrt(1234), 35.128336)
+    EXPECT_CLOSE(sqrt(1234), 35.128336);
     EXPECT_CLOSE(sin(-1), -0.8414709848078965);
     EXPECT_CLOSE(cos(-1), 0.5403023058681398);
     EXPECT_CLOSE(tan(-1), -1.5574077246549023);
@@ -55,12 +50,12 @@ TEST_CASE(trig)
     EXPECT_CLOSE(asin(0.9), 1.119770);
     EXPECT_CLOSE(asin(0.99), 1.429245);
     EXPECT_CLOSE(asin(1.0), 1.570750);
-    EXPECT_CLOSE(atan(0), 0.0)
-    EXPECT_CLOSE(atan(0.5), 0.463648)
-    EXPECT_CLOSE(atan(-0.5), -0.463648)
-    EXPECT_CLOSE(atan(5.5), 1.390943)
-    EXPECT_CLOSE(atan(-5.5), -1.390943)
-    EXPECT_CLOSE(atan(555.5), 1.568996)
+    EXPECT_CLOSE(atan(0), 0.0);
+    EXPECT_CLOSE(atan(0.5), 0.463648);
+    EXPECT_CLOSE(atan(-0.5), -0.463648);
+    EXPECT_CLOSE(atan(5.5), 1.390943);
+    EXPECT_CLOSE(atan(-5.5), -1.390943);
+    EXPECT_CLOSE(atan(555.5), 1.568996);
 }
 
 TEST_CASE(other)
@@ -102,13 +97,13 @@ TEST_CASE(logarithms)
 {
     EXPECT(isnan(log(-1)));
     EXPECT(log(0) < -1000000);
-    EXPECT_CLOSE(log(0.5), -0.693233)
-    EXPECT_CLOSE(log(1.1), 0.095310)
-    EXPECT_CLOSE(log(5), 1.609480)
-    EXPECT_CLOSE(log(5.5), 1.704842)
-    EXPECT_CLOSE(log(500), 6.214104)
-    EXPECT_CLOSE(log2(5), 2.321989)
-    EXPECT_CLOSE(log10(5), 0.698988)
+    EXPECT_CLOSE(log(0.5), -0.693233);
+    EXPECT_CLOSE(log(1.1), 0.095310);
+    EXPECT_CLOSE(log(5), 1.609480);
+    EXPECT_CLOSE(log(5.5), 1.704842);
+    EXPECT_CLOSE(log(500), 6.214104);
+    EXPECT_CLOSE(log2(5), 2.321989);
+    EXPECT_CLOSE(log10(5), 0.698988);
 }
 
 union Extractor {
