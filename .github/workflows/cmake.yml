@@ -16,6 +16,8 @@ jobs:
       matrix:
         debug-macros: ['ALL_DEBUG', 'NORMAL_DEBUG']
         os: [ubuntu-20.04]
+        # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
+        ccache-mark: [0]
 
     steps:
     - uses: actions/checkout@v2
@@ -38,7 +40,7 @@ jobs:
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main"
         sudo apt-get update
-        sudo apt-get install clang-format-11 libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm e2fsprogs qemu-utils qemu-system-i386
+        sudo apt-get install clang-format-11 libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm e2fsprogs qemu-utils qemu-system-i386 ccache
     - name: Use GCC 10 instead
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 
@@ -50,12 +52,23 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 requests
     - name: Check versions
-      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version
+      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version
 
     # === PREPARE FOR BUILDING ===
 
     - name: Lint (Phase 1/2)
       run: ${{ github.workspace }}/Meta/lint-ci.sh
+    - name: Prepare useful stamps
+      id: stamps
+      shell: cmake -P {0}
+      run: |
+        string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
+        # Output everything twice to make it visible both in the logs
+        # *and* as actual output variable, in this order.
+        message("  set-output name=time::${current_date}")
+        message("::set-output name=time::${current_date}")
+        message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
+        message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
     - name: Toolchain cache
       uses: actions/cache@v2
       with:
@@ -63,12 +76,31 @@ jobs:
         # This assumes that *ALL* LibC headers have an impact on the Toolchain.
         # This is wrong, and causes more Toolchain rebuilds than necessary.
         # However, we want to avoid false cache hits at all costs.
-        key: ${{ runner.os }}-toolchain-i686-${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}
+        key: ${{ runner.os }}-toolchain-i686-${{ steps.stamps.outputs.libc_headers }}
     - name: Restore or regenerate Toolchain
       run: TRY_USE_LOCAL_TOOLCHAIN=y ${{ github.workspace }}/Toolchain/BuildIt.sh
-    # TODO: ccache
-    # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
-    # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
+    - name: ccache(1) cache
+      # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
+      uses: actions/cache@v2
+      with:
+        path: /home/runner/.ccache
+        # If you're here because ccache broke (it never should), increment matrix.ccache-mark.
+        # We want to always reuse the last cache, but upload a new one.
+        # This is achieved by using the "prefix-timestamp" format,
+        # and permitting the restore-key "prefix-" without specifying a timestamp.
+        # For this trick to work, the timestamp *must* come last, and it *must* be missing in 'restore-keys'.
+        key: ${{ runner.os }}-ccache-i686-v${{ matrix.ccache-mark }}-D${{ matrix.debug-macros }}-toolchain_${{steps.stamps.outputs.libc_headers}}-time${{ steps.stamps.outputs.time }}
+        restore-keys: |
+          ${{ runner.os }}-ccache-i686-v${{ matrix.ccache-mark }}-D${{ matrix.debug-macros }}-libc_${{steps.stamps.outputs.libc_headers}}-
+    - name: Show ccache stats before build and configure
+      run: |
+        # We only have 5 GiB of cache available *in total*. Beyond that, GitHub deletes caches.
+        # Currently, we use about 65 MB for the toolchain, and two ccache caches:
+        # One with ALL_DEBUG and one with NORMAL_DEBUG.
+        # Therefore, using 2.47 GB or more per ccache cache causes disaster.
+        # Building from scratch fills the ccache cache from 0 to about 0.7 GB, so 1.5 GB is plenty.
+        ccache -M 1500M
+        ccache -s
     - name: Create build environment with debug macros
       working-directory: ${{ github.workspace }}
       # Build the entire project with debug macros turned on, to prevent code rot.
@@ -93,6 +125,8 @@ jobs:
     - name: Build Serenity and Tests
       working-directory: ${{ github.workspace }}/Build
       run: cmake --build .
+    - name: Show ccache stats after build
+      run: ccache -s
     - name: Lint (Phase 2/2)
       working-directory: ${{ github.workspace }}/Meta
       run: ./check-symbols.sh
@@ -152,6 +186,7 @@ jobs:
     # TODO: ccache
     # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
     # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
+    # Ignore for now, since the other step dominates
     - name: Create build environment (fuzz)
       working-directory: ${{ github.workspace }}/Meta/Lagom
       run: |
