@@ -50,7 +50,7 @@ UNMAP_AFTER_INIT static Access::Type detect_optimal_access_type(bool mmio_allowe
 
 UNMAP_AFTER_INIT void initialize()
 {
-    bool mmio_allowed = kernel_command_line().lookup("pci_mmio").value_or("off") == "on";
+    bool mmio_allowed = kernel_command_line().is_mmio_enabled();
 
     if (detect_optimal_access_type(mmio_allowed) == Access::Type::MMIO)
         MMIOAccess::initialize(ACPI::Parser::the()->find_table("MCFG"));
