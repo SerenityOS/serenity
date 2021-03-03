@@ -576,6 +576,14 @@ void Window::prepare_dirty_rects()
             m_dirty_rects = rect();
     } else {
         m_dirty_rects.move_by(frame().render_rect().location());
+        if (m_invalidated_frame) {
+            if (m_invalidated) {
+                m_dirty_rects.add(frame().render_rect());
+            } else {
+                for (auto& rects : frame().render_rect().shatter(rect()))
+                    m_dirty_rects.add(rects);
+            }
+        }
     }
 }
 
