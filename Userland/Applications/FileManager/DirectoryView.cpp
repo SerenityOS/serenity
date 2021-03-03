@@ -444,7 +444,7 @@ void DirectoryView::set_should_show_dotfiles(bool show_dotfiles)
     m_model->set_should_show_dotfiles(show_dotfiles);
 }
 
-void DirectoryView::launch(const URL&, const LauncherHandler& launcher_handler)
+void DirectoryView::launch(const URL&, const LauncherHandler& launcher_handler) const
 {
     pid_t child;
     if (launcher_handler.details().launcher_type == Desktop::Launcher::LauncherType::Application) {
