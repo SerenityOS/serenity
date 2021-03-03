@@ -44,6 +44,13 @@ class Profile;
 class ProfileModel;
 class SamplesModel;
 
+struct MappedObject {
+    NonnullRefPtr<MappedFile> file;
+    ELF::Image elf;
+};
+
+extern HashMap<String, OwnPtr<MappedObject>> g_mapped_object_cache;
+
 class LibraryMetadata {
 public:
     explicit LibraryMetadata(JsonArray regions);
@@ -52,8 +59,7 @@ public:
         FlatPtr base;
         size_t size;
         String name;
-        NonnullRefPtr<MappedFile> file;
-        ELF::Image elf;
+        MappedObject* object { nullptr };
     };
 
     const Library* library_containing(FlatPtr) const;

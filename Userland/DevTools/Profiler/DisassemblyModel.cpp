@@ -74,7 +74,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
             dbgln("no library data");
             return;
         }
-        elf = &library_data->elf;
+        elf = &library_data->object->elf;
         base_address = library_data->base;
     }
 
