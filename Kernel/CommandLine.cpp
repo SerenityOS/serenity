@@ -88,6 +88,11 @@ bool CommandLine::contains(const String& key) const
     return m_params.contains(key);
 }
 
+UNMAP_AFTER_INIT bool CommandLine::is_boot_profiling_enabled() const
+{
+    return contains("boot_prof");
+}
+
 UNMAP_AFTER_INIT bool CommandLine::is_ide_enabled() const
 {
     return !contains("disable_ide");

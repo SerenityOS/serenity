@@ -61,6 +61,7 @@ public:
     Optional<String> lookup(const String& key) const;
     [[nodiscard]] bool contains(const String& key) const;
 
+    [[nodiscard]] bool is_boot_profiling_enabled() const;
     [[nodiscard]] bool is_ide_enabled() const;
     [[nodiscard]] bool is_smp_enabled() const;
     [[nodiscard]] bool is_vmmouse_enabled() const;
