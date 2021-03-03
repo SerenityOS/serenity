@@ -31,6 +31,9 @@
 
 namespace Compress {
 
+constexpr u8 gzip_magic_1 = 0x1f;
+constexpr u8 gzip_magic_2 = 0x8b;
+
 class GzipDecompressor final : public InputStream {
 public:
     GzipDecompressor(InputStream&);
@@ -43,6 +46,7 @@ public:
     bool unreliable_eof() const override;
 
     static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
+    static bool is_likely_compressed(ReadonlyBytes bytes);
 
 private:
     struct [[gnu::packed]] BlockHeader {

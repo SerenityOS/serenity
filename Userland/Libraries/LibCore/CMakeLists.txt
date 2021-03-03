@@ -12,7 +12,6 @@ set(SOURCES
     FileWatcher.cpp
     File.cpp
     GetPassword.cpp
-    Gzip.cpp
     IODevice.cpp
     LocalServer.cpp
     LocalSocket.cpp
@@ -23,7 +22,6 @@ set(SOURCES
     Object.cpp
     ProcessStatisticsReader.cpp
     Property.cpp
-    puff.cpp
     SocketAddress.cpp
     Socket.cpp
     StandardPaths.cpp

@@ -14,8 +14,6 @@ if [ "$#" -eq "1" ]; then
             ':!:Kernel/FileSystem/ext2_fs.h' \
             ':!:Userland/Libraries/LibC/getopt.cpp' \
             ':!:Userland/Libraries/LibC/syslog.h' \
-            ':!:Userland/Libraries/LibCore/puff.h' \
-            ':!:Userland/Libraries/LibCore/puff.cpp' \
             ':!:Userland/Libraries/LibELF/exec_elf.h'
     )
 else
