@@ -76,7 +76,7 @@ jobs:
       run: |
         mkdir -p Build
         cd Build
-        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_ALL_THE_DEBUG_MACROS=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_ALL_THE_DEBUG_MACROS=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
       if: ${{ matrix.debug-macros == 'ALL_DEBUG' }}
     - name: Create build environment
       working-directory: ${{ github.workspace }}
@@ -85,7 +85,7 @@ jobs:
       run: |
         mkdir -p Build
         cd Build
-        cmake .. -GNinja -DBUILD_LAGOM=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
       if: ${{ matrix.debug-macros == 'NORMAL_DEBUG' }}
 
     # === ACTUALLY BUILD ===
@@ -157,7 +157,7 @@ jobs:
       run: |
         mkdir -p Build
         cd Build
-        cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
+        cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
       if: ${{ matrix.with-fuzzers == 'FUZZ' }}
 
     - name: Create build environment (no fuzz)
@@ -165,7 +165,7 @@ jobs:
       run: |
         mkdir -p Build
         cd Build
-        cmake -GNinja -DBUILD_LAGOM=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 ..
+        cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 ..
       if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
 
     # === ACTUALLY BUILD AND TEST ===
