@@ -26,7 +26,6 @@
 
 #include <AK/Debug.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/Gzip.h>
 #include <LibHTTP/HttpResponse.h>
 #include <LibHTTP/HttpsJob.h>
 #include <LibTLS/TLSv12.h>

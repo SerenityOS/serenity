@@ -31,9 +31,14 @@
 
 namespace Compress {
 
+bool GzipDecompressor::is_likely_compressed(ReadonlyBytes bytes)
+{
+    return bytes.size() >= 2 && bytes[0] == gzip_magic_1 && bytes[1] == gzip_magic_2;
+}
+
 bool GzipDecompressor::BlockHeader::valid_magic_number() const
 {
-    return identification_1 == 0x1f && identification_2 == 0x8b;
+    return identification_1 == gzip_magic_1 && identification_2 == gzip_magic_2;
 }
 
 bool GzipDecompressor::BlockHeader::supported_by_implementation() const
@@ -46,10 +51,6 @@ bool GzipDecompressor::BlockHeader::supported_by_implementation() const
     if (flags > Flags::MAX) {
         // RFC 1952 does not define any more flags.
         return false;
-    }
-
-    if (flags & Flags::FHCRC) {
-        TODO();
     }
 
     return true;
@@ -126,6 +127,12 @@ size_t GzipDecompressor::read(Bytes bytes)
         if (header.flags & Flags::FCOMMENT) {
             String comment;
             m_input_stream >> comment;
+        }
+
+        if (header.flags & Flags::FHCRC) {
+            LittleEndian<u16> crc16;
+            m_input_stream >> crc16;
+            // FIXME: we should probably verify this instead of just assuming it matches
         }
 
         m_current_member.emplace(header, m_input_stream);

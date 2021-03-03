@@ -25,7 +25,6 @@
  */
 
 #include <AK/Debug.h>
-#include <LibCore/Gzip.h>
 #include <LibCore/TCPSocket.h>
 #include <LibHTTP/HttpJob.h>
 #include <LibHTTP/HttpResponse.h>
