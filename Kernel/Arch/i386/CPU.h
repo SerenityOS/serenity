@@ -433,7 +433,7 @@ public:
     bool is_write() const { return (m_code & 2) == PageFaultFlags::Write; }
     bool is_user() const { return (m_code & 4) == PageFaultFlags::UserMode; }
     bool is_supervisor() const { return (m_code & 4) == PageFaultFlags::SupervisorMode; }
-    bool is_instruction_fetch() const { return (m_code & 8) == PageFaultFlags::InstructionFetch; }
+    bool is_instruction_fetch() const { return (m_code & 16) == PageFaultFlags::InstructionFetch; }
 
 private:
     u16 m_code;
