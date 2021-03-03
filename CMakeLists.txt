@@ -23,7 +23,8 @@ option(ENABLE_MEMORY_SANITIZER "Enable memory sanitizer testing in gcc/clang" OF
 option(ENABLE_UNDEFINED_SANITIZER "Enable undefined behavior sanitizer testing in gcc/clang" OFF)
 option(ENABLE_FUZZER_SANITIZER "Enable fuzzer sanitizer testing in clang" OFF)
 option(ENABLE_ALL_THE_DEBUG_MACROS "Enable all debug macros to validate they still compile" OFF)
-option(ENABLE_COMPILETIME_FORMAT_CHECK "Disable compiletime format string checks" ON)
+option(ENABLE_COMPILETIME_FORMAT_CHECK "Enable compiletime format string checks" ON)
+option(ENABLE_PCI_IDS_DOWNLOAD "Enable download of the pci.ids database at build time" ON)
 option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/testing" OFF)
 
 add_custom_target(run
@@ -185,7 +186,7 @@ add_subdirectory(Userland)
 
 set(PCI_IDS_URL https://pci-ids.ucw.cz/v2.2/pci.ids)
 set(PCI_IDS_PATH ${CMAKE_INSTALL_DATAROOTDIR}/pci.ids)
-if(NOT EXISTS ${PCI_IDS_PATH})
+if(ENABLE_PCI_IDS_DOWNLOAD AND NOT EXISTS ${PCI_IDS_PATH})
     message(STATUS "Downloading PCI ID database from ${PCI_IDS_URL}...")
     file(DOWNLOAD ${PCI_IDS_URL} ${PCI_IDS_PATH} INACTIVITY_TIMEOUT 10)
 endif()
