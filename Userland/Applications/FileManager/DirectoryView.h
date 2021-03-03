@@ -74,12 +74,12 @@ public:
     int path_history_size() const { return m_path_history.size(); }
     int path_history_position() const { return m_path_history_position; }
     static RefPtr<LauncherHandler> get_default_launch_handler(const NonnullRefPtrVector<LauncherHandler>& handlers);
-    NonnullRefPtrVector<LauncherHandler> get_launch_handlers(const URL& url);
-    NonnullRefPtrVector<LauncherHandler> get_launch_handlers(const String& path);
+    static NonnullRefPtrVector<LauncherHandler> get_launch_handlers(const URL& url);
+    static NonnullRefPtrVector<LauncherHandler> get_launch_handlers(const String& path);
 
     void refresh();
 
-    void launch(const URL&, const LauncherHandler&);
+    void launch(const URL&, const LauncherHandler&) const;
 
     Function<void(const StringView& path, bool can_write_in_path)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;

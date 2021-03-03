@@ -78,6 +78,7 @@ static void do_copy(const Vector<String>& selected_file_paths, FileUtils::FileOp
 static void do_paste(const String& target_directory, GUI::Window* window);
 static void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* window);
 static void show_properties(const String& container_dir_path, const String& path, const Vector<String>& selected, GUI::Window* window);
+static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, const DirectoryView& directory_view, const String& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers);
 
 int main(int argc, char** argv)
 {
@@ -211,6 +212,44 @@ void show_properties(const String& container_dir_path, const String& path, const
     properties->show();
 }
 
+bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, const DirectoryView& directory_view, const String& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers)
+{
+    current_file_launch_handlers = directory_view.get_launch_handlers(full_path);
+
+    bool added_open_menu_items = false;
+    auto default_file_handler = directory_view.get_default_launch_handler(current_file_launch_handlers);
+    if (default_file_handler) {
+        auto file_open_action = default_file_handler->create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
+            directory_view.launch(URL::create_with_file_protocol(full_path), launcher_handler);
+        });
+        if (default_file_handler->details().launcher_type == Desktop::Launcher::LauncherType::Application)
+            file_open_action->set_text(String::formatted("Run {}", file_open_action->text()));
+        else
+            file_open_action->set_text(String::formatted("Open in {}", file_open_action->text()));
+
+        default_action = file_open_action;
+
+        menu->add_action(move(file_open_action));
+        added_open_menu_items = true;
+    } else {
+        default_action.clear();
+    }
+
+    if (current_file_launch_handlers.size() > 1) {
+        added_open_menu_items = true;
+        auto& file_open_with_menu = menu->add_submenu("Open with");
+        for (auto& handler : current_file_launch_handlers) {
+            if (&handler == default_file_handler.ptr())
+                continue;
+            file_open_with_menu.add_action(handler.create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
+                directory_view.launch(URL::create_with_file_protocol(full_path), launcher_handler);
+            }));
+        }
+    }
+
+    return added_open_menu_items;
+}
+
 int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
 {
     static constexpr const char* process_name = "FileManager (Desktop)";
@@ -304,11 +343,33 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
     desktop_context_menu->add_separator();
     desktop_context_menu->add_action(properties_action);
 
+    RefPtr<GUI::Menu> file_context_menu;
+    NonnullRefPtrVector<LauncherHandler> current_file_handlers;
+    RefPtr<GUI::Action> file_context_menu_action_default_action;
+
     directory_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
-        if (!index.is_valid())
+        if (index.is_valid()) {
+            auto& node = directory_view.node(index);
+            if (node.is_directory()) {
+                desktop_context_menu->popup(event.screen_position());
+            } else {
+                file_context_menu = GUI::Menu::construct("Directory View File");
+                file_context_menu->add_action(copy_action);
+                file_context_menu->add_action(cut_action);
+                file_context_menu->add_action(paste_action);
+                file_context_menu->add_action(directory_view.delete_action());
+                file_context_menu->add_separator();
+
+                bool added_open_menu_items = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
+                if (added_open_menu_items)
+                    file_context_menu->add_separator();
+
+                file_context_menu->add_action(properties_action);
+                file_context_menu->popup(event.screen_position());
+            }
+        } else {
             desktop_view_context_menu->popup(event.screen_position());
-        else
-            desktop_context_menu->popup(event.screen_position());
+        }
     };
 
     auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
@@ -889,49 +950,16 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 folder_specific_paste_action->set_enabled(should_get_enabled);
                 directory_context_menu->popup(event.screen_position());
             } else {
-                auto full_path = node.full_path();
-                current_file_handlers = directory_view.get_launch_handlers(full_path);
-
                 file_context_menu = GUI::Menu::construct("Directory View File");
                 file_context_menu->add_action(copy_action);
                 file_context_menu->add_action(cut_action);
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view.delete_action());
                 file_context_menu->add_action(shortcut_action);
-
                 file_context_menu->add_separator();
-                bool added_open_menu_items = false;
-                auto default_file_handler = directory_view.get_default_launch_handler(current_file_handlers);
-                if (default_file_handler) {
-                    auto file_open_action = default_file_handler->create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
-                        directory_view.launch(URL::create_with_file_protocol(full_path), launcher_handler);
-                    });
-                    if (default_file_handler->details().launcher_type == Desktop::Launcher::LauncherType::Application)
-                        file_open_action->set_text(String::formatted("Run {}", file_open_action->text()));
-                    else
-                        file_open_action->set_text(String::formatted("Open in {}", file_open_action->text()));
 
-                    file_context_menu_action_default_action = file_open_action;
-
-                    file_context_menu->add_action(move(file_open_action));
-                    added_open_menu_items = true;
-                } else {
-                    file_context_menu_action_default_action.clear();
-                }
-
-                if (current_file_handlers.size() > 1) {
-                    added_open_menu_items = true;
-                    auto& file_open_with_menu = file_context_menu->add_submenu("Open with");
-                    for (auto& handler : current_file_handlers) {
-                        if (&handler == default_file_handler.ptr())
-                            continue;
-                        file_open_with_menu.add_action(handler.create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
-                            directory_view.launch(URL::create_with_file_protocol(full_path), launcher_handler);
-                        }));
-                    }
-                }
-
-                if (added_open_menu_items)
+                bool added_launch_file_handlers = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
+                if (added_launch_file_handlers)
                     file_context_menu->add_separator();
 
                 file_context_menu->add_action(properties_action);
