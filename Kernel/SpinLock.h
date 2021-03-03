@@ -126,7 +126,7 @@ private:
 };
 
 template<typename LockType>
-class NO_DISCARD ScopedSpinLock {
+class [[nodiscard]] ScopedSpinLock {
 
     AK_MAKE_NONCOPYABLE(ScopedSpinLock);
 
