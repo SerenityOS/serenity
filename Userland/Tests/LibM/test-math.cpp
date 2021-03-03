@@ -30,32 +30,32 @@
 
 TEST_CASE(trig)
 {
-    EXPECT_CLOSE(sin(1234), 0.601927);
-    EXPECT_CLOSE(cos(1234), -0.798550);
-    EXPECT_CLOSE(tan(1234), -0.753775);
-    EXPECT_CLOSE(sqrt(1234), 35.128336);
-    EXPECT_CLOSE(sin(-1), -0.8414709848078965);
-    EXPECT_CLOSE(cos(-1), 0.5403023058681398);
-    EXPECT_CLOSE(tan(-1), -1.5574077246549023);
+    EXPECT_APPROXIMATE(sin(1234), 0.601927);
+    EXPECT_APPROXIMATE(cos(1234), -0.798550);
+    EXPECT_APPROXIMATE(tan(1234), -0.753775);
+    EXPECT_APPROXIMATE(sqrt(1234), 35.128336);
+    EXPECT_APPROXIMATE(sin(-1), -0.8414709848078965);
+    EXPECT_APPROXIMATE(cos(-1), 0.5403023058681398);
+    EXPECT_APPROXIMATE(tan(-1), -1.5574077246549023);
     EXPECT(isnan(sqrt(-1)));
     EXPECT(isnan(asin(1.1)));
     EXPECT(isnan(asin(-1.1)));
-    EXPECT_CLOSE(asin(0), 0.0);
-    EXPECT_CLOSE(asin(0.01), 0.01);
-    EXPECT_CLOSE(asin(0.1), 0.100167);
-    EXPECT_CLOSE(asin(0.3), 0.304693);
-    EXPECT_CLOSE(asin(0.499), 0.522444);
-    EXPECT_CLOSE(asin(0.5), 0.523599);
-    EXPECT_CLOSE(asin(0.501), 0.524754);
-    EXPECT_CLOSE(asin(0.9), 1.119770);
-    EXPECT_CLOSE(asin(0.99), 1.429245);
-    EXPECT_CLOSE(asin(1.0), 1.570750);
-    EXPECT_CLOSE(atan(0), 0.0);
-    EXPECT_CLOSE(atan(0.5), 0.463648);
-    EXPECT_CLOSE(atan(-0.5), -0.463648);
-    EXPECT_CLOSE(atan(5.5), 1.390943);
-    EXPECT_CLOSE(atan(-5.5), -1.390943);
-    EXPECT_CLOSE(atan(555.5), 1.568996);
+    EXPECT_APPROXIMATE(asin(0), 0.0);
+    EXPECT_APPROXIMATE(asin(0.01), 0.01);
+    EXPECT_APPROXIMATE(asin(0.1), 0.100167);
+    EXPECT_APPROXIMATE(asin(0.3), 0.304693);
+    EXPECT_APPROXIMATE(asin(0.499), 0.522444);
+    EXPECT_APPROXIMATE(asin(0.5), 0.523599);
+    EXPECT_APPROXIMATE(asin(0.501), 0.524754);
+    EXPECT_APPROXIMATE(asin(0.9), 1.119770);
+    EXPECT_APPROXIMATE(asin(0.99), 1.429245);
+    EXPECT_APPROXIMATE(asin(1.0), 1.570750);
+    EXPECT_APPROXIMATE(atan(0), 0.0);
+    EXPECT_APPROXIMATE(atan(0.5), 0.463648);
+    EXPECT_APPROXIMATE(atan(-0.5), -0.463648);
+    EXPECT_APPROXIMATE(atan(5.5), 1.390943);
+    EXPECT_APPROXIMATE(atan(-5.5), -1.390943);
+    EXPECT_APPROXIMATE(atan(555.5), 1.568996);
 }
 
 TEST_CASE(other)
@@ -85,10 +85,10 @@ TEST_CASE(exponents)
         { -17.000000, 0.000000, -12077476.376788, 12077476.376788, -1.000000 },
     };
     for (auto& v : values) {
-        EXPECT_CLOSE(exp(v.x), v.exp);
-        EXPECT_CLOSE(sinh(v.x), v.sinh);
-        EXPECT_CLOSE(cosh(v.x), v.cosh);
-        EXPECT_CLOSE(tanh(v.x), v.tanh);
+        EXPECT_APPROXIMATE(exp(v.x), v.exp);
+        EXPECT_APPROXIMATE(sinh(v.x), v.sinh);
+        EXPECT_APPROXIMATE(cosh(v.x), v.cosh);
+        EXPECT_APPROXIMATE(tanh(v.x), v.tanh);
     }
     EXPECT_EQ(exp(1000), __builtin_huge_val());
 }
@@ -97,13 +97,13 @@ TEST_CASE(logarithms)
 {
     EXPECT(isnan(log(-1)));
     EXPECT(log(0) < -1000000);
-    EXPECT_CLOSE(log(0.5), -0.693233);
-    EXPECT_CLOSE(log(1.1), 0.095310);
-    EXPECT_CLOSE(log(5), 1.609480);
-    EXPECT_CLOSE(log(5.5), 1.704842);
-    EXPECT_CLOSE(log(500), 6.214104);
-    EXPECT_CLOSE(log2(5), 2.321989);
-    EXPECT_CLOSE(log10(5), 0.698988);
+    EXPECT_APPROXIMATE(log(0.5), -0.693233);
+    EXPECT_APPROXIMATE(log(1.1), 0.095310);
+    EXPECT_APPROXIMATE(log(5), 1.609480);
+    EXPECT_APPROXIMATE(log(5.5), 1.704842);
+    EXPECT_APPROXIMATE(log(500), 6.214104);
+    EXPECT_APPROXIMATE(log2(5), 2.321989);
+    EXPECT_APPROXIMATE(log10(5), 0.698988);
 }
 
 union Extractor {
