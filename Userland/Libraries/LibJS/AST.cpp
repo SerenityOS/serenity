@@ -207,11 +207,11 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     MarkedValueList arguments(vm.heap());
     arguments.ensure_capacity(m_arguments.size());
 
-    for (size_t i = 0; i < m_arguments.size(); ++i) {
-        auto value = m_arguments[i].value->execute(interpreter, global_object);
+    for (auto& argument : m_arguments) {
+        auto value = argument.value->execute(interpreter, global_object);
         if (vm.exception())
             return {};
-        if (m_arguments[i].is_spread) {
+        if (argument.is_spread) {
             get_iterator_values(global_object, value, [&](Value iterator_value) {
                 if (vm.exception())
                     return IterationDecision::Break;
@@ -717,7 +717,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         }
         // FIXME: standard recommends checking with is_unresolvable but it ALWAYS return false here
         if (reference.is_local_variable() || reference.is_global_variable()) {
-            auto name = reference.name();
+            const auto& name = reference.name();
             lhs_result = interpreter.vm().get_variable(name.to_string(), global_object).value_or(js_undefined());
             if (interpreter.exception())
                 return {};
@@ -804,7 +804,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
     update_function_name(class_constructor_value, m_name);
 
     VERIFY(class_constructor_value.is_function() && is<ScriptFunction>(class_constructor_value.as_function()));
-    ScriptFunction* class_constructor = static_cast<ScriptFunction*>(&class_constructor_value.as_function());
+    auto* class_constructor = static_cast<ScriptFunction*>(&class_constructor_value.as_function());
     class_constructor->set_is_class_constructor();
     Value super_constructor = js_undefined();
     if (!m_super_class.is_null()) {
