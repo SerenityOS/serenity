@@ -74,7 +74,7 @@ KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> u
         return EFAULT;
 
     Thread::SelectBlocker::FDVector fds_info;
-    Vector<int> fds;
+    Vector<int, FD_SETSIZE> fds;
     for (int fd = 0; fd < params.nfds; fd++) {
         u32 block_flags = (u32)Thread::FileBlocker::BlockFlags::None;
         if (params.readfds && FD_ISSET(fd, &fds_read))
