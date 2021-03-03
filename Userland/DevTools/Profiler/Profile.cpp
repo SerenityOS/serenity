@@ -316,7 +316,11 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
                     library_metadata = it->library_metadata.ptr();
                 if (auto* library = library_metadata ? library_metadata->library_containing(ptr) : nullptr) {
                     object_name = library->name;
-                    symbol = library->elf.symbolicate(ptr - library->base, &offset);
+                    if (library->object) {
+                        symbol = library->object->elf.symbolicate(ptr - library->base, &offset);
+                    } else {
+                        symbol = "??";
+                    }
                 } else {
                     symbol = "??";
                 }
@@ -401,6 +405,32 @@ GUI::Model* Profile::disassembly_model()
     return m_disassembly_model;
 }
 
+HashMap<String, OwnPtr<MappedObject>> g_mapped_object_cache;
+
+static MappedObject* get_or_create_mapped_object(const String& path)
+{
+    if (auto it = g_mapped_object_cache.find(path); it != g_mapped_object_cache.end())
+        return it->value.ptr();
+
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error()) {
+        g_mapped_object_cache.set(path, {});
+        return nullptr;
+    }
+    auto elf = ELF::Image(file_or_error.value()->bytes());
+    if (!elf.is_valid()) {
+        g_mapped_object_cache.set(path, {});
+        return nullptr;
+    }
+    auto new_mapped_object = adopt_own(*new MappedObject {
+        .file = file_or_error.release_value(),
+        .elf = move(elf),
+    });
+    auto* ptr = new_mapped_object.ptr();
+    g_mapped_object_cache.set(path, move(new_mapped_object));
+    return ptr;
+}
+
 LibraryMetadata::LibraryMetadata(JsonArray regions)
     : m_regions(move(regions))
 {
@@ -421,16 +451,11 @@ LibraryMetadata::LibraryMetadata(JsonArray regions)
         if (name.contains(".so"))
             path = String::formatted("/usr/lib/{}", path);
 
-        auto file_or_error = MappedFile::map(path);
-        if (file_or_error.is_error()) {
-            m_libraries.set(name, {});
+        auto* mapped_object = get_or_create_mapped_object(path);
+        if (!mapped_object)
             continue;
-        }
-        auto elf = ELF::Image(file_or_error.value()->bytes());
-        if (!elf.is_valid())
-            continue;
-        auto library = adopt_own(*new Library { base, size, name, file_or_error.release_value(), move(elf) });
-        m_libraries.set(name, move(library));
+
+        m_libraries.set(name, adopt_own(*new Library { base, size, name, mapped_object }));
     }
 }
 
