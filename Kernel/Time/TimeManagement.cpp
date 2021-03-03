@@ -219,7 +219,7 @@ Time TimeManagement::now()
     return s_the.ptr()->epoch_time();
 }
 
-Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_periodic_timers()
+UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_periodic_timers()
 {
     bool should_enable = is_hpet_periodic_mode_allowed();
     dbgln("Time: Scanning for periodic timers");
@@ -234,7 +234,7 @@ Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_periodic_timers()
     return timers;
 }
 
-Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodic_timers()
+UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodic_timers()
 {
     dbgln("Time: Scanning for non-periodic timers");
     Vector<HardwareTimerBase*> timers;
