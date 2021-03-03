@@ -113,6 +113,23 @@ Notes:
 - bash is needed because the default version installed on macOS doesn't support globstar
 - If you install some commercial EXT2 macOS fs handler instead of osxfuse and fuse-ext2, you will need to `brew install e2fsprogs` to obtain `mke2fs` anyway.
 - As of 2020-08-06, you might need to tell the build system about your newer host compiler. Once you've built the toolchain, navigate to `Build/`, `rm -rf *`, then run `cmake .. -G Ninja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10`, then continue with `ninja install` as usual.
+- If you are on macOS Big Sur, you will need to manually enable QEMU's acceleration before running Serenity, by creating a new file called `entitlements.xml` in the `Build/` folder, with the content below, and then run the command: `codesign -s - --entitlements entitlements.xml --force /usr/local/bin/qemu-system-x86_64`; otherwise the run command will fail.
+
+<details>
+<summary>Content for 'entitlements.xml'.</summary>
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+	"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.hypervisor</key>
+    <true/>
+</dict>
+</plist>
+```
+</details>
 
 #### OpenBSD prerequisites
 ```
