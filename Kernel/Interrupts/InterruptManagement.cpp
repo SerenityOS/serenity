@@ -61,7 +61,7 @@ UNMAP_AFTER_INIT void InterruptManagement::initialize()
     VERIFY(!InterruptManagement::initialized());
     s_interrupt_management = new InterruptManagement();
 
-    if (kernel_command_line().lookup("smp").value_or("off") == "on")
+    if (kernel_command_line().is_smp_enabled())
         InterruptManagement::the().switch_to_ioapic_mode();
     else
         InterruptManagement::the().switch_to_pic_mode();

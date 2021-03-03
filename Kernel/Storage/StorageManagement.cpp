@@ -62,7 +62,7 @@ bool StorageManagement::boot_argument_contains_partition_uuid()
 NonnullRefPtrVector<StorageController> StorageManagement::enumerate_controllers(bool force_pio) const
 {
     NonnullRefPtrVector<StorageController> controllers;
-    if (!kernel_command_line().contains("disable_ide")) {
+    if (kernel_command_line().is_ide_enabled()) {
         PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
             if (PCI::get_class(address) == 0x1 && PCI::get_subclass(address) == 0x1) {
                 controllers.append(IDEController::initialize(address, force_pio));

@@ -247,11 +247,8 @@ void init_stage2(void*)
 
     PCI::initialize();
 
-    auto boot_mode = kernel_command_line().lookup("boot_mode").value_or("graphical");
-    // FIXME: Richer boot mode options would be nice instead of adding more strcmp here
-    bool text_mode = boot_mode == "text" || boot_mode == "self-test";
-
-    if (text_mode) {
+    auto is_text_mode = kernel_command_line().is_text_mode();
+    if (is_text_mode) {
         dbgln("Text mode enabled");
     } else {
         bool bxvga_found = false;
@@ -294,11 +291,7 @@ void init_stage2(void*)
     SB16::detect();
     VMWareBackdoor::the(); // don't wait until first mouse packet
 
-    bool force_pio = kernel_command_line().contains("force_pio");
-
-    auto root = kernel_command_line().lookup("root").value_or("/dev/hda");
-
-    StorageManagement::initialize(root, force_pio);
+    StorageManagement::initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio());
     if (!VFS::the().mount_root(StorageManagement::the().root_filesystem())) {
         PANIC("VFS::mount_root failed");
     }
@@ -316,12 +309,10 @@ void init_stage2(void*)
     int error;
 
     // FIXME: It would be nicer to set the mode from userspace.
-    tty0->set_graphical(!text_mode);
+    tty0->set_graphical(!is_text_mode);
     RefPtr<Thread> thread;
-    auto userspace_init = kernel_command_line().lookup("init").value_or("/bin/SystemServer");
-    auto init_args = kernel_command_line().lookup("init_args").value_or("").split(',');
-    if (!init_args.is_empty())
-        init_args.prepend(userspace_init);
+    auto userspace_init = kernel_command_line().userspace_init();
+    auto init_args = kernel_command_line().userspace_init_args();
     Process::create_user_process(thread, userspace_init, (uid_t)0, (gid_t)0, ProcessID(0), error, move(init_args), {}, tty0);
     if (error != 0) {
         PANIC("init_stage2: Error spawning SystemServer: {}", error);
