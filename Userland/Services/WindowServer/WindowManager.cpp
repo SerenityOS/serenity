@@ -1252,10 +1252,16 @@ void WindowManager::set_highlight_window(Window* window)
         return;
     auto* previous_highlight_window = m_highlight_window.ptr();
     m_highlight_window = window;
-    if (previous_highlight_window)
+    if (previous_highlight_window) {
         previous_highlight_window->invalidate(true, true);
-    if (m_highlight_window)
+        Compositor::the().invalidate_screen(previous_highlight_window->frame().render_rect());
+    }
+    if (m_highlight_window) {
         m_highlight_window->invalidate(true, true);
+        Compositor::the().invalidate_screen(m_highlight_window->frame().render_rect());
+    }
+    // Invalidate occlusions in case the state change changes geometry
+    Compositor::the().invalidate_occlusions();
 }
 
 bool WindowManager::is_active_window_or_accessory(Window& window) const
