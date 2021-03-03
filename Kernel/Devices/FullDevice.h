@@ -37,7 +37,7 @@ public:
     virtual ~FullDevice() override;
 
     // ^Device
-    virtual mode_t required_mode() const override { return 0600; }
+    virtual mode_t required_mode() const override { return 0666; }
     virtual String device_name() const override { return "full"; }
 
 private:
