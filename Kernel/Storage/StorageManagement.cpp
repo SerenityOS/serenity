@@ -59,7 +59,7 @@ bool StorageManagement::boot_argument_contains_partition_uuid()
     return m_boot_argument.starts_with("PARTUUID=");
 }
 
-NonnullRefPtrVector<StorageController> StorageManagement::enumerate_controllers(bool force_pio) const
+UNMAP_AFTER_INIT NonnullRefPtrVector<StorageController> StorageManagement::enumerate_controllers(bool force_pio) const
 {
     NonnullRefPtrVector<StorageController> controllers;
     if (kernel_command_line().is_ide_enabled()) {
@@ -73,7 +73,7 @@ NonnullRefPtrVector<StorageController> StorageManagement::enumerate_controllers(
     return controllers;
 }
 
-NonnullRefPtrVector<StorageDevice> StorageManagement::enumerate_storage_devices() const
+UNMAP_AFTER_INIT NonnullRefPtrVector<StorageDevice> StorageManagement::enumerate_storage_devices() const
 {
     VERIFY(!m_controllers.is_empty());
     NonnullRefPtrVector<StorageDevice> devices;
@@ -88,7 +88,7 @@ NonnullRefPtrVector<StorageDevice> StorageManagement::enumerate_storage_devices(
     return devices;
 }
 
-OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(const StorageDevice& device) const
+UNMAP_AFTER_INIT OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(const StorageDevice& device) const
 {
     auto mbr_table_or_result = MBRPartitionTable::try_to_initialize(device);
     if (!mbr_table_or_result.is_error())
@@ -108,7 +108,7 @@ OwnPtr<PartitionTable> StorageManagement::try_to_initialize_partition_table(cons
     return {};
 }
 
-NonnullRefPtrVector<DiskPartition> StorageManagement::enumerate_disk_partitions() const
+UNMAP_AFTER_INIT NonnullRefPtrVector<DiskPartition> StorageManagement::enumerate_disk_partitions() const
 {
     VERIFY(!m_storage_devices.is_empty());
     NonnullRefPtrVector<DiskPartition> partitions;
@@ -131,7 +131,7 @@ NonnullRefPtrVector<DiskPartition> StorageManagement::enumerate_disk_partitions(
     return partitions;
 }
 
-void StorageManagement::determine_boot_device()
+UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
 {
     VERIFY(!m_controllers.is_empty());
     if (m_boot_argument.starts_with("/dev/")) {
@@ -151,7 +151,7 @@ void StorageManagement::determine_boot_device()
     }
 }
 
-void StorageManagement::determine_boot_device_with_partition_uuid()
+UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uuid()
 {
     VERIFY(!m_disk_partitions.is_empty());
     VERIFY(m_boot_argument.starts_with("PARTUUID="));
