@@ -89,7 +89,7 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
             }
 
             auto& child_region = child->space().add_region(region_clone.release_nonnull());
-            child_region.map(child->space().page_directory());
+            child_region.map(child->space().page_directory(), ShouldFlushTLB::No);
 
             if (&region == m_master_tls_region.unsafe_ptr())
                 child->m_master_tls_region = child_region;
