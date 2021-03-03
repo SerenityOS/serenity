@@ -530,7 +530,7 @@ public:
 
     class FileBlocker : public Blocker {
     public:
-        enum class BlockFlags : u32 {
+        enum class BlockFlags : u16 {
             None = 0,
 
             Read = 1 << 0,
@@ -632,7 +632,7 @@ public:
     public:
         struct FDInfo {
             NonnullRefPtr<FileDescription> description;
-            BlockFlags block_flags;
+            BlockFlags block_flags { BlockFlags::None };
             BlockFlags unblocked_flags { BlockFlags::None };
         };
 
