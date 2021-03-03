@@ -385,7 +385,7 @@ void Region::set_page_directory(PageDirectory& page_directory)
     m_page_directory = page_directory;
 }
 
-bool Region::map(PageDirectory& page_directory)
+bool Region::map(PageDirectory& page_directory, ShouldFlushTLB should_flush_tlb)
 {
     ScopedSpinLock lock(s_mm_lock);
     ScopedSpinLock page_lock(page_directory.get_lock());
@@ -403,7 +403,8 @@ bool Region::map(PageDirectory& page_directory)
         ++page_index;
     }
     if (page_index > 0) {
-        MM.flush_tlb(m_page_directory, vaddr(), page_index);
+        if (should_flush_tlb == ShouldFlushTLB::Yes)
+            MM.flush_tlb(m_page_directory, vaddr(), page_index);
         return page_index == page_count();
     }
     return false;

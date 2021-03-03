@@ -42,6 +42,11 @@ namespace Kernel {
 class Inode;
 class VMObject;
 
+enum class ShouldFlushTLB {
+    No,
+    Yes,
+};
+
 class Region final
     : public InlineLinkedListNode<Region>
     , public Weakable<Region>
@@ -215,7 +220,7 @@ public:
     void set_executable(bool b) { set_access_bit(Access::Execute, b); }
 
     void set_page_directory(PageDirectory&);
-    bool map(PageDirectory&);
+    bool map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
     enum class ShouldDeallocateVirtualMemoryRange {
         No,
         Yes,
