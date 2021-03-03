@@ -316,11 +316,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
                     library_metadata = it->library_metadata.ptr();
                 if (auto* library = library_metadata ? library_metadata->library_containing(ptr) : nullptr) {
                     object_name = library->name;
-                    if (library->object) {
-                        symbol = library->object->elf.symbolicate(ptr - library->base, &offset);
-                    } else {
-                        symbol = "??";
-                    }
+                    symbol = library->symbolicate(ptr, &offset);
                 } else {
                     symbol = "??";
                 }
@@ -455,8 +451,23 @@ LibraryMetadata::LibraryMetadata(JsonArray regions)
         if (!mapped_object)
             continue;
 
-        m_libraries.set(name, adopt_own(*new Library { base, size, name, mapped_object }));
+        FlatPtr text_base {};
+        mapped_object->elf.for_each_program_header([&](const ELF::Image::ProgramHeader& ph) {
+            if (ph.is_executable())
+                text_base = ph.vaddr().get();
+            return IterationDecision::Continue;
+        });
+
+        m_libraries.set(name, adopt_own(*new Library { base, size, name, text_base, mapped_object }));
     }
+}
+
+String LibraryMetadata::Library::symbolicate(FlatPtr ptr, u32* offset) const
+{
+    if (!object)
+        return "??"sv;
+
+    return object->elf.symbolicate(ptr - base + text_base, offset);
 }
 
 const LibraryMetadata::Library* LibraryMetadata::library_containing(FlatPtr ptr) const
