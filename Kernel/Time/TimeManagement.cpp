@@ -192,7 +192,7 @@ time_t TimeManagement::boot_time() const
 
 UNMAP_AFTER_INIT TimeManagement::TimeManagement()
 {
-    bool probe_non_legacy_hardware_timers = !(kernel_command_line().lookup("time").value_or("modern") == "legacy");
+    bool probe_non_legacy_hardware_timers = !(kernel_command_line().is_legacy_time_enabled());
     if (ACPI::is_enabled()) {
         if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
             RTC::initialize();
@@ -247,12 +247,14 @@ Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodic_timers()
 
 bool TimeManagement::is_hpet_periodic_mode_allowed()
 {
-    auto hpet_mode = kernel_command_line().lookup("hpet").value_or("periodic");
-    if (hpet_mode == "periodic")
+    switch (kernel_command_line().hpet_mode()) {
+    case HPETMode::Periodic:
         return true;
-    if (hpet_mode == "nonperiodic")
+    case HPETMode::NonPeriodic:
         return false;
-    VERIFY_NOT_REACHED();
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_non_legacy_hardware_timers()

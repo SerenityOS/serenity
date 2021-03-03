@@ -31,33 +31,17 @@
 namespace Kernel {
 namespace ACPI {
 
-enum class FeatureLevel {
-    Enabled,
-    Limited,
-    Disabled,
-};
-
-UNMAP_AFTER_INIT static FeatureLevel determine_feature_level()
-{
-    auto value = kernel_command_line().lookup("acpi").value_or("on");
-    if (value == "limited")
-        return FeatureLevel::Limited;
-    if (value == "off")
-        return FeatureLevel::Disabled;
-    return FeatureLevel::Enabled;
-}
-
 UNMAP_AFTER_INIT void initialize()
 {
-    auto feature_level = determine_feature_level();
-    if (feature_level == FeatureLevel::Disabled)
+    auto feature_level = kernel_command_line().acpi_feature_level();
+    if (feature_level == AcpiFeatureLevel::Disabled)
         return;
 
     auto rsdp = StaticParsing::find_rsdp();
     if (!rsdp.has_value())
         return;
 
-    if (feature_level == FeatureLevel::Enabled)
+    if (feature_level == AcpiFeatureLevel::Enabled)
         Parser::initialize<DynamicParser>(rsdp.value());
     else
         Parser::initialize<Parser>(rsdp.value());

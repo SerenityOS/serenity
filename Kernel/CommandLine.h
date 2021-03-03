@@ -29,8 +29,26 @@
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 
 namespace Kernel {
+
+enum class BootMode {
+    Text,
+    SelfTest,
+    Graphical
+};
+
+enum class HPETMode {
+    Periodic,
+    NonPeriodic
+};
+
+enum class AcpiFeatureLevel {
+    Enabled,
+    Limited,
+    Disabled,
+};
 
 class CommandLine {
     AK_MAKE_ETERNAL;
@@ -39,9 +57,23 @@ public:
     static void early_initialize(const char* cmd_line);
     static void initialize();
 
-    const String& string() const { return m_string; }
+    [[nodiscard]] const String& string() const { return m_string; }
     Optional<String> lookup(const String& key) const;
-    bool contains(const String& key) const;
+    [[nodiscard]] bool contains(const String& key) const;
+
+    [[nodiscard]] bool is_ide_enabled() const;
+    [[nodiscard]] bool is_smp_enabled() const;
+    [[nodiscard]] bool is_vmmouse_enabled() const;
+    [[nodiscard]] bool is_mmio_enabled() const;
+    [[nodiscard]] bool is_legacy_time_enabled() const;
+    [[nodiscard]] bool is_text_mode() const;
+    [[nodiscard]] bool is_force_pio() const;
+    [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
+    [[nodiscard]] BootMode boot_mode() const;
+    [[nodiscard]] HPETMode hpet_mode() const;
+    [[nodiscard]] String userspace_init() const;
+    [[nodiscard]] Vector<String> userspace_init_args() const;
+    [[nodiscard]] String root_device() const;
 
 private:
     CommandLine(const String&);
