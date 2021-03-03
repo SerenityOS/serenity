@@ -30,3 +30,5 @@ alias ue=UserspaceEmulator
 alias welcome=Serendipity
 
 alias ll='ls -l'
+
+export PROMPT="\\X\\u@\\h:\\w\\a\\e[32;1m@\\h\\e[0m:\\e[34;1m\\w\\e[0m \\p "
