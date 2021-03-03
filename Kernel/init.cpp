@@ -246,7 +246,7 @@ void init_stage2(void*)
     FinalizerTask::spawn();
 
     PCI::initialize();
-
+    auto boot_profiling = kernel_command_line().is_boot_profiling_enabled();
     auto is_text_mode = kernel_command_line().is_text_mode();
     if (is_text_mode) {
         dbgln("Text mode enabled");
@@ -318,6 +318,12 @@ void init_stage2(void*)
         PANIC("init_stage2: Error spawning SystemServer: {}", error);
     }
     thread->set_priority(THREAD_PRIORITY_HIGH);
+
+    if (boot_profiling) {
+        dbgln("Starting full system boot profiling");
+        auto result = Process::current()->sys$profiling_enable(-1);
+        VERIFY(!result.is_error());
+    }
 
     NetworkTask::spawn();
 
