@@ -71,38 +71,6 @@ size_t InodeVMObject::amount_dirty() const
     return count * PAGE_SIZE;
 }
 
-void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size)
-{
-    dbgln("VMObject::inode_size_changed: ({}:{}) {} -> {}", m_inode->fsid(), m_inode->index(), old_size, new_size);
-
-    InterruptDisabler disabler;
-
-    auto new_page_count = page_round_up(new_size) / PAGE_SIZE;
-    m_physical_pages.resize(new_page_count);
-
-    m_dirty_pages.grow(new_page_count, false);
-
-    // FIXME: Consolidate with inode_contents_changed() so we only do a single walk.
-    for_each_region([](auto& region) {
-        region.remap();
-    });
-}
-
-void InodeVMObject::inode_contents_changed(Badge<Inode>, off_t offset, [[maybe_unused]] ssize_t size, [[maybe_unused]] const UserOrKernelBuffer& data)
-{
-    InterruptDisabler disabler;
-    VERIFY(offset >= 0);
-
-    // FIXME: Only invalidate the parts that actually changed.
-    for (auto& physical_page : m_physical_pages)
-        physical_page = nullptr;
-
-    // FIXME: Consolidate with inode_size_changed() so we only do a single walk.
-    for_each_region([](auto& region) {
-        region.remap();
-    });
-}
-
 int InodeVMObject::release_all_clean_pages()
 {
     LOCKER(m_paging_lock);
