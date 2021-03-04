@@ -60,6 +60,7 @@ public:
     void set_column_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>);
 
     int horizontal_padding() const;
+    int icon_padding() const { return 8; }
 
     Gfx::IntPoint adjusted_position(const Gfx::IntPoint&) const;
 

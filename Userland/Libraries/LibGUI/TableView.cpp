@@ -125,6 +125,7 @@ void TableView::paint_event(PaintEvent& event)
                     painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
                 } else if (data.is_icon()) {
                     if (auto bitmap = data.as_icon().bitmap_for_size(16)) {
+                        cell_rect.set_y(cell_rect.y() + (row_height() - bitmap->height()) / 2);
                         if (is_selected_row) {
                             auto tint = selection_color.with_alpha(100);
                             painter.blit_filtered(cell_rect.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
