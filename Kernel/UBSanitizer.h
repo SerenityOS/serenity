@@ -30,6 +30,8 @@
 
 namespace Kernel::UBSanitizer {
 
+extern bool g_ubsan_is_deadly;
+
 typedef void* ValueHandle;
 
 class SourceLocation {

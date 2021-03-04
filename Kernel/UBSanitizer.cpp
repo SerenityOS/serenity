@@ -26,10 +26,13 @@
 
 #include <AK/Format.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Panic.h>
 #include <Kernel/UBSanitizer.h>
 
 using namespace Kernel;
 using namespace Kernel::UBSanitizer;
+
+bool Kernel::UBSanitizer::g_ubsan_is_deadly { true };
 
 extern "C" {
 
@@ -37,11 +40,12 @@ static void print_location(const SourceLocation& location)
 {
     if (!location.filename()) {
         dbgln("KUBSAN: in unknown file");
-
     } else {
         dbgln("KUBSAN: at {}, line {}, column: {}", location.filename(), location.line(), location.column());
     }
     dump_backtrace();
+    if (g_ubsan_is_deadly)
+        PANIC("UB is configured to be deadly.");
 }
 
 void __ubsan_handle_load_invalid_value(const InvalidValueData&, ValueHandle);
