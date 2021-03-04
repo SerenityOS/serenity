@@ -336,7 +336,7 @@ size_t AnonymousVMObject::count_needed_commit_pages_for_nonvolatile_range(const 
     auto range_end = range.base + range.count;
     for (size_t page_index = range.base; page_index < range_end; page_index++) {
         // COW pages are accounted for in m_shared_committed_cow_pages
-        if (m_cow_map && m_cow_map->get(page_index))
+        if (!m_cow_map.is_null() && m_cow_map.get(page_index))
             continue;
         auto& phys_page = m_physical_pages[page_index];
         if (phys_page && phys_page->is_shared_zero_page())
@@ -355,7 +355,7 @@ size_t AnonymousVMObject::mark_committed_pages_for_nonvolatile_range(const Volat
     auto range_end = range.base + range.count;
     for (size_t page_index = range.base; page_index < range_end; page_index++) {
         // COW pages are accounted for in m_shared_committed_cow_pages
-        if (m_cow_map && m_cow_map->get(page_index))
+        if (!m_cow_map.is_null() && m_cow_map.get(page_index))
             continue;
         auto& phys_page = m_physical_pages[page_index];
         if (phys_page && phys_page->is_shared_zero_page()) {
@@ -395,17 +395,17 @@ RefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(size_t page_inde
 
 Bitmap& AnonymousVMObject::ensure_cow_map()
 {
-    if (!m_cow_map)
-        m_cow_map = make<Bitmap>(page_count(), true);
-    return *m_cow_map;
+    if (m_cow_map.is_null())
+        m_cow_map = Bitmap { page_count(), true };
+    return m_cow_map;
 }
 
 void AnonymousVMObject::ensure_or_reset_cow_map()
 {
-    if (!m_cow_map)
-        m_cow_map = make<Bitmap>(page_count(), true);
+    if (m_cow_map.is_null())
+        ensure_cow_map();
     else
-        m_cow_map->fill(true);
+        m_cow_map.fill(true);
 }
 
 bool AnonymousVMObject::should_cow(size_t page_index, bool is_shared) const
@@ -415,7 +415,7 @@ bool AnonymousVMObject::should_cow(size_t page_index, bool is_shared) const
         return true;
     if (is_shared)
         return false;
-    return m_cow_map && m_cow_map->get(page_index);
+    return !m_cow_map.is_null() && m_cow_map.get(page_index);
 }
 
 void AnonymousVMObject::set_should_cow(size_t page_index, bool cow)
@@ -425,9 +425,9 @@ void AnonymousVMObject::set_should_cow(size_t page_index, bool cow)
 
 size_t AnonymousVMObject::cow_pages() const
 {
-    if (!m_cow_map)
+    if (m_cow_map.is_null())
         return 0;
-    return m_cow_map->count_slow(true);
+    return m_cow_map.count_slow(true);
 }
 
 bool AnonymousVMObject::is_nonvolatile(size_t page_index)
