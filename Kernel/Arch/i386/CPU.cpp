@@ -76,6 +76,7 @@ extern "C" void handle_interrupt(TrapFrame*);
 
 // clang-format off
 
+#if ARCH(I386)
 #define EH_ENTRY(ec, title)                         \
     extern "C" void title##_asm_entry();            \
     extern "C" void title##_handler(TrapFrame*); \
@@ -126,6 +127,26 @@ extern "C" void handle_interrupt(TrapFrame*);
         "    call enter_trap_no_irq \n"             \
         "    call " #title "_handler\n"             \
         "    jmp common_trap_exit \n");
+
+#elif ARCH(X86_64)
+#define EH_ENTRY(ec, title)                         \
+    extern "C" void title##_asm_entry();            \
+    extern "C" void title##_handler(TrapFrame*);    \
+    asm(                                            \
+        ".globl " #title "_asm_entry\n"             \
+        "" #title "_asm_entry: \n"                  \
+        "    cli;hlt;\n"                            \
+);
+
+#define EH_ENTRY_NO_CODE(ec, title)                 \
+    extern "C" void title##_handler(TrapFrame*);    \
+    extern "C" void title##_asm_entry();            \
+asm(                                                \
+        ".globl " #title "_asm_entry\n"             \
+        "" #title "_asm_entry: \n"                  \
+        "    cli;hlt;\n"                            \
+);
+#endif
 
 // clang-format on
 
@@ -1593,6 +1614,7 @@ extern "C" u32 do_init_context(Thread* thread, u32 flags)
 
 extern "C" void do_assume_context(Thread* thread, u32 flags);
 
+#if ARCH(I386)
 // clang-format off
 asm(
 ".global do_assume_context \n"
@@ -1614,8 +1636,9 @@ asm(
 "    jmp enter_thread_context \n"
 );
 // clang-format on
+#endif
 
-void Processor::assume_context(Thread& thread, u32 flags)
+void Processor::assume_context(Thread& thread, FlatPtr flags)
 {
     dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
 
@@ -1624,7 +1647,12 @@ void Processor::assume_context(Thread& thread, u32 flags)
     // in_critical() should be 2 here. The critical section in Process::exec
     // and then the scheduler lock
     VERIFY(Processor::current().in_critical() == 2);
+#if ARCH(I386)
     do_assume_context(&thread, flags);
+#elif ARCH(X86_64)
+    (void)flags;
+    TODO();
+#endif
     VERIFY_NOT_REACHED();
 }
 
@@ -2315,12 +2343,14 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
         : "memory");
     set_fs(GDT_SELECTOR_PROC);
 
+#if ARCH(I386)
     // Make sure CS points to the kernel code descriptor.
     // clang-format off
     asm volatile(
         "ljmpl $" __STRINGIFY(GDT_SELECTOR_CODE0) ", $sanity\n"
         "sanity:\n");
     // clang-format on
+#endif
 }
 
 void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, const RegisterState& kernel_regs)
