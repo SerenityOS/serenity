@@ -90,8 +90,9 @@ jobs:
         # and permitting the restore-key "prefix-" without specifying a timestamp.
         # For this trick to work, the timestamp *must* come last, and it *must* be missing in 'restore-keys'.
         key: ${{ runner.os }}-ccache-i686-v${{ matrix.ccache-mark }}-D${{ matrix.debug-macros }}-toolchain_${{steps.stamps.outputs.libc_headers}}-time${{ steps.stamps.outputs.time }}
+        # IMPORTANT: Keep these two in sync!
         restore-keys: |
-          ${{ runner.os }}-ccache-i686-v${{ matrix.ccache-mark }}-D${{ matrix.debug-macros }}-libc_${{steps.stamps.outputs.libc_headers}}-
+          ${{ runner.os }}-ccache-i686-v${{ matrix.ccache-mark }}-D${{ matrix.debug-macros }}-toolchain_${{steps.stamps.outputs.libc_headers}}-
     - name: Show ccache stats before build and configure
       run: |
         # We only have 5 GiB of cache available *in total*. Beyond that, GitHub deletes caches.
