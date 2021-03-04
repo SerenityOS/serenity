@@ -69,24 +69,24 @@ public:
     WeakPtr<LanguageClient> language_client() { return m_language_client; }
     const String& project_path() const { return m_project_path; }
 
-    template<typename ConcreteType>
+    template<typename LanguageServerType>
     static NonnullRefPtr<ServerConnection> get_or_create(const String& project_path)
     {
-        auto key = LexicalPath { project_path }.string();
-        if (auto instance = s_instances_for_projects.get(key); instance.has_value())
+        auto key = LanguageServerType::language_name();
+        if (auto instance = s_instance_for_language.get(key); instance.has_value()) {
             return *instance.value();
+        }
 
-        auto connection = ConcreteType::construct(project_path);
+        auto connection = LanguageServerType::construct(project_path);
         connection->handshake();
-        set_instance_for_project(project_path, *connection);
+        set_instance_for_project(LanguageServerType::language_name(), *connection);
         return *connection;
     }
 
-    static RefPtr<ServerConnection> instance_for_project(const String& project_path);
-    static void set_instance_for_project(const String& project_path, NonnullRefPtr<ServerConnection>&&);
-    static void remove_instance_for_project(const String& project_path);
+    static void set_instance_for_project(const String& language_name, NonnullRefPtr<ServerConnection>&&);
+    static void remove_instance_for_language(const String& language_name);
 
-    virtual void die();
+    virtual void die() override;
 
 protected:
     virtual void handle(const Messages::LanguageClient::AutoCompleteSuggestions&) override;
@@ -97,7 +97,7 @@ protected:
     WeakPtr<LanguageClient> m_language_client;
 
 private:
-    static HashMap<String, NonnullRefPtr<ServerConnection>> s_instances_for_projects;
+    static HashMap<String, NonnullRefPtr<ServerConnection>> s_instance_for_language;
 };
 
 class LanguageClient : public Weakable<LanguageClient> {
