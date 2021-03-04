@@ -87,7 +87,7 @@ void AbstractTableView::update_column_sizes()
             auto cell_data = model.index(row, column).data();
             int cell_width = 0;
             if (cell_data.is_icon()) {
-                cell_width = row_height();
+                cell_width = cell_data.as_icon().bitmap_for_size(16)->width();
             } else if (cell_data.is_bitmap()) {
                 cell_width = cell_data.as_bitmap().width();
             } else if (cell_data.is_valid()) {
@@ -399,7 +399,7 @@ int AbstractTableView::horizontal_padding() const
 
 int AbstractTableView::row_height() const
 {
-    return font().glyph_height() + 6;
+    return font().glyph_height() + icon_padding();
 }
 
 }
