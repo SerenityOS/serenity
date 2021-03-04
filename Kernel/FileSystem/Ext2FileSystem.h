@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
+#include <AK/BitmapView.h>
 #include <AK/HashMap.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
@@ -185,7 +185,7 @@ private:
         BlockIndex bitmap_block_index { 0 };
         bool dirty { false };
         KBuffer buffer;
-        Bitmap bitmap(u32 blocks_per_group) { return Bitmap::wrap(buffer.data(), blocks_per_group); }
+        BitmapView bitmap(u32 blocks_per_group) { return BitmapView { buffer.data(), blocks_per_group }; }
     };
 
     KResultOr<CachedBitmap*> get_bitmap_block(BlockIndex);

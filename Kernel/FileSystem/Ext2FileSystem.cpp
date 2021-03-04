@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Bitmap.h>
 #include <AK/HashMap.h>
 #include <AK/MemoryStream.h>
 #include <AK/StdLibExtras.h>
@@ -1196,7 +1195,7 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
         auto& cached_bitmap = *cached_bitmap_or_error.value();
 
         int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
-        auto block_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), blocks_in_group);
+        auto block_bitmap = cached_bitmap.bitmap(blocks_in_group);
 
         BlockIndex first_block_in_group = (group_index.value() - 1) * blocks_per_group() + first_block_index().value();
         size_t free_region_size = 0;
