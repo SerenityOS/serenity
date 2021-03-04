@@ -59,6 +59,7 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/TTY.h>
+#include <Kernel/UBSanitizer.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
@@ -994,12 +995,18 @@ void ProcFS::add_sys_string(String&& name, Lockable<String>& var, Function<void(
 bool ProcFS::initialize()
 {
     static Lockable<bool>* kmalloc_stack_helper;
+    static Lockable<bool>* ubsan_deadly_helper;
 
     if (kmalloc_stack_helper == nullptr) {
         kmalloc_stack_helper = new Lockable<bool>();
         kmalloc_stack_helper->resource() = g_dump_kmalloc_stacks;
         ProcFS::add_sys_bool("kmalloc_stacks", *kmalloc_stack_helper, [] {
             g_dump_kmalloc_stacks = kmalloc_stack_helper->resource();
+        });
+        ubsan_deadly_helper = new Lockable<bool>();
+        ubsan_deadly_helper->resource() = UBSanitizer::g_ubsan_is_deadly;
+        ProcFS::add_sys_bool("ubsan_is_deadly", *ubsan_deadly_helper, [] {
+            UBSanitizer::g_ubsan_is_deadly = ubsan_deadly_helper->resource();
         });
     }
     return true;
