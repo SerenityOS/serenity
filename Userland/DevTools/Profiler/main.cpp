@@ -37,7 +37,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -50,31 +49,37 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <serenity.h>
-#include <stdio.h>
 #include <string.h>
 
 static bool generate_profile(pid_t& pid);
 
 int main(int argc, char** argv)
 {
-    Core::ArgsParser args_parser;
     int pid = 0;
+    const char* perfcore_file_arg = nullptr;
+    Core::ArgsParser args_parser;
     args_parser.add_option(pid, "PID to profile", "pid", 'p', "PID");
-    args_parser.parse(argc, argv, false);
+    args_parser.add_positional_argument(perfcore_file_arg, "Path of perfcore file", "perfcore-file", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    if (pid && perfcore_file_arg) {
+        warnln("-p/--pid option and perfcore-file argument must not be used together!");
+        return 1;
+    }
 
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-profiler");
 
-    String path;
-    if (argc != 2) {
+    String perfcore_file;
+    if (!perfcore_file_arg) {
         if (!generate_profile(pid))
             return 0;
-        path = String::formatted("/proc/{}/perf_events", pid);
+        perfcore_file = String::formatted("/proc/{}/perf_events", pid);
     } else {
-        path = argv[1];
+        perfcore_file = perfcore_file_arg;
     }
 
-    auto profile_or_error = Profile::load_from_perfcore_file(path);
+    auto profile_or_error = Profile::load_from_perfcore_file(perfcore_file);
     if (profile_or_error.is_error()) {
         GUI::MessageBox::show(nullptr, profile_or_error.error(), "Profiler", GUI::MessageBox::Type::Error);
         return 0;
