@@ -122,7 +122,7 @@ void LanguageClient::on_server_crash()
 {
     VERIFY(m_server_connection);
     auto project_path = m_server_connection->project_path();
-    ServerConnection::remove_instance_for_project(project_path);
+    ServerConnection::remove_instance_for_language(project_path);
     m_server_connection = nullptr;
 
     auto notification = GUI::Notification::construct();
@@ -133,27 +133,16 @@ void LanguageClient::on_server_crash()
     notification->show();
 }
 
-HashMap<String, NonnullRefPtr<ServerConnection>> ServerConnection::s_instances_for_projects;
+HashMap<String, NonnullRefPtr<ServerConnection>> ServerConnection::s_instance_for_language;
 
-RefPtr<ServerConnection> ServerConnection::instance_for_project(const String& project_path)
+void ServerConnection::set_instance_for_project(const String& language_name, NonnullRefPtr<ServerConnection>&& instance)
 {
-    auto key = LexicalPath { project_path }.string();
-    auto value = s_instances_for_projects.get(key);
-    if (!value.has_value())
-        return nullptr;
-    return *value.value();
+    s_instance_for_language.set(language_name, move(instance));
 }
 
-void ServerConnection::set_instance_for_project(const String& project_path, NonnullRefPtr<ServerConnection>&& instance)
+void ServerConnection::remove_instance_for_language(const String& language_name)
 {
-    auto key = LexicalPath { project_path }.string();
-    s_instances_for_projects.set(key, move(instance));
-}
-
-void ServerConnection::remove_instance_for_project(const String& project_path)
-{
-    auto key = LexicalPath { project_path }.string();
-    s_instances_for_projects.remove(key);
+    s_instance_for_language.remove(language_name);
 }
 void ServerConnection::handle(const Messages::LanguageClient::DeclarationsInDocument& message)
 {
