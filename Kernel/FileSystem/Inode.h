@@ -129,8 +129,6 @@ public:
 protected:
     Inode(FS& fs, InodeIndex);
     void set_metadata_dirty(bool);
-    void inode_contents_changed(off_t, ssize_t, const UserOrKernelBuffer&);
-    void inode_size_changed(size_t old_size, size_t new_size);
     KResult prepare_to_write_data();
 
     void did_add_child(const InodeIdentifier&);

@@ -204,13 +204,10 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBu
         m_metadata.size = new_size;
         set_metadata_dirty(true);
         set_metadata_dirty(false);
-        inode_size_changed(old_size, new_size);
     }
 
     if (!buffer.read(m_content->data() + offset, size)) // TODO: partial reads?
         return -EFAULT;
-    inode_contents_changed(offset, size, buffer);
-
     return size;
 }
 
@@ -353,18 +350,8 @@ KResult TmpFSInode::truncate(u64 size)
         m_content = move(tmp);
     }
 
-    size_t old_size = m_metadata.size;
     m_metadata.size = size;
     notify_watchers();
-
-    if (old_size != (size_t)size) {
-        inode_size_changed(old_size, size);
-        if (m_content) {
-            auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_content->data());
-            inode_contents_changed(0, size, buffer);
-        }
-    }
-
     return KSuccess;
 }
 

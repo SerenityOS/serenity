@@ -889,7 +889,6 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
     bool allow_cache = !description || !description->is_direct();
 
     const size_t block_size = fs().block_size();
-    u64 old_size = size();
     u64 new_size = max(static_cast<u64>(offset) + count, (u64)size());
 
     auto resize_result = resize(new_size);
@@ -930,10 +929,6 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
     }
 
     dbgln_if(EXT2_VERY_DEBUG, "Ext2FS: After write, i_size={}, i_blocks={} ({} blocks in list)", m_raw_inode.i_size, m_raw_inode.i_blocks, m_block_list.size());
-
-    if (old_size != new_size)
-        inode_size_changed(old_size, new_size);
-    inode_contents_changed(offset, count, data);
     return nwritten;
 }
 
