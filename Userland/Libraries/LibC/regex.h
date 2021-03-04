@@ -102,7 +102,6 @@ enum __RegexAllFlags {
     __Regex_Last = __Regex_SkipTrimEmptyMatches
 };
 
-// clang-format off
 // Values for the cflags parameter to the regcomp() function:
 #define REG_EXTENDED __Regex_Extended                // Use Extended Regular Expressions.
 #define REG_ICASE __Regex_Insensitive                // Ignore case in match.
@@ -116,7 +115,6 @@ enum __RegexAllFlags {
 
 //static_assert (sizeof(FlagsUnderlyingType) * 8 >= regex::POSIXFlags::Last << 1), "flags type too small")
 #define REG_SEARCH __Regex_Last << 1
-// clang-format on
 
 int regcomp(regex_t*, const char*, int);
 int regexec(const regex_t*, const char*, size_t, regmatch_t[], int);
