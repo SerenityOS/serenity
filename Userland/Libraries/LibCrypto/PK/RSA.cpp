@@ -209,7 +209,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
             return keypair;
 
         // Now we have a bit string, which contains the PKCS#1 encoded public key.
-        auto data_result = decoder.read<Bitmap>();
+        auto data_result = decoder.read<BitmapView>();
         if (data_result.is_error()) {
             dbgln_if(RSA_PARSE_DEBUG, "RSA PKCS#8 public key parse failed: {}", data_result.error());
             return keypair;
