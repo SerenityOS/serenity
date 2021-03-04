@@ -127,7 +127,8 @@ NonnullRefPtrVector<Declaration> FunctionDefinition::declarations() const
 void VariableDeclaration::dump(size_t indent) const
 {
     ASTNode::dump(indent);
-    m_type->dump(indent + 1);
+    if (m_type)
+        m_type->dump(indent + 1);
     print_indent(indent + 1);
     outln("{}", m_name);
     if (m_initial_value)
