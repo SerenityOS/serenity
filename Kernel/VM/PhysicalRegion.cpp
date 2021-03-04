@@ -43,7 +43,6 @@ NonnullRefPtr<PhysicalRegion> PhysicalRegion::create(PhysicalAddress lower, Phys
 PhysicalRegion::PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper)
     : m_lower(lower)
     , m_upper(upper)
-    , m_bitmap(Bitmap::create())
 {
 }
 
