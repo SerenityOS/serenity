@@ -1,7 +1,6 @@
 #!sh
 
 alias fm=FileManager
-alias hw=HelloWorld
 alias irc=IRCClient
 alias ms=Minesweeper
 alias sh=Shell
@@ -25,7 +24,6 @@ alias sm=SystemMonitor
 alias pv=Profiler
 alias ws=WebServer
 alias sl=Solitaire
-alias wv=WebView
 alias ue=UserspaceEmulator
 alias welcome=Serendipity
 
