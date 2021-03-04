@@ -51,6 +51,28 @@ static bool is_nosys_syscall(int fn)
     return fn == SC_futex;
 }
 
+static bool is_bad_idea(int fn, const size_t* direct_sc_args, const size_t* fake_sc_params, const char* some_string)
+{
+    switch (fn) {
+    case SC_mprotect:
+        // This would mess with future tests or crash the fuzzer.
+        return direct_sc_args[0] == (size_t)fake_sc_params || direct_sc_args[0] == (size_t)some_string;
+    case SC_read:
+    case SC_readv:
+        // FIXME: Known bug: https://github.com/SerenityOS/serenity/issues/5328
+        return direct_sc_args[0] == 1;
+    case SC_write:
+    case SC_writev:
+        // FIXME: Known bug: https://github.com/SerenityOS/serenity/issues/5328
+        return direct_sc_args[0] == 0;
+    case SC_pledge:
+        // Equivalent to pledge(nullptr, _), which would kill the fuzzer.
+        return direct_sc_args[0] == (size_t)fake_sc_params && fake_sc_params[1] == 0;
+    default:
+        return false;
+    }
+}
+
 static void do_systematic_tests()
 {
     int rc;
@@ -119,7 +141,7 @@ static void do_random_tests()
 
     size_t direct_sc_args[3] = { 0 };
     // Isolate to a separate region to make corruption less likely, because we will write to it:
-    size_t* fake_sc_params = reinterpret_cast<size_t*>(mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_RANDOMIZED, 0, 0));
+    auto* fake_sc_params = reinterpret_cast<size_t*>(mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_RANDOMIZED, 0, 0));
     const char* some_string = "Hello, world!";
     Vector<size_t> interesting_values = {
         0,
@@ -132,23 +154,20 @@ static void do_random_tests()
         0xffffffff,
     };
     dbgln("Doing a few random syscalls with:");
-    for (size_t i = 0; i < interesting_values.size(); ++i) {
-        dbgln("  {0} ({0:p})", interesting_values[i]);
+    for (unsigned long& interesting_value : interesting_values) {
+        dbgln("  {0} ({0:p})", interesting_value);
     }
     for (size_t i = 0; i < fuzz_syscall_count; ++i) {
         // Construct a nice syscall:
         int syscall_fn = arc4random_uniform(Syscall::Function::__Count);
-        if (is_deadly_syscall(syscall_fn) || is_unfuzzable_syscall(syscall_fn)) {
-            // Retry, and don't count towards syscall limit.
-            --i;
-            continue;
-        }
         randomize_from(direct_sc_args, array_size(direct_sc_args), interesting_values);
         randomize_from(fake_sc_params, fake_params_count, interesting_values);
 
-        if (syscall_fn == SC_mprotect && direct_sc_args[0] == (size_t)fake_sc_params) {
-            // Actually, that's a terrible idea.
-            // Pretend we don't want to try that.
+        if (is_deadly_syscall(syscall_fn)
+            || is_unfuzzable_syscall(syscall_fn)
+            || is_bad_idea(syscall_fn, direct_sc_args, fake_sc_params, some_string)) {
+            // Retry, and don't count towards syscall limit.
+            --i;
             continue;
         }
 
