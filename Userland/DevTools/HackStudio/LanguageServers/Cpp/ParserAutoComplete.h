@@ -76,8 +76,8 @@ private:
     Vector<PropertyInfo> properties_of_type(const DocumentData& document, const String& type) const;
     NonnullRefPtrVector<Declaration> get_declarations_in_outer_scope_including_headers(const DocumentData& document) const;
 
-    const DocumentData& get_document_data(const String& file) const;
-    const DocumentData& get_or_create_document_data(const String& file);
+    const DocumentData* get_document_data(const String& file) const;
+    const DocumentData* get_or_create_document_data(const String& file);
     void set_document_data(const String& file, OwnPtr<DocumentData>&& data);
 
     OwnPtr<DocumentData> create_document_data_for(const String& file);
