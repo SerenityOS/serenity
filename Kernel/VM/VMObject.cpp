@@ -37,7 +37,7 @@ VMObject::VMObject(const VMObject& other)
 
 VMObject::VMObject(size_t size)
 {
-    m_physical_pages.resize(ceil_div(size, PAGE_SIZE));
+    m_physical_pages.resize(ceil_div(size, static_cast<size_t>(PAGE_SIZE)));
     MM.register_vmobject(*this);
 }
 

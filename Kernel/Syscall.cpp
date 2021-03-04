@@ -37,6 +37,7 @@ extern "C" void syscall_handler(TrapFrame*);
 extern "C" void syscall_asm_entry();
 
 // clang-format off
+#if ARCH(I386)
 asm(
     ".globl syscall_asm_entry\n"
     "syscall_asm_entry:\n"
@@ -64,6 +65,13 @@ asm(
     "    call syscall_handler \n"
     "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
     "    jmp common_trap_exit \n");
+#elif ARCH(X86_64)
+    asm(
+    ".globl syscall_asm_entry\n"
+    "syscall_asm_entry:\n"
+    "    cli\n"
+    "    hlt\n");
+#endif
 // clang-format on
 
 namespace Syscall {

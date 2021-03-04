@@ -57,12 +57,12 @@ constexpr FlatPtr page_round_down(FlatPtr x)
     return ((FlatPtr)(x)) & ~(PAGE_SIZE - 1);
 }
 
-inline u32 low_physical_to_virtual(u32 physical)
+inline FlatPtr low_physical_to_virtual(FlatPtr physical)
 {
     return physical + 0xc0000000;
 }
 
-inline u32 virtual_to_low_physical(u32 physical)
+inline FlatPtr virtual_to_low_physical(FlatPtr physical)
 {
     return physical - 0xc0000000;
 }

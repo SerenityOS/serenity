@@ -699,7 +699,7 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
 {
     VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
-    size_t count = ceil_div(size, PAGE_SIZE);
+    size_t count = ceil_div(size, static_cast<size_t>(PAGE_SIZE));
     NonnullRefPtrVector<PhysicalPage> physical_pages;
 
     for (auto& region : m_super_physical_regions) {

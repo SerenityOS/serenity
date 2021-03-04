@@ -1,5 +1,11 @@
 add_compile_options(-Os)
 
+if ("${SERENITY_ARCH}" STREQUAL "i686")
+    set(KERNEL_ARCH i386)
+elseif("${SERENITY_ARCH}" STREQUAL "x86_64")
+    set(KERNEL_ARCH x86_64)
+endif()
+
 set(KERNEL_HEAP_SOURCES
     Heap/SlabAllocator.cpp
     Heap/kmalloc.cpp
@@ -285,6 +291,10 @@ if (NOT ${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -nostdinc -nostdinc++")
 endif()
 
+if ("${SERENITY_ARCH}" STREQUAL "x86_64")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -mno-red-zone")
+endif()
+
 # Kernel Undefined Behavior Sanitizer (KUBSAN)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
 
@@ -307,9 +317,9 @@ add_link_options(LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib)
 #       kernel won't re-link when boot.S changes without this.
 set_source_files_properties(init.cpp
     PROPERTIES
-    OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/i386/Boot/boot.S
+    OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/Boot/boot.S
 )
-add_library(boot OBJECT Arch/i386/Boot/boot.S)
+add_library(boot OBJECT Arch/${KERNEL_ARCH}/Boot/boot.S)
 
 add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
 file(GENERATE OUTPUT linker.ld INPUT linker.ld)
