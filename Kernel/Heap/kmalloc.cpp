@@ -236,7 +236,7 @@ void* kmalloc_eternal(size_t size)
     return ptr;
 }
 
-void* kmalloc_impl(size_t size)
+void* kmalloc(size_t size)
 {
     ScopedSpinLock lock(s_lock);
     ++g_kmalloc_call_count;

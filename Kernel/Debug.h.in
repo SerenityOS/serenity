@@ -150,10 +150,6 @@
 #cmakedefine01 KEYBOARD_DEBUG
 #endif
 
-#ifndef KMALLOC_DEBUG
-#cmakedefine01 KMALLOC_DEBUG
-#endif
-
 #ifndef LOCAL_SOCKET_DEBUG
 #cmakedefine01 LOCAL_SOCKET_DEBUG
 #endif
@@ -316,8 +312,4 @@
 
 #ifndef WAITQUEUE_DEBUG
 #cmakedefine01 WAITQUEUE_DEBUG
-#endif
-
-#ifndef KMALLOC_DEBUG_LARGE_ALLOCATIONS
-#cmakedefine01 KMALLOC_DEBUG_LARGE_ALLOCATIONS
 #endif

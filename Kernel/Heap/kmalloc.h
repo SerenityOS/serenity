@@ -53,15 +53,7 @@ extern bool g_dump_kmalloc_stacks;
 inline void* operator new(size_t, void* p) { return p; }
 inline void* operator new[](size_t, void* p) { return p; }
 
-[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] ALWAYS_INLINE void* kmalloc(size_t size)
-{
-#if KMALLOC_DEBUG_LARGE_ALLOCATIONS
-    // Any kernel allocation >= 1M is 99.9% a bug.
-    if (size >= 1048576)
-        asm volatile("cli;hlt");
-#endif
-    return kmalloc_impl(size);
-}
+[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc(size_t);
 
 template<size_t ALIGNMENT>
 [[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] inline void* kmalloc_aligned(size_t size)
