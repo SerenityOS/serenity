@@ -41,7 +41,7 @@ ParserAutoComplete::ParserAutoComplete(ClientConnection& connection, const FileD
 {
 }
 
-const ParserAutoComplete::DocumentData& ParserAutoComplete::get_or_create_document_data(const String& file)
+const ParserAutoComplete::DocumentData* ParserAutoComplete::get_or_create_document_data(const String& file)
 {
     auto absolute_path = filedb().to_absolute_path(file);
     if (!m_documents.contains(absolute_path)) {
@@ -50,12 +50,12 @@ const ParserAutoComplete::DocumentData& ParserAutoComplete::get_or_create_docume
     return get_document_data(absolute_path);
 }
 
-const ParserAutoComplete::DocumentData& ParserAutoComplete::get_document_data(const String& file) const
+const ParserAutoComplete::DocumentData* ParserAutoComplete::get_document_data(const String& file) const
 {
     auto absolute_path = filedb().to_absolute_path(file);
     auto document_data = m_documents.get(absolute_path);
     VERIFY(document_data.has_value());
-    return *document_data.value();
+    return document_data.value();
 }
 
 OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_data_for(const String& file)
@@ -97,7 +97,11 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
 
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "ParserAutoComplete position {}:{}", position.line, position.column);
 
-    const auto& document = get_or_create_document_data(file);
+    const auto* document_ptr = get_or_create_document_data(file);
+    if (!document_ptr)
+        return {};
+
+    const auto& document = *document_ptr;
     auto node = document.parser.node_at(position);
     if (!node) {
         dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", position.line, position.column);
@@ -273,8 +277,11 @@ NonnullRefPtrVector<Declaration> ParserAutoComplete::get_declarations_in_outer_s
 {
     NonnullRefPtrVector<Declaration> declarations;
     for (auto& include : document.preprocessor.included_paths()) {
+        document_path_from_include_path(include);
         auto included_document = get_document_data(document_path_from_include_path(include));
-        declarations.append(get_declarations_in_outer_scope_including_headers(included_document));
+        if (!included_document)
+            continue;
+        declarations.append(get_declarations_in_outer_scope_including_headers(*included_document));
     }
     for (auto& decl : document.parser.root_node()->declarations()) {
         declarations.append(decl);
@@ -324,7 +331,11 @@ void ParserAutoComplete::file_opened([[maybe_unused]] const String& file)
 
 Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_declaration_of(const String& file_name, const GUI::TextPosition& identifier_position)
 {
-    const auto& document = get_or_create_document_data(file_name);
+    const auto* document_ptr = get_or_create_document_data(file_name);
+    if (!document_ptr)
+        return {};
+
+    const auto& document = *document_ptr;
     auto node = document.parser.node_at(Cpp::Position { identifier_position.line(), identifier_position.column() });
     if (!node) {
         dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", identifier_position.line(), identifier_position.column());
