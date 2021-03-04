@@ -157,7 +157,7 @@ int fegetround()
 
 int fesetround(int rounding_mode)
 {
-    if (rounding_mode < FE_TONEAREST || rounding_mode > FE_TOWARDSZERO)
+    if (rounding_mode < FE_TONEAREST || rounding_mode > FE_TOWARDZERO)
         return 1;
 
     auto control_word = read_control_word();
