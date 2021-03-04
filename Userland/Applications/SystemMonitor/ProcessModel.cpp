@@ -43,7 +43,6 @@ ProcessModel::ProcessModel()
 {
     VERIFY(!s_the);
     s_the = this;
-    m_generic_process_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png");
 
     auto file = Core::File::construct("/proc/cpuinfo");
     if (file->open(Core::IODevice::ReadOnly)) {
@@ -262,10 +261,10 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Icon: {
-            auto icon = GUI::FileIconProvider::icon_for_executable(thread.current_state.executable);
-            if (auto* bitmap = icon.bitmap_for_size(16))
-                return *bitmap;
-            return *m_generic_process_icon;
+            auto icon = GUI::FileIconProvider::icon_for_executable(thread.current_state.executable).bitmap_for_size(16);
+            if (!icon)
+                return GUI::Icon();
+            return GUI::Icon(*icon);
         }
         case Column::PID:
             return thread.current_state.pid;
