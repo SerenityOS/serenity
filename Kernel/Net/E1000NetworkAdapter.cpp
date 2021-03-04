@@ -32,7 +32,6 @@
 
 namespace Kernel {
 
-// clang-format off
 #define REG_CTRL 0x0000
 #define REG_STATUS 0x0008
 #define REG_EEPROM 0x0014
@@ -139,7 +138,6 @@ namespace Kernel {
 #define INTERRUPT_PHYINT (1 << 12)
 #define INTERRUPT_TXD_LOW (1 << 15)
 #define INTERRUPT_SRPD (1 << 16)
-// clang-format on
 
 // https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf Section 5.2
 static bool is_valid_device_id(u16 device_id)

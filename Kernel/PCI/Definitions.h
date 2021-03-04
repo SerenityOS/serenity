@@ -35,7 +35,6 @@
 
 namespace Kernel {
 
-// clang-format off
 #define PCI_VENDOR_ID 0x00            // word
 #define PCI_DEVICE_ID 0x02            // word
 #define PCI_COMMAND 0x04              // word
@@ -68,7 +67,6 @@ namespace Kernel {
 #define PCI_MAX_DEVICES_PER_BUS 32
 #define PCI_MAX_BUSES 256
 #define PCI_MAX_FUNCTIONS_PER_DEVICE 8
-// clang-format on
 
 namespace PCI {
 struct ID {

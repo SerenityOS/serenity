@@ -48,7 +48,6 @@ struct ifreq {
         unsigned int ifru_index;
     } ifr_ifru;
 
-    // clang-format off
 #define ifr_addr ifr_ifru.ifru_addr           // address
 #define ifr_dstaddr ifr_ifru.ifru_dstaddr     // other end of p-to-p link
 #define ifr_broadaddr ifr_ifru.ifru_broadaddr // broadcast address
@@ -65,7 +64,6 @@ struct ifreq {
 #define ifr_index ifr_ifru.ifru_index         // interface index
 #define ifr_llprio ifr_ifru.ifru_metric       // link layer priority
 #define ifr_hwaddr ifr_ifru.ifru_hwaddr       // MAC address
-    // clang-format on
 };
 
 __END_DECLS
