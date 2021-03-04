@@ -40,10 +40,13 @@ Its default value is `~/.history`.
 `PROMPT` (environment)
 
 The value of this variable is used to generate a prompt, the following escape sequences can be used literally inside the value, and they would expand to their respective values:
-- `\\u` : the current username
-- `\\h` : the current hostname
-- `\\w` : a collapsed path (relative to home) to the current directory
-- `\\p` : the string '$' (or '#' if the user is 'root')
+- `\\a`: bell character (behavior depends on terminal)
+- `\\e`: escape character (`0x1b`)
+- `\\h`: the current hostname
+- `\\p`: the string '$' (or '#' if the user is 'root')
+- `\\u`: the current username
+- `\\w`: a collapsed path (relative to home) to the current directory
+- `\\X`: reset style (foreground and background color, etc)
 
 Any other escaped character shall be ignored.
 
