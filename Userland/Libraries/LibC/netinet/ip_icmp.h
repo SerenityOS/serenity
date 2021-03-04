@@ -44,7 +44,6 @@ struct icmphdr {
     } un;
 };
 
-// clang-format off
 #define ICMP_ECHOREPLY 0       // Echo Reply
 #define ICMP_DEST_UNREACH 3    // Destination Unreachable
 #define ICMP_SOURCE_QUENCH 4   // Source Quench
@@ -59,6 +58,5 @@ struct icmphdr {
 #define ICMP_ADDRESS 17        // Address Mask Request
 #define ICMP_ADDRESSREPLY 18   // Address Mask Reply
 #define NR_ICMP_TYPES 18
-//clang-format on
 
 __END_DECLS
