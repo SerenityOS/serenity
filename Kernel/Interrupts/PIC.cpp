@@ -42,7 +42,6 @@ namespace Kernel {
 #define PIC1_CTL 0xA0
 #define PIC1_CMD 0xA1
 
-// clang-format off
 #define ICW1_ICW4 0x01      /* ICW4 (not) needed */
 #define ICW1_SINGLE 0x02    /* Single (cascade) mode */
 #define ICW1_INTERVAL4 0x04 /* Call address interval 4 (8) */
@@ -54,7 +53,6 @@ namespace Kernel {
 #define ICW4_BUF_SLAVE 0x08  /* Buffered mode/slave */
 #define ICW4_BUF_MASTER 0x0C /* Buffered mode/master */
 #define ICW4_SFNM 0x10       /* Special fully nested (not) */
-// clang-format on
 
 bool inline static is_all_masked(u16 reg)
 {

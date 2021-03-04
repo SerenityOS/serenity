@@ -40,7 +40,6 @@ typedef struct
     } a_un;
 } auxv_t;
 
-// clang-format off
 #define AT_NULL 0           /* No length, last entry's a_type has this value */
 #define AT_IGNORE 1         /* Entry has no meaning, a_un undefined */
 #define AT_EXECFD 2         /* a_val contains a file descriptor of the main program image */
@@ -66,7 +65,6 @@ typedef struct
 #define AT_EXECFN 31        /* a_ptr points to file name of executed program */
 #define AT_EXE_BASE 32      /* a_ptr holds base address where main program was loaded into memory */
 #define AT_EXE_SIZE 33      /* a_val holds the size of the main program in memory */
-// clang-format on
 
 namespace ELF {
 
