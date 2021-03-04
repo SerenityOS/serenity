@@ -137,20 +137,6 @@ void Inode::will_be_destroyed()
         flush_metadata();
 }
 
-void Inode::inode_contents_changed(off_t offset, ssize_t size, const UserOrKernelBuffer& data)
-{
-    LOCKER(m_lock);
-    if (auto shared_vmobject = this->shared_vmobject())
-        shared_vmobject->inode_contents_changed({}, offset, size, data);
-}
-
-void Inode::inode_size_changed(size_t old_size, size_t new_size)
-{
-    LOCKER(m_lock);
-    if (auto shared_vmobject = this->shared_vmobject())
-        shared_vmobject->inode_size_changed({}, old_size, new_size);
-}
-
 int Inode::set_atime(time_t)
 {
     return -ENOTIMPL;

@@ -39,9 +39,6 @@ public:
     Inode& inode() { return *m_inode; }
     const Inode& inode() const { return *m_inode; }
 
-    void inode_contents_changed(Badge<Inode>, off_t, ssize_t, const UserOrKernelBuffer&);
-    void inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size);
-
     size_t amount_dirty() const;
     size_t amount_clean() const;
 
