@@ -46,7 +46,7 @@ private:
     void push_column(const ModelIndex& parent_index);
     void update_column_sizes();
 
-    int item_height() const { return 16; }
+    int item_height() const { return 18; }
     int icon_size() const { return 16; }
     int icon_spacing() const { return 2; }
     int text_padding() const { return 2; }
