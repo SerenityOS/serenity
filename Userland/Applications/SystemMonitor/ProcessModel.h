@@ -144,6 +144,5 @@ private:
     HashMap<int, NonnullOwnPtr<Thread>> m_threads;
     NonnullOwnPtrVector<CpuInfo> m_cpus;
     Vector<int> m_tids;
-    RefPtr<Gfx::Bitmap> m_generic_process_icon;
     RefPtr<Core::File> m_proc_all;
 };
