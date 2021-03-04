@@ -8,3 +8,14 @@ Text Editor has multiple viewing modes; edit and preview HTML and Markdown in re
 It can help to get a second pair of $ Eyes on a problem. Or fifty: $ Eyes -n 100
 Highlighted text in Terminal can be launched or right-clicked for more context.
 Focus can be cycled between windows by pressing and holding Super+Tab. Shift reverses the order.
+Super+Down is a quick way to minimize a window.
+Bold text in context menus hints at the default behavior of a double-click.
+Tree nodes can be fully expanded by pressing Ctrl+Right. Collapse them again with Ctrl+Left.
+Double clicking a window's title bar maximizes it; double clicking its icon will close it.
+Text files can be dragged directly from Terminal and dropped on Text Editor's title bar.
+Resizable windows can be snapped to all sides of the screen. Drag a window to an edge or press Super+Left, Right or Up while it has focus.
+The Run dialog accepts all Shell command language. Truly the gentleman's terminal.
+Windows can be dragged from any visible point by holding Super+Left-click. Super+Right-click begins resizing them.
+Many Serenity applications already have convenient aliases. $ cat /etc/shellrc to view them.
+Custom keymaps can be created and edited with $ KeyboardMapper
+
