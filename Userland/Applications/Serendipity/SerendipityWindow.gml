@@ -98,6 +98,9 @@
                 text: "Next Tip"
             }
 
+            @GUI::Widget {
+            }
+
         }
     }
 
