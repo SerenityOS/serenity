@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
+#include <AK/BitmapView.h>
 #include <AK/Result.h>
 #include <AK/Types.h>
 #include <LibCrypto/ASN1/ASN1.h>
@@ -176,7 +176,7 @@ private:
     static Result<std::nullptr_t, DecodeError> decode_null(ReadonlyBytes);
     static Result<Vector<int>, DecodeError> decode_object_identifier(ReadonlyBytes);
     static Result<StringView, DecodeError> decode_printable_string(ReadonlyBytes);
-    static Result<Bitmap, DecodeError> decode_bit_string(ReadonlyBytes);
+    static Result<const BitmapView, DecodeError> decode_bit_string(ReadonlyBytes);
 
     Vector<ReadonlyBytes> m_stack;
     Optional<Tag> m_current_tag;
