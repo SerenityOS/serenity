@@ -148,6 +148,8 @@ public:
         return count;
     }
 
+    bool is_null() const { return !m_data; }
+
     u8* data() { return m_data; }
     const u8* data() const { return m_data; }
 
