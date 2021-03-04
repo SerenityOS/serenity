@@ -147,7 +147,7 @@ private:
     Vector<PurgeablePageRanges*> m_purgeable_ranges;
     size_t m_unused_committed_pages { 0 };
 
-    mutable OwnPtr<Bitmap> m_cow_map;
+    Bitmap m_cow_map;
 
     // We share a pool of committed cow-pages with clones
     RefPtr<CommittedCowPages> m_shared_committed_cow_pages;
