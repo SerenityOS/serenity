@@ -32,13 +32,15 @@
 
 extern "C" void interrupt_common_asm_entry();
 
-#define GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(isr_number) \
-    extern "C" void interrupt_##isr_number##_asm_entry();        \
-    asm(".globl interrupt_" #isr_number "_asm_entry\n"           \
-        "interrupt_" #isr_number "_asm_entry:\n"                 \
-        "    pushw $" #isr_number "\n"                           \
-        "    pushw $0\n"                                         \
-        "    jmp interrupt_common_asm_entry\n");
+#if ARCH(I386)
+
+#    define GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(isr_number) \
+        extern "C" void interrupt_##isr_number##_asm_entry();        \
+        asm(".globl interrupt_" #isr_number "_asm_entry\n"           \
+            "interrupt_" #isr_number "_asm_entry:\n"                 \
+            "    pushw $" #isr_number "\n"                           \
+            "    pushw $0\n"                                         \
+            "    jmp interrupt_common_asm_entry\n");
 
 // clang-format off
 asm(
@@ -83,3 +85,19 @@ asm(
     "    iret\n"
 );
 // clang-format on
+
+#elif ARCH(X86_64)
+
+#    define GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(isr_number) \
+        extern "C" void interrupt_##isr_number##_asm_entry();        \
+        asm(".globl interrupt_" #isr_number "_asm_entry\n"           \
+            "interrupt_" #isr_number "_asm_entry:\n"                 \
+            "    cli\n"                                              \
+            "    hlt\n");
+
+asm(
+    ".globl common_trap_exit\n"
+    "common_trap_exit:\n"
+    "    cli;hlt\n");
+
+#endif

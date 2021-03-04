@@ -795,12 +795,12 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     auto setup_stack = [&](RegisterState& state) {
 #if ARCH(I386)
         FlatPtr* stack = &state.userspace_esp;
-#elif ARCH(X86_64)
-        FlatPtr* stack = &state.userspace_esp;
-#endif
         FlatPtr old_esp = *stack;
         FlatPtr ret_eip = state.eip;
         FlatPtr ret_eflags = state.eflags;
+#elif ARCH(X86_64)
+        FlatPtr* stack = &state.userspace_esp;
+#endif
 
 #if SIGNAL_DEBUG
         klog() << "signal: setting up user stack to return to eip: " << String::format("%p", (void*)ret_eip) << " esp: " << String::format("%p", (void*)old_esp);

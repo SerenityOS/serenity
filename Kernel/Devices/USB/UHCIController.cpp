@@ -25,15 +25,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/Debug.h>
-#include <Kernel/Devices/USB/UHCIController.h>
-#include <Kernel/Process.h>
-#include <Kernel/StdLib.h>
-#include <Kernel/Time/TimeManagement.h>
-#include <Kernel/VM/AnonymousVMObject.h>
-#include <Kernel/VM/MemoryManager.h>
+#include <AK/Platform.h>
 
-#define UHCI_ENABLED 1
+// FIXME: This should not be i386-specific.
+#if ARCH(I386)
+
+#    include <Kernel/Debug.h>
+#    include <Kernel/Devices/USB/UHCIController.h>
+#    include <Kernel/Process.h>
+#    include <Kernel/StdLib.h>
+#    include <Kernel/Time/TimeManagement.h>
+#    include <Kernel/VM/AnonymousVMObject.h>
+#    include <Kernel/VM/MemoryManager.h>
+
+#    define UHCI_ENABLED 1
 static constexpr u8 MAXIMUM_NUMBER_OF_TDS = 128; // Upper pool limit. This consumes the second page we have allocated
 static constexpr u8 MAXIMUM_NUMBER_OF_QHS = 64;
 
@@ -88,9 +93,9 @@ UHCIController& UHCIController::the()
 
 UNMAP_AFTER_INIT void UHCIController::detect()
 {
-#if !UHCI_ENABLED
+#    if !UHCI_ENABLED
     return;
-#endif
+#    endif
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
             return;
@@ -195,9 +200,9 @@ UNMAP_AFTER_INIT void UHCIController::create_structures()
         transfer_descriptor->set_isochronous();
         transfer_descriptor->link_queue_head(m_interrupt_transfer_queue->paddr());
 
-#if UHCI_VERBOSE_DEBUG
+#    if UHCI_VERBOSE_DEBUG
         transfer_descriptor->print();
-#endif
+#    endif
     }
 
     m_free_td_pool.resize(MAXIMUM_NUMBER_OF_TDS);
@@ -211,17 +216,17 @@ UNMAP_AFTER_INIT void UHCIController::create_structures()
         // access the raw descriptor (that we later send to the controller)
         m_free_td_pool.at(i) = new (placement_addr) Kernel::USB::TransferDescriptor(paddr);
 
-#if UHCI_VERBOSE_DEBUG
+#    if UHCI_VERBOSE_DEBUG
         auto transfer_descriptor = m_free_td_pool.at(i);
         transfer_descriptor->print();
-#endif
+#    endif
     }
 
-#if UHCI_DEBUG
+#    if UHCI_DEBUG
     klog() << "UHCI: Pool information:";
     klog() << "\tqh_pool: " << PhysicalAddress(m_qh_pool->physical_page(0)->paddr()) << ", length: " << m_qh_pool->range().size();
     klog() << "\ttd_pool: " << PhysicalAddress(m_td_pool->physical_page(0)->paddr()) << ", length: " << m_td_pool->range().size();
-#endif
+#    endif
 }
 
 UNMAP_AFTER_INIT void UHCIController::setup_schedule()
@@ -289,9 +294,9 @@ QueueHead* UHCIController::allocate_queue_head() const
     for (QueueHead* queue_head : m_free_qh_pool) {
         if (!queue_head->in_use()) {
             queue_head->set_in_use(true);
-#if UHCI_DEBUG
+#    if UHCI_DEBUG
             klog() << "UHCI: Allocated a new Queue Head! Located @ " << VirtualAddress(queue_head) << "(" << PhysicalAddress(queue_head->paddr()) << ")";
-#endif
+#    endif
             return queue_head;
         }
     }
@@ -305,9 +310,9 @@ TransferDescriptor* UHCIController::allocate_transfer_descriptor() const
     for (TransferDescriptor* transfer_descriptor : m_free_td_pool) {
         if (!transfer_descriptor->in_use()) {
             transfer_descriptor->set_in_use(true);
-#if UHCI_DEBUG
+#    if UHCI_DEBUG
             klog() << "UHCI: Allocated a new Transfer Descriptor! Located @ " << VirtualAddress(transfer_descriptor) << "(" << PhysicalAddress(transfer_descriptor->paddr()) << ")";
-#endif
+#    endif
             return transfer_descriptor;
         }
     }
@@ -464,3 +469,5 @@ void UHCIController::handle_irq(const RegisterState&)
 }
 
 }
+
+#endif

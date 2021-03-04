@@ -75,7 +75,7 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size, Alloc
 {
     if (commit == AllocationStrategy::Reserve || commit == AllocationStrategy::AllocateNow) {
         // We need to attempt to commit before actually creating the object
-        if (!MM.commit_user_physical_pages(ceil_div(size, PAGE_SIZE)))
+        if (!MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))))
             return {};
     }
     return adopt(*new AnonymousVMObject(size, commit));

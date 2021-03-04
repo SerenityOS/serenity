@@ -281,8 +281,10 @@ void signal_trampoline_dummy()
         "int 0x82\n" // sigreturn syscall
         "asm_signal_trampoline_end:\n"
         ".att_syntax" ::"i"(Syscall::SC_sigreturn));
-#else
-    // FIXME: Implement trampoline for other architectures.
+#elif ARCH(X86_64)
+    asm("asm_signal_trampoline:\n"
+        "cli;hlt\n"
+        "asm_signal_trampoline_end:\n");
 #endif
 }
 
