@@ -26,16 +26,24 @@
 
 #include "SerendipityWidget.h"
 #include <LibGUI/Application.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio recvfd sendfd rpath unix proc accept exec fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio recvfd sendfd rpath unix proc accept exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+
+    auto app_icon = GUI::Icon::default_icon("app-serendipity");
 
     if (unveil("/res", "r") < 0) {
         perror("unveil");
@@ -63,11 +71,12 @@ int main(int argc, char** argv)
     }
 
     auto window = GUI::Window::construct();
-    window->set_minimum_size(480, 250);
+    window->resize(480, 250);
     window->center_on_screen();
 
     window->set_title("Welcome");
-    window->set_resizable(true);
+    window->set_minimum_size(480, 250);
+    window->set_icon(app_icon.bitmap_for_size(16));
     window->set_main_widget<SerendipityWidget>();
 
     window->show();
