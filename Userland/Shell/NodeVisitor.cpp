@@ -139,6 +139,12 @@ void NodeVisitor::visit(const AST::IfCond* node)
         node->false_branch()->visit(*this);
 }
 
+void NodeVisitor::visit(const AST::ImmediateExpression* node)
+{
+    for (auto& node : node->arguments())
+        node.visit(*this);
+}
+
 void NodeVisitor::visit(const AST::Join* node)
 {
     node->left()->visit(*this);
@@ -221,6 +227,10 @@ void NodeVisitor::visit(const AST::StringPartCompose* node)
 }
 
 void NodeVisitor::visit(const AST::SyntaxError*)
+{
+}
+
+void NodeVisitor::visit(const AST::SyntheticNode*)
 {
 }
 

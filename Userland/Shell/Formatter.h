@@ -49,6 +49,12 @@ public:
         m_trivia = m_source.substring_view(m_source.length() - offset, offset);
     }
 
+    explicit Formatter(const AST::Node& node)
+        : m_cursor(-1)
+        , m_root_node(node)
+    {
+    }
+
     String format();
     size_t cursor() const { return m_output_cursor; }
 
@@ -74,6 +80,7 @@ private:
     virtual void visit(const AST::HistoryEvent*) override;
     virtual void visit(const AST::Execute*) override;
     virtual void visit(const AST::IfCond*) override;
+    virtual void visit(const AST::ImmediateExpression*) override;
     virtual void visit(const AST::Join*) override;
     virtual void visit(const AST::MatchExpr*) override;
     virtual void visit(const AST::Or*) override;
@@ -119,6 +126,7 @@ private:
     StringView m_source;
     size_t m_output_cursor { 0 };
     ssize_t m_cursor { -1 };
+    RefPtr<AST::Node> m_root_node;
     AST::Node* m_hit_node { nullptr };
 
     const AST::Node* m_parent_node { nullptr };
