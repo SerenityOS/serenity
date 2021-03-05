@@ -75,30 +75,24 @@ void ClientConnection::handle(const Messages::LanguageServer::FileOpened& messag
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText& message)
 {
-#if CPP_LANGUAGE_SERVER_DEBUG
-    dbgln("InsertText for file: {}", message.file_name());
-    dbgln("Text: {}", message.text());
-    dbgln("[{}:{}]", message.start_line(), message.start_column());
-#endif
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "InsertText for file: {}", message.file_name());
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "Text: {}", message.text());
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "[{}:{}]", message.start_line(), message.start_column());
     m_filedb.on_file_edit_insert_text(message.file_name(), message.text(), message.start_line(), message.start_column());
     m_autocomplete_engine->on_edit(message.file_name());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText& message)
 {
-#if CPP_LANGUAGE_SERVER_DEBUG
-    dbgln("RemoveText for file: {}", message.file_name());
-    dbgln("[{}:{} - {}:{}]", message.start_line(), message.start_column(), message.end_line(), message.end_column());
-#endif
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "RemoveText for file: {}", message.file_name());
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "[{}:{} - {}:{}]", message.start_line(), message.start_column(), message.end_line(), message.end_column());
     m_filedb.on_file_edit_remove_text(message.file_name(), message.start_line(), message.start_column(), message.end_line(), message.end_column());
     m_autocomplete_engine->on_edit(message.file_name());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSuggestions& message)
 {
-#if CPP_LANGUAGE_SERVER_DEBUG
-    dbgln("AutoCompleteSuggestions for: {} {}:{}", message.location().file, message.location().line, message.location().column);
-#endif
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "AutoCompleteSuggestions for: {} {}:{}", message.location().file, message.location().line, message.location().column);
 
     auto document = m_filedb.get(message.location().file);
     if (!document) {
@@ -113,13 +107,16 @@ void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSugges
 
 void ClientConnection::handle(const Messages::LanguageServer::SetFileContent& message)
 {
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "SetFileContent: {}", message.file_name());
     auto document = m_filedb.get(message.file_name());
     if (!document) {
-        dbgln("file {} has not been opened", message.file_name());
-        return;
+        m_filedb.add(message.file_name(), message.content());
+        VERIFY(m_filedb.is_open(message.file_name()));
+    } else {
+        const auto& content = message.content();
+        document->set_text(content.view());
     }
-    auto content = message.content();
-    document->set_text(content.view());
+    VERIFY(m_filedb.is_open(message.file_name()));
     m_autocomplete_engine->on_edit(message.file_name());
 }
 
