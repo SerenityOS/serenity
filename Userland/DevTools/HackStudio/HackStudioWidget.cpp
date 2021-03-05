@@ -236,9 +236,6 @@ void HackStudioWidget::open_file(const String& full_filename)
         new_project_file = it->value;
     } else {
         new_project_file = m_project->get_file(filename);
-        if (!new_project_file) {
-            new_project_file = ProjectFile::construct_with_name(filename);
-        }
         m_open_files.set(filename, *new_project_file);
         m_open_files_vector.append(filename);
         m_open_files_view->model()->update();
