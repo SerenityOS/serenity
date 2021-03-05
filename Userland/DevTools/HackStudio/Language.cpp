@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,34 +24,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CodeDocument.h"
+#include "Language.h"
 
 namespace HackStudio {
 
-NonnullRefPtr<CodeDocument> CodeDocument::create(const String& file_path, Client* client)
+Language language_from_file_extension(const String& extension)
 {
-    return adopt(*new CodeDocument(file_path, client));
+    VERIFY(!extension.starts_with("."));
+    if (extension == "cpp" || extension == "h")
+        return Language::Cpp;
+    else if (extension == "js")
+        return Language::JavaScript;
+    else if (extension == "gml")
+        return Language::GML;
+    else if (extension == "ini")
+        return Language::Ini;
+    else if (extension == "sh")
+        return Language::Shell;
+
+    return Language::Unknown;
 }
 
-NonnullRefPtr<CodeDocument> CodeDocument::create(Client* client)
+Language language_from_name(const String& name)
 {
-    return adopt(*new CodeDocument(client));
-}
+    if (name == "Cpp")
+        return Language::Cpp;
+    if (name == "Javascript")
+        return Language::JavaScript;
+    if (name == "Shell")
+        return Language::Shell;
 
-CodeDocument::CodeDocument(const String& file_path, Client* client)
-    : TextDocument(client)
-    , m_file_path(file_path)
-{
-    m_language = language_from_file_extension(LexicalPath { file_path }.extension());
-}
-
-CodeDocument::CodeDocument(Client* client)
-    : TextDocument(client)
-{
-}
-
-CodeDocument::~CodeDocument()
-{
+    return Language::Unknown;
 }
 
 }
