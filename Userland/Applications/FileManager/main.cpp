@@ -32,6 +32,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/FileManager/FileManagerWindowGML.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
@@ -99,6 +100,15 @@ int main(int argc, char** argv)
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("FileManager");
 
+    Core::ArgsParser args_parser;
+    bool is_desktop_mode { false }, is_selection_mode { false }, ignore_path_resolution { false };
+    String initial_location;
+    args_parser.add_option(is_desktop_mode, "Run in desktop mode", "desktop", 'd');
+    args_parser.add_option(is_selection_mode, "Show entry in parent folder", "select", 's');
+    args_parser.add_option(ignore_path_resolution, "Use raw path, do not resolve real path", "raw", 'r');
+    args_parser.add_positional_argument(initial_location, "Path to open", "path", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
     auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio thread recvfd sendfd accept cpath rpath wpath fattr proc exec unix", nullptr) < 0) {
@@ -106,17 +116,20 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (app->args().contains_slow("--desktop") || app->args().contains_slow("-d"))
+    if (is_desktop_mode)
         return run_in_desktop_mode(move(config));
 
     // our initial location is defined as, in order of precedence:
-    // 1. the first command-line argument (e.g. FileManager /bin)
+    // 1. the command-line path argument (e.g. FileManager /bin)
     // 2. the user's home directory
     // 3. the root directory
-    String initial_location;
 
-    if (argc >= 2) {
-        initial_location = Core::File::real_path_for(argv[1]);
+    if (!initial_location.is_empty()) {
+        if (!ignore_path_resolution)
+            initial_location = Core::File::real_path_for(initial_location);
+
+        if (!Core::File::is_directory(initial_location))
+            is_selection_mode = true;
     }
 
     if (initial_location.is_empty())
@@ -125,10 +138,12 @@ int main(int argc, char** argv)
     if (initial_location.is_empty())
         initial_location = "/";
 
-    // the second command-line argument is the name of the entry we wan't the focus to be on
     String focused_entry;
-    if (argc >= 3)
-        focused_entry = argv[2];
+    if (is_selection_mode) {
+        LexicalPath path(initial_location);
+        initial_location = path.dirname();
+        focused_entry = path.basename();
+    }
 
     return run_in_windowed_mode(move(config), initial_location, focused_entry);
 }
