@@ -316,8 +316,8 @@ void Editor::clear_line()
         fputc(0x8, stderr);
     fputs("\033[K", stderr);
     fflush(stderr);
-    m_buffer.clear();
     m_chars_touched_in_the_middle = buffer().size();
+    m_buffer.clear();
     m_cursor = 0;
     m_inline_search_cursor = m_cursor;
 }
