@@ -48,12 +48,14 @@ public:
     String name() const { return LexicalPath(m_root_path).basename(); }
     String root_path() const { return m_root_path; }
 
-    RefPtr<ProjectFile> get_file(const String& path) const;
+    NonnullRefPtr<ProjectFile> get_file(const String& path) const;
 
     void for_each_text_file(Function<void(const ProjectFile&)>) const;
 
 private:
     explicit Project(const String& root_path);
+
+    String to_absolute_path(const String&) const;
 
     RefPtr<GUI::FileSystemModel> m_model;
     mutable NonnullRefPtrVector<ProjectFile> m_files;
