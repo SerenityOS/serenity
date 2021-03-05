@@ -79,6 +79,7 @@ public:
 
     void add_positional_argument(Arg&&);
     void add_positional_argument(const char*& value, const char* help_string, const char* name, Required required = Required::Yes);
+    void add_positional_argument(String& value, const char* help_string, const char* name, Required required = Required::Yes);
     void add_positional_argument(int& value, const char* help_string, const char* name, Required required = Required::Yes);
     void add_positional_argument(double& value, const char* help_string, const char* name, Required required = Required::Yes);
     void add_positional_argument(Vector<const char*>& value, const char* help_string, const char* name, Required required = Required::Yes);
