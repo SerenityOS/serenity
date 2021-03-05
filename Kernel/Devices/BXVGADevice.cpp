@@ -14,6 +14,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/TypedMapping.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
@@ -53,9 +54,13 @@ BXVGADevice& BXVGADevice::the()
 
 UNMAP_AFTER_INIT BXVGADevice::BXVGADevice()
     : BlockDevice(29, 0)
-
 {
     m_framebuffer_address = PhysicalAddress(find_framebuffer_address());
+    m_mmio_registers = find_mmio_region();
+    m_vga_compatible = is_vga_compatible();
+
+    set_register(VBE_DISPI_INDEX_ID, 0xB0C0);
+    dmesgln("BXVGA: ID {}", get_register(VBE_DISPI_INDEX_ID));
     set_safe_resolution();
 }
 
@@ -69,14 +74,23 @@ void BXVGADevice::set_safe_resolution()
 
 void BXVGADevice::set_register(u16 index, u16 data)
 {
-    IO::out16(VBE_DISPI_IOPORT_INDEX, index);
-    IO::out16(VBE_DISPI_IOPORT_DATA, data);
+    if (m_vga_compatible) {
+        IO::out16(VBE_DISPI_IOPORT_INDEX, index);
+        IO::out16(VBE_DISPI_IOPORT_DATA, data);
+        return;
+    }
+    auto reg = map_typed_writable<u16>(m_mmio_registers.offset(index * 2));
+    *(reg.ptr()) = data;
 }
 
 u16 BXVGADevice::get_register(u16 index)
 {
-    IO::out16(VBE_DISPI_IOPORT_INDEX, index);
-    return IO::in16(VBE_DISPI_IOPORT_DATA);
+    if (m_vga_compatible) {
+        IO::out16(VBE_DISPI_IOPORT_INDEX, index);
+        return IO::in16(VBE_DISPI_IOPORT_DATA);
+    }
+    auto reg = map_typed_writable<u16>(m_mmio_registers.offset(index * 2));
+    return *(reg.ptr());
 }
 
 void BXVGADevice::revert_resolution()
@@ -151,6 +165,36 @@ UNMAP_AFTER_INIT u32 BXVGADevice::find_framebuffer_address()
         }
     });
     return framebuffer_address;
+}
+
+UNMAP_AFTER_INIT PhysicalAddress BXVGADevice::find_mmio_region()
+{
+    // NOTE: The QEMU card has the same PCI ID as the Bochs one.
+    static const PCI::ID bochs_vga_id = { 0x1234, 0x1111 };
+    static const PCI::ID virtualbox_vga_id = { 0x80ee, 0xbeef };
+    u32 mmio_region = 0;
+    PCI::enumerate([&mmio_region](const PCI::Address& address, PCI::ID id) {
+        if (id == bochs_vga_id || id == virtualbox_vga_id) {
+            mmio_region = PCI::get_BAR1(address) & 0xfffffff0;
+            dmesgln("BXVGA: mmio region @ {}", PhysicalAddress(mmio_region));
+        }
+    });
+    return PhysicalAddress(mmio_region);
+}
+
+UNMAP_AFTER_INIT bool BXVGADevice::is_vga_compatible()
+{
+    // NOTE: The QEMU card has the same PCI ID as the Bochs one.
+    static const PCI::ID bochs_vga_id = { 0x1234, 0x1111 };
+    static const PCI::ID virtualbox_vga_id = { 0x80ee, 0xbeef };
+    bool vga_compatible = true;
+    PCI::enumerate([&vga_compatible](const PCI::Address& address, PCI::ID id) {
+        if (id == bochs_vga_id || id == virtualbox_vga_id) {
+            if (PCI::get_subclass(address) != 0)
+                vga_compatible = false;
+        }
+    });
+    return vga_compatible;
 }
 
 KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
