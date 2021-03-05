@@ -21,6 +21,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`editline`](editline/)        | Minix Editline                                | 1.17.1            | https://troglobit.com/projects/editline/              |
 | [`figlet`](figlet/)            | FIGlet                                        | 2.2.5             | http://www.figlet.org/                                |
 | [`flex`](flex/)                | flex                                          | 2.6.4             | https://github.com/westes/flex                        |
+| [`freetype`](freetype/)        | FreeType                                      | 2.10.4            | https://www.freetype.org/                             |
 | [`frotz`](frotz/)              | Frotz                                         |                   | https://gitlab.com/DavidGriffith/frotz                |
 | [`gcc`](gcc/)                  | GNU Compiler Collection                       | 10.2.0            | https://gcc.gnu.org/                                  |
 | [`git`](git/)                  | Git                                           | 2.26.0            | https://git-scm.com/                                  |
