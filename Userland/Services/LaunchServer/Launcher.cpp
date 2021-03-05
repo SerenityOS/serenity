@@ -299,9 +299,14 @@ bool Launcher::open_file_url(const URL& url)
 
     // TODO: Make directory opening configurable
     if (S_ISDIR(st.st_mode)) {
-        Vector<String> fm_arguments { url.path() };
-        if (!url.fragment().is_empty())
-            fm_arguments.append(url.fragment());
+        Vector<String> fm_arguments;
+        if (url.fragment().is_empty()) {
+            fm_arguments.append(url.path());
+        } else {
+            fm_arguments.append(String::formatted("{}/{}", url.path(), url.fragment()));
+            fm_arguments.append("-s");
+            fm_arguments.append("-r");
+        }
         return spawn("/bin/FileManager", fm_arguments);
     }
 
