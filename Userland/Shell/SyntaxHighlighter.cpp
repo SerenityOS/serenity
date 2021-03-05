@@ -307,6 +307,31 @@ private:
             else_span.attributes.color = m_palette.syntax_keyword();
         }
     }
+
+    virtual void visit(const AST::ImmediateExpression* node) override
+    {
+        TemporaryChange first { m_is_first_in_command, false };
+        NodeVisitor::visit(node);
+
+        // ${
+        auto& start_span = span_for_node(node);
+        start_span.attributes.color = m_palette.syntax_punctuation();
+        start_span.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column + 1 });
+        start_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::OpenParen);
+
+        // Function name
+        auto& name_span = span_for_node(node);
+        name_span.attributes.color = m_palette.syntax_preprocessor_statement(); // Closest thing we have to this
+        set_offset_range_start(name_span.range, node->function_position().start_line);
+        set_offset_range_end(name_span.range, node->function_position().end_line);
+
+        // }
+        auto& end_span = span_for_node(node);
+        end_span.attributes.color = m_palette.syntax_punctuation();
+        set_offset_range_start(end_span.range, node->position().end_line, 1);
+        end_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::CloseParen);
+    }
+
     virtual void visit(const AST::Join* node) override
     {
         NodeVisitor::visit(node);

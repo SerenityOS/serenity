@@ -1706,6 +1706,98 @@ IfCond::~IfCond()
 {
 }
 
+void ImmediateExpression::dump(int level) const
+{
+    Node::dump(level);
+    print_indented("(function)", level + 1);
+    print_indented(m_function.name, level + 2);
+    print_indented("(arguments)", level + 1);
+    for (auto& argument : arguments())
+        argument.dump(level + 2);
+}
+
+RefPtr<Value> ImmediateExpression::run(RefPtr<Shell> shell)
+{
+    auto node = shell->run_immediate_function(m_function.name, *this, arguments());
+    if (node)
+        return node->run(shell);
+
+    return create<ListValue>({});
+}
+
+void ImmediateExpression::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
+{
+    // '${' - FIXME: This could also be '$\\\n{'
+    editor.stylize({ m_position.start_offset, m_position.start_offset + 2 }, { Line::Style::Foreground(Line::Style::XtermColor::Green) });
+
+    // Function name
+    Line::Style function_style { Line::Style::Foreground(Line::Style::XtermColor::Red) };
+    if (shell.has_immediate_function(function_name()))
+        function_style = { Line::Style::Foreground(Line::Style::XtermColor::Green) };
+    editor.stylize({ m_function.position.start_offset, m_function.position.end_offset }, move(function_style));
+
+    // Arguments
+    for (auto& argument : m_arguments) {
+        metadata.is_first_in_list = false;
+        argument.highlight_in_editor(editor, shell, metadata);
+    }
+
+    // Closing brace
+    if (m_closing_brace_position.has_value())
+        editor.stylize({ m_closing_brace_position->start_offset, m_closing_brace_position->end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Green) });
+}
+
+Vector<Line::CompletionSuggestion> ImmediateExpression::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+{
+    auto matching_node = hit_test_result.matching_node;
+    if (!matching_node || matching_node != this)
+        return {};
+
+    auto corrected_offset = offset - m_function.position.start_offset;
+
+    if (corrected_offset > m_function.name.length())
+        return {};
+
+    return shell.complete_immediate_function_name(m_function.name, corrected_offset);
+}
+
+HitTestResult ImmediateExpression::hit_test_position(size_t offset) const
+{
+    if (!position().contains(offset))
+        return {};
+
+    if (m_function.position.contains(offset))
+        return { this, this, this };
+
+    for (auto& argument : m_arguments) {
+        if (auto result = argument.hit_test_position(offset); result.matching_node)
+            return result;
+    }
+
+    return {};
+}
+
+ImmediateExpression::ImmediateExpression(Position position, NameWithPosition function, NonnullRefPtrVector<AST::Node> arguments, Optional<Position> closing_brace_position)
+    : Node(move(position))
+    , m_arguments(move(arguments))
+    , m_function(move(function))
+    , m_closing_brace_position(move(closing_brace_position))
+{
+    if (m_is_syntax_error)
+        return;
+
+    for (auto& argument : m_arguments) {
+        if (argument.is_syntax_error()) {
+            set_is_syntax_error(argument.syntax_error_node());
+            return;
+        }
+    }
+}
+
+ImmediateExpression::~ImmediateExpression()
+{
+}
+
 void Join::dump(int level) const
 {
     Node::dump(level);
@@ -2754,6 +2846,26 @@ SyntaxError::~SyntaxError()
 {
 }
 
+void SyntheticNode::dump(int level) const
+{
+    Node::dump(level);
+}
+
+RefPtr<Value> SyntheticNode::run(RefPtr<Shell>)
+{
+    return m_value;
+}
+
+void SyntheticNode::highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata)
+{
+}
+
+SyntheticNode::SyntheticNode(Position position, NonnullRefPtr<Value> value)
+    : Node(move(position))
+    , m_value(move(value))
+{
+}
+
 void Tilde::dump(int level) const
 {
     Node::dump(level);
@@ -2946,6 +3058,8 @@ Vector<AST::Command> Value::resolve_as_commands(RefPtr<Shell> shell)
 
 ListValue::ListValue(Vector<String> values)
 {
+    if (values.is_empty())
+        return;
     m_contained_values.ensure_capacity(values.size());
     for (auto& str : values)
         m_contained_values.append(adopt(*new StringValue(move(str))));
@@ -3022,6 +3136,14 @@ Vector<String> StringValue::resolve_as_list(RefPtr<Shell>)
     }
 
     return { m_string };
+}
+
+NonnullRefPtr<Value> StringValue::resolve_without_cast(RefPtr<Shell> shell)
+{
+    if (is_list())
+        return create<AST::ListValue>(resolve_as_list(shell));
+
+    return *this;
 }
 
 GlobValue::~GlobValue()

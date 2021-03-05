@@ -71,6 +71,15 @@
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
     __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")
 
+#define ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS()           \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(concat_lists)  \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(length)        \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(length_across) \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(remove_suffix) \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(remove_prefix) \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(regex_replace) \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(split)
+
 namespace Shell {
 
 class Shell;
@@ -100,6 +109,8 @@ public:
     bool run_file(const String&, bool explicitly_invoked = true);
     bool run_builtin(const AST::Command&, const NonnullRefPtrVector<AST::Rewiring>&, int& retval);
     bool has_builtin(const StringView&) const;
+    RefPtr<AST::Node> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&);
+    static bool has_immediate_function(const StringView&);
     void block_on_job(RefPtr<Job>);
     void block_on_pipeline(RefPtr<AST::Pipeline>);
     String prompt() const;
@@ -173,6 +184,7 @@ public:
     Vector<Line::CompletionSuggestion> complete_variable(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_user(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_option(const String&, const String&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_immediate_function_name(const String&, size_t offset);
 
     void restore_ios();
 
@@ -284,6 +296,15 @@ private:
     [[noreturn]] void execute_process(Vector<const char*>&& argv);
 
     virtual void custom_event(Core::CustomEvent&) override;
+
+#define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(name) \
+    RefPtr<AST::Node> immediate_##name(AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&);
+
+    ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS();
+
+#undef __ENUMERATE_SHELL_IMMEDIATE_FUNCTION
+
+    RefPtr<AST::Node> immediate_length_impl(AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&, bool across);
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
     int builtin_##builtin(int argc, const char** argv);

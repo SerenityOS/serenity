@@ -33,7 +33,7 @@ namespace Shell {
 
 String Formatter::format()
 {
-    auto node = Parser(m_source).parse();
+    auto node = m_root_node ? m_root_node : Parser(m_source).parse();
     if (m_cursor >= 0)
         m_output_cursor = m_cursor;
 
@@ -469,6 +469,27 @@ void Formatter::visit(const AST::IfCond* node)
     } else if (node->else_position().has_value()) {
         current_builder().append(" else ");
     }
+    visited(node);
+}
+
+void Formatter::visit(const AST::ImmediateExpression* node)
+{
+    will_visit(node);
+    test_and_update_output_cursor(node);
+
+    current_builder().append("${");
+    TemporaryChange<const AST::Node*> parent { m_parent_node, node };
+
+    current_builder().append(node->function_name());
+
+    for (auto& node : node->arguments()) {
+        current_builder().append(' ');
+        node.visit(*this);
+    }
+
+    if (node->has_closing_brace())
+        current_builder().append('}');
+
     visited(node);
 }
 

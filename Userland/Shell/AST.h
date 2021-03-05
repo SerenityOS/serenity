@@ -73,6 +73,11 @@ struct Position {
     bool contains(size_t offset) const { return start_offset <= offset && offset <= end_offset; }
 };
 
+struct NameWithPosition {
+    String name;
+    Position position;
+};
+
 struct FdRedirection;
 struct Rewiring : public RefCounted<Rewiring> {
     int old_fd { -1 };
@@ -330,6 +335,7 @@ public:
     virtual ~StringValue();
     virtual bool is_string() const override { return m_split.is_null(); }
     virtual bool is_list() const override { return !m_split.is_null(); }
+    NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
     StringValue(String string, String split_by = {}, bool keep_empty = false)
         : m_string(move(string))
         , m_split(move(split_by))
@@ -472,6 +478,7 @@ public:
         Glob,
         HistoryEvent,
         IfCond,
+        ImmediateExpression,
         Join,
         Juxtaposition,
         ListConcatenate,
@@ -488,6 +495,7 @@ public:
         StringPartCompose,
         Subshell,
         SyntaxError,
+        SyntheticValue,
         Tilde,
         VariableDeclarations,
         WriteAppendRedirection,
@@ -813,10 +821,6 @@ private:
 
 class FunctionDeclaration final : public Node {
 public:
-    struct NameWithPosition {
-        String name;
-        Position position;
-    };
     FunctionDeclaration(Position, NameWithPosition name, Vector<NameWithPosition> argument_names, RefPtr<AST::Node> body);
     virtual ~FunctionDeclaration();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
@@ -992,6 +996,31 @@ private:
     RefPtr<AST::Node> m_false_branch;
 
     Optional<Position> m_else_position;
+};
+
+class ImmediateExpression final : public Node {
+public:
+    ImmediateExpression(Position, NameWithPosition function, NonnullRefPtrVector<AST::Node> arguments, Optional<Position> closing_brace_position);
+    virtual ~ImmediateExpression();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtrVector<Node>& arguments() const { return m_arguments; }
+    const auto& function() const { return m_function; }
+    const String& function_name() const { return m_function.name; }
+    const Position& function_position() const { return m_function.position; }
+    bool has_closing_brace() const { return m_closing_brace_position.has_value(); }
+
+private:
+    NODE(ImmediateExpression);
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+    Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
+
+    NonnullRefPtrVector<AST::Node> m_arguments;
+    NameWithPosition m_function;
+    Optional<Position> m_closing_brace_position;
 };
 
 class Join final : public Node {
@@ -1299,6 +1328,23 @@ private:
 
     String m_syntax_error_text;
     bool m_is_continuable { false };
+};
+
+class SyntheticNode final : public Node {
+public:
+    SyntheticNode(Position, NonnullRefPtr<Value>);
+    virtual ~SyntheticNode() = default;
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const Value& value() const { return m_value; }
+
+private:
+    NODE(SyntheticValue);
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+
+    NonnullRefPtr<Value> m_value;
 };
 
 class Tilde final : public Node {
