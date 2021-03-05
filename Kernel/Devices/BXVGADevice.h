@@ -56,6 +56,9 @@ private:
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override { return -EINVAL; }
     virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override { return -EINVAL; }
 
+    PhysicalAddress find_mmio_region();
+    bool is_vga_compatible();
+
     void set_safe_resolution();
 
     void set_register(u16 index, u16 value);
@@ -70,6 +73,8 @@ private:
     void set_y_offset(size_t);
 
     PhysicalAddress m_framebuffer_address;
+    PhysicalAddress m_mmio_registers;
+    bool m_vga_compatible { true };
     size_t m_framebuffer_pitch { 0 };
     size_t m_framebuffer_width { 0 };
     size_t m_framebuffer_height { 0 };
