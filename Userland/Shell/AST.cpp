@@ -1059,7 +1059,10 @@ FunctionDeclaration::~FunctionDeclaration()
 void ForLoop::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::format("%s in", m_variable_name.characters()), level + 1);
+    if (m_variable.has_value())
+        print_indented(String::formatted("iterating with {} in", m_variable->name), level + 1);
+    if (m_index_variable.has_value())
+        print_indented(String::formatted("with index name {} in", m_index_variable->name), level + 1);
     if (m_iterated_expression)
         m_iterated_expression->dump(level + 2);
     else
@@ -1110,6 +1113,9 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
     };
 
     if (m_iterated_expression) {
+        auto variable_name = m_variable.has_value() ? m_variable->name : "it";
+        Optional<StringView> index_name = m_index_variable.has_value() ? Optional<StringView>(m_index_variable->name) : Optional<StringView>();
+        size_t i = 0;
         m_iterated_expression->for_each_entry(shell, [&](auto value) {
             if (consecutive_interruptions == 2)
                 return IterationDecision::Break;
@@ -1118,10 +1124,16 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
 
             {
                 auto frame = shell->push_frame(String::formatted("for ({})", this));
-                shell->set_local_variable(m_variable_name, value, true);
+                shell->set_local_variable(variable_name, value, true);
+
+                if (index_name.has_value())
+                    shell->set_local_variable(index_name.value(), create<AST::StringValue>(String::number(i)), true);
+
+                ++i;
 
                 block_value = m_block->run(shell);
             }
+
             return run(block_value);
         });
     } else {
@@ -1146,9 +1158,18 @@ void ForLoop::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightM
         if (m_in_kw_position.has_value())
             editor.stylize({ m_in_kw_position.value().start_offset, m_in_kw_position.value().end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
 
+        if (m_index_kw_position.has_value())
+            editor.stylize({ m_index_kw_position.value().start_offset, m_index_kw_position.value().end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+
         metadata.is_first_in_list = false;
         m_iterated_expression->highlight_in_editor(editor, shell, metadata);
     }
+
+    if (m_index_variable.has_value())
+        editor.stylize({ m_index_variable->position.start_offset, m_index_variable->position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Blue), Line::Style::Italic });
+
+    if (m_variable.has_value())
+        editor.stylize({ m_variable->position.start_offset, m_variable->position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Blue), Line::Style::Italic });
 
     metadata.is_first_in_list = true;
     if (m_block)
@@ -1171,12 +1192,14 @@ HitTestResult ForLoop::hit_test_position(size_t offset) const
     return m_block->hit_test_position(offset);
 }
 
-ForLoop::ForLoop(Position position, String variable_name, RefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<Position> in_kw_position)
+ForLoop::ForLoop(Position position, Optional<NameWithPosition> variable, Optional<NameWithPosition> index_variable, RefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<Position> in_kw_position, Optional<Position> index_kw_position)
     : Node(move(position))
-    , m_variable_name(move(variable_name))
+    , m_variable(move(variable))
+    , m_index_variable(move(index_variable))
     , m_iterated_expression(move(iterated_expr))
     , m_block(move(block))
     , m_in_kw_position(move(in_kw_position))
+    , m_index_kw_position(move(index_kw_position))
 {
     if (m_iterated_expression && m_iterated_expression->is_syntax_error())
         set_is_syntax_error(m_iterated_expression->syntax_error_node());
