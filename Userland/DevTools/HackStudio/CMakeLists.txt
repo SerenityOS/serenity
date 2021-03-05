@@ -27,6 +27,7 @@ set(SOURCES
     Git/GitRepo.cpp
     Git/GitWidget.cpp
     HackStudioWidget.cpp
+    Language.cpp
     LanguageClient.cpp
     Locator.cpp
     Project.cpp
