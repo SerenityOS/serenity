@@ -143,4 +143,6 @@ double nexttoward(double, long double) NOEXCEPT;
 float nexttowardf(float, long double) NOEXCEPT;
 long double nexttowardl(long double, long double) NOEXCEPT;
 
+double copysign(double x, double y);
+
 __END_DECLS
