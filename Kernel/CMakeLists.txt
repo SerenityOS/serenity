@@ -27,12 +27,10 @@ set(KERNEL_SOURCES
     CoreDump.cpp
     DMI.cpp
     Devices/AsyncDeviceRequest.cpp
-    Devices/BXVGADevice.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
     Devices/Device.cpp
     Devices/FullDevice.cpp
-    Devices/MBVGADevice.cpp
     Devices/MemoryDevice.cpp
     Devices/NullDevice.cpp
     Devices/PCSpeaker.cpp
@@ -52,6 +50,12 @@ set(KERNEL_SOURCES
     Devices/HID/PS2KeyboardDevice.cpp
     Devices/HID/PS2MouseDevice.cpp
     Devices/HID/VMWareMouseDevice.cpp
+    Graphics/BochsFramebufferDevice.cpp
+    Graphics/BochsGraphicsAdapter.cpp
+    Graphics/FramebufferDevice.cpp
+    Graphics/GraphicsManagement.cpp
+    Graphics/RawFramebufferDevice.cpp
+    Graphics/VGACompatibleAdapter.cpp
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/DiskPartitionMetadata.cpp
     Storage/Partition/EBRPartitionTable.cpp
