@@ -55,6 +55,10 @@
 struct Empty {
 };
 
+enum class Enummer : u8 {
+    Dummmy,
+};
+
 TEST_CASE(FundamentalTypeClassification)
 {
     EXPECT_TRAIT_TRUE(IsVoid, void);
@@ -89,6 +93,12 @@ TEST_CASE(FundamentalTypeClassification)
     EXPECT_TRAIT_FALSE(IsUnsigned, short);
     EXPECT_TRAIT_FALSE(IsUnsigned, char);
     EXPECT_TRAIT_FALSE(IsUnsigned, long);
+
+    EXPECT_TRAIT_TRUE(IsEnum, Enummer);
+    EXPECT_TRAIT_FALSE(IsEnum, Empty);
+    EXPECT_TRAIT_FALSE(IsEnum, int);
+    EXPECT_TRAIT_FALSE(IsEnum, void);
+    EXPECT_TRAIT_FALSE(IsEnum, std::nullptr_t);
 }
 
 TEST_CASE(AddConst)
@@ -99,6 +109,13 @@ TEST_CASE(AddConst)
     // clang-format on
 
     EXPECT_EQ_WITH_TRAIT(AddConst, NoConstList, YesConstList);
+}
+
+TEST_CASE(UnderlyingType)
+{
+    using Type = UnderlyingType<Enummer>::Type;
+
+    STATIC_EXPECT_EQ(Type, u8);
 }
 
 TEST_MAIN(TypeTraits)
