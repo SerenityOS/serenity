@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,56 +29,41 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 
-class BXVGADevice final : public BlockDevice {
+class FramebufferDevice : public BlockDevice {
     AK_MAKE_ETERNAL
 public:
-    static void initialize();
-    static BXVGADevice& the();
-
-    BXVGADevice();
-
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, size_t offset, int prot, bool shared) override;
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, size_t offset, int prot, bool shared) override final;
 
     // ^Device
     virtual mode_t required_mode() const override { return 0660; }
     virtual String device_name() const override;
 
-private:
-    virtual const char* class_name() const override { return "BXVGA"; }
-    virtual bool can_read(const FileDescription&, size_t) const override { return true; }
-    virtual bool can_write(const FileDescription&, size_t) const override { return true; }
-    virtual void start_request(AsyncBlockDeviceRequest& request) override { request.complete(AsyncDeviceRequest::Failure); }
-    virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override { return -EINVAL; }
-    virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override { return -EINVAL; }
+    virtual size_t framebuffer_size_in_bytes() const { return m_framebuffer_pitch * m_framebuffer_height; }
 
-    PhysicalAddress find_mmio_region();
-    bool is_vga_compatible();
+    virtual ~FramebufferDevice() {};
 
-    void set_safe_resolution();
+protected:
+    virtual bool set_resolution(size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch);
 
-    void set_register(u16 index, u16 value);
-    u16 get_register(u16 index);
-    bool validate_setup_resolution(size_t width, size_t height);
-    u32 find_framebuffer_address();
-    void revert_resolution();
-    bool test_resolution(size_t width, size_t height);
-    size_t framebuffer_size_in_bytes() const { return m_framebuffer_pitch * m_framebuffer_height * 2; }
-    bool set_resolution(size_t width, size_t height);
-    void set_resolution_registers(size_t width, size_t height);
-    void set_y_offset(size_t);
+    FramebufferDevice(PhysicalAddress, size_t, size_t, size_t);
 
+    virtual bool can_read(const FileDescription&, size_t) const override final { return true; }
+    virtual bool can_write(const FileDescription&, size_t) const override final { return true; }
+    virtual void start_request(AsyncBlockDeviceRequest& request) override final { request.complete(AsyncDeviceRequest::Failure); }
+    virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override final { return -EINVAL; }
+    virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override final { return -EINVAL; }
+
+protected:
     PhysicalAddress m_framebuffer_address;
-    PhysicalAddress m_mmio_registers;
-    bool m_vga_compatible { true };
     size_t m_framebuffer_pitch { 0 };
     size_t m_framebuffer_width { 0 };
     size_t m_framebuffer_height { 0 };
-    size_t m_y_offset { 0 };
 };
 
 }
