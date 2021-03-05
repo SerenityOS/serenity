@@ -69,7 +69,9 @@ $SERENITY_EXTRA_QEMU_ARGS
 -machine q35
 -d guest_errors
 -smp 2
--device VGA,vgamem_mb=64
+-device bochs-display
+-vga none
+-device piix3-ide
 -drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
 -device ahci,id=ahci
 -device ide-hd,bus=ahci.0,drive=disk,unit=0
