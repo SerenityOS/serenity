@@ -36,18 +36,37 @@ RefPtr<const GUI::TextDocument> FileDB::get(const String& file_name) const
     auto absolute_path = to_absolute_path(file_name);
     auto document_optional = m_open_files.get(absolute_path);
     if (!document_optional.has_value())
-        return create_from_filesystem(absolute_path);
+        return nullptr;
 
     return document_optional.value();
 }
 
 RefPtr<GUI::TextDocument> FileDB::get(const String& file_name)
 {
-    auto absolute_path = to_absolute_path(file_name);
-    return adopt(*const_cast<GUI::TextDocument*>(reinterpret_cast<const FileDB*>(this)->get(absolute_path).leak_ref()));
+    auto document = reinterpret_cast<const FileDB*>(this)->get(file_name);
+    if (document.is_null())
+        return nullptr;
+    return adopt(*const_cast<GUI::TextDocument*>(document.leak_ref()));
 }
 
-bool FileDB::is_open(String file_name) const
+RefPtr<const GUI::TextDocument> FileDB::get_or_create_from_filesystem(const String& file_name) const
+{
+    auto absolute_path = to_absolute_path(file_name);
+    auto document = get(absolute_path);
+    if (document)
+        return document;
+    return create_from_filesystem(absolute_path);
+}
+
+RefPtr<GUI::TextDocument> FileDB::get_or_create_from_filesystem(const String& file_name)
+{
+    auto document = reinterpret_cast<const FileDB*>(this)->get_or_create_from_filesystem(file_name);
+    if (document.is_null())
+        return nullptr;
+    return adopt(*const_cast<GUI::TextDocument*>(document.leak_ref()));
+}
+
+bool FileDB::is_open(const String& file_name) const
 {
     return m_open_files.contains(to_absolute_path(file_name));
 }
@@ -120,11 +139,9 @@ RefPtr<GUI::TextDocument> FileDB::create_from_file(Core::File& file) const
 
 void FileDB::on_file_edit_insert_text(const String& file_name, const String& inserted_text, size_t start_line, size_t start_column)
 {
+    VERIFY(is_open(file_name));
     auto document = get(file_name);
-    if (!document) {
-        dbgln("file {} has not been opened", file_name);
-        return;
-    }
+    VERIFY(document);
     GUI::TextPosition start_position { start_line, start_column };
     document->insert_at(start_position, inserted_text, &s_default_document_client);
 
@@ -133,11 +150,11 @@ void FileDB::on_file_edit_insert_text(const String& file_name, const String& ins
 
 void FileDB::on_file_edit_remove_text(const String& file_name, size_t start_line, size_t start_column, size_t end_line, size_t end_column)
 {
+    // TODO: If file is not open - need to get its contents
+    // Otherwise- somehow verify that respawned language server is synced with all file contents
+    VERIFY(is_open(file_name));
     auto document = get(file_name);
-    if (!document) {
-        dbgln("file {} has not been opened", file_name);
-        return;
-    }
+    VERIFY(document);
     GUI::TextPosition start_position { start_line, start_column };
     GUI::TextRange range {
         GUI::TextPosition { start_line, start_column },
@@ -146,6 +163,26 @@ void FileDB::on_file_edit_remove_text(const String& file_name, size_t start_line
 
     document->remove(range);
     dbgln_if(FILE_CONTENT_DEBUG, "{}", document->text());
+}
+
+RefPtr<GUI::TextDocument> FileDB::create_with_content(const String& content)
+{
+    StringView content_view(content);
+    auto document = GUI::TextDocument::create(&s_default_document_client);
+    document->set_text(content_view);
+    return document;
+}
+
+bool FileDB::add(const String& file_name, const String& content)
+{
+    auto document = create_with_content(content);
+    if (!document) {
+        VERIFY_NOT_REACHED();
+        return false;
+    }
+
+    m_open_files.set(to_absolute_path(file_name), document.release_nonnull());
+    return true;
 }
 
 }
