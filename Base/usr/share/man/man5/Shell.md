@@ -211,9 +211,12 @@ if A {
 ##### For Loops
 For Loops evaluate a sequence of commands once per element in a given list.
 The shell has two forms of _for loops_, one with an explicitly named iteration variable, and one with an implicitly named one.
-The general syntax follows the form `for name in expr { sequence }`, and allows omitting the `name in` part to implicitly name the variable `it`.
+The general syntax follows the form `for index index_name name in expr { sequence }`, and allows omitting the `index index_name name in` part to implicitly name the variable `it`.
 
-A for-loop evaluates the _sequence_ once per every element in the _expr_, seetting the local variable _name_ to the element being processed.
+It should be noted that the `index index_name` section is optional, but if supplied, will require an explicit iteration variable as well.
+In other words, `for index i in foo` is not valid syntax.
+
+A for-loop evaluates the _sequence_ once per every element in the _expr_, seetting the local variable _name_ to the element being processed, and the local variable _enum name_ to the enumeration index (if set).
 
 The Shell shall cancel the for loop if two consecutive commands are interrupted via SIGINT (\^C), and any other terminating signal aborts the loop entirely.
 
@@ -224,6 +227,9 @@ $ for * { mv $it 1-$it }
 
 # Iterate over a sequence and write each element to a file
 $ for i in $(seq 1 100) { echo $i >> foo }
+
+# Iterate over some files and get their index
+$ for index i x in * { echo file at index $i is named $x }
 ```
 
 ##### Infinite Loops
@@ -365,7 +371,7 @@ control_structure[c] :: for_expr
 continuation_control :: 'break'
                       | 'continue'
 
-for_expr :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' [c] toplevel '}'
+for_expr :: 'for' ws+ (('enum' ' '+ identifier)? identifier ' '+ 'in' ws*)? expression ws+ '{' [c] toplevel '}'
 
 loop_expr :: 'loop' ws* '{' [c] toplevel '}'
 

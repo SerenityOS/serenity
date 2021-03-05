@@ -846,13 +846,15 @@ private:
 
 class ForLoop final : public Node {
 public:
-    ForLoop(Position, String variable_name, RefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<Position> in_kw_position = {});
+    ForLoop(Position, Optional<NameWithPosition> variable, Optional<NameWithPosition> index_variable, RefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<Position> in_kw_position = {}, Optional<Position> index_kw_position = {});
     virtual ~ForLoop();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    const String& variable_name() const { return m_variable_name; }
+    const Optional<NameWithPosition>& variable() const { return m_variable; }
+    const Optional<NameWithPosition>& index_variable() const { return m_index_variable; }
     const RefPtr<Node>& iterated_expression() const { return m_iterated_expression; }
     const RefPtr<Node>& block() const { return m_block; }
+    const Optional<Position> index_keyword_position() const { return m_index_kw_position; }
     const Optional<Position> in_keyword_position() const { return m_in_kw_position; }
 
 private:
@@ -864,10 +866,12 @@ private:
     virtual bool would_execute() const override { return true; }
     virtual bool should_override_execution_in_current_process() const override { return true; }
 
-    String m_variable_name;
+    Optional<NameWithPosition> m_variable;
+    Optional<NameWithPosition> m_index_variable;
     RefPtr<AST::Node> m_iterated_expression;
     RefPtr<AST::Node> m_block;
     Optional<Position> m_in_kw_position;
+    Optional<Position> m_index_kw_position;
 };
 
 class Glob final : public Node {

@@ -261,6 +261,35 @@ private:
             set_offset_range_end(in_span.range, position.end_line);
             in_span.attributes.color = m_palette.syntax_keyword();
         }
+
+        // "index"
+        if (auto maybe_position = node->index_keyword_position(); maybe_position.has_value()) {
+            auto& position = maybe_position.value();
+
+            auto& index_span = span_for_node(node);
+            set_offset_range_start(index_span.range, position.start_line);
+            set_offset_range_end(index_span.range, position.end_line);
+            index_span.attributes.color = m_palette.syntax_keyword();
+        }
+
+        // variables
+        if (auto maybe_variable = node->variable(); maybe_variable.has_value()) {
+            auto& position = maybe_variable->position;
+
+            auto& variable_span = span_for_node(node);
+            set_offset_range_start(variable_span.range, position.start_line);
+            set_offset_range_end(variable_span.range, position.end_line);
+            variable_span.attributes.color = m_palette.syntax_identifier();
+        }
+
+        if (auto maybe_variable = node->index_variable(); maybe_variable.has_value()) {
+            auto& position = maybe_variable->position;
+
+            auto& variable_span = span_for_node(node);
+            set_offset_range_start(variable_span.range, position.start_line);
+            set_offset_range_end(variable_span.range, position.end_line);
+            variable_span.attributes.color = m_palette.syntax_identifier();
+        }
     }
     virtual void visit(const AST::Glob* node) override
     {

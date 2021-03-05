@@ -341,8 +341,13 @@ void Formatter::visit(const AST::ForLoop* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     if (!is_loop) {
-        if (node->variable_name() != "it") {
-            current_builder().append(node->variable_name());
+        if (node->index_variable().has_value()) {
+            current_builder().append("index ");
+            current_builder().append(node->index_variable()->name);
+            current_builder().append(" ");
+        }
+        if (node->variable().has_value() && node->variable()->name != "it") {
+            current_builder().append(node->variable()->name);
             current_builder().append(" in ");
         }
 

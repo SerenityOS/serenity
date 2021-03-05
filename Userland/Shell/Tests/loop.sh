@@ -23,6 +23,19 @@ for cmd in ((test 1 = 1) (test 2 = 2)) {
     $cmd || unset singlecommand_ok
 }
 
+# with index
+for index i val in (0 1 2) {
+    if not test "$i" -eq "$val" {
+        unset singlecommand_ok
+    }
+}
+
+for index i val in (1 2 3) {
+    if not test "$i" -ne "$val" {
+        unset singlecommand_ok
+    }
+}
+
  # Multiple commands in block
 for cmd in ((test 1 = 1) (test 2 = 2)) {
     test -z "$cmd"

@@ -592,16 +592,46 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         return nullptr;
     }
 
-    auto variable_name = consume_while(is_word_character);
-    Optional<AST::Position> in_start_position;
-    if (variable_name.is_empty()) {
-        variable_name = "it";
-    } else {
+    Optional<AST::NameWithPosition> index_variable_name, variable_name;
+    Optional<AST::Position> in_start_position, index_start_position;
+
+    auto offset_before_index = current_position();
+    if (expect("index")) {
+        auto offset = current_position();
+        if (!consume_while(is_whitespace).is_empty()) {
+            auto offset_before_variable = current_position();
+            auto variable = consume_while(is_word_character);
+            if (!variable.is_empty()) {
+                index_start_position = AST::Position { offset_before_index.offset, offset.offset, offset_before_index.line, offset.line };
+
+                auto offset_after_variable = current_position();
+                index_variable_name = AST::NameWithPosition {
+                    variable,
+                    { offset_before_variable.offset, offset_after_variable.offset, offset_before_variable.line, offset_after_variable.line },
+                };
+
+                consume_while(is_whitespace);
+            } else {
+                restore_to(offset_before_index.offset, offset_before_index.line);
+            }
+        } else {
+            restore_to(offset_before_index.offset, offset_before_index.line);
+        }
+    }
+
+    auto variable_name_start_offset = current_position();
+    auto name = consume_while(is_word_character);
+    auto variable_name_end_offset = current_position();
+    if (!name.is_empty()) {
+        variable_name = AST::NameWithPosition {
+            name,
+            { variable_name_start_offset.offset, variable_name_end_offset.offset, variable_name_start_offset.line, variable_name_end_offset.line }
+        };
         consume_while(is_whitespace);
         auto in_error_start = push_start();
         if (!expect("in")) {
             auto syntax_error = create<AST::SyntaxError>("Expected 'in' after a variable name in a 'for' loop", true);
-            return create<AST::ForLoop>(move(variable_name), move(syntax_error), nullptr); // ForLoop Var Iterated Block
+            return create<AST::ForLoop>(move(variable_name), move(index_variable_name), move(syntax_error), nullptr); // ForLoop Var Iterated Block
         }
         in_start_position = AST::Position { in_error_start->offset, m_offset, in_error_start->line, line() };
     }
@@ -620,7 +650,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         auto obrace_error_start = push_start();
         if (!expect('{')) {
             auto syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start a 'for' loop body", true);
-            return create<AST::ForLoop>(move(variable_name), move(iterated_expression), move(syntax_error), move(in_start_position)); // ForLoop Var Iterated Block
+            return create<AST::ForLoop>(move(variable_name), move(index_variable_name), move(iterated_expression), move(syntax_error), move(in_start_position), move(index_start_position)); // ForLoop Var Iterated Block
         }
     }
 
@@ -639,7 +669,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         }
     }
 
-    return create<AST::ForLoop>(move(variable_name), move(iterated_expression), move(body), move(in_start_position)); // ForLoop Var Iterated Block
+    return create<AST::ForLoop>(move(variable_name), move(index_variable_name), move(iterated_expression), move(body), move(in_start_position), move(index_start_position)); // ForLoop Var Iterated Block
 }
 
 RefPtr<AST::Node> Parser::parse_loop_loop()
@@ -657,7 +687,7 @@ RefPtr<AST::Node> Parser::parse_loop_loop()
         auto obrace_error_start = push_start();
         if (!expect('{')) {
             auto syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start a 'loop' loop body", true);
-            return create<AST::ForLoop>(String::empty(), nullptr, move(syntax_error), Optional<AST::Position> {}); // ForLoop null null Block
+            return create<AST::ForLoop>(AST::NameWithPosition {}, AST::NameWithPosition {}, nullptr, move(syntax_error)); // ForLoop null null Block
         }
     }
 
@@ -676,7 +706,7 @@ RefPtr<AST::Node> Parser::parse_loop_loop()
         }
     }
 
-    return create<AST::ForLoop>(String::empty(), nullptr, move(body), Optional<AST::Position> {}); // ForLoop null null Block
+    return create<AST::ForLoop>(AST::NameWithPosition {}, AST::NameWithPosition {}, nullptr, move(body)); // ForLoop null null Block
 }
 
 RefPtr<AST::Node> Parser::parse_if_expr()
