@@ -4,3 +4,8 @@ fail() {
     echo "FA""IL:" $*
     exit 1
 }
+
+pass() {
+    echo "PA""SS"
+    exit 0
+}

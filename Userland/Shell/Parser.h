@@ -98,6 +98,7 @@ private:
     RefPtr<AST::Node> parse_glob();
     RefPtr<AST::Node> parse_brace_expansion();
     RefPtr<AST::Node> parse_brace_expansion_spec();
+    RefPtr<AST::Node> parse_immediate_expression();
 
     template<typename A, typename... Args>
     NonnullRefPtr<A> create(Args... args);
@@ -238,6 +239,7 @@ list_expression :: ' '* expression (' '+ list_expression)?
 expression :: evaluate expression?
             | string_composite expression?
             | comment expression?
+            | immediate_expression expression?
             | history_designator expression?
             | '(' list_expression ')' expression?
 
@@ -267,6 +269,10 @@ variable :: '$' identifier
           | ...
 
 comment :: '#' [^\n]*
+
+immediate_expression :: '$' '{' immediate_function expression* '}'
+
+immediate_function :: identifier       { predetermined list of names, see Shell.h:ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS }
 
 history_designator :: '!' event_selector (':' word_selector_composite)?
 

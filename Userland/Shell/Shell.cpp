@@ -1518,6 +1518,26 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
     return suggestions;
 }
 
+Vector<Line::CompletionSuggestion> Shell::complete_immediate_function_name(const String& name, size_t offset)
+{
+    Vector<Line::CompletionSuggestion> suggestions;
+
+#define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(fn_name)                            \
+    if (auto name_view = StringView { #fn_name }; name_view.starts_with(name)) { \
+        suggestions.append({ name_view, " " });                                  \
+        suggestions.last().input_offset = offset;                                \
+    }
+
+    ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS();
+
+#undef __ENUMERATE_SHELL_IMMEDIATE_FUNCTION
+
+    if (m_editor)
+        m_editor->suggest(offset);
+
+    return suggestions;
+}
+
 void Shell::bring_cursor_to_beginning_of_a_line() const
 {
     struct winsize ws;
