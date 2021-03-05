@@ -137,6 +137,8 @@ void Client::send_response(InputStream& response, const HTTP::HttpRequest& reque
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n");
     builder.append("Server: WebServer (SerenityOS)\r\n");
+    builder.append("X-Frame-Options: SAMEORIGIN\r\n");
+    builder.append("X-Content-Type-Options: nosniff\r\n");
     builder.append("Content-Type: ");
     builder.append(content_type);
     builder.append("\r\n");
