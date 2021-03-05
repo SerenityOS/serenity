@@ -456,12 +456,11 @@ void Painter::draw_triangle(const IntPoint& a, const IntPoint& b, const IntPoint
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
-    RGBA32 rgba = color.value();
-
     IntPoint p0(a);
     IntPoint p1(b);
     IntPoint p2(c);
 
+    // sort points from top to bottom
     if (p0.y() > p1.y())
         swap(p0, p1);
     if (p0.y() > p2.y())
@@ -469,41 +468,52 @@ void Painter::draw_triangle(const IntPoint& a, const IntPoint& b, const IntPoint
     if (p1.y() > p2.y())
         swap(p1, p2);
 
+    // return if top and bottom points are on same line
+    if (p0.y() == p2.y())
+        return;
+
+    // return if top is below clip rect or bottom is above clip rect
     auto clip = clip_rect();
     if (p0.y() >= clip.bottom())
         return;
     if (p2.y() < clip.top())
         return;
 
-    float dx01 = (float)(p1.x() - p0.x()) / (p1.y() - p0.y());
-    float dx02 = (float)(p2.x() - p0.x()) / (p2.y() - p0.y());
-    float dx12 = (float)(p2.x() - p1.x()) / (p2.y() - p1.y());
+    int rgba = color.value();
 
+    float dx02 = (float)(p2.x() - p0.x()) / (p2.y() - p0.y());
     float x01 = p0.x();
     float x02 = p0.x();
 
-    int top = p0.y();
-    if (top < clip.top()) {
-        x01 += dx01 * (clip.top() - top);
-        x02 += dx02 * (clip.top() - top);
-        top = clip.top();
-    }
+    if (p0.y() != p1.y()) { // p0 and p1 are on different lines
+        float dx01 = (float)(p1.x() - p0.x()) / (p1.y() - p0.y());
 
-    for (int y = top; y < p1.y() && y < clip.bottom(); ++y) { // XXX <=?
-        int start = x01 > x02 ? max((int)x02, clip.left()) : max((int)x01, clip.left());
-        int end = x01 > x02 ? min((int)x01, clip.right()) : min((int)x02, clip.right());
-        auto* scanline = m_target->scanline(y);
-        for (int x = start; x < end; x++) {
-            scanline[x] = rgba;
+        int top = p0.y();
+        if (top < clip.top()) {
+            x01 += dx01 * (clip.top() - top);
+            x02 += dx02 * (clip.top() - top);
+            top = clip.top();
         }
-        x01 += dx01;
-        x02 += dx02;
+
+        for (int y = top; y < p1.y() && y < clip.bottom(); ++y) { // XXX <=?
+            int start = x01 > x02 ? max((int)x02, clip.left()) : max((int)x01, clip.left());
+            int end = x01 > x02 ? min((int)x01, clip.right()) : min((int)x02, clip.right());
+            auto* scanline = m_target->scanline(y);
+            for (int x = start; x < end; x++) {
+                scanline[x] = rgba;
+            }
+            x01 += dx01;
+            x02 += dx02;
+        }
     }
 
-    x02 = p0.x() + dx02 * (p1.y() - p0.y());
-    float x12 = p1.x();
+    // return if middle point and bottom point are on same line
+    if (p1.y() == p2.y())
+        return;
 
-    top = p1.y();
+    float x12 = p1.x();
+    float dx12 = (float)(p2.x() - p1.x()) / (p2.y() - p1.y());
+    int top = p1.y();
     if (top < clip.top()) {
         x02 += dx02 * (clip.top() - top);
         x12 += dx12 * (clip.top() - top);
