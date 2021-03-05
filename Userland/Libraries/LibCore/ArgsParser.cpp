@@ -342,6 +342,21 @@ void ArgsParser::add_positional_argument(const char*& value, const char* help_st
     add_positional_argument(move(arg));
 }
 
+void ArgsParser::add_positional_argument(String& value, const char* help_string, const char* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        1,
+        [&value](const char* s) {
+            value = s;
+            return true;
+        }
+    };
+    add_positional_argument(move(arg));
+}
+
 void ArgsParser::add_positional_argument(int& value, const char* help_string, const char* name, Required required)
 {
     Arg arg {
