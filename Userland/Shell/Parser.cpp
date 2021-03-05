@@ -1118,7 +1118,7 @@ RefPtr<AST::Node> Parser::parse_expression()
         return read_concat(create<AST::CastToList>(move(list))); // Cast To List
     }
 
-    if (starting_char == '!') {
+    if (starting_char == '!' && m_in_interactive_mode) {
         if (auto designator = parse_history_designator())
             return designator;
     }

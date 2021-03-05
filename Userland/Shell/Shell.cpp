@@ -562,7 +562,7 @@ int Shell::run_command(const StringView& cmd, Optional<SourcePosition> source_po
     if (cmd.is_empty())
         return 0;
 
-    auto command = Parser(cmd).parse();
+    auto command = Parser(cmd, m_is_interactive).parse();
 
     if (!command)
         return 0;
@@ -1289,7 +1289,7 @@ void Shell::add_entry_to_cache(const String& entry)
 void Shell::highlight(Line::Editor& editor) const
 {
     auto line = editor.line();
-    Parser parser(line);
+    Parser parser(line, m_is_interactive);
     auto ast = parser.parse();
     if (!ast)
         return;
@@ -1300,7 +1300,7 @@ Vector<Line::CompletionSuggestion> Shell::complete()
 {
     auto line = m_editor->line(m_editor->cursor());
 
-    Parser parser(line);
+    Parser parser(line, m_is_interactive);
 
     auto ast = parser.parse();
 
@@ -1562,7 +1562,7 @@ bool Shell::has_history_event(StringView source)
         bool has_history_event { false };
     } visitor;
 
-    Parser { source }.parse()->visit(visitor);
+    Parser { source, true }.parse()->visit(visitor);
     return visitor.has_history_event;
 }
 
