@@ -451,6 +451,10 @@ constexpr T exchange(T& slot, U&& value)
 }
 
 template<typename T>
+struct IsEnum : public IntegralConstant<bool, __is_enum(T)> {
+};
+
+template<typename T>
 struct IsUnion : public IntegralConstant<bool, __is_union(T)> {
 };
 
@@ -570,6 +574,19 @@ struct IdentityType {
     using Type = T;
 };
 
+template<class T, bool = IsEnum<T>::value>
+struct __UnderlyingType {
+    using Type = __underlying_type(T);
+};
+
+template<class T>
+struct __UnderlyingType<T, false> {
+};
+
+template<class T>
+struct UnderlyingType : __UnderlyingType<T> {
+};
+
 }
 
 using AK::AddConst;
@@ -590,6 +607,7 @@ using AK::IsArithmetic;
 using AK::IsBaseOf;
 using AK::IsClass;
 using AK::IsConst;
+using AK::IsEnum;
 using AK::IsFundamental;
 using AK::IsNullPointer;
 using AK::IsSame;
@@ -605,4 +623,5 @@ using AK::min;
 using AK::move;
 using AK::RemoveConst;
 using AK::swap;
+using AK::UnderlyingType;
 using AK::Void;
