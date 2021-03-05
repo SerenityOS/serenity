@@ -742,4 +742,15 @@ long double nexttowardl(long double, long double) NOEXCEPT
 {
     TODO();
 }
+
+double copysign(double x, double y)
+{
+    if (x < 0 && y < 0)
+        return x;
+    if (x >= 0 && y < 0)
+        return -x;
+    if (x < 0 && y >= 0)
+        return -x;
+    return x;
+}
 }
