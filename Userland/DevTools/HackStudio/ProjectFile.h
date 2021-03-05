@@ -44,6 +44,7 @@ public:
     const String& name() const { return m_name; }
 
     GUI::TextDocument& document() const;
+    CodeDocument& code_document() const;
 
     int vertical_scroll_value() const;
     void vertical_scroll_value(int);
@@ -52,6 +53,7 @@ public:
 
 private:
     explicit ProjectFile(const String& name);
+    void create_document_if_needed() const;
 
     String m_name;
     mutable RefPtr<CodeDocument> m_document;
