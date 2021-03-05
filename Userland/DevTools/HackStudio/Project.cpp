@@ -70,15 +70,24 @@ void Project::for_each_text_file(Function<void(const ProjectFile&)> callback) co
     });
 }
 
-RefPtr<ProjectFile> Project::get_file(const String& path) const
+NonnullRefPtr<ProjectFile> Project::get_file(const String& path) const
 {
+    auto full_path = to_absolute_path(path);
     for (auto& file : m_files) {
-        if (file.name() == path)
+        if (file.name() == full_path)
             return file;
     }
-    auto file = ProjectFile::construct_with_name(path);
+    auto file = ProjectFile::construct_with_name(full_path);
     m_files.append(file);
     return file;
+}
+
+String Project::to_absolute_path(const String& path) const
+{
+    if (LexicalPath { path }.is_absolute()) {
+        return path;
+    }
+    return LexicalPath { String::formatted("{}/{}", m_root_path, path) }.string();
 }
 
 }
