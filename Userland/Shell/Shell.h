@@ -128,8 +128,8 @@ public:
     RefPtr<Line::Editor> editor() const { return m_editor; }
 
     struct LocalFrame {
-        LocalFrame(const String& name, HashMap<String, RefPtr<AST::Value>> variables)
-            : name(name)
+        LocalFrame(String name, HashMap<String, RefPtr<AST::Value>> variables)
+            : name(move(name))
             , local_variables(move(variables))
         {
         }
@@ -243,7 +243,7 @@ public:
         return err;
     }
     void possibly_print_error() const;
-    bool is_control_flow(ShellError error)
+    static bool is_control_flow(ShellError error)
     {
         switch (error) {
         case ShellError::InternalControlFlowBreak:

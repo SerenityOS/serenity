@@ -37,8 +37,9 @@ namespace Shell {
 
 class Parser {
 public:
-    Parser(StringView input)
+    Parser(StringView input, bool interactive = false)
         : m_input(move(input))
+        , m_in_interactive_mode(interactive)
     {
     }
 
@@ -163,6 +164,7 @@ private:
     Vector<char> m_extra_chars_not_allowed_in_barewords;
     bool m_is_in_brace_expansion_spec { false };
     bool m_continuation_controls_allowed { false };
+    bool m_in_interactive_mode { false };
 };
 
 #if 0
