@@ -37,17 +37,8 @@ ProjectFile::ProjectFile(const String& name)
 
 GUI::TextDocument& ProjectFile::document() const
 {
-    if (!m_document) {
-        m_document = CodeDocument::create(m_name);
-        auto file_or_error = Core::File::open(m_name, Core::File::ReadOnly);
-        if (file_or_error.is_error()) {
-            warnln("Couldn't open '{}': {}", m_name, file_or_error.error());
-            // This is okay though, we'll just go with an empty document and create the file when saving.
-        } else {
-            auto& file = *file_or_error.value();
-            m_document->set_text(file.read_all());
-        }
-    }
+    create_document_if_needed();
+    VERIFY(m_document);
     return *m_document;
 }
 
@@ -69,6 +60,29 @@ int ProjectFile::horizontal_scroll_value() const
 void ProjectFile::horizontal_scroll_value(int horizontal_scroll_value)
 {
     m_horizontal_scroll_value = horizontal_scroll_value;
+}
+
+CodeDocument& ProjectFile::code_document() const
+{
+    create_document_if_needed();
+    VERIFY(m_document);
+    return *m_document;
+}
+
+void ProjectFile::create_document_if_needed() const
+{
+    if (m_document)
+        return;
+
+    m_document = CodeDocument::create(m_name);
+    auto file_or_error = Core::File::open(m_name, Core::File::ReadOnly);
+    if (file_or_error.is_error()) {
+        warnln("Couldn't open '{}': {}", m_name, file_or_error.error());
+        // This is okay though, we'll just go with an empty document and create the file when saving.
+    } else {
+        auto& file = *file_or_error.value();
+        m_document->set_text(file.read_all());
+    }
 }
 
 }
