@@ -12,10 +12,8 @@
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/DMI.h>
-#include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
-#include <Kernel/Devices/MBVGADevice.h>
 #include <Kernel/Devices/MemoryDevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
@@ -26,6 +24,7 @@
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/APIC.h>
@@ -233,30 +232,8 @@ void init_stage2(void*)
 
     PCI::initialize();
     auto boot_profiling = kernel_command_line().is_boot_profiling_enabled();
-    auto is_text_mode = kernel_command_line().is_text_mode();
-    if (is_text_mode) {
-        dbgln("Text mode enabled");
-    } else {
-        bool bxvga_found = false;
-        PCI::enumerate([&](const PCI::Address&, PCI::ID id) {
-            if ((id.vendor_id == 0x1234 && id.device_id == 0x1111) || (id.vendor_id == 0x80ee && id.device_id == 0xbeef))
-                bxvga_found = true;
-        });
 
-        if (bxvga_found) {
-            BXVGADevice::initialize();
-        } else {
-            if (multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB || multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT) {
-                new MBVGADevice(
-                    PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
-                    multiboot_info_ptr->framebuffer_pitch,
-                    multiboot_info_ptr->framebuffer_width,
-                    multiboot_info_ptr->framebuffer_height);
-            } else {
-                BXVGADevice::initialize();
-            }
-        }
-    }
+    GraphicsManagement::the().initialize();
 
     USB::UHCIController::detect();
 
@@ -297,7 +274,7 @@ void init_stage2(void*)
     int error;
 
     // FIXME: It would be nicer to set the mode from userspace.
-    tty0->set_graphical(!is_text_mode);
+    tty0->set_graphical(!GraphicsManagement::the().is_text_mode_enabled());
     RefPtr<Thread> thread;
     auto userspace_init = kernel_command_line().userspace_init();
     auto init_args = kernel_command_line().userspace_init_args();

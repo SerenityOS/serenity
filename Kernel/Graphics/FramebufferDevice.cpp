@@ -1,37 +1,24 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/MBVGADevice.h>
+#include <AK/Checked.h>
+#include <AK/Singleton.h>
+#include <Kernel/Debug.h>
+#include <Kernel/Graphics/FramebufferDevice.h>
+#include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/TypedMapping.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
-static MBVGADevice* s_the;
-
-MBVGADevice& MBVGADevice::the()
-{
-    return *s_the;
-}
-
-UNMAP_AFTER_INIT MBVGADevice::MBVGADevice(PhysicalAddress addr, size_t pitch, size_t width, size_t height)
-    : BlockDevice(29, 0)
-    , m_framebuffer_address(addr)
-    , m_framebuffer_pitch(pitch)
-    , m_framebuffer_width(width)
-    , m_framebuffer_height(height)
-{
-    dbgln("MBVGADevice address={}, pitch={}, width={}, height={}", addr, pitch, width, height);
-    s_the = this;
-}
-
-KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
+KResultOr<Region*> FramebufferDevice::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
 {
     REQUIRE_PROMISE(video);
     if (!shared)
@@ -48,12 +35,32 @@ KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, const R
         range,
         vmobject.release_nonnull(),
         0,
-        "MBVGA Framebuffer",
+        "Framebuffer",
         prot,
         shared);
 }
 
-int MBVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
+String FramebufferDevice::device_name() const
+{
+    return String::formatted("fb{}", minor());
+}
+
+UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(PhysicalAddress addr, size_t pitch, size_t width, size_t height)
+    : BlockDevice(29, GraphicsManagement::the().current_minor_number())
+    , m_framebuffer_address(addr)
+    , m_framebuffer_pitch(pitch)
+    , m_framebuffer_width(width)
+    , m_framebuffer_height(height)
+{
+    dbgln("Framebuffer {}: address={}, pitch={}, width={}, height={}", minor(), addr, pitch, width, height);
+}
+
+bool FramebufferDevice::set_resolution(size_t, size_t, size_t)
+{
+    VERIFY_NOT_REACHED();
+}
+
+int FramebufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {
@@ -65,11 +72,7 @@ int MBVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case FB_IOCTL_GET_BUFFER: {
-        auto* index = (int*)arg;
-        int value = 0;
-        if (!copy_to_user(index, &value))
-            return -EFAULT;
-        return 0;
+        return -ENOTIMPL;
     }
     case FB_IOCTL_GET_RESOLUTION: {
         auto* user_resolution = (FBResolution*)arg;
@@ -94,11 +97,6 @@ int MBVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     default:
         return -EINVAL;
     };
-}
-
-String MBVGADevice::device_name() const
-{
-    return String::formatted("fb{}", minor());
 }
 
 }
