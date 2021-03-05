@@ -207,7 +207,7 @@ control_structure[c] :: for_expr
 continuation_control :: 'break'
                       | 'continue'
 
-for_expr :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' [c] toplevel '}'
+for_expr :: 'for' ws+ (('index' ' '+ identifier ' '+)? identifier ' '+ 'in' ws*)? expression ws+ '{' [c] toplevel '}'
 
 loop_expr :: 'loop' ws* '{' [c] toplevel '}'
 
