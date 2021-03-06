@@ -266,4 +266,15 @@ ParentNode* Node::parent_or_shadow_host()
     return downcast<ParentNode>(parent());
 }
 
+NonnullRefPtrVector<Node> Node::child_nodes() const
+{
+    NonnullRefPtrVector<Node> nodes;
+
+    for_each_child([&](auto& child) {
+        nodes.append(child);
+    });
+
+    return nodes;
+}
+
 }
