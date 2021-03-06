@@ -118,6 +118,27 @@ TEST_CASE(detects_signed_overflow)
     EXPECT((Checked<i64>(-0x4000000000000000) - Checked<i64>(0x4000000000000001)).has_overflow());
 }
 
+TEST_CASE(detects_unsigned_overflow)
+{
+    EXPECT(!(Checked<u32>(0x40000000) + Checked<u32>(0x3fffffff)).has_overflow());
+    EXPECT(!(Checked<u32>(0x40000000) + Checked<u32>(0x40000000)).has_overflow());
+    EXPECT(!(Checked<u32>(0xf0000000) + Checked<u32>(0x0fffffff)).has_overflow());
+    EXPECT((Checked<u32>(0xf0000000) + Checked<u32>(0x10000000)).has_overflow());
+
+    EXPECT(!(Checked<u32>(0x40000000) - Checked<u32>(0x3fffffff)).has_overflow());
+    EXPECT(!(Checked<u32>(0x40000000) - Checked<u32>(0x40000000)).has_overflow());
+    EXPECT((Checked<u32>(0x40000000) - Checked<u32>(0x40000001)).has_overflow());
+
+    EXPECT(!(Checked<u64>(0x4000000000000000) + Checked<u64>(0x3fffffffffffffff)).has_overflow());
+    EXPECT(!(Checked<u64>(0x4000000000000000) + Checked<u64>(0x4000000000000000)).has_overflow());
+    EXPECT(!(Checked<u64>(0xf000000000000000) + Checked<u64>(0x0fffffffffffffff)).has_overflow());
+    EXPECT((Checked<u64>(0xf000000000000000) + Checked<u64>(0x1000000000000000)).has_overflow());
+
+    EXPECT(!(Checked<u64>(0x4000000000000000) - Checked<u64>(0x3fffffffffffffff)).has_overflow());
+    EXPECT(!(Checked<u64>(0x4000000000000000) - Checked<u64>(0x4000000000000000)).has_overflow());
+    EXPECT((Checked<u64>(0x4000000000000000) - Checked<u64>(0x4000000000000001)).has_overflow());
+}
+
 TEST_CASE(should_constexpr_default_construct)
 {
     constexpr Checked<int> checked_value {};
