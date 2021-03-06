@@ -1726,4 +1726,26 @@ void Painter::blit_disabled(const IntPoint& location, const Gfx::Bitmap& bitmap,
     });
 }
 
+void Painter::blit_tiled(const IntRect& dst_rect, const Gfx::Bitmap& bitmap, const IntRect& rect)
+{
+    auto tile_width = rect.width();
+    auto tile_height = rect.height();
+    auto dst_right = dst_rect.right();
+    auto dst_bottom = dst_rect.bottom();
+    for (int tile_y = dst_rect.top(); tile_y < dst_bottom; tile_y += tile_height) {
+        for (int tile_x = dst_rect.left(); tile_x < dst_right; tile_x += tile_width) {
+            IntRect tile_src_rect = rect;
+            auto tile_x_overflow = tile_x + tile_width - dst_right;
+            if (tile_x_overflow > 0) {
+                tile_src_rect.set_width(tile_width - tile_x_overflow);
+            }
+            auto tile_y_overflow = tile_y + tile_height - dst_bottom;
+            if (tile_y_overflow > 0) {
+                tile_src_rect.set_height(tile_height - tile_y_overflow);
+            }
+            blit(IntPoint(tile_x, tile_y), bitmap, tile_src_rect);
+        }
+    }
+}
+
 }
