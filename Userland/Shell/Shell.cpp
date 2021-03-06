@@ -1232,6 +1232,14 @@ void Shell::cache_path()
     for (const auto& builtin_name : builtin_names)
         cached_path.append(escape_token(builtin_name));
 
+    // Add functions to the cache.
+    for (auto& function : m_functions) {
+        auto name = escape_token(function.key);
+        if (cached_path.contains_slow(name))
+            continue;
+        cached_path.append(name);
+    }
+
     // Add aliases to the cache.
     for (const auto& alias : m_aliases) {
         auto name = escape_token(alias.key);
