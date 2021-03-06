@@ -92,13 +92,17 @@ struct [[gnu::packed]] HPETRegistersBlock {
     u8 reserved2[0xF0 - 0x28];
     HPETRegister main_counter_value;
     u64 reserved3;
-    TimerStructure timers[3];
-    u8 reserved4[0x400 - 0x160];
+    TimerStructure timers[32];
 };
 
 static_assert(__builtin_offsetof(HPETRegistersBlock, main_counter_value) == 0xf0);
 static_assert(__builtin_offsetof(HPETRegistersBlock, timers[0]) == 0x100);
 static_assert(__builtin_offsetof(HPETRegistersBlock, timers[1]) == 0x120);
+
+// Note: The HPET specification says it reserves the range of byte 0x160 to
+// 0x400 for comparators 3-31, but for implementing all 32 comparators the HPET
+// MMIO space has to be 1280 bytes and not 1024 bytes.
+static_assert(sizeof(HPETRegistersBlock) == 0x500);
 
 static u64 read_register_safe64(const HPETRegister& reg)
 {
