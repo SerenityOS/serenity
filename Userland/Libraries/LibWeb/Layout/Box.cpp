@@ -46,10 +46,11 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     auto padded_rect = this->padded_rect();
 
     if (phase == PaintPhase::Background && !is_body()) {
-        context.painter().fill_rect(enclosing_int_rect(padded_rect), computed_values().background_color());
-
-        if (background_image() && background_image()->bitmap())
-            context.painter().draw_tiled_bitmap(enclosing_int_rect(padded_rect), *background_image()->bitmap());
+        auto background_rect = enclosing_int_rect(padded_rect);
+        context.painter().fill_rect(background_rect, computed_values().background_color());
+        if (background_image() && background_image()->bitmap()) {
+            context.painter().blit_tiled(background_rect, *background_image()->bitmap(), background_image()->bitmap()->rect());
+        }
     }
 
     if (phase == PaintPhase::Border) {
