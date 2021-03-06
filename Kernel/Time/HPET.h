@@ -75,7 +75,7 @@ private:
     void global_disable();
     void global_enable();
 
-    bool is_periodic_capable(u8 comparator_number);
+    bool is_periodic_capable(u8 comparator_number) const;
     void set_comparators_to_optimal_interrupt_state(size_t timers_count);
 
     u64 nanoseconds_to_raw_ticks() const;
