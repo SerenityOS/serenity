@@ -119,12 +119,12 @@ public:
         m_value |= value;
     }
 
-    Color with_alpha(u8 alpha) const
+    constexpr Color with_alpha(u8 alpha) const
     {
         return Color((m_value & 0x00ffffff) | alpha << 24);
     }
 
-    Color blend(Color source) const
+    constexpr Color blend(Color source) const
     {
         if (!alpha() || source.alpha() == 255)
             return source;
@@ -159,7 +159,7 @@ public:
 #endif
     }
 
-    Color multiply(const Color& other) const
+    constexpr Color multiply(const Color& other) const
     {
         return Color(
             red() * other.red() / 255,
@@ -168,40 +168,40 @@ public:
             alpha() * other.alpha() / 255);
     }
 
-    Color to_grayscale() const
+    constexpr Color to_grayscale() const
     {
         int gray = (red() + green() + blue()) / 3;
         return Color(gray, gray, gray, alpha());
     }
 
-    Color darkened(float amount = 0.5f) const
+    constexpr Color darkened(float amount = 0.5f) const
     {
         return Color(red() * amount, green() * amount, blue() * amount, alpha());
     }
 
-    Color lightened(float amount = 1.2f) const
+    constexpr Color lightened(float amount = 1.2f) const
     {
         return Color(min(255, (int)((float)red() * amount)), min(255, (int)((float)green() * amount)), min(255, (int)((float)blue() * amount)), alpha());
     }
 
-    Color inverted() const
+    constexpr Color inverted() const
     {
         return Color(~red(), ~green(), ~blue(), alpha());
     }
 
-    Color xored(const Color& other) const
+    constexpr Color xored(const Color& other) const
     {
         return Color(((other.m_value ^ m_value) & 0x00ffffff) | (m_value & 0xff000000));
     }
 
-    RGBA32 value() const { return m_value; }
+    constexpr RGBA32 value() const { return m_value; }
 
-    bool operator==(const Color& other) const
+    constexpr bool operator==(const Color& other) const
     {
         return m_value == other.m_value;
     }
 
-    bool operator!=(const Color& other) const
+    constexpr bool operator!=(const Color& other) const
     {
         return m_value != other.m_value;
     }
@@ -210,7 +210,7 @@ public:
     String to_string_without_alpha() const;
     static Optional<Color> from_string(const StringView&);
 
-    HSV to_hsv() const
+    constexpr HSV to_hsv() const
     {
         HSV hsv;
         double r = static_cast<double>(red()) / 255.0;
@@ -246,12 +246,12 @@ public:
         return hsv;
     }
 
-    static Color from_hsv(double hue, double saturation, double value)
+    static constexpr Color from_hsv(double hue, double saturation, double value)
     {
         return from_hsv({ hue, saturation, value });
     }
 
-    static Color from_hsv(const HSV& hsv)
+    static constexpr Color from_hsv(const HSV& hsv)
     {
         VERIFY(hsv.hue >= 0.0 && hsv.hue < 360.0);
         VERIFY(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);
