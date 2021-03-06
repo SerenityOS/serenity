@@ -37,14 +37,20 @@
 
 namespace Web::DOM {
 
-enum class NodeType : unsigned {
+enum class NodeType : u16 {
     INVALID = 0,
     ELEMENT_NODE = 1,
+    ATTRIBUTE_NODE = 2,
     TEXT_NODE = 3,
+    CDATA_SECTION_NODE = 4,
+    ENTITY_REFERENCE_NODE = 5,
+    ENTITY_NODE = 6,
+    PROCESSING_INSTRUCTION_NODE = 7,
     COMMENT_NODE = 8,
     DOCUMENT_NODE = 9,
     DOCUMENT_TYPE_NODE = 10,
     DOCUMENT_FRAGMENT_NODE = 11,
+    NOTATION_NODE = 12
 };
 
 class Node
@@ -81,11 +87,18 @@ public:
     bool is_parent_node() const { return is_element() || is_document() || is_document_fragment(); }
     bool is_slottable() const { return is_element() || is_text(); }
 
+    // NOTE: This is intended for the JS bindings.
+    u16 node_type() const { return (u16)m_type; }
+
     virtual bool is_editable() const;
 
     RefPtr<Node> append_child(NonnullRefPtr<Node>, bool notify = true);
     RefPtr<Node> insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool notify = true);
     RefPtr<Node> remove_child(NonnullRefPtr<Node>);
+
+    // NOTE: This is intended for the JS bindings.
+    bool has_child_nodes() const { return has_children(); }
+    NonnullRefPtrVector<Node> child_nodes() const;
 
     virtual RefPtr<Layout::Node> create_layout_node();
 
