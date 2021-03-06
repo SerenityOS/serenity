@@ -25,6 +25,7 @@ if [ "$(uname)" = "Darwin" ] && [ "$(uname -m)" = "x86_64" ]; then
     fi
 fi
 
+SERENITY_RUN="${SERENITY_RUN:-$1}"
 
 [ -z "$SERENITY_QEMU_BIN" ] && SERENITY_QEMU_BIN="qemu-system-i386"
 
@@ -35,7 +36,7 @@ fi
 [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max"
 
 [ -z "$SERENITY_DISK_IMAGE" ] && {
-    if [ "$1" = qgrub ]; then
+    if [ "$SERENITY_RUN" = qgrub ]; then
         SERENITY_DISK_IMAGE="grub_disk_image"
     else
         SERENITY_DISK_IMAGE="_disk_image"
@@ -78,8 +79,6 @@ export SDL_VIDEO_X11_DGAMOUSE=0
 
 : "${SERENITY_BUILD:=.}"
 cd -P -- "$SERENITY_BUILD" || die "Could not cd to \"$SERENITY_BUILD\""
-
-SERENITY_RUN="${SERENITY_RUN:-$1}"
 
 if [ "$SERENITY_RUN" = "b" ]; then
     # Meta/run.sh b: bochs
