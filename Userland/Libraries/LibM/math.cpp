@@ -745,12 +745,11 @@ long double nexttowardl(long double, long double) NOEXCEPT
 
 double copysign(double x, double y)
 {
-    if (x < 0 && y < 0)
-        return x;
-    if (x >= 0 && y < 0)
-        return -x;
-    if (x < 0 && y >= 0)
-        return -x;
-    return x;
+    using Extractor = FloatExtractor<decltype(x)>;
+    Extractor ex, ey;
+    ex.d = x;
+    ey.d = y;
+    ex.sign = ey.sign;
+    return ex.d;
 }
 }
