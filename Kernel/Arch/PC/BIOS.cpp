@@ -43,10 +43,11 @@ MappedROM map_bios()
 MappedROM map_ebda()
 {
     auto ebda_segment_ptr = map_typed<u16>(PhysicalAddress(0x40e));
-    auto ebda_length_ptr = map_typed<u16>(PhysicalAddress(0x413));
+    auto ebda_length_ptr_b0 = map_typed<u8>(PhysicalAddress(0x413));
+    auto ebda_length_ptr_b1 = map_typed<u8>(PhysicalAddress(0x414));
 
     PhysicalAddress ebda_paddr(*ebda_segment_ptr << 4);
-    size_t ebda_size = *ebda_length_ptr;
+    size_t ebda_size = (*ebda_length_ptr_b1 << 8) | *ebda_length_ptr_b0;
 
     MappedROM mapping;
     mapping.region = MM.allocate_kernel_region(ebda_paddr.page_base(), page_round_up(ebda_size), {}, Region::Access::Read);
