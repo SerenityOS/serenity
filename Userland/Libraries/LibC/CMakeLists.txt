@@ -60,6 +60,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686")
     set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/plt_trampoline.S)
 elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(ASM_SOURCES "arch/x86_64/setjmp.S")
+    set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/x86_64/plt_trampoline.S)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -DSERENITY_LIBC_BUILD")
