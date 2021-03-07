@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mițca Dumitru <dumitru0mitca@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -263,6 +264,31 @@ static int internal_ilogb(FloatT x) NOEXCEPT
     return (int)extractor.exponent - Extractor::exponent_bias;
 }
 
+template<typename FloatT>
+static FloatT internal_scalbn(FloatT x, int exponent) NOEXCEPT
+{
+    if (x == 0 || !isfinite(x) || isnan(x) || exponent == 0)
+        return x;
+
+    using Extractor = FloatExtractor<FloatT>;
+    Extractor extractor;
+    extractor.d = x;
+
+    if (extractor.exponent != 0) {
+        extractor.exponent = clamp((int)extractor.exponent + exponent, 0, (int)Extractor::exponent_max);
+        return extractor.d;
+    }
+
+    unsigned leading_mantissa_zeroes = extractor.mantissa == 0 ? 32 : __builtin_clz(extractor.mantissa);
+    int shift = min((int)leading_mantissa_zeroes, exponent);
+    exponent = max(exponent - shift, 0);
+
+    extractor.exponent <<= shift;
+    extractor.exponent = exponent + 1;
+
+    return extractor.d;
+}
+
 extern "C" {
 
 double trunc(double x) NOEXCEPT
@@ -333,14 +359,20 @@ float powf(float x, float y) NOEXCEPT
     return (float)pow(x, y);
 }
 
+// On systems where FLT_RADIX == 2, ldexp is equivalent to scalbn
+long double ldexpl(long double x, int exp) NOEXCEPT
+{
+    return internal_scalbn(x, exp);
+}
+
 double ldexp(double x, int exp) NOEXCEPT
 {
-    return x * exp2(exp);
+    return internal_scalbn(x, exp);
 }
 
 float ldexpf(float x, int exp) NOEXCEPT
 {
-    return x * exp2f(exp);
+    return internal_scalbn(x, exp);
 }
 
 double tanh(double x) NOEXCEPT
@@ -821,5 +853,35 @@ double copysign(double x, double y)
     ey.d = y;
     ex.sign = ey.sign;
     return ex.d;
+}
+
+float scalbnf(float x, int exponent) NOEXCEPT
+{
+    return internal_scalbn(x, exponent);
+}
+
+double scalbn(double x, int exponent) NOEXCEPT
+{
+    return internal_scalbn(x, exponent);
+}
+
+long double scalbnl(long double x, int exponent) NOEXCEPT
+{
+    return internal_scalbn(x, exponent);
+}
+
+float scalbnlf(float x, long exponent) NOEXCEPT
+{
+    return internal_scalbn(x, exponent);
+}
+
+double scalbln(double x, long exponent) NOEXCEPT
+{
+    return internal_scalbn(x, exponent);
+}
+
+long double scalblnl(long double x, long exponent) NOEXCEPT
+{
+    return internal_scalbn(x, exponent);
 }
 }
