@@ -40,7 +40,7 @@ public:
     void paint_surface(Painter&, const IntRect&, const Palette&, bool paint_vertical_lines = true, bool paint_top_line = true) override;
     void paint_frame(Painter&, const IntRect&, const Palette&, FrameShape, FrameShadow, int thickness, bool skip_vertical_lines = false) override;
     void paint_window_frame(Painter&, const IntRect&, const Palette&) override;
-    void paint_progress_bar(Painter&, const IntRect&, const Palette&, int min, int max, int value, const StringView& text) override;
+    void paint_progress_bar(Painter&, const IntRect&, const Palette&, int min, int max, int value, const StringView& text, Orientation = Orientation::Horizontal) override;
     void paint_radio_button(Painter&, const IntRect&, const Palette&, bool is_checked, bool is_being_pressed) override;
     void paint_check_box(Painter&, const IntRect&, const Palette&, bool is_enabled, bool is_checked, bool is_being_pressed) override;
     void paint_transparency_grid(Painter&, const IntRect&, const Palette&) override;

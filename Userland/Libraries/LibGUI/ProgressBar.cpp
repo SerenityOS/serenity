@@ -31,10 +31,13 @@
 #include <LibGfx/Palette.h>
 
 REGISTER_WIDGET(GUI, ProgressBar)
+REGISTER_WIDGET(GUI, VerticalProgressBar)
+REGISTER_WIDGET(GUI, HorizontalProgressBar)
 
 namespace GUI {
 
-ProgressBar::ProgressBar()
+ProgressBar::ProgressBar(Orientation orientation)
+    : m_orientation(orientation)
 {
     REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_ENUM_PROPERTY("format", format, set_format, Format,
@@ -90,7 +93,15 @@ void ProgressBar::paint_event(PaintEvent& event)
         progress_text = builder.to_string();
     }
 
-    Gfx::StylePainter::paint_progress_bar(painter, rect, palette(), m_min, m_max, m_value, progress_text);
+    Gfx::StylePainter::paint_progress_bar(painter, rect, palette(), m_min, m_max, m_value, progress_text, m_orientation);
+}
+
+void ProgressBar::set_orientation(Orientation value)
+{
+    if (m_orientation == value)
+        return;
+    m_orientation = value;
+    update();
 }
 
 }
