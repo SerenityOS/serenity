@@ -48,7 +48,10 @@ int main(int argc, char* argv[])
         auto url = URL::create_with_url_or_path(url_or_path);
 
         if (url.protocol() == "file") {
-            auto real_path = Core::File::real_path_for(url.path());
+            // NOTE: Since URL::create_with_url_or_path() returns "file:///" for ".", and we chose
+            // to fix that in open(1) itself using Core::File::real_path_for(), we have to
+            // conditionally chose either the URL's path or user-specified argument (also a path).
+            auto real_path = Core::File::real_path_for(StringView(url_or_path).starts_with("file://") ? url.path() : url_or_path);
             if (real_path.is_null()) {
                 // errno *should* be preserved from Core::File::real_path_for().
                 warnln("Failed to open '{}': {}", url.path(), strerror(errno));
