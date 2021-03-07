@@ -34,7 +34,7 @@
 namespace Web::CSS {
 
 struct MatchingRule {
-    RefPtr<StyleRule> rule;
+    RefPtr<CSSStyleRule> rule;
     size_t style_sheet_index { 0 };
     size_t rule_index { 0 };
     size_t selector_index { 0 };

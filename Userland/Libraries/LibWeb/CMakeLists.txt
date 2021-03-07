@@ -11,6 +11,7 @@ set(SOURCES
     Bindings/Wrappable.cpp
     CSS/CSSImportRule.cpp
     CSS/CSSRule.cpp
+    CSS/CSSStyleRule.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
     CSS/Parser/CSSParser.cpp
@@ -23,7 +24,6 @@ set(SOURCES
     CSS/StyleInvalidator.cpp
     CSS/StyleProperties.cpp
     CSS/StyleResolver.cpp
-    CSS/StyleRule.cpp
     CSS/StyleSheet.cpp
     CSS/StyleSheetList.cpp
     CSS/StyleValue.cpp

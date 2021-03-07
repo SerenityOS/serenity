@@ -34,26 +34,26 @@
 
 namespace Web::CSS {
 
-class StyleRule : public CSSRule {
-    AK_MAKE_NONCOPYABLE(StyleRule);
-    AK_MAKE_NONMOVABLE(StyleRule);
+class CSSStyleRule : public CSSRule {
+    AK_MAKE_NONCOPYABLE(CSSStyleRule);
+    AK_MAKE_NONMOVABLE(CSSStyleRule);
 
 public:
-    static NonnullRefPtr<StyleRule> create(Vector<Selector>&& selectors, NonnullRefPtr<StyleDeclaration>&& declaration)
+    static NonnullRefPtr<CSSStyleRule> create(Vector<Selector>&& selectors, NonnullRefPtr<StyleDeclaration>&& declaration)
     {
-        return adopt(*new StyleRule(move(selectors), move(declaration)));
+        return adopt(*new CSSStyleRule(move(selectors), move(declaration)));
     }
 
-    ~StyleRule();
+    ~CSSStyleRule();
 
     const Vector<Selector>& selectors() const { return m_selectors; }
     const StyleDeclaration& declaration() const { return m_declaration; }
 
-    virtual StringView class_name() const { return "StyleRule"; };
+    virtual StringView class_name() const { return "CSSStyleRule"; };
     virtual Type type() const { return Type::Style; };
 
 private:
-    StyleRule(Vector<Selector>&&, NonnullRefPtr<StyleDeclaration>&&);
+    CSSStyleRule(Vector<Selector>&&, NonnullRefPtr<StyleDeclaration>&&);
 
     Vector<Selector> m_selectors;
     NonnullRefPtr<StyleDeclaration> m_declaration;
