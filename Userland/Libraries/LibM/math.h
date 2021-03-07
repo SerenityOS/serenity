@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <limits.h>
 #include <sys/cdefs.h>
 
 #if __cplusplus >= 201103L
@@ -128,6 +129,15 @@ float ldexpf(float, int exp) NOEXCEPT;
 double pow(double x, double y) NOEXCEPT;
 float powf(float x, float y) NOEXCEPT;
 
+#define FP_ILOGB0 INT_MIN
+#define FP_ILOGNAN INT_MAX
+
+int ilogbl(long double) NOEXCEPT;
+int ilogb(double) NOEXCEPT;
+int ilogbf(float) NOEXCEPT;
+long double logbl(long double) NOEXCEPT;
+double logb(double) NOEXCEPT;
+float logbf(float) NOEXCEPT;
 double log2(double) NOEXCEPT;
 float log2f(float) NOEXCEPT;
 long double log2l(long double) NOEXCEPT;

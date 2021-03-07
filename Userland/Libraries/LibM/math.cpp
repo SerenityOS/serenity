@@ -243,6 +243,26 @@ static FloatType internal_nextafter(FloatType x, bool up)
     return extractor.d;
 }
 
+template<typename FloatT>
+static int internal_ilogb(FloatT x) NOEXCEPT
+{
+    if (x == 0)
+        return FP_ILOGB0;
+
+    if (isnan(x))
+        return FP_ILOGNAN;
+
+    if (!isfinite(x))
+        return INT_MAX;
+
+    using Extractor = FloatExtractor<FloatT>;
+
+    Extractor extractor;
+    extractor.d = x;
+
+    return (int)extractor.exponent - Extractor::exponent_bias;
+}
+
 extern "C" {
 
 double trunc(double x) NOEXCEPT
@@ -545,6 +565,36 @@ float acosf(float x) NOEXCEPT
 double fabs(double value) NOEXCEPT
 {
     return value < 0 ? -value : value;
+}
+
+int ilogbl(long double x) NOEXCEPT
+{
+    return internal_ilogb(x);
+}
+
+int ilogb(double x) NOEXCEPT
+{
+    return internal_ilogb(x);
+}
+
+int ilogbf(float x) NOEXCEPT
+{
+    return internal_ilogb(x);
+}
+
+long double logbl(long double x) NOEXCEPT
+{
+    return ilogbl(x);
+}
+
+double logb(double x) NOEXCEPT
+{
+    return ilogb(x);
+}
+
+float logbf(float x) NOEXCEPT
+{
+    return ilogbf(x);
 }
 
 double log2(double x) NOEXCEPT
