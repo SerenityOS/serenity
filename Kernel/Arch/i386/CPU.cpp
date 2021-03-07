@@ -58,7 +58,7 @@ extern FlatPtr end_of_ro_after_init;
 namespace Kernel {
 
 READONLY_AFTER_INIT static DescriptorTablePointer s_idtr;
-READONLY_AFTER_INIT static Descriptor s_idt[256];
+READONLY_AFTER_INIT static IDTEntry s_idt[256];
 
 static GenericInterruptHandler* s_interrupt_handler[GENERIC_INTERRUPT_HANDLERS_COUNT];
 
@@ -484,14 +484,18 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
 
 UNMAP_AFTER_INIT void register_interrupt_handler(u8 index, void (*handler)())
 {
-    s_idt[index].low = 0x00080000 | LSW((FlatPtr)(handler));
-    s_idt[index].high = ((FlatPtr)(handler)&0xffff0000) | 0x8e00;
+    // FIXME: Why is that with selector 8?
+    // FIXME: Is the Gate Type really required to be an Interupt
+    // FIXME: Whats up with that storage segment 0?
+    s_idt[index] = IDTEntry((FlatPtr)handler, 8, IDTEntryType::InterruptGate32, 0, 0);
 }
 
 UNMAP_AFTER_INIT void register_user_callable_interrupt_handler(u8 index, void (*handler)())
 {
-    s_idt[index].low = 0x00080000 | LSW(((FlatPtr)handler));
-    s_idt[index].high = ((FlatPtr)(handler)&0xffff0000) | 0xef00;
+    // FIXME: Why is that with selector 8?
+    // FIXME: Is the Gate Type really required to be a Trap
+    // FIXME: Whats up with that storage segment 0?
+    s_idt[index] = IDTEntry((FlatPtr)handler, 8, IDTEntryType::TrapGate32, 0, 3);
 }
 
 UNMAP_AFTER_INIT void flush_idt()
