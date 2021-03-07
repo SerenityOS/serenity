@@ -108,10 +108,10 @@ void Formatter::will_visit(const AST::Node* node)
 
     auto direct_sequence_child = !m_parent_node || m_parent_node->kind() == AST::Node::Kind::Sequence;
 
-    if (direct_sequence_child && node->kind() != AST::Node::Kind::Sequence) {
+    if (direct_sequence_child && node->kind() != AST::Node::Kind::Sequence && node->kind() != AST::Node::Kind::Execute) {
         // Collapse more than one empty line to a single one.
         if (node->position().start_line.line_number - m_last_visited_node->position().end_line.line_number > 1)
-            current_builder().append('\n');
+            insert_separator();
     }
 }
 
@@ -213,14 +213,10 @@ void Formatter::visit(const AST::CastToCommand* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    if (m_options.explicit_parentheses)
-        current_builder().append('(');
 
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
     NodeVisitor::visit(node);
 
-    if (m_options.explicit_parentheses)
-        current_builder().append(')');
     visited(node);
 }
 
@@ -243,7 +239,7 @@ void Formatter::visit(const AST::CloseFdRedirection* node)
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
-    current_builder().appendf(" %d>&-", node->fd());
+    current_builder().appendf("%d>&-", node->fd());
     visited(node);
 }
 
@@ -305,7 +301,7 @@ void Formatter::visit(const AST::Fd2FdRedirection* node)
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
-    current_builder().appendf(" %d>&%d", node->source_fd(), node->dest_fd());
+    current_builder().appendf("%d>&%d", node->source_fd(), node->dest_fd());
     if (m_hit_node == node)
         ++m_output_cursor;
     visited(node);
@@ -433,12 +429,14 @@ void Formatter::visit(const AST::Execute* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
     ScopedValueRollback options_rollback { m_options };
 
-    if (node->does_capture_stdout()) {
-        builder.append("$");
-        m_options.explicit_parentheses = true;
-    }
+    if (node->does_capture_stdout())
+        builder.append("$(");
 
     NodeVisitor::visit(node);
+
+    if (node->does_capture_stdout())
+        builder.append(")");
+
     visited(node);
 }
 
@@ -486,7 +484,11 @@ void Formatter::visit(const AST::Join* node)
     if (should_parenthesise)
         current_builder().append('(');
 
-    NodeVisitor::visit(node);
+    node->left()->visit(*this);
+
+    current_builder().append(' ');
+
+    node->right()->visit(*this);
 
     if (should_parenthesise)
         current_builder().append(')');
@@ -652,9 +654,7 @@ void Formatter::visit(const AST::Subshell* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     in_new_block([&] {
-        insert_separator();
         NodeVisitor::visit(node);
-        insert_separator();
     });
     visited(node);
 }
