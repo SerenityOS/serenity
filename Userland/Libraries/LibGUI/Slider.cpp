@@ -144,14 +144,17 @@ void Slider::mouseup_event(MouseEvent& event)
 void Slider::mousewheel_event(MouseEvent& event)
 {
     auto acceleration_modifier = step();
+    auto wheel_delta = event.wheel_delta();
 
-    if (event.modifiers() == KeyModifier::Mod_Ctrl && knob_size_mode() == KnobSizeMode::Fixed)
+    if (event.modifiers() == KeyModifier::Mod_Ctrl)
         acceleration_modifier *= 6;
+    if (knob_size_mode() == KnobSizeMode::Proportional)
+        wheel_delta /= abs(wheel_delta);
 
     if (orientation() == Orientation::Horizontal)
-        set_value(value() - event.wheel_delta() * acceleration_modifier);
+        set_value(value() - wheel_delta * acceleration_modifier);
     else
-        set_value(value() + event.wheel_delta() * acceleration_modifier);
+        set_value(value() + wheel_delta * acceleration_modifier);
 
     Widget::mousewheel_event(event);
 }

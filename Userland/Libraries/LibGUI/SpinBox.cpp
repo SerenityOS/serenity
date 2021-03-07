@@ -105,7 +105,10 @@ void SpinBox::set_range(int min, int max)
 
 void SpinBox::mousewheel_event(MouseEvent& event)
 {
-    set_value(m_value - event.wheel_delta());
+    auto wheel_delta = event.wheel_delta() / abs(event.wheel_delta());
+    if (event.modifiers() == KeyModifier::Mod_Ctrl)
+        wheel_delta *= 6;
+    set_value(m_value - wheel_delta);
 }
 
 void SpinBox::resize_event(ResizeEvent& event)
