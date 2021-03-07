@@ -29,10 +29,10 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/ISRStubs.h>
-#include <Kernel/Arch/i386/ProcessorInfo.h>
-#include <Kernel/Arch/i386/SafeMem.h>
+#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/ISRStubs.h>
+#include <Kernel/Arch/x86/ProcessorInfo.h>
+#include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
@@ -2309,8 +2309,8 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     tls_descriptor.dpl = 3;
     tls_descriptor.segment_present = 1;
     tls_descriptor.granularity = 0;
-    tls_descriptor.zero = 0;
-    tls_descriptor.operation_size = 1;
+    tls_descriptor.operation_size64 = 0;
+    tls_descriptor.operation_size32 = 1;
     tls_descriptor.descriptor_type = 1;
     tls_descriptor.type = 2;
     write_gdt_entry(GDT_SELECTOR_TLS, tls_descriptor); // tls3
@@ -2321,8 +2321,8 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     fs_descriptor.dpl = 0;
     fs_descriptor.segment_present = 1;
     fs_descriptor.granularity = 0;
-    fs_descriptor.zero = 0;
-    fs_descriptor.operation_size = 1;
+    fs_descriptor.operation_size64 = 0;
+    fs_descriptor.operation_size32 = 1;
     fs_descriptor.descriptor_type = 1;
     fs_descriptor.type = 2;
     write_gdt_entry(GDT_SELECTOR_PROC, fs_descriptor); // fs0
@@ -2333,8 +2333,8 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     tss_descriptor.dpl = 0;
     tss_descriptor.segment_present = 1;
     tss_descriptor.granularity = 0;
-    tss_descriptor.zero = 0;
-    tss_descriptor.operation_size = 1;
+    tss_descriptor.operation_size64 = 0;
+    tss_descriptor.operation_size32 = 1;
     tss_descriptor.descriptor_type = 0;
     tss_descriptor.type = 9;
     write_gdt_entry(GDT_SELECTOR_TSS, tss_descriptor); // tss

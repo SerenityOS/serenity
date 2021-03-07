@@ -26,7 +26,7 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
 #include <Kernel/Time/HPET.h>

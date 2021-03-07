@@ -30,7 +30,7 @@
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <Kernel/API/Syscall.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/CoreDump.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/NullDevice.h>

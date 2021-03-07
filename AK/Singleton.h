@@ -30,7 +30,7 @@
 #include <AK/Atomic.h>
 #include <AK/Noncopyable.h>
 #ifdef KERNEL
-#    include <Kernel/Arch/i386/CPU.h>
+#    include <Kernel/Arch/x86/CPU.h>
 #endif
 
 #ifndef __serenity__

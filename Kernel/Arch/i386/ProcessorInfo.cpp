@@ -26,8 +26,8 @@
 
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/ProcessorInfo.h>
+#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/ProcessorInfo.h>
 
 namespace Kernel {
 

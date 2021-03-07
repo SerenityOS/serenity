@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,26 +27,26 @@
 
 #pragma once
 
-#include <Kernel/Arch/x86/CPU.h>
+#include <AK/Types.h>
 
 namespace Kernel {
 
-class SmapDisabler {
-public:
-    ALWAYS_INLINE SmapDisabler()
-        : m_flags(cpu_flags())
-    {
-        stac();
-    }
+class GenericInterruptHandeler;
 
-    ALWAYS_INLINE ~SmapDisabler()
-    {
-        if (!(m_flags & 0x40000))
-            clac();
-    }
+extern "C" void interrupt_common_asm_entry();
 
-private:
-    const FlatPtr m_flags;
-};
+#define GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(isr_number) \
+    extern "C" void interrupt_##isr_number##_asm_entry();        \
+    asm(".globl interrupt_" #isr_number "_asm_entry\n"           \
+        "interrupt_" #isr_number "_asm_entry:\n"                 \
+        "    pushw $" #isr_number "\n"                           \
+        "    pushw $0\n"                                         \
+        "    jmp interrupt_common_asm_entry\n");
+
+void register_interrupt_handler(u8 number, void (*handler)());
+void register_user_callable_interrupt_handler(u8 number, void (*handler)());
+GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number);
+void register_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
+void unregister_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
 
 }

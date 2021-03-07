@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <Kernel/Arch/i386/Interrupts.h>
+#include <Kernel/Arch/x86/Interrupts.h>
 
 GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(80)
 GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(81)

@@ -27,7 +27,7 @@
 #include "FullDevice.h"
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {

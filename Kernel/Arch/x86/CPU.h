@@ -30,6 +30,10 @@
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
+
+#include <Kernel/Arch/x86/DescriptorTable.h>
+#include <Kernel/Arch/x86/TSS.h>
+
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibC/sys/arch/i386/regs.h>
@@ -54,90 +58,6 @@ inline u32 get_iopl_from_eflags(u32 eflags)
 {
     return (eflags & iopl_mask) >> 12;
 }
-
-struct [[gnu::packed]] DescriptorTablePointer {
-    u16 limit;
-    void* address;
-};
-
-struct [[gnu::packed]] TSS32 {
-    u16 backlink, __blh;
-    u32 esp0;
-    u16 ss0, __ss0h;
-    u32 esp1;
-    u16 ss1, __ss1h;
-    u32 esp2;
-    u16 ss2, __ss2h;
-    u32 cr3, eip, eflags;
-    u32 eax, ecx, edx, ebx, esp, ebp, esi, edi;
-    u16 es, __esh;
-    u16 cs, __csh;
-    u16 ss, __ssh;
-    u16 ds, __dsh;
-    u16 fs, __fsh;
-    u16 gs, __gsh;
-    u16 ldt, __ldth;
-    u16 trace, iomapbase;
-};
-
-union [[gnu::packed]] Descriptor {
-    struct {
-        u16 limit_lo;
-        u16 base_lo;
-        u8 base_hi;
-        u8 type : 4;
-        u8 descriptor_type : 1;
-        u8 dpl : 2;
-        u8 segment_present : 1;
-        u8 limit_hi : 4;
-        u8 : 1;
-        u8 zero : 1;
-        u8 operation_size : 1;
-        u8 granularity : 1;
-        u8 base_hi2;
-    };
-    struct {
-        u32 low;
-        u32 high;
-    };
-
-    enum Type {
-        Invalid = 0,
-        AvailableTSS_16bit = 0x1,
-        LDT = 0x2,
-        BusyTSS_16bit = 0x3,
-        CallGate_16bit = 0x4,
-        TaskGate = 0x5,
-        InterruptGate_16bit = 0x6,
-        TrapGate_16bit = 0x7,
-        AvailableTSS_32bit = 0x9,
-        BusyTSS_32bit = 0xb,
-        CallGate_32bit = 0xc,
-        InterruptGate_32bit = 0xe,
-        TrapGate_32bit = 0xf,
-    };
-
-    VirtualAddress base() const
-    {
-        FlatPtr base = base_lo;
-        base |= base_hi << 16u;
-        base |= base_hi2 << 24u;
-        return VirtualAddress { base };
-    }
-
-    void set_base(VirtualAddress base)
-    {
-        base_lo = base.get() & 0xffffu;
-        base_hi = (base.get() >> 16u) & 0xffu;
-        base_hi2 = (base.get() >> 24u) & 0xffu;
-    }
-
-    void set_limit(u32 length)
-    {
-        limit_lo = length & 0xffff;
-        limit_hi = (length >> 16) & 0xf;
-    }
-};
 
 class PageDirectoryEntry {
 public:

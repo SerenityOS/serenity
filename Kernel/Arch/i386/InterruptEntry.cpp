@@ -24,24 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/Assertions.h>
-#include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
-
-extern "C" void interrupt_common_asm_entry();
-
-#if ARCH(I386)
-
-#    define GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(isr_number) \
-        extern "C" void interrupt_##isr_number##_asm_entry();        \
-        asm(".globl interrupt_" #isr_number "_asm_entry\n"           \
-            "interrupt_" #isr_number "_asm_entry:\n"                 \
-            "    pushw $" #isr_number "\n"                           \
-            "    pushw $0\n"                                         \
-            "    jmp interrupt_common_asm_entry\n");
-
+#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/DescriptorTable.h>
 // clang-format off
 asm(
     ".globl interrupt_common_asm_entry\n"
@@ -68,9 +52,9 @@ asm(
     "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
     ".globl common_trap_exit \n"
     "common_trap_exit: \n"
-         // another thread may have handled this trap at this point, so don't
-         // make assumptions about the stack other than there's a TrapFrame
-         // and a pointer to it.
+    // another thread may have handled this trap at this point, so don't
+    // make assumptions about the stack other than there's a TrapFrame
+    // and a pointer to it.
     "    call exit_trap \n"
     "    addl $" __STRINGIFY(TRAP_FRAME_SIZE + 4) ", %esp\n" // pop TrapFrame and pointer to it
     ".globl interrupt_common_asm_exit \n"
@@ -85,19 +69,3 @@ asm(
     "    iret\n"
 );
 // clang-format on
-
-#elif ARCH(X86_64)
-
-#    define GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(isr_number) \
-        extern "C" void interrupt_##isr_number##_asm_entry();        \
-        asm(".globl interrupt_" #isr_number "_asm_entry\n"           \
-            "interrupt_" #isr_number "_asm_entry:\n"                 \
-            "    cli\n"                                              \
-            "    hlt\n");
-
-asm(
-    ".globl common_trap_exit\n"
-    "common_trap_exit:\n"
-    "    cli;hlt\n");
-
-#endif

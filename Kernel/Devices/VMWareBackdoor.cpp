@@ -29,7 +29,7 @@
 #include <AK/Singleton.h>
 #include <AK/String.h>
 #include <Kernel/API/MousePacket.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
