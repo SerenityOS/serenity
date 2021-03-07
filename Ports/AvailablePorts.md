@@ -25,6 +25,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`freetype`](freetype/)        | FreeType                                      | 2.10.4            | https://www.freetype.org/                             |
 | [`frotz`](frotz/)              | Frotz                                         |                   | https://gitlab.com/DavidGriffith/frotz                |
 | [`gcc`](gcc/)                  | GNU Compiler Collection                       | 10.2.0            | https://gcc.gnu.org/                                  |
+| [`genemu`](genemu)             | Genesis / MegaDrive Emulator                  |                   | https://github.com/rasky/genemu                       |
 | [`git`](git/)                  | Git                                           | 2.26.0            | https://git-scm.com/                                  |
 | [`gnuplot`](gnuplot/)          | Gnuplot                                       | 5.2.8             | http://www.gnuplot.info/                              |
 | [`grep`](grep/)                | GNU Grep                                      | 2.5.4             | https://www.gnu.org/software/grep/                    |
