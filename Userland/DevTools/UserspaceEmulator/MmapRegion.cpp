@@ -31,42 +31,54 @@
 
 namespace UserspaceEmulator {
 
+static void* mmap_initialized(size_t bytes, char initial_value, const char* name)
+{
+    auto* ptr = mmap_with_name(nullptr, bytes, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, name);
+    VERIFY(ptr != MAP_FAILED);
+    memset(ptr, initial_value, bytes);
+    return ptr;
+}
+
+static void free_pages(void* ptr, size_t bytes)
+{
+    int rc = munmap(ptr, bytes);
+    VERIFY(rc == 0);
+}
+
 NonnullOwnPtr<MmapRegion> MmapRegion::create_anonymous(u32 base, u32 size, u32 prot)
 {
-    auto region = adopt_own(*new MmapRegion(base, size, prot));
-    region->m_file_backed = false;
-    region->m_data = (u8*)calloc(1, size);
+    auto data = (u8*)mmap_initialized(size, 0, nullptr);
+    auto shadow_data = (u8*)mmap_initialized(size, 1, "MmapRegion ShadowData");
+    auto region = adopt_own(*new MmapRegion(base, size, prot, data, shadow_data));
     return region;
 }
 
 NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset, String name)
 {
-    auto region = adopt_own(*new MmapRegion(base, size, prot));
+    auto data = (u8*)mmap_with_name(nullptr, size, prot, flags, fd, offset, name.is_empty() ? nullptr : name.characters());
+    VERIFY(data != MAP_FAILED);
+    auto shadow_data = (u8*)mmap_initialized(size, 1, "MmapRegion ShadowData");
+    auto region = adopt_own(*new MmapRegion(base, size, prot, data, shadow_data));
     region->m_file_backed = true;
     if (!name.is_empty()) {
         name = String::formatted("{} (Emulated)", name);
         region->m_name = name;
     }
-    region->m_data = (u8*)mmap_with_name(nullptr, size, prot, flags, fd, offset, name.is_empty() ? nullptr : name.characters());
-    VERIFY(region->m_data != MAP_FAILED);
     return region;
 }
 
-MmapRegion::MmapRegion(u32 base, u32 size, int prot)
+MmapRegion::MmapRegion(u32 base, u32 size, int prot, u8* data, u8* shadow_data)
     : Region(base, size)
+    , m_data(data)
+    , m_shadow_data(shadow_data)
 {
     set_prot(prot);
-    m_shadow_data = (u8*)malloc(size);
-    memset(m_shadow_data, 1, size);
 }
 
 MmapRegion::~MmapRegion()
 {
-    free(m_shadow_data);
-    if (m_file_backed)
-        munmap(m_data, size());
-    else
-        free(m_data);
+    free_pages(m_data, size());
+    free_pages(m_shadow_data, size());
 }
 
 ValueWithShadow<u8> MmapRegion::read8(FlatPtr offset)
