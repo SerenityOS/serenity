@@ -835,7 +835,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(*view_as_table_action);
     main_toolbar.add_action(*view_as_columns_action);
 
-    directory_view.on_path_change = [&](const String& new_path, bool can_write_in_path) {
+    directory_view.on_path_change = [&](const String& new_path, bool can_read_in_path, bool can_write_in_path) {
         auto icon = GUI::FileIconProvider::icon_for_path(new_path);
         auto* bitmap = icon.bitmap_for_size(16);
         window->set_icon(bitmap);
@@ -897,9 +897,12 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         go_forward_action->set_enabled(directory_view.path_history_position() < directory_view.path_history_size() - 1);
         go_back_action->set_enabled(directory_view.path_history_position() > 0);
         open_parent_directory_action->set_enabled(new_path != "/");
+        view_as_table_action->set_enabled(can_read_in_path);
+        view_as_icons_action->set_enabled(can_read_in_path);
+        view_as_columns_action->set_enabled(can_read_in_path);
     };
 
-    directory_view.on_accepted_drop = [&]() {
+    directory_view.on_accepted_drop = [&] {
         refresh_tree_view();
     };
 
