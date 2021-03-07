@@ -31,8 +31,8 @@
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
+#include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/PropertyID.h>
-#include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
@@ -440,9 +440,11 @@ void dump_sheet(const CSS::StyleSheet& sheet)
 
 void dump_sheet(StringBuilder& builder, const CSS::StyleSheet& sheet)
 {
-    builder.appendff("StyleSheet{{{}}}: {} rule(s)\n", &sheet, sheet.rules().size());
+    VERIFY(is<CSS::CSSStyleSheet>(sheet));
 
-    for (auto& rule : sheet.rules()) {
+    builder.appendff("CSSStyleSheet{{{}}}: {} rule(s)\n", &sheet, static_cast<const CSS::CSSStyleSheet&>(sheet).rules().size());
+
+    for (auto& rule : static_cast<const CSS::CSSStyleSheet&>(sheet).rules()) {
         dump_rule(builder, rule);
     }
 }

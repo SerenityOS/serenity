@@ -29,13 +29,4 @@
 
 namespace Web::CSS {
 
-StyleSheet::StyleSheet(NonnullRefPtrVector<CSSRule>&& rules)
-    : m_rules(move(rules))
-{
-}
-
-StyleSheet::~StyleSheet()
-{
-}
-
 }
