@@ -289,6 +289,17 @@ static FloatT internal_scalbn(FloatT x, int exponent) NOEXCEPT
     return extractor.d;
 }
 
+template<typename FloatT>
+static FloatT internal_copysign(FloatT x, FloatT y) NOEXCEPT
+{
+    using Extractor = FloatExtractor<FloatT>;
+    Extractor ex, ey;
+    ex.d = x;
+    ey.d = y;
+    ex.sign = ey.sign;
+    return ex.d;
+}
+
 extern "C" {
 
 double trunc(double x) NOEXCEPT
@@ -845,14 +856,19 @@ long double nexttowardl(long double, long double) NOEXCEPT
     TODO();
 }
 
-double copysign(double x, double y)
+float copysignf(float x, float y) NOEXCEPT
 {
-    using Extractor = FloatExtractor<decltype(x)>;
-    Extractor ex, ey;
-    ex.d = x;
-    ey.d = y;
-    ex.sign = ey.sign;
-    return ex.d;
+    return internal_copysign(x, y);
+}
+
+double copysign(double x, double y) NOEXCEPT
+{
+    return internal_copysign(x, y);
+}
+
+long double copysignl(long double x, long double y) NOEXCEPT
+{
+    return internal_copysign(x, y);
 }
 
 float scalbnf(float x, int exponent) NOEXCEPT

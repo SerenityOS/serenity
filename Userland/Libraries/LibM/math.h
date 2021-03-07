@@ -170,6 +170,8 @@ float scalbnlf(float, long) NOEXCEPT;
 double scalbln(double, long) NOEXCEPT;
 long double scalblnl(long double, long) NOEXCEPT;
 
-double copysign(double x, double y);
+float copysignf(float x, float y) NOEXCEPT;
+double copysign(double x, double y) NOEXCEPT;
+long double copysignl(long double x, long double y) NOEXCEPT;
 
 __END_DECLS
