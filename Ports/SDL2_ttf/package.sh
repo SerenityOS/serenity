@@ -10,5 +10,5 @@ configure() {
     run ./configure \
         --host=${SERENITY_ARCH}-pc-serenity \
         --with-sdl-prefix=${SERENITY_ROOT}/Build/Root/usr \
-        LIBS="-lgui -lgfx -lipc -lcore -lcompression"
+        LIBS="-lgui -lgfx -lipc -lcore -lcompress"
 }
