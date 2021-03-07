@@ -68,7 +68,6 @@ int main(int argc, char** argv)
 
     window->set_title("Welcome");
     window->set_resizable(true);
-    window->set_window_type(GUI::WindowType::ToolWindow);
     window->set_main_widget<SerendipityWidget>();
 
     window->show();
