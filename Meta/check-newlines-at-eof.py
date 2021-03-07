@@ -17,9 +17,10 @@ files = subprocess.run(
         "*.css",
         "*.sh",
         "*.py",
+        "*.json",
         "CMake*.txt",
         "**/CMake*.txt",
-        ":!:Base",
+        ":!:AK/Tests/*.json",
         ":!:Kernel/FileSystem/ext2_fs.h",
         ":!:Userland/Libraries/LibELF/exec_elf.h"
     ],
