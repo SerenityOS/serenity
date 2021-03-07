@@ -29,16 +29,13 @@
 
 #include <AK/Platform.h>
 
-// FIXME: This should not be i386-specific.
-#if ARCH(I386)
-
-#    include <AK/NonnullOwnPtr.h>
-#    include <Kernel/Devices/USB/UHCIDescriptorTypes.h>
-#    include <Kernel/IO.h>
-#    include <Kernel/PCI/Device.h>
-#    include <Kernel/Process.h>
-#    include <Kernel/Time/TimeManagement.h>
-#    include <Kernel/VM/ContiguousVMObject.h>
+#include <AK/NonnullOwnPtr.h>
+#include <Kernel/Devices/USB/UHCIDescriptorTypes.h>
+#include <Kernel/IO.h>
+#include <Kernel/PCI/Device.h>
+#include <Kernel/Process.h>
+#include <Kernel/Time/TimeManagement.h>
+#include <Kernel/VM/ContiguousVMObject.h>
 
 namespace Kernel::USB {
 
@@ -105,4 +102,3 @@ private:
 };
 
 }
-#endif
