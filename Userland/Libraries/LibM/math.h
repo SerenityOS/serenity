@@ -77,6 +77,10 @@ __BEGIN_DECLS
 #define DOUBLE_MAX ((double)0b0111111111101111111111111111111111111111111111111111111111111111)
 #define DOUBLE_MIN ((double)0b0000000000010000000000000000000000000000000000000000000000000000)
 
+long double nanl(const char*) NOEXCEPT;
+double nan(const char*) NOEXCEPT;
+float nanf(const char*) NOEXCEPT;
+
 double acos(double) NOEXCEPT;
 float acosf(float) NOEXCEPT;
 double asin(double) NOEXCEPT;
