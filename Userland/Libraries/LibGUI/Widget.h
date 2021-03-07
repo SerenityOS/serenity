@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/JsonObject.h>
 #include <AK/String.h>
 #include <LibCore/Object.h>
@@ -79,6 +80,8 @@ enum class FocusPolicy {
     ClickFocus = 0x2,
     StrongFocus = TabFocus | ClickFocus,
 };
+
+AK_ENUM_BITWISE_OPERATORS(FocusPolicy)
 
 class Widget : public Core::Object {
     C_OBJECT(Widget)
