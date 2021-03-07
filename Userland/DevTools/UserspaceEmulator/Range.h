@@ -67,7 +67,18 @@ public:
         return contains(other.base(), other.size());
     }
 
-    Vector<Range, 2> carve(const Range&);
+    Vector<Range, 2> carve(const Range&) const;
+
+    Range split_at(VirtualAddress address)
+    {
+        VERIFY(address.is_page_aligned());
+        VERIFY(m_base < address);
+        size_t new_size = (address - m_base).get();
+        VERIFY(new_size < m_size);
+        size_t other_size = m_size - new_size;
+        m_size = new_size;
+        return { address, other_size };
+    }
 
 private:
     VirtualAddress m_base;

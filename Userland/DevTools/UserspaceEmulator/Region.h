@@ -81,6 +81,7 @@ public:
 
 protected:
     Region(u32 base, u32 size);
+    void set_range(Range r) { m_range = r; };
 
 private:
     Emulator& m_emulator;
