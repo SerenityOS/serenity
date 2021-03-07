@@ -223,6 +223,19 @@ void MmapRegion::write64(u32 offset, ValueWithShadow<u64> value)
     *reinterpret_cast<u64*>(m_shadow_data + offset) = value.shadow();
 }
 
+NonnullOwnPtr<MmapRegion> MmapRegion::split_at(VirtualAddress offset)
+{
+    VERIFY(!m_malloc);
+    VERIFY(!m_malloc_metadata);
+    Range new_range = range();
+    Range other_range = new_range.split_at(offset);
+    auto other_region = adopt_own(*new MmapRegion(other_range.base().get(), other_range.size(), prot(), data() + new_range.size(), shadow_data() + new_range.size()));
+    other_region->m_file_backed = m_file_backed;
+    other_region->m_name = m_name;
+    set_range(new_range);
+    return other_region;
+}
+
 void MmapRegion::set_prot(int prot)
 {
     set_readable(prot & PROT_READ);

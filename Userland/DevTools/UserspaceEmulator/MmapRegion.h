@@ -56,6 +56,12 @@ public:
     bool is_malloc_block() const { return m_malloc; }
     void set_malloc(bool b) { m_malloc = b; }
 
+    NonnullOwnPtr<MmapRegion> split_at(VirtualAddress);
+
+    int prot() const
+    {
+        return (is_readable() ? PROT_READ : 0) | (is_writable() ? PROT_WRITE : 0) | (is_executable() ? PROT_EXEC : 0);
+    }
     void set_prot(int prot);
 
     MallocRegionMetadata* malloc_metadata() { return m_malloc_metadata; }
