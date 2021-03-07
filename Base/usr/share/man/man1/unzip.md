@@ -10,7 +10,7 @@ $ unzip file.zip
 
 ## Description
 
-unzip will extract files from a zip archive to the current directory. 
+unzip will extract files from a zip archive to the current directory.
 
 The program is compatible with the PKZIP file format specification.
 

@@ -90,7 +90,7 @@ It was first enabled in the following [commit](https://github.com/SerenityOS/ser
 
 ```
 commit 823186031d9250217f9a51829d34a96b74113334
-Author Andreas Kling <kling@serenityos.org> 
+Author Andreas Kling <kling@serenityos.org>
 Date:  Tue Feb 2 19:56:11 2021 +0100
 
 Kernel: Add a way to specify which memory regions can make syscalls
@@ -201,7 +201,7 @@ Everywhere: Build with -fstack-clash-protection
 
 The GCC compiler provides a few variants of the `-fstack-protector` option mitigation.
 This family of flags enables [buffer overflow protection](https://en.wikipedia.org/wiki/Buffer_overflow_protection)
-to mitigate [stack-smashing attacks](https://en.wikipedia.org/wiki/Stack_buffer_overflow). 
+to mitigate [stack-smashing attacks](https://en.wikipedia.org/wiki/Stack_buffer_overflow).
 
 The compiler implements the mitigation by storing a canary value randomized on program startup into the preamble of all
 functions. Code is then generated to validate that stack canary on function return and crash if the value has been changed
@@ -217,7 +217,7 @@ Date:   Fri Dec 20 20:51:50 2019 +0100
 Kernel+LibC: Build with basic -fstack-protector support
 ```
 
-It was later re-enabled and refined to `-fstack-protector-strong` in the following commits: 
+It was later re-enabled and refined to `-fstack-protector-strong` in the following commits:
 ```
 
 commit fd08c93ef57f71360d74b035214c71d7f7bfc5b8

@@ -592,7 +592,7 @@ FLATTEN void UnsignedBigInteger::shift_left_without_allocation(
  * Multiplication method:
  * An integer is equal to the sum of the powers of two
  * according to the indexes of its 'on' bits.
- * So to multiple x*y, we go over each '1' bit in x (say the i'th bit), 
+ * So to multiple x*y, we go over each '1' bit in x (say the i'th bit),
  * and add y<<i to the result.
  */
 FLATTEN void UnsignedBigInteger::multiply_without_allocation(

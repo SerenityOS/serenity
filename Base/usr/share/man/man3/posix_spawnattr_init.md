@@ -44,7 +44,7 @@ A `posix_spawnattr_t` object is allocated on the stack but starts in an undefine
 
 `posix_spawnattr_destroy()` frees up resources used by a valid `posix_spawn_file_actions_t` object and puts it into an undefined state. It has to be called after a `posix_spawnattr_t` object is no longer needed.
 
-It is valid to alternatingly call `posix_spawnattr_init()` and `posix_spawnattr_destroy()` on the same object, 
+It is valid to alternatingly call `posix_spawnattr_init()` and `posix_spawnattr_destroy()` on the same object,
 
 `posix_spawnattr_setflags()` configures which attributes of the new child process `posix_spawn()` will set. It receives a bitmask that can contain:
 

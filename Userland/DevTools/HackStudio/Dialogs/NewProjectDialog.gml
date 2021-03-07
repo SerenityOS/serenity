@@ -30,7 +30,7 @@
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {
         }
-        
+
         max_height: 24
 
         @GUI::Label {
@@ -43,11 +43,11 @@
             name: "name_input"
         }
     }
-    
+
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {
         }
-        
+
         max_height: 24
 
         @GUI::Label {
@@ -60,7 +60,7 @@
             name: "create_in_input"
             text: "/home/anon/Source"
         }
-        
+
         @GUI::Button {
             name: "browse_button"
             text: "Browse"
@@ -71,7 +71,7 @@
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {
         }
-        
+
         max_height: 24
 
         @GUI::Label {
@@ -90,22 +90,22 @@
             max_height: 22
         }
     }
-    
+
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {
         }
-        
+
         max_height: 24
 
         @GUI::Widget {
         }
-        
+
         @GUI::Button {
             name: "ok_button"
             text: "OK"
             max_width: 75
         }
-        
+
         @GUI::Button {
             name: "cancel_button"
             text: "Cancel"

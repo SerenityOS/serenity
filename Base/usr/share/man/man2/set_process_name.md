@@ -12,7 +12,7 @@ int set_process_name(const char* name, size_t name_length);
 
 ## Description
 
-`set_process_name()` changes the name of the calling process to the string `name` with length `name_length`. 
+`set_process_name()` changes the name of the calling process to the string `name` with length `name_length`.
 
 ## Pledge
 

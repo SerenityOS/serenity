@@ -8,7 +8,7 @@ mem - physical system memory
 the physical memory.
 
 Trying to [`mmap`(2)](../mmap.md) a physical range results either with success,
-or with an error. When invoking [`mmap`(2)](../mmap.md) on bad memory range, 
+or with an error. When invoking [`mmap`(2)](../mmap.md) on bad memory range,
 the kernel will write a message about it to the kernel log.
 
 By default, the kernel limits the areas which can be accessed. The allowed areas
