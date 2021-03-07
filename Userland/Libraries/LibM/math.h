@@ -66,6 +66,12 @@ __BEGIN_DECLS
 #define isinf(x) __builtin_isinf_sign(x)
 #define isfinite(x) __builtin_isfinite(x)
 #define isnormal(x) __builtin_isnormal(x)
+#define isgreater(x, y) __builtin_isgreater((x), (y))
+#define isgreaterequal(x, y) __builtin_isgreaterequal((x), (y))
+#define isless(x, y) __builtin_isless((x), (y))
+#define islessequal(x, y) __builtin_islessequal((x), (y))
+#define islessgreater(x, y) __builtin_islessgreater((x), (y))
+#define isunordered(x, y) __builtin_isunoredered((x), (y))
 
 #define DOUBLE_MAX ((double)0b0111111111101111111111111111111111111111111111111111111111111111)
 #define DOUBLE_MIN ((double)0b0000000000010000000000000000000000000000000000000000000000000000)
