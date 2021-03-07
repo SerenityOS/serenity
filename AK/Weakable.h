@@ -32,7 +32,7 @@
 #include "RefPtr.h"
 #include "StdLibExtras.h"
 #ifdef KERNEL
-#    include <Kernel/Arch/i386/CPU.h>
+#    include <Kernel/Arch/x86/CPU.h>
 #endif
 
 namespace AK {

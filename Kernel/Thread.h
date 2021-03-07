@@ -37,8 +37,8 @@
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/SafeMem.h>
+#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>

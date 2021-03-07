@@ -25,7 +25,7 @@
  */
 
 #include <Kernel/API/Syscall.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/ThreadTracer.h>

@@ -30,7 +30,7 @@
 #include <AK/Atomic.h>
 #include <AK/HashMap.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Forward.h>
 #include <Kernel/LockMode.h>
 #include <Kernel/WaitQueue.h>

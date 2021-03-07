@@ -20,9 +20,6 @@ set(KERNEL_SOURCES
     ACPI/Parser.cpp
     AddressSanitizer.cpp
     Arch/PC/BIOS.cpp
-    Arch/i386/CPU.cpp
-    Arch/i386/ProcessorInfo.cpp
-    Arch/i386/SafeMem.cpp
     Arch/x86/SmapDisabler.h
     CMOS.cpp
     CommandLine.cpp
@@ -235,6 +232,14 @@ set(KERNEL_SOURCES
     kprintf.cpp
 )
 
+set(KERNEL_SOURCES
+    ${KERNEL_SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/CPU.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/InterruptEntry.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/ProcessorInfo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/SafeMem.cpp
+)
+
 set(AK_SOURCES
     ../AK/ByteBuffer.cpp
     ../AK/FlyString.cpp
@@ -323,6 +328,7 @@ set_source_files_properties(init.cpp
     PROPERTIES
     OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/Boot/boot.S
 )
+
 add_library(boot OBJECT Arch/${KERNEL_ARCH}/Boot/boot.S)
 
 add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
