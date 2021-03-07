@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,35 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/Function.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
-#include <LibWeb/Loader/Resource.h>
 
-namespace Web {
+namespace Web::CSS {
 
-class CSSLoader : public ResourceClient {
-public:
-    CSSLoader(DOM::Document& document);
+CSSStyleSheet::CSSStyleSheet(NonnullRefPtrVector<CSSRule> rules)
+    : m_rules(move(rules))
+{
+}
 
-    void load_from_text(const String&);
-    void load_from_url(const URL&);
-
-    void load_next_import_if_needed();
-
-    RefPtr<CSS::CSSStyleSheet> style_sheet() const { return m_style_sheet; };
-
-    Function<void()> on_load;
-    Function<void()> on_fail;
-
-private:
-    // ^ResourceClient
-    virtual void resource_did_load() override;
-    virtual void resource_did_fail() override;
-
-    RefPtr<CSS::CSSStyleSheet> m_style_sheet;
-    const DOM::Document* m_document;
-};
+CSSStyleSheet::~CSSStyleSheet()
+{
+}
 
 }

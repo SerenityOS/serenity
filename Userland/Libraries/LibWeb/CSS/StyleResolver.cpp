@@ -87,8 +87,10 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& e
 
     size_t style_sheet_index = 0;
     for_each_stylesheet([&](auto& sheet) {
+        if (!is<CSSStyleSheet>(sheet))
+            return;
         size_t rule_index = 0;
-        sheet.for_each_effective_style_rule([&](auto& rule) {
+        static_cast<const CSSStyleSheet&>(sheet).for_each_effective_style_rule([&](auto& rule) {
             size_t selector_index = 0;
             for (auto& selector : rule.selectors()) {
                 if (SelectorEngine::matches(selector, element)) {
@@ -100,7 +102,7 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& e
             ++rule_index;
         });
         ++style_sheet_index;
-    });
+   });
 
     return matching_rules;
 }

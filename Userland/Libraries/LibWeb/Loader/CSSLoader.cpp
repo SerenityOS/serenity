@@ -43,14 +43,14 @@ void CSSLoader::load_from_text(const String& text)
 {
     m_style_sheet = parse_css(CSS::ParsingContext(*m_document), text);
     if (!m_style_sheet)
-        m_style_sheet = CSS::StyleSheet::create({});
+        m_style_sheet = CSS::CSSStyleSheet::create({});
 
     load_next_import_if_needed();
 }
 
 void CSSLoader::load_from_url(const URL& url)
 {
-    m_style_sheet = CSS::StyleSheet::create({});
+    m_style_sheet = CSS::CSSStyleSheet::create({});
 
     LoadRequest request;
     request.set_url(url);
