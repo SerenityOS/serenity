@@ -1222,6 +1222,9 @@ String Shell::unescape_token(const String& token)
 
 void Shell::cache_path()
 {
+    if (!m_is_interactive)
+        return;
+
     if (!cached_path.is_empty())
         cached_path.clear_with_capacity();
 
@@ -1691,7 +1694,7 @@ Shell::Shell()
     cache_path();
 }
 
-Shell::Shell(Line::Editor& editor)
+Shell::Shell(Line::Editor& editor, bool attempt_interactive)
     : m_editor(editor)
 {
     uid = getuid();
@@ -1705,7 +1708,7 @@ Shell::Shell(Line::Editor& editor)
         perror("gethostname");
 
     auto istty = isatty(STDIN_FILENO);
-    m_is_interactive = istty;
+    m_is_interactive = attempt_interactive && istty;
 
     if (istty) {
         rc = ttyname_r(0, ttyname, Shell::TTYNameSize);
@@ -1733,8 +1736,10 @@ Shell::Shell(Line::Editor& editor)
     }
 
     directory_stack.append(cwd);
-    m_editor->load_history(get_history_path());
-    cache_path();
+    if (m_is_interactive) {
+        m_editor->load_history(get_history_path());
+        cache_path();
+    }
 
     m_editor->register_key_input_callback('\n', [](Line::Editor& editor) {
         auto ast = Parser(editor.line()).parse();
@@ -1751,6 +1756,9 @@ Shell::~Shell()
         return;
 
     stop_all_jobs();
+    if (!m_is_interactive)
+        return;
+
     m_editor->save_history(get_history_path());
 }
 
