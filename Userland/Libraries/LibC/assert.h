@@ -52,4 +52,8 @@ __attribute__((noreturn)) void __assertion_failed(const char* msg);
 #define VERIFY assert
 #define TODO VERIFY_NOT_REACHED
 
+#ifndef __cplusplus
+#    define static_assert _Static_assert
+#endif
+
 __END_DECLS
