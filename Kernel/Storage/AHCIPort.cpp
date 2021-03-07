@@ -606,39 +606,39 @@ bool AHCIPort::initiate_sata_reset()
     full_memory_barrier();
     size_t retry = 0;
     // Try to wait 1 second for HBA to clear Command List Running
-    while (retry < 500) {
+    while (retry < 5000) {
         if (!(m_port_registers.cmd & (1 << 15)))
             break;
         // The AHCI specification says to wait now a 500 milliseconds
-        IO::delay(1000);
+        IO::delay(100);
         retry++;
     }
     full_memory_barrier();
     spin_up();
     full_memory_barrier();
     set_interface_state(AHCI::DeviceDetectionInitialization::PerformInterfaceInitializationSequence);
-    // The AHCI specification says to wait now a 1 millisecond, we wait 2 ms
-    IO::delay(10000);
+    // The AHCI specification says to wait now a 1 millisecond
+    IO::delay(1000);
     full_memory_barrier();
     set_interface_state(AHCI::DeviceDetectionInitialization::NoActionRequested);
     full_memory_barrier();
 
     retry = 0;
-    while (retry < 5) {
+    while (retry < 5000) {
         if (!((m_port_registers.ssts & 0xf) == 0))
             break;
 
-        IO::delay(10000);
+        IO::delay(10);
         retry++;
     }
 
     // If device presence detected and Phy communication established, wait for signature to update
     if ((m_port_registers.ssts & 0xf) == 3) {
         retry = 0;
-        while (retry < 30) {
+        while (retry < 30000) {
             if (!(m_port_registers.tfd & (ATA_SR_BSY | ATA_SR_DRQ)) && m_port_registers.sig != 0xffffffff)
                 break;
-            IO::delay(10000);
+            IO::delay(10);
             retry++;
         }
     }
