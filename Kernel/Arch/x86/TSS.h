@@ -28,87 +28,61 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
 
-struct [[gnu::packed]] TSS64
-{
+struct [[gnu::packed]] TSS32 {
+    u16 backlink, __blh;
+    u32 esp0;
+    u16 ss0, __ss0h;
+    u32 esp1;
+    u16 ss1, __ss1h;
+    u32 esp2;
+    u16 ss2, __ss2h;
+    u32 cr3, eip, eflags;
+    u32 eax, ecx, edx, ebx, esp, ebp, esi, edi;
+    u16 es, __esh;
+    u16 cs, __csh;
+    u16 ss, __ssh;
+    u16 ds, __dsh;
+    u16 fs, __fsh;
+    u16 gs, __gsh;
+    u16 ldt, __ldth;
+    u16 trace, iomapbase;
+};
+
+struct [[gnu::packed]] TSS64 {
     u32 __1; // Link?
-    u64 rsp0;
-    u64 rsp1;
-    u64 rsp2;
-    u64 __2; // IST0 -> empty?
-    u64 ist1;
-    u64 ist2;
-    u64 ist3;
-    u64 ist4;
-    u64 ist5;
-    u64 ist6;
-    u64 ist7;
-    u64 __3;
+    u32 rsp0l;
+    u32 rsp0h;
+    u32 rsp1l;
+    u32 rsp1h;
+    u32 rsp2l;
+    u32 rsp2h;
+    u64 __2; //probably CR3 and EIP?
+    u32 ist1l;
+    u32 ist1h;
+    u32 ist2l;
+    u32 ist2h;
+    u32 ist3l;
+    u32 ist3h;
+    u32 ist4l;
+    u32 ist4h;
+    u32 ist5l;
+    u32 ist5h;
+    u32 ist6l;
+    u32 ist6h;
+    u32 ist7l;
+    u32 ist7h;
+    u64 __3; // GS and LDTR?
     u16 __4;
     u16 iomapbase;
 };
 
-union [[gnu::packed]] Descriptor
-{
-    struct {
-        u16 limit_lo;
-        u16 base_lo;
-        u8 base_hi;
-        u8 type : 4;
-        u8 descriptor_type : 1;
-        u8 dpl : 2;
-        u8 segment_present : 1;
-        u8 limit_hi : 4;
-        u8 : 1;
-        u8 operation_size64 : 1;
-        u8 operation_size32 : 1;
-        u8 granularity : 1;
-        u8 base_hi2;
-    };
-    struct {
-        u32 low;
-        u32 high;
-    };
-
-    enum Type {
-        Invalid = 0,
-        AvailableTSS_16bit = 0x1,
-        LDT = 0x2,
-        BusyTSS_16bit = 0x3,
-        CallGate_16bit = 0x4,
-        TaskGate = 0x5,
-        InterruptGate_16bit = 0x6,
-        TrapGate_16bit = 0x7,
-        AvailableTSS_32bit = 0x9,
-        BusyTSS_32bit = 0xb,
-        CallGate_32bit = 0xc,
-        InterruptGate_32bit = 0xe,
-        TrapGate_32bit = 0xf,
-    };
-
-    VirtualAddress base() const
-    {
-        FlatPtr base = base_lo;
-        base |= base_hi << 16u;
-        base |= base_hi2 << 24u;
-        return VirtualAddress { base };
-    }
-
-    void set_base(VirtualAddress base)
-    {
-        base_lo = base.get() & 0xffffu;
-        base_hi = (base.get() >> 16u) & 0xffu;
-        base_hi2 = (base.get() >> 24u) & 0xffu;
-    }
-
-    void set_limit(u32 length)
-    {
-        limit_lo = length & 0xffff;
-        limit_hi = (length >> 16) & 0xf;
-    }
-};
+#if ARCH(I386)
+using TSS = TSS32;
+#elif ARCH(X86_64)
+using TSS = TSS64;
+#endif
 
 }

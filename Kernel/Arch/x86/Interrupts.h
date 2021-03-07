@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,41 +25,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FullDevice.h"
-#include <AK/Memory.h>
-#include <AK/StdLibExtras.h>
-#include <Kernel/Arch/x86/CPU.h>
-#include <LibC/errno_numbers.h>
+#pragma once
+
+#include <AK/Types.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT FullDevice::FullDevice()
-    : CharacterDevice(1, 7)
-{
-}
+class GenericInterruptHandeler;
 
-UNMAP_AFTER_INIT FullDevice::~FullDevice()
-{
-}
+extern "C" void interrupt_common_asm_entry();
 
-bool FullDevice::can_read(const FileDescription&, size_t) const
-{
-    return true;
-}
+#define GENERATE_GENERIC_INTERRUPT_HANDLER_ASM_ENTRY(isr_number) \
+    extern "C" void interrupt_##isr_number##_asm_entry();        \
+    asm(".globl interrupt_" #isr_number "_asm_entry\n"           \
+        "interrupt_" #isr_number "_asm_entry:\n"                 \
+        "    pushw $" #isr_number "\n"                           \
+        "    pushw $0\n"                                         \
+        "    jmp interrupt_common_asm_entry\n");
 
-KResultOr<size_t> FullDevice::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
-{
-    ssize_t count = min(static_cast<size_t>(PAGE_SIZE), size);
-    if (!buffer.memset(0, count))
-        return EFAULT;
-    return count;
-}
-
-KResultOr<size_t> FullDevice::write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t size)
-{
-    if (size == 0)
-        return 0;
-    return ENOSPC;
-}
+void register_interrupt_handler(u8 number, void (*handler)());
+void register_user_callable_interrupt_handler(u8 number, void (*handler)());
+GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number);
+void register_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
+void unregister_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
 
 }
