@@ -7,7 +7,7 @@ Whilst it is possible to run Serenity on physical x86-compatible hardware, it is
 
 ## Hardware support and requirements
 
-Storage-wise Serenity requires a >= 2 GB parallel ATA or SATA IDE disk. Some older SATA chipsets already operate in IDE mode whilst some newer ones will depend upon adjusting a BIOS option to run your SATA controller in IDE (sometimes referred to as Legacy or PATA) mode. SATA AHCI, SCSI, SAS, eMMC and NVME are all presently unsupported. 
+Storage-wise Serenity requires a >= 2 GB parallel ATA or SATA IDE disk. Some older SATA chipsets already operate in IDE mode whilst some newer ones will depend upon adjusting a BIOS option to run your SATA controller in IDE (sometimes referred to as Legacy or PATA) mode. SATA AHCI, SCSI, SAS, eMMC and NVME are all presently unsupported.
 
 You must be willing to wipe your disk's contents to allow for writing the Serenity image so be sure to back up any important data on your disk first! Serenity uses the GRUB2 bootloader so it should be possible to multiboot it with any other OS that can be booted from GRUB2 post-installation.
 

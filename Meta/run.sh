@@ -16,7 +16,7 @@ die() {
 
 # To support virtualization acceleration on mac
 # we need to use 64-bit qemu
-if [ "$(uname)" = "Darwin" ] && [ "$(uname -m)" = "x86_64" ]; then 
+if [ "$(uname)" = "Darwin" ] && [ "$(uname -m)" = "x86_64" ]; then
 
     [ -z "$SERENITY_QEMU_BIN" ] && SERENITY_QEMU_BIN="qemu-system-x86_64"
 

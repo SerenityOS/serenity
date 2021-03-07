@@ -49,7 +49,7 @@ The way around this is to use a different file name for each VDI you generate. Y
 Yes, this is a mess. You can delete the old disk images without any issues. If you know a solution for this, *please* let us know.
 
 ## Configuring the virtual machine to boot Serenity
-Serenity will not be able to boot with the default configuration. There are a couple settings to adjust. Open **Settings** and: 
+Serenity will not be able to boot with the default configuration. There are a couple settings to adjust. Open **Settings** and:
 1. Go to **System**, open the **Processor** tab and tick **Enable PAE/NX**.
 2. Go to **Audio** and set **Audio Controller** to **SoundBlaster 16**.
 

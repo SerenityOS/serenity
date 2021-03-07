@@ -148,7 +148,7 @@ Commands can be either calls to Shell builtins, or external programs.
 The commands can be composed into semantic elements, producing composite commands:
 
 ### Sequences
-A sequence of commands, executed serially independent of each other: `Commanad ; Command ; Command ...` 
+A sequence of commands, executed serially independent of each other: `Commanad ; Command ; Command ...`
 
 It should be noted that a newline (`\\n`) can be substituted for the semicolon (`;`).
 
