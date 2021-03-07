@@ -663,22 +663,22 @@ long double log2l(long double x) NOEXCEPT
     return log2(x);
 }
 
-double frexp(double, int*) NOEXCEPT
+double frexp(double x, int* exp) NOEXCEPT
 {
-    VERIFY_NOT_REACHED();
-    return 0;
+    *exp = (x == 0) ? 0 : (1 + ilogb(x));
+    return scalbn(x, -(*exp));
 }
 
-float frexpf(float, int*) NOEXCEPT
+float frexpf(float x, int* exp) NOEXCEPT
 {
-    VERIFY_NOT_REACHED();
-    return 0;
+    *exp = (x == 0) ? 0 : (1 + ilogbf(x));
+    return scalbnf(x, -(*exp));
 }
 
-long double frexpl(long double, int*) NOEXCEPT
+long double frexpl(long double x, int* exp) NOEXCEPT
 {
-    VERIFY_NOT_REACHED();
-    return 0;
+    *exp = (x == 0) ? 0 : (1 + ilogbl(x));
+    return scalbnl(x, -(*exp));
 }
 
 double round(double value) NOEXCEPT
