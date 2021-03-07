@@ -102,6 +102,11 @@ typedef struct {
     long rem;
 } ldiv_t;
 ldiv_t ldiv(long, long);
+typedef struct {
+    long long quot;
+    long long rem;
+} lldiv_t;
+lldiv_t lldiv(long long, long long);
 
 int posix_openpt(int flags);
 int grantpt(int fd);

@@ -9,6 +9,7 @@ set(LIBC_SOURCES
     fenv.cpp
     getopt.cpp
     grp.cpp
+    inttypes.cpp
     ioctl.cpp
     libcinit.cpp
     libgen.cpp
