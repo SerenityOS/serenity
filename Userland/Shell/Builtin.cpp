@@ -892,10 +892,15 @@ int Shell::builtin_not(int argc, const char** argv)
 
     auto commands = expand_aliases({ move(command) });
     int exit_code = 1;
+    auto found_a_job = false;
     for (auto& job : run_commands(commands)) {
+        found_a_job = true;
         block_on_job(job);
         exit_code = job.exit_code();
     }
+    // In case it was a function.
+    if (!found_a_job)
+        exit_code = last_return_code;
     return exit_code == 0 ? 1 : 0;
 }
 
