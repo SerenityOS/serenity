@@ -63,11 +63,11 @@ int main(int argc, char** argv)
     }
 
     auto window = GUI::Window::construct();
-    window->resize(480, 250);
+    window->set_minimum_size(480, 250);
     window->center_on_screen();
 
     window->set_title("Welcome");
-    window->set_resizable(false);
+    window->set_resizable(true);
     window->set_window_type(GUI::WindowType::ToolWindow);
     window->set_main_widget<SerendipityWidget>();
 
