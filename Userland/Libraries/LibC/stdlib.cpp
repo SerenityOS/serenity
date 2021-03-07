@@ -836,6 +836,19 @@ ldiv_t ldiv(long numerator, long denominator)
     return result;
 }
 
+lldiv_t lldiv(long long numerator, long long denominator)
+{
+    lldiv_t result;
+    result.quot = numerator / denominator;
+    result.rem = numerator % denominator;
+
+    if (numerator >= 0 && result.rem < 0) {
+        result.quot++;
+        result.rem -= denominator;
+    }
+    return result;
+}
+
 size_t mbstowcs(wchar_t*, const char*, size_t)
 {
     dbgln("FIXME: Implement mbstowcs()");

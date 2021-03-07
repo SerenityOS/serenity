@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mițca Dumitru <dumitru0mitca@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,58 +24,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <inttypes.h>
 
-#include <bits/stdint.h>
-#include <sys/cdefs.h>
+extern "C" {
 
-__BEGIN_DECLS
+imaxdiv_t imaxdiv(intmax_t numerator, intmax_t denominator)
+{
+    imaxdiv_t result;
+    result.quot = numerator / denominator;
+    result.rem = numerator % denominator;
 
-#define PRId8 "d"
-#define PRId16 "d"
-#define PRId32 "d"
-#define PRId64 "lld"
-#define PRIi8 "d"
-#define PRIi16 "d"
-#define PRIi32 "d"
-#define PRIi64 "lld"
-#define PRIu8 "u"
-#define PRIo8 "o"
-#define PRIo16 "o"
-#define PRIo32 "o"
-#define PRIo64 "llo"
-#define PRIu16 "u"
-#define PRIu32 "u"
-#define PRIu64 "llu"
-#define PRIx8 "b"
-#define PRIx16 "w"
-#define PRIx32 "x"
-#define PRIX32 "X"
-#define PRIx64 "llx"
-#define PRIX64 "llX"
+    if (numerator >= 0 && result.rem < 0) {
+        result.quot++;
+        result.rem -= denominator;
+    }
 
-#define __PRI64_PREFIX "ll"
-#define __PRIPTR_PREFIX
-
-#define PRIdPTR __PRIPTR_PREFIX "d"
-#define PRIiPTR __PRIPTR_PREFIX "i"
-#define PRIXPTR __PRIPTR_PREFIX "X"
-
-#define PRIdMAX __PRI64_PREFIX "d"
-#define PRIoMAX __PRI64_PREFIX "o"
-#define PRIuMAX __PRI64_PREFIX "u"
-
-#define SCNdMAX __PRI64_PREFIX "d"
-#define SCNoMAX __PRI64_PREFIX "o"
-#define SCNuMAX __PRI64_PREFIX "u"
-
-#define SCNu64 __PRI64_PREFIX "u"
-#define SCNd64 __PRI64_PREFIX "d"
-
-typedef struct imaxdiv_t {
-    intmax_t quot;
-    intmax_t rem;
-} imaxdiv_t;
-imaxdiv_t imaxdiv(intmax_t, intmax_t);
-
-__END_DECLS
+    return result;
+}
+}
