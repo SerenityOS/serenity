@@ -17,6 +17,7 @@ set(AK_TEST_SOURCES
     TestDistinctNumeric.cpp
     TestDoublyLinkedList.cpp
     TestEndian.cpp
+    TestEnumBits.cpp
     TestFind.cpp
     TestFormat.cpp
     TestHashFunctions.cpp
