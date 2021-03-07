@@ -93,7 +93,7 @@ template<typename T, typename... Types>
 Array(T, Types...) -> Array<T, sizeof...(Types) + 1>;
 
 namespace Detail {
-template<typename T, unsigned long... Is>
+template<typename T, size_t... Is>
 constexpr auto integer_sequence_generate_array([[maybe_unused]] const T offset, IntegerSequence<T, Is...>) -> Array<T, sizeof...(Is)>
 {
     return { { (offset + Is)... } };
