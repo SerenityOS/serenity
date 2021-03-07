@@ -64,7 +64,7 @@ public:
     const String& name() const { return m_name; }
 
 private:
-    MmapRegion(u32 base, u32 size, int prot);
+    MmapRegion(u32 base, u32 size, int prot, u8* data, u8* shadow_data);
 
     u8* m_data { nullptr };
     u8* m_shadow_data { nullptr };
