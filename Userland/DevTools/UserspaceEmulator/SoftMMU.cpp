@@ -61,6 +61,38 @@ void SoftMMU::remove_region(Region& region)
     m_regions.remove_first_matching([&](auto& entry) { return entry.ptr() == &region; });
 }
 
+void SoftMMU::ensure_split_at(X86::LogicalAddress address)
+{
+    // FIXME: If this fails, call Emulator::dump_backtrace
+    VERIFY(address.selector() != 0x2b);
+
+    u32 offset = address.offset();
+    VERIFY((offset & (PAGE_SIZE - 1)) == 0);
+    size_t page_index = address.offset() / PAGE_SIZE;
+
+    if (!page_index)
+        return;
+    if (m_page_to_region_map[page_index - 1] != m_page_to_region_map[page_index])
+        return;
+    if (!m_page_to_region_map[page_index])
+        return;
+
+    // If we get here, we know that the page exists and belongs to a region, that there is
+    // a previous page, and that it belongs to the same region.
+    VERIFY(is<MmapRegion>(m_page_to_region_map[page_index]));
+    MmapRegion* old_region = static_cast<MmapRegion*>(m_page_to_region_map[page_index]);
+    NonnullOwnPtr<MmapRegion> new_region = old_region->split_at(VirtualAddress(offset));
+
+    size_t first_page_in_region = new_region->base() / PAGE_SIZE;
+    size_t last_page_in_region = (new_region->base() + new_region->size() - 1) / PAGE_SIZE;
+    for (size_t page = first_page_in_region; page <= last_page_in_region; ++page) {
+        VERIFY(m_page_to_region_map[page] == old_region);
+        m_page_to_region_map[page] = new_region.ptr();
+    }
+
+    m_regions.append(move(new_region));
+}
+
 void SoftMMU::set_tls_region(NonnullOwnPtr<Region> region)
 {
     VERIFY(!m_tls_region);
