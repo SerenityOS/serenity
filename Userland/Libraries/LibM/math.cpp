@@ -303,6 +303,21 @@ static FloatT internal_copysign(FloatT x, FloatT y) NOEXCEPT
 
 extern "C" {
 
+float nanf(const char* s) NOEXCEPT
+{
+    return __builtin_nanf(s);
+}
+
+double nan(const char* s) NOEXCEPT
+{
+    return __builtin_nan(s);
+}
+
+long double nanl(const char* s) NOEXCEPT
+{
+    return __builtin_nanl(s);
+}
+
 double trunc(double x) NOEXCEPT
 {
     return internal_to_integer(x, RoundingMode::ToZero);
