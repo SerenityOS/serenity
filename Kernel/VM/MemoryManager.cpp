@@ -489,7 +489,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     return region->handle_fault(fault, lock);
 }
 
-OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, String name, u8 access, size_t physical_alignment, Region::Cacheable cacheable)
+OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, String name, Region::Access access, size_t physical_alignment, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
@@ -500,7 +500,7 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, Str
     return allocate_kernel_region_with_vmobject(range.value(), vmobject, move(name), access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String name, u8 access, AllocationStrategy strategy, Region::Cacheable cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
@@ -513,7 +513,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String name, u
     return allocate_kernel_region_with_vmobject(range.value(), vmobject.release_nonnull(), move(name), access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, String name, u8 access, Region::Cacheable cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, String name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
@@ -526,7 +526,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
     return allocate_kernel_region_with_vmobject(range.value(), *vmobject, move(name), access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress paddr, size_t size, String name, u8 access, Region::Cacheable cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress paddr, size_t size, String name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
@@ -539,7 +539,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress pa
     return allocate_kernel_region_with_vmobject(range.value(), *vmobject, move(name), access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& range, VMObject& vmobject, String name, u8 access, Region::Cacheable cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& range, VMObject& vmobject, String name, Region::Access access, Region::Cacheable cacheable)
 {
     ScopedSpinLock lock(s_mm_lock);
     auto region = Region::create_kernel_only(range, vmobject, 0, move(name), access, cacheable);
@@ -548,7 +548,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& 
     return region;
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, String name, u8 access, Region::Cacheable cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, String name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
