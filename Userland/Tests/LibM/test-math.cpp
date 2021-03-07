@@ -26,6 +26,7 @@
 
 #include <AK/TestSuite.h>
 
+#include <float.h>
 #include <math.h>
 
 TEST_CASE(trig)
@@ -201,6 +202,22 @@ TEST_CASE(nextafter)
     EXPECT_EQ(nextafter_translator(Extractor(0x1, 0x419, 0x7d78400000000), Extractor(0x0, 0x0, 0x0)), Extractor(0x1, 0x419, 0x7d783ffffffff));
     EXPECT_EQ(nextafter_translator(Extractor(0x1, 0x419, 0x7d78404000000), Extractor(0x1, 0x3ff, 0x0)), Extractor(0x1, 0x419, 0x7d78403ffffff));
     EXPECT_EQ(nextafter_translator(Extractor(0x1, 0x419, 0x7d78400000000), Extractor(0x0, 0x0, 0x1)), Extractor(0x1, 0x419, 0x7d783ffffffff));
+}
+
+TEST_CASE(scalbn)
+{
+    EXPECT(isnan(scalbn(NAN, 3)));
+    EXPECT(!isfinite(scalbn(INFINITY, 5)));
+    EXPECT_EQ(scalbn(0, 3), 0);
+    EXPECT_EQ(scalbn(15.3, 0), 15.3);
+
+    EXPECT_EQ(scalbn(0x0.0000000000008p-1022, 16), 0x0.0000000000008p-1006);
+    static constexpr auto biggest_subnormal = DBL_MIN - DBL_TRUE_MIN;
+    auto smallest_normal = scalbn(biggest_subnormal, 1);
+    Extractor ex(smallest_normal);
+    EXPECT(ex.exponent != 0);
+
+    EXPECT_EQ(scalbn(2.0, 4), 32.0);
 }
 
 TEST_MAIN(Math)
