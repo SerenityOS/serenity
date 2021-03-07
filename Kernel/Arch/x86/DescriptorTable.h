@@ -111,4 +111,69 @@ union [[gnu::packed]] Descriptor {
     }
 };
 
+enum class IDTEntryType {
+    TaskGate32 = 0b0101,
+    InterruptGate16 = 0b110,
+    TrapGate16 = 0b111,
+    InterruptGate32 = 0b1110,
+    TrapGate32 = 0b1111,
+};
+
+// Clang doesn't format this right due to the compiler magic
+// clang-format off
+struct [[gnu::packed]] IDTEntry
+{
+
+    u16 offset_1; // offset bits 0..15
+    u16 selector; // a code segment selector in GDT or LDT
+
+    u8 zero; // unused, set to 0 (maybe used on amd64)
+    struct {
+        // FIXME: Is the order correct?
+        u8 gate_type : 4;
+        u8 storage_segment : 1;
+        u8 descriptor_privilege_level : 2;
+        u8 present : 1;
+    } type_attr;  // type and attributes
+    u16 offset_2; // offset bits 16..31
+#if !ARCH(I386)
+// we may need to switch those around?
+    u32 offset_3;
+    u32 zeros;
+#endif
+
+    IDTEntry() = default;
+    IDTEntry(FlatPtr callback, u16 selector_, IDTEntryType type, u8 storage_segment, u8 privilige_level)
+        : offset_1 { (u16)((FlatPtr)callback & 0xFFFF) }
+        , selector { selector_ }
+        , zero { 0 }
+        , type_attr {
+            .gate_type = (u8)type,
+            .storage_segment = storage_segment,
+            .descriptor_privilege_level = (u8)(privilige_level & 0b11),
+            .present = 1,
+        }
+        , offset_2 { (u16)((FlatPtr)callback >> 16) }
+#if !ARCH(I386)
+        , offset_3 { (u32)(((FlatPtr)callback) >> 32) }
+        , zeros { 0 }
+#endif
+    {
+    }
+
+    u32 off()
+    {
+#if ARCH(I386)
+        return (u32)offset_2 << 16 & (u32)offset_1;
+#else
+        return (u64)offset_3 << 32 & (u64)offset_2 << 16 & (u64)offset_1;
+#endif
+    }
+    IDTEntryType type()
+    {
+        return IDTEntryType(type_attr.gate_type);
+    }
+};
+// clang-format on
+
 }
