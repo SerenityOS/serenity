@@ -60,21 +60,6 @@ int main(int argc, char** argv)
         s_shell->editor()->save_history(s_shell->get_history_path());
     });
 
-    editor = Line::Editor::construct();
-    editor->initialize();
-
-    auto shell = Shell::Shell::construct(*editor);
-    s_shell = shell.ptr();
-
-    s_shell->setup_signals();
-
-#ifndef __serenity__
-    sigset_t blocked;
-    sigemptyset(&blocked);
-    sigaddset(&blocked, SIGTTOU);
-    sigaddset(&blocked, SIGTTIN);
-    pthread_sigmask(SIG_BLOCK, &blocked, nullptr);
-#endif
 #ifdef __serenity__
     if (pledge("stdio rpath wpath cpath proc exec tty accept sigaction unix fattr", nullptr) < 0) {
         perror("pledge");
@@ -82,23 +67,43 @@ int main(int argc, char** argv)
     }
 #endif
 
-    shell->termios = editor->termios();
-    shell->default_termios = editor->default_termios();
+    RefPtr<::Shell::Shell> shell;
+    bool attempt_interactive = false;
 
-    editor->on_display_refresh = [&](auto& editor) {
-        editor.strip_styles();
-        if (shell->should_format_live()) {
-            auto line = editor.line();
-            ssize_t cursor = editor.cursor();
-            editor.clear_line();
-            editor.insert(shell->format(line, cursor));
-            if (cursor >= 0)
-                editor.set_cursor(cursor);
-        }
-        shell->highlight(editor);
-    };
-    editor->on_tab_complete = [&](const Line::Editor&) {
-        return shell->complete();
+    auto initialize = [&] {
+        editor = Line::Editor::construct();
+        editor->initialize();
+
+        shell = Shell::Shell::construct(*editor, attempt_interactive);
+        s_shell = shell.ptr();
+
+        s_shell->setup_signals();
+
+#ifndef __serenity__
+        sigset_t blocked;
+        sigemptyset(&blocked);
+        sigaddset(&blocked, SIGTTOU);
+        sigaddset(&blocked, SIGTTIN);
+        pthread_sigmask(SIG_BLOCK, &blocked, nullptr);
+#endif
+        shell->termios = editor->termios();
+        shell->default_termios = editor->default_termios();
+
+        editor->on_display_refresh = [&](auto& editor) {
+            editor.strip_styles();
+            if (shell->should_format_live()) {
+                auto line = editor.line();
+                ssize_t cursor = editor.cursor();
+                editor.clear_line();
+                editor.insert(shell->format(line, cursor));
+                if (cursor >= 0)
+                    editor.set_cursor(cursor);
+            }
+            shell->highlight(editor);
+        };
+        editor->on_tab_complete = [&](const Line::Editor&) {
+            return shell->complete();
+        };
     };
 
     const char* command_to_run = nullptr;
@@ -118,14 +123,14 @@ int main(int argc, char** argv)
 
     parser.parse(argc, argv);
 
-    shell->set_live_formatting(should_format_live);
-
     if (format) {
         auto file = Core::File::open(format, Core::IODevice::ReadOnly);
         if (file.is_error()) {
             fprintf(stderr, "Error: %s", file.error().characters());
             return 1;
         }
+
+        initialize();
 
         ssize_t cursor = -1;
         puts(shell->format(file.value()->read_all(), cursor).characters());
@@ -152,6 +157,12 @@ int main(int argc, char** argv)
         }
     }
 
+    auto execute_file = file_to_read_from && StringView { "-" } != file_to_read_from;
+    attempt_interactive = !execute_file;
+
+    initialize();
+
+    shell->set_live_formatting(should_format_live);
     shell->current_script = argv[0];
 
     if (!skip_rc_files) {
@@ -179,7 +190,7 @@ int main(int argc, char** argv)
         return shell->run_command(command_to_run);
     }
 
-    if (file_to_read_from && StringView { "-" } != file_to_read_from) {
+    if (execute_file) {
         if (shell->run_file(file_to_read_from))
             return 0;
         return 1;
