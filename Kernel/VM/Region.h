@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
@@ -56,6 +57,7 @@ class Region final
     MAKE_SLAB_ALLOCATED(Region)
 public:
     enum Access : u8 {
+        None = 0,
         Read = 1,
         Write = 2,
         Execute = 4,
@@ -69,8 +71,8 @@ public:
         Yes,
     };
 
-    static NonnullOwnPtr<Region> create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String name, u8 access, Cacheable, bool shared);
-    static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String name, u8 access, Cacheable = Cacheable::Yes);
+    static NonnullOwnPtr<Region> create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String name, Region::Access access, Cacheable, bool shared);
+    static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String name, Region::Access access, Cacheable = Cacheable::Yes);
 
     ~Region();
 
@@ -87,7 +89,7 @@ public:
 
     bool is_cacheable() const { return m_cacheable; }
     const String& name() const { return m_name; }
-    unsigned access() const { return m_access; }
+    Region::Access access() const { return static_cast<Region::Access>(m_access); }
 
     void set_name(String name) { m_name = move(name); }
 
@@ -249,7 +251,7 @@ public:
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
 private:
-    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String, u8 access, Cacheable, bool shared);
+    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String, Region::Access access, Cacheable, bool shared);
 
     bool do_remap_vmobject_page_range(size_t page_index, size_t page_count);
 
@@ -278,7 +280,7 @@ private:
     size_t m_offset_in_vmobject { 0 };
     NonnullRefPtr<VMObject> m_vmobject;
     String m_name;
-    u8 m_access { 0 };
+    u8 m_access { Region::None };
     bool m_shared : 1 { false };
     bool m_cacheable : 1 { false };
     bool m_stack : 1 { false };
@@ -287,9 +289,11 @@ private:
     WeakPtr<Process> m_owner;
 };
 
-inline unsigned prot_to_region_access_flags(int prot)
+AK_ENUM_BITWISE_OPERATORS(Region::Access)
+
+inline Region::Access prot_to_region_access_flags(int prot)
 {
-    unsigned access = 0;
+    Region::Access access = Region::Access::None;
     if (prot & PROT_READ)
         access |= Region::Access::Read;
     if (prot & PROT_WRITE)
@@ -299,7 +303,7 @@ inline unsigned prot_to_region_access_flags(int prot)
     return access;
 }
 
-inline int region_access_flags_to_prot(unsigned access)
+inline int region_access_flags_to_prot(Region::Access access)
 {
     int prot = 0;
     if (access & Region::Access::Read)
