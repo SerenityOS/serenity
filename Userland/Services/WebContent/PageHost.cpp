@@ -84,14 +84,6 @@ void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
         return;
     }
 
-    painter.fill_rect(bitmap_rect, layout_root->document().background_color(palette()));
-
-    if (auto background_bitmap = layout_root->document().background_image()) {
-        painter.draw_tiled_bitmap(bitmap_rect, *background_bitmap);
-    }
-
-    painter.translate(-content_rect.x(), -content_rect.y());
-
     Web::PaintContext context(painter, palette(), content_rect.top_left());
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     context.set_viewport_rect(content_rect);
