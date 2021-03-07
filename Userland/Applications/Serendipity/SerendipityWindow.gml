@@ -73,12 +73,12 @@
         }
 
         @GUI::Widget {
-            fixed_width: 5
+            fixed_width: 3
         }
 
         @GUI::Widget {
             name: "navigation_column"
-            fixed_width: 120
+            fixed_width: 115
             min_height: 160
             layout: @GUI::VerticalBoxLayout {
             }
@@ -86,22 +86,16 @@
             @GUI::Button {
                 name: "new_button"
                 text: "What's New"
-                min_width: 115
-                min_height: 24
             }
 
             @GUI::Button {
                 name: "help_button"
                 text: "Help Contents"
-                min_width: 115
-                min_height: 24
             }
 
             @GUI::Button {
                 name: "next_button"
                 text: "Next Tip"
-                min_width: 115
-                min_height: 24
             }
 
         }
