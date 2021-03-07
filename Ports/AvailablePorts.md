@@ -67,6 +67,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`quake`](quake/)              | Quake                                         | 0.65              | https://github.com/SerenityOS/SerenityQuake           |
 | [`rsync`](rsync/)              | rsync                                         | 3.1.3             | https://rsync.samba.org/                              |
 | [`SDL2`](SDL2/)                | Simple DirectMedia Layer (SDL2)               |                   | https://github.com/SerenityOS/SDL                     |
+| [`SDL2_ttf`](SDL2_ttf/)        | SDL2\_ttf (TrueType Font add-on for SDL2)     | 2.0.15            | https://www.libsdl.org/projects/SDL\_ttf/              |
 | [`sed`](sed/)                  | GNU sed                                       | 4.2.1             | https://www.gnu.org/software/sed/                     |
 | [`sl`](sl/)                    | Steam Locomotive (SL)                         |                   | https://github.com/mtoyoda/sl                         |
 | [`stress-ng`](stress-ng/)      | stress-ng                                     | 0.11.23           | https://github.com/ColinIanKing/stress-ng             |
