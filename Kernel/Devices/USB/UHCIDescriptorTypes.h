@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <AK/Ptr32.h>
 #include <AK/Types.h>
 
 namespace Kernel::USB {
@@ -183,10 +184,10 @@ private:
     u32 m_buffer_ptr;              // Points to a data buffer for this transaction (i.e what we want to send or recv)
 
     // These values will be ignored by the controller, but we can use them for configuration/bookkeeping
-    u32 m_paddr;                   // Physical address where this TransferDescriptor is located
-    TransferDescriptor* m_next_td; // Pointer to first TD
-    TransferDescriptor* m_prev_td; // Pointer to first TD
-    bool m_in_use;                 // Has this TD been allocated (and therefore in use)?
+    u32 m_paddr;                                     // Physical address where this TransferDescriptor is located
+    Ptr32<TransferDescriptor> m_next_td { nullptr }; // Pointer to first TD
+    Ptr32<TransferDescriptor> m_prev_td { nullptr }; // Pointer to first TD
+    bool m_in_use;                                   // Has this TD been allocated (and therefore in use)?
 };
 
 static_assert(sizeof(TransferDescriptor) == 32); // Transfer Descriptor is always 8 Dwords
@@ -273,11 +274,11 @@ private:
 
     // These values will be ignored by the controller, but we can use them for configuration/bookkeeping
     // Any addresses besides `paddr` are assumed virtual and can be dereferenced
-    u32 m_paddr { 0 };                          // Physical address where this QueueHead is located
-    QueueHead* m_next_qh { nullptr };           // Next QH
-    QueueHead* m_prev_qh { nullptr };           // Previous QH
-    TransferDescriptor* m_first_td { nullptr }; // Pointer to first TD
-    bool m_in_use { false };                    // Is this QH currently in use?
+    u32 m_paddr { 0 };                                // Physical address where this QueueHead is located
+    Ptr32<QueueHead> m_next_qh { nullptr };           // Next QH
+    Ptr32<QueueHead> m_prev_qh { nullptr };           // Previous QH
+    Ptr32<TransferDescriptor> m_first_td { nullptr }; // Pointer to first TD
+    bool m_in_use { false };                          // Is this QH currently in use?
 };
 
 static_assert(sizeof(QueueHead) == 32); // Queue Head is always 8 Dwords
