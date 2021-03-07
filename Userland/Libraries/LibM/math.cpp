@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Platform.h>
+#include <AK/StdLibExtras.h>
 #include <LibC/assert.h>
 #include <math.h>
 #include <stdint.h>
@@ -66,6 +68,24 @@ enum class RoundingMode {
 
 template<typename T>
 union FloatExtractor;
+
+#if ARCH(I386) || ARCH(X86_64)
+// This assumes long double is 80 bits, which is true with GCC on Intel platforms
+template<>
+union FloatExtractor<long double> {
+    static const int mantissa_bits = 64;
+    static const unsigned long long mantissa_max = ~0u;
+    static const int exponent_bias = 16383;
+    static const int exponent_bits = 15;
+    static const unsigned exponent_max = 32767;
+    struct {
+        unsigned long long mantissa;
+        unsigned exponent : 15;
+        unsigned sign : 1;
+    };
+    long double d;
+};
+#endif
 
 template<>
 union FloatExtractor<double> {
