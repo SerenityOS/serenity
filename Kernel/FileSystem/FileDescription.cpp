@@ -98,22 +98,23 @@ KResult FileDescription::attach()
 
 Thread::FileBlocker::BlockFlags FileDescription::should_unblock(Thread::FileBlocker::BlockFlags block_flags) const
 {
-    u32 unblock_flags = (u32)Thread::FileBlocker::BlockFlags::None;
-    if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Read) && can_read())
-        unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Read;
-    if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Write) && can_write())
-        unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Write;
+    using BlockFlags = Thread::FileBlocker::BlockFlags;
+    BlockFlags unblock_flags = BlockFlags::None;
+    if (has_flag(block_flags, BlockFlags::Read) && can_read())
+        unblock_flags |= BlockFlags::Read;
+    if (has_flag(block_flags, BlockFlags::Write) && can_write())
+        unblock_flags |= BlockFlags::Write;
     // TODO: Implement Thread::FileBlocker::BlockFlags::Exception
 
-    if ((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::SocketFlags) {
+    if (has_flag(block_flags, BlockFlags::SocketFlags)) {
         auto* sock = socket();
         VERIFY(sock);
-        if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Accept) && sock->can_accept())
-            unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Accept;
-        if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Connect) && sock->setup_state() == Socket::SetupState::Completed)
-            unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Connect;
+        if (has_flag(block_flags, BlockFlags::Accept) && sock->can_accept())
+            unblock_flags |= BlockFlags::Accept;
+        if (has_flag(block_flags, BlockFlags::Connect) && sock->setup_state() == Socket::SetupState::Completed)
+            unblock_flags |= BlockFlags::Connect;
     }
-    return (Thread::FileBlocker::BlockFlags)unblock_flags;
+    return unblock_flags;
 }
 
 KResult FileDescription::stat(::stat& buffer)
