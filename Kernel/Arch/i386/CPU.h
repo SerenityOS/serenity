@@ -672,7 +672,7 @@ class Processor {
     Atomic<u32, AK::MemoryOrder::memory_order_relaxed> m_in_critical;
     static Atomic<u32> s_idle_cpu_mask;
 
-    TSS32 m_tss;
+    TSS m_tss;
     static FPUState s_clean_fpu_state;
     CPUFeature m_features;
     static volatile u32 g_total_processors; // atomic
@@ -1140,5 +1140,4 @@ ALWAYS_INLINE void clac()
     asm volatile("clac" ::
                      : "cc");
 }
-
 }
