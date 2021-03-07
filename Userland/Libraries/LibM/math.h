@@ -163,6 +163,13 @@ double nexttoward(double, long double) NOEXCEPT;
 float nexttowardf(float, long double) NOEXCEPT;
 long double nexttowardl(long double, long double) NOEXCEPT;
 
+float scalbnf(float, int) NOEXCEPT;
+double scalbn(double, int) NOEXCEPT;
+long double scalbnl(long double, int) NOEXCEPT;
+float scalbnlf(float, long) NOEXCEPT;
+double scalbln(double, long) NOEXCEPT;
+long double scalblnl(long double, long) NOEXCEPT;
+
 double copysign(double x, double y);
 
 __END_DECLS
