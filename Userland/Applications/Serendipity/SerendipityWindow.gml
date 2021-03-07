@@ -20,14 +20,14 @@
     }
 
     @GUI::Widget {
-        fixed_height: 160
+        min_height: 160
         layout: @GUI::HorizontalBoxLayout {
         }
 
         @GUI::Frame {
             name: "tip_frame"
-            fixed_width: 340
-            fixed_height: 160
+            min_width: 340
+            min_height: 160
             layout: @GUI::HorizontalBoxLayout {
                 margins: [0, 0, 16, 0]
             }
@@ -67,46 +67,48 @@
 
         @Web::OutOfProcessWebView {
             name: "web_view"
-            fixed_width: 340
-            fixed_height: 160
+            min_width: 340
+            min_height: 160
             visible: false
         }
 
         @GUI::Widget {
+            fixed_width: 5
         }
 
         @GUI::Widget {
             name: "navigation_column"
             fixed_width: 120
-            fixed_height: 160
+            min_height: 160
             layout: @GUI::VerticalBoxLayout {
             }
 
             @GUI::Button {
                 name: "new_button"
                 text: "What's New"
-                fixed_width: 115
-                fixed_height: 24
+                min_width: 115
+                min_height: 24
             }
 
             @GUI::Button {
                 name: "help_button"
                 text: "Help Contents"
-                fixed_width: 115
-                fixed_height: 24
+                min_width: 115
+                min_height: 24
             }
 
             @GUI::Button {
                 name: "next_button"
                 text: "Next Tip"
-                fixed_width: 115
-                fixed_height: 24
+                min_width: 115
+                min_height: 24
             }
 
         }
     }
 
     @GUI::Widget {
+        fixed_height: 5
     }
 
     @GUI::Widget {
