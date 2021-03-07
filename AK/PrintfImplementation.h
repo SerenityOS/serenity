@@ -373,11 +373,11 @@ struct PrintfImpl {
     }
     ALWAYS_INLINE int format_p(const ModifierState&, ArgumentListRefT ap) const
     {
-        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), false, true, false, true, 8);
+        return print_hex(m_putch, m_bufptr, NextArgument<FlatPtr>()(ap), false, true, false, true, 8);
     }
     ALWAYS_INLINE int format_P(const ModifierState&, ArgumentListRefT ap) const
     {
-        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), true, true, false, true, 8);
+        return print_hex(m_putch, m_bufptr, NextArgument<FlatPtr>()(ap), true, true, false, true, 8);
     }
     ALWAYS_INLINE int format_percent(const ModifierState&, ArgumentListRefT) const
     {
