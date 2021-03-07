@@ -299,9 +299,10 @@ int Shell::builtin_exit(int argc, const char** argv)
         }
     }
     stop_all_jobs();
-    m_editor->save_history(get_history_path());
-    if (m_is_interactive)
+    if (m_is_interactive) {
+        m_editor->save_history(get_history_path());
         printf("Good-bye!\n");
+    }
     exit(exit_code);
     return 0;
 }

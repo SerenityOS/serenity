@@ -264,7 +264,7 @@ public:
 #undef __ENUMERATE_SHELL_OPTION
 
 private:
-    Shell(Line::Editor&);
+    Shell(Line::Editor&, bool attempt_interactive);
     Shell();
     virtual ~Shell() override;
 
