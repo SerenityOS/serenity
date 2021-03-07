@@ -169,7 +169,7 @@ void DirectoryView::setup_model()
         add_path_to_history(model().root_path());
 
         if (on_path_change)
-            on_path_change(failed_path, false);
+            on_path_change(failed_path, false, false);
     };
 
     m_model->on_complete = [this] {
@@ -186,7 +186,7 @@ void DirectoryView::setup_model()
         m_touch_action->set_enabled(can_write_in_path);
 
         if (on_path_change)
-            on_path_change(model().root_path(), can_write_in_path);
+            on_path_change(model().root_path(), true, can_write_in_path);
     };
 
     m_model->register_client(*this);
