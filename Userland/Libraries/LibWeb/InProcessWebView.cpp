@@ -262,14 +262,7 @@ void InProcessWebView::paint_event(GUI::PaintEvent& event)
         return;
     }
 
-    painter.fill_rect(event.rect(), document()->background_color(palette()));
-
-    if (auto background_bitmap = document()->background_image()) {
-        painter.draw_tiled_bitmap(event.rect(), *background_bitmap);
-    }
-
     painter.translate(frame_thickness(), frame_thickness());
-    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     PaintContext context(painter, palette(), { horizontal_scrollbar().value(), vertical_scrollbar().value() });
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
