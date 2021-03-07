@@ -102,7 +102,7 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& e
             ++rule_index;
         });
         ++style_sheet_index;
-   });
+    });
 
     return matching_rules;
 }
