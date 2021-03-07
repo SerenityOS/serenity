@@ -30,7 +30,7 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Lock.h>
 #include <Kernel/StdLib.h>
 #include <LibCrypto/Cipher/AES.h>
