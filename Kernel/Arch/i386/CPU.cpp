@@ -1033,11 +1033,18 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
         write_cr4(read_cr4() | 0x4);
     }
 
-    if (has_feature(CPUFeature::XSAVE) && has_feature(CPUFeature::AVX)) {
+    if (has_feature(CPUFeature::XSAVE)) {
         // Turn on CR4.OSXSAVE
         write_cr4(read_cr4() | 0x40000);
-        // Turn on AVX flags
-        write_xcr0(read_xcr0() | 0x7);
+
+        // According to the Intel manual: "After reset, all bits (except bit 0) in XCR0 are cleared to zero; XCR0[0] is set to 1."
+        // Sadly we can't trust this, for example VirtualBox starts with bits 0-4 set, so let's do it ourselves.
+        write_xcr0(0x1);
+
+        if (has_feature(CPUFeature::AVX)) {
+            // Turn on SSE, AVX and x87 flags
+            write_xcr0(read_xcr0() | 0x7);
+        }
     }
 }
 
