@@ -389,7 +389,7 @@ void Widget::handle_mouseup_event(MouseEvent& event)
 
 void Widget::handle_mousedown_event(MouseEvent& event)
 {
-    if (((unsigned)focus_policy() & (unsigned)FocusPolicy::ClickFocus))
+    if (has_flag(focus_policy(), FocusPolicy::ClickFocus))
         set_focus(true, FocusSource::Mouse);
     mousedown_event(event);
     if (event.button() == MouseButton::Right) {
