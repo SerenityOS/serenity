@@ -934,7 +934,7 @@ public:
         consume_whitespace_or_comments();
     }
 
-    RefPtr<CSS::StyleSheet> parse_sheet()
+    RefPtr<CSS::CSSStyleSheet> parse_sheet()
     {
         if (peek(0) == (char)0xef && peek(1) == (char)0xbb && peek(2) == (char)0xbf) {
             // HACK: Skip UTF-8 BOM.
@@ -945,7 +945,7 @@ public:
             parse_rule();
         }
 
-        return CSS::StyleSheet::create(move(rules));
+        return CSS::CSSStyleSheet::create(move(rules));
     }
 
     RefPtr<CSS::StyleDeclaration> parse_standalone_declaration()
@@ -986,10 +986,10 @@ Optional<CSS::Selector> parse_selector(const CSS::ParsingContext& context, const
     return parser.parse_individual_selector();
 }
 
-RefPtr<CSS::StyleSheet> parse_css(const CSS::ParsingContext& context, const StringView& css)
+RefPtr<CSS::CSSStyleSheet> parse_css(const CSS::ParsingContext& context, const StringView& css)
 {
     if (css.is_empty())
-        return CSS::StyleSheet::create({});
+        return CSS::CSSStyleSheet::create({});
     CSSParser parser(context, css);
     return parser.parse_sheet();
 }

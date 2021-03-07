@@ -12,6 +12,7 @@ set(SOURCES
     CSS/CSSImportRule.cpp
     CSS/CSSRule.cpp
     CSS/CSSStyleRule.cpp
+    CSS/CSSStyleSheet.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
     CSS/Parser/CSSParser.cpp

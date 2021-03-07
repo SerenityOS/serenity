@@ -26,7 +26,7 @@
 
 #include <AK/URL.h>
 #include <LibWeb/CSS/CSSImportRule.h>
-#include <LibWeb/CSS/StyleSheet.h>
+#include <LibWeb/CSS/CSSStyleSheet.h>
 
 namespace Web::CSS {
 

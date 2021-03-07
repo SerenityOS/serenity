@@ -46,18 +46,18 @@ public:
     const URL& url() const { return m_url; }
 
     bool has_import_result() const { return !m_style_sheet.is_null(); }
-    RefPtr<StyleSheet> loaded_style_sheet() { return m_style_sheet; }
-    const RefPtr<StyleSheet> loaded_style_sheet() const { return m_style_sheet; }
+    RefPtr<CSSStyleSheet> loaded_style_sheet() { return m_style_sheet; }
+    const RefPtr<CSSStyleSheet> loaded_style_sheet() const { return m_style_sheet; }
     void set_style_sheet(const RefPtr<StyleSheet>& style_sheet) { m_style_sheet = style_sheet; }
 
     virtual StringView class_name() const { return "CSSImportRule"; };
     virtual Type type() const { return Type::Import; };
 
 private:
-    CSSImportRule(URL);
+    explicit CSSImportRule(URL);
 
     URL m_url;
-    RefPtr<StyleSheet> m_style_sheet;
+    RefPtr<CSSStyleSheet> m_style_sheet;
 };
 
 }
