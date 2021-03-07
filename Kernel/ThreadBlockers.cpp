@@ -265,17 +265,17 @@ const FileDescription& Thread::FileDescriptionBlocker::blocked_description() con
 }
 
 Thread::AcceptBlocker::AcceptBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, (BlockFlags)((u32)BlockFlags::Accept | (u32)BlockFlags::Exception), unblocked_flags)
+    : FileDescriptionBlocker(description, BlockFlags::Accept | BlockFlags::Exception, unblocked_flags)
 {
 }
 
 Thread::ConnectBlocker::ConnectBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, (BlockFlags)((u32)BlockFlags::Connect | (u32)BlockFlags::Exception), unblocked_flags)
+    : FileDescriptionBlocker(description, BlockFlags::Connect | BlockFlags::Exception, unblocked_flags)
 {
 }
 
 Thread::WriteBlocker::WriteBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, (BlockFlags)((u32)BlockFlags::Write | (u32)BlockFlags::Exception), unblocked_flags)
+    : FileDescriptionBlocker(description, BlockFlags::Write | BlockFlags::Exception, unblocked_flags)
 {
 }
 
@@ -295,7 +295,7 @@ auto Thread::WriteBlocker::override_timeout(const BlockTimeout& timeout) -> cons
 }
 
 Thread::ReadBlocker::ReadBlocker(FileDescription& description, BlockFlags& unblocked_flags)
-    : FileDescriptionBlocker(description, (BlockFlags)((u32)BlockFlags::Read | (u32)BlockFlags::Exception), unblocked_flags)
+    : FileDescriptionBlocker(description, BlockFlags::Read | BlockFlags::Exception, unblocked_flags)
 {
 }
 
