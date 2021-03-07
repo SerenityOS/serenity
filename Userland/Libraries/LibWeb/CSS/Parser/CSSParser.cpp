@@ -27,9 +27,9 @@
 #include <AK/HashMap.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSRule.h>
+#include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/PropertyID.h>
-#include <LibWeb/CSS/StyleRule.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Document.h>
 #include <ctype.h>
@@ -809,7 +809,7 @@ public:
             return;
         }
 
-        rules.append(CSS::StyleRule::create(move(current_rule.selectors), CSS::StyleDeclaration::create(move(current_rule.properties))));
+        rules.append(CSS::CSSStyleRule::create(move(current_rule.selectors), CSS::StyleDeclaration::create(move(current_rule.properties))));
     }
 
     Optional<String> parse_string()

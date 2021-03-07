@@ -52,7 +52,7 @@ public:
     {
         for (auto& rule : m_rules)
             if (rule.type() == CSSRule::Type::Style) {
-                callback(downcast<StyleRule>(rule));
+                callback(downcast<CSSStyleRule>(rule));
             } else if (rule.type() == CSSRule::Type::Import) {
                 const CSSImportRule& import_rule = downcast<CSSImportRule>(rule);
                 if (import_rule.has_import_result())
