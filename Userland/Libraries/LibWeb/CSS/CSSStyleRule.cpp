@@ -24,17 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/CSS/StyleRule.h>
+#include <LibWeb/CSS/CSSStyleRule.h>
 
 namespace Web::CSS {
 
-StyleRule::StyleRule(Vector<Selector>&& selectors, NonnullRefPtr<StyleDeclaration>&& declaration)
+CSSStyleRule::CSSStyleRule(Vector<Selector>&& selectors, NonnullRefPtr<StyleDeclaration>&& declaration)
     : m_selectors(move(selectors))
     , m_declaration(move(declaration))
 {
 }
 
-StyleRule::~StyleRule()
+CSSStyleRule::~CSSStyleRule()
 {
 }
 

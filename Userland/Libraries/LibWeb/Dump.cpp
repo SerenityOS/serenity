@@ -30,8 +30,8 @@
 #include <AK/Utf8View.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSRule.h>
+#include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/PropertyID.h>
-#include <LibWeb/CSS/StyleRule.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
@@ -405,7 +405,7 @@ void dump_rule(StringBuilder& builder, const CSS::CSSRule& rule)
     builder.appendff("{}:\n", rule.class_name());
     switch (rule.type()) {
     case CSS::CSSRule::Type::Style:
-        dump_style_rule(builder, downcast<const CSS::StyleRule>(rule));
+        dump_style_rule(builder, downcast<const CSS::CSSStyleRule>(rule));
         break;
     case CSS::CSSRule::Type::Import:
         dump_import_rule(builder, downcast<const CSS::CSSImportRule>(rule));
@@ -420,7 +420,7 @@ void dump_import_rule(StringBuilder& builder, const CSS::CSSImportRule& rule)
     builder.appendff("  Document URL: {}\n", rule.url());
 }
 
-void dump_style_rule(StringBuilder& builder, const CSS::StyleRule& rule)
+void dump_style_rule(StringBuilder& builder, const CSS::CSSStyleRule& rule)
 {
     for (auto& selector : rule.selectors()) {
         dump_selector(builder, selector);

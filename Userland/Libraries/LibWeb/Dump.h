@@ -40,7 +40,7 @@ void dump_sheet(StringBuilder&, const CSS::StyleSheet&);
 void dump_sheet(const CSS::StyleSheet&);
 void dump_rule(StringBuilder&, const CSS::CSSRule&);
 void dump_rule(const CSS::CSSRule&);
-void dump_style_rule(StringBuilder&, const CSS::StyleRule&);
+void dump_style_rule(StringBuilder&, const CSS::CSSStyleRule&);
 void dump_import_rule(StringBuilder&, const CSS::CSSImportRule&);
 void dump_selector(StringBuilder&, const CSS::Selector&);
 void dump_selector(const CSS::Selector&);
