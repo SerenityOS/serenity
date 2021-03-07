@@ -28,6 +28,7 @@
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 #include <LibC/assert.h>
+#include <fenv.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -61,10 +62,10 @@ template<size_t value>
 constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
 
 enum class RoundingMode {
-    ToZero,
-    Up,
-    Down,
-    ToEven
+    ToZero = FE_TOWARDZERO,
+    Up = FE_UPWARD,
+    Down = FE_DOWNWARD,
+    ToEven = FE_TONEAREST
 };
 
 template<typename T>
@@ -303,6 +304,16 @@ static FloatT internal_copysign(FloatT x, FloatT y) NOEXCEPT
 extern "C" {
 
 double trunc(double x) NOEXCEPT
+{
+    return internal_to_integer(x, RoundingMode::ToZero);
+}
+
+float truncf(float x) NOEXCEPT
+{
+    return internal_to_integer(x, RoundingMode::ToZero);
+}
+
+long double truncl(long double x) NOEXCEPT
 {
     return internal_to_integer(x, RoundingMode::ToZero);
 }
@@ -691,6 +702,11 @@ float roundf(float value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::ToEven);
 }
 
+long double roundl(long double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
 float floorf(float value) NOEXCEPT
 {
     return internal_to_integer(value, RoundingMode::Down);
@@ -701,10 +717,54 @@ double floor(double value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::Down);
 }
 
+long double floorl(long double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode::Down);
+}
+
+long double rintl(long double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode { fegetround() });
+}
+
 double rint(double value) NOEXCEPT
 {
-    // This should be the current rounding mode
-    return internal_to_integer(value, RoundingMode::ToEven);
+    return internal_to_integer(value, RoundingMode { fegetround() });
+}
+
+float rintf(float value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode { fegetround() });
+}
+
+long lrintl(long double value) NOEXCEPT
+{
+    return (long)internal_to_integer(value, RoundingMode { fegetround() });
+}
+
+long lrint(double value) NOEXCEPT
+{
+    return (long)internal_to_integer(value, RoundingMode { fegetround() });
+}
+
+long lrintf(float value) NOEXCEPT
+{
+    return (long)internal_to_integer(value, RoundingMode { fegetround() });
+}
+
+long long llrintl(long double value) NOEXCEPT
+{
+    return (long long)internal_to_integer(value, RoundingMode { fegetround() });
+}
+
+long long llrint(double value) NOEXCEPT
+{
+    return (long long)internal_to_integer(value, RoundingMode { fegetround() });
+}
+
+long long llrintf(float value) NOEXCEPT
+{
+    return (long long)internal_to_integer(value, RoundingMode { fegetround() });
 }
 
 float ceilf(float value) NOEXCEPT
@@ -713,6 +773,11 @@ float ceilf(float value) NOEXCEPT
 }
 
 double ceil(double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode::Up);
+}
+
+long double ceill(long double value) NOEXCEPT
 {
     return internal_to_integer(value, RoundingMode::Up);
 }
