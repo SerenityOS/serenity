@@ -58,5 +58,5 @@ $ syscall exit 2
 
 ## History
 
-This is a direct port of a utility with the same name originated from the Plan 9 operating system. 
+This is a direct port of a utility with the same name originated from the Plan 9 operating system.
 

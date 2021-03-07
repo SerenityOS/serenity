@@ -61,7 +61,7 @@ boot_pd3_pt1023:
 .global start
 .type start, @function
 
-.extern init 
+.extern init
 .type init, @function
 
 .extern multiboot_info_ptr
@@ -316,11 +316,11 @@ apic_ap_start32:
     orl $0x800, %eax
     wrmsr
 1:
-    
+
     /* load the bsp's cr3 value */
     movl (ap_cpu_init_cr3 - apic_ap_start)(%ebp), %eax
     movl %eax, %cr3
-    
+
     /* enable PAE + PSE */
     movl %cr4, %eax
     orl $0x60, %eax
@@ -340,9 +340,9 @@ apic_ap_start32_2:
     /* flush the TLB */
     movl %cr3, %eax
     movl %eax, %cr3
-    
+
     movl $0xc0008000, %ebp
-    
+
     /* now load the final gdt and idt from the identity mapped area */
     movl (ap_cpu_gdtr - apic_ap_start)(%ebp), %eax
     lgdt (%eax)
@@ -354,20 +354,20 @@ apic_ap_start32_2:
     movl %eax, %cr0
     movl (ap_cpu_init_cr4 - apic_ap_start)(%ebp), %eax
     movl %eax, %cr4
-    
+
     /* push the Processor pointer this CPU is going to use */
     movl (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %eax
     addl $0xc0000000, %eax
     movl 0(%eax, %esi, 4), %eax
     push %eax
-    
+
     /* push the cpu id, 0 representing the bsp and call into c++ */
     incl %esi
     push %esi
-    
+
     xor %ebp, %ebp
     cld
-    
+
     /* We are in identity mapped P0x8000 and the BSP will unload this code
        once all APs are initialized, so call init_ap but return to our
        infinite loop */
