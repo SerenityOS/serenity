@@ -117,7 +117,7 @@ Everyone gets this wrong. most platforms are very lax with these includes, but w
 
 ### Status
 - [X] Local?
-- [ ] Should be merged to upstream? 
+- [ ] Should be merged to upstream?
 - [ ] Resolves issue(s) with our side of things
 - [ ] Hack
 
@@ -127,7 +127,7 @@ Our libstdc++ does not define `std::atoll`, this patch uses the equivalent C fun
 
 ### Status
 - [ ] Local?
-- [ ] Should be merged to upstream? 
+- [ ] Should be merged to upstream?
 - [X] Resolves issue(s) with our side of things
 - [ ] Hack
 
@@ -137,7 +137,7 @@ These two defines make GCC very sad. reasons are unknown at this time.
 
 ### Status
 - [ ] Local?
-- [ ] Should be merged to upstream? 
+- [ ] Should be merged to upstream?
 - [X] Resolves issue(s) with our side of things
 - [X] Hack
 
@@ -219,7 +219,7 @@ For unknown reasons, `curl_setup_once.h` does not include `sys/stat.h`. this pat
 
 ### Status
 - [ ] Local?
-- [ ] Should be merged to upstream? 
+- [ ] Should be merged to upstream?
 - [X] Resolves issue(s) with our side of things
 - [X] Hack
 

@@ -9,7 +9,7 @@ cd "$script_path/.." || exit 1
 # To eliminate the need for these symbols, avoid doing non-trivial construction of local statics in LibC.
 
 FORBIDDEN_SYMBOLS="__cxa_guard_acquire __cxa_guard_release"
-LIBC_PATH="Build/Userland/Libraries/LibC/libc.a" 
+LIBC_PATH="Build/Userland/Libraries/LibC/libc.a"
 for forbidden_symbol in $FORBIDDEN_SYMBOLS; do
     # check if symbol is undefined
     if nm $LIBC_PATH | grep "U $forbidden_symbol" ; then
