@@ -831,10 +831,10 @@ Vector<Widget*> Window::focusable_widgets(FocusSource source) const
         bool widget_accepts_focus = false;
         switch (source) {
         case FocusSource::Keyboard:
-            widget_accepts_focus = ((unsigned)widget.focus_policy() & (unsigned)FocusPolicy::TabFocus);
+            widget_accepts_focus = has_flag(widget.focus_policy(), FocusPolicy::TabFocus);
             break;
         case FocusSource::Mouse:
-            widget_accepts_focus = ((unsigned)widget.focus_policy() & (unsigned)FocusPolicy::ClickFocus);
+            widget_accepts_focus = has_flag(widget.focus_policy(), FocusPolicy::ClickFocus);
             break;
         case FocusSource::Programmatic:
             widget_accepts_focus = widget.focus_policy() != FocusPolicy::NoFocus;
