@@ -245,7 +245,7 @@ void Painter::fill_rect_with_gradient(Orientation orientation, const IntRect& a_
         float c = offset * increment;
         float c_alpha = gradient_start.alpha() + offset * alpha_increment;
         for (int i = clipped_rect.height() - 1; i >= 0; --i) {
-            auto color = gamma_accurate_blend(gradient_start, gradient_end, c);
+            auto color = gamma_accurate_blend(gradient_end, gradient_start, c);
             color.set_alpha(c_alpha);
             for (int j = 0; j < clipped_rect.width(); ++j) {
                 dst[j] = color.value();
