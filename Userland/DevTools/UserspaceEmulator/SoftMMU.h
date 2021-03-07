@@ -57,7 +57,7 @@ public:
         if (address.selector() == 0x2b)
             return m_tls_region.ptr();
 
-        size_t page_index = (address.offset() & ~(PAGE_SIZE - 1)) / PAGE_SIZE;
+        size_t page_index = address.offset() / PAGE_SIZE;
         return m_page_to_region_map[page_index];
     }
 
