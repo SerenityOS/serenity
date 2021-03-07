@@ -63,9 +63,9 @@ void StylePainter::paint_window_frame(Painter& painter, const IntRect& rect, con
     current().paint_window_frame(painter, rect, palette);
 }
 
-void StylePainter::paint_progress_bar(Painter& painter, const IntRect& rect, const Palette& palette, int min, int max, int value, const StringView& text)
+void StylePainter::paint_progress_bar(Painter& painter, const IntRect& rect, const Palette& palette, int min, int max, int value, const StringView& text, Orientation orientation)
 {
-    current().paint_progress_bar(painter, rect, palette, min, max, value, text);
+    current().paint_progress_bar(painter, rect, palette, min, max, value, text, orientation);
 }
 
 void StylePainter::paint_radio_button(Painter& painter, const IntRect& rect, const Palette& palette, bool is_checked, bool is_being_pressed)

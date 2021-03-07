@@ -44,6 +44,9 @@ public:
     int min() const { return m_min; }
     int max() const { return m_max; }
 
+    void set_orientation(Orientation value);
+    Orientation orientation() const { return m_orientation; }
+
     String text() const { return m_text; }
     void set_text(String text) { m_text = move(text); }
 
@@ -56,7 +59,7 @@ public:
     void set_format(Format format) { m_format = format; }
 
 protected:
-    ProgressBar();
+    ProgressBar(Orientation = Orientation::Horizontal);
 
     virtual void paint_event(PaintEvent&) override;
 
@@ -66,6 +69,33 @@ private:
     int m_max { 100 };
     int m_value { 0 };
     String m_text;
+    Orientation m_orientation { Orientation::Horizontal };
+};
+
+class VerticalProgressBar final : public ProgressBar {
+    C_OBJECT(VerticalProgressBar);
+
+public:
+    virtual ~VerticalProgressBar() override { }
+
+private:
+    VerticalProgressBar()
+        : ProgressBar(Orientation::Vertical)
+    {
+    }
+};
+
+class HorizontalProgressBar final : public ProgressBar {
+    C_OBJECT(HorizontalProgressBar);
+
+public:
+    virtual ~HorizontalProgressBar() override { }
+
+private:
+    HorizontalProgressBar()
+        : ProgressBar(Orientation::Horizontal)
+    {
+    }
 };
 
 }
