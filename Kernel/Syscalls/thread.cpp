@@ -46,12 +46,12 @@ KResultOr<int> Process::sys$create_thread(void* (*entry)(void*), Userspace<const
     int schedule_priority = params.m_schedule_priority;
     unsigned stack_size = params.m_stack_size;
 
-    if (Checked<FlatPtr>::addition_would_overflow((FlatPtr)params.m_stack_location, stack_size))
+    auto user_esp = Checked<FlatPtr>((FlatPtr)params.m_stack_location);
+    user_esp += stack_size;
+    if (user_esp.has_overflow())
         return EOVERFLOW;
 
-    auto user_stack_address = (u8*)params.m_stack_location + stack_size;
-
-    if (!MM.validate_user_stack(*this, VirtualAddress(user_stack_address - 4)))
+    if (!MM.validate_user_stack(*this, VirtualAddress(user_esp.value() - 4)))
         return EFAULT;
 
     // FIXME: return EAGAIN if Thread::all_threads().size() is greater than PTHREAD_THREADS_MAX
@@ -83,7 +83,7 @@ KResultOr<int> Process::sys$create_thread(void* (*entry)(void*), Userspace<const
     tss.eip = (FlatPtr)entry;
     tss.eflags = 0x0202;
     tss.cr3 = space().page_directory().cr3();
-    tss.esp = (FlatPtr)user_stack_address;
+    tss.esp = user_esp.value();
 
     auto tsr_result = thread->make_thread_specific_region({});
     if (tsr_result.is_error())
