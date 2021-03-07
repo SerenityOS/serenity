@@ -274,9 +274,7 @@ void init_stage2(void*)
     }
 
     // FIXME: This should not be i386-specific.
-#if ARCH(I386)
     USB::UHCIController::detect();
-#endif
 
     DMIExpose::initialize();
 
