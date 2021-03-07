@@ -47,6 +47,8 @@ namespace Kernel {
 
 static AK::Singleton<Lockable<HashTable<IPv4Socket*>>> s_table;
 
+using BlockFlags = Thread::FileDescriptionBlocker::BlockFlags;
+
 Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {
     return *s_table;
@@ -247,11 +249,11 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
             return EAGAIN;
 
         locker.unlock();
-        auto unblocked_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
+        auto unblocked_flags = BlockFlags::None;
         auto res = Thread::current()->block<Thread::ReadBlocker>({}, description, unblocked_flags);
         locker.lock();
 
-        if (!((u32)unblocked_flags & (u32)Thread::FileDescriptionBlocker::BlockFlags::Read)) {
+        if (!has_flag(unblocked_flags, BlockFlags::Read)) {
             if (res.was_interrupted())
                 return EINTR;
 
@@ -300,11 +302,11 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         }
 
         locker.unlock();
-        auto unblocked_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
+        auto unblocked_flags = BlockFlags::None;
         auto res = Thread::current()->block<Thread::ReadBlocker>({}, description, unblocked_flags);
         locker.lock();
 
-        if (!((u32)unblocked_flags & (u32)Thread::FileDescriptionBlocker::BlockFlags::Read)) {
+        if (!has_flag(unblocked_flags, BlockFlags::Read)) {
             if (res.was_interrupted())
                 return EINTR;
 

@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
@@ -1266,6 +1267,8 @@ private:
     void yield_while_not_holding_big_lock();
     void drop_thread_count(bool);
 };
+
+AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);
 
 template<typename Callback>
 inline IterationDecision Thread::for_each(Callback callback)

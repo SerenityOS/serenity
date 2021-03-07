@@ -30,6 +30,8 @@
 
 namespace Kernel {
 
+using BlockFlags = Thread::FileBlocker::BlockFlags;
+
 KResultOr<ssize_t> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count)
 {
     REQUIRE_PROMISE(stdio);
@@ -65,10 +67,10 @@ KResultOr<ssize_t> Process::sys$readv(int fd, Userspace<const struct iovec*> iov
     for (auto& vec : vecs) {
         if (description->is_blocking()) {
             if (!description->can_read()) {
-                auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+                auto unblock_flags = BlockFlags::None;
                 if (Thread::current()->block<Thread::ReadBlocker>({}, *description, unblock_flags).was_interrupted())
                     return EINTR;
-                if (!((u32)unblock_flags & (u32)Thread::FileBlocker::BlockFlags::Read))
+                if (!has_flag(unblock_flags, BlockFlags::Read))
                     return EAGAIN;
                 // TODO: handle exceptions in unblock_flags
             }
@@ -102,10 +104,10 @@ KResultOr<ssize_t> Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size
         return EISDIR;
     if (description->is_blocking()) {
         if (!description->can_read()) {
-            auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+            auto unblock_flags = BlockFlags::None;
             if (Thread::current()->block<Thread::ReadBlocker>({}, *description, unblock_flags).was_interrupted())
                 return EINTR;
-            if (!((u32)unblock_flags & (u32)Thread::FileBlocker::BlockFlags::Read))
+            if (!has_flag(unblock_flags, BlockFlags::Read))
                 return EAGAIN;
             // TODO: handle exceptions in unblock_flags
         }

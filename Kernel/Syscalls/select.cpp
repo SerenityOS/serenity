@@ -32,6 +32,8 @@
 
 namespace Kernel {
 
+using BlockFlags = Thread::FileBlocker::BlockFlags;
+
 KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
@@ -76,14 +78,14 @@ KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> u
     Thread::SelectBlocker::FDVector fds_info;
     Vector<int, FD_SETSIZE> fds;
     for (int fd = 0; fd < params.nfds; fd++) {
-        u32 block_flags = (u32)Thread::FileBlocker::BlockFlags::None;
+        auto block_flags = BlockFlags::None;
         if (params.readfds && FD_ISSET(fd, &fds_read))
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::Read;
+            block_flags |= BlockFlags::Read;
         if (params.writefds && FD_ISSET(fd, &fds_write))
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::Write;
+            block_flags |= BlockFlags::Write;
         if (params.exceptfds && FD_ISSET(fd, &fds_except))
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::Exception;
-        if (block_flags == (u32)Thread::FileBlocker::BlockFlags::None)
+            block_flags |= BlockFlags::Exception;
+        if (block_flags == BlockFlags::None)
             continue;
 
         auto description = file_description(fd);
@@ -91,7 +93,7 @@ KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> u
             dbgln("sys$select: Bad fd number {}", fd);
             return EBADF;
         }
-        fds_info.append({ description.release_nonnull(), (Thread::FileBlocker::BlockFlags)block_flags });
+        fds_info.append({ description.release_nonnull(), block_flags });
         fds.append(fd);
     }
 
@@ -113,17 +115,17 @@ KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> u
     int marked_fd_count = 0;
     for (size_t i = 0; i < fds_info.size(); i++) {
         auto& fd_entry = fds_info[i];
-        if (fd_entry.unblocked_flags == Thread::FileBlocker::BlockFlags::None)
+        if (fd_entry.unblocked_flags == BlockFlags::None)
             continue;
-        if (params.readfds && ((u32)fd_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Read)) {
+        if (params.readfds && has_flag(fd_entry.unblocked_flags, BlockFlags::Read)) {
             FD_SET(fds[i], &fds_read);
             marked_fd_count++;
         }
-        if (params.writefds && ((u32)fd_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Write)) {
+        if (params.writefds && has_flag(fd_entry.unblocked_flags, BlockFlags::Write)) {
             FD_SET(fds[i], &fds_write);
             marked_fd_count++;
         }
-        if (params.exceptfds && ((u32)fd_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Exception)) {
+        if (params.exceptfds && has_flag(fd_entry.unblocked_flags, BlockFlags::Exception)) {
             FD_SET(fds[i], &fds_except);
             marked_fd_count++;
         }
@@ -180,14 +182,14 @@ KResultOr<int> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_
             dbgln("sys$poll: Bad fd number {}", pfd.fd);
             return EBADF;
         }
-        u32 block_flags = (u32)Thread::FileBlocker::BlockFlags::Exception; // always want POLLERR, POLLHUP, POLLNVAL
+        BlockFlags block_flags = BlockFlags::Exception; // always want POLLERR, POLLHUP, POLLNVAL
         if (pfd.events & POLLIN)
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::Read;
+            block_flags |= BlockFlags::Read;
         if (pfd.events & POLLOUT)
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::Write;
+            block_flags |= BlockFlags::Write;
         if (pfd.events & POLLPRI)
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::ReadPriority;
-        fds_info.append({ description.release_nonnull(), (Thread::FileBlocker::BlockFlags)block_flags });
+            block_flags |= BlockFlags::ReadPriority;
+        fds_info.append({ description.release_nonnull(), block_flags });
     }
 
     auto current_thread = Thread::current();
@@ -213,26 +215,26 @@ KResultOr<int> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_
         auto& fds_entry = fds_info[i];
 
         pfd.revents = 0;
-        if (fds_entry.unblocked_flags == Thread::FileBlocker::BlockFlags::None)
+        if (fds_entry.unblocked_flags == BlockFlags::None)
             continue;
 
-        if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Exception) {
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::ReadHangUp)
+        if (has_flag(fds_entry.unblocked_flags, BlockFlags::Exception)) {
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::ReadHangUp))
                 pfd.revents |= POLLRDHUP;
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::WriteError)
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteError))
                 pfd.revents |= POLLERR;
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::WriteHangUp)
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteHangUp))
                 pfd.revents |= POLLNVAL;
         } else {
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Read) {
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::Read)) {
                 VERIFY(pfd.events & POLLIN);
                 pfd.revents |= POLLIN;
             }
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::ReadPriority) {
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::ReadPriority)) {
                 VERIFY(pfd.events & POLLPRI);
                 pfd.revents |= POLLPRI;
             }
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Write) {
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::Write)) {
                 VERIFY(pfd.events & POLLOUT);
                 pfd.revents |= POLLOUT;
             }
