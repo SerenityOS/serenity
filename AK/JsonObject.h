@@ -78,7 +78,7 @@ public:
         return value ? *value : JsonValue(JsonValue::Type::Null);
     }
 
-    JsonValue get_or(const String& key, JsonValue alternative) const
+    JsonValue get_or(const String& key, const JsonValue& alternative) const
     {
         auto* value = get_ptr(key);
         return value ? *value : alternative;
