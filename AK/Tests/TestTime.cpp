@@ -141,9 +141,14 @@ TEST_CASE(timeval_parsing)
 
 TEST_CASE(addition)
 {
-#define EXPECT_ADDITION(s1, ns1, s2, ns2, sr, nsr)       \
-    EXPECT_TIME(TIME(s1, ns1) + TIME(s2, ns2), sr, nsr); \
-    EXPECT_TIME(TIME(s2, ns2) + TIME(s1, ns1), sr, nsr);
+#define EXPECT_ADDITION(s1, ns1, s2, ns2, sr, nsr)           \
+    do {                                                     \
+        EXPECT_TIME(TIME(s1, ns1) + TIME(s2, ns2), sr, nsr); \
+        EXPECT_TIME(TIME(s2, ns2) + TIME(s1, ns1), sr, nsr); \
+        auto t = TIME(s1, ns1);                              \
+        t += TIME(s2, ns2);                                  \
+        EXPECT_TIME(t, sr, nsr);                             \
+    } while (0)
 
     EXPECT_ADDITION(11, 123'456'789, 22, 900'000'000, 34, 23'456'789);
 
@@ -171,8 +176,13 @@ TEST_CASE(addition)
 
 TEST_CASE(subtraction)
 {
-#define EXPECT_SUBTRACTION(s1, ns1, s2, ns2, sr, nsr) \
-    EXPECT_TIME(TIME(s1, ns1) - TIME(s2, ns2), sr, nsr);
+#define EXPECT_SUBTRACTION(s1, ns1, s2, ns2, sr, nsr)        \
+    do {                                                     \
+        EXPECT_TIME(TIME(s1, ns1) - TIME(s2, ns2), sr, nsr); \
+        auto t = TIME(s1, ns1);                              \
+        t -= TIME(s2, ns2);                                  \
+        EXPECT_TIME(t, sr, nsr);                             \
+    } while (0)
 
     EXPECT_SUBTRACTION(5, 0, 3, 0, 2, 0);
     EXPECT_SUBTRACTION(0, 0, 0, 0, 0, 0);
@@ -202,10 +212,31 @@ TEST_CASE(subtraction)
     EXPECT_SUBTRACTION(-0x7fff'ffff'ffff'ffff, 999'999'995, 1, 999'999'996, (i64)-0x8000'0000'0000'0000, 0);
 }
 
+TEST_CASE(rounding)
+{
+    EXPECT_EQ(TIME(2, 800'800'800).to_seconds(), 3);
+    EXPECT_EQ(TIME(2, 800'800'800).to_milliseconds(), 2'801);
+    EXPECT_EQ(TIME(2, 800'800'800).to_microseconds(), 2'800'801);
+    EXPECT_EQ(TIME(2, 800'800'800).to_nanoseconds(), 2'800'800'800);
+    EXPECT_EQ(TIME(-2, 800'800'800).to_seconds(), -2);
+    EXPECT_EQ(TIME(-2, 800'800'800).to_milliseconds(), -1'200);
+    EXPECT_EQ(TIME(-2, 800'800'800).to_microseconds(), -1'199'200);
+    EXPECT_EQ(TIME(-2, 800'800'800).to_nanoseconds(), -1'199'199'200);
+
+    EXPECT_EQ(TIME(0, 0).to_seconds(), 0);
+    EXPECT_EQ(TIME(0, 0).to_milliseconds(), 0);
+    EXPECT_EQ(TIME(0, 0).to_microseconds(), 0);
+    EXPECT_EQ(TIME(0, 0).to_nanoseconds(), 0);
+}
+
 TEST_CASE(truncation)
 {
-    EXPECT_EQ(TIME(2, 800'000'000).to_truncated_seconds(), 2);
-    EXPECT_EQ(TIME(-2, -800'000'000).to_truncated_seconds(), -2);
+    EXPECT_EQ(TIME(2, 800'800'800).to_truncated_seconds(), 2);
+    EXPECT_EQ(TIME(2, 800'800'800).to_truncated_milliseconds(), 2'800);
+    EXPECT_EQ(TIME(2, 800'800'800).to_truncated_microseconds(), 2'800'800);
+    EXPECT_EQ(TIME(-2, -800'800'800).to_truncated_seconds(), -2);
+    EXPECT_EQ(TIME(-2, -800'800'800).to_truncated_milliseconds(), -2'800);
+    EXPECT_EQ(TIME(-2, -800'800'800).to_truncated_microseconds(), -2'800'800);
 
     EXPECT_EQ(TIME(0, 0).to_truncated_seconds(), 0);
     EXPECT_EQ(TIME(1, 999'999'999).to_truncated_seconds(), 1);

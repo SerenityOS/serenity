@@ -72,10 +72,6 @@ unsigned day_of_week(int year, unsigned month, int day)
     return (year + year / 4 - year / 100 + year / 400 + seek_table[month - 1] + day) % 7;
 }
 
-Time Time::from_nanoseconds(i32 nanoseconds)
-{
-    return Time::from_timespec({ 0, nanoseconds });
-};
 ALWAYS_INLINE static i32 sane_mod(i32& numerator, i32 denominator)
 {
     VERIFY(2 <= denominator && denominator <= 1'000'000'000);
@@ -109,10 +105,123 @@ Time Time::from_timeval(const struct timeval& tv)
 i64 Time::to_truncated_seconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
-    if (m_seconds < 0 && m_nanoseconds)
-        return m_seconds + 1;
-    else
-        return m_seconds;
+    if (m_seconds < 0 && m_nanoseconds) {
+        Checked<i64> seconds(m_seconds);
+        seconds++;
+        return seconds.has_overflow() ? 0x7fff'ffff'ffff'ffffLL : seconds.value();
+    }
+    return m_seconds;
+}
+i64 Time::to_truncated_milliseconds() const
+{
+    VERIFY(m_nanoseconds < 1'000'000'000);
+    Checked<i64> milliseconds(m_seconds);
+    milliseconds *= 1'000;
+    if (!milliseconds.has_overflow()) {
+        u32 add_ms = (u32)(m_nanoseconds / 1'000'000);
+        if (add_ms) {
+            milliseconds += add_ms;
+            if (m_seconds < 0 && m_nanoseconds % 1'000'000 != 0)
+                milliseconds++;
+            if (!milliseconds.has_overflow())
+                return milliseconds.value();
+        } else {
+            return milliseconds.value();
+        }
+    }
+    return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
+}
+i64 Time::to_truncated_microseconds() const
+{
+    VERIFY(m_nanoseconds < 1'000'000'000);
+    Checked<i64> microseconds(m_seconds);
+    microseconds *= 1'000'000;
+    if (!microseconds.has_overflow()) {
+        u32 add_us = (u32)(m_nanoseconds / 1'000);
+        if (add_us) {
+            microseconds += add_us;
+            if (m_seconds < 0 && m_nanoseconds % 1'000 != 0)
+                microseconds++;
+            if (!microseconds.has_overflow())
+                return microseconds.value();
+        } else {
+            return microseconds.value();
+        }
+    }
+    return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
+}
+i64 Time::to_seconds() const
+{
+    VERIFY(m_nanoseconds < 1'000'000'000);
+    if (m_seconds >= 0 && m_nanoseconds) {
+        Checked<i64> seconds(m_seconds);
+        seconds++;
+        return seconds.has_overflow() ? 0x7fff'ffff'ffff'ffffLL : seconds.value();
+    }
+    return m_seconds;
+}
+i64 Time::to_milliseconds() const
+{
+    VERIFY(m_nanoseconds < 1'000'000'000);
+    Checked<i64> milliseconds(m_seconds);
+    milliseconds *= 1'000;
+    if (!milliseconds.has_overflow()) {
+        u32 add_ms = (u32)(m_nanoseconds / 1'000'000);
+        if (add_ms) {
+            milliseconds += add_ms;
+            if (!milliseconds.has_overflow()) {
+                if (m_seconds >= 0 && m_nanoseconds % 1'000'000 != 0) {
+                    milliseconds++;
+                    if (!milliseconds.has_overflow())
+                        return milliseconds.value();
+                } else {
+                    return milliseconds.value();
+                }
+            }
+        } else {
+            return milliseconds.value();
+        }
+    }
+    return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
+}
+i64 Time::to_microseconds() const
+{
+    VERIFY(m_nanoseconds < 1'000'000'000);
+    Checked<i64> microseconds(m_seconds);
+    microseconds *= 1'000'000;
+    if (!microseconds.has_overflow()) {
+        u32 add_us = (u32)(m_nanoseconds / 1'000);
+        if (add_us) {
+            microseconds += add_us;
+            if (!microseconds.has_overflow()) {
+                if (m_seconds >= 0 && m_nanoseconds % 1'000 != 0) {
+                    microseconds++;
+                    if (!microseconds.has_overflow())
+                        return microseconds.value();
+                } else {
+                    return microseconds.value();
+                }
+            }
+        } else {
+            return microseconds.value();
+        }
+    }
+    return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
+}
+i64 Time::to_nanoseconds() const
+{
+    VERIFY(m_nanoseconds < 1'000'000'000);
+    Checked<i64> nanoseconds(m_seconds);
+    nanoseconds *= 1'000'000'000;
+    if (!nanoseconds.has_overflow()) {
+        if (m_nanoseconds) {
+            nanoseconds += m_nanoseconds;
+            if (!nanoseconds.has_overflow())
+                return nanoseconds.value();
+        }
+        return nanoseconds.value();
+    }
+    return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 timespec Time::to_timespec() const
 {
@@ -165,6 +274,13 @@ Time Time::operator+(const Time& other) const
 
     return Time { new_secs.value(), new_nsecs };
 }
+
+Time& Time::operator+=(const Time& other)
+{
+    *this = *this + other;
+    return *this;
+}
+
 Time Time::operator-(const Time& other) const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
@@ -182,6 +298,12 @@ Time Time::operator-(const Time& other) const
     if (m_seconds >= 0)
         return Time::max();
     return Time { (m_seconds + 0x4000'0000'0000'0000) + 0x4000'0000'0000'0000, m_nanoseconds };
+}
+
+Time& Time::operator-=(const Time& other)
+{
+    *this = *this - other;
+    return *this;
 }
 
 bool Time::operator<(const Time& other) const
