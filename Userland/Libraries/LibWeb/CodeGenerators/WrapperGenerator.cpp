@@ -102,6 +102,7 @@ static size_t get_function_length(FunctionType& function)
 struct Type {
     String name;
     bool nullable { false };
+    bool is_string() const { return name.is_one_of("DOMString", "USVString", "CSSOMString"); }
 };
 
 struct Parameter {
@@ -517,7 +518,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         scoped_generator.set("return_statement", "return {};");
 
     // FIXME: Add support for optional to all types
-    if (parameter.type.name == "DOMString") {
+    if (parameter.type.is_string()) {
         if (!optional) {
             scoped_generator.append(R"~~~(
     auto @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
@@ -1255,7 +1256,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
         }
 
         if (return_type.nullable) {
-            if (return_type.name == "DOMString") {
+            if (return_type.is_string()) {
                 scoped_generator.append(R"~~~(
     if (retval.is_null())
         return JS::js_null();
@@ -1268,7 +1269,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
             }
         }
 
-        if (return_type.name == "DOMString") {
+        if (return_type.is_string()) {
             scoped_generator.append(R"~~~(
     return JS::js_string(vm, retval);
 )~~~");
