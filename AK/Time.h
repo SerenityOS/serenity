@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
@@ -103,15 +104,18 @@ public:
     constexpr static Time from_seconds(i64 seconds) { return Time(seconds, 0); }
     constexpr static Time from_nanoseconds(i64 nanoseconds)
     {
-        return Time(nanoseconds / 1'000'000'000, nanoseconds % 1'000'000'000);
+        i64 seconds = sane_mod(nanoseconds, 1'000'000'000);
+        return Time(seconds, nanoseconds);
     }
     constexpr static Time from_microseconds(i64 microseconds)
     {
-        return Time(microseconds / 1'000'000, (microseconds % 1'000'000) * 1'000);
+        i64 seconds = sane_mod(microseconds, 1'000'000);
+        return Time(seconds, microseconds * 1'000);
     }
     constexpr static Time from_milliseconds(i64 milliseconds)
     {
-        return Time(milliseconds / 1'000, (milliseconds % 1'000) * 1'000'000);
+        i64 seconds = sane_mod(milliseconds, 1'000);
+        return Time(seconds, milliseconds * 1'000'000);
     }
     static Time from_timespec(const struct timespec&);
     static Time from_timeval(const struct timeval&);
@@ -149,6 +153,24 @@ private:
         : m_seconds(seconds)
         , m_nanoseconds(nanoseconds)
     {
+    }
+
+    template<typename T>
+    ALWAYS_INLINE static constexpr i32 sane_mod(T& numerator, i32 denominator)
+    {
+        VERIFY(2 <= denominator && denominator <= 1'000'000'000);
+        // '%' in C/C++ does not work in the obvious way:
+        // For example, -9 % 7 is -2, not +5.
+        // However, we want a representation like "(-2)*7 + (+5)".
+        i32 dividend = numerator / denominator;
+        numerator %= denominator;
+        if (numerator < 0) {
+            // Does not overflow: different signs.
+            numerator += denominator;
+            // Does not underflow: denominator >= 2.
+            dividend -= 1;
+        }
+        return dividend;
     }
 
     static Time from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds);

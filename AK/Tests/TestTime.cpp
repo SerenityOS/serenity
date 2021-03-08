@@ -238,6 +238,11 @@ TEST_CASE(truncation)
     EXPECT_EQ(TIME(-2, -800'800'800).to_truncated_milliseconds(), -2'800);
     EXPECT_EQ(TIME(-2, -800'800'800).to_truncated_microseconds(), -2'800'800);
 
+    EXPECT_EQ(TIME(-9223372036854776, 193'000'000).to_truncated_milliseconds(), -0x7fff'ffff'ffff'ffff);
+    //EXPECT_EQ(TIME(-9223372036854776, 193'000'000).to_truncated_microseconds(), -0x7fff'ffff'ffff);
+    EXPECT_EQ(TIME(9223372036854776, 193'000'000).to_truncated_milliseconds(), 0x7fff'ffff'ffff'ffff);
+    //EXPECT_EQ(TIME(9223372036854776, 193'000'000).to_truncated_microseconds(), 0x7fff'ffff'ffff);
+
     EXPECT_EQ(TIME(0, 0).to_truncated_seconds(), 0);
     EXPECT_EQ(TIME(1, 999'999'999).to_truncated_seconds(), 1);
     EXPECT_EQ(TIME(1, 1'000'000'000).to_truncated_seconds(), 2);
