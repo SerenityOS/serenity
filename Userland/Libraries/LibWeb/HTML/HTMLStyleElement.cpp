@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
@@ -53,7 +53,11 @@ void HTMLStyleElement::children_changed()
             builder.append(downcast<DOM::Text>(child).text_content());
     });
     m_css_loader.load_from_text(builder.to_string());
-    document().style_sheets().add_sheet(m_css_loader.style_sheet().release_nonnull());
+
+    if (auto sheet = m_css_loader.style_sheet()) {
+        sheet->set_owner_node(this);
+        document().style_sheets().add_sheet(sheet.release_nonnull());
+    }
 
     HTMLElement::children_changed();
 }
