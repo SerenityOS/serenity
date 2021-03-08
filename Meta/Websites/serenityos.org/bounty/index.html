@@ -30,19 +30,16 @@
         Rewarded bounties will be listed here, and I will also make a video dissecting each
         exploit and showing what the bug was, and how I fix it.
     </p>
-    <p><b>Rewarded bounties:</b></p>
-    <ul>
-        <li><b>2020-03-30:</b> <font color="green"><b>$5</b></font> to <b>\0</b> for reporting that the documentation neglects to mention that the default <b>anon</b> user can use <code>su</code> to become <b>root</b> by default. <a href="kiwis4kiwi.png">Donated to "Kiwis for Kiwi" charity as per \0's request.</a> Fixed with <a href="https://github.com/SerenityOS/serenity/commit/ec91d2eb9febafd82de3b30bd76fb621f3da5026">this commit</a>.</li>
-    </ul>
     <p>
         To claim a reward, get in touch with me either on IRC (<b>kling</b> on Freenode) or via <b>kling@serenityos.org</b>
     </p>
-    <p><b>Unclaimed bounties:</b></p>
+    <p><b>Past exploits:</b></p>
     <ul>
         <li><b>2021-02-18:</b> <b>cees-elzinga</b> combined a ptrace race condition with an ASLR bypass to modify <code>/etc/passwd</code> and become root. (<a href="https://github.com/SerenityOS/serenity/issues/5230">Bug report and exploit</a>)</li>
         <li><b>2021-02-11:</b> <b>vakzz</b> wrote the first-ever full chain exploit, stringing together a LibJS bug and a kernel bug to create a web page that got root access when viewed in our browser. (<a href="https://devcraft.io/2021/02/11/serenityos-writing-a-full-chain-exploit.html">Writeup and exploit</a>)</li>
         <li><b>2020-12-22:</b> <b>ALLES! CTF</b> found a kernel LPE due to missing EFLAGS validation in <code>ptrace()</code>. (<a href="https://github.com/allesctf/writeups/blob/master/2020/hxpctf/wisdom2/writeup.md">Writeup and exploit</a>)</li>
         <li><b>2020-12-20:</b> <b>yyyyyyy</b> found a kernel LPE due to a race condition between <code>execve()</code> and <code>ptrace()</code>. (<a href="https://hxp.io/blog/79/hxp-CTF-2020-wisdom2/">Writeup and exploit</a>)</li>
+        <li><b>2020-03-30:</b> <b>\0</b> claimed <font color="green"><b>$5</b></font> for reporting that the documentation neglects to mention that the default <b>anon</b> user can use <code>su</code> to become <b>root</b> by default. <a href="kiwis4kiwi.png">Donated to "Kiwis for Kiwi" charity as per \0's request.</a> Fixed with <a href="https://github.com/SerenityOS/serenity/commit/ec91d2eb9febafd82de3b30bd76fb621f3da5026">this commit</a>.</li>
         <li><b>2019-12-30:</b> <b>Fire30</b> found a kernel LPE due to bad userspace pointer validation. (<a href="https://github.com/Fire30/CTF-WRITEUPS/tree/master/36c3_ctf/wisdom">Writeup and exploit</a>)</li>
         <li><b>2019-12-29:</b> <b>braindead</b> found a kernel LPE due to a TOCTOU bug in <code>clock_nanosleep()</code>. (<a href="https://github.com/braindead/ctf-writeups/tree/master/2019/36c3/wisdom">Writeup and exploit</a>)</li>
 
