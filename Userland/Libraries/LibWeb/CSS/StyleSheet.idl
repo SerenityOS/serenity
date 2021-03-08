@@ -1,8 +1,8 @@
 interface StyleSheet {
 
     readonly attribute Element? ownerNode;
+    readonly attribute CSSOMString type;
 
-    // readonly attribute CSSOMString type;
     // readonly attribute USVString? href;
     // readonly attribute CSSStyleSheet? parentStyleSheet;
     // readonly attribute DOMString? title;
