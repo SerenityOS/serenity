@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
@@ -41,8 +41,14 @@ public:
 
     virtual ~StyleSheet() = default;
 
+    DOM::Element* owner_node() { return m_owner_node; }
+    void set_owner_node(DOM::Element*);
+
 protected:
     StyleSheet() = default;
+
+private:
+    WeakPtr<DOM::Element> m_owner_node;
 };
 
 }
