@@ -84,9 +84,35 @@ class Time {
 public:
     Time() = default;
     Time(const Time&) = default;
+    Time& operator=(const Time&) = default;
 
-    static Time from_seconds(i64 seconds) { return Time(seconds, 0); }
-    static Time from_nanoseconds(i32 nanoseconds);
+    Time(Time&& other)
+        : m_seconds(exchange(other.m_seconds, 0))
+        , m_nanoseconds(exchange(other.m_nanoseconds, 0))
+    {
+    }
+    Time& operator=(Time&& other)
+    {
+        if (this != &other) {
+            m_seconds = exchange(other.m_seconds, 0);
+            m_nanoseconds = exchange(other.m_nanoseconds, 0);
+        }
+        return *this;
+    }
+
+    constexpr static Time from_seconds(i64 seconds) { return Time(seconds, 0); }
+    constexpr static Time from_nanoseconds(i64 nanoseconds)
+    {
+        return Time(nanoseconds / 1'000'000'000, nanoseconds % 1'000'000'000);
+    }
+    constexpr static Time from_microseconds(i64 microseconds)
+    {
+        return Time(microseconds / 1'000'000, (microseconds % 1'000'000) * 1'000);
+    }
+    constexpr static Time from_milliseconds(i64 milliseconds)
+    {
+        return Time(milliseconds / 1'000, (milliseconds % 1'000) * 1'000'000);
+    }
     static Time from_timespec(const struct timespec&);
     static Time from_timeval(const struct timeval&);
     static Time min() { return Time(-0x8000'0000'0000'0000LL, 0); };
@@ -96,20 +122,30 @@ public:
     // Truncates "2.8 seconds" to 2 seconds.
     // Truncates "-2.8 seconds" to -2 seconds.
     i64 to_truncated_seconds() const;
+    i64 to_truncated_milliseconds() const;
+    i64 to_truncated_microseconds() const;
+    i64 to_seconds() const;
+    i64 to_milliseconds() const;
+    i64 to_microseconds() const;
+    i64 to_nanoseconds() const;
     timespec to_timespec() const;
     timeval to_timeval() const;
+
+    bool is_zero() const { return !m_seconds && !m_nanoseconds; }
 
     bool operator==(const Time& other) const { return this->m_seconds == other.m_seconds && this->m_nanoseconds == other.m_nanoseconds; }
     bool operator!=(const Time& other) const { return !(*this == other); }
     Time operator+(const Time& other) const;
+    Time& operator+=(const Time& other);
     Time operator-(const Time& other) const;
+    Time& operator-=(const Time& other);
     bool operator<(const Time& other) const;
     bool operator<=(const Time& other) const;
     bool operator>(const Time& other) const;
     bool operator>=(const Time& other) const;
 
 private:
-    explicit Time(i64 seconds, u32 nanoseconds)
+    constexpr explicit Time(i64 seconds, u32 nanoseconds)
         : m_seconds(seconds)
         , m_nanoseconds(nanoseconds)
     {
