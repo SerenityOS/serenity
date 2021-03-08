@@ -1,0 +1,52 @@
+diff -ru SDL2_mixer-2.0.4/Makefile.in SDL2_mixer-2.0.4-patched/Makefile.in
+--- SDL2_mixer-2.0.4/Makefile.in	2018-10-31 15:58:59.000000000 +0100
++++ SDL2_mixer-2.0.4-patched/Makefile.in	2021-03-08 13:11:59.083146376 +0100
+@@ -38,7 +38,7 @@
+ PLAYWAVE_OBJECTS = @PLAYWAVE_OBJECTS@
+ PLAYMUS_OBJECTS = @PLAYMUS_OBJECTS@
+ 
+-DIST = *.txt Android.mk Makefile.in SDL2_mixer.pc.in SDL2_mixer.spec.in SDL_mixer.h VisualC VisualC-WinRT Xcode Xcode-iOS acinclude aclocal.m4 autogen.sh build-scripts configure configure.in debian effect_position.c effect_stereoreverse.c effects_internal.c effects_internal.h external gcc-fat.sh load_aiff.c load_aiff.h load_voc.c load_voc.h mixer.c mixer.h music.c music.h music_cmd.c music_cmd.h music_flac.c music_flac.h music_fluidsynth.c music_fluidsynth.h music_mad.c music_mad.h music_mikmod.c music_mikmod.h music_modplug.c music_modplug.h music_mpg123.c music_mpg123.h music_nativemidi.c music_nativemidi.h music_ogg.c music_ogg.h music_opus.c music_opus.h music_timidity.c music_timidity.h music_wav.c music_wav.h native_midi playmus.c playwave.c timidity version.rc
++DIST = *.txt Android.mk Makefile.in SDL2_mixer.pc.in SDL2_mixer.spec.in SDL_mixer.h VisualC VisualC-WinRT Xcode Xcode-iOS acinclude aclocal.m4 autogen.sh build-scripts configure configure.in debian effect_position.c effect_stereoreverse.c effects_internal.c effects_internal.h external gcc-fat.sh load_aiff.c load_aiff.h load_voc.c load_voc.h mixer.c mixer.h music.c music.h music_cmd.c music_cmd.h music_flac.c music_flac.h music_fluidsynth.c music_fluidsynth.h music_mad.c music_mad.h music_mikmod.c music_mikmod.h music_modplug.c music_modplug.h music_mpg123.c music_mpg123.h music_nativemidi.c music_nativemidi.h music_ogg.c music_ogg.h music_opus.c music_opus.h music_timidity.c music_timidity.h music_wav.c music_wav.h native_midi timidity version.rc
+ 
+ LT_AGE      = @LT_AGE@
+ LT_CURRENT  = @LT_CURRENT@
+@@ -46,7 +46,7 @@
+ LT_REVISION = @LT_REVISION@
+ LT_LDFLAGS  = -no-undefined -rpath $(libdir) -release $(LT_RELEASE) -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+ 
+-all: $(srcdir)/configure Makefile $(objects) $(objects)/$(TARGET) $(objects)/playwave$(EXE) $(objects)/playmus$(EXE)
++all: $(srcdir)/configure Makefile $(objects) $(objects)/$(TARGET)
+ 
+ $(srcdir)/configure: $(srcdir)/configure.in
+ 	@echo "Warning, configure.in is out of date"
+@@ -64,12 +64,6 @@
+ $(objects)/$(TARGET): $(OBJECTS) $(VERSION_OBJECTS)
+ 	$(LIBTOOL) --mode=link $(CC) -o $@ $(OBJECTS) $(VERSION_OBJECTS) $(LDFLAGS) $(EXTRA_LDFLAGS) $(LT_LDFLAGS)
+ 
+-$(objects)/playwave$(EXE): $(objects)/playwave.lo $(objects)/$(TARGET)
+-	$(LIBTOOL) --mode=link $(CC) -o $@ $(objects)/playwave.lo $(SDL_CFLAGS) $(objects)/$(TARGET) $(SDL_LIBS) $(LDFLAGS)
+-
+-$(objects)/playmus$(EXE): $(objects)/playmus.lo $(objects)/$(TARGET)
+-	$(LIBTOOL) --mode=link $(CC) -o $@ $(objects)/playmus.lo $(SDL_CFLAGS) $(objects)/$(TARGET) $(SDL_LIBS) $(LDFLAGS)
+-
+ install: all install-hdrs install-lib #install-bin
+ install-hdrs:
+ 	$(SHELL) $(auxdir)/mkinstalldirs $(includedir)/SDL2
+@@ -84,8 +78,6 @@
+ 	$(LIBTOOL) --mode=install $(INSTALL) $(objects)/$(TARGET) $(libdir)/$(TARGET)
+ install-bin:
+ 	$(SHELL) $(auxdir)/mkinstalldirs $(bindir)
+-	$(LIBTOOL) --mode=install $(INSTALL) -m 755 $(objects)/playwave$(EXE) $(bindir)/playwave$(EXE)
+-	$(LIBTOOL) --mode=install $(INSTALL) -m 755 $(objects)/playmus$(EXE) $(bindir)/playmus$(EXE)
+ 
+ uninstall: uninstall-hdrs uninstall-lib uninstall-bin
+ uninstall-hdrs:
+@@ -99,8 +91,6 @@
+ uninstall-lib:
+ 	$(LIBTOOL) --mode=uninstall rm -f $(libdir)/$(TARGET)
+ uninstall-bin:
+-	rm -f $(bindir)/playwave$(EXE)
+-	rm -f $(bindir)/playmus$(EXE)
+ 
+ clean:
+ 	rm -rf $(objects)
