@@ -1300,6 +1300,13 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
         attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
         attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
 
+        if (attribute.extended_attributes.contains("ImplementedAs")) {
+            auto implemented_as = attribute.extended_attributes.get("ImplementedAs").value();
+            attribute_generator.set("attribute.cpp_getter_name", implemented_as);
+        } else {
+            attribute_generator.set("attribute.cpp_getter_name", attribute.name.to_snakecase());
+        }
+
         if (attribute.extended_attributes.contains("Reflect")) {
             auto attribute_name = attribute.extended_attributes.get("Reflect").value();
             if (attribute_name.is_null())
@@ -1338,7 +1345,7 @@ JS_DEFINE_NATIVE_GETTER(@prototype_class@::@attribute.getter_callback@)
             }
         } else {
             attribute_generator.append(R"~~~(
-    auto retval = impl->@attribute.name:snakecase@();
+    auto retval = impl->@attribute.cpp_getter_name@();
 )~~~");
         }
 
