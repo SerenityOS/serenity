@@ -117,8 +117,8 @@ private:
 
     static Time from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds);
 
-    i64 m_seconds;
-    u32 m_nanoseconds; // Always less than 1'000'000'000
+    i64 m_seconds { 0 };
+    u32 m_nanoseconds { 0 }; // Always less than 1'000'000'000
 };
 
 template<typename TimevalType>
