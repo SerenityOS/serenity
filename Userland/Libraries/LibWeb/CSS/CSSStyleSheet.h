@@ -37,6 +37,8 @@ namespace Web::CSS {
 
 class CSSStyleSheet final : public StyleSheet {
 public:
+    using WrapperType = Bindings::CSSStyleSheetWrapper;
+
     static NonnullRefPtr<CSSStyleSheet> create(NonnullRefPtrVector<CSSRule> rules)
     {
         return adopt(*new CSSStyleSheet(move(rules)));
@@ -84,5 +86,11 @@ private:
 
     NonnullRefPtrVector<CSSRule> m_rules;
 };
+
+}
+
+namespace Web::Bindings {
+
+CSSStyleSheetWrapper* wrap(JS::GlobalObject&, CSS::CSSStyleSheet&);
 
 }
