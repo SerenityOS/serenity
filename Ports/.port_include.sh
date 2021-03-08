@@ -5,6 +5,19 @@ SCRIPT=`dirname $0`
 export SERENITY_ROOT=`realpath $SCRIPT/../`
 packagesdb="$SERENITY_ROOT/Build/packages.db"
 
+# Some ports may build and run code at build time, thoses may use the commun
+# variables suffixed by _BUILD.
+# We are stashing them here so we are free to overwrite the usual variable with
+# the serenity config instead.
+
+set +u # Avoid crashing if thoses are unset
+export CC_BUILD=$(if [ -z "$CC" ]; then echo "gcc"; else echo "$CC"; fi)
+export CXX_BUILD=$(if [ -z "$CXX" ]; then echo "g++"; else echo "$CXX"; fi)
+export CFLAGS_BUILD="$CFLAGS"
+export CXXFLAGS_BUILD="$CXXFLAGS"
+export LDFLAGS_BUILD="$LDFLAGS"
+set -u # Resume the normal way to do.
+
 export CC=i686-pc-serenity-gcc
 export CXX=i686-pc-serenity-g++
 export PATH=$SERENITY_ROOT/Toolchain/Local/i686/bin:$PATH
