@@ -980,14 +980,35 @@ int Emulator::virt$pipe(FlatPtr vm_pipefd, int flags)
     return rc;
 }
 
-u32 Emulator::virt$munmap(FlatPtr address, u32 size)
+static void round_to_page_size(FlatPtr& address, size_t& size)
 {
-    auto* region = mmu().find_region({ 0x23, address });
-    VERIFY(region);
-    if (region->size() != round_up_to_power_of_two(size, PAGE_SIZE))
-        TODO();
-    m_range_allocator.deallocate(region->range());
-    mmu().remove_region(*region);
+    auto new_end = round_up_to_power_of_two(address + size, PAGE_SIZE);
+    address &= ~(PAGE_SIZE - 1);
+    size = new_end - address;
+}
+
+u32 Emulator::virt$munmap(FlatPtr address, size_t size)
+{
+    round_to_page_size(address, size);
+    Vector<Region*, 4> marked_for_deletion;
+    bool has_non_mmap_region = false;
+    mmu().for_regions_in({ 0x23, address }, size, [&](Region* region) {
+        if (region) {
+            if (!is<MmapRegion>(*region)) {
+                has_non_mmap_region = true;
+                return IterationDecision::Break;
+            }
+            marked_for_deletion.append(region);
+        }
+        return IterationDecision::Continue;
+    });
+    if (has_non_mmap_region)
+        return -EINVAL;
+
+    for (Region* region : marked_for_deletion) {
+        m_range_allocator.deallocate(region->range());
+        mmu().remove_region(*region);
+    }
     return 0;
 }
 
@@ -1037,6 +1058,7 @@ FlatPtr Emulator::virt$mremap(FlatPtr params_addr)
     Syscall::SC_mremap_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
+    // FIXME: Support regions that have been split in the past (e.g. due to mprotect or munmap).
     if (auto* region = mmu().find_region({ m_cpu.ds(), params.old_address })) {
         if (!is<MmapRegion>(*region))
             return -EINVAL;
@@ -1086,15 +1108,24 @@ u32 Emulator::virt$unveil(u32)
 
 u32 Emulator::virt$mprotect(FlatPtr base, size_t size, int prot)
 {
-    if (auto* region = mmu().find_region({ m_cpu.ds(), base })) {
-        if (!is<MmapRegion>(*region))
-            return -EINVAL;
-        VERIFY(region->size() == size);
-        auto& mmap_region = *(MmapRegion*)region;
-        mmap_region.set_prot(prot);
-        return 0;
-    }
-    return -EINVAL;
+    round_to_page_size(base, size);
+    bool has_non_mmaped_region = false;
+
+    mmu().for_regions_in({ 0x23, base }, size, [&](Region* region) {
+        if (region) {
+            if (!is<MmapRegion>(*region)) {
+                has_non_mmaped_region = true;
+                return IterationDecision::Break;
+            }
+            auto& mmap_region = *(MmapRegion*)region;
+            mmap_region.set_prot(prot);
+        }
+        return IterationDecision::Continue;
+    });
+    if (has_non_mmaped_region)
+        return -EINVAL;
+
+    return 0;
 }
 
 u32 Emulator::virt$madvise(FlatPtr, size_t, int)
