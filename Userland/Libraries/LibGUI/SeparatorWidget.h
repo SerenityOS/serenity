@@ -30,17 +30,43 @@
 
 namespace GUI {
 
-class SeparatorWidget final : public Widget {
+class SeparatorWidget : public Widget {
     C_OBJECT(SeparatorWidget);
 
 public:
     virtual ~SeparatorWidget() override;
 
-private:
+protected:
     explicit SeparatorWidget(Gfx::Orientation);
 
+private:
     virtual void paint_event(PaintEvent&) override;
 
     const Gfx::Orientation m_orientation;
 };
+
+class VerticalSeparator final : public SeparatorWidget {
+    C_OBJECT(VerticalSeparator)
+public:
+    virtual ~VerticalSeparator() override { }
+
+private:
+    VerticalSeparator()
+        : SeparatorWidget(Gfx::Orientation::Vertical)
+    {
+    }
+};
+
+class HorizontalSeparator final : public SeparatorWidget {
+    C_OBJECT(HorizontalSeparator)
+public:
+    virtual ~HorizontalSeparator() override { }
+
+private:
+    HorizontalSeparator()
+        : SeparatorWidget(Gfx::Orientation::Horizontal)
+    {
+    }
+};
+
 }
