@@ -1271,11 +1271,11 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 
     return new_array;
 )~~~");
-        } else if (return_type.name == "boolean" || return_type.name == "double" || return_type.name == "long" || return_type.name == "unsigned long") {
+        } else if (return_type.name == "boolean" || return_type.name == "double") {
             scoped_generator.append(R"~~~(
     return JS::Value(retval);
 )~~~");
-        } else if (return_type.name == "short" || return_type.name == "unsigned short") {
+        } else if (return_type.name == "short" || return_type.name == "unsigned short" || return_type.name == "long" || return_type.name == "unsigned long") {
             scoped_generator.append(R"~~~(
     return JS::Value((i32)retval);
 )~~~");
