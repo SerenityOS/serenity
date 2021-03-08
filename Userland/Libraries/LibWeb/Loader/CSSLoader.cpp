@@ -29,21 +29,24 @@
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/StyleSheet.h>
+#include <LibWeb/DOM/Element.h>
 #include <LibWeb/Loader/CSSLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web {
 
-CSSLoader::CSSLoader(DOM::Document& document)
-    : m_document(&document)
+CSSLoader::CSSLoader(DOM::Element& owner_element)
+    : m_owner_element(owner_element)
 {
 }
 
 void CSSLoader::load_from_text(const String& text)
 {
-    m_style_sheet = parse_css(CSS::ParsingContext(*m_document), text);
-    if (!m_style_sheet)
+    m_style_sheet = parse_css(CSS::ParsingContext(m_owner_element.document()), text);
+    if (!m_style_sheet) {
         m_style_sheet = CSS::CSSStyleSheet::create({});
+        m_style_sheet->set_owner_node(&m_owner_element);
+    }
 
     load_next_import_if_needed();
 }
@@ -51,6 +54,7 @@ void CSSLoader::load_from_text(const String& text)
 void CSSLoader::load_from_url(const URL& url)
 {
     m_style_sheet = CSS::CSSStyleSheet::create({});
+    m_style_sheet->set_owner_node(&m_owner_element);
 
     LoadRequest request;
     request.set_url(url);
@@ -67,7 +71,7 @@ void CSSLoader::resource_did_load()
         dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Resource did load, has encoded data. URL: {}", resource()->url());
     }
 
-    auto sheet = parse_css(CSS::ParsingContext(*m_document), resource()->encoded_data());
+    auto sheet = parse_css(CSS::ParsingContext(m_owner_element.document()), resource()->encoded_data());
     if (!sheet) {
         dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Failed to parse stylesheet: {}", resource()->url());
         return;

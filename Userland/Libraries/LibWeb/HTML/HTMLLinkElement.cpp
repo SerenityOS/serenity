@@ -36,7 +36,7 @@ namespace Web::HTML {
 
 HTMLLinkElement::HTMLLinkElement(DOM::Document& document, QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
-    , m_css_loader(document)
+    , m_css_loader(*this)
 {
     m_css_loader.on_load = [&] {
         document.update_style();
@@ -53,10 +53,8 @@ void HTMLLinkElement::inserted_into(Node& node)
 
     if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
         m_css_loader.load_from_url(document().complete_url(href()));
-        if (auto sheet = m_css_loader.style_sheet()) {
-            sheet->set_owner_node(this);
+        if (auto sheet = m_css_loader.style_sheet())
             document().style_sheets().add_sheet(sheet.release_nonnull());
-        }
     }
 }
 
