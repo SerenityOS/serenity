@@ -60,6 +60,9 @@ private:
 
 ComboBox::ComboBox()
 {
+    REGISTER_STRING_PROPERTY("placeholder", editor_placeholder, set_editor_placeholder);
+    REGISTER_BOOL_PROPERTY("model_only", only_allow_values_from_model, set_only_allow_values_from_model);
+
     set_min_width(32);
     set_fixed_height(22);
 
@@ -142,6 +145,16 @@ ComboBox::ComboBox()
 
 ComboBox::~ComboBox()
 {
+}
+
+void ComboBox::set_editor_placeholder(const StringView& placeholder)
+{
+    m_editor->set_placeholder(placeholder);
+}
+
+const String& ComboBox::editor_placeholder() const
+{
+    return m_editor->placeholder();
 }
 
 void ComboBox::navigate(AbstractView::CursorMovement cursor_movement)

@@ -28,6 +28,9 @@
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, HorizontalSeparator)
+REGISTER_WIDGET(GUI, VerticalSeparator)
+
 namespace GUI {
 
 SeparatorWidget::SeparatorWidget(Gfx::Orientation orientation)

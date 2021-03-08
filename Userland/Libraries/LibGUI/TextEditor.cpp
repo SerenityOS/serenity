@@ -59,6 +59,7 @@ TextEditor::TextEditor(Type type)
     : m_type(type)
 {
     REGISTER_STRING_PROPERTY("text", text, set_text);
+    REGISTER_STRING_PROPERTY("placeholder", placeholder, set_placeholder);
     REGISTER_ENUM_PROPERTY("mode", mode, set_mode, Mode,
         { Editable, "Editable" },
         { ReadOnly, "ReadOnly" },
