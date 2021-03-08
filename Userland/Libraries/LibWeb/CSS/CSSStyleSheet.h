@@ -44,7 +44,9 @@ public:
         return adopt(*new CSSStyleSheet(move(rules)));
     }
 
-    virtual ~CSSStyleSheet();
+    virtual ~CSSStyleSheet() override;
+
+    virtual String type() const override { return "text/css"; }
 
     const NonnullRefPtrVector<CSSRule>& rules() const { return m_rules; }
     NonnullRefPtrVector<CSSRule>& rules() { return m_rules; }
