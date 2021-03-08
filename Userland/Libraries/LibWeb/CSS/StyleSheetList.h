@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,27 +28,46 @@
 
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
-#include <LibWeb/CSS/StyleSheet.h>
+#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
 
-class StyleSheetList : public RefCounted<StyleSheetList> {
+class StyleSheetList
+    : public RefCounted<StyleSheetList>
+    , public Bindings::Wrappable {
 public:
+    using WrapperType = Bindings::StyleSheetListWrapper;
+
     static NonnullRefPtr<StyleSheetList> create(DOM::Document& document)
     {
         return adopt(*new StyleSheetList(document));
     }
 
-    void add_sheet(NonnullRefPtr<StyleSheet>);
+    void add_sheet(NonnullRefPtr<CSSStyleSheet>);
+    const NonnullRefPtrVector<CSSStyleSheet>& sheets() const { return m_sheets; }
 
-    const NonnullRefPtrVector<StyleSheet>& sheets() const { return m_sheets; }
+    RefPtr<CSSStyleSheet> item(size_t index) const
+    {
+        if (index >= m_sheets.size())
+            return {};
+        return m_sheets[index];
+    }
+
+    size_t length() const { return m_sheets.size(); }
 
 private:
     explicit StyleSheetList(DOM::Document&);
 
     DOM::Document& m_document;
-    NonnullRefPtrVector<StyleSheet> m_sheets;
+    NonnullRefPtrVector<CSSStyleSheet> m_sheets;
 };
+
+}
+
+namespace Web::Bindings {
+
+StyleSheetListWrapper* wrap(JS::GlobalObject&, CSS::StyleSheetList&);
 
 }

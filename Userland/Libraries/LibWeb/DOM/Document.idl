@@ -29,6 +29,8 @@ interface Document : Node {
     Comment createComment(DOMString data);
     Range createRange();
 
+    [ImplementedAs=style_sheets_for_bindings] readonly attribute StyleSheetList styleSheets;
+
     readonly attribute DOMString compatMode;
     readonly attribute DocumentType? doctype;
 

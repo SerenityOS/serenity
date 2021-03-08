@@ -92,6 +92,8 @@ public:
     CSS::StyleSheetList& style_sheets() { return *m_style_sheets; }
     const CSS::StyleSheetList& style_sheets() const { return *m_style_sheets; }
 
+    NonnullRefPtr<CSS::StyleSheetList> style_sheets_for_bindings() { return *m_style_sheets; }
+
     virtual FlyString node_name() const override { return "#document"; }
 
     void set_hovered_node(Node*);

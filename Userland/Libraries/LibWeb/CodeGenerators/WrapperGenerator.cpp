@@ -408,7 +408,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (namespace_.is_one_of("DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "SVG", "XHR")) {
+    if (namespace_.is_one_of("CSS", "DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "SVG", "XHR")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -652,7 +652,9 @@ static void generate_header(const IDL::Interface& interface)
 #include <LibWeb/Bindings/Wrapper.h>
 
 // FIXME: This is very strange.
-#if __has_include(<LibWeb/DOM/@name@.h>)
+#if __has_include(<LibWeb/CSS/@name@.h>)
+#    include <LibWeb/CSS/@name@.h>
+#elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
 #    include <LibWeb/HTML/@name@.h>
@@ -768,6 +770,7 @@ void generate_implementation(const IDL::Interface& interface)
 #include <LibWeb/Origin.h>
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::HTML;
 
@@ -881,7 +884,9 @@ void generate_constructor_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#if __has_include(<LibWeb/DOM/@name@.h>)
+#if __has_include(<LibWeb/CSS/@name@.h>)
+#    include <LibWeb/CSS/@name@.h>
+#elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
 #    include <LibWeb/HTML/@name@.h>
@@ -898,6 +903,7 @@ void generate_constructor_implementation(const IDL::Interface& interface)
 #endif
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::HTML;
 
@@ -1079,6 +1085,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibJS/Runtime/Uint8ClampedArray.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
 #include <LibWeb/Bindings/DOMImplementationWrapper.h>
@@ -1094,6 +1101,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceTimingWrapper.h>
 #include <LibWeb/Bindings/RangeWrapper.h>
+#include <LibWeb/Bindings/StyleSheetListWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Element.h>
@@ -1108,7 +1116,9 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
 #    include <LibWeb/Bindings/@prototype_base_class@.h>
 #endif
-#if __has_include(<LibWeb/DOM/@name@.h>)
+#if __has_include(<LibWeb/CSS/@name@.h>)
+#    include <LibWeb/CSS/@name@.h>
+#elif __has_include(<LibWeb/DOM/@name@.h>)
 #    include <LibWeb/DOM/@name@.h>
 #elif __has_include(<LibWeb/HTML/@name@.h>)
 #    include <LibWeb/HTML/@name@.h>
@@ -1125,6 +1135,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #endif
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::HTML;
 using namespace Web::NavigationTiming;
