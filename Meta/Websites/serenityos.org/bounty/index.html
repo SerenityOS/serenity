@@ -35,6 +35,7 @@
     </p>
     <p><b>Past exploits:</b></p>
     <ul>
+        <li><b>2021-03-04:</b> <b>Iliad</b> used a VLA stack overflow in the TCP implementation to smash a nearby kernel stack and become root. (<a href="https://abigpickle.github.io/posts/2021/03/serenityos-kernel-hacking-adventures/">Writeup and exploit</a>)</li>
         <li><b>2021-02-18:</b> <b>cees-elzinga</b> combined a ptrace race condition with an ASLR bypass to modify <code>/etc/passwd</code> and become root. (<a href="https://github.com/SerenityOS/serenity/issues/5230">Bug report and exploit</a>)</li>
         <li><b>2021-02-11:</b> <b>vakzz</b> wrote the first-ever full chain exploit, stringing together a LibJS bug and a kernel bug to create a web page that got root access when viewed in our browser. (<a href="https://devcraft.io/2021/02/11/serenityos-writing-a-full-chain-exploit.html">Writeup and exploit</a>)</li>
         <li><b>2020-12-22:</b> <b>ALLES! CTF</b> found a kernel LPE due to missing EFLAGS validation in <code>ptrace()</code>. (<a href="https://github.com/allesctf/writeups/blob/master/2020/hxpctf/wisdom2/writeup.md">Writeup and exploit</a>)</li>
