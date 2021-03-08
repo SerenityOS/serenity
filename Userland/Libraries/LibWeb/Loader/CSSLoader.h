@@ -34,7 +34,7 @@ namespace Web {
 
 class CSSLoader : public ResourceClient {
 public:
-    CSSLoader(DOM::Document& document);
+    explicit CSSLoader(DOM::Element& owner_element);
 
     void load_from_text(const String&);
     void load_from_url(const URL&);
@@ -51,8 +51,9 @@ private:
     virtual void resource_did_load() override;
     virtual void resource_did_fail() override;
 
+    DOM::Element& m_owner_element;
+
     RefPtr<CSS::CSSStyleSheet> m_style_sheet;
-    const DOM::Document* m_document;
 };
 
 }

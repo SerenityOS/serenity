@@ -55,8 +55,8 @@ private:
         };
     };
 
-    unsigned m_relationship { 0 };
     CSSLoader m_css_loader;
+    unsigned m_relationship { 0 };
 };
 
 }

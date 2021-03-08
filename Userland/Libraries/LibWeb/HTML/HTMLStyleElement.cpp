@@ -34,7 +34,7 @@ namespace Web::HTML {
 
 HTMLStyleElement::HTMLStyleElement(DOM::Document& document, QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
-    , m_css_loader(document)
+    , m_css_loader(*this)
 {
     m_css_loader.on_load = [&] {
         document.update_style();
@@ -54,10 +54,8 @@ void HTMLStyleElement::children_changed()
     });
     m_css_loader.load_from_text(builder.to_string());
 
-    if (auto sheet = m_css_loader.style_sheet()) {
-        sheet->set_owner_node(this);
+    if (auto sheet = m_css_loader.style_sheet())
         document().style_sheets().add_sheet(sheet.release_nonnull());
-    }
 
     HTMLElement::children_changed();
 }
