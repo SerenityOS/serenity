@@ -251,6 +251,19 @@ public:
         return old;
     }
 
+    constexpr Checked& operator--()
+    {
+        sub(1);
+        return *this;
+    }
+
+    constexpr Checked operator--(int)
+    {
+        Checked old { *this };
+        sub(1);
+        return old;
+    }
+
     template<typename U, typename V>
     static constexpr bool addition_would_overflow(U u, V v)
     {
