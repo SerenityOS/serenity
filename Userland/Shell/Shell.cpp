@@ -1582,7 +1582,11 @@ bool Shell::has_history_event(StringView source)
         bool has_history_event { false };
     } visitor;
 
-    Parser { source, true }.parse()->visit(visitor);
+    auto ast = Parser { source, true }.parse();
+    if (!ast)
+        return false;
+
+    ast->visit(visitor);
     return visitor.has_history_event;
 }
 
