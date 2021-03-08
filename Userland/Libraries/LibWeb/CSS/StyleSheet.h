@@ -41,6 +41,8 @@ public:
 
     virtual ~StyleSheet() = default;
 
+    virtual String type() const = 0;
+
     DOM::Element* owner_node() { return m_owner_node; }
     void set_owner_node(DOM::Element*);
 
