@@ -28,7 +28,7 @@
 
 namespace Web::CSS {
 
-void StyleSheetList::add_sheet(NonnullRefPtr<StyleSheet> sheet)
+void StyleSheetList::add_sheet(NonnullRefPtr<CSSStyleSheet> sheet)
 {
     m_sheets.append(move(sheet));
 }

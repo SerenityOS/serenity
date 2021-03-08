@@ -28,11 +28,17 @@
 #pragma once
 
 #include <AK/RefCounted.h>
+#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Forward.h>
 
 namespace Web::CSS {
 
-class StyleSheet : public RefCounted<StyleSheet> {
+class StyleSheet
+    : public RefCounted<StyleSheet>
+    , public Bindings::Wrappable {
 public:
+    using WrapperType = Bindings::StyleSheetWrapper;
+
     virtual ~StyleSheet() = default;
 
 protected:

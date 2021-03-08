@@ -203,7 +203,7 @@ class XMLHttpRequestEventTarget;
 }
 
 namespace Web::Bindings {
-
+class CSSStyleSheetWrapper;
 class CanvasRenderingContext2DWrapper;
 class CharacterDataWrapper;
 class CommentWrapper;
@@ -301,6 +301,8 @@ class SVGGeometryElementWrapper;
 class SVGGraphicsElementWrapper;
 class SVGPathElementWrapper;
 class SVGSVGElementWrapper;
+class StyleSheetWrapper;
+class StyleSheetListWrapper;
 class TextWrapper;
 class UIEventWrapper;
 class WindowObject;
