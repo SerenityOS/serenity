@@ -87,6 +87,28 @@ public:
         }
     }
 
+    template<typename Callback>
+    void for_regions_in(X86::LogicalAddress address, size_t size, Callback callback)
+    {
+        VERIFY(size > 0);
+        X86::LogicalAddress address_end = address;
+        address_end.set_offset(address_end.offset() + size);
+        ensure_split_at(address);
+        ensure_split_at(address_end);
+
+        size_t first_page = address.offset() / PAGE_SIZE;
+        size_t last_page = (address_end.offset() - 1) / PAGE_SIZE;
+        Region* last_reported = nullptr;
+        for (size_t page = first_page; page <= last_page; ++page) {
+            Region* current_region = m_page_to_region_map[page];
+            if (page != first_page && current_region == last_reported)
+                continue;
+            if (callback(current_region) == IterationDecision::Break)
+                return;
+            last_reported = current_region;
+        }
+    }
+
 private:
     Emulator& m_emulator;
 
