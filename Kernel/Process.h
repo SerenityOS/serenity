@@ -211,6 +211,7 @@ public:
     void stop_tracing();
     void tracer_trap(Thread&, const RegisterState&);
 
+    KResultOr<int> sys$emuctl();
     KResultOr<int> sys$yield();
     KResultOr<int> sys$sync();
     KResultOr<int> sys$beep();

@@ -192,7 +192,8 @@ namespace Kernel {
     S(abort)                  \
     S(anon_create)            \
     S(msyscall)               \
-    S(readv)
+    S(readv)                  \
+    S(emuctl)
 
 namespace Syscall {
 
