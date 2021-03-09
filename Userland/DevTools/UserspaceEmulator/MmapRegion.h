@@ -82,4 +82,7 @@ private:
     String m_name;
 };
 
+template<>
+inline bool Region::fast_is<MmapRegion>() const { return m_mmap; }
+
 }

@@ -66,7 +66,7 @@ NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32
 }
 
 MmapRegion::MmapRegion(u32 base, u32 size, int prot, u8* data, u8* shadow_data)
-    : Region(base, size)
+    : Region(base, size, true)
     , m_data(data)
     , m_shadow_data(shadow_data)
 {
