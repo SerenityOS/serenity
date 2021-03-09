@@ -1582,11 +1582,23 @@ void SoftCPU::FLD1(const X86::Instruction&)
     fpu_push(1.0);
 }
 
-void SoftCPU::FLDL2T(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLDL2T(const X86::Instruction&)
+{
+    fpu_push(log2f(10.0f));
+}
+
 void SoftCPU::FLDL2E(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FLDPI(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FLDLG2(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FLDLN2(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FLDLG2(const X86::Instruction&)
+{
+    fpu_push(log10f(2.0f));
+}
+
+void SoftCPU::FLDLN2(const X86::Instruction&)
+{
+    fpu_push(logf(2.0f));
+}
 
 void SoftCPU::FLDZ(const X86::Instruction&)
 {
@@ -1617,7 +1629,13 @@ void SoftCPU::FSQRT(const X86::Instruction&)
 }
 
 void SoftCPU::FSINCOS(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FRNDINT(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FRNDINT(const X86::Instruction&)
+{
+    // FIXME: support rounding mode
+    fpu_set(0, round(fpu_get(0)));
+}
+
 void SoftCPU::FSCALE(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::FSIN(const X86::Instruction&)
@@ -1625,7 +1643,10 @@ void SoftCPU::FSIN(const X86::Instruction&)
     fpu_set(0, sin(fpu_get(0)));
 }
 
-void SoftCPU::FCOS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCOS(const X86::Instruction&)
+{
+    fpu_set(0, cos(fpu_get(0)));
+}
 
 void SoftCPU::FIADD_RM32(const X86::Instruction& insn)
 {
