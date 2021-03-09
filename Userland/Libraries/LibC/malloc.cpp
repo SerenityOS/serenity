@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@
 #include <string.h>
 #include <sys/internals.h>
 #include <sys/mman.h>
+#include <syscall.h>
 
 // FIXME: Thread safety.
 
@@ -74,6 +75,7 @@ static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
 static bool s_scrub_free = true;
 static bool s_profiling = false;
+static bool s_in_userspace_emulator = false;
 
 struct MallocStats {
     size_t number_of_malloc_calls;
@@ -424,6 +426,17 @@ void* realloc(void* ptr, size_t size)
 void __malloc_init()
 {
     new (&malloc_lock()) LibThread::Lock();
+
+#ifdef __serenity__
+    s_in_userspace_emulator = syscall(SC_emuctl) != ENOSYS;
+#endif
+
+    if (s_in_userspace_emulator) {
+        // Don't bother scrubbing memory if we're running in UE since it
+        // keeps track of heap memory anyway.
+        s_scrub_malloc = false;
+        s_scrub_free = false;
+    }
 
     if (secure_getenv("LIBC_NOSCRUB_MALLOC"))
         s_scrub_malloc = false;
