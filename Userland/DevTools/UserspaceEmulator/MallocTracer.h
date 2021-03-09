@@ -60,8 +60,8 @@ public:
     FlatPtr address { 0 };
     size_t chunk_size { 0 };
 
-    size_t chunk_index_for_address(FlatPtr) const;
-    Mallocation& mallocation_for_address(FlatPtr) const;
+    Optional<size_t> chunk_index_for_address(FlatPtr) const;
+    Mallocation* mallocation_for_address(FlatPtr) const;
 
     Vector<Mallocation> mallocations;
 };
@@ -103,11 +103,14 @@ ALWAYS_INLINE Mallocation* MallocTracer::find_mallocation(const Region& region, 
     auto* malloc_data = static_cast<MmapRegion&>(const_cast<Region&>(region)).malloc_metadata();
     if (!malloc_data)
         return nullptr;
-    auto& mallocation = malloc_data->mallocation_for_address(address);
-    if (!mallocation.used)
+    auto* mallocation = malloc_data->mallocation_for_address(address);
+    if (!mallocation)
         return nullptr;
-    VERIFY(mallocation.contains(address));
-    return &mallocation;
+    if (!mallocation->used)
+        return nullptr;
+    if (!mallocation->contains(address))
+        return nullptr;
+    return mallocation;
 }
 
 }
