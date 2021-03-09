@@ -495,14 +495,14 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     } else {
         page_slot = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
         if (page_slot.is_null()) {
-            klog() << "MM: handle_zero_fault was unable to allocate a physical page";
+            dmesgln("MM: handle_zero_fault was unable to allocate a physical page");
             return PageFaultResponse::OutOfMemory;
         }
         dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED {}", page_slot->paddr());
     }
 
     if (!remap_vmobject_page(page_index_in_vmobject)) {
-        klog() << "MM: handle_zero_fault was unable to allocate a page table to map " << page_slot;
+        dmesgln("MM: handle_zero_fault was unable to allocate a page table to map {}", page_slot);
         return PageFaultResponse::OutOfMemory;
     }
     return PageFaultResponse::Continue;
@@ -566,7 +566,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, Scoped
     mm_lock.lock();
 
     if (nread < 0) {
-        klog() << "MM: handle_inode_fault had error (" << nread << ") while reading!";
+        dmesgln("MM: handle_inode_fault had error ({}) while reading!", nread);
         return PageFaultResponse::ShouldCrash;
     }
     if (nread < PAGE_SIZE) {
@@ -576,7 +576,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, Scoped
 
     vmobject_physical_page_entry = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
     if (vmobject_physical_page_entry.is_null()) {
-        klog() << "MM: handle_inode_fault was unable to allocate a physical page";
+        dmesgln("MM: handle_inode_fault was unable to allocate a physical page");
         return PageFaultResponse::OutOfMemory;
     }
 
