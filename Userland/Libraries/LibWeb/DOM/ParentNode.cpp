@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/CSS/Parser/CSSParser.h>
+#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/Dump.h>

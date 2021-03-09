@@ -26,7 +26,7 @@
 
 #include <AK/AnyOf.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/CSS/Parser/CSSParser.h>
+#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleInvalidator.h>
 #include <LibWeb/CSS/StyleResolver.h>

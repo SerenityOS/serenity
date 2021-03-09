@@ -47,7 +47,7 @@
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibJS/Interpreter.h>
-#include <LibWeb/CSS/Parser/CSSParser.h>
+#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/Dump.h>
