@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,11 +65,6 @@ namespace Kernel {
 // the memory manager to be initialized twice!
 static MemoryManager* s_the;
 RecursiveSpinLock s_mm_lock;
-
-const LogStream& operator<<(const LogStream& stream, const UsedMemoryRange& value)
-{
-    return stream << UserMemoryRangeTypeNames[static_cast<int>(value.type)] << " range @ " << value.start << " - " << value.end;
-}
 
 MemoryManager& MM
 {
@@ -217,7 +212,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     auto* mmap_end = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr) + multiboot_info_ptr->mmap_length);
 
     for (auto& used_range : m_used_memory_ranges) {
-        klog() << "MM: " << used_range;
+        dmesgln("MM: {} range @ {} - {}", UserMemoryRangeTypeNames[static_cast<int>(used_range.type)], used_range.start, used_range.end);
     }
 
     for (auto* mmap = mmap_begin; mmap < mmap_end; mmap++) {
@@ -239,7 +234,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
             m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_NVS, start_address, length });
             break;
         case (MULTIBOOT_MEMORY_BADRAM):
-            klog() << "MM: Warning, detected bad memory range!";
+            dmesgln("MM: Warning, detected bad memory range!");
             m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::BadMemory, start_address, length });
             break;
         default:
@@ -477,9 +472,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
         dump_kernel_regions();
         return PageFaultResponse::ShouldCrash;
     }
-#if PAGE_FAULT_DEBUG
-    dbgln("MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::id(), fault.code(), fault.vaddr());
-#endif
+    dbgln_if(PAGE_FAULT_DEBUG, "MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::id(), fault.code(), fault.vaddr());
     auto* region = find_region_from_vaddr(fault.vaddr());
     if (!region) {
         dmesgln("CPU[{}] NP(error) fault at invalid address {}", Processor::id(), fault.vaddr());
