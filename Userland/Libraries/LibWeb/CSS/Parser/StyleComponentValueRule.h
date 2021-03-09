@@ -26,9 +26,9 @@
 
 #pragma once
 
-#include <LibWeb/CSS/Parser/Token.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
+#include <LibWeb/CSS/Parser/Token.h>
 
 namespace Web::CSS {
 
