@@ -1504,7 +1504,7 @@ void SoftCPU::FDIV_RM32(const X86::Instruction& insn)
         auto new_f32 = insn.modrm().read32(*this, insn);
         // FIXME: Respect shadow values
         auto f32 = bit_cast<float>(new_f32.value());
-        // FIXME: Raise IA on + infinity / +-infinitiy, +-0 / +-0, raise Z on finite / +-0
+        // FIXME: Raise IA on + infinity / +-infinity, +-0 / +-0, raise Z on finite / +-0
         fpu_set(0, fpu_get(0) / f32);
     }
 }
@@ -1517,7 +1517,7 @@ void SoftCPU::FDIVR_RM32(const X86::Instruction& insn)
         auto new_f32 = insn.modrm().read32(*this, insn);
         // FIXME: Respect shadow values
         auto f32 = bit_cast<float>(new_f32.value());
-        // FIXME: Raise IA on + infinity / +-infinitiy, +-0 / +-0, raise Z on finite / +-0
+        // FIXME: Raise IA on + infinity / +-infinity, +-0 / +-0, raise Z on finite / +-0
         fpu_set(0, f32 / fpu_get(0));
     }
 }
@@ -1587,8 +1587,15 @@ void SoftCPU::FLDL2T(const X86::Instruction&)
     fpu_push(log2f(10.0f));
 }
 
-void SoftCPU::FLDL2E(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FLDPI(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLDL2E(const X86::Instruction&)
+{
+    fpu_push(log2f(M_E));
+}
+
+void SoftCPU::FLDPI(const X86::Instruction&)
+{
+    fpu_push(M_PI);
+}
 
 void SoftCPU::FLDLG2(const X86::Instruction&)
 {
@@ -1597,7 +1604,7 @@ void SoftCPU::FLDLG2(const X86::Instruction&)
 
 void SoftCPU::FLDLN2(const X86::Instruction&)
 {
-    fpu_push(logf(2.0f));
+    fpu_push(M_LN2);
 }
 
 void SoftCPU::FLDZ(const X86::Instruction&)
@@ -1854,7 +1861,7 @@ void SoftCPU::FDIV_RM64(const X86::Instruction& insn)
         auto new_f64 = insn.modrm().read64(*this, insn);
         // FIXME: Respect shadow values
         auto f64 = bit_cast<double>(new_f64.value());
-        // FIXME: Raise IA on + infinity / +-infinitiy, +-0 / +-0, raise Z on finite / +-0
+        // FIXME: Raise IA on + infinity / +-infinity, +-0 / +-0, raise Z on finite / +-0
         fpu_set(0, fpu_get(0) / f64);
     }
 }
@@ -1869,7 +1876,7 @@ void SoftCPU::FDIVR_RM64(const X86::Instruction& insn)
         auto new_f64 = insn.modrm().read64(*this, insn);
         // FIXME: Respect shadow values
         auto f64 = bit_cast<double>(new_f64.value());
-        // FIXME: Raise IA on + infinity / +-infinitiy, +-0 / +-0, raise Z on finite / +-0
+        // FIXME: Raise IA on + infinity / +-infinity, +-0 / +-0, raise Z on finite / +-0
         fpu_set(0, f64 / fpu_get(0));
     }
 }
@@ -1984,7 +1991,7 @@ void SoftCPU::FIDIV_RM16(const X86::Instruction& insn)
 void SoftCPU::FDIVRP(const X86::Instruction& insn)
 {
     VERIFY(insn.modrm().is_register());
-    // FIXME: Raise IA on + infinity / +-infinitiy, +-0 / +-0, raise Z on finite / +-0
+    // FIXME: Raise IA on + infinity / +-infinity, +-0 / +-0, raise Z on finite / +-0
     fpu_set(insn.modrm().register_index(), fpu_get(0) / fpu_get(insn.modrm().register_index()));
     fpu_pop();
 }
@@ -2001,7 +2008,7 @@ void SoftCPU::FIDIVR_RM16(const X86::Instruction& insn)
 void SoftCPU::FDIVP(const X86::Instruction& insn)
 {
     VERIFY(insn.modrm().is_register());
-    // FIXME: Raise IA on + infinity / +-infinitiy, +-0 / +-0, raise Z on finite / +-0
+    // FIXME: Raise IA on + infinity / +-infinity, +-0 / +-0, raise Z on finite / +-0
     fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) / fpu_get(0));
     fpu_pop();
 }
