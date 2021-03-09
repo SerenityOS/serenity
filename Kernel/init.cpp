@@ -164,7 +164,7 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     I8042Controller::initialize();
     Console::initialize();
 
-    klog() << "Starting SerenityOS...";
+    dmesgln("Starting SerenityOS...");
 
     TimeManagement::initialize(0);
 
