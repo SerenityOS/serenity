@@ -56,6 +56,7 @@ struct Mallocation {
 
 class MallocRegionMetadata {
 public:
+    MmapRegion& region;
     FlatPtr address { 0 };
     size_t chunk_size { 0 };
 
