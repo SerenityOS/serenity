@@ -16,6 +16,8 @@ set(SOURCES
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
     CSS/Parser/CSSParser.cpp
+    CSS/Parser/Token.cpp
+    CSS/Parser/Tokenizer.cpp
     CSS/PropertyID.cpp
     CSS/PropertyID.h
     CSS/QuirksModeStyleSheetSource.cpp
