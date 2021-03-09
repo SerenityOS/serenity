@@ -101,24 +101,34 @@ void MallocTracer::target_did_malloc(Badge<Emulator>, FlatPtr address, size_t si
 
         dbgln("Tracking malloc block @ {:p} with chunk_size={}, chunk_count={}", malloc_data.address, malloc_data.chunk_size, malloc_data.mallocations.size());
     }
-    mmap_region.malloc_metadata()->mallocation_for_address(address) = { address, size, true, false, m_emulator.raw_backtrace(), Vector<FlatPtr>() };
+    auto* mallocation = mmap_region.malloc_metadata()->mallocation_for_address(address);
+    VERIFY(mallocation);
+    *mallocation = { address, size, true, false, m_emulator.raw_backtrace(), Vector<FlatPtr>() };
 }
 
-ALWAYS_INLINE Mallocation& MallocRegionMetadata::mallocation_for_address(FlatPtr address) const
+ALWAYS_INLINE Mallocation* MallocRegionMetadata::mallocation_for_address(FlatPtr address) const
 {
-    return const_cast<Mallocation&>(this->mallocations[chunk_index_for_address(address)]);
+    auto index = chunk_index_for_address(address);
+    if (!index.has_value())
+        return nullptr;
+    return &const_cast<Mallocation&>(this->mallocations[index.value()]);
 }
 
-ALWAYS_INLINE size_t MallocRegionMetadata::chunk_index_for_address(FlatPtr address) const
+ALWAYS_INLINE Optional<size_t> MallocRegionMetadata::chunk_index_for_address(FlatPtr address) const
 {
     bool is_chunked_block = chunk_size <= size_classes[num_size_classes - 1];
     if (!is_chunked_block) {
         // This is a BigAllocationBlock
         return 0;
     }
-    auto chunk_offset = address - (this->address + sizeof(ChunkedBlock));
-    VERIFY(this->chunk_size);
-    return chunk_offset / this->chunk_size;
+    auto offset_into_block = address - this->address;
+    if (offset_into_block < sizeof(ChunkedBlock))
+        return 0;
+    auto chunk_offset = offset_into_block - sizeof(ChunkedBlock);
+    auto chunk_index = chunk_offset / this->chunk_size;
+    if (chunk_index >= mallocations.size())
+        return {};
+    return chunk_index;
 }
 
 void MallocTracer::target_did_free(Badge<Emulator>, FlatPtr address)
@@ -382,4 +392,5 @@ void MallocTracer::dump_leak_report()
     else
         reportln("\n=={}==  \033[31;1m{} leak(s) found: {} byte(s) leaked\033[0m", getpid(), leaks_found, bytes_leaked);
 }
+
 }
