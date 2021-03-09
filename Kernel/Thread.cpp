@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
@@ -366,9 +367,7 @@ const char* Thread::state_string() const
         return m_blocker->state_string();
     }
     }
-    klog() << "Thread::state_string(): Invalid state: " << state();
-    VERIFY_NOT_REACHED();
-    return nullptr;
+    PANIC("Thread::state_string(): Invalid state: {}", (int)state());
 }
 
 void Thread::finalize()
@@ -700,9 +699,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     VERIFY(process().is_user_process());
     VERIFY(this == Thread::current());
 
-#if SIGNAL_DEBUG
-    klog() << "signal: dispatch signal " << signal << " to " << *this << " state: " << state_string();
-#endif
+    dbgln_if(SIGNAL_DEBUG, "Dispatch signal {} to {}, state: {}", signal, *this, state_string());
 
     if (m_state == Invalid || !is_initialized()) {
         // Thread has barely been created, we need to wait until it is
@@ -725,7 +722,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     auto& process = this->process();
     auto tracer = process.tracer();
     if (signal == SIGSTOP || (tracer && default_signal_action(signal) == DefaultSignalAction::DumpCore)) {
-        dbgln_if(SIGNAL_DEBUG, "signal: signal {} sopping thread {}", signal, *this);
+        dbgln_if(SIGNAL_DEBUG, "Signal {} stopping this thread", signal);
         set_state(State::Stopped, signal);
         return DispatchSignalResult::Yield;
     }
@@ -771,9 +768,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     }
 
     if (handler_vaddr.as_ptr() == SIG_IGN) {
-#if SIGNAL_DEBUG
-        klog() << "signal: " << *this << " ignored signal " << signal;
-#endif
+        dbgln_if(SIGNAL_DEBUG, "Ignored signal {}", signal);
         return DispatchSignalResult::Continue;
     }
 
@@ -802,9 +797,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         FlatPtr* stack = &state.userspace_esp;
 #endif
 
-#if SIGNAL_DEBUG
-        klog() << "signal: setting up user stack to return to eip: " << String::format("%p", (void*)ret_eip) << " esp: " << String::format("%p", (void*)old_esp);
-#endif
+        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to EIP {:p}, ESP {:p}", ret_eip, old_esp);
 
 #if ARCH(I386)
         // Align the stack to 16 bytes.
@@ -847,9 +840,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     setup_stack(regs);
     regs.eip = process.signal_trampoline().get();
 
-#if SIGNAL_DEBUG
-    dbgln("signal: Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_tss.cs, m_tss.eip, signal);
-#endif
+    dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_tss.cs, m_tss.eip, signal);
     return DispatchSignalResult::Continue;
 }
 
