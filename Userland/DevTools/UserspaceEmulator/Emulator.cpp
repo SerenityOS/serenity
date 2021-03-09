@@ -518,6 +518,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$getrandom(arg1, arg2, arg3);
     case SC_fork:
         return virt$fork();
+    case SC_emuctl:
+        return virt$emuctl();
     case SC_sched_getparam:
         return virt$sched_getparam(arg1, arg2);
     case SC_sched_setparam:
@@ -1263,6 +1265,11 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
     reportln("Unsupported ioctl: {}", request);
     dump_backtrace();
     TODO();
+}
+
+int Emulator::virt$emuctl()
+{
+    return 0;
 }
 
 int Emulator::virt$fork()
