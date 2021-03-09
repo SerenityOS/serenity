@@ -765,9 +765,16 @@ int Emulator::virt$clock_settime(uint32_t clock_id, FlatPtr user_ts)
     return rc;
 }
 
-int Emulator::virt$set_mmap_name(FlatPtr)
+int Emulator::virt$set_mmap_name(FlatPtr params_addr)
 {
-    // FIXME: Implement.
+    Syscall::SC_set_mmap_name_params params {};
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+    auto name = mmu().copy_buffer_from_vm((FlatPtr)params.name.characters, params.name.length);
+
+    auto* region = mmu().find_region({ 0x23, (FlatPtr)params.addr });
+    if (!region || !is<MmapRegion>(*region))
+        return -EINVAL;
+    static_cast<MmapRegion&>(*region).set_name(String::copy(name));
     return 0;
 }
 
