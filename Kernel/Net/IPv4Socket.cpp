@@ -203,7 +203,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
             return EFAULT;
 
         if (ia.sin_family != AF_INET) {
-            klog() << "sendto: Bad address family: " << ia.sin_family << " is not AF_INET!";
+            dmesgln("sendto: Bad address family: {} is not AF_INET", ia.sin_family);
             return EAFNOSUPPORT;
         }
 
@@ -222,9 +222,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     if (rc < 0)
         return rc;
 
-#if IPV4_SOCKET_DEBUG
-    klog() << "sendto: destination=" << m_peer_address.to_string().characters() << ":" << m_peer_port;
-#endif
+    dbgln_if(IPV4_SOCKET_DEBUG, "sendto: destination={}:{}", m_peer_address, m_peer_port);
 
     if (type() == SOCK_RAW) {
         auto result = routing_decision.adapter->send_ipv4(routing_decision.next_hop, m_peer_address, (IPv4Protocol)protocol(), data, data_length, m_ttl);
@@ -364,9 +362,7 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKerne
             return EINVAL;
     }
 
-#if IPV4_SOCKET_DEBUG
-    klog() << "recvfrom: type=" << type() << ", local_port=" << local_port();
-#endif
+    dbgln_if(IPV4_SOCKET_DEBUG, "recvfrom: type={}, local_port={}", type(), local_port());
 
     KResultOr<size_t> nreceived = 0;
     if (buffer_mode() == BufferMode::Bytes)
