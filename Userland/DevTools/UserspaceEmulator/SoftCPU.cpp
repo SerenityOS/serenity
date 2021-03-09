@@ -66,17 +66,17 @@ static inline Dest bit_cast(Source source)
 }
 
 template<typename T>
-void warn_if_uninitialized(T value_with_shadow, const char* message)
+ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* message)
 {
-    if (value_with_shadow.is_uninitialized()) {
+    if (value_with_shadow.is_uninitialized()) [[unlikely]] {
         reportln("\033[31;1mWarning! Use of uninitialized value: {}\033[0m\n", message);
         Emulator::the().dump_backtrace();
     }
 }
 
-void SoftCPU::warn_if_flags_tainted(const char* message) const
+ALWAYS_INLINE void SoftCPU::warn_if_flags_tainted(const char* message) const
 {
-    if (m_flags_tainted) {
+    if (m_flags_tainted) [[unlikely]] {
         reportln("\n=={}==  \033[31;1mConditional depends on uninitialized data\033[0m ({})\n", getpid(), message);
         Emulator::the().dump_backtrace();
     }
