@@ -68,6 +68,8 @@ public:
 
     void did_receive_signal(int signum) { m_pending_signals |= (1 << signum); }
 
+    void dump_regions() const;
+
 private:
     const String m_executable_path;
     const Vector<String> m_arguments;
