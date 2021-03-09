@@ -833,7 +833,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
             m_descriptor = &m_descriptor->slashes[rm() & 7];
     }
 
-    if (!m_descriptor->mnemonic) {
+    if (!m_descriptor->mnemonic) [[unlikely]] {
         if (has_sub_op()) {
             if (has_slash)
                 fprintf(stderr, "Instruction %02X %02X /%u not understood\n", m_op, m_sub_op, slash());

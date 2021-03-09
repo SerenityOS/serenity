@@ -248,23 +248,26 @@ int Emulator::exec()
     // X86::ELFSymbolProvider symbol_provider(*m_elf);
     X86::ELFSymbolProvider* symbol_provider = nullptr;
 
-    bool trace = false;
+    constexpr bool trace = false;
 
     while (!m_shutdown) {
         m_cpu.save_base_eip();
 
         auto insn = X86::Instruction::from_stream(m_cpu, true, true);
 
-        if (trace)
+        if constexpr (trace) {
             outln("{:p}  \033[33;1m{}\033[0m", m_cpu.base_eip(), insn.to_string(m_cpu.base_eip(), symbol_provider));
+        }
 
         (m_cpu.*insn.handler())(insn);
 
-        if (trace)
+        if constexpr (trace) {
             m_cpu.dump();
+        }
 
-        if (m_pending_signals)
+        if (m_pending_signals) [[unlikely]] {
             dispatch_one_pending_signal();
+        }
     }
 
     if (auto* tracer = malloc_tracer())
