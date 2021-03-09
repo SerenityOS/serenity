@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -128,9 +128,9 @@ void update_arp_table(const IPv4Address& ip_addr, const MACAddress& addr)
     arp_table().resource().set(ip_addr, addr);
     s_arp_table_block_condition->unblock(ip_addr, addr);
 
-    klog() << "ARP table (" << arp_table().resource().size() << " entries):";
+    dmesgln("ARP table ({} entries):", arp_table().resource().size());
     for (auto& it : arp_table().resource()) {
-        klog() << it.value.to_string().characters() << " :: " << it.key.to_string().characters();
+        dmesgln("{} :: {}", it.value.to_string(), it.key.to_string());
     }
 }
 
@@ -180,9 +180,7 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
         return { local_adapter, local_adapter->mac_address() };
 
     if (!local_adapter && !gateway_adapter) {
-#if ROUTING_DEBUG
-        klog() << "Routing: Couldn't find a suitable adapter for route to " << target.to_string().characters();
-#endif
+        dbgln_if(ROUTING_DEBUG, "Routing: Couldn't find a suitable adapter for route to {}", target);
         return { nullptr, {} };
     }
 
@@ -190,15 +188,21 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     IPv4Address next_hop_ip;
 
     if (local_adapter) {
-#if ROUTING_DEBUG
-        klog() << "Routing: Got adapter for route (direct): " << local_adapter->name().characters() << " (" << local_adapter->ipv4_address().to_string().characters() << "/" << local_adapter->ipv4_netmask().to_string().characters() << ") for " << target.to_string().characters();
-#endif
+        dbgln_if(ROUTING_DEBUG, "Routing: Got adapter for route (direct): {} ({}/{}) for {}",
+            local_adapter->name(),
+            local_adapter->ipv4_address(),
+            local_adapter->ipv4_netmask(),
+            target);
+
         adapter = local_adapter;
         next_hop_ip = target;
     } else if (gateway_adapter) {
-#if ROUTING_DEBUG
-        klog() << "Routing: Got adapter for route (using gateway " << gateway_adapter->ipv4_gateway().to_string().characters() << "): " << gateway_adapter->name().characters() << " (" << gateway_adapter->ipv4_address().to_string().characters() << "/" << gateway_adapter->ipv4_netmask().to_string().characters() << ") for " << target.to_string().characters();
-#endif
+        dbgln_if(ROUTING_DEBUG, "Routing: Got adapter for route (using gateway {}): {} ({}/{}) for {}",
+            gateway_adapter->ipv4_gateway(),
+            gateway_adapter->name(),
+            gateway_adapter->ipv4_address(),
+            gateway_adapter->ipv4_netmask(),
+            target);
         adapter = gateway_adapter;
         next_hop_ip = gateway_adapter->ipv4_gateway();
     } else {
@@ -215,16 +219,12 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
         LOCKER(arp_table().lock());
         auto addr = arp_table().resource().get(next_hop_ip);
         if (addr.has_value()) {
-#if ROUTING_DEBUG
-            klog() << "Routing: Using cached ARP entry for " << next_hop_ip.to_string().characters() << " (" << addr.value().to_string().characters() << ")";
-#endif
+            dbgln_if(ROUTING_DEBUG, "Routing: Using cached ARP entry for {} ({})", next_hop_ip, addr.value().to_string());
             return { adapter, addr.value() };
         }
     }
 
-#if ROUTING_DEBUG
-    klog() << "Routing: Sending ARP request via adapter " << adapter->name().characters() << " for IPv4 address " << next_hop_ip.to_string().characters();
-#endif
+    dbgln_if(ROUTING_DEBUG, "Routing: Sending ARP request via adapter {} for IPv4 address {}", adapter->name(), next_hop_ip);
 
     ARPPacket request;
     request.set_operation(ARPOperation::Request);
@@ -237,17 +237,15 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     Optional<MACAddress> addr;
     if (!Thread::current()->block<ARPTableBlocker>({}, next_hop_ip, addr).was_interrupted()) {
         if (addr.has_value()) {
-#if ROUTING_DEBUG
-            klog() << "Routing: Got ARP response using adapter " << adapter->name().characters() << " for " << next_hop_ip.to_string().characters() << " (" << addr.value().to_string().characters() << ")";
-#endif
+            dbgln_if(ROUTING_DEBUG, "Routing: Got ARP response using adapter {} for {} ({})",
+                adapter->name(),
+                next_hop_ip,
+                addr.value().to_string());
             return { adapter, addr.value() };
         }
     }
 
-#if ROUTING_DEBUG
-    klog() << "Routing: Couldn't find route using adapter " << adapter->name().characters() << " for " << target.to_string().characters();
-#endif
-
+    dbgln_if(ROUTING_DEBUG, "Routing: Couldn't find route using adapter {} for {}", adapter->name(), target);
     return { nullptr, {} };
 }
 
