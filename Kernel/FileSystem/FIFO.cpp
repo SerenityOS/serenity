@@ -28,7 +28,6 @@
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
-#include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Lock.h>
@@ -115,14 +114,8 @@ void FIFO::attach(Direction direction)
 {
     if (direction == Direction::Reader) {
         ++m_readers;
-#if FIFO_DEBUG
-        klog() << "open reader (" << m_readers << ")";
-#endif
     } else if (direction == Direction::Writer) {
         ++m_writers;
-#if FIFO_DEBUG
-        klog() << "open writer (" << m_writers << ")";
-#endif
     }
 
     evaluate_block_conditions();
@@ -131,15 +124,9 @@ void FIFO::attach(Direction direction)
 void FIFO::detach(Direction direction)
 {
     if (direction == Direction::Reader) {
-#if FIFO_DEBUG
-        klog() << "close reader (" << m_readers << " - 1)";
-#endif
         VERIFY(m_readers);
         --m_readers;
     } else if (direction == Direction::Writer) {
-#if FIFO_DEBUG
-        klog() << "close writer (" << m_writers << " - 1)";
-#endif
         VERIFY(m_writers);
         --m_writers;
     }

@@ -86,10 +86,6 @@
 #cmakedefine01 EXT2_VERY_DEBUG
 #endif
 
-#ifndef FIFO_DEBUG
-#cmakedefine01 FIFO_DEBUG
-#endif
-
 #ifndef FILEDESCRIPTION_DEBUG
 #cmakedefine01 FILEDESCRIPTION_DEBUG
 #endif
