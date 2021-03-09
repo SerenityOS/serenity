@@ -45,11 +45,12 @@ static void free_pages(void* ptr, size_t bytes)
     VERIFY(rc == 0);
 }
 
-NonnullOwnPtr<MmapRegion> MmapRegion::create_anonymous(u32 base, u32 size, u32 prot)
+NonnullOwnPtr<MmapRegion> MmapRegion::create_anonymous(u32 base, u32 size, u32 prot, String name)
 {
     auto data = (u8*)mmap_initialized(size, 0, nullptr);
     auto shadow_data = (u8*)mmap_initialized(size, 1, "MmapRegion ShadowData");
     auto region = adopt_own(*new MmapRegion(base, size, prot, data, shadow_data));
+    region->m_name = move(name);
     return region;
 }
 
@@ -60,10 +61,7 @@ NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32
     auto shadow_data = (u8*)mmap_initialized(size, 1, "MmapRegion ShadowData");
     auto region = adopt_own(*new MmapRegion(base, size, prot, data, shadow_data));
     region->m_file_backed = true;
-    if (!name.is_empty()) {
-        name = String::formatted("{} (Emulated)", name);
-        region->m_name = name;
-    }
+    region->m_name = move(name);
     return region;
 }
 
