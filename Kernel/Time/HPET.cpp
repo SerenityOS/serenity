@@ -141,7 +141,7 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
     auto hpet = ACPI::Parser::the()->find_table("HPET");
     if (hpet.is_null())
         return false;
-    klog() << "HPET @ " << hpet;
+    dmesgln("HPET @ {}", hpet);
 
     auto sdt = map_typed<ACPI::Structures::HPET>(hpet);
 
@@ -288,9 +288,7 @@ u64 HPET::read_main_counter() const
 
 void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
 {
-#if HPET_DEBUG
-    klog() << "HPET: Set comparator " << comparator.comparator_number() << " to be periodic.";
-#endif
+    dbgln_if(HPET_DEBUG, "HPET: Set comparator {} to be periodic.", comparator.comparator_number());
     disable(comparator);
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
@@ -302,9 +300,7 @@ void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
 }
 void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
 {
-#if HPET_DEBUG
-    klog() << "HPET: Disable periodic interrupt in comparator " << comparator.comparator_number() << ".";
-#endif
+    dbgln_if(HPET_DEBUG, "HPET: Disable periodic interrupt in comparator {}", comparator.comparator_number());
     disable(comparator);
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
@@ -317,18 +313,14 @@ void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
 
 void HPET::disable(const HPETComparator& comparator)
 {
-#if HPET_DEBUG
-    klog() << "HPET: Disable comparator " << comparator.comparator_number() << ".";
-#endif
+    dbgln_if(HPET_DEBUG, "HPET: Disable comparator {}", comparator.comparator_number());
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
     timer.capabilities = timer.capabilities & ~(u32)HPETFlags::TimerConfiguration::InterruptEnable;
 }
 void HPET::enable(const HPETComparator& comparator)
 {
-#if HPET_DEBUG
-    klog() << "HPET: Enable comparator " << comparator.comparator_number() << ".";
-#endif
+    dbgln_if(HPET_DEBUG, "HPET: Enable comparator {}", comparator.comparator_number());
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
     timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::InterruptEnable;
@@ -420,24 +412,27 @@ UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
     auto sdt = map_typed<const volatile ACPI::Structures::HPET>(m_physical_acpi_hpet_table);
     m_vendor_id = sdt->pci_vendor_id;
     m_minimum_tick = sdt->mininum_clock_tick;
-    klog() << "HPET: Minimum clock tick - " << m_minimum_tick;
+    dmesgln("HPET: Minimum clock tick - {}", m_minimum_tick);
 
     auto& regs = registers();
 
     // Note: We must do a 32 bit access to offsets 0x0, or 0x4 only.
     size_t timers_count = ((regs.capabilities.attributes >> 8) & 0x1f) + 1;
-    klog() << "HPET: Timers count - " << timers_count;
-    klog() << "HPET: Main counter size: " << ((regs.capabilities.attributes & (u32)HPETFlags::Attributes::Counter64BitCapable) ? "64 bit" : "32 bit");
+    dmesgln("HPET: Timers count - {}", timers_count);
+    dmesgln("HPET: Main counter size: {}", ((regs.capabilities.attributes & (u32)HPETFlags::Attributes::Counter64BitCapable) ? "64-bit" : "32-bit"));
     for (size_t i = 0; i < timers_count; i++) {
         bool capable_64_bit = regs.timers[i].capabilities & (u32)HPETFlags::TimerConfiguration::Timer64BitsCapable;
-        klog() << "HPET: Timer[" << i << "] comparator size: " << (capable_64_bit ? "64 bit" : "32 bit") << " mode: " << ((!capable_64_bit || (regs.timers[i].capabilities & (u32)HPETFlags::TimerConfiguration::Force32BitMode)) ? "32 bit" : "64 bit");
+        dmesgln("HPET: Timer[{}] comparator size: {}, mode: {}", i,
+            (capable_64_bit ? "64-bit" : "32-bit"),
+            ((!capable_64_bit || (regs.timers[i].capabilities & (u32)HPETFlags::TimerConfiguration::Force32BitMode)) ? "32-bit" : "64-bit"));
     }
     VERIFY(timers_count >= 2);
 
     global_disable();
 
     m_frequency = NANOSECOND_PERIOD_TO_HERTZ(raw_counter_ticks_to_ns(1));
-    klog() << "HPET: frequency " << m_frequency << " Hz (" << HERTZ_TO_MEGAHERTZ(m_frequency) << " MHz) resolution: " << raw_counter_ticks_to_ns(1) << "ns";
+    dmesgln("HPET: frequency {} Hz ({} MHz) resolution: {} ns", m_frequency, HERTZ_TO_MEGAHERTZ(m_frequency), raw_counter_ticks_to_ns(1));
+
     VERIFY(regs.capabilities.main_counter_tick_period <= ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD);
 
     // Reset the counter, just in case... (needs to match m_main_counter_last_read)
