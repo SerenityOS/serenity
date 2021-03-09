@@ -27,7 +27,7 @@
 #include <AK/Debug.h>
 #include <AK/URL.h>
 #include <LibWeb/CSS/CSSImportRule.h>
-#include <LibWeb/CSS/Parser/CSSParser.h>
+#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Loader/CSSLoader.h>
