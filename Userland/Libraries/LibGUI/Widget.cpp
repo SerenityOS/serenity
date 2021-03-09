@@ -770,6 +770,9 @@ void Widget::set_enabled(bool enabled)
         window()->did_disable_focused_widget({});
     }
 
+    if (!m_enabled)
+        set_override_cursor(Gfx::StandardCursor::None);
+
     Event e(Event::EnabledChange);
     event(e);
     update();
