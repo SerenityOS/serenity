@@ -1,0 +1,102 @@
+diff -aur openttd-1.10.3/src/3rdparty/squirrel/squirrel/sqclass.h openttd-1.10.3-serenity/src/3rdparty/squirrel/squirrel/sqclass.h
+--- openttd-1.10.3/src/3rdparty/squirrel/squirrel/sqclass.h	2020-08-09 19:56:38.000000000 +0200
++++ openttd-1.10.3-serenity/src/3rdparty/squirrel/squirrel/sqclass.h	2021-03-08 21:25:30.202774972 +0100
+@@ -128,17 +128,7 @@
+ 	}
+ 	void Release() {
+ 		_uiRef++;
+-		try {
+ 			if (_hook) { _hook(_userpointer,0);}
+-		} catch (...) {
+-			_uiRef--;
+-			if (_uiRef == 0) {
+-				SQInteger size = _memsize;
+-				this->~SQInstance();
+-				SQ_FREE(this, size);
+-			}
+-			throw;
+-		}
+ 		_uiRef--;
+ 		if(_uiRef > 0) return;
+ 		SQInteger size = _memsize;
+diff -aur openttd-1.10.3/src/3rdparty/squirrel/squirrel/sqcompiler.cpp openttd-1.10.3-serenity/src/3rdparty/squirrel/squirrel/sqcompiler.cpp
+--- openttd-1.10.3/src/3rdparty/squirrel/squirrel/sqcompiler.cpp	2020-08-09 19:56:38.000000000 +0200
++++ openttd-1.10.3-serenity/src/3rdparty/squirrel/squirrel/sqcompiler.cpp	2021-03-08 21:22:19.922750422 +0100
+@@ -74,7 +74,7 @@
+ 		va_start(vl, s);
+ 		vseprintf(temp, lastof(temp), s, vl);
+ 		va_end(vl);
+-		throw temp;
++		NOT_REACHED();
+ 	}
+ 	void Lex(){	_token = _lex.Lex();}
+ 	void PushExpState(){ _expstates.push_back(ExpState()); }
+@@ -170,7 +170,6 @@
+ 		_fs->AddParameter(_fs->CreateString("this"));
+ 		_fs->_sourcename = _sourcename;
+ 		SQInteger stacksize = _fs->GetStackSize();
+-		try {
+ 			Lex();
+ 			while(_token > 0){
+ 				Statement();
+@@ -185,15 +184,6 @@
+ 			_fs->Dump(_funcproto(o));
+ #endif
+ 			return true;
+-		}
+-		catch (SQChar *compilererror) {
+-			if(_raiseerror && _ss(_vm)->_compilererrorhandler) {
+-				_ss(_vm)->_compilererrorhandler(_vm, compilererror, type(_sourcename) == OT_STRING?_stringval(_sourcename):"unknown",
+-					_lex._currentline, _lex._currentcolumn);
+-			}
+-			_vm->_lasterror = SQString::Create(_ss(_vm), compilererror, -1);
+-			return false;
+-		}
+ 	}
+ 	void Statements()
+ 	{
+diff -aur openttd-1.10.3/src/3rdparty/squirrel/squirrel/sqvm.cpp openttd-1.10.3-serenity/src/3rdparty/squirrel/squirrel/sqvm.cpp
+--- openttd-1.10.3/src/3rdparty/squirrel/squirrel/sqvm.cpp	2020-08-09 19:56:38.000000000 +0200
++++ openttd-1.10.3-serenity/src/3rdparty/squirrel/squirrel/sqvm.cpp	2021-03-08 21:25:33.198775359 +0100
+@@ -794,16 +794,7 @@
+ 					case OT_NATIVECLOSURE: {
+ 						bool suspend;
+ 						_suspended_target = ct_target;
+-						try {
+-							_GUARD(CallNative(_nativeclosure(clo), arg3, ct_stackbase, clo,suspend));
+-						} catch (...) {
+-							_suspended = SQTrue;
+-							_suspended_target = ct_target;
+-							_suspended_root = ci->_root;
+-							_suspended_traps = traps;
+-							_suspend_varargs = ci->_vargs;
+-							throw;
+-						}
++						_GUARD(CallNative(_nativeclosure(clo), arg3, ct_stackbase, clo,suspend));
+ 						if(suspend){
+ 							_suspended = SQTrue;
+ 							_suspended_target = ct_target;
+@@ -1181,24 +1172,10 @@
+ 	/* Store the call stack size, so we can restore that */
+ 	SQInteger cstksize = _callsstacksize;
+ 	SQInteger ret;
+-	try {
+ 		SQBool can_suspend = this->_can_suspend;
+ 		this->_can_suspend = false;
+ 		ret = (nclosure->_function)(this);
+ 		this->_can_suspend = can_suspend;
+-	} catch (...) {
+-		_nnativecalls--;
+-		suspend = false;
+-
+-		_callsstacksize = cstksize;
+-		_stackbase = oldstackbase;
+-		_top = oldtop;
+-
+-		POP_CALLINFO(this);
+-
+-		while(oldtop > _stackbase + stackbase) _stack._vals[oldtop--].Null();
+-		throw;
+-	}
+
+ 	_callsstacksize = cstksize;

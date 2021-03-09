@@ -1,0 +1,63 @@
+diff -aur openttd-1.10.3/config.lib openttd-1.10.3-serenity/config.lib
+--- openttd-1.10.3/config.lib	2020-08-09 19:56:38.000000000 +0200
++++ openttd-1.10.3-serenity/config.lib	2021-03-08 17:59:57.220267870 +0100
+@@ -1203,7 +1203,7 @@
+ 		# Enable some things only for certain ICC versions
+ 		cc_version=`$1 -dumpversion | cut -c 1-4 | sed s@\\\.@@g`
+
+-		flags="$flags -rdynamic"
++		flags="$flags -Wl,--export-dynamic"
+ 		ldflags="$ldflags -rdynamic"
+
+ 		if [ -z "$first_time_icc_check" ]; then
+@@ -1438,7 +1438,7 @@
+ 		has_rdynamic=`$1 -dumpspecs | grep rdynamic`
+ 		if [ -n "$has_rdynamic" ]; then
+ 			# rdynamic is used to get useful stack traces from crash reports.
+-			flags="$flags -rdynamic"
++			flags="$flags -Wl,--export-dynamic"
+ 			ldflags="$ldflags -rdynamic"
+ 		fi
+ 	fidiff -aur openttd-1.10.3/src/string.cpp openttd-1.10.3-serenity/src/string.cpp
+--- openttd-1.10.3/src/string.cpp	2020-08-09 19:56:39.000000000 +0200
++++ openttd-1.10.3-serenity/src/string.cpp	2021-03-08 17:35:40.187635281 +0100
+@@ -17,6 +17,7 @@
+ #include "table/control_codes.h"
+
+ #include <stdarg.h>
++#include <strings.h>
+ #include <ctype.h> /* required for tolower() */
+
+ #ifdef _MSC_VER
+--- openttd-1.10.3/src/stdafx.h	2020-08-09 19:56:39.000000000 +0200
++++ openttd-1.10.3-serenity/src/stdafx.h	2021-03-08 20:55:03.014540105 +0100
+@@ -99,7 +99,7 @@
+ 	#define strcasecmp stricmp
+ #endif
+
+-#if defined(SUNOS) || defined(HPUX) || defined(__CYGWIN__)
++#if defined(SUNOS) || defined(HPUX) || defined(__CYGWIN__) || defined(__serenity__)
+ 	#include <alloca.h>
+ #endif
+
+@@ -306,7 +306,7 @@
+ typedef unsigned char byte;
+
+ /* This is already defined in unix, but not in QNX Neutrino (6.x)*/
+-#if (!defined(UNIX) && !defined(__HAIKU__)) || defined(__QNXNTO__)
++#if (!defined(UNIX) && !defined(__HAIKU__)) || defined(__QNXNTO__) || defined(__serenity__)
+ 	typedef unsigned int uint;
+ #endif
+
+diff -aur openttd-1.10.3/src/network/core/os_abstraction.h openttd-1.10.3-serenity/src/network/core/os_abstraction.h
+--- openttd-1.10.3/src/network/core/os_abstraction.h	2020-08-09 19:56:38.000000000 +0200
++++ openttd-1.10.3-serenity/src/network/core/os_abstraction.h	2021-03-08 22:12:05.188799787 +0100
+@@ -65,7 +65,7 @@
+ #	include <net/if.h>
+ /* According to glibc/NEWS, <ifaddrs.h> appeared in glibc-2.3. */
+ #	if !defined(__sgi__) && !defined(SUNOS) && !defined(__INNOTEK_LIBC__) \
+-	   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX)
++	   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX) && !defined(__serenity__)
+ /* If for any reason ifaddrs.h does not exist on your system, comment out
+  *   the following two lines and an alternative way will be used to fetch
+  *   the list of IPs from the system. */
