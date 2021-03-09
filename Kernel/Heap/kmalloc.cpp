@@ -31,8 +31,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/Optional.h>
-#include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Heap/Heap.h>
@@ -44,8 +42,6 @@
 #include <Kernel/SpinLock.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>
-
-#define SANITIZE_KMALLOC
 
 #define CHUNK_SIZE 32
 #define POOL_SIZE (2 * MiB)
