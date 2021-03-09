@@ -1042,17 +1042,18 @@ u32 Emulator::virt$mmap(u32 params_addr)
     final_address = result.value().base().get();
     auto final_size = result.value().size();
 
-    if (params.flags & MAP_ANONYMOUS)
-        mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot));
-    else {
-        String name_str;
-        if (params.name.characters) {
-            auto name = ByteBuffer::create_uninitialized(params.name.length);
-            mmu().copy_from_vm(name.data(), (FlatPtr)params.name.characters, params.name.length);
-            name_str = { name.data(), name.size() };
-        }
-        auto region = MmapRegion::create_file_backed(final_address, final_size, params.prot, params.flags, params.fd, params.offset, name_str);
-        if (region->name() == "libc.so: .text (Emulated)") {
+    String name_str;
+    if (params.name.characters) {
+        auto name = ByteBuffer::create_uninitialized(params.name.length);
+        mmu().copy_from_vm(name.data(), (FlatPtr)params.name.characters, params.name.length);
+        name_str = { name.data(), name.size() };
+    }
+
+    if (params.flags & MAP_ANONYMOUS) {
+        mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot, move(name_str)));
+    } else {
+        auto region = MmapRegion::create_file_backed(final_address, final_size, params.prot, params.flags, params.fd, params.offset, move(name_str));
+        if (region->name() == "libc.so: .text") {
             bool rc = find_malloc_symbols(*region);
             VERIFY(rc);
         }
