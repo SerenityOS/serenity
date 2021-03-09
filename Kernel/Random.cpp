@@ -47,7 +47,7 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
     bool supports_rdseed = Processor::current().has_feature(CPUFeature::RDSEED);
     bool supports_rdrand = Processor::current().has_feature(CPUFeature::RDRAND);
     if (supports_rdseed || supports_rdrand) {
-        klog() << "KernelRng: Using RDSEED or RDRAND as entropy source";
+        dmesgln("KernelRng: Using RDSEED or RDRAND as entropy source");
         for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
             u32 value = 0;
             if (supports_rdseed) {
@@ -68,7 +68,7 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
         }
     } else if (TimeManagement::the().can_query_precise_time()) {
         // Add HPET as entropy source if we don't have anything better.
-        klog() << "KernelRng: Using HPET as entropy source";
+        dmesgln("KernelRng: Using HPET as entropy source");
 
         for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
             u64 hpet_time = HPET::the().read_main_counter_unsafe();
@@ -76,7 +76,7 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
         }
     } else {
         // Fallback to RTC
-        klog() << "KernelRng: Using RTC as entropy source (bad!)";
+        dmesgln("KernelRng: Using RTC as entropy source (bad!)");
         auto current_time = static_cast<u64>(RTC::now());
         for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
             this->resource().add_random_event(current_time, i % 32);
