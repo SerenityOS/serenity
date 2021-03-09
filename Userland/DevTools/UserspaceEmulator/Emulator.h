@@ -65,6 +65,7 @@ public:
     bool is_in_malloc_or_free() const;
     bool is_in_loader_code() const;
     bool is_in_libsystem() const;
+    bool is_in_libc() const;
 
     void did_receive_signal(int signum) { m_pending_signals |= (1 << signum); }
 
@@ -199,6 +200,8 @@ private:
     FlatPtr m_malloc_size_symbol_start { 0 };
     FlatPtr m_malloc_size_symbol_end { 0 };
 
+    FlatPtr m_libc_start { 0 };
+    FlatPtr m_libc_end { 0 };
     FlatPtr m_libsystem_start { 0 };
     FlatPtr m_libsystem_end { 0 };
 
@@ -226,6 +229,11 @@ private:
     RangeAllocator m_range_allocator;
 };
 
+ALWAYS_INLINE bool Emulator::is_in_libc() const
+{
+    return m_cpu.base_eip() >= m_libc_start && m_cpu.base_eip() < m_libc_end;
+}
+
 ALWAYS_INLINE bool Emulator::is_in_libsystem() const
 {
     return m_cpu.base_eip() >= m_libsystem_start && m_cpu.base_eip() < m_libsystem_end;
@@ -233,6 +241,8 @@ ALWAYS_INLINE bool Emulator::is_in_libsystem() const
 
 ALWAYS_INLINE bool Emulator::is_in_malloc_or_free() const
 {
+    if (!is_in_libc())
+        return false;
     return (m_cpu.base_eip() >= m_malloc_symbol_start && m_cpu.base_eip() < m_malloc_symbol_end)
         || (m_cpu.base_eip() >= m_free_symbol_start && m_cpu.base_eip() < m_free_symbol_end)
         || (m_cpu.base_eip() >= m_realloc_symbol_start && m_cpu.base_eip() < m_realloc_symbol_end)
