@@ -242,7 +242,10 @@ void MmapRegion::set_prot(int prot)
     set_writable(prot & PROT_WRITE);
     set_executable(prot & PROT_EXEC);
     if (m_file_backed) {
-        mprotect(m_data, size(), prot);
+        if (mprotect(m_data, size(), prot & ~PROT_EXEC) < 0) {
+            perror("MmapRegion::set_prot: mprotect");
+            exit(1);
+        }
     }
 }
 
