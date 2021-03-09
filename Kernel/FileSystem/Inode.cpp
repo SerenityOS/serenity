@@ -92,7 +92,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptio
             break;
     }
     if (nread < 0) {
-        klog() << "Inode::read_entire: ERROR: " << nread;
+        dmesgln("Inode::read_entire: Error: {}", nread);
         return KResult((ErrnoCode)-nread);
     }
 

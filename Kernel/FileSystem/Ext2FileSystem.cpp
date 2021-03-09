@@ -115,20 +115,20 @@ bool Ext2FS::initialize()
 
     auto& super_block = this->super_block();
     if constexpr (EXT2_DEBUG) {
-        klog() << "ext2fs: super block magic: " << String::format("%x", super_block.s_magic) << " (super block size: " << sizeof(ext2_super_block) << ")";
+        dmesgln("Ext2FS: super block magic: {:04x} (super block size: {})", super_block.s_magic, sizeof(ext2_super_block));
     }
     if (super_block.s_magic != EXT2_SUPER_MAGIC)
         return false;
 
     if constexpr (EXT2_DEBUG) {
-        klog() << "ext2fs: " << super_block.s_inodes_count << " inodes, " << super_block.s_blocks_count << " blocks";
-        klog() << "ext2fs: block size = " << EXT2_BLOCK_SIZE(&super_block);
-        klog() << "ext2fs: first data block = " << super_block.s_first_data_block;
-        klog() << "ext2fs: inodes per block = " << inodes_per_block();
-        klog() << "ext2fs: inodes per group = " << inodes_per_group();
-        klog() << "ext2fs: free inodes = " << super_block.s_free_inodes_count;
-        klog() << "ext2fs: desc per block = " << EXT2_DESC_PER_BLOCK(&super_block);
-        klog() << "ext2fs: desc size = " << EXT2_DESC_SIZE(&super_block);
+        dmesgln("Ext2FS: {} inodes, {} blocks", super_block.s_inodes_count, super_block.s_blocks_count);
+        dmesgln("Ext2FS: Block size: {}", EXT2_BLOCK_SIZE(&super_block));
+        dmesgln("Ext2FS: First data block: {}", super_block.s_first_data_block);
+        dmesgln("Ext2FS: Inodes per block: {}", inodes_per_block());
+        dmesgln("Ext2FS: Inodes per group: {}", inodes_per_group());
+        dmesgln("Ext2FS: Free inodes: {}", super_block.s_free_inodes_count);
+        dmesgln("Ext2FS: Descriptors per block: {}", EXT2_DESC_PER_BLOCK(&super_block));
+        dmesgln("Ext2FS: Descriptor size: {}", EXT2_DESC_SIZE(&super_block));
     }
 
     set_block_size(EXT2_BLOCK_SIZE(&super_block));
@@ -138,7 +138,7 @@ bool Ext2FS::initialize()
     m_block_group_count = ceil_div(super_block.s_blocks_count, super_block.s_blocks_per_group);
 
     if (m_block_group_count == 0) {
-        klog() << "ext2fs: no block groups :(";
+        dmesgln("Ext2FS: no block groups :(");
         return false;
     }
 
@@ -160,7 +160,7 @@ bool Ext2FS::initialize()
     if constexpr (EXT2_DEBUG) {
         for (unsigned i = 1; i <= m_block_group_count; ++i) {
             auto& group = group_descriptor(i);
-            klog() << "ext2fs: group[" << i << "] { block_bitmap: " << group.bg_block_bitmap << ", inode_bitmap: " << group.bg_inode_bitmap << ", inode_table: " << group.bg_inode_table << " }";
+            dbgln("Ext2FS: group[{}] ( block_bitmap: {}, inode_bitmap: {}, inode_table: {} )", i, group.bg_block_bitmap, group.bg_inode_bitmap, group.bg_inode_table);
         }
     }
 
