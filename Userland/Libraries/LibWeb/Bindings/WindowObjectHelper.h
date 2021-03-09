@@ -28,6 +28,8 @@
 
 // FIXME: Find a way to generate all of this
 
+#include <LibWeb/Bindings/CSSStyleSheetConstructor.h>
+#include <LibWeb/Bindings/CSSStyleSheetPrototype.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DConstructor.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DPrototype.h>
 #include <LibWeb/Bindings/CharacterDataConstructor.h>
@@ -216,6 +218,10 @@
 #include <LibWeb/Bindings/SVGSVGElementPrototype.h>
 #include <LibWeb/Bindings/ShadowRootConstructor.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
+#include <LibWeb/Bindings/StyleSheetConstructor.h>
+#include <LibWeb/Bindings/StyleSheetListConstructor.h>
+#include <LibWeb/Bindings/StyleSheetListPrototype.h>
+#include <LibWeb/Bindings/StyleSheetPrototype.h>
 #include <LibWeb/Bindings/SubmitEventConstructor.h>
 #include <LibWeb/Bindings/SubmitEventPrototype.h>
 #include <LibWeb/Bindings/TextConstructor.h>
@@ -236,6 +242,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(CanvasRenderingContext2D) \
     ADD_WINDOW_OBJECT_INTERFACE(CharacterData)            \
     ADD_WINDOW_OBJECT_INTERFACE(Comment)                  \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSStyleSheet)            \
     ADD_WINDOW_OBJECT_INTERFACE(DocumentFragment)         \
     ADD_WINDOW_OBJECT_INTERFACE(Document)                 \
     ADD_WINDOW_OBJECT_INTERFACE(DocumentType)             \
@@ -322,6 +329,8 @@
     ADD_WINDOW_OBJECT_INTERFACE(PerformanceTiming)        \
     ADD_WINDOW_OBJECT_INTERFACE(ProgressEvent)            \
     ADD_WINDOW_OBJECT_INTERFACE(ShadowRoot)               \
+    ADD_WINDOW_OBJECT_INTERFACE(StyleSheet)               \
+    ADD_WINDOW_OBJECT_INTERFACE(StyleSheetList)           \
     ADD_WINDOW_OBJECT_INTERFACE(SubmitEvent)              \
     ADD_WINDOW_OBJECT_INTERFACE(SVGElement)               \
     ADD_WINDOW_OBJECT_INTERFACE(SVGGeometryElement)       \
