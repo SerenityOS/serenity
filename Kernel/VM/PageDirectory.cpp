@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,9 +63,9 @@ UNMAP_AFTER_INIT PageDirectory::PageDirectory()
     PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((FlatPtr)boot_pdpt));
     PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((FlatPtr)boot_pd0));
     PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((FlatPtr)boot_pd3));
-    klog() << "MM: boot_pdpt @ " << boot_pdpt_paddr;
-    klog() << "MM: boot_pd0 @ " << boot_pd0_paddr;
-    klog() << "MM: boot_pd3 @ " << boot_pd3_paddr;
+    dmesgln("MM: boot_pdpt @ {}", boot_pdpt_paddr);
+    dmesgln("MM: boot_pd0 @ {}", boot_pd0_paddr);
+    dmesgln("MM: boot_pd3 @ {}", boot_pd3_paddr);
     m_directory_table = PhysicalPage::create(boot_pdpt_paddr, true, false);
     m_directory_pages[0] = PhysicalPage::create(boot_pd0_paddr, true, false);
     m_directory_pages[3] = PhysicalPage::create(boot_pd3_paddr, true, false);
