@@ -105,8 +105,6 @@ struct PhysicalMemoryRange {
     size_t length {};
 };
 
-const LogStream& operator<<(const LogStream& stream, const UsedMemoryRange& value);
-
 #define MM Kernel::MemoryManager::the()
 
 struct MemoryManagerData {
