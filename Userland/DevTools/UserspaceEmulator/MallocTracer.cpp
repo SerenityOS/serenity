@@ -79,22 +79,25 @@ void MallocTracer::target_did_malloc(Badge<Emulator>, FlatPtr address, size_t si
         return;
     }
 
-    MallocRegionMetadata* malloc_data = static_cast<MmapRegion&>(*region).malloc_metadata();
-    if (!malloc_data) {
+    if (!mmap_region.is_malloc_block()) {
         auto new_malloc_data = make<MallocRegionMetadata>();
-        malloc_data = new_malloc_data.ptr();
-        static_cast<MmapRegion&>(*region).set_malloc_metadata({}, move(new_malloc_data));
-        malloc_data->address = region->base();
-        malloc_data->chunk_size = mmap_region.read32(offsetof(CommonHeader, m_size)).value();
+        mmap_region.set_malloc_metadata({}, move(new_malloc_data));
+        auto& malloc_data = *mmap_region.malloc_metadata();
+        malloc_data.address = region->base();
+        malloc_data.chunk_size = mmap_region.read32(offsetof(CommonHeader, m_size)).value();
 
-        bool is_chunked_block = malloc_data->chunk_size <= size_classes[num_size_classes - 1];
+        bool is_chunked_block = malloc_data.chunk_size <= size_classes[num_size_classes - 1];
         if (is_chunked_block)
-            malloc_data->mallocations.resize((ChunkedBlock::block_size - sizeof(ChunkedBlock)) / malloc_data->chunk_size);
+            malloc_data.mallocations.resize((ChunkedBlock::block_size - sizeof(ChunkedBlock)) / malloc_data.chunk_size);
         else
-            malloc_data->mallocations.resize(1);
-        dbgln("Tracking malloc block @ {:p} with chunk_size={}, chunk_count={}", malloc_data->address, malloc_data->chunk_size, malloc_data->mallocations.size());
+            malloc_data.mallocations.resize(1);
+
+        // Mark the containing mmap region as a malloc block!
+        mmap_region.set_malloc(true);
+
+        dbgln("Tracking malloc block @ {:p} with chunk_size={}, chunk_count={}", malloc_data.address, malloc_data.chunk_size, malloc_data.mallocations.size());
     }
-    malloc_data->mallocation_for_address(address) = { address, size, true, false, m_emulator.raw_backtrace(), Vector<FlatPtr>() };
+    mmap_region.malloc_metadata()->mallocation_for_address(address) = { address, size, true, false, m_emulator.raw_backtrace(), Vector<FlatPtr>() };
 }
 
 ALWAYS_INLINE Mallocation& MallocRegionMetadata::mallocation_for_address(FlatPtr address) const
