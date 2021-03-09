@@ -56,9 +56,6 @@ VFS& VFS::the()
 
 UNMAP_AFTER_INIT VFS::VFS()
 {
-#if VFS_DEBUG
-    klog() << "VFS: Constructing VFS";
-#endif
 }
 
 UNMAP_AFTER_INIT VFS::~VFS()
@@ -138,7 +135,7 @@ KResult VFS::unmount(Inode& guest_inode)
 bool VFS::mount_root(FS& file_system)
 {
     if (m_root_inode) {
-        klog() << "VFS: mount_root can't mount another root";
+        dmesgln("VFS: mount_root can't mount another root");
         return false;
     }
 
@@ -146,12 +143,12 @@ bool VFS::mount_root(FS& file_system)
 
     auto root_inode = file_system.root_inode();
     if (!root_inode->is_directory()) {
-        klog() << "VFS: root inode (" << String::format("%02u", file_system.fsid()) << ":" << String::format("%08u", root_inode->index().value()) << ") for / is not a directory :(";
+        dmesgln("VFS: root inode ({}) for / is not a directory :(", root_inode->identifier());
         return false;
     }
 
     m_root_inode = move(root_inode);
-    klog() << "VFS: mounted root from " << file_system.class_name() << " (" << static_cast<FileBackedFS&>(file_system).file_description().absolute_path() << ")";
+    dmesgln("VFS: mounted root from {} ({})", file_system.class_name(), static_cast<FileBackedFS&>(file_system).file_description().absolute_path());
 
     m_mounts.append(move(mount));
     return true;
