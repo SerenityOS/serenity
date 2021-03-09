@@ -80,11 +80,15 @@ void MallocTracer::target_did_malloc(Badge<Emulator>, FlatPtr address, size_t si
     }
 
     if (!mmap_region.is_malloc_block()) {
-        auto new_malloc_data = make<MallocRegionMetadata>();
-        mmap_region.set_malloc_metadata({}, move(new_malloc_data));
+        auto chunk_size = mmap_region.read32(offsetof(CommonHeader, m_size)).value();
+        mmap_region.set_malloc_metadata({},
+            adopt_own(*new MallocRegionMetadata {
+                .region = mmap_region,
+                .address = mmap_region.base(),
+                .chunk_size = chunk_size,
+                .mallocations = {},
+            }));
         auto& malloc_data = *mmap_region.malloc_metadata();
-        malloc_data.address = region->base();
-        malloc_data.chunk_size = mmap_region.read32(offsetof(CommonHeader, m_size)).value();
 
         bool is_chunked_block = malloc_data.chunk_size <= size_classes[num_size_classes - 1];
         if (is_chunked_block)
