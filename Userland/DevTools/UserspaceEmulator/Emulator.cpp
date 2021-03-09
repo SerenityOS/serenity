@@ -1846,4 +1846,21 @@ int Emulator::virt$msyscall(FlatPtr)
     return 0;
 }
 
+void Emulator::dump_regions() const
+{
+    const_cast<SoftMMU&>(m_mmu).for_each_region([&](const Region& region) {
+        reportln("{:p}-{:p}  {:c}{:c}{:c} {}  {}{}{} ",
+            region.base(),
+            region.end() - 1,
+            region.is_readable() ? 'R' : '-',
+            region.is_writable() ? 'W' : '-',
+            region.is_executable() ? 'X' : '-',
+            is<MmapRegion>(region) ? static_cast<const MmapRegion&>(region).name() : "",
+            is<MmapRegion>(region) ? "(mmap) " : "",
+            region.is_stack() ? "(stack) " : "",
+            region.is_text() ? "(text) " : "");
+        return IterationDecision::Continue;
+    });
+}
+
 }
