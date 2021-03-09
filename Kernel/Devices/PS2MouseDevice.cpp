@@ -247,9 +247,9 @@ UNMAP_AFTER_INIT bool PS2MouseDevice::initialize()
     }
     if (device_id == PS2MOUSE_INTELLIMOUSE_ID) {
         m_has_wheel = true;
-        klog() << "PS2MouseDevice: Mouse wheel enabled!";
+        dmesgln("PS2MouseDevice: Mouse wheel enabled!");
     } else {
-        klog() << "PS2MouseDevice: No mouse wheel detected!";
+        dmesgln("PS2MouseDevice: No mouse wheel detected!");
     }
 
     if (device_id == PS2MOUSE_INTELLIMOUSE_ID) {
@@ -262,7 +262,7 @@ UNMAP_AFTER_INIT bool PS2MouseDevice::initialize()
 
     if (device_id == PS2MOUSE_INTELLIMOUSE_EXPLORER_ID) {
         m_has_five_buttons = true;
-        klog() << "PS2MouseDevice: 5 buttons enabled!";
+        dmesgln("PS2MouseDevice: 5 buttons enabled!");
     }
     return true;
 }
