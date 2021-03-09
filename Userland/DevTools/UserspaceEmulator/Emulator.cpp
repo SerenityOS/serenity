@@ -1057,6 +1057,10 @@ u32 Emulator::virt$mmap(u32 params_addr)
             bool rc = find_malloc_symbols(*region);
             VERIFY(rc);
         }
+        if (region->name() == "libsystem.so: .text") {
+            m_libsystem_start = final_address;
+            m_libsystem_end = final_address + final_size;
+        }
         mmu().add_region(move(region));
     }
 
@@ -1818,6 +1822,7 @@ bool Emulator::find_malloc_symbols(const MmapRegion& libc_text)
     auto malloc_symbol = image.find_demangled_function("malloc");
     auto free_symbol = image.find_demangled_function("free");
     auto realloc_symbol = image.find_demangled_function("realloc");
+    auto calloc_symbol = image.find_demangled_function("calloc");
     auto malloc_size_symbol = image.find_demangled_function("malloc_size");
     if (!malloc_symbol.has_value() || !free_symbol.has_value() || !realloc_symbol.has_value() || !malloc_size_symbol.has_value())
         return false;
@@ -1828,6 +1833,8 @@ bool Emulator::find_malloc_symbols(const MmapRegion& libc_text)
     m_free_symbol_end = m_free_symbol_start + free_symbol.value().size();
     m_realloc_symbol_start = realloc_symbol.value().value() + libc_text.base();
     m_realloc_symbol_end = m_realloc_symbol_start + realloc_symbol.value().size();
+    m_calloc_symbol_start = calloc_symbol.value().value() + libc_text.base();
+    m_calloc_symbol_end = m_calloc_symbol_start + calloc_symbol.value().size();
     m_malloc_size_symbol_start = malloc_size_symbol.value().value() + libc_text.base();
     m_malloc_size_symbol_end = m_malloc_size_symbol_start + malloc_size_symbol.value().size();
     return true;
