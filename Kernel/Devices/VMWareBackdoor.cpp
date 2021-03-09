@@ -145,7 +145,7 @@ void VMWareBackdoor::enable_absolute_vmmouse()
     InterruptDisabler disabler;
     if (!detect_vmmouse())
         return;
-    klog() << "VMWareBackdoor: Enabling absolute mouse mode";
+    dmesgln("VMWareBackdoor: Enabling absolute mouse mode");
 
     VMWareCommand command;
 
@@ -153,7 +153,7 @@ void VMWareBackdoor::enable_absolute_vmmouse()
     command.command = VMMOUSE_STATUS;
     send(command);
     if (command.ax == 0xFFFF0000) {
-        klog() << "VMWareBackdoor: VMMOUSE_STATUS got bad status";
+        dmesgln("VMWareBackdoor: VMMOUSE_STATUS got bad status");
         return;
     }
 
@@ -213,9 +213,7 @@ Optional<MousePacket> VMWareBackdoor::receive_mouse_packet()
     command.command = VMMOUSE_STATUS;
     send(command);
     if (command.ax == 0xFFFF0000) {
-#if PS2MOUSE_DEBUG
-        klog() << "PS2MouseDevice: Resetting VMWare mouse";
-#endif
+        dbgln_if(PS2MOUSE_DEBUG, "PS2MouseDevice: Resetting VMWare mouse");
         disable_absolute_vmmouse();
         enable_absolute_vmmouse();
         return {};
