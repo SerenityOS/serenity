@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,9 +51,8 @@ RefPtr<VMObject> AnonymousVMObject::clone()
         });
     }
 
-#if COMMIT_DEBUG
-    klog() << "Cloning " << this << ", need " << need_cow_pages << " committed cow pages";
-#endif
+    dbgln_if(COMMIT_DEBUG, "Cloning {:p}, need {} committed cow pages", this, need_cow_pages);
+
     if (!MM.commit_user_physical_pages(need_cow_pages))
         return {};
     // Create or replace the committed cow pages. When cloning a previously
@@ -224,9 +223,18 @@ int AnonymousVMObject::purge_impl()
                 if (&region.vmobject() == this) {
                     if (auto owner = region.get_owner()) {
                         // we need to hold a reference the process here (if there is one) as we may not own this region
-                        klog() << "Purged " << purged_in_range << " pages from region " << region.name() << " owned by " << *owner << " at " << region.vaddr_from_page_index(range.base) << " - " << region.vaddr_from_page_index(range.base + range.count);
+                        dmesgln("Purged {} pages from region {} owned by {} at {} - {}",
+                            purged_in_range,
+                            region.name(),
+                            *owner,
+                            region.vaddr_from_page_index(range.base),
+                            region.vaddr_from_page_index(range.base + range.count));
                     } else {
-                        klog() << "Purged " << purged_in_range << " pages from region " << region.name() << " (no ownership) at " << region.vaddr_from_page_index(range.base) << " - " << region.vaddr_from_page_index(range.base + range.count);
+                        dmesgln("Purged {} pages from region {} (no ownership) at {} - {}",
+                            purged_in_range,
+                            region.name(),
+                            region.vaddr_from_page_index(range.base),
+                            region.vaddr_from_page_index(range.base + range.count));
                     }
                     region.remap_vmobject_page_range(range.base, range.count);
                 }
@@ -326,9 +334,7 @@ void AnonymousVMObject::range_made_volatile(const VolatilePageRange& range)
 
     // Return those committed pages back to the system
     if (uncommit_page_count > 0) {
-#if COMMIT_DEBUG
-        klog() << "Uncommit " << uncommit_page_count << " lazy-commit pages from " << this;
-#endif
+        dbgln_if(COMMIT_DEBUG, "Uncommit {} lazy-commit pages from {:p}", uncommit_page_count, this);
         MM.uncommit_user_physical_pages(uncommit_page_count);
     }
 
@@ -379,9 +385,8 @@ size_t AnonymousVMObject::mark_committed_pages_for_nonvolatile_range(const Volat
         }
     }
 
-#if COMMIT_DEBUG
-    klog() << "Added " << pages_updated << " lazy-commit pages to " << this;
-#endif
+    dbgln_if(COMMIT_DEBUG, "Added {} lazy-commit pages to {:p}", pages_updated, this);
+
     m_unused_committed_pages += pages_updated;
     return pages_updated;
 }
@@ -481,7 +486,7 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
 #endif
         page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
         if (page.is_null()) {
-            klog() << "MM: handle_cow_fault was unable to allocate a physical page";
+            dmesgln("MM: handle_cow_fault was unable to allocate a physical page");
             return PageFaultResponse::OutOfMemory;
         }
     }
