@@ -214,7 +214,7 @@ void MallocTracer::audit_read(const Region& region, FlatPtr address, size_t size
     if (!m_auditing_enabled)
         return;
 
-    if (m_emulator.is_in_malloc_or_free()) {
+    if (m_emulator.is_in_malloc_or_free() || m_emulator.is_in_libsystem()) {
         return;
     }
 
