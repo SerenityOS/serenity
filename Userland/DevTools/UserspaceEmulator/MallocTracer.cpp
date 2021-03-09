@@ -55,7 +55,7 @@ inline void MallocTracer::for_each_mallocation(Callback callback) const
     });
 }
 
-void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t size)
+void MallocTracer::target_did_malloc(Badge<Emulator>, FlatPtr address, size_t size)
 {
     if (m_emulator.is_in_loader_code())
         return;
@@ -114,7 +114,7 @@ ALWAYS_INLINE size_t MallocRegionMetadata::chunk_index_for_address(FlatPtr addre
     return chunk_offset / this->chunk_size;
 }
 
-void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
+void MallocTracer::target_did_free(Badge<Emulator>, FlatPtr address)
 {
     if (!address)
         return;
@@ -138,7 +138,7 @@ void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
     m_emulator.dump_backtrace();
 }
 
-void MallocTracer::target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t size)
+void MallocTracer::target_did_realloc(Badge<Emulator>, FlatPtr address, size_t size)
 {
     if (m_emulator.is_in_loader_code())
         return;
