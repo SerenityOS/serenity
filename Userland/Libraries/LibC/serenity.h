@@ -109,27 +109,4 @@ int serenity_readlink(const char* path, size_t path_length, char* buffer, size_t
 int getkeymap(char* name_buffer, size_t name_buffer_size, uint32_t* map, uint32_t* shift_map, uint32_t* alt_map, uint32_t* altgr_map, uint32_t* shift_altgr_map);
 int setkeymap(const char* name, const uint32_t* map, uint32_t* const shift_map, const uint32_t* alt_map, const uint32_t* altgr_map, const uint32_t* shift_altgr_map);
 
-#ifdef __i386__
-ALWAYS_INLINE void send_secret_data_to_userspace_emulator(uintptr_t data1, uintptr_t data2, uintptr_t data3)
-{
-    asm volatile(
-        ".byte 0xd6\n"
-        ".byte 0xd6\n" ::
-            : "eax");
-    asm volatile(
-        "push %%eax\n"
-        "push %%ecx\n"
-        "push %%edx\n"
-        "pop %%edx\n"
-        "pop %%ecx\n"
-        "pop %%eax\n" ::"a"(data1),
-        "c"(data2), "d"(data3)
-        : "memory");
-}
-#elif __x86_64__
-ALWAYS_INLINE void send_secret_data_to_userspace_emulator(uintptr_t, uintptr_t, uintptr_t)
-{
-}
-#endif
-
 __END_DECLS

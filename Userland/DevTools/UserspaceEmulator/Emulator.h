@@ -82,7 +82,7 @@ private:
     void register_signal_handlers();
     void setup_signal_trampoline();
 
-    int virt$emuctl();
+    int virt$emuctl(FlatPtr, FlatPtr, FlatPtr);
     int virt$fork();
     int virt$execve(FlatPtr);
     int virt$access(FlatPtr, size_t, int);

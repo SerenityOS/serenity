@@ -112,22 +112,6 @@ void SoftCPU::dump() const
     fflush(stdout);
 }
 
-void SoftCPU::did_receive_secret_data()
-{
-    if (m_secret_data[0] == 1) {
-        if (auto* tracer = m_emulator.malloc_tracer())
-            tracer->target_did_malloc({}, m_secret_data[2], m_secret_data[1]);
-    } else if (m_secret_data[0] == 2) {
-        if (auto* tracer = m_emulator.malloc_tracer())
-            tracer->target_did_free({}, m_secret_data[1]);
-    } else if (m_secret_data[0] == 3) {
-        if (auto* tracer = m_emulator.malloc_tracer())
-            tracer->target_did_realloc({}, m_secret_data[2], m_secret_data[1]);
-    } else {
-        VERIFY_NOT_REACHED();
-    }
-}
-
 void SoftCPU::update_code_cache()
 {
     auto* region = m_emulator.mmu().find_region({ cs(), eip() });
@@ -2757,18 +2741,6 @@ void SoftCPU::PUSH_reg16(const X86::Instruction& insn)
 void SoftCPU::PUSH_reg32(const X86::Instruction& insn)
 {
     push32(gpr32(insn.reg32()));
-
-    if (m_secret_handshake_state == 2) {
-        m_secret_data[0] = gpr32(insn.reg32()).value();
-        ++m_secret_handshake_state;
-    } else if (m_secret_handshake_state == 3) {
-        m_secret_data[1] = gpr32(insn.reg32()).value();
-        ++m_secret_handshake_state;
-    } else if (m_secret_handshake_state == 4) {
-        m_secret_data[2] = gpr32(insn.reg32()).value();
-        m_secret_handshake_state = 0;
-        did_receive_secret_data();
-    }
 }
 
 template<typename T, bool cf>
@@ -2964,11 +2936,6 @@ void SoftCPU::SALC(const X86::Instruction&)
 {
     // FIXME: Respect shadow flags once they exists!
     set_al(shadow_wrap_as_initialized<u8>(cf() ? 0xff : 0x00));
-
-    if (m_secret_handshake_state < 2)
-        ++m_secret_handshake_state;
-    else
-        m_secret_handshake_state = 0;
 }
 
 template<typename T>

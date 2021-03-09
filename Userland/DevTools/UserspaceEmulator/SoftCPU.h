@@ -1105,8 +1105,6 @@ private:
 
     void update_code_cache();
 
-    void did_receive_secret_data();
-
 private:
     Emulator& m_emulator;
 
@@ -1154,9 +1152,6 @@ private:
 
     Region* m_cached_code_region { nullptr };
     u8* m_cached_code_base_ptr { nullptr };
-
-    u32 m_secret_handshake_state { 0 };
-    u32 m_secret_data[3];
 };
 
 ALWAYS_INLINE u8 SoftCPU::read8()

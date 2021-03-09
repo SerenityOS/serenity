@@ -69,9 +69,9 @@ class MallocTracer {
 public:
     explicit MallocTracer(Emulator&);
 
-    void target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t);
-    void target_did_free(Badge<SoftCPU>, FlatPtr address);
-    void target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t);
+    void target_did_malloc(Badge<Emulator>, FlatPtr address, size_t);
+    void target_did_free(Badge<Emulator>, FlatPtr address);
+    void target_did_realloc(Badge<Emulator>, FlatPtr address, size_t);
 
     void audit_read(const Region&, FlatPtr address, size_t);
     void audit_write(const Region&, FlatPtr address, size_t);
