@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,7 @@
 
 #include <AK/MACAddress.h>
 #include <Kernel/Debug.h>
-#include <Kernel/IO.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
-#include <Kernel/Thread.h>
 
 namespace Kernel {
 
@@ -199,7 +197,7 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, 
 {
     set_interface_name("e1k");
 
-    klog() << "E1000: Found @ " << pci_address();
+    dmesgln("E1000: Found @ {}", pci_address());
 
     enable_bus_mastering(pci_address());
 
@@ -208,15 +206,15 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, 
     m_mmio_base = m_mmio_region->vaddr();
     m_use_mmio = true;
     m_interrupt_line = PCI::get_interrupt_line(pci_address());
-    klog() << "E1000: port base: " << m_io_base;
-    klog() << "E1000: MMIO base: " << PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffffc);
-    klog() << "E1000: MMIO base size: " << mmio_base_size << " bytes";
-    klog() << "E1000: Interrupt line: " << m_interrupt_line;
+    dmesgln("E1000: port base: {}", m_io_base);
+    dmesgln("E1000: MMIO base: {}", PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffffc));
+    dmesgln("E1000: MMIO base size: {} bytes", mmio_base_size);
+    dmesgln("E1000: Interrupt line: {}", m_interrupt_line);
     detect_eeprom();
-    klog() << "E1000: Has EEPROM? " << m_has_eeprom;
+    dmesgln("E1000: Has EEPROM? {}", m_has_eeprom);
     read_mac_address();
     const auto& mac = mac_address();
-    klog() << "E1000: MAC address: " << mac.to_string();
+    dmesgln("E1000: MAC address: {}", mac.to_string());
 
     u32 flags = in32(REG_CTRL);
     out32(REG_CTRL, flags | ECTRL_SLU);
@@ -419,9 +417,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
     disable_irq();
     size_t tx_current = in32(REG_TXDESCTAIL) % number_of_tx_descriptors;
-#if E1000_DEBUG
-    klog() << "E1000: Sending packet (" << payload.size() << " bytes)";
-#endif
+    dbgln_if(E1000_DEBUG, "E1000: Sending packet ({} bytes)", payload.size());
     auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
     auto& descriptor = tx_descriptors[tx_current];
     VERIFY(payload.size() <= 8192);
@@ -430,9 +426,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
     descriptor.length = payload.size();
     descriptor.status = 0;
     descriptor.cmd = CMD_EOP | CMD_IFCS | CMD_RS;
-#if E1000_DEBUG
-    klog() << "E1000: Using tx descriptor " << tx_current << " (head is at " << in32(REG_TXDESCHEAD) << ")";
-#endif
+    dbgln_if(E1000_DEBUG, "E1000: Using tx descriptor {} (head is at {})", tx_current, in32(REG_TXDESCHEAD));
     tx_current = (tx_current + 1) % number_of_tx_descriptors;
     cli();
     enable_irq();
@@ -444,9 +438,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
         }
         m_wait_queue.wait_forever("E1000NetworkAdapter");
     }
-#if E1000_DEBUG
-    dbgln("E1000: Sent packet, status is now {:#02x}!", (u8)descriptor.status);
-#endif
+    dbgln_if(E1000_DEBUG, "E1000: Sent packet, status is now {:#02x}!", (u8)descriptor.status);
 }
 
 void E1000NetworkAdapter::receive()
@@ -463,9 +455,7 @@ void E1000NetworkAdapter::receive()
         auto* buffer = m_rx_buffers_regions[rx_current].vaddr().as_ptr();
         u16 length = rx_descriptors[rx_current].length;
         VERIFY(length <= 8192);
-#if E1000_DEBUG
-        klog() << "E1000: Received 1 packet @ " << buffer << " (" << length << ") bytes!";
-#endif
+        dbgln_if(E1000_DEBUG, "E1000: Received 1 packet @ {:p} ({} bytes)", buffer, length);
         did_receive({ buffer, length });
         rx_descriptors[rx_current].status = 0;
         out32(REG_RXDESCTAIL, rx_current);
