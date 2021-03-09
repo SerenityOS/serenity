@@ -468,6 +468,14 @@ inline const LogStream& operator<<(const LogStream& stream, const RefPtr<T, PtrT
 }
 
 template<typename T>
+struct Formatter<RefPtr<T>> : Formatter<const T*> {
+    void format(FormatBuilder& builder, const RefPtr<T>& value)
+    {
+        Formatter<const T*>::format(builder, value.ptr());
+    }
+};
+
+template<typename T>
 struct Traits<RefPtr<T>> : public GenericTraits<RefPtr<T>> {
     using PeekType = const T*;
     static unsigned hash(const RefPtr<T>& p) { return ptr_hash(p.ptr()); }
