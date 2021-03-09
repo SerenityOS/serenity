@@ -519,7 +519,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_fork:
         return virt$fork();
     case SC_emuctl:
-        return virt$emuctl();
+        return virt$emuctl(arg1, arg2, arg3);
     case SC_sched_getparam:
         return virt$sched_getparam(arg1, arg2);
     case SC_sched_setparam:
@@ -1267,9 +1267,24 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
     TODO();
 }
 
-int Emulator::virt$emuctl()
+int Emulator::virt$emuctl(FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
 {
-    return 0;
+    auto* tracer = malloc_tracer();
+    if (!tracer)
+        return 0;
+    switch (arg1) {
+    case 1:
+        tracer->target_did_malloc({}, arg3, arg2);
+        return 0;
+    case 2:
+        tracer->target_did_free({}, arg2);
+        return 0;
+    case 3:
+        tracer->target_did_realloc({}, arg3, arg2);
+        return 0;
+    default:
+        return -EINVAL;
+    }
 }
 
 int Emulator::virt$fork()
