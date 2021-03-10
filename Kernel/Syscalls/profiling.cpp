@@ -57,7 +57,7 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
         return ESRCH;
     if (process->is_dead())
         return ESRCH;
-    if (!is_superuser() && process->uid() != m_euid)
+    if (!is_superuser() && process->uid() != euid())
         return EPERM;
     if (!process->create_perf_events_buffer_if_needed())
         return ENOMEM;
@@ -79,7 +79,7 @@ KResultOr<int> Process::sys$profiling_disable(pid_t pid)
     auto process = Process::from_pid(pid);
     if (!process)
         return ESRCH;
-    if (!is_superuser() && process->uid() != m_euid)
+    if (!is_superuser() && process->uid() != euid())
         return EPERM;
     if (!process->is_profiling())
         return EINVAL;

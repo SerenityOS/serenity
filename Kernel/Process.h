@@ -112,6 +112,33 @@ class Process
     friend class Thread;
     friend class CoreDump;
 
+    struct ProtectedData {
+        ProcessID pid { 0 };
+        SessionID sid { 0 };
+        uid_t euid { 0 };
+        gid_t egid { 0 };
+        uid_t uid { 0 };
+        gid_t gid { 0 };
+        uid_t suid { 0 };
+        gid_t sgid { 0 };
+    };
+
+    // Helper class to temporarily unprotect a process's protected data so you can write to it.
+    class MutableProtectedData {
+    public:
+        explicit MutableProtectedData(Process& process)
+            : m_process(process)
+        {
+            m_process.unprotect_data();
+        }
+
+        ~MutableProtectedData() { m_process.protect_data(); }
+        ProtectedData* operator->() { return &const_cast<ProtectedData&>(m_process.protected_data()); }
+
+    private:
+        Process& m_process;
+    };
+
 public:
     inline static Process* current()
     {
@@ -169,18 +196,18 @@ public:
     static SessionID get_sid_from_pgid(ProcessGroupID pgid);
 
     const String& name() const { return m_name; }
-    ProcessID pid() const { return m_pid; }
-    SessionID sid() const { return m_sid; }
-    bool is_session_leader() const { return m_sid.value() == m_pid.value(); }
+    ProcessID pid() const { return protected_data().pid; }
+    SessionID sid() const { return protected_data().sid; }
+    bool is_session_leader() const { return protected_data().sid.value() == protected_data().pid.value(); }
     ProcessGroupID pgid() const { return m_pg ? m_pg->pgid() : 0; }
-    bool is_group_leader() const { return pgid().value() == m_pid.value(); }
+    bool is_group_leader() const { return pgid().value() == protected_data().pid.value(); }
     Span<const gid_t> extra_gids() const { return m_extra_gids; }
-    uid_t euid() const { return m_euid; }
-    gid_t egid() const { return m_egid; }
-    uid_t uid() const { return m_uid; }
-    gid_t gid() const { return m_gid; }
-    uid_t suid() const { return m_suid; }
-    gid_t sgid() const { return m_sgid; }
+    uid_t euid() const { return protected_data().euid; }
+    gid_t egid() const { return protected_data().egid; }
+    uid_t uid() const { return protected_data().uid; }
+    gid_t gid() const { return protected_data().gid; }
+    uid_t suid() const { return protected_data().suid; }
+    gid_t sgid() const { return protected_data().sgid; }
     ProcessID ppid() const { return m_ppid; }
 
     bool is_dumpable() const { return m_dumpable; }
@@ -392,10 +419,7 @@ public:
 
     KResultOr<LoadResult> load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const Elf32_Ehdr& main_program_header);
 
-    bool is_superuser() const
-    {
-        return m_euid == 0;
-    }
+    bool is_superuser() const { return euid() == 0; }
 
     void terminate_due_to_signal(u8 signal);
     KResult send_signal(u8 signal, Process* sender);
@@ -510,16 +534,12 @@ private:
     OwnPtr<Space> m_space;
     VirtualAddress m_signal_trampoline;
 
-    ProcessID m_pid { 0 };
-    SessionID m_sid { 0 };
     RefPtr<ProcessGroup> m_pg;
 
-    uid_t m_euid { 0 };
-    gid_t m_egid { 0 };
-    uid_t m_uid { 0 };
-    gid_t m_gid { 0 };
-    uid_t m_suid { 0 };
-    gid_t m_sgid { 0 };
+    const ProtectedData& protected_data() const;
+    void protect_data();
+    void unprotect_data();
+    OwnPtr<KBuffer> m_protected_data;
 
     OwnPtr<ThreadTracer> m_tracer;
 
@@ -631,7 +651,7 @@ inline void Process::for_each_child(Callback callback)
     ScopedSpinLock lock(g_processes_lock);
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
-        if (process->ppid() == my_pid || process->has_tracee_thread(m_pid)) {
+        if (process->ppid() == my_pid || process->has_tracee_thread(pid())) {
             if (callback(*process) == IterationDecision::Break)
                 break;
         }
