@@ -129,7 +129,8 @@ void Client::handle_request(ReadonlyBytes raw_request)
 
     Core::InputFileStream stream { file };
 
-    send_response(stream, request, Core::guess_mime_type_based_on_filename(real_path));
+    auto mime_type = Core::guess_mime_type_based_on_filename(real_path);
+    send_response(stream, request, mime_type.has_value() ? mime_type->as_string() : "text/plain");
 }
 
 void Client::send_response(InputStream& response, const HTTP::HttpRequest& request, const String& content_type)

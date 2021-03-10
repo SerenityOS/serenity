@@ -108,7 +108,9 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
         dbgln("No Content-Type header to go on! Guessing based on filename...");
 #endif
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
-        m_mime_type = Core::guess_mime_type_based_on_filename(url().path());
+
+        auto mime_type = Core::guess_mime_type_based_on_filename(url().path());
+        m_mime_type = mime_type.has_value() ? mime_type->as_string() : "text/plain";
     }
 
     for_each_client([](auto& client) {

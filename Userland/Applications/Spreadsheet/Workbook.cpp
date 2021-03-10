@@ -84,7 +84,7 @@ Result<bool, String> Workbook::load(const StringView& filename)
 
     auto mime = Core::guess_mime_type_based_on_filename(filename);
 
-    if (mime == "text/csv") {
+    if (mime.has_value() && mime->as_string() == "text/csv") {
         // FIXME: Prompt the user for settings.
         NonnullRefPtrVector<Sheet> sheets;
 
@@ -154,7 +154,7 @@ Result<bool, String> Workbook::save(const StringView& filename)
         return sb.to_string();
     }
 
-    if (mime == "text/csv") {
+    if (mime.has_value() && mime->as_string() == "text/csv") {
         // FIXME: Prompt the user for settings and which sheet to export.
         Core::OutputFileStream stream { file };
         auto data = m_sheets[0].to_xsv();
