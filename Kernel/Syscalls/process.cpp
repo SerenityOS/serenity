@@ -38,7 +38,7 @@ KResultOr<pid_t> Process::sys$getpid()
 KResultOr<pid_t> Process::sys$getppid()
 {
     REQUIRE_PROMISE(stdio);
-    return m_ppid.value();
+    return protected_data().ppid.value();
 }
 
 KResultOr<int> Process::sys$get_process_name(Userspace<char*> buffer, size_t buffer_size)
