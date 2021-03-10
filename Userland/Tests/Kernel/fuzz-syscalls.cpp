@@ -48,7 +48,7 @@ static bool is_unfuzzable_syscall(int fn)
 
 static bool is_nosys_syscall(int fn)
 {
-    return fn == SC_futex;
+    return fn == SC_futex || fn == SC_emuctl;
 }
 
 static bool is_bad_idea(int fn, const size_t* direct_sc_args, const size_t* fake_sc_params, const char* some_string)
@@ -85,7 +85,7 @@ static void do_systematic_tests()
         }
         // This is pure torture
         rc = syscall(Syscall::Function(i), 0xc0000001, 0xc0000002, 0xc0000003);
-        VERIFY(rc != -ENOSYS);
+        VERIFY(rc != -ENOSYS || is_nosys_syscall(i));
     }
 
     // Finally, test invalid syscalls:
