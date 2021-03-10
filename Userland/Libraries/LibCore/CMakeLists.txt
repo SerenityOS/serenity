@@ -16,6 +16,7 @@ set(SOURCES
     LocalServer.cpp
     LocalSocket.cpp
     MimeData.cpp
+    MimeType.cpp
     NetworkJob.cpp
     NetworkResponse.cpp
     Notifier.cpp
