@@ -32,7 +32,6 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
-#include <AK/kmalloc.h>
 #include <LibCore/FileStream.h>
 #include <LibGfx/FontDatabase.h>
 #include <stdio.h>

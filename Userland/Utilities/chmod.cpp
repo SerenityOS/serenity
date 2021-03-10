@@ -26,7 +26,6 @@
 
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
-#include <AK/kmalloc.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
