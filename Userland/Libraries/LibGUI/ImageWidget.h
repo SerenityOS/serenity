@@ -48,6 +48,9 @@ public:
     void animate();
     void load_from_file(const StringView&);
 
+    int opacity_percent() const { return m_opacity_percent; }
+    void set_opacity_percent(int percent);
+
     Function<void()> on_click;
 
 protected:
@@ -65,6 +68,8 @@ private:
     size_t m_current_frame_index { 0 };
     size_t m_loops_completed { 0 };
     NonnullRefPtr<Core::Timer> m_timer;
+
+    int m_opacity_percent { 100 };
 };
 
 }
