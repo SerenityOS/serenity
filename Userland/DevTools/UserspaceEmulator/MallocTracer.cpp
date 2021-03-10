@@ -95,8 +95,6 @@ void MallocTracer::target_did_malloc(Badge<Emulator>, FlatPtr address, size_t si
 
         // Mark the containing mmap region as a malloc block!
         mmap_region.set_malloc(true);
-
-        dbgln("Tracking malloc block @ {:p} with chunk_size={}, chunk_count={}", malloc_data.address, malloc_data.chunk_size, malloc_data.mallocations.size());
     }
     auto* mallocation = mmap_region.malloc_metadata()->mallocation_for_address(address);
     VERIFY(mallocation);
