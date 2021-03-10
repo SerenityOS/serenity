@@ -125,6 +125,7 @@ private:
     int virt$mkdir(FlatPtr path, size_t path_length, mode_t mode);
     int virt$unlink(FlatPtr path, size_t path_length);
     int virt$get_process_name(FlatPtr buffer, int size);
+    int virt$set_process_name(FlatPtr buffer, int size);
     int virt$set_mmap_name(FlatPtr);
     int virt$gettimeofday(FlatPtr);
     int virt$clock_gettime(int, FlatPtr);
