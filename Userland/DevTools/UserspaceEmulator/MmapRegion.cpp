@@ -56,7 +56,9 @@ NonnullOwnPtr<MmapRegion> MmapRegion::create_anonymous(u32 base, u32 size, u32 p
 
 NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset, String name)
 {
-    auto data = (u8*)mmap_with_name(nullptr, size, prot, flags, fd, offset, name.is_empty() ? nullptr : name.characters());
+    // Since we put the memory to an arbitrary location, do not pass MAP_FIXED to the Kernel.
+    auto real_flags = flags & ~MAP_FIXED;
+    auto data = (u8*)mmap_with_name(nullptr, size, prot, real_flags, fd, offset, name.is_empty() ? nullptr : name.characters());
     VERIFY(data != MAP_FAILED);
     auto shadow_data = (u8*)mmap_initialized(size, 1, "MmapRegion ShadowData");
     auto region = adopt_own(*new MmapRegion(base, size, prot, data, shadow_data));
