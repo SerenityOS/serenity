@@ -123,6 +123,7 @@ class Process
         uid_t suid { 0 };
         gid_t sgid { 0 };
         Vector<gid_t> extra_gids;
+        bool dumpable { false };
     };
 
     // Helper class to temporarily unprotect a process's protected data so you can write to it.
@@ -212,8 +213,8 @@ public:
     gid_t sgid() const { return protected_data().sgid; }
     ProcessID ppid() const { return protected_data().ppid; }
 
-    bool is_dumpable() const { return m_dumpable; }
-    void set_dumpable(bool dumpable) { m_dumpable = dumpable; }
+    bool is_dumpable() const { return protected_data().dumpable; }
+    void set_dumpable(bool);
 
     mode_t umask() const { return m_umask; }
 
@@ -589,8 +590,6 @@ private:
     RefPtr<TTY> m_tty;
 
     mode_t m_umask { 022 };
-
-    bool m_dumpable { true };
 
     WeakPtr<Region> m_master_tls_region;
     size_t m_master_tls_size { 0 };

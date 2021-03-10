@@ -725,4 +725,11 @@ bool Process::add_thread(Thread& thread)
     return is_first;
 }
 
+void Process::set_dumpable(bool dumpable)
+{
+    if (dumpable == protected_data().dumpable)
+        return;
+    MutableProtectedData(*this)->dumpable = dumpable;
+}
+
 }
