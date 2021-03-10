@@ -737,7 +737,14 @@ u32 Emulator::virt$mmap(u32 params_addr)
     if (params.flags & MAP_RANDOMIZED) {
         result = m_range_allocator.allocate_randomized(requested_size, params.alignment);
     } else if (params.flags & MAP_FIXED) {
-        result = m_range_allocator.allocate_specific(VirtualAddress { params.addr }, requested_size);
+        if (params.addr)
+            result = m_range_allocator.allocate_specific(VirtualAddress { params.addr }, requested_size);
+        else {
+            // mmap(nullptr, …, MAP_FIXED) is technically okay, but tends to be a bug.
+            // Therefore, refuse to be helpful.
+            reportln("\n=={}==  \033[31;1mTried to mmap at nullptr with MAP_FIXED.\033[0m, 0x{:x} bytes.", params.size);
+            dump_backtrace();
+        }
     } else {
         result = m_range_allocator.allocate_anywhere(requested_size, params.alignment);
     }
