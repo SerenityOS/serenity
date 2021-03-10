@@ -506,9 +506,11 @@ Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_impl_internal(const e
         auto count = min(blocks_remaining, entries_per_block);
         if (!count)
             return;
-        u32 array[count];
+        size_t read_size = count * sizeof(u32);
+        auto array_storage = ByteBuffer::create_uninitialized(read_size);
+        auto* array = (u32*)array_storage.data();
         auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)array);
-        auto result = fs().read_block(array_block_index, &buffer, sizeof(array), 0);
+        auto result = fs().read_block(array_block_index, &buffer, read_size, 0);
         if (result.is_error()) {
             // FIXME: Stop here and propagate this error.
             dbgln("Ext2FS: compute_block_list_impl_internal had error: {}", result.error());
