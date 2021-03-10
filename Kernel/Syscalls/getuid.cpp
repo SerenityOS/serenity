@@ -74,11 +74,11 @@ KResultOr<int> Process::sys$getgroups(ssize_t count, Userspace<gid_t*> user_gids
     if (count < 0)
         return EINVAL;
     if (!count)
-        return m_extra_gids.size();
-    if (count != (int)m_extra_gids.size())
+        return extra_gids().size();
+    if (count != (int)extra_gids().size())
         return EINVAL;
 
-    if (!copy_to_user(user_gids, m_extra_gids.data(), sizeof(gid_t) * count))
+    if (!copy_to_user(user_gids, extra_gids().data(), sizeof(gid_t) * count))
         return EFAULT;
 
     return 0;

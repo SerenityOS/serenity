@@ -110,7 +110,7 @@ NonnullRefPtrVector<Process> Process::all_processes()
 
 bool Process::in_group(gid_t gid) const
 {
-    return this->gid() == gid || m_extra_gids.contains_slow(gid);
+    return this->gid() == gid || extra_gids().contains_slow(gid);
 }
 
 void Process::kill_threads_except_self()

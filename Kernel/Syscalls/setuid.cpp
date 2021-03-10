@@ -148,7 +148,7 @@ KResultOr<int> Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> use
         return EPERM;
 
     if (!count) {
-        m_extra_gids.clear();
+        MutableProtectedData(*this)->extra_gids.clear();
         return 0;
     }
 
@@ -163,12 +163,13 @@ KResultOr<int> Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> use
             unique_extra_gids.set(extra_gid);
     }
 
-    m_extra_gids.resize(unique_extra_gids.size());
+    MutableProtectedData protected_data { *this };
+    protected_data->extra_gids.resize(unique_extra_gids.size());
     size_t i = 0;
     for (auto& extra_gid : unique_extra_gids) {
         if (extra_gid == gid())
             continue;
-        m_extra_gids[i++] = extra_gid;
+        protected_data->extra_gids[i++] = extra_gid;
     }
     return 0;
 }
