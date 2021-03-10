@@ -29,7 +29,6 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
-#include <AK/kmalloc.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
