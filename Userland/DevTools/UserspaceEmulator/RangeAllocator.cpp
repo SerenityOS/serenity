@@ -149,9 +149,12 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     VERIFY((size % PAGE_SIZE) == 0);
 
     Range allocated_range(base, size);
+    if (!m_total_range.contains(allocated_range)) {
+        dbgln("Unallocatable mmap request?! {:p}+{:p}", base.get(), size);
+        return {};
+    }
     for (size_t i = 0; i < m_available_ranges.size(); ++i) {
         auto& available_range = m_available_ranges[i];
-        VERIFY(m_total_range.contains(allocated_range));
         if (!available_range.contains(base, size))
             continue;
         if (available_range == allocated_range) {
