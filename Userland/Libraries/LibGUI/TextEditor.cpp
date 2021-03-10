@@ -1133,6 +1133,8 @@ void TextEditor::focusin_event(FocusEvent& event)
 
 void TextEditor::focusout_event(FocusEvent&)
 {
+    if (is_displayonly() && has_selection())
+        m_selection.clear();
     stop_timer();
     if (on_focusout)
         on_focusout();
