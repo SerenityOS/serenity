@@ -26,7 +26,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/kmalloc.h>
 #include <LibJS/Heap/HeapBlock.h>
 #include <stdio.h>
 #include <sys/mman.h>

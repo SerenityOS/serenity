@@ -29,7 +29,6 @@
 #include <AK/Demangle.h>
 #include <AK/LogStream.h>
 #include <AK/StringBuilder.h>
-#include <AK/kmalloc.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
