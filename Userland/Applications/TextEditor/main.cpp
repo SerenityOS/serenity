@@ -90,8 +90,8 @@ int main(int argc, char** argv)
 
     if (file_to_edit)
         text_widget.open_file(file_to_edit);
-    else
-        text_widget.update_title();
+
+    text_widget.update_title();
 
     if (initial_line_number != 0)
         text_widget.editor().set_cursor_and_focus_line(initial_line_number - 1, 0);
