@@ -507,11 +507,15 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
         if (main_program_metadata.is_setuid()) {
             executable_is_setid = true;
-            m_euid = m_suid = main_program_metadata.uid;
+            MutableProtectedData protected_data { *this };
+            protected_data->euid = main_program_metadata.uid;
+            protected_data->suid = main_program_metadata.uid;
         }
         if (main_program_metadata.is_setgid()) {
             executable_is_setid = true;
-            m_egid = m_sgid = main_program_metadata.gid;
+            MutableProtectedData protected_data { *this };
+            protected_data->egid = main_program_metadata.gid;
+            protected_data->sgid = main_program_metadata.gid;
         }
     }
 
@@ -574,7 +578,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     }
     VERIFY(new_main_thread);
 
-    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, m_uid, m_euid, m_gid, m_egid, path, main_program_fd);
+    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, uid(), euid(), gid(), egid(), path, main_program_fd);
 
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
@@ -600,7 +604,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     new_main_thread->set_name(m_name);
 
     // FIXME: PID/TID ISSUE
-    m_pid = new_main_thread->tid().value();
+    MutableProtectedData(*this)->pid = new_main_thread->tid().value();
     auto tsr_result = new_main_thread->make_thread_specific_region({});
     if (tsr_result.is_error()) {
         // FIXME: We cannot fail this late. Refactor this so the allocation happens before we commit to the new executable.
@@ -618,7 +622,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     tss.eip = load_result.entry_eip;
     tss.esp = new_userspace_esp;
     tss.cr3 = space().page_directory().cr3();
-    tss.ss2 = m_pid.value();
+    tss.ss2 = pid().value();
 
     // Throw away any recorded performance events in this process.
     if (m_perf_event_buffer)

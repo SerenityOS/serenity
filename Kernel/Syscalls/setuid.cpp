@@ -28,110 +28,114 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$seteuid(uid_t euid)
+KResultOr<int> Process::sys$seteuid(uid_t new_euid)
 {
     REQUIRE_PROMISE(id);
 
-    if (euid != m_uid && euid != m_suid && !is_superuser())
+    if (new_euid != uid() && new_euid != suid() && !is_superuser())
         return EPERM;
 
-    if (m_euid != euid)
+    if (euid() != new_euid)
         set_dumpable(false);
-    m_euid = euid;
+    MutableProtectedData(*this)->euid = new_euid;
     return 0;
 }
 
-KResultOr<int> Process::sys$setegid(gid_t egid)
+KResultOr<int> Process::sys$setegid(gid_t new_egid)
 {
     REQUIRE_PROMISE(id);
 
-    if (egid != m_gid && egid != m_sgid && !is_superuser())
+    if (new_egid != gid() && new_egid != sgid() && !is_superuser())
         return EPERM;
 
-    if (m_egid != egid)
+    if (egid() != new_egid)
         set_dumpable(false);
 
-    m_egid = egid;
+    MutableProtectedData(*this)->egid = new_egid;
     return 0;
 }
 
-KResultOr<int> Process::sys$setuid(uid_t uid)
+KResultOr<int> Process::sys$setuid(uid_t new_uid)
 {
     REQUIRE_PROMISE(id);
 
-    if (uid != m_uid && uid != m_euid && !is_superuser())
+    if (new_uid != uid() && new_uid != euid() && !is_superuser())
         return EPERM;
 
-    if (m_euid != uid)
+    if (euid() != new_uid)
         set_dumpable(false);
 
-    m_uid = uid;
-    m_euid = uid;
-    m_suid = uid;
+    MutableProtectedData protected_data { *this };
+    protected_data->uid = new_uid;
+    protected_data->euid = new_uid;
+    protected_data->suid = new_uid;
     return 0;
 }
 
-KResultOr<int> Process::sys$setgid(gid_t gid)
+KResultOr<int> Process::sys$setgid(gid_t new_gid)
 {
     REQUIRE_PROMISE(id);
 
-    if (gid != m_gid && gid != m_egid && !is_superuser())
+    if (new_gid != gid() && new_gid != egid() && !is_superuser())
         return EPERM;
 
-    if (m_egid != gid)
+    if (egid() != new_gid)
         set_dumpable(false);
 
-    m_gid = gid;
-    m_egid = gid;
-    m_sgid = gid;
+    MutableProtectedData protected_data { *this };
+    protected_data->gid = new_gid;
+    protected_data->egid = new_gid;
+    protected_data->sgid = new_gid;
     return 0;
 }
 
-KResultOr<int> Process::sys$setresuid(uid_t ruid, uid_t euid, uid_t suid)
+KResultOr<int> Process::sys$setresuid(uid_t new_ruid, uid_t new_euid, uid_t new_suid)
 {
     REQUIRE_PROMISE(id);
 
-    if (ruid == (uid_t)-1)
-        ruid = m_uid;
-    if (euid == (uid_t)-1)
-        euid = m_euid;
-    if (suid == (uid_t)-1)
-        suid = m_suid;
+    if (new_ruid == (uid_t)-1)
+        new_ruid = uid();
+    if (new_euid == (uid_t)-1)
+        new_euid = euid();
+    if (new_suid == (uid_t)-1)
+        new_suid = suid();
 
-    auto ok = [this](uid_t id) { return id == m_uid || id == m_euid || id == m_suid; };
-    if ((!ok(ruid) || !ok(euid) || !ok(suid)) && !is_superuser())
+    auto ok = [this](uid_t id) { return id == uid() || id == euid() || id == suid(); };
+    if ((!ok(new_ruid) || !ok(new_euid) || !ok(new_suid)) && !is_superuser())
         return EPERM;
 
-    if (m_euid != euid)
+    if (euid() != new_euid)
         set_dumpable(false);
 
-    m_uid = ruid;
-    m_euid = euid;
-    m_suid = suid;
+    MutableProtectedData protected_data { *this };
+    protected_data->uid = new_ruid;
+    protected_data->euid = new_euid;
+    protected_data->suid = new_suid;
     return 0;
 }
 
-KResultOr<int> Process::sys$setresgid(gid_t rgid, gid_t egid, gid_t sgid)
+KResultOr<int> Process::sys$setresgid(gid_t new_rgid, gid_t new_egid, gid_t new_sgid)
 {
     REQUIRE_PROMISE(id);
 
-    if (rgid == (gid_t)-1)
-        rgid = m_gid;
-    if (egid == (gid_t)-1)
-        egid = m_egid;
-    if (sgid == (gid_t)-1)
-        sgid = m_sgid;
+    if (new_rgid == (gid_t)-1)
+        new_rgid = gid();
+    if (new_egid == (gid_t)-1)
+        new_egid = egid();
+    if (new_sgid == (gid_t)-1)
+        new_sgid = sgid();
 
-    auto ok = [this](gid_t id) { return id == m_gid || id == m_egid || id == m_sgid; };
-    if ((!ok(rgid) || !ok(egid) || !ok(sgid)) && !is_superuser())
+    auto ok = [this](gid_t id) { return id == gid() || id == egid() || id == sgid(); };
+    if ((!ok(new_rgid) || !ok(new_egid) || !ok(new_sgid)) && !is_superuser())
         return EPERM;
 
-    if (m_egid != egid)
+    if (egid() != new_egid)
         set_dumpable(false);
 
-    m_gid = rgid;
-    m_egid = egid;
-    m_sgid = sgid;
+    MutableProtectedData protected_data { *this };
+    protected_data->gid = new_rgid;
+    protected_data->egid = new_egid;
+    protected_data->sgid = new_sgid;
     return 0;
 }
 
@@ -148,23 +152,23 @@ KResultOr<int> Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> use
         return 0;
     }
 
-    Vector<gid_t> gids;
-    gids.resize(count);
-    if (!copy_n_from_user(gids.data(), user_gids, count))
+    Vector<gid_t> new_extra_gids;
+    new_extra_gids.resize(count);
+    if (!copy_n_from_user(new_extra_gids.data(), user_gids, count))
         return EFAULT;
 
     HashTable<gid_t> unique_extra_gids;
-    for (auto& gid : gids) {
-        if (gid != m_gid)
-            unique_extra_gids.set(gid);
+    for (auto& extra_gid : new_extra_gids) {
+        if (extra_gid != gid())
+            unique_extra_gids.set(extra_gid);
     }
 
     m_extra_gids.resize(unique_extra_gids.size());
     size_t i = 0;
-    for (auto& gid : unique_extra_gids) {
-        if (gid == m_gid)
+    for (auto& extra_gid : unique_extra_gids) {
+        if (extra_gid == gid())
             continue;
-        m_extra_gids[i++] = gid;
+        m_extra_gids[i++] = extra_gid;
     }
     return 0;
 }
