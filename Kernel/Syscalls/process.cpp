@@ -32,7 +32,7 @@ namespace Kernel {
 KResultOr<pid_t> Process::sys$getpid()
 {
     REQUIRE_PROMISE(stdio);
-    return m_pid.value();
+    return pid().value();
 }
 
 KResultOr<pid_t> Process::sys$getppid()

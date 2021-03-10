@@ -67,7 +67,7 @@ KResultOr<int> Process::sys$sched_setparam(int pid, Userspace<const struct sched
     if (!peer)
         return ESRCH;
 
-    if (!is_superuser() && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
+    if (!is_superuser() && euid() != peer->process().uid() && uid() != peer->process().uid())
         return EPERM;
 
     peer->set_priority((u32)desired_param.sched_priority);
@@ -90,7 +90,7 @@ KResultOr<int> Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_par
         if (!peer)
             return ESRCH;
 
-        if (!is_superuser() && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
+        if (!is_superuser() && euid() != peer->process().uid() && uid() != peer->process().uid())
             return EPERM;
 
         priority = (int)peer->priority();

@@ -25,7 +25,6 @@
  */
 
 #include <AK/Demangle.h>
-#include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
@@ -38,7 +37,6 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Module.h>
@@ -51,7 +49,6 @@
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PrivateInodeVMObject.h>
-#include <Kernel/VM/ProcessPagingScope.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/limits.h>
@@ -113,7 +110,7 @@ NonnullRefPtrVector<Process> Process::all_processes()
 
 bool Process::in_group(gid_t gid) const
 {
-    return m_gid == gid || m_extra_gids.contains_slow(gid);
+    return this->gid() == gid || m_extra_gids.contains_slow(gid);
 }
 
 void Process::kill_threads_except_self()
@@ -212,15 +209,31 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
     return process;
 }
 
+const Process::ProtectedData& Process::protected_data() const
+{
+    return *reinterpret_cast<const ProtectedData*>(m_protected_data->data());
+}
+
+void Process::protect_data()
+{
+    auto& region = m_protected_data->impl().region();
+    if (!region.is_writable())
+        return;
+    region.set_writable(false);
+    region.remap();
+}
+
+void Process::unprotect_data()
+{
+    auto& region = m_protected_data->impl().region();
+    if (region.is_writable())
+        return;
+    region.set_writable(true);
+    region.remap();
+}
+
 Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
-    , m_pid(allocate_pid())
-    , m_euid(uid)
-    , m_egid(gid)
-    , m_uid(uid)
-    , m_gid(gid)
-    , m_suid(uid)
-    , m_sgid(gid)
     , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
     , m_cwd(move(cwd))
@@ -228,7 +241,21 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
     , m_ppid(ppid)
     , m_wait_block_condition(*this)
 {
-    dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, m_pid.value());
+    m_protected_data = KBuffer::try_create_with_size(sizeof(ProtectedData));
+    VERIFY(m_protected_data);
+
+    {
+        MutableProtectedData protected_data { *this };
+        protected_data->pid = allocate_pid();
+        protected_data->uid = uid;
+        protected_data->gid = gid;
+        protected_data->euid = uid;
+        protected_data->egid = gid;
+        protected_data->suid = uid;
+        protected_data->sgid = gid;
+    }
+
+    dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, this->pid().value());
 
     m_space = Space::create(*this, fork_parent ? &fork_parent->space() : nullptr);
 
@@ -433,8 +460,8 @@ bool Process::dump_core()
 {
     VERIFY(is_dumpable());
     VERIFY(should_core_dump());
-    dbgln("Generating coredump for pid: {}", m_pid.value());
-    auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), m_pid.value(), RTC::now());
+    dbgln("Generating coredump for pid: {}", pid().value());
+    auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), pid().value(), RTC::now());
     auto coredump = CoreDump::create(*this, coredump_path);
     if (!coredump)
         return false;
@@ -445,8 +472,8 @@ bool Process::dump_perfcore()
 {
     VERIFY(is_dumpable());
     VERIFY(m_perf_event_buffer);
-    dbgln("Generating perfcore for pid: {}", m_pid.value());
-    auto description_or_error = VFS::the().open(String::formatted("perfcore.{}", m_pid.value()), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
+    dbgln("Generating perfcore for pid: {}", pid().value());
+    auto description_or_error = VFS::the().open(String::formatted("perfcore.{}", pid().value()), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
     if (description_or_error.is_error())
         return false;
     auto& description = description_or_error.value();
@@ -547,7 +574,7 @@ void Process::die()
         ScopedSpinLock lock(g_processes_lock);
         for (auto* process = g_processes->head(); process;) {
             auto* next_process = process->next();
-            if (process->has_tracee_thread(m_pid)) {
+            if (process->has_tracee_thread(pid())) {
                 dbgln_if(PROCESS_DEBUG, "Process {} ({}) is attached by {} ({}) which will exit", process->name(), process->pid(), name(), pid());
                 process->stop_tracing();
                 auto err = process->send_signal(SIGSTOP, this);
@@ -576,7 +603,7 @@ void Process::terminate_due_to_signal(u8 signal)
 KResult Process::send_signal(u8 signal, Process* sender)
 {
     // Try to send it to the "obvious" main thread:
-    auto receiver_thread = Thread::from_tid(m_pid.value());
+    auto receiver_thread = Thread::from_tid(pid().value());
     // If the main thread has died, there may still be other threads:
     if (!receiver_thread) {
         // The first one should be good enough.

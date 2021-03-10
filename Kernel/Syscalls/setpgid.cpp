@@ -33,14 +33,14 @@ KResultOr<pid_t> Process::sys$getsid(pid_t pid)
 {
     REQUIRE_PROMISE(proc);
     if (pid == 0)
-        return m_sid.value();
+        return sid().value();
     ScopedSpinLock lock(g_processes_lock);
     auto process = Process::from_pid(pid);
     if (!process)
         return ESRCH;
-    if (m_sid != process->m_sid)
+    if (sid() != process->sid())
         return EPERM;
-    return process->m_sid.value();
+    return process->sid().value();
 }
 
 KResultOr<pid_t> Process::sys$setsid()
@@ -55,10 +55,10 @@ KResultOr<pid_t> Process::sys$setsid()
     if (found_process_with_same_pgid_as_my_pid)
         return EPERM;
     // Create a new Session and a new ProcessGroup.
-    m_sid = m_pid.value();
-    m_pg = ProcessGroup::create(ProcessGroupID(m_pid.value()));
+    MutableProtectedData(*this)->sid = pid().value();
+    m_pg = ProcessGroup::create(ProcessGroupID(pid().value()));
     m_tty = nullptr;
-    return m_sid.value();
+    return sid().value();
 }
 
 KResultOr<pid_t> Process::sys$getpgid(pid_t pid)
@@ -97,7 +97,7 @@ KResultOr<int> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 {
     REQUIRE_PROMISE(proc);
     ScopedSpinLock lock(g_processes_lock); // FIXME: Use a ProcessHandle
-    ProcessID pid = specified_pid ? ProcessID(specified_pid) : m_pid;
+    ProcessID pid = specified_pid ? ProcessID(specified_pid) : this->pid();
     if (specified_pgid < 0) {
         // The value of the pgid argument is less than 0, or is not a value supported by the implementation.
         return EINVAL;
@@ -105,7 +105,7 @@ KResultOr<int> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     auto process = Process::from_pid(pid);
     if (!process)
         return ESRCH;
-    if (process != this && process->ppid() != m_pid) {
+    if (process != this && process->ppid() != this->pid()) {
         // The value of the pid argument does not match the process ID
         // of the calling process or of a child process of the calling process.
         return ESRCH;
@@ -114,21 +114,21 @@ KResultOr<int> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
         // The process indicated by the pid argument is a session leader.
         return EPERM;
     }
-    if (process->ppid() == m_pid && process->sid() != sid()) {
+    if (process->ppid() == this->pid() && process->sid() != sid()) {
         // The value of the pid argument matches the process ID of a child
         // process of the calling process and the child process is not in
         // the same session as the calling process.
         return EPERM;
     }
 
-    ProcessGroupID new_pgid = specified_pgid ? ProcessGroupID(specified_pgid) : process->m_pid.value();
+    ProcessGroupID new_pgid = specified_pgid ? ProcessGroupID(specified_pgid) : process->pid().value();
     SessionID current_sid = sid();
     SessionID new_sid = get_sid_from_pgid(new_pgid);
     if (new_sid != -1 && current_sid != new_sid) {
         // Can't move a process between sessions.
         return EPERM;
     }
-    if (new_sid == -1 && new_pgid != process->m_pid.value()) {
+    if (new_sid == -1 && new_pgid != process->pid().value()) {
         // The value of the pgid argument is valid, but is not
         // the calling pid, and is not an existing process group.
         return EPERM;

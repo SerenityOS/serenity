@@ -36,7 +36,7 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
 {
     REQUIRE_PROMISE(proc);
     RefPtr<Thread> child_first_thread;
-    auto child = adopt(*new Process(child_first_thread, m_name, m_uid, m_gid, m_pid, m_is_kernel_process, m_cwd, m_executable, m_tty, this));
+    auto child = adopt(*new Process(child_first_thread, m_name, uid(), gid(), pid(), m_is_kernel_process, m_cwd, m_executable, m_tty, this));
     if (!child_first_thread)
         return ENOMEM;
     child->m_root_directory = m_root_directory;
@@ -48,11 +48,15 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths.deep_copy();
     child->m_fds = m_fds;
-    child->m_sid = m_sid;
     child->m_pg = m_pg;
     child->m_umask = m_umask;
     child->m_extra_gids = m_extra_gids;
     child->m_signal_trampoline = m_signal_trampoline;
+
+    {
+        MutableProtectedData child_data { *child };
+        child_data->sid = this->sid();
+    }
 
     dbgln_if(FORK_DEBUG, "fork: child={}", child);
     child->space().set_enforces_syscall_regions(space().enforces_syscall_regions());
