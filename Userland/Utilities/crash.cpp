@@ -200,7 +200,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (do_read_from_uninitialized_malloc_memory || do_all_crash_types) {
+    if (do_read_from_freed_memory || do_all_crash_types) {
         Crash("Read from freed memory", []() {
             auto* uninitialized_memory = (volatile u32**)malloc(1024);
             if (!uninitialized_memory)
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
 
     if (do_write_to_read_only_memory || do_all_crash_types) {
         Crash("Write to read only memory", []() {
-            auto* ptr = (u8*)mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_ANON, 0, 0);
+            auto* ptr = (u8*)mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, 0, 0);
             if (ptr == MAP_FAILED)
                 return Crash::Failure::UnexpectedError;
 
