@@ -124,6 +124,10 @@ class Process
         gid_t sgid { 0 };
         Vector<gid_t> extra_gids;
         bool dumpable { false };
+        bool has_promises { false };
+        u32 promises { 0 };
+        bool has_execpromises { false };
+        u32 execpromises { 0 };
     };
 
     // Helper class to temporarily unprotect a process's protected data so you can write to it.
@@ -441,14 +445,8 @@ public:
     Custody& root_directory_relative_to_global_root();
     void set_root_directory(const Custody&);
 
-    bool has_promises() const
-    {
-        return m_has_promises;
-    }
-    bool has_promised(Pledge pledge) const
-    {
-        return m_promises & (1u << (u32)pledge);
-    }
+    bool has_promises() const { return protected_data().has_promises; }
+    bool has_promised(Pledge pledge) const { return protected_data().promises & (1u << (u32)pledge); }
 
     VeilState veil_state() const
     {
@@ -599,11 +597,6 @@ private:
     Lock m_ptrace_lock { "ptrace" };
 
     RefPtr<Timer> m_alarm_timer;
-
-    bool m_has_promises { false };
-    u32 m_promises { 0 };
-    bool m_has_execpromises { false };
-    u32 m_execpromises { 0 };
 
     VeilState m_veil_state { VeilState::None };
     UnveilNode m_unveiled_paths { "/", { .full_path = "/", .unveil_inherited_from_root = true } };

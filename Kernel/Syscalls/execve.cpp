@@ -536,12 +536,6 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     m_arguments = arguments;
     m_environment = environment;
 
-    m_promises = m_execpromises;
-    m_has_promises = m_has_execpromises;
-
-    m_execpromises = 0;
-    m_has_execpromises = false;
-
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
 
@@ -603,8 +597,18 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     m_name = parts.take_last();
     new_main_thread->set_name(m_name);
 
-    // FIXME: PID/TID ISSUE
-    MutableProtectedData(*this)->pid = new_main_thread->tid().value();
+    {
+        MutableProtectedData protected_data { *this };
+        protected_data->promises = protected_data->execpromises;
+        protected_data->has_promises = protected_data->has_execpromises;
+
+        protected_data->execpromises = 0;
+        protected_data->has_execpromises = false;
+
+        // FIXME: PID/TID ISSUE
+        protected_data->pid = new_main_thread->tid().value();
+    }
+
     auto tsr_result = new_main_thread->make_thread_specific_region({});
     if (tsr_result.is_error()) {
         // FIXME: We cannot fail this late. Refactor this so the allocation happens before we commit to the new executable.
