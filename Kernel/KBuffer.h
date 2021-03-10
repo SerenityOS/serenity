@@ -162,6 +162,7 @@ public:
 
     void set_size(size_t size) { m_impl->set_size(size); }
 
+    [[nodiscard]] KBufferImpl& impl() { return *m_impl; }
     [[nodiscard]] const KBufferImpl& impl() const { return *m_impl; }
     [[nodiscard]] RefPtr<KBufferImpl> take_impl() { return move(m_impl); }
 
