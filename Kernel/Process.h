@@ -121,6 +121,7 @@ class Process
         gid_t gid { 0 };
         uid_t suid { 0 };
         gid_t sgid { 0 };
+        Vector<gid_t> extra_gids;
     };
 
     // Helper class to temporarily unprotect a process's protected data so you can write to it.
@@ -201,7 +202,7 @@ public:
     bool is_session_leader() const { return protected_data().sid.value() == protected_data().pid.value(); }
     ProcessGroupID pgid() const { return m_pg ? m_pg->pgid() : 0; }
     bool is_group_leader() const { return pgid().value() == protected_data().pid.value(); }
-    Span<const gid_t> extra_gids() const { return m_extra_gids; }
+    const Vector<gid_t>& extra_gids() const { return protected_data().extra_gids; }
     uid_t euid() const { return protected_data().euid; }
     gid_t egid() const { return protected_data().egid; }
     uid_t uid() const { return protected_data().uid; }
@@ -590,8 +591,6 @@ private:
     mode_t m_umask { 022 };
 
     bool m_dumpable { true };
-
-    Vector<gid_t> m_extra_gids;
 
     WeakPtr<Region> m_master_tls_region;
     size_t m_master_tls_size { 0 };
