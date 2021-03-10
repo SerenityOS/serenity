@@ -806,26 +806,23 @@ KResult Ext2FSInode::resize(u64 new_size)
             return ENOSPC;
     }
 
-    Vector<Ext2FS::BlockIndex> block_list;
-    if (!m_block_list.is_empty())
-        block_list = m_block_list;
-    else
-        block_list = this->compute_block_list();
+    if (m_block_list.is_empty())
+        m_block_list = this->compute_block_list();
 
     if (blocks_needed_after > blocks_needed_before) {
         auto blocks_or_error = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
         if (blocks_or_error.is_error())
             return blocks_or_error.error();
-        block_list.append(blocks_or_error.release_value());
+        m_block_list.append(blocks_or_error.release_value());
     } else if (blocks_needed_after < blocks_needed_before) {
         if constexpr (EXT2_DEBUG) {
-            dbgln("Ext2FS: Shrinking inode {}. Old block list is {} entries:", index(), block_list.size());
-            for (auto block_index : block_list) {
+            dbgln("Ext2FS: Shrinking inode {}. Old block list is {} entries:", index(), m_block_list.size());
+            for (auto block_index : m_block_list) {
                 dbgln("    # {}", block_index);
             }
         }
-        while (block_list.size() != blocks_needed_after) {
-            auto block_index = block_list.take_last();
+        while (m_block_list.size() != blocks_needed_after) {
+            auto block_index = m_block_list.take_last();
             if (block_index.value()) {
                 auto result = fs().set_block_allocation_state(block_index, false);
                 if (result.is_error()) {
@@ -835,8 +832,6 @@ KResult Ext2FSInode::resize(u64 new_size)
             }
         }
     }
-
-    m_block_list = move(block_list);
 
     auto result = flush_block_list();
     if (result.is_error())
