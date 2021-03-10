@@ -238,7 +238,7 @@ int main(int argc, char** argv)
     if (do_write_to_read_only_memory || do_all_crash_types) {
         Crash("Write to read only memory", []() {
             auto* ptr = (u8*)mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_ANON, 0, 0);
-            if (ptr != MAP_FAILED)
+            if (ptr == MAP_FAILED)
                 return Crash::Failure::UnexpectedError;
 
             *ptr = 'x'; // This should work fine.
