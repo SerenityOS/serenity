@@ -238,7 +238,6 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
     , m_executable(move(executable))
     , m_cwd(move(cwd))
     , m_tty(tty)
-    , m_ppid(ppid)
     , m_wait_block_condition(*this)
 {
     m_protected_data = KBuffer::try_create_with_size(sizeof(ProtectedData));
@@ -247,6 +246,7 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
     {
         MutableProtectedData protected_data { *this };
         protected_data->pid = allocate_pid();
+        protected_data->ppid = ppid;
         protected_data->uid = uid;
         protected_data->gid = gid;
         protected_data->euid = uid;
@@ -518,7 +518,7 @@ void Process::finalize()
 
     {
         // FIXME: PID/TID BUG
-        if (auto parent_thread = Thread::from_tid(m_ppid.value())) {
+        if (auto parent_thread = Thread::from_tid(ppid().value())) {
             if (!(parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT))
                 parent_thread->send_signal(SIGCHLD, this);
         }

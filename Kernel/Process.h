@@ -114,6 +114,7 @@ class Process
 
     struct ProtectedData {
         ProcessID pid { 0 };
+        ProcessID ppid { 0 };
         SessionID sid { 0 };
         uid_t euid { 0 };
         gid_t egid { 0 };
@@ -209,7 +210,7 @@ public:
     gid_t gid() const { return protected_data().gid; }
     uid_t suid() const { return protected_data().suid; }
     gid_t sgid() const { return protected_data().sgid; }
-    ProcessID ppid() const { return m_ppid; }
+    ProcessID ppid() const { return protected_data().ppid; }
 
     bool is_dumpable() const { return m_dumpable; }
     void set_dumpable(bool dumpable) { m_dumpable = dumpable; }
@@ -587,7 +588,6 @@ private:
 
     RefPtr<TTY> m_tty;
 
-    ProcessID m_ppid { 0 };
     mode_t m_umask { 022 };
 
     bool m_dumpable { true };
