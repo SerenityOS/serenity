@@ -127,7 +127,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
         FlatPtr address;
         const KernelSymbol* symbol { nullptr };
     };
-    size_t max_recognized_symbol_count = 256;
+    constexpr size_t max_recognized_symbol_count = 256;
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
     size_t recognized_symbol_count = 0;
     if (use_ksyms) {
