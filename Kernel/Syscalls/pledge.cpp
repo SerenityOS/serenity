@@ -67,24 +67,27 @@ KResultOr<int> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> u
         return true;
     };
 
+    MutableProtectedData mutable_protected_data { *this };
+
     if (!promises.is_null()) {
         u32 new_promises = 0;
         if (!parse_pledge(promises, new_promises))
             return EINVAL;
-        if (m_promises && (!new_promises || new_promises & ~m_promises))
+        if (protected_data().promises && (!new_promises || new_promises & ~protected_data().promises))
             return EPERM;
-        m_has_promises = true;
-        m_promises = new_promises;
+
+        mutable_protected_data->has_promises = true;
+        mutable_protected_data->promises = new_promises;
     }
 
     if (!execpromises.is_null()) {
         u32 new_execpromises = 0;
         if (!parse_pledge(execpromises, new_execpromises))
             return EINVAL;
-        if (m_execpromises && (!new_execpromises || new_execpromises & ~m_execpromises))
+        if (protected_data().execpromises && (!new_execpromises || new_execpromises & ~protected_data().execpromises))
             return EPERM;
-        m_has_execpromises = true;
-        m_execpromises = new_execpromises;
+        mutable_protected_data->has_execpromises = true;
+        mutable_protected_data->execpromises = new_execpromises;
     }
 
     return 0;
