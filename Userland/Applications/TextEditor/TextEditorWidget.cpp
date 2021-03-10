@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, James Puleo <james@jame.xyz>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +35,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
+#include <LibCore/MimeType.h>
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -584,6 +586,23 @@ void TextEditorWidget::update_title()
 
 void TextEditorWidget::open_file(const String& path)
 {
+    if (Core::File::exists(path)) {
+        auto guessed_mime = Core::guess_mime_type_based_on_filename(path);
+        if (!guessed_mime.has_value() || guessed_mime->type() != Core::MimeType::Type::text) {
+            StringBuilder error_builder;
+            if (!guessed_mime.has_value())
+                error_builder.append("This file does not have a MIME type, and so it may not be a text file. ");
+            else
+                error_builder.appendff("This file has the MIME type of '{}', and so it may not be a text file. ", guessed_mime->as_string());
+            error_builder.append("Are you sure you want to open this?");
+
+            if (GUI::MessageBox::show(window(), error_builder.to_string(), "Not a text file", GUI::MessageBox::Type::Warning,
+                    GUI::MessageBox::InputType::YesNo)
+                == GUI::Dialog::ExecResult::ExecNo)
+                return;
+        }
+    }
+
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly) && file->error() != ENOENT) {
         GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
