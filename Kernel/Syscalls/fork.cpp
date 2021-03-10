@@ -50,12 +50,12 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
     child->m_fds = m_fds;
     child->m_pg = m_pg;
     child->m_umask = m_umask;
-    child->m_extra_gids = m_extra_gids;
     child->m_signal_trampoline = m_signal_trampoline;
 
     {
         MutableProtectedData child_data { *child };
         child_data->sid = this->sid();
+        child_data->extra_gids = this->extra_gids();
     }
 
     dbgln_if(FORK_DEBUG, "fork: child={}", child);
