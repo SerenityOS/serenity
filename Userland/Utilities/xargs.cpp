@@ -198,6 +198,7 @@ bool read_items(FILE* fp, char entry_separator, Function<Decision(StringView)> c
                 perror("getdelim");
                 fail = true;
             }
+            free(item);
             break;
         }
 
