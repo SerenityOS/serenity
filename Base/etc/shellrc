@@ -31,4 +31,10 @@ alias rgrep="grep -r"
 alias egrep="grep -E"
 alias ll='ls -l'
 
-export PROMPT="\\X\\u@\\h:\\w\\a\\e[32;1m@\\h\\e[0m:\\e[34;1m\\w\\e[0m \\p "
+if [ "$(id -u)" = "0" ] {
+    prompt_color=31
+} else {
+    prompt_color=32
+}
+
+export PROMPT="\\X\\u@\\h:\\w\\a\\e[$prompt_color;1m@\\h\\e[0m:\\e[34;1m\\w\\e[0m \\p "
