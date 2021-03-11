@@ -39,7 +39,12 @@ public:
 
 class AbstractTableView : public AbstractView {
 public:
-    int row_height() const;
+    int row_height() const { return font().glyph_height() + vertical_padding(); }
+
+    virtual int horizontal_padding() const { return m_horizontal_padding; }
+    void set_horizontal_padding(int padding) { m_horizontal_padding = padding; }
+    virtual int vertical_padding() const { return m_vertical_padding; }
+    void set_vertical_padding(int padding) { m_vertical_padding = padding; }
 
     bool alternating_row_colors() const { return m_alternating_row_colors; }
     void set_alternating_row_colors(bool b) { m_alternating_row_colors = b; }
@@ -58,9 +63,6 @@ public:
     void set_column_header_alignment(int column, Gfx::TextAlignment);
 
     void set_column_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>);
-
-    int horizontal_padding() const;
-    int icon_padding() const { return 8; }
 
     Gfx::IntPoint adjusted_position(const Gfx::IntPoint&) const;
 
@@ -123,6 +125,9 @@ private:
 
     bool m_alternating_row_colors { true };
     bool m_highlight_selected_rows { true };
+
+    int m_vertical_padding { 8 };
+    int m_horizontal_padding { font().glyph_height() / 2 };
 };
 
 }

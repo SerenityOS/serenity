@@ -51,6 +51,8 @@ public:
     void set_should_fill_selected_rows(bool fill) { m_should_fill_selected_rows = fill; }
     bool should_fill_selected_rows() const { return m_should_fill_selected_rows; }
 
+    virtual int vertical_padding() const override { return m_vertical_padding; }
+
 protected:
     TreeView();
 
@@ -89,6 +91,7 @@ private:
     RefPtr<Gfx::Bitmap> m_collapse_bitmap;
 
     bool m_should_fill_selected_rows { false };
+    int m_vertical_padding { 6 };
 };
 
 }
