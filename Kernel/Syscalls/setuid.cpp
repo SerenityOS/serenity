@@ -37,7 +37,10 @@ KResultOr<int> Process::sys$seteuid(uid_t new_euid)
 
     if (euid() != new_euid)
         set_dumpable(false);
-    MutableProtectedData(*this)->euid = new_euid;
+
+    ProtectedDataMutationScope scope { *this };
+
+    m_euid = new_euid;
     return 0;
 }
 
@@ -51,7 +54,8 @@ KResultOr<int> Process::sys$setegid(gid_t new_egid)
     if (egid() != new_egid)
         set_dumpable(false);
 
-    MutableProtectedData(*this)->egid = new_egid;
+    ProtectedDataMutationScope scope { *this };
+    m_egid = new_egid;
     return 0;
 }
 
@@ -65,10 +69,10 @@ KResultOr<int> Process::sys$setuid(uid_t new_uid)
     if (euid() != new_uid)
         set_dumpable(false);
 
-    MutableProtectedData protected_data { *this };
-    protected_data->uid = new_uid;
-    protected_data->euid = new_uid;
-    protected_data->suid = new_uid;
+    ProtectedDataMutationScope scope { *this };
+    m_uid = new_uid;
+    m_euid = new_uid;
+    m_suid = new_uid;
     return 0;
 }
 
@@ -82,10 +86,10 @@ KResultOr<int> Process::sys$setgid(gid_t new_gid)
     if (egid() != new_gid)
         set_dumpable(false);
 
-    MutableProtectedData protected_data { *this };
-    protected_data->gid = new_gid;
-    protected_data->egid = new_gid;
-    protected_data->sgid = new_gid;
+    ProtectedDataMutationScope scope { *this };
+    m_gid = new_gid;
+    m_egid = new_gid;
+    m_sgid = new_gid;
     return 0;
 }
 
@@ -107,10 +111,10 @@ KResultOr<int> Process::sys$setresuid(uid_t new_ruid, uid_t new_euid, uid_t new_
     if (euid() != new_euid)
         set_dumpable(false);
 
-    MutableProtectedData protected_data { *this };
-    protected_data->uid = new_ruid;
-    protected_data->euid = new_euid;
-    protected_data->suid = new_suid;
+    ProtectedDataMutationScope scope { *this };
+    m_uid = new_ruid;
+    m_euid = new_euid;
+    m_suid = new_suid;
     return 0;
 }
 
@@ -132,10 +136,10 @@ KResultOr<int> Process::sys$setresgid(gid_t new_rgid, gid_t new_egid, gid_t new_
     if (egid() != new_egid)
         set_dumpable(false);
 
-    MutableProtectedData protected_data { *this };
-    protected_data->gid = new_rgid;
-    protected_data->egid = new_egid;
-    protected_data->sgid = new_sgid;
+    ProtectedDataMutationScope scope { *this };
+    m_gid = new_rgid;
+    m_egid = new_egid;
+    m_sgid = new_sgid;
     return 0;
 }
 
@@ -148,7 +152,8 @@ KResultOr<int> Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> use
         return EPERM;
 
     if (!count) {
-        MutableProtectedData(*this)->extra_gids.clear();
+        ProtectedDataMutationScope scope { *this };
+        m_extra_gids.clear();
         return 0;
     }
 
@@ -163,13 +168,13 @@ KResultOr<int> Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> use
             unique_extra_gids.set(extra_gid);
     }
 
-    MutableProtectedData protected_data { *this };
-    protected_data->extra_gids.resize(unique_extra_gids.size());
+    ProtectedDataMutationScope scope { *this };
+    m_extra_gids.resize(unique_extra_gids.size());
     size_t i = 0;
     for (auto& extra_gid : unique_extra_gids) {
         if (extra_gid == gid())
             continue;
-        protected_data->extra_gids[i++] = extra_gid;
+        m_extra_gids[i++] = extra_gid;
     }
     return 0;
 }

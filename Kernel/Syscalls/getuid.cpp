@@ -55,7 +55,7 @@ KResultOr<gid_t> Process::sys$getegid()
 KResultOr<int> Process::sys$getresuid(Userspace<uid_t*> ruid, Userspace<uid_t*> euid, Userspace<uid_t*> suid)
 {
     REQUIRE_PROMISE(stdio);
-    if (!copy_to_user(ruid, &protected_data().uid) || !copy_to_user(euid, &protected_data().euid) || !copy_to_user(suid, &protected_data().suid))
+    if (!copy_to_user(ruid, &m_uid) || !copy_to_user(euid, &m_euid) || !copy_to_user(suid, &m_suid))
         return EFAULT;
     return 0;
 }
@@ -63,7 +63,7 @@ KResultOr<int> Process::sys$getresuid(Userspace<uid_t*> ruid, Userspace<uid_t*> 
 KResultOr<int> Process::sys$getresgid(Userspace<gid_t*> rgid, Userspace<gid_t*> egid, Userspace<gid_t*> sgid)
 {
     REQUIRE_PROMISE(stdio);
-    if (!copy_to_user(rgid, &protected_data().gid) || !copy_to_user(egid, &protected_data().egid) || !copy_to_user(sgid, &protected_data().sgid))
+    if (!copy_to_user(rgid, &m_gid) || !copy_to_user(egid, &m_egid) || !copy_to_user(sgid, &m_sgid))
         return EFAULT;
     return 0;
 }
