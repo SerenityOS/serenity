@@ -12,7 +12,7 @@ echo "$DIR"
 ARCH=${ARCH:-"i686"}
 TARGET="$ARCH-pc-serenity"
 PREFIX="$DIR/Local/$ARCH"
-BUILD="$DIR/../Build/$ARCH"
+BUILD="$DIR/../Build"
 SYSROOT="$BUILD/Root"
 
 MAKE="make"
