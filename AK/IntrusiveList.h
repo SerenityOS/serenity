@@ -60,14 +60,21 @@ public:
 
     class Iterator {
     public:
-        Iterator();
-        Iterator(T* value);
+        Iterator() = default;
+        Iterator(T* value)
+            : m_value(value)
+        {
+        }
 
-        T& operator*() const;
-        T* operator->() const;
-        bool operator==(const Iterator& other) const;
+        T& operator*() const { return *m_value; }
+        T* operator->() const { return m_value; }
+        bool operator==(const Iterator& other) const { return other.m_value == m_value; }
         bool operator!=(const Iterator& other) const { return !(*this == other); }
-        Iterator& operator++();
+        Iterator& operator++()
+        {
+            m_value = IntrusiveList<T, member>::next(m_value);
+            return *this;
+        }
         Iterator& erase();
 
     private:
@@ -75,7 +82,32 @@ public:
     };
 
     Iterator begin();
-    Iterator end();
+    Iterator end() { return Iterator {}; }
+
+    class ConstIterator {
+    public:
+        ConstIterator() = default;
+        ConstIterator(const T* value)
+            : m_value(value)
+        {
+        }
+
+        const T& operator*() const { return *m_value; }
+        const T* operator->() const { return m_value; }
+        bool operator==(const ConstIterator& other) const { return other.m_value == m_value; }
+        bool operator!=(const ConstIterator& other) const { return !(*this == other); }
+        ConstIterator& operator++()
+        {
+            m_value = IntrusiveList<T, member>::next(const_cast<T*>(m_value));
+            return *this;
+        }
+
+    private:
+        const T* m_value { nullptr };
+    };
+
+    ConstIterator begin() const;
+    ConstIterator end() const { return ConstIterator {}; }
 
 private:
     static T* next(T* current);
@@ -96,42 +128,6 @@ private:
     IntrusiveListNode* m_next = nullptr;
     IntrusiveListNode* m_prev = nullptr;
 };
-
-template<class T, IntrusiveListNode T::*member>
-inline IntrusiveList<T, member>::Iterator::Iterator()
-{
-}
-
-template<class T, IntrusiveListNode T::*member>
-inline IntrusiveList<T, member>::Iterator::Iterator(T* value)
-    : m_value(value)
-{
-}
-
-template<class T, IntrusiveListNode T::*member>
-inline T& IntrusiveList<T, member>::Iterator::operator*() const
-{
-    return *m_value;
-}
-
-template<class T, IntrusiveListNode T::*member>
-inline T* IntrusiveList<T, member>::Iterator::operator->() const
-{
-    return m_value;
-}
-
-template<class T, IntrusiveListNode T::*member>
-inline bool IntrusiveList<T, member>::Iterator::operator==(const Iterator& other) const
-{
-    return other.m_value == m_value;
-}
-
-template<class T, IntrusiveListNode T::*member>
-inline typename IntrusiveList<T, member>::Iterator& IntrusiveList<T, member>::Iterator::operator++()
-{
-    m_value = IntrusiveList<T, member>::next(m_value);
-    return *this;
-}
 
 template<class T, IntrusiveListNode T::*member>
 inline typename IntrusiveList<T, member>::Iterator& IntrusiveList<T, member>::Iterator::erase()
@@ -265,9 +261,9 @@ inline typename IntrusiveList<T, member>::Iterator IntrusiveList<T, member>::beg
 }
 
 template<class T, IntrusiveListNode T::*member>
-inline typename IntrusiveList<T, member>::Iterator IntrusiveList<T, member>::end()
+inline typename IntrusiveList<T, member>::ConstIterator IntrusiveList<T, member>::begin() const
 {
-    return Iterator();
+    return m_storage.m_first ? ConstIterator(node_to_value(*m_storage.m_first)) : ConstIterator();
 }
 
 template<class T, IntrusiveListNode T::*member>
