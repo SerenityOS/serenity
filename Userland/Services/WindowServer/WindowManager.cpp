@@ -1174,7 +1174,7 @@ void WindowManager::event(Core::Event& event)
             m_previous_event_is_key_down_logo = true;
         } else if (m_previous_event_is_key_down_logo) {
             m_previous_event_is_key_down_logo = false;
-            if (key_event.type() == Event::KeyUp && key_event.key() == Key_Super) {
+            if (!m_dnd_client && key_event.type() == Event::KeyUp && key_event.key() == Key_Super) {
                 if (MenuManager::the().has_open_menu()) {
                     MenuManager::the().close_everyone();
                 } else {
