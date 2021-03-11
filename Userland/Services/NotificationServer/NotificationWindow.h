@@ -39,6 +39,8 @@ public:
     virtual ~NotificationWindow() override;
     void set_original_rect(Gfx::IntRect original_rect) { m_original_rect = original_rect; };
 
+    static RefPtr<NotificationWindow> get_window_by_id(i32 id);
+
 private:
     NotificationWindow(i32 client_id, const String& text, const String& title, const Gfx::ShareableBitmap&);
 
