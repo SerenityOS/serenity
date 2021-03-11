@@ -6,5 +6,5 @@ useconfigure=true
 depends=pcre2
 
 configure() {
-	run ./"$configscript" CC=i686-pc-serenity-gcc
+	run ./"$configscript"
 }

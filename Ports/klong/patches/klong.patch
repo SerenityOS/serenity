@@ -3,7 +3,7 @@
 @@ -1,12 +1,12 @@
  CFLAGS=	-g -Wall -pedantic -O3
 -CC=	cc $(CFLAGS)
-+CC=	i686-pc-serenity-gcc $(CFLAGS)
++CC:=	$(CC) $(CFLAGS)
  V=	20190330
  R=	20190926
 

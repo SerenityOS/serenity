@@ -4,7 +4,7 @@ version=1.8.2
 files="https://github.com/ninja-build/ninja/archive/v${version}.tar.gz ninja-v${version}.tar.gz"
 
 build() {
-    CXX=i686-pc-serenity-g++ CXXFLAGS="--sysroot=${SERENITY_BUILD_DIR}/Root" \
+    CXXFLAGS="--sysroot=${SERENITY_BUILD_DIR}/Root" \
     LDFLAGS="--sysroot=${SERENITY_BUILD_DIR}/Root" \
     # platform=linux is close enough.
     run ./configure.py --bootstrap --platform=linux
