@@ -605,10 +605,10 @@ KResult VFS::chown(Custody& custody, uid_t a_uid, gid_t a_gid)
     if (custody.is_readonly())
         return EROFS;
 
-    dbgln("VFS::chown(): inode {} <- uid={} gid={}", inode.identifier(), new_uid, new_gid);
+    dbgln_if(VFS_DEBUG, "VFS::chown(): inode {} <- uid={} gid={}", inode.identifier(), new_uid, new_gid);
 
     if (metadata.is_setuid() || metadata.is_setgid()) {
-        dbgln("VFS::chown(): Stripping SUID/SGID bits from {}", inode.identifier());
+        dbgln_if(VFS_DEBUG, "VFS::chown(): Stripping SUID/SGID bits from {}", inode.identifier());
         auto result = inode.chmod(metadata.mode & ~(04000 | 02000));
         if (result.is_error())
             return result;
@@ -734,7 +734,7 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
         return EROFS;
 
     LexicalPath p(linkpath);
-    dbgln("VFS::symlink: '{}' (-> '{}') in {}", p.basename(), target, parent_inode.identifier());
+    dbgln_if(VFS_DEBUG, "VFS::symlink: '{}' (-> '{}') in {}", p.basename(), target, parent_inode.identifier());
     auto inode_or_error = parent_inode.create_child(p.basename(), S_IFLNK | 0644, 0, current_process->euid(), current_process->egid());
     if (inode_or_error.is_error())
         return inode_or_error.error();
