@@ -11,7 +11,7 @@ auth_opts="--keyring ./gnu-keyring.gpg dmidecode-${version}.tar.xz.sig"
 
 install() {
     run make clean
-    run make CC=i686-pc-serenity-gcc
+    run make
 }
 
 post_install() {

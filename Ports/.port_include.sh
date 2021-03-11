@@ -7,6 +7,8 @@ export SERENITY_ARCH=i686
 export SERENITY_BUILD_DIR="${SERENITY_ROOT}/Build/${SERENITY_ARCH}"
 export CC=i686-pc-serenity-gcc
 export CXX=i686-pc-serenity-g++
+export AR=i686-pc-serenity-ar
+export RANLIB=i686-pc-serenity-ranlib
 export PATH=$SERENITY_ROOT/Toolchain/Local/i686/bin:$PATH
 
 packagesdb="${SERENITY_BUILD_DIR}/packages.db"
