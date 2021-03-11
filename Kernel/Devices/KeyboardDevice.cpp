@@ -131,7 +131,7 @@ static const KeyCode unshifted_key_map[0x80] = {
     Key_F12,
     Key_Invalid,
     Key_Invalid,
-    Key_Logo,
+    Key_Super,
     Key_Invalid,
     Key_Menu,
 };
@@ -228,7 +228,7 @@ static const KeyCode shifted_key_map[0x100] = {
     Key_F12,
     Key_Invalid,
     Key_Invalid,
-    Key_Logo,
+    Key_Super,
     Key_Invalid,
     Key_Menu,
 };
@@ -312,7 +312,7 @@ void KeyboardDevice::irq_handle_byte_read(u8 byte)
         update_modifier(Mod_Ctrl, pressed);
         break;
     case 0x5b:
-        update_modifier(Mod_Logo, pressed);
+        update_modifier(Mod_Super, pressed);
         break;
     case 0x2a:
     case 0x36:

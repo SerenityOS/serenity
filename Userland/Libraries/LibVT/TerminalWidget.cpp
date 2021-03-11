@@ -266,7 +266,7 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
 
     m_terminal.handle_key_press(event.key(), event.code_point(), event.modifiers());
 
-    if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_LeftShift && event.key() != Key_RightShift && event.key() != Key_Logo)
+    if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_LeftShift && event.key() != Key_RightShift && event.key() != Key_Super)
         scroll_to_bottom();
 }
 
