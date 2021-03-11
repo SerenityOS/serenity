@@ -16,7 +16,7 @@ index 7ffe373..3c8aae4 100755
  		basic_machine=we32k-att
  		;;
 +    *serenity*)
-+		basic_machine=i686-pc
++		basic_machine="${SERENITY_ARCH}-pc"
 +        ;;
 +
  	sh[1234] | sh[24]a | sh[24]aeb | sh[34]eb | sh[1234]le | sh[23]ele)
