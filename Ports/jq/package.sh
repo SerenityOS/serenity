@@ -3,7 +3,7 @@ port=jq
 version=1.6
 useconfigure=true
 configopts="--with-oniguruma=builtin --disable-maintainer-mode"
-files="https://github.com/stedolan/jq/releases/download/jq-1.6/jq-1.6.tar.gz jq-1.6.tar.gz"
+files="https://github.com/stedolan/jq/releases/download/jq-${version}/jq-${version}.tar.gz jq-${version}.tar.gz"
 makeopts="LDFLAGS=-all-static"
 
 pre_configure() {
