@@ -445,7 +445,7 @@ void Widget::hide_event(HideEvent&)
 
 void Widget::keydown_event(KeyEvent& event)
 {
-    if (!event.alt() && !event.ctrl() && !event.logo()) {
+    if (!event.alt() && !event.ctrl() && !event.super()) {
         if (event.key() == KeyCode::Key_Tab) {
             if (event.shift())
                 focus_previous_widget(FocusSource::Keyboard, false);

@@ -422,7 +422,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
 
 void Window::handle_key_event(KeyEvent& event)
 {
-    if (!m_focused_widget && event.type() == Event::KeyDown && event.key() == Key_Tab && !event.ctrl() && !event.alt() && !event.logo()) {
+    if (!m_focused_widget && event.type() == Event::KeyDown && event.key() == Key_Tab && !event.ctrl() && !event.alt() && !event.super()) {
         focus_a_widget_if_possible(FocusSource::Keyboard);
         return;
     }

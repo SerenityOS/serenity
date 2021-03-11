@@ -134,7 +134,7 @@
     __ENUMERATE_KEY_CODE(Pipe, "|")                  \
     __ENUMERATE_KEY_CODE(Tilde, "~")                 \
     __ENUMERATE_KEY_CODE(Backtick, "`")              \
-    __ENUMERATE_KEY_CODE(Logo, "Logo")               \
+    __ENUMERATE_KEY_CODE(Super, "Super")             \
     __ENUMERATE_KEY_CODE(Menu, "Menu")
 
 enum KeyCode : u8 {
@@ -145,14 +145,14 @@ enum KeyCode : u8 {
         Key_Shift
     = Key_LeftShift,
 };
-const int key_code_count = Key_Logo;
+const int key_code_count = Key_Super;
 
 enum KeyModifier {
     Mod_None = 0x00,
     Mod_Alt = 0x01,
     Mod_Ctrl = 0x02,
     Mod_Shift = 0x04,
-    Mod_Logo = 0x08,
+    Mod_Super = 0x08,
     Mod_AltGr = 0x10,
     Mod_Mask = 0x1f,
 
@@ -169,7 +169,7 @@ struct KeyEvent {
     bool alt() const { return flags & Mod_Alt; }
     bool ctrl() const { return flags & Mod_Ctrl; }
     bool shift() const { return flags & Mod_Shift; }
-    bool logo() const { return flags & Mod_Logo; }
+    bool super() const { return flags & Mod_Super; }
     bool altgr() const { return flags & Mod_AltGr; }
     unsigned modifiers() const { return flags & Mod_Mask; }
     bool is_press() const { return flags & Is_Press; }

@@ -564,8 +564,8 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
                 Gfx::IntPoint pos = m_move_window_origin.translated(event.position() - m_move_origin);
                 m_move_window->set_position_without_repaint(pos);
                 // "Bounce back" the window if it would end up too far outside the screen.
-                // If the user has let go of Mod_Logo, maybe they didn't intentionally press it to begin with. Therefore, refuse to go into a state where knowledge about super-drags is necessary.
-                bool force_titlebar_visible = !(m_keyboard_modifiers & Mod_Logo);
+                // If the user has let go of Mod_Super, maybe they didn't intentionally press it to begin with. Therefore, refuse to go into a state where knowledge about super-drags is necessary.
+                bool force_titlebar_visible = !(m_keyboard_modifiers & Mod_Super);
                 m_move_window->nudge_into_desktop(force_titlebar_visible);
             } else if (pixels_moved_from_start > 5) {
                 m_move_window->set_untiled(event.position());
@@ -957,22 +957,22 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             if (&window != m_resize_candidate.ptr())
                 clear_resize_candidate();
 
-            // First check if we should initiate a move or resize (Logo+LMB or Logo+RMB).
+            // First check if we should initiate a move or resize (Super+LMB or Super+RMB).
             // In those cases, the event is swallowed by the window manager.
             if (window.is_movable()) {
-                if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Logo && event.type() == Event::MouseDown && event.button() == MouseButton::Left) {
+                if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Left) {
                     hovered_window = &window;
                     start_window_move(window, event);
                     return;
                 }
-                if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == Event::MouseDown && event.button() == MouseButton::Right && !window.blocking_modal_window()) {
+                if (window.is_resizable() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Right && !window.blocking_modal_window()) {
                     hovered_window = &window;
                     start_window_resize(window, event);
                     return;
                 }
             }
 
-            if (m_keyboard_modifiers == Mod_Logo && event.type() == Event::MouseWheel) {
+            if (m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseWheel) {
                 float opacity_change = -event.wheel_delta() * 0.05f;
                 float new_opacity = window.opacity() + opacity_change;
                 if (new_opacity < 0.05f)
@@ -1164,17 +1164,17 @@ void WindowManager::event(Core::Event& event)
             return;
         }
 
-        if (key_event.type() == Event::KeyDown && (key_event.modifiers() == (Mod_Ctrl | Mod_Logo | Mod_Shift) && key_event.key() == Key_I)) {
+        if (key_event.type() == Event::KeyDown && (key_event.modifiers() == (Mod_Ctrl | Mod_Super | Mod_Shift) && key_event.key() == Key_I)) {
             reload_icon_bitmaps_after_scale_change(!m_allow_hidpi_icons);
             Compositor::the().invalidate_screen();
             return;
         }
 
-        if (key_event.type() == Event::KeyDown && key_event.key() == Key_Logo) {
+        if (key_event.type() == Event::KeyDown && key_event.key() == Key_Super) {
             m_previous_event_is_key_down_logo = true;
         } else if (m_previous_event_is_key_down_logo) {
             m_previous_event_is_key_down_logo = false;
-            if (key_event.type() == Event::KeyUp && key_event.key() == Key_Logo) {
+            if (key_event.type() == Event::KeyUp && key_event.key() == Key_Super) {
                 if (MenuManager::the().has_open_menu()) {
                     MenuManager::the().close_everyone();
                 } else {
@@ -1189,7 +1189,7 @@ void WindowManager::event(Core::Event& event)
             return;
         }
 
-        if (key_event.type() == Event::KeyDown && ((key_event.modifiers() == Mod_Logo && key_event.key() == Key_Tab) || (key_event.modifiers() == (Mod_Logo | Mod_Shift) && key_event.key() == Key_Tab)))
+        if (key_event.type() == Event::KeyDown && ((key_event.modifiers() == Mod_Super && key_event.key() == Key_Tab) || (key_event.modifiers() == (Mod_Super | Mod_Shift) && key_event.key() == Key_Tab)))
             m_switcher.show();
         if (m_switcher.is_visible()) {
             m_switcher.on_key_event(key_event);
@@ -1197,7 +1197,7 @@ void WindowManager::event(Core::Event& event)
         }
 
         if (m_active_input_window) {
-            if (key_event.type() == Event::KeyDown && key_event.modifiers() == Mod_Logo) {
+            if (key_event.type() == Event::KeyDown && key_event.modifiers() == Mod_Super) {
                 if (key_event.key() == Key_Down) {
                     if (m_active_input_window->is_resizable() && m_active_input_window->is_maximized()) {
                         maximize_windows(*m_active_input_window, false);
