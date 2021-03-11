@@ -334,7 +334,10 @@ void Process::crash(int signal, u32 eip, bool out_of_memory)
         }
         dump_backtrace();
     }
-    m_termination_signal = signal;
+    {
+        ProtectedDataMutationScope scope { *this };
+        m_termination_signal = signal;
+    }
     set_dump_core(!out_of_memory);
     space().dump_regions();
     VERIFY(is_user_process());
@@ -578,8 +581,11 @@ void Process::terminate_due_to_signal(u8 signal)
     VERIFY(signal < 32);
     VERIFY(Process::current() == this);
     dbgln("Terminating {} due to signal {}", *this, signal);
-    m_termination_status = 0;
-    m_termination_signal = signal;
+    {
+        ProtectedDataMutationScope scope { *this };
+        m_termination_status = 0;
+        m_termination_signal = signal;
+    }
     die();
 }
 
