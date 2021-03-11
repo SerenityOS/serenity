@@ -1344,7 +1344,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
         auto process = Process::from_pid(pid);
         if (!process)
             return ENOENT;
-        process->for_each_thread([&](Thread& thread) -> IterationDecision {
+        process->for_each_thread([&](const Thread& thread) -> IterationDecision {
             int tid = thread.tid().value();
             callback({ String::number(tid), to_identifier_with_stack(fsid(), tid), 0 });
             return IterationDecision::Continue;
