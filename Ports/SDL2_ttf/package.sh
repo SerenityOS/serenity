@@ -3,7 +3,6 @@ port=SDL2_ttf
 version=2.0.15
 useconfigure=true
 files="https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-${version}.tar.gz SDL2_ttf-${version}.tar.gz"
-workdir="SDL2_ttf-$version"
 depends="SDL2 freetype"
 
 configure() {
