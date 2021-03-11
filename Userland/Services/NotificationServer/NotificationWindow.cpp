@@ -128,4 +128,10 @@ NotificationWindow::~NotificationWindow()
 {
 }
 
+RefPtr<NotificationWindow> NotificationWindow::get_window_by_id(i32 id)
+{
+    auto window = s_windows.get(id);
+    return window.value_or(nullptr);
+}
+
 }
