@@ -4,4 +4,6 @@ endpoint NotificationServer = 95
     Greet() => ()
 
     ShowNotification([UTF8] String text, [UTF8] String title, Gfx::ShareableBitmap icon) => ()
+
+    CloseNotification() => ()
 }
