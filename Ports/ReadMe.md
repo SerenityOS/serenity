@@ -191,8 +191,8 @@ keyring and can later be used for verification using [`auth_opts`](#auth_opts).
 
 Options passed to `make install` in the default `install` function.
 
-`DESTDIR="$SERENITY_ROOT"/Build/Root` is always passed, override the `install`
-function if that's undesirable.
+`DESTDIR="${SERENITY_BUILD_DIR}/Root"` (`"${SERENITY_ROOT}/Build/${SERENITY_ARCH}/Root"`)
+is always passed, override the `install` function if that's undesirable.
 
 #### `makeopts`
 

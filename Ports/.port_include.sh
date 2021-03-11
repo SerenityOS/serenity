@@ -3,12 +3,13 @@ set -eu
 
 SCRIPT=`dirname $0`
 export SERENITY_ROOT=`realpath $SCRIPT/../`
-packagesdb="$SERENITY_ROOT/Build/packages.db"
-
+export SERENITY_ARCH=i686
+export SERENITY_BUILD_DIR="${SERENITY_ROOT}/Build/${SERENITY_ARCH}"
 export CC=i686-pc-serenity-gcc
 export CXX=i686-pc-serenity-g++
 export PATH=$SERENITY_ROOT/Toolchain/Local/i686/bin:$PATH
-export SERENITY_ARCH=i686
+
+packagesdb="${SERENITY_BUILD_DIR}/packages.db"
 
 MD5SUM=md5sum
 
@@ -161,7 +162,7 @@ func_defined build || build() {
     run make $makeopts
 }
 func_defined install || install() {
-    run make DESTDIR="$SERENITY_ROOT"/Build/Root $installopts install
+    run make DESTDIR="${SERENITY_BUILD_DIR}/Root" $installopts install
 }
 func_defined post_install || post_install() {
     echo
@@ -223,10 +224,10 @@ uninstall() {
             for f in `cat plist`; do
                 case $f in
                     */)
-                        run rmdir "$SERENITY_ROOT/Build/Root/$f" || true
+                        run rmdir "${SERENITY_BUILD_DIR}/Root/$f" || true
                         ;;
                     *)
-                        run rm -rf "$SERENITY_ROOT/Build/Root/$f"
+                        run rm -rf "${SERENITY_BUILD_DIR}/Root/$f"
                         ;;
                 esac
             done
