@@ -117,6 +117,7 @@ protected:
     u32 m_promises { 0 };
     bool m_has_execpromises { false };
     u32 m_execpromises { 0 };
+    mode_t m_umask { 022 };
 };
 
 class ProcessBase : public ProtectedProcessBase {
@@ -594,8 +595,6 @@ private:
     Vector<String> m_environment;
 
     RefPtr<TTY> m_tty;
-
-    mode_t m_umask { 022 };
 
     WeakPtr<Region> m_master_tls_region;
     size_t m_master_tls_size { 0 };
