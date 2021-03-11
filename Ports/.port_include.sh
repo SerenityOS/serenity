@@ -155,7 +155,7 @@ func_defined pre_configure || pre_configure() {
 }
 func_defined configure || configure() {
     chmod +x "${workdir}"/"$configscript"
-    run ./"$configscript" --host=i686-pc-serenity $configopts
+    run ./"$configscript" --host="${SERENITY_ARCH}-pc-serenity" $configopts
 }
 func_defined post_configure || post_configure() {
     :
