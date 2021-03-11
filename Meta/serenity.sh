@@ -15,6 +15,10 @@ Usage: $ARG0 COMMAND [TARGET] [ARGS...]
                 All other TARGETs: $ARG0 run [TARGET] [kernel_cmd_line]
                     Runs the built image in QEMU, and optionally passes the
                     kernel_cmd_line to the Kernel
+    gdb:        Same as run, but also starts a gdb remote session.
+                $ARG0 gdb [TARGET] [kernel_cmd_line] [-ex 'any gdb command']...
+                    If specified, passes the kernel_cmd_line to the Kernel
+                    Passes through '-ex' commands to gdb
     delete:     Removes the build environment for the TARGET
     recreate:   Deletes and re-creates the build environment for TARGET
     rebuild:    Deletes and re-creates the build environment, and compiles for TARGET
@@ -37,6 +41,9 @@ Usage: $ARG0 COMMAND [TARGET] [ARGS...]
         Resolves the address 0x12345678 in the Kernel binary
     $ARG0 addr2line i686 WindowServer 0x12345678
         Resolves the address 0x12345678 in the WindowServer binary
+    $ARG0 gdb i686 smp=on -ex 'hb *init'
+        Runs the image for the TARGET i686 in qemu and attaches a gdb session
+        setting a breakpoint at the init() function in the Kernel.
 EOF
 }
 
@@ -131,7 +138,45 @@ delete_toolchain() {
     [ ! -d "$TOOLCHAIN_DIR" ] || rm -rf "$TOOLCHAIN_DIR"
 }
 
-if [[ "$CMD" =~ ^(build|install|image|run|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
+kill_tmux_session() {
+    local TMUX_SESSION
+    TMUX_SESSION="$(tmux display-message -p '#S')"
+    [ -z "$TMUX_SESSION" ] || tmux kill-session -t "$TMUX_SESSION"
+}
+
+set_tmux_title() {
+    printf "\033]2;%s\033\\" "$1"
+}
+
+run_gdb() {
+    local GDB_ARGS=()
+    local PASS_ARG_TO_GDB=""
+    local KERNEL_CMD_LINE=""
+    for arg in "${CMD_ARGS[@]}"; do
+        if [ "$PASS_ARG_TO_GDB" != "" ]; then
+            GDB_ARGS+=( "$PASS_ARG_TO_GDB" "$arg" )
+            PASS_ARG_TO_GDB=""
+        elif [ "$arg" = "-ex" ]; then
+            PASS_ARG_TO_GDB="$arg"
+        elif [[ "$arg" =~ ^-.*$ ]]; then
+            die "Don't know how to handle argument: $arg"
+        else
+            if [ "$KERNEL_CMD_LINE" != "" ]; then
+                die "Kernel command line can't be specified more than once"
+            fi
+            KERNEL_CMD_LINE="$arg"
+        fi
+    done
+    if [ "$PASS_ARG_TO_GDB" != "" ]; then
+        GDB_ARGS+=( "$PASS_ARG_TO_GDB" )
+    fi
+    if [ -n "$KERNEL_CMD_LINE" ]; then
+        export SERENITY_KERNEL_CMDLINE="$KERNEL_CMD_LINE"
+    fi
+    gdb "$BUILD_DIR/Kernel/Kernel" -ex 'target remote :1234' "${GDB_ARGS[@]}" -ex cont
+}
+
+if [[ "$CMD" =~ ^(build|install|image|run|gdb|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
     cmd_with_target
     [[ "$CMD" != "recreate" && "$CMD" != "rebuild" ]] || delete_target
     # FIXME: We should probably call ensure_toolchain first, but this somehow causes
@@ -167,6 +212,17 @@ if [[ "$CMD" =~ ^(build|install|image|run|rebuild|recreate|kaddr2line|addr2line|
                 build_target run
             fi
             ;;
+        gdb)
+            command -v tmux >/dev/null 2>&1 || die "Please install tmux!"
+            build_target
+            if [ "$TARGET" = "lagom" ]; then
+                run_tests "${CMD_ARGS[0]}"
+            else
+                build_target install
+                build_target image
+                tmux new-session "$ARG0" __tmux_cmd "$TARGET" run "${CMD_ARGS[@]}" \; set-option -t 0 mouse on \; split-window "$ARG0" __tmux_cmd "$TARGET" gdb "${CMD_ARGS[@]}" \;
+            fi
+            ;;
         rebuild)
             build_target "$@"
             ;;
@@ -200,6 +256,23 @@ elif [ "$CMD" = "rebuild-toolchain" ]; then
     [ "$TARGET" != "lagom" ] || die "The lagom target uses the host toolchain"
     delete_toolchain
     ensure_toolchain
+elif [ "$CMD" = "__tmux_cmd" ]; then
+    trap kill_tmux_session EXIT
+    cmd_with_target
+    CMD="$1"; shift
+    CMD_ARGS=("${CMD_ARGS[@]:1}")
+    if [ "$CMD" = "run" ]; then
+        if [ -n "${CMD_ARGS[0]}" ]; then
+            export SERENITY_KERNEL_CMDLINE="${CMD_ARGS[0]}"
+        fi
+        # We need to make sure qemu doesn't start until we continue in gdb
+        export SERENITY_EXTRA_QEMU_ARGS="${SERENITY_EXTRA_QEMU_ARGS} -d int -no-reboot -no-shutdown -S"
+        set_tmux_title 'qemu'
+        build_target run
+    elif [ "$CMD" = "gdb" ]; then
+        set_tmux_title 'gdb'
+        run_gdb "${CMD_ARGS[@]}"
+    fi
 else
     >&2 echo "Unknown command: $CMD"
     usage
