@@ -113,10 +113,9 @@ NotificationWindow::NotificationWindow(i32 client_id, const String& text, const 
     right_container.set_fixed_width(36);
     right_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    on_close_request = [this] {
+    on_close = [this] {
         s_windows.remove(m_id);
         update_notification_window_locations();
-        return CloseRequestDecision::Close;
     };
 }
 
