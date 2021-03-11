@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Assertions.h>
 #include <AK/Checked.h>
 #include <AK/Time.h>
 
@@ -71,22 +70,6 @@ unsigned day_of_week(int year, unsigned month, int day)
     return (year + year / 4 - year / 100 + year / 400 + seek_table[month - 1] + day) % 7;
 }
 
-ALWAYS_INLINE static i32 sane_mod(i32& numerator, i32 denominator)
-{
-    VERIFY(2 <= denominator && denominator <= 1'000'000'000);
-    // '%' in C/C++ does not work in the obvious way:
-    // For example, -9 % 7 is -2, not +5.
-    // However, we want a representation like "(-2)*7 + (+5)".
-    i32 dividend = numerator / denominator;
-    numerator %= denominator;
-    if (numerator < 0) {
-        // Does not overflow: different signs.
-        numerator += denominator;
-        // Does not underflow: denominator >= 2.
-        dividend -= 1;
-    }
-    return dividend;
-}
 Time Time::from_timespec(const struct timespec& ts)
 {
     i32 nsecs = ts.tv_nsec;
@@ -105,48 +88,45 @@ i64 Time::to_truncated_seconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
     if (m_seconds < 0 && m_nanoseconds) {
-        Checked<i64> seconds(m_seconds);
-        seconds++;
-        return seconds.has_overflow() ? 0x7fff'ffff'ffff'ffffLL : seconds.value();
+        // Since m_seconds is negative, adding 1 can't possibly overflow
+        return m_seconds + 1;
     }
     return m_seconds;
 }
 i64 Time::to_truncated_milliseconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
-    Checked<i64> milliseconds(m_seconds);
+    Checked<i64> milliseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
     milliseconds *= 1'000;
-    if (!milliseconds.has_overflow()) {
-        u32 add_ms = (u32)(m_nanoseconds / 1'000'000);
-        if (add_ms) {
-            milliseconds += add_ms;
-            if (m_seconds < 0 && m_nanoseconds % 1'000'000 != 0)
-                milliseconds++;
-            if (!milliseconds.has_overflow())
-                return milliseconds.value();
-        } else {
-            return milliseconds.value();
+    milliseconds += m_nanoseconds / 1'000'000;
+    if (m_seconds < 0) {
+        if (m_nanoseconds % 1'000'000 != 0) {
+            // Does not overflow: milliseconds <= 1'999.
+            milliseconds++;
         }
+        // We dropped one second previously, put it back in now that we have handled the rounding.
+        milliseconds -= 1'000;
     }
+    if (!milliseconds.has_overflow())
+        return milliseconds.value();
     return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 i64 Time::to_truncated_microseconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
-    Checked<i64> microseconds(m_seconds);
+    Checked<i64> microseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
     microseconds *= 1'000'000;
-    if (!microseconds.has_overflow()) {
-        u32 add_us = (u32)(m_nanoseconds / 1'000);
-        if (add_us) {
-            microseconds += add_us;
-            if (m_seconds < 0 && m_nanoseconds % 1'000 != 0)
-                microseconds++;
-            if (!microseconds.has_overflow())
-                return microseconds.value();
-        } else {
-            return microseconds.value();
+    microseconds += m_nanoseconds / 1'000;
+    if (m_seconds < 0) {
+        if (m_nanoseconds % 1'000 != 0) {
+            // Does not overflow: microseconds <= 1'999'999.
+            microseconds++;
         }
+        // We dropped one second previously, put it back in now that we have handled the rounding.
+        microseconds -= 1'000'000;
     }
+    if (!microseconds.has_overflow())
+        return microseconds.value();
     return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 i64 Time::to_seconds() const
@@ -162,64 +142,47 @@ i64 Time::to_seconds() const
 i64 Time::to_milliseconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
-    Checked<i64> milliseconds(m_seconds);
+    Checked<i64> milliseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
     milliseconds *= 1'000;
-    if (!milliseconds.has_overflow()) {
-        u32 add_ms = (u32)(m_nanoseconds / 1'000'000);
-        if (add_ms) {
-            milliseconds += add_ms;
-            if (!milliseconds.has_overflow()) {
-                if (m_seconds >= 0 && m_nanoseconds % 1'000'000 != 0) {
-                    milliseconds++;
-                    if (!milliseconds.has_overflow())
-                        return milliseconds.value();
-                } else {
-                    return milliseconds.value();
-                }
-            }
-        } else {
-            return milliseconds.value();
-        }
+    milliseconds += m_nanoseconds / 1'000'000;
+    if (m_seconds >= 0 && m_nanoseconds % 1'000'000 != 0)
+        milliseconds++;
+    if (m_seconds < 0) {
+        // We dropped one second previously, put it back in now that we have handled the rounding.
+        milliseconds -= 1'000;
     }
+    if (!milliseconds.has_overflow())
+        return milliseconds.value();
     return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 i64 Time::to_microseconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
-    Checked<i64> microseconds(m_seconds);
+    Checked<i64> microseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
     microseconds *= 1'000'000;
-    if (!microseconds.has_overflow()) {
-        u32 add_us = (u32)(m_nanoseconds / 1'000);
-        if (add_us) {
-            microseconds += add_us;
-            if (!microseconds.has_overflow()) {
-                if (m_seconds >= 0 && m_nanoseconds % 1'000 != 0) {
-                    microseconds++;
-                    if (!microseconds.has_overflow())
-                        return microseconds.value();
-                } else {
-                    return microseconds.value();
-                }
-            }
-        } else {
-            return microseconds.value();
-        }
+    microseconds += m_nanoseconds / 1'000;
+    if (m_seconds >= 0 && m_nanoseconds % 1'000 != 0)
+        microseconds++;
+    if (m_seconds < 0) {
+        // We dropped one second previously, put it back in now that we have handled the rounding.
+        microseconds -= 1'000'000;
     }
+    if (!microseconds.has_overflow())
+        return microseconds.value();
     return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 i64 Time::to_nanoseconds() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
-    Checked<i64> nanoseconds(m_seconds);
+    Checked<i64> nanoseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
     nanoseconds *= 1'000'000'000;
-    if (!nanoseconds.has_overflow()) {
-        if (m_nanoseconds) {
-            nanoseconds += m_nanoseconds;
-            if (!nanoseconds.has_overflow())
-                return nanoseconds.value();
-        }
-        return nanoseconds.value();
+    nanoseconds += m_nanoseconds;
+    if (m_seconds < 0) {
+        // We dropped one second previously, put it back in now that we have handled the rounding.
+        nanoseconds -= 1'000'000'000;
     }
+    if (!nanoseconds.has_overflow())
+        return nanoseconds.value();
     return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 timespec Time::to_timespec() const
