@@ -85,6 +85,52 @@ void Notification::close()
     m_showing = false;
     m_disposed = true;
 }
+
+bool Notification::update()
+{
+    VERIFY(m_showing);
+    VERIFY(!m_disposed);
+    if (!m_connection->is_connected()) {
+        m_showing = false;
+        m_disposed = true;
+        return false;
+    }
+
+    bool is_checked = false;
+
+    if (m_text_dirty || m_title_dirty) {
+        auto response = m_connection->send_sync<Messages::NotificationServer::UpdateNotificationText>(m_text, m_title);
+        m_text_dirty = false;
+        m_title_dirty = false;
+
+        is_checked = true;
+        if (!response->still_showing()) {
+            m_showing = false;
+            m_disposed = true;
+            return false;
+        }
+    }
+
+    if (m_icon_dirty) {
+        auto response = m_connection->send_sync<Messages::NotificationServer::UpdateNotificationIcon>(m_icon ? m_icon->to_shareable_bitmap() : Gfx::ShareableBitmap());
+        m_icon_dirty = false;
+
+        is_checked = true;
+        if (!response->still_showing()) {
+            m_showing = false;
+            m_disposed = true;
+            return false;
+        }
+    }
+
+    if (!is_checked) {
+        auto response = m_connection->send_sync<Messages::NotificationServer::IsShowing>();
+        m_showing = response->still_showing();
+        if (!m_showing) {
+            m_disposed = true;
+        }
+    }
+    return m_showing;
 }
 
 }

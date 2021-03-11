@@ -28,20 +28,17 @@
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
-#include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/ShareableBitmap.h>
 
 namespace NotificationServer {
 
 static HashMap<u32, RefPtr<NotificationWindow>> s_windows;
-static const Gfx::Bitmap* default_image = GUI::Icon::default_icon("ladybug").bitmap_for_size(16);
+static const Gfx::Bitmap* default_image = Gfx::Bitmap::load_from_file("/res/icons/32x32/ladybug.png");
 
 void update_notification_window_locations()
 {
@@ -131,6 +128,21 @@ RefPtr<NotificationWindow> NotificationWindow::get_window_by_id(i32 id)
 {
     auto window = s_windows.get(id);
     return window.value_or(nullptr);
+}
+
+void NotificationWindow::set_text(const String& value)
+{
+    m_text_label->set_text(value);
+}
+
+void NotificationWindow::set_title(const String& value)
+{
+    m_title_label->set_text(value);
+}
+
+void NotificationWindow::set_image(const Gfx::ShareableBitmap& image)
+{
+    m_image->set_bitmap(image.is_valid() ? image.bitmap() : default_image);
 }
 
 }

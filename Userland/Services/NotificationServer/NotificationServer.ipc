@@ -5,5 +5,11 @@ endpoint NotificationServer = 95
 
     ShowNotification([UTF8] String text, [UTF8] String title, Gfx::ShareableBitmap icon) => ()
 
+    UpdateNotificationText([UTF8] String text, [UTF8] String title) => (bool still_showing)
+
+    UpdateNotificationIcon(Gfx::ShareableBitmap icon) => (bool still_showing)
+
+    IsShowing() => (bool still_showing)
+
     CloseNotification() => ()
 }
