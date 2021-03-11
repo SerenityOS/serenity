@@ -22,11 +22,12 @@ diff -Naur lua-5.3.5/src/Makefile lua-5.3.5.serenity/src/Makefile
  
  LUA_A=	liblua.a
  CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \
-@@ -124,6 +124,13 @@
+@@ -124,6 +124,14 @@
  solaris:
  	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN -D_REENTRANT" SYSLIBS="-ldl"
  
 +serenity:
++   # FIXME: Replace these with $CC, $AR, $RANLIB
 +	$(MAKE) $(ALL) \
 +		CC="i686-pc-serenity-gcc -std=gnu99" \
 +		AR="i686-pc-serenity-ar rcu" \
