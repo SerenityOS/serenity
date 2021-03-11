@@ -51,6 +51,9 @@ public:
     GridStyle grid_style() const { return m_grid_style; }
     void set_grid_style(GridStyle);
 
+    void set_highlight_key_column(bool b) { m_highlight_key_column = b; }
+    bool is_key_column_highlighted() const { return m_highlight_key_column; }
+
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 
 protected:
@@ -61,6 +64,8 @@ protected:
 
 private:
     GridStyle m_grid_style { GridStyle::None };
+
+    bool m_highlight_key_column { true };
 };
 
 }

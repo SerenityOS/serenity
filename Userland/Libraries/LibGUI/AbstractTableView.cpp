@@ -392,14 +392,4 @@ void AbstractTableView::keydown_event(KeyEvent& event)
     AbstractView::keydown_event(event);
 }
 
-int AbstractTableView::horizontal_padding() const
-{
-    return font().glyph_height() / 2;
-}
-
-int AbstractTableView::row_height() const
-{
-    return font().glyph_height() + icon_padding();
-}
-
 }
