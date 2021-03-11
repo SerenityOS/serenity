@@ -1062,13 +1062,14 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         go_to_location_action->activate();
     };
 
-    tree_view.on_drop = [&](const GUI::ModelIndex& index, const GUI::DropEvent& event) {
+    tree_view.on_drop = [&](const GUI::ModelIndex& index, GUI::DropEvent& event) {
         if (!event.mime_data().has_urls())
             return;
         auto& target_node = directories_model->node(index);
         if (!target_node.is_directory())
             return;
         copy_urls_to_directory(event.mime_data().urls(), target_node.full_path());
+        event.accept();
     };
 
     directory_view.open(initial_location);
