@@ -139,6 +139,8 @@ public:
 
     PageFaultResponse handle_page_fault(const PageFault&);
 
+    void set_page_writable_direct(VirtualAddress, bool);
+
     void protect_readonly_after_init_memory();
     void unmap_memory_after_init();
 
