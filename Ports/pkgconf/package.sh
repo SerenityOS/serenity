@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=pkgconf
 version=1.7.3
-files="https://distfiles.dereferenced.org/pkgconf/pkgconf-1.7.3.tar.xz pkgconf-1.7.3.tar.xz"
+files="https://distfiles.dereferenced.org/pkgconf/pkgconf-${version}.tar.xz pkgconf-${version}.tar.xz"
 useconfigure=true
 # FIXME: This looks suspiciously host-y... 
 configopts="--prefix=/usr/local --with-pkg-config-dir=/usr/local/lib/pkgconfig"
