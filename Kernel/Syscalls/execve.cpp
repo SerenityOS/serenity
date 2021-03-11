@@ -530,7 +530,6 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     }
 
     signal_trampoline_region.value()->set_syscall_region(true);
-    m_signal_trampoline = signal_trampoline_region.value()->vaddr();
 
     m_executable = main_program_description->custody();
     m_arguments = arguments;
@@ -604,6 +603,8 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
         m_execpromises = 0;
         m_has_execpromises = false;
+
+        m_signal_trampoline = signal_trampoline_region.value()->vaddr();
 
         // FIXME: PID/TID ISSUE
         m_pid = new_main_thread->tid().value();

@@ -44,7 +44,6 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths.deep_copy();
     child->m_fds = m_fds;
-    child->m_signal_trampoline = m_signal_trampoline;
     child->m_pg = m_pg;
 
     {
@@ -56,6 +55,7 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
         child->m_sid = m_sid;
         child->m_extra_gids = m_extra_gids;
         child->m_umask = m_umask;
+        child->m_signal_trampoline = m_signal_trampoline;
     }
 
     dbgln_if(FORK_DEBUG, "fork: child={}", child);
