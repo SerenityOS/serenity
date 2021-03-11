@@ -59,8 +59,16 @@ Notification::~Notification()
 
 void Notification::show()
 {
+    VERIFY(!m_showing);
     auto icon = m_icon ? m_icon->to_shareable_bitmap() : Gfx::ShareableBitmap();
     m_connection->send_sync<Messages::NotificationServer::ShowNotification>(m_text, m_title, icon);
+    m_showing = true;
+}
+void Notification::close()
+{
+    VERIFY(m_showing);
+    m_connection->send_sync<Messages::NotificationServer::CloseNotification>();
+    m_showing = false;
 }
 
 }
