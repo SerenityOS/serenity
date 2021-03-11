@@ -121,6 +121,8 @@ protected:
     VirtualAddress m_signal_trampoline;
     Atomic<u32> m_thread_count { 0 };
     IntrusiveList<Thread, &Thread::m_process_thread_list_node> m_thread_list;
+    u8 m_termination_status { 0 };
+    u8 m_termination_signal { 0 };
 };
 
 class ProcessBase : public ProtectedProcessBase {
@@ -579,8 +581,6 @@ private:
     };
     Vector<FileDescriptionAndFlags> m_fds;
 
-    u8 m_termination_status { 0 };
-    u8 m_termination_signal { 0 };
     mutable RecursiveSpinLock m_thread_list_lock;
 
     const bool m_is_kernel_process;
