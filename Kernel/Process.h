@@ -118,6 +118,7 @@ protected:
     bool m_has_execpromises { false };
     u32 m_execpromises { 0 };
     mode_t m_umask { 022 };
+    VirtualAddress m_signal_trampoline;
 };
 
 class ProcessBase : public ProtectedProcessBase {
@@ -544,7 +545,6 @@ private:
     String m_name;
 
     OwnPtr<Space> m_space;
-    VirtualAddress m_signal_trampoline;
 
     RefPtr<ProcessGroup> m_pg;
 
