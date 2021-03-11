@@ -44,18 +44,19 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths.deep_copy();
     child->m_fds = m_fds;
-    child->m_pg = m_pg;
     child->m_umask = m_umask;
     child->m_signal_trampoline = m_signal_trampoline;
+    child->m_pg = m_pg;
 
     {
-        MutableProtectedData child_data { *child };
-        child_data->promises = protected_data().promises;
-        child_data->execpromises = protected_data().execpromises;
-        child_data->has_promises = protected_data().has_promises;
-        child_data->has_execpromises = protected_data().has_execpromises;
-        child_data->sid = this->sid();
-        child_data->extra_gids = this->extra_gids();
+        child->unprotect_data();
+        child->m_promises = m_promises;
+        child->m_execpromises = m_execpromises;
+        child->m_has_promises = m_has_promises;
+        child->m_has_execpromises = m_has_execpromises;
+        child->m_sid = m_sid;
+        child->m_extra_gids = m_extra_gids;
+        child->protect_data();
     }
 
     dbgln_if(FORK_DEBUG, "fork: child={}", child);

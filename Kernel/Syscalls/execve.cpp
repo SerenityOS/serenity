@@ -507,15 +507,15 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
         if (main_program_metadata.is_setuid()) {
             executable_is_setid = true;
-            MutableProtectedData protected_data { *this };
-            protected_data->euid = main_program_metadata.uid;
-            protected_data->suid = main_program_metadata.uid;
+            ProtectedDataMutationScope scope { *this };
+            m_euid = main_program_metadata.uid;
+            m_suid = main_program_metadata.uid;
         }
         if (main_program_metadata.is_setgid()) {
             executable_is_setid = true;
-            MutableProtectedData protected_data { *this };
-            protected_data->egid = main_program_metadata.gid;
-            protected_data->sgid = main_program_metadata.gid;
+            ProtectedDataMutationScope scope { *this };
+            m_egid = main_program_metadata.gid;
+            m_sgid = main_program_metadata.gid;
         }
     }
 
@@ -598,15 +598,15 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     new_main_thread->set_name(m_name);
 
     {
-        MutableProtectedData protected_data { *this };
-        protected_data->promises = protected_data->execpromises;
-        protected_data->has_promises = protected_data->has_execpromises;
+        ProtectedDataMutationScope scope { *this };
+        m_promises = m_execpromises;
+        m_has_promises = m_has_execpromises;
 
-        protected_data->execpromises = 0;
-        protected_data->has_execpromises = false;
+        m_execpromises = 0;
+        m_has_execpromises = false;
 
         // FIXME: PID/TID ISSUE
-        protected_data->pid = new_main_thread->tid().value();
+        m_pid = new_main_thread->tid().value();
     }
 
     auto tsr_result = new_main_thread->make_thread_specific_region({});

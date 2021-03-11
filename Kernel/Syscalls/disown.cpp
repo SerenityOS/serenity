@@ -36,7 +36,8 @@ KResultOr<int> Process::sys$disown(ProcessID pid)
         return ESRCH;
     if (process->ppid() != this->pid())
         return ECHILD;
-    MutableProtectedData(*this)->ppid = 0;
+    ProtectedDataMutationScope scope(*process);
+    process->m_ppid = 0;
     process->disowned_by_waiter(*this);
     return 0;
 }

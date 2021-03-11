@@ -100,47 +100,57 @@ typedef HashMap<FlatPtr, RefPtr<FutexQueue>> FutexQueues;
 
 struct LoadResult;
 
+class ProtectedProcessBase {
+protected:
+    ProcessID m_pid { 0 };
+    ProcessID m_ppid { 0 };
+    SessionID m_sid { 0 };
+    uid_t m_euid { 0 };
+    gid_t m_egid { 0 };
+    uid_t m_uid { 0 };
+    gid_t m_gid { 0 };
+    uid_t m_suid { 0 };
+    gid_t m_sgid { 0 };
+    Vector<gid_t> m_extra_gids;
+    bool m_dumpable { false };
+    bool m_has_promises { false };
+    u32 m_promises { 0 };
+    bool m_has_execpromises { false };
+    u32 m_execpromises { 0 };
+};
+
+class ProcessBase : public ProtectedProcessBase {
+protected:
+    u8 m_process_base_padding[PAGE_SIZE - sizeof(ProtectedProcessBase)];
+};
+
+static_assert(sizeof(ProcessBase) == PAGE_SIZE);
+
 class Process
-    : public RefCounted<Process>
+    : public ProcessBase
+    , public RefCounted<Process>
     , public InlineLinkedListNode<Process>
     , public Weakable<Process> {
 
     AK_MAKE_NONCOPYABLE(Process);
     AK_MAKE_NONMOVABLE(Process);
 
+    MAKE_ALIGNED_ALLOCATED(Process, PAGE_SIZE);
+
     friend class InlineLinkedListNode<Process>;
     friend class Thread;
     friend class CoreDump;
 
-    struct ProtectedData {
-        ProcessID pid { 0 };
-        ProcessID ppid { 0 };
-        SessionID sid { 0 };
-        uid_t euid { 0 };
-        gid_t egid { 0 };
-        uid_t uid { 0 };
-        gid_t gid { 0 };
-        uid_t suid { 0 };
-        gid_t sgid { 0 };
-        Vector<gid_t> extra_gids;
-        bool dumpable { false };
-        bool has_promises { false };
-        u32 promises { 0 };
-        bool has_execpromises { false };
-        u32 execpromises { 0 };
-    };
-
     // Helper class to temporarily unprotect a process's protected data so you can write to it.
-    class MutableProtectedData {
+    class ProtectedDataMutationScope {
     public:
-        explicit MutableProtectedData(Process& process)
+        explicit ProtectedDataMutationScope(Process& process)
             : m_process(process)
         {
             m_process.unprotect_data();
         }
 
-        ~MutableProtectedData() { m_process.protect_data(); }
-        ProtectedData* operator->() { return &const_cast<ProtectedData&>(m_process.protected_data()); }
+        ~ProtectedDataMutationScope() { m_process.protect_data(); }
 
     private:
         Process& m_process;
@@ -203,21 +213,21 @@ public:
     static SessionID get_sid_from_pgid(ProcessGroupID pgid);
 
     const String& name() const { return m_name; }
-    ProcessID pid() const { return protected_data().pid; }
-    SessionID sid() const { return protected_data().sid; }
-    bool is_session_leader() const { return protected_data().sid.value() == protected_data().pid.value(); }
+    ProcessID pid() const { return m_pid; }
+    SessionID sid() const { return m_sid; }
+    bool is_session_leader() const { return m_sid.value() == m_pid.value(); }
     ProcessGroupID pgid() const { return m_pg ? m_pg->pgid() : 0; }
-    bool is_group_leader() const { return pgid().value() == protected_data().pid.value(); }
-    const Vector<gid_t>& extra_gids() const { return protected_data().extra_gids; }
-    uid_t euid() const { return protected_data().euid; }
-    gid_t egid() const { return protected_data().egid; }
-    uid_t uid() const { return protected_data().uid; }
-    gid_t gid() const { return protected_data().gid; }
-    uid_t suid() const { return protected_data().suid; }
-    gid_t sgid() const { return protected_data().sgid; }
-    ProcessID ppid() const { return protected_data().ppid; }
+    bool is_group_leader() const { return pgid().value() == m_pid.value(); }
+    const Vector<gid_t>& extra_gids() const { return m_extra_gids; }
+    uid_t euid() const { return m_euid; }
+    gid_t egid() const { return m_egid; }
+    uid_t uid() const { return m_uid; }
+    gid_t gid() const { return m_gid; }
+    uid_t suid() const { return m_suid; }
+    gid_t sgid() const { return m_sgid; }
+    ProcessID ppid() const { return m_ppid; }
 
-    bool is_dumpable() const { return protected_data().dumpable; }
+    bool is_dumpable() const { return m_dumpable; }
     void set_dumpable(bool);
 
     mode_t umask() const { return m_umask; }
@@ -445,8 +455,8 @@ public:
     Custody& root_directory_relative_to_global_root();
     void set_root_directory(const Custody&);
 
-    bool has_promises() const { return protected_data().has_promises; }
-    bool has_promised(Pledge pledge) const { return protected_data().promises & (1u << (u32)pledge); }
+    bool has_promises() const { return m_has_promises; }
+    bool has_promised(Pledge pledge) const { return m_promises & (1u << (u32)pledge); }
 
     VeilState veil_state() const
     {
@@ -537,10 +547,8 @@ private:
 
     RefPtr<ProcessGroup> m_pg;
 
-    const ProtectedData& protected_data() const;
     void protect_data();
     void unprotect_data();
-    OwnPtr<KBuffer> m_protected_data;
 
     OwnPtr<ThreadTracer> m_tracer;
 

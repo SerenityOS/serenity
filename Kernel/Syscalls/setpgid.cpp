@@ -55,9 +55,10 @@ KResultOr<pid_t> Process::sys$setsid()
     if (found_process_with_same_pgid_as_my_pid)
         return EPERM;
     // Create a new Session and a new ProcessGroup.
-    MutableProtectedData(*this)->sid = pid().value();
     m_pg = ProcessGroup::create(ProcessGroupID(pid().value()));
     m_tty = nullptr;
+    ProtectedDataMutationScope scope { *this };
+    m_sid = pid().value();
     return sid().value();
 }
 
