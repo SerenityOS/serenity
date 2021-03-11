@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Heap/Heap.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
@@ -64,7 +65,9 @@ struct KmallocGlobalHeap {
         bool add_memory(size_t allocation_request)
         {
             if (!MemoryManager::is_initialized()) {
-                dmesgln("kmalloc: Cannot expand heap before MM is initialized!");
+                if constexpr (KMALLOC_DEBUG) {
+                    dmesgln("kmalloc: Cannot expand heap before MM is initialized!");
+                }
                 return false;
             }
             VERIFY(!m_adding);
@@ -78,13 +81,17 @@ struct KmallocGlobalHeap {
                 // Be careful to not log too much here. We don't want to trigger
                 // any further calls to kmalloc(). We're already out of memory
                 // and don't have any backup memory, either!
-                dmesgln("kmalloc: Cannot expand heap: no backup memory");
+                if constexpr (KMALLOC_DEBUG) {
+                    dmesgln("kmalloc: Cannot expand heap: no backup memory");
+                }
                 return false;
             }
 
             // At this point we should have at least enough memory from the
             // backup region to be able to log properly
-            dmesgln("kmalloc: Adding memory to heap at {}, bytes: {}", region->vaddr(), region->size());
+            if constexpr (KMALLOC_DEBUG) {
+                dmesgln("kmalloc: Adding memory to heap at {}, bytes: {}", region->vaddr(), region->size());
+            }
 
             auto& subheap = m_global_heap.m_heap.add_subheap(region->vaddr().as_ptr(), region->size());
             m_global_heap.m_subheap_memory.append(region.release_nonnull());
@@ -131,10 +138,14 @@ struct KmallocGlobalHeap {
                 if (m_global_heap.m_subheap_memory[i].vaddr().as_ptr() == memory) {
                     auto region = m_global_heap.m_subheap_memory.take(i);
                     if (!m_global_heap.m_backup_memory) {
-                        dmesgln("kmalloc: Using removed memory as backup: {}, bytes: {}", region->vaddr(), region->size());
+                        if constexpr (KMALLOC_DEBUG) {
+                            dmesgln("kmalloc: Using removed memory as backup: {}, bytes: {}", region->vaddr(), region->size());
+                        }
                         m_global_heap.m_backup_memory = move(region);
                     } else {
-                        dmesgln("kmalloc: Queue removing memory from heap at {}, bytes: {}", region->vaddr(), region->size());
+                        if constexpr (KMALLOC_DEBUG) {
+                            dmesgln("kmalloc: Queue removing memory from heap at {}, bytes: {}", region->vaddr(), region->size());
+                        }
                         Processor::deferred_call_queue([this, region = move(region)]() mutable {
                             // We need to defer freeing the region to prevent a potential
                             // deadlock since we are still holding the kmalloc lock
@@ -144,10 +155,14 @@ struct KmallocGlobalHeap {
                             // new backup.
                             ScopedSpinLock lock(s_lock);
                             if (!m_global_heap.m_backup_memory) {
-                                dmesgln("kmalloc: Queued memory region at {}, bytes: {} will be used as new backup", region->vaddr(), region->size());
+                                if constexpr (KMALLOC_DEBUG) {
+                                    dmesgln("kmalloc: Queued memory region at {}, bytes: {} will be used as new backup", region->vaddr(), region->size());
+                                }
                                 m_global_heap.m_backup_memory = move(region);
                             } else {
-                                dmesgln("kmalloc: Queued memory region at {}, bytes: {} will be freed now", region->vaddr(), region->size());
+                                if constexpr (KMALLOC_DEBUG) {
+                                    dmesgln("kmalloc: Queued memory region at {}, bytes: {} will be freed now", region->vaddr(), region->size());
+                                }
                             }
                         });
                     }
@@ -155,7 +170,9 @@ struct KmallocGlobalHeap {
                 }
             }
 
-            dmesgln("kmalloc: Cannot remove memory from heap: {}", VirtualAddress(memory));
+            if constexpr (KMALLOC_DEBUG) {
+                dmesgln("kmalloc: Cannot remove memory from heap: {}", VirtualAddress(memory));
+            }
             return false;
         }
     };

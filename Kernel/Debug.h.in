@@ -146,6 +146,10 @@
 #cmakedefine01 KEYBOARD_DEBUG
 #endif
 
+#ifndef KMALLOC_DEBUG
+#cmakedefine01 KMALLOC_DEBUG
+#endif
+
 #ifndef LOCAL_SOCKET_DEBUG
 #cmakedefine01 LOCAL_SOCKET_DEBUG
 #endif
