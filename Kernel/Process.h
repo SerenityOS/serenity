@@ -119,6 +119,8 @@ protected:
     u32 m_execpromises { 0 };
     mode_t m_umask { 022 };
     VirtualAddress m_signal_trampoline;
+    Atomic<u32> m_thread_count { 0 };
+    IntrusiveList<Thread, &Thread::m_process_thread_list_node> m_thread_list;
 };
 
 class ProcessBase : public ProtectedProcessBase {
@@ -245,8 +247,11 @@ public:
     static void for_each_in_pgrp(ProcessGroupID, Callback);
     template<typename Callback>
     void for_each_child(Callback);
+
     template<typename Callback>
-    IterationDecision for_each_thread(Callback) const;
+    IterationDecision for_each_thread(Callback);
+    template<typename Callback>
+    IterationDecision for_each_thread(Callback callback) const;
 
     void die();
     void finalize();
@@ -576,8 +581,6 @@ private:
 
     u8 m_termination_status { 0 };
     u8 m_termination_signal { 0 };
-    Atomic<u32> m_thread_count { 0 };
-    mutable IntrusiveList<Thread, &Thread::m_process_thread_list_node> m_thread_list;
     mutable RecursiveSpinLock m_thread_list_lock;
 
     const bool m_is_kernel_process;
@@ -659,6 +662,18 @@ inline void Process::for_each_child(Callback callback)
 
 template<typename Callback>
 inline IterationDecision Process::for_each_thread(Callback callback) const
+{
+    ScopedSpinLock thread_list_lock(m_thread_list_lock);
+    for (auto& thread : m_thread_list) {
+        IterationDecision decision = callback(thread);
+        if (decision != IterationDecision::Continue)
+            return decision;
+    }
+    return IterationDecision::Continue;
+}
+
+template<typename Callback>
+inline IterationDecision Process::for_each_thread(Callback callback)
 {
     ScopedSpinLock thread_list_lock(m_thread_list_lock);
     for (auto& thread : m_thread_list) {

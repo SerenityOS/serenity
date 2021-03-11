@@ -86,6 +86,7 @@ class Thread
     AK_MAKE_NONMOVABLE(Thread);
 
     friend class Process;
+    friend class ProtectedProcessBase;
     friend class Scheduler;
     friend class ThreadReadyQueue;
 
