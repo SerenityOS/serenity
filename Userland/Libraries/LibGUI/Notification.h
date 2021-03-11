@@ -60,6 +60,7 @@ private:
 
     NonnullRefPtr<NotificationServerConnection> m_connection;
     bool m_showing { false };
+    bool m_disposed { false };
 };
 
 }
