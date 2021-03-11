@@ -31,8 +31,11 @@ namespace Kernel {
 
 void Process::sys$exit(int status)
 {
-    m_termination_status = status;
-    m_termination_signal = 0;
+    {
+        ProtectedDataMutationScope scope { *this };
+        m_termination_status = status;
+        m_termination_signal = 0;
+    }
     die();
     Thread::current()->die_if_needed();
     VERIFY_NOT_REACHED();
