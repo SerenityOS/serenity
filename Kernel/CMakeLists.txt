@@ -52,6 +52,8 @@ set(KERNEL_SOURCES
     Graphics/GraphicsManagement.cpp
     Graphics/MultibootFramebufferDevice.cpp
     Graphics/VGACompatibleAdapter.cpp
+    Graphics/VMWareFramebufferDevice.cpp
+    Graphics/VMWareGraphicsAdapter.cpp
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/DiskPartitionMetadata.cpp
     Storage/Partition/EBRPartitionTable.cpp

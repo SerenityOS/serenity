@@ -31,6 +31,7 @@
 #include <Kernel/Graphics/BochsGraphicsAdapter.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
+#include <Kernel/Graphics/VMWareGraphicsAdapter.h>
 #include <Kernel/Multiboot.h>
 
 namespace Kernel {
@@ -53,6 +54,9 @@ UNMAP_AFTER_INIT RefPtr<GraphicsDevice> GraphicsManagement::determine_graphics_d
         return BochsGraphicsAdapter::initialize(address);
     }
     if (PCI::get_class(address) == 0x3 && PCI::get_subclass(address) == 0x0) {
+        if (id.vendor_id == 0x15ad && id.device_id == 0x0405) {
+            return VMWareGraphicsAdapter::initialize(address);
+        }
         VERIFY(multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB || multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT);
         return VGACompatibleAdapter::initialize_with_preset_resolution(address,
             PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),

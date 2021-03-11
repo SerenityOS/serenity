@@ -49,7 +49,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -cpu $SERENITY_QEMU_CPU
 -d guest_errors
 -smp 2
--device VGA,vgamem_mb=64
+-device vmware-svga
 -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
 -device ich9-ahci
 -usb
@@ -66,6 +66,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -d guest_errors
 -smp 2
 -device bochs-display
+-device bochs-display
 -vga none
 -device piix3-ide
 -drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
@@ -75,6 +76,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -debugcon stdio
 -soundhw pcspk
 -device sb16
+
 "
 
 export SDL_VIDEO_X11_DGAMOUSE=0
