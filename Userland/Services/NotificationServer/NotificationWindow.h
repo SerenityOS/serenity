@@ -40,9 +40,10 @@ public:
     void set_original_rect(Gfx::IntRect original_rect) { m_original_rect = original_rect; };
 
 private:
-    NotificationWindow(const String& text, const String& title, const Gfx::ShareableBitmap&);
+    NotificationWindow(i32 client_id, const String& text, const String& title, const Gfx::ShareableBitmap&);
 
     Gfx::IntRect m_original_rect;
+    i32 m_id;
 };
 
 }

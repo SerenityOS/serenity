@@ -25,6 +25,7 @@
  */
 
 #include "NotificationWindow.h"
+#include <AK/HashMap.h>
 #include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -39,12 +40,13 @@
 
 namespace NotificationServer {
 
-static Vector<RefPtr<NotificationWindow>> s_windows;
+static HashMap<u32, RefPtr<NotificationWindow>> s_windows;
 
 void update_notification_window_locations()
 {
     Gfx::IntRect last_window_rect;
-    for (auto& window : s_windows) {
+    for (auto& window_entry : s_windows) {
+        auto& window = window_entry.value;
         Gfx::IntPoint new_window_location;
         if (last_window_rect.is_null())
             new_window_location = GUI::Desktop::the().rect().top_right().translated(-window->rect().width() - 24, 26);
@@ -58,16 +60,18 @@ void update_notification_window_locations()
     }
 }
 
-NotificationWindow::NotificationWindow(const String& text, const String& title, const Gfx::ShareableBitmap& icon)
+NotificationWindow::NotificationWindow(i32 client_id, const String& text, const String& title, const Gfx::ShareableBitmap& icon)
 {
-    s_windows.append(this);
+    m_id = client_id;
+    s_windows.set(m_id, this);
 
     set_window_type(GUI::WindowType::Notification);
     set_resizable(false);
     set_minimizable(false);
 
     Gfx::IntRect lowest_notification_rect_on_screen;
-    for (auto& window : s_windows) {
+    for (auto& window_entry : s_windows) {
+        auto& window = window_entry.value;
         if (window->m_original_rect.y() > lowest_notification_rect_on_screen.y())
             lowest_notification_rect_on_screen = window->m_original_rect;
     }
@@ -114,7 +118,7 @@ NotificationWindow::NotificationWindow(const String& text, const String& title, 
     right_container.set_layout<GUI::HorizontalBoxLayout>();
 
     on_close_request = [this] {
-        s_windows.remove_first_matching([this](auto& entry) { return entry == this; });
+        s_windows.remove(m_id);
         update_notification_window_locations();
         return CloseRequestDecision::Close;
     };
