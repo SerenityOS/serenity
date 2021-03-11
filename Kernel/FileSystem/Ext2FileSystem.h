@@ -81,6 +81,11 @@ private:
     KResult write_directory(const Vector<Ext2FSDirectoryEntry>&);
     bool populate_lookup_cache() const;
     KResult resize(u64);
+    KResult write_indirect_block(BlockBasedFS::BlockIndex, Span<BlockBasedFS::BlockIndex>);
+    KResult grow_doubly_indirect_block(BlockBasedFS::BlockIndex, size_t, Span<BlockBasedFS::BlockIndex>, Vector<BlockBasedFS::BlockIndex>&, unsigned&);
+    KResult shrink_doubly_indirect_block(BlockBasedFS::BlockIndex, size_t, size_t, unsigned&);
+    KResult grow_triply_indirect_block(BlockBasedFS::BlockIndex, size_t, Span<BlockBasedFS::BlockIndex>, Vector<BlockBasedFS::BlockIndex>&, unsigned&);
+    KResult shrink_triply_indirect_block(BlockBasedFS::BlockIndex, size_t, size_t, unsigned&);
     KResult flush_block_list();
     Vector<BlockBasedFS::BlockIndex> compute_block_list() const;
     Vector<BlockBasedFS::BlockIndex> compute_block_list_with_meta_blocks() const;
