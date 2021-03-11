@@ -304,7 +304,6 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const Stri
             if (link.name() == name)
                 return EEXIST;
         }
-        dbgln("DevFS: Success on create new symlink");
         auto new_link_inode = adopt(*new DevFSLinkInode(m_parent_fs, name));
         m_links.append(new_link_inode);
         m_parent_fs.m_nodes.append(new_link_inode);
