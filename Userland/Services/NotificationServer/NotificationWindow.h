@@ -40,6 +40,10 @@ public:
     virtual ~NotificationWindow() override;
     void set_original_rect(Gfx::IntRect original_rect) { m_original_rect = original_rect; };
 
+    void set_text(const String&);
+    void set_title(const String&);
+    void set_image(const Gfx::ShareableBitmap&);
+
     static RefPtr<NotificationWindow> get_window_by_id(i32 id);
 
 private:

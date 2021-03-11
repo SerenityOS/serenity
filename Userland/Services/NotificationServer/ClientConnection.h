@@ -46,6 +46,9 @@ private:
     virtual OwnPtr<Messages::NotificationServer::GreetResponse> handle(const Messages::NotificationServer::Greet&) override;
     virtual OwnPtr<Messages::NotificationServer::ShowNotificationResponse> handle(const Messages::NotificationServer::ShowNotification&) override;
     virtual OwnPtr<Messages::NotificationServer::CloseNotificationResponse> handle(const Messages::NotificationServer::CloseNotification& message) override;
+    virtual OwnPtr<Messages::NotificationServer::UpdateNotificationIconResponse> handle(const Messages::NotificationServer::UpdateNotificationIcon& message) override;
+    virtual OwnPtr<Messages::NotificationServer::UpdateNotificationTextResponse> handle(const Messages::NotificationServer::UpdateNotificationText& message) override;
+    virtual OwnPtr<Messages::NotificationServer::IsShowingResponse> handle(const Messages::NotificationServer::IsShowing& message) override;
 };
 
 }

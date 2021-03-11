@@ -69,4 +69,29 @@ OwnPtr<Messages::NotificationServer::CloseNotificationResponse> ClientConnection
     return make<Messages::NotificationServer::CloseNotificationResponse>();
 }
 
+OwnPtr<Messages::NotificationServer::UpdateNotificationIconResponse> ClientConnection::handle(const Messages::NotificationServer::UpdateNotificationIcon& message)
+{
+    auto window = NotificationWindow::get_window_by_id(client_id());
+    if (window) {
+        window->set_image(message.icon());
+    }
+    return make<Messages::NotificationServer::UpdateNotificationIconResponse>(window);
+}
+
+OwnPtr<Messages::NotificationServer::UpdateNotificationTextResponse> ClientConnection::handle(const Messages::NotificationServer::UpdateNotificationText& message)
+{
+    auto window = NotificationWindow::get_window_by_id(client_id());
+    if (window) {
+        window->set_text(message.text());
+        window->set_title(message.title());
+    }
+    return make<Messages::NotificationServer::UpdateNotificationTextResponse>(window);
+}
+
+OwnPtr<Messages::NotificationServer::IsShowingResponse> ClientConnection::handle(const Messages::NotificationServer::IsShowing&)
+{
+    auto window = NotificationWindow::get_window_by_id(client_id());
+    return make<Messages::NotificationServer::IsShowingResponse>(window);
+}
+
 }
