@@ -100,7 +100,6 @@ script simply defines some well-known variables and looks like this:
 
 port="foo"
 version="1.2.3"
-workdir="foo-${version}"
 useconfigure="true"
 files="https://example.com/foo-${version}.tar.gz foo-${version}.tar.gz"
 depends="bar baz"

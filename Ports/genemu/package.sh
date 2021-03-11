@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port="genemu"
-version="${port}-git"
+version=git
 workdir="${port}-master"
 useconfigure=true
 files="https://github.com/rasky/genemu/archive/master.tar.gz ${version}.tar.gz"

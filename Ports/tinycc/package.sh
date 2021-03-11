@@ -1,6 +1,5 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=tinycc
-workdir=tinycc-dev
 version=dev
 files="https://github.com/TinyCC/tinycc/archive/dev.tar.gz tinycc-dev.tar.gz"
 useconfigure=true
