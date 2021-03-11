@@ -40,12 +40,17 @@ public:
         send_sync<Messages::NotificationServer::Greet>();
     }
 
+    virtual void die() override { m_connected = false; }
+
+    bool is_connected() const { return m_connected; }
+
 private:
     NotificationServerConnection()
         : IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>(*this, "/tmp/portal/notify")
     {
     }
     virtual void handle(const Messages::NotificationClient::Dummy&) override { }
+    bool m_connected { true };
 };
 
 Notification::Notification()
@@ -60,15 +65,26 @@ Notification::~Notification()
 void Notification::show()
 {
     VERIFY(!m_showing);
+    VERIFY(!m_disposed);
+    if (!m_connection->is_connected()) {
+        // This would imply that the NotificationServer crashed before we could send it any data.
+        VERIFY_NOT_REACHED();
+    }
     auto icon = m_icon ? m_icon->to_shareable_bitmap() : Gfx::ShareableBitmap();
     m_connection->send_sync<Messages::NotificationServer::ShowNotification>(m_text, m_title, icon);
     m_showing = true;
 }
+
 void Notification::close()
 {
     VERIFY(m_showing);
-    m_connection->send_sync<Messages::NotificationServer::CloseNotification>();
+    if (m_connection->is_connected()) {
+        m_connection->send_sync<Messages::NotificationServer::CloseNotification>();
+    }
+
     m_showing = false;
+    m_disposed = true;
+}
 }
 
 }
