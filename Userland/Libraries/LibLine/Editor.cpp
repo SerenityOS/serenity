@@ -1033,6 +1033,9 @@ void Editor::handle_read_event()
             continue;
         }
 
+        // If we got here, manually cleanup the suggestions and then insert the new code point.
+        suggestion_cleanup.disarm();
+        cleanup_suggestions();
         insert(code_point);
     }
 
