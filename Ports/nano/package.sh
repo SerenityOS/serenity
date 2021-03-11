@@ -4,7 +4,7 @@ version=4.5
 useconfigure="true"
 files="https://www.nano-editor.org/dist/v4/nano-${version}.tar.xz nano-${version}.tar.xz
 https://www.nano-editor.org/dist/v4/nano-${version}.tar.xz.asc nano-${version}.tar.xz.asc"
-configopts="--target=i686-pc-serenity --disable-browser --disable-utf8"
+configopts="--target=${SERENITY_ARCH}-pc-serenity --disable-browser --disable-utf8"
 depends="ncurses"
 auth_type="sig"
 auth_import_key="BFD009061E535052AD0DF2150D28D4D2A0ACE884"

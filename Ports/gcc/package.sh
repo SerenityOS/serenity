@@ -2,7 +2,7 @@
 port=gcc
 version=10.2.0
 useconfigure=true
-configopts="--target=i686-pc-serenity --with-sysroot=/ --with-build-sysroot=${SERENITY_BUILD_DIR}/Root --with-newlib --enable-languages=c,c++ --disable-lto --disable-nls --enable-shared --enable-default-pie --enable-host-shared"
+configopts="--target=${SERENITY_ARCH}-pc-serenity --with-sysroot=/ --with-build-sysroot=${SERENITY_BUILD_DIR}/Root --with-newlib --enable-languages=c,c++ --disable-lto --disable-nls --enable-shared --enable-default-pie --enable-host-shared"
 files="https://ftp.gnu.org/gnu/gcc/gcc-${version}/gcc-${version}.tar.xz gcc-${version}.tar.xz
 https://ftp.gnu.org/gnu/gcc/gcc-${version}/gcc-${version}.tar.xz.sig gcc-${version}.tar.xz.sig
 https://ftp.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
@@ -18,7 +18,7 @@ post_fetch() {
 
 build() {
     run make $makeopts
-    run find ./host-i686-pc-serenity/gcc/ -maxdepth 1 -type f -executable -exec strip --strip-debug {} \; || echo
+    run find "./host-${SERENITY_ARCH}-pc-serenity/gcc/" -maxdepth 1 -type f -executable -exec strip --strip-debug {} \; || echo
 }
 
 install() {
