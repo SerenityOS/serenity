@@ -106,7 +106,7 @@ void WindowSwitcher::event(Core::Event& event)
 void WindowSwitcher::on_key_event(const KeyEvent& event)
 {
     if (event.type() == Event::KeyUp) {
-        if (event.key() == Key_Logo) {
+        if (event.key() == Key_Super) {
             if (auto* window = selected_window()) {
                 window->set_minimized(false);
                 WindowManager::the().move_to_front_and_make_active(*window);

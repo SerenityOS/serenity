@@ -41,8 +41,8 @@ String Shortcut::to_string() const
         parts.append("Shift");
     if (m_modifiers & Mod_Alt)
         parts.append("Alt");
-    if (m_modifiers & Mod_Logo)
-        parts.append("Logo");
+    if (m_modifiers & Mod_Super)
+        parts.append("Super");
 
     if (auto* key_name = key_code_to_string(m_key))
         parts.append(key_name);

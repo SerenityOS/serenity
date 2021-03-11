@@ -290,7 +290,7 @@ public:
     bool ctrl() const { return m_modifiers & Mod_Ctrl; }
     bool alt() const { return m_modifiers & Mod_Alt; }
     bool shift() const { return m_modifiers & Mod_Shift; }
-    bool logo() const { return m_modifiers & Mod_Logo; }
+    bool super() const { return m_modifiers & Mod_Super; }
     u8 modifiers() const { return m_modifiers; }
     u32 code_point() const { return m_code_point; }
     String text() const
@@ -331,7 +331,7 @@ public:
     bool ctrl() const { return m_modifiers & Mod_Ctrl; }
     bool alt() const { return m_modifiers & Mod_Alt; }
     bool shift() const { return m_modifiers & Mod_Shift; }
-    bool logo() const { return m_modifiers & Mod_Logo; }
+    bool super() const { return m_modifiers & Mod_Super; }
     unsigned modifiers() const { return m_modifiers; }
     int wheel_delta() const { return m_wheel_delta; }
 
