@@ -60,4 +60,13 @@ OwnPtr<Messages::NotificationServer::ShowNotificationResponse> ClientConnection:
     return make<Messages::NotificationServer::ShowNotificationResponse>();
 }
 
+OwnPtr<Messages::NotificationServer::CloseNotificationResponse> ClientConnection::handle([[maybe_unused]] const Messages::NotificationServer::CloseNotification& message)
+{
+    auto window = NotificationWindow::get_window_by_id(client_id());
+    if (window) {
+        window->close();
+    }
+    return make<Messages::NotificationServer::CloseNotificationResponse>();
+}
+
 }
