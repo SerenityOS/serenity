@@ -30,7 +30,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
-#include <LibGUI/ImageWidget.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
@@ -41,6 +41,7 @@
 namespace NotificationServer {
 
 static HashMap<u32, RefPtr<NotificationWindow>> s_windows;
+static const Gfx::Bitmap* default_image = GUI::Icon::default_icon("ladybug").bitmap_for_size(16);
 
 void update_notification_window_locations()
 {
@@ -95,23 +96,21 @@ NotificationWindow::NotificationWindow(i32 client_id, const String& text, const 
     widget.layout()->set_margins({ 8, 8, 8, 8 });
     widget.layout()->set_spacing(6);
 
-    if (icon.is_valid()) {
-        auto& image = widget.add<GUI::ImageWidget>();
-        image.set_bitmap(icon.bitmap());
-    }
+    m_image = &widget.add<GUI::ImageWidget>();
+    m_image->set_bitmap(icon.is_valid() ? icon.bitmap() : default_image);
 
     auto& left_container = widget.add<GUI::Widget>();
     left_container.set_layout<GUI::VerticalBoxLayout>();
 
-    auto& title_label = left_container.add<GUI::Label>(title);
-    title_label.set_font(Gfx::FontDatabase::default_bold_font());
-    title_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    auto& text_label = left_container.add<GUI::Label>(text);
-    text_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    m_title_label = &left_container.add<GUI::Label>(title);
+    m_title_label->set_font(Gfx::FontDatabase::default_bold_font());
+    m_title_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    m_text_label = &left_container.add<GUI::Label>(text);
+    m_text_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     widget.set_tooltip(text);
-    title_label.set_tooltip(text);
-    text_label.set_tooltip(text);
+    m_title_label->set_tooltip(text);
+    m_text_label->set_tooltip(text);
 
     auto& right_container = widget.add<GUI::Widget>();
     right_container.set_fixed_width(36);
