@@ -45,6 +45,7 @@ enum class StandardCursor {
     Drag,
     Move,
     Wait,
+    Disallowed,
     __Count,
 };
 
