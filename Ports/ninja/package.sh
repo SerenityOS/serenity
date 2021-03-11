@@ -1,7 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=ninja
 version=1.8.2
-workdir="ninja-${version}"
 files="https://github.com/ninja-build/ninja/archive/v${version}.tar.gz ninja-v${version}.tar.gz"
 
 build() {
