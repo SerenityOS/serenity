@@ -37,6 +37,8 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, TableView)
+
 namespace GUI {
 
 TableView::TableView()
@@ -113,7 +115,7 @@ void TableView::paint_event(PaintEvent& event)
             bool is_key_column = m_key_column == column_index;
             Gfx::IntRect cell_rect(horizontal_padding() + x, y, column_width, row_height());
             auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
-            if (is_key_column)
+            if (is_key_column && is_key_column_highlighted())
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
             auto cell_index = model()->index(row_index, column_index);
 
@@ -122,7 +124,14 @@ void TableView::paint_event(PaintEvent& event)
             } else {
                 auto data = cell_index.data();
                 if (data.is_bitmap()) {
-                    painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
+                    auto cell_constrained_bitmap_rect = data.as_bitmap().rect();
+                    if (data.as_bitmap().rect().width() > column_width)
+                        cell_constrained_bitmap_rect.set_width(column_width);
+                    if (data.as_bitmap().rect().height() > row_height())
+                        cell_constrained_bitmap_rect.set_height(row_height());
+                    cell_rect.set_y(cell_rect.y() + (row_height() - cell_constrained_bitmap_rect.height()) / 2);
+                    cell_rect.set_x(cell_rect.x() + (column_width - cell_constrained_bitmap_rect.width()) / 2);
+                    painter.blit(cell_rect.location(), data.as_bitmap(), cell_constrained_bitmap_rect);
                 } else if (data.is_icon()) {
                     if (auto bitmap = data.as_icon().bitmap_for_size(16)) {
                         cell_rect.set_y(cell_rect.y() + (row_height() - bitmap->height()) / 2);
