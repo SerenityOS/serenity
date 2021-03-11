@@ -106,12 +106,10 @@ void HTMLScriptElement::execute_script()
 }
 
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type-essence-match
-static bool is_javascript_mime_type_essence_match(const String& mime_type)
+static bool is_javascript_mime_type_essence_match(const String& string)
 {
-    // FIXME: This operates on the whole mime type, instead of just the essence. https://mimesniff.spec.whatwg.org/#mime-type-essence
-    //        It'd probably be best to make a helper class for mime types, since there is a whole spec about mime types.
-    auto lowercase_mime_type = mime_type.to_lowercase();
-    return lowercase_mime_type.is_one_of("application/ecmascript", "application/javascript", "application/x-ecmascript", "application/x-javascript", "text/ecmascript", "text/javascript", "text/javascript1.0", "text/javascript1.1", "text/javascript1.2", "text/javascript1.3", "text/javascript1.4", "text/javascript1.5", "text/jscript", "text/livescript", "text/x-ecmascript", "text/x-javascript");
+    auto lowercase_string = string.to_lowercase();
+    return lowercase_string.is_one_of("application/ecmascript", "application/javascript", "application/x-ecmascript", "application/x-javascript", "text/ecmascript", "text/javascript", "text/javascript1.0", "text/javascript1.1", "text/javascript1.2", "text/javascript1.3", "text/javascript1.4", "text/javascript1.5", "text/jscript", "text/livescript", "text/x-ecmascript", "text/x-javascript");
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#prepare-a-script
