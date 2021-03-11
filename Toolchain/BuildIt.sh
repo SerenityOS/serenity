@@ -274,6 +274,22 @@ pushd "$DIR/Build/$ARCH"
 popd
 
 
+# == STRIP BINARIES TO SAVE SPACE ==
+
+pushd "$DIR"
+    # Stripping doesn't seem to work on macOS.
+    if [ "$(uname)" != "Darwin" ]; then
+        # We *most definitely* don't need debug symbols in the linker/compiler.
+        # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 120 MiB.
+        # Hence, this might actually cause marginal speedups, although the point is to not waste space as blatantly.
+        echo "Stripping executables ..."
+        echo "Before: $(du -sh Local)"
+        find Local/ -type f -executable ! -name '*.la' ! -name '*.sh' ! -name 'mk*' -exec strip {} +
+        echo "After: $(du -sh Local)"
+    fi
+popd
+
+
 # == SAVE TO CACHE ==
 
 pushd "$DIR"
@@ -283,16 +299,6 @@ pushd "$DIR"
 
         rm -f "${CACHED_TOOLCHAIN_ARCHIVE}"  # Just in case
 
-        # Stripping doesn't seem to work on macOS.
-        # However, this doesn't seem to be necessary on macOS, the uncompressed size is already about 210 MiB.
-        if [ "$(uname)" != "Darwin" ]; then
-            # We *most definitely* don't need debug symbols in the linker/compiler.
-            # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 190 MiB.
-            echo "Stripping executables ..."
-            echo "Before: $(du -sh Local)"
-            find Local/ -type f -executable ! -name '*.la' ! -name '*.sh' ! -name 'mk*' -exec strip {} +
-            echo "After: $(du -sh Local)"
-        fi
         tar czf "${CACHED_TOOLCHAIN_ARCHIVE}" Local/
 
         echo "Cache (after):"
