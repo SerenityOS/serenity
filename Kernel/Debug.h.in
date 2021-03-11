@@ -78,6 +78,10 @@
 #cmakedefine01 EXEC_DEBUG
 #endif
 
+#ifndef EXT2_BLOCKLIST_DEBUG
+#cmakedefine01 EXT2_BLOCKLIST_DEBUG
+#endif
+
 #ifndef EXT2_DEBUG
 #cmakedefine01 EXT2_DEBUG
 #endif
