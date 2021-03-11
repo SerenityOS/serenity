@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
@@ -100,18 +101,51 @@ public:
         return *this;
     }
 
+private:
+    // This must be part of the header in order to make the various 'from_*' functions constexpr.
+    // However, sane_mod can only deal with a limited range of values for 'denominator', so this can't be made public.
+    ALWAYS_INLINE static constexpr i64 sane_mod(i64& numerator, i64 denominator)
+    {
+        VERIFY(2 <= denominator && denominator <= 1'000'000'000);
+        // '%' in C/C++ does not work in the obvious way:
+        // For example, -9 % 7 is -2, not +5.
+        // However, we want a representation like "(-2)*7 + (+5)".
+        i64 dividend = numerator / denominator;
+        numerator %= denominator;
+        if (numerator < 0) {
+            // Does not overflow: different signs.
+            numerator += denominator;
+            // Does not underflow: denominator >= 2.
+            dividend -= 1;
+        }
+        return dividend;
+    }
+    ALWAYS_INLINE static constexpr i32 sane_mod(i32& numerator, i32 denominator)
+    {
+        i64 numerator_64 = numerator;
+        i64 dividend = sane_mod(numerator_64, denominator);
+        // Does not underflow: numerator can only become smaller.
+        numerator = numerator_64;
+        // Does not overflow: Will be smaller than original value of 'numerator'.
+        return dividend;
+    }
+
+public:
     constexpr static Time from_seconds(i64 seconds) { return Time(seconds, 0); }
     constexpr static Time from_nanoseconds(i64 nanoseconds)
     {
-        return Time(nanoseconds / 1'000'000'000, nanoseconds % 1'000'000'000);
+        i64 seconds = sane_mod(nanoseconds, 1'000'000'000);
+        return Time(seconds, nanoseconds);
     }
     constexpr static Time from_microseconds(i64 microseconds)
     {
-        return Time(microseconds / 1'000'000, (microseconds % 1'000'000) * 1'000);
+        i64 seconds = sane_mod(microseconds, 1'000'000);
+        return Time(seconds, microseconds * 1'000);
     }
     constexpr static Time from_milliseconds(i64 milliseconds)
     {
-        return Time(milliseconds / 1'000, (milliseconds % 1'000) * 1'000'000);
+        i64 seconds = sane_mod(milliseconds, 1'000);
+        return Time(seconds, milliseconds * 1'000'000);
     }
     static Time from_timespec(const struct timespec&);
     static Time from_timeval(const struct timeval&);
@@ -119,16 +153,17 @@ public:
     static Time zero() { return Time(0, 0); };
     static Time max() { return Time(0x7fff'ffff'ffff'ffffLL, 999'999'999); };
 
-    // Truncates "2.8 seconds" to 2 seconds.
-    // Truncates "-2.8 seconds" to -2 seconds.
+    // Truncates towards zero (2.8s to 2s, -2.8s to -2s).
     i64 to_truncated_seconds() const;
     i64 to_truncated_milliseconds() const;
     i64 to_truncated_microseconds() const;
+    // Rounds away from zero (2.3s to 3s, -2.3s to -3s).
     i64 to_seconds() const;
     i64 to_milliseconds() const;
     i64 to_microseconds() const;
     i64 to_nanoseconds() const;
     timespec to_timespec() const;
+    // Rounds towards -inf (it was the easiest to implement).
     timeval to_timeval() const;
 
     bool is_zero() const { return !m_seconds && !m_nanoseconds; }

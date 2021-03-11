@@ -227,10 +227,29 @@ TEST_CASE(rounding)
     EXPECT_EQ(TIME(0, 0).to_milliseconds(), 0);
     EXPECT_EQ(TIME(0, 0).to_microseconds(), 0);
     EXPECT_EQ(TIME(0, 0).to_nanoseconds(), 0);
+
+    EXPECT_EQ(TIME(0, 1).to_seconds(), 1);
+    EXPECT_EQ(TIME(0, 1).to_milliseconds(), 1);
+    EXPECT_EQ(TIME(0, 1).to_microseconds(), 1);
+    EXPECT_EQ(TIME(0, 1).to_nanoseconds(), 1);
+    EXPECT_EQ(TIME(0, -1).to_seconds(), -1);
+    EXPECT_EQ(TIME(0, -1).to_milliseconds(), -1);
+    EXPECT_EQ(TIME(0, -1).to_microseconds(), -1);
+    EXPECT_EQ(TIME(0, -1).to_nanoseconds(), -1);
+
+    EXPECT_EQ(TIME(-9223372037, 145'224'191).to_nanoseconds(), (i64)-0x8000'0000'0000'0000);
+    EXPECT_EQ(TIME(-9223372037, 145'224'192).to_nanoseconds(), (i64)-0x8000'0000'0000'0000);
+    EXPECT_EQ(TIME(-9223372037, 145'224'193).to_nanoseconds(), -0x7fff'ffff'ffff'ffff);
+    EXPECT_EQ(TIME(9223372036, 854'775'806).to_nanoseconds(), 0x7fff'ffff'ffff'fffe);
+    EXPECT_EQ(TIME(9223372036, 854'775'807).to_nanoseconds(), 0x7fff'ffff'ffff'ffff);
+    EXPECT_EQ(TIME(9223372036, 854'775'808).to_nanoseconds(), 0x7fff'ffff'ffff'ffff);
 }
 
 TEST_CASE(truncation)
 {
+    // Sanity
+    EXPECT_EQ(TIME(2, 0).to_truncated_seconds(), 2);
+    EXPECT_EQ(TIME(-2, 0).to_truncated_seconds(), -2);
     EXPECT_EQ(TIME(2, 800'800'800).to_truncated_seconds(), 2);
     EXPECT_EQ(TIME(2, 800'800'800).to_truncated_milliseconds(), 2'800);
     EXPECT_EQ(TIME(2, 800'800'800).to_truncated_microseconds(), 2'800'800);
@@ -238,13 +257,29 @@ TEST_CASE(truncation)
     EXPECT_EQ(TIME(-2, -800'800'800).to_truncated_milliseconds(), -2'800);
     EXPECT_EQ(TIME(-2, -800'800'800).to_truncated_microseconds(), -2'800'800);
 
-    EXPECT_EQ(TIME(0, 0).to_truncated_seconds(), 0);
-    EXPECT_EQ(TIME(1, 999'999'999).to_truncated_seconds(), 1);
-    EXPECT_EQ(TIME(1, 1'000'000'000).to_truncated_seconds(), 2);
-    EXPECT_EQ(TIME(-2, 0).to_truncated_seconds(), -2);
-
+    // Overflow, seconds
     EXPECT_EQ(Time::min().to_truncated_seconds(), (i64)-0x8000'0000'0000'0000);
     EXPECT_EQ(Time::max().to_truncated_seconds(), 0x7fff'ffff'ffff'ffff);
+
+    // Overflow, milliseconds
+    EXPECT_EQ(TIME(-9223372036854776, 191'000'000).to_truncated_milliseconds(), (i64)-0x8000'0000'0000'0000);
+    EXPECT_EQ(TIME(-9223372036854776, 192'000'000).to_truncated_milliseconds(), (i64)-0x8000'0000'0000'0000);
+    EXPECT_EQ(TIME(-9223372036854776, 192'000'001).to_truncated_milliseconds(), -0x7fff'ffff'ffff'ffff);
+    EXPECT_EQ(TIME(-9223372036854776, 193'000'000).to_truncated_milliseconds(), -0x7fff'ffff'ffff'ffff);
+    EXPECT_EQ(TIME(9223372036854775, 806'000'000).to_truncated_milliseconds(), 0x7fff'ffff'ffff'fffe);
+    EXPECT_EQ(TIME(9223372036854775, 806'999'999).to_truncated_milliseconds(), 0x7fff'ffff'ffff'fffe);
+    EXPECT_EQ(TIME(9223372036854775, 807'000'000).to_truncated_milliseconds(), 0x7fff'ffff'ffff'ffff);
+    EXPECT_EQ(TIME(9223372036854775, 808'000'000).to_truncated_milliseconds(), 0x7fff'ffff'ffff'ffff);
+
+    // Overflow, microseconds
+    EXPECT_EQ(TIME(-9223372036855, 224'191'000).to_truncated_microseconds(), (i64)-0x8000'0000'0000'0000);
+    EXPECT_EQ(TIME(-9223372036855, 224'192'000).to_truncated_microseconds(), (i64)-0x8000'0000'0000'0000);
+    EXPECT_EQ(TIME(-9223372036855, 224'192'001).to_truncated_microseconds(), (i64)-0x7fff'ffff'ffff'ffff);
+    EXPECT_EQ(TIME(-9223372036855, 224'193'000).to_truncated_microseconds(), (i64)-0x7fff'ffff'ffff'ffff);
+    EXPECT_EQ(TIME(9223372036854, 775'806'000).to_truncated_microseconds(), 0x7fff'ffff'ffff'fffe);
+    EXPECT_EQ(TIME(9223372036854, 775'806'999).to_truncated_microseconds(), 0x7fff'ffff'ffff'fffe);
+    EXPECT_EQ(TIME(9223372036854, 775'807'000).to_truncated_microseconds(), 0x7fff'ffff'ffff'ffff);
+    EXPECT_EQ(TIME(9223372036854, 775'808'000).to_truncated_microseconds(), 0x7fff'ffff'ffff'ffff);
 }
 
 TEST_MAIN(Time)
