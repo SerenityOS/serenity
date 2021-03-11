@@ -915,4 +915,16 @@ void MemoryManager::dump_kernel_regions()
     }
 }
 
+void MemoryManager::set_page_writable_direct(VirtualAddress vaddr, bool writable)
+{
+    ScopedSpinLock lock(s_mm_lock);
+    ScopedSpinLock page_lock(kernel_page_directory().get_lock());
+    auto* pte = ensure_pte(kernel_page_directory(), vaddr);
+    VERIFY(pte);
+    if (pte->is_writable() == writable)
+        return;
+    pte->set_writable(writable);
+    flush_tlb(&kernel_page_directory(), vaddr);
+}
+
 }
