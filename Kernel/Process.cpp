@@ -227,6 +227,9 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
     , m_tty(tty)
     , m_wait_block_condition(*this)
 {
+    // Ensure that we protect the process data when exiting the constructor.
+    ProtectedDataMutationScope scope { *this };
+
     m_pid = allocate_pid();
     m_ppid = ppid;
     m_uid = uid;
