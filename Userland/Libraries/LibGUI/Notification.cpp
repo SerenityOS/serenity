@@ -49,6 +49,7 @@ private:
 };
 
 Notification::Notification()
+    : m_connection(NotificationServerConnection::construct())
 {
 }
 
@@ -58,9 +59,8 @@ Notification::~Notification()
 
 void Notification::show()
 {
-    auto connection = NotificationServerConnection::construct();
     auto icon = m_icon ? m_icon->to_shareable_bitmap() : Gfx::ShareableBitmap();
-    connection->send_sync<Messages::NotificationServer::ShowNotification>(m_text, m_title, icon);
+    m_connection->send_sync<Messages::NotificationServer::ShowNotification>(m_text, m_title, icon);
 }
 
 }

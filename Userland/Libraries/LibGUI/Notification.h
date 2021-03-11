@@ -30,6 +30,7 @@
 #include <LibGfx/Bitmap.h>
 
 namespace GUI {
+    class NotificationServerConnection;
 
 class Notification : public Core::Object {
     C_OBJECT(Notification);
@@ -54,6 +55,8 @@ private:
     String m_title;
     String m_text;
     RefPtr<Gfx::Bitmap> m_icon;
+
+    NonnullRefPtr<NotificationServerConnection> m_connection;
 };
 
 }
