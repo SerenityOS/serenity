@@ -56,6 +56,7 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
         child->m_extra_gids = m_extra_gids;
         child->m_umask = m_umask;
         child->m_signal_trampoline = m_signal_trampoline;
+        child->m_dumpable = m_dumpable;
     }
 
     dbgln_if(FORK_DEBUG, "fork: child={}", child);
