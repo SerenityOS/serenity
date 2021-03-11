@@ -29,7 +29,7 @@ _codecs_tw cjkcodecs/_codecs_tw.c
 _contextvars _contextvarsmodule.c
 _crypt _cryptmodule.c
 _csv _csv.c
-_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/cfield.c _ctypes/malloc_closure.c _ctypes/stgdict.c -I$(SERENITY_ROOT)/Build/Root/usr/local/include $(SERENITY_ROOT)/Build/Root/usr/local/lib/libffi.a
+_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/cfield.c _ctypes/malloc_closure.c _ctypes/stgdict.c -I$(SERENITY_BUILD_DIR)/Root/usr/local/include $(SERENITY_BUILD_DIR)/Root/usr/local/lib/libffi.a
 _datetime _datetimemodule.c
 _elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DUSE_PYEXPAT_CAPI _elementtree.c
 _heapq _heapqmodule.c
@@ -64,7 +64,7 @@ syslog syslogmodule.c
 unicodedata unicodedata.c
 xxlimited xxlimited.c
 xxsubtype xxsubtype.c
-zlib zlibmodule.c -I$(SERENITY_ROOT)/Build/Root/usr/local/include -L$(SERENITY_ROOT)/Build/Root/usr/local/lib -lz
+zlib zlibmodule.c -I$(SERENITY_BUILD_DIR)/Root/usr/local/include -L$(SERENITY_BUILD_DIR)/Root/usr/local/lib -lz
 
 *disabled*
 # Not building, patch Python some more or fix LibC...
@@ -74,4 +74,4 @@ _decimal _socket mmap resource spwd termios
 _lsprof _multiprocessing
 
 # Lots and lots of linker errors, although these flags should be correct:
-_curses _cursesmodule.c -I$(SERENITY_ROOT)/Build/Root/usr/local/include/ncurses -L$(SERENITY_ROOT)/Build/Root/usr/local/lib -lncurses -ltermcap
+_curses _cursesmodule.c -I$(SERENITY_BUILD_DIR)/Root/usr/local/include/ncurses -L$(SERENITY_BUILD_DIR)/Root/usr/local/lib -lncurses -ltermcap

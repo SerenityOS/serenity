@@ -7,8 +7,6 @@ depends="ncurses"
 
 build() {
     run make \
-        AR=i686-pc-serenity-ar \
-        RANLIB=i686-pc-serenity-ranlib \
         PKG_CONFIG_CURSES=no \
         CURSES_CFLAGS="-I${SERENITY_ROOT}/Build/Root/usr/local/include/ncurses" \
         CURSES_LDFLAGS="-lncurses -ltinfo" \

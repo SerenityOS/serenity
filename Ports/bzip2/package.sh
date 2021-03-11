@@ -4,4 +4,4 @@ version=1.0.8
 files="https://sourceware.org/pub/bzip2/bzip2-${version}.tar.gz bzip2-${version}.tar.gz"
 workdir="bzip2-$version"
 makeopts="bzip2 CC=${CC}"
-installopts="PREFIX=${SERENITY_ROOT}/Build/Root/usr/local"
+installopts="PREFIX=${SERENITY_BUILD_DIR}/Root/usr/local"

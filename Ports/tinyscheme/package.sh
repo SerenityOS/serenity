@@ -10,8 +10,8 @@ build() {
 }
 
 install() {
-    run mkdir -p "${SERENITY_ROOT}/Build/Root/usr/local/bin"
-    run cp scheme "${SERENITY_ROOT}/Build/Root/usr/local/bin/tinyscheme"
-    run mkdir -p "${SERENITY_ROOT}/Build/Root/usr/local/include/tinyscheme"
-    run cp init.scm "${SERENITY_ROOT}/Build/Root/usr/local/include/tinyscheme/init.scm"
+    run mkdir -p "${SERENITY_BUILD_DIR}/Root/usr/local/bin"
+    run cp scheme "${SERENITY_BUILD_DIR}/Root/usr/local/bin/tinyscheme"
+    run mkdir -p "${SERENITY_BUILD_DIR}/Root/usr/local/include/tinyscheme"
+    run cp init.scm "${SERENITY_BUILD_DIR}/Root/usr/local/include/tinyscheme/init.scm"
 }
