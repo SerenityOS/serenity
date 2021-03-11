@@ -181,6 +181,8 @@ RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)
         return WindowManager::the().move_cursor();
     case Gfx::StandardCursor::Wait:
         return WindowManager::the().wait_cursor();
+    case Gfx::StandardCursor::Disallowed:
+        return WindowManager::the().disallowed_cursor();
     default:
         VERIFY_NOT_REACHED();
     }
