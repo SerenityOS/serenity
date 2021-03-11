@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Window.h>
 
 namespace NotificationServer {
@@ -46,6 +47,10 @@ private:
 
     Gfx::IntRect m_original_rect;
     i32 m_id;
+
+    GUI::Label* m_text_label;
+    GUI::Label* m_title_label;
+    GUI::ImageWidget* m_image;
 };
 
 }
