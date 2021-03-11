@@ -209,27 +209,14 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
     return process;
 }
 
-const Process::ProtectedData& Process::protected_data() const
-{
-    return *reinterpret_cast<const ProtectedData*>(m_protected_data->data());
-}
-
 void Process::protect_data()
 {
-    auto& region = m_protected_data->impl().region();
-    if (!region.is_writable())
-        return;
-    region.set_writable(false);
-    region.remap();
+    MM.set_page_writable_direct(VirtualAddress { this }, false);
 }
 
 void Process::unprotect_data()
 {
-    auto& region = m_protected_data->impl().region();
-    if (region.is_writable())
-        return;
-    region.set_writable(true);
-    region.remap();
+    MM.set_page_writable_direct(VirtualAddress { this }, true);
 }
 
 Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
@@ -240,20 +227,14 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
     , m_tty(tty)
     , m_wait_block_condition(*this)
 {
-    m_protected_data = KBuffer::try_create_with_size(sizeof(ProtectedData));
-    VERIFY(m_protected_data);
-
-    {
-        MutableProtectedData protected_data { *this };
-        protected_data->pid = allocate_pid();
-        protected_data->ppid = ppid;
-        protected_data->uid = uid;
-        protected_data->gid = gid;
-        protected_data->euid = uid;
-        protected_data->egid = gid;
-        protected_data->suid = uid;
-        protected_data->sgid = gid;
-    }
+    m_pid = allocate_pid();
+    m_ppid = ppid;
+    m_uid = uid;
+    m_gid = gid;
+    m_euid = uid;
+    m_egid = gid;
+    m_suid = uid;
+    m_sgid = gid;
 
     dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, this->pid().value());
 
@@ -273,6 +254,8 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
 
 Process::~Process()
 {
+    unprotect_data();
+
     VERIFY(thread_count() == 0); // all threads should have been finalized
     VERIFY(!m_alarm_timer);
 
@@ -727,9 +710,10 @@ bool Process::add_thread(Thread& thread)
 
 void Process::set_dumpable(bool dumpable)
 {
-    if (dumpable == protected_data().dumpable)
+    if (dumpable == m_dumpable)
         return;
-    MutableProtectedData(*this)->dumpable = dumpable;
+    ProtectedDataMutationScope scope { *this };
+    m_dumpable = dumpable;
 }
 
 }
