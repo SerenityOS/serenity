@@ -8,8 +8,8 @@ depends="SDL2"
 
 configure() {
     run ./configure \
-        --host=${SERENITY_ARCH}-pc-serenity \
-        --with-sdl-prefix=${SERENITY_ROOT}/Build/Root/usr \
+        --host="${SERENITY_ARCH}-pc-serenity" \
+        --with-sdl-prefix="${SERENITY_BUILD_DIR}/Root/usr" \
         EXTRA_LDFLAGS="-lgui -lgfx -lipc -lcore -lcompression"
 }
 
@@ -18,5 +18,5 @@ build() {
 }
 
 install() {
-    run make -k DESTDIR="$SERENITY_ROOT"/Build/Root install
+    run make -k DESTDIR="${SERENITY_BUILD_DIR}/Root" install
 }

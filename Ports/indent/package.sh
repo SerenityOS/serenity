@@ -8,9 +8,8 @@ useconfigure=true
 auth_type="sig"
 auth_opts="--keyring ./gnu-keyring.gpg indent-${version}.tar.gz.sig"
 
-man_dir=$SERENITY_ROOT/Build/Root/usr/local/share/man/man1/
-
 post_install() {
-    mkdir -p "${man_dir}"
-    cp "indent-${version}/man/indent.1" "${man_dir}"
+    man_dir="${SERENITY_BUILD_DIR}/Root/usr/local/share/man/man1/"
+    run mkdir -p "${man_dir}"
+    run cp man/indent.1 "${man_dir}"
 }

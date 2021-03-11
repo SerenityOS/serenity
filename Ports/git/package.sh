@@ -12,8 +12,8 @@ build() {
 }
 
 post_install() {
-    mkdir -p "$SERENITY_ROOT"/Build/Root/home/anon
-    cp "$workdir"/../default_gitconfig "$SERENITY_ROOT"/Build/Root/home/anon/.gitconfig
+    run mkdir -p "${SERENITY_BUILD_DIR}/Root/home/anon"
+    run cp "../default_gitconfig" "${SERENITY_BUILD_DIR}/Root/home/anon/.gitconfig"
 }
 
 export NO_OPENSSL=1

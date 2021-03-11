@@ -8,7 +8,7 @@ depends="SDL2 freetype"
 
 configure() {
     run ./configure \
-        --host=${SERENITY_ARCH}-pc-serenity \
-        --with-sdl-prefix=${SERENITY_ROOT}/Build/Root/usr \
+        --host="${SERENITY_ARCH}-pc-serenity" \
+        --with-sdl-prefix="${SERENITY_BUILD_DIR}/Root/usr" \
         LIBS="-lgui -lgfx -lipc -lcore -lcompress"
 }

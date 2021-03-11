@@ -12,7 +12,7 @@ build() {
 }
 
 install() {
-    cmake_dir="${SERENITY_ROOT}/Build/Root/home/anon/Source/cmake"
+    cmake_dir="${SERENITY_BUILD_DIR}/Root/home/anon/Source/cmake"
     run rm -rf "$cmake_dir"
     run mkdir -p "$cmake_dir"
     run cp -r . "$cmake_dir"
