@@ -693,6 +693,7 @@ bool Process::create_perf_events_buffer_if_needed()
 
 bool Process::remove_thread(Thread& thread)
 {
+    ProtectedDataMutationScope scope { *this };
     auto thread_cnt_before = m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
     VERIFY(thread_cnt_before != 0);
     ScopedSpinLock thread_list_lock(m_thread_list_lock);
@@ -702,6 +703,7 @@ bool Process::remove_thread(Thread& thread)
 
 bool Process::add_thread(Thread& thread)
 {
+    ProtectedDataMutationScope scope { *this };
     bool is_first = m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed) == 0;
     ScopedSpinLock thread_list_lock(m_thread_list_lock);
     m_thread_list.append(thread);
