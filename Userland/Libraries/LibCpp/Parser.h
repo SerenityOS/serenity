@@ -27,14 +27,17 @@
 #pragma once
 
 #include "AK/NonnullRefPtr.h"
+#include <AK/Noncopyable.h>
 #include "AST.h"
+#include "Preprocessor.h"
 #include <LibCpp/Lexer.h>
 
 namespace Cpp {
 
 class Parser final {
+    AK_MAKE_NONCOPYABLE(Parser);
 public:
-    explicit Parser(const StringView& program, const String& filename);
+    explicit Parser(const StringView& program, const String& filename, Preprocessor::Definitions&& = {});
     ~Parser() = default;
 
     NonnullRefPtr<TranslationUnit> parse();
@@ -48,6 +51,7 @@ public:
     StringView text_of_token(const Cpp::Token& token) const;
     void print_tokens() const;
     Vector<String> errors() const { return m_errors; }
+    const Preprocessor::Definitions& definitions() const {return m_definitions;}
 
 private:
     enum class DeclarationType {
@@ -151,7 +155,15 @@ private:
         return node;
     }
 
+    bool match_attribute_specification();
+    void consume_attribute_specification();
+    bool match_ellipsis();
+    void initialize_program_tokens();
+    void add_tokens_for_preprocessor(Token& replaced_token, Preprocessor::DefinedValue&);
+    Vector<StringView> parse_type_qualifiers();
+
     StringView m_program;
+    Preprocessor::Definitions m_definitions;
     Vector<StringView> m_lines;
     String m_filename;
     Vector<Token> m_tokens;
@@ -160,10 +172,6 @@ private:
     RefPtr<TranslationUnit> m_root_node;
     NonnullRefPtrVector<ASTNode> m_nodes;
     Vector<String> m_errors;
-    Vector<StringView> parse_type_qualifiers();
-    bool match_attribute_specification();
-    void consume_attribute_specification();
-    bool match_ellipsis();
 };
 
 }

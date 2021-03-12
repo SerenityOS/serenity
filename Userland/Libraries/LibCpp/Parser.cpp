@@ -37,25 +37,41 @@
 
 namespace Cpp {
 
-Parser::Parser(const StringView& program, const String& filename)
+Parser::Parser(const StringView& program, const String& filename, Preprocessor::Definitions&& definitions)
     : m_program(program)
+    , m_definitions(move(definitions))
     , m_lines(m_program.split_view("\n", true))
     , m_filename(filename)
 {
-    Lexer lexer(m_program);
-    for (auto& token : lexer.lex()) {
-        if (token.m_type == Token::Type::Whitespace)
-            continue;
-        m_tokens.append(move(token));
-    }
+    initialize_program_tokens();
 #if CPP_DEBUG
     dbgln("Program:");
     dbgln("{}", m_program);
     dbgln("Tokens:");
     for (auto& token : m_tokens) {
-        dbgln("{} ({}:{}-{}:{})", token.to_string(), token.start().line, token.start().column, token.end().line, token.end().column);
+        StringView text;
+        if (token.m_start.line != token.m_end.line || token.m_start.column > token.m_end.column)
+            text = {};
+        else
+            text = text_of_token(token);
+        dbgln("{}  {}:{}-{}:{} ({})", token.to_string(), token.start().line, token.start().column, token.end().line, token.end().column, text);
     }
 #endif
+}
+void Parser::initialize_program_tokens()
+{
+    Lexer lexer(m_program);
+    for (auto& token : lexer.lex()) {
+        if (token.m_type == Token::Type::Whitespace)
+            continue;
+        if (token.m_type == Token::Type::Identifier) {
+            if (auto defined_value = m_definitions.find(text_of_token(token)); defined_value != m_definitions.end()) {
+                add_tokens_for_preprocessor(token, defined_value->value);
+                continue;
+            }
+        }
+        m_tokens.append(move(token));
+    }
 }
 
 NonnullRefPtr<TranslationUnit> Parser::parse()
@@ -1096,6 +1112,19 @@ bool Parser::match_ellipsis()
     if (m_state.token_index > m_tokens.size() - 3)
         return false;
     return peek().type() == Token::Type::Dot && peek().type() == Token::Type::Dot && peek().type() == Token::Type::Dot;
+}
+void Parser::add_tokens_for_preprocessor(Token& replaced_token, Preprocessor::DefinedValue& definition)
+{
+    if (!definition.value.has_value())
+        return;
+    Lexer lexer(definition.value.value());
+    for (auto token : lexer.lex()) {
+        if (token.type() == Token::Type::Whitespace)
+            continue;
+        token.m_start = replaced_token.start();
+        token.m_end = replaced_token.end();
+        m_tokens.append(move(token));
+    }
 }
 
 }

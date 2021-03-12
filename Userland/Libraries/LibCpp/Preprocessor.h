@@ -41,14 +41,17 @@ public:
     const String& processed_text();
     Vector<StringView> included_paths() const { return m_included_paths; }
 
-private:
     struct DefinedValue {
         Optional<StringView> value;
     };
+    using Definitions = HashMap<StringView, DefinedValue>;
 
+    const Definitions& definitions() const { return m_definitions; }
+
+private:
     void handle_preprocessor_line(const StringView&);
 
-    HashMap<StringView, DefinedValue> m_definitions;
+    Definitions m_definitions;
     const StringView m_program;
     StringBuilder m_builder;
     Vector<StringView> m_lines;
