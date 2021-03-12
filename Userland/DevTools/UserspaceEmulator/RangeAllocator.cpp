@@ -136,7 +136,7 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
         carve_at_index(i, allocated_range);
         return allocated_range;
     }
-    klog() << "RangeAllocator: Failed to allocate anywhere: " << size << ", " << alignment;
+    dbgln("RangeAllocator: Failed to allocate anywhere: size={}, alignment={}", size, alignment);
     return {};
 }
 
