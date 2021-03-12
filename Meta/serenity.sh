@@ -148,6 +148,10 @@ set_tmux_title() {
     printf "\033]2;%s\033\\" "$1"
 }
 
+lagom_unsupported() {
+    [ "$TARGET" != "lagom" ] || die "${1:-"Command '$CMD' not supported for the lagom target"}"
+}
+
 run_gdb() {
     local GDB_ARGS=()
     local PASS_ARG_TO_GDB=""
@@ -189,12 +193,12 @@ if [[ "$CMD" =~ ^(build|install|image|run|gdb|rebuild|recreate|kaddr2line|addr2l
             build_target "$@"
             ;;
         install)
-            [ "$TARGET" != "lagom" ] || die "Command '$CMD' not supported for the lagom target"
+            lagom_unsupported
             build_target
             build_target install
             ;;
         image)
-            [ "$TARGET" != "lagom" ] || die "Command '$CMD' not supported for the lagom target"
+            lagom_unsupported
             build_target
             build_target install
             build_target image
@@ -229,6 +233,7 @@ if [[ "$CMD" =~ ^(build|install|image|run|gdb|rebuild|recreate|kaddr2line|addr2l
         recreate)
             ;;
         kaddr2line)
+            lagom_unsupported
             build_target
             [ $# -ge 1 ] || usage
             "$TOOLCHAIN_DIR/binutils/binutils/addr2line" -e "$BUILD_DIR/Kernel/Kernel" "$@"
@@ -253,7 +258,7 @@ elif [ "$CMD" = "delete" ]; then
     delete_target
 elif [ "$CMD" = "rebuild-toolchain" ]; then
     cmd_with_target
-    [ "$TARGET" != "lagom" ] || die "The lagom target uses the host toolchain"
+    lagom_unsupported "The lagom target uses the host toolchain"
     delete_toolchain
     ensure_toolchain
 elif [ "$CMD" = "__tmux_cmd" ]; then
