@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,28 +24,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include "LibCpp/Token.h"
-#include <AK/StringView.h>
-#include <AK/Vector.h>
+#include "Token.h"
 
 namespace Cpp {
 
-class Lexer {
-public:
-    Lexer(const StringView&);
-
-    Vector<Token> lex();
-
-private:
-    char peek(size_t offset = 0) const;
-    char consume();
-
-    StringView m_input;
-    size_t m_index { 0 };
-    Position m_previous_position { 0, 0 };
-    Position m_position { 0, 0 };
-};
+bool Position::operator<(const Position& other) const
+{
+    return line < other.line || (line == other.line && column < other.column);
+}
+bool Position::operator>(const Position& other) const
+{
+    return !(*this < other) && !(*this == other);
+}
+bool Position::operator==(const Position& other) const
+{
+    return line == other.line && column == other.column;
+}
 
 }
