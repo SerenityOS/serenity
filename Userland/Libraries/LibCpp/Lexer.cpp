@@ -791,17 +791,4 @@ Vector<Token> Lexer::lex()
     return tokens;
 }
 
-bool Position::operator<(const Position& other) const
-{
-    return line < other.line || (line == other.line && column < other.column);
-}
-bool Position::operator>(const Position& other) const
-{
-    return !(*this < other) && !(*this == other);
-}
-bool Position::operator==(const Position& other) const
-{
-    return line == other.line && column == other.column;
-}
-
 }
