@@ -68,6 +68,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
+            "/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/QuickShow.md") })) {
+        warnln("Failed to set up allowed launch URLs");
+        return 1;
+    }
+
     if (!Desktop::Launcher::seal_allowlist()) {
         warnln("Failed to seal allowed launch URLs");
         return 1;
@@ -299,6 +305,9 @@ int main(int argc, char** argv)
     view_menu.add_action(hide_show_toolbar_action);
 
     auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/QuickShow.md"), "/bin/Help");
+    }));
     help_menu.add_action(GUI::CommonActions::make_about_action("QuickShow", app_icon, window));
 
     app->set_menubar(move(menubar));
