@@ -20,6 +20,12 @@ Usage: $ARG0 COMMAND [TARGET] [ARGS...]
                 $ARG0 gdb [TARGET] [kernel_cmd_line] [-ex 'any gdb command']...
                     If specified, passes the kernel_cmd_line to the Kernel
                     Passes through '-ex' commands to gdb
+    test:       TARGET lagom: $ARG0 test lagom [TEST_NAME_PATTERN]
+                    Runs the unit tests on the build host, or if TEST_NAME_PATTERN
+                    is specified tests matching it.
+                All other TARGETs: $ARG0 test [TARGET]
+                    Runs the built image in QEMU in self-test mode, by passing
+                    boot_mode=self-test to the Kernel
     delete:     Removes the build environment for TARGET
     recreate:   Deletes and re-creates the build environment for TARGET
     rebuild:    Deletes and re-creates the build environment, and compiles for TARGET
@@ -38,6 +44,8 @@ Usage: $ARG0 COMMAND [TARGET] [ARGS...]
         Runs the image for the default TARGET i686 in QEMU
     $ARG0 run lagom js
         Runs the Lagom-built js(1) REPL
+    $ARG0 test lagom
+        Runs the unit tests on the build host
     $ARG0 kaddr2line i686 0x12345678
         Resolves the address 0x12345678 in the Kernel binary
     $ARG0 addr2line i686 WindowServer 0x12345678
@@ -178,7 +186,7 @@ run_gdb() {
     gdb "$BUILD_DIR/Kernel/Kernel" -ex 'target remote :1234' "${GDB_ARGS[@]}" -ex cont
 }
 
-if [[ "$CMD" =~ ^(build|install|image|run|gdb|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
+if [[ "$CMD" =~ ^(build|install|image|run|gdb|test|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
     cmd_with_target
     [[ "$CMD" != "recreate" && "$CMD" != "rebuild" ]] || delete_target
     # FIXME: We should probably call ensure_toolchain first, but this somehow causes
@@ -219,11 +227,24 @@ if [[ "$CMD" =~ ^(build|install|image|run|gdb|rebuild|recreate|kaddr2line|addr2l
             command -v tmux >/dev/null 2>&1 || die "Please install tmux!"
             build_target
             if [ "$TARGET" = "lagom" ]; then
-                run_tests "${CMD_ARGS[0]}"
+                lagom_unsupported
             else
                 build_target install
                 build_target image
                 tmux new-session "$ARG0" __tmux_cmd "$TARGET" run "${CMD_ARGS[@]}" \; set-option -t 0 mouse on \; split-window "$ARG0" __tmux_cmd "$TARGET" gdb "${CMD_ARGS[@]}" \;
+            fi
+            ;;
+        test)
+            # FIXME: can we avoid building everything for host tests?
+            build_target
+            if [ "$TARGET" = "lagom" ]; then
+                run_tests "${CMD_ARGS[0]}"
+            else
+                build_target install
+                build_target image
+                export SERENITY_KERNEL_CMDLINE="boot_mode=self-test"
+                export SERENITY_RUN="ci"
+                build_target run
             fi
             ;;
         rebuild)
