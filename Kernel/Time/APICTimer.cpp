@@ -27,6 +27,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 #include <Kernel/Time/APICTimer.h>
@@ -56,7 +57,7 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
 {
     VERIFY_INTERRUPTS_DISABLED();
 
-    klog() << "APICTimer: Using " << calibration_source.model() << " as calibration source";
+    dmesgln("APICTimer: Using {} as calibration source", calibration_source.model());
 
     auto& apic = APIC::the();
 #ifdef APIC_TIMER_MEASURE_CPU_CLOCK
@@ -100,8 +101,8 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
     // calbibration_source timer to fire so that we can read the current
     // tick count from the APIC timer
     auto original_callback = set_callback([&](const RegisterState&) {
-        klog() << "APICTimer: Timer fired during calibration!";
-        VERIFY_NOT_REACHED(); // TODO: How should we handle this?
+        // TODO: How should we handle this?
+        PANIC("APICTimer: Timer fired during calibration!");
     });
     apic.setup_local_timer(0xffffffff, APIC::TimerMode::Periodic, true);
 
@@ -120,27 +121,27 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
     if (query_reference) {
         u64 one_tick_ns = calibration_source.raw_to_ns((end_reference - start_reference) / ticks_in_100ms);
         m_frequency = (u32)(1000000000ull / one_tick_ns);
-        klog() << "APICTimer: Ticks per second: " << m_frequency << " (" << (one_tick_ns / 1000000) << "." << (one_tick_ns % 1000000) << "ms)";
+        dmesgln("APICTimer: Ticks per second: {} ({}.{}ms)", m_frequency, one_tick_ns / 1000000, one_tick_ns % 1000000);
     } else {
         // For now, assume the frequency is exactly the same
         m_frequency = calibration_source.ticks_per_second();
-        klog() << "APICTimer: Ticks per second: " << m_frequency << " (assume same frequency as reference clock)";
+        dmesgln("APICTimer: Ticks per second: {} (assume same frequency as reference clock)", m_frequency);
     }
 
     auto delta_apic_count = start_apic_count - end_apic_count; // The APIC current count register decrements!
     m_timer_period = (delta_apic_count * apic.get_timer_divisor()) / ticks_in_100ms;
 
     u64 apic_freq = delta_apic_count * apic.get_timer_divisor() * 10;
-    klog() << "APICTimer: Bus clock speed: " << (apic_freq / 1000000) << "." << (apic_freq % 1000000) << " MHz";
+    dmesgln("APICTimer: Bus clock speed: {}.{} MHz", apic_freq / 1000000, apic_freq % 1000000);
     if (apic_freq < 1000000) {
-        klog() << "APICTimer: Frequency too slow!";
+        dmesgln("APICTimer: Frequency too slow!");
         return false;
     }
 
 #ifdef APIC_TIMER_MEASURE_CPU_CLOCK
     if (supports_tsc) {
         auto delta_tsc = (end_tsc - start_tsc) * 10;
-        klog() << "APICTimer: CPU clock speed: " << (delta_tsc / 1000000) << "." << (delta_tsc % 1000000) << " MHz";
+        dmesgln("APICTimer: CPU clock speed: {}.{} MHz", delta_tsc / 1000000, delta_tsc % 1000000);
     }
 #endif
 
