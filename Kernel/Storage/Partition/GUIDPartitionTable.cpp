@@ -100,12 +100,10 @@ bool GUIDPartitionTable::initialize()
         return false;
     }
 
-#if GPT_DEBUG
-    klog() << "GUIDPartitionTable: signature - 0x" << String::format("%x", header().sig[1]) << String::format("%x", header().sig[0]);
-#endif
+    dbgln_if(GPT_DEBUG, "GUIDPartitionTable: signature - {:#08x} {:#08x}", header().sig[1], header().sig[0]);
 
     if (header().sig[0] != GPT_SIGNATURE && header().sig[1] != GPT_SIGNATURE2) {
-        klog() << "GUIDPartitionTable: bad signature 0x" << String::format("%x", header().sig[1]) << String::format("%x", header().sig[0]);
+        dbgln("GUIDPartitionTable: bad signature {:#08x} {:#08x}", header().sig[1], header().sig[0]);
         return false;
     }
 

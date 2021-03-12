@@ -41,7 +41,7 @@ RamdiskDevice::RamdiskDevice(const RamdiskController& controller, OwnPtr<Region>
     : StorageDevice(controller, major, minor, 512, 0)
     , m_region(move(region))
 {
-    klog() << "Ramdisk: Device #" << minor << " @ " << m_region->vaddr() << " length " << m_region->size();
+    dmesgln("Ramdisk: Device #{} @ {}, length {}", minor, m_region->vaddr(), m_region->size());
 }
 
 RamdiskDevice::~RamdiskDevice()
