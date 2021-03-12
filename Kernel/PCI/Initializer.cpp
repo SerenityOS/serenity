@@ -57,22 +57,22 @@ UNMAP_AFTER_INIT void initialize()
     else
         IOAccess::initialize();
     PCI::enumerate([&](const Address& address, ID id) {
-        klog() << address << " " << id;
+        dmesgln("{} {}", address, id);
     });
 }
 
 UNMAP_AFTER_INIT bool test_pci_io()
 {
-    klog() << "Testing PCI via manual probing... ";
+    dmesgln("Testing PCI via manual probing...");
     u32 tmp = 0x80000000;
     IO::out32(PCI_ADDRESS_PORT, tmp);
     tmp = IO::in32(PCI_ADDRESS_PORT);
     if (tmp == 0x80000000) {
-        klog() << "PCI IO Supported!";
+        dmesgln("PCI IO supported");
         return true;
     }
 
-    klog() << "PCI IO Not Supported!";
+    dmesgln("PCI IO not supported");
     return false;
 }
 

@@ -107,9 +107,7 @@ void Access::enumerate_functions(int type, u8 bus, u8 device, u8 function, Funct
         callback(address, { early_read16_field(address, PCI_VENDOR_ID), early_read16_field(address, PCI_DEVICE_ID) });
     if (early_read_type(address) == PCI_TYPE_BRIDGE && recursive) {
         u8 secondary_bus = early_read8_field(address, PCI_SECONDARY_BUS);
-#if PCI_DEBUG
-        klog() << "PCI: Found secondary bus: " << secondary_bus;
-#endif
+        dbgln_if(PCI_DEBUG, "PCI: Found secondary bus: {}", secondary_bus);
         VERIFY(secondary_bus != bus);
         enumerate_bus(type, secondary_bus, callback, recursive);
     }

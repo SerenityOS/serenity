@@ -83,27 +83,22 @@ UNMAP_AFTER_INIT void MMIOAccess::initialize(PhysicalAddress mcfg)
 {
     if (!Access::is_initialized()) {
         new MMIOAccess(mcfg);
-#if PCI_DEBUG
-        dbgln("PCI: MMIO access initialised.");
-#endif
+        dbgln_if(PCI_DEBUG, "PCI: MMIO access initialised.");
     }
 }
 
 UNMAP_AFTER_INIT MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     : m_mcfg(p_mcfg)
 {
-    klog() << "PCI: Using MMIO for PCI configuration space access";
+    dmesgln("PCI: Using MMIO for PCI configuration space access");
 
     auto checkup_region = MM.allocate_kernel_region(p_mcfg.page_base(), (PAGE_SIZE * 2), "PCI MCFG Checkup", Region::Access::Read | Region::Access::Write);
-#if PCI_DEBUG
-    dbgln("PCI: Checking MCFG Table length to choose the correct mapping size");
-#endif
-
+    dbgln_if(PCI_DEBUG, "PCI: Checking MCFG Table length to choose the correct mapping size");
     auto* sdt = (ACPI::Structures::SDTHeader*)checkup_region->vaddr().offset(p_mcfg.offset_in_page()).as_ptr();
     u32 length = sdt->length;
     u8 revision = sdt->revision;
 
-    klog() << "PCI: MCFG, length - " << length << ", revision " << revision;
+    dbgln("PCI: MCFG, length: {}, revision: {}", length, revision);
     checkup_region->unmap();
 
     auto mcfg_region = MM.allocate_kernel_region(p_mcfg.page_base(), page_round_up(length) + PAGE_SIZE, "PCI Parsing MCFG", Region::Access::Read | Region::Access::Write);
@@ -117,10 +112,10 @@ UNMAP_AFTER_INIT MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
         u32 lower_addr = mcfg.descriptors[index].base_addr;
 
         m_segments.set(index, { PhysicalAddress(lower_addr), start_bus, end_bus });
-        klog() << "PCI: New PCI segment @ " << PhysicalAddress(lower_addr) << ", PCI buses (" << start_bus << "-" << end_bus << ")";
+        dmesgln("PCI: New PCI segment @ {}, PCI buses ({}-{})", PhysicalAddress { lower_addr }, start_bus, end_bus);
     }
     mcfg_region->unmap();
-    klog() << "PCI: MMIO segments - " << m_segments.size();
+    dmesgln("PCI: MMIO segments: {}", m_segments.size());
 
     InterruptDisabler disabler;
 
