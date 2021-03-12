@@ -4,6 +4,7 @@ set(SOURCES
     Parser.cpp
     Preprocessor.cpp
     SyntaxHighlighter.cpp
+    Token.cpp
 )
 
 serenity_lib(LibCpp cpp)
