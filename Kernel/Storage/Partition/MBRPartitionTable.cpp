@@ -120,13 +120,9 @@ const MBRPartitionTable::Header& MBRPartitionTable::header() const
 bool MBRPartitionTable::initialize()
 {
     auto& header = this->header();
-#if MBR_DEBUG
-
-    klog() << "Master Boot Record: mbr_signature=0x" << String::format("%x", header.mbr_signature);
-
-#endif
+    dbgln_if(MBR_DEBUG, "Master Boot Record: mbr_signature={:#08x}", header.mbr_signature);
     if (header.mbr_signature != MBR_SIGNATURE) {
-        klog() << "Master Boot Record: invalid signature";
+        dbgln("Master Boot Record: invalid signature");
         return false;
     }
     return true;
