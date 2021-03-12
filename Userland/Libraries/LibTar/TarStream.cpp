@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -120,7 +121,9 @@ void TarStream::advance()
 
 bool TarStream::valid() const
 {
-    return header().magic() == ustar_magic;
+    auto& header_magic = header().magic();
+    auto& header_version = header().version();
+    return (header_magic == gnu_magic && header_version == gnu_version) || (header_magic == ustar_magic && header_version == ustar_version);
 }
 
 TarFileStream TarStream::file_contents()
