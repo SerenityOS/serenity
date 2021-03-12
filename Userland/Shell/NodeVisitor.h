@@ -63,6 +63,7 @@ public:
     virtual void visit(const AST::ReadWriteRedirection*);
     virtual void visit(const AST::Sequence*);
     virtual void visit(const AST::Subshell*);
+    virtual void visit(const AST::Slice*);
     virtual void visit(const AST::SimpleVariable*);
     virtual void visit(const AST::SpecialVariable*);
     virtual void visit(const AST::Juxtaposition*);

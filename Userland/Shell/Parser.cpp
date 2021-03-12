@@ -1331,6 +1331,21 @@ RefPtr<AST::Node> Parser::parse_doublequoted_string_inner()
 RefPtr<AST::Node> Parser::parse_variable()
 {
     auto rule_start = push_start();
+    auto ref = parse_variable_ref();
+
+    if (!ref)
+        return nullptr;
+
+    auto variable = static_ptr_cast<AST::VariableNode>(ref);
+    if (auto slice = parse_slice())
+        variable->set_slice(slice.release_nonnull());
+
+    return variable;
+}
+
+RefPtr<AST::Node> Parser::parse_variable_ref()
+{
+    auto rule_start = push_start();
     if (at_end())
         return nullptr;
 
@@ -1356,6 +1371,38 @@ RefPtr<AST::Node> Parser::parse_variable()
     }
 
     return create<AST::SimpleVariable>(move(name)); // Variable Simple
+}
+
+RefPtr<AST::Node> Parser::parse_slice()
+{
+    auto rule_start = push_start();
+    if (!next_is("["))
+        return nullptr;
+
+    consume(); // [
+
+    ScopedValueRollback chars_change { m_extra_chars_not_allowed_in_barewords };
+    m_extra_chars_not_allowed_in_barewords.append(']');
+    auto spec = parse_brace_expansion_spec();
+
+    RefPtr<AST::SyntaxError> error;
+
+    if (peek() != ']')
+        error = create<AST::SyntaxError>("Expected a close bracket ']' to end a variable slice");
+    else
+        consume();
+
+    if (!spec) {
+        if (error)
+            spec = move(error);
+        else
+            spec = create<AST::SyntaxError>("Expected either a range, or a comma-seprated list of selectors");
+    }
+
+    auto node = create<AST::Slice>(spec.release_nonnull());
+    if (error)
+        node->set_is_syntax_error(*error);
+    return node;
 }
 
 RefPtr<AST::Node> Parser::parse_evaluate()
@@ -1787,7 +1834,9 @@ RefPtr<AST::Node> Parser::parse_brace_expansion()
 RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
 {
     TemporaryChange is_in_brace_expansion { m_is_in_brace_expansion_spec, true };
-    TemporaryChange chars_change { m_extra_chars_not_allowed_in_barewords, { ',' } };
+    ScopedValueRollback chars_change { m_extra_chars_not_allowed_in_barewords };
+
+    m_extra_chars_not_allowed_in_barewords.append(',');
 
     auto rule_start = push_start();
     auto start_expr = parse_expression();

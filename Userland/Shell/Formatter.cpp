@@ -195,18 +195,22 @@ void Formatter::visit(const AST::BraceExpansion* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    current_builder().append('{');
+    if (!m_parent_node || m_parent_node->kind() != AST::Node::Kind::Slice)
+        current_builder().append('{');
 
-    TemporaryChange<const AST::Node*> parent { m_parent_node, node };
-    bool first = true;
-    for (auto& entry : node->entries()) {
-        if (!first)
-            current_builder().append(',');
-        first = false;
-        entry.visit(*this);
+    {
+        TemporaryChange<const AST::Node*> parent { m_parent_node, node };
+        bool first = true;
+        for (auto& entry : node->entries()) {
+            if (!first)
+                current_builder().append(',');
+            first = false;
+            entry.visit(*this);
+        }
     }
 
-    current_builder().append('}');
+    if (!m_parent_node || m_parent_node->kind() != AST::Node::Kind::Slice)
+        current_builder().append('}');
     visited(node);
 }
 
@@ -615,14 +619,16 @@ void Formatter::visit(const AST::Range* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    current_builder().append('{');
+    if (!m_parent_node || m_parent_node->kind() != AST::Node::Kind::Slice)
+        current_builder().append('{');
 
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
     node->start()->visit(*this);
     current_builder().append("..");
     node->end()->visit(*this);
 
-    current_builder().append('}');
+    if (!m_parent_node || m_parent_node->kind() != AST::Node::Kind::Slice)
+        current_builder().append('}');
     visited(node);
 }
 
@@ -686,12 +692,27 @@ void Formatter::visit(const AST::Subshell* node)
     visited(node);
 }
 
+void Formatter::visit(const AST::Slice* node)
+{
+    will_visit(node);
+    test_and_update_output_cursor(node);
+    TemporaryChange<const AST::Node*> parent { m_parent_node, node };
+
+    current_builder().append('[');
+    node->selector()->visit(*this);
+    current_builder().append(']');
+
+    visited(node);
+}
+
 void Formatter::visit(const AST::SimpleVariable* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append('$');
     current_builder().append(node->name());
+    if (const AST::Node* slice = node->slice())
+        slice->visit(*this);
     visited(node);
 }
 
@@ -701,6 +722,8 @@ void Formatter::visit(const AST::SpecialVariable* node)
     test_and_update_output_cursor(node);
     current_builder().append('$');
     current_builder().append(node->name());
+    if (const AST::Node* slice = node->slice())
+        slice->visit(*this);
     visited(node);
 }
 

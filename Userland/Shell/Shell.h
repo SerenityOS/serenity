@@ -235,6 +235,7 @@ public:
         EvaluatedSyntaxError,
         NonExhaustiveMatchRules,
         InvalidGlobError,
+        InvalidSliceContentsError,
         OpenFailure,
     };
 

@@ -202,12 +202,21 @@ void NodeVisitor::visit(const AST::Subshell* node)
         node->block()->visit(*this);
 }
 
-void NodeVisitor::visit(const AST::SimpleVariable*)
+void NodeVisitor::visit(const AST::Slice* node)
 {
+    node->selector()->visit(*this);
 }
 
-void NodeVisitor::visit(const AST::SpecialVariable*)
+void NodeVisitor::visit(const AST::SimpleVariable* node)
 {
+    if (const AST::Node* slice = node->slice())
+        slice->visit(*this);
+}
+
+void NodeVisitor::visit(const AST::SpecialVariable* node)
+{
+    if (const AST::Node* slice = node->slice())
+        slice->visit(*this);
 }
 
 void NodeVisitor::visit(const AST::Juxtaposition* node)
