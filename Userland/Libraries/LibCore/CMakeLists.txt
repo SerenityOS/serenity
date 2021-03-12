@@ -22,7 +22,6 @@ set(SOURCES
     Object.cpp
     ProcessStatisticsReader.cpp
     Property.cpp
-    SocketAddress.cpp
     Socket.cpp
     StandardPaths.cpp
     TCPServer.cpp
