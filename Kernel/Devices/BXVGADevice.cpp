@@ -166,7 +166,7 @@ UNMAP_AFTER_INIT u32 BXVGADevice::find_framebuffer_address()
     PCI::enumerate([&framebuffer_address](const PCI::Address& address, PCI::ID id) {
         if (id == bochs_vga_id || id == virtualbox_vga_id) {
             framebuffer_address = PCI::get_BAR0(address) & 0xfffffff0;
-            klog() << "BXVGA: framebuffer @ " << PhysicalAddress(framebuffer_address);
+            dbgln("BXVGA: framebuffer @ {}", PhysicalAddress(framebuffer_address));
         }
     });
     return framebuffer_address;
