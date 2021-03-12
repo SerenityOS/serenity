@@ -4,4 +4,4 @@ set(SOURCES
 )
 
 serenity_app(QuickShow ICON filetype-image)
-target_link_libraries(QuickShow LibGUI LibGfx)
+target_link_libraries(QuickShow LibDesktop LibGUI LibGfx)
