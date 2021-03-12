@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +47,10 @@ enum FileType {
 };
 
 constexpr size_t block_size = 512;
-constexpr const char* ustar_magic = "ustar ";
+constexpr const char* gnu_magic = "ustar ";  // gnu format magic
+constexpr const char* gnu_version = " ";     // gnu format version
+constexpr const char* ustar_magic = "ustar"; // ustar format magic
+constexpr const char* ustar_version = "00";  // ustar format version
 
 class Header {
 public:
@@ -60,8 +64,8 @@ public:
     time_t timestamp() const { return get_tar_field(m_timestamp); }
     FileType type_flag() const { return FileType(m_type_flag); }
     const StringView link_name() const { return m_link_name; }
-    const StringView magic() const { return StringView(m_magic, sizeof(m_magic)); }
-    const StringView version() const { return StringView(m_version, sizeof(m_version)); }
+    const StringView magic() const { return StringView(m_magic, min(__builtin_strlen(m_magic), sizeof(m_magic))); }         // in some cases this is a null terminated string, in others its not
+    const StringView version() const { return StringView(m_version, min(__builtin_strlen(m_version), sizeof(m_version))); } // in some cases this is a null terminated string, in others its not
     const StringView owner_name() const { return m_owner_name; }
     const StringView group_name() const { return m_group_name; }
     int major() const { return get_tar_field(m_major); }
