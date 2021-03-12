@@ -657,7 +657,7 @@ Token Parser::consume()
 {
     if (eof()) {
         error("C++ Parser: out of tokens");
-        return { Token::Type::EOF_TOKEN, position(), position() };
+        return { Token::Type::EOF_TOKEN, position(), position(), {} };
     }
     return m_tokens[m_state.token_index++];
 }
@@ -665,7 +665,7 @@ Token Parser::consume()
 Token Parser::peek(size_t offset) const
 {
     if (m_state.token_index + offset >= m_tokens.size())
-        return { Token::Type::EOF_TOKEN, position(), position() };
+        return { Token::Type::EOF_TOKEN, position(), position(), {} };
     return m_tokens[m_state.token_index + offset];
 }
 
@@ -699,9 +699,7 @@ bool Parser::done()
 
 StringView Parser::text_of_token(const Cpp::Token& token) const
 {
-    VERIFY(token.start().line == token.end().line);
-    VERIFY(token.start().column <= token.end().column);
-    return m_lines[token.start().line].substring_view(token.start().column, token.end().column - token.start().column + 1);
+     return token.text();
 }
 
 StringView Parser::text_of_node(const ASTNode& node) const
