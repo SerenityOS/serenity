@@ -148,6 +148,19 @@ UNMAP_AFTER_INIT HPETMode CommandLine::hpet_mode() const
     PANIC("Unknown HPETMode: {}", hpet_mode);
 }
 
+UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const
+{
+    const auto ahci_reset_mode = lookup("ahci_reset_mode").value_or("controller");
+    if (ahci_reset_mode == "controller") {
+        return AHCIResetMode::ControllerOnly;
+    } else if (ahci_reset_mode == "none") {
+        return AHCIResetMode::None;
+    } else if (ahci_reset_mode == "complete") {
+        return AHCIResetMode::Complete;
+    }
+    PANIC("Unknown AHCIResetMode: {}", ahci_reset_mode);
+}
+
 UNMAP_AFTER_INIT BootMode CommandLine::boot_mode() const
 {
     const auto boot_mode = lookup("boot_mode").value_or("graphical");

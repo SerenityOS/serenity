@@ -50,6 +50,12 @@ enum class AcpiFeatureLevel {
     Disabled,
 };
 
+enum class AHCIResetMode {
+    ControllerOnly,
+    Complete,
+    None
+};
+
 class CommandLine {
     AK_MAKE_ETERNAL;
 
@@ -72,6 +78,7 @@ public:
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] BootMode boot_mode() const;
     [[nodiscard]] HPETMode hpet_mode() const;
+    [[nodiscard]] AHCIResetMode ahci_reset_mode() const;
     [[nodiscard]] String userspace_init() const;
     [[nodiscard]] Vector<String> userspace_init_args() const;
     [[nodiscard]] String root_device() const;

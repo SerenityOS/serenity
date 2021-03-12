@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/CommandLine.h>
 #include <Kernel/Storage/AHCIPortHandler.h>
 
 namespace Kernel {
@@ -46,10 +47,19 @@ AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::Maske
     // Clear pending interrupts, if there are any!
     m_pending_ports_interrupts.set_all();
     enable_irq();
+
+    if (kernel_command_line().ahci_reset_mode() == AHCIResetMode::Complete) {
+        for (auto index : taken_ports.to_vector()) {
+            auto port = AHCIPort::create(*this, static_cast<volatile AHCI::PortRegisters&>(controller.hba().port_regs[index]), index);
+            m_handled_ports.set(index, port);
+            port->reset();
+        }
+        return;
+    }
     for (auto index : taken_ports.to_vector()) {
         auto port = AHCIPort::create(*this, static_cast<volatile AHCI::PortRegisters&>(controller.hba().port_regs[index]), index);
         m_handled_ports.set(index, port);
-        port->reset();
+        port->initialize_without_reset();
     }
 }
 

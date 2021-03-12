@@ -78,9 +78,13 @@ public:
     RefPtr<StorageDevice> connected_device() const { return m_connected_device; }
 
     bool reset();
+    UNMAP_AFTER_INIT bool initialize_without_reset();
     void handle_interrupt();
 
 private:
+    bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
+    bool initialize();
+
     UNMAP_AFTER_INIT AHCIPort(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
 
     ALWAYS_INLINE void clear_sata_error_register() const;
