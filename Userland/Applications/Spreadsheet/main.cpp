@@ -33,11 +33,11 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FilePicker.h>
-#include <LibGUI/Forward.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
+#include <unistd.h>
 
 int main(int argc, char* argv[])
 {

@@ -28,6 +28,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

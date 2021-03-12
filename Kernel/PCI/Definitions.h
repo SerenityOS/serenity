@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/LogStream.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -84,10 +83,7 @@ struct ID {
         return vendor_id != other.vendor_id || device_id != other.device_id;
     }
 };
-inline const LogStream& operator<<(const LogStream& stream, const ID value)
-{
-    return stream << String::formatted("({:04x}:{:04x})", value.vendor_id, value.device_id);
-}
+
 struct Address {
 public:
     Address() = default;
@@ -140,11 +136,6 @@ protected:
     u8 m_device { 0 };
     u8 m_function { 0 };
 };
-
-inline const LogStream& operator<<(const LogStream& stream, const Address value)
-{
-    return stream << "PCI [" << String::formatted("{:04x}:{:02x}:{:02x}:{:02x}", value.seg(), value.bus(), value.device(), value.function()) << "]";
-}
 
 struct ChangeableAddress : public Address {
     ChangeableAddress()

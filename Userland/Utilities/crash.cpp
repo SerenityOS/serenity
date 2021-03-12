@@ -34,6 +34,7 @@
 #include <sys/mman.h>
 #include <sys/wait.h>
 #include <syscall.h>
+#include <unistd.h>
 
 #pragma GCC optimize("O0")
 

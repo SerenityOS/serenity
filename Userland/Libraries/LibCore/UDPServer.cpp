@@ -29,6 +29,7 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/UDPServer.h>
 #include <LibCore/UDPSocket.h>
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 

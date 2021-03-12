@@ -31,6 +31,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <signal.h>
 #include <sys/wait.h>

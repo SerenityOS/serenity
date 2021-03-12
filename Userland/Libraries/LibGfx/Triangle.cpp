@@ -34,9 +34,4 @@ String Triangle::to_string() const
     return String::formatted("({},{},{})", m_a, m_b, m_c);
 }
 
-const LogStream& operator<<(const LogStream& stream, const Triangle& value)
-{
-    return stream << value.to_string();
-}
-
 }

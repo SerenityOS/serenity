@@ -105,11 +105,6 @@ private:
     String m_data_payload;
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const URL& value)
-{
-    return stream << value.to_string();
-}
-
 template<>
 struct Formatter<URL> : Formatter<StringView> {
     void format(FormatBuilder& builder, const URL& value)

@@ -31,6 +31,7 @@
 #include <LibCore/TCPSocket.h>
 #include <stdio.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #ifndef SOCK_NONBLOCK
 #    include <fcntl.h>

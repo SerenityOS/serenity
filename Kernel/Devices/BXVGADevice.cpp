@@ -25,6 +25,7 @@
  */
 
 #include <AK/Checked.h>
+#include <AK/Format.h>
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BXVGADevice.h>

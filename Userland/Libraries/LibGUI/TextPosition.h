@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/LogStream.h>
 #include <AK/String.h>
 
 namespace GUI {
@@ -56,13 +55,6 @@ private:
     size_t m_line { 0xffffffff };
     size_t m_column { 0xffffffff };
 };
-
-inline const LogStream& operator<<(const LogStream& stream, const TextPosition& value)
-{
-    if (!value.is_valid())
-        return stream << "GUI::TextPosition(Invalid)";
-    return stream << String::formatted("({},{})", value.line(), value.column());
-}
 
 }
 

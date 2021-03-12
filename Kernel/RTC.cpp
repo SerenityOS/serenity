@@ -25,7 +25,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
 #include <AK/Time.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/RTC.h>

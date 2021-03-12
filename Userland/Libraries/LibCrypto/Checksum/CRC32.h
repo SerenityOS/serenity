@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/LogStream.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
 #include <LibCrypto/Checksum/ChecksumFunction.h>

@@ -30,6 +30,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

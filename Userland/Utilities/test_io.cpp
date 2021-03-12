@@ -25,7 +25,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
 #include <AK/Types.h>
 #include <LibCore/File.h>
 #include <fcntl.h>

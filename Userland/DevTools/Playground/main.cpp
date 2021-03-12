@@ -28,7 +28,6 @@
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/Property.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/AutocompleteProvider.h>
@@ -45,6 +44,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <string.h>
+#include <unistd.h>
 
 namespace {
 

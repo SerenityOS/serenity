@@ -32,6 +32,7 @@
 #include <LibCore/File.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 static bool use_color = false;
 static void print(const String& name, const JsonValue&, Vector<String>& trail);

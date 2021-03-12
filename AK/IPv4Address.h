@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Endian.h>
-#include <AK/LogStream.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
@@ -142,11 +141,6 @@ template<>
 struct Traits<IPv4Address> : public GenericTraits<IPv4Address> {
     static constexpr unsigned hash(const IPv4Address& address) { return int_hash(address.to_u32()); }
 };
-
-inline const LogStream& operator<<(const LogStream& stream, const IPv4Address& value)
-{
-    return stream << value.to_string();
-}
 
 template<>
 struct Formatter<IPv4Address> : Formatter<String> {

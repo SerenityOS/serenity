@@ -478,12 +478,6 @@ private:
     Size<T> m_size;
 };
 
-template<typename T>
-const LogStream& operator<<(const LogStream& stream, const Rect<T>& rect)
-{
-    return stream << rect.to_string();
-}
-
 using IntRect = Rect<int>;
 using FloatRect = Rect<float>;
 

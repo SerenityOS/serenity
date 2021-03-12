@@ -243,7 +243,6 @@ set(AK_SOURCES
     ../AK/JsonParser.cpp
     ../AK/JsonValue.cpp
     ../AK/LexicalPath.cpp
-    ../AK/LogStream.cpp
     ../AK/String.cpp
     ../AK/StringBuilder.cpp
     ../AK/StringImpl.cpp

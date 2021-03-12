@@ -32,6 +32,7 @@
 #include <LibCore/File.h>
 #include <LibPCIDB/Database.h>
 #include <stdio.h>
+#include <unistd.h>
 
 static bool flag_show_numerical = false;
 

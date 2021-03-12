@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <AK/RefCounted.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
@@ -182,12 +182,6 @@ struct Traits<NonnullOwnPtr<T>> : public GenericTraits<NonnullOwnPtr<T>> {
     static unsigned hash(const NonnullOwnPtr<T>& p) { return int_hash((u32)p.ptr()); }
     static bool equals(const NonnullOwnPtr<T>& a, const NonnullOwnPtr<T>& b) { return a.ptr() == b.ptr(); }
 };
-
-template<typename T>
-inline const LogStream& operator<<(const LogStream& stream, const NonnullOwnPtr<T>& value)
-{
-    return stream << value.ptr();
-}
 
 template<typename T, typename U>
 inline void swap(NonnullOwnPtr<T>& a, NonnullOwnPtr<U>& b)

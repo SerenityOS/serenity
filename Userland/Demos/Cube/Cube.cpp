@@ -37,10 +37,9 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Vector3.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <unistd.h>
 
 const int WIDTH = 200;
 const int HEIGHT = 200;

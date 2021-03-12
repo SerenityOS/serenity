@@ -110,8 +110,6 @@ private:
     String m_local_address;
 };
 
-const LogStream& operator<<(const LogStream&, const SocketAddress&);
-
 }
 
 template<>

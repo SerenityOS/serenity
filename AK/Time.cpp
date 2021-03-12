@@ -26,7 +26,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
-#include <AK/LogStream.h>
 #include <AK/Time.h>
 
 // Make a reasonable guess as to which timespec/timeval definition to use.

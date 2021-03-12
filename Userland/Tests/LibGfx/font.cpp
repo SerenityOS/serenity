@@ -28,7 +28,7 @@
 #include <LibGfx/FontDatabase.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <unistd.h>
 
 static void test_fontdatabase_get_by_name()
 {

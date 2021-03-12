@@ -228,12 +228,6 @@ private:
     T m_y { 0 };
 };
 
-template<typename T>
-const LogStream& operator<<(const LogStream& stream, const Point<T>& point)
-{
-    return stream << point.to_string();
-}
-
 using IntPoint = Point<int>;
 using FloatPoint = Point<float>;
 

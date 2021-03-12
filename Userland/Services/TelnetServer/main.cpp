@@ -27,9 +27,7 @@
 #include "Client.h"
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
-#include <AK/IPv4Address.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -39,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 static void run_command(int ptm_fd, String command)
 {

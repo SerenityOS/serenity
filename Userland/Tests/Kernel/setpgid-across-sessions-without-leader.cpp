@@ -25,7 +25,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <fcntl.h>
 #include <serenity.h>
 #include <stdio.h>

@@ -36,7 +36,7 @@
 
 static bool serial_debug;
 // A recursive spinlock allows us to keep writing in the case where a
-// page fault happens in the middle of a dbgln(), klog(), etc
+// page fault happens in the middle of a dbgln(), etc
 static RecursiveSpinLock s_log_lock;
 
 void set_serial_debug(bool on_or_off)
@@ -148,22 +148,20 @@ static void debugger_out(char ch)
     IO::out8(0xe9, ch);
 }
 
-extern "C" int dbgputstr(const char* characters, int length)
+extern "C" void dbgputstr(const char* characters, size_t length)
 {
     if (!characters)
-        return 0;
+        return;
     ScopedSpinLock lock(s_log_lock);
-    for (int i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
         debugger_out(characters[i]);
-    return 0;
 }
 
-extern "C" int kernelputstr(const char* characters, int length)
+extern "C" void kernelputstr(const char* characters, size_t length)
 {
     if (!characters)
-        return 0;
+        return;
     ScopedSpinLock lock(s_log_lock);
-    for (int i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
         console_out(characters[i]);
-    return 0;
 }

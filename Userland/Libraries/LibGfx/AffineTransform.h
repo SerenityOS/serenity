@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <AK/LogStream.h>
 #include <LibGfx/Forward.h>
 
 namespace Gfx {
@@ -75,7 +74,5 @@ public:
 private:
     float m_values[6] { 0 };
 };
-
-const LogStream& operator<<(const LogStream&, const AffineTransform&);
 
 }

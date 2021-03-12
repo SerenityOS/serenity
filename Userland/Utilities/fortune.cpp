@@ -35,6 +35,7 @@
 #include <LibCore/File.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 class Quote {
 public:

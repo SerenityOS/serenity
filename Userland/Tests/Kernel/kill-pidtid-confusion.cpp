@@ -25,11 +25,11 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <LibPthread/pthread.h>
-#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 /*

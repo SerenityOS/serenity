@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Format.h>
 #include <AK/StringView.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/PC/BIOS.h>
@@ -32,7 +33,6 @@
 #include <Kernel/IO.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
 
 namespace Kernel {

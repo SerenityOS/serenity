@@ -32,6 +32,7 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

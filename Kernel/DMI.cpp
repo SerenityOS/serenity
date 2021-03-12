@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Format.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -31,7 +32,6 @@
 #include <Kernel/DMI.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/MappedROM.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
 
 namespace Kernel {

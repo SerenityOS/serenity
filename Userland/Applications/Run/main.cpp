@@ -24,14 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
-#include <AK/URL.h>
-#include <LibGUI/Application.h>
-#include <string.h>
-
 #include "RunWindow.h"
+#include <AK/StringBuilder.h>
+#include <LibGUI/Application.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

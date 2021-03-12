@@ -25,7 +25,6 @@
  */
 
 #include <AK/GenericLexer.h>
-#include <AK/LogStream.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Queue.h>

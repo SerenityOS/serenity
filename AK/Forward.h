@@ -32,12 +32,10 @@ namespace AK {
 
 class Bitmap;
 class ByteBuffer;
-class DebugLogStream;
 class IPv4Address;
 class JsonArray;
 class JsonObject;
 class JsonValue;
-class LogStream;
 class StackInfo;
 class String;
 class StringBuilder;
@@ -143,7 +141,6 @@ using AK::ByteBuffer;
 using AK::Bytes;
 using AK::CircularDuplexStream;
 using AK::CircularQueue;
-using AK::DebugLogStream;
 using AK::DoublyLinkedList;
 using AK::DuplexMemoryStream;
 using AK::FlyString;
@@ -158,7 +155,6 @@ using AK::IPv4Address;
 using AK::JsonArray;
 using AK::JsonObject;
 using AK::JsonValue;
-using AK::LogStream;
 using AK::NonnullOwnPtr;
 using AK::NonnullOwnPtrVector;
 using AK::NonnullRefPtr;

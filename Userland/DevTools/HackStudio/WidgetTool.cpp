@@ -25,7 +25,7 @@
  */
 
 #include "WidgetTool.h"
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 
 namespace HackStudio {
 

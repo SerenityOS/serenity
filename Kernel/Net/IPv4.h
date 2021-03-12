@@ -123,7 +123,6 @@ private:
 };
 
 static_assert(sizeof(IPv4Packet) == 20);
-const LogStream& operator<<(const LogStream& stream, const IPv4Packet& packet);
 
 inline NetworkOrdered<u16> internet_checksum(const void* ptr, size_t count)
 {

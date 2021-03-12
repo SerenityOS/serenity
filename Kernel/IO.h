@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
@@ -156,11 +155,6 @@ public:
 private:
     u16 m_address { 0 };
 };
-
-inline const LogStream& operator<<(const LogStream& stream, IOAddress value)
-{
-    return stream << "IO " << String::formatted("{:x}", value.get());
-}
 
 template<>
 struct AK::Formatter<IOAddress> : AK::Formatter<FormatString> {

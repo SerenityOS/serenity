@@ -26,7 +26,6 @@
 
 #include "GitWidget.h"
 #include "GitFilesModel.h"
-#include <AK/LogStream.h>
 #include <LibCore/File.h>
 #include <LibDiff/Format.h>
 #include <LibGUI/Application.h>

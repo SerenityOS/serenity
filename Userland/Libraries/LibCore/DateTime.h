@@ -69,6 +69,4 @@ private:
     unsigned m_second { 0 };
 };
 
-const LogStream& operator<<(const LogStream&, const DateTime&);
-
 }

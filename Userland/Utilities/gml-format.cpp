@@ -27,6 +27,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibGUI/GMLFormatter.h>
+#include <unistd.h>
 
 bool format_file(const StringView&, bool);
 

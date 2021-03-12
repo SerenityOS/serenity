@@ -25,7 +25,7 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <AK/Utf8View.h>
 
 namespace AK {

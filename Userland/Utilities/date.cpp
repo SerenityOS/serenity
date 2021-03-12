@@ -24,13 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <stdio.h>
-#include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

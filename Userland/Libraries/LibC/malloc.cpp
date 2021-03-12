@@ -26,7 +26,6 @@
 
 #include <AK/Debug.h>
 #include <AK/InlineLinkedList.h>
-#include <AK/LogStream.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
 #include <LibELF/AuxiliaryVector.h>

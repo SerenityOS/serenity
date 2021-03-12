@@ -28,10 +28,10 @@
 #include "Emulator.h"
 #include "MmapRegion.h"
 #include <AK/Debug.h>
-#include <AK/LogStream.h>
 #include <AK/TemporaryChange.h>
 #include <mallocdefs.h>
 #include <string.h>
+#include <unistd.h>
 
 namespace UserspaceEmulator {
 

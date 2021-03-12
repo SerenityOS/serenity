@@ -262,9 +262,4 @@ void Object::register_property(const String& name, Function<JsonValue()> getter,
     m_properties.set(name, make<Property>(name, move(getter), move(setter)));
 }
 
-const LogStream& operator<<(const LogStream& stream, const Object& object)
-{
-    return stream << object.class_name() << '{' << &object << '}';
-}
-
 }

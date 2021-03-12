@@ -44,14 +44,13 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/TableView.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
 #include <stdio.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

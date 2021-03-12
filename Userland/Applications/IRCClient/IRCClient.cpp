@@ -39,6 +39,7 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <strings.h>
+#include <unistd.h>
 
 enum IRCNumeric {
     RPL_WELCOME = 1,

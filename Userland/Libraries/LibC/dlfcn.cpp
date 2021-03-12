@@ -29,13 +29,11 @@
 #include <AK/RefPtr.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibELF/DynamicLoader.h>
 #include <assert.h>
 #include <dlfcn.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <unistd.h>
 
 // NOTE: The string here should never include a trailing newline (according to POSIX)
 String g_dlerror_msg;

@@ -53,6 +53,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #define FIRE_WIDTH 320
 #define FIRE_HEIGHT 168

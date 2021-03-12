@@ -27,7 +27,6 @@
 #include "RegexLexer.h"
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
-#include <AK/LogStream.h>
 #include <stdio.h>
 
 namespace regex {

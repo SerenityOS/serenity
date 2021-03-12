@@ -475,7 +475,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     dbgln_if(PAGE_FAULT_DEBUG, "MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::id(), fault.code(), fault.vaddr());
     auto* region = find_region_from_vaddr(fault.vaddr());
     if (!region) {
-        dmesgln("CPU[{}] NP(error) fault at invalid address {}", Processor::id(), fault.vaddr());
+        Process::current()->space().dump_regions();
         return PageFaultResponse::ShouldCrash;
     }
 

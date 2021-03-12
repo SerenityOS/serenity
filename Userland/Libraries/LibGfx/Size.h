@@ -150,12 +150,6 @@ private:
     T m_height { 0 };
 };
 
-template<typename T>
-const LogStream& operator<<(const LogStream& stream, const Gfx::Size<T>& size)
-{
-    return stream << size.to_string();
-}
-
 using IntSize = Size<int>;
 using FloatSize = Size<float>;
 

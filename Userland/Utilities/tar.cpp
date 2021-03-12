@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/LogStream.h>
 #include <AK/Vector.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
@@ -33,6 +32,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 constexpr size_t buffer_size = 4096;
 

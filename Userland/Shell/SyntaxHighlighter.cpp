@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ScopedValueRollback.h>
 #include <AK/TemporaryChange.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Font.h>
