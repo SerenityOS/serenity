@@ -1613,14 +1613,49 @@ void SoftCPU::FLDZ(const X86::Instruction&)
 }
 
 void SoftCPU::FNSTENV(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::F2XM1(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FYL2X(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::F2XM1(const X86::Instruction&)
+{
+    // FIXME: validate ST(0) is in range –1.0 to +1.0
+    auto f32 = fpu_get(0);
+    // FIXME: Set C0, C2, C3 in FPU status word.
+    fpu_set(0, powf(2, f32) - 1.0f);
+}
+
+void SoftCPU::FYL2X(const X86::Instruction&)
+{
+    // FIXME: Raise IA on +-infinity, +-0, raise Z on +-0
+    auto f32 = fpu_get(0);
+    // FIXME: Set C0, C2, C3 in FPU status word.
+    fpu_set(1, fpu_get(1) * log2f(f32));
+    fpu_pop();
+}
+
+void SoftCPU::FYL2XP1(const X86::Instruction&)
+{
+    // FIXME: validate ST(0) range
+    auto f32 = fpu_get(0);
+    // FIXME: Set C0, C2, C3 in FPU status word.
+    fpu_set(1, (fpu_get(1) * log2f(f32 + 1.0f)));
+    fpu_pop();
+}
+
 void SoftCPU::FPTAN(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FPATAN(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FXTRACT(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FPREM1(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FDECSTP(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FINCSTP(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FDECSTP(const X86::Instruction&)
+{
+    m_fpu_top = (m_fpu_top == 0) ? 7 : m_fpu_top - 1;
+    set_cf(0);
+}
+
+void SoftCPU::FINCSTP(const X86::Instruction&)
+{
+    m_fpu_top = (m_fpu_top == 7) ? 0 : m_fpu_top + 1;
+    set_cf(0);
+}
 
 void SoftCPU::FNSTCW(const X86::Instruction& insn)
 {
@@ -1628,7 +1663,6 @@ void SoftCPU::FNSTCW(const X86::Instruction& insn)
 }
 
 void SoftCPU::FPREM(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FYL2XP1(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::FSQRT(const X86::Instruction&)
 {
@@ -1643,7 +1677,11 @@ void SoftCPU::FRNDINT(const X86::Instruction&)
     fpu_set(0, round(fpu_get(0)));
 }
 
-void SoftCPU::FSCALE(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FSCALE(const X86::Instruction&)
+{
+    // FIXME: set C1 upon stack overflow or if result was rounded
+    fpu_set(0, fpu_get(0) * powf(2, floorf(fpu_get(1))));
+}
 
 void SoftCPU::FSIN(const X86::Instruction&)
 {
@@ -1700,8 +1738,6 @@ void SoftCPU::FISUBR_RM32(const X86::Instruction& insn)
     // FIXME: Respect shadow values
     fpu_set(0, (long double)m32int - fpu_get(0));
 }
-
-void SoftCPU::FUCOMPP(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::FIDIV_RM32(const X86::Instruction& insn)
 {
@@ -1912,6 +1948,7 @@ void SoftCPU::FSTP_RM64(const X86::Instruction& insn)
 void SoftCPU::FRSTOR(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FUCOM(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FUCOMP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FUCOMPP(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FNSAVE(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FNSTSW(const X86::Instruction&) { TODO_INSN(); }
 
