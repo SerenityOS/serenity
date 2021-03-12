@@ -74,9 +74,7 @@ private:
     RefPtr<Gfx::Bitmap> m_icon;
     bool m_icon_dirty;
 
-    NonnullRefPtr<NotificationServerConnection> m_connection;
-    bool m_showing { false };
-    bool m_disposed { false };
+    RefPtr<NotificationServerConnection> m_connection;
 };
 
 }
