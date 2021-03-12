@@ -182,4 +182,10 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
     VERIFY_NOT_REACHED();
 }
 
+const String& Preprocessor::processed_text()
+{
+    VERIFY(!m_processed_text.is_null());
+    return m_processed_text;
+}
+
 };
