@@ -33,23 +33,26 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/PurgeablePageRanges.h>
 
-namespace Kernel {
-
-#if VOLATILE_PAGE_RANGES_DEBUG
-inline LogStream& operator<<(const LogStream& stream, const VolatilePageRange& range)
-{
-    stream << "{" << range.base << " (" << range.count << ") purged: " << range.was_purged << "}";
-    return const_cast<LogStream&>(stream);
+namespace AK {
+template<>
+struct Formatter<Kernel::VolatilePageRange> : Formatter<String> {
+    void format(FormatBuilder& builder, const Kernel::VolatilePageRange& value)
+    {
+        return Formatter<String>::format(builder, String::formatted("{{{} ({}) purged: {}}}", value.base, value.count, value.was_purged));
+    }
+};
 }
+
+namespace Kernel {
 
 static void dump_volatile_page_ranges(const Vector<VolatilePageRange>& ranges)
 {
-    for (size_t i = 0; i < ranges.size(); i++) {
-        const auto& range = ranges[i];
-        klog() << "  [" << i << "] " << range;
+    if constexpr (VOLATILE_PAGE_RANGES_DEBUG) {
+        for (size_t i = 0; i < ranges.size(); i++) {
+            dbgln("[{}] {}", i, ranges[i]);
+        }
     }
 }
-#endif
 
 void VolatilePageRanges::add_unchecked(const VolatilePageRange& range)
 {
@@ -66,15 +69,15 @@ bool VolatilePageRanges::add(const VolatilePageRange& range)
         return false;
     add_range.was_purged = range.was_purged;
 
-#if VOLATILE_PAGE_RANGES_DEBUG
-    klog() << "ADD " << range << " (total range: " << m_total_range << ") -->";
-    dump_volatile_page_ranges(m_ranges);
-    ScopeGuard debug_guard([&]() {
-        klog() << "After adding " << range << " (total range: " << m_total_range << ")";
+    if constexpr (VOLATILE_PAGE_RANGES_DEBUG) {
+        dbgln("ADD {} (total range: {}) -->", range, m_total_range);
         dump_volatile_page_ranges(m_ranges);
-        klog() << "<-- ADD " << range << " (total range: " << m_total_range << ")";
-    });
-#endif
+        ScopeGuard debug_guard([&]() {
+            dbgln("After adding {} (total range: {})", range, m_total_range);
+            dump_volatile_page_ranges(m_ranges);
+            dbgln("<-- ADD {} (total range: {})", range, m_total_range);
+        });
+    }
 
     size_t nearby_index = 0;
     auto* existing_range = binary_search(
@@ -140,15 +143,15 @@ bool VolatilePageRanges::remove(const VolatilePageRange& range, bool& was_purged
     if (remove_range.is_empty())
         return false;
 
-#if VOLATILE_PAGE_RANGES_DEBUG
-    klog() << "REMOVE " << range << " (total range: " << m_total_range << ") -->";
-    dump_volatile_page_ranges(m_ranges);
-    ScopeGuard debug_guard([&]() {
-        klog() << "After removing " << range << " (total range: " << m_total_range << ")";
+    if constexpr (VOLATILE_PAGE_RANGES_DEBUG) {
+        dbgln("REMOVE {} (total range: {}) -->", range, m_total_range);
         dump_volatile_page_ranges(m_ranges);
-        klog() << "<-- REMOVE " << range << " (total range: " << m_total_range << ") was_purged: " << was_purged;
-    });
-#endif
+        ScopeGuard debug_guard([&]() {
+            dbgln("After removing {} (total range: {})", range, m_total_range);
+            dump_volatile_page_ranges(m_ranges);
+            dbgln("<-- REMOVE {} (total range: {}) was_purged: {}", range, m_total_range, was_purged);
+        });
+    }
 
     size_t nearby_index = 0;
     auto* existing_range = binary_search(
