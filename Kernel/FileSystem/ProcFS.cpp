@@ -1521,7 +1521,7 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelB
     VERIFY(offset == 0);
     ssize_t nwritten = write_callback(identifier(), buffer, (size_t)size);
     if (nwritten < 0)
-        klog() << "ProcFS: Writing " << size << " bytes failed: " << nwritten;
+        dbgln("ProcFS: Writing {} bytes failed: {}", size, nwritten);
     return nwritten;
 }
 
