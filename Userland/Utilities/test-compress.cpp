@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,9 +28,11 @@
 
 #include <AK/Array.h>
 #include <AK/MemoryStream.h>
+#include <AK/Random.h>
 #include <LibCompress/Deflate.h>
 #include <LibCompress/Gzip.h>
 #include <LibCompress/Zlib.h>
+#include <string.h>
 
 TEST_CASE(canonical_code_simple)
 {
@@ -129,6 +131,41 @@ TEST_CASE(deflate_decompress_zeroes)
 
     const auto decompressed = Compress::DeflateDecompressor::decompress_all(compressed);
     EXPECT(uncompressed == decompressed.value().bytes());
+}
+
+TEST_CASE(deflate_round_trip_store)
+{
+    auto original = ByteBuffer::create_uninitialized(1024);
+    fill_with_random(original.data(), 1024);
+    auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::STORE);
+    EXPECT(compressed.has_value());
+    auto uncompressed = Compress::DeflateDecompressor::decompress_all(compressed.value());
+    EXPECT(uncompressed.has_value());
+    EXPECT(uncompressed.value() == original);
+}
+
+TEST_CASE(deflate_round_trip_compress)
+{
+    auto original = ByteBuffer::create_uninitialized(2048);
+    fill_with_random(original.data(), 1024);
+    memset(original.offset_pointer(1024), 0, 1024); // we fill the second half with 0s to make sure we test back references as well
+    // Since the different levels just change how much time is spent looking for better matches, just use fast here to reduce test time
+    auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::FAST);
+    EXPECT(compressed.has_value());
+    auto uncompressed = Compress::DeflateDecompressor::decompress_all(compressed.value());
+    EXPECT(uncompressed.has_value());
+    EXPECT(uncompressed.value() == original);
+}
+
+TEST_CASE(deflate_round_trip_compress_large)
+{
+    auto original = ByteBuffer::create_uninitialized(Compress::DeflateCompressor::block_size * 2); // Compress a buffer larger than the maximum block size to test the sliding window mechanism
+    // Since the different levels just change how much time is spent looking for better matches, just use fast here to reduce test time
+    auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::FAST);
+    EXPECT(compressed.has_value());
+    auto uncompressed = Compress::DeflateDecompressor::decompress_all(compressed.value());
+    EXPECT(uncompressed.has_value());
+    EXPECT(uncompressed.value() == original);
 }
 
 TEST_CASE(zlib_decompress_simple)
