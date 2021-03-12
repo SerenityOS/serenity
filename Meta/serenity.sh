@@ -17,8 +17,10 @@ Usage: $ARG0 COMMAND [TARGET] [ARGS...]
                     Runs the built image in QEMU, and optionally passes the
                     KERNEL_CMD_LINE to the Kernel
     gdb:        Same as run, but also starts a gdb remote session.
-                $ARG0 gdb [TARGET] [kernel_cmd_line] [-ex 'any gdb command']...
-                    If specified, passes the kernel_cmd_line to the Kernel
+                TARGET lagom: $ARG0 gdb lagom LAGOM_EXECUTABLE [-ex 'any gdb command']...
+                    Passes through '-ex' commands to gdb
+                All other TARGETs: $ARG0 gdb [TARGET] [KERNEL_CMD_LINE] [-ex 'any gdb command']...
+                    If specified, passes the KERNEL_CMD_LINE to the Kernel
                     Passes through '-ex' commands to gdb
     test:       TARGET lagom: $ARG0 test lagom [TEST_NAME_PATTERN]
                     Runs the unit tests on the build host, or if TEST_NAME_PATTERN
@@ -162,6 +164,7 @@ run_gdb() {
     local GDB_ARGS=()
     local PASS_ARG_TO_GDB=""
     local KERNEL_CMD_LINE=""
+    local LAGOM_EXECUTABLE=""
     for arg in "${CMD_ARGS[@]}"; do
         if [ "$PASS_ARG_TO_GDB" != "" ]; then
             GDB_ARGS+=( "$PASS_ARG_TO_GDB" "$arg" )
@@ -171,19 +174,30 @@ run_gdb() {
         elif [[ "$arg" =~ ^-.*$ ]]; then
             die "Don't know how to handle argument: $arg"
         else
-            if [ "$KERNEL_CMD_LINE" != "" ]; then
-                die "Kernel command line can't be specified more than once"
+            if [ "$TARGET" = "lagom" ]; then
+                if [ "$LAGOM_EXECUTABLE" != "" ]; then
+                    die "Lagom executable can't be specified more than once"
+                fi
+                LAGOM_EXECUTABLE="$arg"
+            else
+                if [ "$KERNEL_CMD_LINE" != "" ]; then
+                    die "Kernel command line can't be specified more than once"
+                fi
+                KERNEL_CMD_LINE="$arg"
             fi
-            KERNEL_CMD_LINE="$arg"
         fi
     done
     if [ "$PASS_ARG_TO_GDB" != "" ]; then
         GDB_ARGS+=( "$PASS_ARG_TO_GDB" )
     fi
-    if [ -n "$KERNEL_CMD_LINE" ]; then
-        export SERENITY_KERNEL_CMDLINE="$KERNEL_CMD_LINE"
+    if [ "$TARGET" = "lagom" ]; then
+        gdb "$BUILD_DIR/Meta/Lagom/$LAGOM_EXECUTABLE" "${GDB_ARGS[@]}"
+    else
+        if [ -n "$KERNEL_CMD_LINE" ]; then
+            export SERENITY_KERNEL_CMDLINE="$KERNEL_CMD_LINE"
+        fi
+        gdb "$BUILD_DIR/Kernel/Kernel" -ex 'target remote :1234' "${GDB_ARGS[@]}" -ex cont
     fi
-    gdb "$BUILD_DIR/Kernel/Kernel" -ex 'target remote :1234' "${GDB_ARGS[@]}" -ex cont
 }
 
 if [[ "$CMD" =~ ^(build|install|image|run|gdb|test|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
@@ -225,10 +239,12 @@ if [[ "$CMD" =~ ^(build|install|image|run|gdb|test|rebuild|recreate|kaddr2line|a
             ;;
         gdb)
             command -v tmux >/dev/null 2>&1 || die "Please install tmux!"
-            build_target
             if [ "$TARGET" = "lagom" ]; then
-                lagom_unsupported
+                [ $# -ge 1 ] || usage
+                build_target "$@"
+                run_gdb "${CMD_ARGS[@]}"
             else
+                build_target
                 build_target install
                 build_target image
                 tmux new-session "$ARG0" __tmux_cmd "$TARGET" run "${CMD_ARGS[@]}" \; set-option -t 0 mouse on \; split-window "$ARG0" __tmux_cmd "$TARGET" gdb "${CMD_ARGS[@]}" \;
