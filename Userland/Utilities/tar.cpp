@@ -24,9 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LexicalPath.h>
+#include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/FileStream.h>
 #include <LibTar/TarStream.h>
 #include <fcntl.h>
@@ -128,8 +131,82 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    // FIXME: Implement other operations.
-    VERIFY_NOT_REACHED();
+    if (create) {
+        if (paths.size() == 0) {
+            warnln("you must provide at least one path to be archived");
+            return 1;
+        }
+
+        auto file = Core::File::standard_output();
+
+        if (archive_file) {
+            auto maybe_file = Core::File::open(archive_file, Core::IODevice::OpenMode::WriteOnly);
+            if (maybe_file.is_error()) {
+                warnln("Core::File::open: {}", maybe_file.error());
+                return 1;
+            }
+            file = maybe_file.value();
+        }
+
+        Core::OutputFileStream file_stream(file);
+        Compress::GzipCompressor gzip_stream(file_stream);
+
+        OutputStream& file_output_stream = file_stream;
+        OutputStream& gzip_output_stream = gzip_stream;
+        Tar::TarOutputStream tar_stream((gzip) ? gzip_output_stream : file_output_stream);
+
+        auto add_file = [&](String path) {
+            auto file = Core::File::construct(path);
+            if (!file->open(Core::IODevice::ReadOnly)) {
+                warnln("Failed to open {}: {}", path, file->error_string());
+                return;
+            }
+
+            struct stat statbuf;
+            if (lstat(path.characters(), &statbuf) < 0) {
+                warnln("Failed stating {}", path);
+                return;
+            }
+            auto canonicalized_path = LexicalPath::canonicalized_path(path);
+            tar_stream.add_file(canonicalized_path, statbuf.st_mode, file->read_all());
+            if (verbose)
+                outln("{}", canonicalized_path);
+        };
+
+        auto add_directory = [&](String path, auto handle_directory) -> void {
+            struct stat statbuf;
+            if (lstat(path.characters(), &statbuf) < 0) {
+                warnln("Failed stating {}", path);
+                return;
+            }
+            auto canonicalized_path = LexicalPath::canonicalized_path(path);
+            tar_stream.add_directory(canonicalized_path, statbuf.st_mode);
+            if (verbose)
+                outln("{}", canonicalized_path);
+
+            Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
+            while (it.has_next()) {
+                auto child_path = it.next_full_path();
+                if (!Core::File::is_directory(child_path)) {
+                    add_file(child_path);
+                } else {
+                    handle_directory(child_path, handle_directory);
+                }
+            }
+        };
+
+        for (const String& path : paths) {
+            if (Core::File::is_directory(path)) {
+                add_directory(path, add_directory);
+            } else {
+                add_file(path);
+            }
+        }
+
+        tar_stream.finish();
+
+        return 0;
+    }
 
     return 0;
 }
