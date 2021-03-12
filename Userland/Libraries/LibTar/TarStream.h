@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +33,7 @@
 
 namespace Tar {
 
-class TarStream;
+class TarInputStream;
 
 class TarFileStream : public InputStream {
 public:
@@ -43,16 +44,16 @@ public:
     bool discard_or_error(size_t count) override;
 
 private:
-    TarFileStream(TarStream& stream);
-    TarStream& m_tar_stream;
+    TarFileStream(TarInputStream& stream);
+    TarInputStream& m_tar_stream;
     int m_generation;
 
-    friend class TarStream;
+    friend class TarInputStream;
 };
 
-class TarStream {
+class TarInputStream {
 public:
-    TarStream(InputStream&);
+    TarInputStream(InputStream&);
     void advance();
     bool finished() const { return m_finished; }
     bool valid() const;
@@ -64,6 +65,20 @@ private:
     InputStream& m_stream;
     unsigned long m_file_offset { 0 };
     int m_generation { 0 };
+    bool m_finished { false };
+
+    friend class TarFileStream;
+};
+
+class TarOutputStream {
+public:
+    TarOutputStream(OutputStream&);
+    void add_file(const String& path, mode_t, const ReadonlyBytes&);
+    void add_directory(const String& path, mode_t);
+    void finish();
+
+private:
+    OutputStream& m_stream;
     bool m_finished { false };
 
     friend class TarFileStream;

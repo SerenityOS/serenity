@@ -26,9 +26,10 @@
  */
 
 #include <LibTar/TarStream.h>
+#include <string.h>
 
 namespace Tar {
-TarFileStream::TarFileStream(TarStream& tar_stream)
+TarFileStream::TarFileStream(TarInputStream& tar_stream)
     : m_tar_stream(tar_stream)
     , m_generation(tar_stream.m_generation)
 {
@@ -83,11 +84,12 @@ bool TarFileStream::discard_or_error(size_t count)
     return m_tar_stream.m_stream.discard_or_error(count);
 }
 
-TarStream::TarStream(InputStream& stream)
+TarInputStream::TarInputStream(InputStream& stream)
     : m_stream(stream)
 {
     if (!m_stream.read_or_error(Bytes(&m_header, sizeof(m_header)))) {
         m_finished = true;
+        m_stream.handle_any_error(); // clear out errors so we dont assert
         return;
     }
     VERIFY(m_stream.discard_or_error(block_size - sizeof(Header)));
@@ -98,7 +100,7 @@ static constexpr unsigned long block_ceiling(unsigned long offset)
     return block_size * (1 + ((offset - 1) / block_size));
 }
 
-void TarStream::advance()
+void TarInputStream::advance()
 {
     if (m_finished)
         return;
@@ -119,17 +121,70 @@ void TarStream::advance()
     VERIFY(m_stream.discard_or_error(block_size - sizeof(Header)));
 }
 
-bool TarStream::valid() const
+bool TarInputStream::valid() const
 {
     auto& header_magic = header().magic();
     auto& header_version = header().version();
     return (header_magic == gnu_magic && header_version == gnu_version) || (header_magic == ustar_magic && header_version == ustar_version);
 }
 
-TarFileStream TarStream::file_contents()
+TarFileStream TarInputStream::file_contents()
 {
     VERIFY(!m_finished);
     return TarFileStream(*this);
+}
+
+TarOutputStream::TarOutputStream(OutputStream& stream)
+    : m_stream(stream)
+{
+}
+
+void TarOutputStream::add_directory(const String& path, mode_t mode)
+{
+    VERIFY(!m_finished);
+    Header header;
+    memset(&header, 0, sizeof(header));
+    header.set_size(0);
+    header.set_file_name(String::formatted("{}/", path)); // Old tar implementations assume directory names end with a /
+    header.set_type_flag(Directory);
+    header.set_mode(mode);
+    header.set_magic(gnu_magic);
+    header.set_version(gnu_version);
+    header.calculate_checksum();
+    VERIFY(m_stream.write_or_error(Bytes { &header, sizeof(header) }));
+    u8 padding[block_size] = { 0 };
+    VERIFY(m_stream.write_or_error(Bytes { &padding, block_size - sizeof(header) }));
+}
+
+void TarOutputStream::add_file(const String& path, mode_t mode, const ReadonlyBytes& bytes)
+{
+    VERIFY(!m_finished);
+    Header header;
+    memset(&header, 0, sizeof(header));
+    header.set_size(bytes.size());
+    header.set_file_name(path);
+    header.set_type_flag(NormalFile);
+    header.set_mode(mode);
+    header.set_magic(gnu_magic);
+    header.set_version(gnu_version);
+    header.calculate_checksum();
+    VERIFY(m_stream.write_or_error(Bytes { &header, sizeof(header) }));
+    u8 padding[block_size] = { 0 };
+    VERIFY(m_stream.write_or_error(Bytes { &padding, block_size - sizeof(header) }));
+    size_t n_written = 0;
+    while (n_written < bytes.size()) {
+        n_written += m_stream.write(bytes.slice(n_written, min(bytes.size() - n_written, block_size)));
+    }
+    VERIFY(m_stream.write_or_error(Bytes { &padding, block_size - (n_written % block_size) }));
+}
+
+void TarOutputStream::finish()
+{
+    VERIFY(!m_finished);
+    u8 padding[block_size] = { 0 };
+    m_stream.write_or_error(Bytes { &padding, block_size }); // 2 empty records that are used to signify the end of the archive
+    m_stream.write_or_error(Bytes { &padding, block_size });
+    m_finished = true;
 }
 
 }
