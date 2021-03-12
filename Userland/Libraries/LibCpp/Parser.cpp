@@ -699,7 +699,7 @@ bool Parser::done()
 
 StringView Parser::text_of_token(const Cpp::Token& token) const
 {
-     return token.text();
+    return token.text();
 }
 
 StringView Parser::text_of_node(const ASTNode& node) const
@@ -777,17 +777,32 @@ RefPtr<ASTNode> Parser::eof_node() const
 
 RefPtr<ASTNode> Parser::node_at(Position pos) const
 {
+    auto index = index_of_node_at(pos);
+    if (!index.has_value())
+        return nullptr;
+    return m_nodes[index.value()];
+}
+
+Optional<size_t> Parser::index_of_node_at(Position pos) const
+{
     VERIFY(!m_tokens.is_empty());
-    RefPtr<ASTNode> match_node;
-    for (auto& node : m_nodes) {
+    Optional<size_t> match_node_index;
+
+    auto node_span = [](const ASTNode& node) {
+        VERIFY(node.end().line >= node.start().line);
+        VERIFY((node.end().line > node.start().line) || (node.end().column >= node.start().column));
+        return Position { node.end().line - node.start().line, node.start().line != node.end().line ? 0 : node.end().column - node.start().column };
+    };
+
+    for (size_t node_index = 0; node_index < m_nodes.size(); ++node_index) {
+        auto& node = m_nodes[node_index];
         if (node.start() > pos || node.end() < pos)
             continue;
-        if (!match_node)
-            match_node = node;
-        else if (node_span_size(node) < node_span_size(*match_node))
-            match_node = node;
+
+        if (!match_node_index.has_value() || (node_span(node) < node_span(m_nodes[match_node_index.value()])))
+            match_node_index = node_index;
     }
-    return match_node;
+    return match_node_index;
 }
 
 Optional<Token> Parser::token_at(Position pos) const
@@ -798,18 +813,6 @@ Optional<Token> Parser::token_at(Position pos) const
         return token;
     }
     return {};
-}
-
-size_t Parser::node_span_size(const ASTNode& node) const
-{
-    if (node.start().line == node.end().line)
-        return node.end().column - node.start().column;
-
-    size_t span_size = m_lines[node.start().line].length() - node.start().column;
-    for (size_t line = node.start().line + 1; line < node.end().line; ++line) {
-        span_size += m_lines[line].length();
-    }
-    return span_size + m_lines[node.end().line].length() - node.end().column;
 }
 
 void Parser::print_tokens() const
