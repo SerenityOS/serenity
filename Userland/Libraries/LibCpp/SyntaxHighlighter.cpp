@@ -83,15 +83,15 @@ void SyntaxHighlighter::rehighlight(const Palette& palette)
 
     Vector<GUI::TextDocumentSpan> spans;
     for (auto& token : tokens) {
-        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{} @ {}:{} - {}:{}", token.to_string(), token.m_start.line, token.m_start.column, token.m_end.line, token.m_end.column);
+        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{} @ {}:{} - {}:{}", token.to_string(), token.start().line, token.start().column, token.end().line, token.end().column);
         GUI::TextDocumentSpan span;
-        span.range.set_start({ token.m_start.line, token.m_start.column });
-        span.range.set_end({ token.m_end.line, token.m_end.column });
-        auto style = style_for_token_type(palette, token.m_type);
+        span.range.set_start({ token.start().line, token.start().column });
+        span.range.set_end({ token.end().line, token.end().column });
+        auto style = style_for_token_type(palette, token.type());
         span.attributes.color = style.color;
         span.attributes.bold = style.bold;
-        span.is_skippable = token.m_type == Cpp::Token::Type::Whitespace;
-        span.data = reinterpret_cast<void*>(token.m_type);
+        span.is_skippable = token.type() == Cpp::Token::Type::Whitespace;
+        span.data = reinterpret_cast<void*>(token.type());
         spans.append(span);
     }
     m_client->do_set_spans(move(spans));

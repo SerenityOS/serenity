@@ -51,7 +51,7 @@ Parser::Parser(const StringView& program, const String& filename, Preprocessor::
     dbgln("Tokens:");
     for (auto& token : m_tokens) {
         StringView text;
-        if (token.m_start.line != token.m_end.line || token.m_start.column > token.m_end.column)
+        if (token.start().line != token.end().line || token.start().column > token.end().column)
             text = {};
         else
             text = text_of_token(token);
@@ -63,9 +63,9 @@ void Parser::initialize_program_tokens()
 {
     Lexer lexer(m_program);
     for (auto& token : lexer.lex()) {
-        if (token.m_type == Token::Type::Whitespace)
+        if (token.type() == Token::Type::Whitespace)
             continue;
-        if (token.m_type == Token::Type::Identifier) {
+        if (token.type() == Token::Type::Identifier) {
             if (auto defined_value = m_definitions.find(text_of_token(token)); defined_value != m_definitions.end()) {
                 add_tokens_for_preprocessor(token, defined_value->value);
                 continue;
@@ -78,7 +78,7 @@ void Parser::initialize_program_tokens()
 NonnullRefPtr<TranslationUnit> Parser::parse()
 {
     SCOPE_LOGGER();
-    auto unit = create_root_ast_node(m_tokens.first().m_start, m_tokens.last().m_end);
+    auto unit = create_root_ast_node(m_tokens.first().start(), m_tokens.last().end());
     while (!done()) {
         if (match_comment()) {
             consume(Token::Type::Comment);
@@ -155,7 +155,7 @@ NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration(ASTNode& p
     }
 
     func->m_name = text_of_token(function_name);
-    func->m_return_type = create_ast_node<Type>(*func, return_type_token.m_start, return_type_token.m_end, text_of_token(return_type_token));
+    func->m_return_type = create_ast_node<Type>(*func, return_type_token.start(), return_type_token.end(), text_of_token(return_type_token));
     if (parameters.has_value())
         func->m_parameters = move(parameters.value());
     func->m_definition = move(body);
@@ -168,7 +168,7 @@ NonnullRefPtr<FunctionDefinition> Parser::parse_function_definition(ASTNode& par
     SCOPE_LOGGER();
     auto func = create_ast_node<FunctionDefinition>(parent, position(), {});
     consume(Token::Type::LeftCurly);
-    while (!eof() && peek().m_type != Token::Type::RightCurly) {
+    while (!eof() && peek().type() != Token::Type::RightCurly) {
         func->statements().append(parse_statement(func));
     }
     func->set_end(position());
@@ -373,12 +373,12 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
         if (match_function_call())
             return parse_function_call(parent);
         auto token = consume();
-        return create_ast_node<Identifier>(parent, token.m_start, token.m_end, text_of_token(token));
+        return create_ast_node<Identifier>(parent, token.start(), token.end(), text_of_token(token));
     }
     default: {
         error("could not parse primary expression");
         auto token = consume();
-        return create_ast_node<InvalidExpression>(parent, token.m_start, token.m_end);
+        return create_ast_node<InvalidExpression>(parent, token.start(), token.end());
     }
     }
 }
@@ -445,7 +445,7 @@ NonnullRefPtr<Expression> Parser::parse_literal(ASTNode& parent)
     switch (peek().type()) {
     case Token::Type::Integer: {
         auto token = consume();
-        return create_ast_node<NumericLiteral>(parent, token.m_start, token.m_end, text_of_token(token));
+        return create_ast_node<NumericLiteral>(parent, token.start(), token.end(), text_of_token(token));
     }
     case Token::Type::DoubleQuotedString: {
         return parse_string_literal(parent);
@@ -458,7 +458,7 @@ NonnullRefPtr<Expression> Parser::parse_literal(ASTNode& parent)
     default: {
         error("could not parse literal");
         auto token = consume();
-        return create_ast_node<InvalidExpression>(parent, token.m_start, token.m_end);
+        return create_ast_node<InvalidExpression>(parent, token.start(), token.end());
     }
     }
 }
@@ -466,7 +466,7 @@ NonnullRefPtr<Expression> Parser::parse_literal(ASTNode& parent)
 NonnullRefPtr<Expression> Parser::parse_secondary_expression(ASTNode& parent, NonnullRefPtr<Expression> lhs)
 {
     SCOPE_LOGGER();
-    switch (peek().m_type) {
+    switch (peek().type()) {
     case Token::Type::Plus:
         return parse_binary_expression(parent, lhs, BinaryOp::Addition);
     case Token::Type::Less:
@@ -555,7 +555,7 @@ bool Parser::match_function_declaration()
         return false;
     consume();
 
-    while (consume().m_type != Token::Type::RightParen && !eof()) { };
+    while (consume().type() != Token::Type::RightParen && !eof()) { };
 
     if (peek(Token::Type::Semicolon).has_value() || peek(Token::Type::LeftCurly).has_value())
         return true;
@@ -572,7 +572,7 @@ Optional<NonnullRefPtrVector<Parameter>> Parser::parse_parameter_list(ASTNode& p
 {
     SCOPE_LOGGER();
     NonnullRefPtrVector<Parameter> parameters;
-    while (peek().m_type != Token::Type::RightParen && !eof()) {
+    while (peek().type() != Token::Type::RightParen && !eof()) {
         if (match_ellipsis()) {
             auto last_dot = consume();
             while (peek().type() == Token::Type::Dot)
@@ -591,7 +591,7 @@ Optional<NonnullRefPtrVector<Parameter>> Parser::parse_parameter_list(ASTNode& p
             if (name_identifier.has_value())
                 name = text_of_token(name_identifier.value());
 
-            auto param = create_ast_node<Parameter>(parent, type->start(), name_identifier.has_value() ? name_identifier.value().m_end : type->end(), name);
+            auto param = create_ast_node<Parameter>(parent, type->start(), name_identifier.has_value() ? name_identifier.value().end() : type->end(), name);
 
             param->m_type = move(type);
             parameters.append(move(param));
@@ -651,7 +651,7 @@ Token Parser::consume(Token::Type type)
 
 bool Parser::match(Token::Type type)
 {
-    return peek().m_type == type;
+    return peek().type() == type;
 }
 
 Token Parser::consume()
@@ -673,7 +673,7 @@ Token Parser::peek(size_t offset) const
 Optional<Token> Parser::peek(Token::Type type) const
 {
     auto token = peek();
-    if (token.m_type == type)
+    if (token.type() == type)
         return token;
     return {};
 }
@@ -700,9 +700,9 @@ bool Parser::done()
 
 StringView Parser::text_of_token(const Cpp::Token& token) const
 {
-    VERIFY(token.m_start.line == token.m_end.line);
-    VERIFY(token.m_start.column <= token.m_end.column);
-    return m_lines[token.m_start.line].substring_view(token.m_start.column, token.m_end.column - token.m_start.column + 1);
+    VERIFY(token.start().line == token.end().line);
+    VERIFY(token.start().column <= token.end().column);
+    return m_lines[token.start().line].substring_view(token.start().column, token.end().column - token.start().column + 1);
 }
 
 StringView Parser::text_of_node(const ASTNode& node) const
@@ -743,8 +743,8 @@ void Parser::error(StringView message)
         formatted_message = String::formatted("C++ Parser error: {}. token: {} ({}:{})",
             message,
             m_state.token_index < m_tokens.size() ? text_of_token(m_tokens[m_state.token_index]) : "EOF",
-            m_tokens[m_state.token_index].m_start.line,
-            m_tokens[m_state.token_index].m_start.column);
+            m_tokens[m_state.token_index].start().line,
+            m_tokens[m_state.token_index].start().column);
     }
     m_errors.append(formatted_message);
     dbgln_if(CPP_DEBUG, "{}", formatted_message);
@@ -752,7 +752,7 @@ void Parser::error(StringView message)
 
 bool Parser::match_expression()
 {
-    auto token_type = peek().m_type;
+    auto token_type = peek().type();
     return token_type == Token::Type::Integer
         || token_type == Token::Type::Float
         || token_type == Token::Type::Identifier
@@ -768,14 +768,14 @@ bool Parser::eof() const
 Position Parser::position() const
 {
     if (eof())
-        return m_tokens.last().m_end;
-    return peek().m_start;
+        return m_tokens.last().end();
+    return peek().start();
 }
 
 RefPtr<ASTNode> Parser::eof_node() const
 {
     VERIFY(m_tokens.size());
-    return node_at(m_tokens.last().m_end);
+    return node_at(m_tokens.last().end());
 }
 
 RefPtr<ASTNode> Parser::node_at(Position pos) const
@@ -985,7 +985,7 @@ NonnullRefPtr<MemberDeclaration> Parser::parse_member_declaration(ASTNode& paren
         consume(Token::Type::RightCurly);
     }
 
-    member_decl->m_type = create_ast_node<Type>(*member_decl, type_token.m_start, type_token.m_end, text_of_token(type_token));
+    member_decl->m_type = create_ast_node<Type>(*member_decl, type_token.start(), type_token.end(), text_of_token(type_token));
     member_decl->m_name = text_of_token(identifier_token);
     member_decl->m_initial_value = move(initial_value);
     consume(Token::Type::Semicolon);
@@ -1122,8 +1122,8 @@ void Parser::add_tokens_for_preprocessor(Token& replaced_token, Preprocessor::De
     for (auto token : lexer.lex()) {
         if (token.type() == Token::Type::Whitespace)
             continue;
-        token.m_start = replaced_token.start();
-        token.m_end = replaced_token.end();
+        token.set_start(replaced_token.start());
+        token.set_end(replaced_token.end());
         m_tokens.append(move(token));
     }
 }
