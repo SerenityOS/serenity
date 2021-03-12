@@ -42,6 +42,7 @@ int main(int argc, char** argv)
     bool do_invalid_stack_pointer_on_syscall = false;
     bool do_invalid_stack_pointer_on_page_fault = false;
     bool do_syscall_from_writeable_memory = false;
+    bool do_legitimate_syscall = false;
     bool do_execute_non_executable_memory = false;
     bool do_trigger_user_mode_instruction_prevention = false;
     bool do_use_io_instruction = false;
@@ -67,6 +68,7 @@ int main(int argc, char** argv)
     args_parser.add_option(do_invalid_stack_pointer_on_syscall, "Make a syscall while using an invalid stack pointer", nullptr, 'T');
     args_parser.add_option(do_invalid_stack_pointer_on_page_fault, "Trigger a page fault while using an invalid stack pointer", nullptr, 't');
     args_parser.add_option(do_syscall_from_writeable_memory, "Make a syscall from writeable memory", nullptr, 'S');
+    args_parser.add_option(do_legitimate_syscall, "Make a syscall from legitimate memory (but outside msyscall)", nullptr, 'y');
     args_parser.add_option(do_execute_non_executable_memory, "Attempt to execute non-executable memory (not mapped with PROT_EXEC)", nullptr, 'X');
     args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault", nullptr, 'U');
     args_parser.add_option(do_use_io_instruction, "Use an x86 I/O instruction in userspace", nullptr, 'I');
@@ -223,6 +225,14 @@ int main(int argc, char** argv)
         Crash("Syscall from writable memory", []() {
             u8 buffer[] = { 0xb8, Syscall::SC_getuid, 0, 0, 0, 0xcd, 0x82 };
             ((void (*)())buffer)();
+            return Crash::Failure::DidNotCrash;
+        }).run(run_type);
+    }
+
+    if (do_legitimate_syscall || do_all_crash_types) {
+        Crash("Regular syscall from outside msyscall", []() {
+            // Since 'crash' is dynamically linked, and DynamicLoader only allows LibSystem to make syscalls, this should kill us:
+            Syscall::invoke(Syscall::SC_getuid);
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
