@@ -25,7 +25,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>

@@ -26,8 +26,10 @@
 
 #include <AK/HashMap.h>
 #include <ProtocolServer/Protocol.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+#include <unistd.h>
 
 namespace ProtocolServer {
 

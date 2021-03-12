@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/LogStream.h>
 #include <LibC/sys/internals.h>
 #include <LibC/unistd.h>
 #include <LibELF/AuxiliaryVector.h>

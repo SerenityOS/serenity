@@ -30,6 +30,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
 #include <AK/ScopeGuard.h>
+#include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
@@ -39,6 +40,7 @@
 #include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <ctype.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/ioctl.h>

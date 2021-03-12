@@ -33,6 +33,7 @@
 #include <LibELF/Validation.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <unistd.h>
 
 static const char* object_file_type_to_string(Elf32_Half type)
 {

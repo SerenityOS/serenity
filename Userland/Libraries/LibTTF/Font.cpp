@@ -26,7 +26,6 @@
 
 #include "AK/ByteBuffer.h"
 #include <AK/Checked.h>
-#include <AK/LogStream.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/File.h>

@@ -27,7 +27,6 @@
 #include <AK/Array.h>
 #include <AK/Assertions.h>
 #include <AK/BinarySearch.h>
-#include <AK/LogStream.h>
 #include <AK/MemoryStream.h>
 
 #include <LibCompress/Deflate.h>

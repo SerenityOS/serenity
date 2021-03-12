@@ -88,9 +88,6 @@ int main(int, char**)
         EXPECT_EFAULT(read, (void*)kernel_address, 1);
     }
 
-    char buffer[4096];
-    EXPECT_EFAULT_NO_FD(dbgputstr, buffer, 0xffffff00);
-
     // Test the page just below where the kernel VM begins.
     u8* jerk_page = (u8*)mmap((void*)(0xc0000000 - PAGE_SIZE), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, 0, 0);
     VERIFY(jerk_page == (void*)(0xc0000000 - PAGE_SIZE));

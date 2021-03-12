@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/LogStream.h>
 #include <AK/Optional.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Rect.h>
@@ -156,20 +155,6 @@ template<>
 IntRect AffineTransform::map(const IntRect& rect) const
 {
     return enclosing_int_rect(map(FloatRect(rect)));
-}
-
-const LogStream& operator<<(const LogStream& stream, const AffineTransform& value)
-{
-    if (value.is_identity())
-        return stream << "{ Identity }";
-
-    return stream << "{ "
-                  << value.a() << ", "
-                  << value.b() << ", "
-                  << value.c() << ", "
-                  << value.d() << ", "
-                  << value.e() << ", "
-                  << value.f() << " }";
 }
 
 }

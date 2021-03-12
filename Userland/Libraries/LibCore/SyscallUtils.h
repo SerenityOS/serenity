@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Debug.h>
-#include <AK/LogStream.h>
 #include <AK/StdLibExtras.h>
 #include <errno.h>
 #include <string.h>

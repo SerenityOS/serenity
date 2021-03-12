@@ -25,7 +25,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/LogStream.h>
 #include <AK/MappedFile.h>
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
@@ -33,7 +32,6 @@
 #include <LibELF/Image.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/ELFSymbolProvider.h>
-#include <stdio.h>
 #include <string.h>
 
 int main(int argc, char** argv)

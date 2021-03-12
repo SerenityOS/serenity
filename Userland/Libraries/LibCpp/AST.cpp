@@ -25,7 +25,6 @@
  */
 
 #include "AST.h"
-#include "AK/LogStream.h"
 
 namespace Cpp {
 

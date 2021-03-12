@@ -29,7 +29,7 @@
 #include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
-#include <sys/utsname.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

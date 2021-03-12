@@ -25,7 +25,7 @@
  */
 
 #include "misc.h"
-#include "AK/LogStream.h"
+#include <AK/Format.h>
 
 extern "C" {
 const char* __cxa_demangle(const char*, void*, void*, int*)

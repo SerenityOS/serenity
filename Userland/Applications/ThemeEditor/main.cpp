@@ -32,6 +32,7 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Window.h>
+#include <unistd.h>
 
 class ColorRoleModel final : public GUI::Model {
 public:

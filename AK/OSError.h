@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <errno.h>
 #include <string.h>
 
 namespace AK {

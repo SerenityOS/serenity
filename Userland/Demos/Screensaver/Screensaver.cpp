@@ -33,6 +33,7 @@
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 class Screensaver final : public GUI::Widget {
     C_OBJECT(Screensaver)

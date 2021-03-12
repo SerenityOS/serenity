@@ -27,6 +27,7 @@
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <stdio.h>
+#include <unistd.h>
 
 class DiscordianDate {
 public:

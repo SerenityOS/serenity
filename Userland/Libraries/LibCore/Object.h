@@ -223,8 +223,6 @@ T* Object::find_descendant_of_type_named(const String& name) requires IsBaseOf<O
     return found_child;
 }
 
-const LogStream& operator<<(const LogStream&, const Object&);
-
 #define REGISTER_INT_PROPERTY(property_name, getter, setter) \
     register_property(                                       \
         property_name,                                       \

@@ -38,9 +38,9 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <stdio.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

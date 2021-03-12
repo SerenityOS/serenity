@@ -26,7 +26,6 @@
 
 #include <AK/Debug.h>
 #include <AK/Iterator.h>
-#include <AK/LogStream.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <mman.h>

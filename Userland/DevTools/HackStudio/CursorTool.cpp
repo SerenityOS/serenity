@@ -29,7 +29,6 @@
 #include "FormWidget.h"
 #include "WidgetTreeModel.h"
 #include <AK/Debug.h>
-#include <AK/LogStream.h>
 #include <LibGfx/Palette.h>
 
 namespace HackStudio {

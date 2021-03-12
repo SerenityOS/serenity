@@ -31,12 +31,12 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibGfx/WindowTheme.h>
+#include <unistd.h>
 
 const int WIDTH = 300;
 const int HEIGHT = 200;

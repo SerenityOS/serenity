@@ -25,12 +25,13 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/internals.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 extern "C" {
 

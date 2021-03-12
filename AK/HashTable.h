@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/HashFunctions.h>
-#include <AK/LogStream.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>

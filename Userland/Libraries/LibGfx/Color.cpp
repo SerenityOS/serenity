@@ -328,10 +328,6 @@ Optional<Color> Color::from_string(const StringView& string)
     return Color(r.value(), g.value(), b.value(), a.value());
 }
 
-const LogStream& operator<<(const LogStream& stream, Color value)
-{
-    return stream << value.to_string();
-}
 }
 
 bool IPC::encode(IPC::Encoder& encoder, const Color& color)

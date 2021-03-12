@@ -1027,11 +1027,6 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     return KSuccess;
 }
 
-const LogStream& operator<<(const LogStream& stream, const Thread& value)
-{
-    return stream << value.process().name() << "(" << value.pid().value() << ":" << value.tid().value() << ")";
-}
-
 RefPtr<Thread> Thread::from_tid(ThreadID tid)
 {
     RefPtr<Thread> found_thread;

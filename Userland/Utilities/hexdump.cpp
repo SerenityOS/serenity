@@ -25,7 +25,6 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <AK/LogStream.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <ctype.h>

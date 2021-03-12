@@ -27,6 +27,7 @@
 #include <AK/MappedFile.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>

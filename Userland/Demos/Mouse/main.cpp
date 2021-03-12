@@ -36,6 +36,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Path.h>
+#include <unistd.h>
 
 #include <math.h>
 

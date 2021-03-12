@@ -40,6 +40,7 @@
 #include <LibGUI/Window.h>
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

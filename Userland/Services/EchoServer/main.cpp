@@ -30,9 +30,9 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/TCPServer.h>
-#include <LibCore/TCPSocket.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

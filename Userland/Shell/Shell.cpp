@@ -31,6 +31,7 @@
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
+#include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <LibCore/ArgsParser.h>

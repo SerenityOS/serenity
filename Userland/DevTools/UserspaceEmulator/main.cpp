@@ -25,16 +25,13 @@
  */
 
 #include "Emulator.h"
-#include "SoftCPU.h"
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
-#include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibELF/Image.h>
-#include <getopt.h>
 #include <pthread.h>
+#include <serenity.h>
 #include <string.h>
 
 bool g_report_to_debug = false;

@@ -27,6 +27,7 @@
 #include "Formatter.h"
 #include "AST.h"
 #include "Parser.h"
+#include <AK/ScopedValueRollback.h>
 #include <AK/TemporaryChange.h>
 
 namespace Shell {

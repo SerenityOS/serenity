@@ -31,8 +31,7 @@
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <unistd.h>
 
 struct Options {
     String data;

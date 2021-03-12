@@ -40,6 +40,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Function.h>
 #include <ctype.h>
+#include <unistd.h>
 
 namespace Spreadsheet {
 

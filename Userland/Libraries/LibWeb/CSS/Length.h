@@ -173,9 +173,4 @@ private:
     float m_value { 0 };
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const Length& value)
-{
-    return stream << value.to_string();
-}
-
 }

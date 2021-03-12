@@ -25,8 +25,8 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Format.h>
 #include <AK/GenericLexer.h>
-#include <AK/LogStream.h>
 #include <AK/StdLibExtras.h>
 #include <ctype.h>
 #include <stdarg.h>

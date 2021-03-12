@@ -141,20 +141,6 @@ struct SignedDivisionResult {
 
 }
 
-inline const LogStream&
-operator<<(const LogStream& stream, const Crypto::SignedBigInteger value)
-{
-    if (value.is_invalid()) {
-        stream << "Invalid BigInt";
-        return stream;
-    }
-    if (value.is_negative())
-        stream << "-";
-
-    stream << value.unsigned_value();
-    return stream;
-}
-
 inline Crypto::SignedBigInteger
 operator""_sbigint(const char* string, size_t length)
 {

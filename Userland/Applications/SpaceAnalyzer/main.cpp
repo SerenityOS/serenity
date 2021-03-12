@@ -43,6 +43,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/StatusBar.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 static const char* APP_NAME = "Space Analyzer";
 

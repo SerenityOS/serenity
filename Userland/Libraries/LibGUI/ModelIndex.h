@@ -76,8 +76,6 @@ private:
     void* m_internal_data { nullptr };
 };
 
-const LogStream& operator<<(const LogStream&, const ModelIndex&);
-
 }
 
 namespace AK {

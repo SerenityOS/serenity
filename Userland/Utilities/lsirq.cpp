@@ -27,9 +27,9 @@
 #include <AK/ByteBuffer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/String.h>
 #include <LibCore/File.h>
 #include <stdio.h>
+#include <unistd.h>
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {

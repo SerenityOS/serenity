@@ -33,21 +33,20 @@
 #        include <AK/Types.h>
 #        include <stdarg.h>
 extern "C" {
-int dbgputstr(const char*, ssize_t);
+void dbgputstr(const char*, size_t);
 int sprintf(char* buf, const char* fmt, ...) __attribute__((format(printf, 2, 3)));
 int snprintf(char* buffer, size_t, const char* fmt, ...) __attribute__((format(printf, 3, 4)));
 }
 #    endif
 #else
 #    include <stdio.h>
-inline int dbgputstr(const char* characters, ssize_t length)
+inline void dbgputstr(const char* characters, size_t length)
 {
     fwrite(characters, 1, length, stderr);
-    return 0;
 }
 #endif
 template<size_t N>
-inline int dbgputstr(const char (&array)[N])
+inline void dbgputstr(const char (&array)[N])
 {
     return ::dbgputstr(array, N);
 }

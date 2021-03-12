@@ -404,8 +404,6 @@ inline constexpr Color::Color(NamedColor named)
     m_value = 0xff000000 | (rgb.r << 16) | (rgb.g << 8) | rgb.b;
 }
 
-const LogStream& operator<<(const LogStream&, Color);
-
 }
 
 using Gfx::Color;
