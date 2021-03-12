@@ -43,7 +43,7 @@ String copy_string_from_user(const char* user_str, size_t user_str_size)
     void* fault_at;
     ssize_t length = Kernel::safe_strnlen(user_str, user_str_size, fault_at);
     if (length < 0) {
-        klog() << "copy_string_from_user(" << static_cast<const void*>(user_str) << ", " << user_str_size << ") failed at " << VirtualAddress(fault_at) << " (strnlen)";
+        dbgln("copy_string_from_user({:p}, {}) failed at {} (strnlen)", static_cast<const void*>(user_str), user_str_size, VirtualAddress { fault_at });
         return {};
     }
     if (length == 0)
@@ -52,7 +52,7 @@ String copy_string_from_user(const char* user_str, size_t user_str_size)
     char* buffer;
     auto copied_string = StringImpl::create_uninitialized((size_t)length, buffer);
     if (!Kernel::safe_memcpy(buffer, user_str, (size_t)length, fault_at)) {
-        klog() << "copy_string_from_user(" << static_cast<const void*>(user_str) << ", " << user_str_size << ") failed at " << VirtualAddress(fault_at) << " (memcpy)";
+        dbgln("copy_string_from_user({:p}, {}) failed at {} (memcpy)", static_cast<const void*>(user_str), user_str_size, VirtualAddress { fault_at });
         return {};
     }
     return copied_string;
@@ -201,7 +201,7 @@ bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
     void* fault_at;
     if (!Kernel::safe_memcpy(dest_ptr, src_ptr, n, fault_at)) {
         VERIFY(VirtualAddress(fault_at) >= VirtualAddress(dest_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)dest_ptr + n));
-        klog() << "copy_to_user(" << dest_ptr << ", " << src_ptr << ", " << n << ") failed at " << VirtualAddress(fault_at);
+        dbgln("copy_to_user({:p}, {:p}, {}) failed at {}", dest_ptr, src_ptr, n, VirtualAddress { fault_at });
         return false;
     }
     return true;
@@ -217,7 +217,7 @@ bool copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
     void* fault_at;
     if (!Kernel::safe_memcpy(dest_ptr, src_ptr, n, fault_at)) {
         VERIFY(VirtualAddress(fault_at) >= VirtualAddress(src_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)src_ptr + n));
-        klog() << "copy_from_user(" << dest_ptr << ", " << src_ptr << ", " << n << ") failed at " << VirtualAddress(fault_at);
+        dbgln("copy_from_user({:p}, {:p}, {}) failed at {}", dest_ptr, src_ptr, n, VirtualAddress { fault_at });
         return false;
     }
     return true;
@@ -270,7 +270,7 @@ const void* memmem(const void* haystack, size_t haystack_length, const void* nee
     Kernel::SmapDisabler disabler;
     void* fault_at;
     if (!Kernel::safe_memset(dest_ptr, c, n, fault_at)) {
-        klog() << "memset(" << dest_ptr << ", " << n << ") failed at " << VirtualAddress(fault_at);
+        dbgln("memset_user({:p}, {}, {}) failed at {}", dest_ptr, c, n, VirtualAddress { fault_at });
         return false;
     }
     return true;
