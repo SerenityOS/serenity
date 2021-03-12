@@ -27,15 +27,16 @@
 #pragma once
 
 #include "AK/NonnullRefPtr.h"
-#include <AK/Noncopyable.h>
 #include "AST.h"
 #include "Preprocessor.h"
+#include <AK/Noncopyable.h>
 #include <LibCpp/Lexer.h>
 
 namespace Cpp {
 
 class Parser final {
     AK_MAKE_NONCOPYABLE(Parser);
+
 public:
     explicit Parser(const StringView& program, const String& filename, Preprocessor::Definitions&& = {});
     ~Parser() = default;
@@ -47,12 +48,13 @@ public:
     RefPtr<ASTNode> node_at(Position) const;
     Optional<size_t> index_of_node_at(Position) const;
     Optional<Token> token_at(Position) const;
+    Optional<size_t> index_of_token_at(Position) const;
     RefPtr<const TranslationUnit> root_node() const { return m_root_node; }
-    StringView text_of_node(const ASTNode&) const;
+    String text_of_node(const ASTNode&) const;
     StringView text_of_token(const Cpp::Token& token) const;
     void print_tokens() const;
     Vector<String> errors() const { return m_errors; }
-    const Preprocessor::Definitions& definitions() const {return m_definitions;}
+    const Preprocessor::Definitions& definitions() const { return m_definitions; }
 
 private:
     enum class DeclarationType {
@@ -119,7 +121,7 @@ private:
     Token peek(size_t offset = 0) const;
     Optional<Token> peek(Token::Type) const;
     Position position() const;
-    StringView text_of_range(Position start, Position end) const;
+    String text_in_range(Position start, Position end) const;
 
     void save_state();
     void load_state();

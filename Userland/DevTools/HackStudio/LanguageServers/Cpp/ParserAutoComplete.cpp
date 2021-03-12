@@ -135,7 +135,7 @@ NonnullRefPtrVector<Declaration> ParserAutoComplete::get_available_declarations(
     return available_declarations;
 }
 
-Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(const DocumentData& document, const ASTNode& node, const StringView& partial_text) const
+Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(const DocumentData& document, const ASTNode& node, const String& partial_text) const
 {
     auto available_declarations = get_available_declarations(document, node);
     Vector<StringView> available_names;
@@ -166,7 +166,7 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(c
     return suggestions;
 }
 
-Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_property(const DocumentData& document, const MemberExpression& parent, const StringView partial_text) const
+Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_property(const DocumentData& document, const MemberExpression& parent, const String partial_text) const
 {
     auto type = type_of(document, *parent.m_object);
     if (type.is_null()) {
