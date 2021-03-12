@@ -39,6 +39,8 @@ public:
     virtual ~StringPrototype() override;
 
 private:
+    JS_DECLARE_NATIVE_GETTER(length_getter);
+
     JS_DECLARE_NATIVE_FUNCTION(char_at);
     JS_DECLARE_NATIVE_FUNCTION(char_code_at);
     JS_DECLARE_NATIVE_FUNCTION(repeat);
@@ -52,9 +54,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(pad_end);
     JS_DECLARE_NATIVE_FUNCTION(substring);
     JS_DECLARE_NATIVE_FUNCTION(substr);
-
-    JS_DECLARE_NATIVE_GETTER(length_getter);
-
     JS_DECLARE_NATIVE_FUNCTION(trim);
     JS_DECLARE_NATIVE_FUNCTION(trim_start);
     JS_DECLARE_NATIVE_FUNCTION(trim_end);
@@ -63,6 +62,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(slice);
     JS_DECLARE_NATIVE_FUNCTION(split);
     JS_DECLARE_NATIVE_FUNCTION(last_index_of);
+    JS_DECLARE_NATIVE_FUNCTION(at);
 
     JS_DECLARE_NATIVE_FUNCTION(symbol_iterator);
 };

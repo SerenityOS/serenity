@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * Copyright (c) 2020, Marcin Gasperowicz <xnooga@gmail.com>
  * All rights reserved.
  *
@@ -81,6 +81,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.fill, fill, 1, attr);
     define_native_function(vm.names.values, values, 0, attr);
     define_native_function(vm.names.flat, flat, 0, attr);
+    define_native_function(vm.names.at, at, 1, attr);
 
     // Use define_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
@@ -1081,4 +1082,30 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat)
         return {};
     return new_array;
 }
+
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::at)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+    auto length = length_of_array_like(global_object, *this_object);
+    if (vm.exception())
+        return {};
+    auto relative_index = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+    if (Value(relative_index).is_infinity())
+        return js_undefined();
+    Checked<size_t> index { 0 };
+    if (relative_index >= 0) {
+        index += relative_index;
+    } else {
+        index += length;
+        index -= -relative_index;
+    }
+    if (index.has_overflow() || index.value() >= length)
+        return js_undefined();
+    return this_object->get(index.value());
+}
+
 }

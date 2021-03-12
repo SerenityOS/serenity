@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,8 @@ public:
 
 private:
     JS_DECLARE_NATIVE_GETTER(length_getter);
+
+    JS_DECLARE_NATIVE_FUNCTION(at);
 };
 
 }
