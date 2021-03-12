@@ -38,7 +38,6 @@
 namespace NotificationServer {
 
 static HashMap<u32, RefPtr<NotificationWindow>> s_windows;
-static const Gfx::Bitmap* default_image = Gfx::Bitmap::load_from_file("/res/icons/32x32/ladybug.png");
 
 void update_notification_window_locations()
 {
@@ -94,7 +93,10 @@ NotificationWindow::NotificationWindow(i32 client_id, const String& text, const 
     widget.layout()->set_spacing(6);
 
     m_image = &widget.add<GUI::ImageWidget>();
-    m_image->set_bitmap(icon.is_valid() ? icon.bitmap() : default_image);
+    m_image->set_visible(icon.is_valid());
+    if (icon.is_valid()) {
+        m_image->set_bitmap(icon.bitmap());
+    }
 
     auto& left_container = widget.add<GUI::Widget>();
     left_container.set_layout<GUI::VerticalBoxLayout>();
@@ -141,7 +143,10 @@ void NotificationWindow::set_title(const String& value)
 
 void NotificationWindow::set_image(const Gfx::ShareableBitmap& image)
 {
-    m_image->set_bitmap(image.is_valid() ? image.bitmap() : default_image);
+    m_image->set_visible(image.is_valid());
+    if (image.is_valid()) {
+        m_image->set_bitmap(image.bitmap());
+    }
 }
 
 }
