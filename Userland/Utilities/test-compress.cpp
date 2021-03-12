@@ -258,4 +258,15 @@ TEST_CASE(gzip_decompress_repeat_around_buffer)
     EXPECT(uncompressed == decompressed.value().bytes());
 }
 
+TEST_CASE(gzip_round_trip)
+{
+    auto original = ByteBuffer::create_uninitialized(1024);
+    fill_with_random(original.data(), 1024);
+    auto compressed = Compress::GzipCompressor::compress_all(original);
+    EXPECT(compressed.has_value());
+    auto uncompressed = Compress::GzipDecompressor::decompress_all(compressed.value());
+    EXPECT(uncompressed.has_value());
+    EXPECT(uncompressed.value() == original);
+}
+
 TEST_MAIN(Compress)
