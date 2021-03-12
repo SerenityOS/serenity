@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,12 +37,12 @@ bool GzipDecompressor::is_likely_compressed(ReadonlyBytes bytes)
     return bytes.size() >= 2 && bytes[0] == gzip_magic_1 && bytes[1] == gzip_magic_2;
 }
 
-bool GzipDecompressor::BlockHeader::valid_magic_number() const
+bool BlockHeader::valid_magic_number() const
 {
     return identification_1 == gzip_magic_1 && identification_2 == gzip_magic_2;
 }
 
-bool GzipDecompressor::BlockHeader::supported_by_implementation() const
+bool BlockHeader::supported_by_implementation() const
 {
     if (compression_method != 0x08) {
         // RFC 1952 does not define any compression methods other than deflate.
@@ -186,5 +187,59 @@ Optional<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 }
 
 bool GzipDecompressor::unreliable_eof() const { return m_eof; }
+
+GzipCompressor::GzipCompressor(OutputStream& stream)
+    : m_output_stream(stream)
+{
+}
+
+GzipCompressor::~GzipCompressor()
+{
+}
+
+size_t GzipCompressor::write(ReadonlyBytes bytes)
+{
+    BlockHeader header;
+    header.identification_1 = 0x1f;
+    header.identification_2 = 0x8b;
+    header.compression_method = 0x08;
+    header.flags = 0;
+    header.modification_time = 0;
+    header.extra_flags = 3;      // DEFLATE sets 2 for maximum compression and 4 for minimum compression
+    header.operating_system = 3; // unix
+    m_output_stream << Bytes { &header, sizeof(header) };
+    DeflateCompressor compressed_stream { m_output_stream };
+    VERIFY(compressed_stream.write_or_error(bytes));
+    compressed_stream.final_flush();
+    Crypto::Checksum::CRC32 crc32;
+    crc32.update(bytes);
+    LittleEndian<u32> digest = crc32.digest();
+    LittleEndian<u32> size = bytes.size();
+    m_output_stream << digest << size;
+    return bytes.size();
+}
+
+bool GzipCompressor::write_or_error(ReadonlyBytes bytes)
+{
+    if (write(bytes) < bytes.size()) {
+        set_fatal_error();
+        return false;
+    }
+
+    return true;
+}
+
+Optional<ByteBuffer> GzipCompressor::compress_all(const ReadonlyBytes& bytes)
+{
+    DuplexMemoryStream output_stream;
+    GzipCompressor gzip_stream { output_stream };
+
+    gzip_stream.write_or_error(bytes);
+
+    if (gzip_stream.handle_any_error())
+        return {};
+
+    return output_stream.copy_into_contiguous_buffer();
+}
 
 }
