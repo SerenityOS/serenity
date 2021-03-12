@@ -76,7 +76,7 @@ void SpuriousInterruptHandler::handle_interrupt(const RegisterState& state)
         m_real_handler->handle_interrupt(state);
         return;
     }
-    klog() << "Spurious Interrupt, vector " << interrupt_number();
+    dbgln("Spurious interrupt, vector {}", interrupt_number());
 }
 
 void SpuriousInterruptHandler::enable_interrupt_vector()

@@ -35,7 +35,7 @@ KResult Process::do_kill(Process& process, int signal)
     if (!is_superuser() && euid() != process.uid() && uid() != process.uid())
         return EPERM;
     if (process.is_kernel_process() && signal == SIGKILL) {
-        klog() << "attempted to send SIGKILL to kernel process " << process.name().characters() << "(" << process.pid().value() << ")";
+        dbgln("Aattempted to send SIGKILL to kernel process {} ({})", process.name(), process.pid());
         return EPERM;
     }
     if (signal != 0)

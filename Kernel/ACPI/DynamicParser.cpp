@@ -34,7 +34,7 @@ UNMAP_AFTER_INIT DynamicParser::DynamicParser(PhysicalAddress rsdp)
     : IRQHandler(9)
     , Parser(rsdp)
 {
-    klog() << "ACPI: Dynamic Parsing Enabled, Can parse AML";
+    dmesgln("ACPI: Dynamic Parsing Enabled, Can parse AML");
 }
 
 void DynamicParser::handle_irq(const RegisterState&)

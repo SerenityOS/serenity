@@ -81,7 +81,6 @@ static KResultOr<FlatPtr> handle(RegisterState&, FlatPtr function, FlatPtr arg1,
 UNMAP_AFTER_INIT void initialize()
 {
     register_user_callable_interrupt_handler(syscall_vector, syscall_asm_entry);
-    klog() << "Syscall: int 0x82 handler installed";
 }
 
 #pragma GCC diagnostic ignored "-Wcast-function-type"

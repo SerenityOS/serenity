@@ -53,7 +53,7 @@ PIT::PIT(Function<void(const RegisterState&)> callback)
 {
     IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_WORD | MODE_SQUARE_WAVE);
 
-    klog() << "PIT: " << OPTIMAL_TICKS_PER_SECOND_RATE << " Hz, square wave (" << String::formatted("{:x}", BASE_FREQUENCY / OPTIMAL_TICKS_PER_SECOND_RATE) << ")";
+    dmesgln("PIT: {} Hz, square wave ({:#08x})", OPTIMAL_TICKS_PER_SECOND_RATE, BASE_FREQUENCY / OPTIMAL_TICKS_PER_SECOND_RATE);
     reset_to_default_ticks_per_second();
     enable_irq();
 }
