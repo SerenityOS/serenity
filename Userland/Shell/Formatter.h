@@ -90,6 +90,7 @@ private:
     virtual void visit(const AST::ReadWriteRedirection*) override;
     virtual void visit(const AST::Sequence*) override;
     virtual void visit(const AST::Subshell*) override;
+    virtual void visit(const AST::Slice*) override;
     virtual void visit(const AST::SimpleVariable*) override;
     virtual void visit(const AST::SpecialVariable*) override;
     virtual void visit(const AST::Juxtaposition*) override;
