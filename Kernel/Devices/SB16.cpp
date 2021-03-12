@@ -122,7 +122,7 @@ UNMAP_AFTER_INIT void SB16::initialize()
 
     auto data = dsp_read();
     if (data != 0xaa) {
-        klog() << "SB16: sb not ready";
+        dbgln("SB16: SoundBlaster not ready");
         return;
     }
 
@@ -131,9 +131,9 @@ UNMAP_AFTER_INIT void SB16::initialize()
     m_major_version = dsp_read();
     auto vmin = dsp_read();
 
-    klog() << "SB16: found version " << m_major_version << "." << vmin;
+    dmesgln("SB16: Found version {}.{}", m_major_version, vmin);
     set_irq_register(SB16_DEFAULT_IRQ);
-    klog() << "SB16: IRQ " << get_irq_line();
+    dmesgln("SB16: IRQ {}", get_irq_line());
 }
 
 void SB16::set_irq_register(u8 irq_number)
@@ -255,9 +255,8 @@ KResultOr<size_t> SB16::write(FileDescription&, size_t, const UserOrKernelBuffer
             return ENOMEM;
     }
 
-#if SB16_DEBUG
-    klog() << "SB16: Writing buffer of " << length << " bytes";
-#endif
+    dbgln_if(SB16_DEBUG, "SB16: Writing buffer of {} bytes", length);
+
     VERIFY(length <= PAGE_SIZE);
     const int BLOCK_SIZE = 32 * 1024;
     if (length > BLOCK_SIZE) {
