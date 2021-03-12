@@ -95,13 +95,10 @@ cmd_with_target() {
     SERENITY_ROOT="$(get_top_dir)"
     export SERENITY_ROOT
     BUILD_DIR="$SERENITY_ROOT/Build/$TARGET"
-    if [ "$TARGET" = "lagom" ]; then
-        TOOLCHAIN=i686
-    else
-        TOOLCHAIN="$TARGET"
+    if [ "$TARGET" != "lagom" ]; then
+        export SERENITY_ARCH="$TARGET"
+        TOOLCHAIN_DIR="$SERENITY_ROOT/Toolchain/Build/$TARGET"
     fi
-    export SERENITY_ARCH="TOOLCHAIN"
-    TOOLCHAIN_DIR="$SERENITY_ROOT/Toolchain/Build/$TOOLCHAIN"
 }
 
 ensure_target() {
@@ -127,7 +124,7 @@ delete_target() {
 }
 
 build_toolchain() {
-    ( cd Toolchain && ARCH="$TOOLCHAIN" ./BuildIt.sh )
+    ( cd Toolchain && ARCH="$TARGET" ./BuildIt.sh )
 }
 
 ensure_toolchain() {
@@ -187,7 +184,7 @@ if [[ "$CMD" =~ ^(build|install|image|run|gdb|rebuild|recreate|kaddr2line|addr2l
     # this error after the toolchain finished building:
     # ninja: error: loading 'build.ninja': No such file or directory
     ensure_target
-    ensure_toolchain
+    [ "$TARGET" = "lagom" ] || ensure_toolchain
     case "$CMD" in
         build)
             build_target "$@"
@@ -243,10 +240,16 @@ if [[ "$CMD" =~ ^(build|install|image|run|gdb|rebuild|recreate|kaddr2line|addr2l
             [ $# -ge 2 ] || usage
             BINARY_FILE="$1"; shift
             BINARY_FILE_PATH="$BUILD_DIR/$BINARY_FILE"
-            if [ -x "$BINARY_FILE_PATH" ]; then
-                "$TOOLCHAIN_DIR/binutils/binutils/addr2line" -e "$BINARY_FILE_PATH" "$@"
+            if [ "$TARGET" = "lagom" ]; then
+                command -v addr2line >/dev/null 2>&1 || die "Please install addr2line!"
+                ADDR2LINE=addr2line
             else
-                find "$BUILD_DIR" -name "$BINARY_FILE" -executable -type f -exec "$TOOLCHAIN_DIR/binutils/binutils/addr2line" -e {} "$@" \;
+                ADDR2LINE="$TOOLCHAIN_DIR/binutils/binutils/addr2line"
+            fi
+            if [ -x "$BINARY_FILE_PATH" ]; then
+                "$ADDR2LINE" -e "$BINARY_FILE_PATH" "$@"
+            else
+                find "$BUILD_DIR" -name "$BINARY_FILE" -executable -type f -exec "$ADDR2LINE" -e {} "$@" \;
             fi
             ;;
         *)
