@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <AK/Types.h>
 
 namespace Cpp {
@@ -114,10 +115,11 @@ struct Token {
 #undef __TOKEN
     };
 
-    Token(Type type, const Position& start, const Position& end)
+    Token(Type type, const Position& start, const Position& end, const StringView& text)
         : m_type(type)
         , m_start(start)
         , m_end(end)
+        , m_text(text)
     {
     }
 
@@ -140,14 +142,16 @@ struct Token {
     const Position& start() const { return m_start; }
     const Position& end() const { return m_end; }
 
-    void set_start(const Position& other) {m_start = other;}
-    void set_end(const Position& other) {m_end = other;}
+    void set_start(const Position& other) { m_start = other; }
+    void set_end(const Position& other) { m_end = other; }
     Type type() const { return m_type; }
+    const StringView& text() const { return m_text; }
 
 private:
     Type m_type { Type::Unknown };
     Position m_start;
     Position m_end;
+    StringView m_text;
 };
 
 }
