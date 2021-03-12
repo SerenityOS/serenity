@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -168,7 +168,15 @@ UNMAP_AFTER_INIT void IDEChannel::initialize(bool force_pio)
 
 static void print_ide_status(u8 status)
 {
-    klog() << "IDEChannel: print_ide_status: DRQ=" << ((status & ATA_SR_DRQ) != 0) << " BSY=" << ((status & ATA_SR_BSY) != 0) << " DRDY=" << ((status & ATA_SR_DRDY) != 0) << " DSC=" << ((status & ATA_SR_DSC) != 0) << " DF=" << ((status & ATA_SR_DF) != 0) << " CORR=" << ((status & ATA_SR_CORR) != 0) << " IDX=" << ((status & ATA_SR_IDX) != 0) << " ERR=" << ((status & ATA_SR_ERR) != 0);
+    dbgln("IDEChannel: print_ide_status: DRQ={} BSY={}, DRDY={}, DSC={}, DF={}, CORR={}, IDX={}, ERR={}",
+        (status & ATA_SR_DRQ) != 0,
+        (status & ATA_SR_BSY) != 0,
+        (status & ATA_SR_DRDY) != 0,
+        (status & ATA_SR_DSC) != 0,
+        (status & ATA_SR_DF) != 0,
+        (status & ATA_SR_CORR) != 0,
+        (status & ATA_SR_IDX) != 0,
+        (status & ATA_SR_ERR) != 0);
 }
 
 void IDEChannel::try_disambiguate_error()
@@ -220,14 +228,13 @@ void IDEChannel::handle_irq(const RegisterState&)
     }
 
     ScopedSpinLock lock(m_request_lock);
-#if PATA_DEBUG
-    klog() << "IDEChannel: interrupt: DRQ=" << ((status & ATA_SR_DRQ) != 0) << " BSY=" << ((status & ATA_SR_BSY) != 0) << " DRDY=" << ((status & ATA_SR_DRDY) != 0);
-#endif
+    dbgln_if(PATA_DEBUG, "IDEChannel: interrupt: DRQ={}, BSY={}, DRDY={}",
+        (status & ATA_SR_DRQ) != 0,
+        (status & ATA_SR_BSY) != 0,
+        (status & ATA_SR_DRDY) != 0);
 
     if (!m_current_request) {
-#if PATA_DEBUG
         dbgln("IDEChannel: IRQ but no pending request!");
-#endif
         return;
     }
 
