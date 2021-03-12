@@ -632,22 +632,11 @@ bool AHCIPort::initiate_sata_reset()
         retry++;
     }
 
-    // If device presence detected and Phy communication established, wait for signature to update
-    if ((m_port_registers.ssts & 0xf) == 3) {
-        retry = 0;
-        while (retry < 30000) {
-            if (!(m_port_registers.tfd & (ATA_SR_BSY | ATA_SR_DRQ)) && m_port_registers.sig != 0xffffffff)
-                break;
-            IO::delay(10);
-            retry++;
-        }
-    }
-
     dmesgln("AHCI Port {}: {}", representative_port_index(), try_disambiguate_sata_status());
 
     full_memory_barrier();
     clear_sata_error_register();
-    return m_port_registers.sig != AHCI::DeviceSignature::Unconnected;
+    return (m_port_registers.ssts & 0xf) == 3;
 }
 
 void AHCIPort::set_interface_state(AHCI::DeviceDetectionInitialization requested_action)
