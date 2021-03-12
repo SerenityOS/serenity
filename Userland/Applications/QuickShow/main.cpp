@@ -28,6 +28,7 @@
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MimeData.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -45,21 +46,30 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
 #include <serenity.h>
-#include <spawn.h>
 #include <stdio.h>
 #include <string.h>
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd accept cpath rpath wpath unix cpath fattr proc exec thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept rpath wpath cpath unix fattr thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd accept cpath rpath wpath proc exec thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept cpath rpath wpath unix thread", nullptr) < 0) {
         perror("pledge");
+        return 1;
+    }
+
+    if (!Desktop::Launcher::add_allowed_handler_with_any_url("/bin/QuickShow")) {
+        warnln("Failed to set up allowed launch URLs");
+        return 1;
+    }
+
+    if (!Desktop::Launcher::seal_allowlist()) {
+        warnln("Failed to seal allowed launch URLs");
         return 1;
     }
 
@@ -106,24 +116,18 @@ int main(int argc, char** argv)
     widget.on_drop = [&](auto& event) {
         window->move_to_front();
 
-        if (event.mime_data().has_urls()) {
-            auto urls = event.mime_data().urls();
+        if (!event.mime_data().has_urls())
+            return;
 
-            if (!urls.is_empty()) {
-                auto url = urls.first();
-                widget.load_from_file(url.path());
-            }
+        auto urls = event.mime_data().urls();
 
-            pid_t child;
-            for (size_t i = 1; i < urls.size(); ++i) {
-                const char* argv[] = { "/bin/QuickShow", urls[i].path().characters(), nullptr };
-                if ((errno = posix_spawn(&child, "/bin/QuickShow", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-                    perror("posix_spawn");
-                } else {
-                    if (disown(child) < 0)
-                        perror("disown");
-                }
-            }
+        if (urls.is_empty())
+            return;
+
+        widget.load_from_file(urls.first().path());
+
+        for (size_t i = 1; i < urls.size(); ++i) {
+            Desktop::Launcher::open(URL::create_with_file_protocol(urls[i].path().characters()), "/bin/QuickShow");
         }
     };
     widget.on_doubleclick = [&] {
