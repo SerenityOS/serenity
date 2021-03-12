@@ -45,6 +45,7 @@ public:
 
     RefPtr<ASTNode> eof_node() const;
     RefPtr<ASTNode> node_at(Position) const;
+    Optional<size_t> index_of_node_at(Position) const;
     Optional<Token> token_at(Position) const;
     RefPtr<const TranslationUnit> root_node() const { return m_root_node; }
     StringView text_of_node(const ASTNode&) const;
@@ -134,8 +135,6 @@ private:
     };
 
     void error(StringView message = {});
-
-    size_t node_span_size(const ASTNode& node) const;
 
     template<class T, class... Args>
     NonnullRefPtr<T>
