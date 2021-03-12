@@ -64,9 +64,9 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     if (!document)
         return {};
     auto content = document->text();
-    auto document_data = make<DocumentData>(document->text(), file);
-    auto root = document_data->parser.parse();
-    for (auto& path : document_data->preprocessor.included_paths()) {
+    auto document_data = create_document_data(document->text(), file);
+    auto root = document_data->parser().parse();
+    for (auto& path : document_data->preprocessor().included_paths()) {
         get_or_create_document_data(document_path_from_include_path(path));
     }
 #ifdef CPP_LANGUAGE_SERVER_DEBUG
@@ -83,14 +83,6 @@ void ParserAutoComplete::set_document_data(const String& file, OwnPtr<DocumentDa
     m_documents.set(filedb().to_absolute_path(file), move(data));
 }
 
-ParserAutoComplete::DocumentData::DocumentData(String&& _text, const String& _filename)
-    : filename(_filename)
-    , text(move(_text))
-    , preprocessor(text.view())
-    , parser(preprocessor.process().view(), filename)
-{
-}
-
 Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position)
 {
     Cpp::Position position { autocomplete_position.line(), autocomplete_position.column() > 0 ? autocomplete_position.column() - 1 : 0 };
@@ -102,7 +94,7 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
         return {};
 
     const auto& document = *document_ptr;
-    auto node = document.parser.node_at(position);
+    auto node = document.parser().node_at(position);
     if (!node) {
         dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", position.line, position.column);
         return {};
@@ -110,10 +102,10 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
 
     if (node->is_identifier()) {
         if (is_property(*node)) {
-            return autocomplete_property(document, (MemberExpression&)(*node->parent()), document.parser.text_of_node(*node));
+            return autocomplete_property(document, (MemberExpression&)(*node->parent()), document.parser().text_of_node(*node));
         }
 
-        return autocomplete_name(document, *node, document.parser.text_of_node(*node));
+        return autocomplete_name(document, *node, document.parser().text_of_node(*node));
     }
 
     if (is_empty_property(document, *node, position)) {
@@ -122,9 +114,9 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
     }
 
     String partial_text = String::empty();
-    auto containing_token = document.parser.token_at(position);
+    auto containing_token = document.parser().token_at(position);
     if (containing_token.has_value()) {
-        partial_text = document.parser.text_of_token(containing_token.value());
+        partial_text = document.parser().text_of_token(containing_token.value());
     }
 
     return autocomplete_name(document, *node, partial_text.view());
@@ -204,7 +196,7 @@ bool ParserAutoComplete::is_empty_property(const DocumentData& document, const A
 {
     if (!node.is_member_expression())
         return false;
-    auto previous_token = document.parser.token_at(autocomplete_position);
+    auto previous_token = document.parser().token_at(autocomplete_position);
     if (!previous_token.has_value())
         return false;
     return previous_token.value().type() == Token::Type::Dot;
@@ -276,14 +268,14 @@ Vector<ParserAutoComplete::PropertyInfo> ParserAutoComplete::properties_of_type(
 NonnullRefPtrVector<Declaration> ParserAutoComplete::get_declarations_in_outer_scope_including_headers(const DocumentData& document) const
 {
     NonnullRefPtrVector<Declaration> declarations;
-    for (auto& include : document.preprocessor.included_paths()) {
+    for (auto& include : document.preprocessor().included_paths()) {
         document_path_from_include_path(include);
         auto included_document = get_document_data(document_path_from_include_path(include));
         if (!included_document)
             continue;
         declarations.append(get_declarations_in_outer_scope_including_headers(*included_document));
     }
-    for (auto& decl : document.parser.root_node()->declarations()) {
+    for (auto& decl : document.parser().root_node()->declarations()) {
         declarations.append(decl);
     }
     return declarations;
@@ -336,7 +328,7 @@ Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_de
         return {};
 
     const auto& document = *document_ptr;
-    auto node = document.parser.node_at(Cpp::Position { identifier_position.line(), identifier_position.column() });
+    auto node = document.parser().node_at(Cpp::Position { identifier_position.line(), identifier_position.column() });
     if (!node) {
         dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", identifier_position.line(), identifier_position.column());
         return {};
@@ -350,7 +342,7 @@ Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_de
 
 RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& document_data, const ASTNode& node) const
 {
-    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "find_declaration_of: {}", document_data.parser.text_of_node(node));
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "find_declaration_of: {}", document_data.parser().text_of_node(node));
     auto declarations = get_available_declarations(document_data, node);
     for (auto& decl : declarations) {
         if (node.is_identifier() && decl.is_variable_or_parameter_declaration()) {
@@ -379,10 +371,10 @@ RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& 
 void ParserAutoComplete::update_declared_symbols(const DocumentData& document)
 {
     Vector<GUI::AutocompleteProvider::Declaration> declarations;
-    for (auto& decl : document.parser.root_node()->declarations()) {
-        declarations.append({ decl.name(), { document.filename, decl.start().line, decl.start().column }, type_of_declaration(decl) });
+    for (auto& decl : document.parser().root_node()->declarations()) {
+        declarations.append({ decl.name(), { document.filename(), decl.start().line, decl.start().column }, type_of_declaration(decl) });
     }
-    set_declarations_of_document(document.filename, move(declarations));
+    set_declarations_of_document(document.filename(), move(declarations));
 }
 
 GUI::AutocompleteProvider::DeclarationType ParserAutoComplete::type_of_declaration(const Declaration& decl)
@@ -396,6 +388,31 @@ GUI::AutocompleteProvider::DeclarationType ParserAutoComplete::type_of_declarati
     if (decl.is_variable_declaration())
         return GUI::AutocompleteProvider::DeclarationType::Variable;
     return GUI::AutocompleteProvider::DeclarationType::Variable;
+}
+
+OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_data(String&& text, const String& filename)
+{
+    auto document_data = make<DocumentData>();
+    document_data->m_filename = move(filename);
+    document_data->m_text = move(text);
+    document_data->m_preprocessor = make<Preprocessor>(document_data->text());
+    document_data->preprocessor().process();
+
+    Preprocessor::Definitions all_definitions;
+    for (auto item : document_data->preprocessor().definitions())
+        all_definitions.set(move(item.key), move(item.value));
+
+    for (auto include : document_data->preprocessor().included_paths()) {
+
+        auto included_document = get_or_create_document_data(document_path_from_include_path(include));
+        if (!included_document)
+            continue;
+        for (auto item : included_document->parser().definitions())
+            all_definitions.set(move(item.key), move(item.value));
+    }
+
+    document_data->m_parser = make<Parser>(document_data->preprocessor().processed_text(), filename, move(all_definitions));
+    return document_data;
 }
 
 }

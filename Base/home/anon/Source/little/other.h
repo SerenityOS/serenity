@@ -2,6 +2,8 @@ int func();
 
 #define USE_VAR2
 
+#define INT_Z int z
+
 struct StructInHeader {
     int var1;
 #ifdef USE_VAR2

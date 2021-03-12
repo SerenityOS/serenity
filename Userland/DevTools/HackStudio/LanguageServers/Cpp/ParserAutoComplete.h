@@ -52,11 +52,33 @@ public:
 
 private:
     struct DocumentData {
-        DocumentData(String&& text, const String& filename);
-        String filename;
-        String text;
-        Preprocessor preprocessor;
-        Parser parser;
+        const String& filename() const { return m_filename; }
+        const String& text() const { return m_text; }
+        const Preprocessor& preprocessor() const
+        {
+            VERIFY(m_preprocessor);
+            return *m_preprocessor;
+        }
+        Preprocessor& preprocessor()
+        {
+            VERIFY(m_preprocessor);
+            return *m_preprocessor;
+        }
+        const Parser& parser() const
+        {
+            VERIFY(m_parser);
+            return *m_parser;
+        }
+        Parser& parser()
+        {
+            VERIFY(m_parser);
+            return *m_parser;
+        }
+
+        String m_filename;
+        String m_text;
+        OwnPtr<Preprocessor> m_preprocessor;
+        OwnPtr<Parser> m_parser;
     };
 
     Vector<GUI::AutocompleteProvider::Entry> autocomplete_property(const DocumentData&, const MemberExpression&, const StringView partial_text) const;
@@ -84,6 +106,8 @@ private:
     String document_path_from_include_path(const StringView& include_path) const;
     void update_declared_symbols(const DocumentData&);
     GUI::AutocompleteProvider::DeclarationType type_of_declaration(const Declaration&);
+
+    OwnPtr<DocumentData> create_document_data(String&& text, const String& filename);
 
     HashMap<String, OwnPtr<DocumentData>> m_documents;
 };
