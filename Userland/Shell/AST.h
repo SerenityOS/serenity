@@ -244,6 +244,9 @@ public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) = 0;
     virtual Vector<Command> resolve_as_commands(RefPtr<Shell>);
     virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) { return *this; }
+    virtual NonnullRefPtr<Value> clone() const = 0;
+    virtual NonnullRefPtr<Value> with_slices(NonnullRefPtr<Slice> slice) const&;
+    virtual NonnullRefPtr<Value> with_slices(NonnullRefPtrVector<Slice> slices) const&;
     virtual ~Value();
     virtual bool is_command() const { return false; }
     virtual bool is_glob() const { return false; }
@@ -251,12 +254,21 @@ public:
     virtual bool is_list() const { return false; }
     virtual bool is_string() const { return false; }
     virtual bool is_list_without_resolution() const { return false; }
+
+protected:
+    Value& set_slices(NonnullRefPtrVector<Slice> slices)
+    {
+        m_slices = move(slices);
+        return *this;
+    }
+    NonnullRefPtrVector<Slice> m_slices;
 };
 
 class CommandValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> clone() const override { return create<CommandValue>(m_command)->set_slices(m_slices); }
     virtual ~CommandValue();
     virtual bool is_command() const override { return true; }
     CommandValue(Command command)
@@ -277,6 +289,7 @@ class CommandSequenceValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> clone() const override { return create<CommandSequenceValue>(m_contained_values)->set_slices(m_slices); }
     virtual ~CommandSequenceValue();
     virtual bool is_command() const override { return true; }
     CommandSequenceValue(Vector<Command> commands)
@@ -292,6 +305,7 @@ class JobValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
     virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
+    virtual NonnullRefPtr<Value> clone() const override { return create<JobValue>(m_job)->set_slices(m_slices); }
     virtual ~JobValue();
     virtual bool is_job() const override { return true; }
     JobValue(RefPtr<Job> job)
@@ -309,6 +323,7 @@ class ListValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> clone() const override { return create<ListValue>(m_contained_values)->set_slices(m_slices); }
     virtual ~ListValue();
     virtual bool is_list() const override { return true; }
     virtual bool is_list_without_resolution() const override { return true; }
@@ -332,6 +347,7 @@ private:
 class StringValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> clone() const override { return create<StringValue>(m_string, m_split, m_keep_empty)->set_slices(m_slices); }
     virtual ~StringValue();
     virtual bool is_string() const override { return m_split.is_null(); }
     virtual bool is_list() const override { return !m_split.is_null(); }
@@ -352,6 +368,7 @@ private:
 class GlobValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> clone() const override { return create<GlobValue>(m_glob, m_generation_position)->set_slices(m_slices); }
     virtual ~GlobValue();
     virtual bool is_glob() const override { return true; }
     GlobValue(String glob, Position position)
@@ -369,6 +386,7 @@ class SimpleVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
     virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> clone() const override { return create<SimpleVariableValue>(m_name)->set_slices(m_slices); }
     virtual ~SimpleVariableValue();
     SimpleVariableValue(String name)
         : m_name(move(name))
@@ -382,6 +400,7 @@ private:
 class SpecialVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> clone() const override { return create<SpecialVariableValue>(m_name)->set_slices(m_slices); }
     virtual ~SpecialVariableValue();
     SpecialVariableValue(char name)
         : m_name(name)
@@ -395,6 +414,7 @@ private:
 class TildeValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> clone() const override { return create<TildeValue>(m_username)->set_slices(m_slices); }
     virtual ~TildeValue();
     virtual bool is_string() const override { return true; }
     TildeValue(String name)
@@ -489,6 +509,7 @@ public:
         ReadRedirection,
         ReadWriteRedirection,
         Sequence,
+        Slice,
         SimpleVariable,
         SpecialVariable,
         StringLiteral,
@@ -1214,7 +1235,48 @@ private:
     RefPtr<AST::Node> m_block;
 };
 
-class SimpleVariable final : public Node {
+class Slice final : public Node {
+public:
+    Slice(Position, NonnullRefPtr<AST::Node>);
+    virtual ~Slice() override;
+
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    NonnullRefPtr<AST::Node> selector() const { return m_selector; }
+
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+    virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
+
+protected:
+    NODE(Slice);
+    NonnullRefPtr<AST::Node> m_selector;
+};
+
+class VariableNode : public Node {
+public:
+    VariableNode(Position position)
+        : Node(move(position))
+    {
+    }
+
+    void set_slice(NonnullRefPtr<Slice>&& slice)
+    {
+        VERIFY(!m_slice);
+        m_slice = move(slice);
+        if (m_slice->is_syntax_error())
+            set_is_syntax_error(m_slice->syntax_error_node());
+    }
+
+    const Slice* slice() const { return m_slice.ptr(); }
+
+protected:
+    RefPtr<Slice> m_slice;
+};
+
+class SimpleVariable final : public VariableNode {
 public:
     SimpleVariable(Position, String);
     virtual ~SimpleVariable();
@@ -1234,7 +1296,7 @@ private:
     String m_name;
 };
 
-class SpecialVariable final : public Node {
+class SpecialVariable final : public VariableNode {
 public:
     SpecialVariable(Position, char);
     virtual ~SpecialVariable();

@@ -1885,6 +1885,7 @@ void Shell::possibly_print_error() const
     case ShellError::EvaluatedSyntaxError:
         warnln("Shell Syntax Error: {}", m_error_description);
         break;
+    case ShellError::InvalidSliceContentsError:
     case ShellError::InvalidGlobError:
     case ShellError::NonExhaustiveMatchRules:
         warnln("Shell: {}", m_error_description);
