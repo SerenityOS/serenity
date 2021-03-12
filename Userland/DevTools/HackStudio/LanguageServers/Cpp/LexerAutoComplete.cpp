@@ -65,20 +65,20 @@ Vector<GUI::AutocompleteProvider::Entry> LexerAutoComplete::get_suggestions(cons
 
 StringView LexerAutoComplete::text_of_token(const Vector<String>& lines, const Cpp::Token& token)
 {
-    VERIFY(token.m_start.line == token.m_end.line);
-    VERIFY(token.m_start.column <= token.m_end.column);
-    return lines[token.m_start.line].substring_view(token.m_start.column, token.m_end.column - token.m_start.column + 1);
+    VERIFY(token.start().line == token.end().line);
+    VERIFY(token.start().column <= token.end().column);
+    return lines[token.start().line].substring_view(token.start().column, token.end().column - token.start().column + 1);
 }
 
 Optional<size_t> LexerAutoComplete::token_in_position(const Vector<Cpp::Token>& tokens, const GUI::TextPosition& position)
 {
     for (size_t token_index = 0; token_index < tokens.size(); ++token_index) {
         auto& token = tokens[token_index];
-        if (token.m_start.line != token.m_end.line)
+        if (token.start().line != token.end().line)
             continue;
-        if (token.m_start.line != position.line())
+        if (token.start().line != position.line())
             continue;
-        if (token.m_start.column + 1 > position.column() || token.m_end.column + 1 < position.column())
+        if (token.start().column + 1 > position.column() || token.end().column + 1 < position.column())
             continue;
         return token_index;
     }
@@ -94,7 +94,7 @@ Vector<GUI::AutocompleteProvider::Entry> LexerAutoComplete::identifier_prefixes(
 
     for (size_t i = 0; i < target_token_index; ++i) {
         auto& token = tokens[i];
-        if (token.m_type != Cpp::Token::Type::Identifier)
+        if (token.type() != Cpp::Token::Type::Identifier)
             continue;
         auto text = text_of_token(lines, token);
         if (text.starts_with(partial_input) && suggestions_lookup.set(text) == AK::HashSetResult::InsertedNewEntry) {

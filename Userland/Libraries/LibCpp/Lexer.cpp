@@ -232,11 +232,7 @@ Vector<Token> Lexer::lex()
     Position token_start_position;
 
     auto emit_token = [&](auto type) {
-        Token token;
-        token.m_type = type;
-        token.m_start = m_position;
-        token.m_end = m_position;
-        tokens.append(token);
+        tokens.empend(type, m_position, m_position);
         consume();
     };
 
@@ -245,11 +241,7 @@ Vector<Token> Lexer::lex()
         token_start_position = m_position;
     };
     auto commit_token = [&](auto type) {
-        Token token;
-        token.m_type = type;
-        token.m_start = token_start_position;
-        token.m_end = m_previous_position;
-        tokens.append(token);
+        tokens.empend(type, token_start_position, m_previous_position);
     };
 
     auto emit_token_equals = [&](auto type, auto equals_type) {
