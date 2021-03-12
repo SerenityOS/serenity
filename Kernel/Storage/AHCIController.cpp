@@ -28,6 +28,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Storage/AHCIController.h>
 #include <Kernel/Storage/SATADiskDevice.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -144,11 +145,13 @@ AHCIController::~AHCIController()
 
 void AHCIController::initialize()
 {
-    if (!reset()) {
-        dmesgln("{}: AHCI controller reset failed", pci_address());
-        return;
+    if (kernel_command_line().ahci_reset_mode() != AHCIResetMode::None) {
+        if (!reset()) {
+            dmesgln("{}: AHCI controller reset failed", pci_address());
+            return;
+        }
+        dmesgln("{}: AHCI controller reset", pci_address());
     }
-    dmesgln("{}: AHCI controller reset", pci_address());
     dbgln("{}: AHCI command list entries count - {}", pci_address(), hba_capabilities().max_command_list_entries_count);
     hba().control_regs.ghc = 0x80000000; // Ensure that HBA knows we are AHCI aware.
     PCI::enable_interrupt_line(pci_address());

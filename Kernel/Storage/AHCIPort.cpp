@@ -210,6 +210,22 @@ bool AHCIPort::reset()
     if (!initiate_sata_reset()) {
         return false;
     }
+    return initialize();
+}
+
+bool AHCIPort::initialize_without_reset()
+{
+    ScopedSpinLock lock(m_lock);
+    dmesgln("AHCI Port {}: {}", representative_port_index(), try_disambiguate_sata_status());
+    return initialize();
+}
+
+bool AHCIPort::initialize()
+{
+    VERIFY(m_lock.is_locked());
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: SIG {:x}", representative_port_index(), static_cast<u32>(m_port_registers.sig));
+    if (!is_phy_enabled())
+        return false;
     rebase();
     power_on();
     spin_up();
