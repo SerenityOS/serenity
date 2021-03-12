@@ -443,7 +443,7 @@ public:
     virtual const char* class_name() const override { return "StringLiteral"; }
     virtual void dump(size_t indent) const override;
 
-    StringView m_value;
+    String m_value;
 };
 
 class ReturnStatement : public Statement {
