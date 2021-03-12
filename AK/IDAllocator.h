@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/HashTable.h>
 
 namespace AK {

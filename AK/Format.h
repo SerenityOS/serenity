@@ -364,7 +364,6 @@ struct Formatter<std::nullptr_t> : Formatter<FlatPtr> {
 };
 
 void vformat(StringBuilder&, StringView fmtstr, TypeErasedFormatParams);
-void vformat(const LogStream& stream, StringView fmtstr, TypeErasedFormatParams);
 
 #ifndef KERNEL
 void vout(FILE*, StringView fmtstr, TypeErasedFormatParams, bool newline = false);

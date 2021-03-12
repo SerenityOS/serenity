@@ -31,6 +31,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/StandardCursor.h>
+#include <unistd.h>
 
 namespace Breakout {
 

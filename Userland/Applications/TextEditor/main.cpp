@@ -29,6 +29,7 @@
 #include <LibGUI/MenuBar.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

@@ -72,6 +72,7 @@
 #include <Kernel/Tasks/SyncTask.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/kstdio.h>
 
 // Defined in the linker script
 typedef void (*ctor_func_t)();
@@ -337,7 +338,7 @@ void init_stage2(void*)
 
 UNMAP_AFTER_INIT void setup_serial_debug()
 {
-    // serial_debug will output all the klog() and dbgln() data to COM1 at
+    // serial_debug will output all the dbgln() data to COM1 at
     // 8-N-1 57600 baud. this is particularly useful for debugging the boot
     // process on live hardware.
     if (StringView(kernel_cmdline).contains("serial_debug")) {

@@ -26,7 +26,7 @@
 
 #include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
-#include <stdio.h>
+#include <unistd.h>
 
 int main(int, char**)
 {

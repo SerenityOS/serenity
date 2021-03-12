@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/LogStream.h>
 #include <LibGUI/TextPosition.h>
 
 namespace GUI {
@@ -84,13 +83,6 @@ private:
     TextPosition m_start;
     TextPosition m_end;
 };
-
-inline const LogStream& operator<<(const LogStream& stream, const TextRange& value)
-{
-    if (!value.is_valid())
-        return stream << "GUI::TextRange(Invalid)";
-    return stream << value.start() << '-' << value.end();
-}
 
 }
 

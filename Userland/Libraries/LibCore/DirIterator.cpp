@@ -27,6 +27,7 @@
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <errno.h>
+#include <unistd.h>
 
 namespace Core {
 

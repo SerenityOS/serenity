@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Atomic.h>
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
@@ -460,12 +460,6 @@ private:
 
     mutable Atomic<FlatPtr> m_bits { PtrTraits::default_null_value };
 };
-
-template<typename T, typename PtrTraits = RefPtrTraits<T>>
-inline const LogStream& operator<<(const LogStream& stream, const RefPtr<T, PtrTraits>& value)
-{
-    return stream << value.ptr();
-}
 
 template<typename T>
 struct Formatter<RefPtr<T>> : Formatter<const T*> {

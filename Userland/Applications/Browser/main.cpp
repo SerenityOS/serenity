@@ -26,7 +26,6 @@
 
 #include "BookmarksBarWidget.h"
 #include "Browser.h"
-#include "InspectorWidget.h"
 #include "Tab.h"
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
@@ -47,6 +46,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 namespace Browser {
 

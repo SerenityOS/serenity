@@ -76,6 +76,4 @@ private:
     IntPoint m_c;
 };
 
-const LogStream& operator<<(const LogStream&, const Triangle&);
-
 }

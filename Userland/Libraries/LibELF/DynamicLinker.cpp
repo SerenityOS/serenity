@@ -30,7 +30,6 @@
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
-#include <AK/LogStream.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/ScopeGuard.h>
 #include <LibC/mman.h>

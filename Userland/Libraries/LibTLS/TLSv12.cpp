@@ -33,6 +33,7 @@
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
+#include <errno.h>
 
 #ifndef SOCK_NONBLOCK
 #    include <sys/ioctl.h>

@@ -35,6 +35,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <stdio.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

@@ -29,7 +29,6 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
-#include <AK/LogStream.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
@@ -44,6 +43,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
 

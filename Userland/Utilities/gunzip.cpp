@@ -27,6 +27,7 @@
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileStream.h>
+#include <unistd.h>
 
 static void decompress_file(Buffered<Core::InputFileStream>& input_stream, Buffered<Core::OutputFileStream>& output_stream)
 {

@@ -26,12 +26,11 @@
 
 #include <AK/Base64.h>
 #include <AK/ByteBuffer.h>
-#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

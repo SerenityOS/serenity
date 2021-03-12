@@ -27,6 +27,7 @@
 #include "Parser.h"
 #include "Shell.h"
 #include <AK/AllOf.h>
+#include <AK/ScopedValueRollback.h>
 #include <AK/TemporaryChange.h>
 #include <ctype.h>
 #include <stdio.h>

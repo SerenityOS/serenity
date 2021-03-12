@@ -212,9 +212,4 @@ private:
     Optional<Gfx::FloatRect> m_bounding_box;
 };
 
-inline const LogStream& operator<<(const LogStream& stream, const Path& path)
-{
-    return stream << path.to_string();
-}
-
 }

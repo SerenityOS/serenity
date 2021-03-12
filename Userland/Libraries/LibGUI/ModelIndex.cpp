@@ -39,11 +39,4 @@ Variant ModelIndex::data(ModelRole role) const
     return model()->data(*this, role);
 }
 
-const LogStream& operator<<(const LogStream& stream, const ModelIndex& value)
-{
-    if (value.internal_data())
-        return stream << String::formatted("ModelIndex({},{},{:p})", value.row(), value.column(), value.internal_data());
-    return stream << String::formatted("ModelIndex({},{})", value.row(), value.column());
-}
-
 }

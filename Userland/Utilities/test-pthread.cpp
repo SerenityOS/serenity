@@ -28,6 +28,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibThread/Thread.h>
 #include <pthread.h>
+#include <unistd.h>
 
 static void test_once()
 {

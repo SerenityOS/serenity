@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 bool run_command(Vector<char*>&& child_argv, bool verbose, bool is_stdin, int devnull_fd);
 

@@ -25,7 +25,6 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/LogStream.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>

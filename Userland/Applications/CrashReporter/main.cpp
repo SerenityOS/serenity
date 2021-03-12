@@ -48,6 +48,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <string.h>
+#include <unistd.h>
 
 struct TitleAndText {
     String title;

@@ -27,6 +27,7 @@
 #include "ChessEngine.h"
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <unistd.h>
 
 int main()
 {

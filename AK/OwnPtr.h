@@ -218,12 +218,6 @@ struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
     static bool equals(const OwnPtr<T>& a, const OwnPtr<T>& b) { return a.ptr() == b.ptr(); }
 };
 
-template<typename T>
-inline const LogStream& operator<<(const LogStream& stream, const OwnPtr<T>& value)
-{
-    return stream << value.ptr();
-}
-
 }
 
 using AK::OwnPtr;

@@ -29,9 +29,9 @@
 #include <net/if.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 static void test_invalid(int);
 static void test_no_route(int);

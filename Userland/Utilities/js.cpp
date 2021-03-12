@@ -58,6 +58,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <unistd.h>
 
 RefPtr<JS::VM> vm;
 Vector<String> repl_statements;

@@ -38,7 +38,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
-#include <AK/LogStream.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -174,10 +173,5 @@ public:
 private:
     RefPtr<KBufferImpl> m_impl;
 };
-
-inline const LogStream& operator<<(const LogStream& stream, const KBuffer& value)
-{
-    return stream << StringView(value.data(), value.size());
-}
 
 }

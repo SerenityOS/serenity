@@ -40,6 +40,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #ifndef __serenity__
 static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int fd, off_t offset, const char*)

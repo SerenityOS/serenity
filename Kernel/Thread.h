@@ -1298,8 +1298,6 @@ inline IterationDecision Thread::for_each_in_state(State state, Callback callbac
     return IterationDecision::Continue;
 }
 
-const LogStream& operator<<(const LogStream&, const Thread&);
-
 }
 
 template<>

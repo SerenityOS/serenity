@@ -41,6 +41,7 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Point.h>
 #include <stdio.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

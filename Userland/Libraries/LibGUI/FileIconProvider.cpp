@@ -28,7 +28,6 @@
 #include <AK/MappedFile.h>
 #include <AK/String.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibELF/Image.h>
@@ -38,6 +37,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGLoader.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 namespace GUI {
 

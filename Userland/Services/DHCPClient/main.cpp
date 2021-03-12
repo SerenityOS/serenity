@@ -35,6 +35,7 @@
 #include <LibCore/LocalServer.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 static u8 mac_part(const Vector<String>& parts, size_t index)
 {

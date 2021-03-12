@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/LogStream.h>
 #include <AK/Weakable.h>
 
 namespace AK {
@@ -234,17 +233,6 @@ inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
         }
     }
     return weak_ptr;
-}
-
-template<typename T>
-inline const LogStream& operator<<(const LogStream& stream, const WeakPtr<T>& value)
-{
-#ifdef KERNEL
-    auto ref = value.strong_ref();
-    return stream << ref.ptr();
-#else
-    return stream << value.ptr();
-#endif
 }
 
 template<typename T>

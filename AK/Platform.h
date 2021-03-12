@@ -61,6 +61,7 @@
 #define FLATTEN [[gnu::flatten]]
 
 #ifndef __serenity__
+#    include <unistd.h>
 #    define PAGE_SIZE sysconf(_SC_PAGESIZE)
 #endif
 

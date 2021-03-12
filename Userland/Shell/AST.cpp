@@ -28,13 +28,16 @@
 #include "Shell.h"
 #include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
+#include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <unistd.h>
 
 void AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder, const Shell::AST::Command& value)
 {

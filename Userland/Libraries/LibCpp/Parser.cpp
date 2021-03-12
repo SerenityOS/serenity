@@ -29,7 +29,6 @@
 #endif
 
 #include "Parser.h"
-#include "AK/LogStream.h"
 #include "AST.h"
 #include <AK/Debug.h>
 #include <AK/ScopeGuard.h>

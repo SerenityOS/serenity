@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 
 extern bool g_report_to_debug;
 

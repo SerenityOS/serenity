@@ -28,10 +28,10 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <stdio.h>
+#include <unistd.h>
 
 class UserNameWidget final : public GUI::Widget {
     C_OBJECT(UserNameWidget)

@@ -29,6 +29,7 @@
 #include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
 #include <LibCore/File.h>
+#include <errno.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>

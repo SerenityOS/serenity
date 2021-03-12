@@ -28,7 +28,12 @@
 #include <AK/GenericLexer.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/kstdio.h>
 #include <ctype.h>
+
+#if defined(__serenity__) && !defined(KERNEL)
+#    include <serenity.h>
+#endif
 
 #ifdef KERNEL
 #    include <Kernel/Process.h>
@@ -415,12 +420,6 @@ void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams p
     FormatParser parser { fmtstr };
 
     vformat_impl(params, fmtbuilder, parser);
-}
-void vformat(const LogStream& stream, StringView fmtstr, TypeErasedFormatParams params)
-{
-    StringBuilder builder;
-    vformat(builder, fmtstr, params);
-    stream << builder.to_string();
 }
 
 void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& parser)
