@@ -114,6 +114,13 @@ struct Token {
 #undef __TOKEN
     };
 
+    Token(Type type, const Position& start, const Position& end)
+        : m_type(type)
+        , m_start(start)
+        , m_end(end)
+    {
+    }
+
     static const char* type_to_string(Type t)
     {
         switch (t) {
@@ -130,10 +137,14 @@ struct Token {
     {
         return type_to_string(m_type);
     }
-    Position start() const { return m_start; }
-    Position end() const { return m_end; }
+    const Position& start() const { return m_start; }
+    const Position& end() const { return m_end; }
+
+    void set_start(const Position& other) {m_start = other;}
+    void set_end(const Position& other) {m_end = other;}
     Type type() const { return m_type; }
 
+private:
     Type m_type { Type::Unknown };
     Position m_start;
     Position m_end;
