@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,8 +85,8 @@ UNMAP_AFTER_INIT void Parser::init_facs()
 
 UNMAP_AFTER_INIT void Parser::init_fadt()
 {
-    klog() << "ACPI: Initializing Fixed ACPI data";
-    klog() << "ACPI: Searching for the Fixed ACPI Data Table";
+    dmesgln("ACPI: Initializing Fixed ACPI data");
+    dmesgln("ACPI: Searching for the Fixed ACPI Data Table");
 
     m_fadt = find_table("FACP");
     VERIFY(!m_fadt.is_null());
@@ -95,8 +95,8 @@ UNMAP_AFTER_INIT void Parser::init_fadt()
 
     dbgln_if(ACPI_DEBUG, "ACPI: FADT @ V{}, {}", &sdt, m_fadt);
 
-    klog() << "ACPI: Fixed ACPI data, Revision " << sdt->h.revision << ", Length " << sdt->h.length << " bytes";
-    klog() << "ACPI: DSDT " << PhysicalAddress(sdt->dsdt_ptr);
+    dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", sdt->h.revision, sdt->h.length);
+    dmesgln("ACPI: DSDT {}", PhysicalAddress(sdt->dsdt_ptr));
     m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
 
     // FIXME: QEMU doesn't report that we have an i8042 controller in these flags, even if it should (when FADT revision is 3),
@@ -216,10 +216,10 @@ void Parser::try_acpi_reboot()
 {
     InterruptDisabler disabler;
     if (!can_reboot()) {
-        klog() << "ACPI: Reboot, Not supported!";
+        dmesgln("ACPI: Reboot not supported!");
         return;
     }
-    dbgln_if(ACPI_DEBUG, "ACPI: Rebooting, Probing FADT ({})", m_fadt);
+    dbgln_if(ACPI_DEBUG, "ACPI: Rebooting, probing FADT ({})", m_fadt);
 
     auto fadt = map_typed<Structures::FADT>(m_fadt);
     VERIFY(validate_reset_register());
@@ -229,7 +229,7 @@ void Parser::try_acpi_reboot()
 
 void Parser::try_acpi_shutdown()
 {
-    klog() << "ACPI: Shutdown is not supported with the current configuration, Abort!";
+    dmesgln("ACPI: Shutdown is not supported with the current configuration, aborting!");
 }
 
 size_t Parser::get_table_size(PhysicalAddress table_header)
@@ -261,21 +261,21 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
 
     auto sdt = map_typed<Structures::SDTHeader>(m_main_system_description_table, length);
 
-    klog() << "ACPI: Main Description Table valid? " << validate_table(*sdt, length);
+    dmesgln("ACPI: Main Description Table valid? {}", validate_table(*sdt, length));
 
     if (m_xsdt_supported) {
         auto& xsdt = (const Structures::XSDT&)*sdt;
-        klog() << "ACPI: Using XSDT, Enumerating tables @ " << m_main_system_description_table;
-        klog() << "ACPI: XSDT Revision " << revision << ", Total length - " << length;
-        dbgln_if(ACPI_DEBUG, "ACPI: XSDT pointer @ V{}", &xsdt);
+        dmesgln("ACPI: Using XSDT, enumerating tables @ {}", m_main_system_description_table);
+        dmesgln("ACPI: XSDT revision {}, total length: {}", revision, length);
+        dbgln_if(ACPI_DEBUG, "ACPI: XSDT pointer @ {}", VirtualAddress { &xsdt });
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u64)); i++) {
             dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &xsdt.table_ptrs[i]);
             m_sdt_pointers.append(PhysicalAddress(xsdt.table_ptrs[i]));
         }
     } else {
         auto& rsdt = (const Structures::RSDT&)*sdt;
-        klog() << "ACPI: Using RSDT, Enumerating tables @ " << m_main_system_description_table;
-        klog() << "ACPI: RSDT Revision " << revision << ", Total length - " << length;
+        dmesgln("ACPI: Using RSDT, enumerating tables @ {}", m_main_system_description_table);
+        dmesgln("ACPI: RSDT revision {}, total length: {}", revision, length);
         dbgln_if(ACPI_DEBUG, "ACPI: RSDT pointer @ V{}", &rsdt);
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
             dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &rsdt.table_ptrs[i]);
@@ -306,7 +306,7 @@ UNMAP_AFTER_INIT void Parser::locate_main_system_description_table()
 UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp)
     : m_rsdp(rsdp)
 {
-    klog() << "ACPI: Using RSDP @ " << rsdp;
+    dmesgln("ACPI: Using RSDP @ {}", rsdp);
     locate_static_data();
 }
 
