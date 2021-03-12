@@ -91,6 +91,8 @@ private:
     RefPtr<AST::Node> parse_string();
     RefPtr<AST::Node> parse_doublequoted_string_inner();
     RefPtr<AST::Node> parse_variable();
+    RefPtr<AST::Node> parse_variable_ref();
+    RefPtr<AST::Node> parse_slice();
     RefPtr<AST::Node> parse_evaluate();
     RefPtr<AST::Node> parse_history_designator();
     RefPtr<AST::Node> parse_comment();
@@ -261,12 +263,16 @@ dquoted_string_inner :: '\' . dquoted_string_inner?       {concat}
                       | '\' 'x' digit digit dquoted_string_inner?
                       | '\' [abefrn] dquoted_string_inner?
 
-variable :: '$' identifier
+variable :: variable_ref slice?
+
+variable_ref :: '$' identifier
           | '$' '$'
           | '$' '?'
           | '$' '*'
           | '$' '#'
           | ...
+
+slice :: '[' brace_expansion_spec ']'
 
 comment :: '#' [^\n]*
 

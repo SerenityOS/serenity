@@ -67,6 +67,7 @@ class ReadRedirection;
 class ReadWriteRedirection;
 class Sequence;
 class Subshell;
+class Slice;
 class SimpleVariable;
 class SpecialVariable;
 class Juxtaposition;
