@@ -31,14 +31,14 @@ extern "C" const char module_name[] = "TestModule";
 
 extern "C" void module_init()
 {
-    klog() << "TestModule has booted!";
+    dmesgln("TestModule has booted!");
 
     for (int i = 0; i < 3; ++i) {
-        klog() << "i is now " << i;
+        dmesgln("i is now {}", i);
     }
 }
 
 extern "C" void module_fini()
 {
-    klog() << "TestModule is being removed!";
+    dmesgln("TestModule is being removed!");
 }
