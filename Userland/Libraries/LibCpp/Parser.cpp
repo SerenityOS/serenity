@@ -40,7 +40,6 @@ namespace Cpp {
 Parser::Parser(const StringView& program, const String& filename, Preprocessor::Definitions&& definitions)
     : m_program(program)
     , m_definitions(move(definitions))
-    , m_lines(m_program.split_view("\n", true))
     , m_filename(filename)
 {
     initialize_program_tokens();
@@ -702,30 +701,23 @@ StringView Parser::text_of_token(const Cpp::Token& token) const
     return token.text();
 }
 
-StringView Parser::text_of_node(const ASTNode& node) const
+String Parser::text_of_node(const ASTNode& node) const
 {
-    return text_of_range(node.start(), node.end());
+    return text_in_range(node.start(), node.end());
 }
 
-StringView Parser::text_of_range(Position start, Position end) const
+String Parser::text_in_range(Position start, Position end) const
 {
-    if (start.line == end.line) {
-        VERIFY(start.column <= end.column);
-        return m_lines[start.line].substring_view(start.column, end.column - start.column + 1);
+    auto start_token_index = index_of_token_at(start);
+    auto end_node_index = index_of_token_at(end);
+    VERIFY(start_token_index.has_value());
+    VERIFY(end_node_index.has_value());
+    StringBuilder text;
+    for(size_t i = start_token_index.value(); i <= end_node_index.value(); ++i)
+    {
+        text.append(m_tokens[i].text());
     }
-
-    auto index_of_position([this](auto position) {
-        size_t start_index = 0;
-        for (size_t line = 0; line < position.line; ++line) {
-            start_index += m_lines[line].length() + 1;
-        }
-        start_index += position.column;
-        return start_index;
-    });
-    auto start_index = index_of_position(start);
-    auto end_index = index_of_position(end);
-    VERIFY(end_index >= start_index);
-    return m_program.substring_view(start_index, end_index - start_index);
+    return text.build();
 }
 
 void Parser::error(StringView message)
@@ -807,10 +799,19 @@ Optional<size_t> Parser::index_of_node_at(Position pos) const
 
 Optional<Token> Parser::token_at(Position pos) const
 {
-    for (auto& token : m_tokens) {
+    auto index = index_of_token_at(pos);
+    if (!index.has_value())
+        return {};
+    return m_tokens[index.value()];
+}
+
+Optional<size_t> Parser::index_of_token_at(Position pos) const
+{
+    for (size_t token_index = 0; token_index < m_tokens.size(); ++token_index) {
+        auto token = m_tokens[token_index];
         if (token.start() > pos || token.end() < pos)
             continue;
-        return token;
+        return token_index;
     }
     return {};
 }
@@ -880,7 +881,7 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(ASTNode& parent)
     Token start_token = m_tokens[start_token_index.value()];
     Token end_token = m_tokens[end_token_index.value()];
 
-    auto text = text_of_range(start_token.start(), end_token.end());
+    auto text = text_in_range(start_token.start(), end_token.end());
     auto string_literal = create_ast_node<StringLiteral>(parent, start_token.start(), end_token.end());
     string_literal->m_value = text;
     return string_literal;

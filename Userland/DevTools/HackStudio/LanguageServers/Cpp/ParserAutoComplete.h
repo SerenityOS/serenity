@@ -81,8 +81,8 @@ private:
         OwnPtr<Parser> m_parser;
     };
 
-    Vector<GUI::AutocompleteProvider::Entry> autocomplete_property(const DocumentData&, const MemberExpression&, const StringView partial_text) const;
-    Vector<GUI::AutocompleteProvider::Entry> autocomplete_name(const DocumentData&, const ASTNode&, const StringView& partial_text) const;
+    Vector<GUI::AutocompleteProvider::Entry> autocomplete_property(const DocumentData&, const MemberExpression&, const String partial_text) const;
+    Vector<GUI::AutocompleteProvider::Entry> autocomplete_name(const DocumentData&, const ASTNode&, const String& partial_text) const;
     String type_of(const DocumentData&, const Expression&) const;
     String type_of_property(const DocumentData&, const Identifier&) const;
     String type_of_variable(const Identifier&) const;
