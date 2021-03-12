@@ -10,16 +10,17 @@ Usage: $ARG0 COMMAND [TARGET] [ARGS...]
     build:      Compiles the target binaries, [ARGS...] are passed through to ninja
     install:    Installs the target binary
     image:      Creates a disk image with the installed binaries
-    run:        TARGET lagom [specific_test]: Runs the unit tests on the build host,
-                    or if specific_test is specified only this test.
-                All other TARGETs: $ARG0 run [TARGET] [kernel_cmd_line]
+    run:        TARGET lagom: $ARG0 run lagom LAGOM_EXECUTABLE
+                    Runs the Lagom-built LAGOM_EXECUTABLE on the build host,
+                    e.g. 'shell' or 'js'
+                All other TARGETs: $ARG0 run [TARGET] [KERNEL_CMD_LINE]
                     Runs the built image in QEMU, and optionally passes the
-                    kernel_cmd_line to the Kernel
+                    KERNEL_CMD_LINE to the Kernel
     gdb:        Same as run, but also starts a gdb remote session.
                 $ARG0 gdb [TARGET] [kernel_cmd_line] [-ex 'any gdb command']...
                     If specified, passes the kernel_cmd_line to the Kernel
                     Passes through '-ex' commands to gdb
-    delete:     Removes the build environment for the TARGET
+    delete:     Removes the build environment for TARGET
     recreate:   Deletes and re-creates the build environment for TARGET
     rebuild:    Deletes and re-creates the build environment, and compiles for TARGET
     kaddr2line: $ARG0 kaddr2line TARGET ADDRESS
@@ -35,8 +36,8 @@ Usage: $ARG0 COMMAND [TARGET] [ARGS...]
         Runs the image in QEMU passing "smp=on" to the kernel command line
     $ARG0 run
         Runs the image for the default TARGET i686 in QEMU
-    $ARG0 run lagom
-        Runs the unit tests on the build host
+    $ARG0 run lagom js
+        Runs the Lagom-built js(1) REPL
     $ARG0 kaddr2line i686 0x12345678
         Resolves the address 0x12345678 in the Kernel binary
     $ARG0 addr2line i686 WindowServer 0x12345678
@@ -201,10 +202,11 @@ if [[ "$CMD" =~ ^(build|install|image|run|gdb|rebuild|recreate|kaddr2line|addr2l
             build_target image
             ;;
         run)
-            build_target
             if [ "$TARGET" = "lagom" ]; then
-                run_tests "${CMD_ARGS[0]}"
+                build_target "$@"
+                "$BUILD_DIR/Meta/Lagom/${CMD_ARGS[0]}"
             else
+                build_target
                 build_target install
                 build_target image
                 if [ -n "${CMD_ARGS[0]}" ]; then
