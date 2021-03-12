@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Checked.h>
 #include <AK/Function.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Heap/Heap.h>
@@ -82,7 +83,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     StringObject::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_native_property(vm.names.length, length_getter, {}, 0);
+    define_native_property(vm.names.length, length_getter, nullptr, 0);
     define_native_function(vm.names.charAt, char_at, 1, attr);
     define_native_function(vm.names.charCodeAt, char_code_at, 1, attr);
     define_native_function(vm.names.repeat, repeat, 1, attr);
@@ -104,6 +105,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.slice, slice, 2, attr);
     define_native_function(vm.names.split, split, 2, attr);
     define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
+    define_native_function(vm.names.at, at, 1, attr);
     define_native_function(vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
 
@@ -610,6 +612,29 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
     }
 
     return Value(-1);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
+{
+    auto string = ak_string_from(vm, global_object);
+    if (string.is_null())
+        return {};
+    auto length = string.length();
+    auto relative_index = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+    if (Value(relative_index).is_infinity())
+        return js_undefined();
+    Checked<size_t> index { 0 };
+    if (relative_index >= 0) {
+        index += relative_index;
+    } else {
+        index += length;
+        index -= -relative_index;
+    }
+    if (index.has_overflow() || index.value() >= length)
+        return js_undefined();
+    return js_string(vm, String::formatted("{}", string[index.value()]));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
