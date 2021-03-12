@@ -159,13 +159,11 @@ private:
     bool match_attribute_specification();
     void consume_attribute_specification();
     bool match_ellipsis();
-    void initialize_program_tokens();
+    void initialize_program_tokens(const StringView& program);
     void add_tokens_for_preprocessor(Token& replaced_token, Preprocessor::DefinedValue&);
     Vector<StringView> parse_type_qualifiers();
 
-    StringView m_program;
     Preprocessor::Definitions m_definitions;
-    Vector<StringView> m_lines;
     String m_filename;
     Vector<Token> m_tokens;
     State m_state;

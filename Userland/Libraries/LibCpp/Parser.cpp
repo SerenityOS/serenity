@@ -38,14 +38,11 @@
 namespace Cpp {
 
 Parser::Parser(const StringView& program, const String& filename, Preprocessor::Definitions&& definitions)
-    : m_program(program)
-    , m_definitions(move(definitions))
+    : m_definitions(move(definitions))
     , m_filename(filename)
 {
-    initialize_program_tokens();
+    initialize_program_tokens(program);
 #if CPP_DEBUG
-    dbgln("Program:");
-    dbgln("{}", m_program);
     dbgln("Tokens:");
     for (auto& token : m_tokens) {
         StringView text;
@@ -57,9 +54,9 @@ Parser::Parser(const StringView& program, const String& filename, Preprocessor::
     }
 #endif
 }
-void Parser::initialize_program_tokens()
+void Parser::initialize_program_tokens(const StringView& program)
 {
-    Lexer lexer(m_program);
+    Lexer lexer(program);
     for (auto& token : lexer.lex()) {
         if (token.type() == Token::Type::Whitespace)
             continue;
@@ -713,8 +710,7 @@ String Parser::text_in_range(Position start, Position end) const
     VERIFY(start_token_index.has_value());
     VERIFY(end_node_index.has_value());
     StringBuilder text;
-    for(size_t i = start_token_index.value(); i <= end_node_index.value(); ++i)
-    {
+    for (size_t i = start_token_index.value(); i <= end_node_index.value(); ++i) {
         text.append(m_tokens[i].text());
     }
     return text.build();
