@@ -44,8 +44,8 @@ AK::Singleton<DMIExpose> s_the;
 
 UNMAP_AFTER_INIT void DMIExpose::set_64_bit_entry_initialization_values()
 {
-    klog() << "DMIExpose: SMBIOS 64bit Entry point @ " << m_entry_point;
-    auto smbios_entry = map_typed<SMBIOS::EntryPoint64bit>(PhysicalAddress(m_entry_point), SMBIOS_SEARCH_AREA_SIZE);
+    dbgln("DMIExpose: SMBIOS 64bit Entry point @ {}", m_entry_point);
+    auto smbios_entry = map_typed<SMBIOS::EntryPoint64bit>(m_entry_point, SMBIOS_SEARCH_AREA_SIZE);
     m_structure_table = PhysicalAddress(smbios_entry.ptr()->table_ptr);
     m_entry_point_length = smbios_entry.ptr()->length;
     m_structure_table_length = smbios_entry.ptr()->table_maximum_size;
@@ -53,8 +53,8 @@ UNMAP_AFTER_INIT void DMIExpose::set_64_bit_entry_initialization_values()
 
 UNMAP_AFTER_INIT void DMIExpose::set_32_bit_entry_initialization_values()
 {
-    klog() << "DMIExpose: SMBIOS 32bit Entry point @ " << m_entry_point;
-    auto smbios_entry = map_typed<SMBIOS::EntryPoint32bit>(PhysicalAddress(m_entry_point), SMBIOS_SEARCH_AREA_SIZE);
+    dbgln("DMIExpose: SMBIOS 32bit Entry point @ {}", m_entry_point);
+    auto smbios_entry = map_typed<SMBIOS::EntryPoint32bit>(m_entry_point, SMBIOS_SEARCH_AREA_SIZE);
     m_structure_table = PhysicalAddress(smbios_entry.ptr()->legacy_structure.smbios_table_ptr);
     m_entry_point_length = smbios_entry.ptr()->length;
     m_structure_table_length = smbios_entry.ptr()->legacy_structure.smboios_table_length;
@@ -87,7 +87,7 @@ UNMAP_AFTER_INIT void DMIExpose::initialize_exposer()
     } else {
         set_32_bit_entry_initialization_values();
     }
-    klog() << "DMIExpose: Data table @ " << m_structure_table;
+    dbgln("DMIExpose: Data table @ {}", m_structure_table);
 }
 
 OwnPtr<KBuffer> DMIExpose::entry_point() const
