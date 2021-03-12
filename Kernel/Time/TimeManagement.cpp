@@ -159,13 +159,13 @@ UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
         // would trigger a deadlock trying to get the s_the instance while
         // creating it.
         if (auto* apic_timer = APIC::the().initialize_timers(*s_the->m_system_timer)) {
-            klog() << "Time: Using APIC timer as system timer";
+            dmesgln("Time: Using APIC timer as system timer");
             s_the->set_system_timer(*apic_timer);
         }
     } else {
         VERIFY(s_the.is_initialized());
         if (auto* apic_timer = APIC::the().get_timer()) {
-            klog() << "Time: Enable APIC timer on CPU #" << cpu;
+            dmesgln("Time: Enable APIC timer on CPU #{}", cpu);
             apic_timer->enable_local_timer();
         }
     }
@@ -198,7 +198,7 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
             RTC::initialize();
             m_epoch_time.tv_sec += boot_time();
         } else {
-            klog() << "ACPI: RTC CMOS Not present";
+            dmesgln("ACPI: RTC CMOS Not present");
         }
     } else {
         // We just assume that we can access RTC CMOS, if ACPI isn't usable.
