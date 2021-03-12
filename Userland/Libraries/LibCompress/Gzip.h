@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +34,28 @@ namespace Compress {
 
 constexpr u8 gzip_magic_1 = 0x1f;
 constexpr u8 gzip_magic_2 = 0x8b;
+struct [[gnu::packed]] BlockHeader {
+    u8 identification_1;
+    u8 identification_2;
+    u8 compression_method;
+    u8 flags;
+    LittleEndian<u32> modification_time;
+    u8 extra_flags;
+    u8 operating_system;
+
+    bool valid_magic_number() const;
+    bool supported_by_implementation() const;
+};
+
+struct Flags {
+    static constexpr u8 FTEXT = 1 << 0;
+    static constexpr u8 FHCRC = 1 << 1;
+    static constexpr u8 FEXTRA = 1 << 2;
+    static constexpr u8 FNAME = 1 << 3;
+    static constexpr u8 FCOMMENT = 1 << 4;
+
+    static constexpr u8 MAX = FTEXT | FHCRC | FEXTRA | FNAME | FCOMMENT;
+};
 
 class GzipDecompressor final : public InputStream {
 public:
@@ -49,29 +72,6 @@ public:
     static bool is_likely_compressed(ReadonlyBytes bytes);
 
 private:
-    struct [[gnu::packed]] BlockHeader {
-        u8 identification_1;
-        u8 identification_2;
-        u8 compression_method;
-        u8 flags;
-        LittleEndian<u32> modification_time;
-        u8 extra_flags;
-        u8 operating_system;
-
-        bool valid_magic_number() const;
-        bool supported_by_implementation() const;
-    };
-
-    struct Flags {
-        static constexpr u8 FTEXT = 1 << 0;
-        static constexpr u8 FHCRC = 1 << 1;
-        static constexpr u8 FEXTRA = 1 << 2;
-        static constexpr u8 FNAME = 1 << 3;
-        static constexpr u8 FCOMMENT = 1 << 4;
-
-        static constexpr u8 MAX = FTEXT | FHCRC | FEXTRA | FNAME | FCOMMENT;
-    };
-
     class Member {
     public:
         Member(BlockHeader header, InputStream& stream)
@@ -93,6 +93,20 @@ private:
     Optional<Member> m_current_member;
 
     bool m_eof { false };
+};
+
+class GzipCompressor final : public OutputStream {
+public:
+    GzipCompressor(OutputStream&);
+    ~GzipCompressor();
+
+    size_t write(ReadonlyBytes) override;
+    bool write_or_error(ReadonlyBytes) override;
+
+    static Optional<ByteBuffer> compress_all(const ReadonlyBytes& bytes);
+
+private:
+    OutputStream& m_output_stream;
 };
 
 }
