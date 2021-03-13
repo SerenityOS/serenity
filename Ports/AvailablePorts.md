@@ -19,7 +19,6 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`doom`](doom/)                | DOOM                                          |                   | https://github.com/SerenityOS/SerenityDOOM            |
 | [`dropbear`](dropbear/)        | Dropbear SSH                                  | 2019.78           | https://dropbear.nl/mirror/dropbear.html              |
 | [`ed`](ed/)                    | GNU ed                                        | 1.15              | https://www.gnu.org/software/ed/                      |
-| [`editline`](editline/)        | Minix Editline                                | 1.17.1            | https://troglobit.com/projects/editline/              |
 | [`figlet`](figlet/)            | FIGlet                                        | 2.2.5             | http://www.figlet.org/                                |
 | [`flex`](flex/)                | flex                                          | 2.6.4             | https://github.com/westes/flex                        |
 | [`freetype`](freetype/)        | FreeType                                      | 2.10.4            | https://www.freetype.org/                             |
