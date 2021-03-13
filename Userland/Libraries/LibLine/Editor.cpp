@@ -1247,18 +1247,21 @@ void Editor::refresh_display()
     auto print_character_at = [this](size_t i) {
         StringBuilder builder;
         auto c = m_buffer[i];
-        bool should_print_caret = isascii(c) && iscntrl(c) && c != '\n';
+        bool should_print_masked = isascii(c) && iscntrl(c) && c != '\n';
+        bool should_print_caret = c < 64 && should_print_masked;
         if (should_print_caret)
             builder.appendff("^{:c}", c + 64);
+        else if (should_print_masked)
+            builder.appendff("\\x{:0>2x}", c);
         else
             builder.append(Utf32View { &c, 1 });
 
-        if (should_print_caret)
+        if (should_print_masked)
             fputs("\033[7m", stderr);
 
         fputs(builder.to_string().characters(), stderr);
 
-        if (should_print_caret)
+        if (should_print_masked)
             fputs("\033[27m", stderr);
     };
 
@@ -1634,7 +1637,7 @@ Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metric
             return state;
         }
         if (isascii(c) && iscntrl(c) && c != '\n')
-            current_line.masked_chars.append({ index, 1, 2 });
+            current_line.masked_chars.append({ index, 1, c < 64 ? 2u : 4u }); // if the character cannot be represented as ^c, represent it as \xbb.
         // FIXME: This will not support anything sophisticated
         ++current_line.length;
         ++metrics.total_length;
