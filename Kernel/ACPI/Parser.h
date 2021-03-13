@@ -34,6 +34,12 @@ public:
     virtual void try_acpi_shutdown();
     virtual bool can_shutdown() { return false; }
 
+    PhysicalAddress rsdp() const { return m_rsdp; }
+    PhysicalAddress main_system_description_table() const { return m_main_system_description_table; }
+    bool is_xsdt_supported() const { return m_xsdt_supported; }
+
+    void enumerate_static_tables(Function<void(const StringView&, PhysicalAddress, size_t)>);
+
     virtual bool have_8042() const
     {
         return m_x86_specific_flags.keyboard_8042;
