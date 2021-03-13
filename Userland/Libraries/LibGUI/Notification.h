@@ -36,6 +36,8 @@ class NotificationServerConnection;
 class Notification : public Core::Object {
     C_OBJECT(Notification);
 
+    friend class NotificationServerConnection;
+
 public:
     virtual ~Notification() override;
 
@@ -64,8 +66,12 @@ public:
     bool update();
     void close();
 
+    bool is_showing() const { return m_shown && !m_destroyed; }
+
 private:
     Notification();
+
+    void connection_closed();
 
     String m_title;
     bool m_title_dirty;
@@ -74,6 +80,8 @@ private:
     RefPtr<Gfx::Bitmap> m_icon;
     bool m_icon_dirty;
 
+    bool m_destroyed { false };
+    bool m_shown { false };
     RefPtr<NotificationServerConnection> m_connection;
 };
 
