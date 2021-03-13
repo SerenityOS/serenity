@@ -35,6 +35,6 @@ int main(int, char**)
         exit(1);
     }
     auto content = file->read_all();
-    Cpp::Preprocessor cpp(StringView { content });
+    Cpp::Preprocessor cpp("other.h", StringView { content });
     dbgln("{}", cpp.process());
 }

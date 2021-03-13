@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
@@ -36,15 +37,16 @@ namespace Cpp {
 class Preprocessor {
 
 public:
-    explicit Preprocessor(const StringView&);
+    explicit Preprocessor(const String& filename, const StringView& program);
     const String& process();
     const String& processed_text();
     Vector<StringView> included_paths() const { return m_included_paths; }
 
     struct DefinedValue {
         Optional<StringView> value;
-        size_t line {0};
-        size_t column {0};
+        FlyString filename;
+        size_t line { 0 };
+        size_t column { 0 };
     };
     using Definitions = HashMap<StringView, DefinedValue>;
 
@@ -54,6 +56,7 @@ private:
     void handle_preprocessor_line(const StringView&);
 
     Definitions m_definitions;
+    const String m_filename;
     const StringView m_program;
     StringBuilder m_builder;
     Vector<StringView> m_lines;
