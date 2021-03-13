@@ -1,0 +1,3 @@
+add_executable(WrapperGenerator WrapperGenerator.cpp)
+target_compile_options(WrapperGenerator PUBLIC -g)
+target_link_libraries(WrapperGenerator LagomCore)

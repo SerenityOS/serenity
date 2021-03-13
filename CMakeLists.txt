@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 project(SerenityOS C CXX ASM)
 
-if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
-  message(FATAL
-    ": Don't use CMAKE_BUILD_TYPE when building serenity.\n"
-    "The default build type is optimized with debug info and asserts enabled,\n"
-    "and that's all there is.")
-endif()
+if (NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
+    message(FATAL
+            ": Don't use CMAKE_BUILD_TYPE when building serenity.\n"
+            "The default build type is optimized with debug info and asserts enabled,\n"
+            "and that's all there is.")
+endif ()
 
 set(CMAKE_INSTALL_MESSAGE NEVER)
 
@@ -28,9 +28,9 @@ option(ENABLE_PCI_IDS_DOWNLOAD "Enable download of the pci.ids database at build
 option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/testing" OFF)
 
 add_custom_target(run
-    COMMAND ${CMAKE_SOURCE_DIR}/Meta/run.sh
-    USES_TERMINAL
-)
+        COMMAND ${CMAKE_SOURCE_DIR}/Meta/run.sh
+        USES_TERMINAL
+        )
 
 # This can currently only be implemented by ordered commands
 # as cmake doesn't support inter dependency ordering, and we
@@ -38,34 +38,34 @@ add_custom_target(run
 # custom commands to allow people to run commands adhoc with
 # out forcing re-builds when they might not want them.
 add_custom_target(setup-and-run
-    COMMAND ${CMAKE_MAKE_PROGRAM} install
-    COMMAND ${CMAKE_MAKE_PROGRAM} image
-    COMMAND ${CMAKE_MAKE_PROGRAM} run
-    USES_TERMINAL
-)
+        COMMAND ${CMAKE_MAKE_PROGRAM} install
+        COMMAND ${CMAKE_MAKE_PROGRAM} image
+        COMMAND ${CMAKE_MAKE_PROGRAM} run
+        USES_TERMINAL
+        )
 
 add_custom_target(image
-    DEPENDS qemu-image
-)
+        DEPENDS qemu-image
+        )
 add_custom_target(qemu-image
-    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" ${CMAKE_SOURCE_DIR}/Meta/build-image-qemu.sh
-    BYPRODUCTS ${CMAKE_BINARY_DIR}/_disk_image
-    USES_TERMINAL
-)
+        COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" ${CMAKE_SOURCE_DIR}/Meta/build-image-qemu.sh
+        BYPRODUCTS ${CMAKE_BINARY_DIR}/_disk_image
+        USES_TERMINAL
+        )
 add_custom_target(grub-image
-    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" ${CMAKE_SOURCE_DIR}/Meta/build-image-grub.sh
-    BYPRODUCTS ${CMAKE_BINARY_DIR}/grub_disk_image
-    USES_TERMINAL
-)
+        COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" ${CMAKE_SOURCE_DIR}/Meta/build-image-grub.sh
+        BYPRODUCTS ${CMAKE_BINARY_DIR}/grub_disk_image
+        USES_TERMINAL
+        )
 
 add_custom_target(lint-shell-scripts
-    COMMAND ${CMAKE_SOURCE_DIR}/Meta/lint-shell-scripts.sh
-    USES_TERMINAL
-)
+        COMMAND ${CMAKE_SOURCE_DIR}/Meta/lint-shell-scripts.sh
+        USES_TERMINAL
+        )
 add_custom_target(check-style
-    COMMAND ${CMAKE_SOURCE_DIR}/Meta/check-style.sh
-    USES_TERMINAL
-)
+        COMMAND ${CMAKE_SOURCE_DIR}/Meta/check-style.sh
+        USES_TERMINAL
+        )
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -76,19 +76,19 @@ if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
     # FIXME: Something makes this go crazy and flag unused variables that aren't flagged as such when building with the toolchain.
     #        Disable -Werror for now.
     add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Wmissing-declarations -Wformat=2 -fdiagnostics-color=always)
-else()
+else ()
     add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Werror -Wmissing-declarations -Wformat=2 -fdiagnostics-color=always)
-endif()
+endif ()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-fconcepts -Wno-literal-suffix)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals)
-endif()
+endif ()
 
 if (ENABLE_ALL_THE_DEBUG_MACROS)
     include(${CMAKE_SOURCE_DIR}/Meta/CMake/all_the_debug_macros.cmake)
-endif(ENABLE_ALL_THE_DEBUG_MACROS)
+endif (ENABLE_ALL_THE_DEBUG_MACROS)
 
 configure_file(AK/Debug.h.in AK/Debug.h @ONLY)
 configure_file(Kernel/Debug.h.in Kernel/Debug.h @ONLY)
@@ -99,14 +99,15 @@ include_directories(${CMAKE_BINARY_DIR})
 
 add_subdirectory(Meta/Lagom)
 add_subdirectory(Userland/DevTools/IPCCompiler)
+add_subdirectory(Userland/Libraries/LibJS/CodeGenerators)
 add_subdirectory(Userland/Libraries/LibWeb/CodeGenerators)
 
 set(write_if_different ${CMAKE_SOURCE_DIR}/Meta/write-only-on-difference.sh)
 
 find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
+if (CCACHE_PROGRAM)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
-endif()
+endif ()
 
 unset(CMAKE_SYSROOT)
 set(CMAKE_STAGING_PREFIX ${CMAKE_BINARY_DIR}/Root)
@@ -115,7 +116,7 @@ set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_BINARY_DIR}/Root/res)
 
 if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
     message("Good job on building cmake!")
-else()
+else ()
     set(TOOLCHAIN_PATH ${CMAKE_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin)
     set(TOOLCHAIN_PREFIX ${TOOLCHAIN_PATH}/${SERENITY_ARCH}-pc-serenity-)
 
@@ -126,23 +127,23 @@ else()
     set(CMAKE_RANLIB ${TOOLCHAIN_PREFIX}ranlib)
     set(CMAKE_STRIP ${TOOLCHAIN_PREFIX}strip)
     set(CMAKE_AR ${TOOLCHAIN_PREFIX}ar)
-endif()
+endif ()
 
-foreach(lang ASM C CXX OBJC OBJCXX)
+foreach (lang ASM C CXX OBJC OBJCXX)
     unset(CMAKE_${lang}_OSX_COMPATIBILITY_VERSION_FLAG)
     unset(CMAKE_${lang}_OSX_CURRENT_VERSION_FLAG)
     unset(CMAKE_${lang}_LINK_FLAGS)
     unset(CMAKE_SHARED_LIBRARY_CREATE_${lang}_FLAGS)
     unset(CMAKE_SHARED_MODULE_CREATE_${lang}_FLAGS)
-    unset(CMAKE_SHARED_MODULE_LOADER_${lang}_FLAG )
+    unset(CMAKE_SHARED_MODULE_LOADER_${lang}_FLAG)
     unset(CMAKE_${lang}_OSX_DEPLOYMENT_TARGET_FLAG)
     unset(CMAKE_${lang}_SYSROOT_FLAG)
     if (CMAKE_SYSTEM_NAME MATCHES Darwin)
         ## MacOS Workaround. Don't generate install_name flag when cross compiling
         set(CMAKE_${lang}_CREATE_SHARED_LIBRARY
-            "<CMAKE_${lang}_COMPILER> <LANGUAGE_COMPILE_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_${lang}_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
-    endif()
-endforeach()
+                "<CMAKE_${lang}_COMPILER> <LANGUAGE_COMPILE_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_${lang}_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+    endif ()
+endforeach ()
 
 set(CMAKE_INSTALL_NAME_TOOL "")
 set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
@@ -158,7 +159,7 @@ add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-fstack-clash-protection)
-endif()
+endif ()
 
 add_compile_definitions(DEBUG SANITIZE_PTRS)
 set(CMAKE_CXX_FLAGS_STATIC "${CMAKE_CXX_FLAGS} -static")
@@ -166,7 +167,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fpic")
 
 if (ENABLE_COMPILETIME_FORMAT_CHECK)
     add_compile_definitions(ENABLE_COMPILETIME_FORMAT_CHECK)
-endif()
+endif ()
 
 add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 
@@ -189,14 +190,14 @@ set(PCI_IDS_GZ_PATH ${CMAKE_BINARY_DIR}/pci.ids.gz)
 set(PCI_IDS_PATH ${CMAKE_BINARY_DIR}/pci.ids)
 set(PCI_IDS_INSTALL_PATH ${CMAKE_INSTALL_DATAROOTDIR}/pci.ids)
 
-if(ENABLE_PCI_IDS_DOWNLOAD AND NOT EXISTS ${PCI_IDS_GZ_PATH})
+if (ENABLE_PCI_IDS_DOWNLOAD AND NOT EXISTS ${PCI_IDS_GZ_PATH})
     message(STATUS "Downloading PCI ID database from ${PCI_IDS_GZ_URL}...")
     file(DOWNLOAD ${PCI_IDS_GZ_URL} ${PCI_IDS_GZ_PATH} INACTIVITY_TIMEOUT 10)
-endif()
+endif ()
 
-if(EXISTS ${PCI_IDS_GZ_PATH} AND NOT EXISTS ${PCI_IDS_INSTALL_PATH})
+if (EXISTS ${PCI_IDS_GZ_PATH} AND NOT EXISTS ${PCI_IDS_INSTALL_PATH})
     message(STATUS "Extracting PCI ID database from ${PCI_IDS_GZ_PATH}...")
     execute_process(COMMAND gzip -k -d ${PCI_IDS_GZ_PATH})
     file(MAKE_DIRECTORY ${CMAKE_INSTALL_DATAROOTDIR})
     file(RENAME ${PCI_IDS_PATH} ${PCI_IDS_INSTALL_PATH})
-endif()
+endif ()

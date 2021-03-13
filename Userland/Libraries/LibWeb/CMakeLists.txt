@@ -1,230 +1,230 @@
 set(SOURCES
-    Bindings/EventListenerWrapper.cpp
-    Bindings/EventWrapperFactory.cpp
-    Bindings/EventTargetWrapperFactory.cpp
-    Bindings/LocationObject.cpp
-    Bindings/MainThreadVM.cpp
-    Bindings/NavigatorObject.cpp
-    Bindings/NodeWrapperFactory.cpp
-    Bindings/ScriptExecutionContext.cpp
-    Bindings/WindowObject.cpp
-    Bindings/Wrappable.cpp
-    CSS/CSSImportRule.cpp
-    CSS/CSSRule.cpp
-    CSS/CSSStyleRule.cpp
-    CSS/CSSStyleSheet.cpp
-    CSS/DefaultStyleSheetSource.cpp
-    CSS/Length.cpp
-    CSS/Parser/DeprecatedCSSParser.cpp
-    CSS/Parser/StyleRules.cpp
-    CSS/Parser/Token.cpp
-    CSS/Parser/Tokenizer.cpp
-    CSS/PropertyID.cpp
-    CSS/PropertyID.h
-    CSS/QuirksModeStyleSheetSource.cpp
-    CSS/Selector.cpp
-    CSS/SelectorEngine.cpp
-    CSS/StyleDeclaration.cpp
-    CSS/StyleInvalidator.cpp
-    CSS/StyleProperties.cpp
-    CSS/StyleResolver.cpp
-    CSS/StyleSheet.cpp
-    CSS/StyleSheetList.cpp
-    CSS/StyleValue.cpp
-    CSS/ValueID.cpp
-    CSS/ValueID.h
-    DOM/CharacterData.cpp
-    DOM/CharacterData.idl
-    DOM/Comment.cpp
-    DOM/Document.cpp
-    DOM/DocumentFragment.cpp
-    DOM/DocumentType.cpp
-    DOM/DOMImplementation.cpp
-    DOM/Element.cpp
-    DOM/ElementFactory.cpp
-    DOM/Event.cpp
-    DOM/Range.cpp
-    DOM/EventDispatcher.cpp
-    DOM/EventListener.cpp
-    DOM/EventTarget.cpp
-    DOM/Node.cpp
-    DOM/ParentNode.cpp
-    DOM/Position.cpp
-    DOM/ShadowRoot.cpp
-    DOM/Text.cpp
-    DOM/Text.idl
-    DOM/Timer.cpp
-    DOM/Window.cpp
-    DOMTreeModel.cpp
-    Dump.cpp
-    FontCache.cpp
-    HTML/AttributeNames.cpp
-    HTML/CanvasRenderingContext2D.cpp
-    HTML/EventNames.cpp
-    HTML/GlobalEventHandlers.cpp
-    HTML/HTMLAnchorElement.cpp
-    HTML/HTMLAreaElement.cpp
-    HTML/HTMLAudioElement.cpp
-    HTML/HTMLBRElement.cpp
-    HTML/HTMLBaseElement.cpp
-    HTML/HTMLBlinkElement.cpp
-    HTML/HTMLBodyElement.cpp
-    HTML/HTMLButtonElement.cpp
-    HTML/HTMLCanvasElement.cpp
-    HTML/HTMLDListElement.cpp
-    HTML/HTMLDataElement.cpp
-    HTML/HTMLDataListElement.cpp
-    HTML/HTMLDetailsElement.cpp
-    HTML/HTMLDialogElement.cpp
-    HTML/HTMLDirectoryElement.cpp
-    HTML/HTMLDivElement.cpp
-    HTML/HTMLElement.cpp
-    HTML/HTMLEmbedElement.cpp
-    HTML/HTMLFieldSetElement.cpp
-    HTML/HTMLFontElement.cpp
-    HTML/HTMLFormElement.cpp
-    HTML/HTMLFrameElement.cpp
-    HTML/HTMLFrameSetElement.cpp
-    HTML/HTMLHRElement.cpp
-    HTML/HTMLHeadElement.cpp
-    HTML/HTMLHeadingElement.cpp
-    HTML/HTMLHtmlElement.cpp
-    HTML/HTMLIFrameElement.cpp
-    HTML/HTMLImageElement.cpp
-    HTML/HTMLInputElement.cpp
-    HTML/HTMLLIElement.cpp
-    HTML/HTMLLabelElement.cpp
-    HTML/HTMLLegendElement.cpp
-    HTML/HTMLLinkElement.cpp
-    HTML/HTMLMapElement.cpp
-    HTML/HTMLMarqueeElement.cpp
-    HTML/HTMLMediaElement.cpp
-    HTML/HTMLMenuElement.cpp
-    HTML/HTMLMetaElement.cpp
-    HTML/HTMLMeterElement.cpp
-    HTML/HTMLModElement.cpp
-    HTML/HTMLOListElement.cpp
-    HTML/HTMLObjectElement.cpp
-    HTML/HTMLOptGroupElement.cpp
-    HTML/HTMLOptionElement.cpp
-    HTML/HTMLOutputElement.cpp
-    HTML/HTMLParagraphElement.cpp
-    HTML/HTMLParamElement.cpp
-    HTML/HTMLPictureElement.cpp
-    HTML/HTMLPreElement.cpp
-    HTML/HTMLProgressElement.cpp
-    HTML/HTMLQuoteElement.cpp
-    HTML/HTMLScriptElement.cpp
-    HTML/HTMLSelectElement.cpp
-    HTML/HTMLSlotElement.cpp
-    HTML/HTMLSourceElement.cpp
-    HTML/HTMLSpanElement.cpp
-    HTML/HTMLStyleElement.cpp
-    HTML/HTMLTableCaptionElement.cpp
-    HTML/HTMLTableCellElement.cpp
-    HTML/HTMLTableColElement.cpp
-    HTML/HTMLTableElement.cpp
-    HTML/HTMLTableRowElement.cpp
-    HTML/HTMLTableSectionElement.cpp
-    HTML/HTMLTemplateElement.cpp
-    HTML/HTMLTextAreaElement.cpp
-    HTML/HTMLTimeElement.cpp
-    HTML/HTMLTitleElement.cpp
-    HTML/HTMLTrackElement.cpp
-    HTML/HTMLUListElement.cpp
-    HTML/HTMLUnknownElement.cpp
-    HTML/HTMLVideoElement.cpp
-    HTML/ImageData.cpp
-    HTML/Parser/Entities.cpp
-    HTML/Parser/HTMLDocumentParser.cpp
-    HTML/Parser/HTMLToken.cpp
-    HTML/Parser/HTMLTokenizer.cpp
-    HTML/Parser/ListOfActiveFormattingElements.cpp
-    HTML/Parser/StackOfOpenElements.cpp
-    HTML/SubmitEvent.cpp
-    HTML/TagNames.cpp
-    HighResolutionTime/Performance.cpp
-    InProcessWebView.cpp
-    Layout/BlockBox.cpp
-    Layout/BlockFormattingContext.cpp
-    Layout/Box.cpp
-    Layout/BoxModelMetrics.cpp
-    Layout/BreakNode.cpp
-    Layout/ButtonBox.cpp
-    Layout/CanvasBox.cpp
-    Layout/CheckBox.cpp
-    Layout/FlexFormattingContext.cpp
-    Layout/FormattingContext.cpp
-    Layout/FrameBox.cpp
-    Layout/ImageBox.cpp
-    Layout/InitialContainingBlockBox.cpp
-    Layout/InlineFormattingContext.cpp
-    Layout/InlineNode.cpp
-    Layout/LayoutPosition.cpp
-    Layout/LineBox.cpp
-    Layout/LineBoxFragment.cpp
-    Layout/ListItemBox.cpp
-    Layout/ListItemMarkerBox.cpp
-    Layout/Node.cpp
-    Layout/ReplacedBox.cpp
-    Layout/SVGBox.cpp
-    Layout/SVGGraphicsBox.cpp
-    Layout/SVGPathBox.cpp
-    Layout/SVGSVGBox.cpp
-    Layout/TableBox.cpp
-    Layout/TableCellBox.cpp
-    Layout/TableFormattingContext.cpp
-    Layout/TableRowBox.cpp
-    Layout/TableRowGroupBox.cpp
-    Layout/TextNode.cpp
-    Layout/TreeBuilder.cpp
-    LayoutTreeModel.cpp
-    Loader/ContentFilter.cpp
-    Loader/CSSLoader.cpp
-    Loader/FrameLoader.cpp
-    Loader/ImageLoader.cpp
-    Loader/ImageResource.cpp
-    Loader/Resource.cpp
-    Loader/ResourceLoader.cpp
-    Namespace.cpp
-    NavigationTiming/PerformanceTiming.cpp
-    OutOfProcessWebView.cpp
-    Page/EventHandler.cpp
-    Page/EditEventHandler.cpp
-    Page/Frame.cpp
-    Page/Page.cpp
-    Painting/BorderPainting.cpp
-    Painting/StackingContext.cpp
-    SVG/SVGElement.cpp
-    SVG/SVGGeometryElement.cpp
-    SVG/SVGGraphicsElement.cpp
-    SVG/SVGPathElement.cpp
-    SVG/SVGSVGElement.cpp
-    SVG/TagNames.cpp
-    StylePropertiesModel.cpp
-    UIEvents/EventNames.cpp
-    UIEvents/MouseEvent.cpp
-    URLEncoder.cpp
-    XHR/EventNames.cpp
-    XHR/XMLHttpRequest.cpp
-    WebContentClient.cpp
-)
+        Bindings/EventListenerWrapper.cpp
+        Bindings/EventWrapperFactory.cpp
+        Bindings/EventTargetWrapperFactory.cpp
+        Bindings/LocationObject.cpp
+        Bindings/MainThreadVM.cpp
+        Bindings/NavigatorObject.cpp
+        Bindings/NodeWrapperFactory.cpp
+        Bindings/ScriptExecutionContext.cpp
+        Bindings/WindowObject.cpp
+        Bindings/Wrappable.cpp
+        CSS/CSSImportRule.cpp
+        CSS/CSSRule.cpp
+        CSS/CSSStyleRule.cpp
+        CSS/CSSStyleSheet.cpp
+        CSS/DefaultStyleSheetSource.cpp
+        CSS/Length.cpp
+        CSS/Parser/DeprecatedCSSParser.cpp
+        CSS/Parser/StyleRules.cpp
+        CSS/Parser/Token.cpp
+        CSS/Parser/Tokenizer.cpp
+        CSS/PropertyID.cpp
+        CSS/PropertyID.h
+        CSS/QuirksModeStyleSheetSource.cpp
+        CSS/Selector.cpp
+        CSS/SelectorEngine.cpp
+        CSS/StyleDeclaration.cpp
+        CSS/StyleInvalidator.cpp
+        CSS/StyleProperties.cpp
+        CSS/StyleResolver.cpp
+        CSS/StyleSheet.cpp
+        CSS/StyleSheetList.cpp
+        CSS/StyleValue.cpp
+        CSS/ValueID.cpp
+        CSS/ValueID.h
+        DOM/CharacterData.cpp
+        DOM/CharacterData.idl
+        DOM/Comment.cpp
+        DOM/Document.cpp
+        DOM/DocumentFragment.cpp
+        DOM/DocumentType.cpp
+        DOM/DOMImplementation.cpp
+        DOM/Element.cpp
+        DOM/ElementFactory.cpp
+        DOM/Event.cpp
+        DOM/Range.cpp
+        DOM/EventDispatcher.cpp
+        DOM/EventListener.cpp
+        DOM/EventTarget.cpp
+        DOM/Node.cpp
+        DOM/ParentNode.cpp
+        DOM/Position.cpp
+        DOM/ShadowRoot.cpp
+        DOM/Text.cpp
+        DOM/Text.idl
+        DOM/Timer.cpp
+        DOM/Window.cpp
+        DOMTreeModel.cpp
+        Dump.cpp
+        FontCache.cpp
+        HTML/AttributeNames.cpp
+        HTML/CanvasRenderingContext2D.cpp
+        HTML/EventNames.cpp
+        HTML/GlobalEventHandlers.cpp
+        HTML/HTMLAnchorElement.cpp
+        HTML/HTMLAreaElement.cpp
+        HTML/HTMLAudioElement.cpp
+        HTML/HTMLBRElement.cpp
+        HTML/HTMLBaseElement.cpp
+        HTML/HTMLBlinkElement.cpp
+        HTML/HTMLBodyElement.cpp
+        HTML/HTMLButtonElement.cpp
+        HTML/HTMLCanvasElement.cpp
+        HTML/HTMLDListElement.cpp
+        HTML/HTMLDataElement.cpp
+        HTML/HTMLDataListElement.cpp
+        HTML/HTMLDetailsElement.cpp
+        HTML/HTMLDialogElement.cpp
+        HTML/HTMLDirectoryElement.cpp
+        HTML/HTMLDivElement.cpp
+        HTML/HTMLElement.cpp
+        HTML/HTMLEmbedElement.cpp
+        HTML/HTMLFieldSetElement.cpp
+        HTML/HTMLFontElement.cpp
+        HTML/HTMLFormElement.cpp
+        HTML/HTMLFrameElement.cpp
+        HTML/HTMLFrameSetElement.cpp
+        HTML/HTMLHRElement.cpp
+        HTML/HTMLHeadElement.cpp
+        HTML/HTMLHeadingElement.cpp
+        HTML/HTMLHtmlElement.cpp
+        HTML/HTMLIFrameElement.cpp
+        HTML/HTMLImageElement.cpp
+        HTML/HTMLInputElement.cpp
+        HTML/HTMLLIElement.cpp
+        HTML/HTMLLabelElement.cpp
+        HTML/HTMLLegendElement.cpp
+        HTML/HTMLLinkElement.cpp
+        HTML/HTMLMapElement.cpp
+        HTML/HTMLMarqueeElement.cpp
+        HTML/HTMLMediaElement.cpp
+        HTML/HTMLMenuElement.cpp
+        HTML/HTMLMetaElement.cpp
+        HTML/HTMLMeterElement.cpp
+        HTML/HTMLModElement.cpp
+        HTML/HTMLOListElement.cpp
+        HTML/HTMLObjectElement.cpp
+        HTML/HTMLOptGroupElement.cpp
+        HTML/HTMLOptionElement.cpp
+        HTML/HTMLOutputElement.cpp
+        HTML/HTMLParagraphElement.cpp
+        HTML/HTMLParamElement.cpp
+        HTML/HTMLPictureElement.cpp
+        HTML/HTMLPreElement.cpp
+        HTML/HTMLProgressElement.cpp
+        HTML/HTMLQuoteElement.cpp
+        HTML/HTMLScriptElement.cpp
+        HTML/HTMLSelectElement.cpp
+        HTML/HTMLSlotElement.cpp
+        HTML/HTMLSourceElement.cpp
+        HTML/HTMLSpanElement.cpp
+        HTML/HTMLStyleElement.cpp
+        HTML/HTMLTableCaptionElement.cpp
+        HTML/HTMLTableCellElement.cpp
+        HTML/HTMLTableColElement.cpp
+        HTML/HTMLTableElement.cpp
+        HTML/HTMLTableRowElement.cpp
+        HTML/HTMLTableSectionElement.cpp
+        HTML/HTMLTemplateElement.cpp
+        HTML/HTMLTextAreaElement.cpp
+        HTML/HTMLTimeElement.cpp
+        HTML/HTMLTitleElement.cpp
+        HTML/HTMLTrackElement.cpp
+        HTML/HTMLUListElement.cpp
+        HTML/HTMLUnknownElement.cpp
+        HTML/HTMLVideoElement.cpp
+        HTML/ImageData.cpp
+        HTML/Parser/Entities.cpp
+        HTML/Parser/HTMLDocumentParser.cpp
+        HTML/Parser/HTMLToken.cpp
+        HTML/Parser/HTMLTokenizer.cpp
+        HTML/Parser/ListOfActiveFormattingElements.cpp
+        HTML/Parser/StackOfOpenElements.cpp
+        HTML/SubmitEvent.cpp
+        HTML/TagNames.cpp
+        HighResolutionTime/Performance.cpp
+        InProcessWebView.cpp
+        Layout/BlockBox.cpp
+        Layout/BlockFormattingContext.cpp
+        Layout/Box.cpp
+        Layout/BoxModelMetrics.cpp
+        Layout/BreakNode.cpp
+        Layout/ButtonBox.cpp
+        Layout/CanvasBox.cpp
+        Layout/CheckBox.cpp
+        Layout/FlexFormattingContext.cpp
+        Layout/FormattingContext.cpp
+        Layout/FrameBox.cpp
+        Layout/ImageBox.cpp
+        Layout/InitialContainingBlockBox.cpp
+        Layout/InlineFormattingContext.cpp
+        Layout/InlineNode.cpp
+        Layout/LayoutPosition.cpp
+        Layout/LineBox.cpp
+        Layout/LineBoxFragment.cpp
+        Layout/ListItemBox.cpp
+        Layout/ListItemMarkerBox.cpp
+        Layout/Node.cpp
+        Layout/ReplacedBox.cpp
+        Layout/SVGBox.cpp
+        Layout/SVGGraphicsBox.cpp
+        Layout/SVGPathBox.cpp
+        Layout/SVGSVGBox.cpp
+        Layout/TableBox.cpp
+        Layout/TableCellBox.cpp
+        Layout/TableFormattingContext.cpp
+        Layout/TableRowBox.cpp
+        Layout/TableRowGroupBox.cpp
+        Layout/TextNode.cpp
+        Layout/TreeBuilder.cpp
+        LayoutTreeModel.cpp
+        Loader/ContentFilter.cpp
+        Loader/CSSLoader.cpp
+        Loader/FrameLoader.cpp
+        Loader/ImageLoader.cpp
+        Loader/ImageResource.cpp
+        Loader/Resource.cpp
+        Loader/ResourceLoader.cpp
+        Namespace.cpp
+        NavigationTiming/PerformanceTiming.cpp
+        OutOfProcessWebView.cpp
+        Page/EventHandler.cpp
+        Page/EditEventHandler.cpp
+        Page/Frame.cpp
+        Page/Page.cpp
+        Painting/BorderPainting.cpp
+        Painting/StackingContext.cpp
+        SVG/SVGElement.cpp
+        SVG/SVGGeometryElement.cpp
+        SVG/SVGGraphicsElement.cpp
+        SVG/SVGPathElement.cpp
+        SVG/SVGSVGElement.cpp
+        SVG/TagNames.cpp
+        StylePropertiesModel.cpp
+        UIEvents/EventNames.cpp
+        UIEvents/MouseEvent.cpp
+        URLEncoder.cpp
+        XHR/EventNames.cpp
+        XHR/XMLHttpRequest.cpp
+        WebContentClient.cpp
+        )
 
 set(GENERATED_SOURCES
-    ../../Services/ProtocolServer/ProtocolClientEndpoint.h
-    ../../Services/ProtocolServer/ProtocolServerEndpoint.h
-    ../../Services/WebContent/WebContentClientEndpoint.h
-    ../../Services/WebContent/WebContentServerEndpoint.h
-)
+        ../../Services/ProtocolServer/ProtocolClientEndpoint.h
+        ../../Services/ProtocolServer/ProtocolServerEndpoint.h
+        ../../Services/WebContent/WebContentClientEndpoint.h
+        ../../Services/WebContent/WebContentServerEndpoint.h
+        )
 
 set_property(GLOBAL PROPERTY wrapper_sources)
 function(add_wrapper_sources)
     get_property(tmp GLOBAL PROPERTY wrapper_sources)
-    foreach(arg ${ARGV})
+    foreach (arg ${ARGV})
         set(tmp ${tmp}
-            ${arg}
-        )
-    endforeach()
+                ${arg}
+                )
+    endforeach ()
     set_property(GLOBAL PROPERTY wrapper_sources "${tmp}")
 endfunction(add_wrapper_sources)
 
@@ -234,46 +234,46 @@ function(libweb_js_wrapper class)
     add_wrapper_sources(Bindings/${basename}Constructor.cpp Bindings/${basename}Constructor.h)
     add_wrapper_sources(Bindings/${basename}Prototype.cpp Bindings/${basename}Prototype.h)
     add_custom_command(
-        OUTPUT Bindings/${basename}Wrapper.h
-        COMMAND ${write_if_different} Bindings/${basename}Wrapper.h CodeGenerators/WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
+            OUTPUT Bindings/${basename}Wrapper.h
+            COMMAND ${write_if_different} Bindings/${basename}Wrapper.h ../LibJS/CodeGenerators/WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
+            VERBATIM
+            DEPENDS WrapperGenerator
+            MAIN_DEPENDENCY ${class}.idl
     )
     add_custom_command(
-        OUTPUT Bindings/${basename}Wrapper.cpp
-        COMMAND ${write_if_different} Bindings/${basename}Wrapper.cpp CodeGenerators/WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
+            OUTPUT Bindings/${basename}Wrapper.cpp
+            COMMAND ${write_if_different} Bindings/${basename}Wrapper.cpp ../LibJS/CodeGenerators/WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
+            VERBATIM
+            DEPENDS WrapperGenerator
+            MAIN_DEPENDENCY ${class}.idl
     )
     add_custom_command(
-        OUTPUT Bindings/${basename}Constructor.h
-        COMMAND ${write_if_different} Bindings/${basename}Constructor.h CodeGenerators/WrapperGenerator --constructor-header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
+            OUTPUT Bindings/${basename}Constructor.h
+            COMMAND ${write_if_different} Bindings/${basename}Constructor.h ../LibJS/CodeGenerators/WrapperGenerator --constructor-header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
+            VERBATIM
+            DEPENDS WrapperGenerator
+            MAIN_DEPENDENCY ${class}.idl
     )
     add_custom_command(
-        OUTPUT Bindings/${basename}Constructor.cpp
-        COMMAND ${write_if_different} Bindings/${basename}Constructor.cpp CodeGenerators/WrapperGenerator --constructor-implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
+            OUTPUT Bindings/${basename}Constructor.cpp
+            COMMAND ${write_if_different} Bindings/${basename}Constructor.cpp ../LibJS/CodeGenerators/WrapperGenerator --constructor-implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
+            VERBATIM
+            DEPENDS WrapperGenerator
+            MAIN_DEPENDENCY ${class}.idl
     )
     add_custom_command(
-        OUTPUT Bindings/${basename}Prototype.h
-        COMMAND ${write_if_different} Bindings/${basename}Prototype.h CodeGenerators/WrapperGenerator --prototype-header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
+            OUTPUT Bindings/${basename}Prototype.h
+            COMMAND ${write_if_different} Bindings/${basename}Prototype.h ../LibJS/CodeGenerators/WrapperGenerator --prototype-header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
+            VERBATIM
+            DEPENDS WrapperGenerator
+            MAIN_DEPENDENCY ${class}.idl
     )
     add_custom_command(
-        OUTPUT Bindings/${basename}Prototype.cpp
-        COMMAND ${write_if_different} Bindings/${basename}Prototype.cpp CodeGenerators/WrapperGenerator --prototype-implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
+            OUTPUT Bindings/${basename}Prototype.cpp
+            COMMAND ${write_if_different} Bindings/${basename}Prototype.cpp ../LibJS/CodeGenerators/WrapperGenerator --prototype-implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
+            VERBATIM
+            DEPENDS WrapperGenerator
+            MAIN_DEPENDENCY ${class}.idl
     )
     add_custom_target(generate_${basename}Wrapper.h DEPENDS Bindings/${class}Wrapper.h)
     add_custom_target(generate_${basename}Wrapper.cpp DEPENDS Bindings/${class}Wrapper.cpp)
@@ -391,55 +391,55 @@ get_property(WRAPPER_SOURCES GLOBAL PROPERTY wrapper_sources)
 set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})
 
 add_custom_command(
-    OUTPUT CSS/PropertyID.h
-    COMMAND ${write_if_different} CSS/PropertyID.h CodeGenerators/Generate_CSS_PropertyID_h ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json
-    VERBATIM
-    DEPENDS Generate_CSS_PropertyID_h
-    MAIN_DEPENDENCY CSS/Properties.json
+        OUTPUT CSS/PropertyID.h
+        COMMAND ${write_if_different} CSS/PropertyID.h CodeGenerators/Generate_CSS_PropertyID_h ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json
+        VERBATIM
+        DEPENDS Generate_CSS_PropertyID_h
+        MAIN_DEPENDENCY CSS/Properties.json
 )
 add_custom_target(generate_PropertyID.h DEPENDS CSS/PropertyID.h)
 
 add_custom_command(
-    OUTPUT CSS/PropertyID.cpp
-    COMMAND ${CMAKE_COMMAND} -E make_directory CSS
-    COMMAND ${write_if_different} CSS/PropertyID.cpp CodeGenerators/Generate_CSS_PropertyID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json
-    VERBATIM
-    DEPENDS Generate_CSS_PropertyID_cpp
-    MAIN_DEPENDENCY CSS/Properties.json
+        OUTPUT CSS/PropertyID.cpp
+        COMMAND ${CMAKE_COMMAND} -E make_directory CSS
+        COMMAND ${write_if_different} CSS/PropertyID.cpp CodeGenerators/Generate_CSS_PropertyID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json
+        VERBATIM
+        DEPENDS Generate_CSS_PropertyID_cpp
+        MAIN_DEPENDENCY CSS/Properties.json
 )
 
 add_custom_command(
-    OUTPUT CSS/ValueID.h
-    COMMAND ${write_if_different} CSS/ValueID.h CodeGenerators/Generate_CSS_ValueID_h ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json
-    VERBATIM
-    DEPENDS Generate_CSS_ValueID_h
-    MAIN_DEPENDENCY CSS/Identifiers.json
+        OUTPUT CSS/ValueID.h
+        COMMAND ${write_if_different} CSS/ValueID.h CodeGenerators/Generate_CSS_ValueID_h ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json
+        VERBATIM
+        DEPENDS Generate_CSS_ValueID_h
+        MAIN_DEPENDENCY CSS/Identifiers.json
 )
 add_custom_target(generate_ValueID.h DEPENDS CSS/ValueID.h)
 
 add_custom_command(
-    OUTPUT CSS/ValueID.cpp
-    COMMAND ${CMAKE_COMMAND} -E make_directory CSS
-    COMMAND ${write_if_different} CSS/ValueID.cpp CodeGenerators/Generate_CSS_ValueID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json
-    VERBATIM
-    DEPENDS Generate_CSS_ValueID_cpp
-    MAIN_DEPENDENCY CSS/Identifiers.json
+        OUTPUT CSS/ValueID.cpp
+        COMMAND ${CMAKE_COMMAND} -E make_directory CSS
+        COMMAND ${write_if_different} CSS/ValueID.cpp CodeGenerators/Generate_CSS_ValueID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json
+        VERBATIM
+        DEPENDS Generate_CSS_ValueID_cpp
+        MAIN_DEPENDENCY CSS/Identifiers.json
 )
 
 add_custom_command(
-    OUTPUT CSS/DefaultStyleSheetSource.cpp
-    COMMAND ${write_if_different} CSS/DefaultStyleSheetSource.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh default_stylesheet_source ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Default.css
-    VERBATIM
-    DEPENDS Scripts/GenerateStyleSheetSource.sh
-    MAIN_DEPENDENCY CSS/Default.css
+        OUTPUT CSS/DefaultStyleSheetSource.cpp
+        COMMAND ${write_if_different} CSS/DefaultStyleSheetSource.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh default_stylesheet_source ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Default.css
+        VERBATIM
+        DEPENDS Scripts/GenerateStyleSheetSource.sh
+        MAIN_DEPENDENCY CSS/Default.css
 )
 
 add_custom_command(
-    OUTPUT CSS/QuirksModeStyleSheetSource.cpp
-    COMMAND ${write_if_different} CSS/QuirksModeStyleSheetSource.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh quirks_mode_stylesheet_source ${CMAKE_CURRENT_SOURCE_DIR}/CSS/QuirksMode.css
-    VERBATIM
-    DEPENDS Scripts/GenerateStyleSheetSource.sh
-    MAIN_DEPENDENCY CSS/Default.css
+        OUTPUT CSS/QuirksModeStyleSheetSource.cpp
+        COMMAND ${write_if_different} CSS/QuirksModeStyleSheetSource.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh quirks_mode_stylesheet_source ${CMAKE_CURRENT_SOURCE_DIR}/CSS/QuirksMode.css
+        VERBATIM
+        DEPENDS Scripts/GenerateStyleSheetSource.sh
+        MAIN_DEPENDENCY CSS/Default.css
 )
 
 serenity_lib(LibWeb web)
