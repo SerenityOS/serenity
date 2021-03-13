@@ -48,7 +48,7 @@ static int stat(const char* file, bool should_follow_links)
     if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
         printf("  Device: %u,%u\n", major(st.st_rdev), minor(st.st_rdev));
     else
-        printf("    Size: %zd\n", st.st_size);
+        printf("    Size: %lld\n", st.st_size);
     printf("   Links: %u\n", st.st_nlink);
     printf("  Blocks: %u\n", st.st_blocks);
     printf("     UID: %u", st.st_uid);

@@ -312,7 +312,7 @@ static bool print_filesystem_object(const String& path, const String& name, cons
         if (flag_human_readable) {
             printf(" %10s ", human_readable_size((size_t)st.st_size).characters());
         } else {
-            printf(" %10zd ", st.st_size);
+            printf(" %10lld ", st.st_size);
         }
     }
 

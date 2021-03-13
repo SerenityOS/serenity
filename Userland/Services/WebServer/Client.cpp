@@ -240,7 +240,7 @@ void Client::handle_directory_listing(const String& requested_path, const String
         builder.append(escape_html_entities(name));
         builder.append("</a></td><td>&nbsp;</td>");
 
-        builder.appendf("<td>%10zd</td><td>&nbsp;</td>", st.st_size);
+        builder.appendf("<td>%10lld</td><td>&nbsp;</td>", st.st_size);
         builder.append("<td>");
         builder.append(Core::DateTime::from_timestamp(st.st_mtime).to_string());
         builder.append("</td>");
