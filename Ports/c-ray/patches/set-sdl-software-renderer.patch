@@ -1,13 +1,11 @@
-diff --git a/src/utils/ui.c b/src/utils/ui.c
-index afcb4fc..3713b87 100644
---- a/src/utils/ui.c
-+++ b/src/utils/ui.c
-@@ -63,7 +63,7 @@ int initSDL(struct display *d) {
- 		return -1;
+--- c-ray-master/src/utils/ui.c	2021-03-13 00:30:25.488000000 +0100
++++ c-ray-master/src/utils/ui.c	2021-03-13 00:30:41.056572879 +0100
+@@ -120,7 +120,7 @@
+ 		return;
  	}
  	//Init renderer
--	d->renderer = SDL_CreateRenderer(d->window, -1, SDL_RENDERER_ACCELERATED);
-+	d->renderer = SDL_CreateRenderer(d->window, -1, SDL_RENDERER_SOFTWARE);
- 	if (d->renderer == NULL) {
+-	gdisplay->renderer = SDL_CreateRenderer(gdisplay->window, -1, SDL_RENDERER_ACCELERATED);
++	gdisplay->renderer = SDL_CreateRenderer(gdisplay->window, -1, SDL_RENDERER_SOFTWARE);
+ 	if (gdisplay->renderer == NULL) {
  		logr(warning, "Renderer couldn't be created, error: \"%s\"\n", SDL_GetError());
- 		return -1;
+ 		destroyDisplay();
