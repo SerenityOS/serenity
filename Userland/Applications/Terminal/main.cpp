@@ -457,6 +457,9 @@ int main(int argc, char** argv)
         }));
 
     auto& view_menu = menubar->add_menu("View");
+    view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        window->set_fullscreen(!window->is_fullscreen());
+    }));
     view_menu.add_action(terminal.clear_including_history_action());
     view_menu.add_separator();
     view_menu.add_action(pick_font_action);
