@@ -177,7 +177,7 @@ int fesetround(int rounding_mode)
     return 0;
 }
 
-int feclearexcepts(int exceptions)
+int feclearexcept(int exceptions)
 {
     exceptions &= FE_ALL_EXCEPT;
 
