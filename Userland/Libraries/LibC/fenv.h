@@ -70,7 +70,7 @@ typedef uint16_t fexcept_t;
 int fegetexceptflag(fexcept_t*, int exceptions);
 int fesetexceptflag(const fexcept_t*, int exceptions);
 
-int feclearexcepts(int exceptions);
+int feclearexcept(int exceptions);
 int fetestexcept(int exceptions);
 int feraiseexcept(int exceptions);
 
