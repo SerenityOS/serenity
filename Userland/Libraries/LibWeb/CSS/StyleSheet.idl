@@ -1,6 +1,7 @@
 module Web::Bindings;
 
 import "../Bindings/LibWeb.idl";
+import "../DOM/DOM.idl";
 import "LibWeb/CSS/StyleSheet.h";
 
 interface StyleSheet {

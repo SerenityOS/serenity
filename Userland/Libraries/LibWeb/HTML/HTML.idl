@@ -1,0 +1,4 @@
+import "../Bindings/LibWeb.idl";
+
+import "LibWeb/HTML/EventHandler.h";
+import "LibWeb/HTML/HTMLElement.h";

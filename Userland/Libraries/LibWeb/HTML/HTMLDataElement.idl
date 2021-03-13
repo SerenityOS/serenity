@@ -1,6 +1,6 @@
 module Web::Bindings;
 
-import "../Bindings/LibWeb.idl";
+import "HTML.idl";
 import "LibWeb/HTML/HTMLDataElement.h";
 
 interface HTMLDataElement : HTMLElement {

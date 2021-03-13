@@ -1,0 +1,8 @@
+import "../Bindings/LibWeb.idl";
+
+// These are used anywhere the DOM is used.
+import "LibWeb/DOM/DOMException.h";
+import "LibWeb/DOM/Element.h";
+import "LibWeb/DOM/EventListener.h";
+import "LibWeb/DOM/Range.h";
+import "LibWeb/DOM/Window.h";

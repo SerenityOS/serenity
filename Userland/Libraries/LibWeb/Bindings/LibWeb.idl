@@ -1,3 +1,11 @@
 module Web::Bindings;
 
 import "LibWeb/Bindings/Wrapper.h";
+import "LibJS/Runtime/Array.h";
+import "LibJS/Runtime/Error.h";
+import "LibJS/Runtime/Function.h";
+import "LibJS/Runtime/GlobalObject.h";
+import "LibJS/Runtime/Uint8ClampedArray.h";
+import "LibJS/Runtime/Value.h";
+import "LibWeb/Bindings/ExceptionOrUtils.h";
+import "LibWeb/Bindings/WindowObject.h";

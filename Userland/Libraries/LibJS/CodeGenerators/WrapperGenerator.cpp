@@ -834,32 +834,8 @@ void generate_implementation(const IDL::Interface& interface)
 
     generator.append(R"~~~(
 #include <AK/FlyString.h>
-#include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
-#include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Uint8ClampedArray.h>
-#include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
-#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
-#include <LibWeb/Bindings/CommentWrapper.h>
-#include <LibWeb/Bindings/DOMImplementationWrapper.h>
-#include <LibWeb/Bindings/DocumentFragmentWrapper.h>
-#include <LibWeb/Bindings/DocumentTypeWrapper.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
-#include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
-#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
-#include <LibWeb/Bindings/ImageDataWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/TextWrapper.h>
-#include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/Origin.h>
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
@@ -972,29 +948,9 @@ void generate_constructor_implementation(const IDL::Interface& interface)
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     generator.append(R"~~~(
-#include <LibJS/Heap/Heap.h>
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
-#include <LibWeb/Bindings/WindowObject.h>
-#if __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#endif
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
@@ -1174,60 +1130,11 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 
     generator.append(R"~~~(
 #include <AK/Function.h>
-#include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
-#include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Uint8ClampedArray.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
-#include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
-#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
-#include <LibWeb/Bindings/CommentWrapper.h>
-#include <LibWeb/Bindings/DOMImplementationWrapper.h>
-#include <LibWeb/Bindings/DocumentFragmentWrapper.h>
-#include <LibWeb/Bindings/DocumentTypeWrapper.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
-#include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
-#include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
-#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
-#include <LibWeb/Bindings/ImageDataWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/PerformanceTimingWrapper.h>
-#include <LibWeb/Bindings/RangeWrapper.h>
-#include <LibWeb/Bindings/StyleSheetListWrapper.h>
-#include <LibWeb/Bindings/TextWrapper.h>
-#include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/DOM/Range.h>
-#include <LibWeb/DOM/Window.h>
-#include <LibWeb/HTML/EventHandler.h>
-#include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/NavigationTiming/PerformanceTiming.h>
-#include <LibWeb/Origin.h>
 
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
 #    include <LibWeb/Bindings/@prototype_base_class@.h>
-#endif
-#if __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
 #endif
 
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
