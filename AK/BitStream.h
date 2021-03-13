@@ -152,6 +152,12 @@ public:
     void write_bits(u32 bits, size_t count)
     {
         VERIFY(count <= 32);
+
+        if (count == 32 && !m_next_byte.has_value()) { // fast path for aligned 32 bit writes
+            m_stream << bits;
+            return;
+        }
+
         size_t n_written = 0;
         while (n_written < count) {
             if (m_stream.has_any_error()) {
@@ -167,6 +173,12 @@ public:
                     m_stream << m_next_byte.value();
                     m_next_byte.clear();
                 }
+            } else if (count - n_written >= 16) { // fast path for aligned 16 bit writes
+                m_stream << (u16)((bits >> n_written) & 0xFFFF);
+                n_written += 16;
+            } else if (count - n_written >= 8) { // fast path for aligned 8 bit writes
+                m_stream << (u8)((bits >> n_written) & 0xFF);
+                n_written += 8;
             } else {
                 m_bit_offset = 0;
                 m_next_byte = 0;
