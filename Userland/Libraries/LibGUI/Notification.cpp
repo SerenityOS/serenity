@@ -34,23 +34,28 @@ namespace GUI {
 class NotificationServerConnection : public IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>
     , public NotificationClientEndpoint {
     C_OBJECT(NotificationServerConnection)
+
+    friend class Notification;
+
 public:
     virtual void handshake() override
     {
         send_sync<Messages::NotificationServer::Greet>();
     }
 
-    virtual void die() override { m_connected = false; }
-
-    bool is_connected() const { return m_connected; }
+    virtual void die() override
+    {
+        m_notification->connection_closed();
+    }
 
 private:
-    NotificationServerConnection()
+    explicit NotificationServerConnection(Notification* notification)
         : IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>(*this, "/tmp/portal/notify")
+        , m_notification(notification)
     {
     }
     virtual void handle(const Messages::NotificationClient::Dummy&) override { }
-    bool m_connected { true };
+    Notification* m_notification;
 };
 
 Notification::Notification()
@@ -63,25 +68,27 @@ Notification::~Notification()
 
 void Notification::show()
 {
-    VERIFY(!m_connection);
+    VERIFY(!m_shown && !m_destroyed);
     auto icon = m_icon ? m_icon->to_shareable_bitmap() : Gfx::ShareableBitmap();
-    m_connection = NotificationServerConnection::construct();
+    m_connection = NotificationServerConnection::construct(this);
     m_connection->send_sync<Messages::NotificationServer::ShowNotification>(m_text, m_title, icon);
+    m_shown = true;
 }
 
 void Notification::close()
 {
-    VERIFY(m_connection);
-    if (!m_connection->is_connected()) {
+    VERIFY(m_shown);
+    if (!m_destroyed) {
+        m_connection->send_sync<Messages::NotificationServer::CloseNotification>();
+        connection_closed();
         return;
     }
-    m_connection->send_sync<Messages::NotificationServer::CloseNotification>();
 }
 
 bool Notification::update()
 {
-    VERIFY(m_connection);
-    if (!m_connection->is_connected()) {
+    VERIFY(m_shown);
+    if (m_destroyed) {
         return false;
     }
 
@@ -97,6 +104,12 @@ bool Notification::update()
     }
 
     return true;
+}
+
+void Notification::connection_closed()
+{
+    m_connection.clear();
+    m_destroyed = true;
 }
 
 }
