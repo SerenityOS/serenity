@@ -105,10 +105,14 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
         if (m_state == State::Normal) {
             auto key = lexer.consume_until(' ');
             consume_whitespace();
+
             DefinedValue value;
+            value.line = m_line_index;
+
             auto string_value = lexer.consume_all();
             if (!string_value.is_empty())
                 value.value = string_value;
+
             m_definitions.set(key, value);
         }
         return;
