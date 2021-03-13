@@ -445,6 +445,11 @@ double tan(double angle) NOEXCEPT
     return ampsin(angle) / ampsin(M_PI_2 + angle);
 }
 
+float tanf(float angle) NOEXCEPT
+{
+    return (float)tan((double)angle);
+}
+
 double sqrt(double x) NOEXCEPT
 {
     double res;
