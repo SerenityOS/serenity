@@ -1,19 +1,11 @@
-diff --git a/src/libraries/asprintf.h b/src/libraries/asprintf.h
-index 70a95ac..0e46c3c 100644
---- a/src/libraries/asprintf.h
-+++ b/src/libraries/asprintf.h
-@@ -33,7 +33,6 @@ int vscprintf(const char *format, va_list ap) {
+--- c-ray-master/src/libraries/asprintf.h	2021-03-13 00:16:23.782000000 +0100
++++ c-ray-master/src/libraries/asprintf.h	2021-03-13 00:16:41.350553067 +0100
+@@ -33,7 +33,7 @@
   * GNU-C-compatible compilers implement these with the same names, thus we
   * don't have to do anything
   */
 -#ifdef _MSC_VER
++#if defined(_MSC_VER) || defined(__serenity__)
  int cray_vasprintf(char **strp, const char *format, va_list ap) {
  	int len = vscprintf(format, ap);
  	if (len == -1)
-@@ -57,6 +56,5 @@ int asprintf(char **strp, const char *format, ...) {
- 	va_end(ap);
- 	return retval;
- }
--#endif
- 
- #endif // ASPRINTF_H

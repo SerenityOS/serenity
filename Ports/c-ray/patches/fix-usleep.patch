@@ -1,27 +1,20 @@
-diff --git a/src/utils/timer.c b/src/utils/timer.c
-index 9978a99..c94d33d 100644
---- a/src/utils/timer.c
-+++ b/src/utils/timer.c
-@@ -48,20 +48,13 @@ long getUs(struct timeval timer) {
+--- c-ray-master/src/utils/timer.c	2021-03-13 00:26:36.846000000 +0100
++++ c-ray-master/src/utils/timer.c	2021-03-13 00:27:29.453478737 +0100
+@@ -48,7 +48,7 @@
  	return ((tmr2.tv_sec - timer.tv_sec) * 1000000) + (tmr2.tv_usec - timer.tv_usec);
  }
  
-+#include <unistd.h>
-+
- /**
-  Sleep for a given amount of milliseconds
-  
-  @param ms Milliseconds to sleep for
-  */
- void sleepMSec(int ms) {
--#ifdef WINDOWS
--	Sleep(ms);
--#elif __APPLE__
--	struct timespec ts;
--	ts.tv_sec = ms / 1000;
--	ts.tv_nsec = (ms % 1000) * 1000000;
--	nanosleep(&ts, NULL);
+-#ifdef __linux__
++#if defined(__linux__) || defined(__serenity__)
+ #define _BSD_SOURCE
+ #include <unistd.h>
+ #endif
+@@ -66,7 +66,7 @@
+ 	ts.tv_sec = ms / 1000;
+ 	ts.tv_nsec = (ms % 1000) * 1000000;
+ 	nanosleep(&ts, NULL);
 -#elif __linux__
++#elif defined(__linux__) || defined(__serenity__)
  	usleep(ms * 1000);
--#endif
+ #endif
  }
