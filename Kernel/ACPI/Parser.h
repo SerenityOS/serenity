@@ -30,12 +30,35 @@
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
 namespace ACPI {
+
+class ExposedFolder : public SysFSExposedFolder {
+public:
+    static void initialize();
+
+private:
+    ExposedFolder();
+};
+
+class ExposedComponent : public SysFSExposedComponent {
+public:
+    static NonnullRefPtr<ExposedComponent> create(String name, PhysicalAddress, size_t table_size);
+
+    virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const override;
+
+protected:
+    OwnPtr<KBuffer> try_to_generate_buffer() const;
+    ExposedComponent(String name, PhysicalAddress, size_t table_size);
+
+    PhysicalAddress m_paddr;
+    size_t m_length;
+};
 
 class Parser {
 public:

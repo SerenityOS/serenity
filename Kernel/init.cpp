@@ -28,10 +28,10 @@
 #include <Kernel/ACPI/DynamicParser.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
+#include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/DMI.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/I8042Controller.h>
@@ -45,6 +45,7 @@
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
+#include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
@@ -246,6 +247,8 @@ void init_stage2(void*)
     SyncTask::spawn();
     FinalizerTask::spawn();
 
+    SystemRegistrar::initialize();
+
     PCI::initialize();
     auto boot_profiling = kernel_command_line().is_boot_profiling_enabled();
     auto is_text_mode = kernel_command_line().is_text_mode();
@@ -277,8 +280,8 @@ void init_stage2(void*)
 #if ARCH(I386)
     USB::UHCIController::detect();
 #endif
-
-    DMIExpose::initialize();
+    BIOSExposedFolder::initialize();
+    ACPI::ExposedFolder::initialize();
 
     E1000NetworkAdapter::detect();
     NE2000NetworkAdapter::detect();

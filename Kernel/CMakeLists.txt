@@ -28,7 +28,6 @@ set(KERNEL_SOURCES
     CommandLine.cpp
     Console.cpp
     CoreDump.cpp
-    DMI.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/BXVGADevice.cpp
     Devices/BlockDevice.cpp
@@ -82,6 +81,7 @@ set(KERNEL_SOURCES
     FileSystem/InodeWatcher.cpp
     FileSystem/Plan9FileSystem.cpp
     FileSystem/ProcFS.cpp
+    FileSystem/SysFS.cpp
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp
     FutexQueue.cpp
