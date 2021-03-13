@@ -808,7 +808,7 @@ public:
             return;
         }
 
-        rules.append(CSS::CSSStyleRule::create(move(current_rule.selectors), CSS::StyleDeclaration::create(move(current_rule.properties))));
+        rules.append(CSS::CSSStyleRule::create(move(current_rule.selectors), CSS::CSSStyleDeclaration::create(move(current_rule.properties))));
     }
 
     Optional<String> parse_string()
@@ -947,7 +947,7 @@ public:
         return CSS::CSSStyleSheet::create(move(rules));
     }
 
-    RefPtr<CSS::StyleDeclaration> parse_standalone_declaration()
+    RefPtr<CSS::CSSStyleDeclaration> parse_standalone_declaration()
     {
         consume_whitespace_or_comments();
         for (;;) {
@@ -958,7 +958,7 @@ public:
             if (!peek())
                 break;
         }
-        return CSS::StyleDeclaration::create(move(current_rule.properties));
+        return CSS::CSSStyleDeclaration::create(move(current_rule.properties));
     }
 
 private:
@@ -993,10 +993,10 @@ RefPtr<CSS::CSSStyleSheet> parse_css(const CSS::ParsingContext& context, const S
     return parser.parse_sheet();
 }
 
-RefPtr<CSS::StyleDeclaration> parse_css_declaration(const CSS::ParsingContext& context, const StringView& css)
+RefPtr<CSS::CSSStyleDeclaration> parse_css_declaration(const CSS::ParsingContext& context, const StringView& css)
 {
     if (css.is_empty())
-        return CSS::StyleDeclaration::create({});
+        return CSS::CSSStyleDeclaration::create({});
     CSSParser parser(context, css);
     return parser.parse_standalone_declaration();
 }

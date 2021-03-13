@@ -30,11 +30,11 @@
 namespace Web::CSS {
 class CSSRule;
 class CSSImportRule;
+class CSSStyleDeclaration;
 class CSSStyleRule;
 class CSSStyleSheet;
 class Length;
 class Selector;
-class StyleDeclaration;
 class StyleProperties;
 class StyleResolver;
 class StyleSheet;

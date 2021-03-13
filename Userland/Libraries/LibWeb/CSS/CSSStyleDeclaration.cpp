@@ -24,35 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/CSSStyleDeclaration.h>
 
 namespace Web::CSS {
 
-struct StyleProperty {
-    CSS::PropertyID property_id;
-    NonnullRefPtr<StyleValue> value;
-    bool important { false };
-};
+CSSStyleDeclaration::CSSStyleDeclaration(Vector<StyleProperty>&& properties)
+    : m_properties(move(properties))
+{
+}
 
-class StyleDeclaration : public RefCounted<StyleDeclaration> {
-public:
-    static NonnullRefPtr<StyleDeclaration> create(Vector<StyleProperty>&& properties)
-    {
-        return adopt(*new StyleDeclaration(move(properties)));
-    }
-
-    ~StyleDeclaration();
-
-    const Vector<StyleProperty>& properties() const { return m_properties; }
-
-private:
-    explicit StyleDeclaration(Vector<StyleProperty>&&);
-
-    Vector<StyleProperty> m_properties;
-};
+CSSStyleDeclaration::~CSSStyleDeclaration()
+{
+}
 
 }
