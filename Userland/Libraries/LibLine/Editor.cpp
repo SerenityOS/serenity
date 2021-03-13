@@ -159,6 +159,8 @@ void Editor::set_default_keybinds()
     register_key_input_callback(ctrl('F'), EDITOR_INTERNAL_FUNCTION(cursor_right_character));
     // ^H: ctrl('H') == '\b'
     register_key_input_callback(ctrl('H'), EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
+    // DEL - Some terminals send this instead of ^H.
+    register_key_input_callback((char)127, EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
     register_key_input_callback(m_termios.c_cc[VERASE], EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
     register_key_input_callback(ctrl('K'), EDITOR_INTERNAL_FUNCTION(erase_to_end));
     register_key_input_callback(ctrl('L'), EDITOR_INTERNAL_FUNCTION(clear_screen));
