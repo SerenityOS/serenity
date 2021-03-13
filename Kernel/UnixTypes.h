@@ -424,9 +424,7 @@ struct sigaction {
 #define CLD_STOPPED 4
 #define CLD_CONTINUED 5
 
-#define OFF_T_MAX 2147483647
-
-typedef ssize_t off_t;
+typedef i64 off_t;
 typedef i64 time_t;
 
 struct utimbuf {

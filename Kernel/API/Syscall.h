@@ -244,7 +244,7 @@ struct SC_mmap_params {
     int32_t prot;
     int32_t flags;
     int32_t fd;
-    ssize_t offset;
+    int64_t offset;
     StringArgument name;
 };
 
