@@ -29,8 +29,8 @@
 
 #include <AK/NonnullRefPtrVector.h>
 #include <LibWeb/CSS/CSSRule.h>
+#include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Selector.h>
-#include <LibWeb/CSS/StyleDeclaration.h>
 
 namespace Web::CSS {
 
@@ -39,7 +39,7 @@ class CSSStyleRule : public CSSRule {
     AK_MAKE_NONMOVABLE(CSSStyleRule);
 
 public:
-    static NonnullRefPtr<CSSStyleRule> create(Vector<Selector>&& selectors, NonnullRefPtr<StyleDeclaration>&& declaration)
+    static NonnullRefPtr<CSSStyleRule> create(Vector<Selector>&& selectors, NonnullRefPtr<CSSStyleDeclaration>&& declaration)
     {
         return adopt(*new CSSStyleRule(move(selectors), move(declaration)));
     }
@@ -47,16 +47,16 @@ public:
     ~CSSStyleRule();
 
     const Vector<Selector>& selectors() const { return m_selectors; }
-    const StyleDeclaration& declaration() const { return m_declaration; }
+    const CSSStyleDeclaration& declaration() const { return m_declaration; }
 
     virtual StringView class_name() const { return "CSSStyleRule"; };
     virtual Type type() const { return Type::Style; };
 
 private:
-    CSSStyleRule(Vector<Selector>&&, NonnullRefPtr<StyleDeclaration>&&);
+    CSSStyleRule(Vector<Selector>&&, NonnullRefPtr<CSSStyleDeclaration>&&);
 
     Vector<Selector> m_selectors;
-    NonnullRefPtr<StyleDeclaration> m_declaration;
+    NonnullRefPtr<CSSStyleDeclaration> m_declaration;
 };
 
 }
