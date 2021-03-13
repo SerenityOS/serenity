@@ -31,8 +31,9 @@
 #include <ctype.h>
 
 namespace Cpp {
-Preprocessor::Preprocessor(const StringView& program)
-    : m_program(program)
+Preprocessor::Preprocessor(const String& filename, const StringView& program)
+    : m_filename(filename)
+    , m_program(program)
 {
     m_lines = m_program.split_view('\n', true);
 }
@@ -107,6 +108,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
             consume_whitespace();
 
             DefinedValue value;
+            value.filename = m_filename;
             value.line = m_line_index;
 
             auto string_value = lexer.consume_all();

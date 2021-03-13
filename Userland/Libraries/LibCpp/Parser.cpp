@@ -54,6 +54,7 @@ Parser::Parser(const StringView& program, const String& filename, Preprocessor::
     }
 #endif
 }
+
 void Parser::initialize_program_tokens(const StringView& program)
 {
     Lexer lexer(program);
@@ -63,6 +64,7 @@ void Parser::initialize_program_tokens(const StringView& program)
         if (token.type() == Token::Type::Identifier) {
             if (auto defined_value = m_definitions.find(text_of_token(token)); defined_value != m_definitions.end()) {
                 add_tokens_for_preprocessor(token, defined_value->value);
+                m_replaced_preprocessor_tokens.append({ token, defined_value->value });
                 continue;
             }
         }
