@@ -91,6 +91,11 @@ static void prepare_devfs()
         VERIFY_NOT_REACHED();
     }
 
+    rc = mount(-1, "/sys", "sys", 0);
+    if (rc != 0) {
+        VERIFY_NOT_REACHED();
+    }
+
     rc = mkdir("/dev/pts", 0755);
     if (rc != 0) {
         VERIFY_NOT_REACHED();
