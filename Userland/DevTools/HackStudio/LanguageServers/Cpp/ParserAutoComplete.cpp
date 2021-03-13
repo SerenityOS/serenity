@@ -163,6 +163,13 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(c
             suggestions.append({ name.to_string(), partial_text.length(), GUI::AutocompleteProvider::CompletionKind::Identifier });
         }
     }
+
+    for (auto& preprocessor_name : document.parser().definitions().keys()) {
+        if (preprocessor_name.starts_with(partial_text)) {
+            suggestions.append({ preprocessor_name.to_string(), partial_text.length(), GUI::AutocompleteProvider::CompletionKind::PreprocessorDefinition });
+        }
+    }
+
     return suggestions;
 }
 
@@ -275,9 +282,11 @@ NonnullRefPtrVector<Declaration> ParserAutoComplete::get_declarations_in_outer_s
             continue;
         declarations.append(get_declarations_in_outer_scope_including_headers(*included_document));
     }
+
     for (auto& decl : document.parser().root_node()->declarations()) {
         declarations.append(decl);
     }
+
     return declarations;
 }
 
@@ -374,6 +383,11 @@ void ParserAutoComplete::update_declared_symbols(const DocumentData& document)
     for (auto& decl : document.parser().root_node()->declarations()) {
         declarations.append({ decl.name(), { document.filename(), decl.start().line, decl.start().column }, type_of_declaration(decl) });
     }
+
+    for (auto& definition : document.preprocessor().definitions()) {
+        declarations.append({ definition.key, { document.filename(), definition.value.line, definition.value.column }, GUI::AutocompleteProvider::DeclarationType::PreprocessorDefinition });
+    }
+
     set_declarations_of_document(document.filename(), move(declarations));
 }
 
@@ -403,7 +417,6 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
         all_definitions.set(move(item.key), move(item.value));
 
     for (auto include : document_data->preprocessor().included_paths()) {
-
         auto included_document = get_or_create_document_data(document_path_from_include_path(include));
         if (!included_document)
             continue;

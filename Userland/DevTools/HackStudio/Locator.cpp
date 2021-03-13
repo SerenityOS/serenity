@@ -86,6 +86,7 @@ public:
                 static GUI::Icon class_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Class.png"));
                 static GUI::Icon function_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Function.png"));
                 static GUI::Icon variable_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Variable.png"));
+                static GUI::Icon preprocessor_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Preprocessor.png"));
                 switch (suggestion.as_symbol_declaration.value().type) {
                 case GUI::AutocompleteProvider::DeclarationType::Struct:
                     return struct_icon;
@@ -95,6 +96,8 @@ public:
                     return function_icon;
                 case GUI::AutocompleteProvider::DeclarationType::Variable:
                     return variable_icon;
+                case GUI::AutocompleteProvider::DeclarationType::PreprocessorDefinition:
+                    return preprocessor_icon;
                 }
                 return {};
             }

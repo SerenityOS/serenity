@@ -42,6 +42,7 @@ public:
 
     enum class CompletionKind {
         Identifier,
+        PreprocessorDefinition,
     };
 
     enum class Language {
@@ -66,7 +67,8 @@ public:
         Function,
         Struct,
         Class,
-        Variable
+        Variable,
+        PreprocessorDefinition,
     };
 
     struct Declaration {

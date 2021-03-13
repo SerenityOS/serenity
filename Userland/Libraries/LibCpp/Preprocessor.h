@@ -43,6 +43,8 @@ public:
 
     struct DefinedValue {
         Optional<StringView> value;
+        size_t line {0};
+        size_t column {0};
     };
     using Definitions = HashMap<StringView, DefinedValue>;
 
