@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLStyleElement.h";
+
 interface HTMLStyleElement : HTMLElement {
 
     [Reflect] attribute DOMString media;

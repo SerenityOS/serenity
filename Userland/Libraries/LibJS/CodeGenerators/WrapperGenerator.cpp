@@ -147,6 +147,7 @@ struct Attribute {
 struct Interface {
     String name;
     String parent_name;
+    String module_name;
 
     Vector<Attribute> attributes;
     Vector<Constant> constants;
@@ -160,6 +161,8 @@ struct Interface {
     String constructor_class;
     String prototype_class;
     String prototype_base_class;
+    HashTable<String> imported_headers;
+    HashTable<String> imported_idls;
 };
 
 static OwnPtr<Interface> parse_interface(StringView filename, const StringView& input)
@@ -190,7 +193,66 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
             report_parsing_error(String::formatted("expected '{}'", expected), filename, input, lexer.tell());
     };
 
-    assert_string("interface");
+    for (;;) {
+        consume_whitespace();
+        if (lexer.consume_specific("import ")) {
+            consume_whitespace();
+            auto path = lexer.consume_quoted_string('\\');
+            if (path.is_empty())
+                report_parsing_error("expected a quoted path to either an IDL file or a header file", filename, input, lexer.tell());
+            consume_whitespace();
+            assert_specific(';');
+            if (path.is_empty())
+                continue;
+            LexicalPath lexical_path { path };
+            if (!lexical_path.has_extension("idl") && !lexical_path.has_extension(".h")) {
+                report_parsing_error(String::formatted("expected a quoted path to either an IDL file or a header file, but found '{}'", path), filename, input, lexer.tell());
+                continue;
+            }
+
+            if (lexical_path.has_extension(".h"))
+                interface->imported_headers.set(path);
+            else
+                interface->imported_idls.set(path);
+
+            continue;
+        }
+
+        if (lexer.consume_specific("module ")) {
+            auto do_set = true;
+            if (!interface->module_name.is_empty()) {
+                do_set = false;
+                report_parsing_error(String::formatted("redeclaration of interface module name, previous declaration was '{}'", interface->module_name), filename, input, lexer.tell());
+            }
+            consume_whitespace();
+
+            auto name = lexer.consume_while([](auto c) { return isalnum(c) || c == ':'; });
+            auto parts = name.split_view("::");
+            for (auto& part : parts) {
+                if (part.is_empty() || !isalpha(part[0]) || part.contains(':')) {
+                    report_parsing_error(String::formatted("Module name contains invalid component '{}'", part), filename, input, lexer.tell() - name.length());
+                    do_set = false;
+                }
+            }
+            consume_whitespace();
+            assert_specific(';');
+
+            if (do_set)
+                interface->module_name = name;
+
+            continue;
+        }
+
+        break;
+    }
+
+    if (!lexer.consume_specific("interface")) {
+        consume_whitespace();
+        if (lexer.is_eof())
+            return interface;
+
+        report_parsing_error("expected 'interface'", filename, input, lexer.tell());
+    }
     consume_whitespace();
     interface->name = lexer.consume_until([](auto ch) { return isspace(ch); });
     consume_whitespace();
@@ -373,6 +435,52 @@ static void generate_prototype_implementation(const IDL::Interface&);
 static void generate_header(const IDL::Interface&);
 static void generate_implementation(const IDL::Interface&);
 
+static auto load_idl(const auto& path)
+{
+    struct Result {
+        String namespace_;
+        OwnPtr<IDL::Interface> interface;
+    };
+
+    auto file_or_error = Core::File::open(path, Core::IODevice::ReadOnly);
+    if (file_or_error.is_error())
+        return Result {};
+
+    LexicalPath lexical_path(path);
+    auto namespace_ = lexical_path.parts().at(lexical_path.parts().size() - 2);
+
+    auto data = file_or_error.value()->read_all();
+    auto interface = IDL::parse_interface(path, data);
+
+    return Result { move(namespace_), move(interface) };
+};
+
+static bool resolve(IDL::Interface& interface, HashTable<String> loaded_interfaces, String dirname)
+{
+    for (auto& idl : interface.imported_idls) {
+        auto path = String::formatted("{}/{}", dirname, idl);
+        if (loaded_interfaces.contains(path))
+            continue;
+
+        auto [_, imported_interface] = load_idl(path);
+
+        if (!imported_interface) {
+            warnln("Cannot open/parse imported file {}", path);
+            return false;
+        }
+
+        loaded_interfaces.set(path);
+        if (!resolve(*imported_interface, loaded_interfaces, dirname))
+            return false;
+
+        for (auto& entry : imported_interface->imported_headers) {
+            interface.imported_headers.set(entry);
+        }
+    }
+
+    return true;
+}
+
 int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
@@ -392,22 +500,15 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(path, "IDL file", "idl-file");
     args_parser.parse(argc, argv);
 
-    auto file_or_error = Core::File::open(path, Core::IODevice::ReadOnly);
-    if (file_or_error.is_error()) {
-        fprintf(stderr, "Cannot open %s\n", path);
-        return 1;
-    }
-
-    LexicalPath lexical_path(path);
-    auto namespace_ = lexical_path.parts().at(lexical_path.parts().size() - 2);
-
-    auto data = file_or_error.value()->read_all();
-    auto interface = IDL::parse_interface(path, data);
+    auto [namespace_, interface] = load_idl(path);
 
     if (!interface) {
-        warnln("Cannot parse {}", path);
+        warnln("Cannot open/parse {}", path);
         return 1;
     }
+
+    if (!resolve(*interface, {}, LexicalPath { path }.dirname()))
+        return 1;
 
     if (namespace_.is_one_of("CSS", "DOM", "HTML", "UIEvents", "HighResolutionTime", "NavigationTiming", "SVG", "XHR")) {
         StringBuilder builder;
@@ -641,6 +742,7 @@ static void generate_header(const IDL::Interface& interface)
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    generator.set("toplevel_module", interface.module_name);
     generator.set("name", interface.name);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("wrapper_base_class", interface.wrapper_base_class);
@@ -650,27 +752,15 @@ static void generate_header(const IDL::Interface& interface)
     generator.append(R"~~~(
 #pragma once
 
-#include <LibWeb/Bindings/Wrapper.h>
-
-// FIXME: This is very strange.
-#if __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#endif
 )~~~");
+
+    for (auto& included_header : interface.imported_headers) {
+        auto forked_generator = generator.fork();
+        forked_generator.set("included_path", included_header);
+        forked_generator.append(R"~~~(
+#include <@included_path@>
+)~~~");
+    }
 
     if (interface.wrapper_base_class != "Wrapper") {
         generator.append(R"~~~(
@@ -679,7 +769,7 @@ static void generate_header(const IDL::Interface& interface)
     }
 
     generator.append(R"~~~(
-namespace Web::Bindings {
+namespace @toplevel_module@ {
 
 class @wrapper_class@ : public @wrapper_base_class@ {
     JS_OBJECT(@wrapper_class@, @wrapper_base_class@);
@@ -724,7 +814,7 @@ private:
     }
 
     generator.append(R"~~~(
-} // namespace Web::Bindings
+} // namespace @toplevel_module@
 )~~~");
 
     outln("{}", generator.as_string_view());
@@ -735,6 +825,7 @@ void generate_implementation(const IDL::Interface& interface)
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    generator.set("toplevel_module", interface.module_name);
     generator.set("name", interface.name);
     generator.set("wrapper_class", interface.wrapper_class);
     generator.set("wrapper_base_class", interface.wrapper_base_class);
@@ -775,7 +866,7 @@ using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::HTML;
 
-namespace Web::Bindings {
+namespace @toplevel_module@ {
 
 @wrapper_class@* @wrapper_class@::create(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
 {
@@ -823,7 +914,7 @@ void @wrapper_class@::initialize(JS::GlobalObject& global_object)
     }
 
     generator.append(R"~~~(
-} // namespace Web::Bindings
+} // namespace @toplevel_module@
 )~~~");
 
     outln("{}", generator.as_string_view());
@@ -834,6 +925,7 @@ static void generate_constructor_header(const IDL::Interface& interface)
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    generator.set("toplevel_module", interface.module_name);
     generator.set("name", interface.name);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("constructor_class", interface.constructor_class);
@@ -844,7 +936,7 @@ static void generate_constructor_header(const IDL::Interface& interface)
 
 #include <LibJS/Runtime/NativeFunction.h>
 
-namespace Web::Bindings {
+namespace @toplevel_module@ {
 
 class @constructor_class@ : public JS::NativeFunction {
     JS_OBJECT(@constructor_class@, JS::NativeFunction);
@@ -860,7 +952,7 @@ private:
     virtual bool has_constructor() const override { return true; }
 };
 
-} // namespace Web::Bindings
+} // namespace @toplevel_module@
 )~~~");
 
     outln("{}", generator.as_string_view());
@@ -871,6 +963,7 @@ void generate_constructor_implementation(const IDL::Interface& interface)
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    generator.set("toplevel_module", interface.module_name);
     generator.set("name", interface.name);
     generator.set("prototype_class", interface.prototype_class);
     generator.set("wrapper_class", interface.wrapper_class);
@@ -908,7 +1001,7 @@ using namespace Web::CSS;
 using namespace Web::DOM;
 using namespace Web::HTML;
 
-namespace Web::Bindings {
+namespace @toplevel_module@ {
 
 @constructor_class@::@constructor_class@(JS::GlobalObject& global_object)
     : NativeFunction(*global_object.function_prototype())
@@ -1000,7 +1093,7 @@ define_property("@constant.name@", JS::Value((i32)@constant.value@), JS::Attribu
     generator.append(R"~~~(
 }
 
-} // namespace Web::Bindings
+} // namespace @toplevel_module@
 )~~~");
 
     outln("{}", generator.as_string_view());
@@ -1011,6 +1104,7 @@ static void generate_prototype_header(const IDL::Interface& interface)
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    generator.set("toplevel_module", interface.module_name);
     generator.set("name", interface.name);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("prototype_class", interface.prototype_class);
@@ -1021,7 +1115,7 @@ static void generate_prototype_header(const IDL::Interface& interface)
 
 #include <LibJS/Runtime/Object.h>
 
-namespace Web::Bindings {
+namespace @toplevel_module@ {
 
 class @prototype_class@ : public JS::Object {
     JS_OBJECT(@prototype_class@, JS::Object);
@@ -1057,7 +1151,7 @@ private:
     generator.append(R"~~~(
 };
 
-} // namespace Web::Bindings
+} // namespace @toplevel_module@
     )~~~");
 
     outln("{}", generator.as_string_view());
@@ -1068,6 +1162,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
     StringBuilder builder;
     SourceGenerator generator { builder };
 
+    generator.set("toplevel_module", interface.module_name);
     generator.set("name", interface.name);
     generator.set("parent_name", interface.parent_name);
     generator.set("prototype_class", interface.prototype_class);
@@ -1142,7 +1237,7 @@ using namespace Web::HTML;
 using namespace Web::NavigationTiming;
 using namespace Web::XHR;
 
-namespace Web::Bindings {
+namespace @toplevel_module@ {
 
 @prototype_class@::@prototype_class@(JS::GlobalObject& global_object)
     : Object(*global_object.object_prototype())
@@ -1437,7 +1532,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@function.name:snakecase@)
     }
 
     generator.append(R"~~~(
-} // namespace Web::Bindings
+} // namespace @toplevel_module@
 )~~~");
 
     outln("{}", generator.as_string_view());

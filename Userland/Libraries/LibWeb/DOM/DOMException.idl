@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/DOM/DOMException.h";
+
 interface DOMException {
 
     // FIXME: Support parameter default values in WrapperGenerator

@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLCanvasElement.h";
+
 interface HTMLCanvasElement : HTMLElement {
 
     CanvasRenderingContext2D? getContext(DOMString contextId);

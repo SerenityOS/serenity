@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/DOM/DocumentFragment.h";
+
 interface DocumentFragment : Node {
 
     Element? getElementById(DOMString id);

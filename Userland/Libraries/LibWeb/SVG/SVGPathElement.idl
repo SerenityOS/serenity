@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/SVG/SVGPathElement.h";
+
 interface SVGPathElement : SVGGeometryElement {
 
 };

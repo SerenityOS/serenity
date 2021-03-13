@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLImageElement.h";
+
 interface HTMLImageElement : HTMLElement {
 
     [Reflect] attribute DOMString src;

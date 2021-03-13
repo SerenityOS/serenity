@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLEmbedElement.h";
+
 interface HTMLEmbedElement : HTMLElement {
 
     [Reflect] attribute DOMString src;

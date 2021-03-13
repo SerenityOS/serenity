@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLLabelElement.h";
+
 interface HTMLLabelElement : HTMLElement {
 
     [Reflect=for] attribute DOMString htmlFor;

@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLAreaElement.h";
+
 interface HTMLAreaElement : HTMLElement {
 
     [Reflect=nohref] attribute boolean noHref;

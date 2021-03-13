@@ -1,0 +1,3 @@
+module Web::Bindings;
+
+import "LibWeb/Bindings/Wrapper.h";

@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLButtonElement.h";
+
 interface HTMLButtonElement : HTMLElement {
 
     [Reflect=formnovalidate] attribute boolean formNoValidate;

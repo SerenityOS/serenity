@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/CSS/CSSStyleSheet.h";
+
 interface CSSStyleSheet : StyleSheet {
     // readonly attribute CSSRule? ownerRule;
     // [SameObject] readonly attribute CSSRuleList cssRules;

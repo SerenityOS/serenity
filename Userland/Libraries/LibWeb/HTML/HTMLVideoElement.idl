@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLVideoElement.h";
+
 interface HTMLVideoElement : HTMLMediaElement {
 
     [Reflect] attribute DOMString poster;

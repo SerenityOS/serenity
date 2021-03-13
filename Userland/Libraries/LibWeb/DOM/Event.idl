@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/DOM/Event.h";
+
 interface Event {
 
     // FIXME: second parameter: 'optional EventInit eventInitDict = {}'

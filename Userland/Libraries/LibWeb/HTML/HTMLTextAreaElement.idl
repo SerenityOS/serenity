@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLTextAreaElement.h";
+
 interface HTMLTextAreaElement : HTMLElement {
 
     [Reflect] attribute DOMString placeholder;

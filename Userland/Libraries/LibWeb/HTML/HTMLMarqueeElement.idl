@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLMarqueeElement.h";
+
 interface HTMLMarqueeElement : HTMLElement {
 
     [Reflect] attribute DOMString behaviour;

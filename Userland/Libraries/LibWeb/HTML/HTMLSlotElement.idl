@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLSlotElement.h";
+
 interface HTMLSlotElement : HTMLElement {
 
     [Reflect] attribute DOMString name;

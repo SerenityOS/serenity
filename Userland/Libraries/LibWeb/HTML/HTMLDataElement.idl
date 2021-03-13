@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLDataElement.h";
+
 interface HTMLDataElement : HTMLElement {
 
     [Reflect] attribute DOMString value;

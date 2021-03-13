@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLTrackElement.h";
+
 interface HTMLTrackElement : HTMLElement {
 
     [Reflect] attribute DOMString src;

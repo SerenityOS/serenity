@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/DOM/EventTarget.h";
+
 interface EventTarget {
 
     undefined addEventListener(DOMString type, EventListener? callback);

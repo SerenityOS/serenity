@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/ImageData.h";
+
 interface ImageData {
 
     readonly attribute unsigned long width;

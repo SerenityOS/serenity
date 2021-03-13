@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLProgressElement.h";
+
 interface HTMLProgressElement : HTMLElement {
 
 

@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/XHR/XMLHttpRequest.h";
+
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
     constructor();

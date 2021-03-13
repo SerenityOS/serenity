@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLBodyElement.h";
+
 interface HTMLBodyElement : HTMLElement {
 
     [LegacyNullToEmptyString, Reflect] attribute DOMString text;

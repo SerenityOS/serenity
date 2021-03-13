@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLUListElement.h";
+
 interface HTMLUListElement : HTMLElement {
 
     [Reflect] attribute boolean compact;

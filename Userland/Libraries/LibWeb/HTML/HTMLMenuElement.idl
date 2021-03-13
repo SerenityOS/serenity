@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HTML/HTMLMenuElement.h";
+
 interface HTMLMenuElement : HTMLElement {
 
     [Reflect] attribute boolean compact;

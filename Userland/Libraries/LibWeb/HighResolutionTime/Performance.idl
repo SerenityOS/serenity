@@ -1,3 +1,8 @@
+module Web::Bindings;
+
+import "../Bindings/LibWeb.idl";
+import "LibWeb/HighResolutionTime/Performance.h";
+
 interface Performance : EventTarget {
     double now();
     readonly attribute double timeOrigin;
