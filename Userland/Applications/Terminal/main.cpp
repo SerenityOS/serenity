@@ -27,6 +27,8 @@
 #include <AK/URL.h>
 #include <Applications/Terminal/TerminalSettingsWindowGML.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/ConfigFile.h>
+#include <LibCore/File.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -347,6 +349,7 @@ int main(int argc, char** argv)
     }
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
+    Core::File::ensure_parent_directories(config->file_name());
 
     pid_t shell_pid = 0;
 
@@ -502,7 +505,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil(config->file_name().characters(), "rwc")) {
+    if (unveil(config->file_name().characters(), "rwc") < 0) {
         perror("unveil");
         return 1;
     }
