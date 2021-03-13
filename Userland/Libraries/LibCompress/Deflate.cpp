@@ -578,15 +578,13 @@ ALWAYS_INLINE u8 DeflateCompressor::distance_to_base(u16 distance)
 }
 
 template<size_t Size>
-void DeflateCompressor::generate_huffman_lengths(Array<u8, Size>& lengths, const Array<u16, Size>& frequencies, size_t max_bit_length)
+void DeflateCompressor::generate_huffman_lengths(Array<u8, Size>& lengths, const Array<u16, Size>& frequencies, size_t max_bit_length, u16 frequency_cap)
 {
     VERIFY((1u << max_bit_length) >= Size);
     u16 heap_keys[Size]; // Used for O(n) heap construction
     u16 heap_values[Size];
 
     u16 huffman_links[Size * 2 + 1] = { 0 };
-    u16 frequency_cap = UINT16_MAX;
-try_again:
     size_t non_zero_freqs = 0;
     for (size_t i = 0; i < Size; i++) {
         auto frequency = frequencies[i];
@@ -644,8 +642,7 @@ try_again:
 
         if (bit_length > max_bit_length) {
             VERIFY(frequency_cap != 1);
-            frequency_cap /= 2;
-            goto try_again; // FIXME: gotos are ugly, but i cant think of a good way to flatten this
+            return generate_huffman_lengths(lengths, frequencies, max_bit_length, frequency_cap / 2);
         }
 
         lengths[i] = bit_length;
