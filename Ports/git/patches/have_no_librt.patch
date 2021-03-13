@@ -1,0 +1,12 @@
+--- git-2.26.0/config.mak.uname.orig	2021-03-13 13:30:24.439217597 +0100
++++ git-2.26.0/config.mak.uname	2021-03-13 13:30:32.747203874 +0100
+@@ -52,7 +52,8 @@
+ 	HAVE_CLOCK_GETTIME = YesPlease
+ 	HAVE_CLOCK_MONOTONIC = YesPlease
+ 	# -lrt is needed for clock_gettime on glibc <= 2.16
+-	NEEDS_LIBRT = YesPlease
++	# But not when cross-compiling for Serenity.
++	# NEEDS_LIBRT = YesPlease
+ 	HAVE_GETDELIM = YesPlease
+ 	SANE_TEXT_GREP=-a
+ 	FREAD_READS_DIRECTORIES = UnfortunatelyYes
