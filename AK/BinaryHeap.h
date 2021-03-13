@@ -39,8 +39,10 @@ public:
     {
         VERIFY(size <= Capacity);
         m_size = size;
-        __builtin_memcpy(m_keys, keys, size * sizeof(K));
-        __builtin_memcpy(m_values, values, size * sizeof(V));
+        for (size_t i = 0; i < size; i++) {
+            m_elements[i].key = keys[i];
+            m_elements[i].value = values[i];
+        }
 
         for (ssize_t i = size / 2; i >= 0; i--) {
             heapify_down(i);
@@ -54,8 +56,8 @@ public:
     {
         VERIFY(m_size < Capacity);
         auto index = m_size++;
-        m_keys[index] = key;
-        m_values[index] = value;
+        m_elements[index].key = key;
+        m_elements[index].value = value;
         heapify_up(index);
     }
 
@@ -63,22 +65,21 @@ public:
     {
         VERIFY(!is_empty());
         auto index = --m_size;
-        swap(m_keys[0], m_keys[index]);
-        swap(m_values[0], m_values[index]);
+        swap(m_elements[0], m_elements[index]);
         heapify_down(0);
-        return m_values[index];
+        return m_elements[index].value;
     }
 
     const V& peek_min() const
     {
         VERIFY(!is_empty());
-        return m_values[0];
+        return m_elements[0].value;
     }
 
-    const V& peek_min_key() const
+    const K& peek_min_key() const
     {
         VERIFY(!is_empty());
-        return m_keys[0];
+        return m_elements[0].key;
     }
 
     void clear()
@@ -94,13 +95,12 @@ private:
             auto right_child = index * 2 + 2;
 
             auto min_child = left_child;
-            if (right_child < m_size && m_keys[right_child] < m_keys[min_child])
+            if (right_child < m_size && m_elements[right_child].key < m_elements[min_child].key)
                 min_child = right_child;
 
-            if (m_keys[index] <= m_keys[min_child])
+            if (m_elements[index].key <= m_elements[min_child].key)
                 break;
-            swap(m_keys[index], m_keys[min_child]);
-            swap(m_values[index], m_values[min_child]);
+            swap(m_elements[index], m_elements[min_child]);
             index = min_child;
         }
     }
@@ -110,16 +110,17 @@ private:
         while (index != 0) {
             auto parent = (index - 1) / 2;
 
-            if (m_keys[index] >= m_keys[parent])
+            if (m_elements[index].key >= m_elements[parent].key)
                 break;
-            swap(m_keys[index], m_keys[parent]);
-            swap(m_values[index], m_values[parent]);
+            swap(m_elements[index], m_elements[parent]);
             index = parent;
         }
     }
 
-    K m_keys[Capacity];
-    V m_values[Capacity];
+    struct {
+        K key;
+        V value;
+    } m_elements[Capacity];
     size_t m_size { 0 };
 };
 
