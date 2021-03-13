@@ -30,7 +30,6 @@ set(KERNEL_SOURCES
     CommandLine.cpp
     ConsoleDevice.cpp
     CoreDump.cpp
-    DMI.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
@@ -107,6 +106,7 @@ set(KERNEL_SOURCES
     FileSystem/InodeWatcher.cpp
     FileSystem/Plan9FileSystem.cpp
     FileSystem/ProcFS.cpp
+    FileSystem/SysFS.cpp
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp
     FutexQueue.cpp
@@ -225,6 +225,7 @@ set(KERNEL_SOURCES
     Syscalls/waitid.cpp
     Syscalls/inode_watcher.cpp
     Syscalls/write.cpp
+    SystemExposed.cpp
     TTY/ConsoleManagement.cpp
     TTY/MasterPTY.cpp
     TTY/PTYMultiplexer.cpp
