@@ -276,7 +276,6 @@ public:
     KResultOr<int> sys$dump_backtrace();
     KResultOr<pid_t> sys$gettid();
     KResultOr<int> sys$donate(pid_t tid);
-    KResultOr<int> sys$ftruncate(int fd, off_t);
     KResultOr<pid_t> sys$setsid();
     KResultOr<pid_t> sys$getsid(pid_t);
     KResultOr<int> sys$setpgid(pid_t pid, pid_t pgid);
@@ -299,7 +298,8 @@ public:
     KResultOr<ssize_t> sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count);
     KResultOr<int> sys$fstat(int fd, Userspace<stat*>);
     KResultOr<int> sys$stat(Userspace<const Syscall::SC_stat_params*>);
-    KResultOr<int> sys$lseek(int fd, off_t, int whence);
+    KResultOr<int> sys$lseek(int fd, Userspace<off_t*>, int whence);
+    KResultOr<int> sys$ftruncate(int fd, Userspace<off_t*>);
     KResultOr<int> sys$kill(pid_t pid_or_pgid, int sig);
     [[noreturn]] void sys$exit(int status);
     KResultOr<int> sys$sigreturn(RegisterState& registers);

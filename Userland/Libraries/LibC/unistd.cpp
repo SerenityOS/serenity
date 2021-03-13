@@ -440,8 +440,8 @@ ssize_t readlink(const char* path, char* buffer, size_t size)
 
 off_t lseek(int fd, off_t offset, int whence)
 {
-    int rc = syscall(SC_lseek, fd, offset, whence);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    int rc = syscall(SC_lseek, fd, &offset, whence);
+    __RETURN_WITH_ERRNO(rc, offset, -1);
 }
 
 int link(const char* old_path, const char* new_path)
@@ -633,7 +633,7 @@ char* getlogin()
 
 int ftruncate(int fd, off_t length)
 {
-    int rc = syscall(SC_ftruncate, fd, length);
+    int rc = syscall(SC_ftruncate, fd, &length);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
