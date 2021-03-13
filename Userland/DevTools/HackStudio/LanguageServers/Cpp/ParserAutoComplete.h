@@ -106,6 +106,7 @@ private:
     String document_path_from_include_path(const StringView& include_path) const;
     void update_declared_symbols(const DocumentData&);
     GUI::AutocompleteProvider::DeclarationType type_of_declaration(const Declaration&);
+    Optional<GUI::AutocompleteProvider::ProjectLocation> find_preprocessor_definition(const DocumentData&, const GUI::TextPosition&);
 
     OwnPtr<DocumentData> create_document_data(String&& text, const String& filename);
 

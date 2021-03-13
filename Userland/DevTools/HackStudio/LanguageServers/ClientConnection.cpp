@@ -135,6 +135,7 @@ void ClientConnection::handle(const Messages::LanguageServer::FindDeclaration& m
         dbgln("could not find declaration");
         return;
     }
+
     dbgln_if(LANGUAGE_SERVER_DEBUG, "declaration location: {} {}:{}", location.value().file, location.value().line, location.value().column);
     post_message(Messages::LanguageClient::DeclarationLocation(GUI::AutocompleteProvider::ProjectLocation { location.value().file, location.value().line, location.value().column }));
 }
