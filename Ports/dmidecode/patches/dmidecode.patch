@@ -6,11 +6,11 @@ diff -u b/dmidecode.c b/dmidecode.c
  #define FLAG_STOP_AT_EOT        (1 << 1)
  
 -#define SYS_FIRMWARE_DIR "/sys/firmware/dmi/tables"
-+#define SYS_FIRMWARE_DIR "/proc"
++#define SYS_FIRMWARE_DIR "/sys/bios"
  #define SYS_ENTRY_FILE SYS_FIRMWARE_DIR "/smbios_entry_point"
  #define SYS_TABLE_FILE SYS_FIRMWARE_DIR "/DMI"
  
-@@ -3654,8 +3654,6 @@
+@@ -3654,7 +3654,5 @@
  {
  	if (addrtype == 0x1) /* IPv4 */
  		return inet_ntop(AF_INET, data, storage, 64);
@@ -18,36 +18,3 @@ diff -u b/dmidecode.c b/dmidecode.c
 -		return inet_ntop(AF_INET6, data, storage, 64);
  	return out_of_spec;
  }
- 
-@@ -5278,7 +5276,7 @@
- 	if ((flags & FLAG_NO_FILE_OFFSET) || (opt.flags & FLAG_FROM_DUMP))
- 	{
- 		/*
--		 * When reading from sysfs or from a dump file, the file may be
-+		 * When reading from procfs or from a dump file, the file may be
- 		 * shorter than announced. For SMBIOS v3 this is expcted, as we
- 		 * only know the maximum table size, not the actual table size.
- 		 * For older implementations (and for SMBIOS v3 too), this
-@@ -5647,11 +5645,11 @@
- 	 * the largest one, then determine what type it contains.
- 	 */
- 	size = 0x20;
--	if (!(opt.flags & FLAG_NO_SYSFS)
-+	if (!(opt.flags & FLAG_NO_PROCFS)
- 	 && (buf = read_file(0, &size, SYS_ENTRY_FILE)) != NULL)
- 	{
- 		if (!(opt.flags & FLAG_QUIET))
--			pr_info("Getting SMBIOS data from sysfs.");
-+			pr_info("Getting SMBIOS data from procfs.");
- 		if (size >= 24 && memcmp(buf, "_SM3_", 5) == 0)
- 		{
- 			if (smbios3_decode(buf, SYS_TABLE_FILE, FLAG_NO_FILE_OFFSET))
-@@ -5671,7 +5669,7 @@
- 		if (found)
- 			goto done;
- 		if (!(opt.flags & FLAG_QUIET))
--			pr_info("Failed to get SMBIOS data from sysfs.");
-+			pr_info("Failed to get SMBIOS data from procfs.");
- 	}
- 
- 	/* Next try EFI (ia64, Intel-based Mac, arm64) */
