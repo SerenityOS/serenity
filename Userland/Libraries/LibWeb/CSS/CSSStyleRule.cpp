@@ -28,7 +28,7 @@
 
 namespace Web::CSS {
 
-CSSStyleRule::CSSStyleRule(Vector<Selector>&& selectors, NonnullRefPtr<StyleDeclaration>&& declaration)
+CSSStyleRule::CSSStyleRule(Vector<Selector>&& selectors, NonnullRefPtr<CSSStyleDeclaration>&& declaration)
     : m_selectors(move(selectors))
     , m_declaration(move(declaration))
 {

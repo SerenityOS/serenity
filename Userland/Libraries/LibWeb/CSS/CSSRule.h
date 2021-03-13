@@ -28,8 +28,8 @@
 
 #include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Selector.h>
-#include <LibWeb/CSS/StyleDeclaration.h>
 
 namespace Web::CSS {
 
