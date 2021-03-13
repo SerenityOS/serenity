@@ -9,9 +9,9 @@
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/x86/Processor.h>
+#include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/DMI.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/MemoryDevice.h>
@@ -24,6 +24,7 @@
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
+#include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/SlabAllocator.h>
@@ -146,6 +147,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
     ACPI::initialize();
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
+    SystemRegistrar::initialize();
     PCI::initialize();
     PCISerialDevice::detect();
 
@@ -237,7 +239,8 @@ void init_stage2(void*)
 
     USB::UHCIController::detect();
 
-    DMIExpose::initialize();
+    BIOSExposedFolder::initialize();
+    ACPI::ExposedFolder::initialize();
 
     VirtIO::detect();
 
