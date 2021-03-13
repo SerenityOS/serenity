@@ -14,7 +14,6 @@
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/ConsoleDevice.h>
-#include <Kernel/DMI.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
@@ -73,8 +72,6 @@ enum ProcFileType {
     FI_Root_cpuinfo,
     FI_Root_dmesg,
     FI_Root_interrupts,
-    FI_Root_dmi,
-    FI_Root_smbios_entry_point,
     FI_Root_keymap,
     FI_Root_pci,
     FI_Root_devices,
@@ -385,24 +382,6 @@ static bool procfs$pci(InodeIdentifier, KBufferBuilder& builder)
         obj.add("subsystem_vendor_id", PCI::get_subsystem_vendor_id(address));
     });
     array.finish();
-    return true;
-}
-
-static bool procfs$dmi(InodeIdentifier, KBufferBuilder& builder)
-{
-    if (!DMIExpose::the().is_available())
-        return false;
-    auto structures_ptr = DMIExpose::the().structure_table();
-    builder.append_bytes(ReadonlyBytes { structures_ptr->data(), structures_ptr->size() });
-    return true;
-}
-
-static bool procfs$smbios_entry_point(InodeIdentifier, KBufferBuilder& builder)
-{
-    if (!DMIExpose::the().is_available())
-        return false;
-    auto structures_ptr = DMIExpose::the().entry_point();
-    builder.append_bytes(ReadonlyBytes { structures_ptr->data(), structures_ptr->size() });
     return true;
 }
 
@@ -1265,14 +1244,6 @@ InodeMetadata ProcFSInode::metadata() const
     case FI_PID_stacks:
         metadata.mode = S_IFDIR | S_IRUSR | S_IXUSR;
         break;
-    case FI_Root_smbios_entry_point:
-        metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
-        metadata.size = DMIExpose::the().entry_point_length();
-        break;
-    case FI_Root_dmi:
-        metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
-        metadata.size = DMIExpose::the().structure_table_length();
-        break;
     default:
         metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
         break;
@@ -1788,8 +1759,6 @@ ProcFS::ProcFS()
     m_entries[FI_Root_self] = { "self", FI_Root_self, false, procfs$self };
     m_entries[FI_Root_pci] = { "pci", FI_Root_pci, false, procfs$pci };
     m_entries[FI_Root_interrupts] = { "interrupts", FI_Root_interrupts, false, procfs$interrupts };
-    m_entries[FI_Root_dmi] = { "DMI", FI_Root_dmi, false, procfs$dmi };
-    m_entries[FI_Root_smbios_entry_point] = { "smbios_entry_point", FI_Root_smbios_entry_point, false, procfs$smbios_entry_point };
     m_entries[FI_Root_keymap] = { "keymap", FI_Root_keymap, false, procfs$keymap };
     m_entries[FI_Root_devices] = { "devices", FI_Root_devices, false, procfs$devices };
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, false, procfs$uptime };
