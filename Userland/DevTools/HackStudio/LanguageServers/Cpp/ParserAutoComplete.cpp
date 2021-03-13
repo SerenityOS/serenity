@@ -343,10 +343,26 @@ Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_de
         return {};
     }
     auto decl = find_declaration_of(document, *node);
-    if (!decl)
-        return {};
+    if (decl)
+        return GUI::AutocompleteProvider::ProjectLocation { decl->filename(), decl->start().line, decl->start().column };
 
-    return GUI::AutocompleteProvider::ProjectLocation { decl->filename(), decl->start().line, decl->start().column };
+    return find_preprocessor_definition(document, identifier_position);
+}
+
+Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_preprocessor_definition(const DocumentData& document, const GUI::TextPosition& text_position)
+{
+    Position cpp_position { text_position.line(), text_position.column() };
+
+    // Search for a replaced preprocessor token that intersects with text_position
+    for (auto& replaced_token : document.parser().replaced_preprocessor_tokens()) {
+        if (replaced_token.token.start() > cpp_position)
+            continue;
+        if (replaced_token.token.end() < cpp_position)
+            continue;
+
+        return GUI::AutocompleteProvider::ProjectLocation { replaced_token.preprocessor_value.filename, replaced_token.preprocessor_value.line, replaced_token.preprocessor_value.column };
+    }
+    return {};
 }
 
 RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& document_data, const ASTNode& node) const
@@ -409,7 +425,7 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     auto document_data = make<DocumentData>();
     document_data->m_filename = move(filename);
     document_data->m_text = move(text);
-    document_data->m_preprocessor = make<Preprocessor>(document_data->text());
+    document_data->m_preprocessor = make<Preprocessor>(document_data->m_filename, document_data->text());
     document_data->preprocessor().process();
 
     Preprocessor::Definitions all_definitions;

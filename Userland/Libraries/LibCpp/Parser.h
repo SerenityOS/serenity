@@ -56,6 +56,12 @@ public:
     Vector<String> errors() const { return m_errors; }
     const Preprocessor::Definitions& definitions() const { return m_definitions; }
 
+    struct TokenAndPreprocessorDefinition {
+        Token token;
+        Preprocessor::DefinedValue preprocessor_value;
+    };
+    const Vector<TokenAndPreprocessorDefinition>& replaced_preprocessor_tokens() const { return m_replaced_preprocessor_tokens; }
+
 private:
     enum class DeclarationType {
         Function,
@@ -171,6 +177,8 @@ private:
     RefPtr<TranslationUnit> m_root_node;
     NonnullRefPtrVector<ASTNode> m_nodes;
     Vector<String> m_errors;
+
+    Vector<TokenAndPreprocessorDefinition> m_replaced_preprocessor_tokens;
 };
 
 }
