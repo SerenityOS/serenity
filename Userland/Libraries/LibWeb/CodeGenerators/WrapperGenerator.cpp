@@ -1086,6 +1086,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibJS/Runtime/Uint8ClampedArray.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
 #include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>

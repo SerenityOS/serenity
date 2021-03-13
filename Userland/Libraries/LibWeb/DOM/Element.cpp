@@ -380,4 +380,11 @@ void Element::set_shadow_root(RefPtr<ShadowRoot> shadow_root)
     invalidate_style();
 }
 
+NonnullRefPtr<CSS::CSSStyleDeclaration> Element::style_for_bindings()
+{
+    if (!m_inline_style)
+        m_inline_style = CSS::CSSStyleDeclaration::create({});
+    return *m_inline_style;
+}
+
 }
