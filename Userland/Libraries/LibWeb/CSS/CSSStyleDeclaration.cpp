@@ -37,4 +37,11 @@ CSSStyleDeclaration::~CSSStyleDeclaration()
 {
 }
 
+String CSSStyleDeclaration::item(size_t index) const
+{
+    if (index >= m_properties.size())
+        return {};
+    return CSS::string_from_property_id(m_properties[index].property_id);
+}
+
 }

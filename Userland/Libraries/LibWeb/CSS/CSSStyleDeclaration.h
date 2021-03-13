@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
@@ -38,8 +39,12 @@ struct StyleProperty {
     bool important { false };
 };
 
-class CSSStyleDeclaration : public RefCounted<CSSStyleDeclaration> {
+class CSSStyleDeclaration
+    : public RefCounted<CSSStyleDeclaration>
+    , public Bindings::Wrappable {
 public:
+    using WrapperType = Bindings::CSSStyleDeclarationWrapper;
+
     static NonnullRefPtr<CSSStyleDeclaration> create(Vector<StyleProperty>&& properties)
     {
         return adopt(*new CSSStyleDeclaration(move(properties)));
@@ -49,10 +54,19 @@ public:
 
     const Vector<StyleProperty>& properties() const { return m_properties; }
 
+    size_t length() const { return m_properties.size(); }
+    String item(size_t index) const;
+
 private:
     explicit CSSStyleDeclaration(Vector<StyleProperty>&&);
 
     Vector<StyleProperty> m_properties;
 };
+
+}
+
+namespace Web::Bindings {
+
+CSSStyleDeclarationWrapper* wrap(JS::GlobalObject&, CSS::CSSStyleDeclaration&);
 
 }

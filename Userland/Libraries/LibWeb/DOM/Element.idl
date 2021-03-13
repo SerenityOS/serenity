@@ -23,4 +23,6 @@ interface Element : Node {
 
     readonly attribute Element? nextElementSibling;
     readonly attribute Element? previousElementSibling;
+
+    [ImplementedAs=style_for_bindings] readonly attribute CSSStyleDeclaration style;
 };
