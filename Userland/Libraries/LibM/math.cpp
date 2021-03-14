@@ -868,6 +868,36 @@ long double roundl(long double value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::ToEven);
 }
 
+long lroundf(float value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long lround(double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long lroundl(long double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long long llroundf(float value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long long llround(double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
+long long llroundd(long double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode::ToEven);
+}
+
 float floorf(float value) NOEXCEPT
 {
     return internal_to_integer(value, RoundingMode::Down);
