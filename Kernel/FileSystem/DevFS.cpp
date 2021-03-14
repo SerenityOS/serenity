@@ -387,7 +387,7 @@ ssize_t DevFSDeviceInode::write_bytes(off_t offset, ssize_t count, const UserOrK
 {
     LOCKER(m_lock);
     VERIFY(!!description);
-    if (!m_attached_device->can_read(*description, offset))
+    if (!m_attached_device->can_write(*description, offset))
         return -EIO;
     auto nread = const_cast<Device&>(*m_attached_device).write(*description, offset, buffer, count);
     if (nread.is_error())
