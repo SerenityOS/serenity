@@ -312,6 +312,34 @@ static FloatT internal_copysign(FloatT x, FloatT y) NOEXCEPT
     return ex.d;
 }
 
+template<typename FloatT>
+static FloatT internal_gamma(FloatT x) NOEXCEPT
+{
+    if (isnan(x))
+        return (FloatT)NAN;
+
+    if (x < (FloatT)0 && (((long long)x == x) || isinf(x)))
+        return (FloatT)NAN;
+
+    if (isinf(x))
+        return INFINITY;
+
+    using Extractor = FloatExtractor<FloatT>;
+    if ((long long)x == x) {
+        // These constants were obtained through use of WolframAlpha, they are (in order): 20!, 18!, 10!
+        constexpr auto max_factorial_that_fits = (Extractor::mantissa_bits == FloatExtractor<long double>::mantissa_bits ? 2'432'902'008'176'640'000ull : (Extractor::mantissa_bits == FloatExtractor<double>::mantissa_bits ? 6'402'373'705'728'000ull : (Extractor::mantissa_bits == FloatExtractor<float>::mantissa_bits ? 3'628'800ull : 0ull)));
+        static_assert(max_factorial_that_fits != 0, "internal_gamma needs to be aware of the integer factorial that fits in this floating point type.");
+        unsigned long long result = 1;
+        for (; result < max_factorial_that_fits; result++)
+            result *= result + 1;
+        return (FloatT)result;
+    }
+
+    // Approximation taken from: <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5840229/>
+    // Web archive link: <https://web.archive.org/web/20210314174210/https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5840229/>
+    return sqrtl(M_TAU * x) * powl(x / M_E, x) * powl(x * sinhl(1.0l / x), x / 2.0l) * expl((7.0l / 324.0l) * (1.0l / (powl(x, 3.0l) * (35.0l * powl(x, 2.0l) + 33.0l)))) - 1.0l;
+}
+
 extern "C" {
 
 float nanf(const char* s) NOEXCEPT
@@ -992,6 +1020,59 @@ double gamma(double x) NOEXCEPT
 {
     // Stirling approximation
     return sqrt(2.0 * M_PI / x) * pow(x / M_E, x);
+}
+
+long double tgammal(long double value) NOEXCEPT
+{
+    return internal_gamma(value);
+}
+
+double tgamma(double value) NOEXCEPT
+{
+    return internal_gamma(value);
+}
+
+float tgammaf(float value) NOEXCEPT
+{
+    return internal_gamma(value);
+}
+
+int signgam = 0;
+
+long double lgammal(long double value) NOEXCEPT
+{
+    return lgammal_r(value, &signgam);
+}
+
+double lgamma(double value) NOEXCEPT
+{
+    return lgamma_r(value, &signgam);
+}
+
+float lgammaf(float value) NOEXCEPT
+{
+    return lgammaf_r(value, &signgam);
+}
+
+long double lgammal_r(long double value, int* sign) NOEXCEPT
+{
+    long double result = logl(internal_gamma(value));
+    *sign = signbit(result);
+    return result;
+}
+
+double lgamma_r(double value, int* sign) NOEXCEPT
+{
+    double result = log(internal_gamma(value));
+    *sign = signbit(result);
+    return result;
+}
+
+float lgammaf_r(float value, int* sign) NOEXCEPT
+{
+    float result = logf(internal_gamma(value));
+    *sign = signbit(result);
+    return result;
 }
 
 long double expm1l(long double x) NOEXCEPT
