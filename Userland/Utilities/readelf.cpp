@@ -397,10 +397,10 @@ int main(int argc, char** argv)
             printf("There are no sections in this file.\n");
         } else {
             printf("Section Headers:\n");
-            printf("  Name            Type            Address  Offset   Size     Flags\n");
+            printf("  Name                Type            Address  Offset   Size     Flags\n");
 
             interpreter_image.for_each_section([](const ELF::Image::Section& section) {
-                printf("  %-15s ", StringView(section.name()).to_string().characters());
+                printf("  %-19s ", StringView(section.name()).to_string().characters());
                 printf("%-15s ", object_section_header_type_to_string(section.type()));
                 printf("%08x ", section.address());
                 printf("%08x ", section.offset());
