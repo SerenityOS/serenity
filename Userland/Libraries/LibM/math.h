@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <float.h>
 #include <limits.h>
 #include <sys/cdefs.h>
 
@@ -44,6 +45,7 @@ __BEGIN_DECLS
 #define HUGE_VAL 1e10000
 #define INFINITY __builtin_huge_val()
 #define NAN __builtin_nan("")
+#define MAXFLOAT FLT_MAX
 #define M_E 2.718281828459045
 #define M_PI 3.141592653589793
 #define M_PI_2 1.570796326794896
