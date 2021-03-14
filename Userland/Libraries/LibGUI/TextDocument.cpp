@@ -315,6 +315,8 @@ String TextDocument::text() const
 
 String TextDocument::text_in_range(const TextRange& a_range) const
 {
+    if (is_empty())
+        return String("");
     auto range = a_range.normalized();
 
     StringBuilder builder;
