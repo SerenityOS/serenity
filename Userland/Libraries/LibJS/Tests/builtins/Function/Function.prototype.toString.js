@@ -12,6 +12,6 @@ test("basic functionality", () => {
             return bar + 42;
         }.toString()
     ).toBe("function (foo, bar, baz) {\n  ???\n}");
-    expect(console.debug.toString()).toBe("function debug() {\n  [NativeFunction]\n}");
-    expect(Function.toString()).toBe("function Function() {\n  [FunctionConstructor]\n}");
+    expect(console.debug.toString()).toBe("function debug() {\n  [native code]\n}");
+    expect(Function.toString()).toBe("function Function() {\n  [native code]\n}");
 });
