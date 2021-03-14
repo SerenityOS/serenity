@@ -179,6 +179,16 @@ long double erfcl(long double) NOEXCEPT;
 double erfc(double) NOEXCEPT;
 float erfcf(float) NOEXCEPT;
 double gamma(double) NOEXCEPT;
+long double tgammal(long double) NOEXCEPT;
+double tgamma(double) NOEXCEPT;
+float tgammaf(float) NOEXCEPT;
+long double lgammal(long double) NOEXCEPT;
+double lgamma(double) NOEXCEPT;
+float lgammaf(float) NOEXCEPT;
+long double lgammal_r(long double, int*) NOEXCEPT;
+double lgamma_r(double, int*) NOEXCEPT;
+float lgammaf_r(float, int*) NOEXCEPT;
+extern int signgam;
 
 /* Nearest integer floating point operations */
 long double ceill(long double) NOEXCEPT;
