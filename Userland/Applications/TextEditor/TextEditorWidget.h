@@ -63,7 +63,7 @@ private:
     void update_preview();
     void update_markdown_preview();
     void update_html_preview();
-    void update_statusbar_cursor_position();
+    void update_statusbar();
 
     virtual void drop_event(GUI::DropEvent&) override;
 
