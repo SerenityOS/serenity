@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
@@ -33,6 +33,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringIterator.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
@@ -106,6 +107,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.split, split, 2, attr);
     define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
     define_native_function(vm.names.at, at, 1, attr);
+    define_native_function(vm.names.match, match, 1, attr);
     define_native_function(vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
 
@@ -649,6 +651,34 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
     if (vm.exception())
         return {};
     return StringIterator::create(global_object, string);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
+{
+    // https://tc39.es/ecma262/#sec-string.prototype.match
+    auto this_object = vm.this_value(global_object);
+    if (this_object.is_nullish()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
+        return {};
+    }
+    auto regexp = vm.argument(0);
+    if (!regexp.is_nullish()) {
+        if (auto* matcher = get_method(global_object, regexp, vm.well_known_symbol_match()))
+            return vm.call(*matcher, regexp, this_object);
+    }
+    auto s = this_object.to_primitive_string(global_object);
+    if (!s)
+        return {};
+    auto regexp_string = regexp.to_string(global_object);
+    if (regexp_string.is_null())
+        return {};
+    auto rx = regexp_create(global_object, regexp, js_undefined());
+    if (!rx)
+        return {};
+    auto* matcher = get_method(global_object, rx, vm.well_known_symbol_match());
+    if (!matcher)
+        return {};
+    return vm.call(*matcher, rx, this_object);
 }
 
 }
