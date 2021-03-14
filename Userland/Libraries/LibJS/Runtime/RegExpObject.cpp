@@ -180,7 +180,7 @@ RegExpObject* regexp_create(GlobalObject& global_object, Value pattern, Value fl
             return nullptr;
     }
     String f;
-    if (flags.is_empty()) {
+    if (flags.is_undefined()) {
         f = String::empty();
     } else {
         f = flags.to_string(global_object);
