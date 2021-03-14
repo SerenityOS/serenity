@@ -47,7 +47,7 @@
 namespace UserspaceEmulator {
 
 static constexpr u32 stack_location = 0x10000000;
-static constexpr size_t stack_size = 64 * KiB;
+static constexpr size_t stack_size = 1 * MiB;
 
 static Emulator* s_the;
 
