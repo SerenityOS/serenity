@@ -133,7 +133,19 @@ public:
     IndexedProperties& indexed_properties() { return m_indexed_properties; }
     void set_indexed_property_elements(Vector<Value>&& values) { m_indexed_properties = IndexedProperties(move(values)); }
 
-    Value invoke(const StringOrSymbol& property_name, Optional<MarkedValueList> arguments = {});
+    [[nodiscard]] Value invoke_internal(const StringOrSymbol& property_name, Optional<MarkedValueList> arguments);
+
+    template<typename... Args>
+    [[nodiscard]] ALWAYS_INLINE Value invoke(const StringOrSymbol& property_name, Args... args)
+    {
+        if constexpr (sizeof...(Args) > 0) {
+            MarkedValueList arglist { heap() };
+            (..., arglist.append(move(args)));
+            return invoke(property_name, move(arglist));
+        }
+
+        return invoke(property_name);
+    }
 
     void ensure_shape_is_unique();
 
@@ -164,5 +176,14 @@ private:
     Vector<Value> m_storage;
     IndexedProperties m_indexed_properties;
 };
+
+template<>
+[[nodiscard]] ALWAYS_INLINE Value Object::invoke(const StringOrSymbol& property_name, MarkedValueList arguments) { return invoke_internal(property_name, move(arguments)); }
+
+template<>
+[[nodiscard]] ALWAYS_INLINE Value Object::invoke(const StringOrSymbol& property_name, Optional<MarkedValueList> arguments) { return invoke_internal(property_name, move(arguments)); }
+
+template<>
+[[nodiscard]] ALWAYS_INLINE Value Object::invoke(const StringOrSymbol& property_name) { return invoke(property_name, Optional<MarkedValueList> {}); }
 
 }
