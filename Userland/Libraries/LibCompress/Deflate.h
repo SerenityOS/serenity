@@ -190,10 +190,10 @@ private:
     template<size_t Size>
     static void generate_huffman_lengths(Array<u8, Size>& lengths, const Array<u16, Size>& frequencies, size_t max_bit_length, u16 frequency_cap = UINT16_MAX);
     size_t huffman_block_length(const Array<u8, max_huffman_literals>& literal_bit_lengths, const Array<u8, max_huffman_distances>& distance_bit_lengths);
-    void write_huffman(const CanonicalCode& literal_code, const CanonicalCode& distance_code);
+    void write_huffman(const CanonicalCode& literal_code, const Optional<CanonicalCode>& distance_code);
     static size_t encode_huffman_lengths(const Array<u8, max_huffman_literals + max_huffman_distances>& lengths, size_t lengths_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths);
     size_t encode_block_lengths(const Array<u8, max_huffman_literals>& literal_bit_lengths, const Array<u8, max_huffman_distances>& distance_bit_lengths, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t& literal_code_count, size_t& distance_code_count);
-    void write_dynamic_huffman(const CanonicalCode& literal_code, size_t literal_code_count, const CanonicalCode& distance_code, size_t distance_code_count, const Array<u8, 19>& code_lengths_bit_lengths, size_t code_length_count, const Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t encoded_lengths_count);
+    void write_dynamic_huffman(const CanonicalCode& literal_code, size_t literal_code_count, const Optional<CanonicalCode>& distance_code, size_t distance_code_count, const Array<u8, 19>& code_lengths_bit_lengths, size_t code_length_count, const Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t encoded_lengths_count);
 
     size_t uncompressed_block_length();
     size_t fixed_block_length();
