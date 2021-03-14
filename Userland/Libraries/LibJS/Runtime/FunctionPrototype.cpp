@@ -146,12 +146,11 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     String function_parameters = "";
     String function_body;
 
-    if (is<NativeFunction>(this_object) || is<BoundFunction>(this_object)) {
-        function_body = String::formatted("  [{}]", this_object->class_name());
-    } else {
+    if (is<ScriptFunction>(this_object)) {
+        auto& script_function = static_cast<ScriptFunction&>(*this_object);
         StringBuilder parameters_builder;
         auto first = true;
-        for (auto& parameter : static_cast<ScriptFunction*>(this_object)->parameters()) {
+        for (auto& parameter : script_function.parameters()) {
             if (!first)
                 parameters_builder.append(", ");
             first = false;
@@ -166,6 +165,8 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
         // auto& body = static_cast<ScriptFunction*>(this_object)->body();
         // function_body = body.to_source();
         function_body = "  ???";
+    } else {
+        function_body = String::formatted("  [{}]", this_object->class_name());
     }
 
     auto function_source = String::formatted(
