@@ -1641,7 +1641,14 @@ void SoftCPU::FYL2XP1(const X86::Instruction&)
     fpu_pop();
 }
 
-void SoftCPU::FPTAN(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FPTAN(const X86::Instruction&)
+{
+    // FIXME: set C1 upon stack overflow or if result was rounded
+    // FIXME: Set C2 to 1 if ST(0) is outside range of -2^63 to +2^63; else set to 0
+    fpu_set(0, tanf(fpu_get(0)));
+    fpu_push(1.0f);
+}
+
 void SoftCPU::FPATAN(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FXTRACT(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FPREM1(const X86::Instruction&) { TODO_INSN(); }
