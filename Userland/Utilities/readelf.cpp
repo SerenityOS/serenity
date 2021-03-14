@@ -237,6 +237,36 @@ static const char* object_symbol_binding_to_string(Elf32_Word type)
     }
 }
 
+static const char* object_relocation_type_to_string(Elf32_Word type)
+{
+    switch (type) {
+    case R_386_NONE:
+        return "R_386_NONE";
+    case R_386_32:
+        return "R_386_32";
+    case R_386_PC32:
+        return "R_386_PC32";
+    case R_386_GOT32:
+        return "R_386_GOT32";
+    case R_386_PLT32:
+        return "R_386_PLT32";
+    case R_386_COPY:
+        return "R_386_COPY";
+    case R_386_GLOB_DAT:
+        return "R_386_GLOB_DAT";
+    case R_386_JMP_SLOT:
+        return "R_386_JMP_SLOT";
+    case R_386_RELATIVE:
+        return "R_386_RELATIVE";
+    case R_386_TLS_TPOFF:
+        return "R_386_TLS_TPOFF";
+    case R_386_TLS_TPOFF32:
+        return "R_386_TLS_TPOFF32";
+    default:
+        return "(?)";
+    }
+}
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio rpath", nullptr) < 0) {
@@ -262,8 +292,12 @@ int main(int argc, char** argv)
     args_parser.add_option(display_elf_header, "Display ELF header", "file-header", 'h');
     args_parser.add_option(display_program_headers, "Display program headers", "program-headers", 'l');
     args_parser.add_option(display_section_headers, "Display section headers", "section-headers", 'S');
-    args_parser.add_option(display_headers, "Equivalent to: -h -l -S", "headers", 'e');
+    args_parser.add_option(display_headers, "Equivalent to: -h -l -S -s -r -d -n -u", "headers", 'e');
     args_parser.add_option(display_symbol_table, "Display the symbol table", "syms", 's');
+    args_parser.add_option(display_dynamic_section, "Display the dynamic section", "dynamic", 'd');
+    args_parser.add_option(display_core_notes, "Display core notes", "notes", 'n');
+    args_parser.add_option(display_relocations, "Display relocations", "relocs", 'r');
+    args_parser.add_option(display_unwind_info, "Display unwind info", "unwind", 'u');
     args_parser.add_positional_argument(path, "ELF path", "path");
     args_parser.parse(argc, argv);
 
@@ -282,6 +316,9 @@ int main(int argc, char** argv)
         display_elf_header = true;
         display_program_headers = true;
         display_section_headers = true;
+        display_core_notes = true;
+        display_relocations = true;
+        display_unwind_info = true;
         display_symbol_table = true;
     }
 
@@ -363,7 +400,7 @@ int main(int argc, char** argv)
             printf("  Name            Type            Address  Offset   Size     Flags\n");
 
             interpreter_image.for_each_section([](const ELF::Image::Section& section) {
-                printf("  %-15s ", section.name().characters_without_null_termination());
+                printf("  %-15s ", StringView(section.name()).to_string().characters());
                 printf("%-15s ", object_section_header_type_to_string(section.type()));
                 printf("%08x ", section.address());
                 printf("%08x ", section.offset());
@@ -403,36 +440,129 @@ int main(int argc, char** argv)
 
             return IterationDecision::Continue;
         });
+
+        // TODO: Display section to segment mapping
         printf("\n");
     }
 
     if (display_dynamic_section) {
-        // TODO: Dynamic section
+        auto found_dynamic_section = false;
+        interpreter_image.for_each_section([&found_dynamic_section](const ELF::Image::Section& section) {
+            if (section.name() != ELF_DYNAMIC)
+                return IterationDecision::Continue;
+
+            found_dynamic_section = true;
+
+            if (!section.entry_count()) {
+                printf("Dynamic section '%s' at offset 0x%08x contains zero entries.\n", section.name().to_string().characters(), section.offset());
+                return IterationDecision::Continue;
+            }
+
+            printf("Dynamic section '%s' at offset 0x%08x contains %u entries.\n", section.name().to_string().characters(), section.offset(), section.entry_count());
+
+            // TODO: Display dynamic section
+
+            return IterationDecision::Continue;
+        });
+
+        if (!found_dynamic_section)
+            printf("No dynamic section in this file.\n");
+
+        printf("\n");
     }
 
     if (display_relocations) {
-        // TODO: Relocations section
+        auto found_relocations = false;
+        interpreter_image.for_each_section([&found_relocations](const ELF::Image::Section& section) {
+            // FIXME: support dynamic relocations (.rel.dyn)
+            if (!section.relocations().relocation_count())
+                return IterationDecision::Continue;
+
+            found_relocations = true;
+
+            if (!section.relocations().entry_count()) {
+                printf("Relocation section '%s' at offset 0x%08x contains zero entries.\n", section.name().to_string().characters(), section.offset());
+                return IterationDecision::Continue;
+            }
+
+            printf("Relocation section '%s' at offset 0x%08x contains %u entries:\n", section.relocations().name().to_string().characters(), section.relocations().offset(), section.relocations().entry_count());
+            printf("  Offset      Type               Sym Value   Sym Name\n");
+            section.relocations().for_each_relocation([](const ELF::Image::Relocation& reloc) {
+                printf("  0x%08x ", reloc.offset());
+                printf(" %-17s ", object_relocation_type_to_string(reloc.type()));
+                printf(" 0x%08x ", reloc.symbol().value());
+                printf(" %s", reloc.symbol().name().to_string().characters());
+                printf("\n");
+                return IterationDecision::Continue;
+            });
+
+            printf("\n");
+            return IterationDecision::Continue;
+        });
+
+        if (!found_relocations)
+            printf("No relocations in this file.\n");
+
+        printf("\n");
     }
 
     if (display_unwind_info) {
         // TODO: Unwind info
+        printf("Decoding of unwind sections for machine type %s is not supported.\n", object_machine_type_to_string(header.e_machine));
+        printf("\n");
     }
 
     if (display_core_notes) {
-        // TODO: Core notes
+        auto found_notes = false;
+        interpreter_image.for_each_program_header([&found_notes](const ELF::Image::ProgramHeader& program_header) {
+            if (program_header.type() != PT_NOTE)
+                return IterationDecision::Continue;
+
+            found_notes = true;
+
+            printf("Displaying notes section '%s' at offset 0x%08x of length 0x%08x:\n", object_program_header_type_to_string(program_header.type()), program_header.offset(), program_header.size_in_image());
+
+            // FIXME: Parse CORE notes. Notes are in JSON format on SerenityOS, but vary between systems.
+            printf("%s\n", program_header.raw_data());
+
+            return IterationDecision::Continue;
+        });
+
+        if (!found_notes)
+            printf("No core notes in this file.\n");
+
+        printf("\n");
     }
 
     if (display_dynamic_symbol_table || display_symbol_table) {
-        // TODO: dynamic symbol table
-        if (!interpreter_image.symbol_count()) {
-            printf("Dynamic symbol information is not available for displaying symbols.\n");
-            printf("\n");
-        }
+        auto found_dynamic_symbol_table = false;
+        interpreter_image.for_each_section([&found_dynamic_symbol_table](const ELF::Image::Section& section) {
+            if (section.name() != ELF_DYNSYM)
+                return IterationDecision::Continue;
+
+            found_dynamic_symbol_table = true;
+
+            if (!section.entry_count()) {
+                printf("Symbol table '%s' contains zero entries.\n", ELF_DYNSYM);
+                return IterationDecision::Continue;
+            }
+
+            printf("Symbol table '%s' contains %u entries.\n", ELF_DYNSYM, section.entry_count());
+
+            // TODO: display dynamic symbol table
+
+            return IterationDecision::Continue;
+        });
+
+        if (!found_dynamic_symbol_table)
+            printf("No dynamic symbol information for this file.\n");
+
+        printf("\n");
     }
 
     if (display_symbol_table) {
         if (interpreter_image.symbol_count()) {
-            printf("Symbol table '.symtab' contains %u entries:\n", interpreter_image.symbol_count());
+            printf("Symbol table '%s' contains %u entries:\n", ELF_SYMTAB, interpreter_image.symbol_count());
             printf("   Num: Value    Size     Type     Bind     Name\n");
 
             interpreter_image.for_each_symbol([](const ELF::Image::Symbol& sym) {
@@ -441,7 +571,7 @@ int main(int argc, char** argv)
                 printf("%08x ", sym.size());
                 printf("%-8s ", object_symbol_type_to_string(sym.type()));
                 printf("%-8s ", object_symbol_binding_to_string(sym.bind()));
-                printf("%s", sym.name().characters_without_null_termination());
+                printf("%s", StringView(sym.name()).to_string().characters());
                 printf("\n");
                 return IterationDecision::Continue;
             });
