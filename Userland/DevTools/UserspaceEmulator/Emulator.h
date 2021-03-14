@@ -123,6 +123,7 @@ private:
     int virt$pipe(FlatPtr pipefd, int flags);
     int virt$close(int);
     int virt$mkdir(FlatPtr path, size_t path_length, mode_t mode);
+    int virt$rmdir(FlatPtr path, size_t path_length);
     int virt$unlink(FlatPtr path, size_t path_length);
     int virt$get_process_name(FlatPtr buffer, int size);
     int virt$set_process_name(FlatPtr buffer, int size);
