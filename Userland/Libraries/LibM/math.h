@@ -222,6 +222,7 @@ long long llrintf(float) NOEXCEPT;
 long double frexpl(long double, int* exp) NOEXCEPT;
 double frexp(double, int* exp) NOEXCEPT;
 float frexpf(float, int* exp) NOEXCEPT;
+long double ldexpl(long double, int exp) NOEXCEPT;
 double ldexp(double, int exp) NOEXCEPT;
 float ldexpf(float, int exp) NOEXCEPT;
 long double modfl(long double, long double*) NOEXCEPT;
