@@ -696,4 +696,15 @@ void Document::completely_finish_loading()
     dispatch_event(DOM::Event::create(HTML::EventNames::load));
 }
 
+String Document::cookie() const
+{
+    // FIXME: Support cookies!
+    return {};
+}
+
+void Document::set_cookie(String)
+{
+    // FIXME: Support cookies!
+}
+
 }

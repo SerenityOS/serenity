@@ -11,6 +11,8 @@ interface Document : Node {
 
     readonly attribute Window? defaultView;
 
+    attribute DOMString cookie;
+
     Element? getElementById(DOMString id);
     ArrayFromVector getElementsByName(DOMString name);
     ArrayFromVector getElementsByTagName(DOMString tagName);
