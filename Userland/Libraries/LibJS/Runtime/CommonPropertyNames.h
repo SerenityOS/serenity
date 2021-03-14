@@ -220,6 +220,7 @@ namespace JS {
     P(tanh)                                  \
     P(test)                                  \
     P(toDateString)                          \
+    P(toGMTString)                           \
     P(toISOString)                           \
     P(toJSON)                                \
     P(toLocaleDateString)                    \

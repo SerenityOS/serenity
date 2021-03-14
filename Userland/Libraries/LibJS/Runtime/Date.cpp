@@ -91,6 +91,13 @@ int Date::utc_seconds() const
     return to_utc_tm().tm_sec;
 }
 
+String Date::gmt_date_string() const
+{
+    // Mon, 18 Dec 1995 17:28:35 GMT
+    // FIXME: Note that we're totally cheating with the timezone part here..
+    return datetime().to_string("%a, %e %b %Y %T GMT");
+}
+
 String Date::iso_date_string() const
 {
     auto tm = to_utc_tm();
