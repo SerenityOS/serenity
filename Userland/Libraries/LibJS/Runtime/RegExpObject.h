@@ -37,6 +37,8 @@ struct Flags {
 
 namespace JS {
 
+RegExpObject* regexp_create(GlobalObject&, Value pattern, Value flags);
+
 class RegExpObject : public Object {
     JS_OBJECT(RegExpObject, Object);
 
