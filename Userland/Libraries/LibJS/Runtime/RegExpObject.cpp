@@ -168,4 +168,30 @@ JS_DEFINE_NATIVE_SETTER(RegExpObject::set_last_index)
     regexp_object->regex().start_offset = index;
 }
 
+RegExpObject* regexp_create(GlobalObject& global_object, Value pattern, Value flags)
+{
+    // https://tc39.es/ecma262/#sec-regexpcreate
+    String p;
+    if (pattern.is_undefined()) {
+        p = String::empty();
+    } else {
+        p = pattern.to_string(global_object);
+        if (p.is_null())
+            return nullptr;
+    }
+    String f;
+    if (flags.is_empty()) {
+        f = String::empty();
+    } else {
+        f = flags.to_string(global_object);
+        if (f.is_null())
+            return nullptr;
+    }
+    // FIXME: This is awkward: the RegExpObject C++ constructor may throw a VM exception.
+    auto* obj = RegExpObject::create(global_object, move(p), move(f));
+    if (global_object.vm().exception())
+        return nullptr;
+    return obj;
+}
+
 }
