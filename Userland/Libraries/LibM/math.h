@@ -80,6 +80,22 @@ __BEGIN_DECLS
 #define FP_ILOGB0 INT_MIN
 #define FP_ILOGNAN INT_MAX
 
+#define FLT_EVAL_METHOD __FLT_EVAL_METHOD__
+
+#if FLT_EVAL_METHOD == 0
+typedef float float_t;
+typedef double double_t;
+#elif FLT_EVAL_METHOD == 1
+typedef double float_t;
+typedef double double_t;
+#elif FLT_EVAL_METHOD == 2
+typedef long double float_t;
+typedef long double double_t;
+#else
+typedef float float_t;
+typedef double double_t;
+#endif
+
 /* Basic floating point operations */
 long double fabsl(long double) NOEXCEPT;
 double fabs(double) NOEXCEPT;
