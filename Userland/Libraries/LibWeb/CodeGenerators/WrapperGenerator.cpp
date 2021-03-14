@@ -148,6 +148,8 @@ struct Interface {
     String name;
     String parent_name;
 
+    HashMap<String, String> extended_attributes;
+
     Vector<Attribute> attributes;
     Vector<Constant> constants;
     Vector<Constructor> constructors;
@@ -189,6 +191,28 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         if (!lexer.consume_specific(expected))
             report_parsing_error(String::formatted("expected '{}'", expected), filename, input, lexer.tell());
     };
+
+    auto parse_extended_attributes = [&] {
+        HashMap<String, String> extended_attributes;
+        for (;;) {
+            consume_whitespace();
+            if (lexer.consume_specific(']'))
+                break;
+            auto name = lexer.consume_until([](auto ch) { return ch == ']' || ch == '=' || ch == ','; });
+            if (lexer.consume_specific('=')) {
+                auto value = lexer.consume_until([](auto ch) { return ch == ']' || ch == ','; });
+                extended_attributes.set(name, value);
+            } else {
+                extended_attributes.set(name, {});
+            }
+            lexer.consume_specific(',');
+        }
+        consume_whitespace();
+        return extended_attributes;
+    };
+
+    if (lexer.consume_specific('['))
+        interface->extended_attributes = parse_extended_attributes();
 
     assert_string("interface");
     consume_whitespace();
@@ -301,25 +325,6 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         assert_specific(';');
 
         interface->constructors.append(Constructor { interface->name, move(parameters) });
-    };
-
-    auto parse_extended_attributes = [&] {
-        HashMap<String, String> extended_attributes;
-        for (;;) {
-            consume_whitespace();
-            if (lexer.consume_specific(']'))
-                break;
-            auto name = lexer.consume_until([](auto ch) { return ch == ']' || ch == '=' || ch == ','; });
-            if (lexer.consume_specific('=')) {
-                auto value = lexer.consume_until([](auto ch) { return ch == ']' || ch == ','; });
-                extended_attributes.set(name, value);
-            } else {
-                extended_attributes.set(name, {});
-            }
-            lexer.consume_specific(',');
-        }
-        consume_whitespace();
-        return extended_attributes;
     };
 
     for (;;) {
@@ -690,6 +695,17 @@ public:
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~@wrapper_class@() override;
 )~~~");
+
+    if (interface.extended_attributes.contains("CustomGet")) {
+        generator.append(R"~~~(
+    virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}) const override;
+)~~~");
+    }
+    if (interface.extended_attributes.contains("CustomPut")) {
+        generator.append(R"~~~(
+    virtual bool put(const JS::PropertyName&, JS::Value, JS::Value receiver = {}) override;
+)~~~");
+    }
 
     if (interface.wrapper_base_class == "Wrapper") {
         generator.append(R"~~~(
