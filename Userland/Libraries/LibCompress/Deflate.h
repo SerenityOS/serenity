@@ -49,12 +49,12 @@ public:
 
 private:
     // Decompression - indexed by code
-    Vector<u32> m_symbol_codes;
-    Vector<u32> m_symbol_values;
+    Vector<u16> m_symbol_codes;
+    Vector<u16> m_symbol_values;
 
     // Compression - indexed by symbol
-    Array<u32, 288> m_bit_codes {}; // deflate uses a maximum of 288 symbols (maximum of 32 for distances)
-    Array<u32, 288> m_bit_code_lengths {};
+    Array<u16, 288> m_bit_codes {}; // deflate uses a maximum of 288 symbols (maximum of 32 for distances)
+    Array<u16, 288> m_bit_code_lengths {};
 };
 
 class DeflateDecompressor final : public InputStream {
