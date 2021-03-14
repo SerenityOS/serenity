@@ -60,6 +60,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getDate, get_date, 0, attr);
     define_native_function(vm.names.getDay, get_day, 0, attr);
     define_native_function(vm.names.getFullYear, get_full_year, 0, attr);
+    define_native_function(vm.names.setFullYear, set_full_year, 3, attr);
     define_native_function(vm.names.getHours, get_hours, 0, attr);
     define_native_function(vm.names.getMilliseconds, get_milliseconds, 0, attr);
     define_native_function(vm.names.getMinutes, get_minutes, 0, attr);
@@ -116,6 +117,22 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->full_year()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
+{
+    auto* this_object = typed_this(vm, global_object);
+    if (!this_object)
+        return {};
+    auto new_year = vm.argument(0).to_i32(global_object);
+    if (vm.exception())
+        return {};
+    // FIXME: Support specifying new month and new day as well.
+    auto& datetime = this_object->datetime();
+    auto new_month = datetime.month();
+    auto new_day = datetime.day();
+    datetime.set_time(new_year, new_month, new_day, datetime.hour(), datetime.minute(), datetime.second());
+    return Value { this_object->time() };
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)

@@ -199,6 +199,7 @@ namespace JS {
     P(reverse)                               \
     P(round)                                 \
     P(set)                                   \
+    P(setFullYear)                           \
     P(setPrototypeOf)                        \
     P(shift)                                 \
     P(sign)                                  \
