@@ -1,1 +1,1 @@
-serenity_install_sources(Libraries/LibELF)
+serenity_install_sources("Userland/Libraries/LibELF")

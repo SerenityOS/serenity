@@ -1,2 +1,1 @@
-
-serenity_install_sources(Libraries/LibTest)
+serenity_install_sources("Userland/Libraries/LibTest")
