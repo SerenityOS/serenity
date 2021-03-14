@@ -58,6 +58,8 @@ public:
     String item(size_t index) const;
 
 private:
+    friend class Bindings::CSSStyleDeclarationWrapper;
+
     explicit CSSStyleDeclaration(Vector<StyleProperty>&&);
 
     Vector<StyleProperty> m_properties;

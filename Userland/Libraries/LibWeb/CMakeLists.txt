@@ -1,4 +1,5 @@
 set(SOURCES
+    Bindings/CSSStyleDeclarationWrapperCustom.cpp
     Bindings/EventListenerWrapper.cpp
     Bindings/EventWrapperFactory.cpp
     Bindings/EventTargetWrapperFactory.cpp
