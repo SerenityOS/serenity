@@ -25,9 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/TemporaryChange.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/DeferGC.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Lexer.h>
+#include <LibJS/Parser.h>
 #include <LibJS/Runtime/ArrayBufferConstructor.h>
 #include <LibJS/Runtime/ArrayBufferPrototype.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
@@ -119,6 +123,7 @@ void GlobalObject::initialize()
     define_native_function(vm.names.isFinite, is_finite, 1, attr);
     define_native_function(vm.names.parseFloat, parse_float, 1, attr);
     define_native_function(vm.names.parseInt, parse_int, 1, attr);
+    define_native_function(vm.names.eval, eval, 1, attr);
 
     define_property(vm.names.NaN, js_nan(), 0);
     define_property(vm.names.Infinity, js_infinity(), 0);
@@ -307,6 +312,21 @@ bool GlobalObject::has_this_binding() const
 Value GlobalObject::get_this_binding(GlobalObject&) const
 {
     return Value(this);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
+{
+    auto code = vm.argument(0).to_string(global_object);
+    if (code.is_null())
+        return {};
+    JS::Parser parser { JS::Lexer { code } };
+    auto program = parser.parse_program();
+
+    auto& caller_frame = vm.call_stack().at(vm.call_stack().size() - 2);
+    TemporaryChange scope_change(vm.call_frame().scope, caller_frame->scope);
+
+    // FIXME: eval() should return the result of the executed code. This currently does not work.
+    return vm.interpreter().execute_statement(global_object, program);
 }
 
 }

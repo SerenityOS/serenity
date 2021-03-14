@@ -81,6 +81,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(is_finite);
     JS_DECLARE_NATIVE_FUNCTION(parse_float);
     JS_DECLARE_NATIVE_FUNCTION(parse_int);
+    JS_DECLARE_NATIVE_FUNCTION(eval);
 
     NonnullOwnPtr<Console> m_console;
 
