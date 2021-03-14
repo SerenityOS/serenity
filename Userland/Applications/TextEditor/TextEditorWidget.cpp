@@ -97,7 +97,7 @@ TextEditorWidget::TextEditorWidget()
         if (url.is_valid())
             m_statusbar->set_text(url.to_string());
         else
-            update_statusbar_cursor_position();
+            update_statusbar();
     };
     m_page_view->on_link_click = [&](auto& url, auto&, unsigned) {
         if (!Desktop::Launcher::open(url)) {
@@ -274,7 +274,8 @@ TextEditorWidget::TextEditorWidget()
 
     m_statusbar = *find_descendant_of_type_named<GUI::StatusBar>("statusbar");
 
-    m_editor->on_cursor_change = [this] { update_statusbar_cursor_position(); };
+    m_editor->on_cursor_change = [this] { update_statusbar(); };
+    m_editor->on_selection_change = [this] { update_statusbar(); };
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         if (m_document_dirty) {
@@ -685,9 +686,27 @@ void TextEditorWidget::update_html_preview()
     m_page_view->scroll_into_view(current_scroll_pos, true, true);
 }
 
-void TextEditorWidget::update_statusbar_cursor_position()
+void TextEditorWidget::update_statusbar()
 {
     StringBuilder builder;
     builder.appendff("Line: {}, Column: {}", m_editor->cursor().line() + 1, m_editor->cursor().column());
+
+    if (m_editor->has_selection()) {
+        int word_count = 0;
+        bool in_word = false;
+        String selected_text = m_editor->selected_text();
+        for (char c : selected_text) {
+            if (in_word && isspace(c)) {
+                in_word = false;
+                word_count++;
+                continue;
+            }
+            if (!in_word && !isspace(c))
+                in_word = true;
+        }
+        if (in_word)
+            word_count++;
+        builder.appendff("        Selected: {} {} ({} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
+    }
     m_statusbar->set_text(builder.to_string());
 }
