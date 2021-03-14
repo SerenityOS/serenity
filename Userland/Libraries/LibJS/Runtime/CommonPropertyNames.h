@@ -75,6 +75,7 @@ namespace JS {
     P(bind)                                  \
     P(byteLength)                            \
     P(call)                                  \
+    P(callee)                                \
     P(cbrt)                                  \
     P(ceil)                                  \
     P(charAt)                                \

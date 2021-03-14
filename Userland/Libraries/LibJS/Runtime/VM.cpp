@@ -175,6 +175,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
                 return possible_match.value().value;
             if (!call_frame().arguments_object) {
                 call_frame().arguments_object = Array::create(global_object);
+                call_frame().arguments_object->put(names.callee, call_frame().callee);
                 for (auto argument : call_frame().arguments) {
                     call_frame().arguments_object->indexed_properties().append(argument);
                 }
@@ -211,6 +212,7 @@ Reference VM::get_reference(const FlyString& name)
 Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject& global_object)
 {
     CallFrame call_frame;
+    call_frame.callee = &function;
     call_frame.current_node = current_node();
     call_frame.is_strict_mode = function.is_strict_mode();
 
@@ -335,6 +337,7 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     VERIFY(!exception());
 
     CallFrame call_frame;
+    call_frame.callee = &function;
     call_frame.current_node = current_node();
     call_frame.is_strict_mode = function.is_strict_mode();
     call_frame.function_name = function.name();
