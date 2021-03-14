@@ -631,6 +631,22 @@ float fmodf(float index, float period) NOEXCEPT
     return index - trunc(index / period) * period;
 }
 
+// FIXME: These aren't exactly like fmod, but these definitions are probably good enough for now
+long double remainderl(long double x, long double y) NOEXCEPT
+{
+    return fmodl(x, y);
+}
+
+double remainder(double x, double y) NOEXCEPT
+{
+    return fmod(x, y);
+}
+
+float remainderf(float x, float y) NOEXCEPT
+{
+    return fmodf(x, y);
+}
+
 long double expl(long double exponent) NOEXCEPT
 {
     long double res = 0;
