@@ -262,20 +262,23 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     auto* rx = this_object_from(vm, global_object);
     if (!rx)
         return {};
-    auto string = vm.argument(0);
-    auto s = string.to_string(global_object);
-    auto global_value = rx->get(vm.names.global);
-    if (global_value.is_empty())
+    auto s = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto global_value = rx->get(vm.names.global).value_or(js_undefined());
+    if (vm.exception())
         return {};
     bool global = global_value.to_boolean();
+    // FIXME: Implement and use RegExpExec, this does something different - https://tc39.es/ecma262/#sec-regexpexec
     auto* exec = get_method(global_object, rx, vm.names.exec);
     if (!exec)
-        return {};
+        return js_undefined();
+    // FIXME end
     if (!global)
-        return vm.call(*exec, rx, string);
+        return vm.call(*exec, rx, js_string(vm, s));
 
     // FIXME: This should exec the RegExp repeatedly while updating "lastIndex"
-    return vm.call(*exec, rx, string);
+    return vm.call(*exec, rx, js_string(vm, s));
 }
 
 }
