@@ -883,7 +883,7 @@ Value Object::ordinary_to_primitive(Value::PreferredType preferred_type) const
     return {};
 }
 
-Value Object::invoke(const StringOrSymbol& property_name, Optional<MarkedValueList> arguments)
+Value Object::invoke_internal(const StringOrSymbol& property_name, Optional<MarkedValueList> arguments)
 {
     auto& vm = this->vm();
     auto property = get(property_name).value_or(js_undefined());
