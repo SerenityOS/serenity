@@ -792,21 +792,22 @@ size_t DeflateCompressor::dynamic_block_length(const Array<u8, max_huffman_liter
     return length + huffman_block_length(literal_bit_lengths, distance_bit_lengths);
 }
 
-void DeflateCompressor::write_huffman(const CanonicalCode& literal_code, const CanonicalCode& distance_code)
+void DeflateCompressor::write_huffman(const CanonicalCode& literal_code, const Optional<CanonicalCode>& distance_code)
 {
+    auto has_distances = distance_code.has_value();
     for (size_t i = 0; i < m_pending_symbol_size; i++) {
         if (m_symbol_buffer[i].distance == 0) {
             literal_code.write_symbol(m_output_stream, m_symbol_buffer[i].literal);
             continue;
         }
-
+        VERIFY(has_distances);
         auto symbol = length_to_symbol[m_symbol_buffer[i].length];
         literal_code.write_symbol(m_output_stream, symbol);
         // Emit extra bits if needed
         m_output_stream.write_bits(m_symbol_buffer[i].length - packed_length_symbols[symbol - 257].base_length, packed_length_symbols[symbol - 257].extra_bits);
 
         auto base_distance = distance_to_base(m_symbol_buffer[i].distance);
-        distance_code.write_symbol(m_output_stream, base_distance);
+        distance_code.value().write_symbol(m_output_stream, base_distance);
         // Emit extra bits if needed
         m_output_stream.write_bits(m_symbol_buffer[i].distance - packed_distances[base_distance].base_distance, packed_distances[base_distance].extra_bits);
     }
@@ -880,7 +881,7 @@ size_t DeflateCompressor::encode_block_lengths(const Array<u8, max_huffman_liter
     return encode_huffman_lengths(all_lengths, lengths_count, encoded_lengths);
 }
 
-void DeflateCompressor::write_dynamic_huffman(const CanonicalCode& literal_code, size_t literal_code_count, const CanonicalCode& distance_code, size_t distance_code_count, const Array<u8, 19>& code_lengths_bit_lengths, size_t code_length_count, const Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t encoded_lengths_count)
+void DeflateCompressor::write_dynamic_huffman(const CanonicalCode& literal_code, size_t literal_code_count, const Optional<CanonicalCode>& distance_code, size_t distance_code_count, const Array<u8, 19>& code_lengths_bit_lengths, size_t code_length_count, const Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t encoded_lengths_count)
 {
     m_output_stream.write_bits(literal_code_count - 257, 5);
     m_output_stream.write_bits(distance_code_count - 1, 5);
@@ -991,8 +992,7 @@ void DeflateCompressor::flush()
         auto literal_code = CanonicalCode::from_bytes(dynamic_literal_bit_lengths);
         VERIFY(literal_code.has_value());
         auto distance_code = CanonicalCode::from_bytes(dynamic_distance_bit_lengths);
-        VERIFY(distance_code.has_value());
-        write_dynamic_huffman(literal_code.value(), literal_code_count, distance_code.value(), distance_code_count, code_lengths_bit_lengths, code_lengths_count, encoded_lengths, encoded_lengths_count);
+        write_dynamic_huffman(literal_code.value(), literal_code_count, distance_code, distance_code_count, code_lengths_bit_lengths, code_lengths_count, encoded_lengths, encoded_lengths_count);
     }
     if (m_finished)
         m_output_stream.align_to_byte_boundary();

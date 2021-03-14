@@ -168,6 +168,14 @@ TEST_CASE(deflate_round_trip_compress_large)
     EXPECT(uncompressed.value() == original);
 }
 
+TEST_CASE(deflate_compress_literals)
+{
+    // This byte array is known to not produce any back references with our lz77 implementation even at the highest compression settings
+    Array<u8, 0x13> test { 0, 0, 0, 0, 0x72, 0, 0, 0xee, 0, 0, 0, 0x26, 0, 0, 0, 0x28, 0, 0, 0x72 };
+    auto compressed = Compress::DeflateCompressor::compress_all(test, Compress::DeflateCompressor::CompressionLevel::GOOD);
+    EXPECT(compressed.has_value());
+}
+
 TEST_CASE(zlib_decompress_simple)
 {
     const Array<u8, 40> compressed {
