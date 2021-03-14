@@ -39,14 +39,14 @@ for file in *; do
                 fi
             fi
             if [ "$verbose" == true ]; then
-                if $(./package.sh); then
+                if ./package.sh; then
                     echo "Built ${dirname}."
                 else
                     echo "ERROR: Build of ${dirname} was not successful!"
                     some_failed=true
                 fi
             else
-                if $(./package.sh > /dev/null 2>&1); then
+                if ./package.sh > /dev/null 2>&1; then
                     echo "Built ${dirname}."
                 else
                     echo "ERROR: Build of ${dirname} was not successful!"
