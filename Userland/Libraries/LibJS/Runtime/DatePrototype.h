@@ -58,6 +58,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_utc_month);
     JS_DECLARE_NATIVE_FUNCTION(get_utc_seconds);
     JS_DECLARE_NATIVE_FUNCTION(to_date_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_gmt_string);
     JS_DECLARE_NATIVE_FUNCTION(to_iso_string);
     JS_DECLARE_NATIVE_FUNCTION(to_locale_date_string);
     JS_DECLARE_NATIVE_FUNCTION(to_locale_string);

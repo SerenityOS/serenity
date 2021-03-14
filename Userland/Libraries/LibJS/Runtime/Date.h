@@ -71,6 +71,7 @@ public:
         return String::formatted("{} {}", date_string(), time_string());
     }
 
+    String gmt_date_string() const;
     String iso_date_string() const;
 
     // FIXME: One day, implement real locale support. Until then, everyone gets what the Clock MenuApplet displays.
