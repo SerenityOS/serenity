@@ -666,19 +666,13 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
         if (auto* matcher = get_method(global_object, regexp, vm.well_known_symbol_match()))
             return vm.call(*matcher, regexp, this_object);
     }
-    auto s = this_object.to_primitive_string(global_object);
-    if (!s)
-        return {};
-    auto regexp_string = regexp.to_string(global_object);
-    if (regexp_string.is_null())
+    auto s = this_object.to_string(global_object);
+    if (vm.exception())
         return {};
     auto rx = regexp_create(global_object, regexp, js_undefined());
     if (!rx)
         return {};
-    auto* matcher = get_method(global_object, rx, vm.well_known_symbol_match());
-    if (!matcher)
-        return {};
-    return vm.call(*matcher, rx, this_object);
+    return rx->invoke(vm.well_known_symbol_match(), js_string(vm, s));
 }
 
 }
