@@ -2,6 +2,7 @@ interface CanvasRenderingContext2D {
 
     undefined fillRect(double x, double y, double w, double h);
     undefined strokeRect(double x, double y, double w, double h);
+    undefined clearRect(double x, double y, double w, double h);
 
     undefined scale(double x, double y);
     undefined translate(double x, double y);

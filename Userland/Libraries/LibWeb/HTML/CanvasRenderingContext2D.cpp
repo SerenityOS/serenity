@@ -64,6 +64,17 @@ void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float he
     did_draw(rect);
 }
 
+void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float height)
+{
+    auto painter = this->painter();
+    if (!painter)
+        return;
+
+    auto rect = m_transform.map(Gfx::FloatRect(x, y, width, height));
+    painter->clear_rect(enclosing_int_rect(rect), Color());
+    did_draw(rect);
+}
+
 void CanvasRenderingContext2D::set_stroke_style(String style)
 {
     m_stroke_style = Gfx::Color::from_string(style).value_or(Color::Black);
