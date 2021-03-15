@@ -109,7 +109,7 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
         painter.draw_text(clipped_title_rect.translated(0, 1), title_text, title_font, Gfx::TextAlignment::CenterLeft, title_color, Gfx::TextElision::Right);
     }
 
-    painter.blit(titlebar_icon_rect.location(), icon, icon.rect());
+    painter.draw_scaled_bitmap(titlebar_icon_rect, icon, icon.rect());
 }
 
 void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, const StringView& title_text, const Palette& palette, const IntRect& leftmost_button_rect) const
