@@ -1005,7 +1005,7 @@ size_t Thread::thread_specific_region_size() const
 
 KResult Thread::make_thread_specific_region(Badge<Process>)
 {
-    // The process may not require a TLS region
+    // The process may not require a TLS region, or allocate TLS later with sys$allocate_tls (which is what dynamically loaded programs do)
     if (!process().m_master_tls_region)
         return KSuccess;
 
@@ -1022,8 +1022,10 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
     m_thread_specific_data = VirtualAddress(thread_specific_data);
     thread_specific_data->self = thread_specific_data;
+
     if (process().m_master_tls_size)
         memcpy(thread_local_storage, process().m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), process().m_master_tls_size);
+
     return KSuccess;
 }
 

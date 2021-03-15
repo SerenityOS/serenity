@@ -310,6 +310,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
                 ph_load_result = region_or_error.error();
                 return IterationDecision::Break;
             }
+
             master_tls_region = region_or_error.value();
             master_tls_size = program_header.size_in_memory();
             master_tls_alignment = program_header.alignment();
@@ -444,6 +445,11 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
         auto result = load_elf_object(new_space.release_nonnull(), main_program_description, FlatPtr { 0 }, ShouldAllocateTls::Yes);
         if (result.is_error())
             return result.error();
+
+        m_master_tls_region = result.value().tls_region;
+        m_master_tls_size = result.value().tls_size;
+        m_master_tls_alignment = result.value().tls_alignment;
+
         return result;
     }
 
