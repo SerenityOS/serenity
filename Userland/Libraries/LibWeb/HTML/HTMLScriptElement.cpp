@@ -113,7 +113,7 @@ static bool is_javascript_mime_type_essence_match(const String& string)
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#prepare-a-script
-void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
+void HTMLScriptElement::prepare_script()
 {
     if (m_already_started) {
         dbgln("HTMLScriptElement: Refusing to run script because it has already started.");
@@ -271,7 +271,23 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
 
     else if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)
         || (m_script_type == ScriptType::Module && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)) {
-        TODO();
+        m_preparation_time_document->add_script_to_execute_as_soon_as_possible({}, *this);
+
+        // FIXME: When the script is ready, run the following steps:
+        //
+        // If the element is not now the first element in the list of scripts
+        // that will execute in order as soon as possible to which it was added above,
+        // then mark the element as ready but return without executing the script yet.
+        //
+        // Execution: Execute the script block corresponding to the first script element
+        // in this list of scripts that will execute in order as soon as possible.
+        //
+        // Remove the first element from this list of scripts that will execute in order
+        // as soon as possible.
+        //
+        // If this list of scripts that will execute in order as soon as possible is still
+        // not empty and the first entry has already been marked as ready, then jump back
+        // to the step labeled execution.
     }
 
     else if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src)) || m_script_type == ScriptType::Module) {
@@ -311,6 +327,15 @@ void HTMLScriptElement::when_the_script_is_ready(Function<void()> callback)
         return;
     }
     m_script_ready_callback = move(callback);
+}
+
+void HTMLScriptElement::inserted_into(Node& parent)
+{
+    // FIXME: It would be nice to have a notification for "node became connected"
+    if (is_connected()) {
+        prepare_script();
+    }
+    HTMLElement::inserted_into(parent);
 }
 
 }
