@@ -214,6 +214,9 @@ public:
         if (is_null())
             return {};
 
+        if (offset == 0 && size == this->size())
+            return *this;
+
         // I cannot hand you a slice I don't have
         VERIFY(offset + size <= this->size());
 
