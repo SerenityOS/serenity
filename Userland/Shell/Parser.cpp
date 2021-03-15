@@ -1686,7 +1686,11 @@ RefPtr<AST::Node> Parser::parse_bareword()
             restore_to(rule_start->offset, rule_start->line);
             auto ch = consume();
             VERIFY(ch == '~');
+            auto username_length = username.length();
             tilde = create<AST::Tilde>(move(username));
+            // Consume the username (if any)
+            for (size_t i = 0; i < username_length; ++i)
+                consume();
         }
 
         if (string.is_empty())
