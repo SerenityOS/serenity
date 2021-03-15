@@ -57,6 +57,7 @@ public:
 
     void fill_rect(float x, float y, float width, float height);
     void stroke_rect(float x, float y, float width, float height);
+    void clear_rect(float x, float y, float width, float height);
 
     void draw_image(const HTMLImageElement&, float x, float y);
 
