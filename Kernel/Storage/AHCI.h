@@ -418,6 +418,26 @@ enum PortInterruptFlag : u32 {
     DHR = 1 << 0        /* Device to Host Register FIS */
 };
 
+enum SErr : u32 {
+    DIAG_X = 1 << 26, /* Exchanged */
+    DIAG_F = 1 << 25, /* Unknown FIS Type */
+    DIAG_T = 1 << 24, /* Transport state transition error */
+    DIAG_S = 1 << 23, /* Link sequence error */
+    DIAG_H = 1 << 22, /* Handshake error */
+    DIAG_C = 1 << 21, /* CRC error */
+    DIAG_D = 1 << 20, /* Disparity error */
+    DIAG_B = 1 << 19, /* 10B to 8B decode error */
+    DIAG_W = 1 << 18, /* Comm Wake */
+    DIAG_I = 1 << 17, /* Phy Internal Error */
+    DIAG_N = 1 << 16, /* PhyRdy Change */
+    ERR_E = 1 << 11,  /* Internal error */
+    ERR_P = 1 << 10,  /* Protocol error */
+    ERR_C = 1 << 9,   /* Persistent communication or data integrity error */
+    ERR_T = 1 << 8,   /* Transient data integrity error */
+    ERR_M = 1 << 1,   /* Received communications error */
+    ERR_I = 1 << 0,   /* Recovered data integrity error */
+};
+
 class PortInterruptStatusBitField {
 
 public:

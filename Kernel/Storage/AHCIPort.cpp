@@ -181,7 +181,8 @@ void AHCIPort::eject()
 
     while (1) {
         if (m_port_registers.serr != 0) {
-            dbgln_if(AHCI_DEBUG, "AHCI Port {}: Eject Drive failed, SError {}", representative_port_index(), (u32)m_port_registers.serr);
+            dbgln_if(AHCI_DEBUG, "AHCI Port {}: Eject Drive failed, SError 0x{:08x}", representative_port_index(), (u32)m_port_registers.serr);
+            try_disambiguate_sata_error();
             VERIFY_NOT_REACHED();
         }
         if ((m_port_registers.ci & (1 << unused_command_header.value())) == 0)
@@ -288,6 +289,60 @@ const char* AHCIPort::try_disambiguate_sata_status()
         return "interface disabled";
     }
     VERIFY_NOT_REACHED();
+}
+
+void AHCIPort::try_disambiguate_sata_error()
+{
+    dmesgln("AHCI Port {}: SErr breakdown:", representative_port_index());
+    dmesgln("AHCI Port {}: Diagnostics:", representative_port_index());
+
+    constexpr u32 diagnostics_bitfield = 0xFFFF0000;
+    if ((m_port_registers.serr & diagnostics_bitfield) > 0) {
+        if (m_port_registers.serr & AHCI::SErr::DIAG_X)
+            dmesgln("AHCI Port {}: - Exchanged", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::DIAG_F)
+            dmesgln("AHCI Port {}: - Unknown FIS Type", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::DIAG_T)
+            dmesgln("AHCI Port {}: - Transport state transition error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::DIAG_S)
+            dmesgln("AHCI Port {}: - Link sequence error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::DIAG_H)
+            dmesgln("AHCI Port {}: - Handshake error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::DIAG_C)
+            dmesgln("AHCI Port {}: - CRC error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::DIAG_D)
+            dmesgln("AHCI Port {}: - Disparity error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::DIAG_B)
+            dmesgln("AHCI Port {}: - 10B to 8B decode error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::DIAG_W)
+            dmesgln("AHCI Port {}: - Comm Wake", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::DIAG_I)
+            dmesgln("AHCI Port {}: - Phy Internal Error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::DIAG_N)
+            dmesgln("AHCI Port {}: - PhyRdy Change", representative_port_index());
+    } else {
+        dmesgln("AHCI Port {}: - No diagnostic information provided.", representative_port_index());
+    }
+
+    dmesgln("AHCI Port {}: Error(s):", representative_port_index());
+
+    constexpr u32 error_bitfield = 0xFFFF;
+    if ((m_port_registers.serr & error_bitfield) > 0) {
+        if (m_port_registers.serr & AHCI::SErr::ERR_E)
+            dmesgln("AHCI Port {}: - Internal error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::ERR_P)
+            dmesgln("AHCI Port {}: - Protocol error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::ERR_C)
+            dmesgln("AHCI Port {}: - Persistent communication or data integrity error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::ERR_T)
+            dmesgln("AHCI Port {}: - Transient data integrity error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::ERR_M)
+            dmesgln("AHCI Port {}: - Received communications error", representative_port_index());
+        if (m_port_registers.serr & AHCI::SErr::ERR_I)
+            dmesgln("AHCI Port {}: - Recovered data integrity error", representative_port_index());
+    } else {
+        dmesgln("AHCI Port {}: - No error information provided.", representative_port_index());
+    }
 }
 
 void AHCIPort::rebase()
@@ -535,7 +590,8 @@ bool AHCIPort::identify_device()
 
     while (1) {
         if (m_port_registers.serr != 0) {
-            dbgln("AHCI Port {}: Identify failed, SError {}", representative_port_index(), (u32)m_port_registers.serr);
+            dbgln("AHCI Port {}: Identify failed, SError 0x{:08x}", representative_port_index(), (u32)m_port_registers.serr);
+            try_disambiguate_sata_error();
             return false;
         }
         if ((m_port_registers.ci & (1 << unused_command_header.value())) == 0)
