@@ -322,6 +322,12 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
     JS::Parser parser { JS::Lexer { code } };
     auto program = parser.parse_program();
 
+    if (parser.has_errors()) {
+        auto& error = parser.errors()[0];
+        vm.throw_exception<SyntaxError>(global_object, error.to_string());
+        return {};
+    }
+
     auto& caller_frame = vm.call_stack().at(vm.call_stack().size() - 2);
     TemporaryChange scope_change(vm.call_frame().scope, caller_frame->scope);
 
