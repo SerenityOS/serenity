@@ -385,7 +385,7 @@ void Thread::SelectBlocker::not_blocking(bool timeout_in_past)
     // Either the timeout was in the past or we didn't add all blockers
     VERIFY(timeout_in_past || !m_should_block);
     ScopedSpinLock lock(m_lock);
-    if (!m_did_unblock) {
+    if (!m_should_block || !m_did_unblock) {
         m_did_unblock = true;
         if (!timeout_in_past) {
             auto count = collect_unblocked_flags();
