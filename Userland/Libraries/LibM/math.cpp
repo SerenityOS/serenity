@@ -318,26 +318,28 @@ static FloatT internal_gamma(FloatT x) NOEXCEPT
     if (isnan(x))
         return (FloatT)NAN;
 
-    if (x < (FloatT)0 && (((long long)x == x) || isinf(x)))
+    if (x == (FloatT)0.0)
+        return signbit(x) ? (FloatT)-INFINITY : (FloatT)INFINITY;
+
+    if (x < (FloatT)0 && (rintl(x) == x || isinf(x)))
         return (FloatT)NAN;
 
     if (isinf(x))
-        return INFINITY;
+        return (FloatT)INFINITY;
 
     using Extractor = FloatExtractor<FloatT>;
-    if ((long long)x == x) {
-        // These constants were obtained through use of WolframAlpha, they are (in order): 20!, 18!, 10!
-        constexpr auto max_factorial_that_fits = (Extractor::mantissa_bits == FloatExtractor<long double>::mantissa_bits ? 2'432'902'008'176'640'000ull : (Extractor::mantissa_bits == FloatExtractor<double>::mantissa_bits ? 6'402'373'705'728'000ull : (Extractor::mantissa_bits == FloatExtractor<float>::mantissa_bits ? 3'628'800ull : 0ull)));
-        static_assert(max_factorial_that_fits != 0, "internal_gamma needs to be aware of the integer factorial that fits in this floating point type.");
-        unsigned long long result = 1;
-        for (; result < max_factorial_that_fits; result++)
-            result *= result + 1;
+    // These constants were obtained through use of WolframAlpha
+    constexpr long long max_integer_whose_factorial_fits = (Extractor::mantissa_bits == FloatExtractor<long double>::mantissa_bits ? 20 : (Extractor::mantissa_bits == FloatExtractor<double>::mantissa_bits ? 18 : (Extractor::mantissa_bits == FloatExtractor<float>::mantissa_bits ? 10 : 0)));
+    static_assert(max_integer_whose_factorial_fits != 0, "internal_gamma needs to be aware of the integer factorial that fits in this floating point type.");
+    if (rintl(x) == (long double)x && x <= max_integer_whose_factorial_fits) {
+        long long result = 1;
+        for (long long cursor = 1; cursor <= min(max_integer_whose_factorial_fits, (long long)x); cursor++)
+            result *= cursor;
         return (FloatT)result;
     }
 
-    // Approximation taken from: <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5840229/>
-    // Web archive link: <https://web.archive.org/web/20210314174210/https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5840229/>
-    return sqrtl(M_TAU * x) * powl(x / M_E, x) * powl(x * sinhl(1.0l / x), x / 2.0l) * expl((7.0l / 324.0l) * (1.0l / (powl(x, 3.0l) * (35.0l * powl(x, 2.0l) + 33.0l)))) - 1.0l;
+    // Stirling approximation
+    return sqrtl(2.0 * M_PI / x) * powl(x / M_E, x);
 }
 
 extern "C" {
@@ -1072,22 +1074,34 @@ float lgammaf(float value) NOEXCEPT
 
 long double lgammal_r(long double value, int* sign) NOEXCEPT
 {
+    if (value == 1.0 || value == 2.0)
+        return 0.0;
+    if (isinf(value) || value == 0.0)
+        return INFINITY;
     long double result = logl(internal_gamma(value));
-    *sign = signbit(result);
+    *sign = signbit(result) ? -1 : 1;
     return result;
 }
 
 double lgamma_r(double value, int* sign) NOEXCEPT
 {
+    if (value == 1.0 || value == 2.0)
+        return 0.0;
+    if (isinf(value) || value == 0.0)
+        return INFINITY;
     double result = log(internal_gamma(value));
-    *sign = signbit(result);
+    *sign = signbit(result) ? -1 : 1;
     return result;
 }
 
 float lgammaf_r(float value, int* sign) NOEXCEPT
 {
+    if (value == 1.0 || value == 2.0)
+        return 0.0;
+    if (isinf(value) || value == 0.0)
+        return INFINITY;
     float result = logf(internal_gamma(value));
-    *sign = signbit(result);
+    *sign = signbit(result) ? -1 : 1;
     return result;
 }
 
