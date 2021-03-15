@@ -247,4 +247,19 @@ TEST_CASE(gamma)
     EXPECT_EQ(signgam, -1);
 }
 
+TEST_CASE(fmax_and_fmin)
+{
+    EXPECT(fmax(-INFINITY, 0) == 0);
+    EXPECT(fmax(NAN, 12) == 12);
+    EXPECT(fmax(5, NAN) == 5);
+    EXPECT(isnan(fmax(NAN, NAN)));
+    EXPECT(isinf(fmax(1'000'000, INFINITY)));
+
+    EXPECT(isinf(fmin(-INFINITY, 0)));
+    EXPECT(fmin(0, INFINITY) == 0);
+    EXPECT(fmin(NAN, 5) == 5);
+    EXPECT(fmin(0, NAN) == 0);
+    EXPECT(isnan(fmin(NAN, NAN)));
+}
+
 TEST_MAIN(Math)

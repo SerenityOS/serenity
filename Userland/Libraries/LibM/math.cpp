@@ -1364,4 +1364,64 @@ long double scalblnl(long double x, long exponent) NOEXCEPT
 {
     return internal_scalbn(x, exponent);
 }
+
+long double fmaxl(long double x, long double y) NOEXCEPT
+{
+    if (isnan(x))
+        return y;
+    if (isnan(y))
+        return x;
+
+    return x > y ? x : y;
+}
+
+double fmax(double x, double y) NOEXCEPT
+{
+    if (isnan(x))
+        return y;
+    if (isnan(y))
+        return x;
+
+    return x > y ? x : y;
+}
+
+float fmaxf(float x, float y) NOEXCEPT
+{
+    if (isnan(x))
+        return y;
+    if (isnan(y))
+        return x;
+
+    return x > y ? x : y;
+}
+
+long double fminl(long double x, long double y) NOEXCEPT
+{
+    if (isnan(x))
+        return y;
+    if (isnan(y))
+        return x;
+
+    return x < y ? x : y;
+}
+
+double fmin(double x, double y) NOEXCEPT
+{
+    if (isnan(x))
+        return y;
+    if (isnan(y))
+        return x;
+
+    return x < y ? x : y;
+}
+
+float fminf(float x, float y) NOEXCEPT
+{
+    if (isnan(x))
+        return y;
+    if (isnan(y))
+        return x;
+
+    return x < y ? x : y;
+}
 }
