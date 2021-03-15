@@ -668,7 +668,7 @@ u32 Emulator::virt$fcntl(int fd, int cmd, u32 arg)
     case F_ISTTY:
         break;
     default:
-        TODO();
+        dbgln("Invalid fcntl cmd: {}", cmd);
     }
 
     return syscall(SC_fcntl, fd, cmd, arg);
