@@ -74,6 +74,7 @@ private:
 
     void relayout();
     void resize_window();
+    void reset_view();
 
     String m_path;
     RefPtr<Gfx::Bitmap> m_bitmap;
