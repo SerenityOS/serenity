@@ -92,6 +92,7 @@ private:
     void eject();
 
     const char* try_disambiguate_sata_status();
+    void try_disambiguate_sata_error();
 
     bool initiate_sata_reset();
     void rebase();
