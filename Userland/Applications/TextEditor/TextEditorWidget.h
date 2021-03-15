@@ -114,6 +114,13 @@ private:
     RefPtr<GUI::Action> m_wrap_anywhere_action;
     RefPtr<GUI::Action> m_wrap_at_words_action;
 
+    GUI::ActionGroup m_soft_tab_width_actions;
+    RefPtr<GUI::Action> m_soft_tab_1_width_action;
+    RefPtr<GUI::Action> m_soft_tab_2_width_action;
+    RefPtr<GUI::Action> m_soft_tab_4_width_action;
+    RefPtr<GUI::Action> m_soft_tab_8_width_action;
+    RefPtr<GUI::Action> m_soft_tab_16_width_action;
+
     GUI::ActionGroup syntax_actions;
     RefPtr<GUI::Action> m_plain_text_highlight;
     RefPtr<GUI::Action> m_cpp_highlight;
