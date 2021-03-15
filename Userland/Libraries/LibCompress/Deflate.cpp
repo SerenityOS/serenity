@@ -321,6 +321,11 @@ bool DeflateDecompressor::discard_or_error(size_t count)
 
 bool DeflateDecompressor::unreliable_eof() const { return m_state == State::Idle && m_read_final_bock; }
 
+bool DeflateDecompressor::handle_any_error()
+{
+    return m_input_stream.handle_any_error() || Stream::handle_any_error();
+}
+
 Optional<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     InputMemoryStream memory_stream { bytes };
