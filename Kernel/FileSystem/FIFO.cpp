@@ -155,8 +155,9 @@ KResultOr<size_t> FIFO::write(FileDescription&, size_t, const UserOrKernelBuffer
 {
     if (!m_readers) {
         Thread::current()->send_signal(SIGPIPE, Process::current());
-        return -EPIPE;
+        return EPIPE;
     }
+
     return m_buffer.write(buffer, size);
 }
 

@@ -75,7 +75,7 @@ KResultOr<int> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_na
 
     Optional<Time> requested_sleep = copy_time_from_user(params.requested_sleep);
     if (!requested_sleep.has_value())
-        return -EFAULT;
+        return EFAULT;
 
     bool is_absolute;
     switch (params.flags) {
