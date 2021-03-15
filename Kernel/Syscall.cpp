@@ -131,12 +131,12 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
 
     if (function >= Function::__Count) {
         dbgln("Unknown syscall {} requested ({:08x}, {:08x}, {:08x})", function, arg1, arg2, arg3);
-        return -ENOSYS;
+        return ENOSYS;
     }
 
     if (s_syscall_table[function] == nullptr) {
         dbgln("Null syscall {} requested, you probably need to rebuild this program!", function);
-        return -ENOSYS;
+        return ENOSYS;
     }
     return (process.*(s_syscall_table[function]))(arg1, arg2, arg3);
 }

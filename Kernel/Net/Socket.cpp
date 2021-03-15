@@ -254,7 +254,7 @@ KResultOr<size_t> Socket::read(FileDescription& description, size_t, UserOrKerne
 KResultOr<size_t> Socket::write(FileDescription& description, size_t, const UserOrKernelBuffer& data, size_t size)
 {
     if (is_shut_down_for_writing())
-        return -EPIPE;
+        return EPIPE;
     return sendto(description, data, size, 0, {}, 0);
 }
 
