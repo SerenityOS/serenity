@@ -220,4 +220,31 @@ TEST_CASE(scalbn)
     EXPECT_EQ(scalbn(2.0, 4), 32.0);
 }
 
+TEST_CASE(gamma)
+{
+    EXPECT(isinf(tgamma(+0.0)) && !signbit(tgamma(+0.0)));
+    EXPECT(isinf(tgamma(-0.0)) && signbit(tgamma(-0.0)));
+    EXPECT(isinf(tgamma(INFINITY)) && !signbit(tgamma(INFINITY)));
+    EXPECT(isnan(tgamma(NAN)));
+    EXPECT(isnan(tgamma(-INFINITY)));
+    EXPECT(isnan(tgamma(-5)));
+
+    EXPECT_APPROXIMATE(tgamma(0.5), sqrt(M_PI));
+    EXPECT_EQ(tgammal(21.0l), 2'432'902'008'176'640'000.0l);
+    EXPECT_EQ(tgamma(19.0), 6'402'373'705'728'000.0);
+    EXPECT_EQ(tgammaf(11.0f), 3628800.0f);
+    EXPECT_EQ(tgamma(4.0), 6);
+
+    EXPECT_EQ(lgamma(1.0), 0.0);
+    EXPECT_EQ(lgamma(2.0), 0.0);
+    EXPECT(isinf(lgamma(0.0)));
+    EXPECT(!signbit(lgamma(-0.0)));
+    EXPECT(isnan(lgamma(NAN)));
+    EXPECT(isinf(lgamma(INFINITY)));
+    EXPECT(isinf(lgamma(-INFINITY)));
+    EXPECT_EQ(signgam, 1);
+    lgamma(-2.5);
+    EXPECT_EQ(signgam, -1);
+}
+
 TEST_MAIN(Math)
