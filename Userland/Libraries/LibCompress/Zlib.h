@@ -34,21 +34,22 @@ namespace Compress {
 
 class Zlib {
 public:
-    Zlib(ReadonlyBytes data);
-
     Optional<ByteBuffer> decompress();
     u32 checksum();
 
+    static Optional<Zlib> try_create(ReadonlyBytes data);
     static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
+    Zlib(const ReadonlyBytes& data);
+
     u8 m_compression_method;
     u8 m_compression_info;
     u8 m_check_bits;
     u8 m_has_dictionary;
     u8 m_compression_level;
 
-    u32 m_checksum;
+    u32 m_checksum { 0 };
     ReadonlyBytes m_input_data;
     ReadonlyBytes m_data_bytes;
 };
