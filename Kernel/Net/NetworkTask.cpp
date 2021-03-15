@@ -131,7 +131,7 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
     }
     auto& packet = *static_cast<const ARPPacket*>(eth.payload());
     if (packet.hardware_type() != 1 || packet.hardware_address_length() != sizeof(MACAddress)) {
-        dbgln("handle_arp: Hardware type not ethernet ({:#04x}, len={})", packet.hardware_type(), packet.hardware_address_length());
+        dbgln_if(ARP_DEBUG, "handle_arp: Hardware type not ethernet ({:#04x}, len={})", packet.hardware_type(), packet.hardware_address_length());
         return;
     }
     if (packet.protocol_type() != EtherType::IPv4 || packet.protocol_address_length() != sizeof(IPv4Address)) {
@@ -157,7 +157,7 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
         // Who has this IP address?
         if (auto adapter = NetworkAdapter::from_ipv4_address(packet.target_protocol_address())) {
             // We do!
-            dbgln("handle_arp: Responding to ARP request for my IPv4 address ({})", adapter->ipv4_address());
+            dbgln_if(ARP_DEBUG, "handle_arp: Responding to ARP request for my IPv4 address ({})", adapter->ipv4_address());
             ARPPacket response;
             response.set_operation(ARPOperation::Response);
             response.set_target_hardware_address(packet.sender_hardware_address());
