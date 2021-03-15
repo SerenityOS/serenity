@@ -45,10 +45,13 @@ public:
     void set_parser_document(Badge<HTMLDocumentParser>, DOM::Document&);
     void set_non_blocking(Badge<HTMLDocumentParser>, bool);
     void set_already_started(Badge<HTMLDocumentParser>, bool b) { m_already_started = b; }
-    void prepare_script(Badge<HTMLDocumentParser>);
+    void prepare_script(Badge<HTMLDocumentParser>) { prepare_script(); }
     void execute_script();
 
+    virtual void inserted_into(Node&) override;
+
 private:
+    void prepare_script();
     void script_became_ready();
     void when_the_script_is_ready(Function<void()>);
 
