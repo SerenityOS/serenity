@@ -234,6 +234,7 @@ long long llround(double) NOEXCEPT;
 long long llroundd(long double) NOEXCEPT;
 float rintf(float) NOEXCEPT;
 double rint(double) NOEXCEPT;
+long double rintl(long double) NOEXCEPT;
 long lrintl(long double) NOEXCEPT;
 long lrint(double) NOEXCEPT;
 long lrintf(float) NOEXCEPT;
