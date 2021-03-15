@@ -225,7 +225,7 @@ Handler Launcher::get_handler_for_executable(Handler::Type handler_type, const S
     return handler;
 }
 
-bool Launcher::open_with_user_preferences(const HashMap<String, String>& user_preferences, const String key, const AK::Vector<String> arguments, const String default_program)
+bool Launcher::open_with_user_preferences(const HashMap<String, String>& user_preferences, const String& key, const Vector<String>& arguments, const String& default_program)
 {
     auto program_path = user_preferences.get(key);
     if (program_path.has_value())
@@ -318,16 +318,16 @@ bool Launcher::open_file_url(const URL& url)
     if (extension_parts.size() > 1)
         extension = extension_parts.last();
 
-    // Additionnal parameters parsing, specific for the file protocol
+    // Additional parameters parsing, specific for the file protocol and TextEditor
     Vector<String> additional_parameters;
     additional_parameters.append(url.path());
     auto parameters = url.query().split('&');
     for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter) {
         auto pair = parameter->split('=');
-        if (pair[0] == "line_number") {
+        if (pair.size() == 2 && pair[0] == "line_number") {
             auto line = pair[1].to_int();
             if (line.has_value())
-                additional_parameters.prepend(String::format("-l%i", *line));
+                additional_parameters.prepend(String::formatted("-l {}", line.value()));
         }
     }
     return open_with_user_preferences(m_file_handlers, extension, additional_parameters, "/bin/TextEditor");
