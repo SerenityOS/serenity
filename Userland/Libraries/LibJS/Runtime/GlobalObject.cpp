@@ -325,8 +325,10 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
     auto& caller_frame = vm.call_stack().at(vm.call_stack().size() - 2);
     TemporaryChange scope_change(vm.call_frame().scope, caller_frame->scope);
 
-    // FIXME: eval() should return the result of the executed code. This currently does not work.
-    return vm.interpreter().execute_statement(global_object, program);
+    vm.interpreter().execute_statement(global_object, program);
+    if (vm.exception())
+        return {};
+    return vm.last_value();
 }
 
 }
