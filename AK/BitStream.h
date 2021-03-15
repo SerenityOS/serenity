@@ -116,6 +116,11 @@ public:
             m_next_byte.clear();
     }
 
+    bool handle_any_error() override
+    {
+        return m_stream.handle_any_error() || Stream::handle_any_error();
+    }
+
 private:
     Optional<u8> m_next_byte;
     size_t m_bit_offset { 0 };
