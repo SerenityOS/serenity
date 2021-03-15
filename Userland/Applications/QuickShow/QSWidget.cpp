@@ -156,12 +156,11 @@ void QSWidget::relayout()
     if (m_bitmap.is_null())
         return;
 
-    float scale_factor = (float)m_scale / 100.0f;
     Gfx::IntSize new_size = m_bitmap_rect.size();
 
     Gfx::IntPoint new_location;
-    new_location.set_x((width() / 2) - (new_size.width() / 2) - (m_pan_origin.x() * scale_factor));
-    new_location.set_y((height() / 2) - (new_size.height() / 2) - (m_pan_origin.y() * scale_factor));
+    new_location.set_x((width() / 2) - (new_size.width() / 2) - m_pan_origin.x());
+    new_location.set_y((height() / 2) - (new_size.height() / 2) - m_pan_origin.y());
     m_bitmap_rect.set_location(new_location);
 
     update();
@@ -208,10 +207,9 @@ void QSWidget::mousemove_event(GUI::MouseEvent& event)
         return;
 
     auto delta = event.position() - m_click_position;
-    float scale_factor = (float)m_scale / 100.0f;
     m_pan_origin = m_saved_pan_origin.translated(
-        -delta.x() / scale_factor,
-        -delta.y() / scale_factor);
+        -delta.x(),
+        -delta.y());
 
     relayout();
 }
@@ -231,13 +229,18 @@ void QSWidget::mousewheel_event(GUI::MouseEvent& event)
     auto old_scale_factor = (float)m_scale / 100.0f;
     auto new_scale_factor = (float)new_scale / 100.0f;
 
+    // focus_point is the window position the cursor is pointing to.
+    // The pixel (in image space) the cursor points to is located at
+    // (m_pan_origin + focus_point) / scale_factor.
+    // We want the image after scaling to be panned in such a way that the cursor
+    // will still point to the same image pixel. Basically, we need to solve
+    // (m_pan_origin + focus_point) / old_scale_factor = (new_m_pan_origin + focus_point) / new_scale_factor.
     auto focus_point = Gfx::FloatPoint(
-        m_pan_origin.x() - ((float)event.x() - (float)width() / 2.0) / old_scale_factor,
-        m_pan_origin.y() - ((float)event.y() - (float)height() / 2.0) / old_scale_factor);
+        (float)event.x() - (float)width() / 2.0,
+        (float)event.y() - (float)height() / 2.0);
 
-    m_pan_origin = Gfx::FloatPoint(
-        focus_point.x() - new_scale_factor / old_scale_factor * (focus_point.x() - m_pan_origin.x()),
-        focus_point.y() - new_scale_factor / old_scale_factor * (focus_point.y() - m_pan_origin.y()));
+    // A little algebra shows that new m_pan_origin equals to:
+    m_pan_origin = (m_pan_origin + focus_point) * (new_scale_factor / old_scale_factor) - focus_point;
 
     set_scale(new_scale);
 }
