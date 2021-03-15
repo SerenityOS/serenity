@@ -48,7 +48,7 @@ void QSWidget::clear()
     m_bitmap = nullptr;
     m_path = {};
 
-    set_scale(100);
+    reset_view();
     update();
 }
 
@@ -133,9 +133,6 @@ void QSWidget::set_scale(int scale)
         scale = 10;
     if (scale > 1000)
         scale = 1000;
-
-    if (scale == 100)
-        m_pan_origin = { 0, 0 };
 
     m_scale = scale;
     float scale_factor = (float)m_scale / 100.0f;
@@ -256,7 +253,7 @@ void QSWidget::load_from_file(const String& path)
     m_path = path;
     m_bitmap = bitmap;
     m_scale = -1;
-    set_scale(100);
+    reset_view();
 }
 
 void QSWidget::drop_event(GUI::DropEvent& event)
@@ -283,4 +280,10 @@ void QSWidget::resize_window()
 
     new_size.set_height(new_size.height() + m_toolbar_height);
     window()->resize(new_size);
+}
+
+void QSWidget::reset_view()
+{
+    m_pan_origin = { 0, 0 };
+    set_scale(100);
 }
