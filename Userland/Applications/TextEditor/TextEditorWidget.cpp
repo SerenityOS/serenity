@@ -481,6 +481,34 @@ void TextEditorWidget::initialize_menubar(GUI::MenuBar& menubar)
     m_no_wrapping_action->set_checked(true);
 
     view_menu.add_separator();
+
+    m_soft_tab_width_actions.set_exclusive(true);
+    auto& soft_tab_width_menu = view_menu.add_submenu("Tab width");
+    m_soft_tab_1_width_action = GUI::Action::create_checkable("1", [&](auto&) {
+        m_editor->set_soft_tab_width(1);
+    });
+    m_soft_tab_2_width_action = GUI::Action::create_checkable("2", [&](auto&) {
+        m_editor->set_soft_tab_width(2);
+    });
+    m_soft_tab_4_width_action = GUI::Action::create_checkable("4", [&](auto&) {
+        m_editor->set_soft_tab_width(4);
+    });
+    m_soft_tab_8_width_action = GUI::Action::create_checkable("8", [&](auto&) {
+        m_editor->set_soft_tab_width(8);
+    });
+    m_soft_tab_16_width_action = GUI::Action::create_checkable("16", [&](auto&) {
+        m_editor->set_soft_tab_width(16);
+    });
+
+    soft_tab_width_menu.add_action(*m_soft_tab_1_width_action);
+    soft_tab_width_menu.add_action(*m_soft_tab_2_width_action);
+    soft_tab_width_menu.add_action(*m_soft_tab_4_width_action);
+    soft_tab_width_menu.add_action(*m_soft_tab_8_width_action);
+    soft_tab_width_menu.add_action(*m_soft_tab_16_width_action);
+
+    m_soft_tab_4_width_action->set_checked(true);
+
+    view_menu.add_separator();
     view_menu.add_action(*m_no_preview_action);
     view_menu.add_action(*m_markdown_preview_action);
     view_menu.add_action(*m_html_preview_action);
