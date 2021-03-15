@@ -8,3 +8,12 @@ test("basic eval() functionality", () => {
     }
     expect(foo(7)).toBe(12);
 });
+
+test("syntax error", () => {
+    expect(() => {
+        eval("{");
+    }).toThrowWithMessage(
+        SyntaxError,
+        "Unexpected token Eof. Expected CurlyClose (line: 1, column: 2)"
+    );
+});
