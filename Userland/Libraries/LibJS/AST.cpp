@@ -52,6 +52,28 @@
 
 namespace JS {
 
+class InterpreterNodeScope {
+    AK_MAKE_NONCOPYABLE(InterpreterNodeScope);
+    AK_MAKE_NONMOVABLE(InterpreterNodeScope);
+
+public:
+    InterpreterNodeScope(Interpreter& interpreter, const ASTNode& node)
+        : m_interpreter(interpreter)
+        , m_node(node)
+    {
+        m_interpreter.enter_node(m_node);
+    }
+
+    ~InterpreterNodeScope()
+    {
+        m_interpreter.exit_node(m_node);
+    }
+
+private:
+    Interpreter& m_interpreter;
+    const ASTNode& m_node;
+};
+
 String ASTNode::class_name() const
 {
     // NOTE: We strip the "JS::" prefix.
@@ -95,41 +117,31 @@ static String get_function_name(GlobalObject& global_object, Value value)
 
 Value ScopeNode::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return interpreter.execute_statement(global_object, *this);
 }
 
 Value Program::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return interpreter.execute_statement(global_object, *this, ScopeType::Block);
 }
 
 Value FunctionDeclaration::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return {};
 }
 
 Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_scope(), is_strict_mode() || interpreter.vm().in_strict_mode(), m_is_arrow_function);
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return m_expression->execute(interpreter, global_object);
 }
 
@@ -174,9 +186,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
 
 Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     auto& vm = interpreter.vm();
     auto [this_value, callee] = compute_this_and_callee(interpreter, global_object);
     if (vm.exception())
@@ -261,9 +271,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
 
 Value ReturnStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     auto value = argument() ? argument()->execute(interpreter, global_object) : js_undefined();
     if (interpreter.exception())
         return {};
@@ -273,8 +281,7 @@ Value ReturnStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
 
 Value IfStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto predicate_result = m_predicate->execute(interpreter, global_object);
     if (interpreter.exception())
@@ -291,8 +298,7 @@ Value IfStatement::execute(Interpreter& interpreter, GlobalObject& global_object
 
 Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto object_value = m_object->execute(interpreter, global_object);
     if (interpreter.exception())
@@ -312,8 +318,7 @@ Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_obje
 
 Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto last_value = js_undefined();
     for (;;) {
@@ -342,8 +347,7 @@ Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
 
 Value DoWhileStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto last_value = js_undefined();
     for (;;) {
@@ -374,8 +378,7 @@ Value DoWhileStatement::execute(Interpreter& interpreter, GlobalObject& global_o
 
 Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     RefPtr<BlockStatement> wrapper;
 
@@ -473,8 +476,7 @@ static FlyString variable_from_for_declaration(Interpreter& interpreter, GlobalO
 
 Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     bool has_declaration = is<VariableDeclaration>(*m_lhs);
     if (!has_declaration && !is<Identifier>(*m_lhs)) {
@@ -521,8 +523,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
 
 Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     bool has_declaration = is<VariableDeclaration>(*m_lhs);
     if (!has_declaration && !is<Identifier>(*m_lhs)) {
@@ -566,8 +567,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
 
 Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto lhs_result = m_lhs->execute(interpreter, global_object);
     if (interpreter.exception())
@@ -628,8 +628,7 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 
 Value LogicalExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto lhs_result = m_lhs->execute(interpreter, global_object);
     if (interpreter.exception())
@@ -688,8 +687,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
 
 Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto& vm = interpreter.vm();
     if (m_op == UnaryOp::Delete) {
@@ -775,8 +773,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
 Value SuperExpression::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     // The semantics for SuperExpressions are handled in CallExpression::compute_this_and_callee()
     VERIFY_NOT_REACHED();
@@ -784,16 +781,13 @@ Value SuperExpression::execute(Interpreter& interpreter, GlobalObject&) const
 
 Value ClassMethod::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return m_function->execute(interpreter, global_object);
 }
 
 Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto& vm = interpreter.vm();
     Value class_constructor_value = m_constructor->execute(interpreter, global_object);
@@ -887,8 +881,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
 Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     Value class_constructor = m_class_expression->execute(interpreter, global_object);
     if (interpreter.exception())
@@ -1302,8 +1295,7 @@ void ForOfStatement::dump(int indent) const
 
 Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto value = interpreter.vm().get_variable(string(), global_object);
     if (value.is_empty()) {
@@ -1327,17 +1319,13 @@ void SpreadExpression::dump(int indent) const
 
 Value SpreadExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return m_target->execute(interpreter, global_object);
 }
 
 Value ThisExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return interpreter.vm().resolve_this_binding(global_object);
 }
 
@@ -1348,8 +1336,7 @@ void ThisExpression::dump(int indent) const
 
 Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
 #define EXECUTE_LHS_AND_RHS()                                    \
     do {                                                         \
@@ -1466,8 +1453,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
 
 Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto reference = m_argument->to_reference(interpreter, global_object);
     if (interpreter.exception())
@@ -1590,8 +1576,7 @@ void UpdateExpression::dump(int indent) const
 
 Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     for (auto& declarator : m_declarations) {
         if (auto* init = declarator.init()) {
@@ -1608,8 +1593,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
 
 Value VariableDeclarator::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     // NOTE: VariableDeclarator execution is handled by VariableDeclaration.
     VERIFY_NOT_REACHED();
@@ -1669,8 +1653,7 @@ void ExpressionStatement::dump(int indent) const
 
 Value ObjectProperty::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     // NOTE: ObjectProperty execution is handled by ObjectExpression.
     VERIFY_NOT_REACHED();
@@ -1678,8 +1661,7 @@ Value ObjectProperty::execute(Interpreter& interpreter, GlobalObject&) const
 
 Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto* object = Object::create_empty(global_object);
     for (auto& property : m_properties) {
@@ -1782,8 +1764,7 @@ String MemberExpression::to_string_approximation() const
 
 Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto object_value = m_object->execute(interpreter, global_object);
     if (interpreter.exception())
@@ -1812,8 +1793,7 @@ void MetaProperty::dump(int indent) const
 
 Value MetaProperty::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     if (m_type == MetaProperty::Type::NewTarget)
         return interpreter.vm().get_new_target().value_or(js_undefined());
@@ -1824,41 +1804,31 @@ Value MetaProperty::execute(Interpreter& interpreter, GlobalObject&) const
 
 Value StringLiteral::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return js_string(interpreter.heap(), m_value);
 }
 
 Value NumericLiteral::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return Value(m_value);
 }
 
 Value BigIntLiteral::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
 }
 
 Value BooleanLiteral::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return Value(m_value);
 }
 
 Value NullLiteral::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return js_null();
 }
 
@@ -1870,9 +1840,7 @@ void RegExpLiteral::dump(int indent) const
 
 Value RegExpLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     return RegExpObject::create(global_object, content(), flags());
 }
 
@@ -1891,8 +1859,7 @@ void ArrayExpression::dump(int indent) const
 
 Value ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto* array = Array::create(global_object);
     for (auto& element : m_elements) {
@@ -1926,8 +1893,7 @@ void TemplateLiteral::dump(int indent) const
 
 Value TemplateLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     StringBuilder string_builder;
 
@@ -1957,8 +1923,7 @@ void TaggedTemplateLiteral::dump(int indent) const
 
 Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto& vm = interpreter.vm();
     auto tag = m_tag->execute(interpreter, global_object);
@@ -2035,8 +2000,7 @@ void ThrowStatement::dump(int indent) const
 
 Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     interpreter.execute_statement(global_object, m_block, ScopeType::Try);
     if (auto* exception = interpreter.exception()) {
@@ -2071,8 +2035,7 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
 
 Value CatchClause::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     // NOTE: CatchClause execution is handled by TryStatement.
     VERIFY_NOT_REACHED();
@@ -2081,9 +2044,7 @@ Value CatchClause::execute(Interpreter& interpreter, GlobalObject&) const
 
 Value ThrowStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     auto value = m_argument->execute(interpreter, global_object);
     if (interpreter.vm().exception())
         return {};
@@ -2093,8 +2054,7 @@ Value ThrowStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
 
 Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto discriminant_result = m_discriminant->execute(interpreter, global_object);
     if (interpreter.exception())
@@ -2135,8 +2095,7 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
 
 Value SwitchCase::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     // NOTE: SwitchCase execution is handled by SwitchStatement.
     VERIFY_NOT_REACHED();
@@ -2145,18 +2104,14 @@ Value SwitchCase::execute(Interpreter& interpreter, GlobalObject&) const
 
 Value BreakStatement::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     interpreter.vm().unwind(ScopeType::Breakable, m_target_label);
     return {};
 }
 
 Value ContinueStatement::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     interpreter.vm().unwind(ScopeType::Continuable, m_target_label);
     return {};
 }
@@ -2188,8 +2143,7 @@ void SwitchCase::dump(int indent) const
 
 Value ConditionalExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     auto test_result = m_test->execute(interpreter, global_object);
     if (interpreter.exception())
@@ -2242,9 +2196,7 @@ Value SequenceExpression::execute(Interpreter& interpreter, GlobalObject& global
 
 Value DebuggerStatement::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
-
+    InterpreterNodeScope node_scope { interpreter, *this };
     // Sorry, no JavaScript debugger available (yet)!
     return {};
 }
