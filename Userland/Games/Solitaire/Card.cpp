@@ -81,7 +81,7 @@ static RefPtr<Gfx::Bitmap> s_background;
 
 Card::Card(Type type, uint8_t value)
     : m_rect(Gfx::IntRect({}, { width, height }))
-    , m_front(*Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { width, height }))
+    , m_front(*Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }))
     , m_type(type)
     , m_value(value)
 {
@@ -89,7 +89,7 @@ Card::Card(Type type, uint8_t value)
     Gfx::IntRect paint_rect({ 0, 0 }, { width, height });
 
     if (s_background.is_null()) {
-        s_background = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { width, height });
+        s_background = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height });
         Gfx::Painter bg_painter(*s_background);
 
         s_background->fill(Color::White);

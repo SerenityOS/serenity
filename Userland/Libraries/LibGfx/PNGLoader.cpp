@@ -630,7 +630,7 @@ static bool decode_png_bitmap_simple(PNGLoadingContext& context)
         }
     }
 
-    context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? BitmapFormat::RGBA32 : BitmapFormat::RGB32, { context.width, context.height });
+    context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height });
 
     if (!context.bitmap) {
         context.state = PNGLoadingContext::State::Error;
@@ -750,7 +750,7 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
 static bool decode_png_adam7(PNGLoadingContext& context)
 {
     Streamer streamer(context.decompression_buffer.data(), context.decompression_buffer.size());
-    context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? BitmapFormat::RGBA32 : BitmapFormat::RGB32, { context.width, context.height });
+    context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height });
     if (!context.bitmap)
         return false;
 

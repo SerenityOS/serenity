@@ -92,16 +92,16 @@ void Compositor::init_bitmaps()
     auto& screen = Screen::the();
     auto size = screen.size();
 
-    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.scale_factor(), screen.pitch(), screen.scanline(0));
+    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(0));
     m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
 
     if (m_screen_can_set_buffer)
-        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.scale_factor(), screen.pitch(), screen.scanline(screen.physical_height()));
+        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(screen.physical_height()));
     else
-        m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size, screen.scale_factor());
+        m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
 
-    m_temp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size, screen.scale_factor());
+    m_temp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
     m_temp_painter = make<Gfx::Painter>(*m_temp_bitmap);
 
     m_buffers_are_flipped = false;
@@ -803,7 +803,7 @@ void Compositor::draw_cursor(const Gfx::IntRect& cursor_rect)
     auto& wm = WindowManager::the();
 
     if (!m_cursor_back_bitmap || m_cursor_back_bitmap->size() != cursor_rect.size() || m_cursor_back_bitmap->scale() != Screen::the().scale_factor()) {
-        m_cursor_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, cursor_rect.size(), Screen::the().scale_factor());
+        m_cursor_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, cursor_rect.size(), Screen::the().scale_factor());
         m_cursor_back_painter = make<Gfx::Painter>(*m_cursor_back_bitmap);
     }
 

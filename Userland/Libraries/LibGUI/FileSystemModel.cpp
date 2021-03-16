@@ -497,7 +497,7 @@ static RefPtr<Gfx::Bitmap> render_thumbnail(const StringView& path)
 
     double scale = min(32 / (double)png_bitmap->width(), 32 / (double)png_bitmap->height());
 
-    auto thumbnail = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { 32, 32 });
+    auto thumbnail = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 32, 32 });
     Gfx::IntRect destination = Gfx::IntRect(0, 0, (int)(png_bitmap->width() * scale), (int)(png_bitmap->height() * scale));
     destination.center_within(thumbnail->rect());
 

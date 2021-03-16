@@ -38,7 +38,7 @@ static const Gfx::Bitmap& heat_gradient()
 {
     static RefPtr<Gfx::Bitmap> bitmap;
     if (!bitmap) {
-        bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { 101, 1 });
+        bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { 101, 1 });
         GUI::Painter painter(*bitmap);
         painter.fill_rect_with_gradient(Orientation::Horizontal, bitmap->rect(), Color::from_rgb(0xffc080), Color::from_rgb(0xff3000));
     }

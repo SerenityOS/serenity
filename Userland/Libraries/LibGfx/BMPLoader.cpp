@@ -1186,12 +1186,12 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
             return BitmapFormat::Indexed8;
         case 16:
             if (context.dib.info.masks.size() == 4)
-                return BitmapFormat::RGBA32;
-            return BitmapFormat::RGB32;
+                return BitmapFormat::BGRA8888;
+            return BitmapFormat::BGRx8888;
         case 24:
-            return BitmapFormat::RGB32;
+            return BitmapFormat::BGRx8888;
         case 32:
-            return BitmapFormat::RGBA32;
+            return BitmapFormat::BGRA8888;
         default:
             return BitmapFormat::Invalid;
         }

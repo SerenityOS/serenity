@@ -52,8 +52,8 @@ enum class BitmapFormat {
     Indexed2,
     Indexed4,
     Indexed8,
-    RGB32,
-    RGBA32,
+    BGRx8888,
+    BGRA8888,
 };
 
 inline bool is_valid_bitmap_format(unsigned format)
@@ -64,8 +64,8 @@ inline bool is_valid_bitmap_format(unsigned format)
     case (unsigned)BitmapFormat::Indexed2:
     case (unsigned)BitmapFormat::Indexed4:
     case (unsigned)BitmapFormat::Indexed8:
-    case (unsigned)BitmapFormat::RGB32:
-    case (unsigned)BitmapFormat::RGBA32:
+    case (unsigned)BitmapFormat::BGRx8888:
+    case (unsigned)BitmapFormat::BGRA8888:
         return true;
     }
     return false;
@@ -80,9 +80,9 @@ enum class StorageFormat {
 static StorageFormat determine_storage_format(BitmapFormat format)
 {
     switch (format) {
-    case BitmapFormat::RGB32:
+    case BitmapFormat::BGRx8888:
         return StorageFormat::RGB32;
-    case BitmapFormat::RGBA32:
+    case BitmapFormat::BGRA8888:
         return StorageFormat::RGBA32;
     case BitmapFormat::Indexed1:
     case BitmapFormat::Indexed2:
@@ -194,8 +194,8 @@ public:
             return 4;
         case BitmapFormat::Indexed8:
             return 8;
-        case BitmapFormat::RGB32:
-        case BitmapFormat::RGBA32:
+        case BitmapFormat::BGRx8888:
+        case BitmapFormat::BGRA8888:
             return 32;
         default:
             VERIFY_NOT_REACHED();
@@ -213,7 +213,7 @@ public:
 
     void fill(Color);
 
-    bool has_alpha_channel() const { return m_format == BitmapFormat::RGBA32; }
+    bool has_alpha_channel() const { return m_format == BitmapFormat::BGRA8888; }
     BitmapFormat format() const { return m_format; }
 
     void set_mmap_name(const StringView&);

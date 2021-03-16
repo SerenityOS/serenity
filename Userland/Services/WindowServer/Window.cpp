@@ -159,7 +159,7 @@ void Window::set_rect(const Gfx::IntRect& rect)
     auto old_rect = m_rect;
     m_rect = rect;
     if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
-        m_backing_store = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, m_rect.size());
+        m_backing_store = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, m_rect.size());
     }
 
     invalidate(true, old_rect.size() != rect.size());

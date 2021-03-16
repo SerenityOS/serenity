@@ -248,7 +248,7 @@ RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, con
 /// - scale_factor
 /// - format
 /// - palette count
-/// - palette data (= palette count * RGBA32)
+/// - palette data (= palette count * BGRA8888)
 /// - image data (= actual size * u8)
 RefPtr<Bitmap> Bitmap::create_from_serialized_byte_buffer(ByteBuffer&& buffer)
 {
@@ -270,7 +270,7 @@ RefPtr<Bitmap> Bitmap::create_from_serialized_byte_buffer(ByteBuffer&& buffer)
     if (!read(actual_size) || !read(width) || !read(height) || !read(scale_factor) || !read(format) || !read(palette_size))
         return nullptr;
 
-    if (format > BitmapFormat::RGBA32 || format < BitmapFormat::Indexed1)
+    if (format > BitmapFormat::BGRA8888 || format < BitmapFormat::Indexed1)
         return nullptr;
 
     if (!check_size({ width, height }, scale_factor, format, actual_size))

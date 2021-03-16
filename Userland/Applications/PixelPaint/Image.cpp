@@ -141,7 +141,7 @@ void Image::save(const String& file_path) const
 
 void Image::export_bmp(const String& file_path)
 {
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, m_size);
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, m_size);
     GUI::Painter painter(*bitmap);
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
 
@@ -154,7 +154,7 @@ void Image::export_bmp(const String& file_path)
 
 void Image::export_png(const String& file_path)
 {
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, m_size);
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, m_size);
     GUI::Painter painter(*bitmap);
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
 

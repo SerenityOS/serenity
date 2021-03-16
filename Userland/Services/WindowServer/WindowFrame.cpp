@@ -227,7 +227,7 @@ bool WindowFrame::frame_has_alpha() const
 {
     if (m_has_alpha_channel)
         return true;
-    if (auto* shadow_bitmap = window_shadow(); shadow_bitmap && shadow_bitmap->format() == Gfx::BitmapFormat::RGBA32)
+    if (auto* shadow_bitmap = window_shadow(); shadow_bitmap && shadow_bitmap->format() == Gfx::BitmapFormat::BGRA8888)
         return true;
     return false;
 }
@@ -388,7 +388,7 @@ void WindowFrame::render_to_cache()
     if (!s_tmp_bitmap || !s_tmp_bitmap->size().contains(total_frame_rect.size()) || s_tmp_bitmap->scale() != scale) {
         if (s_tmp_bitmap)
             s_tmp_bitmap->unref();
-        s_tmp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, total_frame_rect.size(), scale).leak_ref();
+        s_tmp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, total_frame_rect.size(), scale).leak_ref();
     }
 
     auto top_bottom_height = total_frame_rect.height() - window_rect.height();
@@ -396,14 +396,14 @@ void WindowFrame::render_to_cache()
 
     if (!m_top_bottom || m_top_bottom->width() != total_frame_rect.width() || m_top_bottom->height() != top_bottom_height || m_top_bottom->scale() != scale) {
         if (top_bottom_height > 0)
-            m_top_bottom = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { total_frame_rect.width(), top_bottom_height }, scale);
+            m_top_bottom = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { total_frame_rect.width(), top_bottom_height }, scale);
         else
             m_top_bottom = nullptr;
         m_shadow_dirty = true;
     }
     if (!m_left_right || m_left_right->height() != total_frame_rect.height() || m_left_right->width() != left_right_width || m_left_right->scale() != scale) {
         if (left_right_width > 0)
-            m_left_right = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { left_right_width, total_frame_rect.height() }, scale);
+            m_left_right = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { left_right_width, total_frame_rect.height() }, scale);
         else
             m_left_right = nullptr;
         m_shadow_dirty = true;
