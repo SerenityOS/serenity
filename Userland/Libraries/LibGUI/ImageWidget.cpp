@@ -103,13 +103,11 @@ void ImageWidget::load_from_file(const StringView& path)
 
     set_bitmap(bitmap);
 
-    if (path.ends_with(".gif")) {
-        if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
-            const auto& first_frame = m_image_decoder->frame(0);
-            m_timer->set_interval(first_frame.duration);
-            m_timer->on_timeout = [this] { animate(); };
-            m_timer->start();
-        }
+    if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
+        const auto& first_frame = m_image_decoder->frame(0);
+        m_timer->set_interval(first_frame.duration);
+        m_timer->on_timeout = [this] { animate(); };
+        m_timer->start();
     }
 }
 
