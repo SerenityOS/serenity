@@ -114,7 +114,7 @@ Value FunctionDeclaration::execute(Interpreter& interpreter, GlobalObject&) cons
     interpreter.enter_node(*this);
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
-    return js_undefined();
+    return {};
 }
 
 Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -315,14 +315,14 @@ Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     interpreter.enter_node(*this);
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
-    Value last_value = js_undefined();
+    auto last_value = js_undefined();
     for (;;) {
         auto test_result = m_test->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
         if (!test_result.to_boolean())
             break;
-        last_value = interpreter.execute_statement(global_object, *m_body);
+        last_value = interpreter.execute_statement(global_object, *m_body).value_or(last_value);
         if (interpreter.exception())
             return {};
         if (interpreter.vm().should_unwind()) {
@@ -345,11 +345,11 @@ Value DoWhileStatement::execute(Interpreter& interpreter, GlobalObject& global_o
     interpreter.enter_node(*this);
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
-    Value last_value = js_undefined();
+    auto last_value = js_undefined();
     for (;;) {
         if (interpreter.exception())
             return {};
-        last_value = interpreter.execute_statement(global_object, *m_body);
+        last_value = interpreter.execute_statement(global_object, *m_body).value_or(last_value);
         if (interpreter.exception())
             return {};
         if (interpreter.vm().should_unwind()) {
@@ -392,8 +392,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
             interpreter.exit_scope(*wrapper);
     });
 
-    Value last_value = js_undefined();
-
+    auto last_value = js_undefined();
     if (m_init) {
         m_init->execute(interpreter, global_object);
         if (interpreter.exception())
@@ -407,7 +406,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
                 return {};
             if (!test_result.to_boolean())
                 break;
-            last_value = interpreter.execute_statement(global_object, *m_body);
+            last_value = interpreter.execute_statement(global_object, *m_body).value_or(last_value);
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
@@ -428,7 +427,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         }
     } else {
         while (true) {
-            last_value = interpreter.execute_statement(global_object, *m_body);
+            last_value = interpreter.execute_statement(global_object, *m_body).value_or(last_value);
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
@@ -499,7 +498,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
             interpreter.vm().set_variable(variable_name, property_name.value_and_attributes(object).value, global_object, has_declaration);
             if (interpreter.exception())
                 return {};
-            last_value = interpreter.execute_statement(global_object, *m_body);
+            last_value = interpreter.execute_statement(global_object, *m_body).value_or(last_value);
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
@@ -543,7 +542,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     get_iterator_values(global_object, rhs_result, [&](Value value) {
         interpreter.vm().set_variable(variable_name, value, global_object, has_declaration);
-        last_value = interpreter.execute_statement(global_object, *m_body);
+        last_value = interpreter.execute_statement(global_object, *m_body).value_or(last_value);
         if (interpreter.exception())
             return IterationDecision::Break;
         if (interpreter.vm().should_unwind()) {
@@ -897,7 +896,7 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
 
     interpreter.current_scope()->put_to_scope(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
 
-    return js_undefined();
+    return {};
 }
 
 static void print_indent(int indent)
@@ -1604,7 +1603,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
             interpreter.vm().set_variable(variable_name, initalizer_result, global_object, true);
         }
     }
-    return js_undefined();
+    return {};
 }
 
 Value VariableDeclarator::execute(Interpreter& interpreter, GlobalObject&) const
@@ -2150,7 +2149,7 @@ Value BreakStatement::execute(Interpreter& interpreter, GlobalObject&) const
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
     interpreter.vm().unwind(ScopeType::Breakable, m_target_label);
-    return js_undefined();
+    return {};
 }
 
 Value ContinueStatement::execute(Interpreter& interpreter, GlobalObject&) const
@@ -2159,7 +2158,7 @@ Value ContinueStatement::execute(Interpreter& interpreter, GlobalObject&) const
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
     interpreter.vm().unwind(ScopeType::Continuable, m_target_label);
-    return js_undefined();
+    return {};
 }
 
 void SwitchStatement::dump(int indent) const
@@ -2247,7 +2246,7 @@ Value DebuggerStatement::execute(Interpreter& interpreter, GlobalObject&) const
     ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
 
     // Sorry, no JavaScript debugger available (yet)!
-    return js_undefined();
+    return {};
 }
 
 void ScopeNode::add_variables(NonnullRefPtrVector<VariableDeclaration> variables)
