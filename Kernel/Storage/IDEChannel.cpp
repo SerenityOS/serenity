@@ -401,7 +401,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
     }
 }
 
-void IDEChannel::ata_access(Direction direction, bool slave_request, u32 lba, u8 block_count, u16 capabilities, bool use_dma)
+void IDEChannel::ata_access(Direction direction, bool slave_request, u64 lba, u8 block_count, u16 capabilities, bool use_dma)
 {
     LBAMode lba_mode;
     u8 head = 0;
@@ -432,8 +432,8 @@ void IDEChannel::ata_access(Direction direction, bool slave_request, u32 lba, u8
     if (lba_mode == LBAMode::FortyEightBit) {
         m_io_group.io_base().offset(ATA_REG_SECCOUNT1).out<u8>(0);
         m_io_group.io_base().offset(ATA_REG_LBA3).out<u8>((lba & 0xFF000000) >> 24);
-        m_io_group.io_base().offset(ATA_REG_LBA4).out<u8>(0);
-        m_io_group.io_base().offset(ATA_REG_LBA5).out<u8>(0);
+        m_io_group.io_base().offset(ATA_REG_LBA4).out<u8>((lba & 0xFF00000000ull) >> 32);
+        m_io_group.io_base().offset(ATA_REG_LBA5).out<u8>((lba & 0xFF0000000000ull) >> 40);
     }
 
     m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(block_count);
@@ -470,7 +470,7 @@ void IDEChannel::ata_access(Direction direction, bool slave_request, u32 lba, u8
 void IDEChannel::ata_read_sectors_with_dma(bool slave_request, u16 capabilities)
 {
     auto& request = *m_current_request;
-    u32 lba = request.block_index();
+    auto lba = request.block_index();
     dbgln_if(PATA_DEBUG, "IDEChannel::ata_read_sectors_with_dma ({} x {})", lba, request.block_count());
 
     prdt().offset = m_dma_buffer_page->paddr();
@@ -530,7 +530,7 @@ void IDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
 void IDEChannel::ata_write_sectors_with_dma(bool slave_request, u16 capabilities)
 {
     auto& request = *m_current_request;
-    u32 lba = request.block_index();
+    auto lba = request.block_index();
     dbgln_if(PATA_DEBUG, "IDEChannel::ata_write_sectors_with_dma ({} x {})", lba, request.block_count());
 
     prdt().offset = m_dma_buffer_page->paddr();
@@ -586,7 +586,7 @@ void IDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     auto& request = *m_current_request;
 
     VERIFY(request.block_count() <= 256);
-    u32 start_sector = request.block_index();
+    auto start_sector = request.block_index();
     u32 count = request.block_count();
     dbgln_if(PATA_DEBUG, "IDEChannel: Writing {} sector(s) @ LBA {}", count, start_sector);
 
