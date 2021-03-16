@@ -288,7 +288,7 @@ static Optional<u8> get_next_symbol(HuffmanStreamState& hstream, const HuffmanTa
  * macroblocks that share the chrominance data. Next two iterations (assuming that
  * we are dealing with three components) will fill up the blocks with chroma data.
  */
-static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& macroblocks, u8 hcursor, u8 vcursor)
+static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
     for (auto it = context.components.begin(); it != context.components.end(); ++it) {
         ComponentSpec& component = it->value;
