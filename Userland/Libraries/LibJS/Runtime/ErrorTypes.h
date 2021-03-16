@@ -43,6 +43,7 @@
     M(Convert, "Cannot convert {} to {}")                                                                                               \
     M(ConvertUndefinedToObject, "Cannot convert undefined to object")                                                                   \
     M(DescChangeNonConfigurable, "Cannot change attributes of non-configurable property '{}'")                                          \
+    M(DivisionByZero, "Division by zero")                                                                                               \
     M(FunctionArgsNotObject, "Argument array must be an object")                                                                        \
     M(InOperatorWithObject, "'in' operator must be used on an object")                                                                  \
     M(InstanceOfOperatorBadPrototype, "'prototype' property of {} is not an object")                                                    \
