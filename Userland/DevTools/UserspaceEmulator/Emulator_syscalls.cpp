@@ -138,6 +138,12 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$rmdir(arg1, arg2);
     case SC_unlink:
         return virt$unlink(arg1, arg2);
+    case SC_symlink:
+        return virt$symlink(arg1);
+    case SC_rename:
+        return virt$rename(arg1);
+    case SC_set_coredump_metadata:
+        return virt$set_coredump_metadata(arg1);
     case SC_write:
         return virt$write(arg1, arg2, arg3);
     case SC_read:
@@ -318,6 +324,54 @@ int Emulator::virt$unlink(FlatPtr path, size_t path_length)
 {
     auto buffer = mmu().copy_buffer_from_vm(path, path_length);
     return syscall(SC_unlink, buffer.data(), buffer.size());
+}
+
+int Emulator::virt$symlink(FlatPtr params_addr)
+{
+    Syscall::SC_symlink_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto target = mmu().copy_buffer_from_vm((FlatPtr)params.target.characters, params.target.length);
+    params.target.characters = (const char*)target.data();
+    params.target.length = target.size();
+
+    auto link = mmu().copy_buffer_from_vm((FlatPtr)params.linkpath.characters, params.linkpath.length);
+    params.linkpath.characters = (const char*)link.data();
+    params.linkpath.length = link.size();
+
+    return syscall(SC_symlink, &params);
+}
+
+int Emulator::virt$rename(FlatPtr params_addr)
+{
+    Syscall::SC_rename_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto new_path = mmu().copy_buffer_from_vm((FlatPtr)params.new_path.characters, params.new_path.length);
+    params.new_path.characters = (const char*)new_path.data();
+    params.new_path.length = new_path.size();
+
+    auto old_path = mmu().copy_buffer_from_vm((FlatPtr)params.old_path.characters, params.old_path.length);
+    params.old_path.characters = (const char*)old_path.data();
+    params.old_path.length = old_path.size();
+
+    return syscall(SC_rename, &params);
+}
+
+int Emulator::virt$set_coredump_metadata(FlatPtr params_addr)
+{
+    Syscall::SC_set_coredump_metadata_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto key = mmu().copy_buffer_from_vm((FlatPtr)params.key.characters, params.key.length);
+    params.key.characters = (const char*)key.data();
+    params.key.length = key.size();
+
+    auto value = mmu().copy_buffer_from_vm((FlatPtr)params.value.characters, params.value.length);
+    params.value.characters = (const char*)value.data();
+    params.value.length = value.size();
+
+    return syscall(SC_set_coredump_metadata, &params);
 }
 
 int Emulator::virt$dbgputstr(FlatPtr characters, int length)
