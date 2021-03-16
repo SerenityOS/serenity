@@ -941,8 +941,13 @@ Value exp(GlobalObject& global_object, Value lhs, Value rhs)
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(pow(lhs_numeric.as_double(), rhs_numeric.as_double()));
-    if (both_bigint(lhs_numeric, rhs_numeric))
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        if (rhs_numeric.as_bigint().big_integer().is_negative()) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::NegativeExponent);
+            return {};
+        }
         return js_bigint(vm.heap(), Crypto::NumberTheory::Power(lhs_numeric.as_bigint().big_integer(), rhs_numeric.as_bigint().big_integer()));
+    }
     vm.throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "exponentiation");
     return {};
 }

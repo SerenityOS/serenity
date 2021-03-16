@@ -60,6 +60,7 @@
     M(JsonBigInt, "Cannot serialize BigInt value to JSON")                                                                              \
     M(JsonCircular, "Cannot stringify circular object")                                                                                 \
     M(JsonMalformed, "Malformed JSON string")                                                                                           \
+    M(NegativeExponent, "Exponent must be positive")                                                                                    \
     M(NotA, "Not a {} object")                                                                                                          \
     M(NotAConstructor, "{} is not a constructor")                                                                                       \
     M(NotAFunction, "{} is not a function")                                                                                             \
