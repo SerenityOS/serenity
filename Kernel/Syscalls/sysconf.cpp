@@ -44,6 +44,9 @@ KResultOr<long> Process::sys$sysconf(int name)
         return TTY_NAME_MAX;
     case _SC_GETPW_R_SIZE_MAX:
         return 4096; // idk
+    case _SC_CLK_TCK:
+        // FIXME: should return Number of clock intervals per second for times()
+        return 100; // seems to be 100 on x86_64
     default:
         return EINVAL;
     }
