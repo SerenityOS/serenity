@@ -763,8 +763,8 @@ public:
     RegisterState& get_register_dump_from_stack();
     const RegisterState& get_register_dump_from_stack() const { return const_cast<Thread*>(this)->get_register_dump_from_stack(); }
 
-    TSS32& tss() { return m_tss; }
-    const TSS32& tss() const { return m_tss; }
+    TSS& tss() { return m_tss; }
+    const TSS& tss() const { return m_tss; }
     State state() const { return m_state; }
     const char* state_string() const;
 
@@ -1199,7 +1199,7 @@ private:
     mutable RecursiveSpinLock m_block_lock;
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
-    TSS32 m_tss {};
+    TSS m_tss {};
     TrapFrame* m_current_trap { nullptr };
     u32 m_saved_critical { 1 };
     IntrusiveListNode m_ready_queue_node;
