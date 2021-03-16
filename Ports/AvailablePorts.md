@@ -28,6 +28,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`git`](git/)                  | Git                                           | 2.26.0            | https://git-scm.com/                                  |
 | [`gnuplot`](gnuplot/)          | Gnuplot                                       | 5.2.8             | http://www.gnuplot.info/                              |
 | [`grep`](grep/)                | GNU Grep                                      | 2.5.4             | https://www.gnu.org/software/grep/                    |
+| [`hatari`](hatari/)            | Atari ST/STE/TT/Falcon emulator               | 2.4.0-devel       | https://hatari.tuxfamily.org/             |
 | [`indent`](indent/)            | GNU indent                                    | 2.2.11            | https://www.gnu.org/software/indent/                  |
 | [`jot`](jot/)                  | jot (OpenBSD)                                 | 6.6               | https://github.com/ibara/libpuffy                     |
 | [`jq`](jq/)                    | jq                                            | 1.6               | https://stedolan.github.io/jq/                        |
