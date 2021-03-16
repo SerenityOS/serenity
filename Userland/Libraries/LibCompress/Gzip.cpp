@@ -78,6 +78,11 @@ size_t GzipDecompressor::read(Bytes bytes)
         current_member().m_checksum.update(bytes.trim(nread));
         current_member().m_nread += nread;
 
+        if (current_member().m_stream.handle_any_error()) {
+            set_fatal_error();
+            return 0;
+        }
+
         if (nread < bytes.size()) {
             LittleEndian<u32> crc32, input_size;
             m_input_stream >> crc32 >> input_size;
@@ -187,6 +192,12 @@ Optional<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 }
 
 bool GzipDecompressor::unreliable_eof() const { return m_eof; }
+
+bool GzipDecompressor::handle_any_error()
+{
+    bool handled_errors = m_input_stream.handle_any_error();
+    return Stream::handle_any_error() || handled_errors;
+}
 
 GzipCompressor::GzipCompressor(OutputStream& stream)
     : m_output_stream(stream)
