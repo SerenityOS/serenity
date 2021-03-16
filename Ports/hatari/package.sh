@@ -15,4 +15,3 @@ configure() {
 install() {
     run make install
 }
-
