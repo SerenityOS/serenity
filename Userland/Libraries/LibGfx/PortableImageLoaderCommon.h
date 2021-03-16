@@ -198,7 +198,7 @@ static bool read_max_val(TContext& context, Streamer& streamer)
 template<typename TContext>
 static bool create_bitmap(TContext& context)
 {
-    context.bitmap = Bitmap::create_purgeable(BitmapFormat::RGB32, { context.width, context.height });
+    context.bitmap = Bitmap::create_purgeable(BitmapFormat::BGRx8888, { context.width, context.height });
     if (!context.bitmap) {
         context.state = TContext::State::Error;
         return false;

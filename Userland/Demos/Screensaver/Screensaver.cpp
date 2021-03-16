@@ -54,7 +54,7 @@ private:
 
 Screensaver::Screensaver(int width, int height, int interval)
 {
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { width, height });
+    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height });
     srand(time(nullptr));
     stop_timer();
     start_timer(interval);

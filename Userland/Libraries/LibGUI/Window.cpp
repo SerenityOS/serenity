@@ -757,7 +757,7 @@ void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
 
 OwnPtr<WindowBackingStore> Window::create_backing_store(const Gfx::IntSize& size)
 {
-    auto format = m_has_alpha_channel ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32;
+    auto format = m_has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
 
     VERIFY(!size.is_empty());
     size_t pitch = Gfx::Bitmap::minimum_pitch(size.width(), format);
@@ -793,7 +793,7 @@ void Window::set_icon(const Gfx::Bitmap* icon)
 
     Gfx::IntSize icon_size = icon ? icon->size() : Gfx::IntSize(16, 16);
 
-    m_icon = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, icon_size);
+    m_icon = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, icon_size);
     VERIFY(m_icon);
     if (icon) {
         Painter painter(*m_icon);

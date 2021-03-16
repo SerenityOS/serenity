@@ -64,8 +64,8 @@ static const char* bpp_for_format_resilient(String format)
         return "4";
     case Gfx::BitmapFormat::Indexed8:
         return "8";
-    case Gfx::BitmapFormat::RGB32:
-    case Gfx::BitmapFormat::RGBA32:
+    case Gfx::BitmapFormat::BGRx8888:
+    case Gfx::BitmapFormat::BGRA8888:
         return "32";
     case Gfx::BitmapFormat::Invalid:
         /* fall-through */

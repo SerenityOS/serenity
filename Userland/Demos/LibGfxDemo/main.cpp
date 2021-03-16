@@ -53,7 +53,7 @@ private:
 
 Canvas::Canvas()
 {
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { WIDTH, HEIGHT });
+    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT });
     draw();
 }
 

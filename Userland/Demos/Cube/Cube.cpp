@@ -80,7 +80,7 @@ private:
 
 Cube::Cube()
 {
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { WIDTH, HEIGHT });
+    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT });
 
     m_accumulated_time = 0;
     m_cycles = 0;

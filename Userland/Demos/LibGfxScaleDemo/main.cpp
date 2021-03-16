@@ -58,15 +58,15 @@ private:
 
 Canvas::Canvas()
 {
-    m_bitmap_1x = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { WIDTH, HEIGHT }, 1);
-    m_bitmap_2x = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { WIDTH, HEIGHT }, 2);
+    m_bitmap_1x = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }, 1);
+    m_bitmap_2x = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }, 2);
 
     // m_bitmap_1x and m_bitmap_2x have the same logical size, so LibGfx will try to draw them at the same physical size:
     // When drawing on a 2x backing store it'd scale m_bitmap_1x up 2x and paint m_bitmap_2x at its physical size.
     // When drawing on a 1x backing store it'd draw m_bitmap_1x at its physical size, and it would have to scale down m_bitmap_2x to 0.5x its size.
     // But the system can't current scale down, and we want to draw the 2x bitmap at twice the size of the 1x bitmap in this particular application,
     // so make a 1x alias of the 2x bitmap to make LibGfx paint it without any scaling at paint time, mapping once pixel to one pixel.
-    m_bitmap_2x_as_1x = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, m_bitmap_2x->physical_size(), 1, m_bitmap_2x->pitch(), m_bitmap_2x->scanline(0));
+    m_bitmap_2x_as_1x = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, m_bitmap_2x->physical_size(), 1, m_bitmap_2x->pitch(), m_bitmap_2x->scanline(0));
 
     Gfx::Painter painter_1x(*m_bitmap_1x);
     draw(painter_1x);
