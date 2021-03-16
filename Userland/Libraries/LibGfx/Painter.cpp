@@ -770,6 +770,23 @@ void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const In
         return;
     }
 
+    if (source.format() == BitmapFormat::RGBA8888) {
+        const u32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
+        const size_t src_skip = source.pitch() / sizeof(u32);
+        for (int row = first_row; row <= last_row; ++row) {
+            for (int i = 0; i < clipped_rect.width(); ++i) {
+                u32 rgba = src[i];
+                u32 bgra = (rgba & 0xff00ff00)
+                    | ((rgba & 0x000000ff) << 16)
+                    | ((rgba & 0x00ff0000) >> 16);
+                dst[i] = bgra;
+            }
+            dst += dst_skip;
+            src += src_skip;
+        }
+        return;
+    }
+
     if (Bitmap::is_indexed(source.format())) {
         const u8* src = source.scanline_u8(src_rect.top() + first_row) + src_rect.left() + first_column;
         const size_t src_skip = source.pitch();

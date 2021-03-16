@@ -54,6 +54,7 @@ enum class BitmapFormat {
     Indexed8,
     BGRx8888,
     BGRA8888,
+    RGBA8888,
 };
 
 inline bool is_valid_bitmap_format(unsigned format)
@@ -66,6 +67,7 @@ inline bool is_valid_bitmap_format(unsigned format)
     case (unsigned)BitmapFormat::Indexed8:
     case (unsigned)BitmapFormat::BGRx8888:
     case (unsigned)BitmapFormat::BGRA8888:
+    case (unsigned)BitmapFormat::RGBA8888:
         return true;
     }
     return false;
@@ -75,6 +77,7 @@ enum class StorageFormat {
     Indexed8,
     BGRx8888,
     BGRA8888,
+    RGBA8888,
 };
 
 static StorageFormat determine_storage_format(BitmapFormat format)
@@ -84,6 +87,8 @@ static StorageFormat determine_storage_format(BitmapFormat format)
         return StorageFormat::BGRx8888;
     case BitmapFormat::BGRA8888:
         return StorageFormat::BGRA8888;
+    case BitmapFormat::RGBA8888:
+        return StorageFormat::RGBA8888;
     case BitmapFormat::Indexed1:
     case BitmapFormat::Indexed2:
     case BitmapFormat::Indexed4:
