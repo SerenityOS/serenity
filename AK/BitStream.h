@@ -118,7 +118,8 @@ public:
 
     bool handle_any_error() override
     {
-        return m_stream.handle_any_error() || Stream::handle_any_error();
+        bool handled_errors = m_stream.handle_any_error();
+        return Stream::handle_any_error() || handled_errors;
     }
 
 private:
