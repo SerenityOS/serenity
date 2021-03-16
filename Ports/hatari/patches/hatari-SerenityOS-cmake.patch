@@ -1,0 +1,1254 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 62743a7e..17451668 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,12 +1,13 @@
+ cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+ 
+-project(Hatari C)
++project(hatari C)
+ enable_testing()
+ 
+-set(APP_NAME "Hatari")
++set(APP_NAME "hatari")
+ 
+-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
++set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+ 
++include(FindPkgConfig)
+ include(CheckIncludeFiles)
+ include(CheckFunctionExists)
+ include(CheckStructHasMember)
+@@ -40,16 +41,15 @@ function (check_large_file)
+ endfunction (check_large_file)
+ 
+ 
+-
+ # ##########################
+ # Conditional build features
+ # ##########################
+ 
+ set(ENABLE_DSP_EMU 1
+     CACHE BOOL "Enable DSP 56k emulator for Falcon mode")
+-set(ENABLE_TRACING 1
++set(ENABLE_TRACING 0
+     CACHE BOOL "Enable tracing messages for debugging")
+-set(ENABLE_SMALL_MEM 0
++set(ENABLE_SMALL_MEM 1
+     CACHE BOOL "Enable to use less memory - at the expense of emulation speed")
+ 
+ # Run-time checks with GCC / LLVM (Clang) AddressSanitizer:
+@@ -81,29 +81,18 @@ else()
+ 	set(ENABLE_MAN_PAGES 0 CACHE BOOL "Built and install man pages")
+ endif()
+ 
+-if(APPLE)
+-	set(ENABLE_OSX_BUNDLE 1
+-	    CACHE BOOL "Built Hatari as macOS application bundle")
+-	# set(CMAKE_OSX_ARCHITECTURES "i386" CACHE STRING "Target architectures" FORCE)
+-	# set(CMAKE_OSX_SYSROOT "/Developer/SDKs/MacOSX10.6.sdk" CACHE STRING "10.6 SDK" FORCE)
+-	# set(CMAKE_OSX_DEPLOYMENT_TARGET "10.5" CACHE STRING "Target Min 10.5" FORCE)
+-	set(ADDITIONAL_INCLUDES ${FRAMEWORKS})
+-	set_source_files_properties(${FRAMEWORKS} PROPERTIES MACOSX_PACKAGE_LOCATION Frameworks)
+-else()
+-	set(ENABLE_OSX_BUNDLE 0
++set(ENABLE_OSX_BUNDLE 0
+ 	    CACHE BOOL "Built Hatari as macOS application bundle")
+-endif(APPLE)
+ 
+ # ####################
+ # Check for libraries:
+ # ####################
+ 
+-find_package(SDL2)
+-if(NOT SDL2_FOUND)
+-	message(FATAL_ERROR "SDL2 library not found!")
+-endif(NOT SDL2_FOUND)
+-
+-find_package(Math)
++find_package(SDL2 REQUIRED)
++if("${SDL2_LIBRARIES}" STREQUAL "")
++    message(WARNING "SDL2_LIBRARIES wasn't set, manually setting to SDL2::SDL2")
++    set(SDL2_LIBRARIES "SDL2::SDL2")
++endif()
+ 
+ find_package(Readline)
+ if(Readline_FOUND)
+@@ -175,13 +164,6 @@ if(DETECTED_SDL_CFLAGS)
+ 	# message(STATUS "Additional CFLAGS of SDL: ${DETECTED_SDL_CFLAGS}")
+ endif(DETECTED_SDL_CFLAGS)
+ 
+-if(ENABLE_OSX_BUNDLE)
+-	# Use OSX native alert windows
+-	add_definitions(-DALERT_HOOKS=1)
+-	# We still want to use our SDLMain.m with SDL2
+-	add_definitions(-DSDL_MAIN_NEEDED=1)
+-endif(ENABLE_OSX_BUNDLE)
+-
+ # ###########################
+ # Check for optional headers:
+ # ###########################
+@@ -189,7 +171,7 @@ endif(ENABLE_OSX_BUNDLE)
+ check_include_files(termios.h HAVE_TERMIOS_H)
+ check_include_files(sys/ioctl.h HAVE_SYS_IOCTL_H)
+ check_include_files(strings.h HAVE_STRINGS_H)
+-check_include_files(${SDL2_INCLUDE_DIR}/SDL_config.h HAVE_SDL_CONFIG_H)
++check_include_files(${SDL2_INCLUDE_DIRS}/SDL_config.h HAVE_SDL_CONFIG_H)
+ check_include_files(sys/time.h HAVE_SYS_TIME_H)
+ check_include_files(sys/times.h HAVE_SYS_TIMES_H)
+ check_include_files(utime.h HAVE_UTIME_H)
+@@ -268,16 +250,8 @@ if(NOT DATADIR)
+ endif()
+ 
+ if(NOT BIN2DATADIR)
+-	if(WIN32)
+-		set(BIN2DATADIR "."
+-		    CACHE STRING "Relative path from bindir to datadir")
+-	elseif(ENABLE_OSX_BUNDLE)
+-		set(BIN2DATADIR "../Resources"
++	set(BIN2DATADIR "../share/hatari"
+ 		    CACHE STRING "Relative path from bindir to datadir")
+-	else()
+-		set(BIN2DATADIR "../share/hatari"
+-		    CACHE STRING "Relative path from bindir to datadir")
+-	endif(WIN32)
+ 	mark_as_advanced(BIN2DATADIR)
+ endif()
+ 
+@@ -290,23 +264,14 @@ if(NOT DOCDIR)
+ endif()
+ 
+ if(NOT ETCDIR)
+-	if(WIN32)
+-		set(ETCDIR .)
+-	else()
+-		set(ETCDIR /etc)
+-	endif()
++	set(ETCDIR /etc)
+ endif()
+ 
+ if(NOT ICONDIR)
+ 	set(ICONDIR share/icons/hicolor)
+ endif()
+ 
+-if(ENABLE_OSX_BUNDLE)
+-	# put the config files in the app's bundle
+-	add_definitions(-DCONFDIR=\"../Resources\")
+-else()
+-	add_definitions(-DCONFDIR=\"${ETCDIR}\")
+-endif()
++add_definitions(-DCONFDIR=\"${ETCDIR}\")
+ 
+ # #########################################
+ # Create config.h and recurse into subdirs:
+@@ -407,4 +372,4 @@ if(NOT HAVE_SYS_TIMES_H)
+   message("        ==> using inaccurate SDL_GetTicks() instead")
+ endif()
+ 
+-message( "" )
++message( "" )
+\ No newline at end of file
+diff --git a/cmake/FindMath.cmake b/cmake/FindMath.cmake
+deleted file mode 100644
+index 030b3871..00000000
+--- a/cmake/FindMath.cmake
++++ /dev/null
+@@ -1,15 +0,0 @@
+-
+-if(MATH_INCLUDE_DIR)
+-  # Already in cache, be silent
+-  set(MATH_FIND_QUIETLY TRUE)
+-endif(MATH_INCLUDE_DIR)
+-
+-find_path(MATH_INCLUDE_DIR math.h)
+-
+-find_library(MATH_LIBRARY NAMES m)
+-
+-include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(Math DEFAULT_MSG
+-                                  MATH_LIBRARY MATH_INCLUDE_DIR)
+-
+-mark_as_advanced(MATH_LIBRARY MATH_INCLUDE_DIR)
+diff --git a/cmake/FindSDL2.cmake b/cmake/FindSDL2.cmake
+deleted file mode 100644
+index 5856493f..00000000
+--- a/cmake/FindSDL2.cmake
++++ /dev/null
+@@ -1,177 +0,0 @@
+-# Locate SDL2 library
+-# This module defines
+-# SDL2_LIBRARY, the name of the library to link against
+-# SDL2_FOUND, if false, do not try to link to SDL2
+-# SDL2_INCLUDE_DIR, where to find SDL.h
+-#
+-# This module responds to the the flag:
+-# SDL2_BUILDING_LIBRARY
+-# If this is defined, then no SDL2main will be linked in because
+-# only applications need main().
+-# Otherwise, it is assumed you are building an application and this
+-# module will attempt to locate and set the the proper link flags
+-# as part of the returned SDL2_LIBRARY variable.
+-#
+-# Don't forget to include SDLmain.h and SDLmain.m your project for the
+-# macOS framework based version. (Other versions link to -lSDL2main which
+-# this module will try to find on your behalf.) Also for macOS, this
+-# module will automatically add the -framework Cocoa on your behalf.
+-#
+-#
+-# Additional Note: If you see an empty SDL2_LIBRARY_TEMP in your configuration
+-# and no SDL2_LIBRARY, it means CMake did not find your SDL2 library
+-# (SDL2.dll, libsdl2.so, SDL2.framework, etc).
+-# Set SDL2_LIBRARY_TEMP to point to your SDL2 library, and configure again.
+-# Similarly, if you see an empty SDL2MAIN_LIBRARY, you should set this value
+-# as appropriate. These values are used to generate the final SDL2_LIBRARY
+-# variable, but when these values are unset, SDL2_LIBRARY does not get created.
+-#
+-#
+-# $SDL2DIR is an environment variable that would
+-# correspond to the ./configure --prefix=$SDL2DIR
+-# used in building SDL2.
+-# l.e.galup  9-20-02
+-#
+-# Modified by Eric Wing.
+-# Added code to assist with automated building by using environmental variables
+-# and providing a more controlled/consistent search behavior.
+-# Added new modifications to recognize macOS frameworks and
+-# additional Unix paths (FreeBSD, etc).
+-# Also corrected the header search path to follow "proper" SDL guidelines.
+-# Added a search for SDL2main which is needed by some platforms.
+-# Added a search for threads which is needed by some platforms.
+-# Added needed compile switches for MinGW.
+-#
+-# On OSX, this will prefer the Framework version (if found) over others.
+-# People will have to manually change the cache values of
+-# SDL2_LIBRARY to override this selection or set the CMake environment
+-# CMAKE_INCLUDE_PATH to modify the search paths.
+-#
+-# Note that the header path has changed from SDL2/SDL.h to just SDL.h
+-# This needed to change because "proper" SDL convention
+-# is #include "SDL.h", not <SDL2/SDL.h>. This is done for portability
+-# reasons because not all systems place things in SDL2/ (see FreeBSD).
+-
+-#=============================================================================
+-# Copyright 2003-2009 Kitware, Inc.
+-#
+-# Distributed under the OSI-approved BSD License (the "License");
+-# see http://www.cmake.org/cmake/project/license.html for details.
+-#
+-# This software is distributed WITHOUT ANY WARRANTY; without even the
+-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+-# See the License for more information.
+-#=============================================================================
+-
+-SET(SDL2_SEARCH_PATHS
+-  ~/Library/Frameworks
+-  /Library/Frameworks
+-  /usr/local
+-  /usr
+-  /sw # Fink
+-  /opt/local # DarwinPorts
+-  /opt/csw # Blastwave
+-  /opt
+-)
+-
+-FIND_PATH(SDL2_INCLUDE_DIR SDL_scancode.h
+-  HINTS
+-  $ENV{SDL2DIR}
+-  PATH_SUFFIXES SDL2 include/SDL2 include
+-  PATHS ${SDL2_SEARCH_PATHS}
+-)
+-
+-FIND_LIBRARY(SDL2_LIBRARY_TEMP
+-  NAMES SDL2
+-  HINTS
+-  $ENV{SDL2DIR}
+-  PATH_SUFFIXES lib64 lib
+-  PATHS ${SDL2_SEARCH_PATHS}
+-)
+-
+-IF(NOT SDL2_BUILDING_LIBRARY)
+-  IF(NOT ${SDL2_INCLUDE_DIR} MATCHES ".framework")
+-    # Non-macOS framework versions expect you to also dynamically link to
+-    # SDL2main. This is mainly for Windows and macOS. Other (Unix) platforms
+-    # seem to provide SDL2main for compatibility even though they don't
+-    # necessarily need it.
+-    FIND_LIBRARY(SDL2MAIN_LIBRARY
+-      NAMES SDL2main
+-      HINTS
+-      $ENV{SDL2DIR}
+-      PATH_SUFFIXES lib64 lib
+-      PATHS ${SDL2_SEARCH_PATHS}
+-    )
+-  ENDIF(NOT ${SDL2_INCLUDE_DIR} MATCHES ".framework")
+-ENDIF(NOT SDL2_BUILDING_LIBRARY)
+-
+-# SDL2 may require threads on your system.
+-# The Apple build may not need an explicit flag because one of the
+-# frameworks may already provide it.
+-# But for non-OSX systems, I will use the CMake Threads package.
+-IF(NOT APPLE)
+-  FIND_PACKAGE(Threads)
+-ENDIF(NOT APPLE)
+-
+-# MinGW needs an additional library, mwindows
+-# It's total link flags should look like -lmingw32 -lSDL2main -lSDL2 -lmwindows
+-# (Actually on second look, I think it only needs one of the m* libraries.)
+-IF(MINGW)
+-  SET(MINGW32_LIBRARY mingw32 CACHE STRING "mwindows for MinGW")
+-ENDIF(MINGW)
+-
+-IF(SDL2_LIBRARY_TEMP)
+-  # For SDL2main
+-  IF(NOT SDL2_BUILDING_LIBRARY)
+-    IF(SDL2MAIN_LIBRARY)
+-      SET(SDL2_LIBRARY_TEMP ${SDL2MAIN_LIBRARY} ${SDL2_LIBRARY_TEMP})
+-    ENDIF(SDL2MAIN_LIBRARY)
+-  ENDIF(NOT SDL2_BUILDING_LIBRARY)
+-
+-  # For macOS, SDL2 uses Cocoa as a backend so it must link to Cocoa.
+-  # CMake doesn't display the -framework Cocoa string in the UI even
+-  # though it actually is there if I modify a pre-used variable.
+-  # I think it has something to do with the CACHE STRING.
+-  # So I use a temporary variable until the end so I can set the
+-  # "real" variable in one-shot.
+-  IF(APPLE)
+-    SET(SDL2_LIBRARY_TEMP ${SDL2_LIBRARY_TEMP} "-framework Cocoa")
+-  ENDIF(APPLE)
+-
+-  # For threads, as mentioned Apple doesn't need this.
+-  # In fact, there seems to be a problem if I used the Threads package
+-  # and try using this line, so I'm just skipping it entirely for macOS.
+-  IF(NOT APPLE)
+-    SET(SDL2_LIBRARY_TEMP ${SDL2_LIBRARY_TEMP} ${CMAKE_THREAD_LIBS_INIT})
+-  ENDIF(NOT APPLE)
+-
+-  # For MinGW library
+-  IF(MINGW)
+-    SET(SDL2_LIBRARY_TEMP ${MINGW32_LIBRARY} ${SDL2_LIBRARY_TEMP})
+-  ENDIF(MINGW)
+-
+-  # Set the final string here so the GUI reflects the final state.
+-  SET(SDL2_LIBRARY ${SDL2_LIBRARY_TEMP} CACHE STRING "Where the SDL2 Library can be found")
+-  # Set the temp variable to INTERNAL so it is not seen in the CMake GUI
+-  SET(SDL2_LIBRARY_TEMP "${SDL2_LIBRARY_TEMP}" CACHE INTERNAL "")
+-ENDIF(SDL2_LIBRARY_TEMP)
+-
+-if(SDL2_INCLUDE_DIR AND EXISTS "${SDL2_INCLUDE_DIR}/SDL_version.h")
+-  file(STRINGS "${SDL2_INCLUDE_DIR}/SDL_version.h" SDL2_VERSION_MAJOR_LINE REGEX "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+[0-9]+$")
+-  file(STRINGS "${SDL2_INCLUDE_DIR}/SDL_version.h" SDL2_VERSION_MINOR_LINE REGEX "^#define[ \t]+SDL_MINOR_VERSION[ \t]+[0-9]+$")
+-  file(STRINGS "${SDL2_INCLUDE_DIR}/SDL_version.h" SDL2_VERSION_PATCH_LINE REGEX "^#define[ \t]+SDL_PATCHLEVEL[ \t]+[0-9]+$")
+-  string(REGEX REPLACE "^#define[ \t]+SDL_MAJOR_VERSION[ \t]+([0-9]+)$" "\\1" SDL2_VERSION_MAJOR "${SDL2_VERSION_MAJOR_LINE}")
+-  string(REGEX REPLACE "^#define[ \t]+SDL_MINOR_VERSION[ \t]+([0-9]+)$" "\\1" SDL2_VERSION_MINOR "${SDL2_VERSION_MINOR_LINE}")
+-  string(REGEX REPLACE "^#define[ \t]+SDL_PATCHLEVEL[ \t]+([0-9]+)$" "\\1" SDL2_VERSION_PATCH "${SDL2_VERSION_PATCH_LINE}")
+-  set(SDL2_VERSION_STRING ${SDL2_VERSION_MAJOR}.${SDL2_VERSION_MINOR}.${SDL2_VERSION_PATCH})
+-  unset(SDL2_VERSION_MAJOR_LINE)
+-  unset(SDL2_VERSION_MINOR_LINE)
+-  unset(SDL2_VERSION_PATCH_LINE)
+-  unset(SDL2_VERSION_MAJOR)
+-  unset(SDL2_VERSION_MINOR)
+-  unset(SDL2_VERSION_PATCH)
+-endif()
+-
+-INCLUDE(FindPackageHandleStandardArgs)
+-
+-FIND_PACKAGE_HANDLE_STANDARD_ARGS(SDL2 REQUIRED_VARS SDL2_LIBRARY SDL2_INCLUDE_DIR)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index d0b23d32..82f9d15c 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -14,38 +14,8 @@ set(SOURCES
+ # Disk image code is shared with the hmsa tool, so we put it into a library:
+ add_library(Floppy createBlankImage.c dim.c msa.c st.c zip.c)
+ 
+-# When building for macOS, define specific sources for gui and resources
+-if(ENABLE_OSX_BUNDLE)
+-	set(GUIOSX_SOURCES
+-	    gui-osx/AlertHooks.m gui-osx/PrefsController.m gui-osx/Shared.m
+-	    gui-osx/CreateFloppyController.m gui-osx/SDLMain.m gui-osx/paths.m)
+-	set_source_files_properties(${GUIOSX_SOURCES} PROPERTIES LANGUAGE C)
+-	set(GUIOSX_RSRCS
+-	    gui-osx/Hatari.icns gui-osx/stdisk.png gui-osx/en.lproj gui-osx/fr.lproj)
+-	set(GUIOSX_DOCS
+-	    ${CMAKE_SOURCE_DIR}/doc/manual.html ${CMAKE_SOURCE_DIR}/doc/images
+-	    ${CMAKE_SOURCE_DIR}/doc/compatibility.html ${CMAKE_SOURCE_DIR}/doc/toc.js )
+-	# these are the macOS Interface Builder Files
+-	set (HATARI_XIBS en.lproj/SDLMain fr.lproj/SDLMain)
+-elseif(APPLE)
+-	set(SOURCES ${SOURCES} gui-osx/paths.m)
+-endif()
+-
+-# When building for Windows, define specific sources for gui and resources
+-# and set the subsystem of the resulting .exe to "windows GUI" instead of "console"
+-# Recent mingw version sets _FORTIFY_SOURCE, which requires to link with lib ssp.
+-# We use "--as-needed" to keep compatibility with older mingw that don't require lib ssp
+-if(WIN32)
+-	set(GUIWIN_SOURCES gui-win/opencon.c)
+-	set(GUIWIN_RES gui-win/hatari-winicon.rc)
+-	if(CMAKE_COMPILER_IS_GNUCC)
+-		set(CMAKE_EXE_LINKER_FLAGS
+-		    "${CMAKE_EXE_LINKER_FLAGS} -mwindows -Wl,--as-needed -lssp")
+-	endif(CMAKE_COMPILER_IS_GNUCC)
+-endif(WIN32)
+-
+-include_directories(includes debug falcon
+-		    ${CMAKE_BINARY_DIR} ${SDL2_INCLUDE_DIR} cpu)
++include_directories(hatari SYSTEM PRIVATE includes debug falcon
++		    ${CMAKE_BINARY_DIR} cpu ${SDL2_INCLUDE_DIRS})
+ 
+ if(ZLIB_FOUND)
+ 	include_directories(${ZLIB_INCLUDE_DIR})
+@@ -74,81 +44,9 @@ add_subdirectory(falcon)
+ add_subdirectory(gui-sdl)
+ add_subdirectory(cpu)
+ 
+-# When building for macOS, add specific sources
+-if(ENABLE_OSX_BUNDLE)
+-	#find_library(SDL_FRAMEWORK SDL ${ADD_FRAMEWOK_PATH})
+-	set(ADDITIONAL_INCLUDES ${FRAMEWORKS})
+-	set_source_files_properties(${FRAMEWORKS} PROPERTIES MACOSX_PACKAGE_LOCATION Frameworks)
+-	add_executable(hatari MACOSX_BUNDLE ${GUIOSX_RSRCS} ${GUIOSX_DOCS} ${SOURCES} ${GUIOSX_SOURCES} ${FRAMEWORKS})
+-	set_target_properties(hatari PROPERTIES MACOSX_BUNDLE_INFO_PLIST
+-			      ${CMAKE_CURRENT_SOURCE_DIR}/gui-osx/Info-Hatari.plist)
+-	set(MACOSX_BUNDLE_ICON_FILE Hatari.icns)
+-	if(CMAKE_GENERATOR MATCHES "Xcode")
+-		set(BUNDLE_CONTENTS ${CMAKE_CURRENT_BINARY_DIR}/\${CONFIGURATION}/Hatari.app/Contents)
+-	else()
+-		set(BUNDLE_CONTENTS ${CMAKE_CURRENT_BINARY_DIR}/Hatari.app/Contents)
+-	endif()
+-	# Create Hatari.app bundle
+-	add_custom_target(osx_bundle_dirs
+-			COMMAND mkdir -p ${BUNDLE_CONTENTS}/Resources
+-			#COMMAND mkdir -p ${BUNDLE_CONTENTS}/Frameworks
+-			COMMAND mkdir -p ${BUNDLE_CONTENTS}/MacOS
+-			COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/gui-osx/${MACOSX_BUNDLE_ICON_FILE}
+-				   ${BUNDLE_CONTENTS}/Resources/${MACOSX_BUNDLE_ICON_FILE}
+-			# Copy Localized .nib and help to Bundle
+-			COMMAND cp -R ${CMAKE_CURRENT_SOURCE_DIR}/gui-osx/*.lproj ${BUNDLE_CONTENTS}/Resources/
+-			COMMAND mkdir -p ${BUNDLE_CONTENTS}/Resources/HatariHelp
+-			COMMAND cp -R ${GUIOSX_DOCS} ${BUNDLE_CONTENTS}/Resources/HatariHelp/
+-			#COMMAND mkdir -p ${BUNDLE_CONTENTS}/Resources/fr.lproj/HatariHelp
+-			#COMMAND cp -R ${GUIOSX_DOCS} ${BUNDLE_CONTENTS}/Resources/fr.lproj/HatariHelp/
+-	)
+-	add_dependencies(hatari osx_bundle_dirs)
+-	set_source_files_properties(${GUIOSX_RSRCS} PROPERTIES
+-				    MACOSX_PACKAGE_LOCATION Resources)
+-	set_source_files_properties(${GUIOSX_DOCS} PROPERTIES
+-				    MACOSX_PACKAGE_LOCATION Resources/HatariHelp)
+-
+-	#find ibtool
+-	find_program(IBTOOL ibtool HINTS "/usr/bin" "${OSX_DEVELOPER_ROOT}/usr/bin")
+-	if (${IBTOOL} STREQUAL "IBTOOL-NOTFOUND")
+-		message(SEND_ERROR "ibtool can not be found and is needed to compile the .xib files.
+-			It should have been installed with the Apple developer tools. The default
+-			system paths were searched in addition to ${OSX_DEVELOPER_ROOT}/usr/bin")
+-	endif()
+-	# Compile the .xib files using the 'ibtool' program with the destination being the app package
+-	foreach(xib ${HATARI_XIBS})
+-		add_custom_command (TARGET hatari POST_BUILD
+-			COMMAND ${IBTOOL} --errors --warnings --notices --output-format human-readable-text
+-				--compile ${BUNDLE_CONTENTS}/Resources/${xib}.nib ${CMAKE_CURRENT_SOURCE_DIR}/gui-osx/${xib}.xib
+-			COMMAND rm ${BUNDLE_CONTENTS}/Resources/${xib}.xib
+-			COMMENT "Compiling ${CMAKE_CURRENT_SOURCE_DIR}/gui-osx/${xib}.xib")
+-	endforeach()
+-
+-# When building for Windows, add specific sources + method to compile .rc files
+-elseif(WIN32)
+-	# Set a default rc compiler if it was not defined yet
+-	if(NOT CMAKE_RC_COMPILER)
+-		set(CMAKE_RC_COMPILER windres)
+-	endif(NOT CMAKE_RC_COMPILER)
+-	ENABLE_LANGUAGE(RC)
+-	set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> -Ocoff -o <OBJECT> <SOURCE>")
+-	set_source_files_properties(${GUIWIN_RES} PROPERTIES LANGUAGE RC)
+-	add_executable(hatari ${GUIWIN_RES} ${SOURCES} ${GUIWIN_SOURCES})
+-
+-# Other targets, use default sources
+-else()
+-	add_executable(hatari ${SOURCES})
+-endif(ENABLE_OSX_BUNDLE)
+-
+-target_link_libraries(hatari Falcon UaeCpu GuiSdl Floppy Debug ${SDL2_LIBRARY})
+-
+-if(MATH_FOUND AND NOT APPLE)
+-	target_link_libraries(hatari ${MATH_LIBRARY})
+-endif()
+-
+-if(SDL2MAIN_LIBRARY)
+-	target_link_libraries(hatari ${SDL2MAIN_LIBRARY})
+-endif(SDL2MAIN_LIBRARY)
++add_executable(hatari ${SOURCES})
++target_include_directories(hatari SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
++target_link_libraries(hatari PRIVATE Falcon UaeCpu GuiSdl Floppy Debug ${SDL2_LIBRARIES} m)
+ 
+ if(READLINE_FOUND)
+ 	target_link_libraries(hatari ${READLINE_LIBRARY})
+@@ -182,19 +80,9 @@ if(UDEV_FOUND)
+ 	target_link_libraries(hatari ${UDEV_LIBRARY})
+ endif(UDEV_FOUND)
+ 
+-if(WIN32)
+-	# Needed for socket() on Windows
+-	target_link_libraries(hatari ws2_32)
+-endif(WIN32)
+-
+-
+-if(ENABLE_OSX_BUNDLE)
+-	install(TARGETS hatari BUNDLE DESTINATION /Applications)
+-else()
+-	install(TARGETS hatari RUNTIME DESTINATION ${BINDIR})
+-	install(FILES hatari-icon.bmp DESTINATION ${DATADIR})
+-	file(GLOB TOS_IMG_FILE tos.img)
+-	if(TOS_IMG_FILE)
+-		install(FILES tos.img DESTINATION ${DATADIR})
+-	endif(TOS_IMG_FILE)
+-endif(ENABLE_OSX_BUNDLE)
++install(TARGETS hatari RUNTIME DESTINATION ${BINDIR})
++install(FILES hatari-icon.bmp DESTINATION ${DATADIR})
++file(GLOB TOS_IMG_FILE tos.img)
++if(TOS_IMG_FILE)
++	install(FILES tos.img DESTINATION ${DATADIR})
++endif(TOS_IMG_FILE)
+diff --git a/src/audio.c b/src/audio.c
+index c4d0043e..4518e28f 100644
+--- a/src/audio.c
++++ b/src/audio.c
+@@ -8,7 +8,7 @@
+ */
+ const char Audio_fileid[] = "Hatari audio.c";
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ 
+ #include "main.h"
+ #include "audio.h"
+diff --git a/src/avi_record.c b/src/avi_record.c
+index 9d1a426e..34772587 100644
+--- a/src/avi_record.c
++++ b/src/avi_record.c
+@@ -80,8 +80,8 @@
+ 
+ const char AVIRecord_fileid[] = "Hatari avi_record.c";
+ 
+-#include <SDL.h>
+-#include <SDL_endian.h>
++#include <SDL2/SDL.h>
++#include <SDL2/SDL_endian.h>
+ #include <sys/types.h>  /* For off_t */
+ 
+ #include "main.h"
+diff --git a/src/blitter.c b/src/blitter.c
+index 11934d4d..8113aa88 100644
+--- a/src/blitter.c
++++ b/src/blitter.c
+@@ -104,7 +104,7 @@
+ 
+ const char Blitter_fileid[] = "Hatari blitter.c";
+ 
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
+diff --git a/src/clocks_timings.c b/src/clocks_timings.c
+index 29ef410b..7bed4c8e 100644
+--- a/src/clocks_timings.c
++++ b/src/clocks_timings.c
+@@ -119,8 +119,8 @@ FALCON :
+ 
+ const char ClocksTimings_fileid[] = "Hatari clocks_timings.c";
+ 
+-#include <SDL.h>
+-#include <SDL_endian.h>
++#include <SDL2/SDL.h>
++#include <SDL2/SDL_endian.h>
+ 
+ #include "main.h"
+ #include "configuration.h"
+diff --git a/src/configuration.c b/src/configuration.c
+index 15daca88..1bf9d520 100644
+--- a/src/configuration.c
++++ b/src/configuration.c
+@@ -11,7 +11,7 @@
+ */
+ const char Configuration_fileid[] = "Hatari configuration.c";
+ 
+-#include <SDL_keyboard.h>
++#include <SDL2/SDL_keyboard.h>
+ #include <SDL_joystick.h>
+ 
+ #include "main.h"
+diff --git a/src/cpu/CMakeLists.txt b/src/cpu/CMakeLists.txt
+index 0ce4e6a0..4e8fe778 100644
+--- a/src/cpu/CMakeLists.txt
++++ b/src/cpu/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ 
+-include_directories(. ../.. ../includes ${SDL2_INCLUDE_DIR} softfloat
++include_directories(. ../.. ../includes ${SDL2_INCLUDE_DIRS} softfloat
+                     ${CMAKE_CURRENT_BINARY_DIR})
+ 
+ # The sources generated by gencpu:
+diff --git a/src/cpu/maccess.h b/src/cpu/maccess.h
+index db5b8647..160bd395 100644
+--- a/src/cpu/maccess.h
++++ b/src/cpu/maccess.h
+@@ -14,7 +14,7 @@
+ #ifndef UAE_MACCESS_H
+ #define UAE_MACCESS_H
+ 
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ 
+ /* Can the actual CPU access unaligned memory? */
+ #ifndef CPU_CAN_ACCESS_UNALIGNED
+diff --git a/src/cpu/memory.c b/src/cpu/memory.c
+index 42db37c1..5b96c0de 100644
+--- a/src/cpu/memory.c
++++ b/src/cpu/memory.c
+@@ -12,7 +12,7 @@
+   */
+ const char Memory_fileid[] = "Hatari memory.c";
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ #include "main.h"
+ #include "sysdeps.h"
+ #include "hatari-glue.h"
+diff --git a/src/debug/debugui.c b/src/debug/debugui.c
+index 5def12a0..e0078258 100644
+--- a/src/debug/debugui.c
++++ b/src/debug/debugui.c
+@@ -13,7 +13,7 @@ const char DebugUI_fileid[] = "Hatari debugui.c";
+ #include <ctype.h>
+ #include <stdio.h>
+ #include <unistd.h>
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ 
+ #include "config.h"
+ 
+diff --git a/src/debug/evaluate.c b/src/debug/evaluate.c
+index 0ca4fa05..776fcbfb 100644
+--- a/src/debug/evaluate.c
++++ b/src/debug/evaluate.c
+@@ -20,7 +20,7 @@ const char Eval_fileid[] = "Hatari calculate.c";
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <stdbool.h>
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ #include <inttypes.h>
+ #include "configuration.h"
+ #include "dsp.h"
+diff --git a/src/debug/log.h b/src/debug/log.h
+index 9be233f9..ae4c6f8f 100644
+--- a/src/debug/log.h
++++ b/src/debug/log.h
+@@ -8,7 +8,7 @@
+ #define HATARI_LOG_H
+ 
+ #include <stdbool.h>
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ 
+ 
+ /* Exception debugging
+diff --git a/src/debug/symbols.c b/src/debug/symbols.c
+index bd60e7e9..7cadc68d 100644
+--- a/src/debug/symbols.c
++++ b/src/debug/symbols.c
+@@ -23,8 +23,8 @@ const char Symbols_fileid[] = "Hatari symbols.c";
+ #include <stdio.h>
+ #include <string.h>
+ #include <assert.h>
+-#include <SDL_types.h>
+-#include <SDL_endian.h>
++#include <SDL2/SDL_types.h>
++#include <SDL2/SDL_endian.h>
+ #include "main.h"
+ #include "file.h"
+ #include "options.h"
+diff --git a/src/falcon/dsp_core.h b/src/falcon/dsp_core.h
+index 4998715b..a8cee8e8 100644
+--- a/src/falcon/dsp_core.h
++++ b/src/falcon/dsp_core.h
+@@ -22,7 +22,7 @@
+ #ifndef DSP_CORE_H
+ #define DSP_CORE_H
+ 
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ 
+ #ifdef __cplusplus
+ extern "C" {
+diff --git a/src/floppy.c b/src/floppy.c
+index 86211c6c..447de36d 100644
+--- a/src/floppy.c
++++ b/src/floppy.c
+@@ -25,7 +25,7 @@ const char Floppy_fileid[] = "Hatari floppy.c";
+ 
+ #include <sys/stat.h>
+ #include <assert.h>
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ 
+ #include "main.h"
+ #include "configuration.h"
+diff --git a/src/gui-sdl/CMakeLists.txt b/src/gui-sdl/CMakeLists.txt
+index 4fe1a086..46f16a9f 100644
+--- a/src/gui-sdl/CMakeLists.txt
++++ b/src/gui-sdl/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ 
+-include_directories(. ../.. ../debug ../includes ${SDL2_INCLUDE_DIR})
++include_directories(. ../.. ../debug ../includes ${SDL2_INCLUDE_DIRS})
+ 
+ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+ 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-write-strings")
+diff --git a/src/gui-sdl/dlgFileSelect.c b/src/gui-sdl/dlgFileSelect.c
+index 46458321..72dbd389 100644
+--- a/src/gui-sdl/dlgFileSelect.c
++++ b/src/gui-sdl/dlgFileSelect.c
+@@ -8,7 +8,7 @@
+ */
+ const char DlgFileSelect_fileid[] = "Hatari dlgFileSelect.c";
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ #include <sys/stat.h>
+ #include <unistd.h>
+ 
+diff --git a/src/gui-sdl/sdlgui.c b/src/gui-sdl/sdlgui.c
+index fe7b0dd5..4508e461 100644
+--- a/src/gui-sdl/sdlgui.c
++++ b/src/gui-sdl/sdlgui.c
+@@ -8,7 +8,7 @@
+ */
+ const char SDLGui_fileid[] = "Hatari sdlgui.c";
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ #include <ctype.h>
+ #include <string.h>
+ #include <stdlib.h>
+diff --git a/src/hdc.c b/src/hdc.c
+index e6f3488c..76e759f5 100644
+--- a/src/hdc.c
++++ b/src/hdc.c
+@@ -9,7 +9,7 @@
+ const char HDC_fileid[] = "Hatari hdc.c";
+ 
+ #include <errno.h>
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ 
+ #include "main.h"
+ #include "configuration.h"
+diff --git a/src/ide.c b/src/ide.c
+index e07f6061..6d0083fc 100644
+--- a/src/ide.c
++++ b/src/ide.c
+@@ -7,7 +7,7 @@
+   This is where we intercept read/writes to/from the IDE controller hardware.
+ */
+ 
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ #include <errno.h>
+ 
+ #include <sys/types.h>
+diff --git a/src/includes/cycles.h b/src/includes/cycles.h
+index 3165778a..b95589f5 100644
+--- a/src/includes/cycles.h
++++ b/src/includes/cycles.h
+@@ -9,7 +9,7 @@
+ #define HATARI_CYCLES_H
+ 
+ #include <stdbool.h>
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ 
+ enum
+ {
+diff --git a/src/includes/keymap.h b/src/includes/keymap.h
+index cb7f9b19..5ef5f9a2 100644
+--- a/src/includes/keymap.h
++++ b/src/includes/keymap.h
+@@ -8,7 +8,7 @@
+ #ifndef HATARI_KEYMAP_H
+ #define HATARI_KEYMAP_H
+ 
+-#include <SDL_keyboard.h>
++#include <SDL2/SDL_keyboard.h>
+ 
+ /* TODO: Get rid of these defines later... */
+ #define SDLKey SDL_Keycode
+diff --git a/src/includes/main.h b/src/includes/main.h
+index e6b983ad..c0f3c1ca 100644
+--- a/src/includes/main.h
++++ b/src/includes/main.h
+@@ -14,7 +14,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ #include <stdbool.h>
+ #include <math.h>
+ 
+diff --git a/src/includes/screen.h b/src/includes/screen.h
+index a08243de..7b17d20c 100644
+--- a/src/includes/screen.h
++++ b/src/includes/screen.h
+@@ -8,7 +8,7 @@
+ #ifndef HATARI_SCREEN_H
+ #define HATARI_SCREEN_H
+ 
+-#include <SDL_video.h>    /* for SDL_Surface */
++#include <SDL2/SDL_video.h>    /* for SDL_Surface */
+ 
+ extern SDL_Window *sdlWindow;
+ 
+diff --git a/src/includes/screenSnapShot.h b/src/includes/screenSnapShot.h
+index 5727759e..d8cfcc87 100644
+--- a/src/includes/screenSnapShot.h
++++ b/src/includes/screenSnapShot.h
+@@ -8,7 +8,7 @@
+ #ifndef HATARI_SCREENSNAPSHOT_H
+ #define HATARI_SCREENSNAPSHOT_H
+ 
+-#include <SDL_video.h>
++#include <SDL2/SDL_video.h>
+ 
+ extern int ScreenSnapShot_SavePNG_ToFile(SDL_Surface *surface, int destw,
+ 		int desth, FILE *fp, int png_compression_level, int png_filter,
+diff --git a/src/includes/sdlgui.h b/src/includes/sdlgui.h
+index b69040ab..82826f0b 100644
+--- a/src/includes/sdlgui.h
++++ b/src/includes/sdlgui.h
+@@ -10,7 +10,7 @@
+ #ifndef HATARI_SDLGUI_H
+ #define HATARI_SDLGUI_H
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ 
+ /* object types: */
+ enum
+diff --git a/src/includes/sound.h b/src/includes/sound.h
+index f4e7d8da..4d2dafa4 100644
+--- a/src/includes/sound.h
++++ b/src/includes/sound.h
+@@ -23,7 +23,7 @@ extern Sint16	MixBuffer[MIXBUFFER_SIZE][2];
+ extern bool	Sound_BufferIndexNeedReset;
+ 
+ /* STSound sound renderer active */
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ 
+ 
+ /* Internal data types */
+diff --git a/src/includes/statusbar.h b/src/includes/statusbar.h
+index 9b7ec46f..9fe51180 100644
+--- a/src/includes/statusbar.h
++++ b/src/includes/statusbar.h
+@@ -7,7 +7,7 @@
+ #ifndef HATARI_STATUSBAR_H
+ #define HATARI_STATUSBAR_H
+ 
+-#include <SDL_video.h>
++#include <SDL2/SDL_video.h>
+ 
+ /* must correspond to max value returned by Statusbar_GetHeightForSize() */
+ #define STATUSBAR_MAX_HEIGHT (2*(2*8+2))
+diff --git a/src/includes/utils.h b/src/includes/utils.h
+index ea85e3c9..90b0345d 100644
+--- a/src/includes/utils.h
++++ b/src/includes/utils.h
+@@ -7,7 +7,7 @@
+ #ifndef HATARI_UTILS_H
+ #define HATARI_UTILS_H
+ 
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ 
+ 
+ #define CRC32_POLY	0x04c11db7	/* IEEE 802.3 recommendation */
+diff --git a/src/inffile.c b/src/inffile.c
+index 58f50544..cabb61df 100644
+--- a/src/inffile.c
++++ b/src/inffile.c
+@@ -8,7 +8,7 @@
+ */
+ const char INFFILE_fileid[] = "Hatari inffile.c";
+ 
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ #include <assert.h>
+ #include <errno.h>
+ #include <ctype.h>
+diff --git a/src/joy.c b/src/joy.c
+index 7c8de347..763c2ce4 100644
+--- a/src/joy.c
++++ b/src/joy.c
+@@ -10,7 +10,7 @@
+ */
+ const char Joy_fileid[] = "Hatari joy.c";
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ 
+ #include "main.h"
+ #include "configuration.h"
+diff --git a/src/lilo.c b/src/lilo.c
+index d28b5a47..57929df1 100644
+--- a/src/lilo.c
++++ b/src/lilo.c
+@@ -19,7 +19,7 @@
+ #include "stMemory.h"	/* STRam etc */
+ #include "symbols.h"
+ #include <stdint.h>
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ 
+ bool bUseLilo;
+ 
+diff --git a/src/main.c b/src/main.c
+index 61e487f4..6346817e 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -8,9 +8,13 @@
+ */
+ const char Main_fileid[] = "Hatari main.c";
+ 
++#ifndef _SC_CLK_TCK
++#define _SC_CLK_TCK 2
++#endif
++
+ #include <time.h>
+ #include <errno.h>
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ 
+ #include "main.h"
+ #include "version.h"
+diff --git a/src/memorySnapShot.c b/src/memorySnapShot.c
+index fa6837f9..329a08ed 100644
+--- a/src/memorySnapShot.c
++++ b/src/memorySnapShot.c
+@@ -18,7 +18,7 @@
+ */
+ const char MemorySnapShot_fileid[] = "Hatari memorySnapShot.c";
+ 
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ #include <errno.h>
+ 
+ #include "main.h"
+diff --git a/src/midi.c b/src/midi.c
+index 9dc74c0b..8681d12a 100644
+--- a/src/midi.c
++++ b/src/midi.c
+@@ -22,7 +22,7 @@
+ */
+ const char Midi_fileid[] = "Hatari midi.c";
+ 
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ 
+ #include "main.h"
+ #include "configuration.h"
+diff --git a/src/msa.c b/src/msa.c
+index ecbf3f49..deef1580 100644
+--- a/src/msa.c
++++ b/src/msa.c
+@@ -8,7 +8,7 @@
+ */
+ const char MSA_fileid[] = "Hatari msa.c";
+ 
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ 
+ #include "main.h"
+ #include "file.h"
+diff --git a/src/options.c b/src/options.c
+index f2e54d0c..e505ebd9 100644
+--- a/src/options.c
++++ b/src/options.c
+@@ -18,7 +18,7 @@ const char Options_fileid[] = "Hatari options.c";
+ #include <stdlib.h>
+ #include <string.h>
+ #include <assert.h>
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ 
+ #include "main.h"
+ #include "version.h"
+diff --git a/src/resolution.c b/src/resolution.c
+index c725c3b6..7fd201e9 100644
+--- a/src/resolution.c
++++ b/src/resolution.c
+@@ -8,7 +8,7 @@
+ */
+ const char Resolution_fileid[] = "Hatari resolution.c";
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ #include "main.h"
+ #include "configuration.h"
+ #include "log.h"
+diff --git a/src/rs232.c b/src/rs232.c
+index 2935267a..661d95d8 100644
+--- a/src/rs232.c
++++ b/src/rs232.c
+@@ -15,7 +15,7 @@
+ */
+ const char RS232_fileid[] = "Hatari rs232.c";
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ #include <SDL_thread.h>
+ #include <errno.h>
+ 
+diff --git a/src/screen.c b/src/screen.c
+index 2ec93d56..7a5e08e7 100644
+--- a/src/screen.c
++++ b/src/screen.c
+@@ -26,8 +26,8 @@
+ 
+ const char Screen_fileid[] = "Hatari screen.c";
+ 
+-#include <SDL.h>
+-#include <SDL_endian.h>
++#include <SDL2/SDL.h>
++#include <SDL2/SDL_endian.h>
+ #include <assert.h>
+ 
+ #include "main.h"
+@@ -493,7 +493,7 @@ bool Screen_SetSDLVideoSize(int width, int height, int bitdepth, bool bForceChan
+ 		int rm, bm, gm;
+ 		SDL_RendererInfo sRenderInfo = { 0 };
+ 
+-		sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, 0);
++		sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, SDL_RENDERER_SOFTWARE);
+ 		if (!sdlRenderer)
+ 		{
+ 			fprintf(stderr, "ERROR: Failed to create %dx%d renderer!\n",
+diff --git a/src/screenConvert.c b/src/screenConvert.c
+index 2bf3a6d5..7d541b58 100644
+--- a/src/screenConvert.c
++++ b/src/screenConvert.c
+@@ -5,7 +5,7 @@
+   or at your option any later version. Read the file gpl.txt for details.
+ */
+ 
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ #include "main.h"
+ #include "configuration.h"
+ #include "log.h"
+diff --git a/src/screenSnapShot.c b/src/screenSnapShot.c
+index 37e0307e..72975035 100644
+--- a/src/screenSnapShot.c
++++ b/src/screenSnapShot.c
+@@ -8,7 +8,7 @@
+ */
+ const char ScreenSnapShot_fileid[] = "Hatari screenSnapShot.c";
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ #include <dirent.h>
+ #include <string.h>
+ #include "main.h"
+diff --git a/src/shortcut.c b/src/shortcut.c
+index 6ca22d94..4fa12967 100644
+--- a/src/shortcut.c
++++ b/src/shortcut.c
+@@ -8,7 +8,7 @@
+ */
+ const char ShortCut_fileid[] = "Hatari shortcut.c";
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ 
+ #include "main.h"
+ #include "dialog.h"
+diff --git a/src/spec512.c b/src/spec512.c
+index bd145e0a..1be6bbc2 100644
+--- a/src/spec512.c
++++ b/src/spec512.c
+@@ -68,7 +68,7 @@
+ 
+ const char Spec512_fileid[] = "Hatari spec512.c";
+ 
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ 
+ #include "main.h"
+ #include "configuration.h"
+diff --git a/src/str.c b/src/str.c
+index 507194cf..b7dd0567 100644
+--- a/src/str.c
++++ b/src/str.c
+@@ -13,7 +13,7 @@ const char Str_fileid[] = "Hatari str.c";
+ #include <stdbool.h>
+ #include <stdlib.h>
+ #include <locale.h>
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ #include "configuration.h"
+ #include "str.h"
+ 
+diff --git a/src/tos.c b/src/tos.c
+index da19681d..40169791 100644
+--- a/src/tos.c
++++ b/src/tos.c
+@@ -18,7 +18,7 @@
+   to select any of these images we bring up an error. */
+ const char TOS_fileid[] = "Hatari tos.c";
+ 
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ 
+ #include "main.h"
+ #include "configuration.h"
+diff --git a/src/video.c b/src/video.c
+index 78808cfe..a19e3c87 100644
+--- a/src/video.c
++++ b/src/video.c
+@@ -425,7 +425,7 @@
+ 
+ const char Video_fileid[] = "Hatari video.c";
+ 
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ 
+ #include "main.h"
+ #include "configuration.h"
+diff --git a/src/wavFormat.c b/src/wavFormat.c
+index 31c6f40a..7f5b960d 100644
+--- a/src/wavFormat.c
++++ b/src/wavFormat.c
+@@ -35,7 +35,7 @@
+ */
+ const char WAVFormat_fileid[] = "Hatari wavFormat.c";
+ 
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ 
+ #include "main.h"
+ #include "audio.h"
+diff --git a/tests/debugger/CMakeLists.txt b/tests/debugger/CMakeLists.txt
+index 9fe45468..51faf5d2 100644
+--- a/tests/debugger/CMakeLists.txt
++++ b/tests/debugger/CMakeLists.txt
+@@ -3,7 +3,7 @@ set(TEST_SOURCE_DIR ${CMAKE_SOURCE_DIR}/tests/debugger)
+ 
+ include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src/includes
+ 		    ${CMAKE_SOURCE_DIR}/src/debug ${CMAKE_SOURCE_DIR}/src/falcon
+-		    ${CMAKE_SOURCE_DIR}/src/debug ${SDL2_INCLUDE_DIR}
++		    ${CMAKE_SOURCE_DIR}/src/debug ${SDL2_INCLUDE_DIRS}
+ 		    ${CMAKE_SOURCE_DIR}/src/cpu)
+ 
+ add_library(DebuggerTestLib test-dummies.c  ${CMAKE_SOURCE_DIR}/src/str.c
+diff --git a/tests/debugger/test-evaluate.c b/tests/debugger/test-evaluate.c
+index cefaeca7..3ca9c93f 100644
+--- a/tests/debugger/test-evaluate.c
++++ b/tests/debugger/test-evaluate.c
+@@ -3,7 +3,7 @@
+  * (including Hatari variable and CPU register values in expressions)
+  */
+ #include <stdio.h>
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ #include <stdbool.h>
+ #include "stMemory.h"
+ #include "evaluate.h"
+diff --git a/tests/debugger/test-symbols.c b/tests/debugger/test-symbols.c
+index e7466c33..fe1d994e 100644
+--- a/tests/debugger/test-symbols.c
++++ b/tests/debugger/test-symbols.c
+@@ -2,7 +2,7 @@
+  * Code to test Hatari symbol/address (re-)loading in src/debug/symbols.c
+  */
+ #include <stdio.h>
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ #include <stdbool.h>
+ #include "debug_priv.h"
+ #include "symbols.h"
+diff --git a/tools/debugger/CMakeLists.txt b/tools/debugger/CMakeLists.txt
+index 334a3bc2..c3558bd0 100644
+--- a/tools/debugger/CMakeLists.txt
++++ b/tools/debugger/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ 
+-include_directories(${SDL2_INCLUDE_DIR})
++include_directories(${SDL2_INCLUDE_DIRS})
+ 
+ add_executable(gst2ascii gst2ascii.c)
+ 
+diff --git a/tools/debugger/gst2ascii.c b/tools/debugger/gst2ascii.c
+index 8572a93f..a00e397c 100644
+--- a/tools/debugger/gst2ascii.c
++++ b/tools/debugger/gst2ascii.c
+@@ -22,7 +22,7 @@
+ # define SDL_SwapBE16(x) x
+ # define SDL_SwapBE32(x) x
+ #else
+-# include <SDL_endian.h>
++# include <SDL2/SDL_endian.h>
+ #endif
+ #include <assert.h>
+ #include "../../src/debug/a.out.h"
+diff --git a/tools/hmsa/CMakeLists.txt b/tools/hmsa/CMakeLists.txt
+index 639fafe2..fe11a53f 100644
+--- a/tools/hmsa/CMakeLists.txt
++++ b/tools/hmsa/CMakeLists.txt
+@@ -1,6 +1,6 @@
+ 
+ include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src/includes
+-		    ${CMAKE_SOURCE_DIR}/src/debug ${SDL2_INCLUDE_DIR})
++		    ${CMAKE_SOURCE_DIR}/src/debug ${SDL2_INCLUDE_DIRS})
+ 
+ set(HMSA_SOURCES hmsa.c floppy.c ../../src/file.c)
+ 
+@@ -11,11 +11,7 @@ endif(ZLIB_FOUND)
+ 
+ add_executable(hmsa ${HMSA_SOURCES})
+ 
+-target_link_libraries(hmsa Floppy)
+-
+-if(MATH_FOUND)
+-	target_link_libraries(hmsa ${MATH_LIBRARY})
+-endif(MATH_FOUND)
++target_link_libraries(hmsa Floppy m)
+ 
+ if(ZLIB_FOUND)
+ 	target_link_libraries(hmsa ${ZLIB_LIBRARY})
+diff --git a/tools/hmsa/floppy.c b/tools/hmsa/floppy.c
+index 7553540a..c1f96155 100644
+--- a/tools/hmsa/floppy.c
++++ b/tools/hmsa/floppy.c
+@@ -8,7 +8,7 @@
+ */
+ 
+ #include <stdio.h>
+-#include <SDL_endian.h>
++#include <SDL2/SDL_endian.h>
+ 
+ #include "hmsa.h"
+ #include "floppy.h"
+diff --git a/tools/hmsa/hmsa.h b/tools/hmsa/hmsa.h
+index ffa249cb..21b954ed 100644
+--- a/tools/hmsa/hmsa.h
++++ b/tools/hmsa/hmsa.h
+@@ -8,7 +8,7 @@
+ #ifndef HMSA_H
+ #define HMSA_H
+ 
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ 
+ typedef int BOOL;
+ 
