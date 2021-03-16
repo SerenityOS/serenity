@@ -33,6 +33,7 @@ class CSSImportRule;
 class CSSStyleDeclaration;
 class CSSStyleRule;
 class CSSStyleSheet;
+class ElementInlineCSSStyleDeclaration;
 class Length;
 class Selector;
 class StyleProperties;
