@@ -96,4 +96,10 @@ describe("errors", () => {
             1n % 0n;
         }).toThrowWithMessage(RangeError, "Division by zero");
     });
+
+    test("negative exponent", () => {
+        expect(() => {
+            1n ** -1n;
+        }).toThrowWithMessage(RangeError, "Exponent must be positive");
+    });
 });
