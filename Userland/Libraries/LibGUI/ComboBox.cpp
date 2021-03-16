@@ -251,7 +251,6 @@ void ComboBox::open()
     Gfx::IntRect list_window_rect { my_screen_rect.bottom_left(), size };
     list_window_rect.intersect(Desktop::the().rect().shrunken(0, taskbar_height + menubar_height + offset));
 
-    m_editor->set_has_visible_list(true);
     m_editor->set_focus(true);
     if (m_selected_index.has_value()) {
         // Don't set m_updating_model to true here because we only want to
@@ -272,8 +271,6 @@ void ComboBox::open()
 void ComboBox::close()
 {
     m_list_window->hide();
-    m_editor->set_has_visible_list(false);
-    m_editor->set_focus(true);
 }
 
 String ComboBox::text() const
