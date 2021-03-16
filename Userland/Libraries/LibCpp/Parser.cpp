@@ -75,6 +75,8 @@ void Parser::initialize_program_tokens(const StringView& program)
 NonnullRefPtr<TranslationUnit> Parser::parse()
 {
     SCOPE_LOGGER();
+    if (m_tokens.is_empty())
+        return create_root_ast_node({}, {});
     auto unit = create_root_ast_node(m_tokens.first().start(), m_tokens.last().end());
     while (!done()) {
         if (match_comment()) {
