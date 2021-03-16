@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,16 +26,18 @@
  */
 
 #include "QSWidget.h"
+#include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Palette.h>
 
 QSWidget::QSWidget()
+    : m_timer(Core::Timer::construct())
 {
     set_fill_with_background_color(false);
 }
@@ -244,10 +247,29 @@ void QSWidget::mousewheel_event(GUI::MouseEvent& event)
 
 void QSWidget::load_from_file(const String& path)
 {
-    auto bitmap = Gfx::Bitmap::load_from_file(path);
-    if (!bitmap) {
+    auto show_error = [&] {
         GUI::MessageBox::show(window(), String::formatted("Failed to open {}", path), "Cannot open image", GUI::MessageBox::Type::Error);
+    };
+
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error()) {
+        show_error();
         return;
+    }
+
+    auto& mapped_file = *file_or_error.value();
+    m_image_decoder = Gfx::ImageDecoder::create((const u8*)mapped_file.data(), mapped_file.size());
+    auto bitmap = m_image_decoder->bitmap();
+    if (!bitmap) {
+        show_error();
+        return;
+    }
+
+    if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
+        const auto& first_frame = m_image_decoder->frame(0);
+        m_timer->set_interval(first_frame.duration);
+        m_timer->on_timeout = [this] { animate(); };
+        m_timer->start();
     }
 
     m_path = path;
@@ -286,4 +308,32 @@ void QSWidget::reset_view()
 {
     m_pan_origin = { 0, 0 };
     set_scale(100);
+}
+
+void QSWidget::set_bitmap(const Gfx::Bitmap* bitmap)
+{
+    if (m_bitmap == bitmap)
+        return;
+    m_bitmap = bitmap;
+    update();
+}
+
+// Same as ImageWidget::animate(), you probably want to keep any changes in sync
+void QSWidget::animate()
+{
+    m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();
+
+    const auto& current_frame = m_image_decoder->frame(m_current_frame_index);
+    set_bitmap(current_frame.image);
+
+    if (current_frame.duration != m_timer->interval()) {
+        m_timer->restart(current_frame.duration);
+    }
+
+    if (m_current_frame_index == m_image_decoder->frame_count() - 1) {
+        ++m_loops_completed;
+        if (m_loops_completed > 0 && m_loops_completed == m_image_decoder->loop_count()) {
+            m_timer->stop();
+        }
+    }
 }
