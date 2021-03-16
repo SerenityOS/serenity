@@ -3,4 +3,10 @@ test("basic functionality", () => {
 
     d.setMilliseconds(600);
     expect(d.getMilliseconds()).toBe(600);
+
+    d.setMilliseconds("");
+    expect(d.getMilliseconds()).toBe(0);
+
+    d.setMilliseconds("a");
+    expect(d.getMilliseconds()).toBe(NaN);
 });

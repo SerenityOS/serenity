@@ -18,4 +18,10 @@ test("basic functionality", () => {
     expect(d.getMinutes()).toBe(30);
     expect(d.getSeconds()).toBe(50);
     expect(d.getMilliseconds()).toBe(600);
+
+    d.setHours("");
+    expect(d.getHours()).toBe(0);
+
+    d.setHours("a");
+    expect(d.getHours()).toBe(NaN);
 });

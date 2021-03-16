@@ -7,4 +7,10 @@ test("basic functionality", () => {
     d.setSeconds(50, 600);
     expect(d.getSeconds()).toBe(50);
     expect(d.getMilliseconds()).toBe(600);
+
+    d.setSeconds("");
+    expect(d.getSeconds()).toBe(0);
+
+    d.setSeconds("a");
+    expect(d.getSeconds()).toBe(NaN);
 });
