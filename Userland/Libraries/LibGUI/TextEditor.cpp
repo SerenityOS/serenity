@@ -400,7 +400,7 @@ void TextEditor::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), widget_background_color);
 
-    if (is_displayonly() && (is_focused() || has_visible_list())) {
+    if (is_displayonly() && is_focused()) {
         widget_background_color = palette().selection();
         Gfx::IntRect display_rect {
             widget_inner_rect().x() + 1,
@@ -502,12 +502,12 @@ void TextEditor::paint_event(PaintEvent& event)
             } else if (!document().has_spans()) {
                 // Fast-path for plain text
                 auto color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
-                if (is_displayonly() && (is_focused() || has_visible_list()))
+                if (is_displayonly() && is_focused())
                     color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
                 painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, color);
             } else {
                 auto unspanned_color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
-                if (is_displayonly() && (is_focused() || has_visible_list()))
+                if (is_displayonly() && is_focused())
                     unspanned_color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
                 RefPtr<Gfx::Font> unspanned_font = this->font();
 
@@ -1373,13 +1373,6 @@ void TextEditor::set_mode(const Mode mode)
         set_override_cursor(Gfx::StandardCursor::IBeam);
     else
         set_override_cursor(Gfx::StandardCursor::None);
-}
-
-void TextEditor::set_has_visible_list(bool visible)
-{
-    if (m_has_visible_list == visible)
-        return;
-    m_has_visible_list = visible;
 }
 
 void TextEditor::did_update_selection()

@@ -81,9 +81,6 @@ public:
     void set_visualize_trailing_whitespace(bool);
     bool visualize_trailing_whitespace() const { return m_visualize_trailing_whitespace; }
 
-    bool has_visible_list() const { return m_has_visible_list; }
-    void set_has_visible_list(bool);
-
     virtual bool is_automatic_indentation_enabled() const final { return m_automatic_indentation_enabled; }
     void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
 
@@ -320,7 +317,6 @@ private:
     bool m_has_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
     WrappingMode m_wrapping_mode { WrappingMode::NoWrap };
-    bool m_has_visible_list { false };
     bool m_visualize_trailing_whitespace { true };
     int m_line_spacing { 4 };
     size_t m_soft_tab_width { 4 };
