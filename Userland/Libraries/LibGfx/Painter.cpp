@@ -62,9 +62,9 @@ ALWAYS_INLINE Color get_pixel(const Gfx::Bitmap& bitmap, int x, int y)
         return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
     if constexpr (format == BitmapFormat::Indexed1)
         return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
-    if constexpr (format == BitmapFormat::RGB32)
+    if constexpr (format == BitmapFormat::BGRx8888)
         return Color::from_rgb(bitmap.scanline(y)[x]);
-    if constexpr (format == BitmapFormat::RGBA32)
+    if constexpr (format == BitmapFormat::BGRA8888)
         return Color::from_rgba(bitmap.scanline(y)[x]);
     return bitmap.get_pixel(x, y);
 }
@@ -73,7 +73,7 @@ Painter::Painter(Gfx::Bitmap& bitmap)
     : m_target(bitmap)
 {
     int scale = bitmap.scale();
-    VERIFY(bitmap.format() == Gfx::BitmapFormat::RGB32 || bitmap.format() == Gfx::BitmapFormat::RGBA32);
+    VERIFY(bitmap.format() == Gfx::BitmapFormat::BGRx8888 || bitmap.format() == Gfx::BitmapFormat::BGRA8888);
     VERIFY(bitmap.physical_width() % scale == 0);
     VERIFY(bitmap.physical_height() % scale == 0);
     m_state_stack.append(State());
@@ -687,7 +687,7 @@ void Painter::draw_tiled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& so
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    if (source.format() == BitmapFormat::RGB32 || source.format() == BitmapFormat::RGBA32) {
+    if (source.format() == BitmapFormat::BGRx8888 || source.format() == BitmapFormat::BGRA8888) {
         int s = scale / source.scale();
         if (s == 1) {
             int x_start = first_column + a_dst_rect.left() * scale;
@@ -759,7 +759,7 @@ void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const In
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    if (source.format() == BitmapFormat::RGB32 || source.format() == BitmapFormat::RGBA32) {
+    if (source.format() == BitmapFormat::BGRx8888 || source.format() == BitmapFormat::BGRA8888) {
         const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
         const size_t src_skip = source.pitch() / sizeof(RGBA32);
         for (int row = first_row; row <= last_row; ++row) {
@@ -866,11 +866,11 @@ void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& s
 
     if (source.has_alpha_channel() || opacity != 1.0f) {
         switch (source.format()) {
-        case BitmapFormat::RGB32:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::RGB32>, opacity);
+        case BitmapFormat::BGRx8888:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRx8888>, opacity);
             break;
-        case BitmapFormat::RGBA32:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::RGBA32>, opacity);
+        case BitmapFormat::BGRA8888:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRA8888>, opacity);
             break;
         case BitmapFormat::Indexed8:
             do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity);
@@ -890,8 +890,8 @@ void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& s
         }
     } else {
         switch (source.format()) {
-        case BitmapFormat::RGB32:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::RGB32>, opacity);
+        case BitmapFormat::BGRx8888:
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRx8888>, opacity);
             break;
         case BitmapFormat::Indexed8:
             do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity);

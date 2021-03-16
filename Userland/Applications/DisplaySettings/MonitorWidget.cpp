@@ -116,7 +116,7 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
         // Render text label scaled with scale factor to hint at its effect.
         // FIXME: Once bitmaps have intrinsic scale factors, we could create a bitmap with an intrinsic scale factor of m_desktop_scale_factor
         // and that should give us the same effect with less code.
-        auto text_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, Gfx::IntSize { painter.font().width(displayed_resolution_string) + 1, painter.font().glyph_height() + 1 });
+        auto text_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize { painter.font().width(displayed_resolution_string) + 1, painter.font().glyph_height() + 1 });
         GUI::Painter text_painter(*text_bitmap);
         text_painter.set_font(painter.font());
 

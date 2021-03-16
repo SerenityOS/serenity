@@ -623,7 +623,7 @@ OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> ClientConnection::
     } else {
         // FIXME: Plumb scale factor here eventually.
         auto backing_store = Gfx::Bitmap::create_with_anon_fd(
-            message.has_alpha_channel() ? Gfx::BitmapFormat::RGBA32 : Gfx::BitmapFormat::RGB32,
+            message.has_alpha_channel() ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
             message.anon_file().take_fd(),
             message.size(),
             1,

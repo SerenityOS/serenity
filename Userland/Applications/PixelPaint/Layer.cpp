@@ -66,7 +66,7 @@ Layer::Layer(Image& image, const Gfx::IntSize& size, const String& name)
     : m_image(image)
     , m_name(name)
 {
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, size);
+    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size);
 }
 
 Layer::Layer(Image& image, const Gfx::Bitmap& bitmap, const String& name)

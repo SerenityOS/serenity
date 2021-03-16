@@ -98,7 +98,7 @@ bool HTMLCanvasElement::create_bitmap()
         return false;
     }
     if (!m_bitmap || m_bitmap->size() != size)
-        m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, size);
+        m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size);
     return m_bitmap;
 }
 

@@ -160,13 +160,13 @@ void OutOfProcessWebView::handle_resize()
     if (available_size().is_empty())
         return;
 
-    if (auto new_bitmap = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::RGB32, available_size())) {
+    if (auto new_bitmap = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size())) {
         m_client_state.front_bitmap = move(new_bitmap);
         m_client_state.front_bitmap_id = m_client_state.next_bitmap_id++;
         client().post_message(Messages::WebContentServer::AddBackingStore(m_client_state.front_bitmap_id, m_client_state.front_bitmap->to_shareable_bitmap()));
     }
 
-    if (auto new_bitmap = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::RGB32, available_size())) {
+    if (auto new_bitmap = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size())) {
         m_client_state.back_bitmap = move(new_bitmap);
         m_client_state.back_bitmap_id = m_client_state.next_bitmap_id++;
         client().post_message(Messages::WebContentServer::AddBackingStore(m_client_state.back_bitmap_id, m_client_state.back_bitmap->to_shareable_bitmap()));
