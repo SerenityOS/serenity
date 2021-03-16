@@ -563,6 +563,7 @@ public:
         : Expression(move(source_range))
         , m_expressions(move(expressions))
     {
+        VERIFY(m_expressions.size() >= 2);
     }
 
     virtual void dump(int indent) const override;
