@@ -33,6 +33,7 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/InProcessWebView.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web::DOM {
@@ -179,6 +180,20 @@ bool Window::dispatch_event(NonnullRefPtr<Event> event)
 JS::Object* Window::create_wrapper(JS::GlobalObject& global_object)
 {
     return &global_object;
+}
+
+int Window::inner_width() const
+{
+    if (!document().layout_node())
+        return 0;
+    return document().layout_node()->width();
+}
+
+int Window::inner_height() const
+{
+    if (!document().layout_node())
+        return 0;
+    return document().layout_node()->height();
 }
 
 }
