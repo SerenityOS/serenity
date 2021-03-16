@@ -26,6 +26,7 @@
 
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Process.h>
+#include <Kernel/Time/TimeManagement.h>
 #include <limits.h>
 
 namespace Kernel {
@@ -45,8 +46,7 @@ KResultOr<long> Process::sys$sysconf(int name)
     case _SC_GETPW_R_SIZE_MAX:
         return 4096; // idk
     case _SC_CLK_TCK:
-        // FIXME: should return Number of clock intervals per second for times()
-        return 100; // seems to be 100 on x86_64
+        return TimeManagement::the().ticks_per_second();
     default:
         return EINVAL;
     }
