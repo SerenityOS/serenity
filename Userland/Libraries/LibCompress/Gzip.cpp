@@ -106,13 +106,19 @@ size_t GzipDecompressor::read(Bytes bytes)
 
         return nread;
     } else {
-        BlockHeader header;
-        m_input_stream >> Bytes { &header, sizeof(header) };
+        m_partial_header_offset += m_input_stream.read(Bytes { m_partial_header, sizeof(BlockHeader) }.slice(m_partial_header_offset));
 
-        if (m_input_stream.handle_any_error()) {
+        if (m_input_stream.handle_any_error() || m_input_stream.unreliable_eof()) {
             m_eof = true;
             return 0;
         }
+
+        if (m_partial_header_offset < sizeof(BlockHeader)) {
+            return 0; // partial header read
+        }
+        m_partial_header_offset = 0;
+
+        BlockHeader header = *(reinterpret_cast<BlockHeader*>(m_partial_header));
 
         if (!header.valid_magic_number() || !header.supported_by_implementation()) {
             set_fatal_error();
