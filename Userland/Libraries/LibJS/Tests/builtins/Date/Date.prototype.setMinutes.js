@@ -12,4 +12,10 @@ test("basic functionality", () => {
     expect(d.getMinutes()).toBe(30);
     expect(d.getSeconds()).toBe(50);
     expect(d.getMilliseconds()).toBe(600);
+
+    d.setMinutes("");
+    expect(d.getMinutes()).toBe(0);
+
+    d.setMinutes("a");
+    expect(d.getMinutes()).toBe(NaN);
 });
