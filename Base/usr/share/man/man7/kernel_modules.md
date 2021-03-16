@@ -59,7 +59,7 @@ extern "C" void module_fini()
 
 ## See also
 
-* [`modload`(1)](../man1/modload.md)
-* [`modunload`(1)](../man1/modunload.md)
+* [`modload`(8)](../man8/modload.md)
+* [`modunload`(8)](../man8/modunload.md)
 * [`module_load`(2)](../man2/module_load.md)
 * [`module_unload`(2)](../man2/module_unload.md)
