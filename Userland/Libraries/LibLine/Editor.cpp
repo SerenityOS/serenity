@@ -1678,7 +1678,6 @@ Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metric
 Vector<size_t, 2> Editor::vt_dsr()
 {
     char buf[16];
-    u32 length { 0 };
 
     // Read whatever junk there is before talking to the terminal
     // and insert them later when we're reading user input.
@@ -1713,8 +1712,25 @@ Vector<size_t, 2> Editor::vt_dsr()
     fputs("\033[6n", stderr);
     fflush(stderr);
 
+    // Parse the DSR response
+    // it should be of the form .*\e[\d+;\d+R.*
+    // Anything not part of the response is just added to the incomplete data.
+    enum {
+        Free,
+        SawEsc,
+        SawBracket,
+        InFirstCoordinate,
+        SawSemicolon,
+        InSecondCoordinate,
+        SawR,
+    } state { Free };
+    auto has_error = false;
+    Vector<char, 4> coordinate_buffer;
+    size_t row { 1 }, col { 1 };
+
     do {
-        auto nread = read(0, buf + length, 16 - length);
+        char c;
+        auto nread = read(0, &c, 1);
         if (nread < 0) {
             if (errno == 0 || errno == EINTR) {
                 // ????
@@ -1731,25 +1747,80 @@ Vector<size_t, 2> Editor::vt_dsr()
             dbgln("Terminal DSR issue; received no response");
             return { 1, 1 };
         }
-        length += nread;
-    } while (buf[length - 1] != 'R' && length < 16);
-    size_t row { 1 }, col { 1 };
 
-    if (buf[0] == '\033' && buf[1] == '[') {
-        auto parts = StringView(buf + 2, length - 3).split_view(';');
-        auto row_opt = parts[0].to_int();
-        if (!row_opt.has_value()) {
-            dbgln("Terminal DSR issue; received garbage row");
-        } else {
-            row = row_opt.value();
+        switch (state) {
+        case Free:
+            if (c == '\x1b') {
+                state = SawEsc;
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case SawEsc:
+            if (c == '[') {
+                state = SawBracket;
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case SawBracket:
+            if (isdigit(c)) {
+                state = InFirstCoordinate;
+                coordinate_buffer.append(c);
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case InFirstCoordinate:
+            if (isdigit(c)) {
+                coordinate_buffer.append(c);
+                continue;
+            }
+            if (c == ';') {
+                auto maybe_row = StringView { coordinate_buffer.data(), coordinate_buffer.size() }.to_uint();
+                if (!maybe_row.has_value())
+                    has_error = true;
+                row = maybe_row.value_or(1u);
+                coordinate_buffer.clear_with_capacity();
+                state = SawSemicolon;
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case SawSemicolon:
+            if (isdigit(c)) {
+                state = InSecondCoordinate;
+                coordinate_buffer.append(c);
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case InSecondCoordinate:
+            if (isdigit(c)) {
+                coordinate_buffer.append(c);
+                continue;
+            }
+            if (c == 'R') {
+                auto maybe_column = StringView { coordinate_buffer.data(), coordinate_buffer.size() }.to_uint();
+                if (!maybe_column.has_value())
+                    has_error = true;
+                col = maybe_column.value_or(1u);
+                coordinate_buffer.clear_with_capacity();
+                state = SawR;
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case SawR:
+            m_incomplete_data.append(c);
+            continue;
+        default:
+            VERIFY_NOT_REACHED();
         }
-        auto col_opt = parts[1].to_int();
-        if (!col_opt.has_value()) {
-            dbgln("Terminal DSR issue; received garbage col");
-        } else {
-            col = col_opt.value();
-        }
-    }
+    } while (state != SawR);
+
+    if (has_error)
+        dbgln("Terminal DSR issue, couldn't parse DSR response");
     return { row, col };
 }
 
