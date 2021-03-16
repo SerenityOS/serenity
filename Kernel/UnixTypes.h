@@ -63,6 +63,7 @@ enum {
     _SC_TTY_NAME_MAX,
     _SC_PAGESIZE,
     _SC_GETPW_R_SIZE_MAX,
+    _SC_CLK_TCK,
 };
 
 #define PERF_EVENT_SAMPLE 0
