@@ -67,6 +67,7 @@ public:
     bool discard_or_error(size_t) override;
 
     bool unreliable_eof() const override;
+    bool handle_any_error() override;
 
     static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
     static bool is_likely_compressed(ReadonlyBytes bytes);
