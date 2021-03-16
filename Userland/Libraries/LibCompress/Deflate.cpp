@@ -218,11 +218,21 @@ size_t DeflateDecompressor::read(Bytes bytes)
         m_read_final_bock = m_input_stream.read_bit();
         const auto block_type = m_input_stream.read_bits(2);
 
+        if (m_input_stream.has_any_error()) {
+            set_fatal_error();
+            return 0;
+        }
+
         if (block_type == 0b00) {
             m_input_stream.align_to_byte_boundary();
 
             LittleEndian<u16> length, negated_length;
             m_input_stream >> length >> negated_length;
+
+            if (m_input_stream.has_any_error()) {
+                set_fatal_error();
+                return 0;
+            }
 
             if ((length ^ 0xffff) != negated_length) {
                 set_fatal_error();
@@ -247,6 +257,11 @@ size_t DeflateDecompressor::read(Bytes bytes)
             Optional<CanonicalCode> distance_codes;
             decode_codes(literal_codes, distance_codes);
 
+            if (m_input_stream.has_any_error()) {
+                set_fatal_error();
+                return 0;
+            }
+
             m_state = State::ReadingCompressedBlock;
             new (&m_compressed_block) CompressedBlock(*this, literal_codes, distance_codes);
 
@@ -264,6 +279,11 @@ size_t DeflateDecompressor::read(Bytes bytes)
             nread += m_output_stream.read(bytes.slice(nread));
         }
 
+        if (m_input_stream.has_any_error()) {
+            set_fatal_error();
+            return 0;
+        }
+
         if (nread == bytes.size())
             return nread;
 
@@ -278,6 +298,11 @@ size_t DeflateDecompressor::read(Bytes bytes)
 
         while (nread < bytes.size() && m_uncompressed_block.try_read_more()) {
             nread += m_output_stream.read(bytes.slice(nread));
+        }
+
+        if (m_input_stream.has_any_error()) {
+            set_fatal_error();
+            return 0;
         }
 
         if (nread == bytes.size())
