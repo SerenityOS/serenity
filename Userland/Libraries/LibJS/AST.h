@@ -91,7 +91,7 @@ public:
         : Statement(move(source_range))
     {
     }
-    Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
+    Value execute(Interpreter&, GlobalObject&) const override { return {}; }
 };
 
 class ErrorStatement final : public Statement {
@@ -100,7 +100,7 @@ public:
         : Statement(move(source_range))
     {
     }
-    Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
+    Value execute(Interpreter&, GlobalObject&) const override { return {}; }
 };
 
 class ExpressionStatement final : public Statement {
@@ -202,7 +202,7 @@ public:
         : Declaration(move(source_range))
     {
     }
-    Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
+    Value execute(Interpreter&, GlobalObject&) const override { return {}; }
 };
 
 class FunctionNode {
@@ -286,7 +286,7 @@ public:
     {
     }
 
-    Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
+    Value execute(Interpreter&, GlobalObject&) const override { return {}; }
 };
 
 class ReturnStatement final : public Statement {
