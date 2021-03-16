@@ -235,6 +235,7 @@ namespace JS {
     P(toString)                              \
     P(toTimeString)                          \
     P(toUpperCase)                           \
+    P(toUTCString)                           \
     P(trace)                                 \
     P(trim)                                  \
     P(trimEnd)                               \
