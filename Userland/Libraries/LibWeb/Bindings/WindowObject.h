@@ -84,6 +84,9 @@ private:
 
     JS_DECLARE_NATIVE_GETTER(event_getter);
 
+    JS_DECLARE_NATIVE_GETTER(inner_width_getter);
+    JS_DECLARE_NATIVE_GETTER(inner_height_getter);
+
     JS_DECLARE_NATIVE_FUNCTION(alert);
     JS_DECLARE_NATIVE_FUNCTION(confirm);
     JS_DECLARE_NATIVE_FUNCTION(prompt);

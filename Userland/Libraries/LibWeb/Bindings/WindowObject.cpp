@@ -67,6 +67,8 @@ void WindowObject::initialize()
     define_property("self", this, JS::Attribute::Enumerable);
     define_native_property("document", document_getter, document_setter, JS::Attribute::Enumerable);
     define_native_property("performance", performance_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_property("innerWidth", inner_width_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_property("innerHeight", inner_height_getter, nullptr, JS::Attribute::Enumerable);
     define_native_function("alert", alert);
     define_native_function("confirm", confirm);
     define_native_function("prompt", prompt);
@@ -377,6 +379,22 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::event_getter)
     if (!impl->current_event())
         return JS::js_undefined();
     return wrap(global_object, const_cast<DOM::Event&>(*impl->current_event()));
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::inner_width_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return JS::Value(impl->inner_width());
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::inner_height_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return JS::Value(impl->inner_height());
 }
 
 }
