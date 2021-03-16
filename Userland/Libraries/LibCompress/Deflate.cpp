@@ -120,7 +120,8 @@ u32 CanonicalCode::read_symbol(InputBitStream& stream) const
 
     for (;;) {
         code_bits = code_bits << 1 | stream.read_bits(1);
-        VERIFY(code_bits < (1 << 16));
+        if (code_bits >= (1 << 16))
+            return UINT32_MAX; // the maximum symbol in deflate is 288, so we use UINT32_MAX (an impossible value) to indicate an error
 
         // FIXME: This is very inefficient and could greatly be improved by implementing this
         //        algorithm: https://www.hanshq.net/zip.html#huffdec
@@ -149,6 +150,11 @@ bool DeflateDecompressor::CompressedBlock::try_read_more()
 
     const auto symbol = m_literal_codes.read_symbol(m_decompressor.m_input_stream);
 
+    if (symbol == UINT32_MAX) {
+        m_decompressor.set_fatal_error();
+        return false;
+    }
+
     if (symbol < 256) {
         m_decompressor.m_output_stream << static_cast<u8>(symbol);
         return true;
@@ -162,7 +168,12 @@ bool DeflateDecompressor::CompressedBlock::try_read_more()
         }
 
         const auto length = m_decompressor.decode_length(symbol);
-        const auto distance = m_decompressor.decode_distance(m_distance_codes.value().read_symbol(m_decompressor.m_input_stream));
+        const auto distance_symbol = m_distance_codes.value().read_symbol(m_decompressor.m_input_stream);
+        if (distance_symbol == UINT32_MAX) {
+            m_decompressor.set_fatal_error();
+            return false;
+        }
+        const auto distance = m_decompressor.decode_distance(distance_symbol);
 
         for (size_t idx = 0; idx < length; ++idx) {
             u8 byte = 0;
@@ -432,6 +443,11 @@ void DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Optional<Can
     Vector<u8> code_lengths;
     while (code_lengths.size() < literal_code_count + distance_code_count) {
         auto symbol = code_length_code.read_symbol(m_input_stream);
+
+        if (symbol == UINT32_MAX) {
+            set_fatal_error();
+            return;
+        }
 
         if (symbol < DeflateSpecialCodeLengths::COPY) {
             code_lengths.append(static_cast<u8>(symbol));
