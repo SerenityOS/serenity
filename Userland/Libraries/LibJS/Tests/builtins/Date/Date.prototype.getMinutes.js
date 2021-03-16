@@ -4,4 +4,5 @@ test("basic functionality", () => {
     expect(d.getMinutes()).not.toBeNaN();
     expect(d.getMinutes()).toBeGreaterThanOrEqual(0);
     expect(d.getMinutes()).toBeLessThanOrEqual(59);
+    expect(new Date(NaN).getMinutes()).toBe(NaN);
 });

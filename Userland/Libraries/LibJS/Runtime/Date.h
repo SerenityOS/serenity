@@ -35,9 +35,9 @@ class Date final : public Object {
     JS_OBJECT(Date, Object);
 
 public:
-    static Date* create(GlobalObject&, Core::DateTime, u16 milliseconds);
+    static Date* create(GlobalObject&, Core::DateTime, u16 milliseconds, bool is_invalid = false);
 
-    Date(Core::DateTime datetime, u16 milliseconds, Object& prototype);
+    Date(Core::DateTime datetime, u16 milliseconds, bool is_invalid, Object& prototype);
     virtual ~Date() override;
 
     Core::DateTime& datetime() { return m_datetime; }
@@ -53,6 +53,9 @@ public:
     int seconds() const { return datetime().second(); }
     double time() const { return datetime().timestamp() * 1000.0 + milliseconds(); }
     int year() const { return datetime().day(); }
+
+    bool is_invalid() const { return m_is_invalid; }
+    void set_is_invalid(bool value) { m_is_invalid = value; }
 
     int utc_date() const;
     int utc_day() const;
@@ -73,6 +76,9 @@ public:
     String time_string() const { return m_datetime.to_string("%T GMT+0000 (UTC)"); }
     String string() const
     {
+        if (is_invalid())
+            return "Invalid Date";
+
         return String::formatted("{} {}", date_string(), time_string());
     }
 
@@ -94,6 +100,7 @@ private:
 
     Core::DateTime m_datetime;
     u16 m_milliseconds;
+    bool m_is_invalid { false };
 };
 
 }

@@ -51,6 +51,7 @@
     M(InvalidIndex, "Index must be a positive integer")                                                                                 \
     M(InvalidLeftHandAssignment, "Invalid left-hand side in assignment")                                                                \
     M(InvalidLength, "Invalid {} length")                                                                                               \
+    M(InvalidTimeValue, "Invalid time value")                                                                                           \
     M(InvalidRadix, "Radix must be an integer no less than 2, and no greater than 36")                                                  \
     M(IsNotA, "{} is not a {}")                                                                                                         \
     M(IsNotAEvaluatedFrom, "{} is not a {} (evaluated from '{}')")                                                                      \
