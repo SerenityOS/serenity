@@ -87,4 +87,13 @@ describe("errors", () => {
             +123n;
         }).toThrowWithMessage(TypeError, "Cannot convert BigInt to number");
     });
+
+    test("division by zero", () => {
+        expect(() => {
+            1n / 0n;
+        }).toThrowWithMessage(RangeError, "Division by zero");
+        expect(() => {
+            1n % 0n;
+        }).toThrowWithMessage(RangeError, "Division by zero");
+    });
 });

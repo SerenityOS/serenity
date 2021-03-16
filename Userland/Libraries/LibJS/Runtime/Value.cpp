@@ -882,27 +882,34 @@ Value mul(GlobalObject& global_object, Value lhs, Value rhs)
 
 Value div(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    auto& vm = global_object.vm();
     auto lhs_numeric = lhs.to_numeric(global_object.global_object());
-    if (global_object.vm().exception())
+    if (vm.exception())
         return {};
     auto rhs_numeric = rhs.to_numeric(global_object.global_object());
-    if (global_object.vm().exception())
+    if (vm.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() / rhs_numeric.as_double());
-    if (both_bigint(lhs_numeric, rhs_numeric))
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        if (rhs_numeric.as_bigint().big_integer() == BIGINT_ZERO) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::DivisionByZero);
+            return {};
+        }
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).quotient);
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "division");
+    }
+    vm.throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "division");
     return {};
 }
 
 Value mod(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    auto& vm = global_object.vm();
     auto lhs_numeric = lhs.to_numeric(global_object.global_object());
-    if (global_object.vm().exception())
+    if (vm.exception())
         return {};
     auto rhs_numeric = rhs.to_numeric(global_object.global_object());
-    if (global_object.vm().exception())
+    if (vm.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (lhs_numeric.is_nan() || rhs_numeric.is_nan())
@@ -912,9 +919,14 @@ Value mod(GlobalObject& global_object, Value lhs, Value rhs)
         auto trunc = (double)(i32)(index / period);
         return Value(index - trunc * period);
     }
-    if (both_bigint(lhs_numeric, rhs_numeric))
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        if (rhs_numeric.as_bigint().big_integer() == BIGINT_ZERO) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::DivisionByZero);
+            return {};
+        }
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).remainder);
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "modulo");
+    }
+    vm.throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "modulo");
     return {};
 }
 
