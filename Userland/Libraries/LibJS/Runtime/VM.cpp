@@ -163,8 +163,8 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
 
 Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 {
-    if (m_call_stack.size()) {
-        if (name == names.arguments) {
+    if (!m_call_stack.is_empty()) {
+        if (name == names.arguments && m_call_stack.size() > 1) {
             // HACK: Special handling for the name "arguments":
             //       If the name "arguments" is defined in the current scope, for example via
             //       a function parameter, or by a local var declaration, we use that.
