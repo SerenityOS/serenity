@@ -50,19 +50,34 @@ public:
         return adopt(*new CSSStyleDeclaration(move(properties)));
     }
 
-    ~CSSStyleDeclaration();
+    virtual ~CSSStyleDeclaration();
 
     const Vector<StyleProperty>& properties() const { return m_properties; }
 
     size_t length() const { return m_properties.size(); }
     String item(size_t index) const;
 
+protected:
+    explicit CSSStyleDeclaration(Vector<StyleProperty>&&);
+
 private:
     friend class Bindings::CSSStyleDeclarationWrapper;
 
-    explicit CSSStyleDeclaration(Vector<StyleProperty>&&);
-
     Vector<StyleProperty> m_properties;
+};
+
+class ElementInlineCSSStyleDeclaration final : public CSSStyleDeclaration {
+public:
+    static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element& element) { return adopt(*new ElementInlineCSSStyleDeclaration(element)); }
+    virtual ~ElementInlineCSSStyleDeclaration() override;
+
+    DOM::Element* element() { return m_element.ptr(); }
+    const DOM::Element* element() const { return m_element.ptr(); }
+
+private:
+    explicit ElementInlineCSSStyleDeclaration(DOM::Element&);
+
+    WeakPtr<DOM::Element> m_element;
 };
 
 }
