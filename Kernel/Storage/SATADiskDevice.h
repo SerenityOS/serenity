@@ -44,7 +44,7 @@ public:
     };
 
 public:
-    static NonnullRefPtr<SATADiskDevice> create(const AHCIController&, const AHCIPort&, size_t sector_size, size_t max_addressable_block);
+    static NonnullRefPtr<SATADiskDevice> create(const AHCIController&, const AHCIPort&, size_t sector_size, u64 max_addressable_block);
     virtual ~SATADiskDevice() override;
 
     // ^StorageDevice
@@ -54,7 +54,7 @@ public:
     virtual String device_name() const override;
 
 private:
-    SATADiskDevice(const AHCIController&, const AHCIPort&, size_t sector_size, size_t max_addressable_block);
+    SATADiskDevice(const AHCIController&, const AHCIPort&, size_t sector_size, u64 max_addressable_block);
 
     // ^DiskDevice
     virtual const char* class_name() const override;
