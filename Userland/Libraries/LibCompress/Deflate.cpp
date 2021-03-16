@@ -323,7 +323,8 @@ bool DeflateDecompressor::unreliable_eof() const { return m_state == State::Idle
 
 bool DeflateDecompressor::handle_any_error()
 {
-    return m_input_stream.handle_any_error() || Stream::handle_any_error();
+    bool handled_errors = m_input_stream.handle_any_error();
+    return Stream::handle_any_error() || handled_errors;
 }
 
 Optional<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
