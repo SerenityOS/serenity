@@ -140,7 +140,7 @@ private:
 
     void clear_pending_interrupts() const;
 
-    void ata_access(Direction, bool, u32, u8, u16, bool);
+    void ata_access(Direction, bool, u64, u8, u16, bool);
     void ata_read_sectors_with_dma(bool, u16);
     void ata_read_sectors(bool, u16);
     bool ata_do_read_sector();
