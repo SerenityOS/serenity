@@ -388,12 +388,15 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
         u16 capabilities = wbufbase[ATA_IDENT_CAPABILITIES / sizeof(u16)];
         if (cyls == 0 || heads == 0 || spt == 0)
             continue;
-        dbgln("IDEChannel: {} {} device found: Type={}, Name={}, C/H/Spt={}/{}/{}, Capabilities=0x{:04x}", channel_type_string(), channel_string(i), interface_type == PATADiskDevice::InterfaceType::ATA ? "ATA" : "ATAPI", ((char*)bbuf.data() + 54), cyls, heads, spt, capabilities);
+        u64 max_addressable_block = cyls * heads * spt;
+        if (capabilities & ATA_CAP_LBA)
+            max_addressable_block = (wbufbase[(ATA_IDENT_MAX_LBA + 2) / sizeof(u16)] << 16) | wbufbase[ATA_IDENT_MAX_LBA / sizeof(u16)];
+        dbgln("IDEChannel: {} {} {} device found: Name={}, Capacity={}, C/H/Spt={}/{}/{}, Capabilities=0x{:04x}", channel_type_string(), channel_string(i), interface_type == PATADiskDevice::InterfaceType::ATA ? "ATA" : "ATAPI", ((char*)bbuf.data() + 54), max_addressable_block * 512, cyls, heads, spt, capabilities);
 
         if (i == 0) {
-            m_master = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Master, interface_type, cyls, heads, spt, capabilities);
+            m_master = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Master, interface_type, capabilities, max_addressable_block);
         } else {
-            m_slave = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Slave, interface_type, cyls, heads, spt, capabilities);
+            m_slave = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Slave, interface_type, capabilities, max_addressable_block);
         }
     }
 }

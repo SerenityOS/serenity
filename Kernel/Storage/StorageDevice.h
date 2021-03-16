@@ -47,7 +47,7 @@ public:
 
 public:
     virtual Type type() const = 0;
-    virtual size_t max_addressable_block() const { return m_max_addressable_block; }
+    virtual u64 max_addressable_block() const { return m_max_addressable_block; }
 
     NonnullRefPtr<StorageController> controller() const;
 
@@ -61,15 +61,15 @@ public:
     virtual mode_t required_mode() const override { return 0600; }
 
 protected:
-    StorageDevice(const StorageController&, size_t, size_t);
-    StorageDevice(const StorageController&, int, int, size_t, size_t);
+    StorageDevice(const StorageController&, size_t, u64);
+    StorageDevice(const StorageController&, int, int, size_t, u64);
     // ^DiskDevice
     virtual const char* class_name() const override;
 
 private:
     NonnullRefPtr<StorageController> m_storage_controller;
     NonnullRefPtrVector<DiskPartition> m_partitions;
-    size_t m_max_addressable_block;
+    u64 m_max_addressable_block;
 };
 
 }

@@ -57,19 +57,18 @@ public:
     };
 
 public:
-    static NonnullRefPtr<PATADiskDevice> create(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u16, u16, u16);
+    static NonnullRefPtr<PATADiskDevice> create(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u64);
     virtual ~PATADiskDevice() override;
 
     // ^StorageDevice
     virtual Type type() const override { return StorageDevice::Type::IDE; }
-    virtual size_t max_addressable_block() const override;
 
     // ^BlockDevice
     virtual void start_request(AsyncBlockDeviceRequest&) override;
     virtual String device_name() const override;
 
 private:
-    PATADiskDevice(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u16, u16, u16);
+    PATADiskDevice(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u64);
 
     // ^DiskDevice
     virtual const char* class_name() const override;

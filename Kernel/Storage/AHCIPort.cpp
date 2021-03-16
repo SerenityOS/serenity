@@ -243,7 +243,7 @@ bool AHCIPort::initialize()
 
     size_t logical_sector_size = 512;
     size_t physical_sector_size = 512;
-    size_t max_addressable_sector = 0;
+    u64 max_addressable_sector = 0;
     if (identify_device()) {
         auto identify_block = map_typed<ATAIdentifyBlock>(m_parent_handler->get_identify_metadata_physical_region(m_port_index));
         // Check if word 106 is valid before using it!
@@ -266,7 +266,7 @@ bool AHCIPort::initialize()
             m_port_registers.cmd = m_port_registers.cmd | (1 << 24);
         }
 
-        dmesgln("AHCI Port {}: max lba {:x}, L/P sector size - {}/{} ", representative_port_index(), max_addressable_sector, logical_sector_size, physical_sector_size);
+        dmesgln("AHCI Port {}: Device found, Capacity={}, Bytes per logical sector={}, Bytes per physical sector={}", representative_port_index(), max_addressable_sector * logical_sector_size, logical_sector_size, physical_sector_size);
 
         // FIXME: We don't support ATAPI devices yet, so for now we don't "create" them
         if (!is_atapi_attached()) {
