@@ -61,6 +61,8 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
 
     VM::InterpreterExecutionScope scope(*this);
 
+    vm.set_last_value({}, {});
+
     CallFrame global_call_frame;
     global_call_frame.current_node = &program;
     global_call_frame.this_value = &global_object;
@@ -73,6 +75,9 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     VERIFY(!vm.exception());
     program.execute(*this, global_object);
     vm.pop_call_frame();
+
+    if (vm.last_value().is_empty())
+        vm.set_last_value({}, js_undefined());
 }
 
 GlobalObject& Interpreter::global_object()
@@ -162,11 +167,10 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
     auto& block = static_cast<const ScopeNode&>(statement);
     enter_scope(block, scope_type, global_object);
 
-    if (block.children().is_empty())
-        vm().set_last_value({}, js_undefined());
-
     for (auto& node : block.children()) {
-        vm().set_last_value({}, node.execute(*this, global_object));
+        auto value = node.execute(*this, global_object);
+        if (!value.is_empty())
+            vm().set_last_value({}, value);
         if (vm().should_unwind()) {
             if (!block.label().is_null() && vm().should_unwind_until(ScopeType::Breakable, block.label()))
                 vm().stop_unwind();
@@ -174,14 +178,18 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
         }
     }
 
-    bool did_return = vm().unwind_until() == ScopeType::Function;
+    if (scope_type == ScopeType::Function) {
+        bool did_return = vm().unwind_until() == ScopeType::Function;
+        if (!did_return)
+            vm().set_last_value({}, js_undefined());
+    }
 
     if (vm().unwind_until() == scope_type)
         vm().unwind(ScopeType::None);
 
     exit_scope(block);
 
-    return did_return ? vm().last_value() : js_undefined();
+    return vm().last_value();
 }
 
 LexicalEnvironment* Interpreter::current_environment()
