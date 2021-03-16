@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,7 +41,8 @@ namespace Web::UIEvents::EventNames {
     __ENUMERATE_UI_EVENT(mousemove)  \
     __ENUMERATE_UI_EVENT(mouseout)   \
     __ENUMERATE_UI_EVENT(mouseover)  \
-    __ENUMERATE_UI_EVENT(mouseup)
+    __ENUMERATE_UI_EVENT(mouseup)    \
+    __ENUMERATE_UI_EVENT(resize)
 
 #define __ENUMERATE_UI_EVENT(name) extern FlyString name;
 ENUMERATE_UI_EVENTS
