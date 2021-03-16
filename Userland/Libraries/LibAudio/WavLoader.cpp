@@ -34,6 +34,8 @@
 
 namespace Audio {
 
+static constexpr size_t maximum_wav_size = 1 * GiB; // FIXME: is there a more appropriate size limit?
+
 WavLoaderPlugin::WavLoaderPlugin(const StringView& path)
     : m_file(Core::File::construct(path))
 {
@@ -243,7 +245,7 @@ bool WavLoaderPlugin::parse_header()
     CHECK_OK("Found no data chunk");
     VERIFY(found_data);
 
-    ok = ok && data_sz < INT32_MAX;
+    ok = ok && data_sz < maximum_wav_size;
     CHECK_OK("Data was too large");
 
     int bytes_per_sample = (m_bits_per_sample / 8) * m_num_channels;
