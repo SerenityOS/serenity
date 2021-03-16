@@ -81,6 +81,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getUTCSeconds, get_utc_seconds, 0, attr);
     define_native_function(vm.names.toDateString, to_date_string, 0, attr);
     define_native_function(vm.names.toGMTString, to_gmt_string, 0, attr);
+    define_native_function(vm.names.toUTCString, to_utc_string, 0, attr);
     define_native_function(vm.names.toISOString, to_iso_string, 0, attr);
     define_native_function(vm.names.toLocaleDateString, to_locale_date_string, 0, attr);
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
@@ -400,9 +401,18 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_date_string)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_gmt_string)
 {
+    // toGMTString is deprecated but kept for compatibility.
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toGMTString
+    return to_utc_string(vm, global_object);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
+{
     auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
+
+    // HTTP dates are always expressed in GMT.
     auto string = this_object->gmt_date_string();
     return js_string(vm, move(string));
 }
