@@ -64,8 +64,8 @@ size_t Bitmap::minimum_pitch(size_t physical_width, BitmapFormat format)
     case StorageFormat::Indexed8:
         element_size = 1;
         break;
-    case StorageFormat::RGB32:
-    case StorageFormat::RGBA32:
+    case StorageFormat::BGRx8888:
+    case StorageFormat::BGRA8888:
         element_size = 4;
         break;
     default:

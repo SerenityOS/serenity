@@ -70,11 +70,11 @@ static void flood_fill(Gfx::Bitmap& bitmap, const Gfx::IntPoint& start_position,
     while (!queue.is_empty()) {
         auto position = queue.dequeue();
 
-        auto pixel_color = bitmap.get_pixel<Gfx::StorageFormat::RGBA32>(position.x(), position.y());
+        auto pixel_color = bitmap.get_pixel<Gfx::StorageFormat::BGRA8888>(position.x(), position.y());
         if (color_distance_squared(pixel_color, target_color) > threshold_normalized_squared)
             continue;
 
-        bitmap.set_pixel<Gfx::StorageFormat::RGBA32>(position.x(), position.y(), fill_color);
+        bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(position.x(), position.y(), fill_color);
 
         if (position.x() != 0)
             queue.enqueue(position.translated(-1, 0));
