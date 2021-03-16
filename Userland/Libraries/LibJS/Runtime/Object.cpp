@@ -696,10 +696,11 @@ Value Object::get(const PropertyName& property_name, Value receiver) const
             return get_by_index(property_index);
     }
 
+    if (receiver.is_empty())
+        receiver = Value(this);
+
     const Object* object = this;
     while (object) {
-        if (receiver.is_empty())
-            receiver = Value(const_cast<Object*>(this));
         auto value = object->get_own_property(property_name, receiver);
         if (vm().exception())
             return {};
