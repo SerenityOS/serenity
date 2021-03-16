@@ -91,6 +91,8 @@ private:
     Member& current_member() { return m_current_member.value(); }
 
     InputStream& m_input_stream;
+    u8 m_partial_header[sizeof(BlockHeader)];
+    size_t m_partial_header_offset { 0 };
     Optional<Member> m_current_member;
 
     bool m_eof { false };
