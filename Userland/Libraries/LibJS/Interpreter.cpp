@@ -54,7 +54,7 @@ Interpreter::~Interpreter()
 {
 }
 
-Value Interpreter::run(GlobalObject& global_object, const Program& program)
+void Interpreter::run(GlobalObject& global_object, const Program& program)
 {
     auto& vm = this->vm();
     VERIFY(!vm.exception());
@@ -71,9 +71,8 @@ Value Interpreter::run(GlobalObject& global_object, const Program& program)
     global_call_frame.is_strict_mode = program.is_strict_mode();
     vm.push_call_frame(global_call_frame, global_object);
     VERIFY(!vm.exception());
-    auto result = program.execute(*this, global_object);
+    program.execute(*this, global_object);
     vm.pop_call_frame();
-    return result;
 }
 
 GlobalObject& Interpreter::global_object()

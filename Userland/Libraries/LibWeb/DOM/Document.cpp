@@ -555,10 +555,11 @@ JS::Value Document::run_javascript(const StringView& source, const StringView& f
         return JS::js_undefined();
     }
     auto& interpreter = document().interpreter();
-    auto result = interpreter.run(interpreter.global_object(), *program);
-    if (interpreter.exception())
-        interpreter.vm().clear_exception();
-    return result;
+    auto& vm = interpreter.vm();
+    interpreter.run(interpreter.global_object(), *program);
+    if (vm.exception())
+        vm.clear_exception();
+    return vm.last_value();
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelement

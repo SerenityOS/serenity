@@ -61,7 +61,7 @@ public:
 
     ~Interpreter();
 
-    Value run(GlobalObject&, const Program&);
+    void run(GlobalObject&, const Program&);
 
     GlobalObject& global_object();
     const GlobalObject& global_object() const;
