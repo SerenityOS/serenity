@@ -24,6 +24,13 @@ test("timestamp constructor", () => {
     expect(date.getSeconds()).toBe(1);
     expect(date.getFullYear()).toBe(1970);
     expect(date.getMonth()).toBe(1); // Feb
+
+    date = new Date(NaN);
+    expect(date.getTime()).toBe(NaN);
+    date = new Date(undefined);
+    expect(date.getTime()).toBe(NaN);
+    date = new Date("");
+    expect(date.getTime()).toBe(NaN);
 });
 
 test("tuple constructor", () => {
@@ -52,6 +59,11 @@ test("tuple constructor", () => {
     let timestamp_upper_bound = 1577750400000; // 2019-12-31T00:00:00Z
     expect(date.getTime()).toBeGreaterThan(timestamp_lower_bound);
     expect(date.getTime()).toBeLessThan(timestamp_upper_bound);
+
+    date = new Date(NaN, 11, 15, 9, 16, 14, 123);
+    expect(date.getTime()).toBe(NaN);
+    date = new Date(2021, 11, 15, 9, 16, 14, undefined);
+    expect(date.getTime()).toBe(NaN);
 });
 
 test("tuple constructor overflow", () => {
@@ -65,7 +77,7 @@ test("tuple constructor overflow", () => {
     expect(date.getMilliseconds()).toBe(345);
     expect(date.getDay()).toBe(4);
 
-    let date = new Date(2019, -13, -33, -30, -70, -80, -2345);
+    date = new Date(2019, -13, -33, -30, -70, -80, -2345);
     expect(date.getFullYear()).toBe(2017);
     expect(date.getMonth()).toBe(9);
     expect(date.getDate()).toBe(26);

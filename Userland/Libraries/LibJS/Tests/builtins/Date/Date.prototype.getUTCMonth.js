@@ -6,6 +6,7 @@ test("basic functionality", () => {
     expect(d.getUTCMonth()).toBeLessThanOrEqual(11);
 
     expect(new Date(Date.UTC(2020, 11)).getUTCMonth()).toBe(11);
+    expect(new Date(NaN).getUTCMonth()).toBe(NaN);
 });
 
 test("leap years", () => {

@@ -4,4 +4,5 @@ test("basic functionality", () => {
     expect(d.getUTCMinutes()).not.toBeNaN();
     expect(d.getUTCMinutes()).toBeGreaterThanOrEqual(0);
     expect(d.getUTCMinutes()).toBeLessThanOrEqual(59);
+    expect(new Date(NaN).getUTCMinutes()).toBe(NaN);
 });
