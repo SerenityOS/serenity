@@ -24,8 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ScopeGuard.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
 #include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
+#include <LibWeb/DOM/Element.h>
 
 namespace Web::Bindings {
 
@@ -57,6 +59,12 @@ bool CSSStyleDeclarationWrapper::put(const JS::PropertyName& name, JS::Value val
     // FIXME: What are we supposed to do if we can't parse it?
     if (!new_value)
         return false;
+
+    ScopeGuard style_invalidation_guard = [&] {
+        auto& declaration = downcast<CSS::ElementInlineCSSStyleDeclaration>(impl());
+        if (auto* element = declaration.element())
+            element->invalidate_style();
+    };
 
     // FIXME: I don't think '!important' is being handled correctly here..
 
