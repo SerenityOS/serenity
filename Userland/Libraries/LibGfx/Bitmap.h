@@ -73,17 +73,17 @@ inline bool is_valid_bitmap_format(unsigned format)
 
 enum class StorageFormat {
     Indexed8,
-    RGB32,
-    RGBA32,
+    BGRx8888,
+    BGRA8888,
 };
 
 static StorageFormat determine_storage_format(BitmapFormat format)
 {
     switch (format) {
     case BitmapFormat::BGRx8888:
-        return StorageFormat::RGB32;
+        return StorageFormat::BGRx8888;
     case BitmapFormat::BGRA8888:
-        return StorageFormat::RGBA32;
+        return StorageFormat::BGRA8888;
     case BitmapFormat::Indexed1:
     case BitmapFormat::Indexed2:
     case BitmapFormat::Indexed4:
@@ -295,14 +295,14 @@ inline const RGBA32* Bitmap::scanline(int y) const
 }
 
 template<>
-inline Color Bitmap::get_pixel<StorageFormat::RGB32>(int x, int y) const
+inline Color Bitmap::get_pixel<StorageFormat::BGRx8888>(int x, int y) const
 {
     VERIFY(x >= 0 && x < physical_width());
     return Color::from_rgb(scanline(y)[x]);
 }
 
 template<>
-inline Color Bitmap::get_pixel<StorageFormat::RGBA32>(int x, int y) const
+inline Color Bitmap::get_pixel<StorageFormat::BGRA8888>(int x, int y) const
 {
     VERIFY(x >= 0 && x < physical_width());
     return Color::from_rgba(scanline(y)[x]);
@@ -318,10 +318,10 @@ inline Color Bitmap::get_pixel<StorageFormat::Indexed8>(int x, int y) const
 inline Color Bitmap::get_pixel(int x, int y) const
 {
     switch (determine_storage_format(m_format)) {
-    case StorageFormat::RGB32:
-        return get_pixel<StorageFormat::RGB32>(x, y);
-    case StorageFormat::RGBA32:
-        return get_pixel<StorageFormat::RGBA32>(x, y);
+    case StorageFormat::BGRx8888:
+        return get_pixel<StorageFormat::BGRx8888>(x, y);
+    case StorageFormat::BGRA8888:
+        return get_pixel<StorageFormat::BGRA8888>(x, y);
     case StorageFormat::Indexed8:
         return get_pixel<StorageFormat::Indexed8>(x, y);
     default:
@@ -330,13 +330,13 @@ inline Color Bitmap::get_pixel(int x, int y) const
 }
 
 template<>
-inline void Bitmap::set_pixel<StorageFormat::RGB32>(int x, int y, Color color)
+inline void Bitmap::set_pixel<StorageFormat::BGRx8888>(int x, int y, Color color)
 {
     VERIFY(x >= 0 && x < physical_width());
     scanline(y)[x] = color.value();
 }
 template<>
-inline void Bitmap::set_pixel<StorageFormat::RGBA32>(int x, int y, Color color)
+inline void Bitmap::set_pixel<StorageFormat::BGRA8888>(int x, int y, Color color)
 {
     VERIFY(x >= 0 && x < physical_width());
     scanline(y)[x] = color.value(); // drop alpha
@@ -344,11 +344,11 @@ inline void Bitmap::set_pixel<StorageFormat::RGBA32>(int x, int y, Color color)
 inline void Bitmap::set_pixel(int x, int y, Color color)
 {
     switch (determine_storage_format(m_format)) {
-    case StorageFormat::RGB32:
-        set_pixel<StorageFormat::RGB32>(x, y, color);
+    case StorageFormat::BGRx8888:
+        set_pixel<StorageFormat::BGRx8888>(x, y, color);
         break;
-    case StorageFormat::RGBA32:
-        set_pixel<StorageFormat::RGBA32>(x, y, color);
+    case StorageFormat::BGRA8888:
+        set_pixel<StorageFormat::BGRA8888>(x, y, color);
         break;
     case StorageFormat::Indexed8:
         VERIFY_NOT_REACHED();
