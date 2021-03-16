@@ -43,7 +43,6 @@ public:
 
     // ^StorageDevice
     virtual Type type() const override { return StorageDevice::Type::Ramdisk; }
-    virtual size_t max_addressable_block() const override;
 
     // ^BlockDevice
     virtual void start_request(AsyncBlockDeviceRequest&) override;
