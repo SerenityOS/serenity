@@ -796,7 +796,8 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
             return false;
         break;
     default:
-        VERIFY_NOT_REACHED();
+        context.state = PNGLoadingContext::State::Error;
+        return false;
     }
 
     context.decompression_buffer.clear();
