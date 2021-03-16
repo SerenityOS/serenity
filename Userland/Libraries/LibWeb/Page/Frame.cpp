@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,12 +25,15 @@
  */
 
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/Frame.h>
+#include <LibWeb/UIEvents/EventNames.h>
 
 namespace Web {
 
@@ -113,8 +116,10 @@ void Frame::set_viewport_rect(const Gfx::IntRect& rect)
 
     if (m_size != rect.size()) {
         m_size = rect.size();
-        if (m_document)
+        if (m_document) {
+            m_document->window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
             m_document->update_layout();
+        }
         did_change = true;
     }
 
@@ -134,8 +139,10 @@ void Frame::set_size(const Gfx::IntSize& size)
     if (m_size == size)
         return;
     m_size = size;
-    if (m_document)
+    if (m_document) {
+        m_document->window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
         m_document->update_layout();
+    }
 
     for (auto* client : m_viewport_clients)
         client->frame_did_set_viewport_rect(viewport_rect());
