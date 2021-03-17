@@ -57,7 +57,7 @@ bool InodeWatcher::can_write(const FileDescription&, size_t) const
     return true;
 }
 
-KResultOr<size_t> InodeWatcher::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t buffer_size)
+KResultOr<size_t> InodeWatcher::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t buffer_size)
 {
     LOCKER(m_lock);
     VERIFY(!m_queue.is_empty() || !m_inode);
@@ -82,7 +82,7 @@ KResultOr<size_t> InodeWatcher::read(FileDescription&, size_t, UserOrKernelBuffe
     return bytes_to_write;
 }
 
-KResultOr<size_t> InodeWatcher::write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t)
+KResultOr<size_t> InodeWatcher::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t)
 {
     return EIO;
 }

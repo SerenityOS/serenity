@@ -52,7 +52,7 @@ void TTY::set_default_termios()
     memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
-KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (Process::current()->pgid() != pgid()) {
         // FIXME: Should we propagate this error path somehow?
@@ -100,7 +100,7 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer
     return (size_t)nwritten;
 }
 
-KResultOr<size_t> TTY::write(FileDescription&, size_t, const UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (m_termios.c_lflag & TOSTOP && Process::current()->pgid() != pgid()) {
         [[maybe_unused]] auto rc = Process::current()->send_signal(SIGTTOU, nullptr);

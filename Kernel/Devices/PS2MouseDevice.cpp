@@ -273,7 +273,7 @@ bool PS2MouseDevice::can_read(const FileDescription&, size_t) const
     return !m_queue.is_empty();
 }
 
-KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> PS2MouseDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     VERIFY(size > 0);
     size_t nread = 0;
@@ -300,7 +300,7 @@ KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuf
     return nread;
 }
 
-KResultOr<size_t> PS2MouseDevice::write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t)
+KResultOr<size_t> PS2MouseDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t)
 {
     return 0;
 }

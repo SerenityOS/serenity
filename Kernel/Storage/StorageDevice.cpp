@@ -57,7 +57,7 @@ NonnullRefPtr<StorageController> StorageDevice::controller() const
     return m_storage_controller;
 }
 
-KResultOr<size_t> StorageDevice::read(FileDescription&, size_t offset, UserOrKernelBuffer& outbuf, size_t len)
+KResultOr<size_t> StorageDevice::read(FileDescription&, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
@@ -122,7 +122,7 @@ bool StorageDevice::can_read(const FileDescription&, size_t offset) const
     return offset < (max_addressable_block() * block_size());
 }
 
-KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const UserOrKernelBuffer& inbuf, size_t len)
+KResultOr<size_t> StorageDevice::write(FileDescription&, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
