@@ -37,7 +37,7 @@ class GlobalObject : public ScopeObject {
 
 public:
     explicit GlobalObject();
-    virtual void initialize();
+    virtual void initialize_global_object();
 
     virtual ~GlobalObject() override;
 
