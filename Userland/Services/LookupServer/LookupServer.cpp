@@ -203,7 +203,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short recor
         return {};
     }
 
-    return move(answers);
+    return answers;
 }
 
 Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
@@ -296,7 +296,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& namese
         answers.append(answer);
     }
 
-    return move(answers);
+    return answers;
 }
 
 void LookupServer::put_in_cache(const DNSAnswer& answer)

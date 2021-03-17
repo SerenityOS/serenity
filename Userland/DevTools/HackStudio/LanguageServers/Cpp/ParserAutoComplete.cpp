@@ -75,7 +75,7 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
 
     update_declared_symbols(*document_data);
 
-    return move(document_data);
+    return document_data;
 }
 
 void ParserAutoComplete::set_document_data(const String& file, OwnPtr<DocumentData>&& data)
