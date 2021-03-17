@@ -18,4 +18,7 @@ The Run dialog accepts all Shell command language. Truly the gentleman's termina
 Windows can be dragged from any visible point by holding Super+Left-click. Super+Right-click begins resizing them.
 Many Serenity applications already have convenient aliases. $ cat /etc/shellrc to view them.
 Custom keymaps can be created and edited with $ KeyboardMapper
+Supplying # profile with a PID of -1 as root enables systemwide profiling.
+Holding Ctrl accelerates mouse wheel interaction with sliders and spin boxes.
+Selected files can be renamed by pressing F2.
 

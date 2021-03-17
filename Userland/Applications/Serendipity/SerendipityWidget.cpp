@@ -31,7 +31,6 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/SeparatorWidget.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibMarkdown/Document.h>
@@ -46,11 +45,6 @@ SerendipityWidget::SerendipityWidget()
 
     auto& banner_label = *find_descendant_of_type_named<GUI::Label>("banner_label");
     banner_label.set_icon(Gfx::Bitmap::load_from_file("/res/graphics/welcome-serendipity.png"));
-
-    auto& navigation_column = *find_descendant_of_type_named<GUI::Widget>("navigation_column");
-
-    auto& nav_separator = navigation_column.add<GUI::SeparatorWidget>(Gfx::Orientation::Horizontal);
-    nav_separator.set_max_height(2);
 
     auto& tip_frame = *find_descendant_of_type_named<GUI::Frame>("tip_frame");
     auto palette = tip_frame.palette();
