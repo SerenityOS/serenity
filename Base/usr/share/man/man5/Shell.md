@@ -47,6 +47,33 @@ Any sequence of _Double Quoted String Part_ tokens:
 ##### Variable Reference
 Any sequence of _Identifier_ characters, or a _Special Variable_ following a `$`
 
+##### Immediate Expressions
+An expression of the form '${identifier expression...}', such expressions are expanded to other kinds of nodes before resolution, and are internal functions provided by the shell.
+Currently, the following functions are exposed:
+- ${length (string|list)? _expression_}
+Finds the length of the given _expression_. if either `string` or `list` is given, the shell will attempt to treat _expression_ as that type, otherwise the type of _expression_ will be inferred.
+
+- ${length\_across (string|list) _expression_}
+Finds the lengths of the entries in _expression_, this requires _expression_ to be a list.
+If either `string` or `list` is given, the shell attempts to treat the elements of _expression_ as that type, otherwise the types are individually inferred.
+
+- ${split _delimiter_ _string_}
+Splits the _string_ with _delimiter_, and evaluates to a list.
+Both _string_ and _delimiter_ must be strings.
+
+- ${remove\_suffix _suffix_ _string_}
+Removes the suffix _suffix_ (if present) from the given _string_.
+
+- ${remove\_prefix _prefix_ _string_}
+Removes the prefix _prefix_ (if present) from the given _string_.
+
+- ${concat\_lists _list_...}
+Concatenates all the given expressions as lists, and evaluates to a list.
+
+- ${regex\_replace _pattern_ _replacement-template_ _string_}
+Replaces all occurences of the regular expression _pattern_ in the given _string_, using the given _replacement-template_.
+Capture groups in _pattern_ can be referred to as `\<group_number>` in the _replacement template_, for example, to reference capture group 1, use `\1`.
+
 ##### Evaluate expression
 Any expression following a `$` that is not a variable reference:
 * Inline execution: A _syntactic list_ following a `$`:
@@ -403,6 +430,7 @@ list_expression :: ' '* expression (' '+ list_expression)?
 expression :: evaluate expression?
             | string_composite expression?
             | comment expression?
+            | immediate_expression expression?
             | history_designator expression?
             | '(' list_expression ')' expression?
 
@@ -432,6 +460,10 @@ variable :: '$' identifier
           | ...
 
 comment :: '#' [^\n]*
+
+immediate_expression :: '$' '{' immediate_function expression* '}'
+
+immediate_function :: identifier    { predetermined list of names, see Shell.h:ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS }
 
 history_designator :: '!' event_selector (':' word_selector_composite)?
 
