@@ -178,6 +178,10 @@ bool DeflateDecompressor::CompressedBlock::try_read_more()
         for (size_t idx = 0; idx < length; ++idx) {
             u8 byte = 0;
             m_decompressor.m_output_stream.read({ &byte, sizeof(byte) }, distance);
+            if (m_decompressor.m_output_stream.handle_any_error()) {
+                m_decompressor.set_fatal_error();
+                return false; // a back reference was requested that was too far back (outside our current sliding window)
+            }
             m_decompressor.m_output_stream << byte;
         }
 
