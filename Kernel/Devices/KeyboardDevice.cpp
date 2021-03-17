@@ -430,7 +430,7 @@ bool KeyboardDevice::can_read(const FileDescription&, size_t) const
     return !m_queue.is_empty();
 }
 
-KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> KeyboardDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     size_t nread = 0;
     ScopedSpinLock lock(m_queue_lock);
@@ -458,7 +458,7 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, UserOrKernelBuf
     return nread;
 }
 
-KResultOr<size_t> KeyboardDevice::write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t)
+KResultOr<size_t> KeyboardDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t)
 {
     return 0;
 }

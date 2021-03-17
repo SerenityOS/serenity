@@ -93,7 +93,7 @@ bool SlavePTY::can_read(const FileDescription& description, size_t offset) const
     return TTY::can_read(description, offset);
 }
 
-KResultOr<size_t> SlavePTY::read(FileDescription& description, size_t offset, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> SlavePTY::read(FileDescription& description, u64 offset, UserOrKernelBuffer& buffer, size_t size)
 {
     if (m_master->is_closed())
         return 0;

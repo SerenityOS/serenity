@@ -42,7 +42,7 @@ UNMAP_AFTER_INIT MemoryDevice::~MemoryDevice()
 {
 }
 
-KResultOr<size_t> MemoryDevice::read(FileDescription&, size_t, UserOrKernelBuffer&, size_t)
+KResultOr<size_t> MemoryDevice::read(FileDescription&, u64, UserOrKernelBuffer&, size_t)
 {
     TODO();
 }

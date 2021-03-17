@@ -40,9 +40,9 @@ public:
     virtual void start_request(AsyncBlockDeviceRequest&) override;
 
     // ^BlockDevice
-    virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const FileDescription&, size_t) const override;
 
     // ^Device

@@ -46,7 +46,7 @@ InodeFile::~InodeFile()
 {
 }
 
-KResultOr<size_t> InodeFile::read(FileDescription& description, size_t offset, UserOrKernelBuffer& buffer, size_t count)
+KResultOr<size_t> InodeFile::read(FileDescription& description, u64 offset, UserOrKernelBuffer& buffer, size_t count)
 {
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
@@ -61,7 +61,7 @@ KResultOr<size_t> InodeFile::read(FileDescription& description, size_t offset, U
     return nread;
 }
 
-KResultOr<size_t> InodeFile::write(FileDescription& description, size_t offset, const UserOrKernelBuffer& data, size_t count)
+KResultOr<size_t> InodeFile::write(FileDescription& description, u64 offset, const UserOrKernelBuffer& data, size_t count)
 {
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
