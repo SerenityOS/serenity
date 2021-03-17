@@ -61,7 +61,7 @@ Sheet::Sheet(Workbook& workbook)
 {
     JS::DeferGC defer_gc(m_workbook.interpreter().heap());
     m_global_object = m_workbook.interpreter().heap().allocate_without_global_object<SheetGlobalObject>(*this);
-    global_object().initialize();
+    global_object().initialize_global_object();
     global_object().put("workbook", m_workbook.workbook_object());
     global_object().put("thisSheet", &global_object()); // Self-reference is unfortunate, but required.
 

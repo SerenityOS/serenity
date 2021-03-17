@@ -48,7 +48,7 @@ public:
 
     virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}) const override;
     virtual bool put(const JS::PropertyName&, JS::Value value, JS::Value receiver = {}) override;
-    virtual void initialize() override;
+    virtual void initialize_global_object() override;
 
     JS_DECLARE_NATIVE_FUNCTION(get_real_cell_contents);
     JS_DECLARE_NATIVE_FUNCTION(set_real_cell_contents);

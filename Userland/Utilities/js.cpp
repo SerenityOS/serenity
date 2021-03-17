@@ -63,15 +63,15 @@
 RefPtr<JS::VM> vm;
 Vector<String> repl_statements;
 
-class ReplObject : public JS::GlobalObject {
+class ReplObject final : public JS::GlobalObject {
+    JS_OBJECT(ReplObject, JS::GlobalObject);
+
 public:
     ReplObject();
-    virtual void initialize() override;
+    virtual void initialize_global_object() override;
     virtual ~ReplObject() override;
 
 private:
-    virtual const char* class_name() const override { return "ReplObject"; }
-
     JS_DECLARE_NATIVE_FUNCTION(exit_interpreter);
     JS_DECLARE_NATIVE_FUNCTION(repl_help);
     JS_DECLARE_NATIVE_FUNCTION(load_file);
@@ -510,9 +510,9 @@ ReplObject::ReplObject()
 {
 }
 
-void ReplObject::initialize()
+void ReplObject::initialize_global_object()
 {
-    GlobalObject::initialize();
+    Base::initialize_global_object();
     define_property("global", this, JS::Attribute::Enumerable);
     define_native_function("exit", exit_interpreter);
     define_native_function("help", repl_help);
