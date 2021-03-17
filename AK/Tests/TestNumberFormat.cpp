@@ -136,12 +136,11 @@ TEST_CASE(extremes_8byte)
         EXPECT_EQ(human_readable_size(0x100000000ULL), "4.0 GiB");
         EXPECT_EQ(human_readable_size(0x100000001ULL), "4.0 GiB");
         EXPECT_EQ(human_readable_size(0x800000000ULL), "32.0 GiB");
-        EXPECT_EQ(human_readable_size(0x10000000000ULL), "1024.0 GiB");
-
-        // Oh yeah! These are *correct*!
-        EXPECT_EQ(human_readable_size(0x7fffffffffffffffULL), "8589934591.9 GiB");
-        EXPECT_EQ(human_readable_size(0x8000000000000000ULL), "8589934592.0 GiB");
-        EXPECT_EQ(human_readable_size(0xffffffffffffffffULL), "17179869183.9 GiB");
+        EXPECT_EQ(human_readable_size(0x10000000000ULL), "1.0 TiB");
+        EXPECT_EQ(human_readable_size(0x4000000000000ULL), "1.0 PiB");
+        EXPECT_EQ(human_readable_size(0x7fffffffffffffffULL), "7.9 EiB");
+        EXPECT_EQ(human_readable_size(0x8000000000000000ULL), "8.0 EiB");
+        EXPECT_EQ(human_readable_size(0xffffffffffffffffULL), "15.9 EiB");
     } else {
         warnln("(Skipping 8-byte-size_t test on 32-bit platform)");
     }
