@@ -191,7 +191,7 @@ void RollWidget::mousemove_event(GUI::MouseEvent& event)
         if (note_width_is_fractional && x_is_not_last)
             ++x;
         x /= m_note_width;
-        return x;
+        return clamp(x, 0, m_num_notes - 1);
     };
 
     int x0 = get_note_x(m_note_drag_start.value().x());
