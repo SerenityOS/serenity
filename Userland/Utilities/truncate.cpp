@@ -59,7 +59,7 @@ int main(int argc, char** argv)
     }
 
     auto op = OP_Set;
-    int size = 0;
+    off_t size = 0;
 
     if (resize) {
         String str = resize;
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
             break;
         }
 
-        auto size_opt = str.to_int();
+        auto size_opt = str.to_int<off_t>();
         if (!size_opt.has_value()) {
             args_parser.print_usage(stderr, argv[0]);
             return 1;
