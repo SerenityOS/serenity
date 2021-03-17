@@ -52,6 +52,8 @@ public:
 
     const Definitions& definitions() const { return m_definitions; }
 
+    void set_ignore_unsupported_keywords(bool ignore) { m_options.ignore_unsupported_keywords = ignore; }
+
 private:
     void handle_preprocessor_line(const StringView&);
 
@@ -74,5 +76,9 @@ private:
 
     Vector<StringView> m_included_paths;
     String m_processed_text;
+
+    struct Options {
+        bool ignore_unsupported_keywords { false };
+    } m_options;
 };
 }
