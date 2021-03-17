@@ -150,7 +150,7 @@ bool DeflateDecompressor::CompressedBlock::try_read_more()
 
     const auto symbol = m_literal_codes.read_symbol(m_decompressor.m_input_stream);
 
-    if (symbol == UINT32_MAX) {
+    if (symbol >= 286) { // invalid deflate literal/length symbol
         m_decompressor.set_fatal_error();
         return false;
     }
@@ -169,7 +169,7 @@ bool DeflateDecompressor::CompressedBlock::try_read_more()
 
         const auto length = m_decompressor.decode_length(symbol);
         const auto distance_symbol = m_distance_codes.value().read_symbol(m_decompressor.m_input_stream);
-        if (distance_symbol == UINT32_MAX) {
+        if (distance_symbol >= 30) { // invalid deflate distance symbol
             m_decompressor.set_fatal_error();
             return false;
         }
