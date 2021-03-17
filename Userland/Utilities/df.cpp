@@ -33,6 +33,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,11 +77,11 @@ int main(int argc, char** argv)
     json.for_each([](auto& value) {
         auto fs_object = value.as_object();
         auto fs = fs_object.get("class_name").to_string();
-        auto total_block_count = fs_object.get("total_block_count").to_u32();
-        auto free_block_count = fs_object.get("free_block_count").to_u32();
-        [[maybe_unused]] auto total_inode_count = fs_object.get("total_inode_count").to_u32();
-        [[maybe_unused]] auto free_inode_count = fs_object.get("free_inode_count").to_u32();
-        auto block_size = fs_object.get("block_size").to_u32();
+        auto total_block_count = fs_object.get("total_block_count").to_u64();
+        auto free_block_count = fs_object.get("free_block_count").to_u64();
+        [[maybe_unused]] auto total_inode_count = fs_object.get("total_inode_count").to_u64();
+        [[maybe_unused]] auto free_inode_count = fs_object.get("free_inode_count").to_u64();
+        auto block_size = fs_object.get("block_size").to_u64();
         auto mount_point = fs_object.get("mount_point").to_string();
 
         printf("%-10s", fs.characters());
@@ -90,9 +91,9 @@ int main(int argc, char** argv)
             printf("%10s   ", human_readable_size((total_block_count - free_block_count) * block_size).characters());
             printf("%10s   ", human_readable_size(free_block_count * block_size).characters());
         } else {
-            printf("%10u  ", total_block_count);
-            printf("%10u   ", total_block_count - free_block_count);
-            printf("%10u   ", free_block_count);
+            printf("%10" PRIu64 "  ", total_block_count);
+            printf("%10" PRIu64 "   ", total_block_count - free_block_count);
+            printf("%10" PRIu64 "   ", free_block_count);
         }
 
         printf("%s", mount_point.characters());
