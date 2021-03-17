@@ -426,6 +426,7 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     document_data->m_filename = move(filename);
     document_data->m_text = move(text);
     document_data->m_preprocessor = make<Preprocessor>(document_data->m_filename, document_data->text());
+    document_data->preprocessor().set_ignore_unsupported_keywords(true);
     document_data->preprocessor().process();
 
     Preprocessor::Definitions all_definitions;
