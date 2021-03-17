@@ -45,7 +45,16 @@ Any sequence of _Double Quoted String Part_ tokens:
 * Escaped sequences
 
 ##### Variable Reference
-Any sequence of _Identifier_ characters, or a _Special Variable_ following a `$`
+Any sequence of _Identifier_ characters, or a _Special Variable_ following a `$`.
+Variables may be followed by a _Slice_ (see [Slice](#Slice))
+
+##### Slice
+Variables may be sliced into, which will allow the user to select a subset of entries in the contents of the variable.
+An expression of the form $_identifier_[_slice-contents_] can be used to slice into a variable, where _slice-contents_ has semantics similar to _Brace Expansions_, but it may only evaluate to numeric values, that are used to index into the variable being sliced.
+Negative indices are allowed, and will index the contents from the end. It should be noted that the shell will always perform bounds-checking on the indices, and raise an error on out-of-bound accesses. Slices can slice into both lists and strings.
+
+For example, `$lst[1..-2]` can be used to select a permutation of a 4-element list referred to by the variable `lst`, as the slice will evaluate to the list `(1 0 -1 -2)`, which will select the indices 1, 0, 3, 2 (in that order).
+
 
 ##### Immediate Expressions
 An expression of the form '${identifier expression...}', such expressions are expanded to other kinds of nodes before resolution, and are internal functions provided by the shell.
@@ -452,12 +461,16 @@ dquoted_string_inner :: '\' . dquoted_string_inner?       {concat}
                       | '\' 'x' digit digit dquoted_string_inner?
                       | '\' [abefrn] dquoted_string_inner?
 
-variable :: '$' identifier
+variable :: variable_ref slice?
+
+variable_ref :: '$' identifier
           | '$' '$'
           | '$' '?'
           | '$' '*'
           | '$' '#'
           | ...
+
+slice :: '[' brace_expansion_spec ']'
 
 comment :: '#' [^\n]*
 
