@@ -56,12 +56,12 @@ bool NullDevice::can_read(const FileDescription&, size_t) const
     return true;
 }
 
-KResultOr<size_t> NullDevice::read(FileDescription&, size_t, UserOrKernelBuffer&, size_t)
+KResultOr<size_t> NullDevice::read(FileDescription&, u64, UserOrKernelBuffer&, size_t)
 {
     return 0;
 }
 
-KResultOr<size_t> NullDevice::write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t buffer_size)
+KResultOr<size_t> NullDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t buffer_size)
 {
     return min(static_cast<size_t>(PAGE_SIZE), buffer_size);
 }

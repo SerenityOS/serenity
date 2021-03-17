@@ -45,7 +45,7 @@ bool SerialDevice::can_read(const FileDescription&, size_t) const
     return (get_line_status() & DataReady) != 0;
 }
 
-KResultOr<size_t> SerialDevice::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> SerialDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (!size)
         return 0;
@@ -69,7 +69,7 @@ bool SerialDevice::can_write(const FileDescription&, size_t) const
     return (get_line_status() & EmptyTransmitterHoldingRegister) != 0;
 }
 
-KResultOr<size_t> SerialDevice::write(FileDescription&, size_t, const UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> SerialDevice::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (!size)
         return 0;

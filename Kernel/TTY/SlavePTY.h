@@ -52,7 +52,7 @@ private:
 
     // ^CharacterDevice
     virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const FileDescription&, size_t) const override;
     virtual const char* class_name() const override { return "SlavePTY"; }
     virtual KResult close() override;

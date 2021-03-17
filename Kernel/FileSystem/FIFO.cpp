@@ -144,14 +144,14 @@ bool FIFO::can_write(const FileDescription&, size_t) const
     return m_buffer.space_for_writing() || !m_readers;
 }
 
-KResultOr<size_t> FIFO::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> FIFO::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (!m_writers && m_buffer.is_empty())
         return 0;
     return m_buffer.read(buffer, size);
 }
 
-KResultOr<size_t> FIFO::write(FileDescription&, size_t, const UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> FIFO::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (!m_readers) {
         Thread::current()->send_signal(SIGPIPE, Process::current());
