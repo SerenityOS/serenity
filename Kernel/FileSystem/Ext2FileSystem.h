@@ -49,7 +49,7 @@ class Ext2FSInode final : public Inode {
 public:
     virtual ~Ext2FSInode() override;
 
-    size_t size() const { return m_raw_inode.i_size; }
+    u64 size() const;
     bool is_symlink() const { return Kernel::is_symlink(m_raw_inode.i_mode); }
     bool is_directory() const { return Kernel::is_directory(m_raw_inode.i_mode); }
 
@@ -105,6 +105,11 @@ class Ext2FS final : public BlockBasedFS {
     friend class Ext2FSInode;
 
 public:
+    enum class FeaturesReadOnly : u32 {
+        None = 0,
+        FileSize64bits = 1 << 1,
+    };
+
     static NonnullRefPtr<Ext2FS> create(FileDescription&);
 
     virtual ~Ext2FS() override;
@@ -120,6 +125,8 @@ public:
     virtual bool supports_watchers() const override { return true; }
 
     virtual u8 internal_file_type_to_directory_entry_type(const DirectoryEntryView& entry) const override;
+
+    FeaturesReadOnly get_features_readonly() const;
 
 private:
     TYPEDEF_DISTINCT_ORDERED_ID(unsigned, GroupIndex);

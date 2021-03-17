@@ -428,7 +428,7 @@ KResult Ext2FSInode::flush_block_list()
     }
 
     // NOTE: There is a mismatch between i_blocks and blocks.size() since i_blocks includes meta blocks and blocks.size() does not.
-    const auto old_block_count = ceil_div(static_cast<size_t>(m_raw_inode.i_size), fs().block_size());
+    const auto old_block_count = ceil_div(size(), static_cast<u64>(fs().block_size()));
 
     auto old_shape = fs().compute_block_list_shape(old_block_count);
     const auto new_shape = fs().compute_block_list_shape(m_block_list.size());
@@ -572,7 +572,7 @@ Vector<Ext2FS::BlockIndex> Ext2FSInode::compute_block_list_impl_internal(const e
 {
     unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
 
-    unsigned block_count = ceil_div(static_cast<size_t>(e2inode.i_size), fs().block_size());
+    unsigned block_count = ceil_div(size(), static_cast<u64>(fs().block_size()));
 
     // If we are handling a symbolic link, the path is stored in the 60 bytes in
     // the inode that are used for the 12 direct and 3 indirect block pointers,
@@ -765,12 +765,19 @@ Ext2FSInode::~Ext2FSInode()
         fs().free_inode(*this);
 }
 
+u64 Ext2FSInode::size() const
+{
+    if (Kernel::is_regular_file(m_raw_inode.i_mode) && ((u32)fs().get_features_readonly() & (u32)Ext2FS::FeaturesReadOnly::FileSize64bits))
+        return static_cast<u64>(m_raw_inode.i_dir_acl) << 32 | m_raw_inode.i_size;
+    return m_raw_inode.i_size;
+}
+
 InodeMetadata Ext2FSInode::metadata() const
 {
     LOCKER(m_lock);
     InodeMetadata metadata;
     metadata.inode = identifier();
-    metadata.size = m_raw_inode.i_size;
+    metadata.size = size();
     metadata.mode = m_raw_inode.i_mode;
     metadata.uid = m_raw_inode.i_uid;
     metadata.gid = m_raw_inode.i_gid;
@@ -908,6 +915,9 @@ KResult Ext2FSInode::resize(u64 new_size)
     if (old_size == new_size)
         return KSuccess;
 
+    if (!((u32)fs().get_features_readonly() & (u32)Ext2FS::FeaturesReadOnly::FileSize64bits) && (new_size >= static_cast<u32>(-1)))
+        return ENOSPC;
+
     u64 block_size = fs().block_size();
     size_t blocks_needed_before = ceil_div(old_size, block_size);
     size_t blocks_needed_after = ceil_div(new_size, block_size);
@@ -955,6 +965,9 @@ KResult Ext2FSInode::resize(u64 new_size)
         return result;
 
     m_raw_inode.i_size = new_size;
+    if (Kernel::is_regular_file(m_raw_inode.i_mode))
+        m_raw_inode.i_dir_acl = new_size >> 32;
+
     set_metadata_dirty(true);
 
     if (new_size > old_size) {
@@ -1003,7 +1016,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
     bool allow_cache = !description || !description->is_direct();
 
     const size_t block_size = fs().block_size();
-    u64 new_size = max(static_cast<u64>(offset) + count, (u64)size());
+    u64 new_size = max(static_cast<u64>(offset) + count, size());
 
     auto resize_result = resize(new_size);
     if (resize_result.is_error())
@@ -1042,7 +1055,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
         nwritten += num_bytes_to_copy;
     }
 
-    dbgln_if(EXT2_VERY_DEBUG, "Ext2FSInode[{}]::write_bytes(): After write, i_size={}, i_blocks={} ({} blocks in list)", identifier(), m_raw_inode.i_size, m_raw_inode.i_blocks, m_block_list.size());
+    dbgln_if(EXT2_VERY_DEBUG, "Ext2FSInode[{}]::write_bytes(): After write, i_size={}, i_blocks={} ({} blocks in list)", identifier(), size(), m_raw_inode.i_blocks, m_block_list.size());
     return nwritten;
 }
 
@@ -1066,6 +1079,13 @@ u8 Ext2FS::internal_file_type_to_directory_entry_type(const DirectoryEntryView& 
     default:
         return DT_UNKNOWN;
     }
+}
+
+Ext2FS::FeaturesReadOnly Ext2FS::get_features_readonly() const
+{
+    if (m_super_block.s_rev_level > 0)
+        return static_cast<Ext2FS::FeaturesReadOnly>(m_super_block.s_feature_ro_compat);
+    return Ext2FS::FeaturesReadOnly::None;
 }
 
 KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
