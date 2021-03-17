@@ -114,9 +114,11 @@ public:
 
     int to_int(int default_value = 0) const { return to_i32(default_value); }
     i32 to_i32(i32 default_value = 0) const { return to_number<i32>(default_value); }
+    i64 to_i64(i64 default_value = 0) const { return to_number<i64>(default_value); }
 
     unsigned to_uint(unsigned default_value = 0) const { return to_u32(default_value); }
     u32 to_u32(u32 default_value = 0) const { return to_number<u32>(default_value); }
+    u64 to_u64(u64 default_value = 0) const { return to_number<u64>(default_value); }
 
     bool to_bool(bool default_value = false) const
     {
