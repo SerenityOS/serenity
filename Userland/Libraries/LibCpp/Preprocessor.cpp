@@ -184,8 +184,11 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
         lexer.consume_all();
         return;
     }
-    dbgln("Unsupported preprocessor keyword: {}", keyword);
-    VERIFY_NOT_REACHED();
+
+    if (!m_options.ignore_unsupported_keywords) {
+        dbgln("Unsupported preprocessor keyword: {}", keyword);
+        VERIFY_NOT_REACHED();
+    }
 }
 
 const String& Preprocessor::processed_text()
