@@ -213,4 +213,12 @@ TEST_CASE(trailing_port)
     EXPECT_EQ(url.port(), 8086);
 }
 
+TEST_CASE(port_int_overflow_wrap)
+{
+    auto expected_port = 80;
+    URL url(String::formatted("http://example.com:{}/", (u32)((65536 * 1000) + expected_port)));
+    EXPECT_EQ(url.port(), expected_port);
+    EXPECT_EQ(url.is_valid(), true);
+}
+
 TEST_MAIN(URL)
