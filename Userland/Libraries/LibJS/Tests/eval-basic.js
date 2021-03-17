@@ -24,3 +24,8 @@ test("syntax error", () => {
         "Unexpected token Eof. Expected CurlyClose (line: 1, column: 2)"
     );
 });
+
+test("returns 1st argument unless 1st argument is a string", () => {
+    var string_object = new String("1 + 2");
+    expect(string_object).toBe(string_object);
+});
