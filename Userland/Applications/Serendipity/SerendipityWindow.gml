@@ -101,6 +101,9 @@
             @GUI::Widget {
             }
 
+            @GUI::HorizontalSeparator {
+                fixed_height: 2
+            }
         }
     }
 
