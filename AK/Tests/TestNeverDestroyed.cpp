@@ -58,7 +58,7 @@ TEST_CASE(should_construct_by_copy)
 TEST_CASE(should_construct_by_move)
 {
     Counter c {};
-    AK::NeverDestroyed<Counter> n { AK::move(c) };
+    AK::NeverDestroyed<Counter> n { move(c) };
 
     EXPECT_EQ(0, n->num_copies);
     EXPECT_EQ(1, n->num_moves);

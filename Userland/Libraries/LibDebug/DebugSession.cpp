@@ -120,7 +120,7 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command, String
     // At this point, libraries should have been loaded
     debug_session->update_loaded_libs();
 
-    return move(debug_session);
+    return debug_session;
 }
 
 bool DebugSession::poke(u32* address, u32 data)
