@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,20 @@ constexpr unsigned round_up_to_power_of_two(unsigned value, unsigned power_of_tw
 {
     return ((value - 1) & ~(power_of_two - 1)) + power_of_two;
 }
+
+namespace std {
+
+// NOTE: This is in the "std" namespace since some compiler features rely on it.
+
+template<typename T>
+constexpr T&& move(T& arg)
+{
+    return static_cast<T&&>(arg);
+}
+
+}
+
+using std::move;
 
 namespace AK {
 
@@ -75,12 +89,6 @@ constexpr T ceil_div(T a, U b)
     if ((a % b) != 0)
         ++result;
     return result;
-}
-
-template<typename T>
-constexpr T&& move(T& arg)
-{
-    return static_cast<T&&>(arg);
 }
 
 template<typename T, typename U>
@@ -622,7 +630,6 @@ using AK::MakeSigned;
 using AK::MakeUnsigned;
 using AK::max;
 using AK::min;
-using AK::move;
 using AK::RemoveConst;
 using AK::swap;
 using AK::UnderlyingType;
