@@ -500,6 +500,12 @@ void TextEditorWidget::initialize_menubar(GUI::MenuBar& menubar)
         m_editor->set_soft_tab_width(16);
     });
 
+    m_soft_tab_width_actions.add_action(*m_soft_tab_1_width_action);
+    m_soft_tab_width_actions.add_action(*m_soft_tab_2_width_action);
+    m_soft_tab_width_actions.add_action(*m_soft_tab_4_width_action);
+    m_soft_tab_width_actions.add_action(*m_soft_tab_8_width_action);
+    m_soft_tab_width_actions.add_action(*m_soft_tab_16_width_action);
+
     soft_tab_width_menu.add_action(*m_soft_tab_1_width_action);
     soft_tab_width_menu.add_action(*m_soft_tab_2_width_action);
     soft_tab_width_menu.add_action(*m_soft_tab_4_width_action);
@@ -507,6 +513,20 @@ void TextEditorWidget::initialize_menubar(GUI::MenuBar& menubar)
     soft_tab_width_menu.add_action(*m_soft_tab_16_width_action);
 
     m_soft_tab_4_width_action->set_checked(true);
+
+    view_menu.add_separator();
+
+    m_visualize_trailing_whitespace_action = GUI::Action::create_checkable("Visualize trailing whitespace", [&](auto&) {
+        m_editor->set_visualize_trailing_whitespace(m_visualize_trailing_whitespace_action->is_checked());
+    });
+    m_visualize_leading_whitespace_action = GUI::Action::create_checkable("Visualize leading whitespace", [&](auto&) {
+        m_editor->set_visualize_leading_whitespace(m_visualize_leading_whitespace_action->is_checked());
+    });
+
+    m_visualize_trailing_whitespace_action->set_checked(true);
+
+    view_menu.add_action(*m_visualize_trailing_whitespace_action);
+    view_menu.add_action(*m_visualize_leading_whitespace_action);
 
     view_menu.add_separator();
     view_menu.add_action(*m_no_preview_action);

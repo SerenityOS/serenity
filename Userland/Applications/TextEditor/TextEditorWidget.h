@@ -114,6 +114,9 @@ private:
     RefPtr<GUI::Action> m_wrap_anywhere_action;
     RefPtr<GUI::Action> m_wrap_at_words_action;
 
+    RefPtr<GUI::Action> m_visualize_trailing_whitespace_action;
+    RefPtr<GUI::Action> m_visualize_leading_whitespace_action;
+
     GUI::ActionGroup m_soft_tab_width_actions;
     RefPtr<GUI::Action> m_soft_tab_1_width_action;
     RefPtr<GUI::Action> m_soft_tab_2_width_action;
