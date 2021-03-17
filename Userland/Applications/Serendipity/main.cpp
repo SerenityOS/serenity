@@ -44,8 +44,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto app_icon = GUI::Icon::default_icon("app-serendipity");
-
     if (unveil("/res", "r") < 0) {
         perror("unveil");
         return 1;
@@ -70,6 +68,8 @@ int main(int argc, char** argv)
         perror("unveil");
         return 1;
     }
+
+    auto app_icon = GUI::Icon::default_icon("app-serendipity");
 
     auto window = GUI::Window::construct();
     window->resize(480, 250);
