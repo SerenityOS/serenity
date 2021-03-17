@@ -316,10 +316,10 @@ Value GlobalObject::get_this_binding(GlobalObject&) const
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
 {
-    auto code = vm.argument(0).to_string(global_object);
-    if (code.is_null())
-        return {};
-    JS::Parser parser { JS::Lexer { code } };
+    if (!vm.argument(0).is_string())
+        return vm.argument(0);
+    auto& code_string = vm.argument(0).as_string();
+    JS::Parser parser { JS::Lexer { code_string.string() } };
     auto program = parser.parse_program();
 
     if (parser.has_errors()) {
