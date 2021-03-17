@@ -123,8 +123,8 @@ public:
     Lock& lock() { return m_lock; }
 
     // ^File
-    virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override final;
-    virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override final;
+    virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override final;
+    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override final;
     virtual KResult stat(::stat&) const override;
     virtual String absolute_path(const FileDescription&) const override = 0;
 

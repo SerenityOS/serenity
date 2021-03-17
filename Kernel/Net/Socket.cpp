@@ -243,7 +243,7 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
     }
 }
 
-KResultOr<size_t> Socket::read(FileDescription& description, size_t, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> Socket::read(FileDescription& description, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (is_shut_down_for_reading())
         return 0;
@@ -251,7 +251,7 @@ KResultOr<size_t> Socket::read(FileDescription& description, size_t, UserOrKerne
     return recvfrom(description, buffer, size, 0, {}, 0, t);
 }
 
-KResultOr<size_t> Socket::write(FileDescription& description, size_t, const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> Socket::write(FileDescription& description, u64, const UserOrKernelBuffer& data, size_t size)
 {
     if (is_shut_down_for_writing())
         return EPIPE;
