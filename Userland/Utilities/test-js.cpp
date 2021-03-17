@@ -77,16 +77,16 @@ struct JSTestRunnerCounts {
     int files_total { 0 };
 };
 
-class TestRunnerGlobalObject : public JS::GlobalObject {
+class TestRunnerGlobalObject final : public JS::GlobalObject {
+    JS_OBJECT(TestRunnerGlobalObject, JS::GlobalObject);
+
 public:
     TestRunnerGlobalObject();
     virtual ~TestRunnerGlobalObject() override;
 
-    virtual void initialize() override;
+    virtual void initialize_global_object() override;
 
 private:
-    virtual const char* class_name() const override { return "TestRunnerGlobalObject"; }
-
     JS_DECLARE_NATIVE_FUNCTION(is_strict_mode);
     JS_DECLARE_NATIVE_FUNCTION(can_parse_source);
 };
@@ -141,9 +141,9 @@ TestRunnerGlobalObject::~TestRunnerGlobalObject()
 {
 }
 
-void TestRunnerGlobalObject::initialize()
+void TestRunnerGlobalObject::initialize_global_object()
 {
-    JS::GlobalObject::initialize();
+    Base::initialize_global_object();
     static FlyString global_property_name { "global" };
     static FlyString is_strict_mode_property_name { "isStrictMode" };
     static FlyString can_parse_source_property_name { "canParseSource" };

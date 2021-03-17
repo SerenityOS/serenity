@@ -135,16 +135,16 @@ extern "C" void __sanitizer_cov_trace_pc_guard(uint32_t* guard)
 // END FUZZING CODE
 //
 
-class TestRunnerGlobalObject : public JS::GlobalObject {
+class TestRunnerGlobalObject final : public JS::GlobalObject {
+    JS_OBJECT(TestRunnerGlobalObject, JS::GlobalObject);
+
 public:
     TestRunnerGlobalObject();
     virtual ~TestRunnerGlobalObject() override;
 
-    virtual void initialize() override;
+    virtual void initialize_global_object() override;
 
 private:
-    virtual const char* class_name() const override { return "TestRunnerGlobalObject"; }
-
     JS_DECLARE_NATIVE_FUNCTION(fuzzilli);
 };
 
@@ -194,9 +194,9 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
     return JS::js_undefined();
 }
 
-void TestRunnerGlobalObject::initialize()
+void TestRunnerGlobalObject::initialize_global_object()
 {
-    JS::GlobalObject::initialize();
+    Base::initialize_global_object();
     define_property("global", this, JS::Attribute::Enumerable);
     define_native_function("fuzzilli", fuzzilli, 2);
 }

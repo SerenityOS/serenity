@@ -53,7 +53,7 @@ public:
         auto interpreter = adopt_own(*new Interpreter(vm));
         VM::InterpreterExecutionScope scope(*interpreter);
         interpreter->m_global_object = make_handle(static_cast<Object*>(interpreter->heap().allocate_without_global_object<GlobalObjectType>(forward<Args>(args)...)));
-        static_cast<GlobalObjectType*>(interpreter->m_global_object.cell())->initialize();
+        static_cast<GlobalObjectType*>(interpreter->m_global_object.cell())->initialize_global_object();
         return interpreter;
     }
 

@@ -82,7 +82,7 @@ GlobalObject::GlobalObject()
 {
 }
 
-void GlobalObject::initialize()
+void GlobalObject::initialize_global_object()
 {
     auto& vm = this->vm();
 

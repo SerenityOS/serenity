@@ -56,9 +56,9 @@ WindowObject::WindowObject(DOM::Window& impl)
     impl.set_wrapper({}, *this);
 }
 
-void WindowObject::initialize()
+void WindowObject::initialize_global_object()
 {
-    GlobalObject::initialize();
+    Base::initialize_global_object();
 
     set_prototype(&ensure_web_prototype<EventTargetPrototype>("EventTarget"));
 
