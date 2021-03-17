@@ -26,6 +26,6 @@ test("syntax error", () => {
 });
 
 test("returns 1st argument unless 1st argument is a string", () => {
-    var string_object = new String("1 + 2");
-    expect(string_object).toBe(string_object);
+    var stringObject = new String("1 + 2");
+    expect(eval(stringObject)).toBe(stringObject);
 });
