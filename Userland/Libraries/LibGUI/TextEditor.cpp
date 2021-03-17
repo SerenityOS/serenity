@@ -640,6 +640,21 @@ void TextEditor::paint_event(PaintEvent& event)
                 }
             }
 
+            if (m_visualize_leading_whitespace && line.leading_spaces() > 0) {
+                size_t physical_column = line.leading_spaces();
+                size_t end_of_leading_whitespace = (start_of_visual_line + physical_column);
+                size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
+                if (end_of_leading_whitespace < end_of_visual_line) {
+                    Gfx::IntRect whitespace_rect {
+                        content_x_for_position({ line_index, start_of_visual_line }),
+                        visual_line_rect.y(),
+                        font().width(visual_line_text.substring_view(0, end_of_leading_whitespace)),
+                        visual_line_rect.height()
+                    };
+                    painter.fill_rect_with_dither_pattern(whitespace_rect, Color(), Color(192, 255, 192));
+                }
+            }
+
             if (physical_line_has_selection) {
                 size_t start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
                 size_t end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
@@ -1761,6 +1776,14 @@ void TextEditor::set_visualize_trailing_whitespace(bool enabled)
     if (m_visualize_trailing_whitespace == enabled)
         return;
     m_visualize_trailing_whitespace = enabled;
+    update();
+}
+
+void TextEditor::set_visualize_leading_whitespace(bool enabled)
+{
+    if (m_visualize_leading_whitespace == enabled)
+        return;
+    m_visualize_leading_whitespace = enabled;
     update();
 }
 
