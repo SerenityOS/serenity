@@ -141,24 +141,20 @@ jobs:
       if: ${{ matrix.debug-macros == 'NORMAL_DEBUG'}}
       working-directory: ${{ github.workspace }}/Build
       env:
+        SERENITY_QEMU_CPU: "max,vmx=off"
         SERENITY_KERNEL_CMDLINE: "boot_mode=self-test"
         SERENITY_RUN: "ci"
       run: |
         echo "::group::ninja run # Qemu output"
-        run_worked=y
-        ninja run || run_worked=n
+        ninja run
         echo "::endgroup::"
-        echo "::group::cat debug.log # Serenity output"
-        if [ "y" = "${run_worked}" ] ; then
-          cat debug.log
-        else
-          echo "skipped (qemu had non-zero exit-code)"
-        fi
-        echo "::endgroup::"
-        [ "y" = ${run_worked} ]
-      timeout-minutes: 10
-      # FIXME: When stable, remove continue on error. (See issue #5541)
-      continue-on-error: true
+      timeout-minutes: 20
+
+    - name: Print Target Logs
+      # Extremely useful if Serenity hangs trying to run one of the tests
+      if: ${{ !cancelled() && matrix.debug-macros == 'NORMAL_DEBUG'}}
+      working-directory: ${{ github.workspace }}/Build
+      run: '[ ! -e debug.log ] || cat debug.log'
 
   build_and_test_lagom:
     runs-on: ${{ matrix.os }}
