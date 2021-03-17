@@ -67,7 +67,7 @@ OwnPtr<AutoComplete::DocumentData> AutoComplete::create_document_data_for(const 
         get_or_create_document_data(path);
 
     update_declared_symbols(*document_data);
-    return move(document_data);
+    return document_data;
 }
 
 void AutoComplete::set_document_data(const String& file, OwnPtr<DocumentData>&& data)

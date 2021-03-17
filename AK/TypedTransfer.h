@@ -45,9 +45,9 @@ public:
 
         for (size_t i = 0; i < count; ++i) {
             if (destination <= source)
-                new (&destination[i]) T(AK::move(source[i]));
+                new (&destination[i]) T(std::move(source[i]));
             else
-                new (&destination[count - i - 1]) T(AK::move(source[count - i - 1]));
+                new (&destination[count - i - 1]) T(std::move(source[count - i - 1]));
         }
 
         return;

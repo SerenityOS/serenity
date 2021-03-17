@@ -78,7 +78,7 @@ Optional<DecodedImage> Client::decode_image(const ByteBuffer& encoded_data)
         frame.bitmap = response->bitmaps()[i].bitmap();
         frame.duration = response->durations()[i];
     }
-    return move(image);
+    return image;
 }
 
 }

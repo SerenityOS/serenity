@@ -1239,7 +1239,7 @@ RefPtr<AST::Node> Parser::parse_string()
         auto result = create<AST::StringLiteral>(move(text)); // String Literal
         if (is_error)
             result->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating single quote", true));
-        return move(result);
+        return result;
     }
 
     return nullptr;

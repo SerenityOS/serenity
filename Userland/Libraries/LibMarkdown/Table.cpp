@@ -231,7 +231,7 @@ OwnPtr<Table> Table::parse(Vector<StringView>::ConstIterator& lines)
 
     table->m_row_count = row_count;
 
-    return move(table);
+    return table;
 }
 
 }
