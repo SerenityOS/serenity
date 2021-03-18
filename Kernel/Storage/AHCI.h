@@ -485,7 +485,7 @@ public:
     }
 
     bool is_set(PortInterruptFlag flag) { return m_bitfield & (u32)flag; }
-    void set_at(PortInterruptFlag flag) { m_bitfield = m_bitfield | (1 << (u32)flag); }
+    void set_at(PortInterruptFlag flag) { m_bitfield = m_bitfield | static_cast<u32>(flag); }
     void clear() { m_bitfield = 0; }
     bool is_cleared() const { return m_bitfield == 0; }
     void set_all() { m_bitfield = 0xffffffff; }
