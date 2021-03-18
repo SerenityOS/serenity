@@ -69,13 +69,25 @@ void InfinitelyScrollableTableView::did_scroll()
     TableView::did_scroll();
     auto& vscrollbar = vertical_scrollbar();
     auto& hscrollbar = horizontal_scrollbar();
-    if (vscrollbar.is_visible() && vscrollbar.value() == vscrollbar.max()) {
-        if (on_reaching_vertical_end)
-            on_reaching_vertical_end();
+    if (!m_vertical_scroll_end_timer->is_active()) {
+        if (vscrollbar.is_visible() && vscrollbar.value() == vscrollbar.max()) {
+            m_vertical_scroll_end_timer->on_timeout = [&] {
+                if (on_reaching_vertical_end)
+                    on_reaching_vertical_end();
+                m_vertical_scroll_end_timer->stop();
+            };
+            m_vertical_scroll_end_timer->start(50);
+        }
     }
-    if (hscrollbar.is_visible() && hscrollbar.value() == hscrollbar.max()) {
-        if (on_reaching_horizontal_end)
-            on_reaching_horizontal_end();
+    if (!m_horizontal_scroll_end_timer->is_active()) {
+        if (hscrollbar.is_visible() && hscrollbar.value() == hscrollbar.max()) {
+            m_horizontal_scroll_end_timer->on_timeout = [&] {
+                if (on_reaching_horizontal_end)
+                    on_reaching_horizontal_end();
+                m_horizontal_scroll_end_timer->stop();
+            };
+            m_horizontal_scroll_end_timer->start(50);
+        }
     }
 }
 
