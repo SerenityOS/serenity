@@ -32,9 +32,9 @@
 #include <string.h>
 #include <sys/types.h>
 
-namespace Tar {
+namespace Archive {
 
-enum FileType {
+enum class TarFileType : char {
     NormalFile = '0',
     AlternateNormalFile = '\0',
     HardLink = '1',
@@ -54,7 +54,7 @@ constexpr const char* gnu_version = " ";     // gnu format version
 constexpr const char* ustar_magic = "ustar"; // ustar format magic
 constexpr const char* ustar_version = "00";  // ustar format version
 
-class [[gnu::packed]] Header {
+class [[gnu::packed]] TarFileHeader {
 public:
     const StringView file_name() const { return m_file_name; }
     mode_t mode() const { return get_tar_field(m_mode); }
@@ -63,7 +63,7 @@ public:
     // FIXME: support 2001-star size encoding
     size_t size() const { return get_tar_field(m_size); }
     time_t timestamp() const { return get_tar_field(m_timestamp); }
-    FileType type_flag() const { return FileType(m_type_flag); }
+    TarFileType type_flag() const { return TarFileType(m_type_flag); }
     const StringView link_name() const { return m_link_name; }
     const StringView magic() const { return StringView(m_magic, min(__builtin_strlen(m_magic), sizeof(m_magic))); }         // in some cases this is a null terminated string, in others its not
     const StringView version() const { return StringView(m_version, min(__builtin_strlen(m_version), sizeof(m_version))); } // in some cases this is a null terminated string, in others its not
@@ -80,7 +80,7 @@ public:
     void set_gid(gid_t gid) { VERIFY(String::formatted("{:o}", gid).copy_characters_to_buffer(m_gid, sizeof(m_gid))); }
     void set_size(size_t size) { VERIFY(String::formatted("{:o}", size).copy_characters_to_buffer(m_size, sizeof(m_size))); }
     void set_timestamp(time_t timestamp) { VERIFY(String::formatted("{:o}", timestamp).copy_characters_to_buffer(m_timestamp, sizeof(m_timestamp))); }
-    void set_type_flag(FileType type) { m_type_flag = type; }
+    void set_type_flag(TarFileType type) { m_type_flag = static_cast<char>(type); }
     void set_link_name(const String& link_name) { VERIFY(link_name.copy_characters_to_buffer(m_link_name, sizeof(m_link_name))); }
     void set_magic(const char* magic) { memcpy(m_magic, magic, sizeof(m_magic)); }           // magic doesnt necessarily include a null byte
     void set_version(const char* version) { memcpy(m_version, version, sizeof(m_version)); } // version doesnt necessarily include a null byte
@@ -115,7 +115,7 @@ private:
 };
 
 template<size_t N>
-size_t Header::get_tar_field(const char (&field)[N])
+size_t TarFileHeader::get_tar_field(const char (&field)[N])
 {
     size_t value = 0;
     for (size_t i = 0; i < N; ++i) {
@@ -128,11 +128,11 @@ size_t Header::get_tar_field(const char (&field)[N])
     }
     return value;
 }
-void Header::calculate_checksum()
+void TarFileHeader::calculate_checksum()
 {
     memset(m_checksum, ' ', sizeof(m_checksum));
     auto checksum = 0u;
-    for (auto i = 0u; i < sizeof(Header); ++i) {
+    for (auto i = 0u; i < sizeof(TarFileHeader); ++i) {
         checksum += ((unsigned char*)this)[i];
     }
     VERIFY(String::formatted("{:o}", checksum).copy_characters_to_buffer(m_checksum, sizeof(m_checksum)));
