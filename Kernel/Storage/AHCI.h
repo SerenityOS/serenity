@@ -484,6 +484,7 @@ public:
     {
     }
 
+    u32 raw_value() const { return m_bitfield; }
     bool is_set(PortInterruptFlag flag) { return m_bitfield & (u32)flag; }
     void set_at(PortInterruptFlag flag) { m_bitfield = m_bitfield | static_cast<u32>(flag); }
     void clear() { m_bitfield = 0; }
