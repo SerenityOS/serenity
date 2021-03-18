@@ -24,12 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/NumberFormat.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 static const u8 central_directory_file_header_sig[] = "\x50\x4b\x01\x02";
 
@@ -62,7 +64,7 @@ static bool find_next_central_directory(off_t file_size, const MappedFile& file,
     return false;
 }
 
-static bool unpack_file_for_central_directory_index(off_t central_directory_index, const MappedFile& file)
+static bool unpack_file_for_central_directory_index(off_t central_directory_index, const MappedFile& file, const AK::String target_path)
 {
     enum CentralFileDirectoryHeaderOffsets {
         CFDHCompressionMethodOffset = 10,
@@ -120,6 +122,25 @@ static bool unpack_file_for_central_directory_index(off_t central_directory_inde
         return false;
     file_name[file_name_length] = '\0';
 
+    // determine where the archive intends to write a file
+    StringBuilder destination_path_raw;
+    if (file_name[0] != '/') {
+        destination_path_raw.append(target_path);
+        destination_path_raw.append("/");
+    }
+    destination_path_raw.append(file_name);
+    LexicalPath destination_path(destination_path_raw.to_string());
+    if (!(destination_path.string().starts_with(target_path))) {
+        fprintf(stderr, "File %s path is outside of current working directory, skipping\n", file_name);
+        return false;
+    }
+
+    // Ignore zips containing target path.
+    // This will prevent mkdir from failing later when it probably shouldn't
+    if (destination_path.string() == target_path) {
+        return true;
+    }
+
     if (file_name[file_name_length - 1] == '/') {
         if (mkdir(file_name, 0755) < 0) {
             perror("mkdir");
@@ -162,6 +183,29 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
+    StringBuilder target_path_raw;
+    // Currently unzip doesn't support extracting to a specified location. If that is implemented the target_path
+    // should be replaced with the target path from the command line arguements instead of "."
+    target_path_raw.append(realpath(".", nullptr));
+    target_path_raw.append("/");
+    LexicalPath target_path(target_path_raw.to_string());
+    auto target_path_string = target_path.string();
+    if (unveil(target_path_string.characters(), "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    auto zip_path = realpath(path, nullptr);
+    if (unveil(zip_path, "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     String zip_file_path { path };
 
     struct stat st;
@@ -192,7 +236,7 @@ int main(int argc, char** argv)
 
     off_t index = 0;
     while (find_next_central_directory(st.st_size, mapped_file, index, index)) {
-        bool success = unpack_file_for_central_directory_index(index, mapped_file);
+        bool success = unpack_file_for_central_directory_index(index, mapped_file, target_path_string);
         if (!success) {
             printf("Could not find local file header for a file.\n");
             return 4;

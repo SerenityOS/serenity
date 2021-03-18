@@ -59,6 +59,18 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(paths, "Paths", "PATHS", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
+    // Currently tar doesn't support extracting to a specified location. If that is implemented the target path
+    // should be unveiled with rwc instead of the current directory.
+    StringBuilder target_path_raw;
+    target_path_raw.append(realpath(".", nullptr));
+    target_path_raw.append("/");
+    LexicalPath target_path(target_path_raw.to_string());
+    auto target_path_string = target_path.string();
+    if (unveil(target_path_string.characters(), "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     if (create + extract + list != 1) {
         warnln("exactly one of -c, -x, and -t can be used");
         return 1;
@@ -68,6 +80,16 @@ int main(int argc, char** argv)
         auto file = Core::File::standard_input();
 
         if (archive_file) {
+            // make sure we can read the archive path
+            auto archive_file_path = realpath(archive_file, nullptr);
+            if (unveil(archive_file_path, "r") < 0) {
+                perror("unveil");
+                return 1;
+            }
+            if (unveil(nullptr, nullptr) < 0) {
+                perror("unveil");
+                return 1;
+            }
             auto maybe_file = Core::File::open(archive_file, Core::IODevice::OpenMode::ReadOnly);
             if (maybe_file.is_error()) {
                 warnln("Core::File::open: {}", maybe_file.error());
@@ -86,14 +108,38 @@ int main(int argc, char** argv)
             warnln("the provided file is not a well-formatted ustar file");
             return 1;
         }
+
         for (; !tar_stream.finished(); tar_stream.advance()) {
+            auto file_name = tar_stream.header().file_name();
+
             if (list || verbose)
-                outln("{}", tar_stream.header().file_name());
+                outln("{}", file_name);
 
             if (extract) {
                 Tar::TarFileStream file_stream = tar_stream.file_contents();
 
                 const Tar::Header& header = tar_stream.header();
+
+                // determine where the archive intends to write a file
+                StringBuilder destination_path_raw;
+                if (file_name[0] != '/') {
+                    destination_path_raw.append(target_path_string);
+                    destination_path_raw.append("/");
+                }
+                destination_path_raw.append(file_name);
+                LexicalPath destination_path(destination_path_raw.to_string());
+
+                if (!(destination_path.string().starts_with(target_path_string))) {
+                    fprintf(stderr, "File %s path is outside of current working directory, skipping\n", file_name.to_string().characters());
+                    return false;
+                }
+
+                // Ignore tars containing target path.
+                // This will prevent mkdir from failing later when it probably shouldn't
+                if (destination_path.string() == target_path_string) {
+                    continue;
+                }
+
                 switch (header.type_flag()) {
                 case Tar::NormalFile:
                 case Tar::AlternateNormalFile: {
