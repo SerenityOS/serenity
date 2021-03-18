@@ -32,7 +32,7 @@ namespace Kernel {
 
 class BlockBasedFS : public FileBackedFS {
 public:
-    TYPEDEF_DISTINCT_ORDERED_ID(unsigned, BlockIndex);
+    TYPEDEF_DISTINCT_ORDERED_ID(u64, BlockIndex);
 
     virtual ~BlockBasedFS() override;
 
