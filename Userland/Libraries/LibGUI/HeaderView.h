@@ -45,6 +45,10 @@ public:
     void set_section_size(int section, int size);
     int section_size(int section) const;
 
+    void set_default_section_size(int section, int size);
+    int default_section_size(int section) const;
+    bool is_default_section_size_initialized(int section) const;
+
     Gfx::TextAlignment section_alignment(int section) const;
     void set_section_alignment(int section, Gfx::TextAlignment);
 
@@ -54,6 +58,8 @@ public:
     int section_count() const;
     Gfx::IntRect section_rect(int section) const;
 
+    Function<void(int section)> on_resize_doubleclick;
+
 private:
     HeaderView(AbstractTableView&, Gfx::Orientation);
 
@@ -61,6 +67,7 @@ private:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
+    virtual void doubleclick_event(MouseEvent&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
     virtual void leave_event(Core::Event&) override;
 
@@ -78,7 +85,9 @@ private:
 
     struct SectionData {
         int size { 0 };
+        int default_size { 0 };
         bool has_initialized_size { false };
+        bool has_initialized_default_size { false };
         bool visibility { true };
         RefPtr<Action> visibility_action;
         Gfx::TextAlignment alignment { Gfx::TextAlignment::CenterLeft };
