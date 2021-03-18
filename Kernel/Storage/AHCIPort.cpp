@@ -32,6 +32,7 @@
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
+#include <Kernel/WorkQueue.h>
 
 namespace Kernel {
 
@@ -96,17 +97,49 @@ void AHCIPort::handle_interrupt()
     if (m_interrupt_status.raw_value() == 0) {
         return;
     }
-    if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::PRC) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::PC)) {
-        reset();
-        return;
+    if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::PRC) && m_interrupt_status.is_set(AHCI::PortInterruptFlag::PC)) {
+        clear_sata_error_register();
+        m_wait_connect_for_completion = true;
     }
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::INF)) {
         reset();
         return;
     }
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::IF) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::TFE) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBD) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBF)) {
-        recover_from_fatal_error();
+        g_io_work->queue([this]() {
+            recover_from_fatal_error();
+        });
+        return;
     }
+    if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::DHR) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::PS)) {
+        m_wait_for_completion = false;
+
+        // Now schedule reading/writing the buffer as soon as we leave the irq handler.
+        // This is important so that we can safely access the buffers, which could
+        // trigger page faults
+        if (!m_current_request) {
+            dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request handled, probably identify request", representative_port_index());
+        } else {
+            g_io_work->queue([this]() {
+                dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request handled", representative_port_index());
+                LOCKER(m_lock);
+                VERIFY(m_current_request);
+                VERIFY(m_current_scatter_list);
+                if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
+                    if (!m_current_request->write_to_buffer(m_current_request->buffer(), m_current_scatter_list->dma_region().as_ptr(), m_connected_device->block_size() * m_current_request->block_count())) {
+                        dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request failure, memory fault occurred when reading in data.", representative_port_index());
+                        m_current_scatter_list = nullptr;
+                        complete_current_request(AsyncDeviceRequest::MemoryFault);
+                        return;
+                    }
+                }
+                m_current_scatter_list = nullptr;
+                dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request success", representative_port_index());
+                complete_current_request(AsyncDeviceRequest::Success);
+            });
+        }
+    }
+
     m_interrupt_status.clear();
 }
 
@@ -117,8 +150,10 @@ bool AHCIPort::is_interrupts_enabled() const
 
 void AHCIPort::recover_from_fatal_error()
 {
-    ScopedSpinLock lock(m_lock);
+    LOCKER(m_lock);
+    ScopedSpinLock lock(m_hard_lock);
     dmesgln("{}: AHCI Port {} fatal error, shutting down!", m_parent_handler->hba_controller()->pci_address(), representative_port_index());
+    dmesgln("{}: AHCI Port {} fatal error, SError {}", m_parent_handler->hba_controller()->pci_address(), representative_port_index(), (u32)m_port_registers.serr);
     stop_command_list_processing();
     stop_fis_receiving();
     m_interrupt_enable.clear();
@@ -192,8 +227,6 @@ void AHCIPort::eject()
             try_disambiguate_sata_error();
             VERIFY_NOT_REACHED();
         }
-        if ((m_port_registers.ci & (1 << unused_command_header.value())) == 0)
-            break;
     }
     dbgln("AHCI Port {}: Eject Drive", representative_port_index());
     return;
@@ -201,7 +234,8 @@ void AHCIPort::eject()
 
 bool AHCIPort::reset()
 {
-    ScopedSpinLock lock(m_lock);
+    LOCKER(m_lock);
+    ScopedSpinLock lock(m_hard_lock);
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Resetting", representative_port_index());
 
@@ -217,20 +251,21 @@ bool AHCIPort::reset()
     full_memory_barrier();
     clear_sata_error_register();
     full_memory_barrier();
-    if (!initiate_sata_reset()) {
+    if (!initiate_sata_reset(lock)) {
         return false;
     }
-    return initialize();
+    return initialize(lock);
 }
 
 bool AHCIPort::initialize_without_reset()
 {
-    ScopedSpinLock lock(m_lock);
+    LOCKER(m_lock);
+    ScopedSpinLock lock(m_hard_lock);
     dmesgln("AHCI Port {}: {}", representative_port_index(), try_disambiguate_sata_status());
-    return initialize();
+    return initialize(lock);
 }
 
-bool AHCIPort::initialize()
+bool AHCIPort::initialize(ScopedSpinLock<SpinLock<u8>>& main_lock)
 {
     VERIFY(m_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Initialization. Signature = 0x{:08x}", representative_port_index(), static_cast<u32>(m_port_registers.sig));
@@ -255,7 +290,7 @@ bool AHCIPort::initialize()
     size_t logical_sector_size = 512;
     size_t physical_sector_size = 512;
     u64 max_addressable_sector = 0;
-    if (identify_device()) {
+    if (identify_device(main_lock)) {
         auto identify_block = map_typed<ATAIdentifyBlock>(m_parent_handler->get_identify_metadata_physical_region(m_port_index));
         // Check if word 106 is valid before using it!
         if ((identify_block->physical_sector_size_to_logical_sector_size >> 14) == 1) {
@@ -361,6 +396,7 @@ void AHCIPort::try_disambiguate_sata_error()
 void AHCIPort::rebase()
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
     VERIFY(!m_command_list_page.is_null() && !m_fis_receive_page.is_null());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Rebasing.", representative_port_index());
     full_memory_barrier();
@@ -394,6 +430,7 @@ bool AHCIPort::is_operable() const
 void AHCIPort::set_active_state() const
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Switching to active state.", representative_port_index());
     m_port_registers.cmd = (m_port_registers.cmd & 0x0ffffff) | (1 << 28);
 }
@@ -401,6 +438,7 @@ void AHCIPort::set_active_state() const
 void AHCIPort::set_sleep_state() const
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
     m_port_registers.cmd = (m_port_registers.cmd & 0x0ffffff) | (0b1000 << 28);
 }
 
@@ -433,40 +471,35 @@ Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_li
 
 void AHCIPort::start_request(AsyncBlockDeviceRequest& request)
 {
-    ScopedSpinLock lock(m_lock);
-    VERIFY(!m_current_scatter_list);
+    LOCKER(m_lock);
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request start", representative_port_index());
+    VERIFY(!m_current_request);
+    VERIFY(!m_current_scatter_list);
+
+    m_current_request = request;
 
     auto result = prepare_and_set_scatter_list(request);
     if (result.has_value()) {
         dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request failure.", representative_port_index());
-        request.complete(result.value());
+        m_lock.unlock();
+        complete_current_request(result.value());
         return;
     }
 
     auto success = access_device(request.request_type(), request.block_index(), request.block_count());
     if (!success) {
         dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request failure.", representative_port_index());
-        request.complete(AsyncDeviceRequest::Failure);
+        m_lock.unlock();
+        complete_current_request(AsyncDeviceRequest::Failure);
         return;
     }
-
-    if (request.request_type() == AsyncBlockDeviceRequest::Read) {
-        if (!request.write_to_buffer(request.buffer(), m_current_scatter_list->dma_region().as_ptr(), m_connected_device->block_size() * request.block_count())) {
-            dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request failure, memory fault occurred when reading in data.", representative_port_index());
-            request.complete(AsyncDeviceRequest::MemoryFault);
-            m_current_scatter_list = nullptr;
-            return;
-        }
-    }
-    m_current_scatter_list = nullptr;
-    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request success", representative_port_index());
-    request.complete(AsyncDeviceRequest::Success);
 }
 
-void AHCIPort::complete_current_request(AsyncDeviceRequest::RequestResult)
+void AHCIPort::complete_current_request(AsyncDeviceRequest::RequestResult result)
 {
-    VERIFY(m_lock.is_locked());
+    VERIFY(m_current_request);
+    m_current_request->complete(result);
+    m_current_request.clear();
 }
 
 bool AHCIPort::spin_until_ready() const
@@ -490,7 +523,9 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     VERIFY(m_lock.is_locked());
     VERIFY(m_connected_device);
     VERIFY(is_operable());
+    VERIFY(m_lock.is_locked());
     VERIFY(m_current_scatter_list);
+    ScopedSpinLock lock(m_hard_lock);
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {}", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count);
     if (!spin_until_ready())
@@ -528,6 +563,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
         command_table.descriptors[scatter_entry_index].byte_count = PAGE_SIZE - 1;
         scatter_entry_index++;
     }
+    command_table.descriptors[scatter_entry_index].byte_count = (PAGE_SIZE - 1) | (1 << 31);
 
     memset(const_cast<u8*>(command_table.atapi_command), 0, 32);
 
@@ -561,20 +597,14 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
         return false;
 
     full_memory_barrier();
-    start_command_list_processing();
-    full_memory_barrier();
     mark_command_header_ready_to_process(unused_command_header.value());
     full_memory_barrier();
 
-    while (1) {
-        if ((m_port_registers.ci & (1 << unused_command_header.value())) == 0)
-            break;
-    }
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {} @ {}, ended", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count, m_dma_buffers[0].paddr());
     return true;
 }
 
-bool AHCIPort::identify_device()
+bool AHCIPort::identify_device(ScopedSpinLock<SpinLock<u8>>& main_lock)
 {
     VERIFY(m_lock.is_locked());
     VERIFY(is_operable());
@@ -609,25 +639,35 @@ bool AHCIPort::identify_device()
     if (!spin_until_ready())
         return false;
 
-    full_memory_barrier();
-    mark_command_header_ready_to_process(unused_command_header.value());
-    full_memory_barrier();
+    // FIXME: Find a better way to send IDENTIFY DEVICE and getting an interrupt!
+    {
+        main_lock.unlock();
+        VERIFY_INTERRUPTS_ENABLED();
+        full_memory_barrier();
+        m_wait_for_completion = true;
+        dbgln_if(AHCI_DEBUG, "AHCI Port {}: Marking command header at index {} as ready to identify device", representative_port_index(), unused_command_header.value());
+        m_port_registers.ci = 1 << unused_command_header.value();
+        full_memory_barrier();
 
-    while (1) {
-        if (m_port_registers.serr != 0) {
-            dbgln("AHCI Port {}: Identify failed, SError 0x{:08x}", representative_port_index(), (u32)m_port_registers.serr);
-            try_disambiguate_sata_error();
-            return false;
+        while (1) {
+            if (m_port_registers.serr != 0) {
+                dbgln("AHCI Port {}: Identify failed, SError 0x{:08x}", representative_port_index(), (u32)m_port_registers.serr);
+                try_disambiguate_sata_error();
+                return false;
+            }
+            if (!m_wait_for_completion)
+                break;
         }
-        if ((m_port_registers.ci & (1 << unused_command_header.value())) == 0)
-            break;
+        main_lock.lock();
     }
+
     return true;
 }
 
 bool AHCIPort::shutdown()
 {
-    ScopedSpinLock lock(m_lock);
+    LOCKER(m_lock);
+    ScopedSpinLock lock(m_hard_lock);
     rebase();
     set_interface_state(AHCI::DeviceDetectionInitialization::DisableInterface);
     return true;
@@ -650,6 +690,7 @@ Optional<u8> AHCIPort::try_to_find_unused_command_header()
 void AHCIPort::start_command_list_processing() const
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
     VERIFY(is_operable());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Starting command list processing.", representative_port_index());
     m_port_registers.cmd = m_port_registers.cmd | 1;
@@ -658,7 +699,10 @@ void AHCIPort::start_command_list_processing() const
 void AHCIPort::mark_command_header_ready_to_process(u8 command_header_index) const
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
     VERIFY(is_operable());
+    VERIFY(!m_wait_for_completion);
+    m_wait_for_completion = true;
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Marking command header at index {} as ready to process.", representative_port_index(), command_header_index);
     m_port_registers.ci = 1 << command_header_index;
 }
@@ -666,6 +710,7 @@ void AHCIPort::mark_command_header_ready_to_process(u8 command_header_index) con
 void AHCIPort::stop_command_list_processing() const
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Stopping command list processing.", representative_port_index());
     m_port_registers.cmd = m_port_registers.cmd & 0xfffffffe;
 }
@@ -673,6 +718,7 @@ void AHCIPort::stop_command_list_processing() const
 void AHCIPort::start_fis_receiving() const
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Starting FIS receiving.", representative_port_index());
     m_port_registers.cmd = m_port_registers.cmd | (1 << 4);
 }
@@ -680,6 +726,7 @@ void AHCIPort::start_fis_receiving() const
 void AHCIPort::power_on() const
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Power on. Cold presence detection? {}", representative_port_index(), (bool)(m_port_registers.cmd & (1 << 20)));
     if (!(m_port_registers.cmd & (1 << 20)))
         return;
@@ -690,6 +737,7 @@ void AHCIPort::power_on() const
 void AHCIPort::spin_up() const
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Spin up. Staggered spin up? {}", representative_port_index(), m_parent_handler->hba_capabilities().staggered_spin_up_supported);
     if (!m_parent_handler->hba_capabilities().staggered_spin_up_supported)
         return;
@@ -700,13 +748,15 @@ void AHCIPort::spin_up() const
 void AHCIPort::stop_fis_receiving() const
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Stopping FIS receiving.", representative_port_index());
     m_port_registers.cmd = m_port_registers.cmd & 0xFFFFFFEF;
 }
 
-bool AHCIPort::initiate_sata_reset()
+bool AHCIPort::initiate_sata_reset(ScopedSpinLock<SpinLock<u8>>& main_lock)
 {
     VERIFY(m_lock.is_locked());
+    VERIFY(m_hard_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Initiate SATA reset", representative_port_index());
     stop_command_list_processing();
     full_memory_barrier();
@@ -725,17 +775,24 @@ bool AHCIPort::initiate_sata_reset()
     set_interface_state(AHCI::DeviceDetectionInitialization::PerformInterfaceInitializationSequence);
     // The AHCI specification says to wait now a 1 millisecond
     IO::delay(1000);
-    full_memory_barrier();
-    set_interface_state(AHCI::DeviceDetectionInitialization::NoActionRequested);
-    full_memory_barrier();
+    // FIXME: Find a better way to opt-out temporarily from Scoped locking!
+    {
+        main_lock.unlock();
+        VERIFY_INTERRUPTS_ENABLED();
+        full_memory_barrier();
+        set_interface_state(AHCI::DeviceDetectionInitialization::NoActionRequested);
+        full_memory_barrier();
+        if (m_wait_connect_for_completion) {
+            retry = 0;
+            while (retry < 100000) {
+                if (is_phy_enabled())
+                    break;
 
-    retry = 0;
-    while (retry < 5000) {
-        if (!((m_port_registers.ssts & 0xf) == 0))
-            break;
-
-        IO::delay(10);
-        retry++;
+                IO::delay(10);
+                retry++;
+            }
+        }
+        main_lock.lock();
     }
 
     dmesgln("AHCI Port {}: {}", representative_port_index(), try_disambiguate_sata_status());
@@ -747,7 +804,6 @@ bool AHCIPort::initiate_sata_reset()
 
 void AHCIPort::set_interface_state(AHCI::DeviceDetectionInitialization requested_action)
 {
-    VERIFY(m_lock.is_locked());
     switch (requested_action) {
     case AHCI::DeviceDetectionInitialization::NoActionRequested:
         m_port_registers.sctl = (m_port_registers.sctl & 0xfffffff0);
