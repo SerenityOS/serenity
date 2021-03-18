@@ -583,12 +583,12 @@ void TextEditorWidget::update_title()
     window()->set_title(builder.to_string());
 }
 
-void TextEditorWidget::open_file(const String& path)
+bool TextEditorWidget::open_file(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly) && file->error() != ENOENT) {
         GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-        return;
+        return false;
     }
 
     m_editor->set_text(file->read_all());
@@ -598,6 +598,8 @@ void TextEditorWidget::open_file(const String& path)
     set_path(LexicalPath(path));
 
     m_editor->set_focus(true);
+
+    return true;
 }
 
 bool TextEditorWidget::request_close()
