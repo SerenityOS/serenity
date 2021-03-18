@@ -109,6 +109,7 @@ AHCIController::AHCIController(PCI::Address address)
 AHCI::HBADefinedCapabilities AHCIController::capabilities() const
 {
     u32 capabilities = hba().control_regs.cap;
+    u32 extended_capabilities = hba().control_regs.cap2;
     return (AHCI::HBADefinedCapabilities) {
         (capabilities & 0b11111) + 1,
         ((capabilities >> 8) & 0b11111) + 1,
@@ -129,7 +130,13 @@ AHCI::HBADefinedCapabilities AHCIController::capabilities() const
         (capabilities & (u32)(AHCI::HBACapabilities::SMPS)) != 0,
         (capabilities & (u32)(AHCI::HBACapabilities::SSNTF)) != 0,
         (capabilities & (u32)(AHCI::HBACapabilities::SNCQ)) != 0,
-        (capabilities & (u32)(AHCI::HBACapabilities::S64A)) != 0
+        (capabilities & (u32)(AHCI::HBACapabilities::S64A)) != 0,
+        (capabilities & (u32)(AHCI::HBACapabilitiesExtended::BOH)) != 0,
+        (capabilities & (u32)(AHCI::HBACapabilitiesExtended::NVMP)) != 0,
+        (extended_capabilities & (u32)(AHCI::HBACapabilitiesExtended::APST)) != 0,
+        (extended_capabilities & (u32)(AHCI::HBACapabilitiesExtended::SDS)) != 0,
+        (extended_capabilities & (u32)(AHCI::HBACapabilitiesExtended::SADM)) != 0,
+        (extended_capabilities & (u32)(AHCI::HBACapabilitiesExtended::DESO)) != 0
     };
 }
 
