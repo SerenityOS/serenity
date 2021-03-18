@@ -58,6 +58,7 @@ public:
 
     int column_width(int column) const;
     void set_column_width(int column, int width);
+    void set_default_column_width(int column, int width);
 
     Gfx::TextAlignment column_header_alignment(int column) const;
     void set_column_header_alignment(int column, Gfx::TextAlignment);
@@ -106,6 +107,7 @@ protected:
     virtual void toggle_index(const ModelIndex&) { }
 
     void update_content_size();
+    virtual void auto_resize_column(int column);
     virtual void update_column_sizes();
     virtual void update_row_sizes();
     virtual int item_count() const;

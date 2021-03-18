@@ -117,6 +117,20 @@ int HeaderView::section_count() const
     return m_orientation == Gfx::Orientation::Horizontal ? model()->column_count() : model()->row_count();
 }
 
+void HeaderView::doubleclick_event(MouseEvent& event)
+{
+    if (!model())
+        return;
+
+    int section_count = this->section_count();
+    for (int i = 0; i < section_count; ++i) {
+        if (section_resize_grabbable_rect(i).contains(event.position())) {
+            if (on_resize_doubleclick)
+                on_resize_doubleclick(i);
+        }
+    }
+}
+
 void HeaderView::mousedown_event(MouseEvent& event)
 {
     if (!model())
@@ -359,6 +373,28 @@ Gfx::TextAlignment HeaderView::section_alignment(int section) const
 void HeaderView::set_section_alignment(int section, Gfx::TextAlignment alignment)
 {
     section_data(section).alignment = alignment;
+}
+
+void HeaderView::set_default_section_size(int section, int size)
+{
+    if (orientation() == Gfx::Orientation::Horizontal && size < minimum_column_size)
+        size = minimum_column_size;
+
+    auto& data = section_data(section);
+    if (data.default_size == size)
+        return;
+    data.default_size = size;
+    data.has_initialized_default_size = true;
+}
+
+int HeaderView::default_section_size(int section) const
+{
+    return section_data(section).default_size;
+}
+
+bool HeaderView::is_default_section_size_initialized(int section) const
+{
+    return section_data(section).has_initialized_default_size;
 }
 
 bool HeaderView::is_section_visible(int section) const
