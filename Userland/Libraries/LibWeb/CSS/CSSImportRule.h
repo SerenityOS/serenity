@@ -60,4 +60,7 @@ private:
     RefPtr<CSSStyleSheet> m_style_sheet;
 };
 
+template<>
+inline bool CSSRule::fast_is<CSSImportRule>() const { return type() == CSSRule::Type::Import; }
+
 }
