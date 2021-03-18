@@ -26,127 +26,62 @@
 
 #include <AK/MappedFile.h>
 #include <AK/NumberFormat.h>
+#include <LibArchive/Zip.h>
+#include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <string.h>
 #include <sys/stat.h>
 
-static const u8 central_directory_file_header_sig[] = "\x50\x4b\x01\x02";
-
-static bool seek_and_read(u8* buffer, const MappedFile& file, off_t seek_to, size_t bytes_to_read)
+static bool unpack_zip_member(Archive::ZipMember zip_member)
 {
-    if (!buffer)
-        return false;
-
-    if ((size_t)seek_to >= file.size())
-        return false;
-
-    memcpy(buffer, (const char*)file.data() + seek_to, bytes_to_read);
-
-    return true;
-}
-
-static bool find_next_central_directory(off_t file_size, const MappedFile& file, off_t current_index, off_t& return_index)
-{
-    off_t start_index = current_index == 0 ? current_index : current_index + 1;
-    for (off_t index = start_index; index < file_size - 4; index++) {
-        u8 buffer[4];
-        if (!seek_and_read(buffer, file, index, 4))
-            return false;
-
-        if (!memcmp(buffer, central_directory_file_header_sig, 4)) {
-            return_index = index;
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool unpack_file_for_central_directory_index(off_t central_directory_index, const MappedFile& file)
-{
-    enum CentralFileDirectoryHeaderOffsets {
-        CFDHCompressionMethodOffset = 10,
-        CFDHLocalFileHeaderIndexOffset = 42,
-    };
-    enum LocalFileHeaderOffsets {
-        LFHCompressionMethodOffset = 8,
-        LFHCompressedSizeOffset = 18,
-        LFHFileNameLengthOffset = 26,
-        LFHExtraFieldLengthOffset = 28,
-        LFHFileNameBaseOffset = 30,
-    };
-    enum CompressionMethod {
-        None = 0,
-        Shrunk = 1,
-        Factor1 = 2,
-        Factor2 = 3,
-        Factor3 = 4,
-        Factor4 = 5,
-        Implode = 6,
-        Deflate = 8,
-        EnhancedDeflate = 9,
-        PKWareDCLImplode = 10,
-        BZIP2 = 12,
-        LZMA = 14,
-        TERSE = 18,
-        LZ77 = 19,
-    };
-
-    u8 buffer[4];
-    if (!seek_and_read(buffer, file, central_directory_index + CFDHLocalFileHeaderIndexOffset, 4))
-        return false;
-    off_t local_file_header_index = buffer[3] << 24 | buffer[2] << 16 | buffer[1] << 8 | buffer[0];
-
-    if (!seek_and_read(buffer, file, local_file_header_index + LFHCompressionMethodOffset, 2))
-        return false;
-    auto compression_method = buffer[1] << 8 | buffer[0];
-    // FIXME: Remove once any decompression is supported.
-    VERIFY(compression_method == None);
-
-    if (!seek_and_read(buffer, file, local_file_header_index + LFHCompressedSizeOffset, 4))
-        return false;
-    off_t compressed_file_size = buffer[3] << 24 | buffer[2] << 16 | buffer[1] << 8 | buffer[0];
-
-    if (!seek_and_read(buffer, file, local_file_header_index + LFHFileNameLengthOffset, 2))
-        return false;
-    off_t file_name_length = buffer[1] << 8 | buffer[0];
-
-    if (!seek_and_read(buffer, file, local_file_header_index + LFHExtraFieldLengthOffset, 2))
-        return false;
-    off_t extra_field_length = buffer[1] << 8 | buffer[0];
-
-    char file_name[file_name_length + 1];
-    if (!seek_and_read((u8*)file_name, file, local_file_header_index + LFHFileNameBaseOffset, file_name_length))
-        return false;
-    file_name[file_name_length] = '\0';
-
-    if (file_name[file_name_length - 1] == '/') {
-        if (mkdir(file_name, 0755) < 0) {
+    if (zip_member.is_directory) {
+        if (mkdir(zip_member.name.characters(), 0755) < 0) {
             perror("mkdir");
             return false;
         }
-    } else {
-        auto new_file = Core::File::construct(String { file_name });
-        if (!new_file->open(Core::IODevice::WriteOnly)) {
-            fprintf(stderr, "Can't write file %s: %s\n", file_name, new_file->error_string());
+        outln(" extracting: {}", zip_member.name);
+        return true;
+    }
+    auto new_file = Core::File::construct(zip_member.name);
+    if (!new_file->open(Core::IODevice::WriteOnly)) {
+        warnln("Can't write file {}: {}", zip_member.name, new_file->error_string());
+        return false;
+    }
+
+    outln(" extracting: {}", zip_member.name);
+
+    // TODO: verify CRC32s match!
+    switch (zip_member.compression_method) {
+    case Archive::ZipCompressionMethod::Store: {
+        if (!new_file->write(zip_member.compressed_data.data(), zip_member.compressed_data.size())) {
+            warnln("Can't write file contents in {}: {}", zip_member.name, new_file->error_string());
             return false;
         }
-
-        printf(" extracting: %s\n", file_name);
-        u8 raw_file_contents[compressed_file_size];
-        if (!seek_and_read(raw_file_contents, file, local_file_header_index + LFHFileNameBaseOffset + file_name_length + extra_field_length, compressed_file_size))
-            return false;
-
-        // FIXME: Try to uncompress data here. We're just ignoring it as no decompression methods are implemented yet.
-        if (!new_file->write(raw_file_contents, compressed_file_size)) {
-            fprintf(stderr, "Can't write file contents in %s: %s\n", file_name, new_file->error_string());
+        break;
+    }
+    case Archive::ZipCompressionMethod::Deflate: {
+        auto decompressed_data = Compress::DeflateDecompressor::decompress_all(zip_member.compressed_data);
+        if (!decompressed_data.has_value()) {
+            warnln("Failed decompressing file {}", zip_member.name);
             return false;
         }
-
-        if (!new_file->close()) {
-            fprintf(stderr, "Can't close file %s: %s\n", file_name, new_file->error_string());
+        if (decompressed_data.value().size() != zip_member.uncompressed_size) {
+            warnln("Failed decompressing file {}", zip_member.name);
             return false;
         }
+        if (!new_file->write(decompressed_data.value().data(), decompressed_data.value().size())) {
+            warnln("Can't write file contents in {}: {}", zip_member.name, new_file->error_string());
+            return false;
+        }
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    if (!new_file->close()) {
+        warnln("Can't close file {}: {}", zip_member.name, new_file->error_string());
+        return false;
     }
 
     return true;
@@ -175,29 +110,30 @@ int main(int argc, char** argv)
     //        This will require mapping some parts then unmapping them repeatedly,
     //        but it would be significantly faster and less syscall heavy than seek()/read() at every read.
     if (st.st_size >= map_size_limit) {
-        fprintf(stderr, "unzip warning: Refusing to map file since it is larger than %s, pass '--map-size-limit %d' to get around this\n",
+        warnln("unzip warning: Refusing to map file since it is larger than {}, pass '--map-size-limit {}' to get around this",
             human_readable_size(map_size_limit).characters(),
             round_up_to_power_of_two(st.st_size, 16));
         return 1;
     }
 
-    auto file_or_error = MappedFile ::map(zip_file_path);
+    auto file_or_error = MappedFile::map(zip_file_path);
     if (file_or_error.is_error()) {
         warnln("Failed to open {}: {}", zip_file_path, file_or_error.error());
         return 1;
     }
     auto& mapped_file = *file_or_error.value();
 
-    printf("Archive: %s\n", zip_file_path.characters());
+    warnln("Archive: {}", zip_file_path);
 
-    off_t index = 0;
-    while (find_next_central_directory(st.st_size, mapped_file, index, index)) {
-        bool success = unpack_file_for_central_directory_index(index, mapped_file);
-        if (!success) {
-            printf("Could not find local file header for a file.\n");
-            return 4;
-        }
+    auto zip_file = Archive::Zip::try_create(mapped_file.bytes());
+    if (!zip_file.has_value()) {
+        warnln("Invalid zip file {}", zip_file_path);
+        return 1;
     }
 
-    return 0;
+    auto success = zip_file->for_each_member([&](auto zip_member) {
+        return unpack_zip_member(zip_member) ? IterationDecision::Continue : IterationDecision::Break;
+    });
+
+    return success ? 0 : 1;
 }
