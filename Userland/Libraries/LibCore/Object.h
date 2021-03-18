@@ -321,6 +321,8 @@ T* Object::find_descendant_of_type_named(const String& name) requires IsBaseOf<O
                 EnumType enum_value;                                         \
                 String string_value;                                         \
             } options[] = { __VA_ARGS__ };                                   \
+            if (!value.is_string())                                          \
+                return false;                                                \
             auto string_value = value.as_string();                           \
             for (size_t i = 0; i < array_size(options); ++i) {               \
                 auto& option = options[i];                                   \
