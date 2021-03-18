@@ -235,7 +235,7 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
 
     if (!allow_cache) {
         const_cast<BlockBasedFS*>(this)->flush_specific_block_if_needed(index);
-        size_t base_offset = index.value() * block_size() + offset;
+        auto base_offset = index.value() * block_size() + offset;
         file_description().seek(base_offset, SEEK_SET);
         auto nread = file_description().read(*buffer, count);
         if (nread.is_error())
@@ -246,7 +246,7 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
 
     auto& entry = cache().get(index);
     if (!entry.has_data) {
-        size_t base_offset = index.value() * block_size();
+        auto base_offset = index.value() * block_size();
         file_description().seek(base_offset, SEEK_SET);
         auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
         auto nread = file_description().read(entry_data_buffer, block_size());
