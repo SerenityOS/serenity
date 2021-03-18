@@ -340,7 +340,7 @@ enum CommandHeaderAttributes : u16 {
     R = (1 << 8)   /* Reset */
 };
 
-enum HBACapabilites : u32 {
+enum HBACapabilities : u32 {
     S64A = (u32)1 << 31, /* Supports 64-bit Addressing */
     SNCQ = 1 << 30,      /* Supports Native Command Queuing */
     SSNTF = 1 << 29,     /* Supports SNotification Register */
@@ -372,11 +372,11 @@ struct [[gnu::packed]] HBADefinedCapabilities {
     bool slumber_state_capable : 1 { false };
     bool pio_multiple_drq_block : 1 { false };
     bool fis_based_switching_supported : 1 { false };
-    bool port_multilier_supported : 1 { false };
+    bool port_multiplier_supported : 1 { false };
     bool ahci_mode_only : 1 { true };
     bool command_list_override_supported : 1 { false };
     bool activity_led_supported : 1 { false };
-    bool aggerssive_link_power_management_supported : 1 { false };
+    bool aggressive_link_power_management_supported : 1 { false };
     bool staggered_spin_up_supported : 1 { false };
     bool mechanical_presence_switch_supported : 1 { false };
     bool snotification_register_supported : 1 { false };
