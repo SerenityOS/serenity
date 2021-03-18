@@ -360,6 +360,15 @@ enum HBACapabilities : u32 {
     SXS = 1 << 5         /* Supports External SATA */
 };
 
+enum HBACapabilitiesExtended : u32 {
+    DESO = 1 << 5, /* DevSleep Entrance from Slumber Only */
+    SADM = 1 << 4, /* Supports Aggressive Device Sleep Management */
+    SDS = 1 << 3,  /* Supports Device Sleep */
+    APST = 1 << 2, /* Automatic Partial to Slumber Transitions */
+    NVMP = 1 << 1, /* NVMHCI Present */
+    BOH = 1 << 0,  /* BIOS/OS Handoff */
+};
+
 // This structure is not defined by the AHCI spec, but is used within the code
 struct [[gnu::packed]] HBADefinedCapabilities {
     size_t ports_count { 1 };
@@ -382,6 +391,12 @@ struct [[gnu::packed]] HBADefinedCapabilities {
     bool snotification_register_supported : 1 { false };
     bool native_command_queuing_supported : 1 { false };
     bool addressing_64_bit_supported : 1 { false };
+    bool bios_os_handoff : 1 { false };
+    bool nvmhci_present : 1 { false };
+    bool automatic_partial_to_slumber_transitions : 1 { false };
+    bool device_sleep_supported : 1 { false };
+    bool aggressive_device_sleep_management_supported : 1 { false };
+    bool devsleep_entrance_from_slumber_only : 1 { false };
 };
 
 enum DeviceSignature : u32 {
