@@ -59,4 +59,7 @@ private:
     NonnullRefPtr<CSSStyleDeclaration> m_declaration;
 };
 
+template<>
+inline bool CSSRule::fast_is<CSSStyleRule>() const { return type() == CSSRule::Type::Style; }
+
 }

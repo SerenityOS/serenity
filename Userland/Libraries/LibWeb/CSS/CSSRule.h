@@ -47,6 +47,9 @@ public:
     virtual StringView class_name() const = 0;
     virtual Type type() const = 0;
 
+    template<typename T>
+    bool fast_is() const = delete;
+
 private:
 };
 
