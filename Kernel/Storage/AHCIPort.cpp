@@ -104,7 +104,7 @@ void AHCIPort::handle_interrupt()
         reset();
         return;
     }
-    if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::IF)) {
+    if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::IF) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::TFE) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBD) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBF)) {
         recover_from_fatal_error();
     }
     m_interrupt_status.clear();
