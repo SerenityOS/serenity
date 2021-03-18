@@ -63,6 +63,7 @@ private:
     String m_extension;
     bool m_is_valid { false };
     bool m_is_absolute { false };
+    bool m_is_dir { false };
 };
 
 template<>

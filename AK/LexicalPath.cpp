@@ -46,6 +46,7 @@ void LexicalPath::canonicalize()
     }
 
     m_is_absolute = m_string[0] == '/';
+    m_is_dir = m_string.ends_with('/');
     auto parts = m_string.split_view('/');
 
     size_t approximate_canonical_length = 0;
@@ -104,6 +105,10 @@ void LexicalPath::canonicalize()
         if (m_is_absolute || i != 0)
             builder.append('/');
         builder.append(canonical_part);
+    }
+    if (m_is_dir) {
+        builder.append('/');
+        m_dirname = builder.to_string();
     }
     m_parts = move(canonical_parts);
     m_string = builder.to_string();
