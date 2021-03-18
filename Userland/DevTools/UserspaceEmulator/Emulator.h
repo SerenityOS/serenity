@@ -143,6 +143,7 @@ private:
     int virt$clock_settime(uint32_t clock_id, FlatPtr user_ts);
     int virt$listen(int, int);
     int virt$kill(pid_t, int);
+    int virt$killpg(int pgrp, int sig);
     int virt$fstat(int, FlatPtr);
     u32 virt$fcntl(int fd, int, u32);
     int virt$getgroups(ssize_t count, FlatPtr);
@@ -151,6 +152,8 @@ private:
     int virt$socket(int, int, int);
     int virt$getsockopt(FlatPtr);
     int virt$setsockopt(FlatPtr);
+    int virt$getsockname(FlatPtr);
+    int virt$getpeername(FlatPtr);
     int virt$select(FlatPtr);
     int virt$get_stack_bounds(FlatPtr, FlatPtr);
     int virt$accept(int sockfd, FlatPtr address, FlatPtr address_length);
@@ -158,6 +161,8 @@ private:
     int virt$recvmsg(int sockfd, FlatPtr msg_addr, int flags);
     int virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags);
     int virt$connect(int sockfd, FlatPtr address, socklen_t address_size);
+    int virt$shutdown(int sockfd, int how);
+    void virt$sync();
     void virt$exit(int);
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
     int virt$chdir(FlatPtr, size_t);
