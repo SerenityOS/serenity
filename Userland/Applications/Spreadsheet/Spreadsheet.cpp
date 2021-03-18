@@ -383,6 +383,10 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
     auto rows = object.get("rows").to_u32(default_row_count);
     auto columns = object.get("columns");
     auto name = object.get("name").as_string_or("Sheet");
+    auto cells_value = object.get_or("cells", JsonObject {});
+    if (!cells_value.is_object())
+        return nullptr;
+    auto& cells = cells_value.as_object();
 
     sheet->set_name(name);
 
@@ -402,7 +406,6 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
             sheet->add_column();
     }
 
-    auto cells = object.get("cells").as_object();
     auto json = sheet->interpreter().global_object().get("JSON");
     auto& parse_function = json.as_object().get("parse").as_function();
 
