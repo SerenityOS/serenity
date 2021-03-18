@@ -86,6 +86,11 @@ public:
     Function<void()> on_reaching_horizontal_end;
 
 private:
+    InfinitelyScrollableTableView()
+        : m_horizontal_scroll_end_timer(Core::Timer::construct())
+        , m_vertical_scroll_end_timer(Core::Timer::construct())
+    {
+    }
     virtual void did_scroll() override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
@@ -93,6 +98,8 @@ private:
     bool m_should_intercept_drag { false };
     bool m_has_committed_to_dragging { false };
     GUI::ModelIndex m_starting_selection_index;
+    RefPtr<Core::Timer> m_horizontal_scroll_end_timer;
+    RefPtr<Core::Timer> m_vertical_scroll_end_timer;
 };
 
 class SpreadsheetView final : public GUI::Widget {
