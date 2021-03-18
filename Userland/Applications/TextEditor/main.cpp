@@ -90,9 +90,10 @@ int main(int argc, char** argv)
     app->set_menubar(menubar);
 
     if (file_to_edit)
-        text_widget.open_file(file_to_edit);
-    else
-        text_widget.update_title();
+        if (!text_widget.open_file(file_to_edit))
+            return 1;
+
+    text_widget.update_title();
 
     if (initial_line_number != 0)
         text_widget.editor().set_cursor_and_focus_line(initial_line_number - 1, 0);
