@@ -310,7 +310,7 @@ static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& 
     outln();
     // FIXME: This kinda sucks.
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    if (StringView(object.class_name()) == StringView(#ClassName)) {                     \
+    if (is<JS::ClassName>(object)) {                                                     \
         out("[ ");                                                                       \
         auto& typed_array = static_cast<const JS::ClassName&>(typed_array_base);         \
         auto data = typed_array.data();                                                  \
