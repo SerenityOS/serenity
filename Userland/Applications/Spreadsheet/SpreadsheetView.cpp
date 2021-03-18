@@ -169,6 +169,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             m_sheet->add_column();
             auto last_column_index = m_sheet->column_count() - 1;
             m_table_view->set_column_width(last_column_index, 50);
+            m_table_view->set_default_column_width(last_column_index, 50);
             m_table_view->set_column_header_alignment(last_column_index, Gfx::TextAlignment::Center);
         }
         update_with_model();
@@ -180,6 +181,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     for (size_t i = 0; i < m_sheet->column_count(); ++i) {
         m_table_view->set_column_painting_delegate(i, make<TableCellPainter>(*m_table_view));
         m_table_view->set_column_width(i, 50);
+        m_table_view->set_default_column_width(i, 50);
         m_table_view->set_column_header_alignment(i, Gfx::TextAlignment::Center);
     }
 
