@@ -29,9 +29,9 @@
 
 #include <AK/Span.h>
 #include <AK/Stream.h>
-#include <LibTar/Tar.h>
+#include <LibArchive/Tar.h>
 
-namespace Tar {
+namespace Archive {
 
 class TarInputStream;
 
@@ -57,11 +57,11 @@ public:
     void advance();
     bool finished() const { return m_finished; }
     bool valid() const;
-    const Header& header() const { return m_header; }
+    const TarFileHeader& header() const { return m_header; }
     TarFileStream file_contents();
 
 private:
-    Header m_header;
+    TarFileHeader m_header;
     InputStream& m_stream;
     unsigned long m_file_offset { 0 };
     int m_generation { 0 };
