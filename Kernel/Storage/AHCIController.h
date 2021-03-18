@@ -37,9 +37,11 @@ namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 class AHCIPortHandler;
+class AHCIPort;
 class AHCIController final : public StorageController
     , public PCI::DeviceController {
     friend class AHCIPortHandler;
+    friend class AHCIPort;
     AK_MAKE_ETERNAL
 public:
 public:

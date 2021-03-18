@@ -34,6 +34,7 @@
 #include <Kernel/Lock.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
+#include <Kernel/SpinLock.h>
 #include <Kernel/Storage/AHCI.h>
 #include <Kernel/Storage/AHCIPortHandler.h>
 #include <Kernel/Storage/StorageDevice.h>
@@ -83,7 +84,7 @@ public:
 
 private:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
-    bool initialize();
+    bool initialize(ScopedSpinLock<SpinLock<u8>>&);
 
     UNMAP_AFTER_INIT AHCIPort(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
 
@@ -94,7 +95,7 @@ private:
     const char* try_disambiguate_sata_status();
     void try_disambiguate_sata_error();
 
-    bool initiate_sata_reset();
+    bool initiate_sata_reset(ScopedSpinLock<SpinLock<u8>>&);
     void rebase();
     void recover_from_fatal_error();
     bool shutdown();
@@ -111,7 +112,7 @@ private:
 
     bool spin_until_ready() const;
 
-    bool identify_device();
+    bool identify_device(ScopedSpinLock<SpinLock<u8>>&);
 
     ALWAYS_INLINE void start_command_list_processing() const;
     ALWAYS_INLINE void mark_command_header_ready_to_process(u8 command_header_index) const;
@@ -132,11 +133,12 @@ private:
     // Data members
 
     EntropySource m_entropy_source;
-    AsyncBlockDeviceRequest* m_current_request { nullptr };
-    u32 m_current_request_block_index { 0 };
-    bool m_current_request_uses_dma { false };
-    bool m_current_request_flushing_cache { false };
-    SpinLock<u8> m_lock;
+    RefPtr<AsyncBlockDeviceRequest> m_current_request;
+    SpinLock<u8> m_hard_lock;
+    Lock m_lock { "AHCIPort" };
+
+    mutable bool m_wait_for_completion { false };
+    bool m_wait_connect_for_completion { false };
 
     NonnullRefPtrVector<PhysicalPage> m_dma_buffers;
     NonnullRefPtrVector<PhysicalPage> m_command_table_pages;
