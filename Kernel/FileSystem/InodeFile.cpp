@@ -107,7 +107,7 @@ int InodeFile::ioctl(FileDescription& description, unsigned request, FlatPtr arg
     }
 }
 
-KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, const Range& range, size_t offset, int prot, bool shared)
+KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, const Range& range, u64 offset, int prot, bool shared)
 {
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     RefPtr<InodeVMObject> vmobject;

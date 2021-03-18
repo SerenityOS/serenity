@@ -51,7 +51,7 @@ UNMAP_AFTER_INIT MBVGADevice::MBVGADevice(PhysicalAddress addr, size_t pitch, si
     s_the = this;
 }
 
-KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, const Range& range, size_t offset, int prot, bool shared)
+KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
 {
     REQUIRE_PROMISE(video);
     if (!shared)

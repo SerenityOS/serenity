@@ -148,12 +148,12 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
         return EFAULT;
 
     FlatPtr addr = params.addr;
-    size_t size = params.size;
-    size_t alignment = params.alignment;
-    int prot = params.prot;
-    int flags = params.flags;
-    int fd = params.fd;
-    int offset = params.offset;
+    auto size = params.size;
+    auto alignment = params.alignment;
+    auto prot = params.prot;
+    auto flags = params.flags;
+    auto fd = params.fd;
+    auto offset = params.offset;
 
     if (prot & PROT_EXEC) {
         REQUIRE_PROMISE(prot_exec);
@@ -255,7 +255,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
                 return EACCES;
         }
 
-        auto region_or_error = description->mmap(*this, range.value(), static_cast<size_t>(offset), prot, map_shared);
+        auto region_or_error = description->mmap(*this, range.value(), static_cast<u64>(offset), prot, map_shared);
         if (region_or_error.is_error())
             return region_or_error.error().error();
         region = region_or_error.value();

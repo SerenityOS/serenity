@@ -39,7 +39,7 @@ AnonymousFile::~AnonymousFile()
 {
 }
 
-KResultOr<Region*> AnonymousFile::mmap(Process& process, FileDescription&, const Range& range, size_t offset, int prot, bool shared)
+KResultOr<Region*> AnonymousFile::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
 {
     if (offset != 0)
         return EINVAL;
