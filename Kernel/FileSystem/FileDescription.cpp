@@ -327,7 +327,7 @@ InodeMetadata FileDescription::metadata() const
     return {};
 }
 
-KResultOr<Region*> FileDescription::mmap(Process& process, const Range& range, size_t offset, int prot, bool shared)
+KResultOr<Region*> FileDescription::mmap(Process& process, const Range& range, u64 offset, int prot, bool shared)
 {
     LOCKER(m_lock);
     return m_file->mmap(process, *this, range, offset, prot, shared);
