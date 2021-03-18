@@ -50,7 +50,7 @@ public:
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, size_t offset, int prot, bool shared) override;
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, u64 offset, int prot, bool shared) override;
 
     virtual String absolute_path(const FileDescription&) const override;
 

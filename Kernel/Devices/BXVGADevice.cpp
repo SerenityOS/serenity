@@ -173,7 +173,7 @@ UNMAP_AFTER_INIT u32 BXVGADevice::find_framebuffer_address()
     return framebuffer_address;
 }
 
-KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, const Range& range, size_t offset, int prot, bool shared)
+KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
 {
     REQUIRE_PROMISE(video);
     if (!shared)
