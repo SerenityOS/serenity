@@ -192,10 +192,16 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$accept(arg1, arg2, arg3);
     case SC_setsockopt:
         return virt$setsockopt(arg1);
+    case SC_getsockname:
+        return virt$getsockname(arg1);
+    case SC_getpeername:
+        return virt$getpeername(arg1);
     case SC_bind:
         return virt$bind(arg1, arg2, arg3);
     case SC_connect:
         return virt$connect(arg1, arg2, arg3);
+    case SC_shutdown:
+        return virt$shutdown(arg1, arg2);
     case SC_listen:
         return virt$listen(arg1, arg2);
     case SC_select:
@@ -206,8 +212,13 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$sendmsg(arg1, arg2, arg3);
     case SC_kill:
         return virt$kill(arg1, arg2);
+    case SC_killpg:
+        return virt$killpg(arg1, arg2);
     case SC_set_mmap_name:
         return virt$set_mmap_name(arg1);
+    case SC_sync:
+        virt$sync();
+        return 0;
     case SC_exit:
         virt$exit((int)arg1);
         return 0;
@@ -478,6 +489,11 @@ int Emulator::virt$connect(int sockfd, FlatPtr address, socklen_t address_size)
     return syscall(SC_connect, sockfd, buffer.data(), buffer.size());
 }
 
+int Emulator::virt$shutdown(int sockfd, int how)
+{
+    return syscall(SC_shutdown, sockfd, how);
+}
+
 int Emulator::virt$dbgputch(char ch)
 {
     dbgputch(ch);
@@ -492,6 +508,11 @@ int Emulator::virt$listen(int fd, int backlog)
 int Emulator::virt$kill(pid_t pid, int signal)
 {
     return syscall(SC_kill, pid, signal);
+}
+
+int Emulator::virt$killpg(int pgrp, int sig)
+{
+    return syscall(SC_killpg, pgrp, sig);
 }
 
 int Emulator::virt$gettimeofday(FlatPtr timeval)
@@ -687,6 +708,30 @@ int Emulator::virt$getsockopt(FlatPtr params_addr)
     }
 
     TODO();
+}
+
+int Emulator::virt$getsockname(FlatPtr params_addr)
+{
+    Syscall::SC_getsockname_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+    struct sockaddr addr = {};
+    socklen_t addrlen = {};
+    auto rc = getsockname(params.sockfd, &addr, &addrlen);
+    mmu().copy_to_vm((FlatPtr)params.addr, &addr, sizeof(addr));
+    mmu().copy_to_vm((FlatPtr)params.addrlen, &addrlen, sizeof(addrlen));
+    return rc;
+}
+
+int Emulator::virt$getpeername(FlatPtr params_addr)
+{
+    Syscall::SC_getpeername_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+    struct sockaddr addr = {};
+    socklen_t addrlen = {};
+    auto rc = getpeername(params.sockfd, &addr, &addrlen);
+    mmu().copy_to_vm((FlatPtr)params.addr, &addr, sizeof(addr));
+    mmu().copy_to_vm((FlatPtr)params.addrlen, &addrlen, sizeof(addrlen));
+    return rc;
 }
 
 int Emulator::virt$getgroups(ssize_t count, FlatPtr groups)
@@ -975,6 +1020,11 @@ u32 Emulator::virt$read(int fd, FlatPtr buffer, ssize_t size)
     }
     mmu().copy_to_vm(buffer, local_buffer.data(), local_buffer.size());
     return nread;
+}
+
+void Emulator::virt$sync()
+{
+    syscall(SC_sync);
 }
 
 void Emulator::virt$exit(int status)
