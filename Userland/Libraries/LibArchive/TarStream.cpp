@@ -25,10 +25,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibTar/TarStream.h>
+#include <LibArchive/TarStream.h>
 #include <string.h>
 
-namespace Tar {
+namespace Archive {
 TarFileStream::TarFileStream(TarInputStream& tar_stream)
     : m_tar_stream(tar_stream)
     , m_generation(tar_stream.m_generation)
@@ -92,7 +92,7 @@ TarInputStream::TarInputStream(InputStream& stream)
         m_stream.handle_any_error(); // clear out errors so we dont assert
         return;
     }
-    VERIFY(m_stream.discard_or_error(block_size - sizeof(Header)));
+    VERIFY(m_stream.discard_or_error(block_size - sizeof(TarFileHeader)));
 }
 
 static constexpr unsigned long block_ceiling(unsigned long offset)
@@ -118,7 +118,7 @@ void TarInputStream::advance()
         return;
     }
 
-    VERIFY(m_stream.discard_or_error(block_size - sizeof(Header)));
+    VERIFY(m_stream.discard_or_error(block_size - sizeof(TarFileHeader)));
 }
 
 bool TarInputStream::valid() const
@@ -142,11 +142,11 @@ TarOutputStream::TarOutputStream(OutputStream& stream)
 void TarOutputStream::add_directory(const String& path, mode_t mode)
 {
     VERIFY(!m_finished);
-    Header header;
+    TarFileHeader header;
     memset(&header, 0, sizeof(header));
     header.set_size(0);
     header.set_file_name(String::formatted("{}/", path)); // Old tar implementations assume directory names end with a /
-    header.set_type_flag(Directory);
+    header.set_type_flag(TarFileType::Directory);
     header.set_mode(mode);
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
@@ -159,11 +159,11 @@ void TarOutputStream::add_directory(const String& path, mode_t mode)
 void TarOutputStream::add_file(const String& path, mode_t mode, const ReadonlyBytes& bytes)
 {
     VERIFY(!m_finished);
-    Header header;
+    TarFileHeader header;
     memset(&header, 0, sizeof(header));
     header.set_size(bytes.size());
     header.set_file_name(path);
-    header.set_type_flag(NormalFile);
+    header.set_type_flag(TarFileType::NormalFile);
     header.set_mode(mode);
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);

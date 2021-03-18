@@ -27,11 +27,11 @@
 #include <AK/LexicalPath.h>
 #include <AK/Span.h>
 #include <AK/Vector.h>
+#include <LibArchive/TarStream.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/FileStream.h>
-#include <LibTar/TarStream.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 
         InputStream& file_input_stream = file_stream;
         InputStream& gzip_input_stream = gzip_stream;
-        Tar::TarInputStream tar_stream((gzip) ? gzip_input_stream : file_input_stream);
+        Archive::TarInputStream tar_stream((gzip) ? gzip_input_stream : file_input_stream);
         if (!tar_stream.valid()) {
             warnln("the provided file is not a well-formatted ustar file");
             return 1;
@@ -91,12 +91,12 @@ int main(int argc, char** argv)
                 outln("{}", tar_stream.header().file_name());
 
             if (extract) {
-                Tar::TarFileStream file_stream = tar_stream.file_contents();
+                Archive::TarFileStream file_stream = tar_stream.file_contents();
 
-                const Tar::Header& header = tar_stream.header();
+                const Archive::TarFileHeader& header = tar_stream.header();
                 switch (header.type_flag()) {
-                case Tar::NormalFile:
-                case Tar::AlternateNormalFile: {
+                case Archive::TarFileType::NormalFile:
+                case Archive::TarFileType::AlternateNormalFile: {
                     int fd = open(String(header.file_name()).characters(), O_CREAT | O_WRONLY, header.mode());
                     if (fd < 0) {
                         perror("open");
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
                     close(fd);
                     break;
                 }
-                case Tar::Directory: {
+                case Archive::TarFileType::Directory: {
                     if (mkdir(String(header.file_name()).characters(), header.mode())) {
                         perror("mkdir");
                         return 1;
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
 
         OutputStream& file_output_stream = file_stream;
         OutputStream& gzip_output_stream = gzip_stream;
-        Tar::TarOutputStream tar_stream((gzip) ? gzip_output_stream : file_output_stream);
+        Archive::TarOutputStream tar_stream((gzip) ? gzip_output_stream : file_output_stream);
 
         auto add_file = [&](String path) {
             auto file = Core::File::construct(path);
