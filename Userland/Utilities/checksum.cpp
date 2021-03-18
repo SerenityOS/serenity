@@ -85,7 +85,9 @@ int main(int argc, char** argv)
             has_error = true;
             continue;
         }
-        hash.update(file->read_all());
+
+        while (!file->eof() && !file->has_error())
+            hash.update(file->read(PAGE_SIZE));
         auto digest = hash.digest();
         auto digest_data = digest.immutable_data();
         StringBuilder builder;
