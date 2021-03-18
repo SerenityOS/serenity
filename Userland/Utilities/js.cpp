@@ -495,13 +495,16 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
         }
         vm->clear_exception();
     };
-    if (vm->exception())
-        handle_exception();
 
-    if (s_print_last_result) {
+    if (vm->exception()) {
+        handle_exception();
+        return false;
+    }
+    if (s_print_last_result)
         print(vm->last_value());
-        if (vm->exception())
-            handle_exception();
+    if (vm->exception()) {
+        return false;
+        handle_exception();
     }
     return true;
 }
