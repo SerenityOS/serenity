@@ -32,25 +32,54 @@
 
 namespace GUI {
 
-template<typename T>
+template<typename T, typename Container = Vector<T>, typename ColumnNameListType = void>
 class ItemListModel : public Model {
 public:
-    static NonnullRefPtr<ItemListModel> create(const Vector<T>& data) { return adopt(*new ItemListModel<T>(data)); }
+    static constexpr auto IsTwoDimensional = requires(Container data)
+    {
+        requires !IsVoid<ColumnNameListType>::value;
+        data.at(0).at(0);
+        data.at(0).size();
+    };
+
+    // Substitute 'void' for a dummy u8.
+    using ColumnNamesT = typename Conditional<IsVoid<ColumnNameListType>::value, u8, ColumnNameListType>::Type;
+
+    static NonnullRefPtr<ItemListModel> create(const Container& data, const ColumnNamesT& column_names, const Optional<size_t>& row_count = {}) requires(IsTwoDimensional)
+    {
+        return adopt(*new ItemListModel<T, Container, ColumnNameListType>(data, column_names, row_count));
+    }
+    static NonnullRefPtr<ItemListModel> create(const Container& data, const Optional<size_t>& row_count = {}) requires(!IsTwoDimensional)
+    {
+        return adopt(*new ItemListModel<T, Container>(data, row_count));
+    }
 
     virtual ~ItemListModel() override { }
 
     virtual int row_count(const ModelIndex&) const override
     {
-        return m_data.size();
+        return m_provided_row_count.has_value() ? *m_provided_row_count : m_data.size();
     }
 
-    virtual int column_count(const ModelIndex&) const override
+    virtual int column_count(const ModelIndex& index) const override
     {
+        // if it's 2D (e.g. Vector<Vector<T>>)
+        if constexpr (IsTwoDimensional) {
+            if (index.is_valid())
+                return m_data.at(index.row()).size();
+            if (m_data.size())
+                return m_data.at(0).size();
+            return 0;
+        }
+
+        // Otherwise, let's just assume it's 1D.
         return 1;
     }
 
-    virtual String column_name(int) const override
+    virtual String column_name(int index) const override
     {
+        if constexpr (IsTwoDimensional)
+            return m_column_names[index];
         return "Data";
     }
 
@@ -58,8 +87,12 @@ public:
     {
         if (role == ModelRole::TextAlignment)
             return Gfx::TextAlignment::CenterLeft;
-        if (role == ModelRole::Display)
-            return m_data.at(index.row());
+        if (role == ModelRole::Display) {
+            if constexpr (IsTwoDimensional)
+                return m_data.at(index.row()).at(index.column());
+            else
+                return m_data.at(index.row());
+        }
 
         return {};
     }
@@ -70,12 +103,22 @@ public:
     }
 
 protected:
-    explicit ItemListModel(const Vector<T>& data)
+    explicit ItemListModel(const Container& data, Optional<size_t> row_count = {}) requires(!IsTwoDimensional)
         : m_data(data)
+        , m_provided_row_count(move(row_count))
     {
     }
 
-    const Vector<T>& m_data;
+    explicit ItemListModel(const Container& data, const ColumnNamesT& column_names, Optional<size_t> row_count = {}) requires(IsTwoDimensional)
+        : m_data(data)
+        , m_column_names(column_names)
+        , m_provided_row_count(move(row_count))
+    {
+    }
+
+    const Container& m_data;
+    ColumnNamesT m_column_names;
+    Optional<size_t> m_provided_row_count;
 };
 
 }
