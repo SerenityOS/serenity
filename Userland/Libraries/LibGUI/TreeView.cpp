@@ -558,6 +558,47 @@ int TreeView::item_count() const
     return count;
 }
 
+void TreeView::auto_resize_column(int column)
+{
+    if (!model())
+        return;
+
+    if (!column_header().is_section_visible(column))
+        return;
+
+    auto& model = *this->model();
+
+    int header_width = column_header().font().width(model.column_name(column));
+    if (column == m_key_column && model.is_column_sortable(column))
+        header_width += font().width(" \xE2\xAC\x86");
+    int column_width = header_width;
+
+    bool is_empty = true;
+    traverse_in_paint_order([&](const ModelIndex& index, const Gfx::IntRect&, const Gfx::IntRect&, int indent_level) {
+        auto cell_data = model.index(index.row(), column, index.parent()).data();
+        int cell_width = 0;
+        if (cell_data.is_icon()) {
+            cell_width = cell_data.as_icon().bitmap_for_size(16)->width();
+        } else if (cell_data.is_bitmap()) {
+            cell_width = cell_data.as_bitmap().width();
+        } else if (cell_data.is_valid()) {
+            cell_width = font().width(cell_data.to_string());
+        }
+        if (is_empty && cell_width > 0)
+            is_empty = false;
+        if (column == model.tree_column())
+            cell_width += horizontal_padding() * 2 + indent_level * indent_width_in_pixels() + icon_size() / 2;
+        column_width = max(column_width, cell_width);
+        return IterationDecision::Continue;
+    });
+
+    auto default_column_width = column_header().default_section_size(column);
+    if (is_empty && column_header().is_default_section_size_initialized(column))
+        column_header().set_section_size(column, default_column_width);
+    else
+        column_header().set_section_size(column, column_width);
+}
+
 void TreeView::update_column_sizes()
 {
     if (!model())
