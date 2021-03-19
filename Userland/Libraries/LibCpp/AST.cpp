@@ -43,7 +43,7 @@ void ASTNode::dump(size_t indent) const
 void TranslationUnit::dump(size_t indent) const
 {
     ASTNode::dump(indent);
-    for (const auto& child : m_children) {
+    for (const auto& child : m_declarations) {
         child.dump(indent + 1);
     }
 }
@@ -413,4 +413,14 @@ NonnullRefPtrVector<Declaration> IfStatement::declarations() const
     declarations.append(m_else->declarations());
     return declarations;
 }
+
+void NamespaceDeclaration::dump(size_t indent) const
+{
+    ASTNode::dump(indent);
+    print_indent(indent + 1);
+    outln("{}", m_name);
+    for (auto& decl : m_declarations)
+        decl.dump(indent + 1);
+}
+
 }

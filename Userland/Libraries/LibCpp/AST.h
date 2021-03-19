@@ -96,23 +96,16 @@ class TranslationUnit : public ASTNode {
 
 public:
     virtual ~TranslationUnit() override = default;
-    const NonnullRefPtrVector<Declaration>& children() const { return m_children; }
     virtual const char* class_name() const override { return "TranslationUnit"; }
     virtual void dump(size_t indent) const override;
-    void append(NonnullRefPtr<Declaration> child)
-    {
-        m_children.append(move(child));
-    }
-    virtual NonnullRefPtrVector<Declaration> declarations() const override { return m_children; }
+    virtual NonnullRefPtrVector<Declaration> declarations() const override { return m_declarations; }
 
-public:
     TranslationUnit(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : ASTNode(parent, start, end, filename)
     {
     }
 
-private:
-    NonnullRefPtrVector<Declaration> m_children;
+    NonnullRefPtrVector<Declaration> m_declarations;
 };
 
 class Statement : public ASTNode {
@@ -140,6 +133,7 @@ public:
     virtual bool is_struct() const { return false; }
     virtual bool is_class() const { return false; }
     virtual bool is_function() const { return false; }
+    virtual bool is_namespace() const { return false; }
     const StringView& name() const { return m_name; }
 
     StringView m_name;
@@ -616,6 +610,24 @@ public:
     RefPtr<Expression> m_predicate;
     RefPtr<Statement> m_then;
     RefPtr<Statement> m_else;
+};
+
+class NamespaceDeclaration : public Declaration {
+public:
+    virtual ~NamespaceDeclaration() override = default;
+    virtual const char* class_name() const override { return "NamespaceDeclaration"; }
+    virtual void dump(size_t indent) const override;
+    virtual bool is_namespace() const override { return true; }
+
+    NamespaceDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+        : Declaration(parent, start, end, filename)
+    {
+    }
+
+    virtual NonnullRefPtrVector<Declaration> declarations() const override { return m_declarations; }
+
+    StringView m_name;
+    NonnullRefPtrVector<Declaration> m_declarations;
 };
 
 }
