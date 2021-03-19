@@ -28,11 +28,13 @@
 #include "Editor.h"
 #include "HackStudio.h"
 #include <LibGUI/Action.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibGfx/Palette.h>
 
 namespace HackStudio {
 
@@ -81,5 +83,22 @@ void EditorWrapper::set_editor_has_focus(Badge<Editor>, bool focus)
 }
 
 LanguageClient& EditorWrapper::language_client() { return m_editor->language_client(); }
+
+void EditorWrapper::set_mode_displayable()
+{
+    editor().set_mode(GUI::TextEditor::Editable);
+    editor().set_background_role(Gfx::ColorRole::Base);
+    editor().set_palette(GUI::Application::the()->palette());
+}
+
+void EditorWrapper::set_mode_non_displayable()
+{
+    editor().set_mode(GUI::TextEditor::ReadOnly);
+    editor().set_background_role(Gfx::ColorRole::InactiveSelection);
+    auto palette = editor().palette();
+    palette.set_color(Gfx::ColorRole::BaseText, Color::from_rgb(0xffffff));
+    editor().set_palette(palette);
+    editor().document().set_text("The contents of this file could not be displayed. Is it a binary file?");
+}
 
 }
