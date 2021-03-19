@@ -146,8 +146,8 @@ endforeach()
 
 set(CMAKE_INSTALL_NAME_TOOL "")
 set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
-set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-shared -Wl,--hash-style=gnu,-z,relro,-z,now")
-set(CMAKE_CXX_LINK_FLAGS "-Wl,--hash-style=gnu,-z,relro,-z,now")
+set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "-shared -Wl,--hash-style=gnu,-z,relro,-z,now,-z,noexecstack")
+set(CMAKE_CXX_LINK_FLAGS "-Wl,--hash-style=gnu,-z,relro,-z,now,-z,noexecstack")
 
 # We disable it completely because it makes cmake very spammy.
 # This will need to be revisited when the Loader supports RPATH/RUN_PATH.
