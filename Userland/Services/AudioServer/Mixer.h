@@ -51,7 +51,7 @@ public:
     bool is_full() const { return m_queue.size() >= 3; }
     void enqueue(NonnullRefPtr<Audio::Buffer>&&);
 
-    bool get_next_sample(Audio::Sample& sample)
+    bool get_next_sample(Audio::Frame& sample)
     {
         if (m_paused)
             return false;

@@ -45,7 +45,7 @@ Track::~Track()
 
 void Track::fill_sample(Sample& sample)
 {
-    Audio::Sample new_sample;
+    Audio::Frame new_sample;
 
     for (size_t note = 0; note < note_count; ++note) {
         if (!m_roll_iters[note].is_end()) {
@@ -86,7 +86,7 @@ void Track::fill_sample(Sample& sample)
             VERIFY_NOT_REACHED();
         }
 
-        Audio::Sample note_sample;
+        Audio::Frame note_sample;
         switch (m_wave) {
         case Wave::Sine:
             note_sample = sine(note);
@@ -172,7 +172,7 @@ String Track::set_recorded_sample(const StringView& path)
 
 // All of the information for these waves is on Wikipedia.
 
-Audio::Sample Track::sine(size_t note)
+Audio::Frame Track::sine(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
     double sin_step = pos * 2 * M_PI;
@@ -181,7 +181,7 @@ Audio::Sample Track::sine(size_t note)
     return w;
 }
 
-Audio::Sample Track::saw(size_t note)
+Audio::Frame Track::saw(size_t note)
 {
     double saw_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
@@ -190,7 +190,7 @@ Audio::Sample Track::saw(size_t note)
     return w;
 }
 
-Audio::Sample Track::square(size_t note)
+Audio::Frame Track::square(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
     double square_step = pos * 2 * M_PI;
@@ -199,7 +199,7 @@ Audio::Sample Track::square(size_t note)
     return w;
 }
 
-Audio::Sample Track::triangle(size_t note)
+Audio::Frame Track::triangle(size_t note)
 {
     double triangle_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
@@ -208,14 +208,14 @@ Audio::Sample Track::triangle(size_t note)
     return w;
 }
 
-Audio::Sample Track::noise() const
+Audio::Frame Track::noise() const
 {
     double random_percentage = static_cast<double>(rand()) / RAND_MAX;
     double w = (random_percentage * 2) - 1;
     return w;
 }
 
-Audio::Sample Track::recorded_sample(size_t note)
+Audio::Frame Track::recorded_sample(size_t note)
 {
     int t = m_pos[note];
     if (t >= static_cast<int>(m_recorded_sample.size()))
