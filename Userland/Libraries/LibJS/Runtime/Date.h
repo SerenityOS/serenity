@@ -63,6 +63,11 @@ public:
     int utc_month() const;
     int utc_seconds() const;
 
+    void set_milliseconds(u16 milliseconds)
+    {
+        m_milliseconds = milliseconds;
+    }
+
     String date_string() const { return m_datetime.to_string("%a %b %d %Y"); }
     // FIXME: Deal with timezones once SerenityOS has a working tzset(3)
     String time_string() const { return m_datetime.to_string("%T GMT+0000 (UTC)"); }

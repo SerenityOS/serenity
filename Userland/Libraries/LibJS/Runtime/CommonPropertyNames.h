@@ -201,7 +201,11 @@ namespace JS {
     P(round)                                 \
     P(set)                                   \
     P(setFullYear)                           \
+    P(setHours)                              \
+    P(setMilliseconds)                       \
+    P(setMinutes)                            \
     P(setPrototypeOf)                        \
+    P(setSeconds)                            \
     P(shift)                                 \
     P(sign)                                  \
     P(sin)                                   \
