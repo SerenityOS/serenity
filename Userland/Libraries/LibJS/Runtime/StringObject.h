@@ -46,9 +46,13 @@ public:
     }
 
 private:
+    virtual bool is_string_object() const final { return true; }
     virtual void visit_edges(Visitor&) override;
 
     PrimitiveString& m_string;
 };
+
+template<>
+inline bool Object::fast_is<StringObject>() const { return is_string_object(); }
 
 }
