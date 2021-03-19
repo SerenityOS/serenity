@@ -25,6 +25,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibCore/Timer.h>
@@ -57,28 +58,48 @@ TextDocument::~TextDocument()
 {
 }
 
-void TextDocument::set_text(const StringView& text)
+bool TextDocument::set_text(const StringView& text)
 {
     m_client_notifications_enabled = false;
     m_spans.clear();
     remove_all_lines();
 
+    ArmedScopeGuard clear_text_guard([this]() {
+        set_text({});
+    });
+
     size_t start_of_current_line = 0;
 
-    auto add_line = [&](size_t current_position) {
+    auto add_line = [&](size_t current_position) -> bool {
         size_t line_length = current_position - start_of_current_line;
         auto line = make<TextDocumentLine>(*this);
+
+        bool success = true;
         if (line_length)
-            line->set_text(*this, text.substring_view(start_of_current_line, current_position - start_of_current_line));
+            success = line->set_text(*this, text.substring_view(start_of_current_line, current_position - start_of_current_line));
+
+        if (!success)
+            return false;
+
         append_line(move(line));
         start_of_current_line = current_position + 1;
+
+        return true;
     };
+
     size_t i = 0;
     for (i = 0; i < text.length(); ++i) {
-        if (text[i] == '\n')
-            add_line(i);
+        if (text[i] != '\n')
+            continue;
+
+        auto success = add_line(i);
+        if (!success)
+            return false;
     }
-    add_line(i);
+
+    auto success = add_line(i);
+    if (!success)
+        return false;
 
     // Don't show the file's trailing newline as an actual new line.
     if (line_count() > 1 && line(line_count() - 1).is_empty())
@@ -88,6 +109,9 @@ void TextDocument::set_text(const StringView& text)
 
     for (auto* client : m_clients)
         client->document_did_set_text();
+
+    clear_text_guard.disarm();
+    return true;
 }
 
 size_t TextDocumentLine::first_non_whitespace_column() const
@@ -157,17 +181,21 @@ void TextDocumentLine::set_text(TextDocument& document, const Vector<u32> text)
     document.update_views({});
 }
 
-void TextDocumentLine::set_text(TextDocument& document, const StringView& text)
+bool TextDocumentLine::set_text(TextDocument& document, const StringView& text)
 {
     if (text.is_empty()) {
         clear(document);
-        return;
+        return true;
     }
     m_text.clear();
     Utf8View utf8_view(text);
+    if (!utf8_view.validate()) {
+        return false;
+    }
     for (auto code_point : utf8_view)
         m_text.append(code_point);
     document.update_views({});
+    return true;
 }
 
 void TextDocumentLine::append(TextDocument& document, const u32* code_points, size_t length)
