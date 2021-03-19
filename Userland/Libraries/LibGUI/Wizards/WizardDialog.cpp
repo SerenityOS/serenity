@@ -79,7 +79,11 @@ WizardDialog::WizardDialog(Window* parent_window)
         if (!current_page().can_go_next())
             return done(ExecOK);
 
-        push_page(*current_page().next_page());
+        auto next_page = current_page().next_page();
+        if (!next_page)
+            return done(ExecOK);
+
+        push_page(*next_page);
     };
 
     auto& button_spacer = nav_container_widget.add<Widget>();
