@@ -144,7 +144,9 @@ KResult BlockBasedFS::write_block(BlockIndex index, const UserOrKernelBuffer& da
     if (!allow_cache) {
         flush_specific_block_if_needed(index);
         u32 base_offset = index.value() * block_size() + offset;
-        file_description().seek(base_offset, SEEK_SET);
+        auto seek_result = file_description().seek(base_offset, SEEK_SET);
+        if (seek_result.is_error())
+            return seek_result.error();
         auto nwritten = file_description().write(data, count);
         if (nwritten.is_error())
             return nwritten.error();
@@ -171,7 +173,8 @@ bool BlockBasedFS::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
 {
     LOCKER(m_lock);
     u32 base_offset = index.value() * m_logical_block_size;
-    file_description().seek(base_offset, SEEK_SET);
+    auto seek_result = file_description().seek(base_offset, SEEK_SET);
+    VERIFY(!seek_result.is_error());
     auto nread = file_description().read(buffer, m_logical_block_size);
     VERIFY(!nread.is_error());
     VERIFY(nread.value() == m_logical_block_size);
@@ -182,7 +185,8 @@ bool BlockBasedFS::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
 {
     LOCKER(m_lock);
     size_t base_offset = index.value() * m_logical_block_size;
-    file_description().seek(base_offset, SEEK_SET);
+    auto seek_result = file_description().seek(base_offset, SEEK_SET);
+    VERIFY(!seek_result.is_error());
     auto nwritten = file_description().write(buffer, m_logical_block_size);
     VERIFY(!nwritten.is_error());
     VERIFY(nwritten.value() == m_logical_block_size);
@@ -236,7 +240,9 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
     if (!allow_cache) {
         const_cast<BlockBasedFS*>(this)->flush_specific_block_if_needed(index);
         auto base_offset = index.value() * block_size() + offset;
-        file_description().seek(base_offset, SEEK_SET);
+        auto seek_result = file_description().seek(base_offset, SEEK_SET);
+        if (seek_result.is_error())
+            return seek_result.error();
         auto nread = file_description().read(*buffer, count);
         if (nread.is_error())
             return nread.error();
@@ -247,7 +253,9 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
     auto& entry = cache().get(index);
     if (!entry.has_data) {
         auto base_offset = index.value() * block_size();
-        file_description().seek(base_offset, SEEK_SET);
+        auto seek_result = file_description().seek(base_offset, SEEK_SET);
+        if (seek_result.is_error())
+            return seek_result.error();
         auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
         auto nread = file_description().read(entry_data_buffer, block_size());
         if (nread.is_error())
@@ -288,7 +296,8 @@ void BlockBasedFS::flush_specific_block_if_needed(BlockIndex index)
     cache().for_each_dirty_entry([&](CacheEntry& entry) {
         if (entry.block_index != index) {
             size_t base_offset = entry.block_index.value() * block_size();
-            file_description().seek(base_offset, SEEK_SET);
+            auto seek_result = file_description().seek(base_offset, SEEK_SET);
+            VERIFY(!seek_result.is_error());
             // FIXME: Should this error path be surfaced somehow?
             auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
             [[maybe_unused]] auto rc = file_description().write(entry_data_buffer, block_size());
@@ -309,7 +318,8 @@ void BlockBasedFS::flush_writes_impl()
     u32 count = 0;
     cache().for_each_dirty_entry([&](CacheEntry& entry) {
         u32 base_offset = entry.block_index.value() * block_size();
-        file_description().seek(base_offset, SEEK_SET);
+        auto seek_result = file_description().seek(base_offset, SEEK_SET);
+        VERIFY(!seek_result.is_error());
         // FIXME: Should this error path be surfaced somehow?
         auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
         [[maybe_unused]] auto rc = file_description().write(entry_data_buffer, block_size());

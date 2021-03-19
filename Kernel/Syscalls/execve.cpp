@@ -559,7 +559,8 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     if (interpreter_description) {
         main_program_fd = alloc_fd();
         VERIFY(main_program_fd >= 0);
-        main_program_description->seek(0, SEEK_SET);
+        auto seek_result = main_program_description->seek(0, SEEK_SET);
+        VERIFY(!seek_result.is_error());
         main_program_description->set_readable(true);
         m_fds[main_program_fd].set(move(main_program_description), FD_CLOEXEC);
     }

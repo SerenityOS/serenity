@@ -84,8 +84,11 @@ KResultOr<ssize_t> Process::do_write(FileDescription& description, const UserOrK
             return EAGAIN;
     }
 
-    if (description.should_append())
-        description.seek(0, SEEK_END);
+    if (description.should_append()) {
+        auto seek_result = description.seek(0, SEEK_END);
+        if (seek_result.is_error())
+            return seek_result.error();
+    }
 
     while ((size_t)total_nwritten < data_size) {
         if (!description.can_write()) {

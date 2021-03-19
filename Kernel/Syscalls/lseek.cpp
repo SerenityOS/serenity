@@ -38,13 +38,12 @@ KResultOr<int> Process::sys$lseek(int fd, Userspace<off_t*> userspace_offset, in
     off_t offset;
     if (!copy_from_user(&offset, userspace_offset))
         return EFAULT;
-    offset = description->seek(offset, whence);
-    if (!copy_to_user(userspace_offset, &offset))
+    auto seek_result = description->seek(offset, whence);
+    if (seek_result.is_error())
+        return seek_result.error();
+    if (!copy_to_user(userspace_offset, &seek_result.value()))
         return EFAULT;
-    if (offset < 0)
-        return offset;
-    else
-        return 0;
+    return KSuccess;
 }
 
 }
