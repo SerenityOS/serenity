@@ -66,7 +66,7 @@ public:
 
     KResult close();
 
-    off_t seek(off_t, int whence);
+    KResultOr<off_t> seek(off_t, int whence);
     KResultOr<size_t> read(UserOrKernelBuffer&, size_t);
     KResultOr<size_t> write(const UserOrKernelBuffer& data, size_t);
     KResult stat(::stat&);
