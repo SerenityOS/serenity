@@ -39,6 +39,7 @@ class Editor;
 
 class EditorWrapper : public GUI::Widget {
     C_OBJECT(EditorWrapper)
+
 public:
     virtual ~EditorWrapper() override;
 
@@ -50,6 +51,9 @@ public:
 
     void set_editor_has_focus(Badge<Editor>, bool);
     LanguageClient& language_client();
+
+    void set_mode_displayable();
+    void set_mode_non_displayable();
 
 private:
     EditorWrapper();
