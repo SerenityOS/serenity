@@ -128,10 +128,27 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
     auto new_year = vm.argument(0).to_i32(global_object);
     if (vm.exception())
         return {};
-    // FIXME: Support specifying new month and new day as well.
+
     auto& datetime = this_object->datetime();
-    auto new_month = datetime.month();
-    auto new_day = datetime.day();
+
+    i32 new_month;
+    if (vm.argument_count() >= 2) {
+        new_month = vm.argument(1).to_i32(global_object);
+        if (vm.exception())
+            return {};
+    } else {
+        new_month = datetime.month();
+    }
+
+    i32 new_day;
+    if (vm.argument_count() >= 3) {
+        new_day = vm.argument(2).to_i32(global_object);
+        if (vm.exception())
+            return {};
+    } else {
+        new_day = datetime.day();
+    }
+
     datetime.set_time(new_year, new_month, new_day, datetime.hour(), datetime.minute(), datetime.second());
     return Value { this_object->time() };
 }
