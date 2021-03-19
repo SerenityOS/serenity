@@ -112,6 +112,8 @@ public:
     virtual bool is_array() const { return false; }
     virtual bool is_function() const { return false; }
     virtual bool is_typed_array() const { return false; }
+    virtual bool is_string_object() const { return false; }
+    virtual bool is_global_object() const { return false; }
 
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_edges(Cell::Visitor&) override;
@@ -151,6 +153,9 @@ public:
 
     void enable_transitions() { m_transitions_enabled = true; }
     void disable_transitions() { m_transitions_enabled = false; }
+
+    template<typename T>
+    bool fast_is() const = delete;
 
 protected:
     enum class GlobalObjectTag { Tag };
