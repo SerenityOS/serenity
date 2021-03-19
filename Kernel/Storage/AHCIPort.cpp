@@ -498,8 +498,9 @@ void AHCIPort::start_request(AsyncBlockDeviceRequest& request)
 void AHCIPort::complete_current_request(AsyncDeviceRequest::RequestResult result)
 {
     VERIFY(m_current_request);
-    m_current_request->complete(result);
+    auto current_request = m_current_request;
     m_current_request.clear();
+    current_request->complete(result);
 }
 
 bool AHCIPort::spin_until_ready() const
@@ -520,7 +521,6 @@ bool AHCIPort::spin_until_ready() const
 
 bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64 lba, u8 block_count)
 {
-    VERIFY(m_lock.is_locked());
     VERIFY(m_connected_device);
     VERIFY(is_operable());
     VERIFY(m_lock.is_locked());
