@@ -286,18 +286,20 @@ int main(int argc, char** argv)
     static bool display_relocations = false;
     static bool display_unwind_info = false;
     static bool display_dynamic_section = false;
+    static bool display_hardening = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(display_all, "Display all", "all", 'a');
     args_parser.add_option(display_elf_header, "Display ELF header", "file-header", 'h');
     args_parser.add_option(display_program_headers, "Display program headers", "program-headers", 'l');
     args_parser.add_option(display_section_headers, "Display section headers", "section-headers", 'S');
-    args_parser.add_option(display_headers, "Equivalent to: -h -l -S -s -r -d -n -u", "headers", 'e');
+    args_parser.add_option(display_headers, "Equivalent to: -h -l -S -s -r -d -n -u -c", "headers", 'e');
     args_parser.add_option(display_symbol_table, "Display the symbol table", "syms", 's');
     args_parser.add_option(display_dynamic_section, "Display the dynamic section", "dynamic", 'd');
     args_parser.add_option(display_core_notes, "Display core notes", "notes", 'n');
     args_parser.add_option(display_relocations, "Display relocations", "relocs", 'r');
     args_parser.add_option(display_unwind_info, "Display unwind info", "unwind", 'u');
+    args_parser.add_option(display_hardening, "Display security hardening info", "checksec", 'c');
     args_parser.add_positional_argument(path, "ELF path", "path");
     args_parser.parse(argc, argv);
 
@@ -320,6 +322,7 @@ int main(int argc, char** argv)
         display_relocations = true;
         display_unwind_info = true;
         display_symbol_table = true;
+        display_hardening = true;
     }
 
     auto file_or_error = MappedFile::map(path);
@@ -576,6 +579,69 @@ int main(int argc, char** argv)
                 return IterationDecision::Continue;
             });
         }
+        printf("\n");
+    }
+
+    if (display_hardening) {
+        printf("Security Hardening:\n");
+        printf("RELRO        Stack Canary NX           PIE    Symbols\n");
+
+        // FIXME: Add support for full/partial RELRO detection using DT_BIND_NOW
+        bool relro = false;
+        interpreter_image.for_each_program_header([&relro](const ELF::Image::ProgramHeader& program_header) {
+            if (program_header.type() == PT_GNU_RELRO) {
+                relro = true;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+
+        if (relro)
+            printf("\033[0;32m%-12s\033[0m ", "RELRO");
+        else
+            printf("\033[0;31m%-12s\033[0m ", "No RELRO");
+
+        bool canary = false;
+        interpreter_image.for_each_symbol([&canary](const ELF::Image::Symbol& sym) {
+            if (sym.name() == "__stack_chk_fail" || sym.name() == "__intel_security_cookie") {
+                canary = true;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+
+        if (canary)
+            printf("\033[0;32m%-12s\033[0m ", "Canary found");
+        else
+            printf("\033[0;31m%-12s\033[0m ", "No canary");
+
+        bool nx = false;
+        interpreter_image.for_each_program_header([&nx](const ELF::Image::ProgramHeader& program_header) {
+            if (program_header.type() == PT_GNU_STACK) {
+                if (program_header.flags() & PF_X)
+                    nx = false;
+                else
+                    nx = true;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+
+        if (nx)
+            printf("\033[0;32m%-12s\033[0m ", "NX enabled");
+        else
+            printf("\033[0;31m%-12s\033[0m ", "NX disabled");
+
+        bool pie = false;
+        if (header.e_type == ET_REL || header.e_type == ET_DYN)
+            pie = true;
+
+        if (pie)
+            printf("\033[0;32m%-6s\033[0m ", "PIE");
+        else
+            printf("\033[0;31m%-6s\033[0m ", "No PIE");
+
+        printf("%u symbols ", interpreter_image.symbol_count());
         printf("\n");
     }
 
