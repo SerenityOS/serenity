@@ -81,7 +81,7 @@ public:
 
     void set_spans(Vector<TextDocumentSpan> spans) { m_spans = move(spans); }
 
-    void set_text(const StringView&);
+    bool set_text(const StringView&);
 
     const NonnullOwnPtrVector<TextDocumentLine>& lines() const { return m_lines; }
     NonnullOwnPtrVector<TextDocumentLine>& lines() { return m_lines; }
@@ -176,7 +176,7 @@ public:
     Utf32View view() const { return { code_points(), length() }; }
     const u32* code_points() const { return m_text.data(); }
     size_t length() const { return m_text.size(); }
-    void set_text(TextDocument&, const StringView&);
+    bool set_text(TextDocument&, const StringView&);
     void set_text(TextDocument&, Vector<u32>);
     void append(TextDocument&, u32);
     void prepend(TextDocument&, u32);
