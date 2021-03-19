@@ -83,7 +83,7 @@ constexpr const char* wave_strings[] = {
     "Square",
     "Saw",
     "Noise",
-    "Sample",
+    "Frame",
 };
 
 constexpr int first_wave = Sine;

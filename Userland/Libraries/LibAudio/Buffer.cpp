@@ -36,7 +36,7 @@ i32 Buffer::allocate_id()
 }
 
 template<typename SampleReader>
-static void read_samples_from_stream(InputMemoryStream& stream, SampleReader read_sample, Vector<Sample>& samples, ResampleHelper& resampler, int num_channels)
+static void read_samples_from_stream(InputMemoryStream& stream, SampleReader read_sample, Vector<Frame>& samples, ResampleHelper& resampler, int num_channels)
 {
     double norm_l = 0;
     double norm_r = 0;
@@ -45,7 +45,7 @@ static void read_samples_from_stream(InputMemoryStream& stream, SampleReader rea
     case 1:
         for (;;) {
             while (resampler.read_sample(norm_l, norm_r)) {
-                samples.append(Sample(norm_l));
+                samples.append(Frame(norm_l));
             }
             norm_l = read_sample(stream);
 
@@ -58,7 +58,7 @@ static void read_samples_from_stream(InputMemoryStream& stream, SampleReader rea
     case 2:
         for (;;) {
             while (resampler.read_sample(norm_l, norm_r)) {
-                samples.append(Sample(norm_l, norm_r));
+                samples.append(Frame(norm_l, norm_r));
             }
             norm_l = read_sample(stream);
             norm_r = read_sample(stream);
@@ -113,7 +113,7 @@ RefPtr<Buffer> Buffer::from_pcm_data(ReadonlyBytes data, ResampleHelper& resampl
 
 RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, ResampleHelper& resampler, int num_channels, int bits_per_sample, int num_samples)
 {
-    Vector<Sample> fdata;
+    Vector<Frame> fdata;
     fdata.ensure_capacity(num_samples);
 
     switch (bits_per_sample) {
