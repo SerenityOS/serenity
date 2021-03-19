@@ -76,6 +76,7 @@ private:
     int text_padding() const { return 2; }
     int tree_column_x_offset() const;
     virtual void update_column_sizes() override;
+    virtual void auto_resize_column(int column) override;
 
     template<typename Callback>
     void traverse_in_paint_order(Callback) const;
