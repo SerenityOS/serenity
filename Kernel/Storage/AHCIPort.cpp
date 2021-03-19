@@ -536,7 +536,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     auto* command_list_entries = (volatile AHCI::CommandHeader*)m_command_list_region->vaddr().as_ptr();
     command_list_entries[unused_command_header.value()].ctba = m_command_table_pages[unused_command_header.value()].paddr().get();
     command_list_entries[unused_command_header.value()].ctbau = 0;
-    command_list_entries[unused_command_header.value()].prdbc = (block_count * m_connected_device->block_size());
+    command_list_entries[unused_command_header.value()].prdbc = 0;
     command_list_entries[unused_command_header.value()].prdtl = m_current_scatter_list->scatters_count();
 
     // Note: we must set the correct Dword count in this register. Real hardware
@@ -555,12 +555,20 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     memset(const_cast<u8*>(command_table.command_fis), 0, 64);
 
     size_t scatter_entry_index = 0;
+    size_t data_transfer_count = (block_count * m_connected_device->block_size());
     for (auto scatter_page : m_current_scatter_list->vmobject().physical_pages()) {
+        VERIFY(data_transfer_count != 0);
         VERIFY(scatter_page);
         dbgln_if(AHCI_DEBUG, "AHCI Port {}: Add a transfer scatter entry @ {}", representative_port_index(), scatter_page->paddr());
         command_table.descriptors[scatter_entry_index].base_high = 0;
         command_table.descriptors[scatter_entry_index].base_low = scatter_page->paddr().get();
-        command_table.descriptors[scatter_entry_index].byte_count = PAGE_SIZE - 1;
+        if (data_transfer_count <= PAGE_SIZE) {
+            command_table.descriptors[scatter_entry_index].byte_count = data_transfer_count - 1;
+            data_transfer_count = 0;
+        } else {
+            command_table.descriptors[scatter_entry_index].byte_count = PAGE_SIZE - 1;
+            data_transfer_count -= PAGE_SIZE;
+        }
         scatter_entry_index++;
     }
     command_table.descriptors[scatter_entry_index].byte_count = (PAGE_SIZE - 1) | (1 << 31);
