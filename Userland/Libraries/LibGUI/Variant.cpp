@@ -143,6 +143,11 @@ Variant::Variant(const FlyString& value)
 {
 }
 
+Variant::Variant(const StringView& value)
+    : Variant(value.to_string())
+{
+}
+
 Variant::Variant(const String& value)
     : m_type(Type::String)
 {
