@@ -223,113 +223,121 @@ DeflateDecompressor::~DeflateDecompressor()
 
 size_t DeflateDecompressor::read(Bytes bytes)
 {
-    if (has_any_error())
-        return 0;
+    size_t total_read = 0;
+    while (total_read < bytes.size()) {
+        if (has_any_error())
+            break;
 
-    if (m_state == State::Idle) {
-        if (m_read_final_bock)
-            return 0;
+        auto slice = bytes.slice(total_read);
 
-        m_read_final_bock = m_input_stream.read_bit();
-        const auto block_type = m_input_stream.read_bits(2);
+        if (m_state == State::Idle) {
+            if (m_read_final_bock)
+                break;
 
-        if (m_input_stream.has_any_error()) {
-            set_fatal_error();
-            return 0;
-        }
-
-        if (block_type == 0b00) {
-            m_input_stream.align_to_byte_boundary();
-
-            LittleEndian<u16> length, negated_length;
-            m_input_stream >> length >> negated_length;
+            m_read_final_bock = m_input_stream.read_bit();
+            const auto block_type = m_input_stream.read_bits(2);
 
             if (m_input_stream.has_any_error()) {
                 set_fatal_error();
-                return 0;
+                break;
             }
 
-            if ((length ^ 0xffff) != negated_length) {
-                set_fatal_error();
-                return 0;
+            if (block_type == 0b00) {
+                m_input_stream.align_to_byte_boundary();
+
+                LittleEndian<u16> length, negated_length;
+                m_input_stream >> length >> negated_length;
+
+                if (m_input_stream.has_any_error()) {
+                    set_fatal_error();
+                    break;
+                }
+
+                if ((length ^ 0xffff) != negated_length) {
+                    set_fatal_error();
+                    break;
+                }
+
+                m_state = State::ReadingUncompressedBlock;
+                new (&m_uncompressed_block) UncompressedBlock(*this, length);
+
+                continue;
             }
 
-            m_state = State::ReadingUncompressedBlock;
-            new (&m_uncompressed_block) UncompressedBlock(*this, length);
+            if (block_type == 0b01) {
+                m_state = State::ReadingCompressedBlock;
+                new (&m_compressed_block) CompressedBlock(*this, CanonicalCode::fixed_literal_codes(), CanonicalCode::fixed_distance_codes());
 
-            return read(bytes);
+                continue;
+            }
+
+            if (block_type == 0b10) {
+                CanonicalCode literal_codes;
+                Optional<CanonicalCode> distance_codes;
+                decode_codes(literal_codes, distance_codes);
+
+                if (m_input_stream.has_any_error()) {
+                    set_fatal_error();
+                    break;
+                }
+
+                m_state = State::ReadingCompressedBlock;
+                new (&m_compressed_block) CompressedBlock(*this, literal_codes, distance_codes);
+
+                continue;
+            }
+
+            set_fatal_error();
+            break;
         }
 
-        if (block_type == 0b01) {
-            m_state = State::ReadingCompressedBlock;
-            new (&m_compressed_block) CompressedBlock(*this, CanonicalCode::fixed_literal_codes(), CanonicalCode::fixed_distance_codes());
+        if (m_state == State::ReadingCompressedBlock) {
+            auto nread = m_output_stream.read(slice);
 
-            return read(bytes);
-        }
-
-        if (block_type == 0b10) {
-            CanonicalCode literal_codes;
-            Optional<CanonicalCode> distance_codes;
-            decode_codes(literal_codes, distance_codes);
+            while (nread < slice.size() && m_compressed_block.try_read_more()) {
+                nread += m_output_stream.read(slice.slice(nread));
+            }
 
             if (m_input_stream.has_any_error()) {
                 set_fatal_error();
-                return 0;
+                break;
             }
 
-            m_state = State::ReadingCompressedBlock;
-            new (&m_compressed_block) CompressedBlock(*this, literal_codes, distance_codes);
+            total_read += nread;
+            if (nread == slice.size())
+                break;
 
-            return read(bytes);
+            m_compressed_block.~CompressedBlock();
+            m_state = State::Idle;
+
+            continue;
         }
 
-        set_fatal_error();
-        return 0;
+        if (m_state == State::ReadingUncompressedBlock) {
+            auto nread = m_output_stream.read(slice);
+
+            while (nread < slice.size() && m_uncompressed_block.try_read_more()) {
+                nread += m_output_stream.read(slice.slice(nread));
+            }
+
+            if (m_input_stream.has_any_error()) {
+                set_fatal_error();
+                break;
+            }
+
+            total_read += nread;
+            if (nread == slice.size())
+                break;
+
+            m_uncompressed_block.~UncompressedBlock();
+            m_state = State::Idle;
+
+            continue;
+        }
+
+        VERIFY_NOT_REACHED();
     }
-
-    if (m_state == State::ReadingCompressedBlock) {
-        auto nread = m_output_stream.read(bytes);
-
-        while (nread < bytes.size() && m_compressed_block.try_read_more()) {
-            nread += m_output_stream.read(bytes.slice(nread));
-        }
-
-        if (m_input_stream.has_any_error()) {
-            set_fatal_error();
-            return 0;
-        }
-
-        if (nread == bytes.size())
-            return nread;
-
-        m_compressed_block.~CompressedBlock();
-        m_state = State::Idle;
-
-        return nread + read(bytes.slice(nread));
-    }
-
-    if (m_state == State::ReadingUncompressedBlock) {
-        auto nread = m_output_stream.read(bytes);
-
-        while (nread < bytes.size() && m_uncompressed_block.try_read_more()) {
-            nread += m_output_stream.read(bytes.slice(nread));
-        }
-
-        if (m_input_stream.has_any_error()) {
-            set_fatal_error();
-            return 0;
-        }
-
-        if (nread == bytes.size())
-            return nread;
-
-        m_uncompressed_block.~UncompressedBlock();
-        m_state = State::Idle;
-
-        return nread + read(bytes.slice(nread));
-    }
-
-    VERIFY_NOT_REACHED();
+    return total_read;
 }
 
 bool DeflateDecompressor::read_or_error(Bytes bytes)
