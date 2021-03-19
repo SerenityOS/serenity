@@ -102,7 +102,11 @@ void AHCIPort::handle_interrupt()
         m_wait_connect_for_completion = true;
     }
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::INF)) {
-        reset();
+        // We need to defer the reset, because we can receive interrupts when
+        // resetting the device.
+        g_io_work->queue([this]() {
+            reset();
+        });
         return;
     }
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::IF) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::TFE) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBD) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBF)) {
