@@ -78,7 +78,28 @@ NonnullRefPtr<TranslationUnit> Parser::parse()
     if (m_tokens.is_empty())
         return create_root_ast_node({}, {});
     auto unit = create_root_ast_node(m_tokens.first().start(), m_tokens.last().end());
-    while (!done()) {
+    unit->m_declarations = parse_declarations_in_translation_unit(*unit);
+    return unit;
+}
+
+NonnullRefPtrVector<Declaration> Parser::parse_declarations_in_translation_unit(ASTNode& parent)
+{
+    NonnullRefPtrVector<Declaration> declarations;
+    while (!eof()) {
+        auto declaration = parse_single_declaration_in_translation_unit(parent);
+        if (declaration) {
+            declarations.append(declaration.release_nonnull());
+        } else {
+            error("unexpected token");
+            consume();
+        }
+    }
+    return declarations;
+}
+
+RefPtr<Declaration> Parser::parse_single_declaration_in_translation_unit(ASTNode& parent)
+{
+    while (!eof()) {
         if (match_comment()) {
             consume(Token::Type::Comment);
             continue;
@@ -89,29 +110,13 @@ NonnullRefPtr<TranslationUnit> Parser::parse()
             continue;
         }
 
-        auto declaration = match_declaration();
+        auto declaration = match_declaration_in_translation_unit();
         if (declaration.has_value()) {
-            unit->append(parse_declaration(*unit, declaration.value()));
-            continue;
+            return parse_declaration(parent, declaration.value());
         }
-
-        error("unexpected token");
-        consume();
-    }
-    return unit;
-}
-
-Optional<Parser::DeclarationType> Parser::match_declaration()
-{
-    switch (m_state.context) {
-    case Context::InTranslationUnit:
-        return match_declaration_in_translation_unit();
-    case Context::InFunctionDefinition:
-        return match_declaration_in_function_definition();
-    default:
-        error("unexpected context");
         return {};
     }
+    return {};
 }
 
 NonnullRefPtr<Declaration> Parser::parse_declaration(ASTNode& parent, DeclarationType declaration_type)
@@ -125,6 +130,8 @@ NonnullRefPtr<Declaration> Parser::parse_declaration(ASTNode& parent, Declaratio
         return parse_enum_declaration(parent);
     case DeclarationType::Struct:
         return parse_struct_or_class_declaration(parent, StructOrClassDeclaration::Type::Struct);
+    case DeclarationType::Namespace:
+        return parse_namespace_declaration(parent);
     default:
         error("unexpected declaration type");
         return create_ast_node<InvalidDeclaration>(parent, position(), position());
@@ -233,7 +240,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(ASTNode& parent)
     SCOPE_LOGGER();
     auto block_statement = create_ast_node<BlockStatement>(parent, position(), {});
     consume(Token::Type::LeftCurly);
-    while (peek().type() != Token::Type::RightCurly) {
+    while (!eof() && peek().type() != Token::Type::RightCurly) {
         block_statement->m_statements.append(parse_statement(*block_statement));
     }
     consume(Token::Type::RightCurly);
@@ -524,17 +531,24 @@ Optional<Parser::DeclarationType> Parser::match_declaration_in_translation_unit(
         return DeclarationType::Enum;
     if (match_struct_declaration())
         return DeclarationType::Struct;
+    if (match_namespace_declaration())
+        return DeclarationType::Namespace;
     return {};
 }
 
 bool Parser::match_enum_declaration()
 {
-    return peek().type() == Token::Type::Keyword && text_of_token(peek()) == "enum";
+    return match_keyword("enum");
 }
 
 bool Parser::match_struct_declaration()
 {
-    return peek().type() == Token::Type::Keyword && text_of_token(peek()) == "struct";
+    return match_keyword("struct");
+}
+
+bool Parser::match_namespace_declaration()
+{
+    return match_keyword("namespace");
 }
 
 bool Parser::match_function_declaration()
@@ -685,16 +699,6 @@ void Parser::save_state()
 void Parser::load_state()
 {
     m_state = m_saved_states.take_last();
-}
-
-Optional<Parser::DeclarationType> Parser::match_declaration_in_function_definition()
-{
-    VERIFY_NOT_REACHED();
-}
-
-bool Parser::done()
-{
-    return m_state.token_index == m_tokens.size();
 }
 
 StringView Parser::text_of_token(const Cpp::Token& token) const
@@ -906,7 +910,7 @@ NonnullRefPtr<EnumDeclaration> Parser::parse_enum_declaration(ASTNode& parent)
     auto name_token = consume(Token::Type::Identifier);
     enum_decl->m_name = text_of_token(name_token);
     consume(Token::Type::LeftCurly);
-    while (peek().type() != Token::Type::RightCurly && !eof()) {
+    while (!eof() && peek().type() != Token::Type::RightCurly) {
         enum_decl->m_entries.append(text_of_token(consume(Token::Type::Identifier)));
         if (peek().type() != Token::Type::Comma) {
             break;
@@ -962,7 +966,7 @@ NonnullRefPtr<StructOrClassDeclaration> Parser::parse_struct_or_class_declaratio
 
     consume(Token::Type::LeftCurly);
 
-    while (peek().type() != Token::Type::RightCurly && !eof()) {
+    while (!eof() && peek().type() != Token::Type::RightCurly) {
         decl->m_members.append(parse_member_declaration(*decl));
     }
 
@@ -1073,7 +1077,7 @@ Vector<StringView> Parser::parse_type_qualifiers()
 {
     SCOPE_LOGGER();
     Vector<StringView> qualifiers;
-    while (!done()) {
+    while (!eof()) {
         auto token = peek();
         if (token.type() != Token::Type::Keyword)
             break;
@@ -1096,7 +1100,7 @@ void Parser::consume_attribute_specification()
     consume(); // __attribute__
     consume(Token::Type::LeftParen);
     size_t left_count = 1;
-    while (!done()) {
+    while (!eof()) {
         auto token = consume();
         if (token.type() == Token::Type::LeftParen) {
             ++left_count;
@@ -1127,6 +1131,38 @@ void Parser::add_tokens_for_preprocessor(Token& replaced_token, Preprocessor::De
         token.set_end(replaced_token.end());
         m_tokens.append(move(token));
     }
+}
+
+NonnullRefPtr<NamespaceDeclaration> Parser::parse_namespace_declaration(ASTNode& parent, bool is_nested_namespace)
+{
+    auto namespace_decl = create_ast_node<NamespaceDeclaration>(parent, position(), {});
+
+    if (!is_nested_namespace)
+        consume(Token::Type::Keyword);
+
+    auto name_token = consume(Token::Type::Identifier);
+    namespace_decl->m_name = name_token.text();
+
+    if (peek().type() == Token::Type::ColonColon) {
+        consume(Token::Type::ColonColon);
+        namespace_decl->m_declarations.append(parse_namespace_declaration(*namespace_decl, true));
+        namespace_decl->set_end(position());
+        return namespace_decl;
+    }
+
+    consume(Token::Type::LeftCurly);
+    while (!eof() && peek().type() != Token::Type::RightCurly) {
+        auto declaration = parse_single_declaration_in_translation_unit(*namespace_decl);
+        if (declaration) {
+            namespace_decl->m_declarations.append(declaration.release_nonnull());
+        } else {
+            error("unexpected token");
+            consume();
+        }
+    }
+    consume(Token::Type::RightCurly);
+    namespace_decl->set_end(position());
+    return namespace_decl;
 }
 
 }
