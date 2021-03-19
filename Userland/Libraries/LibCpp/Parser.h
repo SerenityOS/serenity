@@ -68,13 +68,10 @@ private:
         Variable,
         Enum,
         Struct,
+        Namespace,
     };
 
-    bool done();
-
-    Optional<DeclarationType> match_declaration();
     Optional<DeclarationType> match_declaration_in_translation_unit();
-    Optional<DeclarationType> match_declaration_in_function_definition();
     bool match_function_declaration();
     bool match_comment();
     bool match_preprocessor();
@@ -90,6 +87,7 @@ private:
     bool match_boolean_literal();
     bool match_keyword(const String&);
     bool match_block_statement();
+    bool match_namespace_declaration();
 
     Optional<NonnullRefPtrVector<Parameter>> parse_parameter_list(ASTNode& parent);
     Optional<Token> consume_whitespace();
@@ -119,6 +117,10 @@ private:
     NonnullRefPtr<BlockStatement> parse_block_statement(ASTNode& parent);
     NonnullRefPtr<Comment> parse_comment(ASTNode& parent);
     NonnullRefPtr<IfStatement> parse_if_statement(ASTNode& parent);
+    NonnullRefPtr<NamespaceDeclaration> parse_namespace_declaration(ASTNode& parent, bool is_nested_namespace = false);
+    NonnullRefPtrVector<Declaration> parse_declarations_in_translation_unit(ASTNode& parent);
+    RefPtr<Declaration> parse_single_declaration_in_translation_unit(ASTNode& parent);
+
 
     bool match(Token::Type);
     Token consume(Token::Type);
@@ -132,13 +134,7 @@ private:
     void save_state();
     void load_state();
 
-    enum class Context {
-        InTranslationUnit,
-        InFunctionDefinition,
-    };
-
     struct State {
-        Context context { Context::InTranslationUnit };
         size_t token_index { 0 };
     };
 
