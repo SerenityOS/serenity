@@ -37,22 +37,22 @@ namespace Audio {
 
 // A single sample in an audio buffer.
 // Values are floating point, and should range from -1.0 to +1.0
-struct Sample {
-    Sample()
+struct Frame {
+    Frame()
         : left(0)
         , right(0)
     {
     }
 
     // For mono
-    Sample(double left)
+    Frame(double left)
         : left(left)
         , right(left)
     {
     }
 
     // For stereo
-    Sample(double left, double right)
+    Frame(double left, double right)
         : left(left)
         , right(right)
     {
@@ -78,7 +78,7 @@ struct Sample {
         right *= pct;
     }
 
-    Sample& operator+=(const Sample& other)
+    Frame& operator+=(const Frame& other)
     {
         left += other.left;
         right += other.right;
@@ -111,7 +111,7 @@ class Buffer : public RefCounted<Buffer> {
 public:
     static RefPtr<Buffer> from_pcm_data(ReadonlyBytes data, ResampleHelper& resampler, int num_channels, int bits_per_sample);
     static RefPtr<Buffer> from_pcm_stream(InputMemoryStream& stream, ResampleHelper& resampler, int num_channels, int bits_per_sample, int num_samples);
-    static NonnullRefPtr<Buffer> create_with_samples(Vector<Sample>&& samples)
+    static NonnullRefPtr<Buffer> create_with_samples(Vector<Frame>&& samples)
     {
         return adopt(*new Buffer(move(samples)));
     }
@@ -120,20 +120,20 @@ public:
         return adopt(*new Buffer(move(buffer), buffer_id, sample_count));
     }
 
-    const Sample* samples() const { return (const Sample*)data(); }
+    const Frame* samples() const { return (const Frame*)data(); }
     int sample_count() const { return m_sample_count; }
     const void* data() const { return m_buffer.data<void>(); }
-    int size_in_bytes() const { return m_sample_count * (int)sizeof(Sample); }
+    int size_in_bytes() const { return m_sample_count * (int)sizeof(Frame); }
     int id() const { return m_id; }
     const Core::AnonymousBuffer& anonymous_buffer() const { return m_buffer; }
 
 private:
-    explicit Buffer(const Vector<Sample> samples)
-        : m_buffer(Core::AnonymousBuffer::create_with_size(samples.size() * sizeof(Sample)))
+    explicit Buffer(const Vector<Frame> samples)
+        : m_buffer(Core::AnonymousBuffer::create_with_size(samples.size() * sizeof(Frame)))
         , m_id(allocate_id())
         , m_sample_count(samples.size())
     {
-        memcpy(m_buffer.data<void>(), samples.data(), samples.size() * sizeof(Sample));
+        memcpy(m_buffer.data<void>(), samples.data(), samples.size() * sizeof(Frame));
     }
 
     explicit Buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count)
