@@ -126,11 +126,11 @@ KResult FileDescription::stat(::stat& buffer)
     return m_file->stat(buffer);
 }
 
-off_t FileDescription::seek(off_t offset, int whence)
+KResultOr<off_t> FileDescription::seek(off_t offset, int whence)
 {
     LOCKER(m_lock);
     if (!m_file->is_seekable())
-        return -ESPIPE;
+        return ESPIPE;
 
     off_t new_offset;
 
@@ -140,21 +140,21 @@ off_t FileDescription::seek(off_t offset, int whence)
         break;
     case SEEK_CUR:
         if (Checked<off_t>::addition_would_overflow(m_current_offset, offset))
-            return -EOVERFLOW;
+            return EOVERFLOW;
         new_offset = m_current_offset + offset;
         break;
     case SEEK_END:
         if (!metadata().is_valid())
-            return -EIO;
+            return EIO;
         new_offset = metadata().size;
         break;
     default:
-        return -EINVAL;
+        return EINVAL;
     }
 
     if (new_offset < 0)
-        return -EINVAL;
-    // FIXME: Return -EINVAL if attempting to seek past the end of a seekable device.
+        return EINVAL;
+    // FIXME: Return EINVAL if attempting to seek past the end of a seekable device.
 
     m_current_offset = new_offset;
 
