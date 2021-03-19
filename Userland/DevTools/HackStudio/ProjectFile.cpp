@@ -79,10 +79,11 @@ void ProjectFile::create_document_if_needed() const
     if (file_or_error.is_error()) {
         warnln("Couldn't open '{}': {}", m_name, file_or_error.error());
         // This is okay though, we'll just go with an empty document and create the file when saving.
-    } else {
-        auto& file = *file_or_error.value();
-        m_document->set_text(file.read_all());
+        return;
     }
+
+    auto& file = *file_or_error.value();
+    m_could_render_text = m_document->set_text(file.read_all());
 }
 
 }

@@ -81,6 +81,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibGfx/Palette.h>
 #include <LibThread/Lock.h>
 #include <LibThread/Thread.h>
 #include <LibVT/TerminalWidget.h>
@@ -242,7 +243,11 @@ void HackStudioWidget::open_file(const String& full_filename)
     }
 
     current_editor().set_document(const_cast<GUI::TextDocument&>(new_project_file->document()));
-    current_editor().set_mode(GUI::TextEditor::Editable);
+    if (new_project_file->could_render_text()) {
+        current_editor_wrapper().set_mode_displayable();
+    } else {
+        current_editor_wrapper().set_mode_non_displayable();
+    }
     current_editor().horizontal_scrollbar().set_value(new_project_file->horizontal_scroll_value());
     current_editor().vertical_scrollbar().set_value(new_project_file->vertical_scroll_value());
     current_editor().set_editing_engine(make<GUI::RegularEditingEngine>());
