@@ -49,7 +49,7 @@ ParserBehaviour operator|(ParserBehaviour left, ParserBehaviour right);
 struct ParserTraits {
     String separator;
     String quote { "\"" };
-    enum {
+    enum QuoteEscape {
         Repeat,
         Backslash,
     } quote_escape { Repeat };
@@ -103,6 +103,7 @@ public:
 
     size_t size() const { return m_rows.size(); }
     Vector<String> headers() const;
+    [[nodiscard]] bool has_explicit_headers() const { return (static_cast<u32>(m_behaviours) & static_cast<u32>(ParserBehaviour::ReadHeaders)) != 0; }
 
     class Row {
     public:
@@ -115,7 +116,11 @@ public:
         StringView operator[](StringView name) const;
         StringView operator[](size_t column) const;
 
+        template<typename T>
+        StringView at(T column) const { return this->operator[](column); }
+
         size_t index() const { return m_index; }
+        size_t size() const { return m_xsv.headers().size(); }
 
         // FIXME: Implement begin() and end(), keeping `Field' out of the API.
 
@@ -165,6 +170,8 @@ public:
 
     const Row operator[](size_t index) const;
     Row operator[](size_t index);
+
+    Row at(size_t index) const;
 
     auto begin() { return RowIterator<false>(*this); }
     auto end() { return RowIterator<false>(*this, m_rows.size()); }

@@ -48,8 +48,17 @@ void XSV::set_error(ReadError error)
 Vector<String> XSV::headers() const
 {
     Vector<String> headers;
-    for (auto& field : m_names)
-        headers.append(field.is_string_view ? field.as_string_view : field.as_string.view());
+    if (has_explicit_headers()) {
+        for (auto& field : m_names)
+            headers.append(field.is_string_view ? field.as_string_view : field.as_string.view());
+    } else {
+        // No headers read, grab one of the rows and generate empty names
+        if (m_rows.is_empty())
+            return headers;
+
+        for ([[maybe_unused]] auto& field : m_rows.first())
+            headers.append(String::empty());
+    }
 
     return headers;
 }
@@ -261,6 +270,11 @@ StringView XSV::Row::operator[](size_t column) const
 const XSV::Row XSV::operator[](size_t index) const
 {
     return const_cast<XSV&>(*this)[index];
+}
+
+XSV::Row XSV::at(size_t index) const
+{
+    return this->operator[](index);
 }
 
 XSV::Row XSV::operator[](size_t index)
