@@ -38,12 +38,16 @@ concept Integral = IsIntegral<T>::value;
 template<typename T>
 concept FloatingPoint = IsFloatingPoint<T>::value;
 
+template<typename T>
+concept Arithmetic = IsArithmetic<T>::value;
+
 #endif
 
 }
 
 #if defined(__cpp_concepts) && !defined(__COVERITY__)
 
+using AK::IsArithmetic;
 using AK::IsFloatingPoint;
 using AK::IsIntegral;
 
