@@ -180,14 +180,19 @@ ValueAndAttributes GenericIndexedPropertyStorage::take_first()
     VERIFY(m_array_size > 0);
     m_array_size--;
 
+    auto first_element = m_packed_elements.take_first();
+
     if (!m_sparse_elements.is_empty()) {
+        m_packed_elements.append(m_sparse_elements.get(SPARSE_ARRAY_THRESHOLD).value_or({}));
         HashMap<u32, ValueAndAttributes> new_sparse_elements;
-        for (auto& entry : m_sparse_elements)
-            new_sparse_elements.set(entry.key - 1, entry.value);
+        for (auto& entry : m_sparse_elements) {
+            if (entry.key - 1 >= SPARSE_ARRAY_THRESHOLD)
+                new_sparse_elements.set(entry.key - 1, entry.value);
+        }
         m_sparse_elements = move(new_sparse_elements);
     }
 
-    return m_packed_elements.take_first();
+    return first_element;
 }
 
 ValueAndAttributes GenericIndexedPropertyStorage::take_last()
