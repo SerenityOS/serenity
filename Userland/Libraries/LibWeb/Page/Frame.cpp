@@ -102,7 +102,7 @@ void Frame::set_document(DOM::Document* document)
 
     if (m_document) {
         m_document->attach_to_frame({}, *this);
-        if (m_page)
+        if (m_page && is_main_frame())
             m_page->client().page_did_change_title(m_document->title());
     }
 

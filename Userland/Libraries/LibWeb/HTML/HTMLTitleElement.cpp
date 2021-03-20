@@ -42,8 +42,10 @@ HTMLTitleElement::~HTMLTitleElement()
 void HTMLTitleElement::children_changed()
 {
     HTMLElement::children_changed();
-    if (auto* page = document().page())
-        page->client().page_did_change_title(document().title());
+    if (auto* page = document().page()) {
+        if (document().frame() == &page->main_frame())
+            page->client().page_did_change_title(document().title());
+    }
 }
 
 }
