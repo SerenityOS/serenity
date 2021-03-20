@@ -565,28 +565,37 @@ void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& sou
     const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
     const unsigned src_skip = source.pitch() / sizeof(RGBA32);
 
-    auto do_blit = [&]<bool with_src_alpha>() {
+    auto do_blit = [&]<bool with_src_alpha, bool with_dst_alpha>() {
         for (int row = first_row; row <= last_row; ++row) {
             for (int x = 0; x <= (last_column - first_column); ++x) {
+                Color dest_color = with_dst_alpha ? Color::from_rgba(dst[x]) : Color::from_rgb(dst[x]);
                 if constexpr (with_src_alpha) {
                     Color src_color_with_alpha = Color::from_rgba(src[x]);
                     float pixel_opacity = src_color_with_alpha.alpha() / 255.0;
                     src_color_with_alpha.set_alpha(255 * (opacity * pixel_opacity));
-                    dst[x] = Color::from_rgba(dst[x]).blend(src_color_with_alpha).value();
+                    dst[x] = dest_color.blend(src_color_with_alpha).value();
                 } else {
                     Color src_color_with_alpha = Color::from_rgb(src[x]);
                     src_color_with_alpha.set_alpha(alpha);
-                    dst[x] = Color::from_rgb(dst[x]).blend(src_color_with_alpha).value();
+                    dst[x] = dest_color.blend(src_color_with_alpha).value();
                 }
             }
             dst += dst_skip;
             src += src_skip;
         }
     };
-    if (source.has_alpha_channel() && apply_alpha)
-        do_blit.template operator()<true>();
-    else
-        do_blit.template operator()<false>();
+
+    if (source.has_alpha_channel() && apply_alpha) {
+        if (m_target->has_alpha_channel())
+            do_blit.template operator()<true, true>();
+        else
+            do_blit.template operator()<true, false>();
+    } else {
+        if (m_target->has_alpha_channel())
+            do_blit.template operator()<false, true>();
+        else
+            do_blit.template operator()<false, false>();
+    }
 }
 
 void Painter::blit_filtered(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& src_rect, Function<Color(Color)> filter)
