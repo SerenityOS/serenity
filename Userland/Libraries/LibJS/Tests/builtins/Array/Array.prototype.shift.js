@@ -21,3 +21,15 @@ describe("normal behavior", () => {
         expect(a).toEqual([]);
     });
 });
+
+test("Issue #5884, GenericIndexedPropertyStorage::take_first() loses elements", () => {
+    const a = [];
+    for (let i = 0; i < 300; i++) {
+        a.push(i);
+    }
+    expect(a.length).toBe(300);
+    for (let i = 0; i < 300; i++) {
+        a.shift();
+    }
+    expect(a.length).toBe(0);
+});
