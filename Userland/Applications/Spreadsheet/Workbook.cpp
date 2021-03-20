@@ -25,6 +25,7 @@
  */
 
 #include "Workbook.h"
+#include "ExportDialog.h"
 #include "ImportDialog.h"
 #include "JSIntegration.h"
 #include "Readers/CSV.h"
@@ -111,33 +112,10 @@ Result<bool, String> Workbook::save(const StringView& filename)
         return sb.to_string();
     }
 
-    if (mime == "text/csv") {
-        // FIXME: Prompt the user for settings and which sheet to export.
-        Core::OutputFileStream stream { file };
-        auto data = m_sheets[0].to_xsv();
-        auto header_string = data.take_first();
-        Vector<StringView> headers;
-        for (auto& str : header_string)
-            headers.append(str);
-        Writer::CSV csv { stream, data, headers };
-        if (csv.has_error())
-            return String::formatted("Unable to save file, CSV writer error: {}", csv.error_string());
-    } else {
-        JsonArray array;
-        for (auto& sheet : m_sheets)
-            array.append(sheet.to_json());
-
-        auto file_content = array.to_string();
-        bool result = file->write(file_content);
-        if (!result) {
-            int error_number = errno;
-            StringBuilder sb;
-            sb.append("Unable to save file. Error: ");
-            sb.append(strerror(error_number));
-
-            return sb.to_string();
-        }
-    }
+    // Make an export dialog, we might need to import it.
+    auto result = ExportDialog::make_and_run_for(mime, *file, *this);
+    if (result.is_error())
+        return result.error();
 
     set_filename(filename);
     set_dirty(false);
