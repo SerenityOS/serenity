@@ -3,6 +3,7 @@ set(SOURCES
     Bindings/EventListenerWrapper.cpp
     Bindings/EventWrapperFactory.cpp
     Bindings/EventTargetWrapperFactory.cpp
+    Bindings/ImageConstructor.cpp
     Bindings/LocationObject.cpp
     Bindings/MainThreadVM.cpp
     Bindings/NavigatorObject.cpp

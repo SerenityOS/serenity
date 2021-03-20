@@ -194,6 +194,7 @@
 #include <LibWeb/Bindings/HTMLUnknownElementPrototype.h>
 #include <LibWeb/Bindings/HTMLVideoElementConstructor.h>
 #include <LibWeb/Bindings/HTMLVideoElementPrototype.h>
+#include <LibWeb/Bindings/ImageConstructor.h>
 #include <LibWeb/Bindings/ImageDataConstructor.h>
 #include <LibWeb/Bindings/ImageDataPrototype.h>
 #include <LibWeb/Bindings/MouseEventConstructor.h>
@@ -322,6 +323,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(HTMLUListElement)         \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLUnknownElement)       \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLVideoElement)         \
+    ADD_WINDOW_OBJECT_INTERFACE(Image)                    \
     ADD_WINDOW_OBJECT_INTERFACE(ImageData)                \
     ADD_WINDOW_OBJECT_INTERFACE(MouseEvent)               \
     ADD_WINDOW_OBJECT_INTERFACE(Node)                     \
