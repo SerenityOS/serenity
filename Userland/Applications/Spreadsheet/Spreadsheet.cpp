@@ -495,6 +495,8 @@ Position Sheet::written_data_bounds() const
 {
     Position bound;
     for (auto& entry : m_cells) {
+        if (entry.value->data().is_empty())
+            continue;
         if (entry.key.row >= bound.row)
             bound.row = entry.key.row;
         if (entry.key.column >= bound.column)
