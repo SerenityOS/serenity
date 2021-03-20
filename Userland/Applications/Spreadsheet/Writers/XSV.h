@@ -57,7 +57,7 @@ inline WriterBehaviour operator|(WriterBehaviour left, WriterBehaviour right)
 struct WriterTraits {
     String separator;
     String quote { "\"" };
-    enum {
+    enum QuoteEscape {
         Repeat,
         Backslash,
     } quote_escape { Repeat };
@@ -79,10 +79,10 @@ inline constexpr WriterBehaviour default_behaviours()
     return WriterBehaviour::None;
 }
 
-template<typename ContainerType>
+template<typename ContainerType, typename HeaderType = Vector<StringView>>
 class XSV {
 public:
-    XSV(OutputStream& output, const ContainerType& data, const WriterTraits& traits, const Vector<StringView>& headers = {}, WriterBehaviour behaviours = default_behaviours())
+    XSV(OutputStream& output, const ContainerType& data, const WriterTraits& traits, const HeaderType& headers = {}, WriterBehaviour behaviours = default_behaviours())
         : m_data(data)
         , m_traits(traits)
         , m_behaviours(behaviours)
@@ -159,13 +159,17 @@ private:
     {
         auto string = String::formatted("{}", FormatIfSupported(entry));
 
-        auto safe_to_write_normally = !string.contains("\n") && !string.contains(m_traits.separator);
+        auto safe_to_write_normally = (m_behaviours & WriterBehaviour::QuoteAll) == WriterBehaviour::None
+            && !string.contains("\n")
+            && !string.contains(m_traits.separator);
+
         if (safe_to_write_normally) {
             if ((m_behaviours & WriterBehaviour::QuoteOnlyInFieldStart) == WriterBehaviour::None)
                 safe_to_write_normally = !string.contains(m_traits.quote);
             else
                 safe_to_write_normally = !string.starts_with(m_traits.quote);
         }
+
         if (safe_to_write_normally) {
             if (m_output.write(string.bytes()) != string.length())
                 set_error(WriteError::InternalError);
@@ -207,7 +211,7 @@ private:
     const ContainerType& m_data;
     const WriterTraits& m_traits;
     WriterBehaviour m_behaviours;
-    const Vector<StringView>& m_names;
+    const HeaderType& m_names;
     WriteError m_error { WriteError::None };
     OutputStream& m_output;
 };
