@@ -287,8 +287,10 @@ void Document::set_title(const String& title)
 
     title_element->append_child(adopt(*new Text(*this, title)));
 
-    if (auto* page = this->page())
-        page->client().page_did_change_title(title);
+    if (auto* page = this->page()) {
+        if (frame() == &page->main_frame())
+            page->client().page_did_change_title(title);
+    }
 }
 
 void Document::attach_to_frame(Badge<Frame>, Frame& frame)
