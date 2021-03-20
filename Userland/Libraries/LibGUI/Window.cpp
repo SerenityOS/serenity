@@ -363,8 +363,12 @@ void Window::handle_mouse_event(MouseEvent& event)
     if (event.buttons() != 0 && !m_automatic_cursor_tracking_widget)
         m_automatic_cursor_tracking_widget = *result.widget;
     if (result.widget != m_global_cursor_tracking_widget.ptr())
-        return result.widget->dispatch_event(*local_event, this);
-    return;
+        result.widget->dispatch_event(*local_event, this);
+
+    if (!m_pending_paint_event_rects.is_empty()) {
+        MultiPaintEvent paint_event(move(m_pending_paint_event_rects), size());
+        handle_multi_paint_event(paint_event);
+    }
 }
 
 void Window::handle_multi_paint_event(MultiPaintEvent& event)
