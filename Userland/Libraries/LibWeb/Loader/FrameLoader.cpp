@@ -140,7 +140,7 @@ bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data
     }
     if (mime_type.starts_with("image/"))
         return build_image_document(document, data);
-    if (mime_type == "text/plain")
+    if (mime_type == "text/plain" || mime_type == "application/json")
         return build_text_document(document, data);
     if (mime_type == "text/markdown")
         return build_markdown_document(document, data);
