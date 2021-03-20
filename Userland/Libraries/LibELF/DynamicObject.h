@@ -251,6 +251,12 @@ public:
     template<typename F>
     void for_each_initialization_array_function(F f) const;
 
+    template<typename F>
+    void for_each_dynamic_entry(F) const;
+
+    template<typename F>
+    void for_each_symbol(F) const;
+
     struct SymbolLookupResult {
         FlatPtr value { 0 };
         VirtualAddress address;
@@ -272,12 +278,6 @@ private:
     StringView symbol_string_table_string(Elf32_Word) const;
     const char* raw_symbol_string_table_string(Elf32_Word) const;
     void parse();
-
-    template<typename F>
-    void for_each_symbol(F) const;
-
-    template<typename F>
-    void for_each_dynamic_entry(F) const;
 
     VirtualAddress m_base_address;
     VirtualAddress m_dynamic_address;
