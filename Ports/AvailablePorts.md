@@ -79,6 +79,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`tinyscheme`](tinyscheme/)    | TinyScheme Interpreter                        | 1.42              | https://sourceforge.net/projects/tinyscheme/          |
 | [`tr`](tr/)                    | tr (OpenBSD)                                  | 6.7               | https://github.com/ibara/libpuffy                     |
 | [`vim`](vim/)                  | Vim                                           |                   | https://www.vim.org/                                  |
+| [`vitetris`](vitetris/)        | vitetris                                      | 0.59.1            | https://github.com/vicgeralds/vitetris                |
 | [`vttest`](vttest/)            | vttest                                        | 20210210          | https://invisible-island.net/vttest/                  |
 | [`zlib`](zlib/)                | zlib                                          | 1.2.11            | https://www.zlib.net/                                 |
 | [`zstd`](zstd/)                | Zstandard                                     | 1.4.4             | https://facebook.github.io/zstd/                      |
