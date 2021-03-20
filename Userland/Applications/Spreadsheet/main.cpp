@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd thread rpath accept cpath wpath unix", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd thread rpath accept cpath wpath fattr unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -68,6 +68,12 @@ int main(int argc, char* argv[])
     }
 
     if (unveil("/tmp/portal/webcontent", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    // For writing temporary files when exporting.
+    if (unveil("/tmp", "crw") < 0) {
         perror("unveil");
         return 1;
     }
