@@ -80,6 +80,8 @@ public:
     Utf8View substring_view(int byte_offset, int byte_length) const;
     bool is_empty() const { return m_string.is_empty(); }
 
+    bool starts_with(const Utf8View&) const;
+
     size_t iterator_offset(const Utf8CodepointIterator& it) const
     {
         return byte_offset_of(it);
