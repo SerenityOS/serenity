@@ -25,7 +25,8 @@ describe("normal behavior", () => {
 test("Issue #5884, GenericIndexedPropertyStorage::take_first() loses elements", () => {
     const a = [];
     for (let i = 0; i < 300; i++) {
-        a.push(i);
+        // NOTE: We use defineProperty to prevent the array from using SimpleIndexedPropertyStorage
+        Object.defineProperty(a, i, { value: i, writable: false });
     }
     expect(a.length).toBe(300);
     for (let i = 0; i < 300; i++) {
