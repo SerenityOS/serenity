@@ -58,6 +58,15 @@ namespace JS {
 // Used in various abstract operations to make it obvious when a non-optional return value must be discarded.
 static const double INVALID { 0 };
 
+static inline bool same_type_for_equality(const Value& lhs, const Value& rhs)
+{
+    if (lhs.type() == rhs.type())
+        return true;
+    if (lhs.is_number() && rhs.is_number())
+        return true;
+    return false;
+}
+
 static const Crypto::SignedBigInteger BIGINT_ZERO { 0 };
 
 static bool is_valid_bigint_value(StringView string)
@@ -253,7 +262,9 @@ String Value::to_string_without_side_effects() const
         return "null";
     case Type::Boolean:
         return m_value.as_bool ? "true" : "false";
-    case Type::Number:
+    case Type::Int32:
+        return String::number(m_value.as_i32);
+    case Type::Double:
         return double_to_string(m_value.as_double);
     case Type::String:
         return m_value.as_string->string();
@@ -291,7 +302,9 @@ String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_s
         return !legacy_null_to_empty_string ? "null" : String::empty();
     case Type::Boolean:
         return m_value.as_bool ? "true" : "false";
-    case Type::Number:
+    case Type::Int32:
+        return String::number(m_value.as_i32);
+    case Type::Double:
         return double_to_string(m_value.as_double);
     case Type::String:
         return m_value.as_string->string();
@@ -319,7 +332,9 @@ bool Value::to_boolean() const
         return false;
     case Type::Boolean:
         return m_value.as_bool;
-    case Type::Number:
+    case Type::Int32:
+        return m_value.as_i32 != 0;
+    case Type::Double:
         if (is_nan())
             return false;
         return m_value.as_double != 0;
@@ -381,8 +396,9 @@ Object* Value::to_object(GlobalObject& global_object) const
         return nullptr;
     case Type::Boolean:
         return BooleanObject::create(global_object, m_value.as_bool);
-    case Type::Number:
-        return NumberObject::create(global_object, m_value.as_double);
+    case Type::Int32:
+    case Type::Double:
+        return NumberObject::create(global_object, as_double());
     case Type::String:
         return StringObject::create(global_object, *m_value.as_string);
     case Type::Symbol:
@@ -416,8 +432,9 @@ Value Value::to_number(GlobalObject& global_object) const
         return Value(0);
     case Type::Boolean:
         return Value(m_value.as_bool ? 1 : 0);
-    case Type::Number:
-        return Value(m_value.as_double);
+    case Type::Int32:
+    case Type::Double:
+        return *this;
     case Type::String: {
         auto string = as_string().string().trim_whitespace();
         if (string.is_empty())
@@ -468,7 +485,8 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
     }
     case Type::BigInt:
         return &primitive.as_bigint();
-    case Type::Number:
+    case Type::Int32:
+    case Type::Double:
         vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "number", "BigInt");
         return {};
     case Type::String: {
@@ -513,8 +531,9 @@ double Value::to_double(GlobalObject& global_object) const
     return number.as_double();
 }
 
-i32 Value::to_i32(GlobalObject& global_object) const
+i32 Value::to_i32_slow_case(GlobalObject& global_object) const
 {
+    VERIFY(type() != Type::Int32);
     auto number = to_number(global_object);
     if (global_object.vm().exception())
         return INVALID;
@@ -1024,7 +1043,7 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
 
 bool same_value(Value lhs, Value rhs)
 {
-    if (lhs.type() != rhs.type())
+    if (!same_type_for_equality(lhs, rhs))
         return false;
 
     if (lhs.is_number()) {
@@ -1050,7 +1069,7 @@ bool same_value(Value lhs, Value rhs)
 
 bool same_value_zero(Value lhs, Value rhs)
 {
-    if (lhs.type() != rhs.type())
+    if (!same_type_for_equality(lhs, rhs))
         return false;
 
     if (lhs.is_number()) {
@@ -1068,7 +1087,7 @@ bool same_value_zero(Value lhs, Value rhs)
 bool same_value_non_numeric(Value lhs, Value rhs)
 {
     VERIFY(!lhs.is_number() && !lhs.is_bigint());
-    VERIFY(lhs.type() == rhs.type());
+    VERIFY(same_type_for_equality(lhs, rhs));
 
     switch (lhs.type()) {
     case Value::Type::Undefined:
@@ -1089,7 +1108,7 @@ bool same_value_non_numeric(Value lhs, Value rhs)
 
 bool strict_eq(Value lhs, Value rhs)
 {
-    if (lhs.type() != rhs.type())
+    if (!same_type_for_equality(lhs, rhs))
         return false;
 
     if (lhs.is_number()) {
@@ -1108,7 +1127,7 @@ bool strict_eq(Value lhs, Value rhs)
 
 bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    if (lhs.type() == rhs.type())
+    if (same_type_for_equality(lhs, rhs))
         return strict_eq(lhs, rhs);
 
     if (lhs.is_nullish() && rhs.is_nullish())
