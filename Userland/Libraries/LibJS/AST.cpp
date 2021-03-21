@@ -59,19 +59,20 @@ class InterpreterNodeScope {
 public:
     InterpreterNodeScope(Interpreter& interpreter, const ASTNode& node)
         : m_interpreter(interpreter)
-        , m_node(node)
+        , m_chain_node { nullptr, node }
     {
-        m_interpreter.enter_node(m_node);
+        m_interpreter.vm().call_frame().current_node = &node;
+        m_interpreter.push_ast_node(m_chain_node);
     }
 
     ~InterpreterNodeScope()
     {
-        m_interpreter.exit_node(m_node);
+        m_interpreter.pop_ast_node();
     }
 
 private:
     Interpreter& m_interpreter;
-    const ASTNode& m_node;
+    ExecutingASTNodeChain m_chain_node;
 };
 
 String ASTNode::class_name() const
@@ -2169,8 +2170,7 @@ void SequenceExpression::dump(int indent) const
 
 Value SequenceExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.enter_node(*this);
-    ScopeGuard exit_node { [&] { interpreter.exit_node(*this); } };
+    InterpreterNodeScope node_scope { interpreter, *this };
 
     Value last_value;
     for (auto& expression : m_expressions) {
