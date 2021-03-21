@@ -284,4 +284,14 @@ template<>
 template<>
 [[nodiscard]] ALWAYS_INLINE Value VM::call(Function& function, Value this_value) { return call(function, this_value, Optional<MarkedValueList> {}); }
 
+ALWAYS_INLINE Heap& Cell::heap() const
+{
+    return HeapBlock::from_cell(this)->heap();
+}
+
+ALWAYS_INLINE VM& Cell::vm() const
+{
+    return heap().vm();
+}
+
 }
