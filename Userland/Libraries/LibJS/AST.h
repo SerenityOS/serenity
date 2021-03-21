@@ -599,7 +599,7 @@ private:
 class NumericLiteral final : public Literal {
 public:
     explicit NumericLiteral(SourceRange source_range, double value)
-        : Literal(move(source_range))
+        : Literal(source_range)
         , m_value(value)
     {
     }
@@ -608,7 +608,7 @@ public:
     virtual void dump(int indent) const override;
 
 private:
-    double m_value { 0 };
+    Value m_value;
 };
 
 class BigIntLiteral final : public Literal {

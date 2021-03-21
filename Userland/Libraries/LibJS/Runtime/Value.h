@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,8 @@ public:
         Empty,
         Undefined,
         Null,
-        Number,
+        Int32,
+        Double,
         String,
         Object,
         Boolean,
@@ -66,7 +67,7 @@ public:
     bool is_empty() const { return m_type == Type::Empty; }
     bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_null() const { return m_type == Type::Null; }
-    bool is_number() const { return m_type == Type::Number; }
+    bool is_number() const { return m_type == Type::Int32 || m_type == Type::Double; }
     bool is_string() const { return m_type == Type::String; }
     bool is_object() const { return m_type == Type::Object; }
     bool is_boolean() const { return m_type == Type::Boolean; }
@@ -107,21 +108,31 @@ public:
     }
 
     explicit Value(double value)
-        : m_type(Type::Number)
     {
-        m_value.as_double = value;
+        if (value >= NumericLimits<i32>::min() && value <= NumericLimits<i32>::max() && static_cast<i32>(value) == value) {
+            m_type = Type::Int32;
+            m_value.as_i32 = static_cast<i32>(value);
+        } else {
+            m_type = Type::Double;
+            m_value.as_double = value;
+        }
     }
 
     explicit Value(unsigned value)
-        : m_type(Type::Number)
     {
-        m_value.as_double = static_cast<double>(value);
+        if (value > NumericLimits<i32>::max()) {
+            m_value.as_double = static_cast<double>(value);
+            m_type = Type::Double;
+        } else {
+            m_value.as_i32 = static_cast<i32>(value);
+            m_type = Type::Int32;
+        }
     }
 
     explicit Value(i32 value)
-        : m_type(Type::Number)
+        : m_type(Type::Int32)
     {
-        m_value.as_double = value;
+        m_value.as_i32 = value;
     }
 
     Value(const Object* object)
@@ -169,7 +180,9 @@ public:
 
     double as_double() const
     {
-        VERIFY(type() == Type::Number);
+        VERIFY(is_number());
+        if (m_type == Type::Int32)
+            return m_value.as_i32;
         return m_value.as_double;
     }
 
@@ -254,7 +267,12 @@ public:
     Value to_number(GlobalObject&) const;
     BigInt* to_bigint(GlobalObject&) const;
     double to_double(GlobalObject&) const;
-    i32 to_i32(GlobalObject&) const;
+    i32 to_i32(GlobalObject& global_object) const
+    {
+        if (m_type == Type::Int32)
+            return m_value.as_i32;
+        return to_i32_slow_case(global_object);
+    }
     u32 to_u32(GlobalObject&) const;
     size_t to_length(GlobalObject&) const;
     size_t to_index(GlobalObject&) const;
@@ -273,8 +291,11 @@ public:
 private:
     Type m_type { Type::Empty };
 
+    i32 to_i32_slow_case(GlobalObject&) const;
+
     union {
         bool as_bool;
+        i32 as_i32;
         double as_double;
         PrimitiveString* as_string;
         Symbol* as_symbol;

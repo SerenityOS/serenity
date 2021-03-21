@@ -729,7 +729,8 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             // yes, this is on purpose. yes, this is how javascript works.
             // yes, it's silly.
             return js_string(vm, "object");
-        case Value::Type::Number:
+        case Value::Type::Int32:
+        case Value::Type::Double:
             return js_string(vm, "number");
         case Value::Type::String:
             return js_string(vm, "string");
