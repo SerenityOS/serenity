@@ -25,19 +25,22 @@
  */
 
 #include "SoundPlayerWidget.h"
+#include "Common.h"
 #include <AK/StringBuilder.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <math.h>
 
-SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::ClientConnection> connection)
+SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, Audio::ClientConnection& connection, PlaybackManager& manager)
     : m_window(window)
     , m_connection(connection)
-    , m_manager(connection)
+    , m_manager(manager)
 {
+    window.set_resizable(false);
+    window.resize(350, 140);
+
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 2, 2, 2, 2 });
@@ -104,16 +107,7 @@ SoundPlayerWidget::~SoundPlayerWidget()
 {
 }
 
-SoundPlayerWidget::Slider::~Slider()
-{
-}
-
-void SoundPlayerWidget::hide_scope(bool hide)
-{
-    m_sample_widget->set_visible(!hide);
-}
-
-void SoundPlayerWidget::open_file(String path)
+void SoundPlayerWidget::open_file(StringView path)
 {
     NonnullRefPtr<Audio::Loader> loader = Audio::Loader::create(path);
     if (loader->has_error() || !loader->sample_rate()) {
@@ -191,4 +185,9 @@ void SoundPlayerWidget::update_position(const int position)
         static_cast<int>(remaining_seconds * 100) % 100));
 
     m_slider->set_value(total_norm_samples);
+}
+
+void SoundPlayerWidget::hide_scope(bool hide)
+{
+    m_sample_widget->set_visible(!hide);
 }
