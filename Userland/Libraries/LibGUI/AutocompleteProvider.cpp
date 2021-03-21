@@ -65,7 +65,6 @@ public:
                 return suggestion.completion;
             }
             if (index.column() == Column::Icon) {
-                // TODO
                 if (suggestion.language == GUI::AutocompleteProvider::Language::Cpp) {
                     if (!s_cpp_identifier_icon) {
                         s_cpp_identifier_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/completion/cpp-identifier.png");
