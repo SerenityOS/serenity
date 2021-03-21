@@ -15,14 +15,12 @@
             fixed_width: 251
         }
 
-        @GUI::Widget {
-        }
+        @GUI::Widget
     }
 
     @GUI::Widget {
         min_height: 160
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Frame {
             name: "tip_frame"
@@ -34,21 +32,18 @@
 
             @GUI::Widget {
                 fixed_width: 60
-                layout: @GUI::VerticalBoxLayout {
-                }
+                layout: @GUI::VerticalBoxLayout
 
                 @GUI::Label {
                     name: "light_bulb_label"
                     fixed_height: 60
                 }
 
-                @GUI::Widget {
-                }
+                @GUI::Widget
             }
 
             @GUI::Widget {
-                layout: @GUI::VerticalBoxLayout {
-                }
+                layout: @GUI::VerticalBoxLayout
 
                 @GUI::Label {
                     fixed_height: 60
@@ -80,8 +75,7 @@
             name: "navigation_column"
             fixed_width: 115
             min_height: 160
-            layout: @GUI::VerticalBoxLayout {
-            }
+            layout: @GUI::VerticalBoxLayout
 
             @GUI::Button {
                 name: "new_button"
@@ -98,8 +92,7 @@
                 text: "Next Tip"
             }
 
-            @GUI::Widget {
-            }
+            @GUI::Widget
 
             @GUI::HorizontalSeparator {
                 fixed_height: 2
@@ -122,8 +115,7 @@
             fixed_width: 315
         }
 
-        @GUI::Widget {
-        }
+        @GUI::Widget
 
         @GUI::Button {
             name: "close_button"
