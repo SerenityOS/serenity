@@ -187,7 +187,7 @@ Once the toolchain has been built, go into the `Build/i686/` directory and run t
 
 ```console
 $ cd ../Build/i686
-$ cmake ../.. -G Ninja
+$ cmake ../../.. -G Ninja
 $ ninja install
 ```
 
