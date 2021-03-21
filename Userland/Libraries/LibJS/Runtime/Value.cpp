@@ -833,37 +833,38 @@ Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 
 Value add(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    auto& vm = global_object.vm();
     auto lhs_primitive = lhs.to_primitive(global_object);
-    if (global_object.vm().exception())
+    if (vm.exception())
         return {};
     auto rhs_primitive = rhs.to_primitive(global_object);
-    if (global_object.vm().exception())
+    if (vm.exception())
         return {};
 
     if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
         auto lhs_string = lhs_primitive.to_string(global_object);
-        if (global_object.vm().exception())
+        if (vm.exception())
             return {};
         auto rhs_string = rhs_primitive.to_string(global_object);
-        if (global_object.vm().exception())
+        if (vm.exception())
             return {};
         StringBuilder builder(lhs_string.length() + rhs_string.length());
         builder.append(lhs_string);
         builder.append(rhs_string);
-        return js_string(global_object.heap(), builder.to_string());
+        return js_string(vm.heap(), builder.to_string());
     }
 
     auto lhs_numeric = lhs_primitive.to_numeric(global_object);
-    if (global_object.vm().exception())
+    if (vm.exception())
         return {};
     auto rhs_numeric = rhs_primitive.to_numeric(global_object);
-    if (global_object.vm().exception())
+    if (vm.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() + rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer()));
-    global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "addition");
+        return js_bigint(vm.heap(), lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer()));
+    vm.throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "addition");
     return {};
 }
 
