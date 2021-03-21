@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,26 +38,28 @@ int main(int argc, char** argv)
     const char* cmd_argument = nullptr;
     bool enable = false;
     bool disable = false;
+    bool all_processes = false;
 
     args_parser.add_option(pid_argument, "Target PID", nullptr, 'p', "PID");
+    args_parser.add_option(all_processes, "Profile all processes (super-user only)", nullptr, 'a');
     args_parser.add_option(enable, "Enable", nullptr, 'e');
     args_parser.add_option(disable, "Disable", nullptr, 'd');
     args_parser.add_option(cmd_argument, "Command", nullptr, 'c', "command");
 
     args_parser.parse(argc, argv);
 
-    if (!pid_argument && !cmd_argument) {
+    if (!pid_argument && !cmd_argument && !all_processes) {
         args_parser.print_usage(stdout, argv[0]);
         return 0;
     }
 
-    if (pid_argument) {
+    if (pid_argument || all_processes) {
         if (!(enable ^ disable)) {
             fprintf(stderr, "-p <PID> requires -e xor -d.\n");
             return 1;
         }
 
-        pid_t pid = atoi(pid_argument);
+        pid_t pid = all_processes ? -1 : atoi(pid_argument);
 
         if (enable) {
             if (profiling_enable(pid) < 0) {
