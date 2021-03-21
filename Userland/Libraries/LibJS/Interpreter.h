@@ -71,10 +71,10 @@ public:
     GlobalObject& global_object();
     const GlobalObject& global_object() const;
 
-    VM& vm() { return *m_vm; }
-    const VM& vm() const { return *m_vm; }
-    Heap& heap() { return vm().heap(); }
-    Exception* exception() { return vm().exception(); }
+    ALWAYS_INLINE VM& vm() { return *m_vm; }
+    ALWAYS_INLINE const VM& vm() const { return *m_vm; }
+    ALWAYS_INLINE Heap& heap() { return vm().heap(); }
+    ALWAYS_INLINE Exception* exception() { return vm().exception(); }
 
     ScopeObject* current_scope() { return vm().current_scope(); }
     LexicalEnvironment* current_environment();
