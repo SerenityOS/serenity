@@ -43,14 +43,4 @@ void Cell::Visitor::visit(Value value)
         visit_impl(value.as_cell());
 }
 
-Heap& Cell::heap() const
-{
-    return HeapBlock::from_cell(this)->heap();
-}
-
-VM& Cell::vm() const
-{
-    return heap().vm();
-}
-
 }
