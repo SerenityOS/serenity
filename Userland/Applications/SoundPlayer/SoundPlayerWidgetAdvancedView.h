@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Cesar Torres <shortanemoia@protonmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,48 +26,60 @@
 
 #pragma once
 
-#include "Common.h"
+#include "BarsVisualizationWidget.h"
 #include "PlaybackManager.h"
 #include "Player.h"
-#include "SampleWidget.h"
+#include "SoundPlayerWidget.h"
 #include <AK/NonnullRefPtr.h>
-#include <LibGUI/Button.h>
-#include <LibGUI/Label.h>
+#include <LibAudio/ClientConnection.h>
 #include <LibGUI/Widget.h>
-#include <LibGUI/Window.h>
 
-class SoundPlayerWidget final : public GUI::Widget
+class SoundPlayerWidgetAdvancedView final : public GUI::Widget
     , public Player {
-    C_OBJECT(SoundPlayerWidget)
+    C_OBJECT(SoundPlayerWidgetAdvancedView)
+
 public:
-    virtual ~SoundPlayerWidget() override;
+    explicit SoundPlayerWidgetAdvancedView(GUI::Window& window, Audio::ClientConnection& connection, PlaybackManager& manager);
+    ~SoundPlayerWidgetAdvancedView() override;
+
     void open_file(StringView path) override;
-    void hide_scope(bool);
     Audio::ClientConnection& client_connection() override { return m_connection; }
     PlaybackManager& playback_manager() override { return m_manager; }
 
+    template<typename T>
+    void set_visualization()
+    {
+        m_visualization->remove_from_parent();
+        update();
+        auto new_visualization = T::construct();
+        insert_child_before(new_visualization, *static_cast<Core::Object*>(m_playback_progress_slider.ptr()));
+        m_visualization = new_visualization;
+    }
+
+    void set_nonlinear_volume_slider(bool nonlinear);
+
+    void set_volume(double value);
+
 private:
-    explicit SoundPlayerWidget(GUI::Window& window, Audio::ClientConnection& connection, PlaybackManager& manager);
-
-    virtual void drop_event(GUI::DropEvent&) override;
-
-    void update_position(const int position);
-    void update_ui();
-    int normalize_rate(int) const;
-    int denormalize_rate(int) const;
+    void drop_event(GUI::DropEvent& event) override;
 
     GUI::Window& m_window;
     Audio::ClientConnection& m_connection;
     PlaybackManager& m_manager;
 
-    float m_sample_ratio { 1.0 };
-    RefPtr<GUI::Label> m_status;
-    RefPtr<GUI::Label> m_elapsed;
-    RefPtr<GUI::Label> m_remaining;
-    RefPtr<Slider> m_slider;
-    RefPtr<SampleWidget> m_sample_widget;
-    RefPtr<Gfx::Bitmap> m_play_icon { Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png") };
-    RefPtr<Gfx::Bitmap> m_pause_icon { Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png") };
-    RefPtr<GUI::Button> m_play;
-    RefPtr<GUI::Button> m_stop;
+    RefPtr<GUI::Widget> m_visualization;
+
+    RefPtr<Gfx::Bitmap> m_play_icon;
+    RefPtr<Gfx::Bitmap> m_pause_icon;
+    RefPtr<Gfx::Bitmap> m_stop_icon;
+    RefPtr<Gfx::Bitmap> m_back_icon;
+    RefPtr<Gfx::Bitmap> m_next_icon;
+
+    RefPtr<GUI::Button> m_play_button;
+    RefPtr<GUI::Button> m_stop_button;
+    RefPtr<Slider> m_playback_progress_slider;
+    RefPtr<GUI::Label> m_volume_label;
+
+    double m_volume;
+    bool m_nonlinear_volume_slider;
 };
