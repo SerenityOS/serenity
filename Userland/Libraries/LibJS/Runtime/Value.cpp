@@ -1213,13 +1213,14 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         auto x_string = x_primitive.as_string().string();
         auto y_string = y_primitive.as_string().string();
 
-        if (x_string.starts_with(y_string))
-            return TriState::False;
-        if (y_string.starts_with(x_string))
-            return TriState::True;
-
         Utf8View x_code_points { x_string };
         Utf8View y_code_points { y_string };
+
+        if (x_code_points.starts_with(y_code_points))
+            return TriState::False;
+        if (y_code_points.starts_with(x_code_points))
+            return TriState::True;
+
         for (auto k = x_code_points.begin(), l = y_code_points.begin();
              k != x_code_points.end() && l != y_code_points.end();
              ++k, ++l) {
