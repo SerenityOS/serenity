@@ -64,8 +64,8 @@ static Optional<JsonValue> parse_core_object(Queue<GMLToken>& tokens)
     object.set("class", JsonValue(class_name.m_view));
 
     if (peek() != GMLToken::Type::LeftCurly) {
-        dbgln("Expected {{");
-        return {};
+        // Empty object
+        return object;
     }
     tokens.dequeue();
 
