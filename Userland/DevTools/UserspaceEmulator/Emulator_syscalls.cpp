@@ -219,6 +219,9 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_sync:
         virt$sync();
         return 0;
+    case SC_abort:
+        virt$abort();
+        return 0;
     case SC_exit:
         virt$exit((int)arg1);
         return 0;
@@ -1025,6 +1028,14 @@ u32 Emulator::virt$read(int fd, FlatPtr buffer, ssize_t size)
 void Emulator::virt$sync()
 {
     syscall(SC_sync);
+}
+
+void Emulator::virt$abort()
+{
+    reportln("\n=={}==  \033[33;1mSyscall: abort\033[0m, shutting down!", getpid());
+    m_exit_status = 127;
+    m_shutdown = true;
+    dump_backtrace();
 }
 
 void Emulator::virt$exit(int status)
