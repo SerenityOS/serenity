@@ -44,6 +44,11 @@
 
 namespace JS {
 
+struct ExecutingASTNodeChain {
+    ExecutingASTNodeChain* previous { nullptr };
+    const ASTNode& node;
+};
+
 class Interpreter : public Weakable<Interpreter> {
 public:
     template<typename GlobalObjectType, typename... Args>
@@ -77,14 +82,21 @@ public:
     void enter_scope(const ScopeNode&, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);
 
-    void enter_node(const ASTNode&);
-    void exit_node(const ASTNode&);
+    void push_ast_node(ExecutingASTNodeChain& chain_node)
+    {
+        chain_node.previous = m_ast_node_chain;
+        m_ast_node_chain = &chain_node;
+    }
 
-    void push_ast_node(const ASTNode& node) { m_ast_nodes.append(&node); }
-    void pop_ast_node() { m_ast_nodes.take_last(); }
+    void pop_ast_node()
+    {
+        VERIFY(m_ast_node_chain);
+        m_ast_node_chain = m_ast_node_chain->previous;
+    }
 
-    const ASTNode* current_node() const { return !m_ast_nodes.is_empty() ? m_ast_nodes.last() : nullptr; }
-    const Vector<const ASTNode*>& node_stack() const { return m_ast_nodes; }
+    const ASTNode* current_node() const { return m_ast_node_chain ? &m_ast_node_chain->node : nullptr; }
+    ExecutingASTNodeChain* executing_ast_node_chain() { return m_ast_node_chain; }
+    const ExecutingASTNodeChain* executing_ast_node_chain() const { return m_ast_node_chain; }
 
     Value execute_statement(GlobalObject&, const Statement&, ScopeType = ScopeType::Block);
 
@@ -94,7 +106,7 @@ private:
     void push_scope(ScopeFrame frame);
 
     Vector<ScopeFrame> m_scope_stack;
-    Vector<const ASTNode*> m_ast_nodes;
+    ExecutingASTNodeChain* m_ast_node_chain { nullptr };
 
     NonnullRefPtr<VM> m_vm;
 

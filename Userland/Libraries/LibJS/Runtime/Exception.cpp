@@ -45,11 +45,8 @@ Exception::Exception(Value value)
     }
 
     if (auto* interpreter = vm.interpreter_if_exists()) {
-        auto& node_stack = interpreter->node_stack();
-        for (ssize_t i = node_stack.size() - 1; i >= 0; --i) {
-            auto* node = node_stack[i];
-            VERIFY(node);
-            m_source_ranges.append(node->source_range());
+        for (auto* node_chain = interpreter->executing_ast_node_chain(); node_chain; node_chain = node_chain->previous) {
+            m_source_ranges.append(node_chain->node.source_range());
         }
     }
 }
