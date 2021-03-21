@@ -32,7 +32,7 @@
 #include <LibAudio/Loader.h>
 #include <LibCore/Timer.h>
 
-#define PLAYBACK_MANAGER_BUFFER_SIZE 64 * KiB
+#define PLAYBACK_MANAGER_BUFFER_SIZE 48 * KiB
 #define PLAYBACK_MANAGER_RATE 44100
 
 class PlaybackManager final {
@@ -56,6 +56,7 @@ public:
     NonnullRefPtr<Audio::ClientConnection> connection() const { return m_connection; }
 
     Function<void()> on_update;
+    Function<void(Audio::Buffer&)> on_load_sample_buffer;
 
 private:
     void next_buffer();
