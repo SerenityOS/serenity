@@ -109,7 +109,7 @@ public:
 
     explicit Value(double value)
     {
-        if (value >= NumericLimits<i32>::min() && value <= NumericLimits<i32>::max() && static_cast<i32>(value) == value) {
+        if (value >= NumericLimits<i32>::min() && value <= NumericLimits<i32>::max() && trunc(value) == value && value != -0.0) {
             m_type = Type::Int32;
             m_value.as_i32 = static_cast<i32>(value);
         } else {
