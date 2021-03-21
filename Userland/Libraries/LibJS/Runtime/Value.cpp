@@ -413,7 +413,7 @@ Object* Value::to_object(GlobalObject& global_object) const
     }
 }
 
-Value Value::to_numeric(GlobalObject& global_object) const
+FLATTEN Value Value::to_numeric(GlobalObject& global_object) const
 {
     auto primitive = to_primitive(global_object, Value::PreferredType::Number);
     if (global_object.vm().exception())
