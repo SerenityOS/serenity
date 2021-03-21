@@ -532,14 +532,51 @@ void Painter::draw_triangle(const IntPoint& a, const IntPoint& b, const IntPoint
     }
 }
 
+struct BlitState {
+    enum AlphaState {
+        NoAlpha = 0,
+        SrcAlpha = 1,
+        DstAlpha = 2,
+        BothAlpha = SrcAlpha | DstAlpha
+    };
+
+    const RGBA32* src;
+    RGBA32* dst;
+    size_t src_pitch;
+    size_t dst_pitch;
+    int row_count;
+    int column_count;
+    float opacity;
+};
+
+template<BlitState::AlphaState has_alpha>
+static void do_blit_with_opacity(BlitState& state)
+{
+    for (int row = 0; row < state.row_count; ++row) {
+        for (int x = 0; x < state.column_count; ++x) {
+            Color dest_color = (has_alpha & BlitState::DstAlpha) ? Color::from_rgba(state.dst[x]) : Color::from_rgb(state.dst[x]);
+            if constexpr (has_alpha & BlitState::SrcAlpha) {
+                Color src_color_with_alpha = Color::from_rgba(state.src[x]);
+                float pixel_opacity = src_color_with_alpha.alpha() / 255.0;
+                src_color_with_alpha.set_alpha(255 * (state.opacity * pixel_opacity));
+                state.dst[x] = dest_color.blend(src_color_with_alpha).value();
+            } else {
+                Color src_color_with_alpha = Color::from_rgb(state.src[x]);
+                src_color_with_alpha.set_alpha(state.opacity * 255);
+                state.dst[x] = dest_color.blend(src_color_with_alpha).value();
+            }
+        }
+        state.dst += state.dst_pitch;
+        state.src += state.src_pitch;
+    }
+}
+
 void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity, bool apply_alpha)
 {
     VERIFY(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
 
     if (opacity >= 1.0f && !(source.has_alpha_channel() && apply_alpha))
         return blit(position, source, a_src_rect);
-
-    u8 alpha = 255 * opacity;
 
     IntRect safe_src_rect = IntRect::intersection(a_src_rect, source.rect());
     if (scale() != source.scale())
@@ -559,34 +596,28 @@ void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& sou
     const int last_row = clipped_rect.bottom() - dst_rect.top();
     const int first_column = clipped_rect.left() - dst_rect.left();
     const int last_column = clipped_rect.right() - dst_rect.left();
-    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
-    const unsigned src_skip = source.pitch() / sizeof(RGBA32);
-
-    auto do_blit = [&]<bool with_src_alpha>() {
-        for (int row = first_row; row <= last_row; ++row) {
-            for (int x = 0; x <= (last_column - first_column); ++x) {
-                if constexpr (with_src_alpha) {
-                    Color src_color_with_alpha = Color::from_rgba(src[x]);
-                    float pixel_opacity = src_color_with_alpha.alpha() / 255.0;
-                    src_color_with_alpha.set_alpha(255 * (opacity * pixel_opacity));
-                    dst[x] = Color::from_rgba(dst[x]).blend(src_color_with_alpha).value();
-                } else {
-                    Color src_color_with_alpha = Color::from_rgb(src[x]);
-                    src_color_with_alpha.set_alpha(alpha);
-                    dst[x] = Color::from_rgb(dst[x]).blend(src_color_with_alpha).value();
-                }
-            }
-            dst += dst_skip;
-            src += src_skip;
-        }
+    BlitState blit_state {
+        .src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column,
+        .dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x(),
+        .src_pitch = source.pitch() / sizeof(RGBA32),
+        .dst_pitch = m_target->pitch() / sizeof(RGBA32),
+        .row_count = last_row - first_row + 1,
+        .column_count = last_column - first_column + 1,
+        .opacity = opacity
     };
-    if (source.has_alpha_channel() && apply_alpha)
-        do_blit.template operator()<true>();
-    else
-        do_blit.template operator()<false>();
+
+    if (source.has_alpha_channel() && apply_alpha) {
+        if (m_target->has_alpha_channel())
+            do_blit_with_opacity<BlitState::BothAlpha>(blit_state);
+        else
+            do_blit_with_opacity<BlitState::SrcAlpha>(blit_state);
+    } else {
+        if (m_target->has_alpha_channel())
+            do_blit_with_opacity<BlitState::DstAlpha>(blit_state);
+        else
+            do_blit_with_opacity<BlitState::NoAlpha>(blit_state);
+    }
 }
 
 void Painter::blit_filtered(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& src_rect, Function<Color(Color)> filter)
