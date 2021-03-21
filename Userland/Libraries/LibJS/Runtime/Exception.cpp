@@ -26,6 +26,7 @@
 
 #include <AK/String.h>
 #include <LibJS/AST.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/VM.h>
 
@@ -34,7 +35,8 @@ namespace JS {
 Exception::Exception(Value value)
     : m_value(value)
 {
-    auto& call_stack = vm().call_stack();
+    auto& vm = this->vm();
+    auto& call_stack = vm.call_stack();
     for (ssize_t i = call_stack.size() - 1; i >= 0; --i) {
         String function_name = call_stack[i]->function_name;
         if (function_name.is_empty())
@@ -42,11 +44,13 @@ Exception::Exception(Value value)
         m_trace.append(function_name);
     }
 
-    auto& node_stack = vm().node_stack();
-    for (ssize_t i = node_stack.size() - 1; i >= 0; --i) {
-        auto* node = node_stack[i];
-        VERIFY(node);
-        m_source_ranges.append(node->source_range());
+    if (auto* interpreter = vm.interpreter_if_exists()) {
+        auto& node_stack = interpreter->node_stack();
+        for (ssize_t i = node_stack.size() - 1; i >= 0; --i) {
+            auto* node = node_stack[i];
+            VERIFY(node);
+            m_source_ranges.append(node->source_range());
+        }
     }
 }
 

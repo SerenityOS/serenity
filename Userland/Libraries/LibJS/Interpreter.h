@@ -80,6 +80,12 @@ public:
     void enter_node(const ASTNode&);
     void exit_node(const ASTNode&);
 
+    void push_ast_node(const ASTNode& node) { m_ast_nodes.append(&node); }
+    void pop_ast_node() { m_ast_nodes.take_last(); }
+
+    const ASTNode* current_node() const { return !m_ast_nodes.is_empty() ? m_ast_nodes.last() : nullptr; }
+    const Vector<const ASTNode*>& node_stack() const { return m_ast_nodes; }
+
     Value execute_statement(GlobalObject&, const Statement&, ScopeType = ScopeType::Block);
 
 private:
@@ -88,6 +94,7 @@ private:
     void push_scope(ScopeFrame frame);
 
     Vector<ScopeFrame> m_scope_stack;
+    Vector<const ASTNode*> m_ast_nodes;
 
     NonnullRefPtr<VM> m_vm;
 
