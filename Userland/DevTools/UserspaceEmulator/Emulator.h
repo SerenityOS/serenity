@@ -163,6 +163,7 @@ private:
     int virt$connect(int sockfd, FlatPtr address, socklen_t address_size);
     int virt$shutdown(int sockfd, int how);
     void virt$sync();
+    void virt$abort();
     void virt$exit(int);
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
     int virt$chdir(FlatPtr, size_t);
