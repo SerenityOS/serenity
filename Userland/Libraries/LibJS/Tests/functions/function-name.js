@@ -21,9 +21,9 @@ test("function assigned to variable", () => {
 
 test("functions in array assigned to variable", () => {
     const arr = [function () {}, function () {}, function () {}];
-    expect(arr[0].name).toBe("arr");
-    expect(arr[1].name).toBe("arr");
-    expect(arr[2].name).toBe("arr");
+    expect(arr[0].name).toBe("");
+    expect(arr[1].name).toBe("");
+    expect(arr[2].name).toBe("");
 });
 
 test("functions in objects", () => {
@@ -47,11 +47,4 @@ test("names of native functions", () => {
     expect(console.debug.name).toBe("debug");
     expect((console.debug.name = "warn")).toBe("warn");
     expect(console.debug.name).toBe("debug");
-});
-
-test("cyclic members should not cause infinite recursion (#3471)", () => {
-    let a = [() => 4];
-    a[1] = a;
-    a = a;
-    expect(a[0].name).toBe("a");
 });
