@@ -80,30 +80,13 @@ String ASTNode::class_name() const
     return demangle(typeid(*this).name()).substring(4);
 }
 
-static void update_function_name(Value value, const FlyString& name, HashTable<JS::Cell*>& visited)
-{
-    if (!value.is_object())
-        return;
-    if (visited.contains(value.as_cell()))
-        return;
-    visited.set(value.as_cell());
-    auto& object = value.as_object();
-    if (object.is_function()) {
-        auto& function = static_cast<Function&>(object);
-        if (is<ScriptFunction>(function) && function.name().is_empty())
-            static_cast<ScriptFunction&>(function).set_name(name);
-    } else if (object.is_array()) {
-        auto& array = static_cast<Array&>(object);
-        array.indexed_properties().for_each_value([&](auto& array_element_value) {
-            update_function_name(array_element_value, name, visited);
-        });
-    }
-}
-
 static void update_function_name(Value value, const FlyString& name)
 {
-    HashTable<JS::Cell*> visited;
-    update_function_name(value, name, visited);
+    if (!value.is_function())
+        return;
+    auto& function = value.as_function();
+    if (is<ScriptFunction>(function) && function.name().is_empty())
+        static_cast<ScriptFunction&>(function).set_name(name);
 }
 
 static String get_function_name(GlobalObject& global_object, Value value)
@@ -1443,7 +1426,11 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::InvalidLeftHandAssignment);
         return {};
     }
-    update_function_name(rhs_result, get_function_name(global_object, reference.name().to_value(interpreter.vm())));
+
+    // FIXME: We should also check if the LHS is an identifier reference.
+    if (rhs_result.is_function())
+        update_function_name(rhs_result, get_function_name(global_object, reference.name().to_value(interpreter.vm())));
+
     reference.put(global_object, rhs_result);
 
     if (interpreter.exception())
