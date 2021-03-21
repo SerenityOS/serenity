@@ -43,7 +43,7 @@ public:
     }
 
     enum LocalVariableTag { LocalVariable };
-    Reference(LocalVariableTag, const String& name, bool strict = false)
+    Reference(LocalVariableTag, const FlyString& name, bool strict = false)
         : m_base(js_null())
         , m_name(name)
         , m_strict(strict)
@@ -52,7 +52,7 @@ public:
     }
 
     enum GlobalVariableTag { GlobalVariable };
-    Reference(GlobalVariableTag, const String& name, bool strict = false)
+    Reference(GlobalVariableTag, const FlyString& name, bool strict = false)
         : m_base(js_null())
         , m_name(name)
         , m_strict(strict)
