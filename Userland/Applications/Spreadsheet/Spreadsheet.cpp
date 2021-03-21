@@ -636,7 +636,13 @@ RefPtr<Sheet> Sheet::from_xsv(const Reader::XSV& xsv, Workbook& workbook)
     auto rows = xsv.size();
 
     auto sheet = adopt(*new Sheet(workbook));
-    sheet->m_columns = cols;
+    if (xsv.has_explicit_headers()) {
+        sheet->m_columns = cols;
+    } else {
+        sheet->m_columns.ensure_capacity(cols.size());
+        for (size_t i = 0; i < cols.size(); ++i)
+            sheet->m_columns.append(convert_to_string(i));
+    }
     for (size_t i = 0; i < max(rows, Sheet::default_row_count); ++i)
         sheet->add_row();
     if (sheet->columns_are_standard()) {
