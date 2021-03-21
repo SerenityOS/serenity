@@ -833,6 +833,16 @@ Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 
 Value add(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    if (both_number(lhs, rhs)) {
+        if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32) {
+            Checked<i32> result;
+            result = lhs.to_i32(global_object);
+            result += rhs.to_i32(global_object);
+            if (!result.has_overflow())
+                return Value(result.value());
+        }
+        return Value(lhs.as_double() + rhs.as_double());
+    }
     auto& vm = global_object.vm();
     auto lhs_primitive = lhs.to_primitive(global_object);
     if (vm.exception())
