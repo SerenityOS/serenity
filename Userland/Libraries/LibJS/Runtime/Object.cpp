@@ -28,6 +28,7 @@
 #include <AK/String.h>
 #include <AK/TemporaryChange.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
@@ -901,7 +902,8 @@ Value Object::call_native_property_getter(NativeProperty& property, Value this_v
 {
     auto& vm = this->vm();
     CallFrame call_frame;
-    call_frame.current_node = property.vm().current_node();
+    if (auto* interpreter = vm.interpreter_if_exists())
+        call_frame.current_node = interpreter->current_node();
     call_frame.is_strict_mode = vm.in_strict_mode();
     call_frame.this_value = this_value;
     vm.push_call_frame(call_frame, global_object());
@@ -916,7 +918,8 @@ void Object::call_native_property_setter(NativeProperty& property, Value this_va
 {
     auto& vm = this->vm();
     CallFrame call_frame;
-    call_frame.current_node = property.vm().current_node();
+    if (auto* interpreter = vm.interpreter_if_exists())
+        call_frame.current_node = interpreter->current_node();
     call_frame.is_strict_mode = vm.in_strict_mode();
     call_frame.this_value = this_value;
     vm.push_call_frame(call_frame, global_object());

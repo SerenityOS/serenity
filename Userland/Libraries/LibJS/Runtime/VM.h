@@ -128,15 +128,10 @@ public:
 
     void pop_call_frame() { m_call_stack.take_last(); }
 
-    void push_ast_node(const ASTNode& node) { m_ast_nodes.append(&node); }
-    void pop_ast_node() { m_ast_nodes.take_last(); }
-
     CallFrame& call_frame() { return *m_call_stack.last(); }
     const CallFrame& call_frame() const { return *m_call_stack.last(); }
     const Vector<CallFrame*>& call_stack() const { return m_call_stack; }
     Vector<CallFrame*>& call_stack() { return m_call_stack; }
-    const ASTNode* current_node() const { return !m_ast_nodes.is_empty() ? m_ast_nodes.last() : nullptr; }
-    const Vector<const ASTNode*>& node_stack() const { return m_ast_nodes; }
 
     const ScopeObject* current_scope() const { return call_frame().scope; }
     ScopeObject* current_scope() { return call_frame().scope; }
@@ -256,7 +251,6 @@ private:
     Vector<Interpreter*> m_interpreters;
 
     Vector<CallFrame*> m_call_stack;
-    Vector<const ASTNode*> m_ast_nodes;
 
     Value m_last_value;
     ScopeType m_unwind_until { ScopeType::None };
