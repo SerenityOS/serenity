@@ -73,7 +73,7 @@ void SampleWidget::paint_event(GUI::PaintEvent& event)
     }
 }
 
-void SampleWidget::set_buffer(Audio::Buffer* buffer)
+void SampleWidget::set_buffer(RefPtr<Audio::Buffer> buffer)
 {
     if (m_buffer == buffer)
         return;
