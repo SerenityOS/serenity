@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,18 +25,18 @@
  */
 
 #include "Workbook.h"
+#include "ImportDialog.h"
 #include "JSIntegration.h"
 #include "Readers/CSV.h"
 #include "Writers/CSV.h"
 #include <AK/ByteBuffer.h>
 #include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
-#include <AK/JsonParser.h>
 #include <AK/Stream.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 #include <LibCore/MimeData.h>
+#include <LibGUI/TextBox.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <string.h>
@@ -84,55 +84,12 @@ Result<bool, String> Workbook::load(const StringView& filename)
 
     auto mime = Core::guess_mime_type_based_on_filename(filename);
 
-    if (mime == "text/csv") {
-        // FIXME: Prompt the user for settings.
-        NonnullRefPtrVector<Sheet> sheets;
+    // Make an import dialog, we might need to import it.
+    auto result = ImportDialog::make_and_run_for(mime, file_or_error.value(), *this);
+    if (result.is_error())
+        return result.error();
 
-        auto sheet = Sheet::from_xsv(Reader::CSV(file_or_error.value()->read_all(), Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders), *this);
-        if (sheet)
-            sheets.append(sheet.release_nonnull());
-
-        m_sheets.clear();
-        m_sheets = move(sheets);
-    } else {
-        // Assume JSON.
-        auto json_value_option = JsonParser(file_or_error.value()->read_all()).parse();
-        if (!json_value_option.has_value()) {
-            StringBuilder sb;
-            sb.append("Failed to parse ");
-            sb.append(filename);
-
-            return sb.to_string();
-        }
-
-        auto& json_value = json_value_option.value();
-        if (!json_value.is_array()) {
-            StringBuilder sb;
-            sb.append("Did not find a spreadsheet in ");
-            sb.append(filename);
-
-            return sb.to_string();
-        }
-
-        NonnullRefPtrVector<Sheet> sheets;
-
-        auto& json_array = json_value.as_array();
-        json_array.for_each([&](auto& sheet_json) {
-            if (!sheet_json.is_object())
-                return IterationDecision::Continue;
-
-            auto sheet = Sheet::from_json(sheet_json.as_object(), *this);
-            if (!sheet)
-                return IterationDecision::Continue;
-
-            sheets.append(sheet.release_nonnull());
-
-            return IterationDecision::Continue;
-        });
-
-        m_sheets.clear();
-        m_sheets = move(sheets);
-    }
+    m_sheets = result.release_value();
 
     set_filename(filename);
 
