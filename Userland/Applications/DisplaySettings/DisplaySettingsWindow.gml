@@ -13,8 +13,7 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             text: "Wallpaper:"
@@ -37,8 +36,7 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             text: "Modes:"
@@ -53,8 +51,7 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             text: "Resolution:"
@@ -67,8 +64,7 @@
             fixed_width: 90
         }
 
-        @GUI::Widget {
-        }
+        @GUI::Widget
 
         @GUI::Label {
             text: "Display scale:"
@@ -89,8 +85,7 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             text: "Color:"
@@ -104,16 +99,13 @@
         }
     }
 
-    @GUI::Widget {
-    }
+    @GUI::Widget
 
     @GUI::Widget {
         shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
-        @GUI::Widget {
-        }
+        @GUI::Widget
 
         @GUI::Button {
             name: "ok_button"
