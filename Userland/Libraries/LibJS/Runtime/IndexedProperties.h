@@ -32,9 +32,6 @@
 
 namespace JS {
 
-const u32 SPARSE_ARRAY_THRESHOLD = 200;
-const u32 MIN_PACKED_RESIZE_AMOUNT = 20;
-
 struct ValueAndAttributes {
     Value value;
     PropertyAttributes attributes { default_attributes };
@@ -88,6 +85,8 @@ public:
 private:
     friend GenericIndexedPropertyStorage;
 
+    void grow_storage_if_needed();
+
     size_t m_array_size { 0 };
     Vector<Value> m_packed_elements;
 };
@@ -105,16 +104,14 @@ public:
     virtual ValueAndAttributes take_first() override;
     virtual ValueAndAttributes take_last() override;
 
-    virtual size_t size() const override { return m_packed_elements.size() + m_sparse_elements.size(); }
+    virtual size_t size() const override { return m_sparse_elements.size(); }
     virtual size_t array_like_size() const override { return m_array_size; }
     virtual void set_array_like_size(size_t new_size) override;
 
-    const Vector<ValueAndAttributes>& packed_elements() const { return m_packed_elements; }
     const HashMap<u32, ValueAndAttributes>& sparse_elements() const { return m_sparse_elements; }
 
 private:
     size_t m_array_size { 0 };
-    Vector<ValueAndAttributes> m_packed_elements;
     HashMap<u32, ValueAndAttributes> m_sparse_elements;
 };
 
@@ -141,7 +138,7 @@ class IndexedProperties {
 public:
     IndexedProperties() = default;
 
-    IndexedProperties(Vector<Value>&& values)
+    explicit IndexedProperties(Vector<Value> values)
         : m_storage(make<SimpleIndexedPropertyStorage>(move(values)))
     {
     }
@@ -174,8 +171,6 @@ public:
             for (auto& value : static_cast<SimpleIndexedPropertyStorage&>(*m_storage).elements())
                 callback(value);
         } else {
-            for (auto& element : static_cast<const GenericIndexedPropertyStorage&>(*m_storage).packed_elements())
-                callback(element.value);
             for (auto& element : static_cast<const GenericIndexedPropertyStorage&>(*m_storage).sparse_elements())
                 callback(element.value.value);
         }

@@ -30,6 +30,8 @@
 
 namespace JS {
 
+const u32 SPARSE_ARRAY_HOLE_THRESHOLD = 200;
+
 SimpleIndexedPropertyStorage::SimpleIndexedPropertyStorage(Vector<Value>&& initial_values)
     : m_array_size(initial_values.size())
     , m_packed_elements(move(initial_values))
@@ -48,15 +50,21 @@ Optional<ValueAndAttributes> SimpleIndexedPropertyStorage::get(u32 index) const
     return ValueAndAttributes { m_packed_elements[index], default_attributes };
 }
 
+void SimpleIndexedPropertyStorage::grow_storage_if_needed()
+{
+    if (m_array_size <= m_packed_elements.size())
+        return;
+    // Grow storage by 25% at a time.
+    m_packed_elements.resize(m_array_size + (m_array_size / 4));
+}
+
 void SimpleIndexedPropertyStorage::put(u32 index, Value value, PropertyAttributes attributes)
 {
     VERIFY(attributes == default_attributes);
-    VERIFY(index < SPARSE_ARRAY_THRESHOLD);
 
     if (index >= m_array_size) {
         m_array_size = index + 1;
-        if (index >= m_packed_elements.size())
-            m_packed_elements.resize(index + MIN_PACKED_RESIZE_AMOUNT >= SPARSE_ARRAY_THRESHOLD ? SPARSE_ARRAY_THRESHOLD : index + MIN_PACKED_RESIZE_AMOUNT);
+        grow_storage_if_needed();
     }
     m_packed_elements[index] = value;
 }
@@ -70,9 +78,7 @@ void SimpleIndexedPropertyStorage::remove(u32 index)
 void SimpleIndexedPropertyStorage::insert(u32 index, Value value, PropertyAttributes attributes)
 {
     VERIFY(attributes == default_attributes);
-    VERIFY(index < SPARSE_ARRAY_THRESHOLD);
     m_array_size++;
-    VERIFY(m_array_size <= SPARSE_ARRAY_THRESHOLD);
     m_packed_elements.insert(index, value);
 }
 
@@ -92,7 +98,6 @@ ValueAndAttributes SimpleIndexedPropertyStorage::take_last()
 
 void SimpleIndexedPropertyStorage::set_array_like_size(size_t new_size)
 {
-    VERIFY(new_size <= SPARSE_ARRAY_THRESHOLD);
     m_array_size = new_size;
     m_packed_elements.resize(new_size);
 }
@@ -100,14 +105,13 @@ void SimpleIndexedPropertyStorage::set_array_like_size(size_t new_size)
 GenericIndexedPropertyStorage::GenericIndexedPropertyStorage(SimpleIndexedPropertyStorage&& storage)
 {
     m_array_size = storage.array_like_size();
-    for (auto& element : move(storage.m_packed_elements))
-        m_packed_elements.append({ element, default_attributes });
+    for (size_t i = 0; i < storage.m_packed_elements.size(); ++i) {
+        m_sparse_elements.set(i, { storage.m_packed_elements[i], default_attributes });
+    }
 }
 
 bool GenericIndexedPropertyStorage::has_index(u32 index) const
 {
-    if (index < SPARSE_ARRAY_THRESHOLD)
-        return index < m_packed_elements.size() && !m_packed_elements[index].value.is_empty();
     return m_sparse_elements.contains(index);
 }
 
@@ -115,11 +119,6 @@ Optional<ValueAndAttributes> GenericIndexedPropertyStorage::get(u32 index) const
 {
     if (index >= m_array_size)
         return {};
-    if (index < SPARSE_ARRAY_THRESHOLD) {
-        if (index >= m_packed_elements.size())
-            return {};
-        return m_packed_elements[index];
-    }
     return m_sparse_elements.get(index);
 }
 
@@ -127,13 +126,7 @@ void GenericIndexedPropertyStorage::put(u32 index, Value value, PropertyAttribut
 {
     if (index >= m_array_size)
         m_array_size = index + 1;
-    if (index < SPARSE_ARRAY_THRESHOLD) {
-        if (index >= m_packed_elements.size())
-            m_packed_elements.resize(index + MIN_PACKED_RESIZE_AMOUNT >= SPARSE_ARRAY_THRESHOLD ? SPARSE_ARRAY_THRESHOLD : index + MIN_PACKED_RESIZE_AMOUNT);
-        m_packed_elements[index] = { value, attributes };
-    } else {
-        m_sparse_elements.set(index, { value, attributes });
-    }
+    m_sparse_elements.set(index, { value, attributes });
 }
 
 void GenericIndexedPropertyStorage::remove(u32 index)
@@ -144,12 +137,7 @@ void GenericIndexedPropertyStorage::remove(u32 index)
         take_last();
         return;
     }
-    if (index < SPARSE_ARRAY_THRESHOLD) {
-        if (index < m_packed_elements.size())
-            m_packed_elements[index] = {};
-    } else {
-        m_sparse_elements.remove(index);
-    }
+    m_sparse_elements.remove(index);
 }
 
 void GenericIndexedPropertyStorage::insert(u32 index, Value value, PropertyAttributes attributes)
@@ -168,11 +156,7 @@ void GenericIndexedPropertyStorage::insert(u32 index, Value value, PropertyAttri
         m_sparse_elements = move(new_sparse_elements);
     }
 
-    if (index < SPARSE_ARRAY_THRESHOLD) {
-        m_packed_elements.insert(index, { value, attributes });
-    } else {
-        m_sparse_elements.set(index, { value, attributes });
-    }
+    m_sparse_elements.set(index, { value, attributes });
 }
 
 ValueAndAttributes GenericIndexedPropertyStorage::take_first()
@@ -180,18 +164,12 @@ ValueAndAttributes GenericIndexedPropertyStorage::take_first()
     VERIFY(m_array_size > 0);
     m_array_size--;
 
-    auto first_element = m_packed_elements.take_first();
+    auto indices = m_sparse_elements.keys();
+    quick_sort(indices);
 
-    if (!m_sparse_elements.is_empty()) {
-        m_packed_elements.append(m_sparse_elements.get(SPARSE_ARRAY_THRESHOLD).value_or({}));
-        HashMap<u32, ValueAndAttributes> new_sparse_elements;
-        for (auto& entry : m_sparse_elements) {
-            if (entry.key - 1 >= SPARSE_ARRAY_THRESHOLD)
-                new_sparse_elements.set(entry.key - 1, entry.value);
-        }
-        m_sparse_elements = move(new_sparse_elements);
-    }
-
+    auto it = m_sparse_elements.find(indices.first());
+    auto first_element = it->value;
+    m_sparse_elements.remove(it);
     return first_element;
 }
 
@@ -200,34 +178,22 @@ ValueAndAttributes GenericIndexedPropertyStorage::take_last()
     VERIFY(m_array_size > 0);
     m_array_size--;
 
-    if (m_array_size <= SPARSE_ARRAY_THRESHOLD) {
-        auto last_element = m_packed_elements[m_array_size];
-        m_packed_elements[m_array_size] = {};
-        return last_element;
-    } else {
-        auto result = m_sparse_elements.get(m_array_size);
-        m_sparse_elements.remove(m_array_size);
-        VERIFY(result.has_value());
-        return result.value();
-    }
+    auto result = m_sparse_elements.get(m_array_size);
+    m_sparse_elements.remove(m_array_size);
+    VERIFY(result.has_value());
+    return result.value();
 }
 
 void GenericIndexedPropertyStorage::set_array_like_size(size_t new_size)
 {
     m_array_size = new_size;
-    if (new_size < SPARSE_ARRAY_THRESHOLD) {
-        m_packed_elements.resize(new_size);
-        m_sparse_elements.clear();
-    } else {
-        m_packed_elements.resize(SPARSE_ARRAY_THRESHOLD);
 
-        HashMap<u32, ValueAndAttributes> new_sparse_elements;
-        for (auto& entry : m_sparse_elements) {
-            if (entry.key < new_size)
-                new_sparse_elements.set(entry.key, entry.value);
-        }
-        m_sparse_elements = move(new_sparse_elements);
+    HashMap<u32, ValueAndAttributes> new_sparse_elements;
+    for (auto& entry : m_sparse_elements) {
+        if (entry.key < new_size)
+            new_sparse_elements.set(entry.key, entry.value);
     }
+    m_sparse_elements = move(new_sparse_elements);
 }
 
 IndexedPropertyIterator::IndexedPropertyIterator(const IndexedProperties& indexed_properties, u32 staring_index, bool skip_empty)
@@ -296,8 +262,10 @@ Optional<ValueAndAttributes> IndexedProperties::get(Object* this_object, u32 ind
 
 void IndexedProperties::put(Object* this_object, u32 index, Value value, PropertyAttributes attributes, bool evaluate_accessors)
 {
-    if (m_storage->is_simple_storage() && (index >= SPARSE_ARRAY_THRESHOLD || attributes != default_attributes))
+    if (m_storage->is_simple_storage() && (attributes != default_attributes || index > (array_like_size() + SPARSE_ARRAY_HOLE_THRESHOLD))) {
         switch_to_generic_storage();
+    }
+
     if (m_storage->is_simple_storage() || !evaluate_accessors) {
         m_storage->put(index, value, attributes);
         return;
@@ -325,9 +293,13 @@ bool IndexedProperties::remove(u32 index)
 
 void IndexedProperties::insert(u32 index, Value value, PropertyAttributes attributes)
 {
-    if (m_storage->is_simple_storage() && (index >= SPARSE_ARRAY_THRESHOLD || attributes != default_attributes || array_like_size() == SPARSE_ARRAY_THRESHOLD))
-        switch_to_generic_storage();
-    m_storage->insert(index, move(value), attributes);
+    if (m_storage->is_simple_storage()) {
+        if (attributes != default_attributes
+            || index > (array_like_size() + SPARSE_ARRAY_HOLE_THRESHOLD)) {
+            switch_to_generic_storage();
+        }
+    }
+    m_storage->insert(index, value, attributes);
 }
 
 ValueAndAttributes IndexedProperties::take_first(Object* this_object)
@@ -361,34 +333,25 @@ void IndexedProperties::append_all(Object* this_object, const IndexedProperties&
 
 void IndexedProperties::set_array_like_size(size_t new_size)
 {
-    if (m_storage->is_simple_storage() && new_size > SPARSE_ARRAY_THRESHOLD)
-        switch_to_generic_storage();
     m_storage->set_array_like_size(new_size);
 }
 
 Vector<u32> IndexedProperties::indices() const
 {
-    Vector<u32> indices;
     if (m_storage->is_simple_storage()) {
         const auto& storage = static_cast<const SimpleIndexedPropertyStorage&>(*m_storage);
         const auto& elements = storage.elements();
+        Vector<u32> indices;
         indices.ensure_capacity(storage.array_like_size());
         for (size_t i = 0; i < elements.size(); ++i) {
             if (!elements.at(i).is_empty())
                 indices.unchecked_append(i);
         }
-    } else {
-        const auto& storage = static_cast<const GenericIndexedPropertyStorage&>(*m_storage);
-        const auto& packed_elements = storage.packed_elements();
-        indices.ensure_capacity(storage.array_like_size());
-        for (size_t i = 0; i < packed_elements.size(); ++i) {
-            if (!packed_elements.at(i).value.is_empty())
-                indices.unchecked_append(i);
-        }
-        auto sparse_elements_keys = storage.sparse_elements().keys();
-        quick_sort(sparse_elements_keys);
-        indices.append(move(sparse_elements_keys));
+        return indices;
     }
+    const auto& storage = static_cast<const GenericIndexedPropertyStorage&>(*m_storage);
+    auto indices = storage.sparse_elements().keys();
+    quick_sort(indices);
     return indices;
 }
 
