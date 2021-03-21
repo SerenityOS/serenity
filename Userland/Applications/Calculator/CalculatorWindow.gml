@@ -12,8 +12,7 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             name: "label"
@@ -51,8 +50,7 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Button {
             name: "mem_clear_button"
@@ -107,7 +105,7 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {}
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Button {
             name: "mem_recall_button"
@@ -162,7 +160,7 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {}
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Button {
             name: "mem_save_button"
@@ -217,7 +215,7 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {}
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Button {
             name: "mem_add_button"

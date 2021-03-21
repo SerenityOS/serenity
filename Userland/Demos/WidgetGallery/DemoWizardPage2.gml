@@ -15,7 +15,5 @@
     }
 
     // Spacer
-    @GUI::Widget {
-
-    }
+    @GUI::Widget
 }
