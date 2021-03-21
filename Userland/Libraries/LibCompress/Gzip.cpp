@@ -70,86 +70,94 @@ GzipDecompressor::~GzipDecompressor()
 // FIXME: Again, there are surely a ton of bugs because the code doesn't check for read errors.
 size_t GzipDecompressor::read(Bytes bytes)
 {
-    if (has_any_error() || m_eof)
-        return 0;
+    size_t total_read = 0;
+    while (total_read < bytes.size()) {
+        if (has_any_error() || m_eof)
+            break;
 
-    if (m_current_member.has_value()) {
-        size_t nread = current_member().m_stream.read(bytes);
-        current_member().m_checksum.update(bytes.trim(nread));
-        current_member().m_nread += nread;
+        auto slice = bytes.slice(total_read);
 
-        if (current_member().m_stream.handle_any_error()) {
-            set_fatal_error();
-            return 0;
-        }
+        if (m_current_member.has_value()) {
+            size_t nread = current_member().m_stream.read(slice);
+            current_member().m_checksum.update(slice.trim(nread));
+            current_member().m_nread += nread;
 
-        if (nread < bytes.size()) {
-            LittleEndian<u32> crc32, input_size;
-            m_input_stream >> crc32 >> input_size;
-
-            if (crc32 != current_member().m_checksum.digest()) {
-                // FIXME: Somehow the checksum is incorrect?
-
+            if (current_member().m_stream.handle_any_error()) {
                 set_fatal_error();
-                return 0;
+                break;
             }
 
-            if (input_size != current_member().m_nread) {
-                set_fatal_error();
-                return 0;
+            if (nread < slice.size()) {
+                LittleEndian<u32> crc32, input_size;
+                m_input_stream >> crc32 >> input_size;
+
+                if (crc32 != current_member().m_checksum.digest()) {
+                    // FIXME: Somehow the checksum is incorrect?
+
+                    set_fatal_error();
+                    break;
+                }
+
+                if (input_size != current_member().m_nread) {
+                    set_fatal_error();
+                    break;
+                }
+
+                m_current_member.clear();
+
+                total_read += nread;
+                continue;
             }
 
-            m_current_member.clear();
+            total_read += nread;
+            continue;
+        } else {
+            m_partial_header_offset += m_input_stream.read(Bytes { m_partial_header, sizeof(BlockHeader) }.slice(m_partial_header_offset));
 
-            return nread + read(bytes.slice(nread));
+            if (m_input_stream.handle_any_error() || m_input_stream.unreliable_eof()) {
+                m_eof = true;
+                break;
+            }
+
+            if (m_partial_header_offset < sizeof(BlockHeader)) {
+                break; // partial header read
+            }
+            m_partial_header_offset = 0;
+
+            BlockHeader header = *(reinterpret_cast<BlockHeader*>(m_partial_header));
+
+            if (!header.valid_magic_number() || !header.supported_by_implementation()) {
+                set_fatal_error();
+                break;
+            }
+
+            if (header.flags & Flags::FEXTRA) {
+                LittleEndian<u16> subfield_id, length;
+                m_input_stream >> subfield_id >> length;
+                m_input_stream.discard_or_error(length);
+            }
+
+            if (header.flags & Flags::FNAME) {
+                String original_filename;
+                m_input_stream >> original_filename;
+            }
+
+            if (header.flags & Flags::FCOMMENT) {
+                String comment;
+                m_input_stream >> comment;
+            }
+
+            if (header.flags & Flags::FHCRC) {
+                LittleEndian<u16> crc16;
+                m_input_stream >> crc16;
+                // FIXME: we should probably verify this instead of just assuming it matches
+            }
+
+            m_current_member.emplace(header, m_input_stream);
+            continue;
         }
-
-        return nread;
-    } else {
-        m_partial_header_offset += m_input_stream.read(Bytes { m_partial_header, sizeof(BlockHeader) }.slice(m_partial_header_offset));
-
-        if (m_input_stream.handle_any_error() || m_input_stream.unreliable_eof()) {
-            m_eof = true;
-            return 0;
-        }
-
-        if (m_partial_header_offset < sizeof(BlockHeader)) {
-            return 0; // partial header read
-        }
-        m_partial_header_offset = 0;
-
-        BlockHeader header = *(reinterpret_cast<BlockHeader*>(m_partial_header));
-
-        if (!header.valid_magic_number() || !header.supported_by_implementation()) {
-            set_fatal_error();
-            return 0;
-        }
-
-        if (header.flags & Flags::FEXTRA) {
-            LittleEndian<u16> subfield_id, length;
-            m_input_stream >> subfield_id >> length;
-            m_input_stream.discard_or_error(length);
-        }
-
-        if (header.flags & Flags::FNAME) {
-            String original_filename;
-            m_input_stream >> original_filename;
-        }
-
-        if (header.flags & Flags::FCOMMENT) {
-            String comment;
-            m_input_stream >> comment;
-        }
-
-        if (header.flags & Flags::FHCRC) {
-            LittleEndian<u16> crc16;
-            m_input_stream >> crc16;
-            // FIXME: we should probably verify this instead of just assuming it matches
-        }
-
-        m_current_member.emplace(header, m_input_stream);
-        return read(bytes);
     }
+    return total_read;
 }
 
 bool GzipDecompressor::read_or_error(Bytes bytes)
