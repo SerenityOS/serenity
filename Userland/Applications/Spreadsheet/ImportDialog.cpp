@@ -244,11 +244,8 @@ Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(String
             if (!sheet_json.is_object())
                 return IterationDecision::Continue;
 
-            auto sheet = Sheet::from_json(sheet_json.as_object(), workbook);
-            if (!sheet)
-                return IterationDecision::Continue;
-
-            sheets.append(sheet.release_nonnull());
+            if (auto sheet = Sheet::from_json(sheet_json.as_object(), workbook))
+                sheets.append(sheet.release_nonnull());
 
             return IterationDecision::Continue;
         });
