@@ -1429,10 +1429,6 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         return {};
     }
 
-    // FIXME: We should also check if the LHS is an identifier reference.
-    if (rhs_result.is_function())
-        update_function_name(rhs_result, get_function_name(global_object, reference.name().to_value(interpreter.vm())));
-
     reference.put(global_object, rhs_result);
 
     if (interpreter.exception())
@@ -1573,7 +1569,8 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
             if (interpreter.exception())
                 return {};
             auto variable_name = declarator.id().string();
-            update_function_name(initalizer_result, variable_name);
+            if (is<ClassExpression>(*init))
+                update_function_name(initalizer_result, variable_name);
             interpreter.vm().set_variable(variable_name, initalizer_result, global_object, true);
         }
     }

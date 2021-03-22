@@ -234,6 +234,13 @@ protected:
 
     const NonnullRefPtrVector<VariableDeclaration>& variables() const { return m_variables; }
 
+protected:
+    void set_name(FlyString name)
+    {
+        VERIFY(m_name.is_empty());
+        m_name = move(name);
+    }
+
 private:
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;
@@ -266,7 +273,7 @@ public:
     static bool must_have_name() { return false; }
 
     FunctionExpression(SourceRange source_range, const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode, bool is_arrow_function = false)
-        : Expression(move(source_range))
+        : Expression(source_range)
         , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_strict_mode)
         , m_is_arrow_function(is_arrow_function)
     {
@@ -275,8 +282,20 @@ public:
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
 
+    void set_name_if_possible(FlyString new_name)
+    {
+        if (m_cannot_auto_rename)
+            return;
+        m_cannot_auto_rename = true;
+        if (name().is_empty())
+            set_name(move(new_name));
+    }
+    bool cannot_auto_rename() const { return m_cannot_auto_rename; }
+    void set_cannot_auto_rename() { m_cannot_auto_rename = true; }
+
 private:
-    bool m_is_arrow_function;
+    bool m_cannot_auto_rename { false };
+    bool m_is_arrow_function { false };
 };
 
 class ErrorExpression final : public Expression {
