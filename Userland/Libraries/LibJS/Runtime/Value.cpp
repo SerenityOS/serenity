@@ -517,12 +517,6 @@ u32 Value::as_u32() const
     return min((double)as_i32(), MAX_U32);
 }
 
-size_t Value::as_size_t() const
-{
-    VERIFY(as_double() >= 0);
-    return min((double)as_i32(), MAX_ARRAY_LIKE_INDEX);
-}
-
 double Value::to_double(GlobalObject& global_object) const
 {
     auto number = to_number(global_object);
