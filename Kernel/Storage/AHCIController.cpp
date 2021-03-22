@@ -172,13 +172,6 @@ void AHCIController::initialize()
     hba().control_regs.ghc = 0x80000000; // Ensure that HBA knows we are AHCI aware.
     PCI::enable_interrupt_line(pci_address());
     PCI::enable_bus_mastering(pci_address());
-
-    // FIXME: This is a hack for VMWare (and possibly other hardware) that set
-    // the IRQ line to 7 or other weird value. Find a better way to set this
-    // with balancing IRQ sharing in mind.
-    if (kernel_command_line().is_forcing_irq_11_for_ahci())
-        PCI::set_interrupt_line(pci_address(), 11);
-
     enable_global_interrupts();
     m_handlers.append(AHCIPortHandler::create(*this, PCI::get_interrupt_line(pci_address()),
         AHCI::MaskedBitField((volatile u32&)(hba().control_regs.pi))));

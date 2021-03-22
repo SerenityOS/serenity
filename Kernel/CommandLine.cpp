@@ -113,11 +113,6 @@ UNMAP_AFTER_INIT bool CommandLine::is_mmio_enabled() const
     return lookup("pci_mmio").value_or("off") == "on";
 }
 
-UNMAP_AFTER_INIT bool CommandLine::is_forcing_irq_11_for_ahci() const
-{
-    return lookup("force_ahci_irq_11").value_or("off") == "on";
-}
-
 UNMAP_AFTER_INIT bool CommandLine::is_legacy_time_enabled() const
 {
     return lookup("time").value_or("modern") == "legacy";
