@@ -59,10 +59,14 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     auto& help_button = top_bar.add<GUI::Button>("🛈");
     help_button.set_fixed_size(20, 20);
     help_button.on_click = [&](auto) {
-        auto docs = m_selected_view->sheet().gather_documentation();
-        auto help_window = HelpWindow::the(window());
-        help_window->set_docs(move(docs));
-        help_window->show();
+        if (!m_selected_view) {
+            GUI::MessageBox::show_error(window(), "Can only show function documentation/help when a worksheet exists and is open");
+        } else if (auto* sheet_ptr = m_selected_view->sheet_if_available()) {
+            auto docs = sheet_ptr->gather_documentation();
+            auto help_window = HelpWindow::the(window());
+            help_window->set_docs(move(docs));
+            help_window->show();
+        }
     };
 
     auto& cell_value_editor = top_bar.add<GUI::TextEditor>(GUI::TextEditor::Type::SingleLine);
@@ -98,7 +102,9 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     auto rename_action = GUI::Action::create("Rename...", [this](auto&) {
         VERIFY(m_tab_context_menu_sheet_view);
 
-        auto& sheet = m_tab_context_menu_sheet_view->sheet();
+        auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
+        VERIFY(sheet_ptr); // How did we get here without a sheet?
+        auto& sheet = *sheet_ptr;
         String new_name;
         if (GUI::InputBox::show(window(), new_name, String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
             sheet.set_name(new_name);
@@ -139,9 +145,13 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
         if (m_selected_view) {
             m_selected_view->on_selection_changed = nullptr;
             m_selected_view->on_selection_dropped = nullptr;
-        };
+        }
         m_selected_view = &static_cast<SpreadsheetView&>(selected_widget);
         m_selected_view->on_selection_changed = [&](Vector<Position>&& selection) {
+            auto* sheet_ptr = m_selected_view->sheet_if_available();
+            // How did this even happen?
+            VERIFY(sheet_ptr);
+            auto& sheet = *sheet_ptr;
             if (selection.is_empty()) {
                 m_current_cell_label->set_enabled(false);
                 m_current_cell_label->set_text({});
@@ -156,9 +166,9 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             if (selection.size() == 1) {
                 auto& position = selection.first();
                 m_current_cell_label->set_enabled(true);
-                m_current_cell_label->set_text(position.to_cell_identifier(m_selected_view->sheet()));
+                m_current_cell_label->set_text(position.to_cell_identifier(sheet));
 
-                auto& cell = m_selected_view->sheet().ensure(position);
+                auto& cell = sheet.ensure(position);
                 m_cell_value_editor->on_change = nullptr;
                 m_cell_value_editor->set_text(cell.source());
                 m_cell_value_editor->on_change = [&] {
@@ -167,7 +177,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                     auto offset = m_cell_value_editor->cursor().column();
                     try_generate_tip_for_input_expression(text, offset);
                     cell.set_data(move(text));
-                    m_selected_view->sheet().update();
+                    sheet.update();
                     update();
                 };
                 m_cell_value_editor->set_enabled(true);
@@ -183,7 +193,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
             Vector<Cell*> cells;
             for (auto& position : selection)
-                cells.append(&m_selected_view->sheet().ensure(position));
+                cells.append(&sheet.ensure(position));
 
             auto first_cell = cells.first();
             m_cell_value_editor->on_change = nullptr;
@@ -193,13 +203,17 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             m_cell_value_editor->on_focusout = [this] { m_should_change_selected_cells = false; };
             m_cell_value_editor->on_change = [cells = move(cells), this] {
                 if (m_should_change_selected_cells) {
+                    auto* sheet_ptr = m_selected_view->sheet_if_available();
+                    if (!sheet_ptr)
+                        return;
+                    auto& sheet = *sheet_ptr;
                     auto text = m_cell_value_editor->text();
                     // FIXME: Lines?
                     auto offset = m_cell_value_editor->cursor().column();
                     try_generate_tip_for_input_expression(text, offset);
                     for (auto* cell : cells)
                         cell->set_data(text);
-                    m_selected_view->sheet().update();
+                    sheet.update();
                     update();
                 }
             };
@@ -230,6 +244,12 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
 void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source, size_t cursor_offset)
 {
+    auto* sheet_ptr = m_selected_view->sheet_if_available();
+    if (!sheet_ptr)
+        return;
+
+    auto& sheet = *sheet_ptr;
+
     m_inline_documentation_window->set_rect(m_cell_value_editor->screen_relative_rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
     if (!m_selected_view || !source.starts_with('=')) {
         m_inline_documentation_window->hide();
@@ -242,7 +262,6 @@ void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source,
     }
 
     auto& [name, index] = maybe_function_and_argument.value();
-    auto& sheet = m_selected_view->sheet();
     auto text = sheet.generate_inline_documentation_for(name, index);
     if (text.is_empty()) {
         m_inline_documentation_window->hide();

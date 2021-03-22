@@ -36,6 +36,7 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <unistd.h>
 
@@ -169,7 +170,13 @@ int main(int argc, char* argv[])
         /// - action: copy/cut
         /// - currently selected cell
         /// - selected cell+
-        auto& cells = spreadsheet_widget.current_worksheet().selected_cells();
+        auto* worksheet_ptr = spreadsheet_widget.current_worksheet_if_available();
+        if (!worksheet_ptr) {
+            GUI::MessageBox::show_error(window, "There are no active worksheets");
+            return;
+        }
+        auto& worksheet = *worksheet_ptr;
+        auto& cells = worksheet.selected_cells();
         VERIFY(!cells.is_empty());
         StringBuilder text_builder, url_builder;
         url_builder.append(is_cut ? "cut\n" : "copy\n");
@@ -177,20 +184,20 @@ int main(int argc, char* argv[])
         auto cursor = spreadsheet_widget.current_selection_cursor();
         if (cursor) {
             Spreadsheet::Position position { (size_t)cursor->column(), (size_t)cursor->row() };
-            url_builder.append(position.to_url(spreadsheet_widget.current_worksheet()).to_string());
+            url_builder.append(position.to_url(worksheet).to_string());
             url_builder.append('\n');
         }
 
         for (auto& cell : cells) {
             if (first && !cursor) {
-                url_builder.append(cell.to_url(spreadsheet_widget.current_worksheet()).to_string());
+                url_builder.append(cell.to_url(worksheet).to_string());
                 url_builder.append('\n');
             }
 
-            url_builder.append(cell.to_url(spreadsheet_widget.current_worksheet()).to_string());
+            url_builder.append(cell.to_url(worksheet).to_string());
             url_builder.append('\n');
 
-            auto cell_data = spreadsheet_widget.current_worksheet().at(cell);
+            auto cell_data = worksheet.at(cell);
             if (!first)
                 text_builder.append('\t');
             if (cell_data)
@@ -209,12 +216,17 @@ int main(int argc, char* argv[])
     edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
         ScopeGuard update_after_paste { [&] { spreadsheet_widget.update(); } };
 
-        auto& cells = spreadsheet_widget.current_worksheet().selected_cells();
+        auto* worksheet_ptr = spreadsheet_widget.current_worksheet_if_available();
+        if (!worksheet_ptr) {
+            GUI::MessageBox::show_error(window, "There are no active worksheets");
+            return;
+        }
+        auto& sheet = *worksheet_ptr;
+        auto& cells = sheet.selected_cells();
         VERIFY(!cells.is_empty());
         const auto& data = GUI::Clipboard::the().data_and_type();
         if (auto spreadsheet_data = data.metadata.get("text/x-spreadsheet-data"); spreadsheet_data.has_value()) {
             Vector<Spreadsheet::Position> source_positions, target_positions;
-            auto& sheet = spreadsheet_widget.current_worksheet();
             auto lines = spreadsheet_data.value().split_view('\n');
             auto action = lines.take_first();
 
@@ -225,7 +237,7 @@ int main(int argc, char* argv[])
                     source_positions.append(position.release_value());
             }
 
-            for (auto& position : spreadsheet_widget.current_worksheet().selected_cells())
+            for (auto& position : sheet.selected_cells())
                 target_positions.append(position);
 
             if (source_positions.is_empty())
@@ -234,8 +246,8 @@ int main(int argc, char* argv[])
             auto first_position = source_positions.take_first();
             sheet.copy_cells(move(source_positions), move(target_positions), first_position, action == "cut" ? Spreadsheet::Sheet::CopyOperation::Cut : Spreadsheet::Sheet::CopyOperation::Copy);
         } else {
-            for (auto& cell : spreadsheet_widget.current_worksheet().selected_cells())
-                spreadsheet_widget.current_worksheet().ensure(cell).set_data(StringView { data.data.data(), data.data.size() });
+            for (auto& cell : sheet.selected_cells())
+                sheet.ensure(cell).set_data(StringView { data.data.data(), data.data.size() });
             spreadsheet_widget.update();
         }
     },
@@ -245,10 +257,14 @@ int main(int argc, char* argv[])
 
     help_menu.add_action(GUI::Action::create(
         "Functions Help", [&](auto&) {
-            auto docs = spreadsheet_widget.current_worksheet().gather_documentation();
-            auto help_window = Spreadsheet::HelpWindow::the(window);
-            help_window->set_docs(move(docs));
-            help_window->show();
+            if (auto* worksheet_ptr = spreadsheet_widget.current_worksheet_if_available()) {
+                auto docs = worksheet_ptr->gather_documentation();
+                auto help_window = Spreadsheet::HelpWindow::the(window);
+                help_window->set_docs(move(docs));
+                help_window->show();
+            } else {
+                GUI::MessageBox::show_error(window, "Cannot prepare documentation/help without an active worksheet");
+            }
         },
         window));
 
