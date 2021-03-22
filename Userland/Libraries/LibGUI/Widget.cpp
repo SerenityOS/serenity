@@ -110,6 +110,24 @@ Widget::Widget()
     REGISTER_INT_PROPERTY("x", x, set_x);
     REGISTER_INT_PROPERTY("y", y, set_y);
 
+    REGISTER_STRING_PROPERTY("font", m_font->family, set_font_family);
+    REGISTER_INT_PROPERTY("font_size", m_font->presentation_size, set_font_size);
+    REGISTER_FONT_WEIGHT_PROPERTY("font_weight", m_font->weight, set_font_weight);
+
+    register_property(
+        "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },
+        [this](auto& value) {
+            if (value.to_string() == "FixedWidth") {
+                set_font_fixed_width(true);
+                return true;
+            }
+            if (value.to_string() == "Normal") {
+                set_font_fixed_width(false);
+                return true;
+            }
+            return false;
+        });
+
     register_property(
         "focus_policy", [this]() -> JsonValue {
         auto policy = focus_policy();
@@ -682,6 +700,29 @@ void Widget::set_font(const Gfx::Font* font)
 
     did_change_font();
     update();
+}
+
+void Widget::set_font_family(const String& family)
+{
+    set_font(Gfx::FontDatabase::the().get(family, m_font->presentation_size(), m_font->weight()));
+}
+
+void Widget::set_font_size(unsigned size)
+{
+    set_font(Gfx::FontDatabase::the().get(m_font->family(), size, m_font->weight()));
+}
+
+void Widget::set_font_weight(unsigned weight)
+{
+    set_font(Gfx::FontDatabase::the().get(m_font->family(), m_font->presentation_size(), weight));
+}
+
+void Widget::set_font_fixed_width(bool fixed_width)
+{
+    if (fixed_width)
+        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_fixed_width_font().family(), m_font->presentation_size(), m_font->weight()));
+    else
+        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_font().family(), m_font->presentation_size(), m_font->weight()));
 }
 
 void Widget::set_global_cursor_tracking(bool enabled)
