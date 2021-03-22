@@ -108,8 +108,7 @@ class SpreadsheetView final : public GUI::Widget {
 public:
     ~SpreadsheetView();
 
-    const Sheet& sheet() const { return *m_sheet; }
-    Sheet& sheet() { return *m_sheet; }
+    Sheet* sheet_if_available() { return m_sheet; }
 
     const GUI::ModelIndex* cursor() const
     {
