@@ -31,6 +31,7 @@
 #include <AK/Span.h>
 #include <AK/Stream.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <string.h>
 
 namespace Archive {
@@ -229,6 +230,19 @@ private:
     u16 member_count { 0 };
     size_t members_start_offset { 0 };
     ReadonlyBytes m_input_data;
+};
+
+class ZipOutputStream {
+public:
+    ZipOutputStream(OutputStream&);
+    void add_member(const ZipMember&);
+    void finish();
+
+private:
+    OutputStream& m_stream;
+    Vector<ZipMember> m_members;
+
+    bool m_finished { false };
 };
 
 }
