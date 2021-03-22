@@ -64,6 +64,10 @@ Optional<FunctionAndArgumentIndex> get_function_and_argument_index(StringView so
         case JS::TokenType::ParenClose:
             previous_was_identifier = false;
             if (open_parens_since_last_commit == 0) {
+                if (state.is_empty() || names.is_empty()) {
+                    // JS Syntax error.
+                    break;
+                }
                 state.take_last();
                 names.take_last();
                 break;
@@ -73,7 +77,8 @@ Optional<FunctionAndArgumentIndex> get_function_and_argument_index(StringView so
         case JS::TokenType::Comma:
             previous_was_identifier = false;
             if (open_parens_since_last_commit == 0 && open_curlies_and_brackets_since_last_commit == 0) {
-                state.last()++;
+                if (!state.is_empty())
+                    state.last()++;
                 break;
             }
             break;
