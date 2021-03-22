@@ -347,4 +347,18 @@ T* Object::find_descendant_of_type_named(const String& name) requires IsBaseOf<O
         { Gfx::TextAlignment::CenterRight, "CenterRight" },             \
         { Gfx::TextAlignment::TopRight, "TopRight" },                   \
         { Gfx::TextAlignment::BottomRight, "BottomRight" })
+
+#define REGISTER_FONT_WEIGHT_PROPERTY(property_name, getter, setter) \
+    REGISTER_ENUM_PROPERTY(                                          \
+        property_name, getter, setter, unsigned,                     \
+        { Gfx::FontWeight::Thin, "Thin" },                           \
+        { Gfx::FontWeight::ExtraLight, "ExtraLight" },               \
+        { Gfx::FontWeight::Light, "Light" },                         \
+        { Gfx::FontWeight::Regular, "Regular" },                     \
+        { Gfx::FontWeight::Medium, "Medium" },                       \
+        { Gfx::FontWeight::SemiBold, "SemiBold" },                   \
+        { Gfx::FontWeight::Bold, "Bold" },                           \
+        { Gfx::FontWeight::ExtraBold, "ExtraBold" },                 \
+        { Gfx::FontWeight::Black, "Black" },                         \
+        { Gfx::FontWeight::ExtraBlack, "ExtraBlack" })
 }

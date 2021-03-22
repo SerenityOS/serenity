@@ -239,8 +239,14 @@ public:
     bool fill_with_background_color() const { return m_fill_with_background_color; }
 
     const Gfx::Font& font() const { return *m_font; }
+
     void set_font(const Gfx::Font*);
     void set_font(const Gfx::Font& font) { set_font(&font); }
+
+    void set_font_family(const String&);
+    void set_font_size(unsigned);
+    void set_font_weight(unsigned);
+    void set_font_fixed_width(bool);
 
     void set_global_cursor_tracking(bool);
     bool global_cursor_tracking() const;
