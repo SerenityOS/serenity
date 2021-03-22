@@ -26,6 +26,7 @@
 
 #include <AK/Debug.h>
 #include <LibCompress/Gzip.h>
+#include <LibCompress/Zlib.h>
 #include <LibCore/TCPSocket.h>
 #include <LibHTTP/HttpResponse.h>
 #include <LibHTTP/Job.h>
@@ -53,6 +54,32 @@ static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& c
 
         if constexpr (JOB_DEBUG) {
             dbgln("Job::handle_content_encoding: Gzip::decompress() successful.");
+            dbgln("  Input size: {}", buf.size());
+            dbgln("  Output size: {}", uncompressed.value().size());
+        }
+
+        return uncompressed.value();
+    } else if (content_encoding == "deflate") {
+        dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf is deflate compressed!");
+
+        // Even though the content encoding is "deflate", it's actually deflate with the zlib wrapper.
+        // https://tools.ietf.org/html/rfc7230#section-4.2.2
+        auto uncompressed = Compress::Zlib::decompress_all(buf);
+        if (!uncompressed.has_value()) {
+            // From the RFC:
+            // "Note: Some non-conformant implementations send the "deflate"
+            //        compressed data without the zlib wrapper."
+            dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: Zlib::decompress_all() failed. Trying DeflateDecompressor::decompress_all()");
+            uncompressed = Compress::DeflateDecompressor::decompress_all(buf);
+
+            if (!uncompressed.has_value()) {
+                dbgln("Job::handle_content_encoding: DeflateDecompressor::decompress_all() failed, returning original buffer.");
+                return buf;
+            }
+        }
+
+        if constexpr (JOB_DEBUG) {
+            dbgln("Job::handle_content_encoding: Deflate decompression successful.");
             dbgln("  Input size: {}", buf.size());
             dbgln("  Output size: {}", uncompressed.value().size());
         }
