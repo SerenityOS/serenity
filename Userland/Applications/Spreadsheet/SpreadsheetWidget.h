@@ -46,8 +46,7 @@ public:
     void add_sheet(NonnullRefPtr<Sheet>&&);
 
     const String& current_filename() const { return m_workbook->current_filename(); }
-    const Sheet& current_worksheet() const { return m_selected_view->sheet(); }
-    Sheet& current_worksheet() { return m_selected_view->sheet(); }
+    Sheet* current_worksheet_if_available() { return m_selected_view ? m_selected_view->sheet_if_available() : nullptr; }
     void set_filename(const String& filename);
 
     Workbook& workbook() { return *m_workbook; }
