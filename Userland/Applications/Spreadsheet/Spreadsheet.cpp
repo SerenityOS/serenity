@@ -199,10 +199,10 @@ Sheet::ValueAndException Sheet::evaluate(const StringView& source, Cell* on_beha
     ScopeGuard clear_exception { [&] { interpreter().vm().clear_exception(); } };
 
     auto parser = JS::Parser(JS::Lexer(source));
+    auto program = parser.parse_program();
     if (parser.has_errors() || interpreter().exception())
         return { JS::js_undefined(), interpreter().exception() };
 
-    auto program = parser.parse_program();
     interpreter().run(global_object(), program);
     if (interpreter().exception()) {
         auto exc = interpreter().exception();
