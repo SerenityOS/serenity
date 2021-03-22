@@ -9,6 +9,7 @@ set(AK_TEST_SOURCES
     TestBase64.cpp
     TestBinaryHeap.cpp
     TestBinarySearch.cpp
+    TestBitCast.cpp
     TestBitmap.cpp
     TestByteBuffer.cpp
     TestChecked.cpp
