@@ -70,7 +70,7 @@ SpuriousInterruptHandler::~SpuriousInterruptHandler()
 void SpuriousInterruptHandler::handle_interrupt(const RegisterState& state)
 {
     // Actually check if IRQ7 or IRQ15 are spurious, and if not, call the real handler to handle the IRQ.
-    if (m_responsible_irq_controller->get_isr() & (1 << 15)) {
+    if (m_responsible_irq_controller->get_isr() & (1 << interrupt_number())) {
         m_real_irq = true; // remember that we had a real IRQ, when EOI later!
         m_real_handler->increment_invoking_counter();
         m_real_handler->handle_interrupt(state);
