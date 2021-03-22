@@ -29,6 +29,9 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
+#include <LibELF/DynamicLoader.h>
+#include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
 #include <ctype.h>
@@ -267,6 +270,98 @@ static const char* object_relocation_type_to_string(Elf32_Word type)
     }
 }
 
+static const char* object_tag_to_string(Elf32_Sword dt_tag)
+{
+    switch (dt_tag) {
+    case DT_NULL:
+        return "NULL"; /* marks end of _DYNAMIC array */
+    case DT_NEEDED:
+        return "NEEDED"; /* string table offset of needed lib */
+    case DT_PLTRELSZ:
+        return "PLTRELSZ"; /* size of relocation entries in PLT */
+    case DT_PLTGOT:
+        return "PLTGOT"; /* address PLT/GOT */
+    case DT_HASH:
+        return "HASH"; /* address of symbol hash table */
+    case DT_STRTAB:
+        return "STRTAB"; /* address of string table */
+    case DT_SYMTAB:
+        return "SYMTAB"; /* address of symbol table */
+    case DT_RELA:
+        return "RELA"; /* address of relocation table */
+    case DT_RELASZ:
+        return "RELASZ"; /* size of relocation table */
+    case DT_RELAENT:
+        return "RELAENT"; /* size of relocation entry */
+    case DT_STRSZ:
+        return "STRSZ"; /* size of string table */
+    case DT_SYMENT:
+        return "SYMENT"; /* size of symbol table entry */
+    case DT_INIT:
+        return "INIT"; /* address of initialization func. */
+    case DT_FINI:
+        return "FINI"; /* address of termination function */
+    case DT_SONAME:
+        return "SONAME"; /* string table offset of shared obj */
+    case DT_RPATH:
+        return "RPATH"; /* string table offset of library search path */
+    case DT_SYMBOLIC:
+        return "SYMBOLIC"; /* start sym search in shared obj. */
+    case DT_REL:
+        return "REL"; /* address of rel. tbl. w addends */
+    case DT_RELSZ:
+        return "RELSZ"; /* size of DT_REL relocation table */
+    case DT_RELENT:
+        return "RELENT"; /* size of DT_REL relocation entry */
+    case DT_PLTREL:
+        return "PLTREL"; /* PLT referenced relocation entry */
+    case DT_DEBUG:
+        return "DEBUG"; /* bugger */
+    case DT_TEXTREL:
+        return "TEXTREL"; /* Allow rel. mod. to unwritable seg */
+    case DT_JMPREL:
+        return "JMPREL"; /* add. of PLT's relocation entries */
+    case DT_BIND_NOW:
+        return "BIND_NOW"; /* Bind now regardless of env setting */
+    case DT_INIT_ARRAY:
+        return "INIT_ARRAY"; /* address of array of init func */
+    case DT_FINI_ARRAY:
+        return "FINI_ARRAY"; /* address of array of term func */
+    case DT_INIT_ARRAYSZ:
+        return "INIT_ARRAYSZ"; /* size of array of init func */
+    case DT_FINI_ARRAYSZ:
+        return "FINI_ARRAYSZ"; /* size of array of term func */
+    case DT_RUNPATH:
+        return "RUNPATH"; /* strtab offset of lib search path */
+    case DT_FLAGS:
+        return "FLAGS"; /* Set of DF_* flags */
+    case DT_ENCODING:
+        return "ENCODING"; /* further DT_* follow encoding rules */
+    case DT_PREINIT_ARRAY:
+        return "PREINIT_ARRAY"; /* address of array of preinit func */
+    case DT_PREINIT_ARRAYSZ:
+        return "PREINIT_ARRAYSZ"; /* size of array of preinit func */
+    case DT_LOOS:
+        return "LOOS"; /* reserved range for OS */
+    case DT_HIOS:
+        return "HIOS"; /*  specific dynamic array tags */
+    case DT_LOPROC:
+        return "LOPROC"; /* reserved range for processor */
+    case DT_HIPROC:
+        return "HIPROC"; /*  specific dynamic array tags */
+    case DT_GNU_HASH:
+        return "GNU_HASH"; /* address of GNU hash table */
+    case DT_RELACOUNT:
+        return "RELACOUNT"; /* if present, number of RELATIVE */
+    case DT_RELCOUNT:
+        return "RELCOUNT"; /* relocs, which must come first */
+    case DT_FLAGS_1:
+        return "FLAGS_1";
+    default:
+        return "??";
+    }
+}
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio rpath", nullptr) < 0) {
@@ -295,6 +390,7 @@ int main(int argc, char** argv)
     args_parser.add_option(display_section_headers, "Display section headers", "section-headers", 'S');
     args_parser.add_option(display_headers, "Equivalent to: -h -l -S -s -r -d -n -u -c", "headers", 'e');
     args_parser.add_option(display_symbol_table, "Display the symbol table", "syms", 's');
+    args_parser.add_option(display_dynamic_symbol_table, "Display the dynamic symbol table", "dyn-syms", '\0');
     args_parser.add_option(display_dynamic_section, "Display the dynamic section", "dynamic", 'd');
     args_parser.add_option(display_core_notes, "Display core notes", "notes", 'n');
     args_parser.add_option(display_relocations, "Display relocations", "relocs", 'r');
@@ -333,9 +429,9 @@ int main(int argc, char** argv)
     }
 
     auto elf_image_data = file_or_error.value()->bytes();
-    ELF::Image executable_elf(elf_image_data);
+    ELF::Image elf_image(elf_image_data);
 
-    if (!executable_elf.is_valid()) {
+    if (!elf_image.is_valid()) {
         fprintf(stderr, "File is not a valid ELF object\n");
         return -1;
     }
@@ -347,29 +443,61 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    if (executable_elf.is_dynamic() && interpreter_path.is_null()) {
-        fprintf(stderr, "Warning: Dynamic ELF object has no interpreter path\n");
-    }
-
-    ELF::Image interpreter_image(elf_image_data);
-
-    if (!interpreter_image.is_valid()) {
-        fprintf(stderr, "ELF image is invalid\n");
-        return -1;
-    }
-
     auto& header = *reinterpret_cast<const Elf32_Ehdr*>(elf_image_data.data());
+
+    RefPtr<ELF::DynamicObject> object = nullptr;
+
+    if (elf_image.is_dynamic()) {
+        if (interpreter_path.is_null()) {
+            interpreter_path = "/usr/lib/Loader.so";
+            fprintf(stderr, "Warning: Dynamic ELF object has no interpreter path. Using: %s\n", interpreter_path.characters());
+        }
+
+        auto interpreter_file_or_error = MappedFile::map(interpreter_path);
+
+        if (interpreter_file_or_error.is_error()) {
+            warnln("Unable to map interpreter file {}: {}", interpreter_path, interpreter_file_or_error.error());
+            return -1;
+        }
+
+        auto interpreter_image_data = interpreter_file_or_error.value()->bytes();
+
+        ELF::Image interpreter_image(interpreter_image_data);
+
+        if (!interpreter_image.is_valid()) {
+            fprintf(stderr, "ELF interpreter image is invalid\n");
+            return -1;
+        }
+
+        int fd = open(path, O_RDONLY);
+        if (fd < 0) {
+            outln(String::formatted("Unable to open file {}", path).characters());
+            return 1;
+        }
+
+        auto loader = ELF::DynamicLoader::try_create(fd, path);
+        if (!loader || !loader->is_valid()) {
+            outln(String::formatted("{} is not a valid ELF dynamic shared object!", path));
+            return 1;
+        }
+
+        object = loader->map();
+        if (!object) {
+            outln(String::formatted("Failed to map dynamic ELF object {}", path));
+            return 1;
+        }
+    }
 
     if (display_elf_header) {
         printf("ELF header:\n");
 
         String magic = String::format("%s", header.e_ident);
         printf("  Magic:                             ");
-        for (size_t i = 0; i < magic.length(); i++) {
-            if (isprint(magic[i])) {
-                printf("%c ", magic[i]);
+        for (char i : magic) {
+            if (isprint(i)) {
+                printf("%c ", i);
             } else {
-                printf("%02x ", magic[i]);
+                printf("%02x ", i);
             }
         }
         printf("\n");
@@ -396,13 +524,13 @@ int main(int argc, char** argv)
             printf("\n");
         }
 
-        if (!interpreter_image.section_count()) {
+        if (!elf_image.section_count()) {
             printf("There are no sections in this file.\n");
         } else {
             printf("Section Headers:\n");
             printf("  Name                Type            Address  Offset   Size     Flags\n");
 
-            interpreter_image.for_each_section([](const ELF::Image::Section& section) {
+            elf_image.for_each_section([](const ELF::Image::Section& section) {
                 printf("  %-19s ", StringView(section.name()).to_string().characters());
                 printf("%-15s ", object_section_header_type_to_string(section.type()));
                 printf("%08x ", section.address());
@@ -427,7 +555,7 @@ int main(int argc, char** argv)
         printf("Program Headers:\n");
         printf("  Type           Offset     VirtAddr   PhysAddr   FileSiz    MemSiz     Flg  Align\n");
 
-        interpreter_image.for_each_program_header([](const ELF::Image::ProgramHeader& program_header) {
+        elf_image.for_each_program_header([](const ELF::Image::ProgramHeader& program_header) {
             printf("  %-14s ", object_program_header_type_to_string(program_header.type()));
             printf("0x%08x ", program_header.offset());
             printf("%p ", program_header.vaddr().as_ptr());
@@ -450,23 +578,49 @@ int main(int argc, char** argv)
 
     if (display_dynamic_section) {
         auto found_dynamic_section = false;
-        interpreter_image.for_each_section([&found_dynamic_section](const ELF::Image::Section& section) {
-            if (section.name() != ELF_DYNAMIC)
+        if (elf_image.is_dynamic()) {
+            elf_image.for_each_section([&found_dynamic_section](const ELF::Image::Section& section) {
+                if (section.name() != ELF_DYNAMIC)
+                    return IterationDecision::Continue;
+
+                found_dynamic_section = true;
+
+                if (section.entry_count()) {
+                    printf("Dynamic section '%s' at offset 0x%08x contains %u entries.\n", section.name().to_string().characters(), section.offset(), section.entry_count());
+                } else {
+                    printf("Dynamic section '%s' at offset 0x%08x contains zero entries.\n", section.name().to_string().characters(), section.offset());
+                }
+
+                return IterationDecision::Break;
+            });
+
+            Vector<String> libraries;
+            object->for_each_needed_library([&libraries](StringView entry) {
+                libraries.append(String::formatted("{}", entry).characters());
                 return IterationDecision::Continue;
+            });
 
-            found_dynamic_section = true;
+            auto library_index = 0;
+            printf("  Tag        Type              Name / Value\n");
+            object->for_each_dynamic_entry([&library_index, &libraries, &object](const ELF::DynamicObject::DynamicEntry& entry) {
+                printf("  0x%08x ", entry.tag());
+                printf("%-17s ", object_tag_to_string(entry.tag()));
 
-            if (!section.entry_count()) {
-                printf("Dynamic section '%s' at offset 0x%08x contains zero entries.\n", section.name().to_string().characters(), section.offset());
+                if (entry.tag() == DT_NEEDED) {
+                    printf("Shared library: %s\n", String(libraries[library_index]).characters());
+                    library_index++;
+                } else if (entry.tag() == DT_RPATH) {
+                    printf("Library rpath: %s\n", String(object->rpath()).characters());
+                } else if (entry.tag() == DT_RUNPATH) {
+                    printf("Library runpath: %s\n", String(object->runpath()).characters());
+                } else if (entry.tag() == DT_SONAME) {
+                    printf("Library soname: %s\n", String(object->soname()).characters());
+                } else {
+                    printf("0x%08x\n", entry.val());
+                }
                 return IterationDecision::Continue;
-            }
-
-            printf("Dynamic section '%s' at offset 0x%08x contains %u entries.\n", section.name().to_string().characters(), section.offset(), section.entry_count());
-
-            // TODO: Display dynamic section
-
-            return IterationDecision::Continue;
-        });
+            });
+        }
 
         if (!found_dynamic_section)
             printf("No dynamic section in this file.\n");
@@ -475,36 +629,40 @@ int main(int argc, char** argv)
     }
 
     if (display_relocations) {
-        auto found_relocations = false;
-        interpreter_image.for_each_section([&found_relocations](const ELF::Image::Section& section) {
-            // FIXME: support dynamic relocations (.rel.dyn)
-            if (!section.relocations().relocation_count())
-                return IterationDecision::Continue;
-
-            found_relocations = true;
-
-            if (!section.relocations().entry_count()) {
-                printf("Relocation section '%s' at offset 0x%08x contains zero entries.\n", section.name().to_string().characters(), section.offset());
-                return IterationDecision::Continue;
+        if (elf_image.is_dynamic()) {
+            if (!object->relocation_section().entry_count()) {
+                printf("Relocation section '%s' at offset 0x%08x contains zero entries:\n", object->relocation_section().name().to_string().characters(), object->relocation_section().offset());
+            } else {
+                printf("Relocation section '%s' at offset 0x%08x contains %u entries:\n", object->relocation_section().name().to_string().characters(), object->relocation_section().offset(), object->relocation_section().entry_count());
+                printf("  Offset      Type               Sym Value   Sym Name\n");
+                object->relocation_section().for_each_relocation([](const ELF::DynamicObject::Relocation& reloc) {
+                    printf("  0x%08x ", reloc.offset());
+                    printf(" %-17s ", object_relocation_type_to_string(reloc.type()));
+                    printf(" 0x%08x ", reloc.symbol().value());
+                    printf(" %s", reloc.symbol().name().to_string().characters());
+                    printf("\n");
+                    return IterationDecision::Continue;
+                });
             }
-
-            printf("Relocation section '%s' at offset 0x%08x contains %u entries:\n", section.relocations().name().to_string().characters(), section.relocations().offset(), section.relocations().entry_count());
-            printf("  Offset      Type               Sym Value   Sym Name\n");
-            section.relocations().for_each_relocation([](const ELF::Image::Relocation& reloc) {
-                printf("  0x%08x ", reloc.offset());
-                printf(" %-17s ", object_relocation_type_to_string(reloc.type()));
-                printf(" 0x%08x ", reloc.symbol().value());
-                printf(" %s", reloc.symbol().name().to_string().characters());
-                printf("\n");
-                return IterationDecision::Continue;
-            });
-
             printf("\n");
-            return IterationDecision::Continue;
-        });
 
-        if (!found_relocations)
+            if (!object->plt_relocation_section().entry_count()) {
+                printf("Relocation section '%s' at offset 0x%08x contains zero entries:\n", object->plt_relocation_section().name().to_string().characters(), object->plt_relocation_section().offset());
+            } else {
+                printf("Relocation section '%s' at offset 0x%08x contains %u entries:\n", object->plt_relocation_section().name().to_string().characters(), object->plt_relocation_section().offset(), object->plt_relocation_section().entry_count());
+                printf("  Offset      Type               Sym Value   Sym Name\n");
+                object->plt_relocation_section().for_each_relocation([](const ELF::DynamicObject::Relocation& reloc) {
+                    printf("  0x%08x ", reloc.offset());
+                    printf(" %-17s ", object_relocation_type_to_string(reloc.type()));
+                    printf(" 0x%08x ", reloc.symbol().value());
+                    printf(" %s", reloc.symbol().name().to_string().characters());
+                    printf("\n");
+                    return IterationDecision::Continue;
+                });
+            }
+        } else {
             printf("No relocations in this file.\n");
+        }
 
         printf("\n");
     }
@@ -517,7 +675,7 @@ int main(int argc, char** argv)
 
     if (display_core_notes) {
         auto found_notes = false;
-        interpreter_image.for_each_program_header([&found_notes](const ELF::Image::ProgramHeader& program_header) {
+        elf_image.for_each_program_header([&found_notes](const ELF::Image::ProgramHeader& program_header) {
             if (program_header.type() != PT_NOTE)
                 return IterationDecision::Continue;
 
@@ -539,23 +697,38 @@ int main(int argc, char** argv)
 
     if (display_dynamic_symbol_table || display_symbol_table) {
         auto found_dynamic_symbol_table = false;
-        interpreter_image.for_each_section([&found_dynamic_symbol_table](const ELF::Image::Section& section) {
-            if (section.name() != ELF_DYNSYM)
-                return IterationDecision::Continue;
 
-            found_dynamic_symbol_table = true;
+        if (elf_image.is_dynamic()) {
+            elf_image.for_each_section([&found_dynamic_symbol_table](const ELF::Image::Section& section) {
+                if (section.name() != ELF_DYNSYM)
+                    return IterationDecision::Continue;
 
-            if (!section.entry_count()) {
-                printf("Symbol table '%s' contains zero entries.\n", ELF_DYNSYM);
-                return IterationDecision::Continue;
+                found_dynamic_symbol_table = true;
+
+                if (!section.entry_count()) {
+                    printf("Symbol table '%s' contains zero entries.\n", ELF_DYNSYM);
+                } else {
+                    printf("Symbol table '%s' contains %u entries.\n", ELF_DYNSYM, section.entry_count());
+                }
+
+                return IterationDecision::Break;
+            });
+
+            if (object->symbol_count()) {
+                // FIXME: Add support for init/fini/start/main sections
+                printf("   Num: Value    Size     Type     Bind     Name\n");
+                object->for_each_symbol([](const ELF::DynamicObject::Symbol& sym) {
+                    printf("  %4u: ", sym.index());
+                    printf("%08x ", sym.value());
+                    printf("%08x ", sym.size());
+                    printf("%-8s ", object_symbol_type_to_string(sym.type()));
+                    printf("%-8s ", object_symbol_binding_to_string(sym.bind()));
+                    printf("%s", StringView(sym.name()).to_string().characters());
+                    printf("\n");
+                    return IterationDecision::Continue;
+                });
             }
-
-            printf("Symbol table '%s' contains %u entries.\n", ELF_DYNSYM, section.entry_count());
-
-            // TODO: display dynamic symbol table
-
-            return IterationDecision::Continue;
-        });
+        }
 
         if (!found_dynamic_symbol_table)
             printf("No dynamic symbol information for this file.\n");
@@ -564,11 +737,11 @@ int main(int argc, char** argv)
     }
 
     if (display_symbol_table) {
-        if (interpreter_image.symbol_count()) {
-            printf("Symbol table '%s' contains %u entries:\n", ELF_SYMTAB, interpreter_image.symbol_count());
+        if (elf_image.symbol_count()) {
+            printf("Symbol table '%s' contains %u entries:\n", ELF_SYMTAB, elf_image.symbol_count());
             printf("   Num: Value    Size     Type     Bind     Name\n");
 
-            interpreter_image.for_each_symbol([](const ELF::Image::Symbol& sym) {
+            elf_image.for_each_symbol([](const ELF::Image::Symbol& sym) {
                 printf("  %4u: ", sym.index());
                 printf("%08x ", sym.value());
                 printf("%08x ", sym.size());
@@ -578,17 +751,18 @@ int main(int argc, char** argv)
                 printf("\n");
                 return IterationDecision::Continue;
             });
+        } else {
+            printf("Symbol table '%s' contains zero entries.\n", ELF_SYMTAB);
         }
         printf("\n");
     }
 
     if (display_hardening) {
         printf("Security Hardening:\n");
-        printf("RELRO        Stack Canary NX           PIE    Symbols\n");
+        printf("RELRO         Stack Canary NX           PIE          RPATH        RUNPATH      Symbols      \n");
 
-        // FIXME: Add support for full/partial RELRO detection using DT_BIND_NOW
         bool relro = false;
-        interpreter_image.for_each_program_header([&relro](const ELF::Image::ProgramHeader& program_header) {
+        elf_image.for_each_program_header([&relro](const ELF::Image::ProgramHeader& program_header) {
             if (program_header.type() == PT_GNU_RELRO) {
                 relro = true;
                 return IterationDecision::Break;
@@ -596,13 +770,25 @@ int main(int argc, char** argv)
             return IterationDecision::Continue;
         });
 
-        if (relro)
-            printf("\033[0;32m%-12s\033[0m ", "RELRO");
-        else
-            printf("\033[0;31m%-12s\033[0m ", "No RELRO");
+        bool full_relro = false;
+        if (relro) {
+            object->for_each_dynamic_entry([&full_relro](const ELF::DynamicObject::DynamicEntry& entry) {
+                if (entry.tag() == DT_BIND_NOW) {
+                    full_relro = true;
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+            if (full_relro)
+                printf("\033[0;32m%-13s\033[0m ", "Full RELRO");
+            else
+                printf("\033[0;33m%-13s\033[0m ", "Partial RELRO");
+        } else {
+            printf("\033[0;31m%-13s\033[0m ", "No RELRO");
+        }
 
         bool canary = false;
-        interpreter_image.for_each_symbol([&canary](const ELF::Image::Symbol& sym) {
+        elf_image.for_each_symbol([&canary](const ELF::Image::Symbol& sym) {
             if (sym.name() == "__stack_chk_fail" || sym.name() == "__intel_security_cookie") {
                 canary = true;
                 return IterationDecision::Break;
@@ -616,7 +802,7 @@ int main(int argc, char** argv)
             printf("\033[0;31m%-12s\033[0m ", "No canary");
 
         bool nx = false;
-        interpreter_image.for_each_program_header([&nx](const ELF::Image::ProgramHeader& program_header) {
+        elf_image.for_each_program_header([&nx](const ELF::Image::ProgramHeader& program_header) {
             if (program_header.type() == PT_GNU_STACK) {
                 if (program_header.flags() & PF_X)
                     nx = false;
@@ -637,11 +823,29 @@ int main(int argc, char** argv)
             pie = true;
 
         if (pie)
-            printf("\033[0;32m%-6s\033[0m ", "PIE");
+            printf("\033[0;32m%-12s\033[0m ", "PIE enabled");
         else
-            printf("\033[0;31m%-6s\033[0m ", "No PIE");
+            printf("\033[0;31m%-12s\033[0m ", "No PIE");
 
-        printf("%u symbols ", interpreter_image.symbol_count());
+        StringView rpath;
+        if (elf_image.is_dynamic())
+            rpath = object->rpath();
+
+        if (rpath.is_empty())
+            printf("\033[0;32m%-12s\033[0m ", "No RPATH");
+        else
+            printf("\033[0;31m%-12s\033[0m ", rpath.to_string().characters());
+
+        StringView runpath;
+        if (elf_image.is_dynamic())
+            runpath = object->runpath();
+
+        if (runpath.is_empty())
+            printf("\033[0;32m%-12s\033[0m ", "No RUNPATH");
+        else
+            printf("\033[0;31m%-12s\033[0m ", runpath.to_string().characters());
+
+        printf("%u symbols ", elf_image.symbol_count());
         printf("\n");
     }
 
