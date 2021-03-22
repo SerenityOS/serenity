@@ -249,24 +249,8 @@ void ImageEditor::mouseup_event(GUI::MouseEvent& event)
 
 void ImageEditor::mousewheel_event(GUI::MouseEvent& event)
 {
-    auto old_scale = m_scale;
-
-    m_scale += -event.wheel_delta() * 0.1f;
-    if (m_scale < 0.1f)
-        m_scale = 0.1f;
-    if (m_scale > 100.0f)
-        m_scale = 100.0f;
-
-    auto focus_point = Gfx::FloatPoint(
-        m_pan_origin.x() - ((float)event.x() - (float)width() / 2.0) / old_scale,
-        m_pan_origin.y() - ((float)event.y() - (float)height() / 2.0) / old_scale);
-
-    m_pan_origin = Gfx::FloatPoint(
-        focus_point.x() - m_scale / old_scale * (focus_point.x() - m_pan_origin.x()),
-        focus_point.y() - m_scale / old_scale * (focus_point.y() - m_pan_origin.y()));
-
-    if (old_scale != m_scale)
-        relayout();
+    auto scale_delta = -event.wheel_delta() * 0.1f;
+    scale_centered_on_position(event.position(), scale_delta);
 }
 
 void ImageEditor::context_menu_event(GUI::ContextMenuEvent& event)
@@ -384,6 +368,28 @@ Layer* ImageEditor::layer_at_editor_position(const Gfx::IntPoint& editor_positio
             return const_cast<Layer*>(&layer);
     }
     return nullptr;
+}
+
+void ImageEditor::scale_centered_on_position(const Gfx::IntPoint& position, float scale_delta)
+{
+    auto old_scale = m_scale;
+
+    m_scale += scale_delta;
+    if (m_scale < 0.1f)
+        m_scale = 0.1f;
+    if (m_scale > 100.0f)
+        m_scale = 100.0f;
+
+    auto focus_point = Gfx::FloatPoint(
+        m_pan_origin.x() - ((float)position.x() - (float)width() / 2.0) / old_scale,
+        m_pan_origin.y() - ((float)position.y() - (float)height() / 2.0) / old_scale);
+
+    m_pan_origin = Gfx::FloatPoint(
+        focus_point.x() - m_scale / old_scale * (focus_point.x() - m_pan_origin.x()),
+        focus_point.y() - m_scale / old_scale * (focus_point.y() - m_pan_origin.y()));
+
+    if (old_scale != m_scale)
+        relayout();
 }
 
 void ImageEditor::relayout()
