@@ -21,6 +21,7 @@ set(SOURCES
     ToolboxWidget.cpp
     ToolPropertiesWidget.cpp
     Tool.cpp
+    ZoomTool.cpp
 )
 
 serenity_app(PixelPaint ICON app-pixel-paint)

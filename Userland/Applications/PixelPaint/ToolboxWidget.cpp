@@ -35,6 +35,7 @@
 #include "PickerTool.h"
 #include "RectangleTool.h"
 #include "SprayTool.h"
+#include "ZoomTool.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -135,6 +136,7 @@ void ToolboxWidget::setup_tools()
     add_tool("Line", "line", { Mod_Ctrl | Mod_Shift, Key_L }, make<LineTool>());
     add_tool("Rectangle", "rectangle", { Mod_Ctrl | Mod_Shift, Key_R }, make<RectangleTool>());
     add_tool("Ellipse", "circle", { Mod_Ctrl | Mod_Shift, Key_E }, make<EllipseTool>());
+    add_tool("Zoom", "zoom", { 0, Key_Z }, make<ZoomTool>());
 }
 
 }
