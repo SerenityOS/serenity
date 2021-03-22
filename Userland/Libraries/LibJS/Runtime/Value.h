@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/BitCast.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/String.h>
@@ -38,6 +39,8 @@
 static constexpr double MAX_ARRAY_LIKE_INDEX = 9007199254740991.0;
 // 2 ** 32 - 1
 static constexpr double MAX_U32 = 4294967295.0;
+// Unique bit representation of negative zero (only sign bit set)
+static constexpr u64 NEGATIVE_ZERO_BITS = ((u64)1 << 63);
 
 namespace JS {
 
@@ -85,8 +88,8 @@ public:
     bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
     bool is_positive_infinity() const { return is_number() && __builtin_isinf_sign(as_double()) > 0; }
     bool is_negative_infinity() const { return is_number() && __builtin_isinf_sign(as_double()) < 0; }
-    bool is_positive_zero() const { return is_number() && 1.0 / as_double() == INFINITY; }
-    bool is_negative_zero() const { return is_number() && 1.0 / as_double() == -INFINITY; }
+    bool is_positive_zero() const { return is_number() && bit_cast<u64>(as_double()) == 0; }
+    bool is_negative_zero() const { return is_number() && bit_cast<u64>(as_double()) == NEGATIVE_ZERO_BITS; }
     bool is_integer() const { return is_finite_number() && (i32)as_double() == as_double(); }
     bool is_finite_number() const
     {
@@ -109,7 +112,7 @@ public:
 
     explicit Value(double value)
     {
-        bool is_negative_zero = value == 0.0 && (1.0 / value == -INFINITY);
+        bool is_negative_zero = bit_cast<u64>(value) == NEGATIVE_ZERO_BITS;
         if (value >= NumericLimits<i32>::min() && value <= NumericLimits<i32>::max() && trunc(value) == value && !is_negative_zero) {
             m_type = Type::Int32;
             m_value.as_i32 = static_cast<i32>(value);
