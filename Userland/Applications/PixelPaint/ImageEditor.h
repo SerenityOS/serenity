@@ -63,6 +63,8 @@ public:
 
     Layer* layer_at_editor_position(const Gfx::IntPoint&);
 
+    void scale_centered_on_position(const Gfx::IntPoint&, float);
+
     Color primary_color() const { return m_primary_color; }
     void set_primary_color(Color);
 
