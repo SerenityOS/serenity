@@ -72,6 +72,10 @@ void DynamicObject::dump() const
 
     if (m_has_soname)
         builder.appendff("DT_SONAME: {}\n", soname()); // FIXME: Validate that this string is null terminated?
+    if (m_has_rpath)
+        builder.appendff("DT_RPATH: {}\n", rpath());
+    if (m_has_runpath)
+        builder.appendff("DT_RUNPATH: {}\n", runpath());
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "Dynamic section at address {} contains {} entries:", m_dynamic_address.as_ptr(), num_dynamic_sections);
     dbgln_if(DYNAMIC_LOAD_DEBUG, "{}", builder.string_view());
@@ -162,6 +166,14 @@ void DynamicObject::parse()
             break;
         case DT_BIND_NOW:
             m_dt_flags |= DF_BIND_NOW;
+            break;
+        case DT_RPATH:
+            m_rpath_index = entry.val();
+            m_has_rpath = true;
+            break;
+        case DT_RUNPATH:
+            m_runpath_index = entry.val();
+            m_has_runpath = true;
             break;
         case DT_DEBUG:
             break;

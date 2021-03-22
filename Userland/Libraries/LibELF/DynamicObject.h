@@ -238,6 +238,8 @@ public:
     VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset.value()); }
     VirtualAddress base_address() const { return m_base_address; }
 
+    StringView rpath() const { return m_has_rpath ? symbol_string_table_string(m_rpath_index) : StringView {}; }
+    StringView runpath() const { return m_has_runpath ? symbol_string_table_string(m_runpath_index) : StringView {}; }
     StringView soname() const { return m_has_soname ? symbol_string_table_string(m_soname_index) : StringView {}; }
 
     Optional<FlatPtr> tls_offset() const { return m_tls_offset; }
@@ -320,6 +322,10 @@ private:
 
     bool m_has_soname { false };
     Elf32_Word m_soname_index { 0 }; // Index into dynstr table for SONAME
+    bool m_has_rpath { false };
+    Elf32_Word m_rpath_index { 0 }; // Index into dynstr table for RPATH
+    bool m_has_runpath { false };
+    Elf32_Word m_runpath_index { 0 }; // Index into dynstr table for RUNPATH
 
     Optional<FlatPtr> m_tls_offset;
     Optional<FlatPtr> m_tls_size;
