@@ -544,7 +544,7 @@ JsonObject Sheet::to_json() const
     JsonObject cells;
     for (auto& it : m_cells) {
         StringBuilder builder;
-        builder.append(it.key.column);
+        builder.append(column(it.key.column));
         builder.appendff("{}", it.key.row);
         auto key = builder.to_string();
 
