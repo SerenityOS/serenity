@@ -48,3 +48,17 @@ test("names of native functions", () => {
     expect((console.debug.name = "warn")).toBe("warn");
     expect(console.debug.name).toBe("debug");
 });
+
+test("no invalid autonaming of anonymous functions", () => {
+    // prettier-ignore
+    let f1 = (function () {});
+    expect(f1.name).toBe("");
+    let f2 = f1;
+    expect(f2.name).toBe("");
+    let f3;
+    f3 = false || f2;
+    expect(f3.name).toBe("");
+    let f4 = false;
+    f4 ||= function () {};
+    expect(f4.name).toBe("");
+});

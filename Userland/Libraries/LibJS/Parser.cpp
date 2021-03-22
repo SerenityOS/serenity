@@ -635,6 +635,9 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         }
         auto expression = parse_expression(0);
         consume(TokenType::ParenClose);
+        if (is<FunctionExpression>(*expression)) {
+            static_cast<FunctionExpression&>(*expression).set_cannot_auto_rename();
+        }
         return expression;
     }
     case TokenType::This:
@@ -1184,7 +1187,16 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
     } else if (m_parser_state.m_strict_mode && is<CallExpression>(*lhs)) {
         syntax_error("Cannot assign to function call");
     }
-    return create_ast_node<AssignmentExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, assignment_op, move(lhs), parse_expression(min_precedence, associativity));
+    auto rhs = parse_expression(min_precedence, associativity);
+    if (assignment_op == AssignmentOp::Assignment && is<FunctionExpression>(*rhs)) {
+        auto ident = lhs;
+        if (is<MemberExpression>(*lhs)) {
+            ident = static_cast<MemberExpression&>(*lhs).property();
+        }
+        if (is<Identifier>(*ident))
+            static_cast<FunctionExpression&>(*rhs).set_name_if_possible(static_cast<Identifier&>(*ident).string());
+    }
+    return create_ast_node<AssignmentExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, assignment_op, move(lhs), move(rhs));
 }
 
 NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs)
@@ -1441,7 +1453,11 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
         } else if (!for_loop_variable_declaration && declaration_kind == DeclarationKind::Const) {
             syntax_error("Missing initializer in 'const' variable declaration");
         }
-        declarations.append(create_ast_node<VariableDeclarator>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, create_ast_node<Identifier>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, move(id)), move(init)));
+        auto identifier = create_ast_node<Identifier>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, move(id));
+        if (init && is<FunctionExpression>(*init)) {
+            static_cast<FunctionExpression&>(*init).set_name_if_possible(id);
+        }
+        declarations.append(create_ast_node<VariableDeclarator>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, move(identifier), move(init)));
         if (match(TokenType::Comma)) {
             consume();
             continue;
