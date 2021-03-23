@@ -54,8 +54,15 @@ int main(int argc, char** argv)
 
     auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();
-
     PlaybackManager playback_manager(audio_client);
+    PlayerState initial_player_state { true,
+        true,
+        false,
+        false,
+        1.0,
+        audio_client,
+        playback_manager,
+        "" };
 
     if (pledge("stdio recvfd sendfd accept rpath thread", nullptr) < 0) {
         perror("pledge");
@@ -72,11 +79,11 @@ int main(int argc, char** argv)
 
     auto& app_menu = menubar->add_menu("File");
     // start in simple view by default
-    Player* player = &window->set_main_widget<SoundPlayerWidget>(window, audio_client, playback_manager);
+    Player* player = &window->set_main_widget<SoundPlayerWidget>(window, initial_player_state);
     if (argc > 1) {
         String path = argv[1];
         player->open_file(path);
-        player->playback_manager().play();
+        player->play();
     }
 
     app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
@@ -89,12 +96,13 @@ int main(int argc, char** argv)
     RefPtr<GUI::Action> hide_scope;
 
     auto advanced_view_check = GUI::Action::create_checkable("Advanced view", { Mod_Ctrl, Key_A }, [&](auto& action) {
+        PlayerState state = player->get_player_state();
         window->close();
         if (action.is_checked()) {
-            player = &window->set_main_widget<SoundPlayerWidgetAdvancedView>(window, audio_client, playback_manager);
+            player = &window->set_main_widget<SoundPlayerWidgetAdvancedView>(window, state);
             hide_scope->set_checkable(false);
         } else {
-            player = &window->set_main_widget<SoundPlayerWidget>(window, audio_client, playback_manager);
+            player = &window->set_main_widget<SoundPlayerWidget>(window, state);
             hide_scope->set_checkable(true);
         }
         window->show();
@@ -123,7 +131,7 @@ int main(int argc, char** argv)
     auto& playback_menu = menubar->add_menu("Playback");
 
     auto loop = GUI::Action::create_checkable("Loop", { Mod_Ctrl, Key_R }, [&](auto& action) {
-        player->playback_manager().loop(action.is_checked());
+        player->set_looping(action.is_checked());
     });
 
     playback_menu.add_action(move(loop));

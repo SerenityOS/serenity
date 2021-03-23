@@ -33,10 +33,9 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 
-SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, Audio::ClientConnection& connection, PlaybackManager& manager)
-    : m_window(window)
-    , m_connection(connection)
-    , m_manager(manager)
+SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, PlayerState& state)
+    : Player(state)
+    , m_window(window)
 {
     window.set_resizable(false);
     window.resize(350, 140);
@@ -68,8 +67,8 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, Audio::ClientConnectio
 
     m_slider = add<Slider>(Orientation::Horizontal);
     m_slider->set_min(0);
-    m_slider->set_enabled(false);
-    m_slider->on_knob_released = [&](int value) { m_manager.seek(denormalize_rate(value)); };
+    m_slider->set_enabled(has_loaded_file());
+    m_slider->on_knob_released = [&](int value) { manager().seek(denormalize_rate(value)); };
 
     auto& control_widget = add<GUI::Widget>();
     control_widget.set_fill_with_background_color(true);
@@ -79,16 +78,21 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, Audio::ClientConnectio
     control_widget.layout()->set_spacing(10);
 
     m_play = control_widget.add<GUI::Button>();
-    m_play->set_icon(*m_pause_icon);
-    m_play->set_enabled(false);
+    m_play->set_icon(has_loaded_file() ? *m_play_icon : *m_pause_icon);
+    m_play->set_enabled(has_loaded_file());
     m_play->on_click = [this](auto) {
-        m_play->set_icon(m_manager.toggle_pause() ? *m_play_icon : *m_pause_icon);
+        bool paused = manager().toggle_pause();
+        set_paused(paused);
+        m_play->set_icon(paused ? *m_play_icon : *m_pause_icon);
     };
 
     m_stop = control_widget.add<GUI::Button>();
-    m_stop->set_enabled(false);
+    m_stop->set_enabled(has_loaded_file());
     m_stop->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/stop.png"));
-    m_stop->on_click = [this](auto) { m_manager.stop(); };
+    m_stop->on_click = [this](auto) {
+        manager().stop();
+        set_stopped(true);
+    };
 
     m_status = add<GUI::Label>();
     m_status->set_frame_shape(Gfx::FrameShape::Box);
@@ -96,11 +100,11 @@ SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, Audio::ClientConnectio
     m_status->set_frame_thickness(4);
     m_status->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     m_status->set_fixed_height(18);
-    m_status->set_text("No file open!");
+    m_status->set_text(has_loaded_file() ? loaded_filename() : "No file open!");
 
     update_position(0);
 
-    m_manager.on_update = [&]() { update_ui(); };
+    manager().on_update = [&]() { update_ui(); };
 }
 
 SoundPlayerWidget::~SoundPlayerWidget()
@@ -132,8 +136,10 @@ void SoundPlayerWidget::open_file(StringView path)
         loader->num_channels(),
         loader->bits_per_sample()));
 
-    m_manager.set_loader(move(loader));
+    manager().set_loader(move(loader));
     update_position(0);
+    set_has_loaded_file(true);
+    set_loaded_filename(path);
 }
 
 void SoundPlayerWidget::drop_event(GUI::DropEvent& event)
@@ -161,16 +167,16 @@ int SoundPlayerWidget::denormalize_rate(int rate) const
 
 void SoundPlayerWidget::update_ui()
 {
-    m_sample_widget->set_buffer(m_manager.current_buffer());
-    m_play->set_icon(m_manager.is_paused() ? *m_play_icon : *m_pause_icon);
-    update_position(m_manager.connection()->get_played_samples());
+    m_sample_widget->set_buffer(manager().current_buffer());
+    m_play->set_icon(manager().is_paused() ? *m_play_icon : *m_pause_icon);
+    update_position(manager().connection()->get_played_samples());
 }
 
 void SoundPlayerWidget::update_position(const int position)
 {
-    int total_norm_samples = position + normalize_rate(m_manager.last_seek());
+    int total_norm_samples = position + normalize_rate(manager().last_seek());
     float seconds = (total_norm_samples / static_cast<float>(PLAYBACK_MANAGER_RATE));
-    float remaining_seconds = m_manager.total_length() - seconds;
+    float remaining_seconds = manager().total_length() - seconds;
 
     m_elapsed->set_text(String::formatted(
         "Elapsed:\n{}:{:02}.{:02}",
@@ -190,4 +196,11 @@ void SoundPlayerWidget::update_position(const int position)
 void SoundPlayerWidget::hide_scope(bool hide)
 {
     m_sample_widget->set_visible(!hide);
+}
+
+void SoundPlayerWidget::play()
+{
+    manager().play();
+    set_paused(false);
+    set_stopped(false);
 }

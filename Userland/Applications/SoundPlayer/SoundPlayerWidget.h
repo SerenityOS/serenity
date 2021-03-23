@@ -40,16 +40,15 @@ class SoundPlayerWidget final : public GUI::Widget
     , public Player {
     C_OBJECT(SoundPlayerWidget)
 public:
-    virtual ~SoundPlayerWidget() override;
+    ~SoundPlayerWidget() override;
     void open_file(StringView path) override;
+    void play() override;
     void hide_scope(bool);
-    Audio::ClientConnection& client_connection() override { return m_connection; }
-    PlaybackManager& playback_manager() override { return m_manager; }
 
 private:
-    explicit SoundPlayerWidget(GUI::Window& window, Audio::ClientConnection& connection, PlaybackManager& manager);
+    explicit SoundPlayerWidget(GUI::Window& window, PlayerState& state);
 
-    virtual void drop_event(GUI::DropEvent&) override;
+    void drop_event(GUI::DropEvent&) override;
 
     void update_position(const int position);
     void update_ui();
@@ -57,8 +56,6 @@ private:
     int denormalize_rate(int) const;
 
     GUI::Window& m_window;
-    Audio::ClientConnection& m_connection;
-    PlaybackManager& m_manager;
 
     float m_sample_ratio { 1.0 };
     RefPtr<GUI::Label> m_status;

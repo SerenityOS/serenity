@@ -28,11 +28,48 @@
 
 #include "PlaybackManager.h"
 #include "VisualizationBase.h"
+#include <AK/RefPtr.h>
+
+struct PlayerState {
+    bool is_paused;
+    bool is_stopped;
+    bool has_loaded_file;
+    bool is_looping;
+    double volume;
+    Audio::ClientConnection& connection;
+    PlaybackManager& manager;
+    StringView loaded_filename;
+};
 
 class Player {
 public:
-    explicit Player() = default;
+    explicit Player(PlayerState& state)
+        : m_player_state(state) {};
     virtual void open_file(StringView path) = 0;
-    virtual Audio::ClientConnection& client_connection() = 0;
-    virtual PlaybackManager& playback_manager() = 0;
+    virtual void play() = 0;
+
+    PlayerState& get_player_state() { return m_player_state; }
+    bool is_stopped() const { return m_player_state.is_stopped; }
+    bool is_paused() const { return m_player_state.is_paused; }
+    bool has_loaded_file() const { return m_player_state.has_loaded_file; }
+    double volume() const { return m_player_state.volume; }
+    bool looping() const { return m_player_state.is_looping; }
+    StringView& loaded_filename() { return m_player_state.loaded_filename; }
+
+    virtual void set_stopped(bool stopped) { m_player_state.is_stopped = stopped; }
+    virtual void set_paused(bool paused) { m_player_state.is_paused = paused; }
+    virtual void set_has_loaded_file(bool loaded) { m_player_state.has_loaded_file = loaded; }
+    virtual void set_volume(double volume) { m_player_state.volume = volume; }
+    virtual void set_looping(bool loop)
+    {
+        m_player_state.is_looping = loop;
+        manager().loop(loop);
+    }
+    virtual void set_loaded_filename(StringView& filename) { m_player_state.loaded_filename = filename; }
+
+    Audio::ClientConnection& client_connection() { return m_player_state.connection; }
+    PlaybackManager& manager() { return m_player_state.manager; }
+
+protected:
+    PlayerState m_player_state;
 };
