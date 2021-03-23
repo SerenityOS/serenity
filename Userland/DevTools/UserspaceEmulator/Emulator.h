@@ -148,7 +148,7 @@ private:
     u32 virt$fcntl(int fd, int, u32);
     int virt$getgroups(ssize_t count, FlatPtr);
     int virt$setgroups(ssize_t count, FlatPtr);
-    int virt$lseek(int fd, off_t offset, int whence);
+    int virt$lseek(int fd, FlatPtr offset_addr, int whence);
     int virt$socket(int, int, int);
     int virt$getsockopt(FlatPtr);
     int virt$setsockopt(FlatPtr);
@@ -184,7 +184,7 @@ private:
     u32 virt$allocate_tls(size_t);
     int virt$ptsname(int fd, FlatPtr buffer, size_t buffer_size);
     int virt$beep();
-    int virt$ftruncate(int fd, off_t);
+    int virt$ftruncate(int fd, FlatPtr length_addr);
     mode_t virt$umask(mode_t);
     int virt$anon_create(size_t, int);
     int virt$recvfd(int, int);

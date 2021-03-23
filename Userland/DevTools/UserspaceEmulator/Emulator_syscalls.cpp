@@ -457,9 +457,11 @@ int Emulator::virt$get_stack_bounds(FlatPtr base, FlatPtr size)
     return 0;
 }
 
-int Emulator::virt$ftruncate(int fd, off_t length)
+int Emulator::virt$ftruncate(int fd, FlatPtr length_addr)
 {
-    return syscall(SC_ftruncate, fd, length);
+    off_t length;
+    mmu().copy_from_vm(&length, length_addr, sizeof(off_t));
+    return syscall(SC_ftruncate, fd, &length);
 }
 
 mode_t Emulator::virt$umask(mode_t mask)
@@ -578,9 +580,13 @@ int Emulator::virt$set_process_name(FlatPtr user_buffer, int size)
     return syscall(SC_set_process_name, name.characters(), name.length());
 }
 
-int Emulator::virt$lseek(int fd, off_t offset, int whence)
+int Emulator::virt$lseek(int fd, FlatPtr offset_addr, int whence)
 {
-    return syscall(SC_lseek, fd, offset, whence);
+    off_t offset;
+    mmu().copy_from_vm(&offset, offset_addr, sizeof(off_t));
+    auto rc = syscall(SC_lseek, fd, &offset, whence);
+    mmu().copy_to_vm(offset_addr, &offset, sizeof(off_t));
+    return rc;
 }
 
 int Emulator::virt$socket(int domain, int type, int protocol)
