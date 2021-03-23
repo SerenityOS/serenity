@@ -15,6 +15,7 @@
             name: "formula_editor"
             fixed_height: 25
             tooltip: "Use 'value' to refer to the current cell's value"
+            font_type: "FixedWidth"
         }
     }
 
