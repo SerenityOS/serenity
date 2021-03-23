@@ -9,6 +9,7 @@
 
     @GUI::TextBox {
         name: "entry_textbox"
+        font_type: "FixedWidth"
     }
 
     @GUI::Widget {

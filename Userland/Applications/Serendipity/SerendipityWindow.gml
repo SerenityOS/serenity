@@ -50,12 +50,15 @@
                     name: "did_you_know_label"
                     text: "Did you know..."
                     text_alignment: "CenterLeft"
+                    font_size: 12
+                    font_weight: "Bold"
                 }
 
                 @GUI::Label {
                     name: "tip_label"
                     text_alignment: "TopLeft"
                     word_wrap: true
+                    font_size: 12
                 }
             }
         }

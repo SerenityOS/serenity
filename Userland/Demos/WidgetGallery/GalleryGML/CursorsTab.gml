@@ -11,6 +11,7 @@
 
         @GUI::TableView {
             name: "cursors_tableview"
+            font_size: 12
         }
     }
 }

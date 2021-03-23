@@ -11,6 +11,7 @@
 
         @GUI::TableView {
             name: "icons_tableview"
+            font_size: 12
         }
     }
 }
