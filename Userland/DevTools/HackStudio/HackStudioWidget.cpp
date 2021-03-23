@@ -302,6 +302,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     m_open_selected_action = create_open_selected_action();
     m_new_file_action = create_new_file_action();
     m_new_directory_action = create_new_directory_action();
+    m_rename_action = create_rename_action();
     m_delete_action = create_delete_action();
     auto project_tree_view_context_menu = GUI::Menu::construct("Project Files");
     project_tree_view_context_menu->add_action(*m_open_selected_action);
@@ -309,6 +310,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     project_tree_view_context_menu->add_separator();
     project_tree_view_context_menu->add_action(*m_new_file_action);
     project_tree_view_context_menu->add_action(*m_new_directory_action);
+    project_tree_view_context_menu->add_action(*m_rename_action);
     project_tree_view_context_menu->add_action(*m_delete_action);
     return project_tree_view_context_menu;
 }
@@ -419,6 +421,57 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_project_action()
 
         if (result == GUI::Dialog::ExecResult::ExecOK && dialog->created_project_path().has_value())
             open_project(dialog->created_project_path().value());
+    });
+}
+
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_rename_action()
+{
+    return GUI::Action::create("Rename", { Mod_Alt, Key_Return }, [this](const GUI::Action&) {
+        auto& selected_project_files = m_project_tree_view->selection();
+        if (selected_project_files.size() > 1 || selected_project_files.is_empty()) {
+            return;
+        }
+
+        String new_name;
+        if (GUI::InputBox::show(window(), new_name, "Enter the new file name:", "Rename file") != GUI::InputBox::ExecOK) {
+            return;
+        }
+
+        if (!new_name.is_empty()) {
+            String old_name;
+            String old_full_path;
+
+            auto project_file = selected_project_files.first();
+            old_full_path = dynamic_cast<GUI::FileSystemModel*>(m_project_tree_view->model())->node(project_file).full_path();
+            old_name = project_file.data().as_string();
+            auto old_relative_path = LexicalPath::relative_path(old_full_path, m_project->root_path());
+
+            StringBuilder path_builder;
+            path_builder.append(LexicalPath(old_full_path).dirname());
+            path_builder.append('/');
+            path_builder.append(new_name);
+            auto new_full_path = path_builder.to_string();
+
+            if (rename(old_full_path.characters(), new_full_path.characters()) > 0 || !Core::File::exists(new_full_path)) {
+                return;
+            }
+
+            auto file_list_index = m_open_files_vector.find_first_index(old_relative_path);
+            if (file_list_index.has_value()) {
+                auto new_relative_path = LexicalPath::relative_path(new_full_path, m_project->root_path());
+
+                m_open_files_vector.remove(file_list_index.value());
+                if (currently_open_file().equals_ignoring_case(old_relative_path)) {
+                    open_file(new_relative_path);
+                } else {
+                    m_open_files_vector.append(new_relative_path);
+                }
+                auto project_file = m_open_files.get(old_relative_path).value();
+                m_open_files.remove(old_relative_path);
+                m_open_files.set(new_full_path, project_file);
+                m_open_files_view->model()->update();
+            }
+        }
     });
 }
 

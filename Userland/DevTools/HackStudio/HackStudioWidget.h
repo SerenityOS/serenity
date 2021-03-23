@@ -88,6 +88,7 @@ private:
     NonnullRefPtr<GUI::Menu> create_project_tree_view_context_menu();
     NonnullRefPtr<GUI::Action> create_new_file_action();
     NonnullRefPtr<GUI::Action> create_new_directory_action();
+    NonnullRefPtr<GUI::Action> create_rename_action();
     NonnullRefPtr<GUI::Action> create_open_selected_action();
     NonnullRefPtr<GUI::Action> create_delete_action();
     NonnullRefPtr<GUI::Action> create_new_project_action();
@@ -165,6 +166,7 @@ private:
     RefPtr<GUI::Action> m_new_directory_action;
     RefPtr<GUI::Action> m_open_selected_action;
     RefPtr<GUI::Action> m_delete_action;
+    RefPtr<GUI::Action> m_rename_action;
     RefPtr<GUI::Action> m_new_project_action;
     RefPtr<GUI::Action> m_switch_to_next_editor;
     RefPtr<GUI::Action> m_switch_to_previous_editor;
