@@ -306,7 +306,6 @@ GalleryWidget::GalleryWidget()
     m_cursors_tableview->set_alternating_row_colors(false);
     m_cursors_tableview->set_vertical_padding(16);
     m_cursors_tableview->set_column_headers_visible(false);
-    m_cursors_tableview->set_font(Gfx::BitmapFont::load_from_file("/res/fonts/KaticaRegular12.font"));
     m_cursors_tableview->set_highlight_key_column(false);
 
     auto sorting_proxy_model = GUI::SortingProxyModel::create(MouseCursorModel::create());
@@ -380,7 +379,6 @@ GalleryWidget::GalleryWidget()
     m_icons_tableview->set_alternating_row_colors(false);
     m_icons_tableview->set_vertical_padding(24);
     m_icons_tableview->set_column_headers_visible(false);
-    m_icons_tableview->set_font(Gfx::BitmapFont::load_from_file("/res/fonts/KaticaRegular12.font"));
     m_icons_tableview->set_highlight_key_column(false);
 
     auto sorting_proxy_icons_model = GUI::SortingProxyModel::create(FileIconsModel::create());

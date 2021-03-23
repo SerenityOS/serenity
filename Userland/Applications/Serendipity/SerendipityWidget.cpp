@@ -56,13 +56,9 @@ SerendipityWidget::SerendipityWidget()
     auto& light_bulb_label = *find_descendant_of_type_named<GUI::Label>("light_bulb_label");
     light_bulb_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/32x32/app-serendipity.png"));
 
-    auto& did_you_know_label = *find_descendant_of_type_named<GUI::Label>("did_you_know_label");
-    did_you_know_label.set_font(Gfx::BitmapFont::load_from_file("/res/fonts/KaticaBold12.font"));
-
     m_web_view = *find_descendant_of_type_named<Web::OutOfProcessWebView>("web_view");
 
     m_tip_label = *find_descendant_of_type_named<GUI::Label>("tip_label");
-    m_tip_label->set_font(Gfx::BitmapFont::load_from_file("/res/fonts/KaticaRegular12.font"));
 
     m_next_button = *find_descendant_of_type_named<GUI::Button>("next_button");
     m_next_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"));
