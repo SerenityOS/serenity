@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * Copyright (c) 2021, Brian Gianforcaro <b.gianfo@gmail.com>
  * All rights reserved.
  *
@@ -51,6 +51,17 @@ struct Suite {
     // precedence over a passed test
     Result most_severe_test_result { Result::Pass };
     Vector<Case> tests {};
+};
+
+struct Counts {
+    // Not all of these might be used by a certain test runner, e.g. some
+    // do not have a concept of suites, or might not load tests from files.
+    unsigned tests_failed { 0 };
+    unsigned tests_passed { 0 };
+    unsigned tests_skipped { 0 };
+    unsigned suites_failed { 0 };
+    unsigned suites_passed { 0 };
+    unsigned files_total { 0 };
 };
 
 }
