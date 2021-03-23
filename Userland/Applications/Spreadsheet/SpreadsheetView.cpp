@@ -297,10 +297,8 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         }
 
         if (event.mime_data().has_text()) {
-            auto* target_cell = m_sheet->at({ (size_t)index.column(), (size_t)index.row() });
-            VERIFY(target_cell);
-
-            target_cell->set_data(event.text());
+            auto& target_cell = m_sheet->ensure({ (size_t)index.column(), (size_t)index.row() });
+            target_cell.set_data(event.text());
             return;
         }
     };
