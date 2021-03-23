@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * Copyright (c) 2021, Petróczi Zoltán <petroczizoltan@tutanota.com>
  * All rights reserved.
  *
@@ -111,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->date()));
+    return Value(this_object->date());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
@@ -123,7 +123,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->day()));
+    return Value(this_object->day());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
@@ -135,7 +135,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->full_year()));
+    return Value(this_object->full_year());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
@@ -178,7 +178,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
     datetime.set_time(new_year, new_month, new_day, datetime.hour(), datetime.minute(), datetime.second());
     this_object->set_is_invalid(false);
 
-    return Value { this_object->time() };
+    return Value(this_object->time());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
@@ -190,7 +190,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->hours()));
+    return Value(this_object->hours());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
@@ -257,7 +257,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_milliseconds)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->milliseconds()));
+    return Value(this_object->milliseconds());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_milliseconds)
@@ -299,7 +299,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_minutes)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->minutes()));
+    return Value(this_object->minutes());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
@@ -357,7 +357,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->month()));
+    return Value(this_object->month());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
@@ -369,7 +369,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->seconds()));
+    return Value(this_object->seconds());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_seconds)
@@ -430,7 +430,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_date)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->utc_date()));
+    return Value(this_object->utc_date());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_day)
@@ -442,7 +442,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_day)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->utc_day()));
+    return Value(this_object->utc_day());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_full_year)
@@ -454,7 +454,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_full_year)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->utc_full_year()));
+    return Value(this_object->utc_full_year());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_hours)
@@ -466,7 +466,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_hours)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->utc_hours()));
+    return Value(this_object->utc_hours());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_milliseconds)
@@ -478,7 +478,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_milliseconds)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->utc_milliseconds()));
+    return Value(this_object->utc_milliseconds());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_month)
@@ -490,7 +490,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_month)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->utc_month()));
+    return Value(this_object->utc_month());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_minutes)
@@ -502,7 +502,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_minutes)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->utc_minutes()));
+    return Value(this_object->utc_minutes());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_seconds)
@@ -514,7 +514,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_seconds)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(static_cast<double>(this_object->utc_seconds()));
+    return Value(this_object->utc_seconds());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_date_string)
