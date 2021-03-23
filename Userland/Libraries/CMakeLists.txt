@@ -1,3 +1,4 @@
+add_subdirectory(LibAML)
 add_subdirectory(LibArchive)
 add_subdirectory(LibAudio)
 add_subdirectory(LibC)

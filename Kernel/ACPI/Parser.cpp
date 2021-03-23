@@ -24,11 +24,12 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#define ACPI_DEBUG 1
 #include <AK/Format.h>
 #include <AK/StringView.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/PC/BIOS.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI/Access.h>
@@ -37,6 +38,37 @@
 
 namespace Kernel {
 namespace ACPI {
+
+OwnPtr<AMLCodeTable> AMLCodeTable::load(PhysicalAddress paddr, StringView name)
+{
+    auto code_table = adopt_own(*new AMLCodeTable(paddr, move(name)));
+    if (!code_table->m_aml.is_null())
+        return {};
+    return code_table;
+}
+
+AMLCodeTable::AMLCodeTable(PhysicalAddress paddr, StringView name)
+{
+    AML::CodeTable::DefBlockHeader header;
+    {
+        auto mapped_header = map_typed<AML::CodeTable::DefBlockHeader>(paddr);
+        // TODO: do we need this, or is it always guaranteed to be aligned properly?
+        __builtin_memcpy(&header, mapped_header.ptr(), sizeof(header));
+    }
+    if (header.table_length < sizeof(header)) {
+        dbgln("AML: Table {} at {} length too small: {}", name, paddr, header.table_length);
+        return;
+    }
+
+    size_t size = header.table_length;
+    m_region = MM.allocate_kernel_region(paddr.page_base(), page_round_up(size), {}, Kernel::Region::Access::Read);
+    AML::CodeTable aml(m_region->vaddr().as_ptr() + paddr.offset_in_page(), size);
+    if (!aml.evaluate()) {
+        dbgln("AML: Failed to evaluate table {} at {}", name, paddr);
+        return;
+    }
+    m_aml = move(aml);
+}
 
 static Parser* s_acpi_parser;
 
@@ -96,7 +128,8 @@ UNMAP_AFTER_INIT void Parser::init_fadt()
     dbgln_if(ACPI_DEBUG, "ACPI: FADT @ V{}, {}", &sdt, m_fadt);
 
     dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", sdt->h.revision, sdt->h.length);
-    dmesgln("ACPI: DSDT {}", PhysicalAddress(sdt->dsdt_ptr));
+    m_dsdt = (sdt->h.revision >= 4 && sdt->x_dsdt != 0) ? sdt->x_dsdt : sdt->dsdt_ptr;
+    dmesgln("ACPI: DSDT P{:08x}", m_dsdt);
     m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
 
     // FIXME: QEMU doesn't report that we have an i8042 controller in these flags, even if it should (when FADT revision is 3),
@@ -308,6 +341,13 @@ UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp)
 {
     dmesgln("ACPI: Using RSDP @ {}", rsdp);
     locate_static_data();
+
+    auto feature_level = kernel_command_line().acpi_feature_level();
+    VERIFY(feature_level != AcpiFeatureLevel::Disabled);
+    if (feature_level == AcpiFeatureLevel::Enabled) {
+        if (m_dsdt)
+            m_dsdtAml = AMLCodeTable::load(PhysicalAddress(m_dsdt), "DSDT");
+    }
 }
 
 static bool validate_table(const Structures::SDTHeader& v_header, size_t length)
@@ -383,26 +423,6 @@ UNMAP_AFTER_INIT static PhysicalAddress search_table_in_rsdt(PhysicalAddress rsd
             return PhysicalAddress((FlatPtr)rsdt->table_ptrs[i]);
     }
     return {};
-}
-
-void Parser::enable_aml_interpretation()
-{
-    VERIFY_NOT_REACHED();
-}
-
-void Parser::enable_aml_interpretation(File&)
-{
-    VERIFY_NOT_REACHED();
-}
-
-void Parser::enable_aml_interpretation(u8*, u32)
-{
-    VERIFY_NOT_REACHED();
-}
-
-void Parser::disable_aml_interpretation()
-{
-    VERIFY_NOT_REACHED();
 }
 
 }

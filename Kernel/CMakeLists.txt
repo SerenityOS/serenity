@@ -14,7 +14,6 @@ set(KERNEL_HEAP_SOURCES
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_STATIC}")
 
 set(KERNEL_SOURCES
-    ACPI/DynamicParser.cpp
     ACPI/Initialize.cpp
     ACPI/MultiProcessorParser.cpp
     ACPI/Parser.cpp
@@ -259,6 +258,10 @@ set(AK_SOURCES
     ../AK/UUID.cpp
 )
 
+set(AML_SOURCES
+    ../Userland/Libraries/LibAML/AML.cpp
+)
+
 set(ELF_SOURCES
     ../Userland/Libraries/LibELF/Image.cpp
     ../Userland/Libraries/LibELF/Validation.cpp
@@ -285,6 +288,7 @@ set(C_SOURCES
 set(SOURCES
     ${KERNEL_SOURCES}
     ${AK_SOURCES}
+    ${AML_SOURCES}
     ${ELF_SOURCES}
     ${VT_SOURCES}
     ${KEYBOARD_SOURCES}

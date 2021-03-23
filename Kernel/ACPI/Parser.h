@@ -27,24 +27,36 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Userland/Libraries/LibAML/AML.h>
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/PhysicalAddress.h>
+#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
+#include <Kernel/VM/TypedMapping.h>
 #include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
 namespace ACPI {
 
+class AMLCodeTable {
+public:
+    static OwnPtr<AMLCodeTable> load(PhysicalAddress, StringView);
+private:
+    AMLCodeTable(PhysicalAddress, StringView);
+
+    OwnPtr<Kernel::Region> m_region;
+    AML::CodeTable m_aml;
+};
+
 class Parser {
 public:
     static Parser* the();
 
-    template<typename ParserType>
     static void initialize(PhysicalAddress rsdp)
     {
-        set_the(*new ParserType(rsdp));
+        set_the(*new Parser(rsdp));
     }
 
     virtual PhysicalAddress find_table(const StringView& signature);
@@ -61,11 +73,6 @@ public:
 
     const FADTFlags::HardwareFeatures& hardware_features() const { return m_hardware_flags; }
     const FADTFlags::x86_Specific_Flags& x86_specific_flags() const { return m_x86_specific_flags; }
-
-    virtual void enable_aml_interpretation();
-    virtual void enable_aml_interpretation(File&);
-    virtual void enable_aml_interpretation(u8*, u32);
-    virtual void disable_aml_interpretation();
 
 protected:
     explicit Parser(PhysicalAddress rsdp);
@@ -90,6 +97,8 @@ private:
     Vector<PhysicalAddress> m_sdt_pointers;
     PhysicalAddress m_fadt;
     PhysicalAddress m_facs;
+    u64 m_dsdt { 0 };
+    OwnPtr<AMLCodeTable> m_dsdtAml;
 
     bool m_xsdt_supported { false };
     FADTFlags::HardwareFeatures m_hardware_flags;

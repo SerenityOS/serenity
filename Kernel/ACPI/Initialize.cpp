@@ -25,7 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/ACPI/DynamicParser.h>
+#include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
 
 namespace Kernel {
@@ -41,10 +41,7 @@ UNMAP_AFTER_INIT void initialize()
     if (!rsdp.has_value())
         return;
 
-    if (feature_level == AcpiFeatureLevel::Enabled)
-        Parser::initialize<DynamicParser>(rsdp.value());
-    else
-        Parser::initialize<Parser>(rsdp.value());
+    Parser::initialize(rsdp.value());
 }
 
 bool is_enabled()

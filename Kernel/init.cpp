@@ -25,7 +25,6 @@
  */
 
 #include <AK/Types.h>
-#include <Kernel/ACPI/DynamicParser.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/x86/CPU.h>

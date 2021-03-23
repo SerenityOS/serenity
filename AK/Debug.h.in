@@ -26,6 +26,10 @@
 
 #pragma once
 
+#ifndef AML_DEBUG
+#cmakedefine01 AML_DEBUG
+#endif
+
 #ifndef AUTOCOMPLETE_DEBUG
 #cmakedefine01 AUTOCOMPLETE_DEBUG
 #endif
