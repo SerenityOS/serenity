@@ -1,3 +1,6 @@
+
+namespace MyNamespace {
+
 int func();
 
 #define USE_VAR2
@@ -12,3 +15,5 @@ struct StructInHeader {
     int var3;
 #endif
 };
+
+}

@@ -75,6 +75,7 @@ public:
     virtual bool is_variable_or_parameter_declaration() const { return false; }
     virtual bool is_function_call() const { return false; }
     virtual bool is_type() const { return false; }
+    virtual bool is_declaration() const { return false; }
 
 protected:
     ASTNode(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
@@ -113,7 +114,6 @@ public:
     virtual ~Statement() override = default;
     virtual const char* class_name() const override { return "Statement"; }
 
-    virtual bool is_declaration() const { return false; }
     virtual NonnullRefPtrVector<Declaration> declarations() const override;
 
 protected:

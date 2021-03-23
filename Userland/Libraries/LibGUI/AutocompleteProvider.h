@@ -75,6 +75,7 @@ public:
         String name;
         ProjectLocation position;
         DeclarationType type;
+        String scope;
     };
 
     virtual void provide_completions(Function<void(Vector<Entry>)>) = 0;

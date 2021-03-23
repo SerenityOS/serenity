@@ -294,8 +294,7 @@ NonnullRefPtrVector<Declaration> ParserAutoComplete::get_global_declarations(con
 
     for (auto& decl : node.declarations()) {
         declarations.append(decl);
-        if(decl.is_namespace())
-        {
+        if (decl.is_namespace()) {
             declarations.append(get_global_declarations(decl));
         }
     }
@@ -410,13 +409,12 @@ void ParserAutoComplete::update_declared_symbols(const DocumentData& document)
 {
     Vector<GUI::AutocompleteProvider::Declaration> declarations;
 
-    for(auto& decl : get_global_declarations(*document.parser().root_node()))
-    {
-        declarations.append({ decl.name(), { document.filename(), decl.start().line, decl.start().column }, type_of_declaration(decl) });
+    for (auto& decl : get_global_declarations(*document.parser().root_node())) {
+        declarations.append({ decl.name(), { document.filename(), decl.start().line, decl.start().column }, type_of_declaration(decl), scope_of_declaration(decl) });
     }
 
     for (auto& definition : document.preprocessor().definitions()) {
-        declarations.append({ definition.key, { document.filename(), definition.value.line, definition.value.column }, GUI::AutocompleteProvider::DeclarationType::PreprocessorDefinition });
+        declarations.append({ definition.key, { document.filename(), definition.value.line, definition.value.column }, GUI::AutocompleteProvider::DeclarationType::PreprocessorDefinition, {} });
     }
 
     set_declarations_of_document(document.filename(), move(declarations));
@@ -458,6 +456,29 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
 
     document_data->m_parser = make<Parser>(document_data->preprocessor().processed_text(), filename, move(all_definitions));
     return document_data;
+}
+
+String ParserAutoComplete::scope_of_declaration(const Declaration& decl)
+{
+
+    auto parent = decl.parent();
+    if (!parent)
+        return {};
+
+    if (!parent->is_declaration())
+        return {};
+
+    auto& parent_decl = static_cast<Declaration&>(*parent);
+
+    if (parent_decl.is_namespace()) {
+        auto& containing_namespace = static_cast<NamespaceDeclaration&>(parent_decl);
+        auto scope_of_parent = scope_of_declaration(parent_decl);
+        if (scope_of_parent.is_null())
+            return containing_namespace.m_name;
+        return String::formatted("{}::{}", scope_of_parent, containing_namespace.m_name);
+    }
+
+    return {};
 }
 
 }
