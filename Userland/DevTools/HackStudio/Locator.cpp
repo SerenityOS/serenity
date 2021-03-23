@@ -77,8 +77,11 @@ public:
                 return GUI::FileIconProvider::icon_for_path(suggestion.as_filename.value());
         }
         if (suggestion.is_symbol_declaration()) {
-            if (index.column() == Column::Name)
-                return suggestion.as_symbol_declaration.value().name;
+            if (index.column() == Column::Name) {
+                if (suggestion.as_symbol_declaration.value().scope.is_null())
+                    return suggestion.as_symbol_declaration.value().name;
+                return String::formatted("{}::{}", suggestion.as_symbol_declaration.value().scope, suggestion.as_symbol_declaration.value().name);
+            }
             if (index.column() == Column::Filename)
                 return suggestion.as_symbol_declaration.value().position.file;
             if (index.column() == Column::Icon) {
@@ -225,7 +228,7 @@ void Locator::update_suggestions()
 
     for (auto& item : m_document_to_declarations) {
         for (auto& decl : item.value) {
-            if (decl.name.contains(typed_text, CaseSensitivity::CaseInsensitive))
+            if (decl.name.contains(typed_text, CaseSensitivity::CaseInsensitive) || decl.scope.contains(typed_text, CaseSensitivity::CaseInsensitive))
                 suggestions.append((LocatorSuggestionModel::Suggestion::create_symbol_declaration(decl)));
         }
     }
