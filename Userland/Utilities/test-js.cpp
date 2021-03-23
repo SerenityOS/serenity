@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,15 +68,6 @@ struct JSFileResult {
     Vector<String> logged_messages {};
 };
 
-struct JSTestRunnerCounts {
-    int tests_failed { 0 };
-    int tests_passed { 0 };
-    int tests_skipped { 0 };
-    int suites_failed { 0 };
-    int suites_passed { 0 };
-    int files_total { 0 };
-};
-
 class TestRunnerGlobalObject final : public JS::GlobalObject {
     JS_OBJECT(TestRunnerGlobalObject, JS::GlobalObject);
 
@@ -109,7 +100,7 @@ public:
 
     void run();
 
-    const JSTestRunnerCounts& counts() const { return m_counts; }
+    const Test::Counts& counts() const { return m_counts; }
 
     bool is_printing_progress() const { return m_print_progress; }
 
@@ -126,7 +117,7 @@ protected:
     bool m_print_progress;
 
     double m_total_elapsed_time_in_ms { 0 };
-    JSTestRunnerCounts m_counts;
+    Test::Counts m_counts;
 
     RefPtr<JS::Program> m_test_program;
 };

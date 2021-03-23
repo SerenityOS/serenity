@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
+ * Copyright (c) 2020-2021, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,15 +66,6 @@ struct JSFileResult {
     Vector<String> logged_messages {};
 };
 
-struct JSTestRunnerCounts {
-    int tests_failed { 0 };
-    int tests_passed { 0 };
-    int tests_skipped { 0 };
-    int suites_failed { 0 };
-    int suites_passed { 0 };
-    int files_total { 0 };
-};
-
 Function<void(const URL&)> g_on_page_change;
 
 class TestRunnerObject final : public JS::Object {
@@ -138,7 +129,7 @@ private:
     bool m_print_times;
 
     double m_total_elapsed_time_in_ms { 0 };
-    JSTestRunnerCounts m_counts;
+    Test::Counts m_counts;
 
     RefPtr<Web::InProcessWebView> m_page_view;
 
