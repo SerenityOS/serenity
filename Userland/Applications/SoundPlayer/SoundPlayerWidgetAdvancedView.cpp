@@ -41,12 +41,10 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
-SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window, Audio::ClientConnection& connection, PlaybackManager& manager)
-    : m_window(window)
-    , m_connection(connection)
-    , m_manager(manager)
+SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window, PlayerState& state)
+    : Player(state)
+    , m_window(window)
 {
-
     window.resize(455, 350);
     window.set_minimum_size(440, 130);
     window.set_resizable(true);
@@ -65,9 +63,9 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     m_playback_progress_slider = add<Slider>(Orientation::Horizontal);
     m_playback_progress_slider->set_fixed_height(20);
     m_playback_progress_slider->set_min(0);
-    m_playback_progress_slider->set_max(m_manager.total_length() * 44100); //this value should be set when we load a new file
+    m_playback_progress_slider->set_max(this->manager().total_length() * 44100); //this value should be set when we load a new file
     m_playback_progress_slider->on_knob_released = [&](int value) {
-        m_manager.seek(value);
+        this->manager().seek(value);
     };
 
     auto& toolbar_container = add<GUI::ToolBarContainer>();
@@ -75,20 +73,22 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     auto& menubar = toolbar_container.add<GUI::ToolBar>();
 
     m_play_button = menubar.add<GUI::Button>();
-    m_play_button->set_icon(*m_play_icon);
+    m_play_button->set_icon(is_paused() ? (!has_loaded_file() ? *m_play_icon : *m_pause_icon) : *m_pause_icon);
     m_play_button->set_fixed_width(50);
-
+    m_play_button->set_enabled(has_loaded_file());
     m_play_button->on_click = [&](unsigned) {
-        bool paused = m_manager.toggle_pause();
+        bool paused = this->manager().toggle_pause();
+        set_paused(paused);
         m_play_button->set_icon(paused ? *m_play_icon : *m_pause_icon);
-        m_stop_button->set_enabled(!paused);
     };
 
     m_stop_button = menubar.add<GUI::Button>();
     m_stop_button->set_icon(*m_stop_icon);
     m_stop_button->set_fixed_width(50);
+    m_stop_button->set_enabled(has_loaded_file());
     m_stop_button->on_click = [&](unsigned) {
-        m_manager.stop();
+        this->manager().stop();
+        set_stopped(true);
         m_play_button->set_icon(*m_play_icon);
         m_stop_button->set_enabled(false);
     };
@@ -100,13 +100,15 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     // filler_label
     menubar.add<GUI::Label>();
 
-    auto& back_button = menubar.add<GUI::Button>();
-    back_button.set_fixed_width(50);
-    back_button.set_icon(*m_back_icon);
+    m_back_button = menubar.add<GUI::Button>();
+    m_back_button->set_fixed_width(50);
+    m_back_button->set_icon(*m_back_icon);
+    m_back_button->set_enabled(has_loaded_file());
 
-    auto& next_button = menubar.add<GUI::Button>();
-    next_button.set_fixed_width(50);
-    next_button.set_icon(*m_next_icon);
+    m_next_button = menubar.add<GUI::Button>();
+    m_next_button->set_fixed_width(50);
+    m_next_button->set_icon(*m_next_icon);
+    m_next_button->set_enabled(has_loaded_file());
 
     m_volume_label = &menubar.add<GUI::Label>();
     m_volume_label->set_fixed_width(30);
@@ -127,39 +129,34 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     set_volume(1.);
     set_nonlinear_volume_slider(false);
 
-    m_manager.on_update = [&]() {
+    manager().on_update = [&]() {
         //TODO: make this program support other sample rates
-        int samples_played = m_connection.get_played_samples() + m_manager.last_seek();
+        int samples_played = client_connection().get_played_samples() + this->manager().last_seek();
         int current_second = samples_played / 44100;
         timestamp_label.set_text(String::formatted("Elapsed: {:02}:{:02}:{:02}", current_second / 3600, current_second / 60, current_second % 60));
         m_playback_progress_slider->set_value(samples_played);
 
-        dynamic_cast<Visualization*>(m_visualization.ptr())->set_buffer(m_manager.current_buffer());
+        dynamic_cast<Visualization*>(m_visualization.ptr())->set_buffer(this->manager().current_buffer());
     };
 
-    m_manager.on_load_sample_buffer = [&](Audio::Buffer& buffer) {
-        if (m_volume == 1.)
+    this->manager().on_load_sample_buffer = [&](Audio::Buffer& buffer) {
+        if (volume() == 1.)
             return;
         auto sample_count = buffer.sample_count();
         if (sample_count % 4 == 0) {
             const int total_iter = sample_count / (sizeof(AK::SIMD::f64x4) / sizeof(double) / 2);
             AK::SIMD::f64x4* sample_ptr = const_cast<AK::SIMD::f64x4*>(reinterpret_cast<const AK::SIMD::f64x4*>((buffer.data())));
             for (int i = 0; i < total_iter; ++i) {
-                sample_ptr[i] = sample_ptr[i] * m_volume;
+                sample_ptr[i] = sample_ptr[i] * volume();
             }
         } else {
             const int total_iter = sample_count / (sizeof(AK::SIMD::f64x2) / sizeof(double) / 2);
             AK::SIMD::f64x2* sample_ptr = const_cast<AK::SIMD::f64x2*>(reinterpret_cast<const AK::SIMD::f64x2*>((buffer.data())));
             for (int i = 0; i < total_iter; ++i) {
-                sample_ptr[i] = sample_ptr[i] * m_volume;
+                sample_ptr[i] = sample_ptr[i] * volume();
             }
         }
     };
-}
-
-void SoundPlayerWidgetAdvancedView::set_volume(double value)
-{
-    m_volume = value;
 }
 
 void SoundPlayerWidgetAdvancedView::open_file(StringView path)
@@ -173,7 +170,12 @@ void SoundPlayerWidgetAdvancedView::open_file(StringView path)
     }
     m_window.set_title(String::formatted("{} - SoundPlayer", loader->file()->filename()));
     m_playback_progress_slider->set_max(loader->total_samples());
-    m_manager.set_loader(move(loader));
+    m_playback_progress_slider->set_enabled(true);
+    m_play_button->set_enabled(true);
+    m_stop_button->set_enabled(true);
+    manager().set_loader(move(loader));
+    set_has_loaded_file(true);
+    set_loaded_filename(path);
 }
 
 void SoundPlayerWidgetAdvancedView::set_nonlinear_volume_slider(bool nonlinear)
@@ -196,5 +198,13 @@ void SoundPlayerWidgetAdvancedView::drop_event(GUI::DropEvent& event)
 
 SoundPlayerWidgetAdvancedView::~SoundPlayerWidgetAdvancedView()
 {
-    m_manager.on_load_sample_buffer = nullptr;
+    manager().on_load_sample_buffer = nullptr;
+    manager().on_update = nullptr;
+}
+
+void SoundPlayerWidgetAdvancedView::play()
+{
+    manager().play();
+    set_paused(false);
+    set_stopped(false);
 }

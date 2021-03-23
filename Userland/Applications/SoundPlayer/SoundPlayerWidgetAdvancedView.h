@@ -39,12 +39,11 @@ class SoundPlayerWidgetAdvancedView final : public GUI::Widget
     C_OBJECT(SoundPlayerWidgetAdvancedView)
 
 public:
-    explicit SoundPlayerWidgetAdvancedView(GUI::Window& window, Audio::ClientConnection& connection, PlaybackManager& manager);
+    explicit SoundPlayerWidgetAdvancedView(GUI::Window& window, PlayerState& state);
     ~SoundPlayerWidgetAdvancedView() override;
 
     void open_file(StringView path) override;
-    Audio::ClientConnection& client_connection() override { return m_connection; }
-    PlaybackManager& playback_manager() override { return m_manager; }
+    void play() override;
 
     template<typename T>
     void set_visualization()
@@ -58,14 +57,9 @@ public:
 
     void set_nonlinear_volume_slider(bool nonlinear);
 
-    void set_volume(double value);
-
 private:
     void drop_event(GUI::DropEvent& event) override;
-
     GUI::Window& m_window;
-    Audio::ClientConnection& m_connection;
-    PlaybackManager& m_manager;
 
     RefPtr<GUI::Widget> m_visualization;
 
@@ -77,9 +71,10 @@ private:
 
     RefPtr<GUI::Button> m_play_button;
     RefPtr<GUI::Button> m_stop_button;
+    RefPtr<GUI::Button> m_back_button;
+    RefPtr<GUI::Button> m_next_button;
     RefPtr<Slider> m_playback_progress_slider;
     RefPtr<GUI::Label> m_volume_label;
 
-    double m_volume;
     bool m_nonlinear_volume_slider;
 };
