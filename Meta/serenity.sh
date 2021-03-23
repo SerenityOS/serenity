@@ -10,9 +10,9 @@ Usage: $ARG0 COMMAND [TARGET] [ARGS...]
     build:      Compiles the target binaries, [ARGS...] are passed through to ninja
     install:    Installs the target binary
     image:      Creates a disk image with the installed binaries
-    run:        TARGET lagom: $ARG0 run lagom LAGOM_EXECUTABLE
-                    Runs the Lagom-built LAGOM_EXECUTABLE on the build host,
-                    e.g. 'shell' or 'js'
+    run:        TARGET lagom: $ARG0 run lagom LAGOM_EXECUTABLE [ARGS...]
+                    Runs the Lagom-built LAGOM_EXECUTABLE on the build host, e.g.
+                    'shell' or 'js', [ARGS...] are passed through to the executable
                 All other TARGETs: $ARG0 run [TARGET] [KERNEL_CMD_LINE]
                     Runs the built image in QEMU, and optionally passes the
                     KERNEL_CMD_LINE to the Kernel
@@ -44,7 +44,7 @@ Usage: $ARG0 COMMAND [TARGET] [ARGS...]
         Runs the image in QEMU passing "smp=on" to the kernel command line
     $ARG0 run
         Runs the image for the default TARGET i686 in QEMU
-    $ARG0 run lagom js
+    $ARG0 run lagom js -A
         Runs the Lagom-built js(1) REPL
     $ARG0 test lagom
         Runs the unit tests on the build host
@@ -225,8 +225,8 @@ if [[ "$CMD" =~ ^(build|install|image|run|gdb|test|rebuild|recreate|kaddr2line|a
             ;;
         run)
             if [ "$TARGET" = "lagom" ]; then
-                build_target "$@"
-                "$BUILD_DIR/Meta/Lagom/${CMD_ARGS[0]}"
+                build_target "${CMD_ARGS[0]}"
+                "$BUILD_DIR/Meta/Lagom/${CMD_ARGS[0]}" "${CMD_ARGS[@]:1}"
             else
                 build_target
                 build_target install
