@@ -69,9 +69,6 @@ void Menu::set_icon(const Gfx::Bitmap* icon)
 void Menu::add_action(NonnullRefPtr<Action> action)
 {
     m_items.append(make<MenuItem>(m_menu_id, move(action)));
-#if GMENU_DEBUG
-    dbgln("GUI::Menu::add_action(): MenuItem Menu ID: {}", m_menu_id);
-#endif
 }
 
 Menu& Menu::add_submenu(const String& name)
