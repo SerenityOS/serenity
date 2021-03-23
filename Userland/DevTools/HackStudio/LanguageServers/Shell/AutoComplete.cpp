@@ -233,7 +233,7 @@ void AutoComplete::update_declared_symbols(const DocumentData& document)
 
                 if (!name.is_empty()) {
                     dbgln("Found variable {}", name);
-                    declarations.append({ move(name), { filename, entry.name->position().start_line.line_number, entry.name->position().start_line.line_column }, GUI::AutocompleteProvider::DeclarationType::Variable });
+                    declarations.append({ move(name), { filename, entry.name->position().start_line.line_number, entry.name->position().start_line.line_column }, GUI::AutocompleteProvider::DeclarationType::Variable, {} });
                 }
             }
             ::Shell::AST::NodeVisitor::visit(node);
@@ -242,7 +242,7 @@ void AutoComplete::update_declared_symbols(const DocumentData& document)
         void visit(const ::Shell::AST::FunctionDeclaration* node) override
         {
             dbgln("Found function {}", node->name().name);
-            declarations.append({ node->name().name, { filename, node->position().start_line.line_number, node->position().start_line.line_column }, GUI::AutocompleteProvider::DeclarationType::Function });
+            declarations.append({ node->name().name, { filename, node->position().start_line.line_number, node->position().start_line.line_column }, GUI::AutocompleteProvider::DeclarationType::Function, {} });
         }
 
         const String& filename;
