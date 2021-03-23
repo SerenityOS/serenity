@@ -427,7 +427,6 @@ ConditionView::ConditionView(ConditionalFormat& fmt)
 
     formula_editor.set_syntax_highlighter(make<JS::SyntaxHighlighter>());
     formula_editor.set_should_hide_unnecessary_scrollbars(true);
-    formula_editor.set_font(&Gfx::FontDatabase::default_fixed_width_font());
     formula_editor.on_change = [&] {
         m_format.condition = formula_editor.text();
     };
