@@ -174,10 +174,6 @@
 #cmakedefine01 GLOBAL_DTORS_DEBUG
 #endif
 
-#ifndef GMENU_DEBUG
-#cmakedefine01 GMENU_DEBUG
-#endif
-
 #ifndef GZIP_DEBUG
 #cmakedefine01 GZIP_DEBUG
 #endif
