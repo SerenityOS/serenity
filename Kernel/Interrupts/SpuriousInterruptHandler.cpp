@@ -57,6 +57,13 @@ bool SpuriousInterruptHandler::eoi()
     return false;
 }
 
+const char* SpuriousInterruptHandler::purpose() const
+{
+    if (!m_real_handler)
+        return "Spurious Interrupt Handler";
+    return m_real_handler->purpose();
+}
+
 SpuriousInterruptHandler::SpuriousInterruptHandler(u8 irq)
     : GenericInterruptHandler(irq)
     , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
