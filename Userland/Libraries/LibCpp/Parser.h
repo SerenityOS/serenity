@@ -121,7 +121,6 @@ private:
     NonnullRefPtrVector<Declaration> parse_declarations_in_translation_unit(ASTNode& parent);
     RefPtr<Declaration> parse_single_declaration_in_translation_unit(ASTNode& parent);
 
-
     bool match(Token::Type);
     Token consume(Token::Type);
     Token consume();
