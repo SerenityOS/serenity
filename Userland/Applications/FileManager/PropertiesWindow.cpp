@@ -26,6 +26,7 @@
 
 #include "PropertiesWindow.h"
 #include <AK/LexicalPath.h>
+#include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
@@ -128,7 +129,7 @@ PropertiesWindow::PropertiesWindow(const String& path, bool disable_rename, Wind
         }
     }
 
-    properties.append({ "Size:", String::formatted("{} bytes", st.st_size) });
+    properties.append({ "Size:", human_readable_size_long(st.st_size) });
     properties.append({ "Owner:", String::formatted("{} ({})", owner_name, st.st_uid) });
     properties.append({ "Group:", String::formatted("{} ({})", group_name, st.st_gid) });
     properties.append({ "Created at:", GUI::FileSystemModel::timestamp_string(st.st_ctime) });
