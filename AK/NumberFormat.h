@@ -54,6 +54,15 @@ static inline String human_readable_size(u64 size)
     return number_string_with_one_decimal(size, EiB, "EiB");
 }
 
+static inline String human_readable_size_long(u64 size)
+{
+    if (size < 1 * KiB)
+        return String::formatted("{} bytes", size);
+    else
+        return String::formatted("{} ({} bytes)", human_readable_size(size), size);
+}
+
 }
 
 using AK::human_readable_size;
+using AK::human_readable_size_long;
