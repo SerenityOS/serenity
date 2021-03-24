@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCrypto/Hash/HashManager.h>
-#include <stdio.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
@@ -38,7 +37,7 @@ int main(int argc, char** argv)
     }
 
     auto program_name = StringView { argv[0] };
-    auto hash_kind { Crypto::Hash::HashKind::None };
+    auto hash_kind = Crypto::Hash::HashKind::None;
 
     if (program_name == "md5sum")
         hash_kind = Crypto::Hash::HashKind::MD5;
@@ -50,7 +49,7 @@ int main(int argc, char** argv)
         hash_kind = Crypto::Hash::HashKind::SHA512;
 
     if (hash_kind == Crypto::Hash::HashKind::None) {
-        fprintf(stderr, "Error: program must be executed as 'md5sum', 'sha1sum', 'sha256sum' or 'sha512sum'; got '%s'\n", argv[0]);
+        warnln("Error: program must be executed as 'md5sum', 'sha1sum', 'sha256sum' or 'sha512sum'; got '{}'", argv[0]);
         exit(1);
     }
 
@@ -81,7 +80,7 @@ int main(int argc, char** argv)
             success = file->open(Core::IODevice::OpenMode::ReadOnly);
         }
         if (!success) {
-            fprintf(stderr, "%s: %s: %s\n", argv[0], path, file->error_string());
+            warnln("{}: {}: {}", argv[0], path, file->error_string());
             has_error = true;
             continue;
         }
@@ -92,9 +91,9 @@ int main(int argc, char** argv)
         auto digest_data = digest.immutable_data();
         StringBuilder builder;
         for (size_t i = 0; i < hash.digest_size(); ++i)
-            builder.appendf("%02x", digest_data[i]);
+            builder.appendff("{:02x}", digest_data[i]);
         auto hash_sum_hex = builder.build();
-        printf("%s  %s\n", hash_sum_hex.characters(), path);
+        outln("{}  {}", hash_sum_hex, path);
     }
     return has_error ? 1 : 0;
 }
