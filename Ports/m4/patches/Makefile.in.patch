@@ -1,0 +1,11 @@
+--- m4-1.4.9/Makefile.in	2021-03-22 06:13:45.959823300 +0100
++++ m4-1.4.9-patched/Makefile.in	2021-03-22 06:18:06.420963000 +0100
+@@ -267,7 +267,7 @@
+ target_alias = @target_alias@
+ top_builddir = @top_builddir@
+ top_srcdir = @top_srcdir@
+-SUBDIRS = . examples lib src doc checks
++SUBDIRS = . lib src
+ EXTRA_DIST = bootstrap c-boxes.el gendocs.sh GNUmakefile Makefile.maint \
+ 	m4/gnulib-cache.m4
+ 

@@ -1,0 +1,11 @@
+--- m4-1.4.9/Makefile.am	2021-03-22 06:08:56.323301400 +0100
++++ m4-1.4.9-patched/Makefile.am	2021-03-22 06:10:35.508791200 +0100
+@@ -20,7 +20,7 @@
+ ##
+ ## Written by Gary V. Vaughan <gary@gnu.org>
+ 
+-SUBDIRS = . examples lib src doc checks
++SUBDIRS = . lib src 
+ EXTRA_DIST = bootstrap c-boxes.el gendocs.sh GNUmakefile Makefile.maint \
+ 	m4/gnulib-cache.m4
+ DISTCLEANFILES = stamp-h
