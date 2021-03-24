@@ -43,10 +43,7 @@ class File;
 
 class FileBlockCondition : public Thread::BlockCondition {
 public:
-    FileBlockCondition(File& file)
-        : m_file(file)
-    {
-    }
+    FileBlockCondition() { }
 
     virtual bool should_add_blocker(Thread::Blocker& b, void* data) override
     {
@@ -64,9 +61,6 @@ public:
             return blocker.unblock(false, data);
         });
     }
-
-private:
-    File& m_file;
 };
 
 // File is the base class for anything that can be referenced by a FileDescription.
