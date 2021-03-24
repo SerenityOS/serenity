@@ -63,7 +63,6 @@ private:
     private:
         ScatterList(AsyncBlockDeviceRequest&, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size);
         NonnullRefPtr<AnonymousVMObject> m_vm_object;
-        size_t m_device_block_size;
         OwnPtr<Region> m_dma_region;
     };
 
