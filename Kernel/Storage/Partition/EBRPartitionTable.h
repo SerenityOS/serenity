@@ -49,6 +49,5 @@ private:
     void search_extended_partition(const StorageDevice&, MBRPartitionTable&, u64, size_t limit);
 
     bool m_valid { false };
-    size_t m_partitions_count { 0 };
 };
 }
