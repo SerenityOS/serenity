@@ -59,8 +59,6 @@ public:
     void clear_current_menu();
     void open_menu(Menu&, bool from_menu_bar, bool as_current_menu = true);
 
-    void set_current_menubar(MenuBar*);
-
     void close_bar();
     void close_everyone();
     void close_everyone_not_in_lineage(Menu&);
@@ -68,21 +66,9 @@ public:
 
     void close_all_menus_from_client(Badge<ClientConnection>, ClientConnection&);
 
-    Menu* system_menu() { return m_system_menu; }
-    void set_system_menu(Menu&);
-
     int theme_index() const { return m_theme_index; }
 
     Window& window() { return *m_window; }
-
-    template<typename Callback>
-    void for_each_active_menubar_menu(Callback callback)
-    {
-        if (system_menu()) {
-            if (callback(*system_menu()) == IterationDecision::Break)
-                return;
-        }
-    }
 
     Menu* previous_menu(Menu* current);
     Menu* next_menu(Menu* current);

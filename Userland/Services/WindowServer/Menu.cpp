@@ -122,7 +122,7 @@ int Menu::content_width() const
     if (widest_shortcut)
         widest_item += padding_between_text_and_shortcut() + widest_shortcut;
 
-    return max(widest_item, rect_in_global_menubar().width()) + horizontal_padding() + frame_thickness() * 2;
+    return max(widest_item, rect_in_window_menubar().width()) + horizontal_padding() + frame_thickness() * 2;
 }
 
 void Menu::redraw()
