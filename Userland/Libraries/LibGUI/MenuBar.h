@@ -44,6 +44,8 @@ public:
     void notify_added_to_application(Badge<Application>);
     void notify_removed_from_application(Badge<Application>);
 
+    int menubar_id() const { return m_menubar_id; }
+
 private:
     MenuBar();
 
