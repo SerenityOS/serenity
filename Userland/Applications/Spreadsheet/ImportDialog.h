@@ -66,6 +66,13 @@ private:
     RefPtr<GUI::CheckBox> m_trim_leading_field_spaces_check_box;
     RefPtr<GUI::CheckBox> m_trim_trailing_field_spaces_check_box;
     RefPtr<GUI::TableView> m_data_preview_table_view;
+    RefPtr<GUI::Label> m_data_preview_error_label;
+    RefPtr<GUI::StackWidget> m_data_preview_widget;
+    Vector<String> m_quote_escape_items {
+        // Note: Keep in sync with Reader::ParserTraits::QuoteEscape.
+        "Repeat",
+        "Backslash",
+    };
 };
 
 struct ImportDialog {
