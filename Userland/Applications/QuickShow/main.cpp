@@ -275,7 +275,7 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("QuickShow");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(open_action);
     app_menu.add_action(delete_action);
     app_menu.add_separator();
@@ -310,7 +310,7 @@ int main(int argc, char** argv)
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("QuickShow", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     if (path != nullptr) {
         widget.load_from_file(path);

@@ -361,7 +361,7 @@ TextEditorWidget::~TextEditorWidget()
 
 void TextEditorWidget::initialize_menubar(GUI::MenuBar& menubar)
 {
-    auto& app_menu = menubar.add_menu("Text Editor");
+    auto& app_menu = menubar.add_menu("File");
     app_menu.add_action(*m_new_action);
     app_menu.add_action(*m_open_action);
     app_menu.add_action(*m_save_action);

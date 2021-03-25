@@ -61,8 +61,7 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
     hex_editor_widget.initialize_menubar(menubar);
-    app->set_menubar(menubar);
-
+    window->set_menubar(menubar);
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
 

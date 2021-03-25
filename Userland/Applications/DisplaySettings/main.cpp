@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("Display Settings");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](const GUI::Action&) {
         app->quit();
     }));
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Display Settings", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
     window->show();
     return app->exec();
 }

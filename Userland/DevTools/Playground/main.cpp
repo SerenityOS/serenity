@@ -330,7 +330,7 @@ int main(int argc, char** argv)
     };
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("GML Playground");
+    auto& app_menu = menubar->add_menu("File");
 
     app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
@@ -400,7 +400,7 @@ int main(int argc, char** argv)
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("GML Playground", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     window->show();
     return app->exec();

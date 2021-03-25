@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     });
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Solitaire");
+    auto& app_menu = menubar->add_menu("Game");
 
     app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
         widget->setup();
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Solitaire", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
     window->set_main_widget(widget);
     window->set_icon(app_icon.bitmap_for_size(16));
     window->show();

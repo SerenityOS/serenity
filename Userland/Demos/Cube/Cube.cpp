@@ -264,7 +264,7 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Cube Demo");
+    auto& app_menu = menubar->add_menu("File");
     auto show_window_frame_action = GUI::Action::create_checkable("Show window frame", [&](auto& action) {
         cube.set_show_window_frame(action.is_checked());
     });
@@ -276,7 +276,7 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Cube Demo", app_icon, window));
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     cube.on_context_menu_request = [&](auto& event) {
         app_menu.popup(event.screen_position());

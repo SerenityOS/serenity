@@ -71,10 +71,9 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("Calculator");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-        return;
     }));
 
     auto& edit_menu = menubar->add_menu("Edit");
@@ -93,8 +92,6 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
-
-    app->set_menubar(move(menubar));
-
+    window->set_menubar(move(menubar));
     return app->exec();
 }

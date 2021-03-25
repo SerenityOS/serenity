@@ -141,7 +141,7 @@ int main(int argc, char** argv)
     };
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Profiler");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& view_menu = menubar->add_menu("View");
@@ -185,8 +185,7 @@ int main(int argc, char** argv)
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Profiler", app_icon, window));
 
-    app->set_menubar(move(menubar));
-
+    window->set_menubar(move(menubar));
     window->show();
     return app->exec();
 }

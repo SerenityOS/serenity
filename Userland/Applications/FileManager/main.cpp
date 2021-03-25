@@ -755,7 +755,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("File Manager");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(mkdir_action);
     app_menu.add_action(touch_action);
     app_menu.add_action(copy_action);
@@ -814,7 +814,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("File Manager", GUI::Icon::default_icon("app-file-manager"), window));
 
-    GUI::Application::the()->set_menubar(move(menubar));
+    window->set_menubar(menubar);
 
     main_toolbar.add_action(go_back_action);
     main_toolbar.add_action(go_forward_action);

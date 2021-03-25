@@ -115,7 +115,7 @@ int main(int argc, char** argv)
     window->show();
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("PixelPaint");
+    auto& app_menu = menubar->add_menu("File");
 
     auto open_image_file = [&](auto& path) {
         auto image = PixelPaint::Image::create_from_file(path);
@@ -382,7 +382,7 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("PixelPaint", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     image_editor.on_active_layer_change = [&](auto* layer) {
         layer_list_widget.set_selected_layer(layer);

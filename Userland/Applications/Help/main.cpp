@@ -274,7 +274,7 @@ int main(int argc, char* argv[])
 
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("Help");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_about_action("Help", app_icon, window));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
@@ -286,7 +286,7 @@ int main(int argc, char* argv[])
     go_menu.add_action(*go_forward_action);
     go_menu.add_action(*go_home_action);
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     if (start_page) {
         URL url = URL::create_with_url_or_path(start_page);

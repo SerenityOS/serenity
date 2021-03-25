@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
     s_hack_studio_widget->initialize_menubar(menubar);
-    app->set_menubar(menubar);
+    s_window->set_menubar(menubar);
 
     s_window->show();
 

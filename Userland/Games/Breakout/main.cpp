@@ -69,23 +69,21 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("Breakout");
+    auto& app_menu = menubar->add_menu("Game");
     app_menu.add_action(GUI::Action::create_checkable("Pause", { {}, Key_P }, [&](auto& action) {
         game.set_paused(action.is_checked());
-        return;
     }));
 
     app_menu.add_separator();
 
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-        return;
     }));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Breakout", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     return app->exec();
 }

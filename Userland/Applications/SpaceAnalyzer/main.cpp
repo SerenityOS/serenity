@@ -291,7 +291,7 @@ int main(int argc, char* argv[])
 
     // Configure the menubar.
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu(APP_NAME);
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::Action::create("Analyze", [&](auto&) {
         analyze(tree, treemapwidget, statusbar);
     }));
@@ -300,7 +300,7 @@ int main(int argc, char* argv[])
     }));
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window));
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     // Configure the nodes context menu.
     auto open_folder_action = GUI::Action::create("Open Folder", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
