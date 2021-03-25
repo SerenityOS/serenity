@@ -56,6 +56,7 @@ MenuManager::MenuManager()
 
     m_window = Window::construct(*this, WindowType::Menubar);
     m_window->set_rect(menubar_rect());
+    m_window->set_visible(false);
 
     m_search_timer = Core::Timer::create_single_shot(0, [this] {
         m_current_search.clear();
