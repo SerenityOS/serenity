@@ -1155,9 +1155,6 @@ Gfx::IntRect WindowManager::arena_rect_for_type(WindowType type) const
 void WindowManager::event(Core::Event& event)
 {
     if (static_cast<Event&>(event).is_mouse_event()) {
-        if (event.type() != Event::MouseMove)
-            m_previous_event_is_key_down_logo = false;
-
         Window* hovered_window = nullptr;
         process_mouse_event(static_cast<MouseEvent&>(event), hovered_window);
         set_hovered_window(hovered_window);
@@ -1185,20 +1182,6 @@ void WindowManager::event(Core::Event& event)
             reload_icon_bitmaps_after_scale_change(!m_allow_hidpi_icons);
             Compositor::the().invalidate_screen();
             return;
-        }
-
-        if (key_event.type() == Event::KeyDown && key_event.key() == Key_Super) {
-            m_previous_event_is_key_down_logo = true;
-        } else if (m_previous_event_is_key_down_logo) {
-            m_previous_event_is_key_down_logo = false;
-            if (!m_dnd_client && key_event.type() == Event::KeyUp && key_event.key() == Key_Super) {
-                if (MenuManager::the().has_open_menu()) {
-                    MenuManager::the().close_everyone();
-                } else {
-                    MenuManager::the().open_menu(*MenuManager::the().system_menu(), true);
-                }
-                return;
-            }
         }
 
         if (MenuManager::the().current_menu()) {
@@ -1371,8 +1354,6 @@ void WindowManager::set_active_window(Window* window, bool make_input)
         Core::EventLoop::current().post_event(*m_active_window, make<Event>(Event::WindowActivated));
         m_active_window->invalidate(true, true);
         tell_wm_listeners_window_state_changed(*m_active_window);
-    } else {
-        MenuManager::the().set_current_menubar(nullptr);
     }
 
     // Window shapes may have changed (e.g. shadows for inactive/active windows)
