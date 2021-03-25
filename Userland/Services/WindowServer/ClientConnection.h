@@ -58,8 +58,6 @@ public:
     static ClientConnection* from_client_id(int client_id);
     static void for_each_client(Function<void(ClientConnection&)>);
 
-    MenuBar* app_menubar() { return m_app_menubar.ptr(); }
-
     void notify_about_new_screen_rect(const Gfx::IntRect&);
     void post_paint_message(Window&, bool ignore_occlusion = false);
 
@@ -169,7 +167,6 @@ private:
     HashMap<int, NonnullRefPtr<Window>> m_windows;
     HashMap<int, NonnullRefPtr<MenuBar>> m_menubars;
     HashMap<int, NonnullRefPtr<Menu>> m_menus;
-    WeakPtr<MenuBar> m_app_menubar;
 
     RefPtr<Core::Timer> m_ping_timer;
 

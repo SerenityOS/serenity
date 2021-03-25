@@ -54,7 +54,6 @@ MenuManager::MenuManager()
     s_the = this;
     m_needs_window_resize = true;
 
-    // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
     m_window = Window::construct(*this, WindowType::Menubar);
@@ -498,15 +497,8 @@ Gfx::IntRect MenuManager::menubar_rect() const
     return { 0, 0, Screen::the().rect().width(), 19 };
 }
 
-void MenuManager::set_current_menubar(MenuBar* menubar)
+void MenuManager::set_current_menubar(MenuBar*)
 {
-    if (menubar)
-        m_current_menubar = *menubar;
-    else
-        m_current_menubar = nullptr;
-
-    dbgln_if(MENUS_DEBUG, "[WM] Current menubar is now {}", menubar);
-
     Gfx::IntPoint next_menu_location { MenuManager::menubar_menu_margin() / 2, 0 };
     for_each_active_menubar_menu([&](Menu& menu) {
         int text_width = menu.title_font().width(menu.name());
@@ -521,16 +513,10 @@ void MenuManager::set_current_menubar(MenuBar* menubar)
     refresh();
 }
 
-void MenuManager::close_menubar(MenuBar& menubar)
-{
-    if (current_menubar() == &menubar)
-        set_current_menubar(nullptr);
-}
-
 void MenuManager::set_system_menu(Menu& menu)
 {
     m_system_menu = menu;
-    set_current_menubar(m_current_menubar);
+    set_current_menubar(nullptr);
 }
 
 Menu* MenuManager::previous_menu(Menu* current)
