@@ -25,6 +25,7 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
@@ -439,7 +440,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
         case Column::Name:
             return node.name;
         case Column::Size:
-            return (int)node.size;
+            return human_readable_size(node.size);
         case Column::Owner:
             return name_for_uid(node.uid);
         case Column::Group:
