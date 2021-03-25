@@ -60,6 +60,9 @@ public:
 
     virtual bool is_uncheckable() const override;
 
+    int icon_spacing() const { return m_icon_spacing; }
+    void set_icon_spacing(int spacing) { m_icon_spacing = spacing; }
+
 protected:
     explicit Button(String text = {});
     virtual void paint_event(PaintEvent&) override;
@@ -69,6 +72,7 @@ private:
     Gfx::ButtonStyle m_button_style { Gfx::ButtonStyle::Normal };
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
     WeakPtr<Action> m_action;
+    int m_icon_spacing { 4 };
 };
 
 }

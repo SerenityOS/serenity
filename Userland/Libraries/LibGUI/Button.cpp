@@ -94,8 +94,8 @@ void Button::paint_event(PaintEvent& event)
     }
     auto& font = is_checked() ? Gfx::FontDatabase::default_bold_font() : this->font();
     if (m_icon && !text().is_empty()) {
-        content_rect.move_by(m_icon->width() + 4, 0);
-        content_rect.set_width(content_rect.width() - m_icon->width() - 4);
+        content_rect.move_by(m_icon->width() + icon_spacing(), 0);
+        content_rect.set_width(content_rect.width() - m_icon->width() - icon_spacing());
     }
 
     Gfx::IntRect text_rect { 0, 0, font.width(text()), font.glyph_height() };
