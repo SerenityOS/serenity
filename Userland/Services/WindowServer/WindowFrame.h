@@ -36,6 +36,7 @@
 namespace WindowServer {
 
 class Button;
+class Menu;
 class MouseEvent;
 class Window;
 
@@ -43,7 +44,7 @@ class WindowFrame {
 public:
     static void reload_config();
 
-    WindowFrame(Window&);
+    explicit WindowFrame(Window&);
     ~WindowFrame();
 
     Gfx::IntRect rect() const;
@@ -55,10 +56,14 @@ public:
     void notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect);
     void invalidate_title_bar();
     void invalidate(Gfx::IntRect relative_rect);
+    void invalidate();
 
     Gfx::IntRect title_bar_rect() const;
     Gfx::IntRect title_bar_icon_rect() const;
     Gfx::IntRect title_bar_text_rect() const;
+
+    Gfx::IntRect menubar_rect() const;
+    int menu_row_count() const;
 
     void did_set_maximized(Badge<Window>, bool);
 
@@ -97,10 +102,14 @@ private:
     void paint_notification_frame(Gfx::Painter&);
     void paint_normal_frame(Gfx::Painter&);
     void paint_tool_window_frame(Gfx::Painter&);
+    void paint_menubar(Gfx::Painter&);
     Gfx::Bitmap* window_shadow() const;
     bool frame_has_alpha() const;
     Gfx::IntRect inflated_for_shadow(const Gfx::IntRect&) const;
     Gfx::Bitmap* inflate_for_shadow(Gfx::IntRect&, Gfx::IntPoint&) const;
+
+    void handle_menubar_mouse_event(const MouseEvent&);
+    void handle_menu_mouse_event(Menu&, const MouseEvent&);
 
     Gfx::WindowTheme::WindowState window_state_for_theme() const;
     String compute_title_text() const;

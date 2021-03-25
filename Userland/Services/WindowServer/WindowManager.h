@@ -113,6 +113,10 @@ public:
     const Window* active_input_window() const { return m_active_input_window.ptr(); }
     const ClientConnection* active_client() const;
 
+    Window* window_with_active_menu() { return m_window_with_active_menu; }
+    const Window* window_with_active_menu() const { return m_window_with_active_menu; }
+    void set_window_with_active_menu(Window*);
+
     const Window* highlight_window() const { return m_highlight_window.ptr(); }
     void set_highlight_window(Window*);
 
@@ -329,6 +333,7 @@ private:
     WeakPtr<Window> m_highlight_window;
     WeakPtr<Window> m_active_input_window;
     WeakPtr<Window> m_active_input_tracking_window;
+    WeakPtr<Window> m_window_with_active_menu;
 
     WeakPtr<Window> m_move_window;
     Gfx::IntPoint m_move_origin;

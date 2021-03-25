@@ -32,6 +32,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
 #include <WindowServer/AppletManager.h>
+#include <WindowServer/ClientConnection.h>
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
@@ -96,19 +97,20 @@ void MenuManager::draw()
     painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, palette.threed_shadow2());
 
     for_each_active_menubar_menu([&](Menu& menu) {
+        auto text_rect = menu.text_rect_in_global_menubar();
         Color text_color = palette.window_text();
         if (is_open(menu) && &menu == m_current_menu_bar_menu) {
-            painter.fill_rect(menu.rect_in_menubar(), palette.menu_selection());
-            painter.draw_rect(menu.rect_in_menubar(), palette.menu_selection().darkened());
+            painter.fill_rect(menu.rect_in_global_menubar(), palette.menu_selection());
+            painter.draw_rect(menu.rect_in_global_menubar(), palette.menu_selection().darkened());
             text_color = palette.menu_selection_text();
+            text_rect.move_by(1, 1);
         }
         painter.draw_text(
-            menu.text_rect_in_menubar(),
+            text_rect,
             menu.name(),
             menu.title_font(),
             Gfx::TextAlignment::CenterLeft,
             text_color);
-        //painter.draw_rect(menu.text_rect_in_menubar(), Color::Magenta);
         return IterationDecision::Continue;
     });
 
@@ -216,7 +218,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
     auto* active_window = WindowManager::the().active_window();
     bool handled_menubar_event = false;
     for_each_active_menubar_menu([&](Menu& menu) {
-        if (menu.rect_in_menubar().contains(mouse_event.position())) {
+        if (menu.rect_in_global_menubar().contains(mouse_event.position())) {
             handled_menubar_event = &menu == m_system_menu || !active_window || !active_window->is_modal();
             if (handled_menubar_event)
                 handle_menu_mouse_event(menu, mouse_event);
@@ -383,6 +385,25 @@ void MenuManager::close_menu_and_descendants(Menu& menu)
     close_menus(menus_to_close);
 }
 
+void MenuManager::set_hovered_menu(Menu* menu)
+{
+    if (m_hovered_menu == menu)
+        return;
+    if (menu) {
+        m_hovered_menu = menu->make_weak_ptr<Menu>();
+    } else {
+        // FIXME: This is quite aggressive. If we knew which window the previously hovered menu was in,
+        //        we could just invalidate that one instead of iterating all windows in the client.
+        if (auto* client = m_hovered_menu->client()) {
+            client->for_each_window([&](Window& window) {
+                window.invalidate_menubar();
+                return IterationDecision::Continue;
+            });
+        }
+        m_hovered_menu = nullptr;
+    }
+}
+
 void MenuManager::open_menu(Menu& menu, bool from_menu_bar, bool as_current_menu)
 {
     if (from_menu_bar)
@@ -405,7 +426,7 @@ void MenuManager::open_menu(Menu& menu, bool from_menu_bar, bool as_current_menu
             menu.ensure_menu_window();
         }
         if (should_update_position)
-            menu.menu_window()->move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
+            menu.menu_window()->move_to({ menu.rect_in_global_menubar().x(), menu.rect_in_global_menubar().bottom() + 2 });
         menu.menu_window()->set_visible(true);
     }
 
@@ -430,6 +451,10 @@ void MenuManager::clear_current_menu()
         // When closing the last menu, restore the previous active input window
         auto& wm = WindowManager::the();
         wm.restore_active_input_window(m_previous_input_window);
+        if (auto* window = wm.window_with_active_menu()) {
+            window->invalidate_menubar();
+        }
+        wm.set_window_with_active_menu(nullptr);
     }
 }
 
@@ -485,12 +510,12 @@ void MenuManager::set_current_menubar(MenuBar* menubar)
     Gfx::IntPoint next_menu_location { MenuManager::menubar_menu_margin() / 2, 0 };
     for_each_active_menubar_menu([&](Menu& menu) {
         int text_width = menu.title_font().width(menu.name());
-        menu.set_rect_in_menubar({ next_menu_location.x() - MenuManager::menubar_menu_margin() / 2, 0, text_width + MenuManager::menubar_menu_margin(), menubar_rect().height() - 1 });
+        menu.set_rect_in_global_menubar({ next_menu_location.x() - MenuManager::menubar_menu_margin() / 2, 0, text_width + MenuManager::menubar_menu_margin(), menubar_rect().height() - 1 });
 
         Gfx::IntRect text_rect { next_menu_location.translated(0, 1), { text_width, menubar_rect().height() - 3 } };
 
-        menu.set_text_rect_in_menubar(text_rect);
-        next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
+        menu.set_text_rect_in_global_menubar(text_rect);
+        next_menu_location.move_by(menu.rect_in_global_menubar().width(), 0);
         return IterationDecision::Continue;
     });
     refresh();

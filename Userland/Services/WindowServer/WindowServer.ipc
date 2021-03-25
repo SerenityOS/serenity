@@ -52,6 +52,8 @@ endpoint WindowServer = 2
 
     DestroyWindow(i32 window_id) => (Vector<i32> destroyed_window_ids)
 
+    SetWindowMenubar(i32 window_id, i32 menubar_id) => ()
+
     SetWindowTitle(i32 window_id, [UTF8] String title) => ()
     GetWindowTitle(i32 window_id) => ([UTF8] String title)
 

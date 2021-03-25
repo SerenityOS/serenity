@@ -35,6 +35,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Event.h>
+#include <LibGUI/MenuBar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -1050,6 +1051,15 @@ bool Window::is_active() const
 Gfx::Bitmap* Window::back_bitmap()
 {
     return m_back_store ? &m_back_store->bitmap() : nullptr;
+}
+
+void Window::set_menubar(RefPtr<MenuBar> menubar)
+{
+    if (m_menubar == menubar)
+        return;
+    m_menubar = move(menubar);
+    if (m_window_id && m_menubar)
+        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowMenubar>(m_window_id, m_menubar->menubar_id());
 }
 
 }
