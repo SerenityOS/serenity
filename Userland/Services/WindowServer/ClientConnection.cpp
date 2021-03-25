@@ -144,11 +144,6 @@ OwnPtr<Messages::WindowServer::DestroyMenuResponse> ClientConnection::handle(con
     return make<Messages::WindowServer::DestroyMenuResponse>();
 }
 
-OwnPtr<Messages::WindowServer::SetApplicationMenubarResponse> ClientConnection::handle(const Messages::WindowServer::SetApplicationMenubar&)
-{
-    return make<Messages::WindowServer::SetApplicationMenubarResponse>();
-}
-
 OwnPtr<Messages::WindowServer::SetWindowMenubarResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowMenubar& message)
 {
     RefPtr<Window> window;

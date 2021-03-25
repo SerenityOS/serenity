@@ -9,7 +9,6 @@ endpoint WindowServer = 2
     DestroyMenu(i32 menu_id) => ()
 
     AddMenuToMenubar(i32 menubar_id, i32 menu_id) => ()
-    SetApplicationMenubar(i32 menubar_id) => ()
 
     SetSystemMenu(i32 menu_id) => ()
 
