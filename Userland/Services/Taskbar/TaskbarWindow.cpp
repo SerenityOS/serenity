@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,7 @@
  */
 
 #include "TaskbarWindow.h"
+#include "ClockWidget.h"
 #include "TaskbarButton.h"
 #include <AK/Debug.h>
 #include <LibCore/ConfigFile.h>
@@ -77,14 +78,19 @@ TaskbarWindow::TaskbarWindow()
 
     GUI::Desktop::the().on_rect_change = [this](const Gfx::IntRect& rect) { on_screen_rect_change(rect); };
 
-    auto& widget = set_main_widget<TaskbarWidget>();
-    widget.set_layout<GUI::HorizontalBoxLayout>();
-    widget.layout()->set_margins({ 3, 2, 3, 2 });
-    widget.layout()->set_spacing(3);
+    auto& main_widget = set_main_widget<TaskbarWidget>();
+    main_widget.set_layout<GUI::HorizontalBoxLayout>();
+    main_widget.layout()->set_margins({ 3, 2, 3, 2 });
+
+    create_quick_launch_bar();
+
+    m_task_button_container = main_widget.add<GUI::Widget>();
+    m_task_button_container->set_layout<GUI::HorizontalBoxLayout>();
+    m_task_button_container->layout()->set_spacing(3);
 
     m_default_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
 
-    create_quick_launch_bar();
+    main_widget.add<Taskbar::ClockWidget>();
 }
 
 TaskbarWindow::~TaskbarWindow()
@@ -154,7 +160,7 @@ void TaskbarWindow::on_screen_rect_change(const Gfx::IntRect& rect)
 
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
-    auto& button = main_widget()->add<TaskbarButton>(identifier);
+    auto& button = m_task_button_container->add<TaskbarButton>(identifier);
     button.set_min_size(20, 23);
     button.set_max_size(140, 23);
     button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
