@@ -1370,11 +1370,6 @@ void WindowManager::set_active_window(Window* window, bool make_input)
         m_active_window = *window;
         Core::EventLoop::current().post_event(*m_active_window, make<Event>(Event::WindowActivated));
         m_active_window->invalidate(true, true);
-        if (auto* client = window->client()) {
-            MenuManager::the().set_current_menubar(client->app_menubar());
-        } else {
-            MenuManager::the().set_current_menubar(nullptr);
-        }
         tell_wm_listeners_window_state_changed(*m_active_window);
     } else {
         MenuManager::the().set_current_menubar(nullptr);
@@ -1404,12 +1399,6 @@ const ClientConnection* WindowManager::active_client() const
     if (m_active_window)
         return m_active_window->client();
     return nullptr;
-}
-
-void WindowManager::notify_client_changed_app_menubar(ClientConnection& client)
-{
-    if (active_client() == &client)
-        MenuManager::the().set_current_menubar(client.app_menubar());
 }
 
 const Cursor& WindowManager::active_cursor() const

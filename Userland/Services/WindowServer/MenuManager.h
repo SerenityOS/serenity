@@ -59,9 +59,7 @@ public:
     void clear_current_menu();
     void open_menu(Menu&, bool from_menu_bar, bool as_current_menu = true);
 
-    MenuBar* current_menubar() { return m_current_menubar.ptr(); }
     void set_current_menubar(MenuBar*);
-    void close_menubar(MenuBar&);
 
     void close_bar();
     void close_everyone();
@@ -84,8 +82,6 @@ public:
             if (callback(*system_menu()) == IterationDecision::Break)
                 return;
         }
-        if (m_current_menubar)
-            m_current_menubar->for_each_menu(callback);
     }
 
     Menu* previous_menu(Menu* current);
@@ -123,7 +119,6 @@ private:
 
     int m_theme_index { 0 };
 
-    WeakPtr<MenuBar> m_current_menubar;
     WeakPtr<Menu> m_hovered_menu;
 };
 

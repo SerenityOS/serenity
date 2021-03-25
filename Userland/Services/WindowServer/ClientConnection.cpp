@@ -117,8 +117,6 @@ OwnPtr<Messages::WindowServer::DestroyMenubarResponse> ClientConnection::handle(
         did_misbehave("DestroyMenubar: Bad menubar ID");
         return {};
     }
-    auto& menubar = *(*it).value;
-    MenuManager::the().close_menubar(menubar);
     m_menubars.remove(it);
     return make<Messages::WindowServer::DestroyMenubarResponse>();
 }
@@ -146,17 +144,8 @@ OwnPtr<Messages::WindowServer::DestroyMenuResponse> ClientConnection::handle(con
     return make<Messages::WindowServer::DestroyMenuResponse>();
 }
 
-OwnPtr<Messages::WindowServer::SetApplicationMenubarResponse> ClientConnection::handle(const Messages::WindowServer::SetApplicationMenubar& message)
+OwnPtr<Messages::WindowServer::SetApplicationMenubarResponse> ClientConnection::handle(const Messages::WindowServer::SetApplicationMenubar&)
 {
-    int menubar_id = message.menubar_id();
-    auto it = m_menubars.find(menubar_id);
-    if (it == m_menubars.end()) {
-        did_misbehave("SetApplicationMenubar: Bad menubar ID");
-        return {};
-    }
-    auto& menubar = *(*it).value;
-    m_app_menubar = menubar.make_weak_ptr();
-    WindowManager::the().notify_client_changed_app_menubar(*this);
     return make<Messages::WindowServer::SetApplicationMenubarResponse>();
 }
 
