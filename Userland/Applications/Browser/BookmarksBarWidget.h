@@ -52,6 +52,7 @@ public:
     bool contains_bookmark(const String& url);
     bool remove_bookmark(const String& url);
     bool add_bookmark(const String& url, const String& title);
+    bool edit_bookmark(const String& url);
 
 private:
     BookmarksBarWidget(const String&, bool enabled);

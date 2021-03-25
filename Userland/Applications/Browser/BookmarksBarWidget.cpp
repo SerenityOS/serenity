@@ -25,18 +25,92 @@
  */
 
 #include "BookmarksBarWidget.h"
+#include <Applications/Browser/EditBookmarkGML.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Dialog.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 
 namespace Browser {
+
+namespace {
+
+class BookmarkEditor final : public GUI::Dialog {
+    C_OBJECT(BookmarkEditor)
+
+public:
+    static Vector<JsonValue>
+    edit_bookmark(Window* parent_window, const StringView& title, const StringView& url)
+    {
+        auto editor = BookmarkEditor::construct(parent_window, title, url);
+        editor->set_title("Edit Bookmark");
+
+        if (editor->exec() == Dialog::ExecOK) {
+            return Vector<JsonValue> { editor->title(), editor->url() };
+        }
+
+        return {};
+    }
+
+private:
+    BookmarkEditor(Window* parent_window, const StringView& title, const StringView& url)
+        : Dialog(parent_window)
+    {
+        auto& widget = set_main_widget<GUI::Widget>();
+        if (!widget.load_from_gml(edit_bookmark_gml))
+            VERIFY_NOT_REACHED();
+
+        set_resizable(false);
+        resize(260, 85);
+
+        m_title_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("title_textbox");
+        m_title_textbox->set_text(title);
+        m_title_textbox->set_focus(true);
+        m_title_textbox->select_all();
+        m_title_textbox->on_return_pressed = [this] {
+            done(Dialog::ExecOK);
+        };
+
+        m_url_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("url_textbox");
+        m_url_textbox->set_text(url);
+        m_url_textbox->on_return_pressed = [this] {
+            done(Dialog::ExecOK);
+        };
+
+        auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+        ok_button.on_click = [this](auto) {
+            done(Dialog::ExecOK);
+        };
+
+        auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+        cancel_button.on_click = [this](auto) {
+            done(Dialog::ExecCancel);
+        };
+    }
+
+    String title() const
+    {
+        return m_title_textbox->text();
+    }
+
+    String url() const
+    {
+        return m_url_textbox->text();
+    }
+
+    RefPtr<GUI::TextBox> m_title_textbox;
+    RefPtr<GUI::TextBox> m_url_textbox;
+};
+
+}
 
 static BookmarksBarWidget* s_the;
 
@@ -79,6 +153,10 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
     m_context_menu->add_action(GUI::Action::create("Open in new tab", [this](auto&) {
         if (on_bookmark_click)
             on_bookmark_click(m_context_menu_url, Mod_Ctrl);
+    }));
+    m_context_menu->add_separator();
+    m_context_menu->add_action(GUI::Action::create("Edit", [this](auto&) {
+        edit_bookmark(m_context_menu_url);
     }));
     m_context_menu->add_action(GUI::Action::create("Delete", [this](auto&) {
         remove_bookmark(m_context_menu_url);
@@ -224,6 +302,7 @@ bool BookmarksBarWidget::remove_bookmark(const String& url)
 
     return false;
 }
+
 bool BookmarksBarWidget::add_bookmark(const String& url, const String& title)
 {
     Vector<JsonValue> values;
@@ -235,6 +314,31 @@ bool BookmarksBarWidget::add_bookmark(const String& url, const String& title)
         json_model.store();
         return true;
     }
+    return false;
+}
+
+bool BookmarksBarWidget::edit_bookmark(const String& url)
+{
+    for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
+        auto item_title = model()->index(item_index, 0).data().to_string();
+        auto item_url = model()->index(item_index, 1).data().to_string();
+
+        if (item_url == url) {
+            auto values = BookmarkEditor::edit_bookmark(window(), item_title, item_url);
+            bool item_replaced = false;
+
+            if (!values.is_empty()) {
+                auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
+                item_replaced = json_model.set(item_index, move(values));
+
+                if (item_replaced)
+                    json_model.store();
+            }
+
+            return item_replaced;
+        }
+    }
+
     return false;
 }
 
