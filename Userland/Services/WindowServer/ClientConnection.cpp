@@ -104,7 +104,7 @@ void ClientConnection::notify_about_new_screen_rect(const Gfx::IntRect& rect)
 OwnPtr<Messages::WindowServer::CreateMenubarResponse> ClientConnection::handle(const Messages::WindowServer::CreateMenubar&)
 {
     int menubar_id = m_next_menubar_id++;
-    auto menubar = make<MenuBar>(*this, menubar_id);
+    auto menubar = MenuBar::create(*this, menubar_id);
     m_menubars.set(menubar_id, move(menubar));
     return make<Messages::WindowServer::CreateMenubarResponse>(menubar_id);
 }
@@ -158,6 +158,30 @@ OwnPtr<Messages::WindowServer::SetApplicationMenubarResponse> ClientConnection::
     m_app_menubar = menubar.make_weak_ptr();
     WindowManager::the().notify_client_changed_app_menubar(*this);
     return make<Messages::WindowServer::SetApplicationMenubarResponse>();
+}
+
+OwnPtr<Messages::WindowServer::SetWindowMenubarResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowMenubar& message)
+{
+    RefPtr<Window> window;
+    {
+        auto it = m_windows.find(message.window_id());
+        if (it == m_windows.end()) {
+            did_misbehave("SetWindowMenubar: Bad window ID");
+            return {};
+        }
+        window = it->value;
+    }
+    RefPtr<MenuBar> menubar;
+    if (message.menubar_id() != -1) {
+        auto it = m_menubars.find(message.menubar_id());
+        if (it == m_menubars.end()) {
+            did_misbehave("SetWindowMenubar: Bad menubar ID");
+            return {};
+        }
+        menubar = *(*it).value;
+    }
+    window->set_menubar(menubar);
+    return make<Messages::WindowServer::SetWindowMenubarResponse>();
 }
 
 OwnPtr<Messages::WindowServer::AddMenuToMenubarResponse> ClientConnection::handle(const Messages::WindowServer::AddMenuToMenubar& message)

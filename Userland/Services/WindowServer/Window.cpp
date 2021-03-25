@@ -942,4 +942,36 @@ bool Window::hit_test(const Gfx::IntPoint& point, bool include_frame) const
     return color.alpha() >= threshold;
 }
 
+void Window::set_menubar(MenuBar* menubar)
+{
+    if (m_menubar == menubar)
+        return;
+    m_menubar = menubar;
+    if (m_menubar) {
+        auto& wm = WindowManager::the();
+        Gfx::IntPoint next_menu_location { MenuManager::menubar_menu_margin() / 2, 0 };
+        auto menubar_rect = Gfx::WindowTheme::current().menu_bar_rect(Gfx::WindowTheme::WindowType::Normal, rect(), wm.palette(), 1);
+        m_menubar->for_each_menu([&](Menu& menu) {
+            int text_width = wm.font().width(menu.name());
+            menu.set_rect_in_window_menubar({ next_menu_location.x() - MenuManager::menubar_menu_margin() / 2, 0, text_width + MenuManager::menubar_menu_margin(), menubar_rect.height() });
+
+            Gfx::IntRect text_rect { next_menu_location.translated(0, 1), { text_width, menubar_rect.height() - 3 } };
+
+            menu.set_text_rect_in_window_menubar(text_rect);
+            next_menu_location.move_by(menu.rect_in_window_menubar().width(), 0);
+            return IterationDecision::Continue;
+        });
+    }
+    Compositor::the().invalidate_occlusions();
+    frame().invalidate();
+}
+
+void Window::invalidate_menubar()
+{
+    if (!menubar())
+        return;
+    // FIXME: This invalidates way more than the menubar!
+    frame().invalidate();
+}
+
 }

@@ -33,6 +33,8 @@
 
 namespace Gfx {
 
+static constexpr int menu_bar_height = 19;
+
 ClassicWindowTheme::ClassicWindowTheme()
 {
 }
@@ -70,9 +72,9 @@ Gfx::IntRect ClassicWindowTheme::title_bar_text_rect(WindowType window_type, con
     };
 }
 
-void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, const StringView& title_text, const Bitmap& icon, const Palette& palette, const IntRect& leftmost_button_rect) const
+void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, const StringView& title_text, const Bitmap& icon, const Palette& palette, const IntRect& leftmost_button_rect, int menu_row_count) const
 {
-    auto frame_rect = frame_rect_for_window(WindowType::Normal, window_rect, palette);
+    auto frame_rect = frame_rect_for_window(WindowType::Normal, window_rect, palette, menu_row_count);
     frame_rect.set_location({ 0, 0 });
     Gfx::StylePainter::paint_window_frame(painter, frame_rect, palette);
 
@@ -114,7 +116,7 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
 
 void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, const StringView& title_text, const Palette& palette, const IntRect& leftmost_button_rect) const
 {
-    auto frame_rect = frame_rect_for_window(WindowType::ToolWindow, window_rect, palette);
+    auto frame_rect = frame_rect_for_window(WindowType::ToolWindow, window_rect, palette, 0);
     frame_rect.set_location({ 0, 0 });
     Gfx::StylePainter::paint_window_frame(painter, frame_rect, palette);
 
@@ -141,6 +143,13 @@ void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState w
         // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
         painter.draw_text(clipped_title_rect.translated(0, 1), title_text, title_font, Gfx::TextAlignment::CenterLeft, title_color, Gfx::TextElision::Right);
     }
+}
+
+IntRect ClassicWindowTheme::menu_bar_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette, int menu_row_count) const
+{
+    if (window_type != WindowType::Normal)
+        return {};
+    return { 4, 4 + title_bar_height(window_type, palette) + 2, window_rect.width(), menu_bar_height * menu_row_count };
 }
 
 IntRect ClassicWindowTheme::title_bar_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette) const
@@ -173,7 +182,7 @@ ClassicWindowTheme::FrameColors ClassicWindowTheme::compute_frame_colors(WindowS
 
 void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRect& window_rect, const Palette& palette, const IntRect& close_button_rect) const
 {
-    auto frame_rect = frame_rect_for_window(WindowType::Notification, window_rect, palette);
+    auto frame_rect = frame_rect_for_window(WindowType::Notification, window_rect, palette, 0);
     frame_rect.set_location({ 0, 0 });
     Gfx::StylePainter::paint_window_frame(painter, frame_rect, palette);
 
@@ -191,7 +200,7 @@ void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRec
     }
 }
 
-IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, const IntRect& window_rect, const Gfx::Palette& palette) const
+IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, const IntRect& window_rect, const Gfx::Palette& palette, int menu_row_count) const
 {
     auto window_titlebar_height = title_bar_height(window_type, palette);
 
@@ -200,9 +209,9 @@ IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, const 
     case WindowType::ToolWindow:
         return {
             window_rect.x() - 4,
-            window_rect.y() - window_titlebar_height - 6,
+            window_rect.y() - window_titlebar_height - 6 - menu_row_count * menu_bar_height,
             window_rect.width() + 8,
-            window_rect.height() + 10 + window_titlebar_height
+            window_rect.height() + 10 + window_titlebar_height + menu_row_count * menu_bar_height
         };
     case WindowType::Notification:
         return {
