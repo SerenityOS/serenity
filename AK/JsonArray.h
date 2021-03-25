@@ -76,6 +76,7 @@ public:
 
     void clear() { m_values.clear(); }
     void append(JsonValue value) { m_values.append(move(value)); }
+    void set(int index, JsonValue value) { m_values[index] = move(value); }
 
     template<typename Builder>
     typename Builder::OutputType serialized() const;
