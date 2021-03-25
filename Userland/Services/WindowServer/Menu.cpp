@@ -100,7 +100,7 @@ static const int s_checked_bitmap_height = 9;
 static const int s_submenu_arrow_bitmap_width = 9;
 static const int s_submenu_arrow_bitmap_height = 9;
 static const int s_item_icon_width = 16;
-static const int s_stripe_width = 23;
+static const int s_stripe_width = 24;
 
 int Menu::content_width() const
 {
@@ -187,8 +187,8 @@ void Menu::draw()
     Gfx::Painter painter(*menu_window()->backing_store());
 
     Gfx::IntRect rect { {}, menu_window()->size() };
-    Gfx::StylePainter::paint_window_frame(painter, rect, palette);
-    painter.fill_rect(rect.shrunken(6, 6), palette.menu_base());
+    painter.draw_rect(rect, Color::Black);
+    painter.fill_rect(rect.shrunken(2, 2), palette.menu_base());
     int width = this->content_width();
 
     if (!s_checked_bitmap)
@@ -203,7 +203,6 @@ void Menu::draw()
 
     Gfx::IntRect stripe_rect { frame_thickness(), frame_thickness(), s_stripe_width, menu_window()->height() - frame_thickness() * 2 };
     painter.fill_rect(stripe_rect, palette.menu_stripe());
-    painter.draw_line(stripe_rect.top_right(), stripe_rect.bottom_right(), palette.menu_stripe().darkened());
 
     int visible_item_count = this->visible_item_count();
 
