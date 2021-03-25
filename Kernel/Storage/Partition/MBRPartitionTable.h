@@ -82,6 +82,5 @@ private:
     bool m_header_valid { false };
     const u32 m_start_lba;
     ByteBuffer m_cached_header;
-    size_t m_partitions_count { 0 };
 };
 }
