@@ -96,8 +96,8 @@ public:
 
     int content_width() const;
 
-    int item_height() const { return 20; }
-    int frame_thickness() const { return 3; }
+    int item_height() const { return 22; }
+    int frame_thickness() const { return 2; }
     int horizontal_padding() const { return left_padding() + right_padding(); }
     int left_padding() const { return 14; }
     int right_padding() const { return 14; }
