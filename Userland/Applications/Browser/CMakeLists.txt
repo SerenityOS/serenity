@@ -1,4 +1,5 @@
 compile_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)
+compile_gml(EditBookmark.gml EditBookmarkGML.h edit_bookmark_gml)
 compile_gml(Tab.gml TabGML.h tab_gml)
 
 set(SOURCES
@@ -12,6 +13,7 @@ set(SOURCES
     Tab.cpp
     WindowActions.cpp
     BrowserWindowGML.h
+    EditBookmarkGML.h
     TabGML.h
 )
 
