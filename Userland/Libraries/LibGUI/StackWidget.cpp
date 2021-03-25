@@ -28,6 +28,8 @@
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/Window.h>
 
+REGISTER_WIDGET(GUI, StackWidget);
+
 namespace GUI {
 
 StackWidget::StackWidget()
