@@ -76,6 +76,7 @@ public:
     void set_json_path(const String& json_path);
 
     bool add(const Vector<JsonValue>&& fields);
+    bool set(int row, Vector<JsonValue>&& fields);
     bool remove(int row);
     bool store();
 
