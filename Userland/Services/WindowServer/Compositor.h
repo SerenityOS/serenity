@@ -81,7 +81,6 @@ private:
     void init_bitmaps();
     void flip_buffers();
     void flush(const Gfx::IntRect&);
-    void draw_menubar();
     void run_animations(Gfx::DisjointRectSet&);
     void notify_display_links();
     void start_compose_async_timer();

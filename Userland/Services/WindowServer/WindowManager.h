@@ -121,7 +121,6 @@ public:
 
     void move_to_front_and_make_active(Window&);
 
-    Gfx::IntRect menubar_rect() const;
     Gfx::IntRect desktop_rect() const;
     Gfx::IntRect arena_rect_for_type(WindowType) const;
 

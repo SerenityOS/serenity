@@ -929,8 +929,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     MenuManager::the().set_hovered_menu(nullptr);
 
     if (MenuManager::the().has_open_menu()
-        || hitting_menu_in_window_with_active_menu
-        || menubar_rect().contains(event.position())) {
+        || hitting_menu_in_window_with_active_menu) {
         for_each_visible_window_of_type_from_front_to_back(WindowType::MenuApplet, [&](auto& window) {
             if (!window.rect_in_menubar().contains(event.position()))
                 return IterationDecision::Continue;
@@ -1113,22 +1112,15 @@ void WindowManager::clear_resize_candidate()
     m_resize_candidate = nullptr;
 }
 
-Gfx::IntRect WindowManager::menubar_rect() const
-{
-    if (active_fullscreen_window())
-        return {};
-    return MenuManager::the().menubar_rect();
-}
-
 Gfx::IntRect WindowManager::desktop_rect() const
 {
     if (active_fullscreen_window())
         return Screen::the().rect();
     return {
         0,
-        menubar_rect().bottom() + 1,
+        0,
         Screen::the().width(),
-        Screen::the().height() - menubar_rect().height() - 28
+        Screen::the().height() - 28
     };
 }
 
@@ -1447,10 +1439,6 @@ Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
     rect.set_y(rect.y() + window.frame().title_bar_rect().height() + window.frame().menubar_rect().height());
     rect.set_height(rect.height() - window.frame().title_bar_rect().height() - window.frame().menubar_rect().height());
 
-    // Subtract menu bar
-    rect.set_y(rect.y() + menubar_rect().height());
-    rect.set_height(rect.height() - menubar_rect().height());
-
     // Subtract taskbar window height if present
     const_cast<WindowManager*>(this)->for_each_visible_window_of_type_from_back_to_front(WindowType::Taskbar, [&rect](Window& taskbar_window) {
         rect.set_height(rect.height() - taskbar_window.height());
@@ -1558,7 +1546,6 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint
 
     // FIXME: Find a better source for this.
     int taskbar_height = 28;
-    int menubar_height = MenuManager::the().menubar_rect().height();
 
     const Window* overlap_window = nullptr;
     for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& window) {
@@ -1573,7 +1560,7 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint
         point = overlap_window->position() + shift;
         point = { point.x() % Screen::the().width(),
             (point.y() >= (Screen::the().height() - taskbar_height))
-                ? menubar_height + Gfx::WindowTheme::current().title_bar_height(Gfx::WindowTheme::WindowType::Normal, palette())
+                ? Gfx::WindowTheme::current().title_bar_height(Gfx::WindowTheme::WindowType::Normal, palette())
                 : point.y() };
     } else {
         point = desired;
