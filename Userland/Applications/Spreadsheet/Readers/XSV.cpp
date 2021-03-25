@@ -105,6 +105,8 @@ Vector<XSV::Field> XSV::read_row(bool header_row)
 
     if (!header_row && (m_behaviours & ParserBehaviour::ReadHeaders) != ParserBehaviour::None && row.size() != m_names.size())
         set_error(ReadError::NonConformingColumnCount);
+    else if (!header_row && !has_explicit_headers() && !m_rows.is_empty() && m_rows.first().size() != row.size())
+        set_error(ReadError::NonConformingColumnCount);
 
     return row;
 }

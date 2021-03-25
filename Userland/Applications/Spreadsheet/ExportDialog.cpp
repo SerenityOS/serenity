@@ -97,12 +97,7 @@ CSVExportDialogPage::CSVExportDialogPage(const Sheet& sheet)
 
     m_data_preview_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
-    Vector<String> quote_escape_items {
-        // Note: Keep in sync with Writer::WriterTraits::QuoteEscape.
-        "Repeat",
-        "Backslash",
-    };
-    m_quote_escape_combo_box->set_model(GUI::ItemListModel<String>::create(quote_escape_items));
+    m_quote_escape_combo_box->set_model(GUI::ItemListModel<String>::create(m_quote_escape_items));
 
     // By default, use commas, double quotes with repeat, disable headers, and quote only the fields that require quoting.
     m_delimiter_comma_radio->set_checked(true);
