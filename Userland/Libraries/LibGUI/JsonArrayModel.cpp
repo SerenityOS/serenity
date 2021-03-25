@@ -76,6 +76,25 @@ bool JsonArrayModel::add(const Vector<JsonValue>&& values)
     return true;
 }
 
+bool JsonArrayModel::set(int row, Vector<JsonValue>&& values)
+{
+    VERIFY(values.size() == m_fields.size());
+
+    if (row >= m_array.size())
+        return false;
+
+    JsonObject obj;
+    for (size_t i = 0; i < m_fields.size(); ++i) {
+        auto& field_spec = m_fields[i];
+        obj.set(field_spec.json_field_name, move(values.at(i)));
+    }
+
+    m_array.set(row, move(obj));
+    did_update();
+
+    return true;
+}
+
 bool JsonArrayModel::remove(int row)
 {
     if (row >= m_array.size())
