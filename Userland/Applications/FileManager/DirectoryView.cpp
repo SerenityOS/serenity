@@ -413,10 +413,8 @@ void DirectoryView::update_statusbar()
     size_t selected_byte_count = 0;
 
     current_view().selection().for_each_index([&](auto& index) {
-        auto& model = *current_view().model();
-        auto size_index = model.index(index.row(), GUI::FileSystemModel::Column::Size, model.parent_index(index));
-        auto file_size = size_index.data().to_i32();
-        selected_byte_count += file_size;
+        const auto& node = this->node(index);
+        selected_byte_count += node.size;
     });
 
     StringBuilder builder;
