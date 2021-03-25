@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Sound Player");
+    auto& app_menu = menubar->add_menu("File");
     auto& player = window->set_main_widget<SoundPlayerWidget>(window, audio_client);
 
     if (argc > 1) {
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Sound Player", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     window->show();
     return app->exec();

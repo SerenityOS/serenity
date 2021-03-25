@@ -61,7 +61,7 @@ void MenuBar::unrealize_menubar()
     m_menubar_id = -1;
 }
 
-void MenuBar::notify_added_to_application(Badge<Application>)
+void MenuBar::notify_added_to_window(Badge<Window>)
 {
     VERIFY(m_menubar_id == -1);
     m_menubar_id = realize_menubar();
@@ -71,10 +71,9 @@ void MenuBar::notify_added_to_application(Badge<Application>)
         VERIFY(menu_id != -1);
         WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuToMenubar>(m_menubar_id, menu_id);
     }
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetApplicationMenubar>(m_menubar_id);
 }
 
-void MenuBar::notify_removed_from_application(Badge<Application>)
+void MenuBar::notify_removed_from_window(Badge<Window>)
 {
     unrealize_menubar();
 }

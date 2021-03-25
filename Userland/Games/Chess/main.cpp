@@ -96,7 +96,7 @@ int main(int argc, char** argv)
     widget.set_coordinates(config->read_bool_entry("Style", "Coordinates", true));
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Chess");
+    auto& app_menu = menubar->add_menu("Game");
 
     app_menu.add_action(GUI::Action::create("Resign", { Mod_None, Key_F3 }, [&](auto&) {
         widget.resign();
@@ -223,7 +223,7 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Chess", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     window->show();
     widget.reset();

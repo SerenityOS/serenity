@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("HTML");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     }));
@@ -77,8 +77,7 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("HTML", GUI::Icon::default_icon("filetype-html"), window));
 
-    app->set_menubar(move(menubar));
-
+    window->set_menubar(move(menubar));
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
 
     return app->exec();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -110,6 +110,8 @@ Window::Window(Core::Object* parent)
 
 Window::~Window()
 {
+    if (m_menubar)
+        m_menubar->notify_removed_from_window({});
     all_windows->remove(this);
     hide();
 }
@@ -160,6 +162,12 @@ void Window::show()
     m_visible = true;
 
     apply_icon();
+
+    if (m_menubar) {
+        // This little dance makes us create a server-side menubar.
+        auto menubar = move(m_menubar);
+        set_menubar(menubar);
+    }
 
     reified_windows->set(m_window_id, this);
     Application::the()->did_create_window({});
@@ -1057,9 +1065,13 @@ void Window::set_menubar(RefPtr<MenuBar> menubar)
 {
     if (m_menubar == menubar)
         return;
+    if (m_menubar)
+        m_menubar->notify_removed_from_window({});
     m_menubar = move(menubar);
-    if (m_window_id && m_menubar)
+    if (m_window_id && m_menubar) {
+        m_menubar->notify_added_to_window({});
         WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowMenubar>(m_window_id, m_menubar->menubar_id());
+    }
 }
 
 }

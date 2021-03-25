@@ -290,7 +290,7 @@ Tab::Tab(Type type)
 
     m_menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = m_menubar->add_menu("Browser");
+    auto& app_menu = m_menubar->add_menu("File");
     app_menu.add_action(WindowActions::the().create_new_tab_action());
     app_menu.add_action(GUI::Action::create(
         "Close tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
@@ -568,7 +568,7 @@ void Tab::did_become_active()
     m_toolbar_container->set_visible(!is_fullscreen);
     m_statusbar->set_visible(!is_fullscreen);
 
-    GUI::Application::the()->set_menubar(m_menubar);
+    window()->set_menubar(m_menubar);
 }
 
 void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)

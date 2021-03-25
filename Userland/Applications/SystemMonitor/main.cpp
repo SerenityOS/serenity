@@ -279,10 +279,9 @@ int main(int argc, char** argv)
         });
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("System Monitor");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-        return;
     }));
 
     auto& process_menu = menubar->add_menu("Process");
@@ -324,7 +323,7 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     auto& process_tab_unused_widget = process_container_splitter->add<UnavailableProcessWidget>("No process selected");
     process_tab_unused_widget.set_visible(true);
