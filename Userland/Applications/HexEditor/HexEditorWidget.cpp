@@ -137,7 +137,7 @@ HexEditorWidget::~HexEditorWidget()
 
 void HexEditorWidget::initialize_menubar(GUI::MenuBar& menubar)
 {
-    auto& app_menu = menubar.add_menu("Hex Editor");
+    auto& app_menu = menubar.add_menu("File");
     app_menu.add_action(*m_new_action);
     app_menu.add_action(*m_open_action);
     app_menu.add_action(*m_save_action);

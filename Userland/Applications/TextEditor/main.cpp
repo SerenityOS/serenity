@@ -87,7 +87,7 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
     text_widget.initialize_menubar(menubar);
-    app->set_menubar(menubar);
+    window->set_menubar(menubar);
 
     if (file_to_edit)
         if (!text_widget.open_file(file_to_edit))
@@ -100,6 +100,8 @@ int main(int argc, char** argv)
 
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
+
+    window->set_menubar(menubar);
 
     return app->exec();
 }

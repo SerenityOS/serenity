@@ -199,13 +199,13 @@ int main(int argc, char** argv)
     main_widget.set_fill_with_background_color(true);
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Mouse Demo");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Mouse Demo", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
     window->set_resizable(false);
     window->show();
     return app->exec();

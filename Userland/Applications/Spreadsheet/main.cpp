@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
         spreadsheet_widget.load(filename);
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Spreadsheet");
+    auto& app_menu = menubar->add_menu("File");
 
     app_menu.add_action(GUI::Action::create("Add New Sheet", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"), [&](auto&) {
         spreadsheet_widget.add_sheet();
@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
 
     help_menu.add_action(GUI::CommonActions::make_about_action("Spreadsheet", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     window->show();
 

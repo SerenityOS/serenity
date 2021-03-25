@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -123,15 +123,6 @@ int Application::exec()
 void Application::quit(int exit_code)
 {
     m_event_loop->quit(exit_code);
-}
-
-void Application::set_menubar(RefPtr<MenuBar> menubar)
-{
-    if (m_menubar)
-        m_menubar->notify_removed_from_application({});
-    m_menubar = move(menubar);
-    if (m_menubar)
-        m_menubar->notify_added_to_application({});
 }
 
 void Application::register_global_shortcut_action(Badge<Action>, Action& action)

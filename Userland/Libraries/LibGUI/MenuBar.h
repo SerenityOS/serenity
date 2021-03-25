@@ -41,8 +41,8 @@ public:
 
     Menu& add_menu(String name);
 
-    void notify_added_to_application(Badge<Application>);
-    void notify_removed_from_application(Badge<Application>);
+    void notify_added_to_window(Badge<Window>);
+    void notify_removed_from_window(Badge<Window>);
 
     int menubar_id() const { return m_menubar_id; }
 

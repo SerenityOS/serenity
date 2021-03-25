@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Inspector");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& help_menu = menubar->add_menu("Help");
@@ -168,7 +168,7 @@ int main(int argc, char** argv)
         remote_process.set_inspected_object(remote_object->address);
     };
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
     window->show();
     remote_process.update();
 

@@ -258,7 +258,7 @@ void IRCAppWindow::setup_actions()
 void IRCAppWindow::setup_menus()
 {
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("IRC Client");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         dbgln("Terminal: Quit menu activated!");
         GUI::Application::the()->quit();
@@ -297,7 +297,7 @@ void IRCAppWindow::setup_menus()
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("IRC Client", GUI::Icon::default_icon("app-irc-client"), this));
 
-    GUI::Application::the()->set_menubar(move(menubar));
+    set_menubar(move(menubar));
 }
 
 void IRCAppWindow::setup_widgets()

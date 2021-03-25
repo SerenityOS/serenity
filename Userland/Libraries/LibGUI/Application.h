@@ -49,7 +49,6 @@ public:
     int exec();
     void quit(int = 0);
 
-    void set_menubar(RefPtr<MenuBar>);
     Action* action_for_key_event(const KeyEvent&);
 
     void register_global_shortcut_action(Badge<Action>, Action&);
@@ -106,7 +105,6 @@ private:
     void set_pending_drop_widget(Widget*);
 
     OwnPtr<Core::EventLoop> m_event_loop;
-    RefPtr<MenuBar> m_menubar;
     RefPtr<Gfx::PaletteImpl> m_palette;
     RefPtr<Gfx::PaletteImpl> m_system_palette;
     HashMap<Shortcut, Action*> m_global_shortcut_actions;
