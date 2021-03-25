@@ -54,8 +54,6 @@ MenuManager::MenuManager()
     s_the = this;
     m_needs_window_resize = true;
 
-    set_current_menubar(nullptr);
-
     m_window = Window::construct(*this, WindowType::Menubar);
     m_window->set_rect(menubar_rect());
 
@@ -95,24 +93,6 @@ void MenuManager::draw()
     painter.draw_line({ 0, menubar_rect.bottom() - 1 }, { menubar_rect.right(), menubar_rect.bottom() - 1 }, palette.threed_shadow1());
     painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, palette.threed_shadow2());
 
-    for_each_active_menubar_menu([&](Menu& menu) {
-        auto text_rect = menu.text_rect_in_global_menubar();
-        Color text_color = palette.window_text();
-        if (is_open(menu) && &menu == m_current_menu_bar_menu) {
-            painter.fill_rect(menu.rect_in_global_menubar(), palette.menu_selection());
-            painter.draw_rect(menu.rect_in_global_menubar(), palette.menu_selection().darkened());
-            text_color = palette.menu_selection_text();
-            text_rect.move_by(1, 1);
-        }
-        painter.draw_text(
-            text_rect,
-            menu.name(),
-            menu.title_font(),
-            Gfx::TextAlignment::CenterLeft,
-            text_color);
-        return IterationDecision::Continue;
-    });
-
     AppletManager::the().draw();
 }
 
@@ -126,6 +106,8 @@ void MenuManager::refresh()
 
 void MenuManager::event(Core::Event& event)
 {
+    auto& wm = WindowManager::the();
+
     if (static_cast<Event&>(event).is_mouse_event()) {
         handle_mouse_event(static_cast<MouseEvent&>(event));
         return;
@@ -173,8 +155,10 @@ void MenuManager::event(Core::Event& event)
                         m_current_menu->set_hovered_item(-1);
                     else {
                         auto* target_menu = previous_menu(m_current_menu);
-                        if (target_menu)
-                            open_menu(*target_menu, true);
+                        if (target_menu) {
+                            target_menu->ensure_menu_window().move_to(target_menu->rect_in_window_menubar().bottom_left().translated(wm.window_with_active_menu()->frame().rect().location()).translated(wm.window_with_active_menu()->frame().menubar_rect().location()));
+                            open_menu(*target_menu, false);
+                        }
                     }
                 }
                 close_everyone_not_in_lineage(*m_current_menu);
@@ -185,10 +169,11 @@ void MenuManager::event(Core::Event& event)
                 auto hovered_item = m_current_menu->hovered_item();
                 if (hovered_item && hovered_item->is_submenu())
                     m_current_menu->descend_into_submenu_at_hovered_item();
-                else if (m_open_menu_stack.size() <= 1) {
+                else if (m_open_menu_stack.size() <= 1 && wm.window_with_active_menu()) {
                     auto* target_menu = next_menu(m_current_menu);
                     if (target_menu) {
-                        open_menu(*target_menu, true);
+                        target_menu->ensure_menu_window().move_to(target_menu->rect_in_window_menubar().bottom_left().translated(wm.window_with_active_menu()->frame().rect().location()).translated(wm.window_with_active_menu()->frame().menubar_rect().location()));
+                        open_menu(*target_menu, false);
                         close_everyone_not_in_lineage(*target_menu);
                     }
                 }
@@ -214,20 +199,6 @@ void MenuManager::event(Core::Event& event)
 
 void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
 {
-    auto* active_window = WindowManager::the().active_window();
-    bool handled_menubar_event = false;
-    for_each_active_menubar_menu([&](Menu& menu) {
-        if (menu.rect_in_global_menubar().contains(mouse_event.position())) {
-            handled_menubar_event = &menu == m_system_menu || !active_window || !active_window->is_modal();
-            if (handled_menubar_event)
-                handle_menu_mouse_event(menu, mouse_event);
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-    if (handled_menubar_event)
-        return;
-
     if (has_open_menu()) {
         auto* topmost_menu = m_open_menu_stack.last().ptr();
         VERIFY(topmost_menu);
@@ -287,27 +258,6 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
     }
 
     AppletManager::the().dispatch_event(static_cast<Event&>(mouse_event));
-}
-
-void MenuManager::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
-{
-    bool is_hover_with_any_menu_open = event.type() == MouseEvent::MouseMove
-        && has_open_menu() && m_current_menu_bar_menu
-        && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == m_system_menu.ptr());
-    bool is_mousedown_with_left_button = event.type() == MouseEvent::MouseDown && event.button() == MouseButton::Left;
-    bool should_open_menu = (&menu != m_current_menu || !m_current_menu_bar_menu) && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
-
-    if (is_mousedown_with_left_button)
-        m_bar_open = !m_bar_open;
-
-    if (should_open_menu && m_bar_open) {
-        close_everyone();
-        open_menu(menu, true);
-        return;
-    }
-
-    if (!m_bar_open && m_current_menu_bar_menu)
-        close_everyone();
 }
 
 void MenuManager::set_needs_window_resize()
@@ -419,13 +369,8 @@ void MenuManager::open_menu(Menu& menu, bool from_menu_bar, bool as_current_menu
 
     if (!menu.is_empty()) {
         menu.redraw_if_theme_changed();
-        bool should_update_position = from_menu_bar;
-        if (!menu.menu_window()) {
-            should_update_position = true;
+        if (!menu.menu_window())
             menu.ensure_menu_window();
-        }
-        if (should_update_position)
-            menu.menu_window()->move_to({ menu.rect_in_global_menubar().x(), menu.rect_in_global_menubar().bottom() + 2 });
         menu.menu_window()->set_visible(true);
     }
 
@@ -497,33 +442,14 @@ Gfx::IntRect MenuManager::menubar_rect() const
     return { 0, 0, Screen::the().rect().width(), 19 };
 }
 
-void MenuManager::set_current_menubar(MenuBar*)
-{
-    Gfx::IntPoint next_menu_location { MenuManager::menubar_menu_margin() / 2, 0 };
-    for_each_active_menubar_menu([&](Menu& menu) {
-        int text_width = menu.title_font().width(menu.name());
-        menu.set_rect_in_global_menubar({ next_menu_location.x() - MenuManager::menubar_menu_margin() / 2, 0, text_width + MenuManager::menubar_menu_margin(), menubar_rect().height() - 1 });
-
-        Gfx::IntRect text_rect { next_menu_location.translated(0, 1), { text_width, menubar_rect().height() - 3 } };
-
-        menu.set_text_rect_in_global_menubar(text_rect);
-        next_menu_location.move_by(menu.rect_in_global_menubar().width(), 0);
-        return IterationDecision::Continue;
-    });
-    refresh();
-}
-
-void MenuManager::set_system_menu(Menu& menu)
-{
-    m_system_menu = menu;
-    set_current_menubar(nullptr);
-}
-
 Menu* MenuManager::previous_menu(Menu* current)
 {
+    auto& wm = WindowManager::the();
+    if (!wm.window_with_active_menu())
+        return nullptr;
     Menu* found = nullptr;
     Menu* previous = nullptr;
-    for_each_active_menubar_menu([&](Menu& menu) {
+    wm.window_with_active_menu()->menubar()->for_each_menu([&](Menu& menu) {
         if (current == &menu) {
             found = previous;
             return IterationDecision::Break;
@@ -538,7 +464,10 @@ Menu* MenuManager::next_menu(Menu* current)
 {
     Menu* found = nullptr;
     bool is_next = false;
-    for_each_active_menubar_menu([&](Menu& menu) {
+    auto& wm = WindowManager::the();
+    if (!wm.window_with_active_menu())
+        return nullptr;
+    wm.window_with_active_menu()->menubar()->for_each_menu([&](Menu& menu) {
         if (is_next) {
             found = &menu;
             return IterationDecision::Break;

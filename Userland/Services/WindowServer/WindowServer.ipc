@@ -10,8 +10,6 @@ endpoint WindowServer = 2
 
     AddMenuToMenubar(i32 menubar_id, i32 menu_id) => ()
 
-    SetSystemMenu(i32 menu_id) => ()
-
     AddMenuItem(
         i32 menu_id,
         i32 identifier,
