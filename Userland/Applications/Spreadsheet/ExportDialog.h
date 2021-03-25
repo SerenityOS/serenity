@@ -69,6 +69,12 @@ private:
     RefPtr<GUI::CheckBox> m_export_header_check_box;
     RefPtr<GUI::CheckBox> m_quote_all_fields_check_box;
     RefPtr<GUI::TextEditor> m_data_preview_text_editor;
+    Vector<String> m_quote_escape_items {
+        // Note: Keep in sync with Writer::WriterTraits::QuoteEscape.
+        "Repeat",
+        "Backslash",
+    };
+
     String m_temp_output_file_path;
 };
 
