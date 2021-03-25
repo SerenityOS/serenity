@@ -104,7 +104,6 @@ private:
     virtual OwnPtr<Messages::WindowServer::CreateMenuResponse> handle(const Messages::WindowServer::CreateMenu&) override;
     virtual OwnPtr<Messages::WindowServer::DestroyMenuResponse> handle(const Messages::WindowServer::DestroyMenu&) override;
     virtual OwnPtr<Messages::WindowServer::AddMenuToMenubarResponse> handle(const Messages::WindowServer::AddMenuToMenubar&) override;
-    virtual OwnPtr<Messages::WindowServer::SetApplicationMenubarResponse> handle(const Messages::WindowServer::SetApplicationMenubar&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowMenubarResponse> handle(const Messages::WindowServer::SetWindowMenubar&) override;
     virtual OwnPtr<Messages::WindowServer::AddMenuItemResponse> handle(const Messages::WindowServer::AddMenuItem&) override;
     virtual OwnPtr<Messages::WindowServer::AddMenuSeparatorResponse> handle(const Messages::WindowServer::AddMenuSeparator&) override;
