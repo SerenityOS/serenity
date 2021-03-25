@@ -39,7 +39,6 @@ void WorkQueue::initialize()
 }
 
 WorkQueue::WorkQueue(const char* name)
-    : m_name(name)
 {
     RefPtr<Thread> thread;
     Process::create_kernel_process(thread, name, [this] {
