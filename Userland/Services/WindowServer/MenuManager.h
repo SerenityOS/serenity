@@ -50,7 +50,7 @@ public:
     bool has_open_menu() const { return !m_open_menu_stack.is_empty(); }
 
     Gfx::IntRect menubar_rect() const;
-    static int menubar_menu_margin() { return 16; }
+    static int menubar_menu_margin() { return 13; }
 
     void set_needs_window_resize();
 
@@ -93,6 +93,9 @@ public:
 
     void did_change_theme();
 
+    void set_hovered_menu(Menu*);
+    Menu* hovered_menu() { return m_hovered_menu; }
+
 private:
     void close_menus(const Vector<Menu*>&);
 
@@ -121,6 +124,7 @@ private:
     int m_theme_index { 0 };
 
     WeakPtr<MenuBar> m_current_menubar;
+    WeakPtr<Menu> m_hovered_menu;
 };
 
 }

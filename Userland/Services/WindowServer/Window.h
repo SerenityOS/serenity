@@ -42,6 +42,7 @@ namespace WindowServer {
 class ClientConnection;
 class Cursor;
 class Menu;
+class MenuBar;
 class MenuItem;
 class MouseEvent;
 
@@ -192,6 +193,7 @@ public:
 
     void invalidate(bool with_frame = true, bool re_render_frame = false);
     void invalidate(const Gfx::IntRect&, bool with_frame = false);
+    void invalidate_menubar();
     bool invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame = false);
 
     void refresh_client_size();
@@ -326,6 +328,10 @@ public:
     Gfx::DisjointRectSet& transparency_rects() { return m_transparency_rects; }
     Gfx::DisjointRectSet& transparency_wallpaper_rects() { return m_transparency_wallpaper_rects; }
 
+    MenuBar* menubar() { return m_menubar; }
+    const MenuBar* menubar() const { return m_menubar; }
+    void set_menubar(MenuBar*);
+
 private:
     void handle_mouse_event(const MouseEvent&);
     void update_menu_item_text(PopupMenuItem item);
@@ -340,6 +346,8 @@ private:
     WeakPtr<Window> m_parent_window;
     Vector<WeakPtr<Window>> m_child_windows;
     Vector<WeakPtr<Window>> m_accessory_windows;
+
+    RefPtr<MenuBar> m_menubar;
 
     String m_title;
     Gfx::IntRect m_rect;

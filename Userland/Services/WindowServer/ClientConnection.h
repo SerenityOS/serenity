@@ -78,6 +78,15 @@ public:
         return menu.value().ptr();
     }
 
+    template<typename Callback>
+    void for_each_window(Callback callback)
+    {
+        for (auto& it : m_windows) {
+            if (callback(*it.value) == IterationDecision::Break)
+                break;
+        }
+    }
+
     void notify_display_link(Badge<Compositor>);
 
 private:
@@ -98,6 +107,7 @@ private:
     virtual OwnPtr<Messages::WindowServer::DestroyMenuResponse> handle(const Messages::WindowServer::DestroyMenu&) override;
     virtual OwnPtr<Messages::WindowServer::AddMenuToMenubarResponse> handle(const Messages::WindowServer::AddMenuToMenubar&) override;
     virtual OwnPtr<Messages::WindowServer::SetApplicationMenubarResponse> handle(const Messages::WindowServer::SetApplicationMenubar&) override;
+    virtual OwnPtr<Messages::WindowServer::SetWindowMenubarResponse> handle(const Messages::WindowServer::SetWindowMenubar&) override;
     virtual OwnPtr<Messages::WindowServer::AddMenuItemResponse> handle(const Messages::WindowServer::AddMenuItem&) override;
     virtual OwnPtr<Messages::WindowServer::AddMenuSeparatorResponse> handle(const Messages::WindowServer::AddMenuSeparator&) override;
     virtual OwnPtr<Messages::WindowServer::UpdateMenuItemResponse> handle(const Messages::WindowServer::UpdateMenuItem&) override;
@@ -157,7 +167,7 @@ private:
     Window* window_from_id(i32 window_id);
 
     HashMap<int, NonnullRefPtr<Window>> m_windows;
-    HashMap<int, NonnullOwnPtr<MenuBar>> m_menubars;
+    HashMap<int, NonnullRefPtr<MenuBar>> m_menubars;
     HashMap<int, NonnullRefPtr<Menu>> m_menus;
     WeakPtr<MenuBar> m_app_menubar;
 

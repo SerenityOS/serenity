@@ -33,9 +33,11 @@
 
 namespace WindowServer {
 
-class MenuBar : public Weakable<MenuBar> {
+class MenuBar
+    : public RefCounted<MenuBar>
+    , public Weakable<MenuBar> {
 public:
-    MenuBar(ClientConnection& client, int menubar_id);
+    static NonnullRefPtr<MenuBar> create(ClientConnection& client, int menubar_id) { return adopt(*new MenuBar(client, menubar_id)); }
     ~MenuBar();
 
     ClientConnection& client() { return m_client; }
@@ -53,6 +55,8 @@ public:
     }
 
 private:
+    MenuBar(ClientConnection&, int menubar_id);
+
     ClientConnection& m_client;
     int m_menubar_id { 0 };
     Vector<Menu*> m_menus;

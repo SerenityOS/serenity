@@ -206,6 +206,8 @@ void WindowManager::add_window(Window& window)
         });
     }
 
+    window.invalidate(true, true);
+
     tell_wm_listeners_window_state_changed(window);
 }
 
@@ -914,8 +916,21 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     if (m_hovered_button && event.type() == Event::MouseMove)
         m_hovered_button->on_mouse_event(event.translated(-m_hovered_button->screen_rect().location()));
 
-    // FIXME: Now that the menubar has a dedicated window, is this special-casing really necessary?
-    if (MenuManager::the().has_open_menu() || menubar_rect().contains(event.position())) {
+    bool hitting_menu_in_window_with_active_menu = [&] {
+        if (!m_window_with_active_menu)
+            return false;
+        auto& frame = m_window_with_active_menu->frame();
+        return frame.menubar_rect().contains(event.position().translated(-frame.rect().location()));
+    }();
+
+    // FIXME: This is quite hackish, we clear the hovered menu before potentially setting the same menu
+    //        as hovered again. This makes sure that the hovered state doesn't linger after moving the
+    //        cursor away from a hovered menu.
+    MenuManager::the().set_hovered_menu(nullptr);
+
+    if (MenuManager::the().has_open_menu()
+        || hitting_menu_in_window_with_active_menu
+        || menubar_rect().contains(event.position())) {
         for_each_visible_window_of_type_from_front_to_back(WindowType::MenuApplet, [&](auto& window) {
             if (!window.rect_in_menubar().contains(event.position()))
                 return IterationDecision::Continue;
@@ -923,8 +938,11 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             return IterationDecision::Break;
         });
         clear_resize_candidate();
-        MenuManager::the().dispatch_event(event);
-        return;
+
+        if (!hitting_menu_in_window_with_active_menu) {
+            MenuManager::the().dispatch_event(event);
+            return;
+        }
     }
 
     Window* event_window_with_frame = nullptr;
@@ -1456,8 +1474,8 @@ Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
     Gfx::IntRect rect = Screen::the().rect();
 
     // Subtract window title bar (leaving the border)
-    rect.set_y(rect.y() + window.frame().title_bar_rect().height());
-    rect.set_height(rect.height() - window.frame().title_bar_rect().height());
+    rect.set_y(rect.y() + window.frame().title_bar_rect().height() + window.frame().menubar_rect().height());
+    rect.set_height(rect.height() - window.frame().title_bar_rect().height() - window.frame().menubar_rect().height());
 
     // Subtract menu bar
     rect.set_y(rect.y() + menubar_rect().height());
@@ -1611,4 +1629,15 @@ void WindowManager::reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icon
         return IterationDecision::Continue;
     });
 }
+
+void WindowManager::set_window_with_active_menu(Window* window)
+{
+    if (m_window_with_active_menu == window)
+        return;
+    if (window)
+        m_window_with_active_menu = window->make_weak_ptr<Window>();
+    else
+        m_window_with_active_menu = nullptr;
+}
+
 }
