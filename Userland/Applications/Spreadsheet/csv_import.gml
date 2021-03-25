@@ -168,8 +168,16 @@
                 margins: [10, 20, 10, 10]
             }
 
-            @GUI::TableView {
-                name: "data_preview_table_view"
+            @GUI::StackWidget {
+                name: "data_preview_widget"
+
+                @GUI::TableView {
+                    name: "data_preview_table_view"
+                }
+                @GUI::Label {
+                    name: "data_preview_error_label"
+                    word_wrap: true
+                }
             }
         }
     }
