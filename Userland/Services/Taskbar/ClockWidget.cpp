@@ -40,9 +40,9 @@ ClockWidget::ClockWidget()
     set_frame_shadow(Gfx::FrameShadow::Sunken);
     set_frame_thickness(1);
 
-    m_time_width = font().width("2222-22-22 22:22:22");
+    m_time_width = font().width("22:22:22");
 
-    set_fixed_size(m_time_width + 8, 22);
+    set_fixed_size(m_time_width + 20, 22);
 
     m_timer = add<Core::Timer>(1000, [this] {
         static time_t last_update_time;
@@ -50,6 +50,7 @@ ClockWidget::ClockWidget()
         if (now != last_update_time) {
             tick_clock();
             last_update_time = now;
+            set_tooltip(Core::DateTime::now().to_string("%Y-%m-%d"));
         }
     });
 
@@ -204,7 +205,7 @@ ClockWidget::~ClockWidget()
 void ClockWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
-    auto time_text = Core::DateTime::now().to_string();
+    auto time_text = Core::DateTime::now().to_string("%T");
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.draw_text(event.rect(), time_text, Gfx::FontDatabase::default_font(), Gfx::TextAlignment::Center, palette().window_text());
