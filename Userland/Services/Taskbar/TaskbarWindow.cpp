@@ -36,9 +36,11 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <serenity.h>
 #include <stdio.h>
@@ -69,7 +71,8 @@ private:
     }
 };
 
-TaskbarWindow::TaskbarWindow()
+TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
+    : m_start_menu(move(start_menu))
 {
     set_window_type(GUI::WindowType::Taskbar);
     set_title("Taskbar");
@@ -81,6 +84,17 @@ TaskbarWindow::TaskbarWindow()
     auto& main_widget = set_main_widget<TaskbarWidget>();
     main_widget.set_layout<GUI::HorizontalBoxLayout>();
     main_widget.layout()->set_margins({ 3, 2, 3, 2 });
+
+    auto& start_button = main_widget.add<GUI::Button>("Serenity");
+    start_button.set_font(Gfx::FontDatabase::default_bold_font());
+    start_button.set_icon_spacing(0);
+    start_button.set_fixed_width(80);
+    auto app_icon = GUI::Icon::default_icon("ladybug");
+    start_button.set_icon(app_icon.bitmap_for_size(16));
+
+    start_button.on_click = [&](auto) {
+        m_start_menu->popup(start_button.screen_relative_rect().top_left());
+    };
 
     create_quick_launch_bar();
 

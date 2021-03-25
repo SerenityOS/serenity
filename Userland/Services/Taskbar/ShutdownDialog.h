@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,31 +26,18 @@
 
 #pragma once
 
-#include "WindowList.h"
-#include <LibGUI/Widget.h>
-#include <LibGUI/Window.h>
+#include <AK/Vector.h>
+#include <LibGUI/Dialog.h>
 
-class TaskbarWindow final : public GUI::Window {
-    C_OBJECT(TaskbarWindow);
+class ShutdownDialog : public GUI::Dialog {
+    C_OBJECT(ShutdownDialog);
 
 public:
-    virtual ~TaskbarWindow() override;
-
-    static int taskbar_height() { return 28; }
+    static Vector<char const*> show();
 
 private:
-    explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu);
-    void create_quick_launch_bar();
-    void on_screen_rect_change(const Gfx::IntRect&);
-    NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
-    void add_window_button(::Window&, const WindowIdentifier&);
-    void remove_window_button(::Window&, bool);
-    void update_window_button(::Window&, bool);
-    ::Window* find_window_owner(::Window&) const;
+    ShutdownDialog();
+    virtual ~ShutdownDialog() override;
 
-    virtual void wm_event(GUI::WMEvent&) override;
-
-    NonnullRefPtr<GUI::Menu> m_start_menu;
-    RefPtr<GUI::Widget> m_task_button_container;
-    RefPtr<Gfx::Bitmap> m_default_icon;
+    int m_selected_option { -1 };
 };
