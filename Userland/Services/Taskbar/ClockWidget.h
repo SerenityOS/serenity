@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,35 +24,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "TaskbarWindow.h"
-#include <LibCore/EventLoop.h>
+#pragma once
+
+#include <LibCore/DateTime.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/Application.h>
-#include <signal.h>
-#include <stdio.h>
-#include <sys/wait.h>
-#include <unistd.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/Calendar.h>
+#include <LibGUI/Frame.h>
+#include <LibGUI/Label.h>
+#include <time.h>
 
-int main(int argc, char** argv)
-{
-    if (pledge("stdio recvfd sendfd accept proc exec rpath unix cpath fattr sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+namespace Taskbar {
 
-    auto app = GUI::Application::construct(argc, argv);
-    app->event_loop().register_signal(SIGCHLD, [](int) {
-        // Wait all available children
-        while (waitpid(-1, nullptr, WNOHANG) > 0)
-            ;
-    });
+class ClockWidget final : public GUI::Frame {
+    C_OBJECT(ClockWidget);
 
-    if (pledge("stdio recvfd sendfd accept proc exec rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+public:
+    virtual ~ClockWidget() override;
 
-    auto window = TaskbarWindow::construct();
-    window->show();
+private:
+    ClockWidget();
 
-    return app->exec();
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+
+    void tick_clock() { update(); }
+
+    void open();
+    void close();
+
+    void position_calendar_window();
+    void jump_to_current_date();
+
+    RefPtr<GUI::Window> m_calendar_window;
+    RefPtr<GUI::Calendar> m_calendar;
+    RefPtr<GUI::Button> m_next_date;
+    RefPtr<GUI::Button> m_prev_date;
+    RefPtr<GUI::Button> m_selected_calendar_button;
+    RefPtr<GUI::Button> m_jump_to_button;
+    RefPtr<GUI::Button> m_calendar_launcher;
+    RefPtr<Core::Timer> m_timer;
+    int m_time_width { 0 };
+};
+
 }

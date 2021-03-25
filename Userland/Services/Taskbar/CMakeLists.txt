@@ -1,5 +1,6 @@
 set(SOURCES
     main.cpp
+    ClockWidget.cpp
     TaskbarButton.cpp
     TaskbarWindow.cpp
     WindowList.cpp
