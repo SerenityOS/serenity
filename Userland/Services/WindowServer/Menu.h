@@ -70,8 +70,6 @@ public:
             callback(item);
     }
 
-    Gfx::IntRect text_rect_in_window_menubar() const { return m_text_rect_in_window_menubar; }
-    void set_text_rect_in_window_menubar(const Gfx::IntRect& rect) { m_text_rect_in_window_menubar = rect; }
     Gfx::IntRect rect_in_window_menubar() const { return m_rect_in_window_menubar; }
     void set_rect_in_window_menubar(const Gfx::IntRect& rect) { m_rect_in_window_menubar = rect; }
 
@@ -141,7 +139,6 @@ private:
     int m_menu_id { 0 };
     String m_name;
     Gfx::IntRect m_rect_in_window_menubar;
-    Gfx::IntRect m_text_rect_in_window_menubar;
     NonnullOwnPtrVector<MenuItem> m_items;
     RefPtr<Window> m_menu_window;
 
