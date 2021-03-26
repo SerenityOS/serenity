@@ -290,7 +290,9 @@ float BlockFormattingContext::compute_auto_height_for_block_level_element(const 
         // the top margin-edge of the topmost block-level child box
         // and the bottom margin-edge of the bottommost block-level child box.
         box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
-            if (box.is_absolutely_positioned() || box.is_floating())
+            if (child_box.is_absolutely_positioned())
+                return IterationDecision::Continue;
+            if ((box.computed_values().overflow_y() == CSS::Overflow::Visible) && child_box.is_floating())
                 return IterationDecision::Continue;
 
             float child_box_top = child_box.effective_offset().y() - child_box.box_model().margin_box().top;
