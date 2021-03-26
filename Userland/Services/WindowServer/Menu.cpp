@@ -288,7 +288,7 @@ void Menu::update_for_new_hovered_item(bool make_input)
     if (hovered_item() && hovered_item()->is_submenu()) {
         VERIFY(menu_window());
         MenuManager::the().close_everyone_not_in_lineage(*hovered_item()->submenu());
-        hovered_item()->submenu()->do_popup(hovered_item()->rect().top_right().translated(menu_window()->rect().location()), make_input);
+        hovered_item()->submenu()->do_popup(hovered_item()->rect().top_right().translated(menu_window()->rect().location()), make_input, true);
     } else {
         MenuManager::the().close_everyone_not_in_lineage(*this);
         ensure_menu_window().set_visible(true);
@@ -518,7 +518,7 @@ void Menu::popup(const Gfx::IntPoint& position)
     do_popup(position, true);
 }
 
-void Menu::do_popup(const Gfx::IntPoint& position, bool make_input)
+void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_submenu)
 {
     if (is_empty()) {
         dbgln("Menu: Empty menu popup");
@@ -536,6 +536,8 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input)
     }
     if (adjusted_pos.y() + window.height() >= Screen::the().height() - margin) {
         adjusted_pos = adjusted_pos.translated(0, -window.height());
+        if (as_submenu)
+            adjusted_pos = adjusted_pos.translated(0, item_height());
     }
 
     if (adjusted_pos.y() < MenuManager::the().menubar_rect().height())
