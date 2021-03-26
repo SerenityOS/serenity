@@ -29,6 +29,7 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/PNGWriter.h>
 
@@ -37,7 +38,10 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
 
     String output_path;
+    bool output_to_clipboard = false;
+
     args_parser.add_positional_argument(output_path, "Output filename", "output", Core::ArgsParser::Required::No);
+    args_parser.add_option(output_to_clipboard, "Output to clipboard", "clipboard", 'c');
 
     args_parser.parse(argc, argv);
 
@@ -52,6 +56,11 @@ int main(int argc, char** argv)
     if (!bitmap) {
         warnln("Failed to grab screenshot");
         return 1;
+    }
+
+    if (output_to_clipboard) {
+        GUI::Clipboard::the().set_bitmap(*bitmap);
+        return 0;
     }
 
     Gfx::PNGWriter writer;
