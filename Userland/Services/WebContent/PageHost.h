@@ -72,6 +72,7 @@ private:
     virtual void page_did_request_alert(const String&) override;
     virtual bool page_did_request_confirm(const String&) override;
     virtual String page_did_request_prompt(const String&, const String&) override;
+    virtual void page_did_change_favicon(const Gfx::Bitmap&) override;
 
     explicit PageHost(ClientConnection&);
 
