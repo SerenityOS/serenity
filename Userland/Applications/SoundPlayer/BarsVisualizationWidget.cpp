@@ -49,8 +49,7 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
     fft(m_sample_buffer, false);
     double max = sqrt(m_sample_count * 2);
 
-    //TODO: don't hardcode this!
-    double freq_bin = 44100 / m_sample_count;
+    double freq_bin = m_samplerate / m_sample_count;
 
     constexpr int group_count = 60;
     Vector<double, group_count> groups;
@@ -73,7 +72,7 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
 
     const int horizontal_margin = 30;
     const int top_vertical_margin = 15;
-    const int pixels_inbetween_groups = 5;
+    const int pixels_inbetween_groups = frame_inner_rect().width() > 350 ? 5 : 2;
     int pixel_per_group_width = (frame_inner_rect().width() - horizontal_margin * 2 - pixels_inbetween_groups * (group_count - 1)) / group_count;
     int max_height = frame_inner_rect().height() - top_vertical_margin;
     int current_xpos = horizontal_margin;
@@ -146,3 +145,7 @@ void BarsVisualizationWidget::mousedown_event(GUI::MouseEvent& event)
     }
 }
 
+void BarsVisualizationWidget::set_samplerate(int samplerate)
+{
+    m_samplerate = samplerate;
+}
