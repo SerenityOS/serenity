@@ -460,6 +460,8 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     auto& computed_values = box.computed_values();
     auto& containing_block = *box.containing_block();
 
+    CSS::Length specified_top = computed_values.offset().top.resolved_or_auto(box, containing_block.height());
+    CSS::Length specified_bottom = computed_values.offset().bottom.resolved_or_auto(box, containing_block.height());
     CSS::Length specified_height;
 
     if (computed_values.height().is_percentage() && !containing_block.computed_values().height().is_absolute()) {
@@ -476,6 +478,14 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     box.box_model().border.bottom = computed_values.border_bottom().width;
     box.box_model().padding.top = computed_values.padding().top.resolved_or_zero(box, containing_block.width()).to_px(box);
     box.box_model().padding.bottom = computed_values.padding().bottom.resolved_or_zero(box, containing_block.width()).to_px(box);
+
+    if (specified_height.is_auto() && !specified_top.is_auto() && !specified_bottom.is_auto()) {
+        const auto& margin = box.box_model().margin;
+        const auto& padding = box.box_model().padding;
+        const auto& border = box.box_model().border;
+
+        specified_height = CSS::Length(containing_block.height() - specified_top.to_px(box) - margin.top - padding.top - border.top - specified_bottom.to_px(box) - margin.bottom - padding.bottom - border.bottom, CSS::Length::Type::Px);
+    }
 
     if (!specified_height.is_auto()) {
         float used_height = specified_height.to_px(box);
