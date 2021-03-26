@@ -307,6 +307,7 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
     painter.fill_rect(menubar_rect, palette.window());
 
     Gfx::PainterStateSaver saver(painter);
+    painter.add_clip_rect(menubar_rect);
     painter.translate(menubar_rect.location());
 
     m_window.menubar()->for_each_menu([&](Menu& menu) {
