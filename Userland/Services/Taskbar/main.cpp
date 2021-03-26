@@ -116,6 +116,19 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     const Vector<String> sorted_app_categories = discover_apps_and_categories();
     auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"); // HIGH VOLTAGE SIGN
 
+    system_menu->add_action(GUI::Action::create("About SerenityOS", Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"), [](auto&) {
+        pid_t child_pid;
+        const char* argv[] = { "/bin/About", nullptr };
+        if ((errno = posix_spawn(&child_pid, "/bin/About", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+            perror("posix_spawn");
+        } else {
+            if (disown(child_pid) < 0)
+                perror("disown");
+        }
+    }));
+
+    system_menu->add_separator();
+
     // First we construct all the necessary app category submenus.
     HashMap<String, NonnullRefPtr<GUI::Menu>> app_category_menus;
     auto category_icons = Core::ConfigFile::open("/res/icons/SystemMenu.ini");
@@ -199,16 +212,6 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         pid_t child_pid;
         const char* argv[] = { "/bin/Run", nullptr };
         if ((errno = posix_spawn(&child_pid, "/bin/Run", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(child_pid) < 0)
-                perror("disown");
-        }
-    }));
-    system_menu->add_action(GUI::Action::create("About SerenityOS", Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"), [](auto&) {
-        pid_t child_pid;
-        const char* argv[] = { "/bin/About", nullptr };
-        if ((errno = posix_spawn(&child_pid, "/bin/About", nullptr, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
         } else {
             if (disown(child_pid) < 0)
