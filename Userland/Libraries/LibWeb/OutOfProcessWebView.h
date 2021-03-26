@@ -75,6 +75,7 @@ public:
     String notify_server_did_request_prompt(Badge<WebContentClient>, const String& message, const String& default_);
     void notify_server_did_get_source(const URL& url, const String& source);
     void notify_server_did_js_console_output(const String& method, const String& line);
+    void notify_server_did_change_favicon(const Gfx::Bitmap& favicon);
 
 private:
     OutOfProcessWebView();

@@ -173,4 +173,13 @@ OwnPtr<Messages::WebContentClient::DidRequestPromptResponse> WebContentClient::h
     return make<Messages::WebContentClient::DidRequestPromptResponse>(result);
 }
 
+void WebContentClient::handle(const Messages::WebContentClient::DidChangeFavicon& message)
+{
+    if (!message.favicon().is_valid()) {
+        dbgln("DidChangeFavicon: Received invalid favicon");
+        return;
+    }
+    m_view.notify_server_did_change_favicon(*message.favicon().bitmap());
+}
+
 }

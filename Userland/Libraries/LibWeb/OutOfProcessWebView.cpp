@@ -335,6 +335,12 @@ void OutOfProcessWebView::notify_server_did_js_console_output(const String& meth
         on_js_console_output(method, line);
 }
 
+void OutOfProcessWebView::notify_server_did_change_favicon(const Gfx::Bitmap& favicon)
+{
+    if (on_favicon_change)
+        on_favicon_change(favicon);
+}
+
 void OutOfProcessWebView::did_scroll()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));

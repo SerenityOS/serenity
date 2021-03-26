@@ -188,4 +188,9 @@ String PageHost::page_did_request_prompt(const String& message, const String& de
     return m_client.send_sync<Messages::WebContentClient::DidRequestPrompt>(message, default_)->response();
 }
 
+void PageHost::page_did_change_favicon(const Gfx::Bitmap& favicon)
+{
+    m_client.post_message(Messages::WebContentClient::DidChangeFavicon(favicon.to_shareable_bitmap()));
+}
+
 }
