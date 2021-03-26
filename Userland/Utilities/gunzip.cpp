@@ -29,16 +29,18 @@
 #include <LibCore/FileStream.h>
 #include <unistd.h>
 
-static void decompress_file(Buffered<Core::InputFileStream>& input_stream, Buffered<Core::OutputFileStream>& output_stream)
+static bool decompress_file(Buffered<Core::InputFileStream>& input_stream, Buffered<Core::OutputFileStream>& output_stream)
 {
     auto gzip_stream = Compress::GzipDecompressor { input_stream };
 
     u8 buffer[4096];
 
-    while (!gzip_stream.unreliable_eof()) {
+    while (!gzip_stream.has_any_error() && !gzip_stream.unreliable_eof()) {
         const auto nread = gzip_stream.read({ buffer, sizeof(buffer) });
         output_stream.write_or_error({ buffer, nread });
     }
+
+    return !gzip_stream.handle_any_error();
 }
 
 int main(int argc, char** argv)
@@ -65,17 +67,35 @@ int main(int argc, char** argv)
 
         auto input_stream_result = Core::InputFileStream::open_buffered(input_filename);
 
+        if (input_stream_result.is_error()) {
+            warnln("Failed opening input file for reading: {}", input_stream_result.error());
+            return 1;
+        }
+
+        auto success = false;
         if (write_to_stdout) {
             auto stdout = Core::OutputFileStream::stdout_buffered();
-            decompress_file(input_stream_result.value(), stdout);
+            success = decompress_file(input_stream_result.value(), stdout);
         } else {
             auto output_stream_result = Core::OutputFileStream::open_buffered(output_filename);
-            decompress_file(input_stream_result.value(), output_stream_result.value());
+            if (output_stream_result.is_error()) {
+                warnln("Failed opening output file for writing: {}", output_stream_result.error());
+                return 1;
+            }
+            success = decompress_file(input_stream_result.value(), output_stream_result.value());
+        }
+        if (!success) {
+            warnln("Failed gzip decompressing input file");
+            return 1;
         }
 
         if (!keep_input_files) {
             const auto retval = unlink(String { input_filename }.characters());
-            VERIFY(retval == 0);
+            if (retval != 0) {
+                warnln("Failed removing input file");
+                return 1;
+            }
         }
     }
+    return 0;
 }
