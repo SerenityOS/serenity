@@ -70,7 +70,9 @@ public:
     HashMap<String, String> metadata() const;
 
 private:
-    Reader(NonnullRefPtr<MappedFile>);
+    Reader(ReadonlyBytes);
+
+    static ByteBuffer decompress_coredump(const ReadonlyBytes&);
 
     class NotesEntryIterator {
     public:
@@ -92,7 +94,7 @@ private:
     // as getters with the appropriate (non-JsonValue) types.
     const JsonObject process_info() const;
 
-    NonnullRefPtr<MappedFile> m_coredump_file;
+    ByteBuffer m_coredump_buffer;
     ELF::Image m_coredump_image;
     ssize_t m_notes_segment_index { -1 };
 };

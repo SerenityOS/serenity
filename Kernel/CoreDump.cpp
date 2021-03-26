@@ -72,7 +72,7 @@ RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, con
         return nullptr;
     }
     auto dump_directory_metadata = dump_directory.value()->inode().metadata();
-    if (dump_directory_metadata.uid != 0 || dump_directory_metadata.gid != 0 || dump_directory_metadata.mode != 040755) {
+    if (dump_directory_metadata.uid != 0 || dump_directory_metadata.gid != 0 || dump_directory_metadata.mode != 040777) {
         dbgln("Refusing to put core dump in sketchy directory '{}'", output_directory);
         return nullptr;
     }
@@ -329,7 +329,7 @@ KResult CoreDump::write()
     if (result.is_error())
         return result;
 
-    return m_fd->chmod(0400); // Make coredump file readable
+    return m_fd->chmod(0600); // Make coredump file read/writable
 }
 
 }
