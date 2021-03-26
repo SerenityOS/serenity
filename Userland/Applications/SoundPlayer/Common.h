@@ -28,10 +28,10 @@
 
 #include <LibGUI/Slider.h>
 
-class Slider final : public GUI::Slider {
-    C_OBJECT(Slider)
+class AutoSlider final : public GUI::Slider {
+    C_OBJECT(AutoSlider)
 public:
-    ~Slider() override = default;
+    ~AutoSlider() override = default;
     Function<void(int)> on_knob_released;
     void set_value(int value)
     {
@@ -40,7 +40,7 @@ public:
     }
 
 protected:
-    Slider(Orientation orientation)
+    AutoSlider(Orientation orientation)
         : GUI::Slider(orientation)
     {
     }

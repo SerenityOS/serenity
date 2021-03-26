@@ -2,7 +2,6 @@ set(SOURCES
     main.cpp
     PlaybackManager.cpp
     SampleWidget.cpp
-    SoundPlayerWidget.cpp
     SoundPlayerWidgetAdvancedView.cpp
     BarsVisualizationWidget.cpp
     AudioAlgorithms.cpp
