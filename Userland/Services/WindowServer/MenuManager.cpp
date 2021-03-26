@@ -159,6 +159,7 @@ void MenuManager::event(Core::Event& event)
                         if (target_menu) {
                             target_menu->ensure_menu_window().move_to(target_menu->rect_in_window_menubar().bottom_left().translated(wm.window_with_active_menu()->frame().rect().location()).translated(wm.window_with_active_menu()->frame().menubar_rect().location()));
                             open_menu(*target_menu);
+                            wm.window_with_active_menu()->invalidate_menubar();
                         }
                     }
                 }
@@ -175,6 +176,7 @@ void MenuManager::event(Core::Event& event)
                     if (target_menu) {
                         target_menu->ensure_menu_window().move_to(target_menu->rect_in_window_menubar().bottom_left().translated(wm.window_with_active_menu()->frame().rect().location()).translated(wm.window_with_active_menu()->frame().menubar_rect().location()));
                         open_menu(*target_menu);
+                        wm.window_with_active_menu()->invalidate_menubar();
                         close_everyone_not_in_lineage(*target_menu);
                     }
                 }
