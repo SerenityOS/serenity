@@ -54,10 +54,6 @@ public:
     const ClientConnection* client() const { return m_client; }
     int menu_id() const { return m_menu_id; }
 
-    MenuBar* menubar() { return m_menubar; }
-    const MenuBar* menubar() const { return m_menubar; }
-    void set_menubar(MenuBar* menubar) { m_menubar = menubar; }
-
     bool is_empty() const { return m_items.is_empty(); }
     int item_count() const { return m_items.size(); }
     const MenuItem& item(int index) const { return m_items.at(index); }
@@ -99,8 +95,6 @@ public:
 
     void draw();
     const Gfx::Font& font() const;
-    const Gfx::Font& title_font() const;
-    void set_title_font(const Gfx::Font& font);
 
     MenuItem* item_with_identifier(unsigned);
     void redraw();
@@ -135,8 +129,6 @@ public:
 private:
     virtual void event(Core::Event&) override;
 
-    RefPtr<Gfx::Font> m_title_font { &Gfx::FontDatabase::default_font() };
-
     void handle_mouse_move_event(const MouseEvent&);
     int visible_item_count() const;
 
@@ -150,7 +142,6 @@ private:
     String m_name;
     Gfx::IntRect m_rect_in_window_menubar;
     Gfx::IntRect m_text_rect_in_window_menubar;
-    MenuBar* m_menubar { nullptr };
     NonnullOwnPtrVector<MenuItem> m_items;
     RefPtr<Window> m_menu_window;
 

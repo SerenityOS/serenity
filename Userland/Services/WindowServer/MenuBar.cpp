@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,6 @@
 
 #include "MenuBar.h"
 #include "Menu.h"
-#include "MenuItem.h"
-#include <LibGfx/Bitmap.h>
 
 namespace WindowServer {
 
@@ -43,12 +41,6 @@ MenuBar::~MenuBar()
 
 void MenuBar::add_menu(Menu& menu)
 {
-    menu.set_menubar(this);
-
-    // NOTE: We assume that the first menu is the App menu, which has a bold font.
-    if (m_menus.is_empty())
-        menu.set_title_font(Gfx::FontDatabase::default_bold_font());
-
     m_menus.append(&menu);
 }
 
