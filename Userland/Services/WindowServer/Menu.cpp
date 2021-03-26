@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Shannon Booth <shannon.ml.booth@gmail.com>
  * All rights reserved.
  *
@@ -53,16 +53,6 @@ Menu::Menu(ClientConnection* client, int menu_id, const String& name)
 
 Menu::~Menu()
 {
-}
-
-void Menu::set_title_font(const Gfx::Font& font)
-{
-    m_title_font = &font;
-}
-
-const Gfx::Font& Menu::title_font() const
-{
-    return *m_title_font;
 }
 
 const Gfx::Font& Menu::font() const
