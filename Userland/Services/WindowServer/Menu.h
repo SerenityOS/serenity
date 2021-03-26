@@ -114,7 +114,7 @@ public:
     void close();
 
     void popup(const Gfx::IntPoint&);
-    void do_popup(const Gfx::IntPoint&, bool);
+    void do_popup(const Gfx::IntPoint&, bool make_input, bool as_submenu = false);
 
     bool is_menu_ancestor_of(const Menu&) const;
 
