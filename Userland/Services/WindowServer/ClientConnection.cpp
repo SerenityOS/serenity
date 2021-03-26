@@ -987,4 +987,10 @@ void ClientConnection::did_become_responsive()
     set_unresponsive(false);
 }
 
+OwnPtr<Messages::WindowServer::GetScreenBitmapResponse> ClientConnection::handle(const Messages::WindowServer::GetScreenBitmap&)
+{
+    auto& bitmap = Compositor::the().front_bitmap_for_screenshot({});
+    return make<Messages::WindowServer::GetScreenBitmapResponse>(bitmap.to_shareable_bitmap());
+}
+
 }
