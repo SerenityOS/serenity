@@ -311,7 +311,7 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
     painter.translate(menubar_rect.location());
 
     m_window.menubar()->for_each_menu([&](Menu& menu) {
-        auto text_rect = menu.text_rect_in_window_menubar();
+        auto text_rect = menu.rect_in_window_menubar();
         Color text_color = palette.window_text();
         if (MenuManager::the().is_open(menu))
             text_rect.move_by(1, 1);
@@ -324,7 +324,7 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
             text_rect,
             menu.name(),
             font,
-            Gfx::TextAlignment::CenterLeft,
+            Gfx::TextAlignment::Center,
             text_color);
         return IterationDecision::Continue;
     });
