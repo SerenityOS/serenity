@@ -61,6 +61,8 @@ inline void* operator new(size_t, void* p) { return p; }
 inline void* operator new[](size_t, void* p) { return p; }
 
 [[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc(size_t);
+// kmalloc_slowbin is the same as kmalloc but skips the fastbins
+[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc_slowbin(size_t);
 
 template<size_t ALIGNMENT>
 [[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] inline void* kmalloc_aligned(size_t size)

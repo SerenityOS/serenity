@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Atomic.h>
 #include <AK/Function.h>
 #include <AK/Types.h>
 
@@ -36,8 +37,49 @@ namespace Kernel {
 
 void* slab_alloc(size_t slab_size);
 void slab_dealloc(void*, size_t slab_size);
+void slab_dealloc(void*);
 void slab_alloc_init();
 void slab_alloc_stats(Function<void(size_t slab_size, size_t allocated, size_t free)>);
+
+template<size_t templated_slab_size>
+class SlabAllocator {
+public:
+    SlabAllocator() = default;
+
+    void init(void*, size_t);
+
+    constexpr size_t slab_size() const { return templated_slab_size; }
+    size_t slab_count() const { return m_slab_count; }
+
+    void* alloc();
+
+    void dealloc(void*);
+
+    size_t num_allocated() const { return m_num_allocated; }
+    size_t num_free() const { return m_slab_count - m_num_allocated; }
+
+    void* base() const { return m_base; }
+    void* end() const { return m_end; }
+
+private:
+    struct FreeSlab {
+        FreeSlab* next;
+        char padding[templated_slab_size - sizeof(FreeSlab*)];
+    };
+
+    Atomic<FreeSlab*> m_freelist { nullptr };
+    Atomic<ssize_t, AK::MemoryOrder::memory_order_relaxed> m_num_allocated;
+    size_t m_slab_count;
+    void* m_base { nullptr };
+    void* m_end { nullptr };
+
+    static_assert(sizeof(FreeSlab) == templated_slab_size);
+};
+
+extern SlabAllocator<16> s_slab_allocator_16;
+extern SlabAllocator<32> s_slab_allocator_32;
+extern SlabAllocator<64> s_slab_allocator_64;
+extern SlabAllocator<128> s_slab_allocator_128;
 
 #define MAKE_SLAB_ALLOCATED(type)                                        \
 public:                                                                  \

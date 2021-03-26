@@ -35,6 +35,7 @@
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Heap/Heap.h>
+#include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
@@ -251,6 +252,25 @@ void* kmalloc_eternal(size_t size)
 
 void* kmalloc(size_t size)
 {
+    // Always slab for size smaller or equal to blocksize
+    if (size <= 32) {
+        if (size <= 16)
+            return Kernel::s_slab_allocator_16.alloc();
+        return Kernel::s_slab_allocator_32.alloc();
+    }
+    // Else try to not be too wastefull
+    switch (size) {
+    case 64:
+        return Kernel::s_slab_allocator_64.alloc();
+    case 128:
+        return Kernel::s_slab_allocator_128.alloc();
+    }
+
+    return kmalloc_slowbin(size);
+}
+
+void* kmalloc_slowbin(size_t size)
+{
     ScopedSpinLock lock(s_lock);
     ++g_kmalloc_call_count;
 
@@ -272,6 +292,19 @@ void kfree(void* ptr)
     if (!ptr)
         return;
 
+    // Non slabed fastpath
+    if (ptr >= Kernel::s_slab_allocator_16.base() && ptr < Kernel::s_slab_allocator_128.end()) {
+        if (ptr < Kernel::s_slab_allocator_32.end()) {
+            if (ptr >= Kernel::s_slab_allocator_32.base())
+                return Kernel::s_slab_allocator_32.dealloc(ptr);
+            return Kernel::s_slab_allocator_16.dealloc(ptr);
+        } else {
+            if (ptr < Kernel::s_slab_allocator_64.end())
+                return Kernel::s_slab_allocator_64.dealloc(ptr);
+            return Kernel::s_slab_allocator_128.dealloc(ptr);
+        }
+    }
+
     ScopedSpinLock lock(s_lock);
     ++g_kfree_call_count;
 
@@ -280,6 +313,64 @@ void kfree(void* ptr)
 
 void* krealloc(void* ptr, size_t new_size)
 {
+    if (!ptr)
+        return kmalloc(new_size);
+
+    // Non slabed fastpath
+    if (ptr >= Kernel::s_slab_allocator_16.base() && ptr < Kernel::s_slab_allocator_128.end()) {
+        size_t old_size;
+        if (ptr < Kernel::s_slab_allocator_32.end()) {
+            if (new_size <= 16) {
+                if (ptr >= Kernel::s_slab_allocator_32.base()) {
+                    old_size = 32;
+                } else {
+                    // Nothing to do
+                    // We are resizing from a 16 byte slab to a 16 byte slab.
+                    return ptr;
+                }
+            } else {
+                if (ptr >= Kernel::s_slab_allocator_32.base()) {
+                    // Are we resizing from a 32 byte slab into a 32 byte slab ?
+                    // If so, nothing to do.
+                    if (new_size <= 32)
+                        return ptr;
+                    old_size = 32;
+                } else {
+                    old_size = 16;
+                }
+            }
+        } else {
+            if (ptr < Kernel::s_slab_allocator_64.end()) {
+                old_size = 64;
+            } else {
+                old_size = 128;
+            }
+        }
+
+        if (old_size == new_size)
+            return ptr;
+
+        auto* new_ptr = kmalloc(new_size);
+        if (new_ptr)
+            __builtin_memcpy(new_ptr, ptr, min(old_size, new_size));
+
+        switch (old_size) {
+        case 16:
+            Kernel::s_slab_allocator_16.dealloc(ptr);
+            break;
+        case 32:
+            Kernel::s_slab_allocator_32.dealloc(ptr);
+            break;
+        case 64:
+            Kernel::s_slab_allocator_64.dealloc(ptr);
+            break;
+        case 128:
+            Kernel::s_slab_allocator_128.dealloc(ptr);
+            break;
+        }
+        return new_ptr;
+    }
+
     ScopedSpinLock lock(s_lock);
     return g_kmalloc_global->m_heap.reallocate(ptr, new_size);
 }
