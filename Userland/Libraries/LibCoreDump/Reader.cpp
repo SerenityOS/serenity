@@ -26,6 +26,7 @@
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <LibCompress/Gzip.h>
 #include <LibCoreDump/Reader.h>
 #include <signal_numbers.h>
 #include <string.h>
@@ -37,12 +38,12 @@ OwnPtr<Reader> Reader::create(const String& path)
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return {};
-    return adopt_own(*new Reader(file_or_error.release_value()));
+    return adopt_own(*new Reader(file_or_error.value()->bytes()));
 }
 
-Reader::Reader(NonnullRefPtr<MappedFile> coredump_file)
-    : m_coredump_file(move(coredump_file))
-    , m_coredump_image(m_coredump_file->bytes())
+Reader::Reader(ReadonlyBytes coredump_bytes)
+    : m_coredump_buffer(decompress_coredump(coredump_bytes))
+    , m_coredump_image(m_coredump_buffer.bytes())
 {
     size_t index = 0;
     m_coredump_image.for_each_program_header([this, &index](auto pheader) {
@@ -54,6 +55,16 @@ Reader::Reader(NonnullRefPtr<MappedFile> coredump_file)
         return IterationDecision::Continue;
     });
     VERIFY(m_notes_segment_index != -1);
+}
+
+ByteBuffer Reader::decompress_coredump(const ReadonlyBytes& raw_coredump)
+{
+    if (!Compress::GzipDecompressor::is_likely_compressed(raw_coredump))
+        return ByteBuffer::copy(raw_coredump); // handle old format core dumps (uncompressed)
+    auto decompressed_coredump = Compress::GzipDecompressor::decompress_all(raw_coredump);
+    if (!decompressed_coredump.has_value())
+        return ByteBuffer::copy(raw_coredump); // if we didnt manage to decompress it, try and parse it as decompressed core dump
+    return decompressed_coredump.value();
 }
 
 Reader::~Reader()

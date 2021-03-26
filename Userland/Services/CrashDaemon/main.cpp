@@ -25,6 +25,9 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/MappedFile.h>
+#include <LibCompress/Gzip.h>
+#include <LibCore/File.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCoreDump/Backtrace.h>
 #include <LibCoreDump/Reader.h>
@@ -49,6 +52,33 @@ static void wait_until_coredump_is_ready(const String& coredump_path)
     }
 }
 
+static bool compress_coredump(const String& coredump_path)
+{
+    auto file_or_error = MappedFile::map(coredump_path);
+    if (file_or_error.is_error()) {
+        dbgln("Could not open coredump '{}': {}", coredump_path, file_or_error.error());
+        return false;
+    }
+    auto coredump_file = file_or_error.value();
+    auto compressed_coredump = Compress::GzipCompressor::compress_all(coredump_file->bytes());
+    if (!compressed_coredump.has_value()) {
+        dbgln("Could not compress coredump '{}'", coredump_path);
+        return false;
+    }
+    auto output_path = String::formatted("{}.gz", coredump_path);
+    auto output_file_or_error = Core::File::open(output_path, Core::File::WriteOnly);
+    if (output_file_or_error.is_error()) {
+        dbgln("Could not open '{}' for writing: {}", output_path, output_file_or_error.error());
+        return false;
+    }
+    auto output_file = output_file_or_error.value();
+    if (!output_file->write(compressed_coredump.value().data(), compressed_coredump.value().size())) {
+        dbgln("Could not write compressed coredump '{}'", output_path);
+        return false;
+    }
+    return true;
+}
+
 static void print_backtrace(const String& coredump_path)
 {
     auto coredump = CoreDump::Reader::create(coredump_path);
@@ -70,10 +100,10 @@ static void print_backtrace(const String& coredump_path)
     });
 }
 
-static void launch_crash_reporter(const String& coredump_path)
+static void launch_crash_reporter(const String& coredump_path, bool unlink_after_use)
 {
     pid_t child;
-    const char* argv[] = { "CrashReporter", coredump_path.characters(), nullptr, nullptr };
+    const char* argv[] = { "CrashReporter", coredump_path.characters(), unlink_after_use ? "--unlink" : nullptr, nullptr, nullptr };
     if ((errno = posix_spawn(&child, "/bin/CrashReporter", nullptr, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
     } else {
@@ -84,7 +114,7 @@ static void launch_crash_reporter(const String& coredump_path)
 
 int main()
 {
-    if (pledge("stdio rpath proc exec", nullptr) < 0) {
+    if (pledge("stdio rpath wpath cpath proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -96,9 +126,12 @@ int main()
         if (event.value().type != Core::FileWatcherEvent::Type::ChildAdded)
             continue;
         auto coredump_path = event.value().child_path;
+        if (coredump_path.ends_with(".gz"))
+            continue; // stops compress_coredump from accidentally triggering us
         dbgln("New coredump file: {}", coredump_path);
         wait_until_coredump_is_ready(coredump_path);
+        auto compressed = compress_coredump(coredump_path);
         print_backtrace(coredump_path);
-        launch_crash_reporter(coredump_path);
+        launch_crash_reporter(coredump_path, compressed);
     }
 }
