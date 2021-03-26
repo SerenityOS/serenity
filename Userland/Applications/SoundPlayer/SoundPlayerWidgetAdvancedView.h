@@ -43,6 +43,7 @@ public:
     ~SoundPlayerWidgetAdvancedView() override;
 
     void open_file(StringView path) override;
+    void read_playlist(StringView path);
     void play() override;
 
     template<typename T>
@@ -61,6 +62,9 @@ private:
     void drop_event(GUI::DropEvent& event) override;
     GUI::Window& m_window;
 
+    RefPtr<GUI::HorizontalSplitter> m_splitter;
+    RefPtr<GUI::Widget> m_player_view;
+    RefPtr<PlaylistWidget> m_playlist_widget;
     RefPtr<GUI::Widget> m_visualization;
 
     RefPtr<Gfx::Bitmap> m_play_icon;
