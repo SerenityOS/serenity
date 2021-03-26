@@ -76,6 +76,8 @@ public:
 
     void did_construct_window_manager(Badge<WindowManager>);
 
+    const Gfx::Bitmap& front_bitmap_for_screenshot(Badge<ClientConnection>) const { return *m_front_bitmap; }
+
 private:
     Compositor();
     void init_bitmaps();
