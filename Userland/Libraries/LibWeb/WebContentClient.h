@@ -68,6 +68,7 @@ private:
     virtual void handle(const Messages::WebContentClient::DidRequestLinkContextMenu&) override;
     virtual void handle(const Messages::WebContentClient::DidGetSource&) override;
     virtual void handle(const Messages::WebContentClient::DidJSConsoleOutput&) override;
+    virtual void handle(const Messages::WebContentClient::DidChangeFavicon&) override;
     virtual OwnPtr<Messages::WebContentClient::DidRequestAlertResponse> handle(const Messages::WebContentClient::DidRequestAlert&) override;
     virtual OwnPtr<Messages::WebContentClient::DidRequestConfirmResponse> handle(const Messages::WebContentClient::DidRequestConfirm&) override;
     virtual OwnPtr<Messages::WebContentClient::DidRequestPromptResponse> handle(const Messages::WebContentClient::DidRequestPrompt&) override;
