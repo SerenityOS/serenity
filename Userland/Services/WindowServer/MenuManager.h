@@ -50,7 +50,7 @@ public:
     bool has_open_menu() const { return !m_open_menu_stack.is_empty(); }
 
     Gfx::IntRect menubar_rect() const;
-    static int menubar_menu_margin() { return 13; }
+    static int menubar_menu_margin() { return 14; }
 
     void set_needs_window_resize();
 
