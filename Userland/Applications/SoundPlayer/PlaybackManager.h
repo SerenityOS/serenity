@@ -57,6 +57,7 @@ public:
 
     Function<void()> on_update;
     Function<void(Audio::Buffer&)> on_load_sample_buffer;
+    Function<void()> on_finished_playing;
 
 private:
     void next_buffer();

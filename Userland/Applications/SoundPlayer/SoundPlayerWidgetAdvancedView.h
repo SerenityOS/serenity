@@ -27,11 +27,12 @@
 #pragma once
 
 #include "BarsVisualizationWidget.h"
+#include "Common.h"
 #include "PlaybackManager.h"
 #include "Player.h"
-#include "SoundPlayerWidget.h"
 #include <AK/NonnullRefPtr.h>
 #include <LibAudio/ClientConnection.h>
+#include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
 
 class SoundPlayerWidgetAdvancedView final : public GUI::Widget
@@ -45,6 +46,9 @@ public:
     void open_file(StringView path) override;
     void read_playlist(StringView path);
     void play() override;
+    void set_nonlinear_volume_slider(bool nonlinear);
+    void set_playlist_visible(bool visible);
+    void try_fill_missing_info(Vector<M3UEntry>& entries, StringView playlist_p);
 
     template<typename T>
     void set_visualization()
@@ -52,11 +56,9 @@ public:
         m_visualization->remove_from_parent();
         update();
         auto new_visualization = T::construct();
-        insert_child_before(new_visualization, *static_cast<Core::Object*>(m_playback_progress_slider.ptr()));
+        m_player_view->insert_child_before(new_visualization, *static_cast<Core::Object*>(m_playback_progress_slider.ptr()));
         m_visualization = new_visualization;
     }
-
-    void set_nonlinear_volume_slider(bool nonlinear);
 
 private:
     void drop_event(GUI::DropEvent& event) override;
@@ -77,7 +79,7 @@ private:
     RefPtr<GUI::Button> m_stop_button;
     RefPtr<GUI::Button> m_back_button;
     RefPtr<GUI::Button> m_next_button;
-    RefPtr<Slider> m_playback_progress_slider;
+    RefPtr<AutoSlider> m_playback_progress_slider;
     RefPtr<GUI::Label> m_volume_label;
 
     bool m_nonlinear_volume_slider;
