@@ -59,8 +59,6 @@ public:
     virtual String render_to_html() const override;
     virtual String render_for_terminal(size_t view_width = 0) const override;
 
-    void add_line(NonnullOwnPtr<Line>&& line);
-
 private:
     NonnullOwnPtrVector<Line> m_lines;
 };
