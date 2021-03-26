@@ -44,6 +44,15 @@ static HashMap<u32, PageDirectory*>& cr3_map()
     return *s_cr3_map;
 }
 
+static PageDirectory* s_kernel_directory;
+PageDirectory& PageDirectory::kernel_page_directory()
+{
+    if (!s_kernel_directory)
+        s_kernel_directory = new PageDirectory;
+
+    return *s_kernel_directory;
+}
+
 RefPtr<PageDirectory> PageDirectory::find_by_cr3(u32 cr3)
 {
     ScopedSpinLock lock(s_mm_lock);

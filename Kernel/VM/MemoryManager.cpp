@@ -82,7 +82,7 @@ bool MemoryManager::is_initialized()
 MemoryManager::MemoryManager()
 {
     ScopedSpinLock lock(s_mm_lock);
-    m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
+    m_kernel_page_directory = &PageDirectory::kernel_page_directory();
     parse_memory_map();
     write_cr3(kernel_page_directory().cr3());
     protect_kernel_image();
@@ -348,7 +348,7 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         pde.set_user_allowed(true);
         pde.set_present(true);
         pde.set_writable(true);
-        pde.set_global(&page_directory == m_kernel_page_directory.ptr());
+        pde.set_global(&page_directory == m_kernel_page_directory);
         // Use page_directory_table_index and page_directory_index as key
         // This allows us to release the page table entry when no longer needed
         auto result = page_directory.m_page_tables.set(vaddr.get() & ~0x1fffff, move(page_table));

@@ -229,7 +229,7 @@ private:
     PageTableEntry* ensure_pte(PageDirectory&, VirtualAddress);
     void release_pte(PageDirectory&, VirtualAddress, bool);
 
-    RefPtr<PageDirectory> m_kernel_page_directory;
+    PageDirectory* m_kernel_page_directory;
 
     RefPtr<PhysicalPage> m_shared_zero_page;
     RefPtr<PhysicalPage> m_lazy_committed_page;

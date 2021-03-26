@@ -47,7 +47,7 @@ public:
             return {};
         return page_directory;
     }
-    static NonnullRefPtr<PageDirectory> create_kernel_page_directory() { return adopt(*new PageDirectory); }
+    static PageDirectory& kernel_page_directory();
     static RefPtr<PageDirectory> find_by_cr3(u32);
 
     ~PageDirectory();

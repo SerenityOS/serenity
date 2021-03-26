@@ -195,6 +195,8 @@ static void create_tmp_coredump_directory()
 
 int main(int, char**)
 {
+
+    sysbeep();
     prepare_devfs();
 
     if (pledge("stdio proc exec tty accept unix rpath wpath cpath chown fattr id sigaction", nullptr) < 0) {

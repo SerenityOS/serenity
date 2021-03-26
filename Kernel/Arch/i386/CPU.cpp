@@ -473,6 +473,21 @@ void register_interrupt_handler(u8 index, void (*f)())
     s_idt[index].high = ((u32)(f)&0xffff0000) | 0x8e00;
 }
 
+// FIXME: There should probably be one idt per processor.
+static char s_double_fault_stack[4096];
+static TSS32 s_double_fault_tss;
+
+void register_double_fault_handler(u8 index, void (*f)())
+{
+    s_double_fault_tss.eip = reinterpret_cast<u32>(f);
+    s_double_fault_tss.esp0 = reinterpret_cast<u32>(s_double_fault_stack + sizeof(s_double_fault_stack));
+    s_double_fault_tss.ss0 = GDT_SELECTOR_DATA0;
+    s_double_fault_tss.cr3 = read_cr3();
+    // FIXME: actually make this work
+    s_idt[index].low = 0x00400000; // Point to fault-tss selector.
+    s_idt[index].high = 0x8500;    // This interrupt is handled by a task gate.
+}
+
 void register_user_callable_interrupt_handler(u8 index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
@@ -497,7 +512,7 @@ static void idt_init()
     register_interrupt_handler(0x05, _exception5);
     register_interrupt_handler(0x06, illegal_instruction_asm_entry);
     register_interrupt_handler(0x07, fpu_exception_asm_entry);
-    register_interrupt_handler(0x08, _exception8);
+    register_double_fault_handler(0x08, _exception8);
     register_interrupt_handler(0x09, _exception9);
     register_interrupt_handler(0x0a, _exception10);
     register_interrupt_handler(0x0b, _exception11);
@@ -1108,10 +1123,9 @@ void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
     u16 i = (selector & 0xfffc) >> 3;
     u32 prev_gdt_length = m_gdt_length;
 
-    if (i > m_gdt_length) {
+    if (i >= m_gdt_length) {
         m_gdt_length = i + 1;
         ASSERT(m_gdt_length <= sizeof(m_gdt) / sizeof(m_gdt[0]));
-        m_gdtr.limit = (m_gdt_length + 1) * 8 - 1;
     }
     m_gdt[i].low = low;
     m_gdt[i].high = high;
@@ -2233,6 +2247,18 @@ void Processor::gdt_init()
     tss_descriptor.descriptor_type = 0;
     tss_descriptor.type = 9;
     write_gdt_entry(GDT_SELECTOR_TSS, tss_descriptor); // tss
+
+    Descriptor double_fault_tss_descriptor;
+    double_fault_tss_descriptor.set_base(&s_double_fault_tss);
+    double_fault_tss_descriptor.set_limit(sizeof(TSS32));
+    double_fault_tss_descriptor.dpl = 0;
+    double_fault_tss_descriptor.segment_present = 1;
+    double_fault_tss_descriptor.granularity = 0;
+    double_fault_tss_descriptor.zero = 0;
+    double_fault_tss_descriptor.operation_size = 1;
+    double_fault_tss_descriptor.descriptor_type = 0;
+    double_fault_tss_descriptor.type = 9;
+    write_gdt_entry(GDT_SELECTOR_FAULT_TSS, double_fault_tss_descriptor); // fault_tss
 
     flush_gdt();
     load_task_register(GDT_SELECTOR_TSS);

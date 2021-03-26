@@ -26,17 +26,32 @@
 
 #include <Kernel/Devices/PCSpeaker.h>
 #include <Kernel/Process.h>
+#include <Kernel/Thread.h>
 
 namespace Kernel {
 
+static int stack_overflow(int a)
+{
+    return stack_overflow(a + 1) + stack_overflow(a + 2);
+}
+
 int Process::sys$beep()
 {
+    dbgln("BEEEEEEP");
+    //auto* thread = Thread::current();
+    //dbgln("thread kernel stack base=0x{:x} top={:x}", thread->kernel_stack_base(), thread->kernel_stack_top());
+
+    //*(int*)(thread->kernel_stack_base() - 50) = 25;
+    //return 0;
+    return stack_overflow(0);
+    /*
     PCSpeaker::tone_on(440);
     auto result = Thread::current()->sleep({ 0, 200 });
     PCSpeaker::tone_off();
     if (result.was_interrupted())
         return -EINTR;
     return 0;
+    */
 }
 
 }

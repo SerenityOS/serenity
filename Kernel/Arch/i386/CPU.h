@@ -277,6 +277,7 @@ struct RegisterState;
 const DescriptorTablePointer& get_gdtr();
 const DescriptorTablePointer& get_idtr();
 void register_interrupt_handler(u8 number, void (*f)());
+void register_double_fault_handler(u8 number, void (*f)());
 void register_user_callable_interrupt_handler(u8 number, void (*f)());
 GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number);
 void register_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
@@ -636,6 +637,7 @@ struct TrapFrame;
 #define GDT_SELECTOR_TLS 0x28
 #define GDT_SELECTOR_PROC 0x30
 #define GDT_SELECTOR_TSS 0x38
+#define GDT_SELECTOR_FAULT_TSS 0x40
 
 // SYSENTER makes certain assumptions on how the GDT is structured:
 static_assert(GDT_SELECTOR_CODE0 + 8 == GDT_SELECTOR_DATA0); // SS0 = CS0 + 8
