@@ -140,7 +140,7 @@ i32 Window::request_animation_frame(JS::Function& callback)
         auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
         auto& vm = function.vm();
         fake_timestamp += 10;
-        [[maybe_unused]] auto rc = vm.call(function, {}, JS::Value(fake_timestamp));
+        [[maybe_unused]] auto rc = vm.call(function, JS::js_undefined(), JS::Value(fake_timestamp));
         if (vm.exception())
             vm.clear_exception();
         GUI::DisplayLink::unregister_callback(link_id);
