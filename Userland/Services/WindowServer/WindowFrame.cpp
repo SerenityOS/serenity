@@ -314,8 +314,11 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
         Color text_color = palette.window_text();
         if (MenuManager::the().is_open(menu))
             text_rect.move_by(1, 1);
-        if (&menu == MenuManager::the().hovered_menu() || MenuManager::the().is_open(menu))
-            Gfx::StylePainter::paint_button(painter, menu.rect_in_window_menubar(), palette, Gfx::ButtonStyle::CoolBar, MenuManager::the().is_open(menu), true);
+        bool paint_as_pressed = MenuManager::the().is_open(menu);
+        bool paint_as_hovered = !paint_as_pressed && &menu == MenuManager::the().hovered_menu();
+        if (paint_as_pressed || paint_as_hovered) {
+            Gfx::StylePainter::paint_button(painter, menu.rect_in_window_menubar(), palette, Gfx::ButtonStyle::CoolBar, paint_as_pressed, paint_as_hovered);
+        }
         painter.draw_text(
             text_rect,
             menu.name(),
