@@ -185,7 +185,8 @@ static void create_tmp_coredump_directory()
 {
     dbgln("Creating /tmp/coredump directory");
     auto old_umask = umask(0);
-    auto rc = mkdir("/tmp/coredump", 0755);
+    // FIXME: the coredump directory should be made read-only once CrashDaemon is no longer responsible for compressing coredumps
+    auto rc = mkdir("/tmp/coredump", 0777);
     if (rc < 0) {
         perror("mkdir(/tmp/coredump)");
         VERIFY_NOT_REACHED();
