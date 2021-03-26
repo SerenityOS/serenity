@@ -84,6 +84,14 @@ public:
                 break;
         }
     }
+    template<typename Callback>
+    void for_each_menu(Callback callback)
+    {
+        for (auto& it : m_menus) {
+            if (callback(*it.value) == IterationDecision::Break)
+                break;
+        }
+    }
 
     void notify_display_link(Badge<Compositor>);
 

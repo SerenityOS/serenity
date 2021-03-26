@@ -103,6 +103,13 @@ void MenuManager::refresh()
         return;
     draw();
     window().invalidate();
+
+    ClientConnection::for_each_client([&](ClientConnection& client) {
+        client.for_each_menu([&](Menu& menu) {
+            menu.redraw();
+            return IterationDecision::Continue;
+        });
+    });
 }
 
 void MenuManager::event(Core::Event& event)
