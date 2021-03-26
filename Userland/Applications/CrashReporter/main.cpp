@@ -30,6 +30,7 @@
 #include <AK/URL.h>
 #include <Applications/CrashReporter/CrashReporterWindowGML.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCoreDump/Backtrace.h>
 #include <LibCoreDump/Reader.h>
 #include <LibDesktop/AppFile.h>
@@ -118,10 +119,12 @@ int main(int argc, char** argv)
     }
 
     const char* coredump_path = nullptr;
+    bool unlink_after_use = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Show information from an application crash coredump.");
     args_parser.add_positional_argument(coredump_path, "Coredump path", "coredump-path");
+    args_parser.add_option(unlink_after_use, "Delete the coredump after its parsed", "unlink", 0);
     args_parser.parse(argc, argv);
 
     Vector<TitleAndText> thread_backtraces;
@@ -153,6 +156,11 @@ int main(int argc, char** argv)
         environment = coredump->process_environment();
         pid = coredump->process_pid();
         termination_signal = coredump->process_termination_signal();
+    }
+
+    if (unlink_after_use) {
+        if (Core::File::remove(coredump_path, Core::File::RecursionMode::Disallowed, false).is_error())
+            dbgln("Failed deleting coredump file");
     }
 
     auto app = GUI::Application::construct(argc, argv);

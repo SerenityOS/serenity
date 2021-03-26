@@ -4,4 +4,4 @@ set(SOURCES
 )
 
 serenity_lib(LibCoreDump coredump)
-target_link_libraries(LibCoreDump LibC LibCore LibDebug)
+target_link_libraries(LibCoreDump LibC LibCompress LibCore LibDebug)
