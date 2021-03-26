@@ -123,5 +123,7 @@ endpoint WindowServer = 2
     SetScrollStepSize(u32 step_size) => ()
     GetScrollStepSize() => (u32 step_size)
 
+    GetScreenBitmap() => (Gfx::ShareableBitmap bitmap)
+
     Pong() =|
 }
