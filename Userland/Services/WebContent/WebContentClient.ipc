@@ -21,4 +21,5 @@ endpoint WebContentClient = 90
     DidRequestPrompt(String message, String default_) => (String response)
     DidGetSource(URL url, String source) =|
     DidJSConsoleOutput(String method, String line) =|
+    DidChangeFavicon(Gfx::ShareableBitmap favicon) =|
 }
