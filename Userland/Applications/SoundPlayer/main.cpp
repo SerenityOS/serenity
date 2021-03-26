@@ -93,36 +93,24 @@ int main(int argc, char** argv)
         }
     }));
 
-    RefPtr<GUI::Action> hide_scope;
-
-    auto advanced_view_check = GUI::Action::create_checkable("Advanced view", { Mod_Ctrl, Key_A }, [&](auto& action) {
-        PlayerState state = player->get_player_state();
-        window->close();
-        if (action.is_checked()) {
-            player = &window->set_main_widget<SoundPlayerWidgetAdvancedView>(window, state);
-            hide_scope->set_checkable(false);
-        } else {
-            player = &window->set_main_widget<SoundPlayerWidget>(window, state);
-            hide_scope->set_checkable(true);
-        }
-        window->show();
-    });
-    app_menu.add_action(advanced_view_check);
-
-    hide_scope = GUI::Action::create_checkable("Hide visualization (legacy view)", { Mod_Ctrl, Key_H }, [&](auto& action) {
-        if (!advanced_view_check->is_checked())
-            static_cast<SoundPlayerWidget*>(player)->hide_scope(action.is_checked());
-    });
-
     auto linear_volume_slider = GUI::Action::create_checkable("Nonlinear volume slider", [&](auto& action) {
-        if (advanced_view_check->is_checked())
-            static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_nonlinear_volume_slider(action.is_checked());
+        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_nonlinear_volume_slider(action.is_checked());
     });
     app_menu.add_action(linear_volume_slider);
 
-    auto ptr_copy = hide_scope;
+    auto playlist_toggle = GUI::Action::create_checkable("Show playlist", [&](auto& action) {
+        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_playlist_visible(action.is_checked());
+    });
+    playlist_menu.add_action(playlist_toggle);
+    if (path.ends_with(".m3u") || path.ends_with(".m3u8"))
+        playlist_toggle->set_checked(true);
+    playlist_menu.add_separator();
 
-    app_menu.add_action(ptr_copy.release_nonnull());
+    auto playlist_loop_toggle = GUI::Action::create_checkable("Loop playlist", [&](auto& action) {
+        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_looping_playlist(action.is_checked());
+    });
+    playlist_menu.add_action(playlist_loop_toggle);
+
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
@@ -174,6 +162,7 @@ int main(int argc, char** argv)
             action.set_checked(true);
             return;
         }
+        checked_vis = &action;
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<NoVisualizationWidget>();
     });
 
