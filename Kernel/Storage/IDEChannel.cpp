@@ -370,7 +370,6 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
         ByteBuffer bbuf = ByteBuffer::create_uninitialized(512);
         u8* b = bbuf.data();
         u16* w = (u16*)wbuf.data();
-        const u16* wbufbase = (u16*)wbuf.data();
 
         for (u32 i = 0; i < 256; ++i) {
             u16 data = m_io_group.io_base().offset(ATA_REG_DATA).in<u16>();
@@ -383,17 +382,20 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
         for (u32 i = 93; i > 54 && bbuf[i] == ' '; --i)
             bbuf[i] = 0;
 
-        u16 cyls = wbufbase[ATA_IDENT_CYLINDERS / sizeof(u16)];
-        u16 heads = wbufbase[ATA_IDENT_HEADS / sizeof(u16)];
-        u16 spt = wbufbase[ATA_IDENT_SECTORS / sizeof(u16)];
-        u16 capabilities = wbufbase[ATA_IDENT_CAPABILITIES / sizeof(u16)];
-        if (cyls == 0 || heads == 0 || spt == 0)
-            continue;
-        u64 max_addressable_block = cyls * heads * spt;
-        if (capabilities & ATA_CAP_LBA)
-            max_addressable_block = (wbufbase[(ATA_IDENT_MAX_LBA + 2) / sizeof(u16)] << 16) | wbufbase[ATA_IDENT_MAX_LBA / sizeof(u16)];
-        dbgln("IDEChannel: {} {} {} device found: Name={}, Capacity={}, C/H/Spt={}/{}/{}, Capabilities=0x{:04x}", channel_type_string(), channel_string(i), interface_type == PATADiskDevice::InterfaceType::ATA ? "ATA" : "ATAPI", ((char*)bbuf.data() + 54), max_addressable_block * 512, cyls, heads, spt, capabilities);
+        volatile ATAIdentifyBlock& identify_block = (volatile ATAIdentifyBlock&)(*wbuf.data());
 
+        u16 capabilities = identify_block.capabilites[0];
+
+        // If the drive is so old that it doesn't support LBA, ignore it.
+        if (!(capabilities & ATA_CAP_LBA))
+            continue;
+        u64 max_addressable_block = identify_block.max_28_bit_addressable_logical_sector;
+
+        // if we support 48-bit LBA, use that value instead.
+        if (identify_block.commands_and_feature_sets_supported[1] & (1 << 10))
+            max_addressable_block = identify_block.user_addressable_logical_sectors_count;
+
+        dbgln("IDEChannel: {} {} {} device found: Name={}, Capacity={}, Capabilities=0x{:04x}", channel_type_string(), channel_string(i), interface_type == PATADiskDevice::InterfaceType::ATA ? "ATA" : "ATAPI", ((char*)bbuf.data() + 54), max_addressable_block * 512, capabilities);
         if (i == 0) {
             m_master = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Master, interface_type, capabilities, max_addressable_block);
         } else {
@@ -406,29 +408,19 @@ void IDEChannel::ata_access(Direction direction, bool slave_request, u64 lba, u8
 {
     LBAMode lba_mode;
     u8 head = 0;
-    u8 sector = 0;
-    u16 cylinder = 0;
 
+    VERIFY(capabilities & ATA_CAP_LBA);
     if (lba >= 0x10000000) {
-        VERIFY(capabilities & ATA_CAP_LBA);
         lba_mode = LBAMode::FortyEightBit;
         head = 0;
-    } else if (capabilities & ATA_CAP_LBA) {
+    } else {
         lba_mode = LBAMode::TwentyEightBit;
         head = (lba & 0xF000000) >> 24;
-    } else {
-        lba_mode = LBAMode::None;
-        sector = (lba % 63) + 1;
-        cylinder = (lba + 1 - sector) / (16 * 63);
-        head = (lba + 1 - sector) % (16 * 63) / (63);
     }
 
     wait_until_not_busy();
 
-    if (lba_mode == LBAMode::None)
-        m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (static_cast<u8>(slave_request) << 4) | head);
-    else
-        m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xE0 | (static_cast<u8>(slave_request) << 4) | head);
+    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xE0 | (static_cast<u8>(slave_request) << 4) | head);
 
     if (lba_mode == LBAMode::FortyEightBit) {
         m_io_group.io_base().offset(ATA_REG_SECCOUNT1).out<u8>(0);
@@ -438,15 +430,9 @@ void IDEChannel::ata_access(Direction direction, bool slave_request, u64 lba, u8
     }
 
     m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(block_count);
-    if (lba_mode == LBAMode::FortyEightBit || lba_mode == LBAMode::TwentyEightBit) {
-        m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>((lba & 0x000000FF) >> 0);
-        m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>((lba & 0x0000FF00) >> 8);
-        m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>((lba & 0x00FF0000) >> 16);
-    } else {
-        m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(sector);
-        m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>((cylinder >> 0) & 0xFF);
-        m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>((cylinder >> 8) & 0xFF);
-    }
+    m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>((lba & 0x000000FF) >> 0);
+    m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>((lba & 0x0000FF00) >> 8);
+    m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>((lba & 0x00FF0000) >> 16);
 
     for (;;) {
         auto status = m_io_group.control_base().in<u8>();
