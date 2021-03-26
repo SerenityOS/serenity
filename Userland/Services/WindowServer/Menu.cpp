@@ -296,15 +296,16 @@ void Menu::update_for_new_hovered_item(bool make_input)
     redraw();
 }
 
-void Menu::open_hovered_item()
+void Menu::open_hovered_item(bool leave_menu_open)
 {
     VERIFY(menu_window());
     VERIFY(menu_window()->is_visible());
     if (!hovered_item())
         return;
     if (hovered_item()->is_enabled())
-        did_activate(*hovered_item());
-    clear_hovered_item();
+        did_activate(*hovered_item(), leave_menu_open);
+    if (!leave_menu_open)
+        clear_hovered_item();
 }
 
 void Menu::descend_into_submenu_at_hovered_item()
@@ -352,7 +353,7 @@ void Menu::event(Core::Event& event)
     }
 
     if (event.type() == Event::MouseUp) {
-        open_hovered_item();
+        open_hovered_item(static_cast<MouseEvent&>(event).modifiers() & KeyModifier::Mod_Ctrl);
         return;
     }
 
@@ -455,7 +456,7 @@ void Menu::clear_hovered_item()
     redraw();
 }
 
-void Menu::did_activate(MenuItem& item)
+void Menu::did_activate(MenuItem& item, bool leave_menu_open)
 {
     if (item.type() == MenuItem::Type::Separator)
         return;
@@ -463,7 +464,8 @@ void Menu::did_activate(MenuItem& item)
     if (on_item_activation)
         on_item_activation(item);
 
-    MenuManager::the().close_everyone();
+    if (!leave_menu_open)
+        MenuManager::the().close_everyone();
 
     if (m_client)
         m_client->post_message(Messages::WindowClient::MenuItemActivated(m_menu_id, item.identifier()));
@@ -475,7 +477,7 @@ bool Menu::activate_default()
         if (item.type() == MenuItem::Type::Separator)
             continue;
         if (item.is_enabled() && item.is_default()) {
-            did_activate(item);
+            did_activate(item, false);
             return true;
         }
     }
