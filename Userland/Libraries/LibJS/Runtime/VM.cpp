@@ -336,6 +336,7 @@ Value VM::get_new_target() const
 Value VM::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
 {
     VERIFY(!exception());
+    VERIFY(!this_value.is_empty());
 
     CallFrame call_frame;
     call_frame.callee = &function;
