@@ -37,6 +37,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Slider.h>
+#include <LibGUI/Splitter.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Window.h>
@@ -212,10 +213,14 @@ void SoundPlayerWidgetAdvancedView::open_file(StringView path)
     m_playback_progress_slider->set_max(loader->total_samples());
     m_playback_progress_slider->set_enabled(true);
     m_play_button->set_enabled(true);
+    m_play_button->set_icon(*m_pause_icon);
     m_stop_button->set_enabled(true);
+    m_playback_progress_slider->set_max(loader->total_samples());
     manager().set_loader(move(loader));
     set_has_loaded_file(true);
+    set_loaded_file_samplerate(loader->sample_rate());
     set_loaded_filename(path);
+    play();
 }
 
 void SoundPlayerWidgetAdvancedView::set_nonlinear_volume_slider(bool nonlinear)
