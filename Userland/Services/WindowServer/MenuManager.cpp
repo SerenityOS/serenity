@@ -158,7 +158,7 @@ void MenuManager::event(Core::Event& event)
                         auto* target_menu = previous_menu(m_current_menu);
                         if (target_menu) {
                             target_menu->ensure_menu_window().move_to(target_menu->rect_in_window_menubar().bottom_left().translated(wm.window_with_active_menu()->frame().rect().location()).translated(wm.window_with_active_menu()->frame().menubar_rect().location()));
-                            open_menu(*target_menu, false);
+                            open_menu(*target_menu);
                         }
                     }
                 }
@@ -174,7 +174,7 @@ void MenuManager::event(Core::Event& event)
                     auto* target_menu = next_menu(m_current_menu);
                     if (target_menu) {
                         target_menu->ensure_menu_window().move_to(target_menu->rect_in_window_menubar().bottom_left().translated(wm.window_with_active_menu()->frame().rect().location()).translated(wm.window_with_active_menu()->frame().menubar_rect().location()));
-                        open_menu(*target_menu, false);
+                        open_menu(*target_menu);
                         close_everyone_not_in_lineage(*target_menu);
                     }
                 }
@@ -238,7 +238,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
                         continue;
                     return;
                 }
-                close_bar();
+                MenuManager::the().close_everyone();
                 topmost_menu->set_window_menu_open(false);
             }
         }
@@ -354,11 +354,8 @@ void MenuManager::set_hovered_menu(Menu* menu)
     }
 }
 
-void MenuManager::open_menu(Menu& menu, bool from_menu_bar, bool as_current_menu)
+void MenuManager::open_menu(Menu& menu, bool as_current_menu)
 {
-    if (from_menu_bar)
-        m_current_menu_bar_menu = &menu;
-
     if (is_open(menu)) {
         if (as_current_menu || current_menu() != &menu) {
             // This menu is already open. If requested, or if the current
@@ -391,7 +388,6 @@ void MenuManager::clear_current_menu()
 {
     Menu* previous_current_menu = m_current_menu;
     m_current_menu = nullptr;
-    m_current_menu_bar_menu = nullptr;
     if (previous_current_menu) {
         // When closing the last menu, restore the previous active input window
         auto& wm = WindowManager::the();
@@ -430,12 +426,6 @@ void MenuManager::set_current_menu(Menu* menu)
     }
 
     wm.set_active_input_window(m_current_menu->menu_window());
-}
-
-void MenuManager::close_bar()
-{
-    close_everyone();
-    m_bar_open = false;
 }
 
 Gfx::IntRect MenuManager::menubar_rect() const

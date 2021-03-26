@@ -759,7 +759,7 @@ void WindowFrame::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
     if (should_open_menu) {
         MenuManager::the().close_everyone();
         menu.ensure_menu_window().move_to(menu.rect_in_window_menubar().bottom_left().translated(rect().location()).translated(menubar_rect.location()));
-        MenuManager::the().open_menu(menu, false);
+        MenuManager::the().open_menu(menu);
         WindowManager::the().set_window_with_active_menu(&m_window);
         invalidate(menubar_rect);
         return;

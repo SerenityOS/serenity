@@ -57,9 +57,8 @@ public:
     Menu* current_menu() { return m_current_menu.ptr(); }
     void set_current_menu(Menu*);
     void clear_current_menu();
-    void open_menu(Menu&, bool from_menu_bar, bool as_current_menu = true);
+    void open_menu(Menu&, bool as_current_menu = true);
 
-    void close_bar();
     void close_everyone();
     void close_everyone_not_in_lineage(Menu&);
     void close_menu_and_descendants(Menu&);
@@ -85,23 +84,19 @@ private:
 
     virtual void event(Core::Event&) override;
     void handle_mouse_event(MouseEvent&);
-    void handle_menu_mouse_event(Menu&, const MouseEvent&);
 
     void draw();
 
     RefPtr<Window> m_window;
 
     WeakPtr<Menu> m_current_menu;
-    WeakPtr<Menu> m_current_menu_bar_menu;
     WeakPtr<Window> m_previous_input_window;
     Vector<WeakPtr<Menu>> m_open_menu_stack;
 
     RefPtr<Core::Timer> m_search_timer;
     StringBuilder m_current_search;
-    WeakPtr<Menu> m_system_menu;
 
     bool m_needs_window_resize { false };
-    bool m_bar_open { false };
 
     int m_theme_index { 0 };
 
