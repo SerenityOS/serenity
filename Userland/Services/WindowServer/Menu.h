@@ -122,7 +122,7 @@ public:
     int scroll_offset() const { return m_scroll_offset; }
 
     void descend_into_submenu_at_hovered_item();
-    void open_hovered_item();
+    void open_hovered_item(bool leave_menu_open);
 
 private:
     virtual void event(Core::Event&) override;
@@ -132,7 +132,7 @@ private:
 
     int item_index_at(const Gfx::IntPoint&);
     int padding_between_text_and_shortcut() const { return 50; }
-    void did_activate(MenuItem&);
+    void did_activate(MenuItem&, bool leave_menu_open);
     void update_for_new_hovered_item(bool make_input = false);
 
     ClientConnection* m_client { nullptr };
