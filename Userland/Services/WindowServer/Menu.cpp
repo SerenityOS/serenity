@@ -322,7 +322,7 @@ void Menu::descend_into_submenu_at_hovered_item()
     VERIFY(hovered_item());
     auto submenu = hovered_item()->submenu();
     VERIFY(submenu);
-    MenuManager::the().open_menu(*submenu, false, false);
+    MenuManager::the().open_menu(*submenu, false);
     submenu->set_hovered_item(0);
     VERIFY(submenu->hovered_item()->type() != MenuItem::Separator);
 }
@@ -473,7 +473,7 @@ void Menu::did_activate(MenuItem& item)
     if (on_item_activation)
         on_item_activation(item);
 
-    MenuManager::the().close_bar();
+    MenuManager::the().close_everyone();
 
     if (m_client)
         m_client->post_message(Messages::WindowClient::MenuItemActivated(m_menu_id, item.identifier()));
@@ -553,7 +553,7 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input)
 
     window.move_to(adjusted_pos);
     window.set_visible(true);
-    MenuManager::the().open_menu(*this, false, make_input);
+    MenuManager::the().open_menu(*this, make_input);
     WindowManager::the().did_popup_a_menu({});
 }
 
