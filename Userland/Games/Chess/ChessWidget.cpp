@@ -155,6 +155,21 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
     }
 
     if (m_dragging_piece) {
+        if (m_show_available_moves) {
+            Gfx::IntPoint move_point;
+            Gfx::IntPoint point_offset = { tile_width / 3, tile_height / 3 };
+            Gfx::IntSize rect_size = { tile_width / 3, tile_height / 3 };
+            for (const auto& square : m_available_moves) {
+                if (side() == Chess::Color::White) {
+                    move_point = { square.file * tile_width, (7 - square.rank) * tile_height };
+                } else {
+                    move_point = { (7 - square.file) * tile_width, square.rank * tile_height };
+                }
+
+                painter.fill_ellipse({ move_point + point_offset, rect_size }, Gfx::Color::LightGray);
+            }
+        }
+
         auto bmp = m_pieces.get(active_board.get_piece(m_moving_square));
         if (bmp.has_value()) {
             auto center = m_drag_point - Gfx::IntPoint(tile_width / 2, tile_height / 2);
@@ -170,6 +185,7 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     if (event.button() == GUI::MouseButton::Right) {
         if (m_dragging_piece) {
             m_dragging_piece = false;
+            m_available_moves.clear();
         } else {
             m_current_marking.from = mouse_to_square(event);
         }
@@ -183,6 +199,13 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
         m_dragging_piece = true;
         m_drag_point = event.position();
         m_moving_square = square;
+
+        m_board.generate_moves([&](Chess::Move move) {
+            if (move.from == m_moving_square) {
+                m_available_moves.append(move.to);
+            }
+            return IterationDecision::Continue;
+        });
     }
 
     update();
@@ -211,6 +234,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
         return;
 
     m_dragging_piece = false;
+    m_available_moves.clear();
 
     auto target_square = mouse_to_square(event);
 

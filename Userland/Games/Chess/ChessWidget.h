@@ -142,6 +142,8 @@ private:
     Gfx::IntPoint m_drag_point;
     bool m_dragging_piece { false };
     bool m_drag_enabled { true };
+    bool m_show_available_moves { true };
+    Vector<Chess::Square> m_available_moves;
     RefPtr<Engine> m_engine;
     bool m_coordinates { true };
 };
