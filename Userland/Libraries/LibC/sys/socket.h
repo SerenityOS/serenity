@@ -38,10 +38,12 @@ __BEGIN_DECLS
 #define AF_LOCAL 1
 #define AF_UNIX AF_LOCAL
 #define AF_INET 2
-#define AF_MAX 3
+#define AF_INET6 3
+#define AF_MAX 4
 #define PF_LOCAL AF_LOCAL
 #define PF_UNIX PF_LOCAL
 #define PF_INET AF_INET
+#define PF_INET6 AF_INET6
 #define PF_UNSPEC AF_UNSPEC
 #define PF_MAX AF_MAX
 
@@ -60,6 +62,7 @@ __BEGIN_DECLS
 #define IPPROTO_ICMP 1
 #define IPPROTO_TCP 6
 #define IPPROTO_UDP 17
+#define IPPROTO_IPV6 41
 
 #define MSG_TRUNC 0x1
 #define MSG_CTRUNC 0x2
