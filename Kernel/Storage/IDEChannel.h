@@ -60,7 +60,8 @@ struct PhysicalRegionDescriptor {
 };
 
 class IDEController;
-class IDEChannel final : public IRQHandler {
+class IDEChannel final : public RefCounted<IDEChannel>
+    , public IRQHandler {
     friend class IDEController;
     friend class PATADiskDevice;
     AK_MAKE_ETERNAL
@@ -104,8 +105,7 @@ public:
     };
 
 public:
-    static NonnullOwnPtr<IDEChannel> create(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
-    IDEChannel(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
+    static NonnullRefPtr<IDEChannel> create(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
     virtual ~IDEChannel() override;
 
     RefPtr<StorageDevice> master_device() const;
@@ -114,6 +114,8 @@ public:
     virtual const char* purpose() const override { return "PATA Channel"; }
 
 private:
+    IDEChannel(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
+
     //^ IRQHandler
     virtual void handle_irq(const RegisterState&) override;
 
