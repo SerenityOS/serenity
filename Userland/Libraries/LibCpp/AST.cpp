@@ -51,6 +51,13 @@ void TranslationUnit::dump(size_t indent) const
 void FunctionDeclaration::dump(size_t indent) const
 {
     ASTNode::dump(indent);
+
+    String qualifiers_string;
+    if (!m_qualifiers.is_empty()) {
+        print_indent(indent+1);
+        outln("[{}]", String::join(" ", m_qualifiers));
+    }
+
     m_return_type->dump(indent + 1);
     if (!m_name.is_null()) {
         print_indent(indent + 1);
