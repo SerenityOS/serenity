@@ -16,7 +16,7 @@ The shell operates according to the following general steps:
 * Should a command be executed, the shell applies the redirections, and executes the command with the flattened argument list
 * Should a command need waiting, the shell shall wait for the command to finish, and continue execution
 
-Any text below is superceded by the formal grammar defined in the _formal grammar_ section.
+Any text below is superseded by the formal grammar defined in the _formal grammar_ section.
 
 ## General Token Recognition
 
@@ -172,7 +172,7 @@ Any bareword starting with a tilde (`~`) and spanning up to the first path separ
 ### Evaluate
 Evaluate expressions take the general form of a dollar sign (`$`) followed by some _expression_, which is evaluated by the rules below.
 - Should the _expression_ be a string, it shall be evaluated as a dynamic variable lookup by first evaluating the string, and then looking up the given variable.
-- Should the _expression_ be a list or a command, it shall be converted to a command, whose output (from the standard output) shall be captured, and split to a list with the shell local variable `IFS` (or the default splitter `\n` (newline, 0x0a)). It should be noted that the shell option `inline_exec_keep_empty_segments` will determine whether empty segments in the split list shall be preserved when this expression is evaluated, this behaviour is disabled by default.
+- Should the _expression_ be a list or a command, it shall be converted to a command, whose output (from the standard output) shall be captured, and split to a list with the shell local variable `IFS` (or the default splitter `\n` (newline, 0x0a)). It should be noted that the shell option `inline_exec_keep_empty_segments` will determine whether empty segments in the split list shall be preserved when this expression is evaluated, this behavior is disabled by default.
 
 ## Commands
 
@@ -271,7 +271,7 @@ $ for index i x in * { echo file at index $i is named $x }
 ##### Infinite Loops
 Infinite loops (as denoted by the keyword `loop`) can be used to repeat a block until the block runs `break`, or the loop terminates by external sources (interrupts, program exit, and terminating signals).
 
-The behaviour regarding SIGINT and other signals is the same as for loops (mentioned above).
+The behavior regarding SIGINT and other signals is the same as for loops (mentioned above).
 
 ###### Examples
 ```sh
@@ -348,7 +348,7 @@ match "$(make_some_value)" {
 ```
 
 ### History Event Designators
-History expansion may be utilised to reuse previously typed words or commands.
+History expansion may be utilized to reuse previously typed words or commands.
 Such expressions are of the general form `!<event_designator>(:<word_designator>)`, where `event_designator` would select an entry in the shell history, and `word_designator` would select a word (or a range of words) from that entry.
 
 | Event designator | effect                      |
