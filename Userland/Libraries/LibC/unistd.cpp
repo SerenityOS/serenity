@@ -89,6 +89,11 @@ pid_t fork()
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+pid_t vfork()
+{
+    return fork();
+}
+
 int execv(const char* path, char* const argv[])
 {
     return execve(path, argv, environ);
