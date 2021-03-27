@@ -309,7 +309,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& p
         initial_value = parse_expression(var);
     }
 
-    if(expect_semicolon)
+    if (expect_semicolon)
         consume(Token::Type::Semicolon);
 
     var->set_end(position());
@@ -372,6 +372,7 @@ bool Parser::match_secondary_expression()
         || type == Token::Type::LessLessEquals
         || type == Token::Type::GreaterGreater
         || type == Token::Type::GreaterGreaterEquals
+        || type == Token::Type::EqualsEquals
         || type == Token::Type::AndAnd
         || type == Token::Type::PipePipe;
 }
@@ -494,6 +495,8 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(ASTNode& parent, No
         return parse_binary_expression(parent, lhs, BinaryOp::Addition);
     case Token::Type::Less:
         return parse_binary_expression(parent, lhs, BinaryOp::LessThan);
+    case Token::Type::EqualsEquals:
+        return parse_binary_expression(parent, lhs, BinaryOp::EqualsEquals);
     case Token::Type::Equals:
         return parse_assignment_expression(parent, lhs, AssignmentOp::Assignment);
     case Token::Type::Dot: {
