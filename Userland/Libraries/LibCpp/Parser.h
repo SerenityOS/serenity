@@ -97,7 +97,7 @@ private:
     NonnullRefPtr<FunctionDeclaration> parse_function_declaration(ASTNode& parent);
     NonnullRefPtr<FunctionDefinition> parse_function_definition(ASTNode& parent);
     NonnullRefPtr<Statement> parse_statement(ASTNode& parent);
-    NonnullRefPtr<VariableDeclaration> parse_variable_declaration(ASTNode& parent);
+    NonnullRefPtr<VariableDeclaration> parse_variable_declaration(ASTNode& parent, bool expect_semicolon=true);
     NonnullRefPtr<Expression> parse_expression(ASTNode& parent);
     NonnullRefPtr<Expression> parse_primary_expression(ASTNode& parent);
     NonnullRefPtr<Expression> parse_secondary_expression(ASTNode& parent, NonnullRefPtr<Expression> lhs);
