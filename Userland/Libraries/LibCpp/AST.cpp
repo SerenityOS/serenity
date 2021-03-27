@@ -408,9 +408,12 @@ void IfStatement::dump(size_t indent) const
 NonnullRefPtrVector<Declaration> IfStatement::declarations() const
 {
     NonnullRefPtrVector<Declaration> declarations;
-    declarations.append(m_predicate->declarations());
-    declarations.append(m_then->declarations());
-    declarations.append(m_else->declarations());
+    if (m_predicate)
+        declarations.append(m_predicate->declarations());
+    if (m_then)
+        declarations.append(m_then->declarations());
+    if (m_else)
+        declarations.append(m_else->declarations());
     return declarations;
 }
 
