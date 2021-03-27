@@ -199,7 +199,7 @@ NonnullRefPtr<Statement> Parser::parse_statement(ASTNode& parent)
         return parse_comment(parent);
     }
     if (match_variable_declaration()) {
-        return parse_variable_declaration(parent);
+        return parse_variable_declaration(parent, false);
     }
     if (match_expression()) {
         return parse_expression(parent);
@@ -277,7 +277,7 @@ bool Parser::match_variable_declaration()
     return match(Token::Type::Semicolon);
 }
 
-NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& parent)
+NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& parent, bool expect_semicolon)
 {
     SCOPE_LOGGER();
     auto var = create_ast_node<VariableDeclaration>(parent, position(), {});
@@ -294,6 +294,9 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& p
         consume(Token::Type::Equals);
         initial_value = parse_expression(var);
     }
+
+    if(expect_semicolon)
+        consume(Token::Type::Semicolon);
 
     var->set_end(position());
     var->m_name = text_of_token(identifier_token);
@@ -533,6 +536,8 @@ Optional<Parser::DeclarationType> Parser::match_declaration_in_translation_unit(
         return DeclarationType::Struct;
     if (match_namespace_declaration())
         return DeclarationType::Namespace;
+    if (match_variable_declaration())
+        return DeclarationType::Variable;
     return {};
 }
 
