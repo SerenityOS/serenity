@@ -163,10 +163,11 @@ protected:
     RefPtr<StorageDevice> m_master;
     RefPtr<StorageDevice> m_slave;
 
-    AsyncBlockDeviceRequest* m_current_request { nullptr };
-    u32 m_current_request_block_index { 0 };
+    RefPtr<AsyncBlockDeviceRequest> m_current_request;
+    size_t m_current_request_block_index { 0 };
     bool m_current_request_flushing_cache { false };
     SpinLock<u8> m_request_lock;
+    Lock m_lock { "IDEChannel" };
 
     IOAddressGroup m_io_group;
     NonnullRefPtr<IDEController> m_parent_controller;
