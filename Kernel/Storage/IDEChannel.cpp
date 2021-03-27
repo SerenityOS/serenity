@@ -45,9 +45,9 @@ namespace Kernel {
 #define PCI_Mass_Storage_Class 0x1
 #define PCI_IDE_Controller_Subclass 0x1
 
-UNMAP_AFTER_INIT NonnullOwnPtr<IDEChannel> IDEChannel::create(const IDEController& controller, IOAddressGroup io_group, ChannelType type, bool force_pio)
+UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, IOAddressGroup io_group, ChannelType type, bool force_pio)
 {
-    return make<IDEChannel>(controller, io_group, type, force_pio);
+    return adopt(*new IDEChannel(controller, io_group, type, force_pio));
 }
 
 RefPtr<StorageDevice> IDEChannel::master_device() const
