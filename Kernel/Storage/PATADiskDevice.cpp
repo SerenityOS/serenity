@@ -58,8 +58,8 @@ const char* PATADiskDevice::class_name() const
 
 void PATADiskDevice::start_request(AsyncBlockDeviceRequest& request)
 {
-    bool use_dma = !m_channel.m_io_group.bus_master_base().is_null() && m_channel.m_dma_enabled.resource();
-    m_channel.start_request(request, use_dma, is_slave(), m_capabilities);
+    bool use_dma = !m_channel->m_io_group.bus_master_base().is_null() && m_channel->m_dma_enabled.resource();
+    m_channel->start_request(request, use_dma, is_slave(), m_capabilities);
 }
 
 String PATADiskDevice::device_name() const
