@@ -41,7 +41,6 @@ class IDEController final : public StorageController
     , public PCI::DeviceController {
     AK_MAKE_ETERNAL
 public:
-public:
     static NonnullRefPtr<IDEController> initialize(PCI::Address address, bool force_pio);
     virtual ~IDEController() override;
 
