@@ -477,6 +477,10 @@ TextPosition EditingEngine::find_end_of_next_word()
     bool is_first_iteration = true;
     auto& lines = m_editor->lines();
     auto cursor = m_editor->cursor();
+
+    if ((lines.at(cursor.line()).length() - cursor.column()) <= 1)
+        return { cursor.line(), cursor.column() };
+
     for (size_t line_index = cursor.line(); line_index < lines.size(); line_index++) {
         auto& line = lines.at(line_index);
 
@@ -605,6 +609,10 @@ TextPosition EditingEngine::find_beginning_of_previous_word()
     bool is_first_iteration = true;
     auto& lines = m_editor->lines();
     auto cursor = m_editor->cursor();
+
+    if ((lines.at(cursor.line()).length() - cursor.column()) <= 1)
+        return { cursor.line(), cursor.column() };
+
     for (size_t line_index = cursor.line(); (int)line_index >= 0; line_index--) {
         auto& line = lines.at(line_index);
 
