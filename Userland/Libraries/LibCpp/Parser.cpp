@@ -901,9 +901,11 @@ NonnullRefPtr<ReturnStatement> Parser::parse_return_statement(ASTNode& parent)
     SCOPE_LOGGER();
     auto return_statement = create_ast_node<ReturnStatement>(parent, position(), {});
     consume(Token::Type::Keyword);
-    auto expression = parse_expression(*return_statement);
-    return_statement->m_value = expression;
-    return_statement->set_end(expression->end());
+    if(!peek(Token::Type::Semicolon).has_value()) {
+        auto expression = parse_expression(*return_statement);
+        return_statement->m_value = expression;
+    }
+    return_statement->set_end(position());
     return return_statement;
 }
 
