@@ -44,6 +44,7 @@ UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(const IDEController& controller, IDE
 
 UNMAP_AFTER_INIT void BMIDEChannel::initialize()
 {
+    VERIFY(m_io_group.bus_master_base().has_value());
     // Let's try to set up DMA transfers.
     PCI::enable_bus_mastering(m_parent_controller->pci_address());
     m_prdt_page = MM.allocate_supervisor_physical_page();
@@ -53,6 +54,9 @@ UNMAP_AFTER_INIT void BMIDEChannel::initialize()
     m_prdt_region = MM.allocate_kernel_region(m_prdt_page->paddr(), PAGE_SIZE, "IDE PRDT", Region::Access::Read | Region::Access::Write);
     m_dma_buffer_region = MM.allocate_kernel_region(m_dma_buffer_page->paddr(), PAGE_SIZE, "IDE DMA region", Region::Access::Read | Region::Access::Write);
     prdt().end_of_table = 0x8000;
+
+    // clear bus master interrupt status
+    m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 4);
 }
 
 static void print_ide_status(u8 status)
@@ -81,6 +85,8 @@ void BMIDEChannel::handle_irq(const RegisterState&)
         dbgln_if(PATA_DEBUG, "BMIDEChannel: ignore interrupt");
         return;
     }
+    // clear bus master interrupt status
+    m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 4);
 
     ScopedSpinLock lock(m_request_lock);
     dbgln_if(PATA_DEBUG, "BMIDEChannel: interrupt: DRQ={}, BSY={}, DRDY={}",
@@ -148,7 +154,7 @@ void BMIDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     VERIFY(m_current_request->block_count() <= 256);
 
     ScopedSpinLock m_lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_write_sectors_with_dma ({} x {})", m_current_request->block_index(), m_current_request->block_count());
+    dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_write_sectors ({} x {})", m_current_request->block_index(), m_current_request->block_count());
 
     prdt().offset = m_dma_buffer_page->paddr().get();
     prdt().size = 512 * m_current_request->block_count();
@@ -157,6 +163,11 @@ void BMIDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
         complete_current_request(AsyncDeviceRequest::MemoryFault);
         return;
     }
+
+    // Note: This is a fix for a quirk for an IDE controller on ICH7 machine.
+    // We need to select the drive and then we wait 10 microseconds... and it doesn't hurt anything
+    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | ((slave_request ? 1 : 0) << 4));
+    IO::delay(10);
 
     VERIFY(prdt().size <= PAGE_SIZE);
     VERIFY(m_io_group.bus_master_base().has_value());
@@ -191,7 +202,12 @@ void BMIDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     VERIFY(m_current_request->block_count() <= 256);
 
     ScopedSpinLock m_lock(m_request_lock);
-    dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_read_sectors_with_dma ({} x {})", m_current_request->block_index(), m_current_request->block_count());
+    dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_read_sectors ({} x {})", m_current_request->block_index(), m_current_request->block_count());
+
+    // Note: This is a fix for a quirk for an IDE controller on ICH7 machine.
+    // We need to select the drive and then we wait 10 microseconds... and it doesn't hurt anything
+    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | ((slave_request ? 1 : 0) << 4));
+    IO::delay(10);
 
     prdt().offset = m_dma_buffer_page->paddr().get();
     prdt().size = 512 * m_current_request->block_count();
@@ -205,11 +221,11 @@ void BMIDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     // Write the PRDT location
     m_io_group.bus_master_base().value().offset(4).out(m_prdt_page->paddr().get());
 
-    // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
-    m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 0x6);
-
     // Set transfer direction
     m_io_group.bus_master_base().value().out<u8>(0x8);
+
+    // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
+    m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 0x6);
 
     ata_access(Direction::Read, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
 
