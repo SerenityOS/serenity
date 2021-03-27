@@ -98,6 +98,14 @@ struct addrinfo {
 #define EAI_SOCKTYPE 10
 #define EAI_SYSTEM 11
 
+#define AI_PASSIVE 0x0001
+#define AI_CANONNAME 0x0002
+#define AI_NUMERICHOST 0x0004
+#define AI_NUMERICSERV 0x0008
+#define AI_V4MAPPED 0x0010
+#define AI_ALL 0x0020
+#define AI_ADDRCONFIG 0x0040
+
 int getaddrinfo(const char* __restrict node, const char* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res);
 void freeaddrinfo(struct addrinfo* res);
 const char* gai_strerror(int errcode);
