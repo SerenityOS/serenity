@@ -135,6 +135,8 @@ private:
     void did_activate(MenuItem&, bool leave_menu_open);
     void update_for_new_hovered_item(bool make_input = false);
 
+    void start_activation_animation(MenuItem&);
+
     ClientConnection* m_client { nullptr };
     int m_menu_id { 0 };
     String m_name;

@@ -456,10 +456,60 @@ void Menu::clear_hovered_item()
     redraw();
 }
 
+void Menu::start_activation_animation(MenuItem& item)
+{
+    VERIFY(menu_window());
+    VERIFY(menu_window()->backing_store());
+    auto window = Window::construct(*this, WindowType::Menu);
+    window->set_frameless(true);
+    window->set_hit_testing_enabled(false);
+    window->set_opacity(0.8f); // start out transparent so we don't have to recompute occlusions
+    window->set_rect(item.rect().translated(m_menu_window->rect().location()));
+    window->set_event_filter([](Core::Event&) {
+        // ignore all events
+        return false;
+    });
+
+    VERIFY(window->backing_store());
+    Gfx::Painter painter(*window->backing_store());
+    painter.blit({}, *menu_window()->backing_store(), item.rect(), 1.0f, false);
+    window->invalidate();
+
+    struct AnimationInfo {
+        RefPtr<Core::Timer> timer;
+        RefPtr<Window> window;
+        u8 step { 8 }; // Must be even number!
+
+        AnimationInfo(NonnullRefPtr<Window>&& window)
+            : window(move(window))
+        {
+        }
+    };
+    auto animation = adopt_own(*new AnimationInfo(move(window)));
+    auto& timer = animation->timer;
+    timer = Core::Timer::create_repeating(50, [this, animation = animation.ptr(), animation_ref = move(animation)] {
+        VERIFY(animation->step % 2 == 0);
+        animation->step -= 2;
+        if (animation->step == 0) {
+            animation->window->set_visible(false);
+            animation->timer->stop();
+            animation->timer = nullptr; // break circular reference
+            return;
+        }
+
+        float opacity = (float)animation->step / 10.0f;
+        animation->window->set_opacity(opacity);
+    });
+    timer->start();
+}
+
 void Menu::did_activate(MenuItem& item, bool leave_menu_open)
 {
     if (item.type() == MenuItem::Type::Separator)
         return;
+
+    if (!leave_menu_open)
+        start_activation_animation(item);
 
     if (on_item_activation)
         on_item_activation(item);
