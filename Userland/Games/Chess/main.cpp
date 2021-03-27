@@ -94,6 +94,7 @@ int main(int argc, char** argv)
     widget.set_piece_set(config->read_entry("Style", "PieceSet", "stelar7"));
     widget.set_board_theme(config->read_entry("Style", "BoardTheme", "Beige"));
     widget.set_coordinates(config->read_bool_entry("Style", "Coordinates", true));
+    widget.set_show_available_moves(config->read_bool_entry("Style", "ShowAvailableMoves", true));
 
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Game");
@@ -198,6 +199,15 @@ int main(int argc, char** argv)
     });
     coordinates_action->set_checked(widget.coordinates());
     style_menu.add_action(coordinates_action);
+
+    auto show_available_moves_action = GUI::Action::create_checkable("Show Available Moves", [&](auto& action) {
+        widget.set_show_available_moves(action.is_checked());
+        widget.update();
+        config->write_bool_entry("Style", "ShowAvailableMoves", action.is_checked());
+        config->sync();
+    });
+    show_available_moves_action->set_checked(widget.show_available_moves());
+    style_menu.add_action(show_available_moves_action);
 
     auto& engine_menu = menubar->add_menu("Engine");
 
