@@ -52,11 +52,13 @@ struct [[gnu::packed]] EndOfCentralDirectory {
     bool read(ReadonlyBytes buffer)
     {
         auto fields_size = sizeof(EndOfCentralDirectory) - sizeof(u8*);
-        if (buffer.size() < fields_size)
+        if (buffer.size() < sizeof(end_of_central_directory_signature) + fields_size)
             return false;
         if (memcmp(buffer.data(), end_of_central_directory_signature, sizeof(end_of_central_directory_signature)) != 0)
             return false;
         memcpy(reinterpret_cast<void*>(&disk_number), buffer.data() + sizeof(end_of_central_directory_signature), fields_size);
+        if (buffer.size() < sizeof(end_of_central_directory_signature) + fields_size + comment_length)
+            return false;
         comment = buffer.data() + sizeof(end_of_central_directory_signature) + fields_size;
         return true;
     }
@@ -101,11 +103,13 @@ struct [[gnu::packed]] CentralDirectoryRecord {
     bool read(ReadonlyBytes buffer)
     {
         auto fields_size = sizeof(CentralDirectoryRecord) - (sizeof(u8*) * 3);
-        if (buffer.size() < fields_size)
+        if (buffer.size() < sizeof(central_directory_record_signature) + fields_size)
             return false;
         if (memcmp(buffer.data(), central_directory_record_signature, sizeof(central_directory_record_signature)) != 0)
             return false;
         memcpy(reinterpret_cast<void*>(&made_by_version), buffer.data() + sizeof(central_directory_record_signature), fields_size);
+        if (buffer.size() < sizeof(end_of_central_directory_signature) + fields_size + comment_length + name_length + extra_data_length)
+            return false;
         name = buffer.data() + sizeof(central_directory_record_signature) + fields_size;
         extra_data = name + name_length;
         comment = extra_data + extra_data_length;
@@ -165,11 +169,13 @@ struct [[gnu::packed]] LocalFileHeader {
     bool read(ReadonlyBytes buffer)
     {
         auto fields_size = sizeof(LocalFileHeader) - (sizeof(u8*) * 3);
-        if (buffer.size() < fields_size)
+        if (buffer.size() < sizeof(local_file_header_signature) + fields_size)
             return false;
         if (memcmp(buffer.data(), local_file_header_signature, sizeof(local_file_header_signature)) != 0)
             return false;
         memcpy(reinterpret_cast<void*>(&minimum_version), buffer.data() + sizeof(local_file_header_signature), fields_size);
+        if (buffer.size() < sizeof(end_of_central_directory_signature) + fields_size + name_length + extra_data_length + compressed_size)
+            return false;
         name = buffer.data() + sizeof(local_file_header_signature) + fields_size;
         extra_data = name + name_length;
         compressed_data = extra_data + extra_data_length;
