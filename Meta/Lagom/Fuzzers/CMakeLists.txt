@@ -42,6 +42,7 @@ add_simple_fuzzer(FuzzURL)
 add_simple_fuzzer(FuzzUTF16BEDecoder)
 add_simple_fuzzer(FuzzRSAKeyParsing)
 add_simple_fuzzer(FuzzWAVLoader)
+add_simple_fuzzer(FuzzZip)
 add_simple_fuzzer(FuzzZlibDecompression)
 
 if (NOT ENABLE_OSS_FUZZ)
