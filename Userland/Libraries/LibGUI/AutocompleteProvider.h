@@ -100,7 +100,7 @@ public:
 
     void update_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions);
     bool is_visible() const;
-    void show(Gfx::IntPoint suggstion_box_location);
+    void show(Gfx::IntPoint suggestion_box_location);
     void close();
 
     void next_suggestion();
