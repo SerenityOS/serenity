@@ -38,6 +38,7 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
 
     String output_path;
+    int file_append = 0;
     bool output_to_clipboard = false;
 
     args_parser.add_positional_argument(output_path, "Output filename", "output", Core::ArgsParser::Required::No);
@@ -45,9 +46,17 @@ int main(int argc, char** argv)
 
     args_parser.parse(argc, argv);
 
-    if (output_path.is_empty()) {
+    if (output_path.is_empty())
         output_path = Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png");
+    
+    while (Core::File::exists(output_path)) {
+        file_append += 1;
+        if (!Core::File::exists(String::formatted("{}({}).png", output_path.split('.')[0], file_append)))
+            break;
     }
+
+    if (!file_append == 0)
+        output_path = String::formatted("{}({}).png", output_path.split('.')[0], file_append);
 
     auto app = GUI::Application::construct(argc, argv);
     auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetScreenBitmap>();
