@@ -71,6 +71,12 @@ void XSV::parse()
     while (!has_error() && !m_lexer.is_eof())
         m_rows.append(read_row());
 
+    // Read and drop any extra lines at the end.
+    while (!m_lexer.is_eof()) {
+        if (!m_lexer.consume_specific("\r\n") && !m_lexer.consume_specific('\n'))
+            break;
+    }
+
     if (!m_lexer.is_eof())
         set_error(ReadError::DataPastLogicalEnd);
 }
