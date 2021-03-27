@@ -88,6 +88,7 @@ private:
     bool match_keyword(const String&);
     bool match_block_statement();
     bool match_namespace_declaration();
+    bool match_type();
 
     Optional<NonnullRefPtrVector<Parameter>> parse_parameter_list(ASTNode& parent);
     Optional<Token> consume_whitespace();
@@ -163,6 +164,7 @@ private:
     void initialize_program_tokens(const StringView& program);
     void add_tokens_for_preprocessor(Token& replaced_token, Preprocessor::DefinedValue&);
     Vector<StringView> parse_type_qualifiers();
+    Vector<StringView> parse_function_qualifiers();
 
     Preprocessor::Definitions m_definitions;
     String m_filename;
