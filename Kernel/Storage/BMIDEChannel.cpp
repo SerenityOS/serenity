@@ -119,14 +119,14 @@ void BMIDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult re
         dbgln_if(PATA_DEBUG, "BMIDEChannel::complete_current_request result: {}", (int)result);
         ScopedSpinLock lock(m_request_lock);
         VERIFY(m_current_request);
-        auto& request = *m_current_request;
-        m_current_request = nullptr;
+        auto current_request = m_current_request;
+        m_current_request.clear();
 
         if (result == AsyncDeviceRequest::Success) {
-            if (request.request_type() == AsyncBlockDeviceRequest::Read) {
-                if (!request.write_to_buffer(request.buffer(), m_dma_buffer_region->vaddr().as_ptr(), 512 * request.block_count())) {
+            if (current_request->request_type() == AsyncBlockDeviceRequest::Read) {
+                if (!current_request->write_to_buffer(current_request->buffer(), m_dma_buffer_region->vaddr().as_ptr(), 512 * current_request->block_count())) {
                     lock.unlock();
-                    request.complete(AsyncDeviceRequest::MemoryFault);
+                    current_request->complete(AsyncDeviceRequest::MemoryFault);
                     return;
                 }
             }
@@ -137,21 +137,23 @@ void BMIDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult re
         }
 
         lock.unlock();
-        request.complete(result);
+        current_request->complete(result);
     });
 }
 
 void BMIDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
 {
-    VERIFY(m_request_lock.is_locked());
-    auto& request = *m_current_request;
-    auto lba = request.block_index();
-    dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_write_sectors_with_dma ({} x {})", lba, request.block_count());
+    VERIFY(m_lock.is_locked());
+    VERIFY(!m_current_request.is_null());
+    VERIFY(m_current_request->block_count() <= 256);
+
+    ScopedSpinLock m_lock(m_request_lock);
+    dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_write_sectors_with_dma ({} x {})", m_current_request->block_index(), m_current_request->block_count());
 
     prdt().offset = m_dma_buffer_page->paddr().get();
-    prdt().size = 512 * request.block_count();
+    prdt().size = 512 * m_current_request->block_count();
 
-    if (!request.read_from_buffer(request.buffer(), m_dma_buffer_region->vaddr().as_ptr(), 512 * request.block_count())) {
+    if (!m_current_request->read_from_buffer(m_current_request->buffer(), m_dma_buffer_region->vaddr().as_ptr(), 512 * m_current_request->block_count())) {
         complete_current_request(AsyncDeviceRequest::MemoryFault);
         return;
     }
@@ -167,7 +169,7 @@ void BMIDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
     m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 0x6);
 
-    ata_access(Direction::Write, slave_request, lba, request.block_count(), capabilities);
+    ata_access(Direction::Write, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
 
     // Start bus master
     m_io_group.bus_master_base().value().out<u8>(0x1);
@@ -184,13 +186,15 @@ void BMIDEChannel::send_ata_io_command(LBAMode lba_mode, Direction direction) co
 
 void BMIDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
 {
-    VERIFY(m_request_lock.is_locked());
-    auto& request = *m_current_request;
-    auto lba = request.block_index();
-    dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_read_sectors_with_dma ({} x {})", lba, request.block_count());
+    VERIFY(m_lock.is_locked());
+    VERIFY(!m_current_request.is_null());
+    VERIFY(m_current_request->block_count() <= 256);
+
+    ScopedSpinLock m_lock(m_request_lock);
+    dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_read_sectors_with_dma ({} x {})", m_current_request->block_index(), m_current_request->block_count());
 
     prdt().offset = m_dma_buffer_page->paddr().get();
-    prdt().size = 512 * request.block_count();
+    prdt().size = 512 * m_current_request->block_count();
 
     VERIFY(prdt().size <= PAGE_SIZE);
 
@@ -207,7 +211,7 @@ void BMIDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     // Set transfer direction
     m_io_group.bus_master_base().value().out<u8>(0x8);
 
-    ata_access(Direction::Read, slave_request, lba, request.block_count(), capabilities);
+    ata_access(Direction::Read, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
 
     // Start bus master
     m_io_group.bus_master_base().value().out<u8>(0x9);
