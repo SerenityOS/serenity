@@ -1,0 +1,18 @@
+--- sqlite-autoconf-3350300/sqlite3.c	2021-03-26 15:24:58.000000000 +0100
++++ sqlite-autoconf-port/sqlite3.c	2021-03-27 12:30:47.197494792 +0100
+@@ -41852,6 +41852,7 @@
+   ** array cannot be const.
+   */
+   static sqlite3_vfs aVfs[] = {
++    UNIXVFS("unix-none",     nolockIoFinder ),
+ #if SQLITE_ENABLE_LOCKING_STYLE && defined(__APPLE__)
+     UNIXVFS("unix",          autolockIoFinder ),
+ #elif OS_VXWORKS
+@@ -41859,7 +41860,6 @@
+ #else
+     UNIXVFS("unix",          posixIoFinder ),
+ #endif
+-    UNIXVFS("unix-none",     nolockIoFinder ),
+     UNIXVFS("unix-dotfile",  dotlockIoFinder ),
+     UNIXVFS("unix-excl",     posixIoFinder ),
+ #if OS_VXWORKS

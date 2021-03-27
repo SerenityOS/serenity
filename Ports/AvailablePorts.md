@@ -73,6 +73,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`SDL2_ttf`](SDL2_ttf/)        | SDL2\_ttf (TrueType Font add-on for SDL2)     | 2.0.15            | https://www.libsdl.org/projects/SDL_ttf/              |
 | [`sed`](sed/)                  | GNU sed                                       | 4.2.1             | https://www.gnu.org/software/sed/                     |
 | [`sl`](sl/)                    | Steam Locomotive (SL)                         |                   | https://github.com/mtoyoda/sl                         |
+| [`sqlite`](sqlite/)            | SQLite                                        | 3350300           | https://www.sqlite.org/                               |
 | [`stress-ng`](stress-ng/)      | stress-ng                                     | 0.11.23           | https://github.com/ColinIanKing/stress-ng             |
 | [`termcap`](termcap/)          | GNU termcap                                   | 1.3.1             | https://www.gnu.org/software/termutils/               |
 | [`tinycc`](tinycc/)            | Tiny C Compiler (TinyCC)                      | dev               | https://github.com/TinyCC/tinycc                      |

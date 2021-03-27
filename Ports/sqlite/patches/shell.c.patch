@@ -1,0 +1,13 @@
+--- sqlite-autoconf-3350300/shell.c	2021-03-26 15:24:58.000000000 +0100
++++ sqlite-autoconf-port/shell.c	2021-03-27 12:05:40.289547647 +0100
+@@ -2554,6 +2554,10 @@
+     if( utimensat(AT_FDCWD, zFile, times, AT_SYMLINK_NOFOLLOW) ){
+       return 1;
+     }
++#elif defined(HAVE_UTIME)
++    int rc = utime(zFile, NULL);
++    if (rc < 0)
++        return 1;
+ #else
+     /* Legacy unix */
+     struct timeval times[2];
