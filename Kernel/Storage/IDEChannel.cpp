@@ -27,7 +27,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
-#include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/IO.h>
 #include <Kernel/Process.h>
 #include <Kernel/Storage/ATA.h>
@@ -45,9 +44,9 @@ namespace Kernel {
 #define PCI_Mass_Storage_Class 0x1
 #define PCI_IDE_Controller_Subclass 0x1
 
-UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, IOAddressGroup io_group, ChannelType type, bool force_pio)
+UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
 {
-    return adopt(*new IDEChannel(controller, io_group, type, force_pio));
+    return adopt(*new IDEChannel(controller, io_group, type));
 }
 
 RefPtr<StorageDevice> IDEChannel::master_device() const
@@ -60,7 +59,7 @@ RefPtr<StorageDevice> IDEChannel::slave_device() const
     return m_slave;
 }
 
-UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddressGroup io_group, ChannelType type, bool force_pio)
+UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
     : IRQHandler(type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ)
     , m_channel_type(type)
     , m_io_group(io_group)
@@ -69,15 +68,16 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddre
     disable_irq();
 
     // FIXME: The device may not be capable of DMA.
-    m_dma_enabled.resource() = !force_pio;
-    ProcFS::add_sys_bool("ide_dma", m_dma_enabled);
 
-    initialize(force_pio);
+    dbgln_if(PATA_DEBUG, "IDEChannel: {} IO base: {}", channel_type_string(), m_io_group.io_base());
+    dbgln_if(PATA_DEBUG, "IDEChannel: {} control base: {}", channel_type_string(), m_io_group.control_base());
+    dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base: {}", channel_type_string(), m_io_group.bus_master_base());
+    m_parent_controller->enable_pin_based_interrupts();
+
     detect_disks();
 
     // Note: calling to detect_disks could generate an interrupt, clear it if that's the case
     clear_pending_interrupts();
-    enable_irq();
 }
 
 void IDEChannel::clear_pending_interrupts() const
@@ -89,7 +89,7 @@ UNMAP_AFTER_INIT IDEChannel::~IDEChannel()
 {
 }
 
-void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool use_dma, bool is_slave, u16 capabilities)
+void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool is_slave, u16 capabilities)
 {
     ScopedSpinLock lock(m_request_lock);
 
@@ -97,20 +97,12 @@ void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool use_dma, b
 
     m_current_request = &request;
     m_current_request_block_index = 0;
-    m_current_request_uses_dma = use_dma;
     m_current_request_flushing_cache = false;
 
-    if (request.request_type() == AsyncBlockDeviceRequest::Read) {
-        if (use_dma)
-            ata_read_sectors_with_dma(is_slave, capabilities);
-        else
-            ata_read_sectors(is_slave, capabilities);
-    } else {
-        if (use_dma)
-            ata_write_sectors_with_dma(is_slave, capabilities);
-        else
-            ata_write_sectors(is_slave, capabilities);
-    }
+    if (request.request_type() == AsyncBlockDeviceRequest::Read)
+        ata_read_sectors(is_slave, capabilities);
+    else
+        ata_write_sectors(is_slave, capabilities);
 }
 
 void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult result)
@@ -130,44 +122,9 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
         auto& request = *m_current_request;
         m_current_request = nullptr;
 
-        if (m_current_request_uses_dma) {
-            if (result == AsyncDeviceRequest::Success) {
-                if (request.request_type() == AsyncBlockDeviceRequest::Read) {
-                    if (!request.write_to_buffer(request.buffer(), m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), 512 * request.block_count())) {
-                        lock.unlock();
-                        request.complete(AsyncDeviceRequest::MemoryFault);
-                        return;
-                    }
-                }
-
-                // I read somewhere that this may trigger a cache flush so let's do it.
-                m_io_group.bus_master_base().offset(2).out<u8>(m_io_group.bus_master_base().offset(2).in<u8>() | 0x6);
-            }
-        }
-
         lock.unlock();
         request.complete(result);
     });
-}
-
-UNMAP_AFTER_INIT void IDEChannel::initialize(bool force_pio)
-{
-    m_parent_controller->enable_pin_based_interrupts();
-
-    dbgln_if(PATA_DEBUG, "IDEChannel: {} IO base: {}", channel_type_string(), m_io_group.io_base());
-    dbgln_if(PATA_DEBUG, "IDEChannel: {} control base: {}", channel_type_string(), m_io_group.control_base());
-    dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base: {}", channel_type_string(), m_io_group.bus_master_base());
-
-    if (force_pio) {
-        dbgln("IDEChannel: Requested to force PIO mode; not setting up DMA");
-        return;
-    }
-
-    // Let's try to set up DMA transfers.
-    PCI::enable_bus_mastering(m_parent_controller->pci_address());
-    m_prdt_page = MM.allocate_supervisor_physical_page();
-    prdt().end_of_table = 0x8000;
-    m_dma_buffer_page = MM.allocate_supervisor_physical_page();
 }
 
 static void print_ide_status(u8 status)
@@ -251,10 +208,6 @@ void IDEChannel::handle_irq(const RegisterState&)
         return;
     }
     m_device_error = 0;
-    if (m_current_request_uses_dma) {
-        complete_current_request(AsyncDeviceRequest::Success);
-        return;
-    }
 
     // Now schedule reading/writing the buffer as soon as we leave the irq handler.
     // This is important so that we can safely access the buffers, which could
@@ -404,7 +357,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
     }
 }
 
-void IDEChannel::ata_access(Direction direction, bool slave_request, u64 lba, u8 block_count, u16 capabilities, bool use_dma)
+void IDEChannel::ata_access(Direction direction, bool slave_request, u64 lba, u8 block_count, u16 capabilities)
 {
     LBAMode lba_mode;
     u8 head = 0;
@@ -439,48 +392,17 @@ void IDEChannel::ata_access(Direction direction, bool slave_request, u64 lba, u8
         if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
             break;
     }
-
-    if (lba_mode != LBAMode::FortyEightBit) {
-        if (use_dma)
-            m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_DMA : ATA_CMD_WRITE_DMA);
-        else
-            m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_PIO : ATA_CMD_WRITE_PIO);
-    } else {
-        if (use_dma)
-            m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_DMA_EXT : ATA_CMD_WRITE_DMA_EXT);
-        else
-            m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_PIO_EXT : ATA_CMD_WRITE_PIO_EXT);
-    }
+    send_ata_io_command(lba_mode, direction);
     enable_irq();
 }
 
-void IDEChannel::ata_read_sectors_with_dma(bool slave_request, u16 capabilities)
+void IDEChannel::send_ata_io_command(LBAMode lba_mode, Direction direction) const
 {
-    auto& request = *m_current_request;
-    auto lba = request.block_index();
-    dbgln_if(PATA_DEBUG, "IDEChannel::ata_read_sectors_with_dma ({} x {})", lba, request.block_count());
-
-    prdt().offset = m_dma_buffer_page->paddr();
-    prdt().size = 512 * request.block_count();
-
-    VERIFY(prdt().size <= PAGE_SIZE);
-
-    // Stop bus master
-    m_io_group.bus_master_base().out<u8>(0);
-
-    // Write the PRDT location
-    m_io_group.bus_master_base().offset(4).out(m_prdt_page->paddr().get());
-
-    // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
-    m_io_group.bus_master_base().offset(2).out<u8>(m_io_group.bus_master_base().offset(2).in<u8>() | 0x6);
-
-    // Set transfer direction
-    m_io_group.bus_master_base().out<u8>(0x8);
-
-    ata_access(Direction::Read, slave_request, lba, request.block_count(), capabilities, true);
-
-    // Start bus master
-    m_io_group.bus_master_base().out<u8>(0x9);
+    if (lba_mode != LBAMode::FortyEightBit) {
+        m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_PIO : ATA_CMD_WRITE_PIO);
+    } else {
+        m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(direction == Direction::Read ? ATA_CMD_READ_PIO_EXT : ATA_CMD_WRITE_PIO_EXT);
+    }
 }
 
 bool IDEChannel::ata_do_read_sector()
@@ -511,38 +433,7 @@ void IDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     auto lba = request.block_index();
     dbgln_if(PATA_DEBUG, "IDEChannel: Reading {} sector(s) @ LBA {}", request.block_count(), lba);
 
-    ata_access(Direction::Read, slave_request, lba, request.block_count(), capabilities, false);
-}
-
-void IDEChannel::ata_write_sectors_with_dma(bool slave_request, u16 capabilities)
-{
-    auto& request = *m_current_request;
-    auto lba = request.block_index();
-    dbgln_if(PATA_DEBUG, "IDEChannel::ata_write_sectors_with_dma ({} x {})", lba, request.block_count());
-
-    prdt().offset = m_dma_buffer_page->paddr();
-    prdt().size = 512 * request.block_count();
-
-    if (!request.read_from_buffer(request.buffer(), m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), 512 * request.block_count())) {
-        complete_current_request(AsyncDeviceRequest::MemoryFault);
-        return;
-    }
-
-    VERIFY(prdt().size <= PAGE_SIZE);
-
-    // Stop bus master
-    m_io_group.bus_master_base().out<u8>(0);
-
-    // Write the PRDT location
-    m_io_group.bus_master_base().offset(4).out<u32>(m_prdt_page->paddr().get());
-
-    // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
-    m_io_group.bus_master_base().offset(2).out<u8>(m_io_group.bus_master_base().offset(2).in<u8>() | 0x6);
-
-    ata_access(Direction::Write, slave_request, lba, request.block_count(), capabilities, true);
-
-    // Start bus master
-    m_io_group.bus_master_base().out<u8>(0x1);
+    ata_access(Direction::Read, slave_request, lba, request.block_count(), capabilities);
 }
 
 void IDEChannel::ata_do_write_sector()
@@ -577,7 +468,7 @@ void IDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     u32 count = request.block_count();
     dbgln_if(PATA_DEBUG, "IDEChannel: Writing {} sector(s) @ LBA {}", count, start_sector);
 
-    ata_access(Direction::Write, slave_request, start_sector, request.block_count(), capabilities, false);
+    ata_access(Direction::Write, slave_request, start_sector, request.block_count(), capabilities);
     ata_do_write_sector();
 }
 }
