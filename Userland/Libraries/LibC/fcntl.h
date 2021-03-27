@@ -71,6 +71,9 @@ __BEGIN_DECLS
 #define S_IRUSR 0400
 #define S_IWUSR 0200
 #define S_IXUSR 0100
+#define S_IREAD S_IRUSR
+#define S_IWRITE S_IWUSR
+#define S_IEXEC S_IXUSR
 #define S_IRGRP 0040
 #define S_IWGRP 0020
 #define S_IXGRP 0010
