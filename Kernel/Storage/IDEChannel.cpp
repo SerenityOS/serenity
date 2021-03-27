@@ -71,7 +71,10 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddre
 
     dbgln_if(PATA_DEBUG, "IDEChannel: {} IO base: {}", channel_type_string(), m_io_group.io_base());
     dbgln_if(PATA_DEBUG, "IDEChannel: {} control base: {}", channel_type_string(), m_io_group.control_base());
-    dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base: {}", channel_type_string(), m_io_group.bus_master_base());
+    if (m_io_group.bus_master_base().has_value())
+        dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base: {}", channel_type_string(), m_io_group.bus_master_base().value());
+    else
+        dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base disabled", channel_type_string());
     m_parent_controller->enable_pin_based_interrupts();
 
     detect_disks();
@@ -180,13 +183,6 @@ void IDEChannel::handle_irq(const RegisterState&)
     u8 status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
 
     m_entropy_source.add_random_event(status);
-
-    u8 bstatus = m_io_group.bus_master_base().offset(2).in<u8>();
-    if (!(bstatus & 0x4)) {
-        // interrupt not from this device, ignore
-        dbgln_if(PATA_DEBUG, "IDEChannel: ignore interrupt");
-        return;
-    }
 
     ScopedSpinLock lock(m_request_lock);
     dbgln_if(PATA_DEBUG, "IDEChannel: interrupt: DRQ={}, BSY={}, DRDY={}",

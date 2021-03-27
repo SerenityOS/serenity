@@ -74,7 +74,8 @@ void BMIDEChannel::handle_irq(const RegisterState&)
 
     m_entropy_source.add_random_event(status);
 
-    u8 bstatus = m_io_group.bus_master_base().offset(2).in<u8>();
+    VERIFY(m_io_group.bus_master_base().has_value());
+    u8 bstatus = m_io_group.bus_master_base().value().offset(2).in<u8>();
     if (!(bstatus & 0x4)) {
         // interrupt not from this device, ignore
         dbgln_if(PATA_DEBUG, "BMIDEChannel: ignore interrupt");
@@ -131,7 +132,8 @@ void BMIDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult re
             }
 
             // I read somewhere that this may trigger a cache flush so let's do it.
-            m_io_group.bus_master_base().offset(2).out<u8>(m_io_group.bus_master_base().offset(2).in<u8>() | 0x6);
+            VERIFY(m_io_group.bus_master_base().has_value());
+            m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 0x6);
         }
 
         lock.unlock();
@@ -155,20 +157,20 @@ void BMIDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     }
 
     VERIFY(prdt().size <= PAGE_SIZE);
-
+    VERIFY(m_io_group.bus_master_base().has_value());
     // Stop bus master
-    m_io_group.bus_master_base().out<u8>(0);
+    m_io_group.bus_master_base().value().out<u8>(0);
 
     // Write the PRDT location
-    m_io_group.bus_master_base().offset(4).out<u32>(m_prdt_page->paddr().get());
+    m_io_group.bus_master_base().value().offset(4).out<u32>(m_prdt_page->paddr().get());
 
     // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
-    m_io_group.bus_master_base().offset(2).out<u8>(m_io_group.bus_master_base().offset(2).in<u8>() | 0x6);
+    m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 0x6);
 
     ata_access(Direction::Write, slave_request, lba, request.block_count(), capabilities);
 
     // Start bus master
-    m_io_group.bus_master_base().out<u8>(0x1);
+    m_io_group.bus_master_base().value().out<u8>(0x1);
 }
 
 void BMIDEChannel::send_ata_io_command(LBAMode lba_mode, Direction direction) const
@@ -192,22 +194,23 @@ void BMIDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
 
     VERIFY(prdt().size <= PAGE_SIZE);
 
+    VERIFY(m_io_group.bus_master_base().has_value());
     // Stop bus master
-    m_io_group.bus_master_base().out<u8>(0);
+    m_io_group.bus_master_base().value().out<u8>(0);
 
     // Write the PRDT location
-    m_io_group.bus_master_base().offset(4).out(m_prdt_page->paddr().get());
+    m_io_group.bus_master_base().value().offset(4).out(m_prdt_page->paddr().get());
 
     // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
-    m_io_group.bus_master_base().offset(2).out<u8>(m_io_group.bus_master_base().offset(2).in<u8>() | 0x6);
+    m_io_group.bus_master_base().value().offset(2).out<u8>(m_io_group.bus_master_base().value().offset(2).in<u8>() | 0x6);
 
     // Set transfer direction
-    m_io_group.bus_master_base().out<u8>(0x8);
+    m_io_group.bus_master_base().value().out<u8>(0x8);
 
     ata_access(Direction::Read, slave_request, lba, request.block_count(), capabilities);
 
     // Start bus master
-    m_io_group.bus_master_base().out<u8>(0x9);
+    m_io_group.bus_master_base().value().out<u8>(0x9);
 }
 
 }

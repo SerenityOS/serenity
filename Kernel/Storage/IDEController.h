@@ -53,6 +53,8 @@ public:
     virtual void start_request(const StorageDevice&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
+    bool is_bus_master_capable() const;
+
 private:
     IDEController(PCI::Address address, bool force_pio);
 
