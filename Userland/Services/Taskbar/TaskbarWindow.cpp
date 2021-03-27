@@ -220,6 +220,7 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
     if (!button)
         return;
     button->set_text(window.title());
+    button->set_tooltip(window.title());
     button->set_checked(show_as_active);
 }
 
