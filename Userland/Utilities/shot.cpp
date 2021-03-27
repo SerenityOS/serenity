@@ -49,6 +49,9 @@ int main(int argc, char** argv)
     if (output_path.is_empty())
         output_path = Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png");
     
+    if (!output_path.ends_with(".png"))
+        output_path = String::formatted("{}.png", output_path);
+    
     while (Core::File::exists(output_path)) {
         file_append += 1;
         if (!Core::File::exists(String::formatted("{}({}).png", output_path.split('.')[0], file_append)))
