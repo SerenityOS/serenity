@@ -146,6 +146,8 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(c
             available_names.append(name);
     };
     for (auto& decl : available_declarations) {
+        if (decl.filename() == node.filename() && decl.start().line > node.start().line)
+            continue;
         if (decl.is_variable_or_parameter_declaration()) {
             add_name(((Cpp::VariableOrParameterDeclaration&)decl).m_name);
         }
@@ -241,7 +243,9 @@ String ParserAutoComplete::type_of(const DocumentData& document, const Expressio
 {
     if (expression.is_member_expression()) {
         auto& member_expression = (const MemberExpression&)expression;
-        return type_of_property(document, *member_expression.m_property);
+        if (member_expression.m_property->is_identifier())
+            return type_of_property(document, static_cast<const Identifier&>(*member_expression.m_property));
+        return {};
     }
     if (!expression.is_identifier()) {
         VERIFY_NOT_REACHED(); // TODO
