@@ -171,6 +171,7 @@ public:
 
     virtual NonnullRefPtrVector<Declaration> declarations() const override;
 
+    Vector<StringView> m_qualifiers;
     RefPtr<Type> m_return_type;
     NonnullRefPtrVector<Parameter> m_parameters;
     RefPtr<FunctionDefinition> m_definition;

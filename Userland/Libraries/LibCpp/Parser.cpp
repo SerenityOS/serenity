@@ -142,10 +142,17 @@ NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration(ASTNode& p
 {
     auto func = create_ast_node<FunctionDeclaration>(parent, position(), {});
 
-    auto return_type_token = consume(Token::Type::KnownType);
+    func->m_qualifiers = parse_function_qualifiers();
+    func->m_return_type = parse_type(*func);
+
     auto function_name = consume(Token::Type::Identifier);
+    func->m_name = text_of_token(function_name);
+
     consume(Token::Type::LeftParen);
     auto parameters = parse_parameter_list(*func);
+    if (parameters.has_value())
+        func->m_parameters = move(parameters.value());
+
     consume(Token::Type::RightParen);
 
     RefPtr<FunctionDefinition> body;
@@ -160,10 +167,6 @@ NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration(ASTNode& p
         consume(Token::Type::Semicolon);
     }
 
-    func->m_name = text_of_token(function_name);
-    func->m_return_type = create_ast_node<Type>(*func, return_type_token.start(), return_type_token.end(), text_of_token(return_type_token));
-    if (parameters.has_value())
-        func->m_parameters = move(parameters.value());
     func->m_definition = move(body);
     func->set_end(func_end);
     return func;
@@ -248,9 +251,8 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(ASTNode& parent)
     return block_statement;
 }
 
-bool Parser::match_variable_declaration()
+bool Parser::match_type()
 {
-    SCOPE_LOGGER();
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
 
@@ -258,7 +260,19 @@ bool Parser::match_variable_declaration()
     // Type
     if (!peek(Token::Type::KnownType).has_value() && !peek(Token::Type::Identifier).has_value())
         return false;
-    consume();
+    return true;
+}
+
+bool Parser::match_variable_declaration()
+{
+    SCOPE_LOGGER();
+    save_state();
+    ScopeGuard state_guard = [this] { load_state(); };
+
+    if (!match_type())
+        return false;
+    VERIFY(m_root_node);
+    parse_type(*m_root_node);
 
     // Identifier
     if (!peek(Token::Type::Identifier).has_value())
@@ -561,9 +575,12 @@ bool Parser::match_function_declaration()
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
 
-    if (!peek(Token::Type::KnownType).has_value())
+    parse_function_qualifiers();
+
+    if (!match_type())
         return false;
-    consume();
+    VERIFY(m_root_node);
+    parse_type(*m_root_node);
 
     if (!peek(Token::Type::Identifier).has_value())
         return false;
@@ -1098,6 +1115,27 @@ Vector<StringView> Parser::parse_type_qualifiers()
     }
     return qualifiers;
 }
+
+Vector<StringView> Parser::parse_function_qualifiers()
+{
+    SCOPE_LOGGER();
+    Vector<StringView> qualifiers;
+    while (!eof()) {
+        auto token = peek();
+        if (token.type() != Token::Type::Keyword)
+            break;
+        auto text = text_of_token(token);
+        if (text == "static" || text == "inline") {
+            qualifiers.append(text);
+            consume();
+        } else {
+            break;
+        }
+    }
+    return qualifiers;
+}
+
+
 bool Parser::match_attribute_specification()
 {
     return text_of_token(peek()) == "__attribute__";
