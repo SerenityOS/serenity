@@ -47,15 +47,10 @@
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibJS/Interpreter.h>
-#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
-#include <LibWeb/Layout/InlineNode.h>
-#include <LibWeb/Layout/Node.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <LibWeb/Page/Frame.h>
@@ -74,9 +69,9 @@ URL url_from_user_input(const String& input)
     return URL(builder.build());
 }
 
-static void start_download(const URL& url)
+void Tab::start_download(const URL& url)
 {
-    auto window = GUI::Window::construct();
+    auto window = GUI::Window::construct(this->window());
     window->resize(300, 150);
     window->set_title(String::formatted("0% of {}", url.basename()));
     window->set_resizable(false);
@@ -85,15 +80,15 @@ static void start_download(const URL& url)
     [[maybe_unused]] auto& unused = window.leak_ref();
 }
 
-static void view_source(const String& url, const String& source)
+void Tab::view_source(const URL& url, const String& source)
 {
-    auto window = GUI::Window::construct();
+    auto window = GUI::Window::construct(this->window());
     auto& editor = window->set_main_widget<GUI::TextEditor>();
     editor.set_text(source);
     editor.set_mode(GUI::TextEditor::ReadOnly);
     editor.set_ruler_visible(true);
     window->resize(640, 480);
-    window->set_title(url);
+    window->set_title(url.to_string());
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-text.png"));
     window->show();
     [[maybe_unused]] auto& unused = window.leak_ref();
@@ -248,7 +243,7 @@ Tab::Tab(Type type)
     };
 
     hooks().on_get_source = [this](auto& url, auto& source) {
-        view_source(url.to_string(), source);
+        view_source(url, source);
     };
 
     hooks().on_js_console_output = [this](auto& method, auto& line) {
@@ -258,7 +253,6 @@ Tab::Tab(Type type)
         }
     };
 
-    // FIXME: Support JS console in multi-process mode.
     if (m_type == Type::InProcessWebView) {
         hooks().on_set_document = [this](auto* document) {
             if (document && m_console_window) {
@@ -335,7 +329,7 @@ Tab::Tab(Type type)
         "View source", { Mod_Ctrl, Key_U }, [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 VERIFY(m_page_view->document());
-                auto url = m_page_view->document()->url().to_string();
+                auto url = m_page_view->document()->url();
                 auto source = m_page_view->document()->source();
                 view_source(url, source);
             } else {
@@ -348,7 +342,7 @@ Tab::Tab(Type type)
         "Inspect DOM tree", { Mod_None, Key_F12 }, [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 if (!m_dom_inspector_window) {
-                    m_dom_inspector_window = GUI::Window::construct();
+                    m_dom_inspector_window = GUI::Window::construct(window());
                     m_dom_inspector_window->resize(300, 500);
                     m_dom_inspector_window->set_title("DOM inspector");
                     m_dom_inspector_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
@@ -372,7 +366,7 @@ Tab::Tab(Type type)
         "Open JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 if (!m_console_window) {
-                    m_console_window = GUI::Window::construct();
+                    m_console_window = GUI::Window::construct(window());
                     m_console_window->resize(500, 300);
                     m_console_window->set_title("JS Console");
                     m_console_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-javascript.png"));
@@ -384,7 +378,7 @@ Tab::Tab(Type type)
                 m_console_window->move_to_front();
             } else {
                 if (!m_console_window) {
-                    m_console_window = GUI::Window::construct();
+                    m_console_window = GUI::Window::construct(window());
                     m_console_window->resize(500, 300);
                     m_console_window->set_title("JS Console");
                     m_console_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-javascript.png"));
