@@ -203,6 +203,9 @@ void BinaryExpression::dump(size_t indent) const
     case BinaryOp::RightShift:
         op_string = ">>";
         break;
+    case BinaryOp::EqualsEquals:
+        op_string = "==";
+        break;
     }
 
     m_lhs->dump(indent + 1);
