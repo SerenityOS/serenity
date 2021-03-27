@@ -77,7 +77,7 @@ private:
 
     Lock m_lock { "IDEDiskDevice" };
     u16 m_capabilities { 0 };
-    IDEChannel& m_channel;
+    NonnullRefPtr<IDEChannel> m_channel;
     DriveType m_drive_type { DriveType::Master };
     InterfaceType m_interface_type { InterfaceType::ATA };
 };
