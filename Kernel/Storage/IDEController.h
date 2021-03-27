@@ -53,8 +53,11 @@ public:
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
     bool is_bus_master_capable() const;
+    bool is_pci_native_mode_enabled() const;
 
 private:
+    bool is_pci_native_mode_enabled_on_primary_channel() const;
+    bool is_pci_native_mode_enabled_on_secondary_channel() const;
     IDEController(PCI::Address address, bool force_pio);
 
     RefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
