@@ -80,6 +80,11 @@ UNMAP_AFTER_INIT IDEController::~IDEController()
 {
 }
 
+bool IDEController::is_bus_master_capable() const
+{
+    return PCI::get_programming_interface(pci_address()) & (1 << 7);
+}
+
 UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
 {
     auto bus_master_base = IOAddress(PCI::get_BAR4(pci_address()) & (~1));
@@ -89,8 +94,11 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
     auto bar1 = PCI::get_BAR1(pci_address());
     auto control_io = (bar1 == 0x1 || bar1 == 0) ? IOAddress(0x3F6) : IOAddress(bar1);
 
+    if (!is_bus_master_capable())
+        force_pio = true;
+
     if (force_pio)
-        m_channels.append(IDEChannel::create(*this, { base_io, control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+        m_channels.append(IDEChannel::create(*this, { base_io, control_io }, IDEChannel::ChannelType::Primary));
     else
         m_channels.append(BMIDEChannel::create(*this, { base_io, control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
     m_channels[0].enable_irq();
@@ -100,7 +108,7 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
     auto bar3 = PCI::get_BAR3(pci_address());
     control_io = (bar3 == 0x1 || bar3 == 0) ? IOAddress(0x376) : IOAddress(bar3);
     if (force_pio)
-        m_channels.append(IDEChannel::create(*this, { base_io, control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+        m_channels.append(IDEChannel::create(*this, { base_io, control_io }, IDEChannel::ChannelType::Secondary));
     else
         m_channels.append(BMIDEChannel::create(*this, { base_io, control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
     m_channels[1].enable_irq();
