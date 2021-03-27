@@ -94,11 +94,12 @@ UNMAP_AFTER_INIT IDEChannel::~IDEChannel()
 
 void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool is_slave, u16 capabilities)
 {
-    ScopedSpinLock lock(m_request_lock);
+    LOCKER(m_lock);
+    VERIFY(m_current_request.is_null());
 
     dbgln_if(PATA_DEBUG, "IDEChannel::start_request");
 
-    m_current_request = &request;
+    m_current_request = request;
     m_current_request_block_index = 0;
     m_current_request_flushing_cache = false;
 
@@ -120,13 +121,11 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     // before Processor::deferred_call_queue returns!
     g_io_work->queue([this, result]() {
         dbgln_if(PATA_DEBUG, "IDEChannel::complete_current_request result: {}", (int)result);
-        ScopedSpinLock lock(m_request_lock);
+        LOCKER(m_lock);
         VERIFY(m_current_request);
-        auto& request = *m_current_request;
-        m_current_request = nullptr;
-
-        lock.unlock();
-        request.complete(result);
+        auto current_request = m_current_request;
+        m_current_request.clear();
+        current_request->complete(result);
     });
 }
 
@@ -145,6 +144,7 @@ static void print_ide_status(u8 status)
 
 void IDEChannel::try_disambiguate_error()
 {
+    VERIFY(m_lock.is_locked());
     dbgln("IDEChannel: Error cause:");
 
     switch (m_device_error) {
@@ -208,10 +208,12 @@ void IDEChannel::handle_irq(const RegisterState&)
     // Now schedule reading/writing the buffer as soon as we leave the irq handler.
     // This is important so that we can safely access the buffers, which could
     // trigger page faults
-    Processor::deferred_call_queue([this]() {
+    g_io_work->queue([this]() {
+        LOCKER(m_lock);
         ScopedSpinLock lock(m_request_lock);
         if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
             dbgln_if(PATA_DEBUG, "IDEChannel: Read block {}/{}", m_current_request_block_index, m_current_request->block_count());
+
             if (ata_do_read_sector()) {
                 if (++m_current_request_block_index >= m_current_request->block_count()) {
                     complete_current_request(AsyncDeviceRequest::Success);
@@ -355,6 +357,8 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 
 void IDEChannel::ata_access(Direction direction, bool slave_request, u64 lba, u8 block_count, u16 capabilities)
 {
+    VERIFY(m_lock.is_locked());
+    VERIFY(m_request_lock.is_locked());
     LBAMode lba_mode;
     u8 head = 0;
 
@@ -403,6 +407,9 @@ void IDEChannel::send_ata_io_command(LBAMode lba_mode, Direction direction) cons
 
 bool IDEChannel::ata_do_read_sector()
 {
+    VERIFY(m_lock.is_locked());
+    VERIFY(m_request_lock.is_locked());
+    VERIFY(!m_current_request.is_null());
     dbgln_if(PATA_DEBUG, "IDEChannel::ata_do_read_sector");
     auto& request = *m_current_request;
     auto out_buffer = request.buffer().offset(m_current_request_block_index * 512);
@@ -422,18 +429,21 @@ bool IDEChannel::ata_do_read_sector()
 // FIXME: This doesn't quite work and locks up reading LBA 3.
 void IDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
 {
-    auto& request = *m_current_request;
-    VERIFY(request.block_count() <= 256);
+    VERIFY(m_lock.is_locked());
+    VERIFY(!m_current_request.is_null());
+    VERIFY(m_current_request->block_count() <= 256);
+
+    ScopedSpinLock m_lock(m_request_lock);
     dbgln_if(PATA_DEBUG, "IDEChannel::ata_read_sectors");
-
-    auto lba = request.block_index();
-    dbgln_if(PATA_DEBUG, "IDEChannel: Reading {} sector(s) @ LBA {}", request.block_count(), lba);
-
-    ata_access(Direction::Read, slave_request, lba, request.block_count(), capabilities);
+    dbgln_if(PATA_DEBUG, "IDEChannel: Reading {} sector(s) @ LBA {}", m_current_request->block_count(), m_current_request->block_index());
+    ata_access(Direction::Read, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
 }
 
 void IDEChannel::ata_do_write_sector()
 {
+    VERIFY(m_lock.is_locked());
+    VERIFY(m_request_lock.is_locked());
+    VERIFY(!m_current_request.is_null());
     auto& request = *m_current_request;
 
     io_delay();
@@ -457,14 +467,13 @@ void IDEChannel::ata_do_write_sector()
 // FIXME: I'm assuming this doesn't work based on the fact PIO read doesn't work.
 void IDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
 {
-    auto& request = *m_current_request;
+    VERIFY(m_lock.is_locked());
+    VERIFY(!m_current_request.is_null());
+    VERIFY(m_current_request->block_count() <= 256);
 
-    VERIFY(request.block_count() <= 256);
-    auto start_sector = request.block_index();
-    u32 count = request.block_count();
-    dbgln_if(PATA_DEBUG, "IDEChannel: Writing {} sector(s) @ LBA {}", count, start_sector);
-
-    ata_access(Direction::Write, slave_request, start_sector, request.block_count(), capabilities);
+    ScopedSpinLock m_lock(m_request_lock);
+    dbgln_if(PATA_DEBUG, "IDEChannel: Writing {} sector(s) @ LBA {}", m_current_request->block_count(), m_current_request->block_index());
+    ata_access(Direction::Write, slave_request, m_current_request->block_index(), m_current_request->block_count(), capabilities);
     ata_do_write_sector();
 }
 }
