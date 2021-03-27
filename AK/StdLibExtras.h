@@ -547,6 +547,9 @@ template<typename... _Ignored>
 constexpr auto DependentFalse = false;
 
 template<typename T>
+using IsSigned = IsSame<T, typename MakeSigned<T>::Type>;
+
+template<typename T>
 using IsUnsigned = IsSame<T, typename MakeUnsigned<T>::Type>;
 
 template<typename T>
@@ -623,6 +626,7 @@ using AK::IsFundamental;
 using AK::IsIntegral;
 using AK::IsNullPointer;
 using AK::IsSame;
+using AK::IsSigned;
 using AK::IsUnion;
 using AK::IsUnsigned;
 using AK::IsVoid;
