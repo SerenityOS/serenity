@@ -1315,7 +1315,7 @@ void TextEditor::try_show_autocomplete()
         m_autocomplete_provider->provide_completions([&](auto completions) {
             auto has_completions = !completions.is_empty();
             m_autocomplete_box->update_suggestions(move(completions));
-            auto position = content_rect_for_position(cursor()).bottom_right().translated(screen_relative_rect().top_left().translated(ruler_width(), 0).translated(10, 5));
+            auto position = content_rect_for_position(cursor()).translated(0, -visible_content_rect().y()).bottom_right().translated(screen_relative_rect().top_left().translated(ruler_width(), 0).translated(10, 5));
             if (has_completions)
                 m_autocomplete_box->show(position);
         });
