@@ -49,6 +49,11 @@ UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEControlle
     return adopt(*new IDEChannel(controller, io_group, type));
 }
 
+UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
+{
+    return adopt(*new IDEChannel(controller, irq, io_group, type));
+}
+
 RefPtr<StorageDevice> IDEChannel::master_device() const
 {
     return m_master;
@@ -59,16 +64,9 @@ RefPtr<StorageDevice> IDEChannel::slave_device() const
     return m_slave;
 }
 
-UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
-    : IRQHandler(type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ)
-    , m_channel_type(type)
-    , m_io_group(io_group)
-    , m_parent_controller(controller)
+UNMAP_AFTER_INIT void IDEChannel::initialize()
 {
     disable_irq();
-
-    // FIXME: The device may not be capable of DMA.
-
     dbgln_if(PATA_DEBUG, "IDEChannel: {} IO base: {}", channel_type_string(), m_io_group.io_base());
     dbgln_if(PATA_DEBUG, "IDEChannel: {} control base: {}", channel_type_string(), m_io_group.control_base());
     if (m_io_group.bus_master_base().has_value())
@@ -81,6 +79,24 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddre
 
     // Note: calling to detect_disks could generate an interrupt, clear it if that's the case
     clear_pending_interrupts();
+}
+
+UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
+    : IRQHandler(irq)
+    , m_channel_type(type)
+    , m_io_group(io_group)
+    , m_parent_controller(controller)
+{
+    initialize();
+}
+
+UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
+    : IRQHandler(type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ)
+    , m_channel_type(type)
+    , m_io_group(io_group)
+    , m_parent_controller(controller)
+{
+    initialize();
 }
 
 void IDEChannel::clear_pending_interrupts() const
