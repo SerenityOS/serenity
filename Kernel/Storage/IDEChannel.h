@@ -106,6 +106,7 @@ public:
 
 public:
     static NonnullRefPtr<IDEChannel> create(const IDEController&, IOAddressGroup, ChannelType type);
+    static NonnullRefPtr<IDEChannel> create(const IDEController&, u8 irq, IOAddressGroup, ChannelType type);
     virtual ~IDEChannel() override;
 
     RefPtr<StorageDevice> master_device() const;
@@ -117,6 +118,7 @@ public:
 
 private:
     void complete_current_request(AsyncDeviceRequest::RequestResult);
+    void initialize();
 
 protected:
     enum class LBAMode : u8 {
@@ -131,6 +133,7 @@ protected:
     };
 
     IDEChannel(const IDEController&, IOAddressGroup, ChannelType type);
+    IDEChannel(const IDEController&, u8 irq, IOAddressGroup, ChannelType type);
     //^ IRQHandler
     virtual void handle_irq(const RegisterState&) override;
 

@@ -46,12 +46,14 @@ class BMIDEChannel final : public IDEChannel {
 
 public:
     static NonnullRefPtr<BMIDEChannel> create(const IDEController&, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
+    static NonnullRefPtr<BMIDEChannel> create(const IDEController&, u8 irq, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
     virtual ~BMIDEChannel() override {};
 
     virtual bool is_dma_enabled() const override { return true; };
 
 private:
     BMIDEChannel(const IDEController&, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
+    BMIDEChannel(const IDEController&, u8 irq, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
     void initialize();
 
     void complete_current_request(AsyncDeviceRequest::RequestResult);

@@ -36,8 +36,19 @@ UNMAP_AFTER_INIT NonnullRefPtr<BMIDEChannel> BMIDEChannel::create(const IDEContr
     return adopt(*new BMIDEChannel(ide_controller, io_group, type));
 }
 
+UNMAP_AFTER_INIT NonnullRefPtr<BMIDEChannel> BMIDEChannel::create(const IDEController& ide_controller, u8 irq, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
+{
+    return adopt(*new BMIDEChannel(ide_controller, irq, io_group, type));
+}
+
 UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(const IDEController& controller, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
     : IDEChannel(controller, io_group, type)
+{
+    initialize();
+}
+
+UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(const IDEController& controller, u8 irq, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
+    : IDEChannel(controller, irq, io_group, type)
 {
     initialize();
 }

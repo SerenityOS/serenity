@@ -80,6 +80,21 @@ UNMAP_AFTER_INIT IDEController::~IDEController()
 {
 }
 
+bool IDEController::is_pci_native_mode_enabled() const
+{
+    return (PCI::get_programming_interface(pci_address()) & 0x05) != 0;
+}
+
+bool IDEController::is_pci_native_mode_enabled_on_primary_channel() const
+{
+    return (PCI::get_programming_interface(pci_address()) & 0x1) == 0x1;
+}
+
+bool IDEController::is_pci_native_mode_enabled_on_secondary_channel() const
+{
+    return (PCI::get_programming_interface(pci_address()) & 0x4) == 0x4;
+}
+
 bool IDEController::is_bus_master_capable() const
 {
     return PCI::get_programming_interface(pci_address()) & (1 << 7);
@@ -119,28 +134,49 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
     dbgln("IDE controller @ {}: primary channel DMA capable? {}", pci_address(), ((bus_master_base.offset(2).in<u8>() >> 5) & 0b11));
     dbgln("IDE controller @ {}: secondary channel DMA capable? {}", pci_address(), ((bus_master_base.offset(2 + 8).in<u8>() >> 5) & 0b11));
 
-    auto bar0 = PCI::get_BAR0(pci_address());
-    auto base_io = (bar0 == 0x1 || bar0 == 0) ? IOAddress(0x1F0) : IOAddress(bar0);
-    auto bar1 = PCI::get_BAR1(pci_address());
-    auto control_io = (bar1 == 0x1 || bar1 == 0) ? IOAddress(0x3F6) : IOAddress(bar1);
-
     if (!is_bus_master_capable())
         force_pio = true;
 
-    if (force_pio)
-        m_channels.append(IDEChannel::create(*this, { base_io, control_io }, IDEChannel::ChannelType::Primary));
-    else
-        m_channels.append(BMIDEChannel::create(*this, { base_io, control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+    auto bar0 = PCI::get_BAR0(pci_address());
+    auto primary_base_io = (bar0 == 0x1 || bar0 == 0) ? IOAddress(0x1F0) : IOAddress(bar0 & (~1));
+    auto bar1 = PCI::get_BAR1(pci_address());
+    auto primary_control_io = (bar1 == 0x1 || bar1 == 0) ? IOAddress(0x3F6) : IOAddress(bar1 & (~1));
+    auto bar2 = PCI::get_BAR2(pci_address());
+    auto secondary_base_io = (bar2 == 0x1 || bar2 == 0) ? IOAddress(0x170) : IOAddress(bar2 & (~1));
+    auto bar3 = PCI::get_BAR3(pci_address());
+    auto secondary_control_io = (bar3 == 0x1 || bar3 == 0) ? IOAddress(0x376) : IOAddress(bar3 & (~1));
+
+    auto irq_line = PCI::get_interrupt_line(pci_address());
+    if (is_pci_native_mode_enabled()) {
+        VERIFY(irq_line != 0);
+    }
+
+    if (is_pci_native_mode_enabled_on_primary_channel()) {
+        if (force_pio)
+            m_channels.append(IDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
+        else
+            m_channels.append(BMIDEChannel::create(*this, irq_line, { primary_control_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+    } else {
+        if (force_pio)
+            m_channels.append(IDEChannel::create(*this, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
+        else
+            m_channels.append(BMIDEChannel::create(*this, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+    }
+
     m_channels[0].enable_irq();
 
-    auto bar2 = PCI::get_BAR2(pci_address());
-    base_io = (bar2 == 0x1 || bar2 == 0) ? IOAddress(0x170) : IOAddress(bar2);
-    auto bar3 = PCI::get_BAR3(pci_address());
-    control_io = (bar3 == 0x1 || bar3 == 0) ? IOAddress(0x376) : IOAddress(bar3);
-    if (force_pio)
-        m_channels.append(IDEChannel::create(*this, { base_io, control_io }, IDEChannel::ChannelType::Secondary));
-    else
-        m_channels.append(BMIDEChannel::create(*this, { base_io, control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+    if (is_pci_native_mode_enabled_on_secondary_channel()) {
+        if (force_pio)
+            m_channels.append(IDEChannel::create(*this, irq_line, { secondary_base_io, secondary_control_io }, IDEChannel::ChannelType::Secondary));
+        else
+            m_channels.append(BMIDEChannel::create(*this, irq_line, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+    } else {
+        if (force_pio)
+            m_channels.append(IDEChannel::create(*this, { secondary_base_io, secondary_control_io }, IDEChannel::ChannelType::Secondary));
+        else
+            m_channels.append(BMIDEChannel::create(*this, { secondary_base_io, secondary_control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+    }
+
     m_channels[1].enable_irq();
 }
 
