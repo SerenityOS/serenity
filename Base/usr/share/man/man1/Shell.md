@@ -25,7 +25,7 @@ The `Shell` utility does not promise POSIX `sh` interoperability.
 ## Options
 
 * `-c`, `--command-string`: Executes the given string as a command and exits
-* `--skip-shellrc`: Skips running the initialisation file (at `~/.shellrc`)
+* `--skip-shellrc`: Skips running the initialization file (at `~/.shellrc`)
 * `--format`: Format shell code from the given file and print the result to standard output
 * `-f`, `--live-formatting`: Enable live formatting of the line editor buffer (in REPL mode)
 

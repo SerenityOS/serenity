@@ -33,7 +33,7 @@ The standard input is left as-is if data is read from a file.
 * `-0`, `--null`: Split the items by zero bytes (null characters) instead of `delimiter`
 * `-d`, `--delimiter`: Set the `delimiter`, which is a newline (`\n`) by default
 * `-v`, `--verbose`: Display each expanded command on standard error before executing it
-* `-a`, `--arg-file`: Read the items from the speified file, `-` refers to standard input and is the default
+* `-a`, `--arg-file`: Read the items from the specified file, `-` refers to standard input and is the default
 * `-L`, `--line-limit`: Set `max-lines`, `0` means unlimited (which is the default)
 * `-s`, `--char-limit`: Set `max-chars`, which is `ARG_MAX` (the maximum command size supported by the system) by default
 

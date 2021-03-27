@@ -8,6 +8,10 @@ Inspector - Serenity process inspector
 $ Inspector [pid]
 ```
 
+## Arguments
+
+* pid: Process ID to inspect
+
 ## Description
 
 Inspector facilitates process inspection via RPC.
