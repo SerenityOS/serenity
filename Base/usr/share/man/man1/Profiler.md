@@ -5,7 +5,7 @@ Profiler - Serenity process profiler
 ## Synopsis
 
 ```**sh
-$ Profiler [--pid PID] [perfcore file]
+$ Profiler [--pid PID] [perfcore-file]
 ```
 
 ## Description
@@ -26,6 +26,10 @@ Profiler can also load performance information from previously created
 ## Options
 
 * `-p PID`, `--pid PID`: PID to profile
+
+## Arguments
+
+* perfcore-file: Path of perfcore file to load
 
 ## Examples
 
