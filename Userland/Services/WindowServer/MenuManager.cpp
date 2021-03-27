@@ -197,7 +197,7 @@ void MenuManager::event(Core::Event& event)
                 if (hovered_item->is_submenu())
                     m_current_menu->descend_into_submenu_at_hovered_item();
                 else
-                    m_current_menu->open_hovered_item(false);
+                    m_current_menu->open_hovered_item(key_event.modifiers() & KeyModifier::Mod_Ctrl);
                 return;
             }
             m_current_menu->dispatch_event(event);
