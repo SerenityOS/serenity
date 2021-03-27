@@ -72,6 +72,13 @@ public:
         {
         }
 
+        IOAddressGroup(IOAddress io_base, IOAddress control_base)
+            : m_io_base(io_base)
+            , m_control_base(control_base)
+            , m_bus_master_base()
+        {
+        }
+
         // Disable default implementations that would use surprising integer promotion.
         bool operator==(const IOAddressGroup&) const = delete;
         bool operator<=(const IOAddressGroup&) const = delete;
@@ -81,7 +88,7 @@ public:
 
         IOAddress io_base() const { return m_io_base; };
         IOAddress control_base() const { return m_control_base; }
-        IOAddress bus_master_base() const { return m_bus_master_base; }
+        Optional<IOAddress> bus_master_base() const { return m_bus_master_base; }
 
         const IOAddressGroup& operator=(const IOAddressGroup& group)
         {
@@ -94,7 +101,7 @@ public:
     private:
         IOAddress m_io_base;
         IOAddress m_control_base;
-        IOAddress m_bus_master_base;
+        Optional<IOAddress> m_bus_master_base;
     };
 
 public:
