@@ -27,6 +27,8 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/Storage/BMIDEChannel.h>
 #include <Kernel/Storage/IDEController.h>
 #include <Kernel/Storage/PATADiskDevice.h>
 
@@ -87,13 +89,21 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
     auto bar1 = PCI::get_BAR1(pci_address());
     auto control_io = (bar1 == 0x1 || bar1 == 0) ? IOAddress(0x3F6) : IOAddress(bar1);
 
-    m_channels.append(IDEChannel::create(*this, { base_io, control_io, bus_master_base }, IDEChannel::ChannelType::Primary, force_pio));
+    if (force_pio)
+        m_channels.append(IDEChannel::create(*this, { base_io, control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+    else
+        m_channels.append(BMIDEChannel::create(*this, { base_io, control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+    m_channels[0].enable_irq();
 
     auto bar2 = PCI::get_BAR2(pci_address());
     base_io = (bar2 == 0x1 || bar2 == 0) ? IOAddress(0x170) : IOAddress(bar2);
     auto bar3 = PCI::get_BAR3(pci_address());
     control_io = (bar3 == 0x1 || bar3 == 0) ? IOAddress(0x376) : IOAddress(bar3);
-    m_channels.append(IDEChannel::create(*this, { base_io, control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary, force_pio));
+    if (force_pio)
+        m_channels.append(IDEChannel::create(*this, { base_io, control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+    else
+        m_channels.append(BMIDEChannel::create(*this, { base_io, control_io, bus_master_base.offset(8) }, IDEChannel::ChannelType::Secondary));
+    m_channels[1].enable_irq();
 }
 
 RefPtr<StorageDevice> IDEController::device_by_channel_and_position(u32 index) const

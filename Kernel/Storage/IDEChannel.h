@@ -37,7 +37,6 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
@@ -53,14 +52,8 @@ namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 
-struct PhysicalRegionDescriptor {
-    PhysicalAddress offset;
-    u16 size { 0 };
-    u16 end_of_table { 0 };
-};
-
 class IDEController;
-class IDEChannel final : public RefCounted<IDEChannel>
+class IDEChannel : public RefCounted<IDEChannel>
     , public IRQHandler {
     friend class IDEController;
     friend class PATADiskDevice;
@@ -105,7 +98,7 @@ public:
     };
 
 public:
-    static NonnullRefPtr<IDEChannel> create(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
+    static NonnullRefPtr<IDEChannel> create(const IDEController&, IOAddressGroup, ChannelType type);
     virtual ~IDEChannel() override;
 
     RefPtr<StorageDevice> master_device() const;
@@ -113,12 +106,12 @@ public:
 
     virtual const char* purpose() const override { return "PATA Channel"; }
 
+    virtual bool is_dma_enabled() const { return false; }
+
 private:
-    IDEChannel(const IDEController&, IOAddressGroup, ChannelType type, bool force_pio);
+    void complete_current_request(AsyncDeviceRequest::RequestResult);
 
-    //^ IRQHandler
-    virtual void handle_irq(const RegisterState&) override;
-
+protected:
     enum class LBAMode : u8 {
         None, // CHS
         TwentyEightBit,
@@ -130,35 +123,34 @@ private:
         Write,
     };
 
-    void initialize(bool force_pio);
+    IDEChannel(const IDEController&, IOAddressGroup, ChannelType type);
+    //^ IRQHandler
+    virtual void handle_irq(const RegisterState&) override;
+
+    virtual void send_ata_io_command(LBAMode lba_mode, Direction direction) const;
+
+    virtual void ata_read_sectors(bool, u16);
+    virtual void ata_write_sectors(bool, u16);
+
     void detect_disks();
     String channel_type_string() const;
 
     void try_disambiguate_error();
     void wait_until_not_busy();
 
-    void start_request(AsyncBlockDeviceRequest&, bool, bool, u16);
-    void complete_current_request(AsyncDeviceRequest::RequestResult);
+    void start_request(AsyncBlockDeviceRequest&, bool, u16);
 
     void clear_pending_interrupts() const;
 
-    void ata_access(Direction, bool, u64, u8, u16, bool);
-    void ata_read_sectors_with_dma(bool, u16);
-    void ata_read_sectors(bool, u16);
+    void ata_access(Direction, bool, u64, u8, u16);
+
     bool ata_do_read_sector();
-    void ata_write_sectors_with_dma(bool, u16);
-    void ata_write_sectors(bool, u16);
     void ata_do_write_sector();
 
     // Data members
     ChannelType m_channel_type { ChannelType::Primary };
 
     volatile u8 m_device_error { 0 };
-
-    PhysicalRegionDescriptor& prdt() { return *reinterpret_cast<PhysicalRegionDescriptor*>(m_prdt_page->paddr().offset(0xc0000000).as_ptr()); }
-    RefPtr<PhysicalPage> m_prdt_page;
-    RefPtr<PhysicalPage> m_dma_buffer_page;
-    Lockable<bool> m_dma_enabled;
     EntropySource m_entropy_source;
 
     RefPtr<StorageDevice> m_master;
@@ -166,7 +158,6 @@ private:
 
     AsyncBlockDeviceRequest* m_current_request { nullptr };
     u32 m_current_request_block_index { 0 };
-    bool m_current_request_uses_dma { false };
     bool m_current_request_flushing_cache { false };
     SpinLock<u8> m_request_lock;
 
