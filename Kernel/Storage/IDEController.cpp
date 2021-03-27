@@ -85,9 +85,39 @@ bool IDEController::is_bus_master_capable() const
     return PCI::get_programming_interface(pci_address()) & (1 << 7);
 }
 
+static const char* detect_controller_type(u8 programming_value)
+{
+    switch (programming_value) {
+    case 0x00:
+        return "ISA Compatibility mode-only controller";
+    case 0x05:
+        return "PCI native mode-only controller";
+    case 0x0A:
+        return "ISA Compatibility mode controller, supports both channels switched to PCI native mode";
+    case 0x0F:
+        return "PCI native mode controller, supports both channels switched to ISA compatibility mode";
+    case 0x80:
+        return "ISA Compatibility mode-only controller, supports bus mastering";
+    case 0x85:
+        return "PCI native mode-only controller, supports bus mastering";
+    case 0x8A:
+        return "ISA Compatibility mode controller, supports both channels switched to PCI native mode, supports bus mastering";
+    case 0x8F:
+        return "PCI native mode controller, supports both channels switched to ISA compatibility mode, supports bus mastering";
+    default:
+        VERIFY_NOT_REACHED();
+    }
+    VERIFY_NOT_REACHED();
+}
+
 UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
 {
     auto bus_master_base = IOAddress(PCI::get_BAR4(pci_address()) & (~1));
+    dbgln("IDE controller @ {}: bus master base was set to {}", pci_address(), bus_master_base);
+    dbgln("IDE controller @ {}: interrupt line was set to {}", pci_address(), PCI::get_interrupt_line(pci_address()));
+    dbgln("IDE controller @ {}: {}", pci_address(), detect_controller_type(PCI::get_programming_interface(pci_address())));
+    dbgln("IDE controller @ {}: primary channel DMA capable? {}", pci_address(), ((bus_master_base.offset(2).in<u8>() >> 5) & 0b11));
+    dbgln("IDE controller @ {}: secondary channel DMA capable? {}", pci_address(), ((bus_master_base.offset(2 + 8).in<u8>() >> 5) & 0b11));
 
     auto bar0 = PCI::get_BAR0(pci_address());
     auto base_io = (bar0 == 0x1 || bar0 == 0) ? IOAddress(0x1F0) : IOAddress(bar0);
@@ -142,5 +172,4 @@ RefPtr<StorageDevice> IDEController::device(u32 index) const
         return nullptr;
     return connected_devices[index];
 }
-
 }
