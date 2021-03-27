@@ -41,6 +41,12 @@ concept FloatingPoint = IsFloatingPoint<T>::value;
 template<typename T>
 concept Arithmetic = IsArithmetic<T>::value;
 
+template<typename T>
+concept Signed = IsSigned<T>::value;
+
+template<typename T>
+concept Unsigned = IsUnsigned<T>::value;
+
 #endif
 
 }
@@ -50,5 +56,7 @@ concept Arithmetic = IsArithmetic<T>::value;
 using AK::Concepts::Arithmetic;
 using AK::Concepts::FloatingPoint;
 using AK::Concepts::Integral;
+using AK::Concepts::Signed;
+using AK::Concepts::Unsigned;
 
 #endif
