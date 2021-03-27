@@ -41,6 +41,10 @@ enum class ParserBehaviour : u32 {
     TrimLeadingFieldSpaces = ReadHeaders << 2,
     TrimTrailingFieldSpaces = ReadHeaders << 3,
     QuoteOnlyInFieldStart = ReadHeaders << 4,
+    Lenient = ReadHeaders << 5, // This is the typical "spreadsheet import" behavior
+                                // Currently, it:
+                                // - fills in missing fields with empty values
+                                // - updates previous rows with extra columns
 };
 
 ParserBehaviour operator&(ParserBehaviour left, ParserBehaviour right);

@@ -158,7 +158,7 @@ auto CSVImportDialogPage::make_reader() -> Optional<Reader::XSV>
         quote_escape,
     };
 
-    auto behaviours = Reader::default_behaviours();
+    auto behaviours = Reader::default_behaviours() | Reader::ParserBehaviour::Lenient;
 
     if (should_read_headers)
         behaviours = behaviours | Reader::ParserBehaviour::ReadHeaders;

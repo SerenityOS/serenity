@@ -103,10 +103,29 @@ Vector<XSV::Field> XSV::read_row(bool header_row)
         }
     }
 
-    if (!header_row && (m_behaviours & ParserBehaviour::ReadHeaders) != ParserBehaviour::None && row.size() != m_names.size())
-        set_error(ReadError::NonConformingColumnCount);
-    else if (!header_row && !has_explicit_headers() && !m_rows.is_empty() && m_rows.first().size() != row.size())
-        set_error(ReadError::NonConformingColumnCount);
+    auto is_lenient = (m_behaviours & ParserBehaviour::Lenient) != ParserBehaviour::None;
+    if (is_lenient) {
+        if (m_rows.is_empty())
+            return row;
+
+        auto& last_row = m_rows.last();
+        if (row.size() < last_row.size()) {
+            if (!m_names.is_empty())
+                row.resize(m_names.size());
+            else
+                row.resize(last_row.size());
+        } else if (row.size() > last_row.size()) {
+            auto new_size = row.size();
+            for (auto& row : m_rows)
+                row.resize(new_size);
+        }
+    } else {
+        auto should_read_headers = (m_behaviours & ParserBehaviour::ReadHeaders) != ParserBehaviour::None;
+        if (!header_row && should_read_headers && row.size() != m_names.size())
+            set_error(ReadError::NonConformingColumnCount);
+        else if (!header_row && !has_explicit_headers() && !m_rows.is_empty() && m_rows.first().size() != row.size())
+            set_error(ReadError::NonConformingColumnCount);
+    }
 
     return row;
 }
