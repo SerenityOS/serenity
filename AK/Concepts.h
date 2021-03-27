@@ -47,8 +47,8 @@ concept Arithmetic = IsArithmetic<T>::value;
 
 #if defined(__cpp_concepts) && !defined(__COVERITY__)
 
-using AK::IsArithmetic;
-using AK::IsFloatingPoint;
-using AK::IsIntegral;
+using AK::Concepts::Arithmetic;
+using AK::Concepts::FloatingPoint;
+using AK::Concepts::Integral;
 
 #endif
