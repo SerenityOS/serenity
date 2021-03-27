@@ -249,7 +249,8 @@ void StringLiteral::dump(size_t indent) const
 void ReturnStatement::dump(size_t indent) const
 {
     ASTNode::dump(indent);
-    m_value->dump(indent + 1);
+    if(m_value)
+        m_value->dump(indent + 1);
 }
 
 void EnumDeclaration::dump(size_t indent) const
