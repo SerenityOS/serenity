@@ -28,5 +28,5 @@ Otherwise, it returns -1 and sets `errno` to describe the error.
 ## See also
 
 * [`module_load`(2)](module_load.md)
-* [`modunload`(1)](../man1/modunload.md)
+* [`modunload`(8)](../man8/modunload.md)
 * [`kernel_modules`(7)](../man7/kernel_modules.md)
