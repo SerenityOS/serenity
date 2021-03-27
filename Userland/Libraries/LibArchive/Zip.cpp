@@ -60,6 +60,8 @@ Optional<Zip> Zip::try_create(const ReadonlyBytes& buffer)
     size_t member_offset = end_of_central_directory.central_directory_offset;
     for (size_t i = 0; i < end_of_central_directory.total_records_count; i++) {
         CentralDirectoryRecord central_directory_record {};
+        if (member_offset > buffer.size())
+            return {};
         if (!central_directory_record.read(buffer.slice(member_offset)))
             return {};
         if (central_directory_record.general_purpose_flags & 1)
@@ -75,6 +77,8 @@ Optional<Zip> Zip::try_create(const ReadonlyBytes& buffer)
         if (memchr(central_directory_record.name, 0, central_directory_record.name_length) != nullptr)
             return {};
         LocalFileHeader local_file_header {};
+        if (central_directory_record.local_file_header_offset > buffer.size())
+            return {};
         if (!local_file_header.read(buffer.slice(central_directory_record.local_file_header_offset)))
             return {};
         if (buffer.size() - (local_file_header.compressed_data - buffer.data()) < central_directory_record.compressed_size)
