@@ -146,6 +146,10 @@ public:
     float opacity() const { return m_opacity; }
     void set_opacity(float);
 
+    void set_hit_testing_enabled(bool value)
+    {
+        m_hit_testing_enabled = value;
+    }
     float alpha_hit_threshold() const { return m_alpha_hit_threshold; }
     void set_alpha_hit_threshold(float threshold)
     {
@@ -379,6 +383,7 @@ private:
     bool m_invalidated { true };
     bool m_invalidated_all { true };
     bool m_invalidated_frame { true };
+    bool m_hit_testing_enabled { true };
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };

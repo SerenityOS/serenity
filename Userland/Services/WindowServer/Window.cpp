@@ -949,6 +949,8 @@ bool Window::hit_test(const Gfx::IntPoint& point, bool include_frame) const
             return frame().hit_test(point);
         return false;
     }
+    if (!m_hit_testing_enabled)
+        return false;
     u8 threshold = alpha_hit_threshold() * 255;
     if (threshold == 0 || !m_backing_store || !m_backing_store->has_alpha_channel())
         return true;
