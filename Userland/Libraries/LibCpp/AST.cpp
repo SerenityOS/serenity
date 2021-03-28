@@ -437,4 +437,9 @@ void NamespaceDeclaration::dump(size_t indent) const
         decl.dump(indent + 1);
 }
 
+void NullPointerLiteral::dump(size_t indent) const
+{
+    ASTNode::dump(indent);
+}
+
 }
