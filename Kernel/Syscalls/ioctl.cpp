@@ -26,6 +26,7 @@
 
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
+#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
@@ -34,6 +35,10 @@ KResultOr<int> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
     auto description = file_description(fd);
     if (!description)
         return EBADF;
+    if (request == FIONBIO && arg != 0) {
+        description->set_blocking(false);
+        return KSuccess;
+    }
     return description->file().ioctl(*description, request, arg);
 }
 
