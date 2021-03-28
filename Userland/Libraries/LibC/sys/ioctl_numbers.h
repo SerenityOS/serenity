@@ -68,7 +68,8 @@ enum IOCtlNumber {
     SIOCSIFNETMASK,
     SIOCADDRT,
     SIOCDELRT,
-    FIBMAP
+    FIBMAP,
+    FIONBIO,
 };
 
 #define TIOCGPGRP TIOCGPGRP
@@ -94,3 +95,4 @@ enum IOCtlNumber {
 #define SIOCADDRT SIOCADDRT
 #define SIOCDELRT SIOCDELRT
 #define FIBMAP FIBMAP
+#define FIONBIO FIONBIO
