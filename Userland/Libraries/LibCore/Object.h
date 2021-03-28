@@ -73,7 +73,6 @@ public:
     virtual ~Object();
 
     virtual const char* class_name() const = 0;
-    virtual void event(Core::Event&);
 
     const String& name() const { return m_name; }
     void set_name(const StringView& name) { m_name = name; }
@@ -154,6 +153,8 @@ protected:
     explicit Object(Object* parent = nullptr);
 
     void register_property(const String& name, Function<JsonValue()> getter, Function<bool(const JsonValue&)> setter = nullptr);
+
+    virtual void event(Core::Event&);
 
     virtual void timer_event(TimerEvent&);
     virtual void custom_event(CustomEvent&);
