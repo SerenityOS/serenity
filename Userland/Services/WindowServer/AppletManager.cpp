@@ -63,7 +63,7 @@ void AppletManager::event(Core::Event& event)
         if (!applet->rect_in_menubar().contains(mouse_event.position()))
             continue;
         auto local_event = mouse_event.translated(-applet->rect_in_menubar().location());
-        applet->event(local_event);
+        applet->dispatch_event(local_event);
     }
 }
 
