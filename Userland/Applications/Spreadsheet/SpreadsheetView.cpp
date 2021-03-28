@@ -204,7 +204,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         auto delegate = make<EditingDelegate>(*m_sheet);
         delegate->on_cursor_key_pressed = [this](auto& event) {
             m_table_view->stop_editing();
-            m_table_view->event(event);
+            m_table_view->dispatch_event(event);
         };
         return delegate;
     };
