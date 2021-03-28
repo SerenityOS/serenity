@@ -49,6 +49,17 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     GUI::GMLToken* last_seen_token { nullptr };
 
     for (auto& token : all_tokens) {
+        auto handle_class_child = [&] {
+            if (token.m_type == GUI::GMLToken::Type::Identifier) {
+                state = InIdentifier;
+                identifier_string = token.m_view;
+            } else if (token.m_type == GUI::GMLToken::Type::ClassMarker) {
+                previous_states.append(AfterClassName);
+                state = Free;
+                should_push_state = false;
+            }
+        };
+
         if (token.m_start.line > cursor.line() || (token.m_start.line == cursor.line() && token.m_start.column > cursor.column()))
             break;
 
@@ -66,23 +77,25 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             }
             break;
         case InClassName:
+            if (token.m_type != GUI::GMLToken::Type::LeftCurly) {
+                // Close empty class and imediately handle our parent's next child
+                class_names.take_last();
+                state = previous_states.take_last();
+
+                if (state == AfterClassName)
+                    handle_class_child();
+
+                break;
+            }
             state = AfterClassName;
             break;
         case AfterClassName:
-            if (token.m_type == GUI::GMLToken::Type::Identifier) {
-                state = InIdentifier;
-                identifier_string = token.m_view;
-                break;
-            }
+            handle_class_child();
+
             if (token.m_type == GUI::GMLToken::Type::RightCurly) {
                 class_names.take_last();
                 state = previous_states.take_last();
                 break;
-            }
-            if (token.m_type == GUI::GMLToken::Type::ClassMarker) {
-                previous_states.append(AfterClassName);
-                state = Free;
-                should_push_state = false;
             }
             break;
         case InIdentifier:
@@ -101,6 +114,12 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             }
             break;
         }
+    }
+
+    if (state == InClassName && last_seen_token && last_seen_token->m_end.line < cursor.line()) {
+        // Close empty class
+        class_names.take_last();
+        state = previous_states.take_last();
     }
 
     Vector<GUI::AutocompleteProvider::Entry> class_entries, identifier_entries;
