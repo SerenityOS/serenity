@@ -1096,7 +1096,7 @@ void WindowManager::reevaluate_hovered_window(Window* updated_window)
             // e.g. a hit-test result change due to a transparent window repaint.
             if (hovered_window->hit_test(cursor_location, false)) {
                 MouseEvent event(Event::MouseMove, cursor_location.translated(-hovered_window->rect().location()), 0, MouseButton::None, 0);
-                hovered_window->event(event);
+                hovered_window->dispatch_event(event);
             } else if (!hovered_window->is_frameless()) {
                 MouseEvent event(Event::MouseMove, cursor_location.translated(-hovered_window->frame().rect().location()), 0, MouseButton::None, 0);
                 hovered_window->frame().on_mouse_event(event);
