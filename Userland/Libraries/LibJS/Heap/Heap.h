@@ -112,7 +112,7 @@ private:
     }
 
     size_t m_max_allocations_between_gc { 10000 };
-    size_t m_allocations_since_last_gc { false };
+    size_t m_allocations_since_last_gc { 0 };
 
     bool m_should_collect_on_every_allocation { false };
 
