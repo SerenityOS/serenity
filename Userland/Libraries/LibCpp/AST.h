@@ -215,15 +215,30 @@ public:
     const StringView& name() const { return m_name; }
     virtual void dump(size_t indent) const override;
     virtual bool is_type() const override { return true; }
+    virtual bool is_templatized() const { return false; }
 
-    Type(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename, StringView name)
+    Type(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : ASTNode(parent, start, end, filename)
-        , m_name(name)
     {
     }
 
     StringView m_name;
     Vector<StringView> m_qualifiers;
+};
+
+class TemplatizedType : public Type {
+public:
+    virtual ~TemplatizedType() override = default;
+    virtual const char* class_name() const override { return "TemplatizedType"; }
+    virtual void dump(size_t indent) const override;
+    virtual bool is_templatized() const override { return true; }
+
+    TemplatizedType(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+        : Type(parent, start, end, filename)
+    {
+    }
+
+    NonnullRefPtrVector<Type> m_template_arguments;
 };
 
 class Pointer : public Type {
@@ -233,7 +248,7 @@ public:
     virtual void dump(size_t indent) const override;
 
     Pointer(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
-        : Type(parent, start, end, filename, {})
+        : Type(parent, start, end, filename)
     {
     }
 

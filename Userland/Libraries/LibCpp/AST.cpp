@@ -54,7 +54,7 @@ void FunctionDeclaration::dump(size_t indent) const
 
     String qualifiers_string;
     if (!m_qualifiers.is_empty()) {
-        print_indent(indent+1);
+        print_indent(indent + 1);
         outln("[{}]", String::join(" ", m_qualifiers));
     }
 
@@ -259,7 +259,7 @@ void StringLiteral::dump(size_t indent) const
 void ReturnStatement::dump(size_t indent) const
 {
     ASTNode::dump(indent);
-    if(m_value)
+    if (m_value)
         m_value->dump(indent + 1);
 }
 
@@ -440,6 +440,26 @@ void NamespaceDeclaration::dump(size_t indent) const
 void NullPointerLiteral::dump(size_t indent) const
 {
     ASTNode::dump(indent);
+}
+
+void TemplatizedType::dump(size_t indent) const
+{
+    ASTNode::dump(indent);
+
+    String qualifiers_string;
+    if (!m_qualifiers.is_empty())
+        qualifiers_string = String::formatted("[{}] ", String::join(" ", m_qualifiers));
+
+    print_indent(indent + 1);
+    outln("{}{}", qualifiers_string, m_name);
+
+    print_indent(indent + 1);
+    outln("<");
+    for (auto& arg : m_template_arguments) {
+        arg.dump(indent + 1);
+    }
+    print_indent(indent + 1);
+    outln(">");
 }
 
 }
