@@ -35,6 +35,7 @@
 #include <sys/times.h>
 #include <syscall.h>
 #include <time.h>
+#include <utime.h>
 
 extern "C" {
 
@@ -66,6 +67,16 @@ int settimeofday(struct timeval* __restrict__ tv, void* __restrict__)
     timespec ts;
     TIMEVAL_TO_TIMESPEC(tv, &ts);
     return clock_settime(CLOCK_REALTIME, &ts);
+}
+
+int utimes(const char* pathname, const struct timeval times[2])
+{
+    if (!times) {
+        return utime(pathname, nullptr);
+    }
+    // FIXME: implement support for tv_usec in the utime (or a new) syscall
+    utimbuf buf = { times[0].tv_sec, times[1].tv_sec };
+    return utime(pathname, &buf);
 }
 
 char* ctime(const time_t* t)
