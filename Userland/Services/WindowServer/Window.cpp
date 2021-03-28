@@ -649,6 +649,11 @@ void Window::ensure_window_menu()
 
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
+        auto menubar_visibility_item = make<MenuItem>(*m_window_menu, 4, "Menu bar");
+        m_window_menu_menubar_visibility_item = menubar_visibility_item.ptr();
+        menubar_visibility_item->set_checkable(true);
+        m_window_menu->add_item(move(menubar_visibility_item));
+
         auto close_item = make<MenuItem>(*m_window_menu, 3, "Close");
         m_window_menu_close_item = close_item.ptr();
         m_window_menu_close_item->set_icon(&close_icon());
@@ -672,6 +677,14 @@ void Window::ensure_window_menu()
             case 3:
                 request_close();
                 break;
+            case 4:
+                frame().invalidate();
+                item.set_checked(!item.is_checked());
+                m_should_show_menubar = item.is_checked();
+                frame().invalidate();
+                Compositor::the().invalidate_occlusions();
+                Compositor::the().invalidate_screen();
+                break;
             }
         };
     }
@@ -694,6 +707,8 @@ void Window::popup_window_menu(const Gfx::IntPoint& position, WindowMenuDefaultA
     m_window_menu_maximize_item->set_default(default_action == WindowMenuDefaultAction::Maximize || default_action == WindowMenuDefaultAction::Restore);
     m_window_menu_maximize_item->set_icon(m_maximized ? &restore_icon() : &maximize_icon());
     m_window_menu_close_item->set_default(default_action == WindowMenuDefaultAction::Close);
+    m_window_menu_menubar_visibility_item->set_enabled(menubar());
+    m_window_menu_menubar_visibility_item->set_checked(menubar() && m_should_show_menubar);
 
     m_window_menu->popup(position);
 }
@@ -964,7 +979,7 @@ void Window::set_menubar(MenuBar* menubar)
 
 void Window::invalidate_menubar()
 {
-    if (!menubar())
+    if (!m_should_show_menubar || !menubar())
         return;
     // FIXME: This invalidates way more than the menubar!
     frame().invalidate();

@@ -302,6 +302,8 @@ public:
     void set_frameless(bool);
     bool is_frameless() const { return m_frameless; }
 
+    bool should_show_menubar() const { return m_should_show_menubar; }
+
     int progress() const { return m_progress; }
     void set_progress(int);
 
@@ -403,8 +405,10 @@ private:
     MenuItem* m_window_menu_minimize_item { nullptr };
     MenuItem* m_window_menu_maximize_item { nullptr };
     MenuItem* m_window_menu_close_item { nullptr };
+    MenuItem* m_window_menu_menubar_visibility_item { nullptr };
     int m_minimize_animation_step { -1 };
     int m_progress { -1 };
+    bool m_should_show_menubar { true };
 };
 
 }
