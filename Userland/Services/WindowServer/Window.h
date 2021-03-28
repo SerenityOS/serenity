@@ -202,8 +202,6 @@ public:
     void clear_dirty_rects();
     Gfx::DisjointRectSet& dirty_rects() { return m_dirty_rects; }
 
-    virtual void event(Core::Event&) override;
-
     // Only used by WindowType::MenuApplet. Perhaps it could be a Window subclass? I don't know.
     void set_rect_in_menubar(const Gfx::IntRect& rect) { m_rect_in_menubar = rect; }
     const Gfx::IntRect& rect_in_menubar() const { return m_rect_in_menubar; }
@@ -333,6 +331,7 @@ public:
     void set_menubar(MenuBar*);
 
 private:
+    virtual void event(Core::Event&) override;
     void handle_mouse_event(const MouseEvent&);
     void update_menu_item_text(PopupMenuItem item);
     void update_menu_item_enabled(PopupMenuItem item);
