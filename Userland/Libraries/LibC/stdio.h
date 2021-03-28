@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,6 +89,7 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE*);
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE*);
 int vprintf(const char* fmt, va_list) __attribute__((format(printf, 1, 0)));
 int vfprintf(FILE*, const char* fmt, va_list) __attribute__((format(printf, 2, 0)));
+int vasprintf(char** strp, const char* fmt, va_list) __attribute__((format(printf, 2, 0)));
 int vsprintf(char* buffer, const char* fmt, va_list) __attribute__((format(printf, 2, 0)));
 int vsnprintf(char* buffer, size_t, const char* fmt, va_list) __attribute__((format(printf, 3, 0)));
 int fprintf(FILE*, const char* fmt, ...) __attribute__((format(printf, 2, 3)));
@@ -96,6 +97,7 @@ int printf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 void dbgputch(char);
 void dbgputstr(const char*, size_t);
 int sprintf(char* buffer, const char* fmt, ...) __attribute__((format(printf, 2, 3)));
+int asprintf(char** strp, const char* fmt, ...) __attribute__((format(printf, 2, 3)));
 int snprintf(char* buffer, size_t, const char* fmt, ...) __attribute__((format(printf, 3, 4)));
 int putchar(int ch);
 int putc(int ch, FILE*);
