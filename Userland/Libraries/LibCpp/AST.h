@@ -341,6 +341,20 @@ public:
     StringView m_value;
 };
 
+class NullPointerLiteral : public Expression {
+public:
+    virtual ~NullPointerLiteral() override = default;
+    virtual const char* class_name() const override { return "NullPointerLiteral"; }
+    virtual void dump(size_t indent) const override;
+
+    NullPointerLiteral(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+        : Expression(parent, start, end, filename)
+    {
+    }
+};
+
+
+
 class BooleanLiteral : public Expression {
 public:
     virtual ~BooleanLiteral() override = default;
