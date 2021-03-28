@@ -28,7 +28,7 @@
 #include <AK/Endian.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
-#include <LibCompress/Gzip.h>
+#include <LibCompress/Zlib.h>
 #include <LibGfx/PNGLoader.h>
 #include <fcntl.h>
 #include <math.h>
@@ -777,7 +777,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
     if (context.color_type == 3 && context.palette_data.is_empty())
         return false; // Didn't see a PLTE chunk for a palettized image, or it was empty.
 
-    auto result = Compress::DeflateDecompressor::decompress_all(context.compressed_data.span().slice(2));
+    auto result = Compress::Zlib::decompress_all(context.compressed_data.span());
     if (!result.has_value()) {
         context.state = PNGLoadingContext::State::Error;
         return false;
