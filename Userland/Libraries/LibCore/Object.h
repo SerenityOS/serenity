@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -113,6 +113,8 @@ public:
     void remove_child(Object&);
     void remove_all_children();
 
+    void set_event_filter(Function<bool(Core::Event&)>);
+
     void dump_tree(int indent = 0);
 
     void deferred_invoke(Function<void(Object&)>);
@@ -169,6 +171,7 @@ private:
     unsigned m_inspector_count { 0 };
     HashMap<String, NonnullOwnPtr<Property>> m_properties;
     NonnullRefPtrVector<Object> m_children;
+    Function<bool(Core::Event&)> m_event_filter;
 };
 
 }
