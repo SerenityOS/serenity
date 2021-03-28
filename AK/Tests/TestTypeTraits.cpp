@@ -91,7 +91,6 @@ TEST_CASE(FundamentalTypeClassification)
     EXPECT_TRAIT_TRUE(IsUnsigned, unsigned long);
     EXPECT_TRAIT_FALSE(IsUnsigned, int);
     EXPECT_TRAIT_FALSE(IsUnsigned, short);
-    EXPECT_TRAIT_FALSE(IsUnsigned, char);
     EXPECT_TRAIT_FALSE(IsUnsigned, long);
 
     EXPECT_TRAIT_TRUE(IsEnum, Enummer);
