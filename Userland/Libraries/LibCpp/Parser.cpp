@@ -189,16 +189,16 @@ NonnullRefPtr<FunctionDefinition> Parser::parse_function_definition(ASTNode& par
 NonnullRefPtr<Statement> Parser::parse_statement(ASTNode& parent)
 {
     SCOPE_LOGGER();
-    ArmedScopeGuard consume_semicolumn([this]() {
+    ArmedScopeGuard consume_semicolon([this]() {
         consume(Token::Type::Semicolon);
     });
 
     if (match_block_statement()) {
-        consume_semicolumn.disarm();
+        consume_semicolon.disarm();
         return parse_block_statement(parent);
     }
     if (match_comment()) {
-        consume_semicolumn.disarm();
+        consume_semicolon.disarm();
         return parse_comment(parent);
     }
     if (match_variable_declaration()) {
@@ -211,15 +211,15 @@ NonnullRefPtr<Statement> Parser::parse_statement(ASTNode& parent)
         return parse_return_statement(parent);
     }
     if (match_keyword("for")) {
-        consume_semicolumn.disarm();
+        consume_semicolon.disarm();
         return parse_for_statement(parent);
     }
     if (match_keyword("if")) {
-        consume_semicolumn.disarm();
+        consume_semicolon.disarm();
         return parse_if_statement(parent);
     } else {
         error("unexpected statement type");
-        consume_semicolumn.disarm();
+        consume_semicolon.disarm();
         consume();
         return create_ast_node<InvalidStatement>(parent, position(), position());
     }
@@ -251,16 +251,60 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(ASTNode& parent)
     return block_statement;
 }
 
-bool Parser::match_type()
+Parser::MatchTypeResult Parser::match_type()
 {
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
 
     parse_type_qualifiers();
-    // Type
+
     if (!peek(Token::Type::KnownType).has_value() && !peek(Token::Type::Identifier).has_value())
+        return MatchTypeResult::NoMatch;
+
+    consume();
+
+    if (peek(Token::Type::Less).has_value()) {
+        if (match_template_arguments()) {
+            return MatchTypeResult::Templatized;
+        }
+        return MatchTypeResult::NoMatch;
+    }
+
+    return MatchTypeResult::Regular;
+}
+
+bool Parser::match_template_arguments()
+{
+    save_state();
+    ScopeGuard state_guard = [this] { load_state(); };
+
+    if (!peek(Token::Type::Less).has_value())
         return false;
-    return true;
+    consume();
+
+    while (!eof() && peek().type() != Token::Type::Greater) {
+        if (match_type() == MatchTypeResult::NoMatch)
+            return false;
+        parse_type(*m_root_node);
+    }
+
+    return peek().type() == Token::Type::Greater;
+}
+
+NonnullRefPtrVector<Type> Parser::parse_template_arguments(ASTNode& parent)
+{
+    SCOPE_LOGGER();
+
+    consume(Token::Type::Less);
+
+    NonnullRefPtrVector<Type> template_arguments;
+    while (!eof() && peek().type() != Token::Type::Greater) {
+        template_arguments.append(parse_type(parent));
+    }
+
+    consume(Token::Type::Greater);
+
+    return template_arguments;
 }
 
 bool Parser::match_variable_declaration()
@@ -269,14 +313,17 @@ bool Parser::match_variable_declaration()
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
 
-    if (!match_type())
+    if (match_type() == MatchTypeResult::NoMatch) {
         return false;
+    }
+
     VERIFY(m_root_node);
     parse_type(*m_root_node);
 
     // Identifier
-    if (!peek(Token::Type::Identifier).has_value())
+    if (!peek(Token::Type::Identifier).has_value()) {
         return false;
+    }
     consume();
 
     if (match(Token::Type::Equals)) {
@@ -586,7 +633,7 @@ bool Parser::match_function_declaration()
 
     parse_function_qualifiers();
 
-    if (!match_type())
+    if (match_type() == MatchTypeResult::NoMatch)
         return false;
     VERIFY(m_root_node);
     parse_type(*m_root_node);
@@ -770,8 +817,8 @@ void Parser::error(StringView message)
             m_tokens[m_state.token_index].start().line,
             m_tokens[m_state.token_index].start().column);
     }
-    m_errors.append(formatted_message);
-    dbgln_if(CPP_DEBUG, "{}", formatted_message);
+
+    m_state.errors.append(formatted_message);
 }
 
 bool Parser::match_expression()
@@ -925,7 +972,7 @@ NonnullRefPtr<ReturnStatement> Parser::parse_return_statement(ASTNode& parent)
     SCOPE_LOGGER();
     auto return_statement = create_ast_node<ReturnStatement>(parent, position(), {});
     consume(Token::Type::Keyword);
-    if(!peek(Token::Type::Semicolon).has_value()) {
+    if (!peek(Token::Type::Semicolon).has_value()) {
         auto expression = parse_expression(*return_statement);
         return_statement->m_value = expression;
     }
@@ -1011,19 +1058,19 @@ NonnullRefPtr<MemberDeclaration> Parser::parse_member_declaration(ASTNode& paren
 {
     SCOPE_LOGGER();
     auto member_decl = create_ast_node<MemberDeclaration>(parent, position(), {});
-    auto type_token = consume();
-    auto identifier_token = consume(Token::Type::Identifier);
-    RefPtr<Expression> initial_value;
+    member_decl->m_type = parse_type(*member_decl);
 
+    auto identifier_token = consume(Token::Type::Identifier);
+    member_decl->m_name = text_of_token(identifier_token);
+
+    RefPtr<Expression> initial_value;
     if (match(Token::Type::LeftCurly)) {
         consume(Token::Type::LeftCurly);
         initial_value = parse_expression(*member_decl);
         consume(Token::Type::RightCurly);
     }
-
-    member_decl->m_type = create_ast_node<Type>(*member_decl, type_token.start(), type_token.end(), text_of_token(type_token));
-    member_decl->m_name = text_of_token(identifier_token);
     member_decl->m_initial_value = move(initial_value);
+
     consume(Token::Type::Semicolon);
     member_decl->set_end(position());
 
@@ -1052,21 +1099,47 @@ bool Parser::match_boolean_literal()
 NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
 {
     SCOPE_LOGGER();
-    auto qualifiers = parse_type_qualifiers();
-    auto token = consume();
-    auto type = create_ast_node<Type>(parent, token.start(), token.end(), text_of_token(token));
-    type->m_qualifiers = move(qualifiers);
-    if (token.type() != Token::Type::KnownType && token.type() != Token::Type::Identifier) {
-        error(String::formatted("unexpected token for type: {}", token.to_string()));
-        return type;
+
+    auto match_result = match_type();
+    if (match_result == TemplatizedMatchResult::NoMatch) {
+        auto token = consume();
+        return create_ast_node<Type>(parent, token.start(), token.end());
     }
-    while (peek().type() == Token::Type::Asterisk) {
+    bool is_templatized = match_result == TemplatizedMatchResult::Templatized;
+
+    RefPtr<Type> type;
+    if (is_templatized) {
+        type = create_ast_node<TemplatizedType>(parent, position(), {});
+    } else {
+        type = create_ast_node<Type>(parent, position(), {});
+    }
+
+    auto qualifiers = parse_type_qualifiers();
+    auto type_name_token = consume();
+    type->m_qualifiers = move(qualifiers);
+    type->m_name = text_of_token(type_name_token);
+
+    if (type_name_token.type() != Token::Type::KnownType && type_name_token.type() != Token::Type::Identifier) {
+        type->set_end(position());
+        error(String::formatted("unexpected type_name_token for type: {}", type_name_token.to_string()));
+        return type.release_nonnull();
+    }
+
+    if (is_templatized) {
+        static_cast<TemplatizedType&>(*type).m_template_arguments = parse_template_arguments(*type);
+    }
+
+    while (!eof() && peek().type() == Token::Type::Asterisk) {
+        type->set_end(position());
         auto asterisk = consume();
-        auto ptr = create_ast_node<Pointer>(type, asterisk.start(), asterisk.end());
+        auto ptr = create_ast_node<Pointer>(parent, asterisk.start(), asterisk.end());
+        type->set_parent(*ptr);
         ptr->m_pointee = type;
         type = ptr;
     }
-    return type;
+
+    type->set_end(position());
+    return type.release_nonnull();
 }
 
 NonnullRefPtr<ForStatement> Parser::parse_for_statement(ASTNode& parent)
@@ -1141,7 +1214,6 @@ Vector<StringView> Parser::parse_function_qualifiers()
     }
     return qualifiers;
 }
-
 
 bool Parser::match_attribute_specification()
 {
