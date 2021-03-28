@@ -71,6 +71,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    add_compile_options(-fconcepts -Wno-literal-suffix)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals)
+endif()
+
 if (ENABLE_ALL_THE_DEBUG_MACROS)
     include(${CMAKE_SOURCE_DIR}/Meta/CMake/all_the_debug_macros.cmake)
 endif(ENABLE_ALL_THE_DEBUG_MACROS)
