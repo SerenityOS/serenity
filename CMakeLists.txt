@@ -71,21 +71,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-
-if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
-    # FIXME: Something makes this go crazy and flag unused variables that aren't flagged as such when building with the toolchain.
-    #        Disable -Werror for now.
-    add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Wmissing-declarations -Wformat=2 -fdiagnostics-color=always)
-else()
-    add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Werror -Wmissing-declarations -Wformat=2 -fdiagnostics-color=always)
-endif()
-
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    add_compile_options(-fconcepts -Wno-literal-suffix)
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals)
-endif()
-
 if (ENABLE_ALL_THE_DEBUG_MACROS)
     include(${CMAKE_SOURCE_DIR}/Meta/CMake/all_the_debug_macros.cmake)
 endif(ENABLE_ALL_THE_DEBUG_MACROS)
@@ -153,11 +138,22 @@ set(CMAKE_CXX_LINK_FLAGS "-Wl,--hash-style=gnu,-z,relro,-z,now,-z,noexecstack")
 # This will need to be revisited when the Loader supports RPATH/RUN_PATH.
 set(CMAKE_SKIP_RPATH TRUE)
 
+if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
+    # FIXME: Something makes this go crazy and flag unused variables that aren't flagged as such when building with the toolchain.
+    #        Disable -Werror for now.
+    add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Wmissing-declarations -Wformat=2 -fdiagnostics-color=always)
+else()
+    add_compile_options(-Wno-unknown-warning-option -Wall -Wextra -Werror -Wmissing-declarations -Wformat=2 -fdiagnostics-color=always)
+endif()
+
 add_compile_options(-g1 -fno-exceptions -fstack-protector-strong -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-nonnull-compare -Wno-deprecated-copy -Wno-expansion-to-defined)
 add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    add_compile_options(-fconcepts -Wno-literal-suffix)
     add_compile_options(-fstack-clash-protection)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals)
 endif()
 
 add_compile_definitions(DEBUG SANITIZE_PTRS)
