@@ -820,7 +820,7 @@ inline IterationDecision IconView::for_each_item_intersecting_rect(const Gfx::In
                     return decision;
             }
         }
-        item_index += m_visual_column_count;
+        item_index += (m_flow_direction == FlowDirection::LeftToRight) ? m_visual_column_count : m_visual_row_count;
     };
 
     return IterationDecision::Continue;
