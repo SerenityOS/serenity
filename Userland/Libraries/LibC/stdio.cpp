@@ -29,6 +29,7 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -878,6 +879,29 @@ int printf(const char* fmt, ...)
     int ret = vprintf(fmt, ap);
     va_end(ap);
     return ret;
+}
+
+int vasprintf(char** strp, const char* fmt, va_list ap)
+{
+    StringBuilder builder;
+    builder.appendvf(fmt, ap);
+    VERIFY(builder.length() <= NumericLimits<int>::max());
+    int length = builder.length();
+    *strp = strdup(builder.to_string().characters());
+    return length;
+}
+
+int asprintf(char** strp, const char* fmt, ...)
+{
+    StringBuilder builder;
+    va_list ap;
+    va_start(ap, fmt);
+    builder.appendvf(fmt, ap);
+    va_end(ap);
+    VERIFY(builder.length() <= NumericLimits<int>::max());
+    int length = builder.length();
+    *strp = strdup(builder.to_string().characters());
+    return length;
 }
 
 static void buffer_putch(char*& bufptr, char ch)
