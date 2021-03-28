@@ -148,11 +148,6 @@ public:
     bool updates_enabled() const { return m_updates_enabled; }
     void set_updates_enabled(bool);
 
-    virtual void event(Core::Event&) override;
-
-    // This is called after children have been painted.
-    virtual void second_paint_event(PaintEvent&);
-
     Gfx::IntRect relative_rect() const { return m_relative_rect; }
     Gfx::IntPoint relative_position() const { return m_relative_rect.location(); }
 
@@ -309,6 +304,11 @@ public:
 
 protected:
     Widget();
+
+    virtual void event(Core::Event&) override;
+
+    // This is called after children have been painted.
+    virtual void second_paint_event(PaintEvent&);
 
     virtual void custom_layout() { }
     virtual void did_change_font() { }
