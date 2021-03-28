@@ -79,7 +79,7 @@ static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& re
 {
     if (window.is_frameless())
         return rect;
-    int menu_row_count = window.menubar() ? 1 : 0;
+    int menu_row_count = (window.menubar() && window.should_show_menubar()) ? 1 : 0;
     return Gfx::WindowTheme::current().frame_rect_for_window(to_theme_window_type(window.type()), rect, WindowManager::the().palette(), menu_row_count);
 }
 
@@ -241,7 +241,7 @@ void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 
 Gfx::IntRect WindowFrame::menubar_rect() const
 {
-    if (!m_window.menubar())
+    if (!m_window.menubar() || !m_window.should_show_menubar())
         return {};
     return Gfx::WindowTheme::current().menu_bar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette(), menu_row_count());
 }
@@ -336,7 +336,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
     Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), compute_title_text(), m_window.icon(), palette, leftmost_button_rect, menu_row_count());
 
-    if (m_window.menubar())
+    if (m_window.menubar() && m_window.should_show_menubar())
         paint_menubar(painter);
 }
 
@@ -878,6 +878,8 @@ void WindowFrame::paint_simple_rect_shadow(Gfx::Painter& painter, const Gfx::Int
 
 int WindowFrame::menu_row_count() const
 {
+    if (!m_window.should_show_menubar())
+        return 0;
     return m_window.menubar() ? 1 : 0;
 }
 
