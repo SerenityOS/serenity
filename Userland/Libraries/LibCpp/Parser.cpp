@@ -414,8 +414,10 @@ bool Parser::match_literal()
         return true;
     case Token::Type::DoubleQuotedString:
         return true;
+    case Token::Type::Float:
+        return true;
     case Token::Type::Keyword: {
-        return match_boolean_literal();
+        return match_boolean_literal() || peek().text() == "nullptr";
     }
     default:
         return false;
@@ -477,6 +479,10 @@ NonnullRefPtr<Expression> Parser::parse_literal(ASTNode& parent)
     case Token::Type::Keyword: {
         if (match_boolean_literal())
             return parse_boolean_literal(parent);
+        if (peek().text() == "nullptr") {
+            auto token = consume();
+            return create_ast_node<NullPointerLiteral>(parent, token.start(), token.end());
+        }
         [[fallthrough]];
     }
     default: {
@@ -771,10 +777,8 @@ void Parser::error(StringView message)
 bool Parser::match_expression()
 {
     auto token_type = peek().type();
-    return token_type == Token::Type::Integer
-        || token_type == Token::Type::Float
+    return match_literal()
         || token_type == Token::Type::Identifier
-        || token_type == Token::Type::DoubleQuotedString
         || match_unary_expression();
 }
 
