@@ -53,7 +53,7 @@ public:
     String text_of_node(const ASTNode&) const;
     StringView text_of_token(const Cpp::Token& token) const;
     void print_tokens() const;
-    Vector<String> errors() const { return m_errors; }
+    const Vector<String>& errors() const { return m_state.errors; }
     const Preprocessor::Definitions& definitions() const { return m_definitions; }
 
     struct TokenAndPreprocessorDefinition {
@@ -88,7 +88,14 @@ private:
     bool match_keyword(const String&);
     bool match_block_statement();
     bool match_namespace_declaration();
-    bool match_type();
+    bool match_template_arguments();
+
+    enum class MatchTypeResult {
+        NoMatch,
+        Regular,
+        Templatized,
+    };
+    MatchTypeResult match_type();
 
     Optional<NonnullRefPtrVector<Parameter>> parse_parameter_list(ASTNode& parent);
     Optional<Token> consume_whitespace();
@@ -98,7 +105,7 @@ private:
     NonnullRefPtr<FunctionDeclaration> parse_function_declaration(ASTNode& parent);
     NonnullRefPtr<FunctionDefinition> parse_function_definition(ASTNode& parent);
     NonnullRefPtr<Statement> parse_statement(ASTNode& parent);
-    NonnullRefPtr<VariableDeclaration> parse_variable_declaration(ASTNode& parent, bool expect_semicolon=true);
+    NonnullRefPtr<VariableDeclaration> parse_variable_declaration(ASTNode& parent, bool expect_semicolon = true);
     NonnullRefPtr<Expression> parse_expression(ASTNode& parent);
     NonnullRefPtr<Expression> parse_primary_expression(ASTNode& parent);
     NonnullRefPtr<Expression> parse_secondary_expression(ASTNode& parent, NonnullRefPtr<Expression> lhs);
@@ -121,6 +128,7 @@ private:
     NonnullRefPtr<NamespaceDeclaration> parse_namespace_declaration(ASTNode& parent, bool is_nested_namespace = false);
     NonnullRefPtrVector<Declaration> parse_declarations_in_translation_unit(ASTNode& parent);
     RefPtr<Declaration> parse_single_declaration_in_translation_unit(ASTNode& parent);
+    NonnullRefPtrVector<Type> parse_template_arguments(ASTNode& parent);
 
     bool match(Token::Type);
     Token consume(Token::Type);
@@ -136,6 +144,7 @@ private:
 
     struct State {
         size_t token_index { 0 };
+        Vector<String> errors;
     };
 
     void error(StringView message = {});
@@ -173,7 +182,6 @@ private:
     Vector<State> m_saved_states;
     RefPtr<TranslationUnit> m_root_node;
     NonnullRefPtrVector<ASTNode> m_nodes;
-    Vector<String> m_errors;
 
     Vector<TokenAndPreprocessorDefinition> m_replaced_preprocessor_tokens;
 };
