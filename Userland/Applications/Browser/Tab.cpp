@@ -453,6 +453,13 @@ Tab::Tab(Type type)
             m_web_content_view->debug_request("collect-garbage");
         }
     }));
+    debug_menu.add_action(GUI::Action::create("Clear cache", { Mod_Ctrl | Mod_Shift, Key_C }, [this](auto&) {
+        if (m_type == Type::InProcessWebView) {
+            Web::ResourceLoader::the().clear_cache();
+        } else {
+            m_web_content_view->debug_request("clear-cache");
+        }
+    }));
 
     auto& help_menu = m_menubar->add_menu("Help");
     help_menu.add_action(WindowActions::the().about_action());

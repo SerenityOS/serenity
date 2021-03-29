@@ -236,4 +236,10 @@ bool ResourceLoader::is_port_blocked(int port)
     return false;
 }
 
+void ResourceLoader::clear_cache()
+{
+    dbgln("Clearing {} items from ResourceLoader cache", s_resource_cache.size());
+    s_resource_cache.clear();
+}
+
 }

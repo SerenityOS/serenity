@@ -37,6 +37,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Frame.h>
 #include <WebContent/ClientConnection.h>
 #include <WebContent/PageHost.h>
@@ -209,6 +210,10 @@ void ClientConnection::handle(const Messages::WebContentServer::DebugRequest& me
         bool state = message.argument() == "on";
         m_page_host->set_should_show_line_box_borders(state);
         page().main_frame().set_needs_display(page().main_frame().viewport_rect());
+    }
+
+    if (message.request() == "clear-cache") {
+        Web::ResourceLoader::the().clear_cache();
     }
 }
 
