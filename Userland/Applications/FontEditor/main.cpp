@@ -80,7 +80,13 @@ int main(int argc, char** argv)
         path = "/tmp/saved.font";
         edited_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::FontDatabase::default_font().clone());
     } else {
-        edited_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::BitmapFont::load_from_file(path)->clone());
+        auto bitmap_font = Gfx::BitmapFont::load_from_file(path);
+        if (!bitmap_font) {
+            String message = String::formatted("Couldn't load font: {}\n", path);
+            GUI::MessageBox::show(nullptr, message, "Font Editor", GUI::MessageBox::Type::Error);
+            return 1;
+        }
+        edited_font = static_ptr_cast<Gfx::BitmapFont>(bitmap_font->clone());
         if (!edited_font) {
             String message = String::formatted("Couldn't load font: {}\n", path);
             GUI::MessageBox::show(nullptr, message, "Font Editor", GUI::MessageBox::Type::Error);
@@ -112,7 +118,13 @@ int main(int argc, char** argv)
         if (!open_path.has_value())
             return;
 
-        RefPtr<Gfx::BitmapFont> new_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::BitmapFont::load_from_file(open_path.value())->clone());
+        auto bitmap_font = Gfx::BitmapFont::load_from_file(open_path.value());
+        if (!bitmap_font) {
+            String message = String::formatted("Couldn't load font: {}\n", open_path.value());
+            GUI::MessageBox::show(window, message, "Font Editor", GUI::MessageBox::Type::Error);
+            return;
+        }
+        RefPtr<Gfx::BitmapFont> new_font = static_ptr_cast<Gfx::BitmapFont>(bitmap_font->clone());
         if (!new_font) {
             String message = String::formatted("Couldn't load font: {}\n", open_path.value());
             GUI::MessageBox::show(window, message, "Font Editor", GUI::MessageBox::Type::Error);
