@@ -48,9 +48,10 @@ bool Job::print_status(PrintStatusMode mode)
 
         if (WIFSIGNALED(wstatus))
             status = "signaled";
-    } else if (rc < 0) {
-        // We couldn't waitpid() it, probably because we're not the parent shell.
-        // just use the old information.
+    } else {
+        // if rc < 0, We couldn't waitpid() it, probably because we're not the parent shell.
+        // Otherwise, the information we have is already correct,
+        // so just use the old information.
         if (exited())
             status = "exited";
         else if (m_is_suspended)
