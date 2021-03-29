@@ -101,10 +101,10 @@ void __cxa_finalize(void* dso_handle)
         bool needs_calling = !exit_entry.has_been_called && (!dso_handle || dso_handle == exit_entry.dso_handle);
         if (needs_calling) {
             dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_finalize: calling entry[{}] {:p}({:p}) dso: {:p}", entry_index, exit_entry.method, exit_entry.parameter, exit_entry.dso_handle);
-            exit_entry.method(exit_entry.parameter);
             unlock_atexit_handlers();
             exit_entry.has_been_called = true;
             lock_atexit_handlers();
+            exit_entry.method(exit_entry.parameter);
         }
     }
 }
