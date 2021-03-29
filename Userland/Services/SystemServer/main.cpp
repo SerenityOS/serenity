@@ -153,6 +153,8 @@ static void prepare_devfs()
     if (rc < 0) {
         VERIFY_NOT_REACHED();
     }
+
+    endgrent();
 }
 
 static void mount_all_filesystems()
