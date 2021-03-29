@@ -33,6 +33,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <errno.h>
+#include <grp.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -116,29 +117,29 @@ static void prepare_devfs()
         VERIFY_NOT_REACHED();
     }
 
-    // FIXME: Find a better way to chown without hardcoding the gid!
-    chown_wrapper("/dev/fb0", 0, 3);
+    auto phys_group = getgrnam("phys");
+    VERIFY(phys_group);
+    chown_wrapper("/dev/fb0", 0, phys_group->gr_gid);
 
-    // FIXME: Find a better way to chown without hardcoding the gid!
-    chown_wrapper("/dev/keyboard", 0, 3);
+    chown_wrapper("/dev/keyboard", 0, phys_group->gr_gid);
 
-    // FIXME: Find a better way to chown without hardcoding the gid!
-    chown_wrapper("/dev/mouse", 0, 3);
+    chown_wrapper("/dev/mouse", 0, phys_group->gr_gid);
 
+    auto tty_group = getgrnam("tty");
+    VERIFY(tty_group);
     // FIXME: Count TTYs instead of using a hardcoded amount
     for (size_t index = 0; index < 6; index++) {
-        // FIXME: Find a better way to chown without hardcoding the gid!
-        chown_wrapper(String::formatted("/dev/tty{}", index).characters(), 0, 2);
+        chown_wrapper(String::formatted("/dev/tty{}", index).characters(), 0, tty_group->gr_gid);
     }
 
     // FIXME: Count serial TTYs instead of using a hardcoded amount
     for (size_t index = 0; index < 4; index++) {
-        // FIXME: Find a better way to chown without hardcoding the gid!
-        chown_wrapper(String::formatted("/dev/ttyS{}", index).characters(), 0, 2);
+        chown_wrapper(String::formatted("/dev/ttyS{}", index).characters(), 0, tty_group->gr_gid);
     }
 
-    // FIXME: Find a better way to chown without hardcoding the gid!
-    chown_wrapper("/dev/audio", 0, 4);
+    auto audio_group = getgrnam("audio");
+    VERIFY(audio_group);
+    chown_wrapper("/dev/audio", 0, audio_group->gr_gid);
 
     rc = symlink("/proc/self/fd/0", "/dev/stdin");
     if (rc < 0) {
