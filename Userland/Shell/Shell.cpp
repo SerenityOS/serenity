@@ -64,9 +64,7 @@ void Shell::setup_signals()
 {
     if (m_should_reinstall_signal_handlers) {
         Core::EventLoop::register_signal(SIGCHLD, [this](int) {
-#if SH_DEBUG
-            dbgln("SIGCHLD!");
-#endif
+            dbgln_if(SH_DEBUG, "SIGCHLD!");
             notify_child_event();
         });
 
@@ -502,9 +500,7 @@ String Shell::format(const StringView& source, ssize_t& cursor) const
 Shell::Frame Shell::push_frame(String name)
 {
     m_local_frames.append(make<LocalFrame>(name, decltype(LocalFrame::local_variables) {}));
-#if SH_DEBUG
-    dbgln("New frame '{}' at {:p}", name, &m_local_frames.last());
-#endif
+    dbgln_if(SH_DEBUG, "New frame '{}' at {:p}", name, &m_local_frames.last());
     return { m_local_frames, m_local_frames.last() };
 }
 
@@ -568,10 +564,10 @@ int Shell::run_command(const StringView& cmd, Optional<SourcePosition> source_po
     if (!command)
         return 0;
 
-#if SH_DEBUG
-    dbgln("Command follows");
-    command->dump(0);
-#endif
+    if constexpr (SH_DEBUG) {
+        dbgln("Command follows");
+        command->dump(0);
+    }
 
     if (command->is_syntax_error()) {
         auto& error_node = command->syntax_error_node();
@@ -665,9 +661,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     auto apply_rewirings = [&] {
         for (auto& rewiring : rewirings) {
 
-#if SH_DEBUG
-            dbgln("in {}<{}>, dup2({}, {})", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.old_fd, rewiring.new_fd);
-#endif
+            dbgln_if(SH_DEBUG, "in {}<{}>, dup2({}, {})", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.old_fd, rewiring.new_fd);
             int rc = dup2(rewiring.old_fd, rewiring.new_fd);
             if (rc < 0) {
                 perror("dup2(run)");
@@ -780,9 +774,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             }
         }
 
-#if SH_DEBUG
-        dbgln("Synced up with parent, we're good to exec()");
-#endif
+        dbgln_if(SH_DEBUG, "Synced up with parent, we're good to exec()");
 
         close(sync_pipe[0]);
 
@@ -977,25 +969,25 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
     NonnullRefPtrVector<Job> spawned_jobs;
 
     for (auto& command : commands) {
-#if SH_DEBUG
-        dbgln("Command");
-        for (auto& arg : command.argv)
-            dbgln("argv: {}", arg);
-        for (auto& redir : command.redirections) {
-            if (redir.is_path_redirection()) {
-                auto path_redir = (const AST::PathRedirection*)&redir;
-                dbgln("redir path '{}' <-({})-> {}", path_redir->path, (int)path_redir->direction, path_redir->fd);
-            } else if (redir.is_fd_redirection()) {
-                auto* fdredir = (const AST::FdRedirection*)&redir;
-                dbgln("redir fd {} -> {}", fdredir->old_fd, fdredir->new_fd);
-            } else if (redir.is_close_redirection()) {
-                auto close_redir = (const AST::CloseRedirection*)&redir;
-                dbgln("close fd {}", close_redir->fd);
-            } else {
-                VERIFY_NOT_REACHED();
+        if constexpr (SH_DEBUG) {
+            dbgln("Command");
+            for (auto& arg : command.argv)
+                dbgln("argv: {}", arg);
+            for (auto& redir : command.redirections) {
+                if (redir.is_path_redirection()) {
+                    auto path_redir = (const AST::PathRedirection*)&redir;
+                    dbgln("redir path '{}' <-({})-> {}", path_redir->path, (int)path_redir->direction, path_redir->fd);
+                } else if (redir.is_fd_redirection()) {
+                    auto* fdredir = (const AST::FdRedirection*)&redir;
+                    dbgln("redir fd {} -> {}", fdredir->old_fd, fdredir->new_fd);
+                } else if (redir.is_close_redirection()) {
+                    auto close_redir = (const AST::CloseRedirection*)&redir;
+                    dbgln("close fd {}", close_redir->fd);
+                } else {
+                    VERIFY_NOT_REACHED();
+                }
             }
         }
-#endif
         auto job = run_command(command);
         if (!job)
             continue;
@@ -1648,13 +1640,9 @@ void Shell::notify_child_event()
             auto& job = *it.value;
 
             int wstatus = 0;
-#if SH_DEBUG
-            dbgln("waitpid({}) = ...", job.pid());
-#endif
+            dbgln_if(SH_DEBUG, "waitpid({} = {}) = ...", job.pid(), job.cmd());
             auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
-#if SH_DEBUG
-            dbgln("... = {} - {}", child_pid, wstatus);
-#endif
+            dbgln_if(SH_DEBUG, "... = {} - exited: {}, suspended: {}", child_pid, WIFEXITED(wstatus), WIFSTOPPED(wstatus));
 
             if (child_pid < 0) {
                 if (errno == ECHILD) {
@@ -1801,9 +1789,7 @@ void Shell::stop_all_jobs()
             printf("Killing active jobs\n");
         for (auto& entry : jobs) {
             if (entry.value->is_suspended()) {
-#if SH_DEBUG
-                dbgln("Job {} is suspended", entry.value->pid());
-#endif
+                dbgln_if(SH_DEBUG, "Job {} is suspended", entry.value->pid());
                 kill_job(entry.value, SIGCONT);
             }
 
@@ -1813,9 +1799,7 @@ void Shell::stop_all_jobs()
         usleep(10000); // Wait for a bit before killing the job
 
         for (auto& entry : jobs) {
-#if SH_DEBUG
-            dbgln("Actively killing {} ({})", entry.value->pid(), entry.value->cmd());
-#endif
+            dbgln_if(SH_DEBUG, "Actively killing {} ({})", entry.value->pid(), entry.value->cmd());
             kill_job(entry.value, SIGKILL);
         }
 
