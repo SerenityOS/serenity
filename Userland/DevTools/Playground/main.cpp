@@ -139,6 +139,10 @@ int main(int argc, char** argv)
             GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             return 1;
         }
+        if (file->is_device()) {
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", path), "Error", GUI::MessageBox::Type::Error);
+            return 1;
+        }
         editor.set_text(file->read_all());
     }
 
@@ -161,6 +165,11 @@ int main(int argc, char** argv)
         auto file = Core::File::construct(open_path.value());
         if (!file->open(Core::IODevice::ReadOnly) && file->error() != ENOENT) {
             GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", open_path.value(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+
+        if (file->is_device()) {
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", open_path.value()), "Error", GUI::MessageBox::Type::Error);
             return;
         }
 
