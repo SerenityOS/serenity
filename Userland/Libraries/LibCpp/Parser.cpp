@@ -258,10 +258,9 @@ Parser::MatchTypeResult Parser::match_type()
 
     parse_type_qualifiers();
 
-    if (!peek(Token::Type::KnownType).has_value() && !peek(Token::Type::Identifier).has_value())
+    if (!match_name())
         return MatchTypeResult::NoMatch;
-
-    consume();
+    parse_name(*m_root_node);
 
     if (peek(Token::Type::Less).has_value()) {
         if (match_template_arguments()) {
@@ -439,19 +438,16 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
     if (match_literal()) {
         return parse_literal(parent);
     }
-    switch (peek().type()) {
-    case Token::Type::Identifier: {
+
+    if (match_name()) {
         if (match_function_call())
             return parse_function_call(parent);
-        auto token = consume();
-        return create_ast_node<Identifier>(parent, token.start(), token.end(), text_of_token(token));
+        return parse_name(parent);
     }
-    default: {
-        error("could not parse primary expression");
-        auto token = consume();
-        return create_ast_node<InvalidExpression>(parent, token.start(), token.end());
-    }
-    }
+
+    error("could not parse primary expression");
+    auto token = consume();
+    return create_ast_node<InvalidExpression>(parent, token.start(), token.end());
 }
 
 bool Parser::match_literal()
@@ -557,9 +553,8 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(ASTNode& parent, No
         auto exp = create_ast_node<MemberExpression>(parent, lhs->start(), {});
         lhs->set_parent(*exp);
         exp->m_object = move(lhs);
-        auto property_token = consume(Token::Type::Identifier);
-        exp->m_property = create_ast_node<Identifier>(*exp, property_token.start(), property_token.end(), text_of_token(property_token));
-        exp->set_end(property_token.end());
+        exp->m_property = parse_expression(*exp);
+        exp->set_end(position());
         return exp;
     }
     default: {
@@ -907,9 +902,10 @@ bool Parser::match_function_call()
 {
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
-    if (!match(Token::Type::Identifier))
+    if (!match_name())
         return false;
-    consume();
+    parse_name(*m_root_node);
+
     return match(Token::Type::LeftParen);
 }
 
@@ -917,8 +913,7 @@ NonnullRefPtr<FunctionCall> Parser::parse_function_call(ASTNode& parent)
 {
     SCOPE_LOGGER();
     auto call = create_ast_node<FunctionCall>(parent, position(), {});
-    auto name_identifier = consume(Token::Type::Identifier);
-    call->m_name = text_of_token(name_identifier);
+    call->m_name = parse_name(*call);
 
     NonnullRefPtrVector<Expression> args;
     consume(Token::Type::LeftParen);
@@ -1115,15 +1110,14 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
     }
 
     auto qualifiers = parse_type_qualifiers();
-    auto type_name_token = consume();
     type->m_qualifiers = move(qualifiers);
-    type->m_name = text_of_token(type_name_token);
 
-    if (type_name_token.type() != Token::Type::KnownType && type_name_token.type() != Token::Type::Identifier) {
+    if (!match_name()) {
         type->set_end(position());
-        error(String::formatted("unexpected type_name_token for type: {}", type_name_token.to_string()));
+        error(String::formatted("expected name instead of: {}", peek().text()));
         return type.release_nonnull();
     }
+    type->m_name = parse_name(*type);
 
     if (is_templatized) {
         static_cast<TemplatizedType&>(*type).m_template_arguments = parse_template_arguments(*type);
@@ -1287,6 +1281,30 @@ NonnullRefPtr<NamespaceDeclaration> Parser::parse_namespace_declaration(ASTNode&
     consume(Token::Type::RightCurly);
     namespace_decl->set_end(position());
     return namespace_decl;
+}
+
+bool Parser::match_name()
+{
+    auto type = peek().type();
+    return type == Token::Type::Identifier || type == Token::Type::KnownType;
+}
+
+NonnullRefPtr<Name> Parser::parse_name(ASTNode& parent)
+{
+    auto name_node = create_ast_node<Name>(parent, position(), {});
+    while (!eof() && (peek().type() == Token::Type::Identifier || peek().type() == Token::Type::KnownType)) {
+        auto token = consume();
+        name_node->m_scope.append(create_ast_node<Identifier>(*name_node, token.start(), token.end(), token.text()));
+        if (peek().type() == Token::Type::ColonColon)
+            consume();
+        else
+            break;
+    }
+
+    VERIFY(!name_node->m_scope.is_empty());
+    name_node->m_name = name_node->m_scope.take_last();
+    name_node->set_end(position());
+    return name_node;
 }
 
 }

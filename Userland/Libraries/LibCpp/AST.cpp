@@ -91,7 +91,7 @@ void Type::dump(size_t indent) const
     String qualifiers_string;
     if (!m_qualifiers.is_empty())
         qualifiers_string = String::formatted("[{}] ", String::join(" ", m_qualifiers));
-    outln("{}{}", qualifiers_string, m_name);
+    outln("{}{}", qualifiers_string, m_name.is_null() ? "" : m_name->full_name());
 }
 
 void Parameter::dump(size_t indent) const
@@ -243,7 +243,7 @@ void FunctionCall::dump(size_t indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent);
-    outln("{}", m_name);
+    outln("{}", m_name->full_name());
     for (const auto& arg : m_arguments) {
         arg.dump(indent + 1);
     }
@@ -460,6 +460,24 @@ void TemplatizedType::dump(size_t indent) const
     }
     print_indent(indent + 1);
     outln(">");
+}
+
+void Name::dump(size_t indent) const
+{
+    ASTNode::dump(indent);
+    print_indent(indent);
+    outln("{}", full_name());
+}
+
+String Name::full_name() const
+{
+    StringBuilder builder;
+    if (!m_scope.is_empty()) {
+        for (auto& scope : m_scope) {
+            builder.appendff("{}::", scope.m_name);
+        }
+    }
+    return String::formatted("{}{}", builder.to_string(), m_name.is_null() ? "" : m_name->m_name);
 }
 
 }
