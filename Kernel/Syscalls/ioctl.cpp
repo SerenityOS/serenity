@@ -36,7 +36,7 @@ KResultOr<int> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
     if (!description)
         return EBADF;
     if (request == FIONBIO) {
-        description->set_blocking(arg != 0);
+        description->set_blocking(arg == 0);
         return KSuccess;
     }
     return description->file().ioctl(*description, request, arg);
