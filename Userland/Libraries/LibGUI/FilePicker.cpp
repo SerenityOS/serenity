@@ -36,6 +36,7 @@
 #include <LibGUI/FilePickerDialogGML.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/MultiView.h>
 #include <LibGUI/SortingProxyModel.h>
@@ -182,6 +183,18 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
 
         if (!node.is_directory())
             m_filename_textbox->set_text(node.name);
+    };
+
+    m_context_menu = GUI::Menu::construct();
+    m_context_menu->add_action(GUI::Action::create_checkable("Show dotfiles", [&](auto& action) {
+        m_model->set_should_show_dotfiles(action.is_checked());
+        m_model->update();
+    }));
+
+    m_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+        if (!index.is_valid()) {
+            m_context_menu->popup(event.screen_position());
+        }
     };
 
     auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
