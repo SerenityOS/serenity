@@ -639,6 +639,11 @@ bool TextEditorWidget::open_file(const String& path)
         return false;
     }
 
+    if (file->is_device()) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open device files", path), "Error", GUI::MessageBox::Type::Error);
+        return false;
+    }
+
     m_editor->set_text(file->read_all());
     m_document_dirty = false;
     m_document_opening = true;

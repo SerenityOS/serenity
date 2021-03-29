@@ -172,6 +172,9 @@ size_t BitmapFont::glyph_count_by_type(FontTypes type)
 
 RefPtr<BitmapFont> BitmapFont::load_from_file(const StringView& path)
 {
+    if (Core::File::is_device(path))
+        return nullptr;
+
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return nullptr;
