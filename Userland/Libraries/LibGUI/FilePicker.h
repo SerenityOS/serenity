@@ -83,6 +83,7 @@ private:
 
     RefPtr<TextBox> m_filename_textbox;
     RefPtr<TextBox> m_location_textbox;
+    RefPtr<Menu> m_context_menu;
     Mode m_mode { Mode::Open };
 };
 
