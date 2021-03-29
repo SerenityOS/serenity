@@ -351,6 +351,40 @@ void BlockFormattingContext::compute_height(Box& box)
     box.set_height(height);
 }
 
+void BlockFormattingContext::compute_position(Box& box)
+{
+    // 9.4.3 Relative positioning
+    // Once a box has been laid out according to the normal flow or floated, it may be shifted relative to this position.
+
+    auto& box_model = box.box_model();
+    auto& computed_values = box.computed_values();
+    float width_of_containing_block = box.width_of_logical_containing_block();
+
+    auto specified_left = computed_values.offset().left.resolved_or_zero(box, width_of_containing_block);
+    auto specified_right = computed_values.offset().right.resolved_or_zero(box, width_of_containing_block);
+
+    if (specified_left.is_auto() && specified_right.is_auto()) {
+        // If both 'left' and 'right' are 'auto' (their initial values), the used values are '0' (i.e., the boxes stay in their original position).
+        box_model.offset.left = 0;
+        box_model.offset.right = 0;
+    } else if (specified_left.is_auto()) {
+        // If 'left' is 'auto', its used value is minus the value of 'right' (i.e., the boxes move to the left by the value of 'right').
+        box_model.offset.right = specified_right.to_px(box);
+        box_model.offset.left = 0 - box_model.offset.right;
+    } else if (specified_right.is_auto()) {
+        // If 'right' is specified as 'auto', its used value is minus the value of 'left'.
+        box_model.offset.left = specified_left.to_px(box);
+        box_model.offset.right = 0 - box_model.offset.left;
+    } else {
+        // If neither 'left' nor 'right' is 'auto', the position is over-constrained, and one of them has to be ignored.
+        // If the 'direction' property of the containing block is 'ltr', the value of 'left' wins and 'right' becomes -'left'.
+        // If 'direction' of the containing block is 'rtl', 'right' wins and 'left' is ignored.
+        // FIXME: Check direction (assuming 'ltr' for now).
+        box_model.offset.left = specified_left.to_px(box);
+        box_model.offset.right = 0 - box_model.offset.left;
+    }
+}
+
 void BlockFormattingContext::layout_inline_children(Box& box, LayoutMode layout_mode)
 {
     InlineFormattingContext context(box, this);
@@ -379,6 +413,9 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
             place_block_level_replaced_element_in_normal_flow(child_box, box);
         else if (is<BlockBox>(child_box))
             place_block_level_non_replaced_element_in_normal_flow(child_box, box);
+
+        if (child_box.computed_values().position() == CSS::Position::Relative)
+            compute_position(child_box); // Note: Shifting position should occur after the above layout.
 
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
         //        Instead, we should generate the marker box during the tree build.
