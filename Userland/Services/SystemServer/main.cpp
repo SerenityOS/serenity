@@ -125,11 +125,13 @@ static void prepare_devfs()
     // FIXME: Find a better way to chown without hardcoding the gid!
     chown_wrapper("/dev/mouse", 0, 3);
 
-    for (size_t index = 0; index < 4; index++) {
+    // FIXME: Count TTYs instead of using a hardcoded amount
+    for (size_t index = 0; index < 6; index++) {
         // FIXME: Find a better way to chown without hardcoding the gid!
         chown_wrapper(String::formatted("/dev/tty{}", index).characters(), 0, 2);
     }
 
+    // FIXME: Count serial TTYs instead of using a hardcoded amount
     for (size_t index = 0; index < 4; index++) {
         // FIXME: Find a better way to chown without hardcoding the gid!
         chown_wrapper(String::formatted("/dev/ttyS{}", index).characters(), 0, 2);
