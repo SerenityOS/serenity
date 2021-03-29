@@ -95,7 +95,7 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    if (elf_header.e_phoff < elf_header.e_ehsize || (elf_header.e_shnum != SHN_UNDEF && elf_header.e_shoff < elf_header.e_ehsize)) {
+    if ((elf_header.e_phnum != 0 && elf_header.e_phoff < elf_header.e_ehsize) || (elf_header.e_shnum != SHN_UNDEF && elf_header.e_shoff < elf_header.e_ehsize)) {
         if (verbose) {
             dbgln("SHENANIGANS! program header offset ({}) or section header offset ({}) overlap with ELF header!",
                 elf_header.e_phoff, elf_header.e_shoff);

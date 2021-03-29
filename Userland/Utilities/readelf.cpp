@@ -552,25 +552,29 @@ int main(int argc, char** argv)
             printf("\n");
         }
 
-        printf("Program Headers:\n");
-        printf("  Type           Offset     VirtAddr   PhysAddr   FileSiz    MemSiz     Flg  Align\n");
+        if (!elf_image.program_header_count()) {
+            printf("There are no program headers in this file.\n");
+        } else {
+            printf("Program Headers:\n");
+            printf("  Type           Offset     VirtAddr   PhysAddr   FileSiz    MemSiz     Flg  Align\n");
 
-        elf_image.for_each_program_header([](const ELF::Image::ProgramHeader& program_header) {
-            printf("  %-14s ", object_program_header_type_to_string(program_header.type()));
-            printf("0x%08x ", program_header.offset());
-            printf("%p ", program_header.vaddr().as_ptr());
-            printf("%p ", program_header.vaddr().as_ptr()); // FIXME: assumes PhysAddr = VirtAddr
-            printf("0x%08x ", program_header.size_in_image());
-            printf("0x%08x ", program_header.size_in_memory());
-            printf("%04x ", program_header.flags());
-            printf("0x%08x", program_header.alignment());
-            printf("\n");
+            elf_image.for_each_program_header([](const ELF::Image::ProgramHeader& program_header) {
+                printf("  %-14s ", object_program_header_type_to_string(program_header.type()));
+                printf("0x%08x ", program_header.offset());
+                printf("%p ", program_header.vaddr().as_ptr());
+                printf("%p ", program_header.vaddr().as_ptr()); // FIXME: assumes PhysAddr = VirtAddr
+                printf("0x%08x ", program_header.size_in_image());
+                printf("0x%08x ", program_header.size_in_memory());
+                printf("%04x ", program_header.flags());
+                printf("0x%08x", program_header.alignment());
+                printf("\n");
 
-            if (program_header.type() == PT_INTERP)
-                printf("      [Interpreter: %s]\n", program_header.raw_data());
+                if (program_header.type() == PT_INTERP)
+                    printf("      [Interpreter: %s]\n", program_header.raw_data());
 
-            return IterationDecision::Continue;
-        });
+                return IterationDecision::Continue;
+            });
+        }
 
         // TODO: Display section to segment mapping
         printf("\n");
