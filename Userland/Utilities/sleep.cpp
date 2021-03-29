@@ -65,6 +65,7 @@ int main(int argc, char** argv)
 
     timespec remaining_sleep {};
 
+sleep_again:
     if (clock_nanosleep(CLOCK_MONOTONIC, 0, &requested_sleep, &remaining_sleep) < 0) {
         if (errno != EINTR) {
             perror("clock_nanosleep");
@@ -73,6 +74,11 @@ int main(int argc, char** argv)
     }
 
     if (remaining_sleep.tv_sec || remaining_sleep.tv_nsec) {
+        if (!g_interrupted) {
+            // If not interrupted with SIGINT, just go back to sleep.
+            requested_sleep = remaining_sleep;
+            goto sleep_again;
+        }
         outln("Sleep interrupted with {}.{} seconds remaining.", remaining_sleep.tv_sec, remaining_sleep.tv_nsec);
     }
 
