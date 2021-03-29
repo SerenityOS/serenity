@@ -26,21 +26,10 @@
 
 #pragma once
 
+#include <Services/WindowServer/WindowType.h>
+
 namespace GUI {
 
-// Keep this in sync with WindowServer::WindowType.
-enum class WindowType {
-    Invalid = 0,
-    Normal,
-    Menu,
-    WindowSwitcher,
-    Taskbar,
-    Tooltip,
-    Menubar,
-    MenuApplet,
-    Notification,
-    Desktop,
-    ToolWindow,
-};
+using WindowType = WindowServer::WindowType;
 
 }
