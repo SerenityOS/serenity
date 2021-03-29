@@ -111,7 +111,7 @@ int Shell::builtin_bg(int argc, const char** argv)
 
     job->set_running_in_background(true);
     job->set_should_announce_exit(true);
-    job->set_is_suspended(false);
+    job->set_shell_did_continue(true);
 
     dbgln("Resuming {} ({})", job->pid(), job->cmd());
     warnln("Resuming job {} - {}", job->job_id(), job->cmd().characters());
@@ -396,7 +396,7 @@ int Shell::builtin_fg(int argc, const char** argv)
     }
 
     job->set_running_in_background(false);
-    job->set_is_suspended(false);
+    job->set_shell_did_continue(true);
 
     dbgln("Resuming {} ({})", job->pid(), job->cmd());
     warnln("Resuming job {} - {}", job->job_id(), job->cmd().characters());
