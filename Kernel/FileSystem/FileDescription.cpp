@@ -40,7 +40,6 @@
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
-#include <Kernel/kstdio.h>
 
 namespace Kernel {
 
