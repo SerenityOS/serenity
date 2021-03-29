@@ -84,7 +84,7 @@ KResultOr<ssize_t> Process::do_write(FileDescription& description, const UserOrK
             return EAGAIN;
     }
 
-    if (description.should_append()) {
+    if (description.should_append() && description.file().is_seekable()) {
         auto seek_result = description.seek(0, SEEK_END);
         if (seek_result.is_error())
             return seek_result.error();
