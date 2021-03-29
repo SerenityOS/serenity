@@ -40,6 +40,7 @@
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
+#include <Kernel/kstdio.h>
 
 namespace Kernel {
 
@@ -154,7 +155,8 @@ KResultOr<off_t> FileDescription::seek(off_t offset, int whence)
 
     if (new_offset < 0)
         return EINVAL;
-    // FIXME: Return EINVAL if attempting to seek past the end of a seekable device.
+    if (new_offset > metadata().size)
+      return EINVAL;
 
     m_current_offset = new_offset;
 
