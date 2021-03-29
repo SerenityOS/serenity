@@ -86,6 +86,7 @@ public:
     bool should_announce_exit() const { return m_should_announce_exit; }
     bool should_announce_signal() const { return m_should_announce_signal; }
     bool is_suspended() const { return m_is_suspended; }
+    bool shell_did_continue() const { return m_shell_did_continue; }
     void unblock() const;
 
     Core::ElapsedTimer& timer() { return m_command_timer; }
@@ -94,6 +95,7 @@ public:
     void set_signalled(int sig);
 
     void set_is_suspended(bool value) const { m_is_suspended = value; }
+    void set_shell_did_continue(bool value) const { m_shell_did_continue = value; }
 
     void set_running_in_background(bool running_in_background)
     {
@@ -129,6 +131,7 @@ private:
     Core::ElapsedTimer m_command_timer;
     mutable bool m_active { true };
     mutable bool m_is_suspended { false };
+    mutable bool m_shell_did_continue { false };
     bool m_should_be_disowned { false };
     OwnPtr<AST::Command> m_command;
 };
