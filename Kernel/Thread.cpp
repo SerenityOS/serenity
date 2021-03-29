@@ -911,6 +911,10 @@ void Thread::set_state(State new_state, u8 stop_signal)
                 return IterationDecision::Continue;
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Continued);
+            // Tell the parent process (if any) about this change.
+            if (auto parent = Process::from_pid(process.ppid())) {
+                [[maybe_unused]] auto result = parent->send_signal(SIGCHLD, &process);
+            }
         }
     }
 
@@ -930,6 +934,10 @@ void Thread::set_state(State new_state, u8 stop_signal)
                 return IterationDecision::Continue;
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Stopped, stop_signal);
+            // Tell the parent process (if any) about this change.
+            if (auto parent = Process::from_pid(process.ppid())) {
+                [[maybe_unused]] auto result = parent->send_signal(SIGCHLD, &process);
+            }
         }
     } else if (m_state == Dying) {
         VERIFY(previous_state != Blocked);
