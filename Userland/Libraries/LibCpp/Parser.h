@@ -89,6 +89,7 @@ private:
     bool match_block_statement();
     bool match_namespace_declaration();
     bool match_template_arguments();
+    bool match_name();
 
     enum class MatchTypeResult {
         NoMatch,
@@ -129,6 +130,7 @@ private:
     NonnullRefPtrVector<Declaration> parse_declarations_in_translation_unit(ASTNode& parent);
     RefPtr<Declaration> parse_single_declaration_in_translation_unit(ASTNode& parent);
     NonnullRefPtrVector<Type> parse_template_arguments(ASTNode& parent);
+    NonnullRefPtr<Name> parse_name(ASTNode& parent);
 
     bool match(Token::Type);
     Token consume(Token::Type);

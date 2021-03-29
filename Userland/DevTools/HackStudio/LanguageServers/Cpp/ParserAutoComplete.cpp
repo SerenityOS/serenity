@@ -109,8 +109,8 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
     }
 
     if (is_empty_property(document, *node, position)) {
-        VERIFY(node->is_member_expression());
-        return autocomplete_property(document, (MemberExpression&)(*node), "");
+        VERIFY(node->parent()->is_member_expression());
+        return autocomplete_property(document, (MemberExpression&)(*node->parent()), "");
     }
 
     String partial_text = String::empty();
@@ -203,7 +203,7 @@ bool ParserAutoComplete::is_property(const ASTNode& node) const
 
 bool ParserAutoComplete::is_empty_property(const DocumentData& document, const ASTNode& node, const Position& autocomplete_position) const
 {
-    if (!node.is_member_expression())
+    if (!node.parent()->is_member_expression())
         return false;
     auto previous_token = document.parser().token_at(autocomplete_position);
     if (!previous_token.has_value())
@@ -217,7 +217,7 @@ String ParserAutoComplete::type_of_property(const DocumentData& document, const 
     auto properties = properties_of_type(document, type_of(document, *parent.m_object));
     for (auto& prop : properties) {
         if (prop.name == identifier.m_name)
-            return prop.type->m_name;
+            return prop.type->m_name->full_name();
     }
     return {};
 }
@@ -230,7 +230,7 @@ String ParserAutoComplete::type_of_variable(const Identifier& identifier) const
             if (decl.is_variable_or_parameter_declaration()) {
                 auto& var_or_param = (VariableOrParameterDeclaration&)decl;
                 if (var_or_param.m_name == identifier.m_name) {
-                    return var_or_param.m_type->m_name;
+                    return var_or_param.m_type->m_name->full_name();
                 }
             }
         }
@@ -247,16 +247,21 @@ String ParserAutoComplete::type_of(const DocumentData& document, const Expressio
             return type_of_property(document, static_cast<const Identifier&>(*member_expression.m_property));
         return {};
     }
-    if (!expression.is_identifier()) {
+
+    const Identifier* identifier { nullptr };
+    if (expression.is_name()) {
+        identifier = static_cast<const Name&>(expression).m_name.ptr();
+    } else if (expression.is_identifier()) {
+        identifier = &static_cast<const Identifier&>(expression);
+    } else {
+        dbgln("expected identifier or name, got: {}", expression.class_name());
         VERIFY_NOT_REACHED(); // TODO
     }
+    VERIFY(identifier);
+    if (is_property(*identifier))
+        return type_of_property(document, *identifier);
 
-    auto& identifier = (const Identifier&)expression;
-
-    if (is_property(identifier))
-        return type_of_property(document, identifier);
-
-    return type_of_variable(identifier);
+    return type_of_variable(*identifier);
 }
 
 Vector<ParserAutoComplete::PropertyInfo> ParserAutoComplete::properties_of_type(const DocumentData& document, const String& type) const
@@ -391,11 +396,11 @@ RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& 
                 return decl;
         }
         if (node.is_type() && decl.is_struct_or_class()) {
-            if (((Cpp::StructOrClassDeclaration&)decl).m_name == static_cast<const Type&>(node).m_name)
+            if (((Cpp::StructOrClassDeclaration&)decl).m_name == static_cast<const Type&>(node).m_name->full_name())
                 return decl;
         }
         if (node.is_function_call() && decl.is_function()) {
-            if (((Cpp::FunctionDeclaration&)decl).m_name == static_cast<const FunctionCall&>(node).m_name)
+            if (((Cpp::FunctionDeclaration&)decl).m_name == static_cast<const FunctionCall&>(node).m_name->full_name())
                 return decl;
         }
         if (is_property(node) && decl.is_struct_or_class()) {
