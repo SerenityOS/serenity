@@ -47,6 +47,9 @@ public:
     bool is_directory() const;
     static bool is_directory(const String& filename);
 
+    bool is_device() const;
+    static bool is_device(const String& filename);
+
     static bool exists(const String& filename);
     static bool ensure_parent_directories(const String& path);
 
