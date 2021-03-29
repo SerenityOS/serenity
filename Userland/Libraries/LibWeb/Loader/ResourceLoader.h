@@ -56,6 +56,8 @@ public:
 
     const String& user_agent() const { return m_user_agent; }
 
+    void clear_cache();
+
 private:
     ResourceLoader();
     static bool is_port_blocked(int port);
