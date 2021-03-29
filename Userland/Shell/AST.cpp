@@ -2220,8 +2220,27 @@ RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
 
     auto pipe_read_end = FdRedirection::create(-1, STDIN_FILENO, Rewiring::Close::Old);
     auto pipe_write_end = FdRedirection::create(-1, STDOUT_FILENO, pipe_read_end, Rewiring::Close::RefreshOld);
-    first_in_right.redirections.append(pipe_read_end);
-    last_in_left.redirections.append(pipe_write_end);
+
+    auto insert_at_start_or_after_last_pipe = [&](auto& pipe, auto& command) {
+        size_t insert_index = 0;
+        auto& redirections = command.redirections;
+        for (ssize_t i = redirections.size() - 1; i >= 0; --i) {
+            auto& redirection = redirections[i];
+            if (!redirection.is_fd_redirection())
+                continue;
+            auto& fd_redirection = static_cast<FdRedirection&>(redirection);
+            if (fd_redirection.old_fd == -1) {
+                insert_index = i;
+                break;
+            }
+        }
+
+        redirections.insert(insert_index, pipe);
+    };
+
+    insert_at_start_or_after_last_pipe(pipe_read_end, first_in_right);
+    insert_at_start_or_after_last_pipe(pipe_write_end, last_in_left);
+
     last_in_left.should_wait = false;
     last_in_left.is_pipe_source = true;
 
