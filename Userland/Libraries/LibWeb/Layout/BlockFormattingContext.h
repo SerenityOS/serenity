@@ -47,6 +47,7 @@ public:
 protected:
     void compute_width(Box&);
     void compute_height(Box&);
+    void compute_position(Box&);
 
 private:
     virtual bool is_block_formatting_context() const final { return true; }
