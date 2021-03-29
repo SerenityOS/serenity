@@ -1057,7 +1057,7 @@ void Shell::block_on_job(RefPtr<Job> job)
     if (!job)
         return;
 
-    if (job->is_suspended())
+    if (job->is_suspended() && !job->shell_did_continue())
         return; // We cannot wait for a suspended job.
 
     ScopeGuard io_restorer { [&]() {
@@ -1655,6 +1655,12 @@ void Shell::notify_child_event()
             }
             if (child_pid == 0) {
                 // If the child existed, but wasn't dead.
+                if (job.is_suspended() && job.shell_did_continue()) {
+                    // The job was suspended, and we sent it a SIGCONT.
+                    job.set_is_suspended(false);
+                    job.set_shell_did_continue(false);
+                    found_child = true;
+                }
                 continue;
             }
             if (child_pid == job.pid()) {
