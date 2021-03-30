@@ -235,10 +235,10 @@ String Window::title() const
     return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowTitle>(m_window_id)->title();
 }
 
-Gfx::IntRect Window::rect_in_menubar() const
+Gfx::IntRect Window::applet_rect_on_screen() const
 {
     VERIFY(m_window_type == WindowType::MenuApplet);
-    return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowRectInMenubar>(m_window_id)->rect();
+    return WindowServerConnection::the().send_sync<Messages::WindowServer::GetAppletRectOnScreen>(m_window_id)->rect();
 }
 
 Gfx::IntRect Window::rect() const

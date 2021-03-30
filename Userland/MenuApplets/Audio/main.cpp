@@ -189,7 +189,11 @@ private:
         VERIFY_NOT_REACHED();
     }
 
-    void reposition_slider_window() { m_slider_window->set_rect(window()->rect_in_menubar().x() - 20, 19, 50, 100); }
+    void reposition_slider_window()
+    {
+        auto applet_rect = window()->applet_rect_on_screen();
+        m_slider_window->set_rect(applet_rect.x() - 20, applet_rect.y() - 106, 50, 100);
+    }
 
     struct VolumeBitmapPair {
         int volume_threshold { 0 };

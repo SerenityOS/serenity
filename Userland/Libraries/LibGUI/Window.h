@@ -101,7 +101,7 @@ public:
     int height() const { return rect().height(); }
 
     Gfx::IntRect rect() const;
-    Gfx::IntRect rect_in_menubar() const;
+    Gfx::IntRect applet_rect_on_screen() const;
     Gfx::IntSize size() const { return rect().size(); }
     void set_rect(const Gfx::IntRect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
