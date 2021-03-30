@@ -54,9 +54,11 @@ public:
 
 private:
     void draw_applet(const Window& applet);
+    void set_hovered_applet(Window*);
 
     Vector<WeakPtr<Window>> m_applets;
     RefPtr<Window> m_window;
+    WeakPtr<Window> m_hovered_applet;
 };
 
 }

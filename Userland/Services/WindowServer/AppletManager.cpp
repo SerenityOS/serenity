@@ -27,6 +27,7 @@
 
 #include "AppletManager.h"
 #include <AK/QuickSort.h>
+#include <LibCore/EventLoop.h>
 #include <LibGfx/Painter.h>
 #include <WindowServer/MenuManager.h>
 
@@ -60,13 +61,30 @@ void AppletManager::set_position(const Gfx::IntPoint& position)
     m_window->set_visible(true);
 }
 
+void AppletManager::set_hovered_applet(Window* applet)
+{
+    if (m_hovered_applet == applet)
+        return;
+
+    if (m_hovered_applet)
+        Core::EventLoop::current().post_event(*m_hovered_applet, make<Event>(Event::WindowLeft));
+
+    m_hovered_applet = applet;
+
+    if (m_hovered_applet)
+        Core::EventLoop::current().post_event(*m_hovered_applet, make<Event>(Event::WindowEntered));
+}
+
 void AppletManager::event(Core::Event& event)
 {
+    if (event.type() == Event::WindowLeft && m_hovered_applet) {
+        set_hovered_applet(nullptr);
+        return;
+    }
+
     if (!is<MouseEvent>(event))
         return;
     auto& mouse_event = static_cast<MouseEvent&>(event);
-
-    dbgln("mouse_event: {}", mouse_event.position());
 
     for (auto& applet : m_applets) {
         if (!applet)
@@ -74,7 +92,9 @@ void AppletManager::event(Core::Event& event)
         if (!applet->rect_in_applet_area().contains(mouse_event.position()))
             continue;
         auto local_event = mouse_event.translated(-applet->rect_in_applet_area().location());
-        applet->dispatch_event(local_event);
+        set_hovered_applet(applet);
+        Core::EventLoop::current().post_event(*applet, make<MouseEvent>(local_event));
+        return;
     }
 }
 

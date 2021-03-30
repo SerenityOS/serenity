@@ -126,7 +126,7 @@ private:
     virtual OwnPtr<Messages::WindowServer::GetWindowRectResponse> handle(const Messages::WindowServer::GetWindowRect&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowMinimumSizeResponse> handle(const Messages::WindowServer::SetWindowMinimumSize&) override;
     virtual OwnPtr<Messages::WindowServer::GetWindowMinimumSizeResponse> handle(const Messages::WindowServer::GetWindowMinimumSize&) override;
-    virtual OwnPtr<Messages::WindowServer::GetWindowRectInMenubarResponse> handle(const Messages::WindowServer::GetWindowRectInMenubar&) override;
+    virtual OwnPtr<Messages::WindowServer::GetAppletRectOnScreenResponse> handle(const Messages::WindowServer::GetAppletRectOnScreen&) override;
     virtual void handle(const Messages::WindowServer::InvalidateRect&) override;
     virtual void handle(const Messages::WindowServer::DidFinishPainting&) override;
     virtual OwnPtr<Messages::WindowServer::SetGlobalCursorTrackingResponse> handle(const Messages::WindowServer::SetGlobalCursorTracking&) override;

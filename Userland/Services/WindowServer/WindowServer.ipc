@@ -62,7 +62,7 @@ endpoint WindowServer = 2
     SetWindowMinimumSize(i32 window_id, Gfx::IntSize size) => ()
     GetWindowMinimumSize(i32 window_id) => (Gfx::IntSize size)
 
-    GetWindowRectInMenubar(i32 window_id) => (Gfx::IntRect rect)
+    GetAppletRectOnScreen(i32 window_id) => (Gfx::IntRect rect)
 
     StartWindowResize(i32 window_id) =|
 
