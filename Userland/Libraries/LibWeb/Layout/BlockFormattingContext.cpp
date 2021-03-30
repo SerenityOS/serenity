@@ -409,13 +409,13 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
         layout_inside(child_box, layout_mode);
         compute_height(child_box);
 
+        if (child_box.computed_values().position() == CSS::Position::Relative)
+            compute_position(child_box);
+
         if (is<ReplacedBox>(child_box))
             place_block_level_replaced_element_in_normal_flow(child_box, box);
         else if (is<BlockBox>(child_box))
             place_block_level_non_replaced_element_in_normal_flow(child_box, box);
-
-        if (child_box.computed_values().position() == CSS::Position::Relative)
-            compute_position(child_box); // Note: Shifting position should occur after the above layout.
 
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
         //        Instead, we should generate the marker box during the tree build.
