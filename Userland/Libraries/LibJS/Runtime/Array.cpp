@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_GETTER(Array::length_getter)
     auto* array = typed_this(vm, global_object);
     if (!array)
         return {};
-    return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
+    return Value(array->indexed_properties().array_like_size());
 }
 
 JS_DEFINE_NATIVE_SETTER(Array::length_setter)
