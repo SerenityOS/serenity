@@ -45,12 +45,18 @@ public:
     void remove_applet(Window& applet);
     void draw();
     void invalidate_applet(const Window& applet, const Gfx::IntRect& rect);
-    void calculate_applet_rects(Window& window);
+    void relayout();
+
+    void set_position(const Gfx::IntPoint&);
+
+    Window* window() { return m_window; }
+    const Window* window() const { return m_window; }
 
 private:
     void draw_applet(const Window& applet);
 
     Vector<WeakPtr<Window>> m_applets;
+    RefPtr<Window> m_window;
 };
 
 }

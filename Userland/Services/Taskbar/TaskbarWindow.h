@@ -53,4 +53,5 @@ private:
     NonnullRefPtr<GUI::Menu> m_start_menu;
     RefPtr<GUI::Widget> m_task_button_container;
     RefPtr<Gfx::Bitmap> m_default_icon;
+    RefPtr<GUI::Frame> m_applet_area_container;
 };

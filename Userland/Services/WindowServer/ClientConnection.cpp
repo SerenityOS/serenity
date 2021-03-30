@@ -483,7 +483,7 @@ OwnPtr<Messages::WindowServer::GetWindowRectInMenubarResponse> ClientConnection:
         did_misbehave("GetWindowRectInMenubar: Bad window ID");
         return {};
     }
-    return make<Messages::WindowServer::GetWindowRectInMenubarResponse>(it->value->rect_in_menubar());
+    return make<Messages::WindowServer::GetWindowRectInMenubarResponse>(it->value->rect_in_applet_area());
 }
 
 Window* ClientConnection::window_from_id(i32 window_id)
@@ -715,6 +715,12 @@ OwnPtr<Messages::WindowServer::SetWindowAlphaHitThresholdResponse> ClientConnect
     }
     it->value->set_alpha_hit_threshold(message.threshold());
     return make<Messages::WindowServer::SetWindowAlphaHitThresholdResponse>();
+}
+
+OwnPtr<Messages::WindowServer::WM_SetAppletAreaPositionResponse> ClientConnection::handle(const Messages::WindowServer::WM_SetAppletAreaPosition& message)
+{
+    AppletManager::the().set_position(message.position());
+    return make<Messages::WindowServer::WM_SetAppletAreaPositionResponse>();
 }
 
 void ClientConnection::handle(const Messages::WindowServer::WM_SetActiveWindow& message)
