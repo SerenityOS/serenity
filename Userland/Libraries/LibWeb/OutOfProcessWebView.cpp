@@ -28,6 +28,7 @@
 #include "WebContentClient.h"
 #include <AK/String.h>
 #include <AK/URLParser.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -253,6 +254,16 @@ void OutOfProcessWebView::notify_server_did_request_scroll(Badge<WebContentClien
 void OutOfProcessWebView::notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect& rect)
 {
     scroll_into_view(rect, true, true);
+}
+
+void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, const Gfx::IntPoint&, const String& title)
+{
+    GUI::Application::the()->show_tooltip(title, nullptr);
+}
+
+void OutOfProcessWebView::notify_server_did_leave_tooltip_area(Badge<WebContentClient>)
+{
+    GUI::Application::the()->hide_tooltip();
 }
 
 void OutOfProcessWebView::notify_server_did_hover_link(Badge<WebContentClient>, const URL& url)
