@@ -357,7 +357,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         page->client().page_did_request_cursor_change(hovered_node_cursor);
 
         if (hovered_node_changed) {
-            RefPtr<HTML::HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element() : nullptr;
+            RefPtr<HTML::HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element_with_attribute(HTML::AttributeNames::title) : nullptr;
             if (hovered_html_element && !hovered_html_element->title().is_null()) {
                 page->client().page_did_enter_tooltip_area(m_frame.to_main_frame_position(position), hovered_html_element->title());
             } else {

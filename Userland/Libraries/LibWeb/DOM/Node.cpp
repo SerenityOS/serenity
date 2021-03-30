@@ -76,6 +76,15 @@ const HTML::HTMLElement* Node::enclosing_html_element() const
     return first_ancestor_of_type<HTML::HTMLElement>();
 }
 
+const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(const FlyString& attribute) const
+{
+    for (auto* node = this; node; node = node->parent()) {
+        if (is<HTML::HTMLElement>(*node) && downcast<HTML::HTMLElement>(*node).has_attribute(attribute))
+            return downcast<HTML::HTMLElement>(node);
+    }
+    return nullptr;
+}
+
 String Node::text_content() const
 {
     StringBuilder builder;

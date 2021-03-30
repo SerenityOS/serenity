@@ -112,6 +112,7 @@ public:
 
     const HTML::HTMLAnchorElement* enclosing_link_element() const;
     const HTML::HTMLElement* enclosing_html_element() const;
+    const HTML::HTMLElement* enclosing_html_element_with_attribute(const FlyString&) const;
 
     String child_text_content() const;
 
