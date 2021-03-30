@@ -49,7 +49,7 @@ class GraphWidget final : public GUI::Frame {
     C_OBJECT(GraphWidget);
 
 public:
-    static constexpr size_t history_size = 30;
+    static constexpr size_t history_size = 24;
 
     GraphWidget(GraphType graph_type, Optional<Gfx::Color> graph_color, Optional<Gfx::Color> graph_error_color)
         : m_graph_type(graph_type)
@@ -254,7 +254,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title(name);
     window->set_window_type(GUI::WindowType::MenuApplet);
-    window->resize(GraphWidget::history_size + 2, 16);
+    window->resize(GraphWidget::history_size + 2, 15);
 
     window->set_main_widget<GraphWidget>(graph_type, graph_color, graph_error_color);
     window->show();
