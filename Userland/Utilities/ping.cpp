@@ -29,6 +29,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>
+#include <serenity.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,21 +37,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-
-static uint16_t internet_checksum(const void* ptr, size_t count)
-{
-    uint32_t checksum = 0;
-    auto* w = (const uint16_t*)ptr;
-    while (count > 1) {
-        checksum += ntohs(*w++);
-        if (checksum & 0x80000000)
-            checksum = (checksum & 0xffff) | (checksum >> 16);
-        count -= 2;
-    }
-    while (checksum >> 16)
-        checksum = (checksum & 0xffff) + (checksum >> 16);
-    return htons(~checksum);
-}
 
 static int total_pings;
 static int successful_pings;
