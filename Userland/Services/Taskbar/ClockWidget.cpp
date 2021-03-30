@@ -26,6 +26,7 @@
 
 #include "ClockWidget.h"
 #include <LibGUI/Painter.h>
+#include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
@@ -55,6 +56,7 @@ ClockWidget::ClockWidget()
     });
 
     m_calendar_window = add<GUI::Window>(window());
+    m_calendar_window->resize(152, 186);
     m_calendar_window->set_frameless(true);
     m_calendar_window->set_resizable(false);
     m_calendar_window->set_minimizable(false);
@@ -82,21 +84,22 @@ ClockWidget::ClockWidget()
     m_prev_date->set_fixed_size(24, 24);
     m_prev_date->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"));
     m_prev_date->on_click = [&](auto) {
-        unsigned int target_month = m_calendar->selected_month();
-        unsigned int target_year = m_calendar->selected_year();
-
+        unsigned view_month = m_calendar->view_month();
+        unsigned view_year = m_calendar->view_year();
         if (m_calendar->mode() == GUI::Calendar::Month) {
-            target_month--;
-            if (m_calendar->selected_month() <= 1) {
-                target_month = 12;
-                target_year--;
+            view_month--;
+            if (m_calendar->view_month() == 1) {
+                view_month = 12;
+                view_year--;
             }
         } else {
-            target_year--;
+            view_year--;
         }
-
-        m_calendar->update_tiles(target_year, target_month);
-        m_selected_calendar_button->set_text(m_calendar->selected_calendar_text(GUI::Calendar::LongNames));
+        m_calendar->update_tiles(view_year, view_month);
+        if (m_calendar->mode() == GUI::Calendar::Year)
+            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly));
+        else
+            m_selected_calendar_button->set_text(m_calendar->formatted_date());
     };
 
     m_selected_calendar_button = navigation_container.add<GUI::Button>();
@@ -104,7 +107,10 @@ ClockWidget::ClockWidget()
     m_selected_calendar_button->set_fixed_height(24);
     m_selected_calendar_button->on_click = [&](auto) {
         m_calendar->toggle_mode();
-        m_selected_calendar_button->set_text(m_calendar->selected_calendar_text(GUI::Calendar::LongNames));
+        if (m_calendar->mode() == GUI::Calendar::Year)
+            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly));
+        else
+            m_selected_calendar_button->set_text(m_calendar->formatted_date());
     };
 
     m_next_date = navigation_container.add<GUI::Button>();
@@ -112,31 +118,26 @@ ClockWidget::ClockWidget()
     m_next_date->set_fixed_size(24, 24);
     m_next_date->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"));
     m_next_date->on_click = [&](auto) {
-        unsigned int target_month = m_calendar->selected_month();
-        unsigned int target_year = m_calendar->selected_year();
-
+        unsigned view_month = m_calendar->view_month();
+        unsigned view_year = m_calendar->view_year();
         if (m_calendar->mode() == GUI::Calendar::Month) {
-            target_month++;
-            if (m_calendar->selected_month() >= 12) {
-                target_month = 1;
-                target_year++;
+            view_month++;
+            if (m_calendar->view_month() == 12) {
+                view_month = 1;
+                view_year++;
             }
         } else {
-            target_year++;
+            view_year++;
         }
-
-        m_calendar->update_tiles(target_year, target_month);
-        m_selected_calendar_button->set_text(m_calendar->selected_calendar_text(GUI::Calendar::LongNames));
+        m_calendar->update_tiles(view_year, view_month);
+        if (m_calendar->mode() == GUI::Calendar::Year)
+            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly));
+        else
+            m_selected_calendar_button->set_text(m_calendar->formatted_date());
     };
 
-    auto& divider1_container = root_container.add<GUI::Widget>();
-    divider1_container.set_fixed_height(2);
-    divider1_container.set_layout<GUI::HorizontalBoxLayout>();
-    divider1_container.layout()->set_margins({ 2, 0, 3, 0 });
-
-    auto& divider1 = divider1_container.add<GUI::Frame>();
-    divider1.set_fixed_height(2);
-    divider1.set_frame_shape(Gfx::FrameShape::Panel);
+    auto& separator1 = root_container.add<GUI::HorizontalSeparator>();
+    separator1.set_fixed_height(2);
 
     auto& calendar_frame_container = root_container.add<GUI::Widget>();
     calendar_frame_container.set_layout<GUI::HorizontalBoxLayout>();
@@ -146,25 +147,19 @@ ClockWidget::ClockWidget()
     calendar_frame.set_layout<GUI::VerticalBoxLayout>();
     calendar_frame.layout()->set_margins({ 2, 2, 2, 2 });
 
-    m_calendar = calendar_frame.add<GUI::Calendar>(Core::DateTime::now());
-    m_selected_calendar_button->set_text(m_calendar->selected_calendar_text(GUI::Calendar::LongNames));
+    m_calendar = calendar_frame.add<GUI::Calendar>();
+    m_selected_calendar_button->set_text(m_calendar->formatted_date());
 
-    m_calendar->on_calendar_tile_click = [&] {
-        m_selected_calendar_button->set_text(m_calendar->selected_calendar_text(GUI::Calendar::LongNames));
+    m_calendar->on_tile_click = [&] {
+        m_selected_calendar_button->set_text(m_calendar->formatted_date());
     };
 
-    m_calendar->on_month_tile_click = [&] {
-        m_selected_calendar_button->set_text(m_calendar->selected_calendar_text(GUI::Calendar::LongNames));
+    m_calendar->on_month_click = [&] {
+        m_selected_calendar_button->set_text(m_calendar->formatted_date());
     };
 
-    auto& divider2_container = root_container.add<GUI::Widget>();
-    divider2_container.set_fixed_height(2);
-    divider2_container.set_layout<GUI::HorizontalBoxLayout>();
-    divider2_container.layout()->set_margins({ 2, 0, 3, 0 });
-
-    auto& divider2 = divider2_container.add<GUI::Frame>();
-    divider2.set_fixed_height(2);
-    divider2.set_frame_shape(Gfx::FrameShape::Panel);
+    auto& separator2 = root_container.add<GUI::HorizontalSeparator>();
+    separator2.set_fixed_height(2);
 
     auto& settings_container = root_container.add<GUI::Widget>();
     settings_container.set_fixed_height(24);
@@ -226,11 +221,8 @@ void ClockWidget::mousedown_event(GUI::MouseEvent& event)
 void ClockWidget::open()
 {
     jump_to_current_date();
-    // FIXME: We position the calendar twice since we don't know the final size the first time.
-    //        Find a way to not do this.
     position_calendar_window();
     m_calendar_window->show();
-    position_calendar_window();
 }
 
 void ClockWidget::close()
@@ -241,10 +233,10 @@ void ClockWidget::close()
 void ClockWidget::position_calendar_window()
 {
     m_calendar_window->set_rect(
-        screen_relative_rect().right() - m_calendar_window->width(),
-        screen_relative_rect().top() - m_calendar_window->height() - 2,
-        153,
-        180);
+        screen_relative_rect().right() - m_calendar_window->width() + 4,
+        screen_relative_rect().top() - m_calendar_window->height() - 3,
+        152,
+        186);
 }
 
 void ClockWidget::jump_to_current_date()
@@ -253,7 +245,7 @@ void ClockWidget::jump_to_current_date()
         m_calendar->toggle_mode();
     m_calendar->set_selected_date(Core::DateTime::now());
     m_calendar->update_tiles(Core::DateTime::now().year(), Core::DateTime::now().month());
-    m_selected_calendar_button->set_text(m_calendar->selected_calendar_text(GUI::Calendar::LongNames));
+    m_selected_calendar_button->set_text(m_calendar->formatted_date());
 }
 
 }
