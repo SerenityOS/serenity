@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <serenity.h>
 #include <string.h>
@@ -148,5 +149,20 @@ int getkeymap(char* name_buffer, size_t name_buffer_size, u32* map, u32* shift_m
     };
     int rc = syscall(SC_getkeymap, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+u16 internet_checksum(const void* ptr, size_t count)
+{
+    u32 checksum = 0;
+    auto* w = (const u16*)ptr;
+    while (count > 1) {
+        checksum += ntohs(*w++);
+        if (checksum & 0x80000000)
+            checksum = (checksum & 0xffff) | (checksum >> 16);
+        count -= 2;
+    }
+    while (checksum >> 16)
+        checksum = (checksum & 0xffff) + (checksum >> 16);
+    return htons(~checksum);
 }
 }
