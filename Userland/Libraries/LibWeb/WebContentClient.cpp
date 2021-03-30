@@ -106,6 +106,16 @@ void WebContentClient::handle(const Messages::WebContentClient::DidRequestScroll
     m_view.notify_server_did_request_scroll_into_view({}, message.rect());
 }
 
+void WebContentClient::handle(const Messages::WebContentClient::DidEnterTooltipArea& message)
+{
+    m_view.notify_server_did_enter_tooltip_area({}, message.content_position(), message.title());
+}
+
+void WebContentClient::handle(const Messages::WebContentClient::DidLeaveTooltipArea&)
+{
+    m_view.notify_server_did_leave_tooltip_area({});
+}
+
 void WebContentClient::handle(const Messages::WebContentClient::DidHoverLink& message)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidHoverLink! url={}", message.url());
