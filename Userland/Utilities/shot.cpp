@@ -34,6 +34,14 @@
 #include <LibGfx/PNGWriter.h>
 #include <unistd.h>
 
+enum ShotReturnValue {
+    Success,
+    ErrorGrabScreenshot,
+    ErrorEncodePNG,
+    ErrorOpenFile,
+    ErrorWritePNG
+};
+
 int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
@@ -59,33 +67,33 @@ int main(int argc, char** argv)
     auto* bitmap = response->bitmap().bitmap();
     if (!bitmap) {
         warnln("Failed to grab screenshot");
-        return 1;
+        return ShotReturnValue::ErrorGrabScreenshot;
     }
 
     if (output_to_clipboard) {
         GUI::Clipboard::the().set_bitmap(*bitmap);
-        return 0;
+        return ShotReturnValue::Success;
     }
 
     Gfx::PNGWriter writer;
     auto encoded_bitmap = writer.write(bitmap);
     if (encoded_bitmap.is_empty()) {
         warnln("Failed to encode PNG");
-        return 1;
+        return ShotReturnValue::ErrorEncodePNG;
     }
 
     auto file_or_error = Core::File::open(output_path, Core::IODevice::ReadWrite);
     if (file_or_error.is_error()) {
         warnln("Could not open '{}' for writing: {}", output_path, file_or_error.error());
-        return 1;
+        return ShotReturnValue::ErrorOpenFile;
     }
 
     auto& file = *file_or_error.value();
     if (!file.write(encoded_bitmap.data(), encoded_bitmap.size())) {
         warnln("Failed to write PNG");
-        return 1;
+        return ShotReturnValue::ErrorWritePNG;
     }
 
     outln("{}", output_path);
-    return 0;
+    return ShotReturnValue::Success;
 }
