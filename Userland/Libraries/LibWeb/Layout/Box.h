@@ -113,6 +113,17 @@ public:
         return rect;
     }
 
+    Gfx::FloatRect margin_box_as_absolute_rect() const
+    {
+        auto rect = absolute_rect();
+        auto margin_box = box_model().margin_box();
+        rect.set_x(rect.x() - margin_box.left);
+        rect.set_width(rect.width() + margin_box.left + margin_box.right);
+        rect.set_y(rect.y() - margin_box.top);
+        rect.set_height(rect.height() + margin_box.top + margin_box.bottom);
+        return rect;
+    }
+
     float absolute_x() const { return absolute_rect().x(); }
     float absolute_y() const { return absolute_rect().y(); }
     Gfx::FloatPoint absolute_position() const { return absolute_rect().location(); }
