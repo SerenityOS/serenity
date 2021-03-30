@@ -11,6 +11,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`byacc`](byacc/)              | Berkeley Yacc                                 | 20191125          | https://invisible-island.net/byacc/byacc.html         |
 | [`bzip2`](bzip2/)              | bzip2                                         | 1.0.8             | https://sourceware.org/bzip2/                         |
 | [`c-ray`](c-ray/)              | C-Ray                                         |                   | https://github.com/vkoskiv/c-ray                      |
+| [`chester`](chester/)          | Chester Gameboy Emulator                      |                   | https://github.com/veikkos/chester                    |
 | [`cmake`](cmake/)              | CMake                                         | 3.19.4            | https://cmake.org/                                    |
 | [`curl`](curl/)                | curl                                          | 7.65.3            | https://curl.se/                                      |
 | [`dash`](dash/)                | DASH                                          | 0.5.10.2          | http://gondor.apana.org.au/~herbert/dash              |
@@ -28,7 +29,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`git`](git/)                  | Git                                           | 2.26.0            | https://git-scm.com/                                  |
 | [`gnuplot`](gnuplot/)          | Gnuplot                                       | 5.2.8             | http://www.gnuplot.info/                              |
 | [`grep`](grep/)                | GNU Grep                                      | 2.5.4             | https://www.gnu.org/software/grep/                    |
-| [`hatari`](hatari/)            | Atari ST/STE/TT/Falcon emulator               | 2.4.0-devel       | https://hatari.tuxfamily.org/             |
+| [`hatari`](hatari/)            | Atari ST/STE/TT/Falcon emulator               | 2.4.0-devel       | https://hatari.tuxfamily.org/                         |
 | [`indent`](indent/)            | GNU indent                                    | 2.2.11            | https://www.gnu.org/software/indent/                  |
 | [`jot`](jot/)                  | jot (OpenBSD)                                 | 6.6               | https://github.com/ibara/libpuffy                     |
 | [`jq`](jq/)                    | jq                                            | 1.6               | https://stedolan.github.io/jq/                        |
