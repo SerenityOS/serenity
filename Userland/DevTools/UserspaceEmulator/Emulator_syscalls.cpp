@@ -1358,7 +1358,7 @@ int Emulator::virt$waitid(FlatPtr params_addr)
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
     Syscall::SC_waitid_params host_params = params;
-    siginfo info;
+    siginfo info {};
     host_params.infop = &info;
 
     int rc = syscall(SC_waitid, &host_params);
@@ -1366,7 +1366,8 @@ int Emulator::virt$waitid(FlatPtr params_addr)
         return rc;
 
     if (info.si_addr) {
-        // FIXME: Translate this somehow.
+        // FIXME: Translate this somehow once we actually start setting it in the kernel.
+        dbgln("si_addr is set to {:p}, I did not expect this!", info.si_addr);
         TODO();
     }
 
