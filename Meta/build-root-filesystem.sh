@@ -56,6 +56,7 @@ chmod 0400 mnt/boot/Kernel
 chmod 4750 mnt/bin/su
 chmod 4755 mnt/bin/passwd
 chmod 4755 mnt/bin/ping
+chmod 4755 mnt/bin/traceroute
 chmod 4750 mnt/bin/reboot
 chmod 4750 mnt/bin/shutdown
 chmod 4750 mnt/bin/keymap
