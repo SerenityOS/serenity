@@ -333,6 +333,18 @@ void IndexedProperties::append_all(Object* this_object, const IndexedProperties&
 
 void IndexedProperties::set_array_like_size(size_t new_size)
 {
+    constexpr size_t length_setter_generic_storage_threshold = 4 * MiB;
+    auto current_array_like_size = array_like_size();
+
+    // We can't use simple storage for lengths that don't fit in an i32.
+    // Also, to avoid gigantic unused storage allocations, let's put an (arbitrary) 4M cap on simple storage here.
+    // This prevents something like "a = []; a.length = 0x80000000;" from allocating 2G entries.
+    if (m_storage->is_simple_storage()
+        && (new_size > NumericLimits<i32>::max()
+            || (current_array_like_size < length_setter_generic_storage_threshold && new_size > length_setter_generic_storage_threshold))) {
+        switch_to_generic_storage();
+    }
+
     m_storage->set_array_like_size(new_size);
 }
 

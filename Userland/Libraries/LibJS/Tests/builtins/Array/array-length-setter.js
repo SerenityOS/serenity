@@ -34,4 +34,14 @@ describe("normal behavior", () => {
         a.length = true;
         expect(a).toHaveLength(1);
     });
+
+    test("setting a huge array length", () => {
+        var a = [];
+        a.length = 0x80000000;
+        expect(a.length).toEqual(0x80000000);
+
+        var b = [];
+        b.length = 0x80000001;
+        expect(b.length).toEqual(0x80000001);
+    });
 });
