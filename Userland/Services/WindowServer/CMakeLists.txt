@@ -24,3 +24,4 @@ set(SOURCES
 
 serenity_bin(WindowServer)
 target_link_libraries(WindowServer LibCore LibGfx LibThread LibPthread LibIPC)
+serenity_install_headers(Services/WindowServer)
