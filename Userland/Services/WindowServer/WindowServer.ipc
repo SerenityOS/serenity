@@ -83,6 +83,7 @@ endpoint WindowServer = 2
     WM_StartWindowResize(i32 client_id, i32 window_id) =|
     WM_PopupWindowMenu(i32 client_id, i32 window_id, Gfx::IntPoint screen_position) =|
     WM_SetWindowTaskbarRect(i32 client_id, i32 window_id, Gfx::IntRect rect) =|
+    WM_SetAppletAreaPosition(Gfx::IntPoint position) => ()
 
     SetWindowHasAlphaChannel(i32 window_id, bool has_alpha_channel) => ()
     MoveWindowToFront(i32 window_id) => ()

@@ -77,6 +77,7 @@ public:
         WM_WindowStateChanged,
         WM_WindowRectChanged,
         WM_WindowIconBitmapChanged,
+        WM_AppletAreaSizeChanged,
         __End_WM_Events,
     };
 
@@ -106,6 +107,20 @@ public:
 private:
     int m_client_id { -1 };
     int m_window_id { -1 };
+};
+
+class WMAppletAreaSizeChangedEvent : public WMEvent {
+public:
+    explicit WMAppletAreaSizeChangedEvent(const Gfx::IntSize& size)
+        : WMEvent(Event::Type::WM_AppletAreaSizeChanged, 0, 0)
+        , m_size(size)
+    {
+    }
+
+    const Gfx::IntSize& size() const { return m_size; }
+
+private:
+    Gfx::IntSize m_size;
 };
 
 class WMWindowRemovedEvent : public WMEvent {

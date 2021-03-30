@@ -40,6 +40,7 @@ enum class WindowType {
     Notification,
     Desktop,
     ToolWindow,
+    AppletArea,
 };
 
 }

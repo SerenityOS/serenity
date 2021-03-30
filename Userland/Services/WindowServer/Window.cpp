@@ -153,12 +153,13 @@ void Window::set_title(const String& title)
 
 void Window::set_rect(const Gfx::IntRect& rect)
 {
-    VERIFY(!rect.is_empty());
     if (m_rect == rect)
         return;
     auto old_rect = m_rect;
     m_rect = rect;
-    if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
+    if (rect.is_empty()) {
+        m_backing_store = nullptr;
+    } else if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
         m_backing_store = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, m_rect.size());
     }
 

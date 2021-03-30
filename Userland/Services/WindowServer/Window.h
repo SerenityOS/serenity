@@ -207,8 +207,8 @@ public:
     Gfx::DisjointRectSet& dirty_rects() { return m_dirty_rects; }
 
     // Only used by WindowType::MenuApplet. Perhaps it could be a Window subclass? I don't know.
-    void set_rect_in_menubar(const Gfx::IntRect& rect) { m_rect_in_menubar = rect; }
-    const Gfx::IntRect& rect_in_menubar() const { return m_rect_in_menubar; }
+    void set_rect_in_applet_area(const Gfx::IntRect& rect) { m_rect_in_applet_area = rect; }
+    const Gfx::IntRect& rect_in_applet_area() const { return m_rect_in_applet_area; }
 
     const Gfx::Bitmap* backing_store() const { return m_backing_store.ptr(); }
     Gfx::Bitmap* backing_store() { return m_backing_store.ptr(); }
@@ -405,7 +405,7 @@ private:
     unsigned m_wm_event_mask { 0 };
     Gfx::DisjointRectSet m_pending_paint_rects;
     Gfx::IntRect m_unmaximized_rect;
-    Gfx::IntRect m_rect_in_menubar;
+    Gfx::IntRect m_rect_in_applet_area;
     RefPtr<Menu> m_window_menu;
     MenuItem* m_window_menu_minimize_item { nullptr };
     MenuItem* m_window_menu_maximize_item { nullptr };

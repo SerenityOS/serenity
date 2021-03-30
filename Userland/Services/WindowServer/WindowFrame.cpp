@@ -217,6 +217,8 @@ Gfx::Bitmap* WindowFrame::window_shadow() const
         return s_menu_bar_shadow;
     case WindowType::Taskbar:
         return s_task_bar_shadow;
+    case WindowType::AppletArea:
+        return nullptr;
     default:
         if (auto* highlight_window = WindowManager::the().highlight_window())
             return highlight_window == &m_window ? s_active_window_shadow : s_inactive_window_shadow;

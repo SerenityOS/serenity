@@ -269,6 +269,12 @@ void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowState
         Core::EventLoop::current().post_event(*window, make<WMWindowStateChangedEvent>(message.client_id(), message.window_id(), message.parent_client_id(), message.parent_window_id(), message.title(), message.rect(), message.is_active(), message.is_modal(), static_cast<WindowType>(message.window_type()), message.is_minimized(), message.is_frameless(), message.progress()));
 }
 
+void WindowServerConnection::handle(const Messages::WindowClient::WM_AppletAreaSizeChanged& message)
+{
+    if (auto* window = Window::from_window_id(message.wm_id()))
+        Core::EventLoop::current().post_event(*window, make<WMAppletAreaSizeChangedEvent>(message.size()));
+}
+
 void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowRectChanged& message)
 {
     if (auto* window = Window::from_window_id(message.wm_id()))

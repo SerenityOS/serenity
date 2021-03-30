@@ -69,6 +69,7 @@ private:
     virtual void handle(const Messages::WindowClient::WM_WindowStateChanged&) override;
     virtual void handle(const Messages::WindowClient::WM_WindowIconBitmapChanged&) override;
     virtual void handle(const Messages::WindowClient::WM_WindowRectChanged&) override;
+    virtual void handle(const Messages::WindowClient::WM_AppletAreaSizeChanged&) override;
     virtual void handle(const Messages::WindowClient::AsyncSetWallpaperFinished&) override;
     virtual void handle(const Messages::WindowClient::DragDropped&) override;
     virtual void handle(const Messages::WindowClient::DragAccepted&) override;
