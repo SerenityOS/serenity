@@ -60,6 +60,14 @@ bool FormattingContext::creates_block_formatting_context(const Box& box)
     if (is<TableCellBox>(box))
         return true;
 
+    CSS::Overflow overflow_x = box.computed_values().overflow_x();
+    if ((overflow_x != CSS::Overflow::Visible) && (overflow_x != CSS::Overflow::Clip))
+        return true;
+
+    CSS::Overflow overflow_y = box.computed_values().overflow_y();
+    if ((overflow_y != CSS::Overflow::Visible) && (overflow_y != CSS::Overflow::Clip))
+        return true;
+
     // FIXME: inline-flex as well
     if (box.parent() && box.parent()->computed_values().display() == CSS::Display::Flex) {
         // FIXME: Flex items (direct children of the element with display: flex or inline-flex) if they are neither flex nor grid nor table containers themselves.
@@ -69,7 +77,6 @@ bool FormattingContext::creates_block_formatting_context(const Box& box)
 
     // FIXME: table-caption
     // FIXME: anonymous table cells
-    // FIXME: Block elements where overflow has a value other than visible and clip.
     // FIXME: display: flow-root
     // FIXME: Elements with contain: layout, content, or paint.
     // FIXME: grid
