@@ -133,6 +133,16 @@ void PageHost::page_did_request_scroll_into_view(const Gfx::IntRect& rect)
     m_client.post_message(Messages::WebContentClient::DidRequestScrollIntoView(rect));
 }
 
+void PageHost::page_did_enter_tooltip_area(const Gfx::IntPoint& content_position, const String& title)
+{
+    m_client.post_message(Messages::WebContentClient::DidEnterTooltipArea(content_position, title));
+}
+
+void PageHost::page_did_leave_tooltip_area()
+{
+    m_client.post_message(Messages::WebContentClient::DidLeaveTooltipArea());
+}
+
 void PageHost::page_did_hover_link(const URL& url)
 {
     m_client.post_message(Messages::WebContentClient::DidHoverLink(url));
