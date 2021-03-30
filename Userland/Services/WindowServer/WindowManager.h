@@ -167,6 +167,7 @@ public:
     void tell_wm_listeners_window_state_changed(Window&);
     void tell_wm_listeners_window_icon_changed(Window&);
     void tell_wm_listeners_window_rect_changed(Window&);
+    void tell_wm_listeners_applet_area_size_changed(const Gfx::IntSize&);
 
     bool is_active_window_or_accessory(Window&) const;
 
@@ -397,6 +398,8 @@ IterationDecision WindowManager::for_each_visible_window_from_back_to_front(Call
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WindowType::Taskbar, callback) == IterationDecision::Break)
         return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_back_to_front(WindowType::AppletArea, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WindowType::Notification, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WindowType::Tooltip, callback) == IterationDecision::Break)
@@ -443,6 +446,8 @@ IterationDecision WindowManager::for_each_visible_window_from_front_to_back(Call
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Tooltip, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Notification, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_front_to_back(WindowType::AppletArea, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Taskbar, callback) == IterationDecision::Break)
         return IterationDecision::Break;

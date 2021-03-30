@@ -28,10 +28,7 @@
 #include <AK/Badge.h>
 #include <AK/Debug.h>
 #include <AK/QuickSort.h>
-#include <LibCore/DirIterator.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
-#include <WindowServer/AppletManager.h>
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Screen.h>
@@ -84,7 +81,6 @@ void MenuManager::draw()
 
     if (m_needs_window_resize) {
         m_window->set_rect(menubar_rect);
-        AppletManager::the().calculate_applet_rects(window());
         m_needs_window_resize = false;
     }
 
@@ -93,8 +89,6 @@ void MenuManager::draw()
     painter.fill_rect(menubar_rect, palette.window());
     painter.draw_line({ 0, menubar_rect.bottom() - 1 }, { menubar_rect.right(), menubar_rect.bottom() - 1 }, palette.threed_shadow1());
     painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, palette.threed_shadow2());
-
-    AppletManager::the().draw();
 }
 
 void MenuManager::refresh()
@@ -266,8 +260,6 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
         }
         return;
     }
-
-    AppletManager::the().dispatch_event(static_cast<Event&>(mouse_event));
 }
 
 void MenuManager::set_needs_window_resize()

@@ -136,6 +136,7 @@ private:
     virtual void handle(const Messages::WindowServer::WM_SetWindowMinimized&) override;
     virtual void handle(const Messages::WindowServer::WM_StartWindowResize&) override;
     virtual void handle(const Messages::WindowServer::WM_PopupWindowMenu&) override;
+    virtual OwnPtr<Messages::WindowServer::WM_SetAppletAreaPositionResponse> handle(const Messages::WindowServer::WM_SetAppletAreaPosition&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowHasAlphaChannelResponse> handle(const Messages::WindowServer::SetWindowHasAlphaChannel&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowAlphaHitThresholdResponse> handle(const Messages::WindowServer::SetWindowAlphaHitThreshold&) override;
     virtual OwnPtr<Messages::WindowServer::MoveWindowToFrontResponse> handle(const Messages::WindowServer::MoveWindowToFront&) override;

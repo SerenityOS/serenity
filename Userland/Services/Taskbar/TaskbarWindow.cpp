@@ -88,7 +88,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     auto& start_button = main_widget.add<GUI::Button>("Serenity");
     start_button.set_font(Gfx::FontDatabase::default_bold_font());
     start_button.set_icon_spacing(0);
-    start_button.set_fixed_width(80);
+    start_button.set_fixed_size(80, 22);
     auto app_icon = GUI::Icon::default_icon("ladybug");
     start_button.set_icon(app_icon.bitmap_for_size(16));
 
@@ -103,6 +103,11 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     m_task_button_container->layout()->set_spacing(3);
 
     m_default_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
+
+    m_applet_area_container = main_widget.add<GUI::Frame>();
+    m_applet_area_container->set_frame_thickness(1);
+    m_applet_area_container->set_frame_shape(Gfx::FrameShape::Box);
+    m_applet_area_container->set_frame_shadow(Gfx::FrameShadow::Sunken);
 
     main_widget.add<Taskbar::ClockWidget>();
 }
@@ -175,8 +180,8 @@ void TaskbarWindow::on_screen_rect_change(const Gfx::IntRect& rect)
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
     auto& button = m_task_button_container->add<TaskbarButton>(identifier);
-    button.set_min_size(20, 23);
-    button.set_max_size(140, 23);
+    button.set_min_size(20, 22);
+    button.set_max_size(140, 22);
     button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     button.set_icon(*m_default_icon);
     return button;
@@ -315,6 +320,17 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
             VERIFY(window.is_modal());
             update_window_button(*window_owner, window.is_active());
         }
+        break;
+    }
+    case GUI::Event::WM_AppletAreaSizeChanged: {
+        auto& changed_event = static_cast<GUI::WMAppletAreaSizeChangedEvent&>(event);
+        m_applet_area_container->set_fixed_size(changed_event.size().width() + 8, 22);
+        // NOTE: Widget layout is normally lazy, but here we have to force it right away so we can tell
+        //       WindowServer where to place the applet area window.
+        main_widget()->do_layout();
+        Gfx::IntRect new_rect { {}, changed_event.size() };
+        new_rect.center_within(m_applet_area_container->screen_relative_rect());
+        GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::WM_SetAppletAreaPosition>(new_rect.location());
         break;
     }
     default:

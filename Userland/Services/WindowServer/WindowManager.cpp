@@ -204,6 +204,8 @@ void WindowManager::add_window(Window& window)
             }
             return IterationDecision::Continue;
         });
+        if (auto* applet_area_window = AppletManager::the().window())
+            tell_wm_listeners_applet_area_size_changed(applet_area_window->size());
     }
 
     window.invalidate(true, true);
@@ -341,6 +343,14 @@ void WindowManager::tell_wm_listeners_window_rect_changed(Window& window)
     });
 }
 
+void WindowManager::tell_wm_listeners_applet_area_size_changed(const Gfx::IntSize& size)
+{
+    for_each_window_listening_to_wm_events([&](Window& listener) {
+        listener.client()->post_message(Messages::WindowClient::WM_AppletAreaSizeChanged(listener.window_id(), size));
+        return IterationDecision::Continue;
+    });
+}
+
 static bool window_type_has_title(WindowType type)
 {
     return type == WindowType::Normal || type == WindowType::ToolWindow;
@@ -382,7 +392,7 @@ void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_
     tell_wm_listeners_window_rect_changed(window);
 
     if (window.type() == WindowType::MenuApplet)
-        AppletManager::the().calculate_applet_rects(MenuManager::the().window());
+        AppletManager::the().relayout();
 
     MenuManager::the().refresh();
 }
@@ -931,7 +941,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     if (MenuManager::the().has_open_menu()
         || hitting_menu_in_window_with_active_menu) {
         for_each_visible_window_of_type_from_front_to_back(WindowType::MenuApplet, [&](auto& window) {
-            if (!window.rect_in_menubar().contains(event.position()))
+            if (!window.rect_in_applet_area().contains(event.position()))
                 return IterationDecision::Continue;
             hovered_window = &window;
             return IterationDecision::Break;
