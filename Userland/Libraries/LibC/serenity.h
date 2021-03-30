@@ -109,4 +109,6 @@ int serenity_readlink(const char* path, size_t path_length, char* buffer, size_t
 int getkeymap(char* name_buffer, size_t name_buffer_size, uint32_t* map, uint32_t* shift_map, uint32_t* alt_map, uint32_t* altgr_map, uint32_t* shift_altgr_map);
 int setkeymap(const char* name, const uint32_t* map, uint32_t* const shift_map, const uint32_t* alt_map, const uint32_t* altgr_map, const uint32_t* shift_altgr_map);
 
+uint16_t internet_checksum(const void* ptr, size_t count);
+
 __END_DECLS
