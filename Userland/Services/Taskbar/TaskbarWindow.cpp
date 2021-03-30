@@ -175,6 +175,19 @@ void TaskbarWindow::on_screen_rect_change(const Gfx::IntRect& rect)
 {
     Gfx::IntRect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
     set_rect(new_rect);
+    update_applet_area();
+}
+
+void TaskbarWindow::update_applet_area()
+{
+    // NOTE: Widget layout is normally lazy, but here we have to force it right away so we can tell
+    //       WindowServer where to place the applet area window.
+    if (!main_widget())
+        return;
+    main_widget()->do_layout();
+    Gfx::IntRect new_rect { {}, m_applet_area_size };
+    new_rect.center_within(m_applet_area_container->screen_relative_rect());
+    GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::WM_SetAppletAreaPosition>(new_rect.location());
 }
 
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
@@ -324,13 +337,9 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     }
     case GUI::Event::WM_AppletAreaSizeChanged: {
         auto& changed_event = static_cast<GUI::WMAppletAreaSizeChangedEvent&>(event);
+        m_applet_area_size = changed_event.size();
         m_applet_area_container->set_fixed_size(changed_event.size().width() + 8, 22);
-        // NOTE: Widget layout is normally lazy, but here we have to force it right away so we can tell
-        //       WindowServer where to place the applet area window.
-        main_widget()->do_layout();
-        Gfx::IntRect new_rect { {}, changed_event.size() };
-        new_rect.center_within(m_applet_area_container->screen_relative_rect());
-        GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::WM_SetAppletAreaPosition>(new_rect.location());
+        update_applet_area();
         break;
     }
     default:
