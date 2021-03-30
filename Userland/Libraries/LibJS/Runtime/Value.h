@@ -122,6 +122,17 @@ public:
         }
     }
 
+    explicit Value(unsigned long value)
+    {
+        if (value > NumericLimits<i32>::max()) {
+            m_value.as_double = static_cast<double>(value);
+            m_type = Type::Double;
+        } else {
+            m_value.as_i32 = static_cast<i32>(value);
+            m_type = Type::Int32;
+        }
+    }
+
     explicit Value(unsigned value)
     {
         if (value > NumericLimits<i32>::max()) {
