@@ -789,7 +789,7 @@ public:
         }
     }
 
-    template<typename T, class... Args>
+    template<typename BlockerType, class... Args>
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
     {
         VERIFY(!Processor::current().in_irq());
@@ -801,7 +801,7 @@ public:
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
         m_in_block = true;
-        T t(forward<Args>(args)...);
+        BlockerType blocker(forward<Args>(args)...);
 
         ScopedSpinLock scheduler_lock(g_scheduler_lock);
         // Relaxed semantics are fine for timeout_unblocked because we
@@ -820,16 +820,16 @@ public:
                 VERIFY_NOT_REACHED();
             }
 
-            m_blocker = &t;
-            if (!t.should_block()) {
+            m_blocker = &blocker;
+            if (!blocker.should_block()) {
                 // Don't block if the wake condition is already met
-                t.not_blocking(false);
+                blocker.not_blocking(false);
                 m_blocker = nullptr;
                 m_in_block = false;
                 return BlockResult::NotBlocked;
             }
 
-            auto& block_timeout = t.override_timeout(timeout);
+            auto& block_timeout = blocker.override_timeout(timeout);
             if (!block_timeout.is_infinite()) {
                 // Process::kill_all_threads may be called at any time, which will mark all
                 // threads to die. In that case
@@ -845,14 +845,14 @@ public:
                 });
                 if (!timer) {
                     // Timeout is already in the past
-                    t.not_blocking(true);
+                    blocker.not_blocking(true);
                     m_blocker = nullptr;
                     m_in_block = false;
                     return BlockResult::InterruptedByTimeout;
                 }
             }
 
-            t.begin_blocking({});
+            blocker.begin_blocking({});
 
             set_state(Thread::Blocked);
         }
@@ -860,7 +860,7 @@ public:
         scheduler_lock.unlock();
         block_lock.unlock();
 
-        dbgln_if(THREAD_DEBUG, "Thread {} blocking on {} ({}) -->", *this, &t, t.state_string());
+        dbgln_if(THREAD_DEBUG, "Thread {} blocking on {} ({}) -->", *this, &blocker, blocker.state_string());
         bool did_timeout = false;
         u32 lock_count_to_restore = 0;
         auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
@@ -888,15 +888,15 @@ public:
             did_timeout |= timeout_unblocked.exchange(true);
             if (m_blocker) {
                 // Remove ourselves...
-                VERIFY(m_blocker == &t);
+                VERIFY(m_blocker == &blocker);
                 m_blocker = nullptr;
             }
-            dbgln_if(THREAD_DEBUG, "<-- Thread {} unblocked from {} ({})", *this, &t, t.state_string());
+            dbgln_if(THREAD_DEBUG, "<-- Thread {} unblocked from {} ({})", *this, &blocker, blocker.state_string());
             m_in_block = false;
             break;
         }
 
-        if (t.was_interrupted_by_signal()) {
+        if (blocker.was_interrupted_by_signal()) {
             ScopedSpinLock scheduler_lock(g_scheduler_lock);
             ScopedSpinLock lock(m_lock);
             dispatch_one_pending_signal();
@@ -904,7 +904,7 @@ public:
 
         // Notify the blocker that we are no longer blocking. It may need
         // to clean up now while we're still holding m_lock
-        auto result = t.end_blocking({}, did_timeout); // calls was_unblocked internally
+        auto result = blocker.end_blocking({}, did_timeout); // calls was_unblocked internally
 
         if (timer && !did_timeout) {
             // Cancel the timer while not holding any locks. This allows
