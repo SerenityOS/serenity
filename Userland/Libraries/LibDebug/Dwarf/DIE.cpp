@@ -131,12 +131,28 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         value.data.as_u32 = data;
         break;
     }
+    case AttributeDataForm::Data8: {
+        u64 data;
+        debug_info_stream >> data;
+        VERIFY(!debug_info_stream.has_any_error());
+        value.type = AttributeValue::Type::UnsignedNumber;
+        value.data.as_u64 = data;
+        break;
+    }
     case AttributeDataForm::Ref4: {
         u32 data;
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::DieReference;
         value.data.as_u32 = data + m_compilation_unit.offset();
+        break;
+    }
+    case AttributeDataForm::Ref8: {
+        u64 data;
+        debug_info_stream >> data;
+        VERIFY(!debug_info_stream.has_any_error());
+        value.type = AttributeValue::Type::DieReference;
+        value.data.as_u64 = data + m_compilation_unit.offset();
         break;
     }
     case AttributeDataForm::FlagPresent: {

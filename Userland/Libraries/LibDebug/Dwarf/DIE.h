@@ -57,6 +57,7 @@ public:
         union {
             u32 as_u32;
             i32 as_i32;
+            u64 as_u64;
             const char* as_string; // points to bytes in the memory mapped elf image
             bool as_bool;
             struct {
