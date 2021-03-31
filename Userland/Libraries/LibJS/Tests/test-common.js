@@ -429,6 +429,7 @@ class ExpectationError extends Error {
         if (suite[message]) {
             suite[message] = {
                 result: "fail",
+                details: "Another test with the same message did already run",
             };
             return;
         }
