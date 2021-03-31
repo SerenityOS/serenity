@@ -65,6 +65,19 @@ SpinBox::SpinBox()
 
     REGISTER_INT_PROPERTY("min", min, set_min);
     REGISTER_INT_PROPERTY("max", max, set_max);
+
+    register_property(
+        "range", [this]() {
+            JsonObject range;
+            range.set("min", min());
+            range.set("max", max());
+            return range; },
+        [this](auto& value) {
+            if (!value.is_array() || value.as_array().size() != 2)
+                return false;
+            set_range(value.as_array().at(0).to_i32(), value.as_array().at(1).to_i32());
+            return true;
+        });
 }
 
 SpinBox::~SpinBox()
