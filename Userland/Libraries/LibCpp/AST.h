@@ -418,7 +418,8 @@ enum class BinaryOp {
     BitwiseXor,
     LeftShift,
     RightShift,
-    EqualsEquals
+    EqualsEquals,
+    NotEqual,
 };
 
 class BinaryExpression : public Expression {
