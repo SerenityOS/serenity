@@ -240,7 +240,7 @@ Gfx::IntRect WindowFrame::menubar_rect() const
 {
     if (!m_window.menubar() || !m_window.should_show_menubar())
         return {};
-    return Gfx::WindowTheme::current().menu_bar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette(), menu_row_count());
+    return Gfx::WindowTheme::current().menubar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette(), menu_row_count());
 }
 
 Gfx::IntRect WindowFrame::title_bar_rect() const

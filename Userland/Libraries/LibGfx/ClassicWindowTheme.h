@@ -45,7 +45,7 @@ public:
     virtual IntRect title_bar_icon_rect(WindowType, const IntRect& window_rect, const Palette&) const override;
     virtual IntRect title_bar_text_rect(WindowType, const IntRect& window_rect, const Palette&) const override;
 
-    virtual IntRect menu_bar_rect(WindowType, const IntRect& window_rect, const Palette&, int menu_row_count) const override;
+    virtual IntRect menubar_rect(WindowType, const IntRect& window_rect, const Palette&, int menu_row_count) const override;
 
     virtual IntRect frame_rect_for_window(WindowType, const IntRect& window_rect, const Palette&, int menu_row_count) const override;
 
