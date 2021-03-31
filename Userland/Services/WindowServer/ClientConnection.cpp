@@ -993,4 +993,10 @@ OwnPtr<Messages::WindowServer::GetScreenBitmapResponse> ClientConnection::handle
     return make<Messages::WindowServer::GetScreenBitmapResponse>(bitmap.to_shareable_bitmap());
 }
 
+OwnPtr<Messages::WindowServer::GetActiveWindowBitmapResponse> ClientConnection::handle(const Messages::WindowServer::GetActiveWindowBitmap&)
+{
+    auto& bitmap = Compositor::the().bitmap_of_active_window({});
+    return make<Messages::WindowServer::GetActiveWindowBitmapResponse>(bitmap.to_shareable_bitmap());
+}
+
 }
