@@ -35,7 +35,6 @@ enum class WindowType {
     WindowSwitcher,
     Taskbar,
     Tooltip,
-    Menubar,
     MenuApplet,
     Notification,
     Desktop,
