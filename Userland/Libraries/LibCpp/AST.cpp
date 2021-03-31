@@ -501,7 +501,24 @@ void TemplatizedFunctionCall::dump(size_t indent) const
     for (const auto& arg : m_arguments) {
         arg.dump(indent + 1);
     }
+}
 
+void CppCastExpression::dump(size_t indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent);
+    outln("{}", m_cast_type);
+
+    print_indent(indent + 1);
+    outln("<");
+    if (m_type)
+        m_type->dump(indent + 1);
+    print_indent(indent + 1);
+    outln(">");
+
+    if (m_expression)
+        m_expression->dump(indent + 1);
 }
 
 }

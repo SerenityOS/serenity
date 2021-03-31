@@ -440,6 +440,9 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
         return parse_literal(parent);
     }
 
+    if (match_cpp_cast_expression())
+        return parse_cpp_cast_expression(parent);
+
     if (match_name()) {
         if (match_function_call() != TemplatizedMatchResult::NoMatch)
             return parse_function_call(parent);
@@ -827,7 +830,8 @@ bool Parser::match_expression()
     auto token_type = peek().type();
     return match_literal()
         || token_type == Token::Type::Identifier
-        || match_unary_expression();
+        || match_unary_expression()
+        || match_cpp_cast_expression();
 }
 
 bool Parser::eof() const
@@ -1339,6 +1343,40 @@ NonnullRefPtr<Name> Parser::parse_name(ASTNode& parent)
     name_node->m_name = name_node->m_scope.take_last();
     name_node->set_end(position());
     return name_node;
+}
+
+bool Parser::match_cpp_cast_expression()
+{
+    save_state();
+    ScopeGuard state_guard = [this] { load_state(); };
+
+    auto token = consume();
+    if (token.type() != Token::Type::Keyword)
+        return false;
+
+    auto text = token.text();
+    if (text == "static_cast" || text == "reinterpret_cast" || text == "dynamic_cast" || text == "const_cast")
+        return true;
+    return false;
+}
+
+NonnullRefPtr<CppCastExpression> Parser::parse_cpp_cast_expression(ASTNode& parent)
+{
+    auto cast_expression = create_ast_node<CppCastExpression>(parent, position(), {});
+
+    cast_expression->m_cast_type = consume(Token::Type::Keyword).text();
+
+    consume(Token::Type::Less);
+    cast_expression->m_type = parse_type(*cast_expression);
+    consume(Token::Type::Greater);
+
+    consume(Token::Type::LeftParen);
+    cast_expression->m_expression = parse_expression(*cast_expression);
+    consume(Token::Type::RightParen);
+
+    cast_expression->set_end(position());
+
+    return cast_expression;
 }
 
 }
