@@ -414,6 +414,8 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     case TIOCSCTTY:
         current_process.set_tty(this);
         return 0;
+    case TIOCSTI:
+        return -EIO;
     case TIOCNOTTY:
         current_process.set_tty(nullptr);
         return 0;
