@@ -73,7 +73,13 @@ HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, HitTestTy
         result = downcast<InitialContainingBlockBox>(m_box).BlockBox::hit_test(position, type);
     }
 
+    int z_index = m_box.computed_values().z_index().value_or(0);
+
     for (auto* child : m_children) {
+        int child_z_index = child->m_box.computed_values().z_index().value_or(0);
+        if (result.layout_node && (child_z_index < z_index))
+            continue;
+
         auto result_here = child->hit_test(position, type);
         if (result_here.layout_node)
             result = result_here;
