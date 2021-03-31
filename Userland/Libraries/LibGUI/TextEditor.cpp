@@ -1127,9 +1127,7 @@ void TextEditor::set_cursor_post_update(const TextPosition& a_position)
         m_cursor = position;
         m_cursor_state = true;
     }
-
     cursor_did_change();
-
     if (m_highlighter)
     {
         m_highlighter->cursor_did_change();
