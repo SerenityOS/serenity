@@ -45,7 +45,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`libpuffy`](libpuffy/)        | libpuffy                                      | 1.0               | https://github.com/ibara/libpuffy                     |
 | [`libtiff`](libtiff/)          | libtiff                                       | 4.2.0             | http://www.libtiff.org/                               |
 | [`libvorbis`](libvorbis/)      | libvorbis                                     | 1.3.7             | https://github.com/xiph/vorbis                        |
-| [`links`](links/)              | Links web browser                             | 2.19              | http://links.twibright.com/                           |
+| [`links`](links/)              | Links web browser                             | 2.22              | http://links.twibright.com/                           |
 | [`lua`](lua/)                  | Lua                                           | 5.3.5             | https://www.lua.org/                                  |
 | [`m4`](m4/)                    | GNU M4                                        | 1.4.9             | https://www.gnu.org/software/m4/                      |
 | [`make`](make/)                | GNU make                                      | 4.3               | https://www.gnu.org/software/make/                    |
