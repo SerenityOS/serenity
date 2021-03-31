@@ -77,6 +77,7 @@ public:
     void did_construct_window_manager(Badge<WindowManager>);
 
     const Gfx::Bitmap& front_bitmap_for_screenshot(Badge<ClientConnection>) const { return *m_front_bitmap; }
+    const Gfx::Bitmap& bitmap_of_active_window(Badge<ClientConnection>);
 
 private:
     Compositor();
@@ -109,6 +110,9 @@ private:
     OwnPtr<Gfx::Painter> m_back_painter;
     OwnPtr<Gfx::Painter> m_front_painter;
     OwnPtr<Gfx::Painter> m_temp_painter;
+
+    RefPtr<Gfx::Bitmap> m_active_window_bitmap;
+    OwnPtr<Gfx::Painter> m_active_window_painter;
 
     Gfx::DisjointRectSet m_dirty_screen_rects;
     Gfx::DisjointRectSet m_opaque_wallpaper_rects;

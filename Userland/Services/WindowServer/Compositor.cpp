@@ -120,6 +120,38 @@ void Compositor::did_construct_window_manager(Badge<WindowManager>)
     compose();
 }
 
+const Gfx::Bitmap& Compositor::bitmap_of_active_window(Badge<ClientConnection>)
+{
+    auto& wm = WindowManager::the();
+
+    const auto active_window = wm.active_window();
+
+    auto& active_window_frame = active_window->frame();
+    const auto active_window_frame_render_rect = active_window_frame.render_rect();
+    const auto size = Gfx::IntSize { active_window_frame_render_rect.width(), active_window_frame_render_rect.height() };
+
+    auto& screen = Screen::the();
+    const auto scale_factor = screen.scale_factor();
+
+    m_active_window_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size, scale_factor);
+    m_active_window_painter = make<Gfx::Painter>(*m_active_window_bitmap);
+
+    active_window_frame.paint_completely(*m_active_window_painter, { 0, 0 });
+
+    const auto active_window_frame_location = active_window_frame_render_rect.location();
+    const auto active_window_rect = active_window->rect();
+    const auto active_window_location = active_window_rect.location();
+    const auto destination_location = Gfx::IntPoint {
+        active_window_location.x() - active_window_frame_location.x(),
+        active_window_location.y() - active_window_frame_location.y()
+    };
+
+    auto active_window_bitmap = active_window->backing_store();
+    m_active_window_painter->blit(destination_location, *active_window_bitmap, active_window_bitmap->rect());
+
+    return *m_active_window_bitmap;
+}
+
 void Compositor::compose()
 {
     auto& wm = WindowManager::the();
