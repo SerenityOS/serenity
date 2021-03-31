@@ -46,25 +46,39 @@ int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
 
-    String output_path;
-    bool output_to_clipboard = false;
+    bool active_window = false;
     int delay = 0;
+    bool output_to_clipboard = false;
+    String output_path;
 
-    args_parser.add_positional_argument(output_path, "Output filename", "output", Core::ArgsParser::Required::No);
-    args_parser.add_option(output_to_clipboard, "Output to clipboard", "clipboard", 'c');
+    args_parser.add_option(active_window, "Screenshot the active window instead of the screen", "active", 'a');
     args_parser.add_option(delay, "Seconds to wait before taking a screenshot", "delay", 'd', "seconds");
+    args_parser.add_option(output_to_clipboard, "Output to clipboard", "clipboard", 'c');
+    args_parser.add_positional_argument(output_path, "Output filename", "output", Core::ArgsParser::Required::No);
 
     args_parser.parse(argc, argv);
 
     if (output_path.is_empty()) {
-        output_path = Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png");
+        if (active_window) {
+            output_path = Core::DateTime::now().to_string("active-window-%Y-%m-%d-%H-%M-%S.png");
+        } else {
+            output_path = Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png");
+        }
     }
 
     auto app = GUI::Application::construct(argc, argv);
     sleep(delay);
-    auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetScreenBitmap>();
 
-    auto* bitmap = response->bitmap().bitmap();
+    Gfx::ShareableBitmap shareable_bitmap;
+    if (active_window) {
+        auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetActiveWindowBitmap>();
+        shareable_bitmap = response->bitmap();
+    } else {
+        auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetScreenBitmap>();
+        shareable_bitmap = response->bitmap();
+    }
+    auto* bitmap = shareable_bitmap.bitmap();
+
     if (!bitmap) {
         warnln("Failed to grab screenshot");
         return ShotReturnValue::ErrorGrabScreenshot;
