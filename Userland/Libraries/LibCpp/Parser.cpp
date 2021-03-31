@@ -455,6 +455,8 @@ bool Parser::match_literal()
     switch (peek().type()) {
     case Token::Type::Integer:
         return true;
+    case Token::Type::SingleQuotedString:
+        return true;
     case Token::Type::DoubleQuotedString:
         return true;
     case Token::Type::Float:
@@ -516,9 +518,10 @@ NonnullRefPtr<Expression> Parser::parse_literal(ASTNode& parent)
         auto token = consume();
         return create_ast_node<NumericLiteral>(parent, token.start(), token.end(), text_of_token(token));
     }
-    case Token::Type::DoubleQuotedString: {
+    case Token::Type::SingleQuotedString:
+        [[fallthrough]];
+    case Token::Type::DoubleQuotedString:
         return parse_string_literal(parent);
-    }
     case Token::Type::Keyword: {
         if (match_boolean_literal())
             return parse_boolean_literal(parent);
@@ -935,7 +938,7 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(ASTNode& parent)
     Optional<size_t> end_token_index;
     while (!eof()) {
         auto token = peek();
-        if (token.type() != Token::Type::DoubleQuotedString && token.type() != Token::Type::EscapeSequence) {
+        if (token.type() != Token::Type::DoubleQuotedString && token.type() != Token::Type::SingleQuotedString && token.type() != Token::Type::EscapeSequence) {
             VERIFY(start_token_index.has_value());
             end_token_index = m_state.token_index - 1;
             break;
