@@ -251,7 +251,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(ASTNode& parent)
     return block_statement;
 }
 
-Parser::MatchTypeResult Parser::match_type()
+Parser::TemplatizedMatchResult Parser::match_type()
 {
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
@@ -259,17 +259,17 @@ Parser::MatchTypeResult Parser::match_type()
     parse_type_qualifiers();
 
     if (!match_name())
-        return MatchTypeResult::NoMatch;
+        return TemplatizedMatchResult::NoMatch;
     parse_name(*m_root_node);
 
     if (peek(Token::Type::Less).has_value()) {
         if (match_template_arguments()) {
-            return MatchTypeResult::Templatized;
+            return TemplatizedMatchResult::Templatized;
         }
-        return MatchTypeResult::NoMatch;
+        return TemplatizedMatchResult::NoMatch;
     }
 
-    return MatchTypeResult::Regular;
+    return TemplatizedMatchResult::Regular;
 }
 
 bool Parser::match_template_arguments()
@@ -282,7 +282,7 @@ bool Parser::match_template_arguments()
     consume();
 
     while (!eof() && peek().type() != Token::Type::Greater) {
-        if (match_type() == MatchTypeResult::NoMatch)
+        if (match_type() == TemplatizedMatchResult::NoMatch)
             return false;
         parse_type(*m_root_node);
     }
@@ -312,7 +312,7 @@ bool Parser::match_variable_declaration()
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
 
-    if (match_type() == MatchTypeResult::NoMatch) {
+    if (match_type() == TemplatizedMatchResult::NoMatch) {
         return false;
     }
 
@@ -441,7 +441,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
     }
 
     if (match_name()) {
-        if (match_function_call())
+        if (match_function_call() != TemplatizedMatchResult::NoMatch)
             return parse_function_call(parent);
         return parse_name(parent);
     }
@@ -634,7 +634,7 @@ bool Parser::match_function_declaration()
 
     parse_function_qualifiers();
 
-    if (match_type() == MatchTypeResult::NoMatch)
+    if (match_type() == TemplatizedMatchResult::NoMatch)
         return false;
     VERIFY(m_root_node);
     parse_type(*m_root_node);
@@ -904,22 +904,49 @@ void Parser::print_tokens() const
     }
 }
 
-bool Parser::match_function_call()
+Parser::TemplatizedMatchResult Parser::match_function_call()
 {
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
     if (!match_name())
-        return false;
+        return TemplatizedMatchResult::NoMatch;
     parse_name(*m_root_node);
 
-    return match(Token::Type::LeftParen);
+    bool is_templatized = false;
+    if (match_template_arguments()) {
+        is_templatized = true;
+        parse_template_arguments(*m_root_node);
+    }
+
+    if (!match(Token::Type::LeftParen))
+        return TemplatizedMatchResult::NoMatch;
+
+    return is_templatized ? TemplatizedMatchResult::Templatized : TemplatizedMatchResult::Regular;
 }
 
 NonnullRefPtr<FunctionCall> Parser::parse_function_call(ASTNode& parent)
 {
     SCOPE_LOGGER();
-    auto call = create_ast_node<FunctionCall>(parent, position(), {});
+
+    auto match_result = match_type();
+    if (match_result == TemplatizedMatchResult::NoMatch) {
+        error("expected type");
+        return create_ast_node<FunctionCall>(parent, position(), position());
+    }
+
+    bool is_templatized = match_result == TemplatizedMatchResult::Templatized;
+
+    RefPtr<FunctionCall> call;
+    if (is_templatized) {
+        call = create_ast_node<TemplatizedFunctionCall>(parent, position(), {});
+    } else {
+        call = create_ast_node<FunctionCall>(parent, position(), {});
+    }
+
     call->m_name = parse_name(*call);
+    if (is_templatized) {
+        static_cast<TemplatizedFunctionCall&>(*call).m_template_arguments = parse_template_arguments(*call);
+    }
 
     NonnullRefPtrVector<Expression> args;
     consume(Token::Type::LeftParen);
@@ -931,7 +958,8 @@ NonnullRefPtr<FunctionCall> Parser::parse_function_call(ASTNode& parent)
     consume(Token::Type::RightParen);
     call->m_arguments = move(args);
     call->set_end(position());
-    return call;
+
+    return call.release_nonnull();
 }
 
 NonnullRefPtr<StringLiteral> Parser::parse_string_literal(ASTNode& parent)

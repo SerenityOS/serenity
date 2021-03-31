@@ -78,7 +78,6 @@ private:
     bool match_whitespace();
     bool match_variable_declaration();
     bool match_expression();
-    bool match_function_call();
     bool match_secondary_expression();
     bool match_enum_declaration();
     bool match_struct_declaration();
@@ -91,12 +90,13 @@ private:
     bool match_template_arguments();
     bool match_name();
 
-    enum class MatchTypeResult {
+    enum class TemplatizedMatchResult {
         NoMatch,
         Regular,
         Templatized,
     };
-    MatchTypeResult match_type();
+    TemplatizedMatchResult match_type();
+    TemplatizedMatchResult match_function_call();
 
     Optional<NonnullRefPtrVector<Parameter>> parse_parameter_list(ASTNode& parent);
     Optional<Token> consume_whitespace();
