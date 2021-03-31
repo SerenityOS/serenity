@@ -971,7 +971,7 @@ void Window::set_menubar(MenuBar* menubar)
 
         auto& wm = WindowManager::the();
         Gfx::IntPoint next_menu_location { 0, 0 };
-        auto menubar_rect = Gfx::WindowTheme::current().menu_bar_rect(Gfx::WindowTheme::WindowType::Normal, rect(), wm.palette(), 1);
+        auto menubar_rect = Gfx::WindowTheme::current().menubar_rect(Gfx::WindowTheme::WindowType::Normal, rect(), wm.palette(), 1);
         m_menubar->for_each_menu([&](Menu& menu) {
             int text_width = wm.font().width(menu.name());
             menu.set_rect_in_window_menubar({ next_menu_location.x(), 0, text_width + menubar_menu_margin, menubar_rect.height() });
