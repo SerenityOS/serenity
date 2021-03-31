@@ -460,20 +460,36 @@ public:
     RefPtr<Expression> m_rhs;
 };
 
-class FunctionCall final : public Expression {
+class FunctionCall : public Expression {
 public:
     FunctionCall(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : Expression(parent, start, end, filename)
     {
     }
 
-    ~FunctionCall() override = default;
+    virtual ~FunctionCall() override = default;
     virtual const char* class_name() const override { return "FunctionCall"; }
     virtual void dump(size_t indent) const override;
     virtual bool is_function_call() const override { return true; }
+    virtual bool is_templatized() const { return false; }
 
     RefPtr<Name> m_name;
     NonnullRefPtrVector<Expression> m_arguments;
+};
+
+class TemplatizedFunctionCall final : public FunctionCall {
+public:
+    TemplatizedFunctionCall(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+        : FunctionCall(parent, start, end, filename)
+    {
+    }
+
+    ~TemplatizedFunctionCall() override = default;
+    virtual const char* class_name() const override { return "TemplatizedFunctionCall"; }
+    virtual void dump(size_t indent) const override;
+    virtual bool is_templatized() const override { return true; }
+
+    NonnullRefPtrVector<Type> m_template_arguments;
 };
 
 class StringLiteral final : public Expression {

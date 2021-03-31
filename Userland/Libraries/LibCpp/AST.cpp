@@ -483,4 +483,25 @@ String Name::full_name() const
     return String::formatted("{}{}", builder.to_string(), m_name.is_null() ? "" : m_name->m_name);
 }
 
+void TemplatizedFunctionCall::dump(size_t indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent);
+    outln("{}", m_name->full_name());
+
+    print_indent(indent + 1);
+    outln("<");
+    for (auto& arg : m_template_arguments) {
+        arg.dump(indent + 1);
+    }
+    print_indent(indent + 1);
+    outln(">");
+
+    for (const auto& arg : m_arguments) {
+        arg.dump(indent + 1);
+    }
+
+}
+
 }
