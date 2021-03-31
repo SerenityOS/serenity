@@ -176,6 +176,7 @@ public:
     void set_cursor_and_focus_line(size_t line, size_t column);
     void set_cursor(size_t line, size_t column);
     virtual void set_cursor(const TextPosition&);
+    virtual void set_cursor_post_update(const TextPosition&);
 
     const Syntax::Highlighter* syntax_highlighter() const;
     void set_syntax_highlighter(OwnPtr<Syntax::Highlighter>);
@@ -243,6 +244,7 @@ private:
     virtual void document_did_change() override;
     virtual void document_did_set_text() override;
     virtual void document_did_set_cursor(const TextPosition&) override;
+    virtual void document_did_set_cursor_post_update(const TextPosition&) override;
 
     // ^Syntax::HighlighterClient
     virtual Vector<TextDocumentSpan>& spans() final { return document().spans(); }

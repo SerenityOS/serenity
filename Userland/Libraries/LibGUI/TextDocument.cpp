@@ -329,6 +329,14 @@ void TextDocument::set_all_cursors(const TextPosition& position)
     }
 }
 
+void TextDocument::set_all_cursors_post_update(const TextPosition& position)
+{
+    if (m_client_notifications_enabled) {
+        for (auto* client : m_clients)
+            client->document_did_set_cursor_post_update(position);
+    }
+}
+
 String TextDocument::text() const
 {
     StringBuilder builder;
@@ -343,9 +351,9 @@ String TextDocument::text() const
 
 String TextDocument::text_in_range(const TextRange& a_range) const
 {
-    if (is_empty() || line_count() < a_range.end().line() - a_range.start().line() || line(a_range.start().line()).is_empty())
-        return String("");
     auto range = a_range.normalized();
+    if (is_empty() || line_count() < range.end().line() - range.start().line() || line(range.start().line()).is_empty())
+        return String("");
 
     StringBuilder builder;
     for (size_t i = range.start().line(); i <= range.end().line(); ++i) {
@@ -780,7 +788,7 @@ RemoveTextCommand::RemoveTextCommand(TextDocument& document, const String& text,
 void RemoveTextCommand::redo()
 {
     m_document.remove(m_range);
-    m_document.set_all_cursors(m_range.start());
+    m_document.set_all_cursors_post_update(m_range.start());
 }
 
 void RemoveTextCommand::undo()

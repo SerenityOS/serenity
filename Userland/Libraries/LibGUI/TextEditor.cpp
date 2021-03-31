@@ -1101,6 +1101,41 @@ void TextEditor::set_cursor(size_t line, size_t column)
     set_cursor({ line, column });
 }
 
+void TextEditor::set_cursor_post_update(const TextPosition& a_position)
+{
+    VERIFY(!lines().is_empty());
+
+    TextPosition position = a_position;
+
+    if (position.line() >= line_count())
+        position.set_line(line_count() - 1);
+
+    if (position.column() > lines()[position.line()].length())
+        position.set_column(lines()[position.line()].length());
+
+    if (m_cursor != position && is_visual_data_up_to_date()) {
+        // NOTE: If the old cursor is no longer valid, repaint everything just in case.
+        auto old_cursor_line_rect = m_cursor.line() < line_count()
+            ? line_widget_rect(m_cursor.line())
+            : rect();
+        m_cursor = position;
+        m_cursor_state = true;
+        scroll_cursor_into_view();
+        update(old_cursor_line_rect);
+        update_cursor();
+    } else if (m_cursor != position) {
+        m_cursor = position;
+        m_cursor_state = true;
+    }
+
+    cursor_did_change();
+
+    if (m_highlighter)
+    {
+        m_highlighter->cursor_did_change();
+    }
+}
+
 void TextEditor::set_cursor(const TextPosition& a_position)
 {
     VERIFY(!lines().is_empty());
@@ -1664,6 +1699,11 @@ void TextEditor::document_did_set_text()
 void TextEditor::document_did_set_cursor(const TextPosition& position)
 {
     set_cursor(position);
+}
+
+void TextEditor::document_did_set_cursor_post_update(const TextPosition& position)
+{
+    set_cursor_post_update(position);
 }
 
 void TextEditor::set_document(TextDocument& document)

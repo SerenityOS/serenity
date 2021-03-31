@@ -67,6 +67,7 @@ public:
         virtual void document_did_change() = 0;
         virtual void document_did_set_text() = 0;
         virtual void document_did_set_cursor(const TextPosition&) = 0;
+        virtual void document_did_set_cursor_post_update(const TextPosition&) {}
 
         virtual bool is_automatic_indentation_enabled() const = 0;
         virtual int soft_tab_width() const = 0;
@@ -134,6 +135,7 @@ public:
 
     void notify_did_change();
     void set_all_cursors(const TextPosition&);
+    void set_all_cursors_post_update(const TextPosition&);
 
     TextPosition insert_at(const TextPosition&, u32, const Client* = nullptr);
     TextPosition insert_at(const TextPosition&, const StringView&, const Client* = nullptr);
