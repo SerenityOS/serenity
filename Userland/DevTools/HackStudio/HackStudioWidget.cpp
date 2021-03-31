@@ -202,11 +202,21 @@ void HackStudioWidget::open_project(const String& root_path)
     }
 }
 
-Vector<String> HackStudioWidget::selected_file_names() const
+Vector<String> HackStudioWidget::selected_file_paths() const
 {
     Vector<String> files;
     m_project_tree_view->selection().for_each_index([&](const GUI::ModelIndex& index) {
-        files.append(index.data().as_string());
+        String sub_path = index.data().as_string();
+
+        GUI::ModelIndex parent_or_invalid = index.parent();
+
+        while (parent_or_invalid.is_valid()) {
+            sub_path = String::formatted("{}/{}", parent_or_invalid.data().as_string(), sub_path);
+
+            parent_or_invalid = parent_or_invalid.parent();
+        }
+
+        files.append(sub_path);
     });
     return files;
 }
@@ -319,12 +329,34 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action()
         String filename;
         if (GUI::InputBox::show(window(), filename, "Enter name of new file:", "Add new file to project") != GUI::InputBox::ExecOK)
             return;
-        auto file = Core::File::construct(filename);
+
+        auto path_to_selected = selected_file_paths();
+
+        String filepath;
+
+        if (!path_to_selected.is_empty()) {
+            VERIFY(Core::File::exists(path_to_selected.first()));
+
+            LexicalPath selected(path_to_selected.first());
+
+            String dir_path;
+
+            if (Core::File::is_directory(selected.string()))
+                dir_path = selected.string();
+            else
+                dir_path = selected.dirname();
+
+            filepath = String::formatted("{}/", dir_path);
+        }
+
+        filepath = String::formatted("{}{}", filepath, filename);
+
+        auto file = Core::File::construct(filepath);
         if (!file->open((Core::IODevice::OpenMode)(Core::IODevice::WriteOnly | Core::IODevice::MustBeNew))) {
-            GUI::MessageBox::show(window(), String::formatted("Failed to create '{}'", filename), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), String::formatted("Failed to create '{}'", filepath), "Error", GUI::MessageBox::Type::Error);
             return;
         }
-        open_file(filename);
+        open_file(filepath);
     });
 }
 
@@ -334,6 +366,22 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
         String directory_name;
         if (GUI::InputBox::show(window(), directory_name, "Enter name of new directory:", "Add new folder to project") != GUI::InputBox::ExecOK)
             return;
+
+        auto path_to_selected = selected_file_paths();
+
+        if (!path_to_selected.is_empty()) {
+            LexicalPath selected(path_to_selected.first());
+
+            String dir_path;
+
+            if (Core::File::is_directory(selected.string()))
+                dir_path = selected.string();
+            else
+                dir_path = selected.dirname();
+
+            directory_name = String::formatted("{}/{}", dir_path, directory_name);
+        }
+
         auto formatted_dir_name = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_project->model().root_path(), directory_name));
         int rc = mkdir(formatted_dir_name.characters(), 0755);
         if (rc < 0) {
@@ -347,7 +395,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_selected_action()
 {
 
     auto open_selected_action = GUI::Action::create("Open", [this](const GUI::Action&) {
-        auto files = selected_file_names();
+        auto files = selected_file_paths();
         for (auto& file : files)
             open_file(file);
     });
@@ -358,13 +406,14 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_selected_action()
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 {
     auto delete_action = GUI::CommonActions::make_delete_action([this](const GUI::Action&) {
-        auto files = selected_file_names();
+        auto files = selected_file_paths();
         if (files.is_empty())
             return;
 
         String message;
         if (files.size() == 1) {
-            message = String::formatted("Really remove {} from disk?", LexicalPath(files[0]).basename());
+            LexicalPath file(files[0]);
+            message = String::formatted("Really remove {} from disk?", file.basename());
         } else {
             message = String::formatted("Really remove {} files from disk?", files.size());
         }

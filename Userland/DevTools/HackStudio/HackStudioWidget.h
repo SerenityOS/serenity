@@ -54,8 +54,6 @@ public:
     virtual ~HackStudioWidget() override;
     void open_file(const String& filename);
 
-    Vector<String> selected_file_names() const;
-
     void update_actions();
     Project& project();
     GUI::TextEditor& current_editor();
@@ -73,6 +71,7 @@ public:
 
 private:
     static String get_full_path_of_serenity_source(const String& file);
+    Vector<String> selected_file_paths() const;
 
     HackStudioWidget(const String& path_to_project);
     void open_project(const String& root_path);
