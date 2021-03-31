@@ -64,13 +64,11 @@ static int s_last_title_button_icons_scale;
 
 static Gfx::Bitmap* s_active_window_shadow;
 static Gfx::Bitmap* s_inactive_window_shadow;
-static Gfx::Bitmap* s_menu_bar_shadow;
 static Gfx::Bitmap* s_menu_shadow;
 static Gfx::Bitmap* s_task_bar_shadow;
 static Gfx::Bitmap* s_tooltip_shadow;
 static String s_last_active_window_shadow_path;
 static String s_last_inactive_window_shadow_path;
-static String s_last_menu_bar_shadow_path;
 static String s_last_menu_shadow_path;
 static String s_last_task_bar_shadow_path;
 static String s_last_tooltip_shadow_path;
@@ -196,7 +194,6 @@ void WindowFrame::reload_config()
     };
     load_shadow(WindowManager::the().palette().active_window_shadow_path(), s_last_active_window_shadow_path, s_active_window_shadow);
     load_shadow(WindowManager::the().palette().inactive_window_shadow_path(), s_last_inactive_window_shadow_path, s_inactive_window_shadow);
-    load_shadow(WindowManager::the().palette().menu_bar_shadow_path(), s_last_menu_bar_shadow_path, s_menu_bar_shadow);
     load_shadow(WindowManager::the().palette().menu_shadow_path(), s_last_menu_shadow_path, s_menu_shadow);
     load_shadow(WindowManager::the().palette().task_bar_shadow_path(), s_last_task_bar_shadow_path, s_task_bar_shadow);
     load_shadow(WindowManager::the().palette().tooltip_shadow_path(), s_last_tooltip_shadow_path, s_tooltip_shadow);
@@ -213,8 +210,6 @@ Gfx::Bitmap* WindowFrame::window_shadow() const
         return s_menu_shadow;
     case WindowType::Tooltip:
         return s_tooltip_shadow;
-    case WindowType::Menubar:
-        return s_menu_bar_shadow;
     case WindowType::Taskbar:
         return s_task_bar_shadow;
     case WindowType::AppletArea:

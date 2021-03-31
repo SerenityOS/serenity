@@ -966,12 +966,15 @@ void Window::set_menubar(MenuBar* menubar)
         return;
     m_menubar = menubar;
     if (m_menubar) {
+        // FIXME: Maybe move this to the theming system?
+        static constexpr auto menubar_menu_margin = 14;
+
         auto& wm = WindowManager::the();
         Gfx::IntPoint next_menu_location { 0, 0 };
         auto menubar_rect = Gfx::WindowTheme::current().menu_bar_rect(Gfx::WindowTheme::WindowType::Normal, rect(), wm.palette(), 1);
         m_menubar->for_each_menu([&](Menu& menu) {
             int text_width = wm.font().width(menu.name());
-            menu.set_rect_in_window_menubar({ next_menu_location.x(), 0, text_width + MenuManager::menubar_menu_margin(), menubar_rect.height() });
+            menu.set_rect_in_window_menubar({ next_menu_location.x(), 0, text_width + menubar_menu_margin, menubar_rect.height() });
             next_menu_location.move_by(menu.rect_in_window_menubar().width(), 0);
             return IterationDecision::Continue;
         });
