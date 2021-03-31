@@ -10,6 +10,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`bison`](bison/)              | GNU Bison                                     | 1.25              | https://www.gnu.org/software/bison/                   |
 | [`byacc`](byacc/)              | Berkeley Yacc                                 | 20191125          | https://invisible-island.net/byacc/byacc.html         |
 | [`bzip2`](bzip2/)              | bzip2                                         | 1.0.8             | https://sourceware.org/bzip2/                         |
+| [`carl`](carl/)                | Crypto Ancienne Resource Loader               | 1.5               | https://github.com/classilla/cryanc                   |
 | [`c-ray`](c-ray/)              | C-Ray                                         |                   | https://github.com/vkoskiv/c-ray                      |
 | [`chester`](chester/)          | Chester Gameboy Emulator                      |                   | https://github.com/veikkos/chester                    |
 | [`cmake`](cmake/)              | CMake                                         | 3.19.4            | https://cmake.org/                                    |
