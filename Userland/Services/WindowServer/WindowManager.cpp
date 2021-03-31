@@ -123,7 +123,6 @@ const Gfx::Font& WindowManager::window_title_font() const
 bool WindowManager::set_resolution(int width, int height, int scale)
 {
     bool success = Compositor::the().set_resolution(width, height, scale);
-    MenuManager::the().set_needs_window_resize();
     ClientConnection::for_each_client([&](ClientConnection& client) {
         client.notify_about_new_screen_rect(Screen::the().rect());
     });
@@ -1145,7 +1144,6 @@ Gfx::IntRect WindowManager::arena_rect_for_type(WindowType type) const
     case WindowType::WindowSwitcher:
     case WindowType::Taskbar:
     case WindowType::Tooltip:
-    case WindowType::Menubar:
     case WindowType::MenuApplet:
     case WindowType::Notification:
         return Screen::the().rect();

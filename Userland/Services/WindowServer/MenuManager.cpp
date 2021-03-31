@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Shannon Booth <shannon.ml.booth@gmail.com>
  * All rights reserved.
  *
@@ -26,14 +26,10 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/Debug.h>
-#include <AK/QuickSort.h>
-#include <LibGfx/Painter.h>
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
-#include <unistd.h>
 
 namespace WindowServer {
 
@@ -49,11 +45,6 @@ MenuManager& MenuManager::the()
 MenuManager::MenuManager()
 {
     s_the = this;
-    m_needs_window_resize = true;
-
-    m_window = Window::construct(*this, WindowType::Menubar);
-    m_window->set_rect(menubar_rect());
-    m_window->set_visible(false);
 
     m_search_timer = Core::Timer::create_single_shot(0, [this] {
         m_current_search.clear();
@@ -73,31 +64,8 @@ bool MenuManager::is_open(const Menu& menu) const
     return false;
 }
 
-void MenuManager::draw()
-{
-    auto& wm = WindowManager::the();
-    auto palette = wm.palette();
-    auto menubar_rect = this->menubar_rect();
-
-    if (m_needs_window_resize) {
-        m_window->set_rect(menubar_rect);
-        m_needs_window_resize = false;
-    }
-
-    Gfx::Painter painter(*window().backing_store());
-
-    painter.fill_rect(menubar_rect, palette.window());
-    painter.draw_line({ 0, menubar_rect.bottom() - 1 }, { menubar_rect.right(), menubar_rect.bottom() - 1 }, palette.threed_shadow1());
-    painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, palette.threed_shadow2());
-}
-
 void MenuManager::refresh()
 {
-    if (!m_window)
-        return;
-    draw();
-    window().invalidate();
-
     ClientConnection::for_each_client([&](ClientConnection& client) {
         client.for_each_menu([&](Menu& menu) {
             menu.redraw();
@@ -262,11 +230,6 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
     }
 }
 
-void MenuManager::set_needs_window_resize()
-{
-    m_needs_window_resize = true;
-}
-
 void MenuManager::close_all_menus_from_client(Badge<ClientConnection>, ClientConnection& client)
 {
     if (!has_open_menu())
@@ -427,11 +390,6 @@ void MenuManager::set_current_menu(Menu* menu)
     }
 
     wm.set_active_input_window(m_current_menu->menu_window());
-}
-
-Gfx::IntRect MenuManager::menubar_rect() const
-{
-    return { 0, 0, Screen::the().rect().width(), 19 };
 }
 
 Menu* MenuManager::previous_menu(Menu* current)

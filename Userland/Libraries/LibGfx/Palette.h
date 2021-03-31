@@ -142,7 +142,6 @@ public:
     String title_button_icons_path() const { return path(PathRole::TitleButtonIcons); }
     String active_window_shadow_path() const { return path(PathRole::ActiveWindowShadow); }
     String inactive_window_shadow_path() const { return path(PathRole::InactiveWindowShadow); }
-    String menu_bar_shadow_path() const { return path(PathRole::MenuBarShadow); }
     String menu_shadow_path() const { return path(PathRole::MenuShadow); }
     String task_bar_shadow_path() const { return path(PathRole::TaskBarShadow); }
     String tooltip_shadow_path() const { return path(PathRole::TooltipShadow); }
