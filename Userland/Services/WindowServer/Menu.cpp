@@ -141,7 +141,7 @@ Window& Menu::ensure_menu_window()
         next_item_location.move_by(0, height);
     }
 
-    int window_height_available = Screen::the().height() - MenuManager::the().menubar_rect().height() - frame_thickness() * 2;
+    int window_height_available = Screen::the().height() - frame_thickness() * 2;
     int max_window_height = (window_height_available / item_height()) * item_height() + frame_thickness() * 2;
     int content_height = m_items.is_empty() ? 0 : (m_items.last().rect().bottom() + 1) + frame_thickness();
     int window_height = min(max_window_height, content_height);
@@ -591,9 +591,6 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_subm
         if (as_submenu)
             adjusted_pos = adjusted_pos.translated(0, item_height());
     }
-
-    if (adjusted_pos.y() < MenuManager::the().menubar_rect().height())
-        adjusted_pos.set_y(MenuManager::the().menubar_rect().height());
 
     window.move_to(adjusted_pos);
     window.set_visible(true);

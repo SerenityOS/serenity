@@ -49,11 +49,6 @@ public:
     bool is_open(const Menu&) const;
     bool has_open_menu() const { return !m_open_menu_stack.is_empty(); }
 
-    Gfx::IntRect menubar_rect() const;
-    static int menubar_menu_margin() { return 14; }
-
-    void set_needs_window_resize();
-
     Menu* current_menu() { return m_current_menu.ptr(); }
     void set_current_menu(Menu*);
     void clear_current_menu();
@@ -67,8 +62,6 @@ public:
 
     int theme_index() const { return m_theme_index; }
 
-    Window& window() { return *m_window; }
-
     Menu* previous_menu(Menu* current);
     Menu* next_menu(Menu* current);
 
@@ -80,14 +73,8 @@ public:
 private:
     void close_menus(const Vector<Menu*>&);
 
-    const Window& window() const { return *m_window; }
-
     virtual void event(Core::Event&) override;
     void handle_mouse_event(MouseEvent&);
-
-    void draw();
-
-    RefPtr<Window> m_window;
 
     WeakPtr<Menu> m_current_menu;
     WeakPtr<Window> m_previous_input_window;
@@ -95,8 +82,6 @@ private:
 
     RefPtr<Core::Timer> m_search_timer;
     StringBuilder m_current_search;
-
-    bool m_needs_window_resize { false };
 
     int m_theme_index { 0 };
 
