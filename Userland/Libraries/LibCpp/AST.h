@@ -696,4 +696,20 @@ public:
     NonnullRefPtrVector<Declaration> m_declarations;
 };
 
+class CppCastExpression : public Expression {
+public:
+    CppCastExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+        : Expression(parent, start, end, filename)
+    {
+    }
+
+    virtual ~CppCastExpression() override = default;
+    virtual const char* class_name() const override { return "CppCastExpression"; }
+    virtual void dump(size_t indent) const override;
+
+    StringView m_cast_type;
+    RefPtr<Type> m_type;
+    RefPtr<Expression> m_expression;
+};
+
 }
