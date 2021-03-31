@@ -383,6 +383,59 @@ void WindowFrame::paint(Gfx::Painter& painter, const Gfx::IntRect& rect)
     }
 }
 
+void WindowFrame::paint_completely(Gfx::Painter& painter)
+{
+    const auto frame_rect = render_rect();
+    paint_completely(painter, frame_rect.location());
+}
+
+void WindowFrame::paint_completely(Gfx::Painter& painter, const Gfx::IntPoint& frame_location)
+{
+    render_to_cache();
+
+    auto frame_rect = render_rect();
+    auto window_rect = m_window.rect();
+
+    if (m_top_bottom) {
+        {
+            auto destination_location = Gfx::IntPoint {
+                frame_location.x(),
+                frame_location.y()
+            };
+            auto source_rect = Gfx::IntRect { 0, 0, frame_rect.width(), m_bottom_y };
+            painter.blit(destination_location, *m_top_bottom, source_rect, m_opacity);
+        }
+        {
+            auto bottom_part_height = frame_rect.height() - window_rect.height() - m_bottom_y;
+            auto destination_location = Gfx::IntPoint {
+                frame_location.x(),
+                frame_location.y() + frame_rect.height() - bottom_part_height
+            };
+            auto source_rect = Gfx::IntRect { 0, m_bottom_y, frame_rect.width(), bottom_part_height };
+            painter.blit(destination_location, *m_top_bottom, source_rect, m_opacity);
+        }
+    }
+
+    if (m_left_right) {
+        {
+            auto destination_location = Gfx::IntPoint {
+                frame_location.x(),
+                frame_location.y() + m_bottom_y
+            };
+            auto source_rect = Gfx::IntRect { 0, 0, m_right_x, window_rect.height() };
+            painter.blit(destination_location, *m_left_right, source_rect, m_opacity);
+        }
+        {
+            auto destination_location = Gfx::IntPoint {
+                frame_location.x() + frame_rect.width() - m_right_x,
+                frame_location.y() + m_bottom_y
+            };
+            auto source_rect = Gfx::IntRect { m_right_x, 0, m_right_x, window_rect.height() };
+            painter.blit(destination_location, *m_left_right, source_rect, m_opacity);
+        }
+    }
+}
+
 void WindowFrame::render(Gfx::Painter& painter)
 {
     if (m_window.is_frameless())

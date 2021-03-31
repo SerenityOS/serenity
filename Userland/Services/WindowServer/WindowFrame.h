@@ -50,6 +50,8 @@ public:
     Gfx::IntRect rect() const;
     Gfx::IntRect render_rect() const;
     void paint(Gfx::Painter&, const Gfx::IntRect&);
+    void paint_completely(Gfx::Painter&);
+    void paint_completely(Gfx::Painter&, const Gfx::IntPoint&);
     void render(Gfx::Painter&);
     void render_to_cache();
     void on_mouse_event(const MouseEvent&);
