@@ -33,7 +33,7 @@
 
 namespace Gfx {
 
-static constexpr int menu_bar_height = 20;
+static constexpr int menubar_height = 20;
 
 ClassicWindowTheme::ClassicWindowTheme()
 {
@@ -145,11 +145,11 @@ void ClassicWindowTheme::paint_tool_window_frame(Painter& painter, WindowState w
     }
 }
 
-IntRect ClassicWindowTheme::menu_bar_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette, int menu_row_count) const
+IntRect ClassicWindowTheme::menubar_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette, int menu_row_count) const
 {
     if (window_type != WindowType::Normal)
         return {};
-    return { 4, 3 + title_bar_height(window_type, palette) + 2, window_rect.width(), menu_bar_height * menu_row_count };
+    return { 4, 3 + title_bar_height(window_type, palette) + 2, window_rect.width(), menubar_height * menu_row_count };
 }
 
 IntRect ClassicWindowTheme::title_bar_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette) const
@@ -209,9 +209,9 @@ IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, const 
     case WindowType::ToolWindow:
         return {
             window_rect.x() - 4,
-            window_rect.y() - window_titlebar_height - 5 - menu_row_count * menu_bar_height,
+            window_rect.y() - window_titlebar_height - 5 - menu_row_count * menubar_height,
             window_rect.width() + 8,
-            window_rect.height() + 9 + window_titlebar_height + menu_row_count * menu_bar_height
+            window_rect.height() + 9 + window_titlebar_height + menu_row_count * menubar_height
         };
     case WindowType::Notification:
         return {
