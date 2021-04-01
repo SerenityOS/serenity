@@ -310,6 +310,10 @@
 #cmakedefine01 PORTABLE_IMAGE_LOADER_DEBUG
 #endif
 
+#ifndef PROMISE_DEBUG
+#cmakedefine01 PROMISE_DEBUG
+#endif
+
 #ifndef PTHREAD_DEBUG
 #cmakedefine01 PTHREAD_DEBUG
 #endif

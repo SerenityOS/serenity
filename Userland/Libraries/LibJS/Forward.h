@@ -55,6 +55,7 @@
     __JS_ENUMERATE(Function, function, FunctionPrototype, FunctionConstructor, void)              \
     __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor, void)                \
     __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor, void)                      \
+    __JS_ENUMERATE(Promise, promise, PromisePrototype, PromiseConstructor, void)                  \
     __JS_ENUMERATE(RegExpObject, regexp, RegExpPrototype, RegExpConstructor, void)                \
     __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor, void)                \
     __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor, void)
@@ -139,6 +140,9 @@ class MarkedValueList;
 class NativeFunction;
 class NativeProperty;
 class PrimitiveString;
+class PromiseReaction;
+class PromiseReactionJob;
+class PromiseResolveThenableJob;
 class PropertyName;
 class Reference;
 class ScopeNode;
@@ -151,6 +155,9 @@ class Uint8ClampedArray;
 class VM;
 class Value;
 enum class DeclarationKind;
+struct AlreadyResolved;
+struct JobCallback;
+struct PromiseCapability;
 
 // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
 class ProxyObject;

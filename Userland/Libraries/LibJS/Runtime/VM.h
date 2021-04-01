@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +28,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <AK/StackInfo.h>
@@ -36,6 +38,7 @@
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/MarkedValueList.h>
+#include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -240,6 +243,14 @@ public:
 
     Shape& scope_object_shape() { return *m_scope_object_shape; }
 
+    void run_queued_promise_jobs();
+    void enqueue_promise_job(NativeFunction&);
+
+    void promise_rejection_tracker(const Promise&, Promise::RejectionOperation) const;
+
+    AK::Function<void(const Promise&)> on_promise_unhandled_rejection;
+    AK::Function<void(const Promise&)> on_promise_rejection_handled;
+
 private:
     VM();
 
@@ -258,9 +269,9 @@ private:
 
     StackInfo m_stack_info;
 
-    bool m_underscore_is_last_value { false };
-
     HashMap<String, Symbol*> m_global_symbol_map;
+
+    Vector<NativeFunction*> m_promise_jobs;
 
     PrimitiveString* m_empty_string { nullptr };
     PrimitiveString* m_single_ascii_character_strings[128] {};
@@ -272,6 +283,7 @@ private:
 
     Shape* m_scope_object_shape { nullptr };
 
+    bool m_underscore_is_last_value { false };
     bool m_should_log_exceptions { false };
 };
 
