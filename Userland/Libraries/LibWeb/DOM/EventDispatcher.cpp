@@ -114,6 +114,8 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<EventTarget::EventListen
             vm.clear_exception();
             // FIXME: Set legacyOutputDidListenersThrowFlag if given. (Only used by IndexedDB currently)
         }
+        vm.run_queued_promise_jobs();
+        VERIFY(!vm.exception());
 
         event.set_in_passive_listener(false);
         if (is<Bindings::WindowObject>(global)) {
