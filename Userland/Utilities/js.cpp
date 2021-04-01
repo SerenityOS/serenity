@@ -715,6 +715,26 @@ int main(int argc, char** argv)
     bool syntax_highlight = !disable_syntax_highlight;
 
     vm = JS::VM::create();
+    // NOTE: These will print out both warnings when using something like Promise.reject().catch(...) -
+    // which is, as far as I can tell, correct - a promise is created, rejected without handler, and a
+    // handler then attached to it. The Node.js REPL doesn't warn in this case, so it's something we
+    // might want to revisit at a later point and disable warnings for promises created this way.
+    vm->on_promise_unhandled_rejection = [](auto& promise) {
+        // FIXME: Optionally make print_value() to print to stderr
+        out("WARNING: A promise was rejected without any handlers");
+        out(" (result: ");
+        HashTable<JS::Object*> seen_objects;
+        print_value(promise.result(), seen_objects);
+        outln(")");
+    };
+    vm->on_promise_rejection_handled = [](auto& promise) {
+        // FIXME: Optionally make print_value() to print to stderr
+        out("WARNING: A handler was added to an already rejected promise");
+        out(" (result: ");
+        HashTable<JS::Object*> seen_objects;
+        print_value(promise.result(), seen_objects);
+        outln(")");
+    };
     OwnPtr<JS::Interpreter> interpreter;
 
     interrupt_interpreter = [&] {
