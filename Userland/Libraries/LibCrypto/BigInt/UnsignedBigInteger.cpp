@@ -156,6 +156,13 @@ size_t UnsignedBigInteger::trimmed_length() const
     return m_cached_trimmed_length.value();
 }
 
+void UnsignedBigInteger::clamp_to_trimmed_length()
+{
+    auto length = trimmed_length();
+    if (m_words.size() > length)
+        m_words.resize(length);
+}
+
 FLATTEN UnsignedBigInteger UnsignedBigInteger::plus(const UnsignedBigInteger& other) const
 {
     UnsignedBigInteger result;
@@ -578,7 +585,7 @@ FLATTEN void UnsignedBigInteger::shift_left_without_allocation(
 
         // output += (carry_word << temp_result.length())
         // FIXME : Using temp_plus this way to transform carry_word into a bigint is not
-        // efficient nor pretty. Maybe we should have an "add_with_shift" method ?
+        //         efficient nor pretty. Maybe we should have an "add_with_shift" method ?
         temp_plus.set_to_0();
         temp_plus.m_words.append(carry_word);
         shift_left_by_n_words(temp_plus, temp_result.length(), temp_result);
