@@ -210,6 +210,14 @@ private:
     bool parse_legacy_octal_escape_sequence(ByteCode& bytecode_stack, size_t& length);
     Optional<u8> parse_legacy_octal_escape();
 
+    size_t ensure_total_number_of_capturing_parenthesis();
+
+    // ECMA-262's flavour of regex is a bit weird in that it allows backrefs to reference "future" captures, and such backrefs
+    // always match the empty string. So we have to know how many capturing parenthesis there are, but we don't want to always
+    // parse it twice, so we'll just do so when it's actually needed.
+    // Most patterns should have no need to ever populate this field.
+    Optional<size_t> m_total_number_of_capturing_parenthesis;
+
     // Keep the Annex B. behaviour behind a flag, the users can enable it by passing the `ECMAScriptFlags::BrowserExtended` flag.
     bool m_should_use_browser_extended_grammar { false };
 };

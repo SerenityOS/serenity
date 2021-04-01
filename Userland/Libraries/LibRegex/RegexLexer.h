@@ -93,6 +93,7 @@ public:
     void set_source(const StringView source) { m_source = source; }
     bool try_skip(char);
     char skip();
+    const auto& source() const { return m_source; }
 
 private:
     ALWAYS_INLINE char peek(size_t offset = 0) const;
