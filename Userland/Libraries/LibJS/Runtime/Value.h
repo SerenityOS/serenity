@@ -82,6 +82,7 @@ public:
     bool is_cell() const { return is_string() || is_accessor() || is_object() || is_bigint() || is_symbol() || is_native_property(); }
     bool is_array() const;
     bool is_function() const;
+    bool is_constructor() const;
     bool is_regexp(GlobalObject& global_object) const;
 
     bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
@@ -377,6 +378,7 @@ bool same_value_non_numeric(Value lhs, Value rhs);
 TriState abstract_relation(GlobalObject&, bool left_first, Value lhs, Value rhs);
 Function* get_method(GlobalObject& global_object, Value, const PropertyName&);
 size_t length_of_array_like(GlobalObject&, const Object&);
+Object* species_constructor(GlobalObject&, const Object&, Object& default_constructor);
 
 }
 

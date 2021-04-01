@@ -45,6 +45,7 @@
     M(DescChangeNonConfigurable, "Cannot change attributes of non-configurable property '{}'")                                          \
     M(DivisionByZero, "Division by zero")                                                                                               \
     M(FunctionArgsNotObject, "Argument array must be an object")                                                                        \
+    M(GetCapabilitiesExecutorCalledMultipleTimes, "GetCapabilitiesExecutor was called multiple times")                                  \
     M(InOperatorWithObject, "'in' operator must be used on an object")                                                                  \
     M(InstanceOfOperatorBadPrototype, "'prototype' property of {} is not an object")                                                    \
     M(InvalidAssignToConst, "Invalid assignment to const variable")                                                                     \
@@ -79,6 +80,7 @@
     M(ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess,                                                                              \
         "Object prototype must not be {} on a super property access")                                                                   \
     M(ObjectPrototypeWrongType, "Prototype must be an object or null")                                                                  \
+    M(PromiseExecutorNotAFunction, "Promise executor must be a function")                                                               \
     M(ProxyConstructBadReturnType, "Proxy handler's construct trap violates invariant: must return "                                    \
                                    "an object")                                                                                         \
     M(ProxyConstructorBadType, "Expected {} argument of Proxy constructor to be object, got {}")                                        \
