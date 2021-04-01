@@ -108,6 +108,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
     define_native_function(vm.names.at, at, 1, attr);
     define_native_function(vm.names.match, match, 1, attr);
+    define_native_function(vm.names.replace, replace, 2, attr);
     define_native_function(vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
 
@@ -673,6 +674,59 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
     if (!rx)
         return {};
     return rx->invoke(vm.well_known_symbol_match(), js_string(vm, s));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
+{
+    // https://tc39.es/ecma262/#sec-string.prototype.replace
+    auto this_object = vm.this_value(global_object);
+    if (this_object.is_nullish()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
+        return {};
+    }
+
+    auto search_value = vm.argument(0);
+    auto replace_value = vm.argument(1);
+
+    if (!search_value.is_nullish()) {
+        if (auto* replacer = get_method(global_object, search_value, vm.well_known_symbol_replace()))
+            return vm.call(*replacer, search_value, this_object, replace_value);
+    }
+
+    auto string = this_object.to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto search_string = search_value.to_string(global_object);
+    if (vm.exception())
+        return {};
+    Optional<size_t> position = string.index_of(search_string);
+    if (!position.has_value())
+        return js_string(vm, string);
+
+    auto preserved = string.substring(0, position.value());
+    String replacement;
+
+    if (replace_value.is_function()) {
+        auto result = vm.call(replace_value.as_function(), js_undefined(), search_value, Value(position.value()), js_string(vm, string));
+        if (vm.exception())
+            return {};
+
+        replacement = result.to_string(global_object);
+        if (vm.exception())
+            return {};
+    } else {
+        // FIXME: Implement the GetSubstituion algorithm for substituting placeholder '$' characters - https://tc39.es/ecma262/#sec-getsubstitution
+        replacement = replace_value.to_string(global_object);
+        if (vm.exception())
+            return {};
+    }
+
+    StringBuilder builder;
+    builder.append(preserved);
+    builder.append(replacement);
+    builder.append(string.substring(position.value() + search_string.length()));
+
+    return js_string(vm, builder.build());
 }
 
 }
