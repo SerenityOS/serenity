@@ -543,8 +543,12 @@ Color Document::visited_link_color() const
 
 JS::Interpreter& Document::interpreter()
 {
-    if (!m_interpreter)
-        m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(Bindings::main_thread_vm(), *m_window);
+    if (!m_interpreter) {
+        auto& vm = Bindings::main_thread_vm();
+        // TODO: Hook up vm.on_promise_unhandled_rejection and vm.on_promise_rejection_handled
+        // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises#promise_rejection_events
+        m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(vm, *m_window);
+    }
     return *m_interpreter;
 }
 
