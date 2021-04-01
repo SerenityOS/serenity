@@ -150,6 +150,13 @@ UnsignedBigInteger ModularPower(const UnsignedBigInteger& b, const UnsignedBigIn
         UnsignedBigInteger::multiply_without_allocation(base, base, temp_1, temp_2, temp_3, temp_4, temp_multiply);
         UnsignedBigInteger::divide_without_allocation(temp_multiply, m, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
         base.set_to(temp_remainder);
+
+        // Note that not clamping here would cause future calculations (multiply, specifically) to allocate even more unused space
+        // which would then persist through the temp bigints, and significantly slow down later loops.
+        // To avoid that, we can clamp to a specific max size, or just clamp to the min needed amount of space.
+        ep.clamp_to_trimmed_length();
+        exp.clamp_to_trimmed_length();
+        base.clamp_to_trimmed_length();
     }
     return exp;
 }
