@@ -66,3 +66,15 @@ test("not matching", () => {
 
     expect(res).toBe(null);
 });
+
+// Backreference to a group not yet parsed: #6039
+test("Future group backreference, #6039", () => {
+    let re = /(\3)(\1)(a)/;
+    let result = re.exec("cat");
+    expect(result.length).toBe(4);
+    expect(result[0]).toBe("a");
+    expect(result[1]).toBe("");
+    expect(result[2]).toBe("");
+    expect(result[3]).toBe("a");
+    expect(result.index).toBe(1);
+});

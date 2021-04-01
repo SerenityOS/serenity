@@ -399,6 +399,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
 
     size_t string_position = state.string_position;
     bool inverse_matched { false };
+    bool had_zero_length_match { false };
 
     size_t offset { state.instruction_position + 3 };
     for (size_t i = 0; i < arguments_count(); ++i) {
@@ -454,7 +455,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
             if (input.view.length() - state.string_position < length)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-            if (!compare_string(input, state, str_builder.string_view().characters_without_null_termination(), length))
+            if (!compare_string(input, state, str_builder.string_view().characters_without_null_termination(), length, had_zero_length_match))
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
         } else if (compare_type == CharacterCompareType::CharClass) {
@@ -488,7 +489,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
             if (input.view.length() - state.string_position < str.length())
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-            if (!compare_string(input, state, str.characters_without_null_termination(), str.length()))
+            if (!compare_string(input, state, str.characters_without_null_termination(), str.length(), had_zero_length_match))
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
         } else if (compare_type == CharacterCompareType::NamedReference) {
@@ -506,7 +507,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
             if (input.view.length() - state.string_position < str.length())
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-            if (!compare_string(input, state, str.characters_without_null_termination(), str.length()))
+            if (!compare_string(input, state, str.characters_without_null_termination(), str.length(), had_zero_length_match))
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
         } else {
@@ -519,7 +520,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
     if (current_inversion_state() && !inverse_matched)
         ++state.string_position;
 
-    if (string_position == state.string_position || state.string_position > input.view.length())
+    if ((!had_zero_length_match && string_position == state.string_position) || state.string_position > input.view.length())
         return ExecutionResult::Failed_ExecuteLowPrioForks;
 
     return ExecutionResult::Continue;
@@ -542,7 +543,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(const MatchInput& input, MatchSt
     }
 }
 
-ALWAYS_INLINE bool OpCode_Compare::compare_string(const MatchInput& input, MatchState& state, const char* str, size_t length)
+ALWAYS_INLINE bool OpCode_Compare::compare_string(const MatchInput& input, MatchState& state, const char* str, size_t length, bool& had_zero_length_match)
 {
     if (input.view.is_u8_view()) {
         auto str_view1 = StringView(str, length);
@@ -558,6 +559,8 @@ ALWAYS_INLINE bool OpCode_Compare::compare_string(const MatchInput& input, Match
 
         if (str_view1 == str_view2) {
             state.string_position += length;
+            if (length == 0)
+                had_zero_length_match = true;
             return true;
         }
     }
