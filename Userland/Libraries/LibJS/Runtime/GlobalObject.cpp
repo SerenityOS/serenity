@@ -58,6 +58,8 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
+#include <LibJS/Runtime/PromiseConstructor.h>
+#include <LibJS/Runtime/PromisePrototype.h>
 #include <LibJS/Runtime/ProxyConstructor.h>
 #include <LibJS/Runtime/ReflectObject.h>
 #include <LibJS/Runtime/RegExpConstructor.h>
@@ -144,6 +146,7 @@ void GlobalObject::initialize_global_object()
     add_constructor(vm.names.Function, m_function_constructor, m_function_prototype);
     add_constructor(vm.names.Number, m_number_constructor, m_number_prototype);
     add_constructor(vm.names.Object, m_object_constructor, m_object_prototype);
+    add_constructor(vm.names.Promise, m_promise_constructor, m_promise_prototype);
     add_constructor(vm.names.Proxy, m_proxy_constructor, nullptr);
     add_constructor(vm.names.RegExp, m_regexp_constructor, m_regexp_prototype);
     add_constructor(vm.names.String, m_string_constructor, m_string_prototype);
