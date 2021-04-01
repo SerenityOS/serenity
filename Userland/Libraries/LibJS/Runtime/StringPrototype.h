@@ -64,6 +64,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(last_index_of);
     JS_DECLARE_NATIVE_FUNCTION(at);
     JS_DECLARE_NATIVE_FUNCTION(match);
+    JS_DECLARE_NATIVE_FUNCTION(replace);
 
     JS_DECLARE_NATIVE_FUNCTION(symbol_iterator);
 };
