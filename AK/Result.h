@@ -117,7 +117,7 @@ public:
         return m_error.has_value();
     }
 
-    void release_error()
+    ErrorType release_error()
     {
         return m_error.release_value();
     }
