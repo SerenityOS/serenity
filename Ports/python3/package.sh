@@ -17,7 +17,7 @@ auth_opts="Python-${version}.tar.xz.asc Python-${version}.tar.xz"
 depends="libffi zlib"
 
 # FIXME: --enable-optimizations results in lots of __gcov_* linker errors
-configopts="--without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no"
+configopts="--disable-ipv6 --without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no"
 
 export BLDSHARED="${CC} -shared"
 
