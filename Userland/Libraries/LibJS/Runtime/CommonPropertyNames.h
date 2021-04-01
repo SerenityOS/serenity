@@ -62,6 +62,9 @@ namespace JS {
     P(abs)                                   \
     P(acos)                                  \
     P(acosh)                                 \
+    P(all)                                   \
+    P(allSettled)                            \
+    P(any)                                   \
     P(apply)                                 \
     P(arguments)                             \
     P(asIntN)                                \
@@ -108,6 +111,7 @@ namespace JS {
     P(expm1)                                 \
     P(fill)                                  \
     P(filter)                                \
+    P(finally)                               \
     P(find)                                  \
     P(findIndex)                             \
     P(flags)                                 \
@@ -192,11 +196,14 @@ namespace JS {
     P(propertyIsEnumerable)                  \
     P(prototype)                             \
     P(push)                                  \
+    P(race)                                  \
     P(random)                                \
     P(raw)                                   \
     P(reduce)                                \
     P(reduceRight)                           \
+    P(reject)                                \
     P(repeat)                                \
+    P(resolve)                               \
     P(reverse)                               \
     P(round)                                 \
     P(set)                                   \
@@ -224,6 +231,7 @@ namespace JS {
     P(tan)                                   \
     P(tanh)                                  \
     P(test)                                  \
+    P(then)                                  \
     P(toDateString)                          \
     P(toGMTString)                           \
     P(toISOString)                           \
@@ -251,6 +259,7 @@ namespace JS {
     P(writable)
 
 struct CommonPropertyNames {
+    FlyString catch_ { "catch" };
     FlyString for_ { "for" };
 #define __ENUMERATE(x) FlyString x { #x };
     ENUMERATE_STANDARD_PROPERTY_NAMES(__ENUMERATE)

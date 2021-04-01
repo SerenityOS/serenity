@@ -55,6 +55,12 @@ set(SOURCES
     Runtime/Object.cpp
     Runtime/ObjectPrototype.cpp
     Runtime/PrimitiveString.cpp
+    Runtime/Promise.cpp
+    Runtime/PromiseConstructor.cpp
+    Runtime/PromiseJobs.cpp
+    Runtime/PromisePrototype.cpp
+    Runtime/PromiseReaction.cpp
+    Runtime/PromiseResolvingFunction.cpp
     Runtime/ProxyConstructor.cpp
     Runtime/ProxyObject.cpp
     Runtime/Reference.cpp

@@ -76,8 +76,10 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     program.execute(*this, global_object);
     vm.pop_call_frame();
 
-    if (vm.last_value().is_empty())
-        vm.set_last_value({}, js_undefined());
+    // Whatever the promise jobs do should not affect the effective 'last value'.
+    auto last_value = vm.last_value();
+    vm.run_queued_promise_jobs();
+    vm.set_last_value({}, last_value.value_or(js_undefined()));
 }
 
 GlobalObject& Interpreter::global_object()

@@ -42,6 +42,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -237,10 +238,20 @@ Function& Value::as_function()
     return static_cast<Function&>(as_object());
 }
 
+// 7.2.4 IsConstructor, https://tc39.es/ecma262/#sec-isconstructor
+bool Value::is_constructor() const
+{
+    if (!is_function())
+        return false;
+    if (is<NativeFunction>(as_object()))
+        return static_cast<const NativeFunction&>(as_object()).has_constructor();
+    // ScriptFunction or BoundFunction
+    return true;
+}
+
+// 7.2.8 IsRegExp, https://tc39.es/ecma262/#sec-isregexp
 bool Value::is_regexp(GlobalObject& global_object) const
 {
-    // 7.2.8 IsRegExp, https://tc39.es/ecma262/#sec-isregexp
-
     if (!is_object())
         return false;
 
@@ -1303,10 +1314,9 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         return TriState::False;
 }
 
+// 7.3.10 GetMethod, https://tc39.es/ecma262/#sec-getmethod
 Function* get_method(GlobalObject& global_object, Value value, const PropertyName& property_name)
 {
-    // 7.3.10 GetMethod, https://tc39.es/ecma262/#sec-getmethod
-
     auto& vm = global_object.vm();
     auto* object = value.to_object(global_object);
     if (vm.exception())
@@ -1323,15 +1333,36 @@ Function* get_method(GlobalObject& global_object, Value value, const PropertyNam
     return &property_value.as_function();
 }
 
+// 7.3.18 LengthOfArrayLike, https://tc39.es/ecma262/#sec-lengthofarraylike
 size_t length_of_array_like(GlobalObject& global_object, const Object& object)
 {
-    // 7.3.18 LengthOfArrayLike, https://tc39.es/ecma262/#sec-lengthofarraylike
-
     auto& vm = global_object.vm();
     auto result = object.get(vm.names.length).value_or(js_undefined());
     if (vm.exception())
         return INVALID;
     return result.to_length(global_object);
+}
+
+// 7.3.22 SpeciesConstructor, https://tc39.es/ecma262/#sec-speciesconstructor
+Object* species_constructor(GlobalObject& global_object, const Object& object, Object& default_constructor)
+{
+    auto& vm = global_object.vm();
+    auto constructor = object.get(vm.names.constructor).value_or(js_undefined());
+    if (vm.exception())
+        return nullptr;
+    if (constructor.is_undefined())
+        return &default_constructor;
+    if (!constructor.is_object()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
+        return nullptr;
+    }
+    auto species = constructor.as_object().get(vm.well_known_symbol_species()).value_or(js_undefined());
+    if (species.is_nullish())
+        return &default_constructor;
+    if (species.is_constructor())
+        return &species.as_object();
+    vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
+    return nullptr;
 }
 
 }

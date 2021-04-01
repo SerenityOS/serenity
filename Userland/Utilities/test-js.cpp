@@ -80,6 +80,7 @@ public:
 private:
     JS_DECLARE_NATIVE_FUNCTION(is_strict_mode);
     JS_DECLARE_NATIVE_FUNCTION(can_parse_source);
+    JS_DECLARE_NATIVE_FUNCTION(run_queued_promise_jobs);
 };
 
 class TestRunner {
@@ -138,9 +139,11 @@ void TestRunnerGlobalObject::initialize_global_object()
     static FlyString global_property_name { "global" };
     static FlyString is_strict_mode_property_name { "isStrictMode" };
     static FlyString can_parse_source_property_name { "canParseSource" };
+    static FlyString run_queued_promise_jobs_property_name { "runQueuedPromiseJobs" };
     define_property(global_property_name, this, JS::Attribute::Enumerable);
     define_native_function(is_strict_mode_property_name, is_strict_mode);
     define_native_function(can_parse_source_property_name, can_parse_source);
+    define_native_function(run_queued_promise_jobs_property_name, run_queued_promise_jobs);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::is_strict_mode)
@@ -156,6 +159,12 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::can_parse_source)
     auto parser = JS::Parser(JS::Lexer(source));
     parser.parse_program();
     return JS::Value(!parser.has_errors());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::run_queued_promise_jobs)
+{
+    vm.run_queued_promise_jobs();
+    return JS::js_undefined();
 }
 
 static void cleanup_and_exit()
