@@ -16,14 +16,15 @@ auth_opts="Python-${version}.tar.xz.asc Python-${version}.tar.xz"
 # modules build at the moment even with those available, so it's pointless.
 depends="libffi zlib"
 
-# FIXME: the --build value is detected correctly by the configure script (via config.guess in the Python source root),
-# but still needs to be set explicitly when cross compiling. Figure out how to not hardcode this.
-BUILD="x86_64-pc-linux-gnu"
-
 # FIXME: --enable-optimizations results in lots of __gcov_* linker errors
-configopts="--build=${BUILD} --without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no"
+configopts="--without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no"
 
 export BLDSHARED="${CC} -shared"
+
+pre_configure() {
+    build="$("${workdir}/config.guess")"  # e.g. 'x86_64-pc-linux-gnu'
+    configopts="${configopts} --build=${build}"
+}
 
 post_configure() {
     run cp "${SERENITY_ROOT}/Ports/${port}/Setup.local" "Modules/Setup.local"
