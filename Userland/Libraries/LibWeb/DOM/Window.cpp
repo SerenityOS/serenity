@@ -109,6 +109,8 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
     [[maybe_unused]] auto rc = vm.call(timer.callback(), wrapper());
     if (vm.exception())
         vm.clear_exception();
+    vm.run_queued_promise_jobs();
+    VERIFY(!vm.exception());
 }
 
 i32 Window::allocate_timer_id(Badge<Timer>)
@@ -143,6 +145,8 @@ i32 Window::request_animation_frame(JS::Function& callback)
         [[maybe_unused]] auto rc = vm.call(function, JS::js_undefined(), JS::Value(fake_timestamp));
         if (vm.exception())
             vm.clear_exception();
+        vm.run_queued_promise_jobs();
+        VERIFY(!vm.exception());
         GUI::DisplayLink::unregister_callback(link_id);
     });
 
