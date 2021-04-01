@@ -81,6 +81,8 @@ public:
     // The "trimmed length" is the number of words after trimming leading zeroed words
     size_t trimmed_length() const;
 
+    void clamp_to_trimmed_length();
+
     UnsignedBigInteger plus(const UnsignedBigInteger& other) const;
     UnsignedBigInteger minus(const UnsignedBigInteger& other) const;
     UnsignedBigInteger bitwise_or(const UnsignedBigInteger& other) const;
