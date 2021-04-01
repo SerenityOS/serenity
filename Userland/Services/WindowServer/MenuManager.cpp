@@ -171,62 +171,61 @@ void MenuManager::event(Core::Event& event)
 
 void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
 {
-    if (has_open_menu()) {
-        auto* topmost_menu = m_open_menu_stack.last().ptr();
-        VERIFY(topmost_menu);
-        auto* window = topmost_menu->menu_window();
-        if (!window) {
-            dbgln("MenuManager::handle_mouse_event: No menu window");
-            return;
-        }
-        VERIFY(window->is_visible());
+    if (!has_open_menu())
+        return;
+    auto* topmost_menu = m_open_menu_stack.last().ptr();
+    VERIFY(topmost_menu);
+    auto* window = topmost_menu->menu_window();
+    if (!window) {
+        dbgln("MenuManager::handle_mouse_event: No menu window");
+        return;
+    }
+    VERIFY(window->is_visible());
 
-        bool event_is_inside_current_menu = window->rect().contains(mouse_event.position());
-        if (event_is_inside_current_menu) {
-            WindowManager::the().set_hovered_window(window);
-            auto translated_event = mouse_event.translated(-window->position());
-            WindowManager::the().deliver_mouse_event(*window, translated_event, true);
-            return;
-        }
+    bool event_is_inside_current_menu = window->rect().contains(mouse_event.position());
+    if (event_is_inside_current_menu) {
+        WindowManager::the().set_hovered_window(window);
+        auto translated_event = mouse_event.translated(-window->position());
+        WindowManager::the().deliver_mouse_event(*window, translated_event, true);
+        return;
+    }
 
-        if (topmost_menu->hovered_item())
-            topmost_menu->clear_hovered_item();
-        if (mouse_event.type() == Event::MouseDown || mouse_event.type() == Event::MouseUp) {
-            auto* window_menu_of = topmost_menu->window_menu_of();
-            if (window_menu_of) {
-                bool event_is_inside_taskbar_button = window_menu_of->taskbar_rect().contains(mouse_event.position());
-                if (event_is_inside_taskbar_button && !topmost_menu->is_window_menu_open()) {
-                    topmost_menu->set_window_menu_open(true);
-                    return;
-                }
-            }
-
-            if (mouse_event.type() == Event::MouseDown) {
-                for (auto& menu : m_open_menu_stack) {
-                    if (!menu)
-                        continue;
-                    if (!menu->menu_window()->rect().contains(mouse_event.position()))
-                        continue;
-                    return;
-                }
-                MenuManager::the().close_everyone();
-                topmost_menu->set_window_menu_open(false);
+    if (topmost_menu->hovered_item())
+        topmost_menu->clear_hovered_item();
+    if (mouse_event.type() == Event::MouseDown || mouse_event.type() == Event::MouseUp) {
+        auto* window_menu_of = topmost_menu->window_menu_of();
+        if (window_menu_of) {
+            bool event_is_inside_taskbar_button = window_menu_of->taskbar_rect().contains(mouse_event.position());
+            if (event_is_inside_taskbar_button && !topmost_menu->is_window_menu_open()) {
+                topmost_menu->set_window_menu_open(true);
+                return;
             }
         }
 
-        if (mouse_event.type() == Event::MouseMove) {
+        if (mouse_event.type() == Event::MouseDown) {
             for (auto& menu : m_open_menu_stack) {
                 if (!menu)
                     continue;
                 if (!menu->menu_window()->rect().contains(mouse_event.position()))
                     continue;
-                WindowManager::the().set_hovered_window(menu->menu_window());
-                auto translated_event = mouse_event.translated(-menu->menu_window()->position());
-                WindowManager::the().deliver_mouse_event(*menu->menu_window(), translated_event, true);
-                break;
+                return;
             }
+            MenuManager::the().close_everyone();
+            topmost_menu->set_window_menu_open(false);
         }
-        return;
+    }
+
+    if (mouse_event.type() == Event::MouseMove) {
+        for (auto& menu : m_open_menu_stack) {
+            if (!menu)
+                continue;
+            if (!menu->menu_window()->rect().contains(mouse_event.position()))
+                continue;
+            WindowManager::the().set_hovered_window(menu->menu_window());
+            auto translated_event = mouse_event.translated(-menu->menu_window()->position());
+            WindowManager::the().deliver_mouse_event(*menu->menu_window(), translated_event, true);
+            break;
+        }
     }
 }
 
