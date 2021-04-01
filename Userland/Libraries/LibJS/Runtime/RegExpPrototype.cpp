@@ -50,6 +50,7 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.exec, exec, 1, attr);
 
     define_native_function(vm.well_known_symbol_match(), symbol_match, 1, attr);
+    define_native_function(vm.well_known_symbol_replace(), symbol_replace, 2, attr);
 
     u8 readable_attr = Attribute::Configurable;
     define_native_property(vm.names.flags, flags, {}, readable_attr);
@@ -279,6 +280,153 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 
     // FIXME: This should exec the RegExp repeatedly while updating "lastIndex"
     return vm.call(*exec, rx, js_string(vm, s));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
+{
+    auto string_value = vm.argument(0);
+    auto replace_value = vm.argument(1);
+
+    // https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
+    auto rx = regexp_object_from(vm, global_object);
+    if (!rx)
+        return {};
+    auto string = string_value.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    auto global_value = rx->get(vm.names.global).value_or(js_undefined());
+    if (vm.exception())
+        return {};
+
+    bool global = global_value.to_boolean();
+    if (global)
+        rx->regex().start_offset = 0;
+
+    // FIXME: Implement and use RegExpExec - https://tc39.es/ecma262/#sec-regexpexec
+    auto* exec = get_method(global_object, rx, vm.names.exec);
+    if (!exec)
+        return {};
+
+    Vector<Object*> results;
+
+    while (true) {
+        auto result = vm.call(*exec, rx, string_value);
+        if (vm.exception())
+            return {};
+        if (result.is_null())
+            break;
+
+        auto* result_object = result.to_object(global_object);
+        if (!result_object)
+            return {};
+
+        results.append(result_object);
+        if (!global)
+            break;
+
+        auto match_object = result_object->get(0);
+        if (vm.exception())
+            return {};
+
+        String match_str = match_object.to_string(global_object);
+        if (vm.exception())
+            return {};
+        if (match_str.is_empty()) {
+            // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
+            //        Once implemented, step (8a) of the @@replace algorithm must also be implemented.
+            rx->regex().start_offset += 1;
+        }
+    }
+
+    String accumulated_result;
+    size_t next_source_position = 0;
+
+    for (auto* result : results) {
+        size_t result_length = length_of_array_like(global_object, *result);
+        size_t n_captures = result_length == 0 ? 0 : result_length - 1;
+
+        auto matched = result->get(0).value_or(js_undefined());
+        if (vm.exception())
+            return {};
+
+        auto position_value = result->get(vm.names.index).value_or(js_undefined());
+        if (vm.exception())
+            return {};
+
+        double position = position_value.to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
+
+        position = clamp(position, static_cast<double>(0), static_cast<double>(string.length()));
+
+        Vector<Value> captures;
+        for (size_t n = 1; n <= n_captures; ++n) {
+            auto capture = result->get(n).value_or(js_undefined());
+            if (vm.exception())
+                return {};
+
+            if (!capture.is_undefined()) {
+                auto capture_string = capture.to_string(global_object);
+                if (vm.exception())
+                    return {};
+
+                capture = Value(js_string(vm, capture_string));
+                if (vm.exception())
+                    return {};
+            }
+
+            captures.append(move(capture));
+        }
+
+        auto named_captures = result->get(vm.names.groups).value_or(js_undefined());
+        if (vm.exception())
+            return {};
+
+        String replacement;
+
+        if (replace_value.is_function()) {
+            Vector<Value> replacer_args { matched };
+            replacer_args.append(move(captures));
+            replacer_args.append(Value(position));
+            replacer_args.append(js_string(vm, string));
+            if (!named_captures.is_undefined()) {
+                replacer_args.append(move(named_captures));
+            }
+
+            auto replace_result = vm.call(replace_value.as_function(), js_undefined(), move(replacer_args));
+            if (vm.exception())
+                return {};
+
+            replacement = replace_result.to_string(global_object);
+            if (vm.exception())
+                return {};
+        } else {
+            // FIXME: Implement the GetSubstituion algorithm for substituting placeholder '$' characters - https://tc39.es/ecma262/#sec-getsubstitution
+            replacement = replace_value.to_string(global_object);
+            if (vm.exception())
+                return {};
+        }
+
+        if (position >= next_source_position) {
+            StringBuilder builder;
+            builder.append(accumulated_result);
+            builder.append(string.substring(next_source_position, position - next_source_position));
+            builder.append(replacement);
+
+            accumulated_result = builder.build();
+            next_source_position = position + matched.as_string().string().length();
+        }
+    }
+
+    if (next_source_position >= string.length())
+        return js_string(vm, accumulated_result);
+
+    StringBuilder builder;
+    builder.append(accumulated_result);
+    builder.append(string.substring(next_source_position));
+
+    return js_string(vm, builder.build());
 }
 
 }
