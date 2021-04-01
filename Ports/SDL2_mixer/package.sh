@@ -9,6 +9,9 @@ configure() {
     run ./configure \
         --host="${SERENITY_ARCH}-pc-serenity" \
         --with-sdl-prefix="${SERENITY_BUILD_DIR}/Root/usr" \
+        --prefix="/usr"                                    \
+        --enable-music-opus=false --enable-music-opus-shared=false \
+        --enable-music-mod-modplug=false --enable-music-mod-modplug-shared=false \
         EXTRA_LDFLAGS="-lgui -lgfx -lipc -lcore -lcompression"
 }
 
