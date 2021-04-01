@@ -47,9 +47,6 @@ SerendipityWidget::SerendipityWidget()
     banner_label.set_icon(Gfx::Bitmap::load_from_file("/res/graphics/welcome-serendipity.png"));
 
     auto& tip_frame = *find_descendant_of_type_named<GUI::Frame>("tip_frame");
-    auto palette = tip_frame.palette();
-    palette.set_color(Gfx::ColorRole::Base, Color::from_rgb(0xffffe1));
-    tip_frame.set_palette(palette);
     tip_frame.set_background_role(Gfx::ColorRole::Base);
     tip_frame.set_fill_with_background_color(true);
 
