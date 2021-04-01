@@ -357,7 +357,67 @@ KResultOr<int> Process::sys$mprotect(Userspace<void*> addr, size_t size, int pro
         return 0;
     }
 
-    // FIXME: We should also support mprotect() across multiple regions. (#175) (#964)
+    if (const auto& regions = space().find_regions_intersecting(range_to_mprotect); regions.size()) {
+        size_t full_size_found = 0;
+        // first check before doing anything
+        for (const auto* region : regions) {
+            if (!region->is_mmap())
+                return EPERM;
+            if (!validate_mmap_prot(prot, region->is_stack(), region->vmobject().is_anonymous(), region))
+                return EINVAL;
+            if (region->access() == prot_to_region_access_flags(prot))
+                return 0;
+            if (region->vmobject().is_inode()
+                && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(region->vmobject()).inode(), region->is_shared())) {
+                return EACCES;
+            }
+            full_size_found += region->range().intersect(range_to_mprotect).size();
+        }
+
+        if (full_size_found != range_to_mprotect.size())
+            return ENOMEM;
+
+        // then do all the other stuff
+        for (auto* old_region : regions) {
+            const auto intersection_to_mprotect = range_to_mprotect.intersect(old_region->range());
+            // full sub region
+            if (intersection_to_mprotect == old_region->range()) {
+                old_region->set_readable(prot & PROT_READ);
+                old_region->set_writable(prot & PROT_WRITE);
+                old_region->set_executable(prot & PROT_EXEC);
+
+                old_region->remap();
+                continue;
+            }
+            // Remove the old region from our regions tree, since were going to add another region
+            // with the exact same start address, but dont deallocate it yet
+            auto region = space().take_region(*old_region);
+            VERIFY(region);
+
+            // Unmap the old region here, specifying that we *don't* want the VM deallocated.
+            region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+
+            // This vector is the region(s) adjacent to our range.
+            // We need to allocate a new region for the range we wanted to change permission bits on.
+            auto adjacent_regions = space().split_region_around_range(*old_region, intersection_to_mprotect);
+            // there should only be one
+            VERIFY(adjacent_regions.size() == 1);
+
+            size_t new_range_offset_in_vmobject = old_region->offset_in_vmobject() + (intersection_to_mprotect.base().get() - old_region->range().base().get());
+            auto& new_region = space().allocate_split_region(*region, intersection_to_mprotect, new_range_offset_in_vmobject);
+            new_region.set_readable(prot & PROT_READ);
+            new_region.set_writable(prot & PROT_WRITE);
+            new_region.set_executable(prot & PROT_EXEC);
+
+            // Map the new region using our page directory (they were just allocated and don't have one) if any.
+            if (adjacent_regions.size())
+                adjacent_regions[0]->map(space().page_directory());
+
+            new_region.map(space().page_directory());
+        }
+
+        return 0;
+    }
 
     return EINVAL;
 }
