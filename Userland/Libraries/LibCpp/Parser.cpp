@@ -447,8 +447,11 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
     if (match_cpp_cast_expression())
         return parse_cpp_cast_expression(parent);
 
-    if(match_sizeof_expression())
+    if (match_sizeof_expression())
         return parse_sizeof_expression(parent);
+
+    if (match_braced_init_list())
+        return parse_braced_init_list(parent);
 
     if (match_name()) {
         if (match_function_call() != TemplatizedMatchResult::NoMatch)
@@ -851,7 +854,8 @@ bool Parser::match_expression()
         || token_type == Token::Type::Identifier
         || match_unary_expression()
         || match_cpp_cast_expression()
-        || match_sizeof_expression();
+        || match_sizeof_expression()
+        || match_braced_init_list();
 }
 
 bool Parser::eof() const
@@ -1116,13 +1120,9 @@ NonnullRefPtr<MemberDeclaration> Parser::parse_member_declaration(ASTNode& paren
     auto identifier_token = consume(Token::Type::Identifier);
     member_decl->m_name = text_of_token(identifier_token);
 
-    RefPtr<Expression> initial_value;
-    if (match(Token::Type::LeftCurly)) {
-        consume(Token::Type::LeftCurly);
-        initial_value = parse_expression(*member_decl);
-        consume(Token::Type::RightCurly);
+    if (match_braced_init_list()) {
+        member_decl->m_initial_value = parse_braced_init_list(*member_decl);
     }
-    member_decl->m_initial_value = move(initial_value);
 
     consume(Token::Type::Semicolon);
     member_decl->set_end(position());
@@ -1424,6 +1424,24 @@ NonnullRefPtr<SizeofExpression> Parser::parse_sizeof_expression(ASTNode& parent)
     consume(Token::Type::RightParen);
     exp->set_end(position());
     return exp;
+}
+
+bool Parser::match_braced_init_list()
+{
+    return match(Token::Type::LeftCurly);
+}
+
+NonnullRefPtr<BracedInitList> Parser::parse_braced_init_list(ASTNode& parent)
+{
+    auto init_list = create_ast_node<BracedInitList>(parent, position(), {});
+
+    consume(Token::Type::LeftCurly);
+    while (!eof() && peek().type() != Token::Type::RightCurly) {
+        init_list->m_expressions.append(parse_expression(*init_list));
+    }
+    consume(Token::Type::RightCurly);
+    init_list->set_end(position());
+    return init_list;
 }
 
 }
