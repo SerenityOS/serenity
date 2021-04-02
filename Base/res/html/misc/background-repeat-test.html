@@ -1,0 +1,54 @@
+<style>
+    body {
+        background: cyan;
+    }
+    iframe {
+        width: 200px;
+        height: 200px;
+    }
+    .float {
+        float: left;
+    }
+    .background {
+        background: white url(background-repeat.png);
+        width: 200px;
+        height: 200px;
+    }
+</style>
+<body>
+    <h1>Body Background</h1>
+    <div style="overflow: hidden">
+        <div class=float>
+            <h2>repeat</h2>
+            <iframe src="background-repeat.html"></iframe>
+
+            <h2>repeat-x</h2>
+            <iframe src="background-repeat-x.html"></iframe>
+        </div>
+        <div class=float>
+            <h2>no-repeat</h2>
+            <iframe src="background-no-repeat.html"></iframe>
+
+            <h2>repeat-y</h2>
+            <iframe src="background-repeat-y.html"></iframe>
+        </div>
+    </div>
+
+    <h1>Element Background</h1>
+    <div style="overflow: hidden">
+        <div class=float>
+            <h2>repeat</h2>
+            <div class=background style="background-repeat: repeat"></div>
+
+            <h2>repeat-x</h2>
+            <div class=background style="background-repeat: repeat-x"></div>
+        </div>
+        <div class=float>
+            <h2>no-repeat</h2>
+            <div class=background style="background-repeat: no-repeat"></div>
+
+            <h2>repeat-y</h2>
+            <div class=background style="background-repeat: repeat-y"></div>
+        </div>
+    </div>
+</body>
