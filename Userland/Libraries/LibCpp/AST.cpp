@@ -536,8 +536,16 @@ void CppCastExpression::dump(size_t indent) const
 void SizeofExpression::dump(size_t indent) const
 {
     ASTNode::dump(indent);
-    if(m_type)
-        m_type->dump(indent+1);
+    if (m_type)
+        m_type->dump(indent + 1);
+}
+
+void BracedInitList::dump(size_t indent) const
+{
+    ASTNode::dump(indent);
+    for (auto& exp : m_expressions) {
+        exp.dump(indent+1);
+    }
 }
 
 }
