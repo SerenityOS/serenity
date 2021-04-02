@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import json
-import requests
 import sys
+import requests
 
 # Must be exactly three lines each!
 # No trailing newline! (I.e. keep it as backslash-newline-tripleapostrophe.)
@@ -83,6 +83,12 @@ def compute_lines(wrapper):
 
 
 def send_notification(line):
+    """Send a message to IRC channel via HTTP bridge.
+
+    Ars:
+        line (str): message to send
+    """
+
     print('> ' + line)
     try:
         response = requests.post(SERENITY_BOT, data={'msg': line})
