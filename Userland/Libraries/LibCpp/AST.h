@@ -77,7 +77,8 @@ public:
     virtual bool is_function_call() const { return false; }
     virtual bool is_type() const { return false; }
     virtual bool is_declaration() const { return false; }
-    virtual bool is_name() const {return false;}
+    virtual bool is_name() const { return false; }
+    virtual bool is_dummy_node() const { return false; }
 
 protected:
     ASTNode(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
@@ -347,7 +348,7 @@ public:
     virtual ~Name() override = default;
     virtual const char* class_name() const override { return "Name"; }
     virtual void dump(size_t indent) const override;
-    virtual bool is_name() const override {return true;}
+    virtual bool is_name() const override { return true; }
 
     Name(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : Expression(parent, start, end, filename)
@@ -755,5 +756,16 @@ public:
     virtual void dump(size_t indent) const override;
 
     NonnullRefPtrVector<Expression> m_expressions;
+};
+
+class DummyAstNode : public ASTNode {
+public:
+    DummyAstNode(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+    : ASTNode(parent, start, end, filename)
+    {
+    }
+    virtual bool is_dummy_node() const override { return true; }
+    virtual const char* class_name() const override { return "DummyAstNode"; }
+    virtual void dump(size_t) const override { }
 };
 }

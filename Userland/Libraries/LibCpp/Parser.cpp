@@ -263,7 +263,7 @@ Parser::TemplatizedMatchResult Parser::match_type()
 
     if (!match_name())
         return TemplatizedMatchResult::NoMatch;
-    parse_name(*m_root_node);
+    parse_name(get_dummy_node());
 
     if (peek(Token::Type::Less).has_value()) {
         if (match_template_arguments()) {
@@ -287,7 +287,7 @@ bool Parser::match_template_arguments()
     while (!eof() && peek().type() != Token::Type::Greater) {
         if (match_type() == TemplatizedMatchResult::NoMatch)
             return false;
-        parse_type(*m_root_node);
+        parse_type(get_dummy_node());
     }
 
     return peek().type() == Token::Type::Greater;
@@ -320,7 +320,7 @@ bool Parser::match_variable_declaration()
     }
 
     VERIFY(m_root_node);
-    parse_type(*m_root_node);
+    parse_type(get_dummy_node());
 
     // Identifier
     if (!peek(Token::Type::Identifier).has_value()) {
@@ -668,7 +668,7 @@ bool Parser::match_function_declaration()
     if (match_type() == TemplatizedMatchResult::NoMatch)
         return false;
     VERIFY(m_root_node);
-    parse_type(*m_root_node);
+    parse_type(get_dummy_node());
 
     if (!peek(Token::Type::Identifier).has_value())
         return false;
@@ -888,7 +888,7 @@ RefPtr<ASTNode> Parser::node_at(Position pos) const
     auto index = index_of_node_at(pos);
     if (!index.has_value())
         return nullptr;
-    return m_nodes[index.value()];
+    return m_state.nodes[index.value()];
 }
 
 Optional<size_t> Parser::index_of_node_at(Position pos) const
@@ -902,12 +902,12 @@ Optional<size_t> Parser::index_of_node_at(Position pos) const
         return Position { node.end().line - node.start().line, node.start().line != node.end().line ? 0 : node.end().column - node.start().column };
     };
 
-    for (size_t node_index = 0; node_index < m_nodes.size(); ++node_index) {
-        auto& node = m_nodes[node_index];
+    for (size_t node_index = 0; node_index < m_state.nodes.size(); ++node_index) {
+        auto& node = m_state.nodes[node_index];
         if (node.start() > pos || node.end() < pos)
             continue;
 
-        if (!match_node_index.has_value() || (node_span(node) < node_span(m_nodes[match_node_index.value()])))
+        if (!match_node_index.has_value() || (node_span(node) < node_span(m_state.nodes[match_node_index.value()])))
             match_node_index = node_index;
     }
     return match_node_index;
@@ -945,12 +945,12 @@ Parser::TemplatizedMatchResult Parser::match_function_call()
     ScopeGuard state_guard = [this] { load_state(); };
     if (!match_name())
         return TemplatizedMatchResult::NoMatch;
-    parse_name(*m_root_node);
+    parse_name(get_dummy_node());
 
     bool is_templatized = false;
     if (match_template_arguments()) {
         is_templatized = true;
-        parse_template_arguments(*m_root_node);
+        parse_template_arguments(get_dummy_node());
     }
 
     if (!match(Token::Type::LeftParen))
@@ -1408,7 +1408,7 @@ bool Parser::match_c_style_cast_expression()
 
     if (match_type() == TemplatizedMatchResult::NoMatch)
         return false;
-    parse_type(*m_root_node);
+    parse_type(get_dummy_node());
 
     if (consume().type() != Token::Type::RightParen)
         return false;
