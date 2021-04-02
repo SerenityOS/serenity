@@ -536,28 +536,32 @@ public:
             if (is_pseudo_element)
                 return {};
 
-            if (pseudo_name.equals_ignoring_case("link"))
+            if (pseudo_name.equals_ignoring_case("link")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Link;
-            else if (pseudo_name.equals_ignoring_case("visited"))
+            } else if (pseudo_name.equals_ignoring_case("visited")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Visited;
-            else if (pseudo_name.equals_ignoring_case("hover"))
+            } else if (pseudo_name.equals_ignoring_case("hover")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Hover;
-            else if (pseudo_name.equals_ignoring_case("focus"))
+            } else if (pseudo_name.equals_ignoring_case("focus")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Focus;
-            else if (pseudo_name.equals_ignoring_case("first-child"))
+            } else if (pseudo_name.equals_ignoring_case("first-child")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::FirstChild;
-            else if (pseudo_name.equals_ignoring_case("last-child"))
+            } else if (pseudo_name.equals_ignoring_case("last-child")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::LastChild;
-            else if (pseudo_name.equals_ignoring_case("only-child"))
+            } else if (pseudo_name.equals_ignoring_case("only-child")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::OnlyChild;
-            else if (pseudo_name.equals_ignoring_case("empty"))
+            } else if (pseudo_name.equals_ignoring_case("empty")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Empty;
-            else if (pseudo_name.equals_ignoring_case("root"))
+            } else if (pseudo_name.equals_ignoring_case("root")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Root;
-            else if (pseudo_name.equals_ignoring_case("before"))
+            } else if (pseudo_name.equals_ignoring_case("before")) {
                 simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::Before;
-            else if (pseudo_name.equals_ignoring_case("after"))
+            } else if (pseudo_name.equals_ignoring_case("after")) {
                 simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::After;
+            } else {
+                dbgln("Unknown pseudo class: '{}'", pseudo_name);
+                return {};
+            }
         }
 
         if (index == index_at_start) {
@@ -1008,5 +1012,4 @@ RefPtr<CSS::StyleValue> parse_html_length(const DOM::Document& document, const S
         return CSS::LengthStyleValue::create(CSS::Length::make_px(integer.value()));
     return parse_css_value(CSS::ParsingContext(document), string);
 }
-
 }
