@@ -257,6 +257,9 @@ Parser::TemplatizedMatchResult Parser::match_type()
     ScopeGuard state_guard = [this] { load_state(); };
 
     parse_type_qualifiers();
+    if (match_keyword("struct")) {
+        consume(Token::Type::Keyword); // Consume struct prefix
+    }
 
     if (!match_name())
         return TemplatizedMatchResult::NoMatch;
@@ -1162,6 +1165,10 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
 
     auto qualifiers = parse_type_qualifiers();
     type->m_qualifiers = move(qualifiers);
+
+    if (match_keyword("struct")) {
+        consume(Token::Type::Keyword); // Consume struct prefix
+    }
 
     if (!match_name()) {
         type->set_end(position());
