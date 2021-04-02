@@ -28,7 +28,7 @@
 #include "VirtualConsole.h"
 #include <AK/String.h>
 #include <Kernel/Arch/x86/CPU.h>
-#include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/IO.h>
 #include <Kernel/StdLib.h>
@@ -116,12 +116,12 @@ void VirtualConsole::set_active(bool active)
 
     if (active) {
         set_vga_start_row(0);
-        KeyboardDevice::the().set_client(this);
+        HIDManagement::the().set_client(this);
 
         m_terminal.m_need_full_flush = true;
         flush_dirty_lines();
     } else {
-        KeyboardDevice::the().set_client(nullptr);
+        HIDManagement::the().set_client(nullptr);
     }
 }
 
@@ -220,7 +220,7 @@ void VirtualConsole::clear_vga_row(u16 row)
         linemem[i] = 0x0720;
 }
 
-void VirtualConsole::on_key_pressed(KeyboardDevice::Event event)
+void VirtualConsole::on_key_pressed(KeyEvent event)
 {
     // Ignore keyboard in graphical mode.
     if (m_graphical)

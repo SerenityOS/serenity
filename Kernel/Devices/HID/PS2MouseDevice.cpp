@@ -27,7 +27,7 @@
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/PS2MouseDevice.h>
+#include <Kernel/Devices/HID/PS2MouseDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/IO.h>
 
@@ -49,12 +49,10 @@ namespace Kernel {
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
 #define PS2MOUSE_INTELLIMOUSE_EXPLORER_ID 0x04
 
-static AK::Singleton<PS2MouseDevice> s_the;
-
-UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice()
+UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(const I8042Controller& ps2_controller)
     : IRQHandler(IRQ_MOUSE)
-    , CharacterDevice(10, 1)
-    , m_controller(I8042Controller::the())
+    , MouseDevice()
+    , I8042Device(ps2_controller)
 {
 }
 
@@ -62,41 +60,15 @@ UNMAP_AFTER_INIT PS2MouseDevice::~PS2MouseDevice()
 {
 }
 
-PS2MouseDevice& PS2MouseDevice::the()
-{
-    return *s_the;
-}
-
 void PS2MouseDevice::handle_irq(const RegisterState&)
 {
     // The controller will read the data and call irq_handle_byte_read
     // for the appropriate device
-    m_controller.irq_process_input_buffer(I8042Controller::Device::Mouse);
+    m_i8042_controller->irq_process_input_buffer(instrument_type());
 }
 
 void PS2MouseDevice::irq_handle_byte_read(u8 byte)
 {
-    auto* backdoor = VMWareBackdoor::the();
-
-    if (backdoor && backdoor->vmmouse_is_absolute()) {
-        // We won't receive complete packets with the backdoor enabled,
-        // we will only get one byte for each event, which we'll just
-        // discard. If we were to wait until we *think* that we got a
-        // full PS/2 packet then we would create a backlog in the VM
-        // because we wouldn't read the appropriate number of mouse
-        // packets from VMWareBackdoor.
-        auto mouse_packet = backdoor->receive_mouse_packet();
-        if (mouse_packet.has_value()) {
-            m_entropy_source.add_random_event(mouse_packet.value());
-            {
-                ScopedSpinLock lock(m_queue_lock);
-                m_queue.enqueue(mouse_packet.value());
-            }
-            evaluate_block_conditions();
-        }
-        return;
-    }
-
     auto commit_packet = [&] {
         m_data_state = 0;
         dbgln_if(PS2MOUSE_DEBUG, "PS2Mouse: {}, {} {} {}",
@@ -198,12 +170,12 @@ u8 PS2MouseDevice::get_device_id()
 
 u8 PS2MouseDevice::read_from_device()
 {
-    return m_controller.read_from_device(I8042Controller::Device::Mouse);
+    return m_i8042_controller->read_from_device(instrument_type());
 }
 
 u8 PS2MouseDevice::send_command(u8 command)
 {
-    u8 response = m_controller.send_command(I8042Controller::Device::Mouse, command);
+    u8 response = m_i8042_controller->send_command(instrument_type(), command);
     if (response != I8042_ACK)
         dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, I8042_ACK);
     return response;
@@ -211,7 +183,7 @@ u8 PS2MouseDevice::send_command(u8 command)
 
 u8 PS2MouseDevice::send_command(u8 command, u8 data)
 {
-    u8 response = m_controller.send_command(I8042Controller::Device::Mouse, command, data);
+    u8 response = m_i8042_controller->send_command(instrument_type(), command, data);
     if (response != I8042_ACK)
         dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, I8042_ACK);
     return response;
@@ -222,9 +194,17 @@ void PS2MouseDevice::set_sample_rate(u8 rate)
     send_command(PS2MOUSE_SET_SAMPLE_RATE, rate);
 }
 
+UNMAP_AFTER_INIT RefPtr<PS2MouseDevice> PS2MouseDevice::try_to_initialize(const I8042Controller& ps2_controller)
+{
+    auto device = adopt(*new PS2MouseDevice(ps2_controller));
+    if (device->initialize())
+        return device;
+    return nullptr;
+}
+
 UNMAP_AFTER_INIT bool PS2MouseDevice::initialize()
 {
-    if (!m_controller.reset_device(I8042Controller::Device::Mouse)) {
+    if (!m_i8042_controller->reset_device(instrument_type())) {
         dbgln("PS2MouseDevice: I8042 controller failed to reset device");
         return false;
     }
@@ -265,44 +245,6 @@ UNMAP_AFTER_INIT bool PS2MouseDevice::initialize()
         dmesgln("PS2MouseDevice: 5 buttons enabled!");
     }
     return true;
-}
-
-bool PS2MouseDevice::can_read(const FileDescription&, size_t) const
-{
-    ScopedSpinLock lock(m_queue_lock);
-    return !m_queue.is_empty();
-}
-
-KResultOr<size_t> PS2MouseDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
-{
-    VERIFY(size > 0);
-    size_t nread = 0;
-    size_t remaining_space_in_buffer = static_cast<size_t>(size) - nread;
-    ScopedSpinLock lock(m_queue_lock);
-    while (!m_queue.is_empty() && remaining_space_in_buffer) {
-        auto packet = m_queue.dequeue();
-        lock.unlock();
-
-        if constexpr (PS2MOUSE_DEBUG) {
-            dbgln("PS2 Mouse Read: Buttons {:x}", packet.buttons);
-            dbgln("PS2 Mouse: X {}, Y {}, Z {}, Relative {}", packet.x, packet.y, packet.z, packet.buttons);
-            dbgln("PS2 Mouse Read: Filter packets");
-        }
-
-        size_t bytes_read_from_packet = min(remaining_space_in_buffer, sizeof(MousePacket));
-        if (!buffer.write(&packet, nread, bytes_read_from_packet))
-            return EFAULT;
-        nread += bytes_read_from_packet;
-        remaining_space_in_buffer -= bytes_read_from_packet;
-
-        lock.lock();
-    }
-    return nread;
-}
-
-KResultOr<size_t> PS2MouseDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t)
-{
-    return 0;
 }
 
 }

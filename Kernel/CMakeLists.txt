@@ -32,19 +32,23 @@ set(KERNEL_SOURCES
     Devices/CharacterDevice.cpp
     Devices/Device.cpp
     Devices/FullDevice.cpp
-    Devices/I8042Controller.cpp
-    Devices/KeyboardDevice.cpp
     Devices/MBVGADevice.cpp
     Devices/MemoryDevice.cpp
     Devices/NullDevice.cpp
     Devices/PCSpeaker.cpp
-    Devices/PS2MouseDevice.cpp
     Devices/RandomDevice.cpp
     Devices/SB16.cpp
     Devices/SerialDevice.cpp
     Devices/USB/UHCIController.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
+    Devices/HID/I8042Controller.cpp
+    Devices/HID/HIDManagement.cpp
+    Devices/HID/KeyboardDevice.cpp
+    Devices/HID/MouseDevice.cpp
+    Devices/HID/PS2KeyboardDevice.cpp
+    Devices/HID/PS2MouseDevice.cpp
+    Devices/HID/VMWareMouseDevice.cpp
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/DiskPartitionMetadata.cpp
     Storage/Partition/EBRPartitionTable.cpp

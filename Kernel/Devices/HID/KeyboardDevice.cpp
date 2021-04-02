@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +32,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/TTY/VirtualConsole.h>
 
@@ -262,12 +263,12 @@ void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
     event.flags = m_modifiers;
     event.e0_prefix = m_has_e0_prefix;
     event.caps_lock_on = m_caps_lock_on;
-    event.code_point = m_character_map.get_char(event);
+    event.code_point = HIDManagement::the().character_map().get_char(event);
 
     if (pressed)
         event.flags |= Is_Press;
-    if (m_client)
-        m_client->on_key_pressed(event);
+    if (HIDManagement::the().m_client)
+        HIDManagement::the().m_client->on_key_pressed(event);
 
     {
         ScopedSpinLock lock(m_queue_lock);
@@ -279,150 +280,17 @@ void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
     evaluate_block_conditions();
 }
 
-void KeyboardDevice::handle_irq(const RegisterState&)
-{
-    // The controller will read the data and call irq_handle_byte_read
-    // for the appropriate device
-    m_controller.irq_process_input_buffer(I8042Controller::Device::Keyboard);
-}
-
-void KeyboardDevice::irq_handle_byte_read(u8 byte)
-{
-    u8 ch = byte & 0x7f;
-    bool pressed = !(byte & 0x80);
-
-    m_entropy_source.add_random_event(byte);
-
-    if (byte == 0xe0) {
-        m_has_e0_prefix = true;
-        return;
-    }
-
-#if KEYBOARD_DEBUG
-    dbgln("Keyboard::irq_handle_byte_read: {:#02x} {}", ch, (pressed ? "down" : "up"));
-#endif
-    switch (ch) {
-    case 0x38:
-        if (m_has_e0_prefix)
-            update_modifier(Mod_AltGr, pressed);
-        else
-            update_modifier(Mod_Alt, pressed);
-        break;
-    case 0x1d:
-        update_modifier(Mod_Ctrl, pressed);
-        break;
-    case 0x5b:
-        update_modifier(Mod_Super, pressed);
-        break;
-    case 0x2a:
-    case 0x36:
-        update_modifier(Mod_Shift, pressed);
-        break;
-    }
-    switch (ch) {
-    case I8042_ACK:
-        break;
-    default:
-        if (m_modifiers & Mod_Alt) {
-            switch (ch) {
-            case 0x02 ... 0x07: // 1 to 6
-                VirtualConsole::switch_to(ch - 0x02);
-                break;
-            default:
-                key_state_changed(ch, pressed);
-                break;
-            }
-        } else {
-            key_state_changed(ch, pressed);
-        }
-    }
-}
-
-static AK::Singleton<KeyboardDevice> s_the;
-
-KeyboardDevice& KeyboardDevice::the()
-{
-    return *s_the;
-}
-
-// clang-format off
-static const Keyboard::CharacterMapData DEFAULT_CHARACTER_MAP =
-{
-    .map = {
-        0,    '\033',    '1',    '2',    '3',    '4',    '5',    '6',    '7',    '8',    '9',    '0',    '-',    '=',    0x08,
-                '\t',    'q',    'w',    'e',    'r',    't',    'y',    'u',    'i',    'o',    'p',    '[',    ']',    '\n',
-                   0,    'a',    's',    'd',    'f',    'g',    'h',    'j',    'k',    'l',    ';',   '\'',    '`',       0,
-                '\\',    'z',    'x',    'c',    'v',    'b',    'n',    'm',    ',',    '.',    '/',      0,    '*',       0,
-                 ' ',      0,      0,
-     //60                            70                                               80
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.', 0, 0, '\\', 0, 0, 0,
-
-    },
-
-    .shift_map = {
-        0,    '\033',    '!',    '@',    '#',    '$',    '%',    '^',    '&',    '*',    '(',    ')',    '_',    '+',    0x08,
-                '\t',    'Q',    'W',    'E',    'R',    'T',    'Y',    'U',    'I',    'O',    'P',    '{',    '}',    '\n',
-                   0,    'A',    'S',    'D',    'F',    'G',    'H',    'J',    'K',    'L',    ':',    '"',    '~',       0,
-                 '|',    'Z',    'X',    'C',    'V',    'B',    'N',    'M',    '<',    '>',    '?',      0,    '*',       0,
-                 ' ',      0,      0,
-     //60                            70                                               80
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.', 0, 0, '|',  0, 0, 0,
-
-    },
-
-    .alt_map = {
-        0,    '\033',    '1',    '2',    '3',    '4',    '5',    '6',    '7',    '8',    '9',    '0',    '-',    '=',    0x08,
-                '\t',    'q',    'w',    'e',    'r',    't',    'y',    'u',    'i',    'o',    'p',    '[',    ']',    '\n',
-                   0,    'a',    's',    'd',    'f',    'g',    'h',    'j',    'k',    'l',    ';',   '\'',    '`',       0,
-                '\\',    'z',    'x',    'c',    'v',    'b',    'n',    'm',    ',',    '.',    '/',      0,    '*',       0,
-                 ' ',      0,      0,
-
-     //60                            70                                               80
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.', 0, 0, '\\', 0, 0, 0,
-
-    },
-
-    .altgr_map = {
-        0,    '\033',    '1',    '2',    '3',    '4',    '5',    '6',    '7',    '8',    '9',    '0',    '-',    '=',    0x08,
-                '\t',    'q',    'w',    'e',    'r',    't',    'y',    'u',    'i',    'o',    'p',    '[',    ']',    '\n',
-                   0,    'a',    's',    'd',    'f',    'g',    'h',    'j',    'k',    'l',    ';',   '\'',    '`',       0,
-                '\\',    'z',    'x',    'c',    'v',    'b',    'n',    'm',    ',',    '.',    '/',      0,    '*',       0,
-                 ' ',      0,      0,
-     //60                            70                                               80
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.', 0, 0, '\\', 0, 0, 0,
-    },
-
-    .shift_altgr_map = {
-        0,    '\033',    '1',    '2',    '3',    '4',    '5',    '6',    '7',    '8',    '9',    '0',    '-',    '=',    0x08,
-                '\t',    'q',    'w',    'e',    'r',    't',    'y',    'u',    'i',    'o',    'p',    '[',    ']',    '\n',
-                   0,    'a',    's',    'd',    'f',    'g',    'h',    'j',    'k',    'l',    ';',   '\'',    '`',       0,
-                '\\',    'z',    'x',    'c',    'v',    'b',    'n',    'm',    ',',    '.',    '/',      0,    '*',       0,
-                 ' ',      0,      0,
-     //60                            70                                               80
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.', 0, 0, '\\', 0, 0, 0,
-    },
-};
-// clang-format on
-
+// FIXME: UNMAP_AFTER_INIT is fine for now, but for hot-pluggable devices
+// like USB keyboards, we need to remove this
 UNMAP_AFTER_INIT KeyboardDevice::KeyboardDevice()
-    : IRQHandler(IRQ_KEYBOARD)
-    , CharacterDevice(85, 1)
-    , m_controller(I8042Controller::the())
-    , m_character_map("en-us", DEFAULT_CHARACTER_MAP)
+    : HIDDevice(85, HIDManagement::the().generate_minor_device_number_for_keyboard())
 {
 }
 
+// FIXME: UNMAP_AFTER_INIT is fine for now, but for hot-pluggable devices
+// like USB keyboards, we need to remove this
 UNMAP_AFTER_INIT KeyboardDevice::~KeyboardDevice()
 {
-}
-
-UNMAP_AFTER_INIT bool KeyboardDevice::initialize()
-{
-    if (!m_controller.reset_device(I8042Controller::Device::Keyboard)) {
-        dbgln("KeyboardDevice: I8042 controller failed to reset device");
-        return false;
-    }
-    return true;
 }
 
 bool KeyboardDevice::can_read(const FileDescription&, size_t) const
@@ -461,17 +329,6 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, u64, UserOrKernelBuffer
 KResultOr<size_t> KeyboardDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t)
 {
     return 0;
-}
-
-KeyboardClient::~KeyboardClient()
-{
-}
-
-void KeyboardDevice::set_maps(const Keyboard::CharacterMapData& character_map_data, const String& character_map_name)
-{
-    m_character_map.set_character_map_data(character_map_data);
-    m_character_map.set_character_map_name(character_map_name);
-    dbgln("New Character map '{}' passed in by client.", character_map_name);
 }
 
 }
