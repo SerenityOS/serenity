@@ -715,4 +715,18 @@ public:
     RefPtr<Expression> m_expression;
 };
 
+class SizeofExpression : public Expression {
+public:
+    SizeofExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+        : Expression(parent, start, end, filename)
+    {
+    }
+
+    virtual ~SizeofExpression() override = default;
+    virtual const char* class_name() const override { return "SizeofExpression"; }
+    virtual void dump(size_t indent) const override;
+
+    RefPtr<Type> m_type;
+};
+
 }
