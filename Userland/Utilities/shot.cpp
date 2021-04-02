@@ -39,10 +39,18 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
 
     String output_path;
+    const char* start_x = nullptr;
+    const char* start_y = nullptr;
+    const char* width = nullptr;
+    const char* height = nullptr;
     bool output_to_clipboard = false;
     int delay = 0;
 
     args_parser.add_positional_argument(output_path, "Output filename", "output", Core::ArgsParser::Required::No);
+    args_parser.add_option(start_x, "Pixels from where the screenshot gets taken (x)", "starting-x", 'x', "pixels");
+    args_parser.add_option(start_y, "Pixels from where the screenshot gets taken (y)", "starting-y", 'y', "pixels");
+    args_parser.add_option(height, "Screenshot height in pixels", "height", 'h', "pixels");
+    args_parser.add_option(width, "Screenshot width in pixels", "width", 'w', "pixels");
     args_parser.add_option(output_to_clipboard, "Output to clipboard", "clipboard", 'c');
     args_parser.add_option(delay, "Seconds to wait before taking a screenshot", "delay", 'd', "seconds");
 
@@ -60,6 +68,15 @@ int main(int argc, char** argv)
     if (!bitmap) {
         warnln("Failed to grab screenshot");
         return 1;
+    }
+
+    //FIXME: There must be a cleaner way to do this. Maybe have initials value set? Like width being the screen width.
+    if (start_x != nullptr && start_y != nullptr && width != nullptr && height != nullptr) {
+        int x = atoi(start_x);
+        int y = atoi(start_y);
+        int w = atoi(width);
+        int h = atoi(height);
+        bitmap = bitmap->cropped({ x, y, w, h }).leak_ref();
     }
 
     if (output_to_clipboard) {
