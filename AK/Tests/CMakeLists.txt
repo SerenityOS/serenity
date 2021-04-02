@@ -25,6 +25,7 @@ set(AK_TEST_SOURCES
     TestFormat.cpp
     TestHashFunctions.cpp
     TestHashMap.cpp
+    TestHashTable.cpp
     TestIPv4Address.cpp
     TestIndexSequence.cpp
     TestJSON.cpp
