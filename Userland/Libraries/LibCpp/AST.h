@@ -729,4 +729,17 @@ public:
     RefPtr<Type> m_type;
 };
 
+class BracedInitList : public Expression {
+public:
+    BracedInitList(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+        : Expression(parent, start, end, filename)
+    {
+    }
+
+    virtual ~BracedInitList() override = default;
+    virtual const char* class_name() const override { return "BracedInitList"; }
+    virtual void dump(size_t indent) const override;
+
+    NonnullRefPtrVector<Expression> m_expressions;
+};
 }
