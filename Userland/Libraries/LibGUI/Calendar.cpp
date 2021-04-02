@@ -517,15 +517,14 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                 }
 
                 auto display_date = String::number(m_tiles[0][i].date_time.day());
-                if (m_tiles[0][i].is_today) {
-                    if (m_tiles[0][i].is_selected && width < 30)
-                        painter.draw_rect(tile_rect, palette().base_text());
+                if (m_tiles[0][i].is_selected && (width < 30 || height < 30))
+                    painter.draw_rect(tile_rect, palette().base_text());
+
+                if (m_tiles[0][i].is_today && !m_tiles[0][i].is_outside_selected_month) {
                     painter.draw_text(text_rect, display_date, font().bold_variant(), text_alignment, palette().base_text());
                 } else if (m_tiles[0][i].is_outside_selected_month) {
-                    painter.draw_text(text_rect, display_date, font(), text_alignment, Color::LightGray);
+                    painter.draw_text(text_rect, display_date, m_tiles[0][i].is_today ? font().bold_variant() : font(), text_alignment, Color::LightGray);
                 } else {
-                    if ((width < 30 || height < 30) && m_tiles[0][i].is_selected)
-                        painter.draw_rect(tile_rect, palette().base_text());
                     painter.draw_text(text_rect, display_date, font(), text_alignment, palette().base_text());
                 }
                 i++;
@@ -627,13 +626,12 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                     }
 
                     auto display_date = String::number(m_tiles[l][i].date_time.day());
+                    if (m_tiles[l][i].is_selected)
+                        painter.draw_rect(tile_rect, palette().base_text());
+
                     if (m_tiles[l][i].is_today && !m_tiles[l][i].is_outside_selected_month) {
-                        if (m_tiles[l][i].is_selected)
-                            painter.draw_rect(tile_rect, palette().base_text());
                         painter.draw_text(tile_rect, display_date, font().bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
                     } else if (!m_tiles[l][i].is_outside_selected_month) {
-                        if (m_tiles[l][i].is_selected)
-                            painter.draw_rect(tile_rect, palette().base_text());
                         painter.draw_text(tile_rect, display_date, font(), Gfx::TextAlignment::Center, palette().base_text());
                     }
                     i++;
