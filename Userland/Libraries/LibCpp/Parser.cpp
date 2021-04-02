@@ -421,7 +421,8 @@ bool Parser::match_secondary_expression()
         || type == Token::Type::EqualsEquals
         || type == Token::Type::AndAnd
         || type == Token::Type::PipePipe
-        || type == Token::Type::ExclamationMarkEquals;
+        || type == Token::Type::ExclamationMarkEquals
+        || type == Token::Type::PipePipe;
 }
 
 NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
@@ -481,7 +482,8 @@ bool Parser::match_unary_expression()
         || type == Token::Type::ExclamationMark
         || type == Token::Type::Tilde
         || type == Token::Type::Plus
-        || type == Token::Type::Minus;
+        || type == Token::Type::Minus
+        || type == Token::Type::And;
 }
 
 NonnullRefPtr<UnaryExpression> Parser::parse_unary_expression(ASTNode& parent)
@@ -504,6 +506,9 @@ NonnullRefPtr<UnaryExpression> Parser::parse_unary_expression(ASTNode& parent)
         break;
     case Token::Type::PlusPlus:
         op = UnaryOp::PlusPlus;
+        break;
+    case Token::Type::And:
+        op = UnaryOp::Address;
         break;
     default:
         break;
@@ -555,6 +560,14 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(ASTNode& parent, No
         return parse_binary_expression(parent, lhs, BinaryOp::EqualsEquals);
     case Token::Type::ExclamationMarkEquals:
         return parse_binary_expression(parent, lhs, BinaryOp::NotEqual);
+    case Token::Type::And:
+        return parse_binary_expression(parent, lhs, BinaryOp::BitwiseAnd);
+    case Token::Type::AndAnd:
+        return parse_binary_expression(parent, lhs, BinaryOp::LogicalAnd);
+    case Token::Type::Pipe:
+        return parse_binary_expression(parent, lhs, BinaryOp::BitwiseOr);
+    case Token::Type::PipePipe:
+        return parse_binary_expression(parent, lhs, BinaryOp::LogicalOr);
     case Token::Type::Equals:
         return parse_assignment_expression(parent, lhs, AssignmentOp::Assignment);
     case Token::Type::Dot: {

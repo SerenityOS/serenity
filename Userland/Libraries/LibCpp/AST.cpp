@@ -209,6 +209,12 @@ void BinaryExpression::dump(size_t indent) const
     case BinaryOp::NotEqual:
         op_string = "!=";
         break;
+    case BinaryOp::LogicalOr:
+        op_string = "||";
+        break;
+    case BinaryOp::LogicalAnd:
+        op_string = "&&";
+        break;
     }
 
     m_lhs->dump(indent + 1);
@@ -318,6 +324,9 @@ void UnaryExpression::dump(size_t indent) const
         break;
     case UnaryOp::PlusPlus:
         op_string = "++";
+        break;
+    case UnaryOp::Address:
+        op_string = "&";
         break;
     default:
         op_string = "<invalid>";
