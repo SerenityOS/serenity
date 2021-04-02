@@ -189,6 +189,15 @@ enum class Overflow : u8 {
     Visible,
 };
 
+enum class Repeat : u8 {
+    NoRepeat,
+    Repeat,
+    RepeatX,
+    RepeatY,
+    Round,
+    Space,
+};
+
 class StyleValue : public RefCounted<StyleValue> {
 public:
     virtual ~StyleValue();
