@@ -171,6 +171,20 @@ void WindowManager::set_scroll_step_size(unsigned step_size)
     m_config->sync();
 }
 
+void WindowManager::set_double_click_speed(int speed)
+{
+    VERIFY(speed >= double_click_speed_min && speed <= double_click_speed_max);
+    m_double_click_speed = speed;
+    dbgln("Saving double-click speed {} to config file at {}", speed, m_config->file_name());
+    m_config->write_entry("Input", "DoubleClickSpeed", String::number(speed));
+    m_config->sync();
+}
+
+int WindowManager::double_click_speed() const
+{
+    return m_double_click_speed;
+}
+
 int WindowManager::scale_factor() const
 {
     return Screen::the().scale_factor();

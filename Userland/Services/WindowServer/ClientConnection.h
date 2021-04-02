@@ -169,6 +169,8 @@ private:
     virtual OwnPtr<Messages::WindowServer::SetScrollStepSizeResponse> handle(const Messages::WindowServer::SetScrollStepSize&) override;
     virtual OwnPtr<Messages::WindowServer::GetScrollStepSizeResponse> handle(const Messages::WindowServer::GetScrollStepSize&) override;
     virtual OwnPtr<Messages::WindowServer::GetScreenBitmapResponse> handle(const Messages::WindowServer::GetScreenBitmap&) override;
+    virtual OwnPtr<Messages::WindowServer::SetDoubleClickSpeedResponse> handle(const Messages::WindowServer::SetDoubleClickSpeed&) override;
+    virtual OwnPtr<Messages::WindowServer::GetDoubleClickSpeedResponse> handle(const Messages::WindowServer::GetDoubleClickSpeed&) override;
 
     Window* window_from_id(i32 window_id);
 

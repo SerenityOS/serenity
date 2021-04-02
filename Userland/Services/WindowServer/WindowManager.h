@@ -47,6 +47,9 @@
 
 namespace WindowServer {
 
+const int double_click_speed_max = 900;
+const int double_click_speed_min = 100;
+
 class Screen;
 class MouseEvent;
 class Window;
@@ -151,6 +154,8 @@ public:
 
     void set_acceleration_factor(double);
     void set_scroll_step_size(unsigned);
+    void set_double_click_speed(int);
+    int double_click_speed() const;
 
     Window* set_active_input_window(Window*);
     void restore_active_input_window(Window*);
