@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -62,8 +62,7 @@ KResultOr<int> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_para
     if (map_name.value().length() > map_name_max_size) {
         return ENAMETOOLONG;
     }
-
-    KeyboardDevice::the().set_maps(character_map_data, map_name.value());
+    HIDManagement::the().set_maps(character_map_data, map_name.value());
     return 0;
 }
 
@@ -75,8 +74,8 @@ KResultOr<int> Process::sys$getkeymap(Userspace<const Syscall::SC_getkeymap_para
     if (!copy_from_user(&params, user_params))
         return EFAULT;
 
-    String keymap_name = KeyboardDevice::the().keymap_name();
-    const Keyboard::CharacterMapData& character_maps = KeyboardDevice::the().character_maps();
+    String keymap_name = HIDManagement::the().keymap_name();
+    const Keyboard::CharacterMapData& character_maps = HIDManagement::the().character_maps();
 
     if (!copy_to_user(params.map, character_maps.map, CHAR_MAP_SIZE * sizeof(u32)))
         return EFAULT;
