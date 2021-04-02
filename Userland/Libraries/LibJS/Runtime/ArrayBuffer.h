@@ -36,8 +36,10 @@ class ArrayBuffer : public Object {
 
 public:
     static ArrayBuffer* create(GlobalObject&, size_t);
+    static ArrayBuffer* create(GlobalObject&, ByteBuffer&);
 
     ArrayBuffer(size_t, Object& prototype);
+    ArrayBuffer(ByteBuffer& buffer, Object& prototype);
     virtual ~ArrayBuffer() override;
 
     size_t byte_length() const { return m_buffer.size(); }
