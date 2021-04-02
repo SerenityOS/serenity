@@ -429,6 +429,8 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             style.set_property(CSS::PropertyID::BackgroundColor, values[0]);
 
         for (auto& value : values) {
+            if (value.is_identifier())
+                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, value, document);
             if (!value.is_string())
                 continue;
             auto string = value.to_string();
@@ -453,6 +455,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
         auto background_image_value = ImageStyleValue::create(document.complete_url(url), document);
         style.set_property(CSS::PropertyID::BackgroundImage, move(background_image_value));
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::BackgroundRepeat) {
+        style.set_property(CSS::PropertyID::BackgroundRepeat, value);
         return;
     }
 
