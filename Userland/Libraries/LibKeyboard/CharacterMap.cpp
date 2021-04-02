@@ -74,7 +74,7 @@ Result<CharacterMap, OSError> CharacterMap::fetch_system_map()
 
 #endif
 
-u32 CharacterMap::get_char(KeyEvent event)
+u32 CharacterMap::get_char(KeyEvent event) const
 {
     auto modifiers = event.modifiers();
     auto index = event.scancode & 0xFF; // Index is last byte of scan code.
@@ -121,7 +121,7 @@ void CharacterMap::set_character_map_name(const String& character_map_name)
     m_character_map_name = character_map_name;
 }
 
-const String CharacterMap::character_map_name()
+const String& CharacterMap::character_map_name() const
 {
     return m_character_map_name;
 }
