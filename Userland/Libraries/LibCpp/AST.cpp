@@ -215,6 +215,9 @@ void BinaryExpression::dump(size_t indent) const
     case BinaryOp::LogicalAnd:
         op_string = "&&";
         break;
+    case BinaryOp::Arrow:
+        op_string = "->";
+        break;
     }
 
     m_lhs->dump(indent + 1);
