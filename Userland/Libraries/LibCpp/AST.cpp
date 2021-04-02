@@ -530,4 +530,11 @@ void CppCastExpression::dump(size_t indent) const
         m_expression->dump(indent + 1);
 }
 
+void SizeofExpression::dump(size_t indent) const
+{
+    ASTNode::dump(indent);
+    if(m_type)
+        m_type->dump(indent+1);
+}
+
 }
