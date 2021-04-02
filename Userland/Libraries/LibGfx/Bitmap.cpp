@@ -409,6 +409,27 @@ RefPtr<Gfx::Bitmap> Bitmap::flipped(Gfx::Orientation orientation) const
     return new_bitmap;
 }
 
+RefPtr<Gfx::Bitmap> Bitmap::cropped(const Gfx::IntRect& rect) const
+{
+    auto crop_width = rect.width();
+    auto crop_height = rect.height();
+    auto start_x = rect.top_left().x();
+    auto start_y = rect.top_left().y();
+
+    auto new_bitmap = Gfx::Bitmap::create(this->format(), { crop_width, crop_height }, scale());
+    if (!new_bitmap)
+        return nullptr;
+
+    for (int i = 0; i < crop_width; i++) {
+        for (int j = 0; j < crop_height; j++) {
+            auto original_pixel = get_pixel(i + start_x, j + start_y);
+            new_bitmap->set_pixel(i, j, original_pixel);
+        }
+    }
+
+    return new_bitmap;
+}
+
 #ifdef __serenity__
 RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anon_fd() const
 {

@@ -135,6 +135,7 @@ public:
 
     RefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
     RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
+    RefPtr<Gfx::Bitmap> cropped(const Gfx::IntRect&) const;
     RefPtr<Bitmap> to_bitmap_backed_by_anon_fd() const;
     ByteBuffer serialize_to_byte_buffer() const;
 
