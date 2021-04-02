@@ -90,6 +90,7 @@ private:
     bool match_template_arguments();
     bool match_name();
     bool match_cpp_cast_expression();
+    bool match_c_style_cast_expression();
     bool match_sizeof_expression();
     bool match_braced_init_list();
 
@@ -137,6 +138,7 @@ private:
     NonnullRefPtr<CppCastExpression> parse_cpp_cast_expression(ASTNode& parent);
     NonnullRefPtr<SizeofExpression> parse_sizeof_expression(ASTNode& parent);
     NonnullRefPtr<BracedInitList> parse_braced_init_list(ASTNode& parent);
+    NonnullRefPtr<CStyleCastExpression> parse_c_style_cast_expression(ASTNode& parent);
 
     bool match(Token::Type);
     Token consume(Token::Type);
