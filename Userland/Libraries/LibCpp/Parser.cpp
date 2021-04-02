@@ -448,6 +448,9 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
     if (match_cpp_cast_expression())
         return parse_cpp_cast_expression(parent);
 
+    if (match_c_style_cast_expression())
+        return parse_c_style_cast_expression(parent);
+
     if (match_sizeof_expression())
         return parse_sizeof_expression(parent);
 
@@ -857,6 +860,7 @@ bool Parser::match_expression()
         || token_type == Token::Type::Identifier
         || match_unary_expression()
         || match_cpp_cast_expression()
+        || match_c_style_cast_expression()
         || match_sizeof_expression()
         || match_braced_init_list();
 }
@@ -1392,6 +1396,40 @@ bool Parser::match_cpp_cast_expression()
     if (text == "static_cast" || text == "reinterpret_cast" || text == "dynamic_cast" || text == "const_cast")
         return true;
     return false;
+}
+
+bool Parser::match_c_style_cast_expression()
+{
+    save_state();
+    ScopeGuard state_guard = [this] { load_state(); };
+
+    if (consume().type() != Token::Type::LeftParen)
+        return false;
+
+    if (match_type() == TemplatizedMatchResult::NoMatch)
+        return false;
+    parse_type(*m_root_node);
+
+    if (consume().type() != Token::Type::RightParen)
+        return false;
+
+    if (!match_expression())
+        return false;
+
+    return true;
+}
+
+NonnullRefPtr<CStyleCastExpression> Parser::parse_c_style_cast_expression(ASTNode& parent)
+{
+    auto parse_exp = create_ast_node<CStyleCastExpression>(parent, position(), {});
+
+    consume(Token::Type::LeftParen);
+    parse_exp->m_type = parse_type(*parse_exp);
+    consume(Token::Type::RightParen);
+    parse_exp->m_expression = parse_expression(*parse_exp);
+    parse_exp->set_end(position());
+
+    return parse_exp;
 }
 
 NonnullRefPtr<CppCastExpression> Parser::parse_cpp_cast_expression(ASTNode& parent)

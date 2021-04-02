@@ -547,8 +547,17 @@ void BracedInitList::dump(size_t indent) const
 {
     ASTNode::dump(indent);
     for (auto& exp : m_expressions) {
-        exp.dump(indent+1);
+        exp.dump(indent + 1);
     }
+}
+
+void CStyleCastExpression::dump(size_t indent) const
+{
+    ASTNode::dump(indent);
+    if (m_type)
+        m_type->dump(indent + 1);
+    if (m_expression)
+        m_expression->dump(indent + 1);
 }
 
 }
