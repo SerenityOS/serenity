@@ -42,7 +42,8 @@ BreakNode::~BreakNode()
 
 void BreakNode::split_into_lines(InlineFormattingContext& context, LayoutMode)
 {
-    context.containing_block().add_line_box();
+    auto& line_box = context.containing_block().add_line_box();
+    line_box.add_fragment(*this, 0, 0, 0, context.containing_block().line_height());
 }
 
 }
