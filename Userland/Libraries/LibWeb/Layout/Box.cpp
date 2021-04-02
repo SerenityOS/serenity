@@ -49,6 +49,23 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         auto background_rect = enclosing_int_rect(padded_rect);
         context.painter().fill_rect(background_rect, computed_values().background_color());
         if (background_image() && background_image()->bitmap()) {
+            switch (computed_values().background_repeat()) {
+            case CSS::Repeat::Repeat:
+                // The background rect is already sized to align with 'repeat'.
+                break;
+            case CSS::Repeat::RepeatX:
+                background_rect.set_height(background_image()->bitmap()->height());
+                break;
+            case CSS::Repeat::RepeatY:
+                background_rect.set_width(background_image()->bitmap()->width());
+                break;
+            case CSS::Repeat::NoRepeat:
+            default: // FIXME: Support 'round' and 'square'
+                background_rect.set_width(background_image()->bitmap()->width());
+                background_rect.set_height(background_image()->bitmap()->height());
+                break;
+            }
+
             context.painter().blit_tiled(background_rect, *background_image()->bitmap(), background_image()->bitmap()->rect());
         }
     }

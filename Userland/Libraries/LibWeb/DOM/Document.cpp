@@ -362,6 +362,19 @@ RefPtr<Gfx::Bitmap> Document::background_image() const
     return background_image->bitmap();
 }
 
+CSS::Repeat Document::background_repeat() const
+{
+    auto* body_element = body();
+    if (!body_element)
+        return CSS::Repeat::Repeat;
+
+    auto* body_layout_node = body_element->layout_node();
+    if (!body_layout_node)
+        return CSS::Repeat::Repeat;
+
+    return body_layout_node->computed_values().background_repeat();
+}
+
 URL Document::complete_url(const String& string) const
 {
     return m_url.complete_url(string);
