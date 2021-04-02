@@ -303,6 +303,8 @@ public:
         return *this;
     }
 
+    String typeof() const;
+
 private:
     Type m_type { Type::Empty };
 
