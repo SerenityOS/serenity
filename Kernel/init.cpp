@@ -34,7 +34,7 @@
 #include <Kernel/DMI.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Devices/FullDevice.h>
-#include <Kernel/Devices/I8042Controller.h>
+#include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/MBVGADevice.h>
 #include <Kernel/Devices/MemoryDevice.h>
 #include <Kernel/Devices/NullDevice.h>
@@ -163,7 +163,6 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     ACPI::initialize();
 
     VFS::initialize();
-    I8042Controller::initialize();
     Console::initialize();
 
     dmesgln("Starting SerenityOS...");
@@ -179,6 +178,8 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     new SerialDevice(SERIAL_COM3_ADDR, 66);
     new SerialDevice(SERIAL_COM4_ADDR, 67);
 
+    VMWareBackdoor::the(); // don't wait until first mouse packet
+    HIDManagement::initialize();
     VirtualConsole::initialize();
     tty0 = new VirtualConsole(0);
     for (unsigned i = 1; i < s_max_virtual_consoles; i++) {
@@ -295,7 +296,6 @@ void init_stage2(void*)
     new RandomDevice;
     PTYMultiplexer::initialize();
     SB16::detect();
-    VMWareBackdoor::the(); // don't wait until first mouse packet
 
     StorageManagement::initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio());
     if (!VFS::the().mount_root(StorageManagement::the().root_filesystem())) {

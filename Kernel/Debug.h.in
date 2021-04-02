@@ -178,6 +178,10 @@
 #cmakedefine01 MBR_DEBUG
 #endif
 
+#ifndef MOUSE_DEBUG
+#cmakedefine01 MOUSE_DEBUG
+#endif
+
 #ifndef MULTIPROCESSOR_DEBUG
 #cmakedefine01 MULTIPROCESSOR_DEBUG
 #endif

@@ -27,7 +27,7 @@
 #pragma once
 
 #include <Kernel/Console.h>
-#include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/TTY/TTY.h>
 #include <LibVT/Terminal.h>
 
@@ -51,7 +51,7 @@ public:
 
 private:
     // ^KeyboardClient
-    virtual void on_key_pressed(KeyboardDevice::Event) override;
+    virtual void on_key_pressed(KeyEvent) override;
 
     // ^TTY
     virtual ssize_t on_tty_write(const UserOrKernelBuffer&, ssize_t) override;
