@@ -394,8 +394,11 @@ NonnullRefPtrVector<Declaration> Statement::declarations() const
 
 NonnullRefPtrVector<Declaration> ForStatement::declarations() const
 {
-    auto declarations = m_init->declarations();
-    declarations.append(m_body->declarations());
+    NonnullRefPtrVector<Declaration> declarations;
+    if (m_init)
+        declarations.append(m_init->declarations());
+    if (m_body)
+        declarations.append(m_body->declarations());
     return declarations;
 }
 

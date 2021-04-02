@@ -1204,13 +1204,20 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement(ASTNode& parent)
     auto for_statement = create_ast_node<ForStatement>(parent, position(), {});
     consume(Token::Type::Keyword);
     consume(Token::Type::LeftParen);
-    for_statement->m_init = parse_variable_declaration(*for_statement);
+    if (peek().type() != Token::Type::Semicolon)
+        for_statement->m_init = parse_variable_declaration(*for_statement, false);
     consume(Token::Type::Semicolon);
-    for_statement->m_test = parse_expression(*for_statement);
+
+    if (peek().type() != Token::Type::Semicolon)
+        for_statement->m_test = parse_expression(*for_statement);
     consume(Token::Type::Semicolon);
-    for_statement->m_update = parse_expression(*for_statement);
+
+    if (peek().type() != Token::Type::RightParen)
+        for_statement->m_update = parse_expression(*for_statement);
     consume(Token::Type::RightParen);
+
     for_statement->m_body = parse_statement(*for_statement);
+
     for_statement->set_end(for_statement->m_body->end());
     return for_statement;
 }
