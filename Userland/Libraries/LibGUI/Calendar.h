@@ -34,7 +34,7 @@
 
 namespace GUI {
 
-class Calendar final : public GUI::Widget {
+class Calendar final : public GUI::Frame {
     C_OBJECT(Calendar)
 
 public:
