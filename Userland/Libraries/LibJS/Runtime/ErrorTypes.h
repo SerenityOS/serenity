@@ -146,7 +146,8 @@
                                         "target is non-extensible")                                                                     \
     M(ProxyTwoArguments, "Proxy constructor requires at least two arguments")                                                           \
     M(ReduceNoInitial, "Reduce of empty array with no initial value")                                                                   \
-    M(ReferencePrimitiveAssignment, "Cannot assign property {} to primitive value")                                                     \
+    M(ReferenceNullishAssignment, "Cannot set property '{}' of {}")                                                                     \
+    M(ReferencePrimitiveAssignment, "Cannot set property '{}' of {} '{}'")                                                              \
     M(ReferenceUnresolvable, "Unresolvable reference")                                                                                  \
     M(ReflectArgumentMustBeAFunction, "First argument of Reflect.{}() must be a function")                                              \
     M(ReflectArgumentMustBeAnObject, "First argument of Reflect.{}() must be an object")                                                \

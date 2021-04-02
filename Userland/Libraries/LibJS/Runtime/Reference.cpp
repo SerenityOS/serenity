@@ -47,12 +47,23 @@ void Reference::put(GlobalObject& global_object, Value value)
         return;
     }
 
-    if (!base().is_object() && vm.in_strict_mode()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveAssignment, m_name.to_value(global_object.vm()).to_string_without_side_effects());
+    auto base = this->base();
+
+    if (!base.is_object() && vm.in_strict_mode()) {
+        if (base.is_nullish())
+            vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishAssignment, m_name.to_value(global_object.vm()).to_string_without_side_effects(), base.to_string_without_side_effects());
+        else
+            vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveAssignment, m_name.to_value(global_object.vm()).to_string_without_side_effects(), base.typeof(), base.to_string_without_side_effects());
         return;
     }
 
-    auto* object = base().to_object(global_object);
+    if (base.is_nullish()) {
+        // This will always fail the to_object() call below, let's throw the TypeError ourselves with a nice message instead.
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishAssignment, m_name.to_value(global_object.vm()).to_string_without_side_effects(), base.to_string_without_side_effects());
+        return;
+    }
+
+    auto* object = base.to_object(global_object);
     if (!object)
         return;
 
@@ -61,13 +72,11 @@ void Reference::put(GlobalObject& global_object, Value value)
 
 void Reference::throw_reference_error(GlobalObject& global_object)
 {
-    auto property_name = m_name.to_string();
-    String message;
-    if (property_name.is_empty()) {
-        global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::ReferenceUnresolvable);
-    } else {
-        global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, property_name);
-    }
+    auto& vm = global_object.vm();
+    if (!m_name.is_valid())
+        vm.throw_exception<ReferenceError>(global_object, ErrorType::ReferenceUnresolvable);
+    else
+        vm.throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, m_name.to_string_or_symbol().to_display_string());
 }
 
 Value Reference::get(GlobalObject& global_object)
