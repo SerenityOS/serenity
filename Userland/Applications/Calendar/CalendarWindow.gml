@@ -11,14 +11,7 @@
         }
     }
 
-    @GUI::Frame {
-        name: "calendar_frame"
-        layout: @GUI::VerticalBoxLayout {
-            margins: [2, 2, 2, 2]
-        }
-
-        @GUI::Calendar {
-            name: "calendar"
-        }
+    @GUI::Calendar {
+        name: "calendar"
     }
 }

@@ -65,7 +65,6 @@ Calendar::Calendar(Core::DateTime date_time, Mode mode)
     , m_mode(mode)
 {
     set_fill_with_background_color(true);
-    set_background_role(Gfx::ColorRole::ThreedShadow2);
 
     for (int i = 0; i < 7; i++) {
         Day day;
@@ -89,10 +88,9 @@ Calendar::~Calendar()
 
 void Calendar::set_grid(bool show)
 {
+    if (m_grid == show)
+        return;
     m_grid = show;
-    set_background_role(has_grid()
-            ? Gfx::ColorRole::ThreedShadow2
-            : Gfx::ColorRole::Base);
 }
 
 void Calendar::toggle_mode()
@@ -108,8 +106,8 @@ void Calendar::toggle_mode()
 
 void Calendar::resize_event(GUI::ResizeEvent& event)
 {
-    m_event_size.set_width(event.size().width());
-    m_event_size.set_height(event.size().height());
+    m_event_size.set_width(event.size().width() - (frame_thickness() * 2));
+    m_event_size.set_height(event.size().height() - (frame_thickness() * 2));
 
     if (mode() == Month) {
         if (m_event_size.width() < 160 || m_event_size.height() < 130)
@@ -181,13 +179,10 @@ void Calendar::resize_event(GUI::ResizeEvent& event)
 
         set_grid(false);
         set_unadjusted_tile_size(tile_width, tile_height);
-        if (unadjusted_tile_size().width() < 17 || unadjusted_tile_size().height() < 13) {
+        if (unadjusted_tile_size().width() < 17 || unadjusted_tile_size().height() < 13)
             m_show_month_tiles = true;
-            set_background_role(Gfx::ColorRole::Window);
-        } else {
+        else
             m_show_month_tiles = false;
-            set_background_role(Gfx::ColorRole::Base);
-        }
 
         if (m_show_month_tiles) {
             int month_tile_width = m_event_size.width() / 4;
@@ -377,8 +372,18 @@ String Calendar::formatted_date(Format format)
 
 void Calendar::paint_event(GUI::PaintEvent& event)
 {
+    GUI::Frame::paint_event(event);
+
     GUI::Painter painter(*this);
+    painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
+
+    if (has_grid())
+        painter.fill_rect(frame_inner_rect(), palette().threed_shadow2());
+    else
+        painter.fill_rect(frame_inner_rect(), palette().base());
+
+    painter.translate(frame_thickness(), frame_thickness());
 
     int width = unadjusted_tile_size().width();
     int height = unadjusted_tile_size().height();
@@ -389,42 +394,32 @@ void Calendar::paint_event(GUI::PaintEvent& event)
         auto year_only_rect = Gfx::IntRect(
             0,
             0,
-            event.rect().width(),
+            frame_inner_rect().width(),
             22);
         y_offset += year_only_rect.height();
         painter.fill_rect(year_only_rect, palette().hover_highlight());
         painter.draw_text(year_only_rect, formatted_date(YearOnly), medium_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
-        painter.draw_line({ 0, y_offset }, { event.rect().width(), y_offset }, (!m_show_month_tiles ? palette().threed_shadow1() : palette().threed_shadow2()), 1);
+        painter.draw_line({ 0, y_offset }, { frame_inner_rect().width(), y_offset }, (!m_show_month_tiles ? palette().threed_shadow1() : palette().threed_shadow2()), 1);
         y_offset += 1;
         if (!m_show_month_tiles) {
-            painter.draw_line({ 0, y_offset }, { event.rect().width(), y_offset }, palette().threed_highlight(), 1);
+            painter.draw_line({ 0, y_offset }, { frame_inner_rect().width(), y_offset }, palette().threed_highlight(), 1);
             y_offset += 1;
         }
     } else if (is_showing_month_and_year()) {
         auto month_year_rect = Gfx::IntRect(
             0,
             0,
-            event.rect().width(),
+            frame_inner_rect().width(),
             22);
         painter.fill_rect(month_year_rect, palette().hover_highlight());
-        auto month_rect = Gfx::IntRect(
-            0,
-            0,
-            event.rect().width() / 2,
-            22);
-        auto year_rect = Gfx::IntRect(
-            event.rect().width() / 2,
-            0,
-            event.rect().width() / 2 + ((event.rect().width() % 2) ? 1 : 0),
-            22);
-        painter.fill_rect(month_rect, palette().hover_highlight());
-        painter.fill_rect(year_rect, palette().hover_highlight());
-        painter.draw_text(month_rect, formatted_date(MonthOnly), medium_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
-        painter.draw_text(year_rect, formatted_date(YearOnly), medium_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
-        y_offset += year_rect.height();
-        painter.draw_line({ 0, y_offset }, { event.rect().width(), y_offset }, palette().threed_shadow1(), 1);
+        month_year_rect.set_width(frame_inner_rect().width() / 2);
+        painter.draw_text(month_year_rect, formatted_date(MonthOnly), medium_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
+        month_year_rect.set_x(month_year_rect.width() + (frame_inner_rect().width() % 2 ? 1 : 0));
+        painter.draw_text(month_year_rect, formatted_date(YearOnly), medium_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
+        y_offset += 22;
+        painter.draw_line({ 0, y_offset }, { frame_inner_rect().width(), y_offset }, palette().threed_shadow1(), 1);
         y_offset += 1;
-        painter.draw_line({ 0, y_offset }, { event.rect().width(), y_offset }, palette().threed_highlight(), 1);
+        painter.draw_line({ 0, y_offset }, { frame_inner_rect().width(), y_offset }, palette().threed_highlight(), 1);
         y_offset += 1;
     }
 
@@ -440,7 +435,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                     y_offset,
                     m_months[i].width,
                     m_months[i].height);
-                m_months[i].rect = month_tile_rect;
+                m_months[i].rect = month_tile_rect.translated(frame_thickness(), frame_thickness());
                 Gfx::StylePainter::paint_button(
                     painter, month_tile_rect, palette(),
                     Gfx::ButtonStyle::Normal,
@@ -460,21 +455,21 @@ void Calendar::paint_event(GUI::PaintEvent& event)
         auto days_of_the_week_rect = Gfx::IntRect(
             0,
             y_offset,
-            event.rect().width(),
+            frame_inner_rect().width(),
             16);
         painter.fill_rect(days_of_the_week_rect, palette().hover_highlight());
         for (int i = 0; i < 7; i++) {
             if (i > 0)
                 x_offset += m_days[i - 1].width + 1;
             Gfx::IntRect day_rect = Gfx::IntRect(
-                event.rect().x() + x_offset,
+                x_offset,
                 y_offset,
                 m_days[i].width,
                 16);
             painter.draw_text(day_rect, m_days[i].name, small_font->bold_variant(), Gfx::TextAlignment::Center, palette().base_text());
         }
         y_offset += days_of_the_week_rect.height();
-        painter.draw_line({ 0, y_offset }, { event.rect().width(), y_offset }, palette().threed_shadow2(), 1);
+        painter.draw_line({ 0, y_offset }, { frame_inner_rect().width(), y_offset }, palette().threed_shadow2(), 1);
         y_offset += 1;
     }
 
@@ -492,7 +487,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                     y_offset,
                     m_tiles[0][i].width,
                     m_tiles[0][i].height);
-                m_tiles[0][i].rect = tile_rect;
+                m_tiles[0][i].rect = tile_rect.translated(frame_thickness(), frame_thickness());
                 if (m_tiles[0][i].is_hovered || m_tiles[0][i].is_selected)
                     painter.fill_rect(tile_rect, palette().hover_highlight());
                 else
@@ -541,7 +536,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
             static int x_month_offset;
             x_month_offset += (i > 0 ? m_month_size[i - 1].width() + 1 : 0);
             auto month_rect = Gfx::IntRect(
-                event.rect().x() + x_month_offset,
+                x_month_offset,
                 y_offset,
                 m_month_size[i].width(),
                 19);
@@ -555,7 +550,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                 x_month_offset = 0;
         }
         y_offset += 19;
-        painter.draw_line({ 0, y_offset }, { event.rect().width(), y_offset }, palette().threed_shadow2(), 1);
+        painter.draw_line({ 0, y_offset }, { frame_inner_rect().width(), y_offset }, palette().threed_shadow2(), 1);
         y_offset += 1;
 
         int x_translation = 0;
@@ -570,16 +565,16 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                 y_offset = y_translation;
             } else if (l == 4 || l == 8) {
                 y_translation += m_month_size[l - 1].height();
-                painter.draw_line({ 0, y_translation }, { event.rect().width(), y_translation }, palette().threed_shadow1(), 1);
+                painter.draw_line({ 0, y_translation }, { frame_inner_rect().width(), y_translation }, palette().threed_shadow1(), 1);
                 y_translation += 1;
-                painter.draw_line({ 0, y_translation }, { event.rect().width(), y_translation }, palette().threed_highlight(), 1);
+                painter.draw_line({ 0, y_translation }, { frame_inner_rect().width(), y_translation }, palette().threed_highlight(), 1);
                 y_translation += 1;
                 y_offset = y_translation;
                 for (int i = l; i < (l == 4 ? 8 : 12); i++) {
                     static int x_month_offset;
                     x_month_offset += (i > (l == 4 ? 4 : 8) ? m_month_size[i - 1].width() + 1 : 0);
                     auto month_rect = Gfx::IntRect(
-                        event.rect().x() + x_month_offset,
+                        x_month_offset,
                         y_offset,
                         m_month_size[i].width(),
                         19);
@@ -593,7 +588,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                         x_month_offset = 0;
                 }
                 y_translation += 19;
-                painter.draw_line({ 0, y_translation }, { event.rect().width(), y_translation }, palette().threed_shadow2(), 1);
+                painter.draw_line({ 0, y_translation }, { frame_inner_rect().width(), y_translation }, palette().threed_shadow2(), 1);
                 y_translation += 1;
                 y_offset = y_translation;
             }
@@ -618,7 +613,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                         y_offset,
                         m_tiles[l][i].width,
                         m_tiles[l][i].height);
-                    m_tiles[l][i].rect = tile_rect;
+                    m_tiles[l][i].rect = tile_rect.translated(frame_thickness(), frame_thickness());
 
                     if (m_tiles[l][i].is_hovered || m_tiles[l][i].is_selected)
                         painter.fill_rect(tile_rect, palette().hover_highlight());

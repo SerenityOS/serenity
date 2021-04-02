@@ -139,15 +139,11 @@ ClockWidget::ClockWidget()
     auto& separator1 = root_container.add<GUI::HorizontalSeparator>();
     separator1.set_fixed_height(2);
 
-    auto& calendar_frame_container = root_container.add<GUI::Widget>();
-    calendar_frame_container.set_layout<GUI::HorizontalBoxLayout>();
-    calendar_frame_container.layout()->set_margins({ 4, 4, 5, 4 });
+    auto& calendar_container = root_container.add<GUI::Widget>();
+    calendar_container.set_layout<GUI::HorizontalBoxLayout>();
+    calendar_container.layout()->set_margins({ 4, 4, 5, 4 });
 
-    auto& calendar_frame = calendar_frame_container.add<GUI::Frame>();
-    calendar_frame.set_layout<GUI::VerticalBoxLayout>();
-    calendar_frame.layout()->set_margins({ 2, 2, 2, 2 });
-
-    m_calendar = calendar_frame.add<GUI::Calendar>();
+    m_calendar = calendar_container.add<GUI::Calendar>();
     m_selected_calendar_button->set_text(m_calendar->formatted_date());
 
     m_calendar->on_tile_click = [&] {
