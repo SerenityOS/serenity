@@ -264,6 +264,33 @@ bool Value::is_regexp(GlobalObject& global_object) const
     return is<RegExpObject>(as_object());
 }
 
+String Value::typeof() const
+{
+    switch (m_type) {
+    case Value::Type::Undefined:
+        return "undefined";
+    case Value::Type::Null:
+        return "object";
+    case Value::Type::Int32:
+    case Value::Type::Double:
+        return "number";
+    case Value::Type::String:
+        return "string";
+    case Value::Type::Object:
+        if (is_function())
+            return "function";
+        return "object";
+    case Value::Type::Boolean:
+        return "boolean";
+    case Value::Type::Symbol:
+        return "symbol";
+    case Value::Type::BigInt:
+        return "bigint";
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 String Value::to_string_without_side_effects() const
 {
     switch (m_type) {
@@ -1364,5 +1391,4 @@ Object* species_constructor(GlobalObject& global_object, const Object& object, O
     vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
     return nullptr;
 }
-
 }

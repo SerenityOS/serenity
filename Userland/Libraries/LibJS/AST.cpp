@@ -719,34 +719,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
     case UnaryOp::Minus:
         return unary_minus(global_object, lhs_result);
     case UnaryOp::Typeof:
-        switch (lhs_result.type()) {
-        case Value::Type::Empty:
-            VERIFY_NOT_REACHED();
-            return {};
-        case Value::Type::Undefined:
-            return js_string(vm, "undefined");
-        case Value::Type::Null:
-            // yes, this is on purpose. yes, this is how javascript works.
-            // yes, it's silly.
-            return js_string(vm, "object");
-        case Value::Type::Int32:
-        case Value::Type::Double:
-            return js_string(vm, "number");
-        case Value::Type::String:
-            return js_string(vm, "string");
-        case Value::Type::Object:
-            if (lhs_result.is_function())
-                return js_string(vm, "function");
-            return js_string(vm, "object");
-        case Value::Type::Boolean:
-            return js_string(vm, "boolean");
-        case Value::Type::Symbol:
-            return js_string(vm, "symbol");
-        case Value::Type::BigInt:
-            return js_string(vm, "bigint");
-        default:
-            VERIFY_NOT_REACHED();
-        }
+        return js_string(vm, lhs_result.typeof());
     case UnaryOp::Void:
         return js_undefined();
     case UnaryOp::Delete:
@@ -1430,9 +1403,9 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
     }
 
     reference.put(global_object, rhs_result);
-
     if (interpreter.exception())
         return {};
+
     return rhs_result;
 }
 
