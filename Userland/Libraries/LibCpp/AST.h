@@ -422,6 +422,7 @@ enum class BinaryOp {
     NotEqual,
     LogicalOr,
     LogicalAnd,
+    Arrow,
 };
 
 class BinaryExpression : public Expression {

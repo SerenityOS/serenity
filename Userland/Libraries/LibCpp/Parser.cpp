@@ -425,7 +425,8 @@ bool Parser::match_secondary_expression()
         || type == Token::Type::AndAnd
         || type == Token::Type::PipePipe
         || type == Token::Type::ExclamationMarkEquals
-        || type == Token::Type::PipePipe;
+        || type == Token::Type::PipePipe
+        || type == Token::Type::Arrow;
 }
 
 NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
@@ -577,6 +578,8 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(ASTNode& parent, No
         return parse_binary_expression(parent, lhs, BinaryOp::BitwiseOr);
     case Token::Type::PipePipe:
         return parse_binary_expression(parent, lhs, BinaryOp::LogicalOr);
+    case Token::Type::Arrow:
+        return parse_binary_expression(parent, lhs, BinaryOp::Arrow);
     case Token::Type::Equals:
         return parse_assignment_expression(parent, lhs, AssignmentOp::Assignment);
     case Token::Type::Dot: {
