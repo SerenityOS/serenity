@@ -966,6 +966,19 @@ OwnPtr<Messages::WindowServer::GetScrollStepSizeResponse> ClientConnection::hand
 {
     return make<Messages::WindowServer::GetScrollStepSizeResponse>(Screen::the().scroll_step_size());
 }
+OwnPtr<Messages::WindowServer::SetDoubleClickSpeedResponse> ClientConnection::handle(const Messages::WindowServer::SetDoubleClickSpeed& message)
+{
+    if (message.speed() < double_click_speed_min || message.speed() > double_click_speed_max) {
+        did_misbehave("SetDoubleClickSpeed with bad speed");
+        return {};
+    }
+    WindowManager::the().set_double_click_speed(message.speed());
+    return make<Messages::WindowServer::SetDoubleClickSpeedResponse>();
+}
+OwnPtr<Messages::WindowServer::GetDoubleClickSpeedResponse> ClientConnection::handle(const Messages::WindowServer::GetDoubleClickSpeed&)
+{
+    return make<Messages::WindowServer::GetDoubleClickSpeedResponse>(WindowManager::the().double_click_speed());
+}
 
 void ClientConnection::set_unresponsive(bool unresponsive)
 {
