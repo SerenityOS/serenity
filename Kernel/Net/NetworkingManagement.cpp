@@ -16,6 +16,7 @@
 #include <Kernel/Net/NE2000NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
+#include <Kernel/Net/RTL8168NetworkAdapter.h>
 #include <Kernel/Panic.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 
@@ -80,6 +81,8 @@ UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_
     if (auto candidate = E1000ENetworkAdapter::try_to_initialize(address); !candidate.is_null())
         return candidate;
     if (auto candidate = RTL8139NetworkAdapter::try_to_initialize(address); !candidate.is_null())
+        return candidate;
+    if (auto candidate = RTL8168NetworkAdapter::try_to_initialize(address); !candidate.is_null())
         return candidate;
     if (auto candidate = NE2000NetworkAdapter::try_to_initialize(address); !candidate.is_null())
         return candidate;
