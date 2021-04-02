@@ -111,7 +111,7 @@ Once you're in nix-shell, you should be able to follow the build directions.
 Make sure you have all the dependencies installed:
 
 ```console
-brew install coreutils qemu e2fsprogs m4 autoconf libtool automake bash gcc@10 ninja
+brew install coreutils qemu e2fsprogs m4 autoconf libtool automake bash gcc@10 ninja cmake
 brew install --cask osxfuse
 Toolchain/BuildFuseExt2.sh
 ```
