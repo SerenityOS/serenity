@@ -447,6 +447,9 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
     if (match_cpp_cast_expression())
         return parse_cpp_cast_expression(parent);
 
+    if(match_sizeof_expression())
+        return parse_sizeof_expression(parent);
+
     if (match_name()) {
         if (match_function_call() != TemplatizedMatchResult::NoMatch)
             return parse_function_call(parent);
@@ -847,7 +850,8 @@ bool Parser::match_expression()
     return match_literal()
         || token_type == Token::Type::Identifier
         || match_unary_expression()
-        || match_cpp_cast_expression();
+        || match_cpp_cast_expression()
+        || match_sizeof_expression();
 }
 
 bool Parser::eof() const
@@ -1397,6 +1401,22 @@ NonnullRefPtr<CppCastExpression> Parser::parse_cpp_cast_expression(ASTNode& pare
     cast_expression->set_end(position());
 
     return cast_expression;
+}
+
+bool Parser::match_sizeof_expression()
+{
+    return match_keyword("sizeof");
+}
+
+NonnullRefPtr<SizeofExpression> Parser::parse_sizeof_expression(ASTNode& parent)
+{
+    auto exp = create_ast_node<SizeofExpression>(parent, position(), {});
+    consume(Token::Type::Keyword);
+    consume(Token::Type::LeftParen);
+    exp->m_type = parse_type(parent);
+    consume(Token::Type::RightParen);
+    exp->set_end(position());
+    return exp;
 }
 
 }

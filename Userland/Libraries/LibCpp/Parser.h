@@ -90,6 +90,7 @@ private:
     bool match_template_arguments();
     bool match_name();
     bool match_cpp_cast_expression();
+    bool match_sizeof_expression();
 
     enum class TemplatizedMatchResult {
         NoMatch,
@@ -133,6 +134,7 @@ private:
     NonnullRefPtrVector<Type> parse_template_arguments(ASTNode& parent);
     NonnullRefPtr<Name> parse_name(ASTNode& parent);
     NonnullRefPtr<CppCastExpression> parse_cpp_cast_expression(ASTNode& parent);
+    NonnullRefPtr<SizeofExpression> parse_sizeof_expression(ASTNode& parent);
 
     bool match(Token::Type);
     Token consume(Token::Type);
