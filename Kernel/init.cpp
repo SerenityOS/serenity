@@ -355,3 +355,10 @@ multiboot_info_t* multiboot_info_ptr;
 void* __dso_handle __attribute__((visibility("hidden")));
 
 }
+extern "C" {
+[[noreturn]] void abort();
+[[noreturn]] void abort()
+{
+    VERIFY_NOT_REACHED();
+}
+}
