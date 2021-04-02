@@ -73,6 +73,7 @@ public:
     Optional<CSS::FlexDirection> flex_direction() const;
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;
+    Optional<CSS::Repeat> background_repeat() const;
 
     const Gfx::Font& font() const
     {
