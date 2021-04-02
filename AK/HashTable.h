@@ -308,9 +308,9 @@ private:
     {
         if (is_empty())
             return nullptr;
-        size_t bucket_index = hash % m_capacity;
+
         for (;;) {
-            auto& bucket = m_buckets[bucket_index];
+            auto& bucket = m_buckets[hash % m_capacity];
 
             if (usable_bucket_for_writing && !*usable_bucket_for_writing && !bucket.used) {
                 *usable_bucket_for_writing = &bucket;
@@ -323,7 +323,6 @@ private:
                 return nullptr;
 
             hash = double_hash(hash);
-            bucket_index = hash % m_capacity;
         }
     }
 
@@ -348,14 +347,12 @@ private:
         else if (usable_bucket_for_writing)
             return *usable_bucket_for_writing;
 
-        size_t bucket_index = hash % m_capacity;
 
         for (;;) {
-            auto& bucket = m_buckets[bucket_index];
+            auto& bucket = m_buckets[hash % m_capacity];
             if (!bucket.used)
                 return bucket;
             hash = double_hash(hash);
-            bucket_index = hash % m_capacity;
         }
     }
 
