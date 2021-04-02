@@ -222,11 +222,6 @@ u8 get_interrupt_line(Address address)
     return read8(address, PCI_INTERRUPT_LINE);
 }
 
-void set_interrupt_line(Address address, u8 new_line)
-{
-    write8(address, PCI_INTERRUPT_LINE, new_line);
-}
-
 u32 get_BAR0(Address address)
 {
     return read32(address, PCI_BAR0);
