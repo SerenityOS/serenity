@@ -198,6 +198,12 @@ void BoxLayout::run(Widget& widget)
     int current_x = margins().left();
     int current_y = margins().top();
 
+    auto widget_rect_with_margins_subtracted = widget.rect();
+    widget_rect_with_margins_subtracted.take_from_left(margins().left());
+    widget_rect_with_margins_subtracted.take_from_top(margins().top());
+    widget_rect_with_margins_subtracted.take_from_right(margins().right());
+    widget_rect_with_margins_subtracted.take_from_bottom(margins().bottom());
+
     for (auto& item : items) {
         Gfx::IntRect rect { current_x, current_y, 0, 0 };
 
@@ -220,9 +226,9 @@ void BoxLayout::run(Widget& widget)
             rect.set_secondary_size_for_orientation(orientation(), secondary);
 
             if (orientation() == Gfx::Orientation::Horizontal)
-                rect.center_vertically_within(widget.rect());
+                rect.center_vertically_within(widget_rect_with_margins_subtracted);
             else
-                rect.center_horizontally_within(widget.rect());
+                rect.center_horizontally_within(widget_rect_with_margins_subtracted);
 
             item.widget->set_relative_rect(rect);
         }
