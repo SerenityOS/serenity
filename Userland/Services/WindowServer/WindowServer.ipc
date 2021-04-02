@@ -127,4 +127,7 @@ endpoint WindowServer = 2
     GetScreenBitmap() => (Gfx::ShareableBitmap bitmap)
 
     Pong() =|
+
+    SetDoubleClickSpeed(int speed) => ()
+    GetDoubleClickSpeed() => (int speed)
 }
