@@ -420,6 +420,8 @@ enum class BinaryOp {
     RightShift,
     EqualsEquals,
     NotEqual,
+    LogicalOr,
+    LogicalAnd,
 };
 
 class BinaryExpression : public Expression {
@@ -582,6 +584,7 @@ enum class UnaryOp {
     Plus,
     Minus,
     PlusPlus,
+    Address,
 };
 
 class UnaryExpression : public Expression {
