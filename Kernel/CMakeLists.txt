@@ -115,8 +115,9 @@ set(KERNEL_SOURCES
     PCI/Device.cpp
     PCI/DeviceController.cpp
     PCI/IOAccess.cpp
-    PCI/Initializer.cpp
     PCI/MMIOAccess.cpp
+    PCI/Initializer.cpp
+    PCI/WindowedMMIOAccess.cpp
     Panic.cpp
     PerformanceEventBuffer.cpp
     Process.cpp

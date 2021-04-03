@@ -40,7 +40,7 @@ protected:
 
 private:
     virtual void enumerate_hardware(Function<void(Address, ID)>) override;
-    virtual const char* access_type() const override { return "IO-Access"; };
+    virtual const char* access_type() const override { return "IOAccess"; };
     virtual uint32_t segment_count() const override { return 1; };
     virtual void write8_field(Address address, u32, u8) override final;
     virtual void write16_field(Address address, u32, u16) override final;
