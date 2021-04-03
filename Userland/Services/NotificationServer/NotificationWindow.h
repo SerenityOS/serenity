@@ -31,8 +31,6 @@
 
 namespace NotificationServer {
 
-void update_notification_window_locations();
-
 class NotificationWindow final : public GUI::Window {
     C_OBJECT(NotificationWindow);
 
@@ -48,6 +46,8 @@ public:
 
 private:
     NotificationWindow(i32 client_id, const String& text, const String& title, const Gfx::ShareableBitmap&);
+
+    virtual void screen_rect_change_event(GUI::ScreenRectChangeEvent&) override;
 
     Gfx::IntRect m_original_rect;
     i32 m_id;

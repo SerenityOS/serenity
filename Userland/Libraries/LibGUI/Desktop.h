@@ -51,8 +51,6 @@ public:
 
     void did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::IntRect&);
 
-    Function<void(const Gfx::IntRect&)> on_rect_change;
-
 private:
     Gfx::IntRect m_rect;
 };
