@@ -170,6 +170,7 @@ set(SOURCES
     Layout/ListItemBox.cpp
     Layout/ListItemMarkerBox.cpp
     Layout/Node.cpp
+    Layout/RadioButton.cpp
     Layout/ReplacedBox.cpp
     Layout/SVGBox.cpp
     Layout/SVGGraphicsBox.cpp

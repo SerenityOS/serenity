@@ -36,6 +36,7 @@
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/CheckBox.h>
+#include <LibWeb/Layout/RadioButton.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web::HTML {
@@ -76,6 +77,9 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node()
 
     if (type() == "checkbox")
         return adopt(*new Layout::CheckBox(document(), *this, move(style)));
+
+    if (type() == "radio")
+        return adopt(*new Layout::RadioButton(document(), *this, move(style)));
 
     create_shadow_tree_if_needed();
     auto layout_node = adopt(*new Layout::BlockBox(document(), this, move(style)));
