@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1961,7 +1961,7 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    interpreter.execute_statement(global_object, m_block, ScopeType::Try);
+    auto result = interpreter.execute_statement(global_object, m_block, ScopeType::Try);
     if (auto* exception = interpreter.exception()) {
         if (m_handler) {
             interpreter.vm().clear_exception();
@@ -1970,7 +1970,7 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
             parameters.set(m_handler->parameter(), Variable { exception->value(), DeclarationKind::Var });
             auto* catch_scope = interpreter.heap().allocate<LexicalEnvironment>(global_object, move(parameters), interpreter.vm().call_frame().scope);
             TemporaryChange<ScopeObject*> scope_change(interpreter.vm().call_frame().scope, catch_scope);
-            interpreter.execute_statement(global_object, m_handler->body());
+            result = interpreter.execute_statement(global_object, m_handler->body());
         }
     }
 
@@ -1980,16 +1980,16 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         auto* previous_exception = interpreter.exception();
         interpreter.vm().clear_exception();
         interpreter.vm().stop_unwind();
-        m_finalizer->execute(interpreter, global_object);
+        result = m_finalizer->execute(interpreter, global_object);
         // If we previously had an exception and the finalizer didn't
         // throw a new one, restore the old one.
         // FIXME: This will print debug output in throw_exception() for
-        // a seconds time with m_should_log_exceptions enabled.
+        // a second time with m_should_log_exceptions enabled.
         if (previous_exception && !interpreter.exception())
             interpreter.vm().throw_exception(previous_exception);
     }
 
-    return js_undefined();
+    return result;
 }
 
 Value CatchClause::execute(Interpreter& interpreter, GlobalObject&) const
