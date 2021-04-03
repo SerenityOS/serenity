@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,40 +37,57 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* filename = nullptr;
+    bool ignore_env = false;
+    const char* split_string = nullptr;
+    Vector<const char*> values;
 
-    for (int idx = 1; idx < argc; ++idx) {
-        if (idx == 1) {
-            if (StringView { argv[idx] } == "-i" || StringView { argv[idx] } == "--ignore-environment") {
-                clearenv();
-                continue;
-            }
-        }
-        if (StringView { argv[idx] }.contains('=')) {
-            putenv(argv[idx]);
+    Core::ArgsParser args_parser;
+    args_parser.add_option(ignore_env, "Start with an empty environment", "ignore-environment", 'i');
+    args_parser.add_option(split_string, "Process and split S into separate arguments; used to pass multiple arguments on shebang lines", "split-string", 'S', "S");
+
+    args_parser.add_positional_argument(values, "Environment and commands", "env/command", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    if (ignore_env)
+        clearenv();
+
+    size_t argv_start;
+    for (argv_start = 0; argv_start < values.size(); ++argv_start) {
+        if (StringView { values[argv_start] }.contains('=')) {
+            putenv(const_cast<char*>(values[argv_start]));
         } else {
-            filename = argv[idx];
-            argv += idx;
             break;
         }
     }
 
-    if (filename == nullptr) {
+    Vector<String> split_string_storage;
+    Vector<const char*> new_argv;
+    if (split_string) {
+        for (auto view : StringView(split_string).split_view(' ')) {
+            split_string_storage.append(view);
+        }
+        for (auto& str : split_string_storage) {
+            new_argv.append(str.characters());
+        }
+    }
+
+    for (size_t i = argv_start; i < values.size(); ++i) {
+        new_argv.append(values[i]);
+    }
+
+    if (new_argv.size() == 0) {
         for (auto entry = environ; *entry != nullptr; ++entry)
             printf("%s\n", *entry);
 
         return 0;
     }
 
-    String filepath = Core::find_executable_in_path(filename);
+    new_argv.append(nullptr);
 
-    if (filepath.is_null()) {
-        warnln("no {} in path", filename);
-        return 1;
-    }
+    const char* executable = new_argv[0];
+    char* const* new_argv_ptr = const_cast<char* const*>(&new_argv[0]);
 
-    execv(filepath.characters(), argv);
-
-    perror("execv");
+    execvp(executable, new_argv_ptr);
+    perror("execvp");
     return 1;
 }
