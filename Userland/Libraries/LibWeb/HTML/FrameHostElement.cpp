@@ -24,25 +24,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/FrameHostElement.h>
+#include <LibWeb/Origin.h>
+#include <LibWeb/Page/Frame.h>
 
 namespace Web::HTML {
 
-class HTMLIFrameElement final : public FrameHostElement {
-public:
-    using WrapperType = Bindings::HTMLIFrameElementWrapper;
+FrameHostElement::FrameHostElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
+{
+}
 
-    HTMLIFrameElement(DOM::Document&, QualifiedName);
-    virtual ~HTMLIFrameElement() override;
+FrameHostElement::~FrameHostElement()
+{
+}
 
-    virtual RefPtr<Layout::Node> create_layout_node() override;
+Origin FrameHostElement::content_origin() const
+{
+    if (!m_content_frame || !m_content_frame->document())
+        return {};
+    return m_content_frame->document()->origin();
+}
 
-private:
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
+bool FrameHostElement::may_access_from_origin(const Origin& origin) const
+{
+    return origin.is_same(content_origin());
+}
 
-    void load_src(const String&);
-};
+const DOM::Document* FrameHostElement::content_document() const
+{
+    return m_content_frame ? m_content_frame->document() : nullptr;
+}
+
+void FrameHostElement::content_frame_did_load(Badge<FrameLoader>)
+{
+    dispatch_event(DOM::Event::create(EventNames::load));
+}
 
 }
