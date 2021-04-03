@@ -1,0 +1,27 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a808a98..7b8753a 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -5,6 +5,9 @@ cmake_minimum_required(VERSION 2.8)
+ project(CMatrix LANGUAGES C)
+ set(VERSION "2.0")
+ 
++set(CMAKE_INCLUDE_PATH "${SERENITY_BUILD_DIR}/Root/usr/local/include/ncurses")
++set(CURSES_NCURSES_LIBRARY "${SERENITY_BUILD_DIR}/Root/usr/local/lib/libncurses.a")
++
+ # These are relative to CMAKE_INSTALL_PREFIX
+ # which by default is "/usr/local"
+ set(CONSOLE_FONTS_DIRS "share/consolefonts" "lib/kbd/consolefonts")
+@@ -49,10 +52,8 @@ if	(HAVE_GETOPT_H)
+ 	add_definitions(-DHAVE_GETOPT_H)
+ endif	()
+ 
+-Set(CURSES_NEED_NCURSES TRUE)
+-find_package(Curses)
+-include_directories(${CURSES_INCLUDE_DIR})
+-add_definitions(-DHAVE_NCURSES_H)
++find_package(Curses REQUIRED)
++include_directories(${CURSES_INCLUDE_PATH})
+ 
+ add_executable(cmatrix cmatrix.c)
+ 
