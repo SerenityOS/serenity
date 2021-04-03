@@ -164,6 +164,40 @@ struct read_element_concrete<unsigned, ApT, kind> {
 };
 
 template<typename ApT, ReadKind kind>
+struct read_element_concrete<long long, ApT, kind> {
+    bool operator()(GenericLexer& lexer, va_list* ap)
+    {
+        lexer.ignore_while(isspace);
+
+        auto* ptr = va_arg(*ap, ApT*);
+        long long value = 0;
+        char* endptr = nullptr;
+        auto nptr = lexer.remaining().characters_without_null_termination();
+        if constexpr (kind == ReadKind::Normal)
+            value = strtoll(nptr, &endptr, 10);
+        if constexpr (kind == ReadKind::Octal)
+            value = strtoll(nptr, &endptr, 8);
+        if constexpr (kind == ReadKind::Hex)
+            value = strtoll(nptr, &endptr, 16);
+        if constexpr (kind == ReadKind::Infer)
+            value = strtoll(nptr, &endptr, 0);
+
+        if (!endptr)
+            return false;
+
+        if (endptr == nptr)
+            return false;
+
+        auto diff = endptr - nptr;
+        VERIFY(diff > 0);
+        lexer.ignore((size_t)diff);
+
+        *ptr = value;
+        return true;
+    }
+};
+
+template<typename ApT, ReadKind kind>
 struct read_element_concrete<unsigned long long, ApT, kind> {
     bool operator()(GenericLexer& lexer, va_list* ap)
     {
@@ -248,15 +282,15 @@ struct read_element {
             if constexpr (IsSame<T, unsigned>::value)
                 return read_element_concrete<T, unsigned, kind> {}(input_lexer, ap);
             if constexpr (IsSame<T, float>::value)
-                return read_element_concrete<T, double, kind> {}(input_lexer, ap);
+                return read_element_concrete<int, double, kind> {}(input_lexer, ap);
             return false;
         case LongLong:
             if constexpr (IsSame<T, int>::value)
-                return read_element_concrete<T, long long, kind> {}(input_lexer, ap);
+                return read_element_concrete<long long, long long, kind> {}(input_lexer, ap);
             if constexpr (IsSame<T, unsigned>::value)
-                return read_element_concrete<T, unsigned long long, kind> {}(input_lexer, ap);
+                return read_element_concrete<unsigned long long, unsigned long long, kind> {}(input_lexer, ap);
             if constexpr (IsSame<T, float>::value)
-                return read_element_concrete<T, double, kind> {}(input_lexer, ap);
+                return read_element_concrete<long long, double, kind> {}(input_lexer, ap);
             return false;
         case IntMax:
             return read_element_concrete<T, intmax_t, kind> {}(input_lexer, ap);
