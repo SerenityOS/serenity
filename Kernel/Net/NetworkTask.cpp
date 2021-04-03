@@ -60,25 +60,15 @@ void NetworkTask::spawn()
 void NetworkTask_main(void*)
 {
     WaitQueue packet_wait_queue;
-    u8 octet = 15;
     int pending_packets = 0;
     NetworkAdapter::for_each([&](auto& adapter) {
+        dmesgln("NetworkTask: {} network adapter found: hw={}", adapter.class_name(), adapter.mac_address().to_string());
+
         if (String(adapter.class_name()) == "LoopbackAdapter") {
             adapter.set_ipv4_address({ 127, 0, 0, 1 });
             adapter.set_ipv4_netmask({ 255, 0, 0, 0 });
             adapter.set_ipv4_gateway({ 0, 0, 0, 0 });
-        } else {
-            adapter.set_ipv4_address({ 10, 0, 2, octet++ });
-            adapter.set_ipv4_netmask({ 255, 255, 255, 0 });
-            adapter.set_ipv4_gateway({ 10, 0, 2, 2 });
         }
-
-        dmesgln("NetworkTask: {} network adapter found: hw={}, ipv4_address={}, ipv4_netmask={}, ipv4_gateway={}",
-            adapter.class_name(),
-            adapter.mac_address().to_string(),
-            adapter.ipv4_address(),
-            adapter.ipv4_netmask(),
-            adapter.ipv4_gateway());
 
         adapter.on_receive = [&]() {
             pending_packets++;
