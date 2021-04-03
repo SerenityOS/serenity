@@ -515,6 +515,9 @@ void IconView::paint_event(PaintEvent& event)
 
     painter.fill_rect(event.rect(), fill_with_background_color() ? widget_background_color : Color::Transparent);
 
+    if (!model())
+        return;
+
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
