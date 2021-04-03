@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,50 +33,33 @@
 namespace Kernel {
 namespace PCI {
 
-class MMIOSegment {
-public:
-    MMIOSegment(PhysicalAddress, u8, u8);
-    u8 get_start_bus() const;
-    u8 get_end_bus() const;
-    size_t get_size() const;
-    PhysicalAddress get_paddr() const;
+#define MEMORY_RANGE_PER_BUS (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE * PCI_MAX_DEVICES_PER_BUS)
 
-private:
-    PhysicalAddress m_base_addr;
-    u8 m_start_bus;
-    u8 m_end_bus;
-};
-
-#define PCI_MMIO_CONFIG_SPACE_SIZE 4096
-
-UNMAP_AFTER_INIT DeviceConfigurationSpaceMapping::DeviceConfigurationSpaceMapping(Address device_address, const MMIOSegment& mmio_segment)
-    : m_device_address(device_address)
-    , m_mapped_region(MM.allocate_kernel_region(page_round_up(PCI_MMIO_CONFIG_SPACE_SIZE), "PCI MMIO Device Access", Region::Access::Read | Region::Access::Write).release_nonnull())
-{
-    PhysicalAddress segment_lower_addr = mmio_segment.get_paddr();
-    PhysicalAddress device_physical_mmio_space = segment_lower_addr.offset(
-        PCI_MMIO_CONFIG_SPACE_SIZE * m_device_address.function() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE) * m_device_address.device() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE * PCI_MAX_DEVICES_PER_BUS) * (m_device_address.bus() - mmio_segment.get_start_bus()));
-    m_mapped_region->physical_page_slot(0) = PhysicalPage::create(device_physical_mmio_space, false, false);
-    m_mapped_region->remap();
-}
-
-uint32_t MMIOAccess::segment_count() const
+u32 MMIOAccess::segment_count() const
 {
     return m_segments.size();
 }
 
-uint8_t MMIOAccess::segment_start_bus(u32 seg) const
+u8 MMIOAccess::segment_start_bus(u32 seg) const
 {
     auto segment = m_segments.get(seg);
     VERIFY(segment.has_value());
     return segment.value().get_start_bus();
 }
 
-uint8_t MMIOAccess::segment_end_bus(u32 seg) const
+u8 MMIOAccess::segment_end_bus(u32 seg) const
 {
     auto segment = m_segments.get(seg);
     VERIFY(segment.has_value());
     return segment.value().get_end_bus();
+}
+
+PhysicalAddress MMIOAccess::determine_memory_mapped_bus_region(u32 segment, u8 bus) const
+{
+    VERIFY(bus >= segment_start_bus(segment) && bus <= segment_end_bus(segment));
+    auto seg = m_segments.get(segment);
+    VERIFY(seg.has_value());
+    return seg.value().get_paddr().offset(MEMORY_RANGE_PER_BUS * (bus - seg.value().get_start_bus()));
 }
 
 UNMAP_AFTER_INIT void MMIOAccess::initialize(PhysicalAddress mcfg)
@@ -118,77 +101,78 @@ UNMAP_AFTER_INIT MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     dmesgln("PCI: MMIO segments: {}", m_segments.size());
 
     InterruptDisabler disabler;
+    VERIFY(m_segments.contains(0));
+
+    // Note: we need to map this region before enumerating the hardware and adding
+    // PCI::PhysicalID objects to the vector, because get_capabilities calls
+    // PCI::read16 which will need this region to be mapped.
+    m_mapped_region = MM.allocate_kernel_region(determine_memory_mapped_bus_region(0, m_segments.get(0).value().get_start_bus()), MEMORY_RANGE_PER_BUS, "PCI ECAM", Region::Access::Read | Region::Access::Write);
+    dmesgln("PCI ECAM Mapped region @ {}", m_mapped_region->vaddr());
 
     enumerate_hardware([&](const Address& address, ID id) {
-        m_mapped_device_regions.append(make<DeviceConfigurationSpaceMapping>(address, m_segments.get(address.seg()).value()));
         m_physical_ids.append({ address, id, get_capabilities(address) });
-        dbgln_if(PCI_DEBUG, "PCI: Mapping device @ pci ({}) {} {}", address, m_mapped_device_regions.last().vaddr(), m_mapped_device_regions.last().paddr());
     });
 }
-
-Optional<VirtualAddress> MMIOAccess::get_device_configuration_space(Address address)
+void MMIOAccess::map_bus_region(u32 segment, u8 bus)
 {
-    dbgln_if(PCI_DEBUG, "PCI: Getting device configuration space for {}", address);
-    for (auto& mapping : m_mapped_device_regions) {
-        auto checked_address = mapping.address();
-        dbgln_if(PCI_DEBUG, "PCI Device Configuration Space Mapping: Check if {} was requested", checked_address);
-        if (address.seg() == checked_address.seg()
-            && address.bus() == checked_address.bus()
-            && address.device() == checked_address.device()
-            && address.function() == checked_address.function()) {
-            dbgln_if(PCI_DEBUG, "PCI Device Configuration Space Mapping: Found {}", checked_address);
-            return mapping.vaddr();
-        }
-    }
+    VERIFY(m_access_lock.is_locked());
+    if (m_mapped_bus == bus)
+        return;
+    m_mapped_region = MM.allocate_kernel_region(determine_memory_mapped_bus_region(segment, bus), MEMORY_RANGE_PER_BUS, "PCI ECAM", Region::Access::Read | Region::Access::Write);
+}
 
-    dbgln_if(PCI_DEBUG, "PCI: No device configuration space found for {}", address);
-    return {};
+VirtualAddress MMIOAccess::get_device_configuration_space(Address address)
+{
+    VERIFY(m_access_lock.is_locked());
+    dbgln_if(PCI_DEBUG, "PCI: Getting device configuration space for {}", address);
+    map_bus_region(address.seg(), address.bus());
+    return m_mapped_region->vaddr().offset(PCI_MMIO_CONFIG_SPACE_SIZE * address.function() + (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE) * address.device());
 }
 
 u8 MMIOAccess::read8_field(Address address, u32 field)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(m_access_lock);
     VERIFY(field <= 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 8-bit field {:#08x} for {}", field, address);
-    return *((u8*)(get_device_configuration_space(address).value().get() + (field & 0xfff)));
+    return *((volatile u8*)(get_device_configuration_space(address).get() + (field & 0xfff)));
 }
 
 u16 MMIOAccess::read16_field(Address address, u32 field)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(m_access_lock);
     VERIFY(field < 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 16-bit field {:#08x} for {}", field, address);
-    return *((u16*)(get_device_configuration_space(address).value().get() + (field & 0xfff)));
+    return *((volatile u16*)(get_device_configuration_space(address).get() + (field & 0xfff)));
 }
 
 u32 MMIOAccess::read32_field(Address address, u32 field)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(m_access_lock);
     VERIFY(field <= 0xffc);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 32-bit field {:#08x} for {}", field, address);
-    return *((u32*)(get_device_configuration_space(address).value().get() + (field & 0xfff)));
+    return *((volatile u32*)(get_device_configuration_space(address).get() + (field & 0xfff)));
 }
 
 void MMIOAccess::write8_field(Address address, u32 field, u8 value)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(m_access_lock);
     VERIFY(field <= 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 8-bit field {:#08x}, value={:#02x} for {}", field, value, address);
-    *((u8*)(get_device_configuration_space(address).value().get() + (field & 0xfff))) = value;
+    *((volatile u8*)(get_device_configuration_space(address).get() + (field & 0xfff))) = value;
 }
 void MMIOAccess::write16_field(Address address, u32 field, u16 value)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(m_access_lock);
     VERIFY(field < 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 16-bit field {:#08x}, value={:#02x} for {}", field, value, address);
-    *((u16*)(get_device_configuration_space(address).value().get() + (field & 0xfff))) = value;
+    *((volatile u16*)(get_device_configuration_space(address).get() + (field & 0xfff))) = value;
 }
 void MMIOAccess::write32_field(Address address, u32 field, u32 value)
 {
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(m_access_lock);
     VERIFY(field <= 0xffc);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 32-bit field {:#08x}, value={:#02x} for {}", field, value, address);
-    *((u32*)(get_device_configuration_space(address).value().get() + (field & 0xfff))) = value;
+    *((volatile u32*)(get_device_configuration_space(address).get() + (field & 0xfff))) = value;
 }
 
 void MMIOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
@@ -210,29 +194,29 @@ void MMIOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
     }
 }
 
-MMIOSegment::MMIOSegment(PhysicalAddress segment_base_addr, u8 start_bus, u8 end_bus)
+MMIOAccess::MMIOSegment::MMIOSegment(PhysicalAddress segment_base_addr, u8 start_bus, u8 end_bus)
     : m_base_addr(segment_base_addr)
     , m_start_bus(start_bus)
     , m_end_bus(end_bus)
 {
 }
 
-u8 MMIOSegment::get_start_bus() const
+u8 MMIOAccess::MMIOSegment::get_start_bus() const
 {
     return m_start_bus;
 }
 
-u8 MMIOSegment::get_end_bus() const
+u8 MMIOAccess::MMIOSegment::get_end_bus() const
 {
     return m_end_bus;
 }
 
-size_t MMIOSegment::get_size() const
+size_t MMIOAccess::MMIOSegment::get_size() const
 {
     return (PCI_MMIO_CONFIG_SPACE_SIZE * PCI_MAX_FUNCTIONS_PER_DEVICE * PCI_MAX_DEVICES_PER_BUS * (get_end_bus() - get_start_bus()));
 }
 
-PhysicalAddress MMIOSegment::get_paddr() const
+PhysicalAddress MMIOAccess::MMIOSegment::get_paddr() const
 {
     return m_base_addr;
 }

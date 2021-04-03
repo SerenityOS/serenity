@@ -226,6 +226,7 @@ PhysicalID get_physical_id(Address address);
 
 class Access;
 class MMIOAccess;
+class WindowedMMIOAccess;
 class IOAccess;
 class MMIOSegment;
 class DeviceController;
