@@ -84,4 +84,15 @@ TEST_CASE(has_extension)
     }
 }
 
+TEST_CASE(relative_path)
+{
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/tmp"), "abc.txt");
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/tmp/"), "abc.txt");
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/"), "tmp/abc.txt");
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/usr"), "/tmp/abc.txt");
+
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/foo.txt", "tmp"), String {});
+    EXPECT_EQ(LexicalPath::relative_path("tmp/foo.txt", "/tmp"), String {});
+}
+
 TEST_MAIN(LexicalPath)
