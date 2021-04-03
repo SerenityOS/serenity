@@ -26,7 +26,7 @@ int main(int, char**)
     Container container;
     for (int i = 0; i < 3; ++i) {
         // This is a comment :^)
-        func();
+        MyNamespace::func();
         printf("Hello friends!\n");
         mkdir("/tmp/xyz", 0755);
     }
