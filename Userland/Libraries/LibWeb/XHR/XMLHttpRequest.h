@@ -76,6 +76,8 @@ public:
 
     DOM::ExceptionOr<void> set_request_header(const String& header, const String& value);
 
+    String get_response_header(const String& name) { return m_response_headers.get(name).value_or({}); }
+
 private:
     virtual void ref_event_target() override { ref(); }
     virtual void unref_event_target() override { unref(); }
@@ -98,6 +100,7 @@ private:
     URL m_url;
 
     HashMap<String, String, CaseInsensitiveStringTraits> m_request_headers;
+    HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
 
     bool m_synchronous { false };
     bool m_upload_complete { false };

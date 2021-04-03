@@ -229,7 +229,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
         // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
         ResourceLoader::the().load(
             request,
-            [weak_this = make_weak_ptr()](auto data, auto&, auto status_code) {
+            [weak_this = make_weak_ptr()](auto data, auto& response_headers, auto status_code) {
                 if (!weak_this)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*weak_this);
@@ -245,6 +245,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
 
                 xhr.m_ready_state = ReadyState::Done;
                 xhr.m_status = status_code.value_or(0);
+                xhr.m_response_headers = move(response_headers);
                 xhr.m_send = false;
                 xhr.dispatch_event(DOM::Event::create(EventNames::readystatechange));
                 xhr.fire_progress_event(EventNames::load, transmitted, length);
