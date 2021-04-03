@@ -67,6 +67,11 @@ add_custom_target(check-style
     USES_TERMINAL
 )
 
+add_custom_target(install-ports
+    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ROOT=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" ${CMAKE_SOURCE_DIR}/Meta/install-ports-tree.sh
+    USES_TERMINAL
+)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
