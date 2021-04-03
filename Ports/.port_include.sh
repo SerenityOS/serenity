@@ -2,16 +2,17 @@
 set -eu
 
 SCRIPT="$(dirname "${0}")"
-export SERENITY_ROOT="$(realpath "${SCRIPT}/../")"
 export SERENITY_ARCH="${SERENITY_ARCH:-i686}"
-export SERENITY_BUILD_DIR="${SERENITY_ROOT}/Build/${SERENITY_ARCH}"
-export CC="${SERENITY_ARCH}-pc-serenity-gcc"
-export CXX="${SERENITY_ARCH}-pc-serenity-g++"
-export AR="${SERENITY_ARCH}-pc-serenity-ar"
-export RANLIB="${SERENITY_ARCH}-pc-serenity-ranlib"
-export PATH="${SERENITY_ROOT}/Toolchain/Local/${SERENITY_ARCH}/bin:${PATH}"
 
-packagesdb="${SERENITY_BUILD_DIR}/packages.db"
+maybe_source() {
+    if [ -f "$1" ]; then
+        . "$1"
+    fi
+}
+DESTDIR="/"
+maybe_source "${SCRIPT}/.hosted_defs.sh"
+
+packagesdb="${DESTDIR}/usr/Ports/packages.db"
 
 MD5SUM=md5sum
 
@@ -164,7 +165,7 @@ func_defined build || build() {
     run make $makeopts
 }
 func_defined install || install() {
-    run make DESTDIR="${SERENITY_BUILD_DIR}/Root" $installopts install
+    run make DESTDIR=$DESTDIR $installopts install
 }
 func_defined post_install || post_install() {
     echo
@@ -194,6 +195,7 @@ func_defined clean_all || clean_all() {
 addtodb() {
     if [ ! -f "$packagesdb" ]; then
         echo "Note: $packagesdb does not exist. Creating."
+        mkdir -p "${DESTDIR}/usr/Ports/"
         touch "$packagesdb"
     fi
     if ! grep -E "^(auto|manual) $port $version" "$packagesdb" > /dev/null; then
@@ -226,10 +228,10 @@ uninstall() {
             for f in `cat plist`; do
                 case $f in
                     */)
-                        run rmdir "${SERENITY_BUILD_DIR}/Root/$f" || true
+                        run rmdir "${DESTDIR}/$f" || true
                         ;;
                     *)
-                        run rm -rf "${SERENITY_BUILD_DIR}/Root/$f"
+                        run rm -rf "${DESTDIR}/$f"
                         ;;
                 esac
             done
