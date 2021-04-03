@@ -127,7 +127,9 @@ String LexicalPath::relative_path(const String absolute_path, const String& pref
     if (!absolute_path.starts_with(prefix))
         return absolute_path;
 
-    size_t prefix_length = LexicalPath { prefix }.string().length() + 1;
+    size_t prefix_length = LexicalPath { prefix }.string().length();
+    if (prefix != "/")
+        prefix_length++;
     if (prefix_length >= absolute_path.length())
         return {};
 
