@@ -26,6 +26,7 @@ set(SOURCES
     CSS/PropertyID.cpp
     CSS/PropertyID.h
     CSS/QuirksModeStyleSheetSource.cpp
+    CSS/Screen.cpp
     CSS/Selector.cpp
     CSS/SelectorEngine.cpp
     CSS/StyleInvalidator.cpp
@@ -290,6 +291,7 @@ endfunction()
 
 libweb_js_wrapper(CSS/CSSStyleDeclaration)
 libweb_js_wrapper(CSS/CSSStyleSheet)
+libweb_js_wrapper(CSS/Screen)
 libweb_js_wrapper(CSS/StyleSheet)
 libweb_js_wrapper(CSS/StyleSheetList)
 libweb_js_wrapper(DOM/CharacterData)

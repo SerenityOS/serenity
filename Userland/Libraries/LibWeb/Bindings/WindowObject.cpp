@@ -40,6 +40,7 @@
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceWrapper.h>
+#include <LibWeb/Bindings/ScreenWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -67,6 +68,7 @@ void WindowObject::initialize_global_object()
     define_property("self", this, JS::Attribute::Enumerable);
     define_native_property("document", document_getter, document_setter, JS::Attribute::Enumerable);
     define_native_property("performance", performance_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_property("screen", screen_getter, nullptr, JS::Attribute::Enumerable);
     define_native_property("innerWidth", inner_width_getter, nullptr, JS::Attribute::Enumerable);
     define_native_property("innerHeight", inner_height_getter, nullptr, JS::Attribute::Enumerable);
     define_native_function("alert", alert);
@@ -369,6 +371,14 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::performance_getter)
     if (!impl)
         return {};
     return wrap(global_object, impl->performance());
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::screen_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return wrap(global_object, impl->screen());
 }
 
 JS_DEFINE_NATIVE_GETTER(WindowObject::event_getter)
