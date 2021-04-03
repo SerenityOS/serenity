@@ -108,9 +108,14 @@ UNMAP_AFTER_INIT bool CommandLine::is_vmmouse_enabled() const
     return lookup("vmmouse").value_or("on") == "on";
 }
 
-UNMAP_AFTER_INIT bool CommandLine::is_mmio_enabled() const
+UNMAP_AFTER_INIT bool CommandLine::is_pci_ecam_enabled() const
 {
-    return lookup("pci_mmio").value_or("off") == "on";
+    auto value = lookup("pci_ecam").value_or("on");
+    if (value == "on")
+        return true;
+    if (value == "off")
+        return false;
+    PANIC("Unknown PCI ECAM setting: {}", value);
 }
 
 UNMAP_AFTER_INIT bool CommandLine::is_legacy_time_enabled() const

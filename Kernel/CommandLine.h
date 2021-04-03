@@ -71,7 +71,7 @@ public:
     [[nodiscard]] bool is_ide_enabled() const;
     [[nodiscard]] bool is_smp_enabled() const;
     [[nodiscard]] bool is_vmmouse_enabled() const;
-    [[nodiscard]] bool is_mmio_enabled() const;
+    [[nodiscard]] bool is_pci_ecam_enabled() const;
     [[nodiscard]] bool is_legacy_time_enabled() const;
     [[nodiscard]] bool is_text_mode() const;
     [[nodiscard]] bool is_force_pio() const;
