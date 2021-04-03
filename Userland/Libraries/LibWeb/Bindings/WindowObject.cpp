@@ -66,7 +66,7 @@ void WindowObject::initialize_global_object()
     define_property("window", this, JS::Attribute::Enumerable);
     define_property("frames", this, JS::Attribute::Enumerable);
     define_property("self", this, JS::Attribute::Enumerable);
-    define_native_property("document", document_getter, document_setter, JS::Attribute::Enumerable);
+    define_native_property("document", document_getter, nullptr, JS::Attribute::Enumerable);
     define_native_property("performance", performance_getter, nullptr, JS::Attribute::Enumerable);
     define_native_property("screen", screen_getter, nullptr, JS::Attribute::Enumerable);
     define_native_property("innerWidth", inner_width_getter, nullptr, JS::Attribute::Enumerable);
@@ -358,11 +358,6 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)
     if (!impl)
         return {};
     return wrap(global_object, impl->document());
-}
-
-JS_DEFINE_NATIVE_SETTER(WindowObject::document_setter)
-{
-    // FIXME: Figure out what we should do here. Just ignore attempts to set window.document for now.
 }
 
 JS_DEFINE_NATIVE_GETTER(WindowObject::performance_getter)
