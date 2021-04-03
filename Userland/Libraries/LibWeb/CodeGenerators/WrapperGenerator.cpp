@@ -102,7 +102,7 @@ static size_t get_function_length(FunctionType& function)
 struct Type {
     String name;
     bool nullable { false };
-    bool is_string() const { return name.is_one_of("DOMString", "USVString", "CSSOMString"); }
+    bool is_string() const { return name.is_one_of("ByteString", "CSSOMString", "DOMString", "USVString"); }
 };
 
 struct Parameter {
