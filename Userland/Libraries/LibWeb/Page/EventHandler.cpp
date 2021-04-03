@@ -437,7 +437,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             auto position = m_frame.cursor_position();
 
             if (position.offset() == 0)
-                TODO();
+                return true;
 
             auto new_position = m_frame.cursor_position();
             new_position.set_offset(position.offset() - 1);
@@ -450,7 +450,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             auto position = m_frame.cursor_position();
 
             if (position.offset() >= downcast<DOM::Text>(position.node())->data().length())
-                TODO();
+                return true;
 
             m_edit_event_handler->handle_delete(DOM::Range::create(*position.node(), position.offset(), *position.node(), position.offset() + 1));
 

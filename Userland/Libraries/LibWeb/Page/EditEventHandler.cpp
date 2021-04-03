@@ -45,8 +45,8 @@ void EditEventHandler::handle_delete(DOM::Range& range)
     if (start == end) {
         StringBuilder builder;
         builder.append(start->data().substring_view(0, range.start_offset()));
-        builder.append(end->data().substring_view(range.end_offset()));
-
+        auto str = end->data();
+        builder.append(str.length() > range.end_offset() ? str.substring_view(range.end_offset()).to_string() : String::empty());
         start->set_data(builder.to_string());
     } else {
         // Remove all the nodes that are fully enclosed in the range.
