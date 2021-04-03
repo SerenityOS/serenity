@@ -175,12 +175,12 @@ bool FILE::flush()
     }
     if (m_mode & O_RDONLY) {
         // When open for reading, just drop the buffered data.
-        size_t had_buffered = m_buffer.buffered_size();
+        VERIFY(m_buffer.buffered_size() <= NumericLimits<off_t>::max());
+        off_t had_buffered = m_buffer.buffered_size();
         m_buffer.drop();
         // Attempt to reset the underlying file position to what the user
         // expects.
-        int rc = lseek(m_fd, -had_buffered, SEEK_CUR);
-        if (rc < 0) {
+        if (lseek(m_fd, -had_buffered, SEEK_CUR) < 0) {
             if (errno == ESPIPE) {
                 // We can't set offset on this file; oh well, the user will just
                 // have to cope.
