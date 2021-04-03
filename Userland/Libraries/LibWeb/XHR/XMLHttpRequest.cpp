@@ -228,7 +228,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
         // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
         ResourceLoader::the().load(
             request,
-            [weak_this = make_weak_ptr()](auto data, auto&) {
+            [weak_this = make_weak_ptr()](auto data, auto&, auto) {
                 if (!weak_this)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*weak_this);
@@ -248,7 +248,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
                 xhr.fire_progress_event(EventNames::load, transmitted, length);
                 xhr.fire_progress_event(EventNames::loadend, transmitted, length);
             },
-            [weak_this = make_weak_ptr()](auto& error) {
+            [weak_this = make_weak_ptr()](auto& error, auto) {
                 if (!weak_this)
                     return;
                 dbgln("XHR failed to load: {}", error);
