@@ -211,11 +211,11 @@ void TestRunner::run()
 
         Web::ResourceLoader::the().load_sync(
             page_to_load,
-            [&](auto data, auto&) {
+            [&](auto data, auto&, auto) {
                 Web::HTML::HTMLDocumentParser parser(*m_page_view->document(), data, "utf-8");
                 parser.run(page_to_load);
             },
-            [page_to_load](auto error) {
+            [page_to_load](auto& error, auto) {
                 printf("Failed to load test page: %s (%s)", page_to_load.to_string().characters(), error.characters());
                 cleanup_and_exit();
             });
@@ -317,7 +317,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
 
     Web::ResourceLoader::the().load_sync(
         page_to_load,
-        [&](auto data, auto&) {
+        [&](auto data, auto&, auto) {
             // Create a new parser and immediately get its document to replace the old interpreter.
             auto document = Web::DOM::Document::create();
             Web::HTML::HTMLDocumentParser parser(document, data, "utf-8");
@@ -417,7 +417,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             file_result.time_taken = get_time_in_ms() - start_time;
             m_total_elapsed_time_in_ms += file_result.time_taken;
         },
-        [page_to_load](auto error) {
+        [page_to_load](auto& error, auto) {
             printf("Failed to load test page: %s (%s)", page_to_load.to_string().characters(), error.characters());
             cleanup_and_exit();
         });

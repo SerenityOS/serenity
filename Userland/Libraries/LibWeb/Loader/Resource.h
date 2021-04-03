@@ -77,8 +77,8 @@ public:
 
     void for_each_client(Function<void(ResourceClient&)>);
 
-    void did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers);
-    void did_fail(Badge<ResourceLoader>, const String& error);
+    void did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers, Optional<u32> status_code);
+    void did_fail(Badge<ResourceLoader>, const String& error, Optional<u32> status_code);
 
 protected:
     explicit Resource(Type, const LoadRequest&);
@@ -93,6 +93,7 @@ private:
     String m_encoding;
     String m_mime_type;
     HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
+    Optional<u32> m_status_code;
     HashTable<ResourceClient*> m_clients;
 };
 
