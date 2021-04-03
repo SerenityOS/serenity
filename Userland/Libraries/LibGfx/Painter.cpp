@@ -1387,8 +1387,8 @@ void Painter::draw_line(const IntPoint& p1, const IntPoint& p2, Color color, int
     // FIXME: Implement dotted/dashed diagonal lines.
     VERIFY(style == LineStyle::Solid);
 
-    const double adx = abs(point2.x() - point1.x());
-    const double ady = abs(point2.y() - point1.y());
+    const int adx = abs(point2.x() - point1.x());
+    const int ady = abs(point2.y() - point1.y());
 
     if (adx > ady) {
         if (point1.x() > point2.x())
@@ -1399,34 +1399,34 @@ void Painter::draw_line(const IntPoint& p1, const IntPoint& p2, Color color, int
     }
 
     // FIXME: Implement clipping below.
-    const double dx = point2.x() - point1.x();
-    const double dy = point2.y() - point1.y();
-    double error = 0;
+    const int dx = point2.x() - point1.x();
+    const int dy = point2.y() - point1.y();
+    int error = 0;
 
     if (dx > dy) {
-        const double y_step = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
-        const double delta_error = fabs(dy / dx);
+        const int y_step = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
+        const int delta_error = 2 * abs(dy);
         int y = point1.y();
         for (int x = point1.x(); x <= point2.x(); ++x) {
             if (clip_rect.contains(x, y))
                 draw_physical_pixel({ x, y }, color, thickness);
             error += delta_error;
-            if (error >= 0.5) {
-                y = (double)y + y_step;
-                error -= 1.0;
+            if (error >= dx) {
+                y += y_step;
+                error -= 2 * dx;
             }
         }
     } else {
-        const double x_step = dx == 0 ? 0 : (dx > 0 ? 1 : -1);
-        const double delta_error = fabs(dx / dy);
+        const int x_step = dx == 0 ? 0 : (dx > 0 ? 1 : -1);
+        const int delta_error = 2 * abs(dx);
         int x = point1.x();
         for (int y = point1.y(); y <= point2.y(); ++y) {
             if (clip_rect.contains(x, y))
                 draw_physical_pixel({ x, y }, color, thickness);
             error += delta_error;
-            if (error >= 0.5) {
-                x = (double)x + x_step;
-                error -= 1.0;
+            if (error >= dy) {
+                x += x_step;
+                error -= 2 * dy;
             }
         }
     }
