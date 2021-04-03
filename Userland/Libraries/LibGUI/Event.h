@@ -71,6 +71,7 @@ public:
         DragMove,
         Drop,
         ThemeChange,
+        ScreenRectChange,
 
         __Begin_WM_Events,
         WM_WindowRemoved,
@@ -397,6 +398,20 @@ public:
         : Event(Type::ThemeChange)
     {
     }
+};
+
+class ScreenRectChangeEvent final : public Event {
+public:
+    explicit ScreenRectChangeEvent(const Gfx::IntRect& rect)
+        : Event(Type::ScreenRectChange)
+        , m_rect(rect)
+    {
+    }
+
+    const Gfx::IntRect& rect() const { return m_rect; }
+
+private:
+    Gfx::IntRect m_rect;
 };
 
 class FocusEvent final : public Event {
