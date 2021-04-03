@@ -78,4 +78,7 @@ typedef struct imaxdiv_t {
 } imaxdiv_t;
 imaxdiv_t imaxdiv(intmax_t, intmax_t);
 
+intmax_t strtoimax(const char*, char** endptr, int base);
+uintmax_t strtoumax(const char*, char** endptr, int base);
+
 __END_DECLS
