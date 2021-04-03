@@ -79,8 +79,6 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 
     on_screen_rect_change(GUI::Desktop::the().rect());
 
-    GUI::Desktop::the().on_rect_change = [this](const Gfx::IntRect& rect) { on_screen_rect_change(rect); };
-
     auto& main_widget = set_main_widget<TaskbarWidget>();
     main_widget.set_layout<GUI::HorizontalBoxLayout>();
     main_widget.layout()->set_margins({ 3, 3, 3, 1 });
@@ -345,4 +343,9 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     default:
         break;
     }
+}
+
+void TaskbarWindow::screen_rect_change_event(GUI::ScreenRectChangeEvent& event)
+{
+    on_screen_rect_change(event.rect());
 }
