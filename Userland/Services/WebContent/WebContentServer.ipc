@@ -3,6 +3,7 @@ endpoint WebContentServer = 89
     Greet() => ()
 
     UpdateSystemTheme(Core::AnonymousBuffer theme_buffer) =|
+    UpdateScreenRect(Gfx::IntRect rect) =|
 
     LoadURL(URL url) =|
     LoadHTML(String html, URL url) =|

@@ -89,6 +89,11 @@ void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemThem
     m_page_host->set_palette_impl(*impl);
 }
 
+void ClientConnection::handle(const Messages::WebContentServer::UpdateScreenRect& message)
+{
+    m_page_host->set_screen_rect(message.rect());
+}
+
 void ClientConnection::handle(const Messages::WebContentServer::LoadURL& message)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", message.url());

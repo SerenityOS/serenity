@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <LibGfx/Rect.h>
 #include <LibWeb/Page/Page.h>
 
 namespace WebContent {
@@ -47,6 +48,7 @@ public:
 
     void set_palette_impl(const Gfx::PaletteImpl&);
     void set_viewport_rect(const Gfx::IntRect&);
+    void set_screen_rect(const Gfx::IntRect& rect) { m_screen_rect = rect; };
 
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
 
@@ -54,6 +56,7 @@ private:
     // ^PageClient
     virtual bool is_multi_process() const override { return true; }
     virtual Gfx::Palette palette() const override;
+    virtual Gfx::IntRect screen_rect() const override { return m_screen_rect; }
     virtual void page_did_invalidate(const Gfx::IntRect&) override;
     virtual void page_did_change_selection() override;
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
@@ -84,6 +87,7 @@ private:
     ClientConnection& m_client;
     NonnullOwnPtr<Web::Page> m_page;
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
+    Gfx::IntRect m_screen_rect;
     bool m_should_show_line_box_borders { false };
 };
 
