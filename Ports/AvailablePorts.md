@@ -13,6 +13,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`c-ray`](c-ray/)              | C-Ray                                         |                   | https://github.com/vkoskiv/c-ray                      |
 | [`chester`](chester/)          | Chester Gameboy Emulator                      |                   | https://github.com/veikkos/chester                    |
 | [`cmake`](cmake/)              | CMake                                         | 3.19.4            | https://cmake.org/                                    |
+| [`cmatrix`](cmatrix/)          | cmatrix                                       |                   | https://github.com/abishekvashok/cmatrix              |
 | [`curl`](curl/)                | curl                                          | 7.65.3            | https://curl.se/                                      |
 | [`dash`](dash/)                | DASH                                          | 0.5.10.2          | http://gondor.apana.org.au/~herbert/dash              |
 | [`diffutils`](diffutils/)      | GNU Diffutils                                 | 3.5               | https://www.gnu.org/software/diffutils/               |
