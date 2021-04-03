@@ -25,12 +25,9 @@
  */
 
 #include "ClientConnection.h"
-#include "NotificationWindow.h"
 #include <LibCore/LocalServer.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/Desktop.h>
 #include <LibGUI/WindowServerConnection.h>
-#include <stdio.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
@@ -67,8 +64,6 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
-
-    GUI::Desktop::the().on_rect_change = [](auto&) { NotificationServer::update_notification_window_locations(); };
 
     return app->exec();
 }

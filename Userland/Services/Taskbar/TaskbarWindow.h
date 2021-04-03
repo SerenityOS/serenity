@@ -49,6 +49,7 @@ private:
     ::Window* find_window_owner(::Window&) const;
 
     virtual void wm_event(GUI::WMEvent&) override;
+    virtual void screen_rect_change_event(GUI::ScreenRectChangeEvent&) override;
 
     void update_applet_area();
 

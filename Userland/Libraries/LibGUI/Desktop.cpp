@@ -50,8 +50,6 @@ void Desktop::did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::
     if (m_rect == rect)
         return;
     m_rect = rect;
-    if (on_rect_change)
-        on_rect_change(rect);
 }
 
 void Desktop::set_background_color(const StringView& background_color)
