@@ -297,6 +297,9 @@ void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowRemov
 void WindowServerConnection::handle(const Messages::WindowClient::ScreenRectChanged& message)
 {
     Desktop::the().did_receive_screen_rect({}, message.rect());
+    Window::for_each_window({}, [message](auto& window) {
+        Core::EventLoop::current().post_event(window, make<ScreenRectChangeEvent>(message.rect()));
+    });
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::AsyncSetWallpaperFinished&)
