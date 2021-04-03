@@ -1,0 +1,13 @@
+diff --git a/cmatrix.c b/cmatrix.c
+index d1f6b98..26d0648 100644
+--- a/cmatrix.c
++++ b/cmatrix.c
+@@ -48,7 +48,7 @@
+ #ifdef HAVE_NCURSES_H
+ #include <ncurses.h>
+ #else
+-#include <curses.h>
++#include <ncurses/curses.h>
+ #endif
+ 
+ #ifdef HAVE_SYS_IOCTL_H
