@@ -217,6 +217,8 @@
 #include <LibWeb/Bindings/SVGPathElementPrototype.h>
 #include <LibWeb/Bindings/SVGSVGElementConstructor.h>
 #include <LibWeb/Bindings/SVGSVGElementPrototype.h>
+#include <LibWeb/Bindings/ScreenConstructor.h>
+#include <LibWeb/Bindings/ScreenPrototype.h>
 #include <LibWeb/Bindings/ShadowRootConstructor.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
 #include <LibWeb/Bindings/StyleSheetConstructor.h>
@@ -336,6 +338,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Performance)               \
     ADD_WINDOW_OBJECT_INTERFACE(PerformanceTiming)         \
     ADD_WINDOW_OBJECT_INTERFACE(ProgressEvent)             \
+    ADD_WINDOW_OBJECT_INTERFACE(Screen)                    \
     ADD_WINDOW_OBJECT_INTERFACE(ShadowRoot)                \
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheet)                \
     ADD_WINDOW_OBJECT_INTERFACE(StyleSheetList)            \
