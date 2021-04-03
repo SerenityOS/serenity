@@ -122,24 +122,20 @@ public:
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(const RefPtr<U>& object)
     {
-        object.do_while_locked([&](U* obj) {
-            if (obj)
-                m_link = obj->template make_weak_ptr<U>().take_link();
-            else
-                m_link = nullptr;
-        });
+        if (auto* obj = object.ptr())
+            m_link = obj->template make_weak_ptr<U>().take_link();
+        else
+            m_link = nullptr;
         return *this;
     }
 
     template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(const NonnullRefPtr<U>& object)
     {
-        object.do_while_locked([&](U* obj) {
-            if (obj)
-                m_link = obj->template make_weak_ptr<U>().take_link();
-            else
-                m_link = nullptr;
-        });
+        if (auto* obj = object.ptr())
+            m_link = obj->template make_weak_ptr<U>().take_link();
+        else
+            m_link = nullptr;
         return *this;
     }
 
@@ -149,13 +145,9 @@ public:
         // safe way to get a strong reference from a WeakPtr. Any code
         // that uses objects not derived from RefCounted will have to
         // use unsafe_ptr(), but as the name suggests, it is not safe...
-        RefPtr<T> ref;
-        // Using do_while_locked protects against a race with clear()!
-        m_link.do_while_locked([&](WeakLink* link) {
-            if (link)
-                ref = link->template strong_ref<T>();
-        });
-        return ref;
+        if (auto* link = m_link.ptr())
+            return link->template strong_ref<T>();
+        return {};
     }
 
 #ifndef KERNEL
@@ -171,12 +163,9 @@ public:
 
     [[nodiscard]] T* unsafe_ptr() const
     {
-        T* ptr = nullptr;
-        m_link.do_while_locked([&](WeakLink* link) {
-            if (link)
-                ptr = link->unsafe_ptr<T>();
-        });
-        return ptr;
+        if (auto* link = m_link.ptr())
+            return link->unsafe_ptr<T>();
+        return nullptr;
     }
 
     operator bool() const { return m_link ? !m_link->is_null() : false; }

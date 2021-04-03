@@ -49,10 +49,10 @@ class WeakLink : public RefCounted<WeakLink> {
     friend class WeakPtr;
 
 public:
-    template<typename T, typename PtrTraits = RefPtrTraits<T>, typename EnableIf<IsBaseOf<RefCountedBase, T>>::Type* = nullptr>
-    RefPtr<T, PtrTraits> strong_ref() const
+    template<typename T, typename EnableIf<IsBaseOf<RefCountedBase, T>>::Type* = nullptr>
+    RefPtr<T> strong_ref() const
     {
-        RefPtr<T, PtrTraits> ref;
+        RefPtr<T> ref;
 
         {
 #ifdef KERNEL

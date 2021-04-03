@@ -118,9 +118,6 @@ template<typename T>
 class Optional;
 
 template<typename T>
-struct RefPtrTraits;
-
-template<typename T, typename PtrTraits = RefPtrTraits<T>>
 class RefPtr;
 
 template<typename T>

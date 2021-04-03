@@ -38,7 +38,7 @@ namespace AK {
 
 template<typename T>
 class OwnPtr;
-template<typename T, typename PtrTraits>
+template<typename T>
 class RefPtr;
 
 template<typename T>
@@ -57,7 +57,7 @@ ALWAYS_INLINE void unref_if_not_null(T* ptr)
 
 template<typename T>
 class NonnullRefPtr {
-    template<typename U, typename P>
+    template<typename U>
     friend class RefPtr;
     template<typename U>
     friend class NonnullRefPtr;
@@ -70,53 +70,53 @@ public:
     enum AdoptTag { Adopt };
 
     ALWAYS_INLINE NonnullRefPtr(const T& object)
-        : m_bits((FlatPtr)&object)
+        : m_ptr(&const_cast<T&>(object))
     {
-        VERIFY(!(m_bits & 1));
+        VERIFY(m_ptr);
         const_cast<T&>(object).ref();
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(const U& object)
-        : m_bits((FlatPtr) static_cast<const T*>(&object))
+        : m_ptr(static_cast<T*>(const_cast<U*>(&object)))
     {
-        VERIFY(!(m_bits & 1));
+        VERIFY(m_ptr);
         const_cast<T&>(static_cast<const T&>(object)).ref();
     }
     ALWAYS_INLINE NonnullRefPtr(AdoptTag, T& object)
-        : m_bits((FlatPtr)&object)
+        : m_ptr(&object)
     {
-        VERIFY(!(m_bits & 1));
+        VERIFY(m_ptr);
     }
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr&& other)
-        : m_bits((FlatPtr)&other.leak_ref())
+        : m_ptr(&other.leak_ref())
     {
-        VERIFY(!(m_bits & 1));
+        VERIFY(m_ptr);
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other)
-        : m_bits((FlatPtr)&other.leak_ref())
+        : m_ptr(static_cast<T*>(&other.leak_ref()))
     {
-        VERIFY(!(m_bits & 1));
+        VERIFY(m_ptr);
     }
     ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr& other)
-        : m_bits((FlatPtr)other.add_ref())
+        : m_ptr(other.add_ref())
     {
-        VERIFY(!(m_bits & 1));
+        VERIFY(m_ptr);
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr<U>& other)
-        : m_bits((FlatPtr)other.add_ref())
+        : m_ptr(static_cast<T*>(other.add_ref()))
     {
-        VERIFY(!(m_bits & 1));
+        VERIFY(m_ptr);
     }
     ALWAYS_INLINE ~NonnullRefPtr()
     {
         assign(nullptr);
 #ifdef SANITIZE_PTRS
         if constexpr (sizeof(T*) == 8)
-            m_bits.store(0xb0b0b0b0b0b0b0b0, AK::MemoryOrder::memory_order_relaxed);
+            m_ptr.store((T*)0xb0b0b0b0b0b0b0b0);
         else
-            m_bits.store(0xb0b0b0b0, AK::MemoryOrder::memory_order_relaxed);
+            m_ptr.store((T*)0xb0b0b0b0);
 #endif
     }
 
@@ -142,7 +142,7 @@ public:
     template<typename U>
     NonnullRefPtr& operator=(const NonnullRefPtr<U>& other)
     {
-        assign(other.add_ref());
+        assign(static_cast<T*>(other.add_ref()));
         return *this;
     }
 
@@ -156,7 +156,7 @@ public:
     template<typename U>
     NonnullRefPtr& operator=(NonnullRefPtr<U>&& other)
     {
-        assign(&other.leak_ref());
+        assign(static_cast<T*>(&other.leak_ref()));
         return *this;
     }
 
@@ -169,7 +169,7 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE T& leak_ref()
     {
-        T* ptr = exchange(nullptr);
+        T* ptr = m_ptr.exchange(nullptr);
         VERIFY(ptr);
         return *ptr;
     }
@@ -228,18 +228,18 @@ public:
             return;
 
         // NOTE: swap is not atomic!
-        T* other_ptr = other.exchange(nullptr);
-        T* ptr = exchange(other_ptr);
-        other.exchange(ptr);
+        T* other_ptr = other.m_ptr.exchange(nullptr);
+        T* ptr = m_ptr.exchange(other_ptr);
+        other.m_ptr.exchange(ptr);
     }
 
     template<typename U>
     void swap(NonnullRefPtr<U>& other)
     {
         // NOTE: swap is not atomic!
-        U* other_ptr = other.exchange(nullptr);
-        T* ptr = exchange(other_ptr);
-        other.exchange(ptr);
+        U* other_ptr = other.m_ptr.exchange(nullptr);
+        T* ptr = m_ptr.exchange(other_ptr);
+        other.m_ptr.exchange(ptr);
     }
 
 private:
@@ -247,90 +247,30 @@ private:
 
     ALWAYS_INLINE T* as_ptr() const
     {
-        return (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
+        return m_ptr;
     }
 
     ALWAYS_INLINE T* as_nonnull_ptr() const
     {
-        T* ptr = (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
+        T* ptr = m_ptr;
         VERIFY(ptr);
         return ptr;
     }
 
-    template<typename F>
-    void do_while_locked(F f) const
-    {
-#ifdef KERNEL
-        // We don't want to be pre-empted while we have the lock bit set
-        Kernel::ScopedCritical critical;
-#endif
-        FlatPtr bits;
-        for (;;) {
-            bits = m_bits.fetch_or(1, AK::MemoryOrder::memory_order_acq_rel);
-            if (!(bits & 1))
-                break;
-#ifdef KERNEL
-            Kernel::Processor::wait_check();
-#endif
-        }
-        VERIFY(!(bits & 1));
-        f((T*)bits);
-        m_bits.store(bits, AK::MemoryOrder::memory_order_release);
-    }
-
     ALWAYS_INLINE void assign(T* new_ptr)
     {
-        T* prev_ptr = exchange(new_ptr);
+        T* prev_ptr = m_ptr.exchange(new_ptr);
         unref_if_not_null(prev_ptr);
-    }
-
-    ALWAYS_INLINE T* exchange(T* new_ptr)
-    {
-        VERIFY(!((FlatPtr)new_ptr & 1));
-#ifdef KERNEL
-        // We don't want to be pre-empted while we have the lock bit set
-        Kernel::ScopedCritical critical;
-#endif
-        // Only exchange while not locked
-        FlatPtr expected = m_bits.load(AK::MemoryOrder::memory_order_relaxed);
-        for (;;) {
-            expected &= ~(FlatPtr)1; // only if lock bit is not set
-            if (m_bits.compare_exchange_strong(expected, (FlatPtr)new_ptr, AK::MemoryOrder::memory_order_acq_rel))
-                break;
-#ifdef KERNEL
-            Kernel::Processor::wait_check();
-#endif
-        }
-        VERIFY(!(expected & 1));
-        return (T*)expected;
     }
 
     T* add_ref() const
     {
-#ifdef KERNEL
-        // We don't want to be pre-empted while we have the lock bit set
-        Kernel::ScopedCritical critical;
-#endif
-        // Lock the pointer
-        FlatPtr expected = m_bits.load(AK::MemoryOrder::memory_order_relaxed);
-        for (;;) {
-            expected &= ~(FlatPtr)1; // only if lock bit is not set
-            if (m_bits.compare_exchange_strong(expected, expected | 1, AK::MemoryOrder::memory_order_acq_rel))
-                break;
-#ifdef KERNEL
-            Kernel::Processor::wait_check();
-#endif
-        }
-
-        // Add a reference now that we locked the pointer
-        ref_if_not_null((T*)expected);
-
-        // Unlock the pointer again
-        m_bits.store(expected, AK::MemoryOrder::memory_order_release);
-        return (T*)expected;
+        T* ptr = m_ptr;
+        ref_if_not_null(ptr);
+        return ptr;
     }
 
-    mutable Atomic<FlatPtr> m_bits { 0 };
+    Atomic<T*, MemoryOrder::memory_order_relaxed> m_ptr { nullptr };
 };
 
 template<typename T>
