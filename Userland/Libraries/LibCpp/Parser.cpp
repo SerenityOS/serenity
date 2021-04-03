@@ -590,7 +590,8 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(ASTNode& parent, No
         auto exp = create_ast_node<MemberExpression>(parent, lhs->start(), {});
         lhs->set_parent(*exp);
         exp->m_object = move(lhs);
-        exp->m_property = parse_expression(*exp);
+        auto identifier_token = consume(Token::Type::Identifier);
+        exp->m_property = create_ast_node<Identifier>(*exp, identifier_token.start(), identifier_token.end(), identifier_token.text());
         exp->set_end(position());
         return exp;
     }
