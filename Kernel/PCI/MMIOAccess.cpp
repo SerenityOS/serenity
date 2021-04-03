@@ -126,7 +126,7 @@ UNMAP_AFTER_INIT MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     });
 }
 
-UNMAP_AFTER_INIT Optional<VirtualAddress> MMIOAccess::get_device_configuration_space(Address address)
+Optional<VirtualAddress> MMIOAccess::get_device_configuration_space(Address address)
 {
     dbgln_if(PCI_DEBUG, "PCI: Getting device configuration space for {}", address);
     for (auto& mapping : m_mapped_device_regions) {
