@@ -34,11 +34,6 @@ namespace Kernel {
 
 class PCI::Access {
 public:
-    enum class Type {
-        IO,
-        MMIO,
-    };
-
     void enumerate(Function<void(Address, ID)>&) const;
 
     void enumerate_bus(int type, u8 bus, Function<void(Address, ID)>&, bool recursive);
