@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -124,6 +125,7 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(const String& header, 
     return {};
 }
 
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-open
 DOM::ExceptionOr<void> XMLHttpRequest::open(const String& method, const String& url)
 {
     // FIXME: Let settingsObject be this’s relevant settings object.
@@ -135,10 +137,9 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(const String& method, const String& 
     if (is_forbidden_method(method))
         return DOM::SecurityError::create("Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
 
-    String normalized_method = normalize_method(method);
+    auto normalized_method = normalize_method(method);
 
-    // FIXME: Pass in settingObject's API base URL and API URL character encoding.
-    URL parsed_url(url);
+    auto parsed_url = m_window->document().complete_url(url);
     if (!parsed_url.is_valid())
         return DOM::SyntaxError::create("Invalid URL");
 
