@@ -9,6 +9,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
     const unsigned short DONE = 4;
 
     readonly attribute unsigned short readyState;
+    readonly attribute unsigned short status;
     readonly attribute DOMString responseText;
 
     undefined open(DOMString method, DOMString url);
