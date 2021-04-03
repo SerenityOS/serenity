@@ -32,6 +32,7 @@
 #include <AK/RefPtr.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/CSS/Screen.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventTarget.h>
 
@@ -83,6 +84,8 @@ public:
 
     HighResolutionTime::Performance& performance() { return *m_performance; }
 
+    CSS::Screen& screen() { return *m_screen; }
+
     const Event* current_event() const { return m_current_event; }
     void set_current_event(Event* event) { m_current_event = event; }
 
@@ -96,6 +99,7 @@ private:
     HashMap<int, NonnullRefPtr<Timer>> m_timers;
 
     NonnullOwnPtr<HighResolutionTime::Performance> m_performance;
+    NonnullRefPtr<CSS::Screen> m_screen;
     RefPtr<Event> m_current_event;
 };
 

@@ -47,6 +47,7 @@ Window::Window(Document& document)
     : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
     , m_document(document)
     , m_performance(make<HighResolutionTime::Performance>(*this))
+    , m_screen(CSS::Screen::create(*this))
 {
 }
 

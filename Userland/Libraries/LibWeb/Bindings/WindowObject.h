@@ -82,6 +82,7 @@ private:
     JS_DECLARE_NATIVE_SETTER(document_setter);
 
     JS_DECLARE_NATIVE_GETTER(performance_getter);
+    JS_DECLARE_NATIVE_GETTER(screen_getter);
 
     JS_DECLARE_NATIVE_GETTER(event_getter);
 
