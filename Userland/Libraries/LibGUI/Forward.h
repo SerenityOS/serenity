@@ -72,6 +72,7 @@ class Painter;
 class RadioButton;
 class ResizeCorner;
 class ResizeEvent;
+class ScreenRectChangeEvent;
 class ScrollBar;
 class ScrollableWidget;
 class Slider;
