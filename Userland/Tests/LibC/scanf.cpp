@@ -31,6 +31,7 @@
 
 typedef long double longdouble;
 typedef long long longlong;
+typedef unsigned long long unsignedlonglong;
 typedef unsigned long unsignedlong;
 typedef char charstar[32];
 
@@ -145,6 +146,7 @@ DECL_WITH_TYPE(float);
 DECL_WITH_TYPE(double);
 DECL_WITH_TYPE(longdouble);
 DECL_WITH_TYPE(unsignedlong);
+DECL_WITH_TYPE(unsignedlonglong);
 
 #undef DECL_WITH_TYPE
 
@@ -184,6 +186,10 @@ const TestSuite test_suites[] {
     // GCC failure tests
     { "%d.%d.%d", "10.2.0", 3, 3, { intarg0, intarg1, intarg2 }, { to_value_t(10), to_value_t(2), to_value_t(0) } },
     { "%lu", "3054       ", 1, 1, { unsignedlongarg0 }, { to_value_t(3054ul) } },
+    // "actual" long long and unsigned long long, from #6096
+    // Note: '9223372036854775806' is the max value for 'long long'.
+    { "%lld", "9223372036854775805", 1, 1, { longlongarg0 }, { to_value_t(9223372036854775805LL) } },
+    { "%llu", "9223372036854775810", 1, 1, { unsignedlonglongarg0 }, { to_value_t(9223372036854775810ULL) } },
 };
 
 bool g_any_failed = false;
