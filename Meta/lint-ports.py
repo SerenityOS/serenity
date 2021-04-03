@@ -14,7 +14,8 @@ IGNORE_FILES = {
     PORT_TABLE_FILE,
     'build_all.sh',
     'build_installed.sh',
-    'README.md'
+    'README.md',
+    '.hosted_defs.sh'
 }
 
 
