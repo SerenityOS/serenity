@@ -41,6 +41,15 @@ FrameHostElement::~FrameHostElement()
 {
 }
 
+void FrameHostElement::inserted_into(Node& parent)
+{
+    HTMLElement::inserted_into(parent);
+    if (!is_connected())
+        return;
+    if (auto* frame = document().frame())
+        m_content_frame = Frame::create_subframe(*this, frame->main_frame());
+}
+
 Origin FrameHostElement::content_origin() const
 {
     if (!m_content_frame || !m_content_frame->document())

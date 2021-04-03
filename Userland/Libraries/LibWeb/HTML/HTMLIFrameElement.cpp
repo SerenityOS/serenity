@@ -35,8 +35,6 @@ namespace Web::HTML {
 HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, QualifiedName qualified_name)
     : FrameHostElement(document, move(qualified_name))
 {
-    VERIFY(document.frame());
-    m_content_frame = Frame::create_subframe(*this, document.frame()->main_frame());
 }
 
 HTMLIFrameElement::~HTMLIFrameElement()
@@ -56,8 +54,18 @@ void HTMLIFrameElement::parse_attribute(const FlyString& name, const String& val
         load_src(value);
 }
 
+void HTMLIFrameElement::inserted_into(Node& parent)
+{
+    FrameHostElement::inserted_into(parent);
+    if (is_connected())
+        load_src(attribute(HTML::AttributeNames::src));
+}
+
 void HTMLIFrameElement::load_src(const String& value)
 {
+    if (!m_content_frame)
+        return;
+
     auto url = document().complete_url(value);
     if (!url.is_valid()) {
         dbgln("iframe failed to load URL: Invalid URL: {}", value);
