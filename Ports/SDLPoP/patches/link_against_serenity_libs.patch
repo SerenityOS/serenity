@@ -1,0 +1,11 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 3558a6c..2092651 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -118,5 +118,5 @@ if(WIN32)
+ elseif(APPLE)
+     target_link_libraries(prince SDL2main SDL2 SDL2_image m)
+ else() # Linux, *BSD, etc.
+-    target_link_libraries(prince SDL2 SDL2_image m)
++    target_link_libraries(prince SDL2 SDL2_image -lm -lpng -ljpeg -lz -lgui -lcore -lipc -lgfx -lpthread)
+ endif()
