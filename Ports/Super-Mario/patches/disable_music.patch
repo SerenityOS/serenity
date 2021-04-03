@@ -1,0 +1,69 @@
+diff --git a/src/Music.cpp b/src/Music.cpp
+index 5bf5047..a82dfb2 100644
+--- a/src/Music.cpp
++++ b/src/Music.cpp
+@@ -111,23 +111,23 @@ void Music::changeMusic(bool musicByLevel, bool forceChange) {
+ }
+ 
+ void Music::PlayMusic() {
+-	if(currentMusic != mNOTHING) {
++	/*if(currentMusic != mNOTHING) {
+ 		Mix_PlayMusic(vMusic[currentMusic - 1], -1);
+ 		musicStopped = false;
+ 	} else {
+ 		StopMusic();
+-	}
++	}*/
+ }
+ 
+ void Music::PlayMusic(eMusic musicID) {
+-	if(musicID != mNOTHING) {
++	/*if(musicID != mNOTHING) {
+ 		Mix_PlayMusic(vMusic[musicID - 1], -1);
+ 		musicStopped = false;
+ 		currentMusic = musicID;
+ 	} else {
+ 		StopMusic();
+ 		currentMusic = mNOTHING;
+-	}
++	}*/
+ }
+ 
+ void Music::StopMusic() {
+@@ -150,8 +150,8 @@ void Music::PauseMusic() {
+ /* ******************************************** */
+ 
+ void Music::PlayChunk(eChunk chunkID) {
+-	Mix_VolumeChunk(vChunk[chunkID], iVolume);
+-	Mix_PlayChannel(-1, vChunk[chunkID], 0);
++	//Mix_VolumeChunk(vChunk[chunkID], iVolume);
++	//Mix_PlayChannel(-1, vChunk[chunkID], 0);
+ }
+ 
+ /* ******************************************** */
+diff --git a/src/MusicManager.cpp b/src/MusicManager.cpp
+index d992e6c..d5b70f1 100644
+--- a/src/MusicManager.cpp
++++ b/src/MusicManager.cpp
+@@ -9,14 +9,14 @@ MusicManager::~MusicManager(void) {
+ }
+ 
+ void MusicManager::PlayMusic() {
+-	vMusic.push_back(Mix_LoadMUS("files/sounds/overworld.wav"));
+-	vMusic.push_back(Mix_LoadMUS("files/sounds/overworld.wav"));
+-	Mix_VolumeMusic(100);
+-	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+-	Mix_PlayMusic(vMusic[0], -1);
++	//vMusic.push_back(Mix_LoadMUS("files/sounds/overworld.wav"));
++	//vMusic.push_back(Mix_LoadMUS("files/sounds/overworld.wav"));
++	//Mix_VolumeMusic(100);
++	//Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
++	//Mix_PlayMusic(vMusic[0], -1);
+ }
+ 
+ Mix_Music* MusicManager::loadMusic(std::string fileName) {
+ 	fileName = "files/sounds/" + fileName + ".wav";
+ 	return Mix_LoadMUS("files/sounds/overworld.wav");
+-}
+\ No newline at end of file
++}

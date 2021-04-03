@@ -1,0 +1,20 @@
+diff --git a/src/Core.cpp b/src/Core.cpp
+index c04581b..f0c0308 100644
+--- a/src/Core.cpp
++++ b/src/Core.cpp
+@@ -36,7 +36,7 @@ CCore::CCore(void) {
+         quitGame = true;
+     }
+ 
+-    rR = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
++    rR = SDL_CreateRenderer(window, -1, 0);
+ 
+     // ----- ICO
+     std::string filename = "files/images/ico.bmp";
+@@ -376,4 +376,4 @@ void CCore::resetMove() {
+ 
+ Map* CCore::getMap() {
+ 	return oMap;
+-}
+\ No newline at end of file
++}
