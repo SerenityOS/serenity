@@ -177,6 +177,7 @@ class LineBox;
 class LineBoxFragment;
 class Node;
 class NodeWithStyle;
+class RadioButton;
 class ReplacedBox;
 }
 
