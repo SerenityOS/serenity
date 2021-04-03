@@ -49,7 +49,7 @@
 #include <unistd.h>
 
 // This is defined in ImportDialog.cpp, we can't include it twice, since the generated symbol is exported.
-extern const char* select_format_page_gml;
+extern const char select_format_page_gml[];
 
 namespace Spreadsheet {
 
