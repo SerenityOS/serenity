@@ -68,6 +68,7 @@ public:
     using RefCounted::unref;
 
     ReadyState ready_state() const { return m_ready_state; };
+    unsigned status() const { return m_status; };
     String response_text() const;
 
     DOM::ExceptionOr<void> open(const String& method, const String& url);
@@ -82,6 +83,7 @@ private:
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
     void set_ready_state(ReadyState);
+    void set_status(unsigned status) { m_status = status; }
     void fire_progress_event(const String&, u64, u64);
 
     explicit XMLHttpRequest(DOM::Window&);
@@ -89,6 +91,7 @@ private:
     NonnullRefPtr<DOM::Window> m_window;
 
     ReadyState m_ready_state { ReadyState::Unsent };
+    unsigned m_status { 0 };
     bool m_send { false };
 
     String m_method;
