@@ -556,6 +556,10 @@ void Widget::theme_change_event(ThemeChangeEvent&)
 {
 }
 
+void Widget::screen_rect_change_event(ScreenRectChangeEvent&)
+{
+}
+
 void Widget::update()
 {
     if (rect().is_empty())

@@ -507,6 +507,22 @@ void Window::handle_theme_change_event(ThemeChangeEvent& event)
     dispatch_theme_change(*m_main_widget.ptr(), dispatch_theme_change);
 }
 
+void Window::handle_screen_rect_change_event(ScreenRectChangeEvent& event)
+{
+    if (!m_main_widget)
+        return;
+    auto dispatch_screen_rect_change = [&](auto& widget, auto recursive) {
+        widget.dispatch_event(event, this);
+        widget.for_each_child_widget([&](auto& widget) -> IterationDecision {
+            widget.dispatch_event(event, this);
+            recursive(widget, recursive);
+            return IterationDecision::Continue;
+        });
+    };
+    dispatch_screen_rect_change(*m_main_widget.ptr(), dispatch_screen_rect_change);
+    screen_rect_change_event(event);
+}
+
 void Window::handle_drag_move_event(DragEvent& event)
 {
     if (!m_main_widget)
@@ -573,6 +589,9 @@ void Window::event(Core::Event& event)
 
     if (event.type() == Event::ThemeChange)
         return handle_theme_change_event(static_cast<ThemeChangeEvent&>(event));
+
+    if (event.type() == Event::ScreenRectChange)
+        return handle_screen_rect_change_event(static_cast<ScreenRectChangeEvent&>(event));
 
     Core::Object::event(event);
 }
@@ -796,6 +815,10 @@ void Window::set_modal(bool modal)
 }
 
 void Window::wm_event(WMEvent&)
+{
+}
+
+void Window::screen_rect_change_event(ScreenRectChangeEvent&)
 {
 }
 

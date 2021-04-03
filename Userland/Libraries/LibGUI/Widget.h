@@ -342,6 +342,7 @@ protected:
     virtual void drag_leave_event(Event&);
     virtual void drop_event(DropEvent&);
     virtual void theme_change_event(ThemeChangeEvent&);
+    virtual void screen_rect_change_event(ScreenRectChangeEvent&);
 
     virtual void did_begin_inspection() override;
     virtual void did_end_inspection() override;
