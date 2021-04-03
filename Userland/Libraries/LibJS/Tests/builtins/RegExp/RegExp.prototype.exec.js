@@ -28,6 +28,16 @@ test("basic unnamed captures", () => {
     expect(res[2]).toBe(undefined);
     expect(res.groups).toBe(undefined);
     expect(res.index).toBe(0);
+
+    re = /(foo)?(bar)/;
+    res = re.exec("bar");
+
+    expect(res.length).toBe(3);
+    expect(res[0]).toBe("bar");
+    expect(res[1]).toBe(undefined);
+    expect(res[2]).toBe("bar");
+    expect(res.groups).toBe(undefined);
+    expect(res.index).toBe(0);
 });
 
 test("basic named captures", () => {

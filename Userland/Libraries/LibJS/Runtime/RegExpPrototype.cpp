@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -194,10 +194,9 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 
     for (size_t i = 0; i < result.n_capture_groups; ++i) {
         auto capture_value = js_undefined();
-        if (result.capture_group_matches[0].size() > i) {
-            auto& capture = result.capture_group_matches[0][i];
+        auto& capture = result.capture_group_matches[0][i + 1];
+        if (!capture.view.is_null())
             capture_value = js_string(vm, capture.view.to_string());
-        }
         array->indexed_properties().put(array, i + 1, capture_value);
     }
 
