@@ -74,6 +74,7 @@ public:
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
 
     Gfx::Palette palette() const;
+    Gfx::IntRect screen_rect() const;
 
 private:
     PageClient& m_client;
@@ -86,6 +87,7 @@ class PageClient {
 public:
     virtual bool is_multi_process() const = 0;
     virtual Gfx::Palette palette() const = 0;
+    virtual Gfx::IntRect screen_rect() const = 0;
     virtual void page_did_set_document_in_main_frame(DOM::Document*) { }
     virtual void page_did_change_title(const String&) { }
     virtual void page_did_start_loading(const URL&) { }

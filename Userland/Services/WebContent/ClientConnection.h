@@ -54,6 +54,7 @@ private:
 
     virtual OwnPtr<Messages::WebContentServer::GreetResponse> handle(const Messages::WebContentServer::Greet&) override;
     virtual void handle(const Messages::WebContentServer::UpdateSystemTheme&) override;
+    virtual void handle(const Messages::WebContentServer::UpdateScreenRect&) override;
     virtual void handle(const Messages::WebContentServer::LoadURL&) override;
     virtual void handle(const Messages::WebContentServer::LoadHTML&) override;
     virtual void handle(const Messages::WebContentServer::Paint&) override;

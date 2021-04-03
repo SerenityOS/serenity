@@ -72,6 +72,11 @@ Gfx::Palette Page::palette() const
     return m_client.palette();
 }
 
+Gfx::IntRect Page::screen_rect() const
+{
+    return m_client.screen_rect();
+}
+
 bool Page::handle_mousewheel(const Gfx::IntPoint& position, unsigned button, unsigned modifiers, int wheel_delta)
 {
     return main_frame().event_handler().handle_mousewheel(position, button, modifiers, wheel_delta);

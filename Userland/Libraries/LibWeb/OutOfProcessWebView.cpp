@@ -29,6 +29,7 @@
 #include <AK/String.h>
 #include <AK/URLParser.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -88,6 +89,7 @@ void OutOfProcessWebView::create_client()
     };
 
     client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
+    client().post_message(Messages::WebContentServer::UpdateScreenRect(GUI::Desktop::the().rect()));
 }
 
 void OutOfProcessWebView::load(const URL& url)
@@ -206,6 +208,11 @@ void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
     GUI::ScrollableWidget::theme_change_event(event);
     client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
     request_repaint();
+}
+
+void OutOfProcessWebView::screen_rect_change_event(GUI::ScreenRectChangeEvent& event)
+{
+    client().post_message(Messages::WebContentServer::UpdateScreenRect(event.rect()));
 }
 
 void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id)
