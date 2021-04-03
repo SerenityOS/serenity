@@ -231,7 +231,7 @@ void HTMLScriptElement::prepare_script()
             m_script_filename = url.basename();
             ResourceLoader::the().load_sync(
                 url,
-                [this, url](auto data, auto&) {
+                [this, url](auto data, auto&, auto) {
                     if (data.is_null()) {
                         dbgln("HTMLScriptElement: Failed to load {}", url);
                         return;
@@ -239,7 +239,7 @@ void HTMLScriptElement::prepare_script()
                     m_script_source = String::copy(data);
                     script_became_ready();
                 },
-                [this](auto&) {
+                [this](auto&, auto) {
                     m_failed_to_load = true;
                 });
         } else {

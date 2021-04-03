@@ -52,19 +52,19 @@ ResourceLoader::ResourceLoader()
 {
 }
 
-void ResourceLoader::load_sync(const URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
+void ResourceLoader::load_sync(const URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
 {
     Core::EventLoop loop;
 
     load(
         url,
-        [&](auto data, auto& response_headers) {
-            success_callback(data, response_headers);
+        [&](auto data, auto& response_headers, auto status_code) {
+            success_callback(data, response_headers, status_code);
             loop.quit(0);
         },
-        [&](auto& string) {
+        [&](auto& string, auto status_code) {
             if (error_callback)
-                error_callback(string);
+                error_callback(string, status_code);
             loop.quit(0);
         });
 
@@ -99,17 +99,17 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
 
     load(
         request,
-        [=](auto data, auto& headers) {
-            const_cast<Resource&>(*resource).did_load({}, data, headers);
+        [=](auto data, auto& headers, auto status_code) {
+            const_cast<Resource&>(*resource).did_load({}, data, headers, status_code);
         },
-        [=](auto& error) {
-            const_cast<Resource&>(*resource).did_fail({}, error);
+        [=](auto& error, auto status_code) {
+            const_cast<Resource&>(*resource).did_fail({}, error, status_code);
         });
 
     return resource;
 }
 
-void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
+void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
 {
     auto& url = request.url();
 
@@ -120,14 +120,14 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
 
     if (ContentFilter::the().is_filtered(url)) {
         dbgln("\033[32;1mResourceLoader::load: URL was filtered! {}\033[0m", url);
-        error_callback("URL was filtered");
+        error_callback("URL was filtered", {});
         return;
     }
 
     if (url.protocol() == "about") {
         dbgln("Loading about: URL {}", url);
         deferred_invoke([success_callback = move(success_callback)](auto&) {
-            success_callback(String::empty().to_byte_buffer(), {});
+            success_callback(String::empty().to_byte_buffer(), {}, {});
         });
         return;
     }
@@ -145,7 +145,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
             data = url.data_payload().to_byte_buffer();
 
         deferred_invoke([data = move(data), success_callback = move(success_callback)](auto&) {
-            success_callback(data, {});
+            success_callback(data, {}, {});
         });
         return;
     }
@@ -156,13 +156,13 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
         if (!f->open(Core::IODevice::OpenMode::ReadOnly)) {
             dbgln("ResourceLoader::load: Error: {}", f->error_string());
             if (error_callback)
-                error_callback(f->error_string());
+                error_callback(f->error_string(), {});
             return;
         }
 
         auto data = f->read_all();
         deferred_invoke([data = move(data), success_callback = move(success_callback)](auto&) {
-            success_callback(data, {});
+            success_callback(data, {}, {});
         });
         return;
     }
@@ -179,13 +179,13 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
         auto download = protocol_client().start_download(request.method(), url.to_string(), headers, request.body());
         if (!download) {
             if (error_callback)
-                error_callback("Failed to initiate load");
+                error_callback("Failed to initiate load", {});
             return;
         }
         download->on_buffered_download_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), download](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
             if (status_code.has_value() && status_code.value() >= 400 && status_code.value() <= 499) {
                 if (error_callback)
-                    error_callback(String::formatted("HTTP error ({})", status_code.value()));
+                    error_callback(String::formatted("HTTP error ({})", status_code.value()), status_code);
                 return;
             }
             --m_pending_loads;
@@ -193,14 +193,14 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
                 on_load_counter_change();
             if (!success) {
                 if (error_callback)
-                    error_callback("HTTP load failed");
+                    error_callback("HTTP load failed", {});
                 return;
             }
             deferred_invoke([download](auto&) {
                 // Clear circular reference of `download` captured by copy
                 const_cast<Protocol::Download&>(*download).on_buffered_download_finish = nullptr;
             });
-            success_callback(payload, response_headers);
+            success_callback(payload, response_headers, status_code);
         };
         download->set_should_buffer_all_input(true);
         download->on_certificate_requested = []() -> Protocol::Download::CertificateAndKey {
@@ -213,10 +213,10 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
     }
 
     if (error_callback)
-        error_callback(String::formatted("Protocol not implemented: {}", url.protocol()));
+        error_callback(String::formatted("Protocol not implemented: {}", url.protocol()), {});
 }
 
-void ResourceLoader::load(const URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
+void ResourceLoader::load(const URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
 {
     LoadRequest request;
     request.set_url(url);

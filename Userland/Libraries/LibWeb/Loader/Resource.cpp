@@ -85,11 +85,12 @@ static String mime_type_from_content_type(const String& content_type)
     return content_type;
 }
 
-void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers)
+void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers, Optional<u32> status_code)
 {
     VERIFY(!m_loaded);
     m_encoded_data = ByteBuffer::copy(data);
     m_response_headers = headers;
+    m_status_code = move(status_code);
     m_loaded = true;
 
     auto content_type = headers.get("Content-Type");
@@ -116,9 +117,10 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
     });
 }
 
-void Resource::did_fail(Badge<ResourceLoader>, const String& error)
+void Resource::did_fail(Badge<ResourceLoader>, const String& error, Optional<u32> status_code)
 {
     m_error = error;
+    m_status_code = move(status_code);
     m_failed = true;
 
     for_each_client([](auto& client) {
