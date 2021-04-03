@@ -292,9 +292,14 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
 
 void VM::throw_exception(Exception* exception)
 {
-    if (should_log_exceptions() && exception->value().is_object() && is<Error>(exception->value().as_object())) {
-        auto& error = static_cast<Error&>(exception->value().as_object());
-        dbgln("Throwing JavaScript Error: {}, {}", error.name(), error.message());
+    if (should_log_exceptions()) {
+        auto value = exception->value();
+        if (value.is_object() && is<Error>(value.as_object())) {
+            auto& error = static_cast<Error&>(value.as_object());
+            dbgln("Throwing JavaScript exception: [{}] {}", error.name(), error.message());
+        } else {
+            dbgln("Throwing JavaScript exception: {}", value);
+        }
 
         for (ssize_t i = m_call_stack.size() - 1; i >= 0; --i) {
             const auto& source_range = m_call_stack[i]->current_node->source_range();
