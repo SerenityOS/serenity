@@ -40,6 +40,7 @@ public:
     virtual RefPtr<Layout::Node> create_layout_node() override;
 
 private:
+    virtual void inserted_into(Node&) override;
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 
     void load_src(const String&);
