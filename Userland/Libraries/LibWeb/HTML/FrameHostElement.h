@@ -26,23 +26,27 @@
 
 #pragma once
 
-#include <LibWeb/HTML/FrameHostElement.h>
+#include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
 
-class HTMLIFrameElement final : public FrameHostElement {
+class FrameHostElement : public HTMLElement {
 public:
-    using WrapperType = Bindings::HTMLIFrameElementWrapper;
+    FrameHostElement(DOM::Document&, QualifiedName);
+    virtual ~FrameHostElement() override;
 
-    HTMLIFrameElement(DOM::Document&, QualifiedName);
-    virtual ~HTMLIFrameElement() override;
+    Frame* content_frame() { return m_content_frame; }
+    const Frame* content_frame() const { return m_content_frame; }
 
-    virtual RefPtr<Layout::Node> create_layout_node() override;
+    const DOM::Document* content_document() const;
 
-private:
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
+    Origin content_origin() const;
+    bool may_access_from_origin(const Origin&) const;
 
-    void load_src(const String&);
+    void content_frame_did_load(Badge<FrameLoader>);
+
+protected:
+    RefPtr<Frame> m_content_frame;
 };
 
 }
