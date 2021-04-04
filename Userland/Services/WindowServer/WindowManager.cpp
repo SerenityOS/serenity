@@ -1525,6 +1525,7 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
         return IterationDecision::Continue;
     });
     MenuManager::the().did_change_theme();
+    AppletManager::the().did_change_theme();
     auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
     wm_config->write_entry("Theme", "Name", theme_name);
     wm_config->sync();

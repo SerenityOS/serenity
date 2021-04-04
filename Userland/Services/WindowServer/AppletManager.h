@@ -52,7 +52,10 @@ public:
     Window* window() { return m_window; }
     const Window* window() const { return m_window; }
 
+    void did_change_theme();
+
 private:
+    void repaint();
     void draw_applet(const Window& applet);
     void set_hovered_applet(Window*);
 

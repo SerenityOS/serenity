@@ -152,11 +152,29 @@ void AppletManager::relayout()
     if (m_window->rect() == rect)
         return;
     m_window->set_rect(rect);
+
+    repaint();
+
+    WindowManager::the().tell_wm_listeners_applet_area_size_changed(rect.size());
+}
+
+void AppletManager::repaint()
+{
+    if (!m_window) {
+        return;
+    }
+
+    auto rect = Gfx::IntRect { { 0, 0 }, m_window->size() };
+
     if (!rect.is_empty()) {
         Gfx::Painter painter(*m_window->backing_store());
-        painter.fill_rect({ { 0, 0 }, rect.size() }, WindowManager::the().palette().window());
+        painter.fill_rect(rect, WindowManager::the().palette().window());
     }
-    WindowManager::the().tell_wm_listeners_applet_area_size_changed(rect.size());
+}
+
+void AppletManager::did_change_theme()
+{
+    repaint();
 }
 
 void AppletManager::remove_applet(Window& applet)
