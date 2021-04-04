@@ -173,4 +173,11 @@ long long wcstoll(const wchar_t*, wchar_t**, int)
     dbgln("FIXME: Implement wcstoll()");
     TODO();
 }
+
+int wcswidth(const wchar_t*, size_t)
+{
+    dbgln("FIXME: Implement wcswidth()");
+    TODO();
+}
+
 }
