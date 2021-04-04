@@ -37,10 +37,13 @@ namespace GUI {
 
 static const int s_box_width = 13;
 static const int s_box_height = 13;
+static const int s_horizontal_padding = 4;
 
 CheckBox::CheckBox(String text)
     : AbstractButton(move(text))
 {
+    REGISTER_BOOL_PROPERTY("autosize", is_autosize, set_autosize);
+
     set_min_width(32);
     set_fixed_height(22);
 }
@@ -55,7 +58,7 @@ void CheckBox::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     auto text_rect = rect();
-    text_rect.set_left(s_box_width + 4);
+    text_rect.set_left(s_box_width + s_horizontal_padding);
     text_rect.set_width(font().width(text()));
     text_rect.set_top(height() / 2 - font().glyph_height() / 2);
     text_rect.set_height(font().glyph_height());
@@ -84,6 +87,20 @@ void CheckBox::click(unsigned)
     if (!is_enabled())
         return;
     set_checked(!is_checked());
+}
+
+void CheckBox::set_autosize(bool autosize)
+{
+    if (m_autosize == autosize)
+        return;
+    m_autosize = autosize;
+    if (m_autosize)
+        size_to_fit();
+}
+
+void CheckBox::size_to_fit()
+{
+    set_fixed_width(s_box_width + font().width(text()) + s_horizontal_padding * 2);
 }
 
 }
