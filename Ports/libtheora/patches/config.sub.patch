@@ -1,0 +1,11 @@
+--- libtheora-1.1.1/config.sub	2021-04-03 04:10:03.816042100 +0200
++++ libtheora-1.1.1-patched/config.sub	2021-04-03 04:10:30.956861500 +0200
+@@ -1089,7 +1089,7 @@
+ 	# The portable systems comes first.
+ 	# Each alternative MUST END IN A *, to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+-	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -serenity* | -irix* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -solaris* | -sym* \
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
