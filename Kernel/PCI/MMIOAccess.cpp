@@ -107,7 +107,7 @@ UNMAP_AFTER_INIT MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     // PCI::PhysicalID objects to the vector, because get_capabilities calls
     // PCI::read16 which will need this region to be mapped.
     m_mapped_region = MM.allocate_kernel_region(determine_memory_mapped_bus_region(0, m_segments.get(0).value().get_start_bus()), MEMORY_RANGE_PER_BUS, "PCI ECAM", Region::Access::Read | Region::Access::Write);
-    dmesgln("PCI ECAM Mapped region @ {}", m_mapped_region->vaddr());
+    dbgln("PCI ECAM Mapped region @ {}", m_mapped_region->vaddr());
 
     enumerate_hardware([&](const Address& address, ID id) {
         m_physical_ids.append({ address, id, get_capabilities(address) });
