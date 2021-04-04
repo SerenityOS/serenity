@@ -30,12 +30,22 @@
     <input type=radio id=targaryen name=got value=Targaryen>
     <label for=targaryen>Targaryen</label>
 
+    <br />
+    <br />
+
+    <b>Selected</b>
+    <br />
+    <div style="display: inline-block;">
+        <pre>HP house: <span id=hp></span></pre>
+        <pre>GoT house: <span id=got></span></pre>
+    </div>
+
     <script>
         const hp = document.getElementsByName('hp');
         for (let i = 0; i < hp.length; ++i) {
             hp[i].addEventListener('change', function() {
                 if (this.checked) {
-                    console.log('HP house:', this.value);
+                    document.getElementById('hp').innerHTML = this.value;
                 }
             });
         }
@@ -44,7 +54,7 @@
         for (let i = 0; i < got.length; ++i) {
             got[i].addEventListener('change', function() {
                 if (this.checked) {
-                    console.log('GoT house:', this.value);
+                    document.getElementById('got').innerHTML = this.value;
                 }
             });
         }
