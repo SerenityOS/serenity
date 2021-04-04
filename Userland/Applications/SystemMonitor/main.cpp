@@ -288,6 +288,24 @@ int main(int argc, char** argv)
             }
         });
 
+    HashMap<pid_t, NonnullRefPtr<GUI::Window>> process_windows;
+
+    auto process_properties_action = GUI::Action::create("Properties", { Mod_Alt, Key_Return }, [&](auto&) {
+        auto pid = selected_id(ProcessModel::Column::PID);
+
+        RefPtr<GUI::Window> process_window;
+        if (!process_windows.contains(pid)) {
+            process_window = build_process_window(pid);
+            process_window->on_close_request = [pid, &process_windows] {
+                process_windows.remove(pid);
+                return GUI::Window::CloseRequestDecision::Close;
+            };
+            process_windows.set(pid, *process_window);
+        }
+        process_window->show();
+        process_window->move_to_front();
+    });
+
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
@@ -301,8 +319,10 @@ int main(int argc, char** argv)
     process_context_menu->add_separator();
     process_context_menu->add_action(profile_action);
     process_context_menu->add_action(inspect_action);
+    process_context_menu->add_separator();
+    process_context_menu->add_action(process_properties_action);
     process_table_view.on_context_menu_request = [&]([[maybe_unused]] const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
-        process_context_menu->popup(event.screen_position());
+        process_context_menu->popup(event.screen_position(), process_properties_action);
     };
 
     auto& frequency_menu = menubar->add_menu("Frequency");
@@ -327,22 +347,8 @@ int main(int argc, char** argv)
 
     window->set_menubar(move(menubar));
 
-    HashMap<pid_t, NonnullRefPtr<GUI::Window>> process_windows;
-
     process_table_view.on_activation = [&](auto&) {
-        auto pid = selected_id(ProcessModel::Column::PID);
-
-        RefPtr<GUI::Window> process_window;
-        if (!process_windows.contains(pid)) {
-            process_window = build_process_window(pid);
-            process_window->on_close_request = [pid, &process_windows] {
-                process_windows.remove(pid);
-                return GUI::Window::CloseRequestDecision::Close;
-            };
-            process_windows.set(pid, *process_window);
-        }
-        process_window->show();
-        process_window->move_to_front();
+        process_properties_action->activate();
     };
 
     window->show();
