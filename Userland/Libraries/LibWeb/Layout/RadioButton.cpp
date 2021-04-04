@@ -27,6 +27,7 @@
 #include <LibGUI/Event.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/RadioButton.h>
 #include <LibWeb/Page/Frame.h>
 
@@ -105,20 +106,12 @@ void RadioButton::set_checked_within_group()
         return;
 
     dom_node().set_checked(true);
-
-    if (!parent())
-        return;
-
     String name = dom_node().name();
 
-    parent()->for_each_child_of_type<RadioButton>([&](auto& child) {
-        if (&child == this)
-            return;
-        if (!child.dom_node().checked())
-            return;
-
-        if (child.dom_node().name() == name)
-            child.dom_node().set_checked(false);
+    document().for_each_in_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
+        if (element.checked() && (element.layout_node() != this) && (element.name() == name))
+            element.set_checked(false);
+        return IterationDecision::Continue;
     });
 }
 
