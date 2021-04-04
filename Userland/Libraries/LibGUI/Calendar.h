@@ -159,6 +159,7 @@ private:
     Mode m_mode { Month };
 
     RefPtr<JsonArrayModel> m_events_model;
+    Icon m_event_pin;
 };
 
 }

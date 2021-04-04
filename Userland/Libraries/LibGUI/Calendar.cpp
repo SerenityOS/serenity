@@ -63,6 +63,7 @@ static const auto small_font = Gfx::BitmapFont::load_from_file("/res/fonts/Katic
 Calendar::Calendar(Core::DateTime date_time, Mode mode)
     : m_selected_date(date_time)
     , m_mode(mode)
+    , m_event_pin(Icon::default_icon("event-pin"))
 {
     set_fill_with_background_color(true);
 
@@ -576,10 +577,21 @@ void Calendar::paint_event(GUI::PaintEvent& event)
 
                             if (tile_date_time.year() == year && tile_date_time.month() == month
                                 && tile_date_time.day() == day) {
-                                auto diameter = min(width, height);
+
                                 auto event_pin_rect = tile_rect;
-                                event_pin_rect.set_size_around({ diameter, diameter }, event_pin_rect.center());
-                                painter.fill_ellipse(event_pin_rect, Gfx::Color::Red);
+                                auto min_size = min(width, height);
+                                if (min_size > 50 && !minimal) {
+                                    event_pin_rect.set_size_around({ 32, 32 }, event_pin_rect.center());
+                                    auto& event_pin_icon = *m_event_pin.bitmap_for_size(32);
+                                    painter.blit(event_pin_rect.top_left(), event_pin_icon, event_pin_icon.rect());
+                                } else if (min_size >= 30 && !minimal) {
+                                    event_pin_rect.set_size_around({ 16, 16 }, event_pin_rect.center());
+                                    auto& event_pin_icon = *m_event_pin.bitmap_for_size(16);
+                                    painter.blit(event_pin_rect.top_left(), event_pin_icon, event_pin_icon.rect());
+                                } else {
+                                    event_pin_rect.set_size_around({ min_size, min_size }, event_pin_rect.center());
+                                    painter.fill_ellipse(event_pin_rect, Gfx::Color::Red);
+                                }
                             }
                         }
                     }
