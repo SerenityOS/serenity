@@ -88,3 +88,15 @@ test("Future group backreference, #6039", () => {
     expect(result[3]).toBe("a");
     expect(result.index).toBe(1);
 });
+
+// #6108
+test("optionally seen capture group", () => {
+    let rmozilla = /(mozilla)(?:.*? rv:([\w.]+))?/;
+    let ua = "mozilla/4.0 (serenityos; x86) libweb+libjs (not khtml, nor gecko) libweb";
+    let res = rmozilla.exec(ua);
+
+    expect(res.length).toBe(3);
+    expect(res[0]).toBe("mozilla");
+    expect(res[1]).toBe("mozilla");
+    expect(res[2]).toBeUndefined();
+});

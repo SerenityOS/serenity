@@ -253,36 +253,24 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 
     MatchOutput output_copy;
     if (match_count) {
-        auto capture_groups_count = min(output.capture_group_matches.size(), output.matches.size());
-        for (size_t i = 0; i < capture_groups_count; ++i) {
-            if (input.regex_options.has_flag_set(AllFlags::SkipTrimEmptyMatches)) {
-                output_copy.capture_group_matches.append(output.capture_group_matches.at(i));
-            } else {
-                Vector<Match> capture_group_matches;
-                for (size_t j = 0; j < output.capture_group_matches.at(i).size(); ++j) {
-                    if (!output.capture_group_matches.at(i).at(j).view.is_null())
-                        capture_group_matches.append(output.capture_group_matches.at(i).at(j));
-                }
-                output_copy.capture_group_matches.append(capture_group_matches);
-            }
+        output_copy.capture_group_matches = output.capture_group_matches;
+        for (auto& matches : output_copy.capture_group_matches)
+            matches.resize(m_pattern.parser_result.capture_groups_count + 1);
+        if (!input.regex_options.has_flag_set(AllFlags::SkipTrimEmptyMatches)) {
+            for (auto& matches : output_copy.capture_group_matches)
+                matches.template remove_all_matching([](auto& match) { return match.view.is_null(); });
         }
 
-        auto named_capture_groups_count = min(output.named_capture_group_matches.size(), output.matches.size());
-        for (size_t i = 0; i < named_capture_groups_count; ++i) {
-            if (output.matches.at(i).view.length())
-                output_copy.named_capture_group_matches.append(output.named_capture_group_matches.at(i));
-        }
+        output_copy.named_capture_group_matches = output.named_capture_group_matches;
 
-        for (size_t i = 0; i < match_count; ++i)
-            output_copy.matches.append(output.matches.at(i));
-
+        output_copy.matches = output.matches;
     } else {
         output_copy.capture_group_matches.clear_with_capacity();
         output_copy.named_capture_group_matches.clear_with_capacity();
     }
 
     return {
-        match_count ? true : false,
+        match_count != 0,
         match_count,
         move(output_copy.matches),
         move(output_copy.capture_group_matches),
