@@ -28,13 +28,14 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/RadioButton.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web::Layout {
 
 RadioButton::RadioButton(DOM::Document& document, HTML::HTMLInputElement& element, NonnullRefPtr<CSS::StyleProperties> style)
-    : ReplacedBox(document, element, move(style))
+    : LabelableNode(document, element, move(style))
 {
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
@@ -51,7 +52,7 @@ void RadioButton::paint(PaintContext& context, PaintPhase phase)
     if (!is_visible())
         return;
 
-    ReplacedBox::paint(context, phase);
+    LabelableNode::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
         Gfx::StylePainter::paint_radio_button(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), dom_node().checked(), m_being_pressed);
@@ -78,8 +79,11 @@ void RadioButton::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& posit
     // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protect = *this;
 
-    bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);
-    if (is_inside)
+    bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
+    if (!is_inside_node_or_label)
+        is_inside_node_or_label = Label::is_inside_associated_label(*this, position);
+
+    if (is_inside_node_or_label)
         set_checked_within_group();
 
     m_being_pressed = false;
@@ -92,11 +96,35 @@ void RadioButton::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& pos
     if (!m_tracking_mouse || !dom_node().enabled())
         return;
 
-    bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);
-    if (m_being_pressed == is_inside)
+    bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
+    if (!is_inside_node_or_label)
+        is_inside_node_or_label = Label::is_inside_associated_label(*this, position);
+
+    if (m_being_pressed == is_inside_node_or_label)
         return;
 
-    m_being_pressed = is_inside;
+    m_being_pressed = is_inside_node_or_label;
+    set_needs_display();
+}
+
+void RadioButton::handle_associated_label_mousedown(Badge<Label>)
+{
+    m_being_pressed = true;
+    set_needs_display();
+}
+
+void RadioButton::handle_associated_label_mouseup(Badge<Label>)
+{
+    set_checked_within_group();
+    m_being_pressed = false;
+}
+
+void RadioButton::handle_associated_label_mousemove(Badge<Label>, bool is_inside_node_or_label)
+{
+    if (m_being_pressed == is_inside_node_or_label)
+        return;
+
+    m_being_pressed = is_inside_node_or_label;
     set_needs_display();
 }
 
