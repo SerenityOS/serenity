@@ -37,6 +37,7 @@ public:
     virtual ~Label() override;
 
     static bool is_inside_associated_label(LabelableNode&, const Gfx::IntPoint&);
+    static bool is_associated_label_hovered(LabelableNode&);
 
     const HTML::HTMLLabelElement& dom_node() const { return static_cast<const HTML::HTMLLabelElement&>(*BlockBox::dom_node()); }
     HTML::HTMLLabelElement& dom_node() { return static_cast<HTML::HTMLLabelElement&>(*BlockBox::dom_node()); }
