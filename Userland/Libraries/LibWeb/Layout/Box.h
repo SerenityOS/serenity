@@ -153,6 +153,8 @@ protected:
 
     virtual void did_set_rect() { }
 
+    void paint_background_image(PaintContext&, const Gfx::Bitmap&, CSS::Repeat, Gfx::IntRect);
+
     Vector<LineBox> m_line_boxes;
 
 private:
