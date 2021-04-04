@@ -170,6 +170,7 @@ const TestSuite test_suites[] {
     { "%d", "", 0, 0, {}, {} },
     { "%x", "0x519", 1, 1, { unsignedarg0 }, { to_value_t(0x519) } },
     { "%x", "0x51g", 1, 1, { unsignedarg0 }, { to_value_t(0x51u) } },
+    { "%06x", "0xabcdef", 1, 1, { unsignedarg0 }, { to_value_t(0xabcdefu) } },
     { "\"%%%d#", "\"%42#", 1, 1, { intarg0 }, { to_value_t(42) } },
     { "  %d", "42", 1, 1, { intarg0 }, { to_value_t(42) } },
     { "%d", "  42", 1, 1, { intarg0 }, { to_value_t(42) } },
