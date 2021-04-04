@@ -51,7 +51,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/SortingProxyModel.h>
-#include <LibGUI/Splitter.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/StatusBar.h>
 #include <LibGUI/TabWidget.h>
@@ -198,11 +197,7 @@ int main(int argc, char** argv)
         statusbar->set_text(1, String::formatted("Threads: {}", thread_count));
     };
 
-    auto process_container_splitter = GUI::VerticalSplitter::construct();
-    tabwidget.add_widget("Processes", process_container_splitter);
-    process_container_splitter->layout()->set_margins({ 4, 4, 4, 4 });
-
-    auto& process_table_container = process_container_splitter->add<GUI::Widget>();
+    auto& process_table_container = tabwidget.add_tab<GUI::Widget>("Processes");
 
     auto graphs_widget = build_graphs_tab();
     tabwidget.add_widget("Graphs", graphs_widget);
@@ -226,6 +221,7 @@ int main(int argc, char** argv)
     tabwidget.add_widget("Interrupts", interrupts_widget);
 
     process_table_container.set_layout<GUI::VerticalBoxLayout>();
+    process_table_container.layout()->set_margins({ 4, 4, 4, 4 });
     process_table_container.layout()->set_spacing(0);
 
     auto& process_table_view = process_table_container.add<GUI::TableView>();
@@ -365,7 +361,7 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     if (args_tab_view == "processes")
-        tabwidget.set_active_widget(process_container_splitter);
+        tabwidget.set_active_widget(&process_table_container);
     else if (args_tab_view == "graphs")
         tabwidget.set_active_widget(graphs_widget);
     else if (args_tab_view == "fs")
