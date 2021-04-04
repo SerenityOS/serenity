@@ -94,6 +94,7 @@ public:
     };
 
     Function<void(const NonnullOwnPtrVector<CpuInfo>&)> on_cpu_info_change;
+    Function<void(int process_count, int thread_count)> on_state_update;
 
     const NonnullOwnPtrVector<CpuInfo>& cpus() const { return m_cpus; }
 

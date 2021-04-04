@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/StatusBar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/ToolBar.h>
@@ -174,9 +175,16 @@ int main(int argc, char** argv)
     auto& keeper = window->set_main_widget<GUI::Widget>();
     keeper.set_layout<GUI::VerticalBoxLayout>();
     keeper.set_fill_with_background_color(true);
-    keeper.layout()->set_margins({ 2, 2, 2, 2 });
+    keeper.layout()->set_margins({ 2, 2, 2, 0 });
 
     auto& tabwidget = keeper.add<GUI::TabWidget>();
+
+    auto& statusbar = keeper.add<GUI::StatusBar>(2);
+    auto process_model = ProcessModel::create();
+    process_model->on_state_update = [&](int process_count, int thread_count) {
+        statusbar.set_text(0, String::formatted("Processes: {}", process_count));
+        statusbar.set_text(1, String::formatted("Threads: {}", thread_count));
+    };
 
     auto process_container_splitter = GUI::VerticalSplitter::construct();
     tabwidget.add_widget("Processes", process_container_splitter);
@@ -210,7 +218,7 @@ int main(int argc, char** argv)
 
     auto& process_table_view = process_table_container.add<GUI::TableView>();
     process_table_view.set_column_headers_visible(true);
-    process_table_view.set_model(GUI::SortingProxyModel::create(ProcessModel::create()));
+    process_table_view.set_model(GUI::SortingProxyModel::create(process_model));
     process_table_view.set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
     process_table_view.model()->update();
 

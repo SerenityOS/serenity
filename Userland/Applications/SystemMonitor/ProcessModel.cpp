@@ -429,6 +429,9 @@ void ProcessModel::update()
     if (on_cpu_info_change)
         on_cpu_info_change(m_cpus);
 
+    if (on_state_update)
+        on_state_update(all_processes->size(), m_threads.size());
+
     // FIXME: This is a rather hackish way of invalidating indexes.
     //        It would be good if GUI::Model had a way to orchestrate removal/insertion while preserving indexes.
     did_update(previous_tid_count == m_tids.size() ? GUI::Model::UpdateFlag::DontInvalidateIndexes : GUI::Model::UpdateFlag::InvalidateAllIndexes);
