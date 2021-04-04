@@ -310,15 +310,14 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
         cut_action->set_enabled(!view.selection().is_empty());
     };
 
-    auto properties_action
-        = GUI::Action::create(
-            "Properties", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action&) {
-                String path = directory_view.path();
-                Vector<String> selected = directory_view.selected_file_paths();
+    auto properties_action = GUI::CommonActions::make_properties_action(
+        [&](auto&) {
+            String path = directory_view.path();
+            Vector<String> selected = directory_view.selected_file_paths();
 
-                show_properties(path, path, selected, directory_view.window());
-            },
-            window);
+            show_properties(path, path, selected, directory_view.window());
+        },
+        window);
 
     auto paste_action = GUI::CommonActions::make_paste_action(
         [&](const GUI::Action&) {
@@ -658,25 +657,24 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             },
             window);
 
-    auto properties_action
-        = GUI::Action::create(
-            "Properties", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action& action) {
-                String container_dir_path;
-                String path;
-                Vector<String> selected;
-                if (action.activator() == directory_context_menu || directory_view.active_widget()->is_focused()) {
-                    path = directory_view.path();
-                    container_dir_path = path;
-                    selected = directory_view.selected_file_paths();
-                } else {
-                    path = directories_model->full_path(tree_view.selection().first());
-                    container_dir_path = LexicalPath(path).basename();
-                    selected = tree_view_selected_file_paths();
-                }
+    auto properties_action = GUI::CommonActions::make_properties_action(
+        [&](auto& action) {
+            String container_dir_path;
+            String path;
+            Vector<String> selected;
+            if (action.activator() == directory_context_menu || directory_view.active_widget()->is_focused()) {
+                path = directory_view.path();
+                container_dir_path = path;
+                selected = directory_view.selected_file_paths();
+            } else {
+                path = directories_model->full_path(tree_view.selection().first());
+                container_dir_path = LexicalPath(path).basename();
+                selected = tree_view_selected_file_paths();
+            }
 
-                show_properties(container_dir_path, path, selected, directory_view.window());
-            },
-            window);
+            show_properties(container_dir_path, path, selected, directory_view.window());
+        },
+        window);
 
     auto paste_action = GUI::CommonActions::make_paste_action(
         [&](const GUI::Action& action) {
