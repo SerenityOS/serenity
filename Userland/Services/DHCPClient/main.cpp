@@ -29,6 +29,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/String.h>
+#include <AK/StringUtils.h>
 #include <AK/Types.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -39,8 +40,9 @@
 
 static u8 mac_part(const Vector<String>& parts, size_t index)
 {
-    auto chars = parts.at(index).characters();
-    return (chars[0] - '0') * 16 + (chars[1] - '0');
+    auto result = AK::StringUtils::convert_to_uint_from_hex(parts.at(index));
+    VERIFY(result.has_value());
+    return result.value();
 }
 
 static MACAddress mac_from_string(const String& str)
