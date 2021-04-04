@@ -577,68 +577,66 @@ NonnullRefPtr<GUI::Widget> build_devices_tab()
 
 NonnullRefPtr<GUI::Widget> build_graphs_tab()
 {
-    auto graphs_container = GUI::LazyWidget::construct();
+    auto graphs_container = GUI::Widget::construct();
 
-    graphs_container->on_first_show = [](GUI::LazyWidget& self) {
-        self.set_fill_with_background_color(true);
-        self.set_background_role(ColorRole::Button);
-        self.set_layout<GUI::VerticalBoxLayout>();
-        self.layout()->set_margins({ 4, 4, 4, 4 });
+    graphs_container->set_fill_with_background_color(true);
+    graphs_container->set_background_role(ColorRole::Button);
+    graphs_container->set_layout<GUI::VerticalBoxLayout>();
+    graphs_container->layout()->set_margins({ 4, 4, 4, 4 });
 
-        auto& cpu_graph_group_box = self.add<GUI::GroupBox>("CPU usage");
-        cpu_graph_group_box.set_layout<GUI::HorizontalBoxLayout>();
-        cpu_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
-        cpu_graph_group_box.set_fixed_height(120);
-        Vector<GraphWidget*> cpu_graphs;
-        for (size_t i = 0; i < ProcessModel::the().cpus().size(); i++) {
-            auto& cpu_graph = cpu_graph_group_box.add<GraphWidget>();
-            cpu_graph.set_max(100);
-            cpu_graph.set_value_format(0, {
-                                              .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
-                                              .text_formatter = [](int value) {
-                                                  return String::formatted("Total: {}%", value);
-                                              },
-                                          });
-            cpu_graph.set_value_format(1, {
-                                              .graph_color_role = ColorRole::SyntaxPreprocessorValue,
-                                              .text_formatter = [](int value) {
-                                                  return String::formatted("Kernel: {}%", value);
-                                              },
-                                          });
-            cpu_graphs.append(&cpu_graph);
-        }
-        ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) {
-            for (size_t i = 0; i < cpus.size(); i++)
-                cpu_graphs[i]->add_value({ (int)cpus[i].total_cpu_percent, (int)cpus[i].total_cpu_percent_kernel });
-        };
-
-        auto& memory_graph_group_box = self.add<GUI::GroupBox>("Memory usage");
-        memory_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
-        memory_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
-        memory_graph_group_box.set_fixed_height(120);
-        auto& memory_graph = memory_graph_group_box.add<GraphWidget>();
-        memory_graph.set_stack_values(true);
-        memory_graph.set_value_format(0, {
-                                             .graph_color_role = ColorRole::SyntaxComment,
-                                             .text_formatter = [&memory_graph](int value) {
-                                                 return String::formatted("Committed: {} KiB", value);
-                                             },
-                                         });
-        memory_graph.set_value_format(1, {
-                                             .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
-                                             .text_formatter = [&memory_graph](int value) {
-                                                 return String::formatted("Allocated: {} KiB", value);
-                                             },
-                                         });
-        memory_graph.set_value_format(2, {
-                                             .graph_color_role = ColorRole::SyntaxPreprocessorValue,
-                                             .text_formatter = [&memory_graph](int value) {
-                                                 return String::formatted("Kernel heap: {} KiB", value);
-                                             },
-                                         });
-
-        self.add<MemoryStatsWidget>(memory_graph);
+    auto& cpu_graph_group_box = graphs_container->add<GUI::GroupBox>("CPU usage");
+    cpu_graph_group_box.set_layout<GUI::HorizontalBoxLayout>();
+    cpu_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
+    cpu_graph_group_box.set_fixed_height(120);
+    Vector<GraphWidget*> cpu_graphs;
+    for (size_t i = 0; i < ProcessModel::the().cpus().size(); i++) {
+        auto& cpu_graph = cpu_graph_group_box.add<GraphWidget>();
+        cpu_graph.set_max(100);
+        cpu_graph.set_value_format(0, {
+                                          .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
+                                          .text_formatter = [](int value) {
+                                              return String::formatted("Total: {}%", value);
+                                          },
+                                      });
+        cpu_graph.set_value_format(1, {
+                                          .graph_color_role = ColorRole::SyntaxPreprocessorValue,
+                                          .text_formatter = [](int value) {
+                                              return String::formatted("Kernel: {}%", value);
+                                          },
+                                      });
+        cpu_graphs.append(&cpu_graph);
+    }
+    ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) {
+        for (size_t i = 0; i < cpus.size(); i++)
+            cpu_graphs[i]->add_value({ (int)cpus[i].total_cpu_percent, (int)cpus[i].total_cpu_percent_kernel });
     };
+
+    auto& memory_graph_group_box = graphs_container->add<GUI::GroupBox>("Memory usage");
+    memory_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
+    memory_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
+    memory_graph_group_box.set_fixed_height(120);
+    auto& memory_graph = memory_graph_group_box.add<GraphWidget>();
+    memory_graph.set_stack_values(true);
+    memory_graph.set_value_format(0, {
+                                         .graph_color_role = ColorRole::SyntaxComment,
+                                         .text_formatter = [&memory_graph](int value) {
+                                             return String::formatted("Committed: {} KiB", value);
+                                         },
+                                     });
+    memory_graph.set_value_format(1, {
+                                         .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
+                                         .text_formatter = [&memory_graph](int value) {
+                                             return String::formatted("Allocated: {} KiB", value);
+                                         },
+                                     });
+    memory_graph.set_value_format(2, {
+                                         .graph_color_role = ColorRole::SyntaxPreprocessorValue,
+                                         .text_formatter = [&memory_graph](int value) {
+                                             return String::formatted("Kernel heap: {} KiB", value);
+                                         },
+                                     });
+
+    graphs_container->add<MemoryStatsWidget>(memory_graph);
     return graphs_container;
 }
 
