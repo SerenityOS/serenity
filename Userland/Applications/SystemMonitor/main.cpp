@@ -74,6 +74,8 @@ static NonnullRefPtr<GUI::Widget> build_devices_tab();
 static NonnullRefPtr<GUI::Widget> build_graphs_tab();
 static NonnullRefPtr<GUI::Widget> build_processors_tab();
 
+static RefPtr<GUI::StatusBar> statusbar;
+
 class UnavailableProcessWidget final : public GUI::Frame {
     C_OBJECT(UnavailableProcessWidget)
 public:
@@ -188,12 +190,12 @@ int main(int argc, char** argv)
     tabwidget_container.layout()->set_margins({ 4, 0, 4, 4 });
     auto& tabwidget = tabwidget_container.add<GUI::TabWidget>();
 
-    auto& statusbar = main_widget.add<GUI::StatusBar>(2);
+    statusbar = main_widget.add<GUI::StatusBar>(3);
 
     auto process_model = ProcessModel::create();
     process_model->on_state_update = [&](int process_count, int thread_count) {
-        statusbar.set_text(0, String::formatted("Processes: {}", process_count));
-        statusbar.set_text(1, String::formatted("Threads: {}", thread_count));
+        statusbar->set_text(0, String::formatted("Processes: {}", process_count));
+        statusbar->set_text(1, String::formatted("Threads: {}", thread_count));
     };
 
     auto process_container_splitter = GUI::VerticalSplitter::construct();
@@ -634,8 +636,13 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         cpu_graphs.append(&cpu_graph);
     }
     ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) {
-        for (size_t i = 0; i < cpus.size(); i++)
+        float sum_cpu = 0;
+        for (size_t i = 0; i < cpus.size(); ++i) {
             cpu_graphs[i]->add_value({ (int)cpus[i].total_cpu_percent, (int)cpus[i].total_cpu_percent_kernel });
+            sum_cpu += cpus[i].total_cpu_percent;
+        }
+        float cpu_usage = sum_cpu / (float)cpus.size();
+        statusbar->set_text(2, String::formatted("CPU usage: {}%", (int)roundf(cpu_usage)));
     };
 
     auto& memory_graph_group_box = graphs_container->add<GUI::GroupBox>("Memory usage");
