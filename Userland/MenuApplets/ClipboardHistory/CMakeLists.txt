@@ -3,5 +3,5 @@ set(SOURCES
     main.cpp
 )
 
-serenity_app(ClipboardHistory.MenuApplet ICON clipboard)
+serenity_app(ClipboardHistory.MenuApplet ICON edit-copy)
 target_link_libraries(ClipboardHistory.MenuApplet LibGUI LibCore LibGfx)
