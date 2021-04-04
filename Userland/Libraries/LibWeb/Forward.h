@@ -174,6 +174,8 @@ class CheckBox;
 class FormattingContext;
 class InitialContainingBlockBox;
 class InlineFormattingContext;
+class Label;
+class LabelableNode;
 class LineBox;
 class LineBoxFragment;
 class Node;
