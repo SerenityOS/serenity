@@ -172,14 +172,15 @@ void DHCPv4Client::handle_ack(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
     transaction->has_ip = true;
     auto& interface = transaction->interface;
     auto new_ip = packet.yiaddr();
+    interface.m_current_ip_address = new_ip;
     auto lease_time = AK::convert_between_host_and_network_endian(options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(transaction->offered_lease_time));
     // set a timer for the duration of the lease, we shall renew if needed
     Core::Timer::create_single_shot(
         lease_time * 1000,
-        [this, transaction, interface = InterfaceDescriptor { interface }, new_ip] {
+        [this, transaction, interface = InterfaceDescriptor { interface }] {
             transaction->accepted_offer = false;
             transaction->has_ip = false;
-            dhcp_discover(interface, new_ip);
+            dhcp_discover(interface);
         },
         this);
     set_params(transaction->interface, new_ip, options.get<IPv4Address>(DHCPOption::SubnetMask).value(), options.get_many<IPv4Address>(DHCPOption::Router, 1).first());
@@ -238,14 +239,14 @@ void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)
     }
 }
 
-void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface, IPv4Address previous)
+void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface)
 {
     auto transaction_id = get_random<u32>();
 
     if constexpr (DHCPV4CLIENT_DEBUG) {
         dbgln("Trying to lease an IP for {} with ID {}", iface.m_ifname, transaction_id);
-        if (!previous.is_zero())
-            dbgln("going to request the server to hand us {}", previous.to_string());
+        if (!iface.m_current_ip_address.is_zero())
+            dbgln("going to request the server to hand us {}", iface.m_current_ip_address.to_string());
     }
 
     DHCPv4PacketBuilder builder;
@@ -256,7 +257,7 @@ void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface, IPv4Address p
     packet.set_hlen(sizeof(MACAddress));
     packet.set_xid(transaction_id);
     packet.set_flags(DHCPv4Flags::Broadcast);
-    packet.ciaddr() = previous;
+    packet.ciaddr() = iface.m_current_ip_address;
     packet.set_chaddr(iface.m_mac_address);
     packet.set_secs(65535); // we lie
 
@@ -277,7 +278,7 @@ void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Pack
 
     DHCPv4Packet& packet = builder.peek();
     packet.set_op(DHCPv4Op::BootRequest);
-    packet.ciaddr() = offer.yiaddr();
+    packet.ciaddr() = iface.m_current_ip_address;
     packet.set_htype(1); // 10mb ethernet
     packet.set_hlen(sizeof(MACAddress));
     packet.set_xid(offer.xid());
