@@ -244,25 +244,32 @@ int main(int argc, char** argv)
         return pid_index.data().to_i32();
     };
 
-    auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/16x16/kill.png"), [&](const GUI::Action&) {
-        pid_t pid = selected_id(ProcessModel::Column::PID);
-        if (pid != -1)
-            kill(pid, SIGKILL);
-    });
+    auto kill_action = GUI::Action::create(
+        "Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/16x16/kill.png"), [&](const GUI::Action&) {
+            pid_t pid = selected_id(ProcessModel::Column::PID);
+            if (pid != -1)
+                kill(pid, SIGKILL);
+        },
+        &process_table_view);
 
-    auto stop_action = GUI::Action::create("Stop process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/stop-hand.png"), [&](const GUI::Action&) {
-        pid_t pid = selected_id(ProcessModel::Column::PID);
-        if (pid != -1)
-            kill(pid, SIGSTOP);
-    });
+    auto stop_action = GUI::Action::create(
+        "Stop process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/stop-hand.png"), [&](const GUI::Action&) {
+            pid_t pid = selected_id(ProcessModel::Column::PID);
+            if (pid != -1)
+                kill(pid, SIGSTOP);
+        },
+        &process_table_view);
 
-    auto continue_action = GUI::Action::create("Continue process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/continue.png"), [&](const GUI::Action&) {
-        pid_t pid = selected_id(ProcessModel::Column::PID);
-        if (pid != -1)
-            kill(pid, SIGCONT);
-    });
+    auto continue_action = GUI::Action::create(
+        "Continue process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/continue.png"), [&](const GUI::Action&) {
+            pid_t pid = selected_id(ProcessModel::Column::PID);
+            if (pid != -1)
+                kill(pid, SIGCONT);
+        },
+        &process_table_view);
 
-    auto profile_action = GUI::Action::create("Profile process", { Mod_Ctrl, Key_P },
+    auto profile_action = GUI::Action::create(
+        "Profile process", { Mod_Ctrl, Key_P },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1) {
@@ -276,9 +283,11 @@ int main(int argc, char** argv)
                         perror("disown");
                 }
             }
-        });
+        },
+        &process_table_view);
 
-    auto inspect_action = GUI::Action::create("Inspect process", { Mod_Ctrl, Key_I },
+    auto inspect_action = GUI::Action::create(
+        "Inspect process", { Mod_Ctrl, Key_I },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/app-inspector.png"), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1) {
@@ -292,7 +301,8 @@ int main(int argc, char** argv)
                         perror("disown");
                 }
             }
-        });
+        },
+        &process_table_view);
 
     HashMap<pid_t, NonnullRefPtr<GUI::Window>> process_windows;
 
@@ -314,7 +324,8 @@ int main(int argc, char** argv)
             }
             process_window->show();
             process_window->move_to_front();
-        });
+        },
+        &process_table_view);
 
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("File");
