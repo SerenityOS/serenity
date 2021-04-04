@@ -944,6 +944,21 @@ long long llroundd(long double value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::ToEven);
 }
 
+double nearbyint(double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode { fegetround() });
+}
+
+float nearbyintf(float value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode { fegetround() });
+}
+
+long double nearbyintl(long double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode { fegetround() });
+}
+
 float floorf(float value) NOEXCEPT
 {
     return internal_to_integer(value, RoundingMode::Down);
