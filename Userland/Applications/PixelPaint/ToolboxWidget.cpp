@@ -105,9 +105,7 @@ ToolboxWidget::ToolboxWidget()
     m_action_group.set_exclusive(true);
     m_action_group.set_unchecking_allowed(false);
 
-    deferred_invoke([this](auto&) {
-        setup_tools();
-    });
+    setup_tools();
 }
 
 ToolboxWidget::~ToolboxWidget()
