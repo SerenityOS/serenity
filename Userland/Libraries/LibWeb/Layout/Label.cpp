@@ -32,6 +32,7 @@
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/LabelableNode.h>
+#include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web::Layout {
@@ -92,6 +93,19 @@ bool Label::is_inside_associated_label(LabelableNode& control, const Gfx::IntPoi
 {
     if (auto* label = label_for_control_node(control); label)
         return enclosing_int_rect(label->absolute_rect()).contains(position);
+    return false;
+}
+
+bool Label::is_associated_label_hovered(LabelableNode& control)
+{
+    if (auto* label = label_for_control_node(control); label) {
+        if (label->document().hovered_node() == &label->dom_node())
+            return true;
+
+        if (auto* child = label->first_child_of_type<TextNode>(); child)
+            return label->document().hovered_node() == &child->dom_node();
+    }
+
     return false;
 }
 
