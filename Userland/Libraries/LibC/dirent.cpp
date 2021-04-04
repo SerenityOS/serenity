@@ -25,6 +25,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Format.h>
 #include <AK/StdLibExtras.h>
 #include <dirent.h>
 #include <errno.h>
@@ -197,4 +198,17 @@ int dirfd(DIR* dirp)
     VERIFY(dirp);
     return dirp->fd;
 }
+
+int alphasort(const struct dirent**, const struct dirent**)
+{
+    dbgln("FIXME: Implement alphasort()");
+    TODO();
+}
+
+int scandir(const char*, struct dirent***, int(*)(const struct dirent*), int(*)(const struct dirent**, const struct dirent**))
+{
+    dbgln("FIXME: Implement scandir()");
+    TODO();
+}
+
 }
