@@ -287,7 +287,6 @@ void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Pack
 
     // set packet options
     builder.set_message_type(DHCPMessageType::DHCPRequest);
-    builder.add_option(DHCPOption::ServerIdentifier, sizeof(IPv4Address), &offer.siaddr());
     builder.add_option(DHCPOption::RequestedIPAddress, sizeof(IPv4Address), &offer.yiaddr());
     auto& dhcp_packet = builder.build();
 
