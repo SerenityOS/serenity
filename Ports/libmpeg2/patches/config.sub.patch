@@ -1,0 +1,11 @@
+--- libmpeg2-0.5.1/.auto/config.sub	2021-04-03 05:36:47.186670600 +0200
++++ libmpeg2-0.5.1-patched/.auto/config.sub	2021-04-03 05:37:49.302362300 +0200
+@@ -1235,7 +1235,7 @@
+ 	# The portable systems comes first.
+ 	# Each alternative MUST END IN A *, to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+-	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -serenity* | -irix* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -solaris* | -sym* \
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
