@@ -26,6 +26,7 @@
 
 #include "AddEventDialog.h"
 #include <Applications/Calendar/CalendarWindowGML.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -42,19 +43,24 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd rpath accept unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd cpath rpath wpath accept unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd rpath accept", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd cpath rpath wpath accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/home", "rwc") < 0) {
         perror("unveil");
         return 1;
     }
@@ -73,6 +79,8 @@ int main(int argc, char** argv)
 
     auto toolbar = main_widget.find_descendant_of_type_named<GUI::ToolBar>("toolbar");
     auto calendar = main_widget.find_descendant_of_type_named<GUI::Calendar>("calendar");
+
+    calendar->set_events_file(String::formatted("{}/calendar_events.json", Core::StandardPaths::config_directory()));
 
     auto prev_date_action = GUI::Action::create({}, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"), [&](const GUI::Action&) {
         unsigned view_month = calendar->view_month();
@@ -105,7 +113,9 @@ int main(int argc, char** argv)
     });
 
     auto add_event_action = GUI::Action::create("Add event", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/add-event.png"), [&](const GUI::Action&) {
-        AddEventDialog::show(calendar->selected_date(), window);
+        auto event = AddEventDialog::show(calendar->selected_date(), window);
+        if (event.has_value())
+            calendar->add_event(event.value());
     });
 
     auto jump_to_action = GUI::Action::create("Jump to today", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"), [&](const GUI::Action&) {
@@ -139,7 +149,9 @@ int main(int argc, char** argv)
     toolbar->add_action(view_year_action);
 
     calendar->on_tile_doubleclick = [&] {
-        AddEventDialog::show(calendar->selected_date(), window);
+        auto event = AddEventDialog::show(calendar->selected_date(), window);
+        if (event.has_value())
+            calendar->add_event(event.value());
     };
 
     calendar->on_month_click = [&] {
@@ -150,8 +162,9 @@ int main(int argc, char** argv)
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::Action::create("Add Event", { Mod_Ctrl | Mod_Shift, Key_E }, Gfx::Bitmap::load_from_file("/res/icons/16x16/add-event.png"),
         [&](const GUI::Action&) {
-            AddEventDialog::show(calendar->selected_date(), window);
-            return;
+            auto event = AddEventDialog::show(calendar->selected_date(), window);
+            if (event.has_value())
+                calendar->add_event(event.value());
         }));
 
     app_menu.add_separator();

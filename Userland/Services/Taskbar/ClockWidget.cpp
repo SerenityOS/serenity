@@ -25,6 +25,7 @@
  */
 
 #include "ClockWidget.h"
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Window.h>
@@ -144,6 +145,8 @@ ClockWidget::ClockWidget()
     calendar_container.layout()->set_margins({ 4, 4, 5, 4 });
 
     m_calendar = calendar_container.add<GUI::Calendar>();
+    m_calendar->set_events_file(String::formatted("{}/calendar_events.json", Core::StandardPaths::config_directory()));
+
     m_selected_calendar_button->set_text(m_calendar->formatted_date());
 
     m_calendar->on_tile_click = [&] {
@@ -218,6 +221,8 @@ void ClockWidget::open()
 {
     jump_to_current_date();
     position_calendar_window();
+    if (m_calendar->events_model())
+        m_calendar->events_model()->update();
     m_calendar_window->show();
 }
 

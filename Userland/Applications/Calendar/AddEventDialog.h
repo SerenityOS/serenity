@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <LibGUI/Calendar.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Model.h>
@@ -36,11 +37,7 @@ class AddEventDialog final : public GUI::Dialog {
 public:
     virtual ~AddEventDialog() override;
 
-    static void show(Core::DateTime date_time, Window* parent_window = nullptr)
-    {
-        auto dialog = AddEventDialog::construct(date_time, parent_window);
-        dialog->exec();
-    }
+    static Optional<GUI::Calendar::Event> show(Core::DateTime date_time, Window* parent_window = nullptr);
 
 private:
     AddEventDialog(Core::DateTime date_time, Window* parent_window = nullptr);
@@ -65,5 +62,5 @@ private:
         MonthListModel();
     };
 
-    Core::DateTime m_date_time;
+    GUI::Calendar::Event m_event;
 };

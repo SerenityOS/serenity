@@ -25,6 +25,7 @@
  */
 
 #include "AddEventDialog.h"
+#include <Applications/Calendar/AddEventDialogGML.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -45,67 +46,47 @@ static const char* short_month_names[] = {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
+Optional<GUI::Calendar::Event> AddEventDialog::show(Core::DateTime date_time, Window* parent_window)
+{
+    auto dialog = AddEventDialog::construct(date_time, parent_window);
+    auto rc = dialog->exec();
+    if (rc == ExecResult::ExecOK)
+        return dialog->m_event;
+
+    return {};
+}
+
 AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     : Dialog(parent_window)
-    , m_date_time(date_time)
+    , m_event({ {}, date_time })
 {
-    resize(158, 100);
+    resize(160, 120);
     set_title("Add Event");
     set_resizable(false);
     set_icon(parent_window->icon());
 
-    auto& widget = set_main_widget<GUI::Widget>();
-    widget.set_fill_with_background_color(true);
-    widget.set_layout<GUI::VerticalBoxLayout>();
+    auto& root_container = set_main_widget<GUI::Widget>();
+    root_container.load_from_gml(add_event_dialog_gml);
 
-    auto& top_container = widget.add<GUI::Widget>();
-    top_container.set_layout<GUI::VerticalBoxLayout>();
-    top_container.set_fixed_height(45);
-    top_container.layout()->set_margins({ 4, 4, 4, 4 });
+    auto& title_box = *find_descendant_of_type_named<GUI::TextBox>("title_box");
 
-    auto& add_label = top_container.add<GUI::Label>("Add title & date:");
-    add_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    add_label.set_fixed_height(14);
-    add_label.set_font(Gfx::FontDatabase::default_bold_font());
+    auto& month_combo = *find_descendant_of_type_named<GUI::ComboBox>("month_combo");
+    month_combo.set_model(MonthListModel::create());
+    month_combo.set_selected_index(m_event.date_time.month() - 1);
 
-    auto& event_title_textbox = top_container.add<GUI::TextBox>();
-    event_title_textbox.set_fixed_height(20);
+    auto& day_combo = *find_descendant_of_type_named<GUI::SpinBox>("day_combo");
+    day_combo.set_value(m_event.date_time.day());
 
-    auto& middle_container = widget.add<GUI::Widget>();
-    middle_container.set_layout<GUI::HorizontalBoxLayout>();
-    middle_container.set_fixed_height(25);
-    middle_container.layout()->set_margins({ 4, 4, 4, 4 });
+    auto& year_combo = *find_descendant_of_type_named<GUI::SpinBox>("year_combo");
+    year_combo.set_value(m_event.date_time.year());
 
-    auto& starting_month_combo = middle_container.add<GUI::ComboBox>();
-    starting_month_combo.set_only_allow_values_from_model(true);
-    starting_month_combo.set_fixed_size(50, 20);
-    starting_month_combo.set_model(MonthListModel::create());
-    starting_month_combo.set_selected_index(m_date_time.month() - 1);
-
-    auto& starting_day_combo = middle_container.add<GUI::SpinBox>();
-    starting_day_combo.set_fixed_size(40, 20);
-    starting_day_combo.set_value(m_date_time.day());
-    starting_day_combo.set_min(1);
-
-    auto& starting_year_combo = middle_container.add<GUI::SpinBox>();
-    starting_year_combo.set_fixed_size(55, 20);
-    starting_year_combo.set_range(0, 9999);
-    starting_year_combo.set_value(m_date_time.year());
-
-    widget.layout()->add_spacer();
-
-    auto& button_container = widget.add<GUI::Widget>();
-    button_container.set_fixed_height(20);
-    button_container.set_layout<GUI::HorizontalBoxLayout>();
-    button_container.layout()->add_spacer();
-    auto& ok_button = button_container.add<GUI::Button>("OK");
-    ok_button.set_fixed_size(80, 20);
-    ok_button.on_click = [this](auto) {
-        dbgln("TODO: Add event icon on specific tile");
+    auto& ok_button = *find_descendant_of_type_named<GUI::Button>("ok_button");
+    ok_button.on_click = [&]() {
+        m_event.title = title_box.text().is_empty() ? "Unnamed" : title_box.text();
+        auto month = month_combo.selected_index() + 1;
+        m_event.date_time = Core::DateTime::create(year_combo.value(), month, day_combo.value());
         done(Dialog::ExecOK);
     };
-
-    event_title_textbox.set_focus(true);
 }
 
 AddEventDialog::~AddEventDialog()

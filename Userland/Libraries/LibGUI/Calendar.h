@@ -30,6 +30,7 @@
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
@@ -90,6 +91,16 @@ public:
         m_unadjusted_tile_size.set_height(height);
     }
 
+    GUI::Model* events_model() { return m_events_model.ptr(); }
+    const GUI::Model* events_model() const { return m_events_model.ptr(); }
+
+    struct Event {
+        String title;
+        Core::DateTime date_time;
+    };
+    void add_event(const Event&);
+    void set_events_file(const StringView&);
+
     Function<void()> on_tile_click;
     Function<void()> on_tile_doubleclick;
     Function<void()> on_month_click;
@@ -146,6 +157,8 @@ private:
     Gfx::IntSize m_event_size;
     Gfx::IntSize m_month_size[12];
     Mode m_mode { Month };
+
+    RefPtr<JsonArrayModel> m_events_model;
 };
 
 }
