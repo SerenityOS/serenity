@@ -40,6 +40,7 @@ set(LIBC_SOURCES
     sys/select.cpp
     sys/socket.cpp
     sys/uio.cpp
+    sys/timeb.cpp
     sys/wait.cpp
     termcap.cpp
     termios.cpp
