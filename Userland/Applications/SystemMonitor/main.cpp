@@ -49,6 +49,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StackWidget.h>
@@ -174,14 +175,21 @@ int main(int argc, char** argv)
     window->set_title("System Monitor");
     window->resize(680, 400);
 
-    auto& keeper = window->set_main_widget<GUI::Widget>();
-    keeper.set_layout<GUI::VerticalBoxLayout>();
-    keeper.set_fill_with_background_color(true);
-    keeper.layout()->set_margins({ 2, 2, 2, 0 });
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
+    main_widget.set_fill_with_background_color(true);
 
-    auto& tabwidget = keeper.add<GUI::TabWidget>();
+    // Add a tasteful separating line between the menu and the main UI.
+    auto& top_line = main_widget.add<GUI::SeparatorWidget>(Gfx::Orientation::Horizontal);
+    top_line.set_fixed_height(2);
 
-    auto& statusbar = keeper.add<GUI::StatusBar>(2);
+    auto& tabwidget_container = main_widget.add<GUI::Widget>();
+    tabwidget_container.set_layout<GUI::VerticalBoxLayout>();
+    tabwidget_container.layout()->set_margins({ 4, 0, 4, 4 });
+    auto& tabwidget = tabwidget_container.add<GUI::TabWidget>();
+
+    auto& statusbar = main_widget.add<GUI::StatusBar>(2);
+
     auto process_model = ProcessModel::create();
     process_model->on_state_update = [&](int process_count, int thread_count) {
         statusbar.set_text(0, String::formatted("Processes: {}", process_count));
