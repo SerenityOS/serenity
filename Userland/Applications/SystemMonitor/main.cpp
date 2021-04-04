@@ -51,6 +51,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/StackWidget.h>
 #include <LibGUI/StatusBar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
@@ -65,6 +66,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+static NonnullRefPtr<GUI::Window> build_process_window(pid_t);
 static NonnullRefPtr<GUI::Widget> build_file_systems_tab();
 static NonnullRefPtr<GUI::Widget> build_pci_devices_tab();
 static NonnullRefPtr<GUI::Widget> build_devices_tab();
@@ -333,38 +335,25 @@ int main(int argc, char** argv)
 
     window->set_menubar(move(menubar));
 
-    auto& process_tab_unused_widget = process_container_splitter->add<UnavailableProcessWidget>("No process selected");
-    process_tab_unused_widget.set_visible(true);
+    HashMap<pid_t, NonnullRefPtr<GUI::Window>> process_windows;
 
-    auto& process_tab_widget = process_container_splitter->add<GUI::TabWidget>();
-    process_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
-    process_tab_widget.set_visible(false);
-
-    auto& memory_map_widget = process_tab_widget.add_tab<ProcessMemoryMapWidget>("Memory map");
-    auto& open_files_widget = process_tab_widget.add_tab<ProcessFileDescriptorMapWidget>("Open files");
-    auto& unveiled_paths_widget = process_tab_widget.add_tab<ProcessUnveiledPathsWidget>("Unveiled paths");
-    auto& stack_widget = process_tab_widget.add_tab<ThreadStackWidget>("Stack");
-
-    process_table_view.on_selection = [&](auto&) {
+    process_table_view.on_activation = [&](auto&) {
         auto pid = selected_id(ProcessModel::Column::PID);
-        auto tid = selected_id(ProcessModel::Column::TID);
-        if (!can_access_pid(pid)) {
-            process_tab_widget.set_visible(false);
-            process_tab_unused_widget.set_text("Process cannot be accessed");
-            process_tab_unused_widget.set_visible(true);
-            return;
-        }
 
-        process_tab_widget.set_visible(true);
-        process_tab_unused_widget.set_visible(false);
-        open_files_widget.set_pid(pid);
-        stack_widget.set_ids(pid, tid);
-        memory_map_widget.set_pid(pid);
-        unveiled_paths_widget.set_pid(pid);
+        RefPtr<GUI::Window> process_window;
+        if (!process_windows.contains(pid)) {
+            process_window = build_process_window(pid);
+            process_window->on_close_request = [pid, &process_windows] {
+                process_windows.remove(pid);
+                return GUI::Window::CloseRequestDecision::Close;
+            };
+            process_windows.set(pid, *process_window);
+        }
+        process_window->show();
+        process_window->move_to_front();
     };
 
     window->show();
-
     window->set_icon(app_icon.bitmap_for_size(16));
 
     if (args_tab_view == "processes")
@@ -404,6 +393,38 @@ public:
         painter.draw_rect(rect, Color::Black);
     }
 };
+
+NonnullRefPtr<GUI::Window> build_process_window(pid_t pid)
+{
+    auto window = GUI::Window::construct();
+    window->resize(480, 360);
+    window->set_title(String::formatted("PID {} - SystemMonitor", pid));
+
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_fill_with_background_color(true);
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
+
+    auto& widget_stack = main_widget.add<GUI::StackWidget>();
+    auto& unavailable_process_widget = widget_stack.add<UnavailableProcessWidget>(String::formatted("Unable to access PID {}", pid));
+
+    auto& process_tab_widget = widget_stack.add<GUI::TabWidget>();
+    auto& memory_map_widget = process_tab_widget.add_tab<ProcessMemoryMapWidget>("Memory map");
+    auto& open_files_widget = process_tab_widget.add_tab<ProcessFileDescriptorMapWidget>("Open files");
+    auto& unveiled_paths_widget = process_tab_widget.add_tab<ProcessUnveiledPathsWidget>("Unveiled paths");
+    auto& thread_stack_widget = process_tab_widget.add_tab<ThreadStackWidget>("Stack");
+
+    open_files_widget.set_pid(pid);
+    thread_stack_widget.set_ids(pid, pid);
+    memory_map_widget.set_pid(pid);
+    unveiled_paths_widget.set_pid(pid);
+
+    if (can_access_pid(pid))
+        widget_stack.set_active_widget(&process_tab_widget);
+    else
+        widget_stack.set_active_widget(&unavailable_process_widget);
+
+    return window;
+}
 
 NonnullRefPtr<GUI::Widget> build_file_systems_tab()
 {
