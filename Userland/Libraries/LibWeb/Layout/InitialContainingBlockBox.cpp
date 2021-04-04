@@ -68,31 +68,8 @@ void InitialContainingBlockBox::paint_document_background(PaintContext& context)
     context.painter().translate(-context.viewport_rect().location());
 
     if (auto background_bitmap = document().background_image()) {
-        int painted_image_width = 0;
-        int painted_image_height = 0;
-
-        switch (document().background_repeat()) {
-        case CSS::Repeat::Repeat:
-            painted_image_width = context.viewport_rect().x() + context.viewport_rect().width();
-            painted_image_height = context.viewport_rect().y() + context.viewport_rect().height();
-            break;
-        case CSS::Repeat::RepeatX:
-            painted_image_width = context.viewport_rect().x() + context.viewport_rect().width();
-            painted_image_height = background_bitmap->rect().height();
-            break;
-        case CSS::Repeat::RepeatY:
-            painted_image_width = background_bitmap->rect().width();
-            painted_image_height = context.viewport_rect().y() + context.viewport_rect().height();
-            break;
-        case CSS::Repeat::NoRepeat:
-        default: // FIXME: Support 'round' and 'square'
-            painted_image_width = background_bitmap->rect().width();
-            painted_image_height = background_bitmap->rect().height();
-            break;
-        }
-
-        Gfx::IntRect background_rect { 0, 0, painted_image_width, painted_image_height };
-        context.painter().blit_tiled(background_rect, *background_bitmap, background_bitmap->rect());
+        Gfx::IntRect background_rect = { 0, 0, context.viewport_rect().x() + context.viewport_rect().width(), context.viewport_rect().y() + context.viewport_rect().height() };
+        paint_background_image(context, *background_bitmap, document().background_repeat(), move(background_rect));
     }
 }
 
