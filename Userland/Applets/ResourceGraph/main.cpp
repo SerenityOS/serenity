@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
@@ -215,49 +215,45 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    bool cpu = false;
-    bool memory = false;
-    const char* name = nullptr;
-    const char* color = nullptr;
-    const char* error_color = nullptr;
+    const char* cpu = nullptr;
+    const char* memory = nullptr;
     Core::ArgsParser args_parser;
-    args_parser.add_option(cpu, "Show CPU usage", "cpu", 'C');
-    args_parser.add_option(memory, "Show memory usage", "memory", 'M');
-    args_parser.add_option(name, "Applet name used by WindowServer.ini to set the applet order", "name", 'n', "name");
-    args_parser.add_option(color, "Graph color", "color", 'c', "color");
-    args_parser.add_option(error_color, "Graph color (error)", "error-color", 'e', "error-color");
+    args_parser.add_option(cpu, "Create CPU graph", "cpu", 'C', "cpu");
+    args_parser.add_option(memory, "Create memory graph", "memory", 'M', "memory");
     args_parser.parse(argc, argv);
 
     if (!cpu && !memory) {
-        printf("Either --cpu or --memory option must be used");
+        printf("At least one of --cpu or --memory must be used");
         return 1;
     }
-    if (cpu && memory) {
-        printf("--cpu and --memory options must not be used together");
-        return 1;
-    }
-    GraphType graph_type;
+
+    NonnullRefPtrVector<GUI::Window> applet_windows;
+
+    auto create_applet = [&](GraphType graph_type, StringView spec) {
+        auto parts = spec.split_view(',');
+
+        dbgln("Create applet: {} with spec '{}'", (int)graph_type, spec);
+
+        if (parts.size() != 2)
+            return;
+
+        auto name = parts[0];
+        auto graph_color = Gfx::Color::from_string(parts[1]);
+
+        auto window = GUI::Window::construct();
+        window->set_title(name);
+        window->set_window_type(GUI::WindowType::Applet);
+        window->resize(GraphWidget::history_size + 2, 15);
+
+        window->set_main_widget<GraphWidget>(graph_type, graph_color, Optional<Gfx::Color> {});
+        window->show();
+        applet_windows.append(move(window));
+    };
+
     if (cpu)
-        graph_type = GraphType::CPU;
+        create_applet(GraphType::CPU, cpu);
     if (memory)
-        graph_type = GraphType::Memory;
-
-    if (name == nullptr)
-        name = "ResourceGraph";
-
-    Optional<Gfx::Color> graph_color, graph_error_color;
-    if (color != nullptr)
-        graph_color = Gfx::Color::from_string(color);
-    if (error_color != nullptr)
-        graph_error_color = Gfx::Color::from_string(error_color);
-
-    auto window = GUI::Window::construct();
-    window->set_title(name);
-    window->set_window_type(GUI::WindowType::Applet);
-    window->resize(GraphWidget::history_size + 2, 15);
-
-    window->set_main_widget<GraphWidget>(graph_type, graph_color, graph_error_color);
-    window->show();
+        create_applet(GraphType::Memory, memory);
 
     if (unveil("/res", "r") < 0) {
         perror("unveil");
