@@ -39,9 +39,13 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
 
+namespace {
+    extern Core::ObjectClassRegistration registration_Widget;
+}
+
 #define REGISTER_WIDGET(namespace_, class_name)                                                                                                 \
     namespace {                                                                                                                                 \
-    GUI::WidgetClassRegistration registration_##class_name(#namespace_ "::" #class_name, []() { return namespace_::class_name::construct(); }); \
+    Core::ObjectClassRegistration registration_##class_name(#namespace_ "::" #class_name, []() { return static_ptr_cast<Core::Object>(namespace_::class_name::construct()); }, &registration_Widget); \
     }
 
 namespace GUI {
@@ -53,25 +57,6 @@ enum class HorizontalDirection {
 enum class VerticalDirection {
     Up,
     Down
-};
-
-class WidgetClassRegistration {
-    AK_MAKE_NONCOPYABLE(WidgetClassRegistration);
-    AK_MAKE_NONMOVABLE(WidgetClassRegistration);
-
-public:
-    WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>()> factory);
-    ~WidgetClassRegistration();
-
-    String class_name() const { return m_class_name; }
-    NonnullRefPtr<Widget> construct() const { return m_factory(); }
-
-    static void for_each(Function<void(const WidgetClassRegistration&)>);
-    static const WidgetClassRegistration* find(const String& class_name);
-
-private:
-    String m_class_name;
-    Function<NonnullRefPtr<Widget>()> m_factory;
 };
 
 enum class FocusPolicy {
@@ -301,7 +286,7 @@ public:
     void set_override_cursor(Gfx::StandardCursor);
 
     bool load_from_gml(const StringView&);
-    bool load_from_gml(const StringView&, RefPtr<Widget> (*unregistered_child_handler)(const String&));
+    bool load_from_gml(const StringView&, RefPtr<Core::Object> (*unregistered_child_handler)(const String&));
 
     void set_shrink_to_fit(bool);
     bool is_shrink_to_fit() const { return m_shrink_to_fit; }
@@ -361,7 +346,7 @@ private:
     void focus_previous_widget(FocusSource, bool siblings_only);
     void focus_next_widget(FocusSource, bool siblings_only);
 
-    bool load_from_json(const JsonObject&, RefPtr<Widget> (*unregistered_child_handler)(const String&));
+    virtual bool load_from_json(const JsonObject&, RefPtr<Core::Object> (*unregistered_child_handler)(const String&)) override;
 
     // HACK: These are used as property getters for the fixed_* size property aliases.
     int dummy_fixed_width() { return 0; }

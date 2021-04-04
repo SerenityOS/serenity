@@ -27,12 +27,55 @@
 #include <AK/Assertions.h>
 #include <AK/Badge.h>
 #include <AK/JsonObject.h>
+#include <AK/Singleton.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
 #include <stdio.h>
 
 namespace Core {
+
+
+static HashMap<String, ObjectClassRegistration*>& object_classes()
+{
+    static AK::Singleton<HashMap<String, ObjectClassRegistration*>> map;
+    return *map;
+}
+
+ObjectClassRegistration::ObjectClassRegistration(const String& class_name, Function<NonnullRefPtr<Object>()> factory, ObjectClassRegistration* parent_class)
+    : m_class_name(class_name)
+    , m_factory(move(factory))
+    , m_parent_class(parent_class)
+{
+    object_classes().set(class_name, this);
+}
+
+ObjectClassRegistration::~ObjectClassRegistration()
+{
+}
+
+bool ObjectClassRegistration::is_derived_from(const ObjectClassRegistration& base_class) const
+{
+    if (this == &base_class)
+        return true;
+    for (auto* pclass = parent_class(); pclass; pclass = pclass->parent_class()) {
+        if (pclass == &base_class)
+            return true;
+    }
+    return false;
+}
+
+void ObjectClassRegistration::for_each(Function<void(const ObjectClassRegistration&)> callback)
+{
+    for (auto& it : object_classes()) {
+        callback(*it.value);
+    }
+}
+
+const ObjectClassRegistration* ObjectClassRegistration::find(const String& class_name)
+{
+    return object_classes().get(class_name).value_or(nullptr);
+}
 
 IntrusiveList<Object, &Object::m_all_objects_list_node>& Object::all_objects()
 {
