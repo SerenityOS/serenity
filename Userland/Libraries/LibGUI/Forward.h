@@ -78,7 +78,6 @@ class VerticalBoxLayout;
 class VerticalSlider;
 class WMEvent;
 class Widget;
-class WidgetClassRegistration;
 class Window;
 class WindowServerConnection;
 

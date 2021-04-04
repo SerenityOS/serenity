@@ -12,7 +12,7 @@ namespace HackStudio {
 
 class WidgetTool final : public Tool {
 public:
-    explicit WidgetTool(FormEditorWidget& editor, const GUI::WidgetClassRegistration& meta_class)
+    explicit WidgetTool(FormEditorWidget& editor, const Core::ObjectClassRegistration& meta_class)
         : Tool(editor)
         , m_meta_class(meta_class)
     {
@@ -26,7 +26,7 @@ private:
     virtual void on_mousemove(GUI::MouseEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
 
-    const GUI::WidgetClassRegistration& m_meta_class;
+    const Core::ObjectClassRegistration& m_meta_class;
 };
 
 }

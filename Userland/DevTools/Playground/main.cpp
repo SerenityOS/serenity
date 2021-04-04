@@ -128,7 +128,7 @@ int main(int argc, char** argv)
 
     editor.on_change = [&] {
         preview.remove_all_children();
-        preview.load_from_gml(editor.text(), [](const String& class_name) -> RefPtr<GUI::Widget> {
+        preview.load_from_gml(editor.text(), [](const String& class_name) -> RefPtr<Core::Object> {
             return UnregisteredWidget::construct(class_name);
         });
     };

@@ -250,4 +250,44 @@ void Object::set_event_filter(Function<bool(Core::Event&)> filter)
     m_event_filter = move(filter);
 }
 
+static HashMap<String, ObjectClassRegistration*>& object_classes()
+{
+    static HashMap<String, ObjectClassRegistration*>* map;
+    if (!map)
+        map = new HashMap<String, ObjectClassRegistration*>;
+    return *map;
+}
+
+ObjectClassRegistration::ObjectClassRegistration(const String& class_name, Function<NonnullRefPtr<Object>()> factory, ObjectClassRegistration* parent_class)
+    : m_class_name(class_name)
+    , m_factory(move(factory))
+    , m_parent_class(parent_class)
+{
+    object_classes().set(class_name, this);
+}
+
+ObjectClassRegistration::~ObjectClassRegistration()
+{
+}
+
+bool ObjectClassRegistration::is_derived_from(const ObjectClassRegistration& base_class) const
+{
+    if (&base_class == this)
+        return true;
+    if (!m_parent_class)
+        return false;
+    return m_parent_class->is_derived_from(base_class);
+}
+
+void ObjectClassRegistration::for_each(Function<void(const ObjectClassRegistration&)> callback)
+{
+    for (auto& it : object_classes()) {
+        callback(*it.value);
+    }
+}
+
+const ObjectClassRegistration* ObjectClassRegistration::find(const String& class_name)
+{
+    return object_classes().get(class_name).value_or(nullptr);
+}
 }

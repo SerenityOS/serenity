@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
+#include <LibCore/Forward.h>
 #include <LibGUI/Forward.h>
 
 namespace HackStudio {

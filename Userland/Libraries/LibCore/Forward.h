@@ -27,6 +27,7 @@ class NetworkJob;
 class NetworkResponse;
 class Notifier;
 class Object;
+class ObjectClassRegistration;
 class ProcessStatisticsReader;
 class Socket;
 class SocketAddress;

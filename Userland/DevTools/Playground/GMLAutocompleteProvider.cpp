@@ -102,6 +102,8 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         state = previous_states.take_last();
     }
 
+    auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget");
+
     Vector<GUI::AutocompleteProvider::Entry> class_entries, identifier_entries;
     switch (state) {
     case Free:
@@ -110,7 +112,9 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             // Nothing to put here.
             break;
         }
-        GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
+        Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
+            if (!registration.is_derived_from(widget_class))
+                return;
             class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
         });
         break;
@@ -122,12 +126,14 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             // TODO: Suggest braces?
             break;
         }
-        GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
+        Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
+            if (!registration.is_derived_from(widget_class))
+                return;
             if (registration.class_name().starts_with(class_names.last()))
                 identifier_entries.empend(registration.class_name(), class_names.last().length());
         });
         break;
-    case InIdentifier:
+    case InIdentifier: {
         if (class_names.is_empty())
             break;
         if (last_seen_token && last_seen_token->m_end.column + 1 != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
@@ -135,7 +141,8 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             // TODO: Maybe suggest a colon?
             break;
         }
-        if (auto registration = GUI::WidgetClassRegistration::find(class_names.last())) {
+        auto registration = Core::ObjectClassRegistration::find(class_names.last());
+        if (registration && registration->is_derived_from(widget_class)) {
             auto instance = registration->construct();
             for (auto& it : instance->properties()) {
                 if (it.key.starts_with(identifier_string))
@@ -148,7 +155,8 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
         if (identifier_entries.size() == 1 && identifier_entries.first().completion == identifier_string)
             identifier_entries.clear();
         break;
-    case AfterClassName:
+    }
+    case AfterClassName: {
         if (last_seen_token && last_seen_token->m_end.line == cursor.line()) {
             if (last_seen_token->m_type != GUI::GMLToken::Type::Identifier || last_seen_token->m_end.column + 1 != cursor.column()) {
                 // Inside braces, but on the same line as some other stuff (and not the continuation of one!)
@@ -157,7 +165,8 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             }
         }
         if (!class_names.is_empty()) {
-            if (auto registration = GUI::WidgetClassRegistration::find(class_names.last())) {
+            auto registration = Core::ObjectClassRegistration::find(class_names.last());
+            if (registration && registration->is_derived_from(widget_class)) {
                 auto instance = registration->construct();
                 for (auto& it : instance->properties()) {
                     if (!it.value->is_readonly())
@@ -165,16 +174,21 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
                 }
             }
         }
-        GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
+        Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
+            if (!registration.is_derived_from(widget_class))
+                return;
             class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
         });
         break;
+    }
     case AfterIdentifier:
         if (last_seen_token && last_seen_token->m_end.line != cursor.line()) {
             break;
         }
         if (identifier_string == "layout") {
-            GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& registration) {
+            Core::ObjectClassRegistration::for_each([&](const Core::ObjectClassRegistration& registration) {
+                if (!registration.is_derived_from(widget_class))
+                    return;
                 if (registration.class_name().contains("Layout"))
                     class_entries.empend(String::formatted("@{}", registration.class_name()), 0u);
             });

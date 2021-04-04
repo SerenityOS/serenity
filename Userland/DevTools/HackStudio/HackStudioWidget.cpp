@@ -799,7 +799,11 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
 
     form_widgets_toolbar.add_action(cursor_tool_action);
 
-    GUI::WidgetClassRegistration::for_each([&, this](const GUI::WidgetClassRegistration& reg) {
+    auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget");
+
+    Core::ObjectClassRegistration::for_each([&, this](const Core::ObjectClassRegistration& reg) {
+        if (!reg.is_derived_from(widget_class))
+            return;
         constexpr size_t gui_namespace_prefix_length = sizeof("GUI::") - 1;
         auto icon_path = String::formatted("/res/icons/hackstudio/G{}.png",
             reg.class_name().substring(gui_namespace_prefix_length, reg.class_name().length() - gui_namespace_prefix_length));
@@ -808,7 +812,7 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
 
         auto action = GUI::Action::create_checkable(reg.class_name(), Gfx::Bitmap::load_from_file(icon_path), [&reg, this](auto&) {
             m_form_editor_widget->set_tool(make<WidgetTool>(*m_form_editor_widget, reg));
-            auto widget = reg.construct();
+            auto widget = static_ptr_cast<Widget>(reg.construct());
             m_form_editor_widget->form_widget().add_child(widget);
             widget->set_relative_rect(30, 30, 30, 30);
             m_form_editor_widget->model().update();

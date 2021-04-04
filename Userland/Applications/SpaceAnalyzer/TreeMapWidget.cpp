@@ -11,9 +11,9 @@
 #include <LibGfx/Font.h>
 #include <WindowServer/WindowManager.h>
 
-namespace SpaceAnalyzer {
-
 REGISTER_WIDGET(SpaceAnalyzer, TreeMapWidget)
+
+namespace SpaceAnalyzer {
 
 TreeMapWidget::TreeMapWidget()
     : m_viewpoint(0)

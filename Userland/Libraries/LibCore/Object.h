@@ -19,6 +19,35 @@
 
 namespace Core {
 
+#define REGISTER_CORE_OBJECT(namespace_, class_name)                                                                                             \
+    namespace Core {                                                                                                                             \
+    namespace Registration {                                                                                                                     \
+    Core::ObjectClassRegistration registration_##class_name(#namespace_ "::" #class_name, []() { return namespace_::class_name::construct(); }); \
+    }                                                                                                                                            \
+    }
+
+class ObjectClassRegistration {
+    AK_MAKE_NONCOPYABLE(ObjectClassRegistration);
+    AK_MAKE_NONMOVABLE(ObjectClassRegistration);
+
+public:
+    ObjectClassRegistration(const String& class_name, Function<NonnullRefPtr<Object>()> factory, ObjectClassRegistration* parent_class = nullptr);
+    ~ObjectClassRegistration();
+
+    String class_name() const { return m_class_name; }
+    const ObjectClassRegistration* parent_class() const { return m_parent_class; }
+    NonnullRefPtr<Object> construct() const { return m_factory(); }
+    bool is_derived_from(const ObjectClassRegistration& base_class) const;
+
+    static void for_each(Function<void(const ObjectClassRegistration&)>);
+    static const ObjectClassRegistration* find(const String& class_name);
+
+private:
+    String m_class_name;
+    Function<NonnullRefPtr<Object>()> m_factory;
+    ObjectClassRegistration* m_parent_class { nullptr };
+};
+
 class RPCClient;
 
 enum class TimerShouldFireWhenNotVisible {
@@ -128,6 +157,8 @@ public:
 
     void increment_inspector_count(Badge<RPCClient>);
     void decrement_inspector_count(Badge<RPCClient>);
+
+    virtual bool load_from_json(const JsonObject&, RefPtr<Core::Object> (*)(const String&)) { return false; }
 
 protected:
     explicit Object(Object* parent = nullptr);

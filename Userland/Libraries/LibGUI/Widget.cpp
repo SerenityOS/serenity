@@ -23,40 +23,9 @@
 #include <LibGfx/Palette.h>
 #include <unistd.h>
 
-REGISTER_WIDGET(GUI, Widget)
+REGISTER_CORE_OBJECT(GUI, Widget)
 
 namespace GUI {
-
-static HashMap<String, WidgetClassRegistration*>& widget_classes()
-{
-    static HashMap<String, WidgetClassRegistration*>* map;
-    if (!map)
-        map = new HashMap<String, WidgetClassRegistration*>;
-    return *map;
-}
-
-WidgetClassRegistration::WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>()> factory)
-    : m_class_name(class_name)
-    , m_factory(move(factory))
-{
-    widget_classes().set(class_name, this);
-}
-
-WidgetClassRegistration::~WidgetClassRegistration()
-{
-}
-
-void WidgetClassRegistration::for_each(Function<void(const WidgetClassRegistration&)> callback)
-{
-    for (auto& it : widget_classes()) {
-        callback(*it.value);
-    }
-}
-
-const WidgetClassRegistration* WidgetClassRegistration::find(const String& class_name)
-{
-    return widget_classes().get(class_name).value_or(nullptr);
-}
 
 Widget::Widget()
     : Core::Object(nullptr)
@@ -996,13 +965,13 @@ void Widget::set_override_cursor(Gfx::StandardCursor cursor)
 
 bool Widget::load_from_gml(const StringView& gml_string)
 {
-    return load_from_gml(gml_string, [](const String& class_name) -> RefPtr<Widget> {
+    return load_from_gml(gml_string, [](const String& class_name) -> RefPtr<Core::Object> {
         dbgln("Class '{}' not registered", class_name);
         return nullptr;
     });
 }
 
-bool Widget::load_from_gml(const StringView& gml_string, RefPtr<Widget> (*unregistered_child_handler)(const String&))
+bool Widget::load_from_gml(const StringView& gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
 {
     auto value = parse_gml(gml_string);
     if (!value.is_object())
@@ -1010,7 +979,7 @@ bool Widget::load_from_gml(const StringView& gml_string, RefPtr<Widget> (*unregi
     return load_from_json(value.as_object(), unregistered_child_handler);
 }
 
-bool Widget::load_from_json(const JsonObject& json, RefPtr<Widget> (*unregistered_child_handler)(const String&))
+bool Widget::load_from_json(const JsonObject& json, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
 {
     json.for_each_member([&](auto& key, auto& value) {
         set_property(key, value);
@@ -1055,16 +1024,16 @@ bool Widget::load_from_json(const JsonObject& json, RefPtr<Widget> (*unregistere
                 return false;
             }
 
-            RefPtr<Widget> child_widget;
-            if (auto* registration = WidgetClassRegistration::find(class_name.as_string())) {
-                child_widget = registration->construct();
+            RefPtr<Core::Object> child;
+            if (auto* registration = Core::ObjectClassRegistration::find(class_name.as_string())) {
+                child = registration->construct();
             } else {
-                child_widget = unregistered_child_handler(class_name.as_string());
-                if (!child_widget)
-                    return false;
+                child = unregistered_child_handler(class_name.as_string());
             }
-            add_child(*child_widget);
-            child_widget->load_from_json(child_json, unregistered_child_handler);
+            if (!child)
+                return false;
+            add_child(*child);
+            child->load_from_json(child_json, unregistered_child_handler);
         }
     }
 
