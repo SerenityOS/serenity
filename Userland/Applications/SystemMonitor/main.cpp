@@ -294,14 +294,6 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     }));
 
-    auto& process_menu = menubar->add_menu("Process");
-    process_menu.add_action(kill_action);
-    process_menu.add_action(stop_action);
-    process_menu.add_action(continue_action);
-    process_menu.add_separator();
-    process_menu.add_action(profile_action);
-    process_menu.add_action(inspect_action);
-
     auto process_context_menu = GUI::Menu::construct();
     process_context_menu->add_action(kill_action);
     process_context_menu->add_action(stop_action);
