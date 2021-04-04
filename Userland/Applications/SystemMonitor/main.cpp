@@ -301,13 +301,16 @@ int main(int argc, char** argv)
             auto pid = selected_id(ProcessModel::Column::PID);
 
             RefPtr<GUI::Window> process_window;
-            if (!process_windows.contains(pid)) {
+            auto it = process_windows.find(pid);
+            if (it == process_windows.end()) {
                 process_window = build_process_window(pid);
                 process_window->on_close_request = [pid, &process_windows] {
                     process_windows.remove(pid);
                     return GUI::Window::CloseRequestDecision::Close;
                 };
                 process_windows.set(pid, *process_window);
+            } else {
+                process_window = it->value;
             }
             process_window->show();
             process_window->move_to_front();
