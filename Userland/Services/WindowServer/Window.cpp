@@ -529,7 +529,7 @@ void Window::invalidate(bool invalidate_frame, bool re_render_frame)
 
 void Window::invalidate(const Gfx::IntRect& rect, bool with_frame)
 {
-    if (type() == WindowType::MenuApplet) {
+    if (type() == WindowType::Applet) {
         AppletManager::the().invalidate_applet(*this, rect);
         return;
     }

@@ -237,7 +237,7 @@ String Window::title() const
 
 Gfx::IntRect Window::applet_rect_on_screen() const
 {
-    VERIFY(m_window_type == WindowType::MenuApplet);
+    VERIFY(m_window_type == WindowType::Applet);
     return WindowServerConnection::the().send_sync<Messages::WindowServer::GetAppletRectOnScreen>(m_window_id)->rect();
 }
 

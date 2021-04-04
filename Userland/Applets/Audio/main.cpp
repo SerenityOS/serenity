@@ -230,7 +230,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_has_alpha_channel(true);
     window->set_title("Audio");
-    window->set_window_type(GUI::WindowType::MenuApplet);
+    window->set_window_type(GUI::WindowType::Applet);
     window->resize(16, 16);
 
     window->set_main_widget<AudioWidget>();

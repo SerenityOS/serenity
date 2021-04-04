@@ -404,7 +404,7 @@ void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_
 
     tell_wm_listeners_window_rect_changed(window);
 
-    if (window.type() == WindowType::MenuApplet)
+    if (window.type() == WindowType::Applet)
         AppletManager::the().relayout();
 
     MenuManager::the().refresh();
@@ -953,7 +953,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
 
     if (MenuManager::the().has_open_menu()
         || hitting_menu_in_window_with_active_menu) {
-        for_each_visible_window_of_type_from_front_to_back(WindowType::MenuApplet, [&](auto& window) {
+        for_each_visible_window_of_type_from_front_to_back(WindowType::Applet, [&](auto& window) {
             if (!window.rect_in_applet_area().contains(event.position()))
                 return IterationDecision::Continue;
             hovered_window = &window;
@@ -1158,7 +1158,7 @@ Gfx::IntRect WindowManager::arena_rect_for_type(WindowType type) const
     case WindowType::WindowSwitcher:
     case WindowType::Taskbar:
     case WindowType::Tooltip:
-    case WindowType::MenuApplet:
+    case WindowType::Applet:
     case WindowType::Notification:
         return Screen::the().rect();
     default:

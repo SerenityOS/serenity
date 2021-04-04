@@ -602,7 +602,7 @@ Gfx::IntRect Widget::window_relative_rect() const
 
 Gfx::IntRect Widget::screen_relative_rect() const
 {
-    auto window_position = window()->window_type() == WindowType::MenuApplet
+    auto window_position = window()->window_type() == WindowType::Applet
         ? window()->applet_rect_on_screen().location()
         : window()->rect().location();
     return window_relative_rect().translated(window_position);

@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("UserName");
-    window->set_window_type(GUI::WindowType::MenuApplet);
+    window->set_window_type(GUI::WindowType::Applet);
 
     auto& widget = window->set_main_widget<UserNameWidget>();
     window->resize(widget.get_width(), 16);
