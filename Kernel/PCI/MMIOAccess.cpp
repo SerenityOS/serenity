@@ -26,6 +26,7 @@
 
 #include <AK/Optional.h>
 #include <AK/StringView.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Debug.h>
 #include <Kernel/PCI/MMIOAccess.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -142,7 +143,9 @@ u16 MMIOAccess::read16_field(Address address, u32 field)
     ScopedSpinLock lock(m_access_lock);
     VERIFY(field < 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 16-bit field {:#08x} for {}", field, address);
-    return *((volatile u16*)(get_device_configuration_space(address).get() + (field & 0xfff)));
+    u16 data = 0;
+    read_possibly_unaligned_data<u16>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), data);
+    return data;
 }
 
 u32 MMIOAccess::read32_field(Address address, u32 field)
@@ -150,7 +153,9 @@ u32 MMIOAccess::read32_field(Address address, u32 field)
     ScopedSpinLock lock(m_access_lock);
     VERIFY(field <= 0xffc);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 32-bit field {:#08x} for {}", field, address);
-    return *((volatile u32*)(get_device_configuration_space(address).get() + (field & 0xfff)));
+    u32 data = 0;
+    read_possibly_unaligned_data<u32>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), data);
+    return data;
 }
 
 void MMIOAccess::write8_field(Address address, u32 field, u8 value)
@@ -165,14 +170,14 @@ void MMIOAccess::write16_field(Address address, u32 field, u16 value)
     ScopedSpinLock lock(m_access_lock);
     VERIFY(field < 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 16-bit field {:#08x}, value={:#02x} for {}", field, value, address);
-    *((volatile u16*)(get_device_configuration_space(address).get() + (field & 0xfff))) = value;
+    write_possibly_unaligned_data<u16>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), value);
 }
 void MMIOAccess::write32_field(Address address, u32 field, u32 value)
 {
     ScopedSpinLock lock(m_access_lock);
     VERIFY(field <= 0xffc);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 32-bit field {:#08x}, value={:#02x} for {}", field, value, address);
-    *((volatile u32*)(get_device_configuration_space(address).get() + (field & 0xfff))) = value;
+    write_possibly_unaligned_data<u32>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), value);
 }
 
 void MMIOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
