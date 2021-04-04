@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
+ * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,20 +26,31 @@
 
 #pragma once
 
-#include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/HTMLLabelElement.h>
+#include <LibWeb/Layout/BlockBox.h>
 
-namespace Web::HTML {
+namespace Web::Layout {
 
-class HTMLLabelElement final : public HTMLElement {
+class Label : public BlockBox {
 public:
-    using WrapperType = Bindings::HTMLLabelElementWrapper;
+    Label(DOM::Document&, HTML::HTMLLabelElement*, NonnullRefPtr<CSS::StyleProperties>);
+    virtual ~Label() override;
 
-    HTMLLabelElement(DOM::Document&, QualifiedName);
-    virtual ~HTMLLabelElement() override;
+    static bool is_inside_associated_label(LabelableNode&, const Gfx::IntPoint&);
 
-    virtual RefPtr<Layout::Node> create_layout_node() override;
+    const HTML::HTMLLabelElement& dom_node() const { return static_cast<const HTML::HTMLLabelElement&>(*BlockBox::dom_node()); }
+    HTML::HTMLLabelElement& dom_node() { return static_cast<HTML::HTMLLabelElement&>(*BlockBox::dom_node()); }
 
-    String for_() const { return attribute(HTML::AttributeNames::for_); }
+private:
+    virtual bool wants_mouse_events() const override { return true; }
+    virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
+    virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
+    virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
+
+    static Label* label_for_control_node(LabelableNode&);
+    LabelableNode* control_node();
+
+    bool m_tracking_mouse { false };
 };
 
 }
