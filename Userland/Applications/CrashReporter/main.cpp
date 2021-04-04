@@ -79,6 +79,13 @@ static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF:
     else if (metadata.contains("pledge_violation"))
         prepend_metadata("pledge_violation", "Has not pledged {}");
 
+    auto fault_address = metadata.get("fault_address");
+    auto fault_type = metadata.get("fault_type");
+    auto fault_access = metadata.get("fault_access");
+    if (fault_address.has_value() && fault_type.has_value() && fault_access.has_value()) {
+        builder.appendff("{} fault on {} at address {}\n\n", fault_type.value(), fault_access.value(), fault_address.value());
+    }
+
     auto first_entry = true;
     for (auto& entry : backtrace.entries()) {
         if (first_entry)

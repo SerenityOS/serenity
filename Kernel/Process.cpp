@@ -727,4 +727,9 @@ void Process::set_dumpable(bool dumpable)
     m_dumpable = dumpable;
 }
 
+void Process::set_coredump_metadata(const String& key, String value)
+{
+    m_coredump_metadata.set(key, move(value));
+}
+
 }
