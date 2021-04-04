@@ -1,0 +1,11 @@
+--- libmad-0.15.1b/config.sub	2021-04-03 05:05:22.539981600 +0200
++++ libmad-0.15.1b-patched/config.sub	2021-04-03 05:06:00.238882700 +0200
+@@ -1136,7 +1136,7 @@
+ 	# The portable systems comes first.
+ 	# Each alternative MUST END IN A *, to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+-	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -serenity* | -irix* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -solaris* | -sym* \
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \

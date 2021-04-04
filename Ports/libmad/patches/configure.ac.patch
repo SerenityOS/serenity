@@ -1,0 +1,10 @@
+--- libmad-0.15.1b/configure.ac	2021-04-03 05:06:29.168607700 +0200
++++ libmad-0.15.1b-patched/configure.ac	2021-04-03 05:09:04.531000600 +0200
+@@ -140,7 +140,6 @@
+     case "$optimize" in
+ 	-O|"-O "*)
+ 	    optimize="-O"
+-	    optimize="$optimize -fforce-mem"
+ 	    optimize="$optimize -fforce-addr"
+ 	    : #x optimize="$optimize -finline-functions"
+ 	    : #- optimize="$optimize -fstrength-reduce"
