@@ -106,7 +106,7 @@ inline float linear_to_gamma(float x)
     constexpr float a = 0.00279491;
     constexpr float b = 1.15907984;
     float c = (b / sqrt(1 + a)) - 1;
-    return ((b / __builtin_sqrt(x + a)) - c) * x;
+    return ((b / __builtin_sqrtf(x + a)) - c) * x;
 }
 
 // Linearize v1 and v2, lerp them by mix factor, then convert back.
