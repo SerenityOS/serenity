@@ -128,7 +128,7 @@ LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_sy
     return s;
 }
 
-Locator::Locator()
+Locator::Locator(Core::Object* parent)
 {
     set_layout<GUI::VerticalBoxLayout>();
     set_fixed_height(20);
@@ -171,7 +171,7 @@ Locator::Locator()
         open_suggestion(selected_index);
     };
 
-    m_popup_window = GUI::Window::construct();
+    m_popup_window = GUI::Window::construct(parent);
     // FIXME: This is obviously not a tooltip window, but it's the closest thing to what we want atm.
     m_popup_window->set_window_type(GUI::WindowType::Tooltip);
     m_popup_window->set_rect(0, 0, 500, 200);
@@ -234,11 +234,14 @@ void Locator::update_suggestions()
     }
 
     dbgln("I have {} suggestion(s):", suggestions.size());
-    for (auto& s : suggestions) {
-        if (s.is_filename())
-            dbgln("    {}", s.as_filename.value());
-        if (s.is_symbol_declaration())
-            dbgln("    {} ({})", s.as_symbol_declaration.value().name, s.as_symbol_declaration.value().position.file);
+    // Limit the debug logging otherwise this can be very slow for large projects
+    if (suggestions.size() < 100) {
+        for (auto& s : suggestions) {
+            if (s.is_filename())
+                dbgln("    {}", s.as_filename.value());
+            if (s.is_symbol_declaration())
+                dbgln("    {} ({})", s.as_symbol_declaration.value().name, s.as_symbol_declaration.value().position.file);
+        }
     }
 
     bool has_suggestions = !suggestions.is_empty();
