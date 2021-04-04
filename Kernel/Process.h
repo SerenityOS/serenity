@@ -494,6 +494,7 @@ public:
 
     HashMap<String, String>& coredump_metadata() { return m_coredump_metadata; }
     const HashMap<String, String>& coredump_metadata() const { return m_coredump_metadata; }
+    void set_coredump_metadata(const String& key, String value);
 
     const NonnullRefPtrVector<Thread>& threads_for_coredump(Badge<CoreDump>) const { return m_threads_for_coredump; }
 
