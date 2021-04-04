@@ -106,6 +106,9 @@ struct addrinfo {
 #define AI_ALL 0x0020
 #define AI_ADDRCONFIG 0x0040
 
+#define NI_MAXHOST 1025
+#define NI_MAXSERV 32
+
 int getaddrinfo(const char* __restrict node, const char* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res);
 void freeaddrinfo(struct addrinfo* res);
 const char* gai_strerror(int errcode);
