@@ -41,12 +41,11 @@ public:
     const HTML::HTMLLabelElement& dom_node() const { return static_cast<const HTML::HTMLLabelElement&>(*BlockBox::dom_node()); }
     HTML::HTMLLabelElement& dom_node() { return static_cast<HTML::HTMLLabelElement&>(*BlockBox::dom_node()); }
 
-private:
-    virtual bool wants_mouse_events() const override { return true; }
-    virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
-    virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
-    virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
+    void handle_mousedown_on_label(Badge<TextNode>, const Gfx::IntPoint&, unsigned button);
+    void handle_mouseup_on_label(Badge<TextNode>, const Gfx::IntPoint&, unsigned button);
+    void handle_mousemove_on_label(Badge<TextNode>, const Gfx::IntPoint&, unsigned button);
 
+private:
     static Label* label_for_control_node(LabelableNode&);
     LabelableNode* control_node();
 
