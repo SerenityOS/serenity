@@ -1,0 +1,11 @@
+--- faad2-2_10_0/config.sub	2021-04-02 15:17:07.375559300 +0200
++++ faad2-2_10_0-patched/config.sub	2021-04-02 15:17:44.017412500 +0200
+@@ -1695,7 +1695,7 @@
+ 	# Now accept the basic system types.
+ 	# The portable systems comes first.
+ 	# Each alternative MUST end in a * to match a version number.
+-	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | serenity* | irix* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
