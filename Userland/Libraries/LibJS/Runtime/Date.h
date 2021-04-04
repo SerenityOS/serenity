@@ -85,7 +85,7 @@ public:
     String gmt_date_string() const;
     String iso_date_string() const;
 
-    // FIXME: One day, implement real locale support. Until then, everyone gets what the Clock MenuApplet displays.
+    // FIXME: One day, implement real locale support. Until then, everyone gets what the Clock Applet displays.
     String locale_date_string() const { return m_datetime.to_string("%Y-%m-%d"); }
     String locale_string() const { return m_datetime.to_string(); }
     String locale_time_string() const { return m_datetime.to_string("%H:%M:%S"); }

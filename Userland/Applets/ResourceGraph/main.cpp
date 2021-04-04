@@ -253,7 +253,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title(name);
-    window->set_window_type(GUI::WindowType::MenuApplet);
+    window->set_window_type(GUI::WindowType::Applet);
     window->resize(GraphWidget::history_size + 2, 15);
 
     window->set_main_widget<GraphWidget>(graph_type, graph_color, graph_error_color);

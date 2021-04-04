@@ -218,7 +218,7 @@ int main(int argc, char* argv[])
 
     auto window = GUI::Window::construct();
     window->set_title(name);
-    window->set_window_type(GUI::WindowType::MenuApplet);
+    window->set_window_type(GUI::WindowType::Applet);
     window->resize(16, 16);
     auto& icon = window->set_main_widget<NetworkWidget>(display_notifications);
     icon.set_fill_with_background_color(true);
