@@ -27,20 +27,20 @@
 #pragma once
 
 #include "Game.h"
-#include <LibGUI/Widget.h>
+#include <LibGUI/Frame.h>
 
-class BoardView final : public GUI::Widget {
-    C_OBJECT(BoardView)
+class BoardView final : public GUI::Frame {
+    C_OBJECT(BoardView);
 
 public:
-    BoardView(const Game::Board*);
     virtual ~BoardView() override;
-
     void set_board(const Game::Board* board);
 
     Function<void(Game::Direction)> on_move;
 
 private:
+    explicit BoardView(const Game::Board*);
+
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;

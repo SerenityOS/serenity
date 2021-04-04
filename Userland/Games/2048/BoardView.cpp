@@ -177,11 +177,16 @@ Gfx::Color BoardView::text_color_for_cell(u32 value)
     return Color::from_rgb(0xf9f6f2);
 }
 
-void BoardView::paint_event(GUI::PaintEvent&)
+void BoardView::paint_event(GUI::PaintEvent& event)
 {
+    Frame::paint_event(event);
+
     Color background_color = Color::from_rgb(0xbbada0);
 
     GUI::Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+    painter.add_clip_rect(frame_inner_rect());
+    painter.translate(frame_thickness(), frame_thickness());
 
     if (!m_board) {
         painter.fill_rect(rect(), background_color);
