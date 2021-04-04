@@ -45,7 +45,7 @@ Label::~Label()
 {
 }
 
-void Label::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned)
+void Label::handle_mousedown_on_label(Badge<TextNode>, const Gfx::IntPoint&, unsigned button)
 {
     if (button != GUI::MouseButton::Left)
         return;
@@ -56,7 +56,7 @@ void Label::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned
     m_tracking_mouse = true;
 }
 
-void Label::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
+void Label::handle_mouseup_on_label(Badge<TextNode>, const Gfx::IntPoint& position, unsigned button)
 {
     if (!m_tracking_mouse || button != GUI::MouseButton::Left)
         return;
@@ -75,7 +75,7 @@ void Label::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, u
     m_tracking_mouse = false;
 }
 
-void Label::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned, unsigned)
+void Label::handle_mousemove_on_label(Badge<TextNode>, const Gfx::IntPoint& position, unsigned)
 {
     if (!m_tracking_mouse)
         return;

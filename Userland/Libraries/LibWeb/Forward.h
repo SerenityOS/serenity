@@ -182,6 +182,7 @@ class Node;
 class NodeWithStyle;
 class RadioButton;
 class ReplacedBox;
+class TextNode;
 }
 
 namespace Web {

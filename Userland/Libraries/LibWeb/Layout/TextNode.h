@@ -48,6 +48,10 @@ public:
 
 private:
     virtual bool is_text_node() const final { return true; }
+    virtual bool wants_mouse_events() const override;
+    virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
+    virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
+    virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
     void split_into_lines_by_rules(InlineFormattingContext&, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks);
     void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
 

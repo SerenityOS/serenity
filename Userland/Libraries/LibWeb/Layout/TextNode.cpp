@@ -30,6 +30,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
+#include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/Frame.h>
 #include <ctype.h>
@@ -304,6 +305,34 @@ void TextNode::split_into_lines(InlineFormattingContext& context, LayoutMode lay
     }
 
     split_into_lines_by_rules(context, layout_mode, do_collapse, do_wrap_lines, do_wrap_breaks);
+}
+
+bool TextNode::wants_mouse_events() const
+{
+    return parent() && is<Label>(parent());
+}
+
+void TextNode::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
+{
+    if (!parent() || !is<Label>(*parent()))
+        return;
+    downcast<Label>(*parent()).handle_mousedown_on_label({}, position, button);
+    frame().event_handler().set_mouse_event_tracking_layout_node(this);
+}
+
+void TextNode::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
+{
+    if (!parent() || !is<Label>(*parent()))
+        return;
+    downcast<Label>(*parent()).handle_mouseup_on_label({}, position, button);
+    frame().event_handler().set_mouse_event_tracking_layout_node(nullptr);
+}
+
+void TextNode::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
+{
+    if (!parent() || !is<Label>(*parent()))
+        return;
+    downcast<Label>(*parent()).handle_mousemove_on_label({}, position, button);
 }
 
 }
