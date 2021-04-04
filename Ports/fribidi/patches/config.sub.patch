@@ -1,0 +1,11 @@
+--- fribidi-1.0.10/config.sub	2021-04-03 05:15:44.871069700 +0200
++++ fribidi-1.0.10-patched/config.sub	2021-04-03 05:16:18.710966100 +0200
+@@ -1333,7 +1333,7 @@
+ 	# The portable systems comes first.
+ 	# Each alternative MUST end in a * to match a version number.
+ 	# sysv* is not here because it comes later, after sysvr4.
+-	gnu* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++	gnu* | bsd* | mach* | minix* | genix* | ultrix* | serenity* | irix* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]*\
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* | kopensolaris* | plan9* \
