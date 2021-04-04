@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
+ * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,20 +26,24 @@
 
 #pragma once
 
-#include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/Forward.h>
+#include <LibWeb/Layout/ReplacedBox.h>
 
-namespace Web::HTML {
+namespace Web::Layout {
 
-class HTMLLabelElement final : public HTMLElement {
+class LabelableNode : public ReplacedBox {
 public:
-    using WrapperType = Bindings::HTMLLabelElementWrapper;
+    virtual void handle_associated_label_mousedown(Badge<Label>) { }
+    virtual void handle_associated_label_mouseup(Badge<Label>) { }
+    virtual void handle_associated_label_mousemove(Badge<Label>, [[maybe_unused]] bool is_inside_node_or_label) { }
 
-    HTMLLabelElement(DOM::Document&, QualifiedName);
-    virtual ~HTMLLabelElement() override;
+protected:
+    LabelableNode(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
+        : ReplacedBox(document, element, move(style))
+    {
+    }
 
-    virtual RefPtr<Layout::Node> create_layout_node() override;
-
-    String for_() const { return attribute(HTML::AttributeNames::for_); }
+    virtual ~LabelableNode() = default;
 };
 
 }
