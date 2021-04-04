@@ -179,5 +179,4 @@ int wcswidth(const wchar_t*, size_t)
     dbgln("FIXME: Implement wcswidth()");
     TODO();
 }
-
 }

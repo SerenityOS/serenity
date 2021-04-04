@@ -205,10 +205,9 @@ int alphasort(const struct dirent**, const struct dirent**)
     TODO();
 }
 
-int scandir(const char*, struct dirent***, int(*)(const struct dirent*), int(*)(const struct dirent**, const struct dirent**))
+int scandir(const char*, struct dirent***, int (*)(const struct dirent*), int (*)(const struct dirent**, const struct dirent**))
 {
     dbgln("FIXME: Implement scandir()");
     TODO();
 }
-
 }

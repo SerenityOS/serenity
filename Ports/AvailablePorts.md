@@ -20,9 +20,12 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`doom`](doom/)                | DOOM                                          |                   | https://github.com/SerenityOS/SerenityDOOM            |
 | [`dropbear`](dropbear/)        | Dropbear SSH                                  | 2019.78           | https://dropbear.nl/mirror/dropbear.html              |
 | [`ed`](ed/)                    | GNU ed                                        | 1.15              | https://www.gnu.org/software/ed/                      |
+| [`faad2`](faad2/)              | Freeware Advanced Audio (AAC) Decoder         | 2.10.0            | https://sourceforge.net/projects/faac/                |
 | [`figlet`](figlet/)            | FIGlet                                        | 2.2.5             | http://www.figlet.org/                                |
+| [`flac`](flac/)                | Free Lossless Audio Codec                     | 1.3.3             | https://xiph.org/flac/                                |
 | [`flex`](flex/)                | flex                                          | 2.6.4             | https://github.com/westes/flex                        |
 | [`freetype`](freetype/)        | FreeType                                      | 2.10.4            | https://www.freetype.org/                             |
+| [`fribidi`](fribidi/)          | GNU FriBidi                                   | 1.0.10            | http://fribidi.org/                                   |
 | [`frotz`](frotz/)              | Frotz                                         |                   | https://gitlab.com/DavidGriffith/frotz                |
 | [`gcc`](gcc/)                  | GNU Compiler Collection                       | 10.2.0            | https://gcc.gnu.org/                                  |
 | [`genemu`](genemu)             | Genesis / MegaDrive Emulator                  |                   | https://github.com/rasky/genemu                       |
@@ -40,9 +43,12 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`libffi`](libffi/)            | libffi                                        | 3.3               | https://www.sourceware.org/libffi/                    |
 | [`libiconv`](libiconv/)        | GNU libiconv                                  | 1.16              | https://www.gnu.org/software/libiconv/                |
 | [`libjpeg`](libjpeg/)          | libjpeg                                       | 9d                | https://ijg.org/                                      |
+| [`libmad`](libmad/)            | MPEG Audio Decoder                            | 0.15.1b           | https://www.underbit.com/products/mad/                |
+| [`libmpeg2`](libmpeg2)         | libmpeg2                                      | 0.5.1             | https://libmpeg2.sourceforge.io/downloads.html        |
 | [`libogg`](libogg/)            | libogg                                        | 1.3.4             | https://github.com/xiph/ogg                           |
 | [`libpng`](libpng/)            | libpng                                        | 1.6.37            | https://libpng.org/                                   |
 | [`libpuffy`](libpuffy/)        | libpuffy                                      | 1.0               | https://github.com/ibara/libpuffy                     |
+| [`libtheora`](libtheora/)      | libtheora                                     | 1.1.1             | https://www.theora.org/doc/libtheora-1.1/             |
 | [`libtiff`](libtiff/)          | libtiff                                       | 4.2.0             | http://www.libtiff.org/                               |
 | [`libvorbis`](libvorbis/)      | libvorbis                                     | 1.3.7             | https://github.com/xiph/vorbis                        |
 | [`links`](links/)              | Links web browser                             | 2.22              | http://links.twibright.com/                           |
@@ -69,6 +75,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`pt2-clone`](pt2-clone/)      | ProTracker 2 clone                            | 1.28              | https://github.com/8bitbubsy/pt2-clone                |
 | [`python3`](python3/)          | Python                                        | 3.9.2             | https://www.python.org/                               |
 | [`quake`](quake/)              | Quake                                         | 0.65              | https://github.com/SerenityOS/SerenityQuake           |
+| [`readline`](readline/)        | GNU Readline                                  | 8.1               | https://tiswww.case.edu/php/chet/readline/rltop.html  |
 | [`rsync`](rsync/)              | rsync                                         | 3.1.3             | https://rsync.samba.org/                              |
 | [`SDL2`](SDL2/)                | Simple DirectMedia Layer (SDL2)               |                   | https://github.com/SerenityOS/SDL                     |
 | [`SDL2_image`](SDL2_image/)    | SDL2\_image (Image loading add-on for SDL2)   | 2.0.5             | https://www.libsdl.org/projects/SDL_image/            |

@@ -74,6 +74,6 @@ struct dirent* readdir(DIR*);
 int readdir_r(DIR*, struct dirent*, struct dirent**);
 int dirfd(DIR*);
 int alphasort(const struct dirent**, const struct dirent**);
-int scandir(const char* dir, struct dirent*** namelist, int(*sel)(const struct dirent*), int(*compar)(const struct dirent**, const struct dirent**));
+int scandir(const char* dir, struct dirent*** namelist, int (*sel)(const struct dirent*), int (*compar)(const struct dirent**, const struct dirent**));
 
 __END_DECLS

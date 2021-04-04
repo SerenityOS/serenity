@@ -6,7 +6,5 @@ files="https://github.com/fribidi/fribidi/releases/download/v${version}/fribidi-
 makeopts="CFLAGS=-std=c99"
 
 pre_configure() {
-    cd "fribidi-${version}"
-    aclocal
-    cd ..
+    run aclocal
 }
