@@ -284,7 +284,8 @@ void page_fault_handler(TrapFrame* trap)
         PANIC("Attempt to access UNMAP_AFTER_INIT section");
     }
 
-    auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
+    PageFault fault { regs.exception_code, VirtualAddress { fault_address } };
+    auto response = MM.handle_page_fault(fault);
 
     if (response == PageFaultResponse::ShouldCrash || response == PageFaultResponse::OutOfMemory) {
         if (faulted_in_kernel && handle_safe_access_fault(regs, fault_address)) {
@@ -326,6 +327,18 @@ void page_fault_handler(TrapFrame* trap)
             dbgln("Note: Address {} looks like it may be recently slab_dealloc()'d memory", VirtualAddress(fault_address));
         } else if (fault_address < 4096) {
             dbgln("Note: Address {} looks like a possible nullptr dereference", VirtualAddress(fault_address));
+        }
+
+        auto& current_process = current_thread->process();
+        if (current_process.is_user_process()) {
+            current_process.set_coredump_metadata("fault_address", String::formatted("{:p}", fault_address));
+            current_process.set_coredump_metadata("fault_type", fault.type() == PageFault::Type::PageNotPresent ? "NotPresent" : "ProtectionViolation");
+            String fault_access;
+            if (fault.is_instruction_fetch())
+                fault_access = "Execute";
+            else
+                fault_access = fault.access() == PageFault::Access::Read ? "Read" : "Write";
+            current_process.set_coredump_metadata("fault_access", fault_access);
         }
 
         handle_crash(regs, "Page Fault", SIGSEGV, response == PageFaultResponse::OutOfMemory);
@@ -2397,7 +2410,6 @@ void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, con
     kernel_regs.eip = ptrace_regs.eip;
     kernel_regs.eflags = (kernel_regs.eflags & ~safe_eflags_mask) | (ptrace_regs.eflags & safe_eflags_mask);
 }
-
 }
 
 #ifdef DEBUG
