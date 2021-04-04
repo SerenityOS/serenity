@@ -9,5 +9,6 @@ configure() {
     run ./configure \
         --host="${SERENITY_ARCH}-pc-serenity" \
         --with-sdl-prefix="${SERENITY_BUILD_DIR}/Root/usr" \
+        FT2_CFLAGS="-I${SERENITY_BUILD_DIR}/Root/usr/local/include/freetype2" \
         LIBS="-lgui -lgfx -lipc -lcore -lcompress"
 }
