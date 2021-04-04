@@ -154,7 +154,7 @@ void AppletManager::relayout()
     m_window->set_rect(rect);
     if (!rect.is_empty()) {
         Gfx::Painter painter(*m_window->backing_store());
-        painter.fill_rect(m_window->rect(), WindowManager::the().palette().window());
+        painter.fill_rect({ { 0, 0 }, rect.size() }, WindowManager::the().palette().window());
     }
     WindowManager::the().tell_wm_listeners_applet_area_size_changed(rect.size());
 }
