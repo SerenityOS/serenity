@@ -84,7 +84,7 @@ ClientConnection::~ClientConnection()
     auto windows = move(m_windows);
     for (auto& window : windows) {
         window.value->detach_client({});
-        if (window.value->type() == WindowType::MenuApplet)
+        if (window.value->type() == WindowType::Applet)
             AppletManager::the().remove_applet(window.value);
     }
 }
@@ -539,7 +539,7 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     window->set_base_size(message.base_size());
     window->set_resize_aspect_ratio(message.resize_aspect_ratio());
     window->invalidate(true, true);
-    if (window->type() == WindowType::MenuApplet)
+    if (window->type() == WindowType::Applet)
         AppletManager::the().add_applet(*window);
     m_windows.set(window_id, move(window));
     return make<Messages::WindowServer::CreateWindowResponse>(window_id);
@@ -563,7 +563,7 @@ void ClientConnection::destroy_window(Window& window, Vector<i32>& destroyed_win
 
     destroyed_window_ids.append(window.window_id());
 
-    if (window.type() == WindowType::MenuApplet)
+    if (window.type() == WindowType::Applet)
         AppletManager::the().remove_applet(window);
 
     window.destroy();

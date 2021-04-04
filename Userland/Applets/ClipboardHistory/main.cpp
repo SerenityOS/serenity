@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
 
     auto applet_window = GUI::Window::construct();
     applet_window->set_title("ClipboardHistory");
-    applet_window->set_window_type(GUI::WindowType::MenuApplet);
+    applet_window->set_window_type(GUI::WindowType::Applet);
     auto& icon = applet_window->set_main_widget<GUI::ImageWidget>();
     icon.load_from_file("/res/icons/16x16/edit-copy.png");
     icon.set_fill_with_background_color(true);

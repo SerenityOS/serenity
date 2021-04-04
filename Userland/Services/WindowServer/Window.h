@@ -206,7 +206,7 @@ public:
     void clear_dirty_rects();
     Gfx::DisjointRectSet& dirty_rects() { return m_dirty_rects; }
 
-    // Only used by WindowType::MenuApplet. Perhaps it could be a Window subclass? I don't know.
+    // Only used by WindowType::Applet. Perhaps it could be a Window subclass? I don't know.
     void set_rect_in_applet_area(const Gfx::IntRect& rect) { m_rect_in_applet_area = rect; }
     const Gfx::IntRect& rect_in_applet_area() const { return m_rect_in_applet_area; }
 
