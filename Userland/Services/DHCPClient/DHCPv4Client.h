@@ -40,6 +40,7 @@
 struct InterfaceDescriptor {
     String m_ifname;
     MACAddress m_mac_address;
+    IPv4Address m_current_ip_address { 0, 0, 0, 0 };
 };
 
 struct DHCPv4Transaction {
@@ -61,7 +62,7 @@ public:
     explicit DHCPv4Client(Vector<InterfaceDescriptor> ifnames);
     virtual ~DHCPv4Client() override;
 
-    void dhcp_discover(const InterfaceDescriptor& ifname, IPv4Address previous = IPv4Address { 0, 0, 0, 0 });
+    void dhcp_discover(const InterfaceDescriptor& ifname);
     void dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Packet& packet);
 
     void process_incoming(const DHCPv4Packet& packet);
