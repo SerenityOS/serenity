@@ -59,11 +59,12 @@ struct TitleAndText {
 static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF::Core::ThreadInfo& thread_info, size_t thread_index)
 {
     CoreDump::Backtrace backtrace(coredump, thread_info);
+    auto metadata = coredump.metadata();
 
     StringBuilder builder;
 
     auto prepend_metadata = [&](auto& key, StringView fmt) {
-        auto maybe_value = coredump.metadata().get(key);
+        auto maybe_value = metadata.get(key);
         if (!maybe_value.has_value() || maybe_value.value().is_empty())
             return;
         builder.appendff(fmt, maybe_value.value());
@@ -73,9 +74,9 @@ static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF:
 
     auto& backtrace_entries = backtrace.entries();
 
-    if (coredump.metadata().contains("assertion"))
+    if (metadata.contains("assertion"))
         prepend_metadata("assertion", "ASSERTION FAILED: {}");
-    else if (coredump.metadata().contains("pledge_violation"))
+    else if (metadata.contains("pledge_violation"))
         prepend_metadata("pledge_violation", "Has not pledged {}");
 
     auto first_entry = true;
