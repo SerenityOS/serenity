@@ -9,3 +9,4 @@ endforeach()
 
 target_link_libraries(font LibGUI LibCore)
 target_link_libraries(image-decoder LibGUI LibCore)
+target_link_libraries(painter LibGUI LibCore)
