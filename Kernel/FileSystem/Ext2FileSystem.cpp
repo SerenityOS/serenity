@@ -857,6 +857,9 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
     if (m_raw_inode.i_size == 0)
         return 0;
 
+    if (static_cast<u64>(offset) >= size())
+        return 0;
+
     // Symbolic links shorter than 60 characters are store inline inside the i_block array.
     // This avoids wasting an entire block on short links. (Most links are short.)
     if (is_symlink() && size() < max_inline_symlink_length) {
