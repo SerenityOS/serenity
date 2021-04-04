@@ -327,6 +327,7 @@ private:
     size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 3 };
     TextRange m_selection;
+    TextRange m_previous_selection;
     RefPtr<Menu> m_context_menu;
     RefPtr<Action> m_undo_action;
     RefPtr<Action> m_redo_action;

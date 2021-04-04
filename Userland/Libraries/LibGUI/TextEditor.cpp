@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1392,6 +1393,11 @@ void TextEditor::set_mode(const Mode mode)
 
 void TextEditor::did_update_selection()
 {
+    if (m_selection == m_previous_selection) {
+        return;
+    }
+    m_previous_selection = m_selection;
+
     m_cut_action->set_enabled(is_editable() && has_selection());
     m_copy_action->set_enabled(has_selection());
     if (on_selection_change)

@@ -62,14 +62,12 @@ bool EditingEngine::on_key(const KeyEvent& event)
             move_to_previous_span(event);
             if (event.shift() && m_editor->selection()->start().is_valid()) {
                 m_editor->selection()->set_end(m_editor->cursor());
-                m_editor->did_update_selection();
             }
             return true;
         }
         move_one_left(event);
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
-            m_editor->did_update_selection();
         }
         return true;
     }
@@ -91,7 +89,6 @@ bool EditingEngine::on_key(const KeyEvent& event)
         move_one_right(event);
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
-            m_editor->did_update_selection();
         }
         return true;
     }
@@ -100,7 +97,6 @@ bool EditingEngine::on_key(const KeyEvent& event)
         move_one_up(event);
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
-            m_editor->did_update_selection();
         }
         return true;
     }
@@ -109,7 +105,6 @@ bool EditingEngine::on_key(const KeyEvent& event)
         move_one_down(event);
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
-            m_editor->did_update_selection();
         }
         return true;
     }
@@ -120,13 +115,11 @@ bool EditingEngine::on_key(const KeyEvent& event)
             move_to_first_line();
             if (event.shift() && m_editor->selection()->start().is_valid()) {
                 m_editor->selection()->set_end(m_editor->cursor());
-                m_editor->did_update_selection();
             }
         } else {
             move_to_line_beginning(event);
             if (event.shift() && m_editor->selection()->start().is_valid()) {
                 m_editor->selection()->set_end(m_editor->cursor());
-                m_editor->did_update_selection();
             }
         }
         return true;
@@ -138,13 +131,11 @@ bool EditingEngine::on_key(const KeyEvent& event)
             move_to_last_line();
             if (event.shift() && m_editor->selection()->start().is_valid()) {
                 m_editor->selection()->set_end(m_editor->cursor());
-                m_editor->did_update_selection();
             }
         } else {
             move_to_line_end(event);
             if (event.shift() && m_editor->selection()->start().is_valid()) {
                 m_editor->selection()->set_end(m_editor->cursor());
-                m_editor->did_update_selection();
             }
         }
         return true;
@@ -154,7 +145,6 @@ bool EditingEngine::on_key(const KeyEvent& event)
         move_page_up(event);
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
-            m_editor->did_update_selection();
         }
         return true;
     }
@@ -163,7 +153,6 @@ bool EditingEngine::on_key(const KeyEvent& event)
         move_page_down(event);
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
-            m_editor->did_update_selection();
         }
         return true;
     }
