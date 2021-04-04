@@ -48,25 +48,9 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     if (phase == PaintPhase::Background && !is_body()) {
         auto background_rect = enclosing_int_rect(padded_rect);
         context.painter().fill_rect(background_rect, computed_values().background_color());
-        if (background_image() && background_image()->bitmap()) {
-            switch (computed_values().background_repeat()) {
-            case CSS::Repeat::Repeat:
-                // The background rect is already sized to align with 'repeat'.
-                break;
-            case CSS::Repeat::RepeatX:
-                background_rect.set_height(background_image()->bitmap()->height());
-                break;
-            case CSS::Repeat::RepeatY:
-                background_rect.set_width(background_image()->bitmap()->width());
-                break;
-            case CSS::Repeat::NoRepeat:
-            default: // FIXME: Support 'round' and 'square'
-                background_rect.set_width(background_image()->bitmap()->width());
-                background_rect.set_height(background_image()->bitmap()->height());
-                break;
-            }
 
-            context.painter().blit_tiled(background_rect, *background_image()->bitmap(), background_image()->bitmap()->rect());
+        if (background_image() && background_image()->bitmap()) {
+            paint_background_image(context, *background_image()->bitmap(), computed_values().background_repeat(), move(background_rect));
         }
     }
 
@@ -98,6 +82,32 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     if (phase == PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && downcast<DOM::Element>(*dom_node()).is_focused()) {
         context.painter().draw_rect(enclosing_int_rect(absolute_rect()), context.palette().focus_outline());
     }
+}
+
+void Box::paint_background_image(
+    PaintContext& context,
+    const Gfx::Bitmap& background_image,
+    CSS::Repeat background_repeat,
+    Gfx::IntRect background_rect)
+{
+    switch (background_repeat) {
+    case CSS::Repeat::Repeat:
+        // The background rect is already sized to align with 'repeat'.
+        break;
+    case CSS::Repeat::RepeatX:
+        background_rect.set_height(background_image.height());
+        break;
+    case CSS::Repeat::RepeatY:
+        background_rect.set_width(background_image.width());
+        break;
+    case CSS::Repeat::NoRepeat:
+    default: // FIXME: Support 'round' and 'square'
+        background_rect.set_width(background_image.width());
+        background_rect.set_height(background_image.height());
+        break;
+    }
+
+    context.painter().blit_tiled(background_rect, background_image, background_image.rect());
 }
 
 HitTestResult Box::hit_test(const Gfx::IntPoint& position, HitTestType type) const
