@@ -324,6 +324,10 @@ void TextNode::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position
 {
     if (!parent() || !is<Label>(*parent()))
         return;
+
+    // NOTE: Changing the state of the DOM node may run arbitrary JS, which could disappear this node.
+    NonnullRefPtr protect = *this;
+
     downcast<Label>(*parent()).handle_mouseup_on_label({}, position, button);
     frame().event_handler().set_mouse_event_tracking_layout_node(nullptr);
 }

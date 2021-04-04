@@ -115,6 +115,9 @@ void RadioButton::handle_associated_label_mousedown(Badge<Label>)
 
 void RadioButton::handle_associated_label_mouseup(Badge<Label>)
 {
+    // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
+    NonnullRefPtr protect = *this;
+
     set_checked_within_group();
     m_being_pressed = false;
 }
