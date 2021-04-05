@@ -47,12 +47,14 @@ class Event;
 class Menu final : public Core::Object {
     C_OBJECT(Menu)
 public:
-    Menu(ClientConnection*, int menu_id, const String& name);
+    Menu(ClientConnection*, int menu_id, String name);
     virtual ~Menu() override;
 
     ClientConnection* client() { return m_client; }
     const ClientConnection* client() const { return m_client; }
     int menu_id() const { return m_menu_id; }
+
+    u32 alt_shortcut_character() const { return m_alt_shortcut_character; }
 
     bool is_empty() const { return m_items.is_empty(); }
     int item_count() const { return m_items.size(); }
@@ -142,6 +144,7 @@ private:
     ClientConnection* m_client { nullptr };
     int m_menu_id { 0 };
     String m_name;
+    u32 m_alt_shortcut_character { 0 };
     Gfx::IntRect m_rect_in_window_menubar;
     NonnullOwnPtrVector<MenuItem> m_items;
     RefPtr<Window> m_menu_window;

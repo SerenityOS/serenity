@@ -317,12 +317,7 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
         if (paint_as_pressed || paint_as_hovered) {
             Gfx::StylePainter::paint_button(painter, menu.rect_in_window_menubar(), palette, Gfx::ButtonStyle::CoolBar, paint_as_pressed, paint_as_hovered);
         }
-        painter.draw_text(
-            text_rect,
-            menu.name(),
-            font,
-            Gfx::TextAlignment::Center,
-            text_color);
+        painter.draw_ui_text(menu.name(), text_rect, font, text_color);
         return IterationDecision::Continue;
     });
 }
@@ -749,6 +744,16 @@ void WindowFrame::handle_menubar_mouse_event(const MouseEvent& event)
     }
 }
 
+void WindowFrame::open_menubar_menu(Menu& menu)
+{
+    auto menubar_rect = this->menubar_rect();
+    MenuManager::the().close_everyone();
+    menu.ensure_menu_window().move_to(menu.rect_in_window_menubar().bottom_left().translated(rect().location()).translated(menubar_rect.location()));
+    MenuManager::the().open_menu(menu);
+    WindowManager::the().set_window_with_active_menu(&m_window);
+    invalidate(menubar_rect);
+}
+
 void WindowFrame::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
 {
     auto menubar_rect = this->menubar_rect();
@@ -758,11 +763,7 @@ void WindowFrame::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
     bool should_close_menu = &menu == MenuManager::the().current_menu() && is_mousedown_with_left_button;
 
     if (should_open_menu) {
-        MenuManager::the().close_everyone();
-        menu.ensure_menu_window().move_to(menu.rect_in_window_menubar().bottom_left().translated(rect().location()).translated(menubar_rect.location()));
-        MenuManager::the().open_menu(menu);
-        WindowManager::the().set_window_with_active_menu(&m_window);
-        invalidate(menubar_rect);
+        open_menubar_menu(menu);
         return;
     }
 

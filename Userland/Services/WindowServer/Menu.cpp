@@ -43,12 +43,26 @@
 
 namespace WindowServer {
 
-Menu::Menu(ClientConnection* client, int menu_id, const String& name)
+static u32 find_ampersand_shortcut_character(const String& string)
+{
+    Utf8View utf8_view { string };
+    for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
+        if (*it == '&') {
+            ++it;
+            if (it != utf8_view.end() && *it != '&')
+                return *it;
+        }
+    }
+    return 0;
+}
+
+Menu::Menu(ClientConnection* client, int menu_id, String name)
     : Core::Object(client)
     , m_client(client)
     , m_menu_id(menu_id)
     , m_name(move(name))
 {
+    m_alt_shortcut_character = find_ampersand_shortcut_character(m_name);
 }
 
 Menu::~Menu()
