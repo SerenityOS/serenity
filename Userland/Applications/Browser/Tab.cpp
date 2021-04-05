@@ -284,7 +284,7 @@ Tab::Tab(Type type)
 
     m_menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = m_menubar->add_menu("File");
+    auto& app_menu = m_menubar->add_menu("&File");
     app_menu.add_action(WindowActions::the().create_new_tab_action());
     app_menu.add_action(GUI::Action::create(
         "Close tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
@@ -297,7 +297,7 @@ Tab::Tab(Type type)
         GUI::Application::the()->quit();
     }));
 
-    auto& view_menu = m_menubar->add_menu("View");
+    auto& view_menu = m_menubar->add_menu("&View");
     view_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
     view_menu.add_separator();
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action(
@@ -318,7 +318,7 @@ Tab::Tab(Type type)
         },
         this));
 
-    auto& go_menu = m_menubar->add_menu("Go");
+    auto& go_menu = m_menubar->add_menu("&Go");
     go_menu.add_action(*m_go_back_action);
     go_menu.add_action(*m_go_forward_action);
     go_menu.add_action(*m_go_home_action);
@@ -358,7 +358,7 @@ Tab::Tab(Type type)
         },
         this);
 
-    auto& inspect_menu = m_menubar->add_menu("Inspect");
+    auto& inspect_menu = m_menubar->add_menu("&Inspect");
     inspect_menu.add_action(*view_source_action);
     inspect_menu.add_action(*inspect_dom_tree_action);
 
@@ -396,7 +396,7 @@ Tab::Tab(Type type)
         },
         this));
 
-    auto& debug_menu = m_menubar->add_menu("Debug");
+    auto& debug_menu = m_menubar->add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
         "Dump DOM tree", [this](auto&) {
             if (m_type == Type::InProcessWebView) {
@@ -461,7 +461,7 @@ Tab::Tab(Type type)
         }
     }));
 
-    auto& help_menu = m_menubar->add_menu("Help");
+    auto& help_menu = m_menubar->add_menu("&Help");
     help_menu.add_action(WindowActions::the().about_action());
 
     m_tab_context_menu = GUI::Menu::construct();
