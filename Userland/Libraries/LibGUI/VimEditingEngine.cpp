@@ -63,8 +63,112 @@ bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
     return false;
 }
 
+char VimEditingEngine::numeric_key_value(const KeyCode key)
+{
+    switch(key)
+    {
+    case (KeyCode::Key_0):
+        return '0';
+    case (KeyCode::Key_1):
+        return '1';
+    case (KeyCode::Key_2):
+        return '2';
+    case (KeyCode::Key_3):
+        return '3';
+    case (KeyCode::Key_4):
+        return '4';
+    case (KeyCode::Key_5):
+        return '5';
+    case (KeyCode::Key_6):
+        return '6';
+    case (KeyCode::Key_7):
+        return '7';
+    case (KeyCode::Key_8):
+        return '8';
+    case (KeyCode::Key_9):
+        return '9';
+    default:
+        return '\0';
+    }
+}
+
+void VimEditingEngine::clear_command_multiplier()
+{
+    m_command_multiplier.clear();
+}
+
+void VimEditingEngine::vim_move_down(const KeyEvent &event)
+{
+    // FIXME: probably not an efficient way to do this
+    if (m_command_multiplier.is_empty()) {
+        move_one_down(event);
+    } else {
+        String multiplier_string = m_command_multiplier.build();
+        uint32_t multiplier = multiplier_string.to_uint().value();
+        for (uint32_t i = 0; i < multiplier; ++i) {
+            move_one_down(event);
+        }
+        clear_command_multiplier();
+    }
+}
+
+void VimEditingEngine::vim_move_up(const KeyEvent &event)
+{
+    if (m_command_multiplier.is_empty()) {
+        move_one_up(event);
+    } else {
+        String multiplier_string = m_command_multiplier.build();
+        uint32_t multiplier = multiplier_string.to_uint().value();
+        for (uint32_t i = 0; i < multiplier; ++i) {
+            move_one_up(event);
+        }
+        clear_command_multiplier();
+    }
+}
+
+void VimEditingEngine::vim_move_left(const KeyEvent &event)
+{
+    if (m_command_multiplier.is_empty()) {
+        move_one_left(event);
+    } else {
+        String multiplier_string = m_command_multiplier.build();
+        uint32_t multiplier = multiplier_string.to_uint().value();
+        for (uint32_t i = 0; i < multiplier; ++i) {
+            move_one_left(event);
+        }
+        clear_command_multiplier();
+    }
+}
+
+void VimEditingEngine::vim_move_right(const KeyEvent &event)
+{
+    if (m_command_multiplier.is_empty()) {
+        move_one_right(event);
+    } else {
+        String multiplier_string = m_command_multiplier.build();
+        uint32_t multiplier = multiplier_string.to_uint().value();
+        for (uint32_t i = 0; i < multiplier; ++i) {
+            move_one_right(event);
+        }
+        clear_command_multiplier();
+    }
+}
+
+void VimEditingEngine::add_to_command_multiplier(char value)
+{
+    // FIXME: there are more efficient ways to do this
+    if (m_command_multiplier.length() < 5) {
+        m_command_multiplier.append(value);
+    }
+}
+
 bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
 {
+    char numeric_value = numeric_key_value(event.key());
+    if (numeric_value != '\0') {
+        add_to_command_multiplier(numeric_value);
+        return true;
+    }
     // FIXME: changing or deleting word methods don't correctly support 1 letter words.
     // For example, in the line 'return 0;' with the cursor on the '0',
     // keys 'cw' will move to the delete '0;' rather than just the '0'.
@@ -245,7 +349,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             case (KeyCode::Key_Backspace):
             case (KeyCode::Key_H):
             case (KeyCode::Key_Left):
-                move_one_left(event);
+                vim_move_left(event);
                 break;
             case (KeyCode::Key_D):
                 m_previous_key = event.key();
@@ -258,18 +362,18 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 break;
             case (KeyCode::Key_Down):
             case (KeyCode::Key_J):
-                move_one_down(event);
+                vim_move_down(event);
                 break;
             case (KeyCode::Key_I):
                 switch_to_insert_mode();
                 break;
             case (KeyCode::Key_K):
             case (KeyCode::Key_Up):
-                move_one_up(event);
+                vim_move_up(event);
                 break;
             case (KeyCode::Key_L):
             case (KeyCode::Key_Right):
-                move_one_right(event);
+                vim_move_right(event);
                 break;
             case (KeyCode::Key_O):
                 move_to_line_end(event);

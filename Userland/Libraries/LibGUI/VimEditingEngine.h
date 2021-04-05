@@ -51,6 +51,15 @@ private:
 
     VimMode m_vim_mode { VimMode::Normal };
 
+    void vim_move_down(const KeyEvent&);
+    void vim_move_left(const KeyEvent&);
+    void vim_move_right(const KeyEvent&);
+    void vim_move_up(const KeyEvent&);
+    StringBuilder m_command_multiplier { 8 };
+    void add_to_command_multiplier(char);
+    void clear_command_multiplier();
+    static char numeric_key_value(KeyCode);
+
     YankType m_yank_type {};
     String m_yank_buffer {};
     void yank(YankType);
