@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
@@ -62,7 +63,9 @@ void Button::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, is_being_pressed(), is_hovered(), is_checked(), is_enabled(), is_focused());
+    bool paint_pressed = is_being_pressed() || (m_menu && m_menu->is_visible());
+
+    Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, paint_pressed, is_hovered(), is_checked(), is_enabled(), is_focused());
 
     if (text().is_empty() && !m_icon)
         return;
@@ -72,9 +75,9 @@ void Button::paint_event(PaintEvent& event)
     if (m_icon && !text().is_empty())
         icon_location.set_x(content_rect.x());
 
-    if (is_being_pressed() || is_checked())
+    if (paint_pressed || is_checked()) {
         painter.translate(1, 1);
-    else if (m_icon && is_enabled() && is_hovered() && button_style() == Gfx::ButtonStyle::CoolBar) {
+    } else if (m_icon && is_enabled() && is_hovered() && button_style() == Gfx::ButtonStyle::CoolBar) {
         auto shadow_color = palette().button().darkened(0.7f);
         painter.blit_filtered(icon_location.translated(1, 1), *m_icon, m_icon->rect(), [&shadow_color](auto) {
             return shadow_color;
@@ -165,6 +168,30 @@ bool Button::is_uncheckable() const
     if (!m_action->group())
         return true;
     return m_action->group()->is_unchecking_allowed();
+}
+
+void Button::set_menu(RefPtr<GUI::Menu> menu)
+{
+    if (m_menu == menu)
+        return;
+    if (m_menu)
+        m_menu->on_visibility_change = nullptr;
+    m_menu = menu;
+    if (m_menu) {
+        m_menu->on_visibility_change = [&](bool) {
+            update();
+        };
+    }
+}
+
+void Button::mousedown_event(MouseEvent& event)
+{
+    if (m_menu) {
+        m_menu->popup(screen_relative_rect().top_left());
+        update();
+        return;
+    }
+    AbstractButton::mousedown_event(event);
 }
 
 }
