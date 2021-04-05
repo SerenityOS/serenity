@@ -169,6 +169,9 @@ func_defined install || install() {
 func_defined post_install || post_install() {
     echo
 }
+func_defined post_uninstll || post_uninstll() {
+  :
+}
 func_defined clean || clean() {
     rm -rf "$workdir" *.out
 }
@@ -236,6 +239,7 @@ uninstall() {
             # Without || true, mv will not be executed if you are uninstalling your only remaining port.
             grep -v "^manual $port " "$packagesdb" > packages.db.tmp || true
             mv packages.db.tmp "$packagesdb"
+            post_uninstll
         else
             >&2 echo "Error: This port does not have a plist yet. Cannot uninstall."
         fi

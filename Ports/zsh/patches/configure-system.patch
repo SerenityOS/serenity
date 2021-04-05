@@ -1,0 +1,20 @@
+*** pristine-zsh-5.8/config.sub	2019-08-17 17:14:27.000000000 -0400
+--- zsh-5.8/config.sub	2021-04-05 09:59:10.910000000 -0400
+*************** case $os in
+*** 1368,1374 ****
+  	     | powermax* | dnix* | nx6 | nx7 | sei* | dragonfly* \
+  	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
+  	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+! 	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi*)
+  	# Remember, each alternative MUST END IN *, to match a version number.
+  		;;
+  	qnx*)
+--- 1368,1375 ----
+  	     | powermax* | dnix* | nx6 | nx7 | sei* | dragonfly* \
+  	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
+  	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+! 	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
+! 	     | serenity*)
+  	# Remember, each alternative MUST END IN *, to match a version number.
+  		;;
+  	qnx*)
