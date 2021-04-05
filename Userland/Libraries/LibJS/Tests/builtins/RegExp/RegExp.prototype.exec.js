@@ -101,3 +101,21 @@ test("optionally seen capture group", () => {
     expect(res[1]).toBe("mozilla");
     expect(res[2]).toBeUndefined();
 });
+
+// #6131
+test("capture group with two '?' qualifiers", () => {
+    let res = /()??/.exec("");
+
+    expect(res.length).toBe(2);
+    expect(res[0]).toBe("");
+    expect(res[1]).toBeUndefined();
+});
+
+test("named capture group with two '?' qualifiers", () => {
+    let res = /(?<foo>)??/.exec("");
+
+    expect(res.length).toBe(2);
+    expect(res[0]).toBe("");
+    expect(res[1]).toBeUndefined();
+    expect(res.groups.foo).toBeUndefined();
+});
