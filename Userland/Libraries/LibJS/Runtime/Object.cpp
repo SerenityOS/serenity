@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -260,6 +261,12 @@ Value Object::get_own_properties(PropertyKind kind, bool only_enumerable_propert
     }
 
     return properties_array;
+}
+
+// 7.3.23 EnumerableOwnPropertyNames, https://tc39.es/ecma262/#sec-enumerableownpropertynames
+Value Object::get_enumerable_own_property_names(PropertyKind kind) const
+{
+    return get_own_properties(kind, true, Object::GetOwnPropertyReturnType::StringOnly);
 }
 
 Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyName& property_name) const
