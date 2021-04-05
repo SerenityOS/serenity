@@ -182,10 +182,21 @@ void siglongjmp(jmp_buf env, int val)
     longjmp(env, val);
 }
 
-int sigsuspend(const sigset_t*)
+int sigsuspend(const sigset_t* set)
 {
-    dbgln("FIXME: Implement sigsuspend()");
-    TODO();
+    assert(set);
+    sigset_t o_sigset;
+
+    if (sigprocmask(SIG_SETMASK, set, &o_sigset) < 0)
+        return -1;
+
+    auto block = sigprocmask(SIG_BLOCK, nullptr, nullptr);
+
+    if (sigprocmask(SIG_SETMASK, &o_sigset, nullptr) < 0)
+        return -1;
+
+    errno = block;
+    return -1;
 }
 
 static const char* signal_names[] = {
