@@ -479,7 +479,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         return {};
     auto* object = rhs_result.to_object(global_object);
     while (object) {
-        auto property_names = object->get_own_properties(Object::PropertyKind::Key, true);
+        auto property_names = object->get_enumerable_own_property_names(Object::PropertyKind::Key);
         for (auto& property_name : property_names.as_object().indexed_properties()) {
             interpreter.vm().set_variable(variable_name, property_name.value_and_attributes(object).value, global_object, has_declaration);
             if (interpreter.exception())

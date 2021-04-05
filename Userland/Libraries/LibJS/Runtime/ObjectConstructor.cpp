@@ -209,7 +209,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
     if (vm.exception())
         return {};
 
-    return obj_arg->get_own_properties(PropertyKind::Key, true);
+    return obj_arg->get_enumerable_own_property_names(PropertyKind::Key);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
@@ -222,7 +222,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
     if (vm.exception())
         return {};
 
-    return obj_arg->get_own_properties(PropertyKind::Value, true);
+    return obj_arg->get_enumerable_own_property_names(PropertyKind::Value);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
@@ -235,7 +235,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
     if (vm.exception())
         return {};
 
-    return obj_arg->get_own_properties(PropertyKind::KeyAndValue, true);
+    return obj_arg->get_enumerable_own_property_names(PropertyKind::KeyAndValue);
 }
 
 }

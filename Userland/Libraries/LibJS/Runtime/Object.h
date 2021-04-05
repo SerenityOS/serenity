@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -96,6 +97,7 @@ public:
 
     Value get_own_property(const PropertyName&, Value receiver) const;
     Value get_own_properties(PropertyKind, bool only_enumerable_properties = false, GetOwnPropertyReturnType = GetOwnPropertyReturnType::StringOnly) const;
+    Value get_enumerable_own_property_names(PropertyKind) const;
     virtual Optional<PropertyDescriptor> get_own_property_descriptor(const PropertyName&) const;
     Value get_own_property_descriptor_object(const PropertyName&) const;
 
