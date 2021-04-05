@@ -116,9 +116,9 @@ void MultiView::set_model_column(int column)
     m_columns_view->set_model_column(column);
 }
 
-void MultiView::set_column_hidden(int column_index, bool hidden)
+void MultiView::set_column_visible(int column_index, bool visible)
 {
-    m_table_view->set_column_hidden(column_index, hidden);
+    m_table_view->set_column_visible(column_index, visible);
 }
 
 void MultiView::build_actions()
