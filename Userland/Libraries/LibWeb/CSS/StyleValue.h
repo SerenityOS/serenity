@@ -192,8 +192,6 @@ enum class Overflow : u8 {
 enum class Repeat : u8 {
     NoRepeat,
     Repeat,
-    RepeatX,
-    RepeatY,
     Round,
     Space,
 };
