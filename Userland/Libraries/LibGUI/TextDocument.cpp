@@ -343,9 +343,9 @@ String TextDocument::text() const
 
 String TextDocument::text_in_range(const TextRange& a_range) const
 {
-    if (is_empty() || line_count() < a_range.end().line() - a_range.start().line() || line(a_range.start().line()).is_empty())
-        return String("");
     auto range = a_range.normalized();
+    if (is_empty() || line_count() < range.end().line() - range.start().line() || line(range.start().line()).is_empty())
+        return String("");
 
     StringBuilder builder;
     for (size_t i = range.start().line(); i <= range.end().line(); ++i) {
