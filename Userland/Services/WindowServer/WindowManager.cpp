@@ -1211,7 +1211,7 @@ void WindowManager::event(Core::Event& event)
         }
 
         if (m_active_input_window) {
-            if (key_event.type() == Event::KeyDown && key_event.modifiers() == Mod_Super) {
+            if (key_event.type() == Event::KeyDown && key_event.modifiers() == Mod_Super && m_active_input_window->type() != WindowType::Desktop) {
                 if (key_event.key() == Key_Down) {
                     if (m_active_input_window->is_resizable() && m_active_input_window->is_maximized()) {
                         maximize_windows(*m_active_input_window, false);
