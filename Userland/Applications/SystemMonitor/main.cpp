@@ -338,7 +338,7 @@ int main(int argc, char** argv)
         &process_table_view);
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("File");
+    auto& app_menu = menubar->add_menu("&File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
@@ -356,7 +356,7 @@ int main(int argc, char** argv)
         process_context_menu->popup(event.screen_position(), process_properties_action);
     };
 
-    auto& frequency_menu = menubar->add_menu("Frequency");
+    auto& frequency_menu = menubar->add_menu("F&requency");
     GUI::ActionGroup frequency_action_group;
     frequency_action_group.set_exclusive(true);
 
@@ -373,7 +373,7 @@ int main(int argc, char** argv)
     make_frequency_action("3 sec", 3000, true);
     make_frequency_action("5 sec", 5000);
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window));
 
     window->set_menubar(move(menubar));
