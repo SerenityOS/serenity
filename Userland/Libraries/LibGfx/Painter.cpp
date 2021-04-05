@@ -1806,4 +1806,49 @@ void Painter::blit_tiled(const IntRect& dst_rect, const Gfx::Bitmap& bitmap, con
     }
 }
 
+void Gfx::Painter::draw_ui_text(const StringView& text, const Gfx::IntRect& rect, const Gfx::Font& font, Gfx::Color color)
+{
+    auto parse_ampersand_string = [](const StringView& raw_text, Optional<size_t>& underline_offset) -> String {
+        if (raw_text.is_empty())
+            return String::empty();
+
+        StringBuilder builder;
+
+        for (size_t i = 0; i < raw_text.length(); ++i) {
+            if (raw_text[i] == '&') {
+                if (i != (raw_text.length() - 1) && raw_text[i + 1] == '&')
+                    builder.append(raw_text[i]);
+                else if (!underline_offset.has_value())
+                    underline_offset = i;
+                continue;
+            }
+            builder.append(raw_text[i]);
+        }
+        return builder.to_string();
+    };
+
+    Optional<size_t> underline_offset;
+    auto name_to_draw = parse_ampersand_string(text, underline_offset);
+
+    Gfx::IntRect text_rect { 0, 0, font.width(name_to_draw), font.glyph_height() };
+    text_rect.center_within(rect);
+
+    draw_text(text_rect, name_to_draw, font, Gfx::TextAlignment::CenterLeft, color);
+
+    if (underline_offset.has_value()) {
+        Utf8View utf8_view { name_to_draw };
+        int width = 0;
+        for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
+            if (utf8_view.byte_offset_of(it) >= underline_offset.value()) {
+                int y = text_rect.bottom() + 2;
+                int x1 = text_rect.left() + width;
+                int x2 = x1 + font.glyph_or_emoji_width(*it);
+                draw_line({ x1, y }, { x2, y }, Color::Black);
+                break;
+            }
+            width += font.glyph_or_emoji_width(*it);
+        }
+    }
+}
+
 }
