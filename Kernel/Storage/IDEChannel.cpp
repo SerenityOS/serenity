@@ -288,8 +288,14 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 
     // There are only two possible disks connected to a channel
     for (auto i = 0; i < 2; i++) {
+        // We need to select the drive and then we wait 20 microseconds... and it doesn't hurt anything so let's just do it.
         m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (i << 4)); // First, we need to select the drive itself
+        IO::delay(20);
 
+        m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(0);
+        m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(0);
+        m_io_group.io_base().offset(ATA_REG_LBA1).out<u8>(0);
+        m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>(0);
         m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_IDENTIFY); // Send the ATA_IDENTIFY command
 
         // Wait for the BSY flag to be reset
@@ -389,7 +395,9 @@ void IDEChannel::ata_access(Direction direction, bool slave_request, u64 lba, u8
 
     wait_until_not_busy();
 
+    // We need to select the drive and then we wait 20 microseconds... and it doesn't hurt anything so let's just do it.
     m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xE0 | (static_cast<u8>(slave_request) << 4) | head);
+    IO::delay(20);
 
     if (lba_mode == LBAMode::FortyEightBit) {
         m_io_group.io_base().offset(ATA_REG_SECCOUNT1).out<u8>(0);
