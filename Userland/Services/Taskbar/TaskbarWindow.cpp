@@ -89,10 +89,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     start_button.set_fixed_size(80, 22);
     auto app_icon = GUI::Icon::default_icon("ladybug");
     start_button.set_icon(app_icon.bitmap_for_size(16));
-
-    start_button.on_click = [&](auto) {
-        m_start_menu->popup(start_button.screen_relative_rect().top_left());
-    };
+    start_button.set_menu(m_start_menu);
 
     create_quick_launch_bar();
 
