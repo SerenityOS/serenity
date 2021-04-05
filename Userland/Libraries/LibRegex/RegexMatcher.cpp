@@ -254,6 +254,9 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
     MatchOutput output_copy;
     if (match_count) {
         output_copy.capture_group_matches = output.capture_group_matches;
+        // Make sure there are as many capture matches as there are actual matches.
+        if (output_copy.capture_group_matches.size() < match_count)
+            output_copy.capture_group_matches.resize(match_count);
         for (auto& matches : output_copy.capture_group_matches)
             matches.resize(m_pattern.parser_result.capture_groups_count + 1);
         if (!input.regex_options.has_flag_set(AllFlags::SkipTrimEmptyMatches)) {
@@ -262,6 +265,9 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
         }
 
         output_copy.named_capture_group_matches = output.named_capture_group_matches;
+        // Make sure there are as many capture matches as there are actual matches.
+        if (output_copy.named_capture_group_matches.size() < match_count)
+            output_copy.named_capture_group_matches.resize(match_count);
 
         output_copy.matches = output.matches;
     } else {
