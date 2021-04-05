@@ -97,6 +97,8 @@ public:
 
     bool hit_test(const Gfx::IntPoint&) const;
 
+    void open_menubar_menu(Menu&);
+
 private:
     void paint_simple_rect_shadow(Gfx::Painter&, const Gfx::IntRect&, const Gfx::Bitmap&) const;
     void paint_notification_frame(Gfx::Painter&);

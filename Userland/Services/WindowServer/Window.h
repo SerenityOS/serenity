@@ -41,6 +41,7 @@ namespace WindowServer {
 
 class ClientConnection;
 class Cursor;
+class KeyEvent;
 class Menu;
 class MenuBar;
 class MenuItem;
@@ -339,6 +340,7 @@ public:
 private:
     virtual void event(Core::Event&) override;
     void handle_mouse_event(const MouseEvent&);
+    void handle_keydown_event(const KeyEvent&);
     void update_menu_item_text(PopupMenuItem item);
     void update_menu_item_enabled(PopupMenuItem item);
     void add_child_window(Window&);
