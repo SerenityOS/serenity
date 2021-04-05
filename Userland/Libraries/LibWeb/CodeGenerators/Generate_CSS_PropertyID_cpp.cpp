@@ -112,7 +112,35 @@ const char* string_from_property_id(PropertyID property_id) {
     }
 }
 
+bool is_pseudo_property(PropertyID property_id)
+{
+    switch (property_id) {
+)~~~");
+
+    json.value().as_object().for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+
+        auto pseudo = value.as_object().get_or("pseudo", false);
+        VERIFY(pseudo.is_bool());
+
+        if (pseudo.as_bool()) {
+            auto member_generator = generator.fork();
+            member_generator.set("name:titlecase", title_casify(name));
+            member_generator.append(R"~~~(
+    case PropertyID::@name:titlecase@:
+        return true;
+)~~~");
+        }
+    });
+
+    generator.append(R"~~~(
+    default:
+        return false;
+    }
+}
+
 } // namespace Web::CSS
+
 )~~~");
 
     outln("{}", generator.as_string_view());

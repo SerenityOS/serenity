@@ -229,9 +229,14 @@ static inline void set_property_border_style(StyleProperties& style, const Style
         style.set_property(CSS::PropertyID::BorderLeftStyle, value);
 }
 
-static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value, DOM::Document& document)
+static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value, DOM::Document& document, bool is_internally_generated_pseudo_property = false)
 {
     CSS::ParsingContext context(document);
+
+    if (is_pseudo_property(property_id) && !is_internally_generated_pseudo_property) {
+        dbgln("Ignoring non-internally-generated pseudo property: {}", string_from_property_id(property_id));
+        return;
+    }
 
     if (property_id == CSS::PropertyID::TextDecoration) {
         switch (value.to_identifier()) {

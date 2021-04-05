@@ -91,6 +91,7 @@ enum class PropertyID {
 
 PropertyID property_id_from_string(const StringView&);
 const char* string_from_property_id(PropertyID);
+bool is_pseudo_property(PropertyID);
 
 } // namespace Web::CSS
 
