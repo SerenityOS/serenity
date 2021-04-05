@@ -90,4 +90,5 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`vitetris`](vitetris/)        | vitetris                                      | 0.59.1            | https://github.com/vicgeralds/vitetris                |
 | [`vttest`](vttest/)            | vttest                                        | 20210210          | https://invisible-island.net/vttest/                  |
 | [`zlib`](zlib/)                | zlib                                          | 1.2.11            | https://www.zlib.net/                                 |
+| [`zsh`](zsh/)                  | zsh                                           | 5.8               | https://www.zsh.org/                                  | 
 | [`zstd`](zstd/)                | Zstandard                                     | 1.4.4             | https://facebook.github.io/zstd/                      |
