@@ -235,7 +235,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
     auto* target = get_target_object_from(global_object, "ownKeys");
     if (!target)
         return {};
-    return target->get_own_properties(*target, PropertyKind::Key);
+    return target->get_own_properties(PropertyKind::Key);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::prevent_extensions)

@@ -186,13 +186,13 @@ Value Object::get_own_property(const PropertyName& property_name, Value receiver
     return value_here;
 }
 
-Value Object::get_own_properties(const Object& this_object, PropertyKind kind, bool only_enumerable_properties, GetOwnPropertyReturnType return_type) const
+Value Object::get_own_properties(PropertyKind kind, bool only_enumerable_properties, GetOwnPropertyReturnType return_type) const
 {
     auto* properties_array = Array::create(global_object());
 
     // FIXME: Support generic iterables
-    if (is<StringObject>(this_object)) {
-        auto str = static_cast<const StringObject&>(this_object).primitive_string().string();
+    if (is<StringObject>(*this)) {
+        auto str = static_cast<const StringObject&>(*this).primitive_string().string();
 
         for (size_t i = 0; i < str.length(); ++i) {
             if (kind == PropertyKind::Key) {
@@ -214,7 +214,7 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
 
     size_t property_index = 0;
     for (auto& entry : m_indexed_properties) {
-        auto value_and_attributes = entry.value_and_attributes(const_cast<Object*>(&this_object));
+        auto value_and_attributes = entry.value_and_attributes(const_cast<Object*>(this));
         if (only_enumerable_properties && !value_and_attributes.attributes.is_enumerable())
             continue;
 
@@ -234,7 +234,7 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
         ++property_index;
     }
 
-    for (auto& it : this_object.shape().property_table_ordered()) {
+    for (auto& it : shape().property_table_ordered()) {
         if (only_enumerable_properties && !it.value.attributes.is_enumerable())
             continue;
 
@@ -246,11 +246,11 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
         if (kind == PropertyKind::Key) {
             properties_array->define_property(property_index, it.key.to_value(vm()));
         } else if (kind == PropertyKind::Value) {
-            properties_array->define_property(property_index, this_object.get(it.key));
+            properties_array->define_property(property_index, get(it.key));
         } else {
             auto* entry_array = Array::create(global_object());
             entry_array->define_property(0, it.key.to_value(vm()));
-            entry_array->define_property(1, this_object.get(it.key));
+            entry_array->define_property(1, get(it.key));
             properties_array->define_property(property_index, entry_array);
         }
         if (vm().exception())
@@ -437,14 +437,14 @@ bool Object::define_property(const PropertyName& property_name, Value value, Pro
     VERIFY(property_name.is_valid());
 
     if (property_name.is_number())
-        return put_own_property_by_index(*this, property_name.as_number(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
+        return put_own_property_by_index(property_name.as_number(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 
     if (property_name.is_string()) {
         i32 property_index = property_name.as_string().to_int().value_or(-1);
         if (property_index >= 0)
-            return put_own_property_by_index(*this, property_index, value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
+            return put_own_property_by_index(property_index, value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
     }
-    return put_own_property(*this, property_name.to_string_or_symbol(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
+    return put_own_property(property_name.to_string_or_symbol(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 }
 
 bool Object::define_accessor(const PropertyName& property_name, Function& getter_or_setter, bool is_getter, PropertyAttributes attributes, bool throw_exceptions)
@@ -474,7 +474,7 @@ bool Object::define_accessor(const PropertyName& property_name, Function& getter
     return true;
 }
 
-bool Object::put_own_property(Object& this_object, const StringOrSymbol& property_name, Value value, PropertyAttributes attributes, PutOwnPropertyMode mode, bool throw_exceptions)
+bool Object::put_own_property(const StringOrSymbol& property_name, Value value, PropertyAttributes attributes, PutOwnPropertyMode mode, bool throw_exceptions)
 {
     VERIFY(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
@@ -561,14 +561,14 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
         return true;
 
     if (value_here.is_native_property()) {
-        call_native_property_setter(value_here.as_native_property(), &this_object, value);
+        call_native_property_setter(value_here.as_native_property(), this, value);
     } else {
         m_storage[metadata.value().offset] = value;
     }
     return true;
 }
 
-bool Object::put_own_property_by_index(Object& this_object, u32 property_index, Value value, PropertyAttributes attributes, PutOwnPropertyMode mode, bool throw_exceptions)
+bool Object::put_own_property_by_index(u32 property_index, Value value, PropertyAttributes attributes, PutOwnPropertyMode mode, bool throw_exceptions)
 {
     VERIFY(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
@@ -615,9 +615,9 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
         return true;
 
     if (value_here.is_native_property()) {
-        call_native_property_setter(value_here.as_native_property(), &this_object, value);
+        call_native_property_setter(value_here.as_native_property(), this, value);
     } else {
-        m_indexed_properties.put(&this_object, property_index, value, attributes, mode == PutOwnPropertyMode::Put);
+        m_indexed_properties.put(this, property_index, value, attributes, mode == PutOwnPropertyMode::Put);
     }
     return true;
 }
@@ -740,7 +740,7 @@ bool Object::put_by_index(u32 property_index, Value value)
         if (vm().exception())
             return {};
     }
-    return put_own_property_by_index(*this, property_index, value, default_attributes, PutOwnPropertyMode::Put);
+    return put_own_property_by_index(property_index, value, default_attributes, PutOwnPropertyMode::Put);
 }
 
 bool Object::put(const PropertyName& property_name, Value value, Value receiver)
@@ -784,7 +784,7 @@ bool Object::put(const PropertyName& property_name, Value value, Value receiver)
         if (vm().exception())
             return false;
     }
-    return put_own_property(*this, string_or_symbol, value, default_attributes, PutOwnPropertyMode::Put);
+    return put_own_property(string_or_symbol, value, default_attributes, PutOwnPropertyMode::Put);
 }
 
 bool Object::define_native_function(const StringOrSymbol& property_name, AK::Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
