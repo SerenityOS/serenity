@@ -1,0 +1,16 @@
+diff --git a/charclass.h b/charclass.h
+index 5edb2c1..af00709 100644
+--- a/charclass.h
++++ b/charclass.h
+@@ -7,6 +7,11 @@
+ /*
+  * POSIX character class support for fnmatch() and glob().
+  */
++int
++isblank(int c)
++{
++	return (c == ' ' || c == '\t');
++}
+ static struct cclass {
+ 	const char *name;
+ 	int (*isctype)(int);
