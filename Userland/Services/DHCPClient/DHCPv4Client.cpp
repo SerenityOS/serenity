@@ -29,22 +29,43 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/Function.h>
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonParser.h>
 #include <AK/Random.h>
+#include <LibCore/File.h>
 #include <LibCore/SocketAddress.h>
 #include <LibCore/Timer.h>
 #include <stdio.h>
 
-static void send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, Core::Object*)
+static u8 mac_part(const Vector<String>& parts, size_t index)
+{
+    auto result = AK::StringUtils::convert_to_uint_from_hex(parts.at(index));
+    VERIFY(result.has_value());
+    return result.value();
+}
+
+static MACAddress mac_from_string(const String& str)
+{
+    auto chunks = str.split(':');
+    VERIFY(chunks.size() == 6); // should we...worry about this?
+    return {
+        mac_part(chunks, 0), mac_part(chunks, 1), mac_part(chunks, 2),
+        mac_part(chunks, 3), mac_part(chunks, 4), mac_part(chunks, 5)
+    };
+}
+
+static bool send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, Core::Object*)
 {
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (fd < 0) {
         dbgln("ERROR: socket :: {}", strerror(errno));
-        return;
+        return false;
     }
 
     if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, iface.m_ifname.characters(), IFNAMSIZ) < 0) {
         dbgln("ERROR: setsockopt(SO_BINDTODEVICE) :: {}", strerror(errno));
-        return;
+        return false;
     }
 
     sockaddr_in dst;
@@ -59,8 +80,10 @@ static void send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, C
     dbgln_if(DHCPV4CLIENT_DEBUG, "sendto({}) = {}", fd, rc);
     if (rc < 0) {
         dbgln("sendto failed with {}", strerror(errno));
-        // FIXME: what do we do here?
+        return false;
     }
+
+    return true;
 }
 
 static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4_addr, const IPv4Address& netmask, const IPv4Address& gateway)
@@ -109,8 +132,9 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
     }
 }
 
-DHCPv4Client::DHCPv4Client(Vector<InterfaceDescriptor> ifnames)
-    : m_ifnames(ifnames)
+DHCPv4Client::DHCPv4Client(Vector<InterfaceDescriptor> ifnames_for_immediate_discover, Vector<InterfaceDescriptor> ifnames_for_later)
+    : m_ifnames_for_immediate_discover(move(ifnames_for_immediate_discover))
+    , m_ifnames_for_later(move(ifnames_for_later))
 {
     m_server = Core::UDPServer::construct(this);
     m_server->on_ready_to_receive = [this] {
@@ -129,8 +153,78 @@ DHCPv4Client::DHCPv4Client(Vector<InterfaceDescriptor> ifnames)
         VERIFY_NOT_REACHED();
     }
 
-    for (auto& iface : m_ifnames)
+    for (auto& iface : m_ifnames_for_immediate_discover)
         dhcp_discover(iface);
+
+    m_fail_check_timer = Core::Timer::create_repeating(
+        1000, [this] { try_discover_deferred_ifs(); }, this);
+
+    m_fail_check_timer->start();
+}
+
+void DHCPv4Client::try_discover_deferred_ifs()
+{
+    auto current_interval = m_fail_check_timer->interval();
+    if (current_interval < m_max_timer_backoff_interval)
+        current_interval *= 1.9f;
+    m_fail_check_timer->set_interval(current_interval);
+
+    if (m_ifnames_for_later.is_empty())
+        return;
+
+    // See if any of them are now up.
+    auto ifs_result = get_discoverable_interfaces();
+    if (ifs_result.is_error())
+        return;
+
+    Interfaces& ifs = ifs_result.value();
+    for (auto& iface : ifs.ready) {
+        if (!m_ifnames_for_later.remove_first_matching([&](auto& if_) { return if_.m_ifname == iface.m_ifname; }))
+            continue;
+
+        deferred_invoke([this, iface](auto&) { dhcp_discover(iface); });
+    }
+}
+
+Result<DHCPv4Client::Interfaces, String> DHCPv4Client::get_discoverable_interfaces()
+{
+    auto file = Core::File::construct("/proc/net/adapters");
+    if (!file->open(Core::IODevice::ReadOnly)) {
+        dbgln("Error: Failed to open /proc/net/adapters: {}", file->error_string());
+        return String { file->error_string() };
+    }
+
+    auto file_contents = file->read_all();
+    auto json = JsonValue::from_string(file_contents);
+
+    if (!json.has_value() || !json.value().is_array()) {
+        dbgln("Error: No network adapters available");
+        return String { "No network adapters available" };
+    }
+
+    Vector<InterfaceDescriptor> ifnames_to_immediately_discover, ifnames_to_attempt_later;
+    json.value().as_array().for_each([&ifnames_to_immediately_discover, &ifnames_to_attempt_later](auto& value) {
+        auto if_object = value.as_object();
+
+        if (if_object.get("class_name").to_string() == "LoopbackAdapter")
+            return;
+
+        auto name = if_object.get("name").to_string();
+        auto mac = if_object.get("mac_address").to_string();
+        auto is_up = if_object.get("link_up").to_bool();
+        if (is_up) {
+            dbgln_if(DHCPV4_DEBUG, "Found adapter '{}' with mac {}, and it was up!", name, mac);
+            ifnames_to_immediately_discover.empend(name, mac_from_string(mac));
+        } else {
+            dbgln_if(DHCPV4_DEBUG, "Found adapter '{}' with mac {}, but it was down", name, mac);
+            ifnames_to_attempt_later.empend(name, mac_from_string(mac));
+        }
+    });
+
+    return Interfaces {
+        move(ifnames_to_immediately_discover),
+        move(ifnames_to_attempt_later)
+    };
 }
 
 DHCPv4Client::~DHCPv4Client()
@@ -266,7 +360,10 @@ void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface)
     auto& dhcp_packet = builder.build();
 
     // broadcast the discover request
-    send(iface, dhcp_packet, this);
+    if (!send(iface, dhcp_packet, this)) {
+        m_ifnames_for_later.append(iface);
+        return;
+    }
     m_ongoing_transactions.set(transaction_id, make<DHCPv4Transaction>(iface));
 }
 
@@ -292,6 +389,9 @@ void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Pack
     auto& dhcp_packet = builder.build();
 
     // broadcast the "request" request
-    send(iface, dhcp_packet, this);
+    if (!send(iface, dhcp_packet, this)) {
+        m_ifnames_for_later.append(iface);
+        return;
+    }
     transaction.accepted_offer = true;
 }
