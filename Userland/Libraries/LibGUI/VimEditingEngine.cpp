@@ -65,7 +65,7 @@ bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
 
 char VimEditingEngine::numeric_key_value(const KeyCode key)
 {
-    switch(key) {
+    switch (key) {
     case (KeyCode::Key_0):
         return '0';
     case (KeyCode::Key_1):
