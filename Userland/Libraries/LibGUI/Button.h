@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,12 +63,16 @@ public:
     int icon_spacing() const { return m_icon_spacing; }
     void set_icon_spacing(int spacing) { m_icon_spacing = spacing; }
 
+    void set_menu(RefPtr<GUI::Menu>);
+
 protected:
     explicit Button(String text = {});
+    virtual void mousedown_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
 
 private:
     RefPtr<Gfx::Bitmap> m_icon;
+    RefPtr<GUI::Menu> m_menu;
     Gfx::ButtonStyle m_button_style { Gfx::ButtonStyle::Normal };
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
     WeakPtr<Action> m_action;
