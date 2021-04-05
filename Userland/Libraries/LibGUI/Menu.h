@@ -59,6 +59,12 @@ public:
     void popup(const Gfx::IntPoint& screen_position, const RefPtr<Action>& default_action = nullptr);
     void dismiss();
 
+    void visibility_did_change(Badge<WindowServerConnection>, bool visible);
+
+    Function<void(bool)> on_visibility_change;
+
+    bool is_visible() const { return m_visible; }
+
 private:
     friend class MenuBar;
 
@@ -71,6 +77,7 @@ private:
     RefPtr<Gfx::Bitmap> m_icon;
     NonnullOwnPtrVector<MenuItem> m_items;
     WeakPtr<Action> m_last_default_action;
+    bool m_visible { false };
 };
 
 }

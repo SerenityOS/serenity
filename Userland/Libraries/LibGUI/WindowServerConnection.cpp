@@ -252,6 +252,16 @@ void WindowServerConnection::handle(const Messages::WindowClient::MouseWheel& me
         Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseWheel, message.mouse_position(), message.buttons(), to_gmousebutton(message.button()), message.modifiers(), message.wheel_delta()));
 }
 
+void WindowServerConnection::handle(const Messages::WindowClient::MenuVisibilityDidChange& message)
+{
+    auto* menu = Menu::from_menu_id(message.menu_id());
+    if (!menu) {
+        dbgln("EventLoop received visibility change event for invalid menu ID {}", message.menu_id());
+        return;
+    }
+    menu->visibility_did_change({}, message.visible());
+}
+
 void WindowServerConnection::handle(const Messages::WindowClient::MenuItemActivated& message)
 {
     auto* menu = Menu::from_menu_id(message.menu_id());
