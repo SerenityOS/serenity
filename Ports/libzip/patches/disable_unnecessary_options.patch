@@ -1,0 +1,52 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 017f7cf0..125900e2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -9,19 +9,23 @@ project(libzip
+   VERSION 1.7.3
+   LANGUAGES C)
+ 
+-option(ENABLE_COMMONCRYPTO "Enable use of CommonCrypto" ON)
+-option(ENABLE_GNUTLS "Enable use of GnuTLS" ON)
+-option(ENABLE_MBEDTLS "Enable use of mbed TLS" ON)
+-option(ENABLE_OPENSSL "Enable use of OpenSSL" ON)
+-option(ENABLE_WINDOWS_CRYPTO "Enable use of Windows cryptography libraries" ON)
++set(ZLIB_LIBRARY ${SERENITY_BUILD_DIR}/Root/usr/local/lib/libz.a)
++set(ZLIB_INCLUDE_DIR ${SERENITY_BUILD_DIR}/Root/usr/local/include/zlib.h)
++add_compile_definitions(HAVE_STRINGS_H)
+ 
+-option(ENABLE_BZIP2 "Enable use of BZip2" ON)
+-option(ENABLE_LZMA "Enable use of LZMA" ON)
++option(ENABLE_COMMONCRYPTO "Enable use of CommonCrypto" OFF)
++option(ENABLE_GNUTLS "Enable use of GnuTLS" OFF)
++option(ENABLE_MBEDTLS "Enable use of mbed TLS" OFF)
++option(ENABLE_OPENSSL "Enable use of OpenSSL" OFF)
++option(ENABLE_WINDOWS_CRYPTO "Enable use of Windows cryptography libraries" OFF)
+ 
+-option(BUILD_TOOLS "Build tools in the src directory (zipcmp, zipmerge, ziptool)" ON)
+-option(BUILD_REGRESS "Build regression tests" ON)
+-option(BUILD_EXAMPLES "Build examples" ON)
+-option(BUILD_DOC "Build documentation" ON)
++option(ENABLE_BZIP2 "Enable use of BZip2" OFF)
++option(ENABLE_LZMA "Enable use of LZMA" OFF)
++
++option(BUILD_TOOLS "Build tools in the src directory (zipcmp, zipmerge, ziptool)" OFF)
++option(BUILD_REGRESS "Build regression tests" OFF)
++option(BUILD_EXAMPLES "Build examples" OFF)
++option(BUILD_DOC "Build documentation" OFF)
+ 
+ include(CheckFunctionExists)
+ include(CheckIncludeFiles)
+@@ -62,10 +66,10 @@ else()
+   set(WINDOWS_CRYPTO_FOUND FALSE)
+ endif()
+ 
+-option(BUILD_SHARED_LIBS "Build shared libraries" ON)
++option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+ option(LIBZIP_DO_INSTALL "Install libzip and the related files" ON)
+ 
+-option(SHARED_LIB_VERSIONNING "Add SO version in .so build" ON)
++option(SHARED_LIB_VERSIONNING "Add SO version in .so build" OFF)
+ 
+ find_program(MDOCTOOL NAMES mandoc groff)
+ if (MDOCTOOL)
