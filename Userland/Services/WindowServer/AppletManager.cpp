@@ -168,7 +168,7 @@ void AppletManager::repaint()
 
     if (!rect.is_empty()) {
         Gfx::Painter painter(*m_window->backing_store());
-        painter.fill_rect(rect, WindowManager::the().palette().window());
+        painter.fill_rect(rect, WindowManager::the().palette().button());
     }
 }
 
@@ -203,7 +203,7 @@ void AppletManager::draw_applet(const Window& applet)
     Gfx::Painter painter(*m_window->backing_store());
     Gfx::PainterStateSaver saver(painter);
     painter.add_clip_rect(applet.rect_in_applet_area());
-    painter.fill_rect(applet.rect_in_applet_area(), WindowManager::the().palette().window());
+    painter.fill_rect(applet.rect_in_applet_area(), WindowManager::the().palette().button());
     painter.blit(applet.rect_in_applet_area().location(), *applet.backing_store(), applet.backing_store()->rect());
 }
 
