@@ -2,7 +2,7 @@
 
 ## DISCLAIMER
 
-Whilst it is possible to run Serenity on physical x86-compatible hardware, it is not yet ready to be used by non-technical users who aren't prepared to report bugs or assist with its development. For this reason, there are currently no pre-built install images so a bare-metal installation requires that you build an installation image from source. Current hardware support is extremely limited. Most successful hard disk installations have been on Pentium 4 era hardware but by network booting Serenity users have been able to get it running on much more modern hardware such as Core i5 machines.
+Whilst it is possible to run Serenity on physical x86-compatible hardware, it is not yet ready to be used by non-technical users who aren't prepared to report bugs or assist with its development. For this reason, there are currently no pre-built install images so a bare-metal installation requires that you build an installation image from source. Current hardware support is extremely limited. Most successful hard disk installations have been on Pentium 4 era hardware but by [network booting Serenity](https://github.com/SerenityOS/serenity/blob/master/Documentation/NetworkBoot.md) users have been able to get it running on more modern hardware such as Core i5 machines.
 
 
 ## Hardware support and requirements
