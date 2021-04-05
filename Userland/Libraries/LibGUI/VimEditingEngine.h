@@ -51,14 +51,16 @@ private:
 
     VimMode m_vim_mode { VimMode::Normal };
 
-    void vim_move_down(const KeyEvent&);
-    void vim_move_left(const KeyEvent&);
-    void vim_move_right(const KeyEvent&);
-    void vim_move_up(const KeyEvent&);
-    StringBuilder m_command_multiplier { 8 };
-    void add_to_command_multiplier(char);
+    template<typename F>
+    void multiply_command(F&&);
+    void multiplied_move_down(const KeyEvent&);
+    void multiplied_move_left(const KeyEvent&);
+    void multiplied_move_right(const KeyEvent&);
+    void multiplied_move_up(const KeyEvent&);
+    uint32_t m_command_multiplier { 0 };
+    void add_to_command_multiplier(uint8_t);
     void clear_command_multiplier();
-    static char numeric_key_value(KeyCode);
+    static bool is_multiplied_key(KeyCode);
 
     YankType m_yank_type {};
     String m_yank_buffer {};
@@ -80,6 +82,35 @@ private:
     bool on_key_in_insert_mode(const KeyEvent& event);
     bool on_key_in_normal_mode(const KeyEvent& event);
     bool on_key_in_visual_mode(const KeyEvent& event);
+
+    template<typename T = uint8_t>
+    inline Optional<T> key_code_to_numeric_key_value(KeyCode key)
+    {
+        switch (key) {
+        case (KeyCode::Key_0):
+            return 0;
+        case (KeyCode::Key_1):
+            return 1;
+        case (KeyCode::Key_2):
+            return 2;
+        case (KeyCode::Key_3):
+            return 3;
+        case (KeyCode::Key_4):
+            return 4;
+        case (KeyCode::Key_5):
+            return 5;
+        case (KeyCode::Key_6):
+            return 6;
+        case (KeyCode::Key_7):
+            return 7;
+        case (KeyCode::Key_8):
+            return 8;
+        case (KeyCode::Key_9):
+            return 9;
+        default:
+            return {};
+        }
+    }
 };
 
 }
