@@ -65,8 +65,7 @@ bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
 
 char VimEditingEngine::numeric_key_value(const KeyCode key)
 {
-    switch(key)
-    {
+    switch(key) {
     case (KeyCode::Key_0):
         return '0';
     case (KeyCode::Key_1):
@@ -97,7 +96,7 @@ void VimEditingEngine::clear_command_multiplier()
     m_command_multiplier.clear();
 }
 
-void VimEditingEngine::vim_move_down(const KeyEvent &event)
+void VimEditingEngine::vim_move_down(const KeyEvent& event)
 {
     // FIXME: probably not an efficient way to do this
     if (m_command_multiplier.is_empty()) {
@@ -112,7 +111,7 @@ void VimEditingEngine::vim_move_down(const KeyEvent &event)
     }
 }
 
-void VimEditingEngine::vim_move_up(const KeyEvent &event)
+void VimEditingEngine::vim_move_up(const KeyEvent& event)
 {
     if (m_command_multiplier.is_empty()) {
         move_one_up(event);
@@ -126,7 +125,7 @@ void VimEditingEngine::vim_move_up(const KeyEvent &event)
     }
 }
 
-void VimEditingEngine::vim_move_left(const KeyEvent &event)
+void VimEditingEngine::vim_move_left(const KeyEvent& event)
 {
     if (m_command_multiplier.is_empty()) {
         move_one_left(event);
@@ -140,7 +139,7 @@ void VimEditingEngine::vim_move_left(const KeyEvent &event)
     }
 }
 
-void VimEditingEngine::vim_move_right(const KeyEvent &event)
+void VimEditingEngine::vim_move_right(const KeyEvent& event)
 {
     if (m_command_multiplier.is_empty()) {
         move_one_right(event);
