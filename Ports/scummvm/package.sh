@@ -4,6 +4,9 @@ useconfigure="true"
 version="2.2.0"
 files="https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.gz scummvm-${version}.tar.gz"
 depends="SDL2"
+# Optionally depends (you probably want to install):
+#   libogg libvorbis flac libmad libjpeg libpng libtheora
+#   faad2 zlib libmpeg2 readline freetype fribidi nasm curl
 
 configure() {
     export LIBS="-lgui -lgfx -lcore"

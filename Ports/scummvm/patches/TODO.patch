@@ -1,0 +1,66 @@
+--- scummvm-2.2.0/engines/glk/glulx/exec.cpp	2021-04-03 09:29:49.314645100 +0200
++++ scummvm-2.2.0-patched/engines/glk/glulx/exec.cpp	2021-04-03 09:26:19.379044700 +0200
+@@ -22,6 +22,8 @@
+ 
+ #include "glk/glulx/glulx.h"
+ 
++#undef TODO
++
+ namespace Glk {
+ namespace Glulx {
+ 
+--- scummvm-2.2.0/engines/glk/zcode/processor_windows.cpp	2021-04-03 09:29:49.554880600 +0200
++++ scummvm-2.2.0-patched/engines/glk/zcode/processor_windows.cpp	2021-04-03 09:26:49.504295100 +0200
+@@ -22,6 +22,8 @@
+ 
+ #include "glk/zcode/processor.h"
+ 
++#undef TODO
++
+ namespace Glk {
+ namespace ZCode {
+ 
+--- scummvm-2.2.0/engines/ultima/ultima4/gfx/imagemgr.cpp	2021-04-03 09:29:50.709229500 +0200
++++ scummvm-2.2.0-patched/engines/ultima/ultima4/gfx/imagemgr.cpp	2021-04-03 09:27:31.088524300 +0200
+@@ -29,6 +29,8 @@
+ #include "ultima/ultima4/filesys/u4file.h"
+ #include "ultima/ultima4/ultima4.h"
+ 
++#undef TODO
++
+ namespace Ultima {
+ namespace Ultima4 {
+ 
+--- scummvm-2.2.0/engines/ultima/nuvie/conf/configuration.cpp	2021-04-03 09:29:50.520881000 +0200
++++ scummvm-2.2.0-patched/engines/ultima/nuvie/conf/configuration.cpp	2021-04-03 09:27:54.930049800 +0200
+@@ -28,6 +28,8 @@
+ #include "common/config-manager.h"
+ #include "common/file.h"
+ 
++#undef TODO
++
+ namespace Ultima {
+ namespace Nuvie {
+ 
+--- scummvm-2.2.0/engines/ultima/nuvie/core/weather.cpp	2021-04-03 09:29:50.675996500 +0200
++++ scummvm-2.2.0-patched/engines/ultima/nuvie/core/weather.cpp	2021-04-03 09:28:11.798766100 +0200
+@@ -36,6 +36,8 @@
+ #include "ultima/nuvie/core/map.h"
+ #include "ultima/nuvie/script/script.h"
+ 
++#undef TODO
++
+ namespace Ultima {
+ namespace Nuvie {
+ 
+--- scummvm-2.2.0/engines/ultima/nuvie/misc/u6_misc.cpp	2021-04-03 09:29:50.696867100 +0200
++++ scummvm-2.2.0-patched/engines/ultima/nuvie/misc/u6_misc.cpp	2021-04-03 09:28:57.335246400 +0200
+@@ -29,6 +29,8 @@
+ #include "common/fs.h"
+ #include "common/str.h"
+ 
++#undef TODO
++
+ namespace Ultima {
+ namespace Nuvie {
+ 
