@@ -59,7 +59,7 @@ public:
     int model_column() const { return m_model_column; }
     void set_model_column(int);
 
-    void set_column_hidden(int column_index, bool hidden);
+    void set_column_visible(int column_index, bool visible);
 
     void set_key_column_and_sort_order(int column, SortOrder);
 

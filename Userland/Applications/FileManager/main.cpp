@@ -427,14 +427,14 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto directories_model = GUI::FileSystemModel::create({}, GUI::FileSystemModel::Mode::DirectoriesOnly);
     tree_view.set_model(directories_model);
-    tree_view.set_column_hidden(GUI::FileSystemModel::Column::Icon, true);
-    tree_view.set_column_hidden(GUI::FileSystemModel::Column::Size, true);
-    tree_view.set_column_hidden(GUI::FileSystemModel::Column::Owner, true);
-    tree_view.set_column_hidden(GUI::FileSystemModel::Column::Group, true);
-    tree_view.set_column_hidden(GUI::FileSystemModel::Column::Permissions, true);
-    tree_view.set_column_hidden(GUI::FileSystemModel::Column::ModificationTime, true);
-    tree_view.set_column_hidden(GUI::FileSystemModel::Column::Inode, true);
-    tree_view.set_column_hidden(GUI::FileSystemModel::Column::SymlinkTarget, true);
+    tree_view.set_column_visible(GUI::FileSystemModel::Column::Icon, false);
+    tree_view.set_column_visible(GUI::FileSystemModel::Column::Size, false);
+    tree_view.set_column_visible(GUI::FileSystemModel::Column::Owner, false);
+    tree_view.set_column_visible(GUI::FileSystemModel::Column::Group, false);
+    tree_view.set_column_visible(GUI::FileSystemModel::Column::Permissions, false);
+    tree_view.set_column_visible(GUI::FileSystemModel::Column::ModificationTime, false);
+    tree_view.set_column_visible(GUI::FileSystemModel::Column::Inode, false);
+    tree_view.set_column_visible(GUI::FileSystemModel::Column::SymlinkTarget, false);
     bool is_reacting_to_tree_view_selection_change = false;
 
     auto& directory_view = splitter.add<DirectoryView>(DirectoryView::Mode::Normal);

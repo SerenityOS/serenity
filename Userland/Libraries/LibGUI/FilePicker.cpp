@@ -113,11 +113,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
     m_view->set_model(SortingProxyModel::create(*m_model));
     m_view->set_model_column(FileSystemModel::Column::Name);
     m_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
-    m_view->set_column_hidden(FileSystemModel::Column::Owner, true);
-    m_view->set_column_hidden(FileSystemModel::Column::Group, true);
-    m_view->set_column_hidden(FileSystemModel::Column::Permissions, true);
-    m_view->set_column_hidden(FileSystemModel::Column::Inode, true);
-    m_view->set_column_hidden(FileSystemModel::Column::SymlinkTarget, true);
+    m_view->set_column_visible(FileSystemModel::Column::Owner, true);
+    m_view->set_column_visible(FileSystemModel::Column::Group, true);
+    m_view->set_column_visible(FileSystemModel::Column::Permissions, true);
+    m_view->set_column_visible(FileSystemModel::Column::Inode, true);
+    m_view->set_column_visible(FileSystemModel::Column::SymlinkTarget, true);
 
     set_path(path);
 
