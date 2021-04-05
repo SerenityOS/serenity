@@ -69,7 +69,7 @@ void InitialContainingBlockBox::paint_document_background(PaintContext& context)
 
     if (auto background_bitmap = document().background_image()) {
         Gfx::IntRect background_rect = { 0, 0, context.viewport_rect().x() + context.viewport_rect().width(), context.viewport_rect().y() + context.viewport_rect().height() };
-        paint_background_image(context, *background_bitmap, document().background_repeat(), move(background_rect));
+        paint_background_image(context, *background_bitmap, document().background_repeat_x(), document().background_repeat_y(), move(background_rect));
     }
 }
 

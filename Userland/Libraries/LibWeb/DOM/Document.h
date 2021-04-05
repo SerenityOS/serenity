@@ -129,7 +129,8 @@ public:
 
     Color background_color(const Gfx::Palette&) const;
     RefPtr<Gfx::Bitmap> background_image() const;
-    CSS::Repeat background_repeat() const;
+    CSS::Repeat background_repeat_x() const;
+    CSS::Repeat background_repeat_y() const;
 
     Color link_color() const;
     void set_link_color(Color);

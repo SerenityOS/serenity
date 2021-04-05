@@ -612,9 +612,9 @@ Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) c
     }
 }
 
-Optional<CSS::Repeat> StyleProperties::background_repeat() const
+Optional<CSS::Repeat> StyleProperties::background_repeat_x() const
 {
-    auto value = property(CSS::PropertyID::BackgroundRepeat);
+    auto value = property(CSS::PropertyID::BackgroundRepeatX);
     if (!value.has_value())
         return {};
 
@@ -623,10 +623,26 @@ Optional<CSS::Repeat> StyleProperties::background_repeat() const
         return CSS::Repeat::NoRepeat;
     case CSS::ValueID::Repeat:
         return CSS::Repeat::Repeat;
-    case CSS::ValueID::RepeatX:
-        return CSS::Repeat::RepeatX;
-    case CSS::ValueID::RepeatY:
-        return CSS::Repeat::RepeatY;
+    case CSS::ValueID::Round:
+        return CSS::Repeat::Round;
+    case CSS::ValueID::Space:
+        return CSS::Repeat::Space;
+    default:
+        return {};
+    }
+}
+
+Optional<CSS::Repeat> StyleProperties::background_repeat_y() const
+{
+    auto value = property(CSS::PropertyID::BackgroundRepeatY);
+    if (!value.has_value())
+        return {};
+
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::NoRepeat:
+        return CSS::Repeat::NoRepeat;
+    case CSS::ValueID::Repeat:
+        return CSS::Repeat::Repeat;
     case CSS::ValueID::Round:
         return CSS::Repeat::Round;
     case CSS::ValueID::Space:

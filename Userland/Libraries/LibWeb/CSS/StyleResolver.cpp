@@ -229,6 +229,24 @@ static inline void set_property_border_style(StyleProperties& style, const Style
         style.set_property(CSS::PropertyID::BorderLeftStyle, value);
 }
 
+static inline bool is_background_repeat_property(const StyleValue& value)
+{
+    if (!value.is_identifier())
+        return false;
+
+    switch (value.to_identifier()) {
+    case CSS::ValueID::NoRepeat:
+    case CSS::ValueID::Repeat:
+    case CSS::ValueID::RepeatX:
+    case CSS::ValueID::RepeatY:
+    case CSS::ValueID::Round:
+    case CSS::ValueID::Space:
+        return true;
+    default:
+        return false;
+    }
+}
+
 static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value, DOM::Document& document, bool is_internally_generated_pseudo_property = false)
 {
     CSS::ParsingContext context(document);
@@ -433,12 +451,22 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         if (values[0].is_color() && color_value_count == 1)
             style.set_property(CSS::PropertyID::BackgroundColor, values[0]);
 
-        for (auto& value : values) {
-            if (value.is_identifier())
-                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, value, document);
+        for (auto it = values.begin(); it != values.end(); ++it) {
+            auto& value = *it;
+
+            if (is_background_repeat_property(value)) {
+                if ((it + 1 != values.end()) && is_background_repeat_property(*(it + 1))) {
+                    ++it;
+
+                    set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, value, document, true);
+                    set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, *it, document, true);
+                } else {
+                    set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, value, document);
+                }
+            }
+
             if (!value.is_string())
                 continue;
-            auto string = value.to_string();
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document);
         }
         return;
@@ -464,7 +492,40 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::BackgroundRepeat) {
-        style.set_property(CSS::PropertyID::BackgroundRepeat, value);
+        auto parts = split_on_whitespace(value.to_string());
+        NonnullRefPtrVector<StyleValue> values;
+        for (auto& part : parts) {
+            auto value = parse_css_value(context, part);
+            if (!value || !is_background_repeat_property(*value))
+                return;
+            values.append(value.release_nonnull());
+        }
+
+        if (values.size() == 1) {
+            auto value_id = values[0].to_identifier();
+            if (value_id == CSS::ValueID::RepeatX || value_id == CSS::ValueID::RepeatY) {
+                auto repeat_x = IdentifierStyleValue::create(value_id == CSS::ValueID::RepeatX ? CSS::ValueID::Repeat : CSS::ValueID::NoRepeat);
+                auto repeat_y = IdentifierStyleValue::create(value_id == CSS::ValueID::RepeatX ? CSS::ValueID::NoRepeat : CSS::ValueID::Repeat);
+                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, repeat_x, document, true);
+                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, repeat_y, document, true);
+            } else {
+                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, values[0], document, true);
+                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, values[0], document, true);
+            }
+        } else if (values.size() == 2) {
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, values[0], document, true);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, values[1], document, true);
+        }
+
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::BackgroundRepeatX || property_id == CSS::PropertyID::BackgroundRepeatY) {
+        auto value_id = value.to_identifier();
+        if (value_id == CSS::ValueID::RepeatX || value_id == CSS::ValueID::RepeatY)
+            return;
+
+        style.set_property(property_id, value);
         return;
     }
 

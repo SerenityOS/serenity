@@ -92,7 +92,8 @@ public:
 
     Color color() const { return m_inherited.color; }
     Color background_color() const { return m_noninherited.background_color; }
-    CSS::Repeat background_repeat() const { return m_noninherited.background_repeat; }
+    CSS::Repeat background_repeat_x() const { return m_noninherited.background_repeat_x; }
+    CSS::Repeat background_repeat_y() const { return m_noninherited.background_repeat_y; }
 
     CSS::ListStyleType list_style_type() const { return m_inherited.list_style_type; }
 
@@ -134,7 +135,8 @@ protected:
         BorderData border_right;
         BorderData border_bottom;
         Color background_color { InitialValues::background_color() };
-        CSS::Repeat background_repeat { InitialValues::background_repeat() };
+        CSS::Repeat background_repeat_x { InitialValues::background_repeat() };
+        CSS::Repeat background_repeat_y { InitialValues::background_repeat() };
         CSS::FlexDirection flex_direction { InitialValues::flex_direction() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
@@ -149,7 +151,8 @@ public:
     void set_color(const Color& color) { m_inherited.color = color; }
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
     void set_background_color(const Color& color) { m_noninherited.background_color = color; }
-    void set_background_repeat(CSS::Repeat repeat) { m_noninherited.background_repeat = repeat; }
+    void set_background_repeat_x(CSS::Repeat repeat) { m_noninherited.background_repeat_x = repeat; }
+    void set_background_repeat_y(CSS::Repeat repeat) { m_noninherited.background_repeat_y = repeat; }
     void set_float(CSS::Float value) { m_noninherited.float_ = value; }
     void set_clear(CSS::Clear value) { m_noninherited.clear = value; }
     void set_z_index(Optional<int> value) { m_noninherited.z_index = value; }

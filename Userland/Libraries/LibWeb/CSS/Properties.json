@@ -18,8 +18,20 @@
     "initial": "0% 0%"
   },
   "background-repeat": {
+    "longhands": [
+      "background-repeat-x",
+      "background-repeat-y"
+    ]
+  },
+  "background-repeat-x": {
     "inherited": false,
-    "initial": "repeat"
+    "initial": "repeat",
+    "pseudo": true
+  },
+  "background-repeat-y": {
+    "inherited": false,
+    "initial": "repeat",
+    "pseudo": true
   },
   "border": {
     "longhands": [
