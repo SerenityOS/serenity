@@ -40,6 +40,9 @@ public:
 private:
     ThreadStackWidget();
 
+    virtual void show_event(GUI::ShowEvent&) override;
+    virtual void hide_event(GUI::HideEvent&) override;
+
     pid_t m_pid { -1 };
     pid_t m_tid { -1 };
     RefPtr<GUI::TextEditor> m_stack_editor;
