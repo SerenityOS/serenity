@@ -95,7 +95,7 @@ public:
     virtual bool put(const PropertyName&, Value, Value receiver = {});
 
     Value get_own_property(const PropertyName&, Value receiver) const;
-    Value get_own_properties(const Object& this_object, PropertyKind, bool only_enumerable_properties = false, GetOwnPropertyReturnType = GetOwnPropertyReturnType::StringOnly) const;
+    Value get_own_properties(PropertyKind, bool only_enumerable_properties = false, GetOwnPropertyReturnType = GetOwnPropertyReturnType::StringOnly) const;
     virtual Optional<PropertyDescriptor> get_own_property_descriptor(const PropertyName&) const;
     Value get_own_property_descriptor_object(const PropertyName&) const;
 
@@ -167,8 +167,8 @@ protected:
     virtual bool put_by_index(u32 property_index, Value);
 
 private:
-    bool put_own_property(Object& this_object, const StringOrSymbol& property_name, Value, PropertyAttributes attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
-    bool put_own_property_by_index(Object& this_object, u32 property_index, Value, PropertyAttributes attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
+    bool put_own_property(const StringOrSymbol& property_name, Value, PropertyAttributes attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
+    bool put_own_property_by_index(u32 property_index, Value, PropertyAttributes attributes, PutOwnPropertyMode = PutOwnPropertyMode::Put, bool throw_exceptions = true);
 
     Value call_native_property_getter(NativeProperty& property, Value this_value) const;
     void call_native_property_setter(NativeProperty& property, Value this_value, Value) const;
