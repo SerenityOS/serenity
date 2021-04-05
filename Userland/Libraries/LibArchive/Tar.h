@@ -49,10 +49,12 @@ enum class TarFileType : char {
 };
 
 constexpr size_t block_size = 512;
-constexpr const char* gnu_magic = "ustar ";  // gnu format magic
-constexpr const char* gnu_version = " ";     // gnu format version
-constexpr const char* ustar_magic = "ustar"; // ustar format magic
-constexpr const char* ustar_version = "00";  // ustar format version
+constexpr const char* gnu_magic = "ustar ";    // gnu format magic
+constexpr const char* gnu_version = " ";       // gnu format version
+constexpr const char* ustar_magic = "ustar";   // ustar format magic
+constexpr const char* ustar_version = "00";    // ustar format version
+constexpr const char* posix1_tar_magic = "";   // POSIX.1-1988 format magic
+constexpr const char* posix1_tar_version = ""; // POSIX.1-1988 format version
 
 class [[gnu::packed]] TarFileHeader {
 public:
@@ -63,6 +65,7 @@ public:
     // FIXME: support 2001-star size encoding
     size_t size() const { return get_tar_field(m_size); }
     time_t timestamp() const { return get_tar_field(m_timestamp); }
+    unsigned checksum() const { return get_tar_field(m_checksum); }
     TarFileType type_flag() const { return TarFileType(m_type_flag); }
     const StringView link_name() const { return m_link_name; }
     const StringView magic() const { return StringView(m_magic, min(__builtin_strlen(m_magic), sizeof(m_magic))); }         // in some cases this is a null terminated string, in others its not
@@ -90,6 +93,7 @@ public:
     void set_minor(int minor) { VERIFY(String::formatted("{:o}", minor).copy_characters_to_buffer(m_minor, sizeof(m_minor))); }
     void set_prefix(const String& prefix) { VERIFY(prefix.copy_characters_to_buffer(m_prefix, sizeof(m_prefix))); }
 
+    unsigned expected_checksum() const;
     void calculate_checksum();
 
 private:
@@ -128,14 +132,25 @@ size_t TarFileHeader::get_tar_field(const char (&field)[N])
     }
     return value;
 }
+
+unsigned TarFileHeader::expected_checksum() const
+{
+    auto checksum = 0u;
+    const u8* u8_this = reinterpret_cast<const u8*>(this);
+    const u8* u8_m_checksum = reinterpret_cast<const u8*>(&m_checksum);
+    for (auto i = 0u; i < sizeof(TarFileHeader); ++i) {
+        if (u8_this + i >= u8_m_checksum && u8_this + i < u8_m_checksum + sizeof(m_checksum)) {
+            checksum += ' ';
+        } else {
+            checksum += u8_this[i];
+        }
+    }
+    return checksum;
+}
+
 void TarFileHeader::calculate_checksum()
 {
     memset(m_checksum, ' ', sizeof(m_checksum));
-    auto checksum = 0u;
-    for (auto i = 0u; i < sizeof(TarFileHeader); ++i) {
-        checksum += ((unsigned char*)this)[i];
-    }
-    VERIFY(String::formatted("{:o}", checksum).copy_characters_to_buffer(m_checksum, sizeof(m_checksum)));
+    VERIFY(String::formatted("{:06o}", expected_checksum()).copy_characters_to_buffer(m_checksum, sizeof(m_checksum)));
 }
-
 }
