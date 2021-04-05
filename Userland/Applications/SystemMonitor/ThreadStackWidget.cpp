@@ -37,12 +37,22 @@ ThreadStackWidget::ThreadStackWidget()
     layout()->set_margins({ 4, 4, 4, 4 });
     m_stack_editor = add<GUI::TextEditor>();
     m_stack_editor->set_mode(GUI::TextEditor::ReadOnly);
-
-    m_timer = add<Core::Timer>(1000, [this] { refresh(); });
 }
 
 ThreadStackWidget::~ThreadStackWidget()
 {
+}
+
+void ThreadStackWidget::show_event(GUI::ShowEvent&)
+{
+    refresh();
+    if (!m_timer)
+        m_timer = add<Core::Timer>(1000, [this] { refresh(); });
+}
+
+void ThreadStackWidget::hide_event(GUI::HideEvent&)
+{
+    m_timer = nullptr;
 }
 
 void ThreadStackWidget::set_ids(pid_t pid, pid_t tid)
@@ -51,7 +61,6 @@ void ThreadStackWidget::set_ids(pid_t pid, pid_t tid)
         return;
     m_pid = pid;
     m_tid = tid;
-    refresh();
 }
 
 void ThreadStackWidget::refresh()
