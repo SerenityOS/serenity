@@ -235,29 +235,44 @@ Value Object::get_own_properties(PropertyKind kind, bool only_enumerable_propert
         ++property_index;
     }
 
-    for (auto& it : shape().property_table_ordered()) {
-        if (only_enumerable_properties && !it.value.attributes.is_enumerable())
-            continue;
-
-        if (return_type == GetOwnPropertyReturnType::StringOnly && it.key.is_symbol())
-            continue;
-        if (return_type == GetOwnPropertyReturnType::SymbolOnly && it.key.is_string())
-            continue;
-
+    auto add_property_to_results = [&](auto& property) {
         if (kind == PropertyKind::Key) {
-            properties_array->define_property(property_index, it.key.to_value(vm()));
+            properties_array->define_property(property_index, property.key.to_value(vm()));
         } else if (kind == PropertyKind::Value) {
-            properties_array->define_property(property_index, get(it.key));
+            properties_array->define_property(property_index, get(property.key));
         } else {
             auto* entry_array = Array::create(global_object());
-            entry_array->define_property(0, it.key.to_value(vm()));
-            entry_array->define_property(1, get(it.key));
+            entry_array->define_property(0, property.key.to_value(vm()));
+            entry_array->define_property(1, get(property.key));
             properties_array->define_property(property_index, entry_array);
         }
-        if (vm().exception())
-            return {};
+    };
 
-        ++property_index;
+    // NOTE: Most things including for..in/of and Object.{keys,values,entries}() use StringOnly, and in those
+    // cases we won't be iterating the ordered property table twice. We can certainly improve this though.
+    if (return_type == GetOwnPropertyReturnType::All || return_type == GetOwnPropertyReturnType::StringOnly) {
+        for (auto& it : shape().property_table_ordered()) {
+            if (only_enumerable_properties && !it.value.attributes.is_enumerable())
+                continue;
+            if (it.key.is_symbol())
+                continue;
+            add_property_to_results(it);
+            if (vm().exception())
+                return {};
+            ++property_index;
+        }
+    }
+    if (return_type == GetOwnPropertyReturnType::All || return_type == GetOwnPropertyReturnType::SymbolOnly) {
+        for (auto& it : shape().property_table_ordered()) {
+            if (only_enumerable_properties && !it.value.attributes.is_enumerable())
+                continue;
+            if (it.key.is_string())
+                continue;
+            add_property_to_results(it);
+            if (vm().exception())
+                return {};
+            ++property_index;
+        }
     }
 
     return properties_array;
