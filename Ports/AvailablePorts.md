@@ -65,6 +65,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`nyancat`](nyancat/)          | Nyancat                                       |                   | https://github.com/klange/nyancat                     |
 | [`openssh`](openssh/)          | OpenSSH                                       | 8.3-9ca7e9c       | https://github.com/openssh/openssh-portable           |
 | [`openssl`](openssl/)          | OpenSSL                                       | 1.0.2             | https://www.openssl.org/                              |
+| [`oksh`](oksh/)                | oksh                                          | 6.8.1             | https://github.com/ibara/oksh                         |
 | [`patch`](patch/)              | patch (OpenBSD)                               | 6.6               | https://github.com/ibara/libpuffy                     |
 | [`pcre2`](pcre2/)              | Perl-compatible Regular Expressions (PCRE2)   | 10.34             | https://www.pcre.org/                                 |
 | [`pkgconf`](pkgconf/)          | pkgconf                                       | 1.7.3             | https://github.com/pkgconf/pkgconf                    |
