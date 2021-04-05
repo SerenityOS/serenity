@@ -54,7 +54,7 @@ public:
     bool column_headers_visible() const;
     void set_column_headers_visible(bool);
 
-    void set_column_hidden(int, bool);
+    void set_column_visible(int, bool);
 
     int column_width(int column) const;
     void set_column_width(int column, int width);

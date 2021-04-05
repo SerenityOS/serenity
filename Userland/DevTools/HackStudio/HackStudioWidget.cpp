@@ -699,9 +699,9 @@ void HackStudioWidget::create_project_tree_view(GUI::Widget& parent)
     m_project_tree_view->set_selection_mode(GUI::AbstractView::SelectionMode::MultiSelection);
 
     for (int column_index = 0; column_index < m_project->model().column_count(); ++column_index)
-        m_project_tree_view->set_column_hidden(column_index, true);
+        m_project_tree_view->set_column_visible(column_index, false);
 
-    m_project_tree_view->set_column_hidden(GUI::FileSystemModel::Column::Name, false);
+    m_project_tree_view->set_column_visible(GUI::FileSystemModel::Column::Name, true);
 
     m_project_tree_view->on_context_menu_request = [this](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid()) {

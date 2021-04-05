@@ -372,9 +372,9 @@ void AbstractTableView::set_default_column_width(int column, int width)
     column_header().set_default_section_size(column, width);
 }
 
-void AbstractTableView::set_column_hidden(int column, bool hidden)
+void AbstractTableView::set_column_visible(int column, bool visible)
 {
-    column_header().set_section_visible(column, !hidden);
+    column_header().set_section_visible(column, visible);
 }
 
 void AbstractTableView::set_column_headers_visible(bool visible)
