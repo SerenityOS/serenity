@@ -111,6 +111,8 @@ public:
 
     void close();
 
+    void set_visible(bool);
+
     void popup(const Gfx::IntPoint&);
     void do_popup(const Gfx::IntPoint&, bool make_input, bool as_submenu = false);
 

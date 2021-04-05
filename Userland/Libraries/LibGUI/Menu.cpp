@@ -162,4 +162,13 @@ Action* Menu::action_at(size_t index)
     return m_items[index].action();
 }
 
+void Menu::visibility_did_change(Badge<WindowServerConnection>, bool visible)
+{
+    if (m_visible == visible)
+        return;
+    m_visible = visible;
+    if (on_visibility_change)
+        on_visibility_change(visible);
+}
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,6 +64,7 @@ private:
     virtual void handle(const Messages::WindowClient::WindowCloseRequest&) override;
     virtual void handle(const Messages::WindowClient::WindowResized&) override;
     virtual void handle(const Messages::WindowClient::MenuItemActivated&) override;
+    virtual void handle(const Messages::WindowClient::MenuVisibilityDidChange&) override;
     virtual void handle(const Messages::WindowClient::ScreenRectChanged&) override;
     virtual void handle(const Messages::WindowClient::WM_WindowRemoved&) override;
     virtual void handle(const Messages::WindowClient::WM_WindowStateChanged&) override;
