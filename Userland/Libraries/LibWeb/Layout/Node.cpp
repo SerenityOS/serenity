@@ -234,9 +234,13 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         m_background_image = static_ptr_cast<CSS::ImageStyleValue>(bgimage.value());
     }
 
-    auto background_repeat = specified_style.background_repeat();
-    if (background_repeat.has_value())
-        computed_values.set_background_repeat(background_repeat.value());
+    auto background_repeat_x = specified_style.background_repeat_x();
+    if (background_repeat_x.has_value())
+        computed_values.set_background_repeat_x(background_repeat_x.value());
+
+    auto background_repeat_y = specified_style.background_repeat_y();
+    if (background_repeat_y.has_value())
+        computed_values.set_background_repeat_y(background_repeat_y.value());
 
     computed_values.set_display(specified_style.display());
 
