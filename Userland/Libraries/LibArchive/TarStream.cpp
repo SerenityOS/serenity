@@ -125,7 +125,14 @@ bool TarInputStream::valid() const
 {
     auto& header_magic = header().magic();
     auto& header_version = header().version();
-    return (header_magic == gnu_magic && header_version == gnu_version) || (header_magic == ustar_magic && header_version == ustar_version);
+
+    if (!((header_magic == gnu_magic && header_version == gnu_version)
+            || (header_magic == ustar_magic && header_version == ustar_version)
+            || (header_magic == posix1_tar_magic && header_version == posix1_tar_version)))
+        return false;
+
+    // POSIX.1-1988 tar does not have magic numbers, so we also neet to verify the header checksum.
+    return header().checksum() == header().expected_checksum();
 }
 
 TarFileStream TarInputStream::file_contents()
