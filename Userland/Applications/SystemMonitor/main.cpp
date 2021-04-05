@@ -174,7 +174,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("System Monitor");
-    window->resize(680, 400);
+    window->resize(680, 430);
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_layout<GUI::VerticalBoxLayout>();
