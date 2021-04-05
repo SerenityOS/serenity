@@ -151,6 +151,11 @@ ALWAYS_INLINE void Parser::reset()
     m_parser_state.current_token = m_parser_state.lexer.next();
     m_parser_state.error = Error::NoError;
     m_parser_state.error_token = { TokenType::Eof, 0, StringView(nullptr) };
+    m_parser_state.capture_group_minimum_lengths.clear();
+    m_parser_state.capture_groups_count = 0;
+    m_parser_state.named_capture_groups_count = 0;
+    m_parser_state.named_capture_group_minimum_lengths.clear();
+    m_parser_state.named_capture_groups.clear();
 }
 
 Parser::Result Parser::parse(Optional<AllOptions> regex_options)
