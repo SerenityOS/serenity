@@ -1,0 +1,28 @@
+diff --git a/history.c b/history.c
+index 59876da..b03cc7a 100644
+--- a/history.c
++++ b/history.c
+@@ -23,6 +23,8 @@
+ 
+ #include "sh.h"
+ 
++#define SMALL
++
+ #if !defined(HAVE_STRAVIS) || !defined(HAVE_STRUNVIS)
+ #include "vis.h"
+ #else
+@@ -636,12 +638,12 @@ init_histvec(void)
+ static void
+ history_lock(int operation)
+ {
+-	while (flock(fileno(histfh), operation) != 0) {
++	/*while (flock(fileno(histfh), operation) != 0) {
+ 		if (errno == EINTR || errno == EAGAIN)
+ 			continue;
+ 		else
+ 			break;
+-	}
++	}*/
+ }
+ 
+ /*
