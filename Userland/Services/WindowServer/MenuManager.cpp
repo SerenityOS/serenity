@@ -242,8 +242,7 @@ void MenuManager::close_everyone()
 {
     for (auto& menu : m_open_menu_stack) {
         VERIFY(menu);
-        if (menu->menu_window())
-            menu->menu_window()->set_visible(false);
+        menu->set_visible(false);
         menu->clear_hovered_item();
     }
     m_open_menu_stack.clear();
@@ -270,8 +269,7 @@ void MenuManager::close_menus(const Vector<Menu*>& menus)
     for (auto& menu : menus) {
         if (menu == m_current_menu)
             clear_current_menu();
-        if (menu->menu_window())
-            menu->menu_window()->set_visible(false);
+        menu->set_visible(false);
         menu->clear_hovered_item();
         m_open_menu_stack.remove_first_matching([&](auto& entry) {
             return entry == menu;
@@ -332,7 +330,7 @@ void MenuManager::open_menu(Menu& menu, bool as_current_menu)
         menu.redraw_if_theme_changed();
         if (!menu.menu_window())
             menu.ensure_menu_window();
-        menu.menu_window()->set_visible(true);
+        menu.set_visible(true);
     }
 
     if (m_open_menu_stack.find_if([&menu](auto& other) { return &menu == other.ptr(); }).is_end())

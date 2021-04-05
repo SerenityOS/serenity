@@ -19,6 +19,7 @@ endpoint WindowClient = 4
     WindowResized(i32 window_id, Gfx::IntRect new_rect) =|
 
     MenuItemActivated(i32 menu_id, i32 identifier) =|
+    MenuVisibilityDidChange(i32 menu_id, bool visible) =|
 
     ScreenRectChanged(Gfx::IntRect rect) =|
 
