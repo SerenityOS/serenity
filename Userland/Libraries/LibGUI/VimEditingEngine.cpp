@@ -86,15 +86,15 @@ void VimEditingEngine::clear_command_multiplier()
 }
 
 template<typename F>
-void VimEditingEngine::multiply_command(F&& move_function)
+void VimEditingEngine::multiply_command(F&& command)
 {
     if (m_command_multiplier > 0) {
         for (uint32_t i = 0; i < m_command_multiplier; ++i) {
-            move_function();
+            command();
         }
         clear_command_multiplier();
     } else {
-        move_function();
+        command();
     }
 }
 
