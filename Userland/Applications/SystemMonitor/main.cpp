@@ -174,7 +174,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("System Monitor");
-    window->resize(680, 430);
+    window->resize(560, 430);
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_layout<GUI::VerticalBoxLayout>();
@@ -227,6 +227,16 @@ int main(int argc, char** argv)
     auto& process_table_view = process_table_container.add<GUI::TableView>();
     process_table_view.set_column_headers_visible(true);
     process_table_view.set_model(GUI::SortingProxyModel::create(process_model));
+    for (auto column = 0; column < ProcessModel::Column::__Count; ++column)
+        process_table_view.set_column_visible(column, false);
+    process_table_view.set_column_visible(ProcessModel::Column::Icon, true);
+    process_table_view.set_column_visible(ProcessModel::Column::PID, true);
+    process_table_view.set_column_visible(ProcessModel::Column::Name, true);
+    process_table_view.set_column_visible(ProcessModel::Column::CPU, true);
+    process_table_view.set_column_visible(ProcessModel::Column::User, true);
+    process_table_view.set_column_visible(ProcessModel::Column::Virtual, true);
+    process_table_view.set_column_visible(ProcessModel::Column::DirtyPrivate, true);
+
     process_table_view.set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
     process_table_view.model()->update();
 

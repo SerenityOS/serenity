@@ -99,7 +99,7 @@ String ProcessModel::column_name(int column) const
     case Column::Physical:
         return "Physical";
     case Column::DirtyPrivate:
-        return "DirtyP";
+        return "Private";
     case Column::CleanInode:
         return "CleanI";
     case Column::PurgeableVolatile:
