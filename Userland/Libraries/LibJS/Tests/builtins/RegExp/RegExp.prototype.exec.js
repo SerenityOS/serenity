@@ -44,9 +44,10 @@ test("basic named captures", () => {
     let re = /f(?<os>o.*)/;
     let res = re.exec("fooooo");
 
-    expect(res.length).toBe(1);
+    expect(res.length).toBe(2);
     expect(res.index).toBe(0);
     expect(res[0]).toBe("fooooo");
+    expect(res[1]).toBe("ooooo");
     expect(res.groups).not.toBe(undefined);
     expect(res.groups.os).toBe("ooooo");
 });
