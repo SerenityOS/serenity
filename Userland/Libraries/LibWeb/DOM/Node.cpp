@@ -181,6 +181,8 @@ const Element* Node::parent_element() const
 
 RefPtr<Node> Node::append_child(NonnullRefPtr<Node> node, bool notify)
 {
+    if (node->parent())
+        node->parent()->remove_child(node);
     if (&node->document() != &document())
         document().adopt_node(node);
     TreeNode<Node>::append_child(node, notify);
@@ -201,6 +203,8 @@ RefPtr<Node> Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, b
         dbgln("FIXME: Trying to insert_before() a bogus child");
         return nullptr;
     }
+    if (node->parent())
+        node->parent()->remove_child(node);
     if (&node->document() != &document())
         document().adopt_node(node);
     TreeNode<Node>::insert_before(node, child, notify);
