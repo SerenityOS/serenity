@@ -109,6 +109,7 @@ private:
         pid_t sid;
         unsigned ticks_user;
         unsigned ticks_kernel;
+        bool kernel;
         String executable;
         String name;
         String state;
@@ -146,4 +147,5 @@ private:
     NonnullOwnPtrVector<CpuInfo> m_cpus;
     Vector<int> m_tids;
     RefPtr<Core::File> m_proc_all;
+    GUI::Icon m_kernel_process_icon;
 };
