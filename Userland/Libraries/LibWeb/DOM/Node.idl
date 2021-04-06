@@ -15,8 +15,8 @@ interface Node : EventTarget {
     attribute DOMString textContent;
 
     Node appendChild(Node node);
-    Node insertBefore(Node node, Node? child);
-    Node removeChild(Node child);
+    [ImplementedAs=pre_insert] Node insertBefore(Node node, Node? child);
+    [ImplementedAs=pre_remove] Node removeChild(Node child);
 
     const unsigned short ELEMENT_NODE = 1;
     const unsigned short ATTRIBUTE_NODE = 2;

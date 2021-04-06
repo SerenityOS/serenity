@@ -31,6 +31,8 @@ interface Document : Node {
     Comment createComment(DOMString data);
     Range createRange();
 
+    [CEReactions, ImplementedAs=adopt_node_binding] Node adoptNode(Node node);
+
     [ImplementedAs=style_sheets_for_bindings] readonly attribute StyleSheetList styleSheets;
 
     readonly attribute DOMString compatMode;
