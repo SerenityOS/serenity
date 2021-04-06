@@ -161,10 +161,12 @@ namespace JS {
     P(isArray)                               \
     P(isExtensible)                          \
     P(isFinite)                              \
+    P(isFrozen)                              \
     P(isInteger)                             \
     P(isNaN)                                 \
     P(isPrototypeOf)                         \
     P(isSafeInteger)                         \
+    P(isSealed)                              \
     P(isView)                                \
     P(join)                                  \
     P(keyFor)                                \

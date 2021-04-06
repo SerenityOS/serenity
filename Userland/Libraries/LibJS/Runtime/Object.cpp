@@ -208,6 +208,32 @@ bool Object::set_integrity_level(IntegrityLevel level)
     return true;
 }
 
+// 7.3.16 TestIntegrityLevel, https://tc39.es/ecma262/#sec-testintegritylevel
+bool Object::test_integrity_level(IntegrityLevel level)
+{
+    auto& vm = this->vm();
+    auto extensible = is_extensible();
+    if (vm.exception())
+        return false;
+    if (extensible)
+        return false;
+    auto keys = get_own_properties(PropertyKind::Key);
+    if (vm.exception())
+        return false;
+    for (auto& key : keys) {
+        auto property_name = PropertyName::from_value(global_object(), key);
+        auto property_descriptor = get_own_property_descriptor(property_name);
+        VERIFY(property_descriptor.has_value());
+        if (property_descriptor->attributes.is_configurable())
+            return false;
+        if (level == IntegrityLevel::Frozen && property_descriptor->is_data_descriptor()) {
+            if (property_descriptor->attributes.is_writable())
+                return false;
+        }
+    }
+    return true;
+}
+
 Value Object::get_own_property(const PropertyName& property_name, Value receiver) const
 {
     VERIFY(property_name.is_valid());
