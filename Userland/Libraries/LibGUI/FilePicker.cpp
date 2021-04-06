@@ -120,8 +120,6 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
     m_view->set_column_visible(FileSystemModel::Column::Inode, true);
     m_view->set_column_visible(FileSystemModel::Column::SymlinkTarget, true);
 
-    set_path(path);
-
     m_model->register_client(*this);
 
     m_location_textbox->on_return_pressed = [this] {
@@ -225,20 +223,39 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
     };
 
     auto& common_locations_frame = *widget.find_descendant_of_type_named<GUI::Frame>("common_locations_frame");
-    auto add_common_location_button = [&](auto& name, String path) {
+    auto add_common_location_button = [&](auto& name, String path) -> GUI::Button& {
         auto& button = common_locations_frame.add<GUI::Button>();
         button.set_button_style(Gfx::ButtonStyle::CoolBar);
         button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         button.set_text(move(name));
         button.set_icon(FileIconProvider::icon_for_path(path).bitmap_for_size(16));
         button.set_fixed_height(22);
+        button.set_checkable(true);
+        button.set_exclusive(true);
         button.on_click = [this, path] {
             set_path(path);
         };
+        return button;
     };
-    add_common_location_button("Home", Core::StandardPaths::home_directory());
-    add_common_location_button("Desktop", Core::StandardPaths::desktop_directory());
-    add_common_location_button("Root", "/");
+    auto& home_button = add_common_location_button("Home", Core::StandardPaths::home_directory());
+    auto& desktop_button = add_common_location_button("Desktop", Core::StandardPaths::desktop_directory());
+    auto& root_button = add_common_location_button("Root", "/");
+
+    m_model->on_complete = [&] {
+        if (m_model->root_path() == Core::StandardPaths::home_directory()) {
+            home_button.set_checked(true);
+        } else if (m_model->root_path() == Core::StandardPaths::desktop_directory()) {
+            desktop_button.set_checked(true);
+        } else if (m_model->root_path() == "/") {
+            root_button.set_checked(true);
+        } else {
+            home_button.set_checked(false);
+            desktop_button.set_checked(false);
+            root_button.set_checked(false);
+        }
+    };
+
+    set_path(path);
 }
 
 FilePicker::~FilePicker()

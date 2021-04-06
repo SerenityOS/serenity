@@ -20,7 +20,7 @@
 
         @GUI::Frame {
             name: "common_locations_frame"
-            fixed_width: 80
+            fixed_width: 90
             fill_with_background_color: true
 
             layout: @GUI::VerticalBoxLayout {
