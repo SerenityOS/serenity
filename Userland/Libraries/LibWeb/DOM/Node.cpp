@@ -114,7 +114,7 @@ RefPtr<Layout::Node> Node::create_layout_node()
 
 void Node::invalidate_style()
 {
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
+    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
         element.set_needs_style_update(true);
         return IterationDecision::Continue;
     });

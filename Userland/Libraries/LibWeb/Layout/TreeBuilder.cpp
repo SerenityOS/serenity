@@ -155,7 +155,7 @@ RefPtr<Node> TreeBuilder::build(DOM::Node& dom_node)
 template<CSS::Display display, typename Callback>
 void TreeBuilder::for_each_in_tree_with_display(NodeWithStyle& root, Callback callback)
 {
-    root.for_each_in_subtree_of_type<Box>([&](auto& box) {
+    root.for_each_in_inclusive_subtree_of_type<Box>([&](auto& box) {
         if (box.computed_values().display() == display)
             callback(box);
         return IterationDecision::Continue;

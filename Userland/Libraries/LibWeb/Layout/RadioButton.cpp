@@ -139,7 +139,7 @@ void RadioButton::set_checked_within_group()
     dom_node().set_checked(true);
     String name = dom_node().name();
 
-    document().for_each_in_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
+    document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
         if (element.checked() && (element.layout_node() != this) && (element.name() == name))
             element.set_checked(false);
         return IterationDecision::Continue;
