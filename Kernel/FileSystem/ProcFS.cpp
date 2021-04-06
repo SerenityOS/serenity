@@ -817,6 +817,7 @@ static bool procfs$all(InodeIdentifier, KBufferBuilder& builder)
         process_object.add("amount_purgeable_volatile", process.space().amount_purgeable_volatile());
         process_object.add("amount_purgeable_nonvolatile", process.space().amount_purgeable_nonvolatile());
         process_object.add("dumpable", process.is_dumpable());
+        process_object.add("kernel", process.is_kernel_process());
         auto thread_array = process_object.add_array("threads");
         process.for_each_thread([&](const Thread& thread) {
             auto thread_object = thread_array.add_object();

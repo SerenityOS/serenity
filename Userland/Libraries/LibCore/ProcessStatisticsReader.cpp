@@ -71,6 +71,7 @@ Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_a
         process.gid = process_object.get("gid").to_u32();
         process.ppid = process_object.get("ppid").to_u32();
         process.nfds = process_object.get("nfds").to_u32();
+        process.kernel = process_object.get("kernel").to_bool();
         process.name = process_object.get("name").to_string();
         process.executable = process_object.get("executable").to_string();
         process.tty = process_object.get("tty").to_string();
