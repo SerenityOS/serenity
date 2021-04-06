@@ -65,6 +65,7 @@ struct ProcessStatistics {
     gid_t gid;
     pid_t ppid;
     unsigned nfds;
+    bool kernel;
     String name;
     String executable;
     String tty;
