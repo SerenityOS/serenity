@@ -40,7 +40,7 @@ RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
     dump_selector(selector.value());
 
     RefPtr<Element> result;
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
+    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
         if (SelectorEngine::matches(selector.value(), element)) {
             result = element;
             return IterationDecision::Break;
@@ -60,7 +60,7 @@ NonnullRefPtrVector<Element> ParentNode::query_selector_all(const StringView& se
     dump_selector(selector.value());
 
     NonnullRefPtrVector<Element> elements;
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
+    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
         if (SelectorEngine::matches(selector.value(), element)) {
             elements.append(element);
         }
