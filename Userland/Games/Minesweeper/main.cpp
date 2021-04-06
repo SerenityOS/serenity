@@ -91,8 +91,9 @@ int main(int argc, char** argv)
 
     auto& flag_label = container.add<GUI::Label>();
     auto& face_button = container.add<GUI::Button>();
+    face_button.set_focus_policy(GUI::FocusPolicy::TabFocus);
     face_button.set_button_style(Gfx::ButtonStyle::CoolBar);
-    face_button.set_fixed_width(36);
+    face_button.set_fixed_size(36, 36);
 
     auto& time_image = container.add<GUI::ImageWidget>();
     time_image.load_from_file("/res/icons/minesweeper/timer.png");

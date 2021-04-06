@@ -33,7 +33,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 #include <time.h>
-#include <unistd.h>
 
 class SquareButton final : public GUI::Button {
     C_OBJECT(SquareButton);
@@ -56,7 +55,10 @@ public:
     }
 
 private:
-    SquareButton() { }
+    SquareButton()
+    {
+        set_focus_policy(GUI::FocusPolicy::TabFocus);
+    }
 };
 
 class SquareLabel final : public GUI::Label {
