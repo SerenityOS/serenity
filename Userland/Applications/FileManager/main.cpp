@@ -379,7 +379,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
                     file_context_menu->add_separator();
 
                 file_context_menu->add_action(properties_action);
-                file_context_menu->popup(event.screen_position());
+                file_context_menu->popup(event.screen_position(), file_context_menu_action_default_action);
             }
         } else {
             desktop_view_context_menu->popup(event.screen_position());
