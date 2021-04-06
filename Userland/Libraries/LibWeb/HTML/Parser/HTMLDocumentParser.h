@@ -127,8 +127,8 @@ private:
 
     DOM::Text* find_character_insertion_node();
     void flush_character_insertions();
-    RefPtr<DOM::Element> insert_foreign_element(const HTMLToken&, const FlyString&);
-    RefPtr<DOM::Element> insert_html_element(const HTMLToken&);
+    NonnullRefPtr<DOM::Element> insert_foreign_element(const HTMLToken&, const FlyString&);
+    NonnullRefPtr<DOM::Element> insert_html_element(const HTMLToken&);
     DOM::Element& current_node();
     DOM::Element& adjusted_current_node();
     DOM::Element& node_before_current_node();
