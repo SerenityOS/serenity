@@ -52,6 +52,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_prototype_of);
     JS_DECLARE_NATIVE_FUNCTION(set_prototype_of);
     JS_DECLARE_NATIVE_FUNCTION(is_extensible);
+    JS_DECLARE_NATIVE_FUNCTION(is_frozen);
+    JS_DECLARE_NATIVE_FUNCTION(is_sealed);
     JS_DECLARE_NATIVE_FUNCTION(prevent_extensions);
     JS_DECLARE_NATIVE_FUNCTION(seal);
     JS_DECLARE_NATIVE_FUNCTION(freeze);

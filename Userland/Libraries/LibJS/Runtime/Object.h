@@ -135,6 +135,7 @@ public:
     virtual bool prevent_extensions();
 
     bool set_integrity_level(IntegrityLevel);
+    bool test_integrity_level(IntegrityLevel);
 
     virtual Value value_of() const { return Value(const_cast<Object*>(this)); }
     virtual Value ordinary_to_primitive(Value::PreferredType preferred_type) const;
