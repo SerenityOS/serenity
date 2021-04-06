@@ -35,8 +35,16 @@ class GlyphEditorWidget final : public GUI::Frame {
 public:
     virtual ~GlyphEditorWidget() override;
 
+    void initialize(Gfx::BitmapFont&);
+
     int glyph() const { return m_glyph; }
     void set_glyph(int);
+
+    void cut_glyph();
+    void copy_glyph();
+    void paste_glyph();
+    void delete_glyph();
+    void clear_clipboard_glyph();
 
     int preferred_width() const;
     int preferred_height() const;
@@ -47,7 +55,7 @@ public:
     Function<void(u8)> on_glyph_altered;
 
 private:
-    GlyphEditorWidget(Gfx::BitmapFont&);
+    GlyphEditorWidget() {};
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
@@ -55,6 +63,8 @@ private:
     void draw_at_mouse(const GUI::MouseEvent&);
 
     RefPtr<Gfx::BitmapFont> m_font;
+    RefPtr<Gfx::Font> m_clipboard_font;
+    Gfx::GlyphBitmap m_clipboard_glyph;
     int m_glyph { 0 };
     int m_scale { 10 };
 };
