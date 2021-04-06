@@ -127,12 +127,14 @@ OwnPtr<Region> Space::take_region(Region& region)
 
     if (m_region_lookup_cache.region.unsafe_ptr() == &region)
         m_region_lookup_cache.region = nullptr;
-    for (size_t i = 0; i < m_regions.size(); ++i) {
-        if (&m_regions[i] == &region) {
-            return m_regions.unstable_take(i);
-        }
-    }
-    return {};
+    // FIXME: currently we traverse the RBTree twice, once to check if the region in the tree starting at region.vaddr()
+    //  is the same region and once to actually remove it, maybe we can add some kind of remove_if()?
+    auto found_region = m_regions.find(region.vaddr().get());
+    if (!found_region)
+        return {};
+    if (found_region->ptr() != &region)
+        return {};
+    return m_regions.unsafe_remove(region.vaddr().get());
 }
 
 Region* Space::find_region_from_range(const Range& range)
@@ -141,25 +143,25 @@ Region* Space::find_region_from_range(const Range& range)
     if (m_region_lookup_cache.range.has_value() && m_region_lookup_cache.range.value() == range && m_region_lookup_cache.region)
         return m_region_lookup_cache.region.unsafe_ptr();
 
+    auto found_region = m_regions.find(range.base().get());
+    if (!found_region)
+        return nullptr;
+    auto& region = *found_region;
     size_t size = page_round_up(range.size());
-    for (auto& region : m_regions) {
-        if (region.vaddr() == range.base() && region.size() == size) {
-            m_region_lookup_cache.range = range;
-            m_region_lookup_cache.region = region;
-            return &region;
-        }
-    }
-    return nullptr;
+    if (region->size() != size)
+        return nullptr;
+    m_region_lookup_cache.range = range;
+    m_region_lookup_cache.region = *region;
+    return region;
 }
 
 Region* Space::find_region_containing(const Range& range)
 {
     ScopedSpinLock lock(m_lock);
-    for (auto& region : m_regions) {
-        if (region.contains(range))
-            return &region;
-    }
-    return nullptr;
+    auto candidate = m_regions.find_largest_not_above(range.base().get());
+    if (!candidate)
+        return nullptr;
+    return (*candidate)->range().contains(range) ? candidate->ptr() : nullptr;
 }
 
 Vector<Region*> Space::find_regions_intersecting(const Range& range)
@@ -170,11 +172,14 @@ Vector<Region*> Space::find_regions_intersecting(const Range& range)
     ScopedSpinLock lock(m_lock);
 
     // FIXME: Maybe take the cache from the single lookup?
-    for (auto& region : m_regions) {
-        if (region.range().base() < range.end() && region.range().end() > range.base()) {
-            regions.append(&region);
+    auto found_region = m_regions.find_largest_not_above(range.base().get());
+    if (!found_region)
+        return regions;
+    for (auto iter = m_regions.begin_from((*found_region)->vaddr().get()); !iter.is_end(); ++iter) {
+        if ((*iter)->range().base() < range.end() && (*iter)->range().end() > range.base()) {
+            regions.append(*iter);
 
-            total_size_collected += region.size() - region.range().intersect(range).size();
+            total_size_collected += (*iter)->size() - (*iter)->range().intersect(range).size();
             if (total_size_collected == range.size())
                 break;
         }
@@ -187,7 +192,7 @@ Region& Space::add_region(NonnullOwnPtr<Region> region)
 {
     auto* ptr = region.ptr();
     ScopedSpinLock lock(m_lock);
-    m_regions.append(move(region));
+    m_regions.insert(region->vaddr().get(), move(region));
     return *ptr;
 }
 
@@ -217,15 +222,7 @@ void Space::dump_regions()
 
     ScopedSpinLock lock(m_lock);
 
-    Vector<Region*> sorted_regions;
-    sorted_regions.ensure_capacity(m_regions.size());
-    for (auto& region : m_regions)
-        sorted_regions.append(&region);
-    quick_sort(sorted_regions, [](auto& a, auto& b) {
-        return a->vaddr() < b->vaddr();
-    });
-
-    for (auto& sorted_region : sorted_regions) {
+    for (auto& sorted_region : m_regions) {
         auto& region = *sorted_region;
         dbgln("{:08x} -- {:08x} {:08x} {:c}{:c}{:c}{:c}{:c}{:c} {}", region.vaddr().get(), region.vaddr().offset(region.size() - 1).get(), region.size(),
             region.is_readable() ? 'R' : ' ',
@@ -253,8 +250,8 @@ size_t Space::amount_dirty_private() const
     //        That's probably a situation that needs to be looked at in general.
     size_t amount = 0;
     for (auto& region : m_regions) {
-        if (!region.is_shared())
-            amount += region.amount_dirty();
+        if (!region->is_shared())
+            amount += region->amount_dirty();
     }
     return amount;
 }
@@ -264,8 +261,8 @@ size_t Space::amount_clean_inode() const
     ScopedSpinLock lock(m_lock);
     HashTable<const InodeVMObject*> vmobjects;
     for (auto& region : m_regions) {
-        if (region.vmobject().is_inode())
-            vmobjects.set(&static_cast<const InodeVMObject&>(region.vmobject()));
+        if (region->vmobject().is_inode())
+            vmobjects.set(&static_cast<const InodeVMObject&>(region->vmobject()));
     }
     size_t amount = 0;
     for (auto& vmobject : vmobjects)
@@ -278,7 +275,7 @@ size_t Space::amount_virtual() const
     ScopedSpinLock lock(m_lock);
     size_t amount = 0;
     for (auto& region : m_regions) {
-        amount += region.size();
+        amount += region->size();
     }
     return amount;
 }
@@ -289,7 +286,7 @@ size_t Space::amount_resident() const
     // FIXME: This will double count if multiple regions use the same physical page.
     size_t amount = 0;
     for (auto& region : m_regions) {
-        amount += region.amount_resident();
+        amount += region->amount_resident();
     }
     return amount;
 }
@@ -303,7 +300,7 @@ size_t Space::amount_shared() const
     //        so that every Region contributes +1 ref to each of its PhysicalPages.
     size_t amount = 0;
     for (auto& region : m_regions) {
-        amount += region.amount_shared();
+        amount += region->amount_shared();
     }
     return amount;
 }
@@ -313,8 +310,8 @@ size_t Space::amount_purgeable_volatile() const
     ScopedSpinLock lock(m_lock);
     size_t amount = 0;
     for (auto& region : m_regions) {
-        if (region.vmobject().is_anonymous() && static_cast<const AnonymousVMObject&>(region.vmobject()).is_any_volatile())
-            amount += region.amount_resident();
+        if (region->vmobject().is_anonymous() && static_cast<const AnonymousVMObject&>(region->vmobject()).is_any_volatile())
+            amount += region->amount_resident();
     }
     return amount;
 }
@@ -324,8 +321,8 @@ size_t Space::amount_purgeable_nonvolatile() const
     ScopedSpinLock lock(m_lock);
     size_t amount = 0;
     for (auto& region : m_regions) {
-        if (region.vmobject().is_anonymous() && !static_cast<const AnonymousVMObject&>(region.vmobject()).is_any_volatile())
-            amount += region.amount_resident();
+        if (region->vmobject().is_anonymous() && !static_cast<const AnonymousVMObject&>(region->vmobject()).is_any_volatile())
+            amount += region->amount_resident();
     }
     return amount;
 }

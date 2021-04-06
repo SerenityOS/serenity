@@ -433,13 +433,8 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
 
 Region* MemoryManager::user_region_from_vaddr(Space& space, VirtualAddress vaddr)
 {
-    // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
     ScopedSpinLock lock(space.get_lock());
-    for (auto& region : space.regions()) {
-        if (region.contains(vaddr))
-            return &region;
-    }
-    return nullptr;
+    return space.find_region_containing({ vaddr, 1 });
 }
 
 Region* MemoryManager::find_region_from_vaddr(Space& space, VirtualAddress vaddr)

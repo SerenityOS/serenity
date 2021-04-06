@@ -137,17 +137,17 @@ KResult CoreDump::write_program_headers(size_t notes_size)
 
         phdr.p_type = PT_LOAD;
         phdr.p_offset = offset;
-        phdr.p_vaddr = region.vaddr().get();
+        phdr.p_vaddr = region->vaddr().get();
         phdr.p_paddr = 0;
 
-        phdr.p_filesz = region.page_count() * PAGE_SIZE;
-        phdr.p_memsz = region.page_count() * PAGE_SIZE;
+        phdr.p_filesz = region->page_count() * PAGE_SIZE;
+        phdr.p_memsz = region->page_count() * PAGE_SIZE;
         phdr.p_align = 0;
 
-        phdr.p_flags = region.is_readable() ? PF_R : 0;
-        if (region.is_writable())
+        phdr.p_flags = region->is_readable() ? PF_R : 0;
+        if (region->is_writable())
             phdr.p_flags |= PF_W;
-        if (region.is_executable())
+        if (region->is_executable())
             phdr.p_flags |= PF_X;
 
         offset += phdr.p_filesz;
@@ -174,20 +174,20 @@ KResult CoreDump::write_program_headers(size_t notes_size)
 KResult CoreDump::write_regions()
 {
     for (auto& region : m_process->space().regions()) {
-        if (region.is_kernel())
+        if (region->is_kernel())
             continue;
 
-        region.set_readable(true);
-        region.remap();
+        region->set_readable(true);
+        region->remap();
 
-        for (size_t i = 0; i < region.page_count(); i++) {
-            auto* page = region.physical_page(i);
+        for (size_t i = 0; i < region->page_count(); i++) {
+            auto* page = region->physical_page(i);
 
             uint8_t zero_buffer[PAGE_SIZE] = {};
             Optional<UserOrKernelBuffer> src_buffer;
 
             if (page) {
-                src_buffer = UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region.vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
+                src_buffer = UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region->vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
             } else {
                 // If the current page is not backed by a physical page, we zero it in the coredump file.
                 // TODO: Do we want to include the contents of pages that have not been faulted-in in the coredump?
@@ -253,20 +253,20 @@ ByteBuffer CoreDump::create_notes_threads_data() const
 ByteBuffer CoreDump::create_notes_regions_data() const
 {
     ByteBuffer regions_data;
-    for (size_t region_index = 0; region_index < m_process->space().region_count(); ++region_index) {
+    size_t region_index = 0;
+    for (auto& region : m_process->space().regions()) {
 
         ByteBuffer memory_region_info_buffer;
         ELF::Core::MemoryRegionInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo;
 
-        auto& region = m_process->space().regions()[region_index];
-        info.region_start = region.vaddr().get();
-        info.region_end = region.vaddr().offset(region.size()).get();
-        info.program_header_index = region_index;
+        info.region_start = region->vaddr().get();
+        info.region_end = region->vaddr().offset(region->size()).get();
+        info.program_header_index = region_index++;
 
         memory_region_info_buffer.append((void*)&info, sizeof(info));
 
-        auto name = region.name();
+        auto name = region->name();
         if (name.is_null())
             name = String::empty();
         memory_region_info_buffer.append(name.characters(), name.length() + 1);

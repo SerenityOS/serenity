@@ -203,8 +203,8 @@ void PerformanceEventBuffer::add_process(const Process& process)
 
     for (auto& region : process.space().regions()) {
         sampled_process->regions.append(SampledProcess::Region {
-            .name = region.name(),
-            .range = region.range(),
+            .name = region->name(),
+            .range = region->range(),
         });
     }
 
