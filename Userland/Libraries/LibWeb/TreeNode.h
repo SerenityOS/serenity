@@ -99,10 +99,10 @@ public:
 
     bool is_ancestor_of(const TreeNode&) const;
 
+    void append_child(NonnullRefPtr<T> node);
     void prepend_child(NonnullRefPtr<T> node);
-    void append_child(NonnullRefPtr<T> node, bool notify = true);
-    void insert_before(NonnullRefPtr<T> node, RefPtr<T> child, bool notify = true);
-    NonnullRefPtr<T> remove_child(NonnullRefPtr<T> node);
+    void insert_before(NonnullRefPtr<T> node, RefPtr<T> child);
+    void remove_child(NonnullRefPtr<T> node);
 
     void remove_all_children();
 
@@ -332,8 +332,9 @@ inline void TreeNode<T>::remove_all_children()
         remove_child(child.release_nonnull());
 }
 
+
 template<typename T>
-inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node)
+inline void TreeNode<T>::remove_child(NonnullRefPtr<T> node)
 {
     VERIFY(node->m_parent == this);
 
@@ -353,17 +354,11 @@ inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node)
     node->m_previous_sibling = nullptr;
     node->m_parent = nullptr;
 
-    node->removed_from(static_cast<T&>(*this));
-
     node->unref();
-
-    static_cast<T*>(this)->children_changed();
-
-    return node;
 }
 
 template<typename T>
-inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool notify)
+inline void TreeNode<T>::append_child(NonnullRefPtr<T> node)
 {
     VERIFY(!node->m_parent);
 
@@ -377,25 +372,17 @@ inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool notify)
     m_last_child = node.ptr();
     if (!m_first_child)
         m_first_child = m_last_child;
-    if (notify)
-        node->inserted_into(static_cast<T&>(*this));
     [[maybe_unused]] auto& rc = node.leak_ref();
-
-    if (notify)
-        static_cast<T*>(this)->children_changed();
 }
 
 template<typename T>
-inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child, bool notify)
+inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child)
 {
     if (!child)
-        return append_child(move(node), notify);
+        return append_child(move(node));
 
     VERIFY(!node->m_parent);
     VERIFY(child->parent() == this);
-
-    if (!static_cast<T*>(this)->is_child_allowed(*node))
-        return;
 
     node->m_previous_sibling = child->m_previous_sibling;
     node->m_next_sibling = child;
@@ -409,12 +396,7 @@ inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child, b
     child->m_previous_sibling = node;
 
     node->m_parent = static_cast<T*>(this);
-    if (notify)
-        node->inserted_into(static_cast<T&>(*this));
     [[maybe_unused]] auto& rc = node.leak_ref();
-
-    if (notify)
-        static_cast<T*>(this)->children_changed();
 }
 
 template<typename T>
