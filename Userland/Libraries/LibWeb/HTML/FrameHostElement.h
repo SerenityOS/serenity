@@ -45,7 +45,7 @@ public:
 
     void content_frame_did_load(Badge<FrameLoader>);
 
-    virtual void inserted_into(Node&) override;
+    virtual void inserted() override;
 
 protected:
     RefPtr<Frame> m_content_frame;
