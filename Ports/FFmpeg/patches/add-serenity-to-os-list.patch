@@ -1,0 +1,13 @@
+diff --git a/ffmpeg-4.3.2/configure.orig b/ffmpeg-4.3.2/configure
+index 36713ab65..340aa804a 100755
+--- a/ffmpeg-4.3.2/configure.orig
++++ b/ffmpeg-4.3.2/configure
+@@ -5541,6 +5541,8 @@ case $target_os in
+         ;;
+     minix)
+         ;;
++    serenity)
++	;;
+     none)
+         ;;
+     *)
