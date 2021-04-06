@@ -1,5 +1,5 @@
---- Python-3.9.2/Python/pystate.c	2021-02-21 20:22:44.083023482 +0100
-+++ Python-3.9.2/Python/pystate.c	2021-02-21 20:30:13.907513469 +0100
+--- Python-3.9.4/Python/pystate.c	2021-02-21 20:22:44.083023482 +0100
++++ Python-3.9.4/Python/pystate.c	2021-02-21 20:30:13.907513469 +0100
 @@ -223,7 +223,7 @@
  
      interp->eval_frame = _PyEval_EvalFrameDefault;
