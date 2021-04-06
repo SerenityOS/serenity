@@ -57,6 +57,8 @@ ProcessModel::ProcessModel()
 
     if (m_cpus.is_empty())
         m_cpus.append(make<CpuInfo>(0));
+
+    m_kernel_process_icon = GUI::Icon::default_icon("gear");
 }
 
 ProcessModel::~ProcessModel()
@@ -261,6 +263,8 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Icon: {
+            if (thread.current_state.kernel)
+                return m_kernel_process_icon;
             auto icon = GUI::FileIconProvider::icon_for_executable(thread.current_state.executable).bitmap_for_size(16);
             if (!icon)
                 return GUI::Icon();
@@ -299,6 +303,8 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Column::Processor:
             return thread.current_state.cpu;
         case Column::Name:
+            if (thread.current_state.kernel)
+                return String::formatted("{} (*)", thread.current_state.name);
             return thread.current_state.name;
         case Column::Syscalls:
             return thread.current_state.syscall_count;
@@ -348,6 +354,7 @@ void ProcessModel::update()
         for (auto& it : all_processes.value()) {
             for (auto& thread : it.value.threads) {
                 ThreadState state;
+                state.kernel = it.value.kernel;
                 state.pid = it.value.pid;
                 state.user = it.value.username;
                 state.pledge = it.value.pledge;
