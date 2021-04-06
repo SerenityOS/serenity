@@ -54,6 +54,7 @@ set(SOURCES
     DOM/Node.cpp
     DOM/ParentNode.cpp
     DOM/Position.cpp
+    DOM/ProcessingInstruction.cpp
     DOM/ShadowRoot.cpp
     DOM/Text.cpp
     DOM/Text.idl
@@ -305,6 +306,7 @@ libweb_js_wrapper(DOM/DOMImplementation)
 libweb_js_wrapper(DOM/Element)
 libweb_js_wrapper(DOM/Event)
 libweb_js_wrapper(DOM/EventTarget)
+libweb_js_wrapper(DOM/ProcessingInstruction)
 libweb_js_wrapper(DOM/ShadowRoot)
 libweb_js_wrapper(DOM/Node)
 libweb_js_wrapper(DOM/Range)
