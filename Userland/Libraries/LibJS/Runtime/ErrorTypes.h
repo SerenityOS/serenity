@@ -74,6 +74,8 @@
     M(NonExtensibleDefine, "Cannot define property {} on non-extensible object")                                                        \
     M(NumberIncompatibleThis, "Number.prototype.{} method called with incompatible this target")                                        \
     M(ObjectDefinePropertyReturnedFalse, "Object's [[DefineProperty]] method returned false")                                           \
+    M(ObjectFreezeFailed, "Could not freeze object")                                                                                    \
+    M(ObjectSealFailed, "Could not seal object")                                                                                        \
     M(ObjectSetPrototypeOfReturnedFalse, "Object's [[SetPrototypeOf]] method returned false")                                           \
     M(ObjectSetPrototypeOfTwoArgs, "Object.setPrototypeOf requires at least two arguments")                                             \
     M(ObjectPreventExtensionsReturnedFalse, "Object's [[PreventExtensions]] method returned false")                                     \

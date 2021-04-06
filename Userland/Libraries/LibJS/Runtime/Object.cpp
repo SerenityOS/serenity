@@ -160,6 +160,54 @@ bool Object::prevent_extensions()
     return true;
 }
 
+// 7.3.15 SetIntegrityLevel, https://tc39.es/ecma262/#sec-setintegritylevel
+bool Object::set_integrity_level(IntegrityLevel level)
+{
+    // FIXME: This feels clunky and should get nicer abstractions.
+    auto update_property = [this](auto& key, auto attributes) {
+        auto property_name = PropertyName::from_value(global_object(), key);
+        auto metadata = shape().lookup(property_name.to_string_or_symbol());
+        VERIFY(metadata.has_value());
+        auto value = get_direct(metadata->offset);
+        define_property(property_name, value, metadata->attributes.bits() & attributes);
+    };
+
+    auto& vm = this->vm();
+    auto status = prevent_extensions();
+    if (vm.exception())
+        return false;
+    if (!status)
+        return false;
+    auto keys = get_own_properties(PropertyKind::Key);
+    if (vm.exception())
+        return false;
+    switch (level) {
+    case IntegrityLevel::Sealed:
+        for (auto& key : keys) {
+            update_property(key, ~Attribute::Configurable);
+            if (vm.exception())
+                return {};
+        }
+        break;
+    case IntegrityLevel::Frozen:
+        for (auto& key : keys) {
+            auto property_name = PropertyName::from_value(global_object(), key);
+            auto property_descriptor = get_own_property_descriptor(property_name);
+            VERIFY(property_descriptor.has_value());
+            u8 attributes = property_descriptor->is_accessor_descriptor()
+                ? ~Attribute::Configurable
+                : ~Attribute::Configurable & ~Attribute::Writable;
+            update_property(key, attributes);
+            if (vm.exception())
+                return {};
+        }
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+    return true;
+}
+
 Value Object::get_own_property(const PropertyName& property_name, Value receiver) const
 {
     VERIFY(property_name.is_valid());

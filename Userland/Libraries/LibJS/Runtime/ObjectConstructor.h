@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +53,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(set_prototype_of);
     JS_DECLARE_NATIVE_FUNCTION(is_extensible);
     JS_DECLARE_NATIVE_FUNCTION(prevent_extensions);
+    JS_DECLARE_NATIVE_FUNCTION(seal);
+    JS_DECLARE_NATIVE_FUNCTION(freeze);
     JS_DECLARE_NATIVE_FUNCTION(keys);
     JS_DECLARE_NATIVE_FUNCTION(values);
     JS_DECLARE_NATIVE_FUNCTION(entries);

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,6 +56,8 @@ void ObjectConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.setPrototypeOf, set_prototype_of, 2, attr);
     define_native_function(vm.names.isExtensible, is_extensible, 1, attr);
     define_native_function(vm.names.preventExtensions, prevent_extensions, 1, attr);
+    define_native_function(vm.names.freeze, freeze, 1, attr);
+    define_native_function(vm.names.seal, seal, 1, attr);
     define_native_function(vm.names.keys, keys, 1, attr);
     define_native_function(vm.names.values, values, 1, attr);
     define_native_function(vm.names.entries, entries, 1, attr);
@@ -146,9 +149,43 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
     auto argument = vm.argument(0);
     if (!argument.is_object())
         return argument;
-    if (!argument.as_object().prevent_extensions()) {
-        if (!vm.exception())
-            vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPreventExtensionsReturnedFalse);
+    auto status = argument.as_object().prevent_extensions();
+    if (vm.exception())
+        return {};
+    if (!status) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPreventExtensionsReturnedFalse);
+        return {};
+    }
+    return argument;
+}
+
+// 20.1.2.6 Object.freeze, https://tc39.es/ecma262/#sec-object.freeze
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
+{
+    auto argument = vm.argument(0);
+    if (!argument.is_object())
+        return argument;
+    auto status = argument.as_object().set_integrity_level(Object::IntegrityLevel::Frozen);
+    if (vm.exception())
+        return {};
+    if (!status) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ObjectFreezeFailed);
+        return {};
+    }
+    return argument;
+}
+
+// 20.1.2.20 Object.seal, https://tc39.es/ecma262/#sec-object.seal
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
+{
+    auto argument = vm.argument(0);
+    if (!argument.is_object())
+        return argument;
+    auto status = argument.as_object().set_integrity_level(Object::IntegrityLevel::Sealed);
+    if (vm.exception())
+        return {};
+    if (!status) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ObjectSealFailed);
         return {};
     }
     return argument;
