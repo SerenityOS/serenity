@@ -55,6 +55,8 @@ void ObjectConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getPrototypeOf, get_prototype_of, 1, attr);
     define_native_function(vm.names.setPrototypeOf, set_prototype_of, 2, attr);
     define_native_function(vm.names.isExtensible, is_extensible, 1, attr);
+    define_native_function(vm.names.isFrozen, is_frozen, 1, attr);
+    define_native_function(vm.names.isSealed, is_sealed, 1, attr);
     define_native_function(vm.names.preventExtensions, prevent_extensions, 1, attr);
     define_native_function(vm.names.freeze, freeze, 1, attr);
     define_native_function(vm.names.seal, seal, 1, attr);
@@ -142,6 +144,24 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_extensible)
     if (!argument.is_object())
         return Value(false);
     return Value(argument.as_object().is_extensible());
+}
+
+// 20.1.2.15 Object.isFrozen, https://tc39.es/ecma262/#sec-object.isfrozen
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_frozen)
+{
+    auto argument = vm.argument(0);
+    if (!argument.is_object())
+        return Value(true);
+    return Value(argument.as_object().test_integrity_level(Object::IntegrityLevel::Frozen));
+}
+
+// 20.1.2.16 Object.isSealed, https://tc39.es/ecma262/#sec-object.issealed
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_sealed)
+{
+    auto argument = vm.argument(0);
+    if (!argument.is_object())
+        return Value(true);
+    return Value(argument.as_object().test_integrity_level(Object::IntegrityLevel::Sealed));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
