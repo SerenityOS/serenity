@@ -218,6 +218,7 @@ public:
     virtual void dump(size_t indent) const override;
     virtual bool is_type() const override { return true; }
     virtual bool is_templatized() const { return false; }
+    virtual String to_string() const;
 
     Type(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : ASTNode(parent, start, end, filename)
@@ -228,26 +229,12 @@ public:
     Vector<StringView> m_qualifiers;
 };
 
-class TemplatizedType : public Type {
-public:
-    virtual ~TemplatizedType() override = default;
-    virtual const char* class_name() const override { return "TemplatizedType"; }
-    virtual void dump(size_t indent) const override;
-    virtual bool is_templatized() const override { return true; }
-
-    TemplatizedType(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
-        : Type(parent, start, end, filename)
-    {
-    }
-
-    NonnullRefPtrVector<Type> m_template_arguments;
-};
-
 class Pointer : public Type {
 public:
     virtual ~Pointer() override = default;
     virtual const char* class_name() const override { return "Pointer"; }
     virtual void dump(size_t indent) const override;
+    virtual String to_string() const override;
 
     Pointer(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : Type(parent, start, end, filename)
@@ -349,15 +336,31 @@ public:
     virtual const char* class_name() const override { return "Name"; }
     virtual void dump(size_t indent) const override;
     virtual bool is_name() const override { return true; }
+    virtual bool is_templatized() const { return false; }
 
     Name(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : Expression(parent, start, end, filename)
     {
     }
-    String full_name() const;
+    virtual String full_name() const;
 
     RefPtr<Identifier> m_name;
     NonnullRefPtrVector<Identifier> m_scope;
+};
+
+class TemplatizedName : public Name {
+public:
+    virtual ~TemplatizedName() override = default;
+    virtual const char* class_name() const override { return "TemplatizedName"; }
+    virtual bool is_templatized() const override { return true; }
+    virtual String full_name() const override;
+
+    TemplatizedName(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+        : Name(parent, start, end, filename)
+    {
+    }
+
+    NonnullRefPtrVector<Type> m_template_arguments;
 };
 
 class NumericLiteral : public Expression {
@@ -475,23 +478,8 @@ public:
     virtual bool is_function_call() const override { return true; }
     virtual bool is_templatized() const { return false; }
 
-    RefPtr<Name> m_name;
+    RefPtr<Expression> m_callee;
     NonnullRefPtrVector<Expression> m_arguments;
-};
-
-class TemplatizedFunctionCall final : public FunctionCall {
-public:
-    TemplatizedFunctionCall(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
-        : FunctionCall(parent, start, end, filename)
-    {
-    }
-
-    ~TemplatizedFunctionCall() override = default;
-    virtual const char* class_name() const override { return "TemplatizedFunctionCall"; }
-    virtual void dump(size_t indent) const override;
-    virtual bool is_templatized() const override { return true; }
-
-    NonnullRefPtrVector<Type> m_template_arguments;
 };
 
 class StringLiteral final : public Expression {
@@ -761,7 +749,7 @@ public:
 class DummyAstNode : public ASTNode {
 public:
     DummyAstNode(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
-    : ASTNode(parent, start, end, filename)
+        : ASTNode(parent, start, end, filename)
     {
     }
     virtual bool is_dummy_node() const override { return true; }
