@@ -28,246 +28,146 @@
 #include "GlyphEditorWidget.h"
 #include "GlyphMapWidget.h"
 #include <AK/StringBuilder.h>
+#include <Applications/FontEditor/FontEditorWindowGML.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
+#include <LibGUI/StatusBar.h>
 #include <LibGUI/TextBox.h>
+#include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
 #include <stdlib.h>
 
-FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&& edited_font)
-    : m_edited_font(move(edited_font))
-    , m_path(path)
+static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
 {
-    set_fill_with_background_color(true);
-    set_layout<GUI::VerticalBoxLayout>();
+    auto window = GUI::Window::construct();
+    window->set_window_type(GUI::WindowType::ToolWindow);
+    window->set_title("Font preview");
+    window->resize(400, 150);
+    window->set_minimum_size(200, 100);
+    window->center_within(*editor.window());
 
-    // Top
-    auto& main_container = add<GUI::Widget>();
-    main_container.set_layout<GUI::HorizontalBoxLayout>();
-    main_container.layout()->set_margins({ 4, 4, 4, 4 });
-    main_container.set_background_role(Gfx::ColorRole::SyntaxKeyword);
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_fill_with_background_color(true);
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
+    main_widget.layout()->set_margins({ 2, 2, 2, 2 });
+    main_widget.layout()->set_spacing(4);
 
-    // Top-Left Glyph Editor and info
-    auto& editor_container = main_container.add<GUI::Widget>();
-    editor_container.set_layout<GUI::VerticalBoxLayout>();
-    editor_container.layout()->set_margins({ 4, 4, 4, 4 });
-    editor_container.set_background_role(Gfx::ColorRole::SyntaxKeyword);
+    auto& preview_box = main_widget.add<GUI::GroupBox>();
+    preview_box.set_layout<GUI::VerticalBoxLayout>();
+    preview_box.layout()->set_margins({ 8, 8, 8, 8 });
 
-    m_glyph_editor_widget = editor_container.add<GlyphEditorWidget>(*m_edited_font);
-    m_glyph_editor_widget->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
+    auto& preview_label = preview_box.add<GUI::Label>();
+    preview_label.set_text("Five quacking zephyrs jolt my wax bed!");
+    preview_label.set_font(editor.edited_font());
 
-    editor_container.set_fixed_width(m_glyph_editor_widget->preferred_width());
-
-    auto& glyph_width_label = editor_container.add<GUI::Label>();
-    glyph_width_label.set_fixed_height(22);
-    glyph_width_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    glyph_width_label.set_text("Glyph width:");
-
-    auto& glyph_width_spinbox = editor_container.add<GUI::SpinBox>();
-    glyph_width_spinbox.set_min(0);
-    glyph_width_spinbox.set_max(32);
-    glyph_width_spinbox.set_value(0);
-    glyph_width_spinbox.set_enabled(!m_edited_font->is_fixed_width());
-
-    auto& info_label = editor_container.add<GUI::Label>();
-    info_label.set_fixed_height(22);
-    info_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    info_label.set_text("info_label");
-
-    /// Top-Right glyph map and font meta data
-
-    auto& map_and_test_container = main_container.add<GUI::Widget>();
-    map_and_test_container.set_layout<GUI::VerticalBoxLayout>();
-    map_and_test_container.layout()->set_margins({ 4, 4, 4, 4 });
-
-    m_glyph_map_widget = map_and_test_container.add<GlyphMapWidget>(*m_edited_font);
-    m_glyph_map_widget->set_fixed_size(m_glyph_map_widget->preferred_width(), m_glyph_map_widget->preferred_height());
-
-    auto& font_mtest_group_box = map_and_test_container.add<GUI::GroupBox>();
-    font_mtest_group_box.set_layout<GUI::VerticalBoxLayout>();
-    font_mtest_group_box.layout()->set_margins({ 5, 15, 5, 5 });
-    font_mtest_group_box.set_fixed_height(2 * m_edited_font->glyph_height() + 50);
-    font_mtest_group_box.set_title("Test");
-
-    auto& demo_label_1 = font_mtest_group_box.add<GUI::Label>();
-    demo_label_1.set_font(m_edited_font);
-    demo_label_1.set_text("quick fox jumps nightly above wizard.");
-
-    auto& demo_label_2 = font_mtest_group_box.add<GUI::Label>();
-    demo_label_2.set_font(m_edited_font);
-    demo_label_2.set_text("QUICK FOX JUMPS NIGHTLY ABOVE WIZARD!");
-
-    auto& font_metadata_group_box = map_and_test_container.add<GUI::GroupBox>();
-    font_metadata_group_box.set_layout<GUI::VerticalBoxLayout>();
-    font_metadata_group_box.layout()->set_margins({ 5, 15, 5, 5 });
-    font_metadata_group_box.set_fixed_height(275);
-    font_metadata_group_box.set_title("Font metadata");
-
-    //// Name Row
-    auto& namecontainer = font_metadata_group_box.add<GUI::Widget>();
-    namecontainer.set_layout<GUI::HorizontalBoxLayout>();
-    namecontainer.set_fixed_height(22);
-
-    auto& name_label = namecontainer.add<GUI::Label>();
-    name_label.set_fixed_width(100);
-    name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    name_label.set_text("Name:");
-
-    auto& name_textbox = namecontainer.add<GUI::TextBox>();
-    name_textbox.set_text(m_edited_font->name());
-    name_textbox.on_change = [&] {
-        m_edited_font->set_name(name_textbox.text());
+    editor.on_initialize = [&] {
+        preview_label.set_font(editor.edited_font());
     };
 
-    //// Family Row
-    auto& family_container = font_metadata_group_box.add<GUI::Widget>();
-    family_container.set_layout<GUI::HorizontalBoxLayout>();
-    family_container.set_fixed_height(22);
+    auto& preview_textbox = main_widget.add<GUI::TextBox>();
+    preview_textbox.set_text("Five quacking zephyrs jolt my wax bed!");
 
-    auto& family_label = family_container.add<GUI::Label>();
-    family_label.set_fixed_width(100);
-    family_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    family_label.set_text("Family:");
-
-    auto& family_textbox = family_container.add<GUI::TextBox>();
-    family_textbox.set_text(m_edited_font->family());
-    family_textbox.on_change = [&] {
-        m_edited_font->set_family(family_textbox.text());
+    preview_textbox.on_change = [&] {
+        preview_label.set_text(preview_textbox.text());
     };
 
-    //// Presentation size Row
-    auto& presentation_size_container = font_metadata_group_box.add<GUI::Widget>();
-    presentation_size_container.set_layout<GUI::HorizontalBoxLayout>();
-    presentation_size_container.set_fixed_height(22);
+    return window;
+}
 
-    auto& presentation_size_label = presentation_size_container.add<GUI::Label>();
-    presentation_size_label.set_fixed_width(100);
-    presentation_size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    presentation_size_label.set_text("Presentation size:");
+FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&& edited_font)
+{
+    load_from_gml(font_editor_window_gml);
 
-    auto& presentation_size_spinbox = presentation_size_container.add<GUI::SpinBox>();
-    presentation_size_spinbox.set_min(0);
-    presentation_size_spinbox.set_max(255);
-    presentation_size_spinbox.set_value(m_edited_font->presentation_size());
+    auto& toolbar = *find_descendant_of_type_named<GUI::ToolBar>("toolbar");
+    auto& status_bar = *find_descendant_of_type_named<GUI::StatusBar>("status_bar");
+    auto& glyph_map_container = *find_descendant_of_type_named<GUI::Widget>("glyph_map_container");
+    m_glyph_editor_container = *find_descendant_of_type_named<GUI::Widget>("glyph_editor_container");
+    m_left_column_container = *find_descendant_of_type_named<GUI::Widget>("left_column_container");
+    m_glyph_editor_width_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("glyph_editor_width_spinbox");
+    m_name_textbox = *find_descendant_of_type_named<GUI::TextBox>("name_textbox");
+    m_family_textbox = *find_descendant_of_type_named<GUI::TextBox>("family_textbox");
+    m_presentation_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("presentation_spinbox");
+    m_weight_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("weight_spinbox");
+    m_spacing_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("spacing_spinbox");
+    m_mean_line_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("mean_line_spinbox");
+    m_baseline_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("baseline_spinbox");
+    m_fixed_width_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("fixed_width_checkbox");
+    m_font_metadata_groupbox = *find_descendant_of_type_named<GUI::GroupBox>("font_metadata_groupbox");
 
-    //// Weight Row
-    auto& weight_container = font_metadata_group_box.add<GUI::Widget>();
-    weight_container.set_layout<GUI::HorizontalBoxLayout>();
-    weight_container.set_fixed_height(22);
+    m_glyph_editor_widget = m_glyph_editor_container->add<GlyphEditorWidget>();
+    m_glyph_map_widget = glyph_map_container.add<GlyphMapWidget>();
 
-    auto& weight_label = weight_container.add<GUI::Label>();
-    weight_label.set_fixed_width(100);
-    weight_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    weight_label.set_text("Weight:");
-
-    auto& weight_spinbox = weight_container.add<GUI::SpinBox>();
-    weight_spinbox.set_min(0);
-    weight_spinbox.set_max(65535);
-    weight_spinbox.set_value(m_edited_font->weight());
-
-    //// Glyph spacing Row
-    auto& glyph_spacing_container = font_metadata_group_box.add<GUI::Widget>();
-    glyph_spacing_container.set_layout<GUI::HorizontalBoxLayout>();
-    glyph_spacing_container.set_fixed_height(22);
-
-    auto& glyph_spacing = glyph_spacing_container.add<GUI::Label>();
-    glyph_spacing.set_fixed_width(100);
-    glyph_spacing.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    glyph_spacing.set_text("Glyph spacing:");
-
-    auto& spacing_spinbox = glyph_spacing_container.add<GUI::SpinBox>();
-    spacing_spinbox.set_min(0);
-    spacing_spinbox.set_max(255);
-    spacing_spinbox.set_value(m_edited_font->glyph_spacing());
-
-    //// Glyph Height Row
-    auto& glyph_height_container = font_metadata_group_box.add<GUI::Widget>();
-    glyph_height_container.set_layout<GUI::HorizontalBoxLayout>();
-    glyph_height_container.set_fixed_height(22);
-
-    auto& glyph_height = glyph_height_container.add<GUI::Label>();
-    glyph_height.set_fixed_width(100);
-    glyph_height.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    glyph_height.set_text("Glyph height:");
-
-    auto& glyph_height_spinbox = glyph_height_container.add<GUI::SpinBox>();
-    glyph_height_spinbox.set_min(0);
-    glyph_height_spinbox.set_max(255);
-    glyph_height_spinbox.set_value(m_edited_font->glyph_height());
-    glyph_height_spinbox.set_enabled(false);
-
-    //// Glyph width Row
-    auto& glyph_weight_container = font_metadata_group_box.add<GUI::Widget>();
-    glyph_weight_container.set_layout<GUI::HorizontalBoxLayout>();
-    glyph_weight_container.set_fixed_height(22);
-
-    auto& glyph_header_width_label = glyph_weight_container.add<GUI::Label>();
-    glyph_header_width_label.set_fixed_width(100);
-    glyph_header_width_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    glyph_header_width_label.set_text("Glyph width:");
-
-    auto& glyph_header_width_spinbox = glyph_weight_container.add<GUI::SpinBox>();
-    glyph_header_width_spinbox.set_min(0);
-    glyph_header_width_spinbox.set_max(255);
-    glyph_header_width_spinbox.set_value(m_edited_font->glyph_fixed_width());
-    glyph_header_width_spinbox.set_enabled(false);
-
-    //// Mean line Row
-    auto& mean_line_container = font_metadata_group_box.add<GUI::Widget>();
-    mean_line_container.set_layout<GUI::HorizontalBoxLayout>();
-    mean_line_container.set_fixed_height(22);
-
-    auto& mean_line_label = mean_line_container.add<GUI::Label>();
-    mean_line_label.set_fixed_width(100);
-    mean_line_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    mean_line_label.set_text("Mean line:");
-
-    auto& mean_line_spinbox = mean_line_container.add<GUI::SpinBox>();
-    mean_line_spinbox.set_min(0);
-    mean_line_spinbox.set_max(m_edited_font->glyph_height() - 1);
-    mean_line_spinbox.set_value(m_edited_font->mean_line());
-
-    //// Baseline Row
-    auto& baseline_container = font_metadata_group_box.add<GUI::Widget>();
-    baseline_container.set_layout<GUI::HorizontalBoxLayout>();
-    baseline_container.set_fixed_height(22);
-
-    auto& baseline_label = baseline_container.add<GUI::Label>();
-    baseline_label.set_fixed_width(100);
-    baseline_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    baseline_label.set_text("Baseline:");
-
-    auto& baseline_spinbox = baseline_container.add<GUI::SpinBox>();
-    baseline_spinbox.set_min(0);
-    baseline_spinbox.set_max(m_edited_font->glyph_height() - 1);
-    baseline_spinbox.set_value(m_edited_font->baseline());
-
-    //// Fixed checkbox Row
-    auto& fixed_width_checkbox = font_metadata_group_box.add<GUI::CheckBox>();
-    fixed_width_checkbox.set_text("Fixed width");
-    fixed_width_checkbox.set_checked(m_edited_font->is_fixed_width());
-
-    // Event handlers
     auto update_demo = [&] {
-        demo_label_1.update();
-        demo_label_2.update();
+        if (m_font_preview_window)
+            m_font_preview_window->update();
     };
 
-    auto calculate_prefed_sizes = [&] {
-        int right_side_width = m_edited_font->width("QUICK FOX JUMPS NIGHTLY ABOVE WIZARD!") + 20;
-        right_side_width = max(right_side_width, m_glyph_map_widget->preferred_width());
+    auto open_action = GUI::CommonActions::make_open_action([&](auto&) {
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/");
+        if (!open_path.has_value())
+            return;
 
-        m_preferred_width = m_glyph_editor_widget->width() + right_side_width + 12;
-        m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 346;
-    };
+        auto bitmap_font = Gfx::BitmapFont::load_from_file(open_path.value());
+        if (!bitmap_font) {
+            String message = String::formatted("Couldn't load font: {}\n", open_path.value());
+            GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
+            return;
+        }
+        RefPtr<Gfx::BitmapFont> new_font = static_ptr_cast<Gfx::BitmapFont>(bitmap_font->clone());
+        if (!new_font) {
+            String message = String::formatted("Couldn't load font: {}\n", open_path.value());
+            GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
+            return;
+        }
+        window()->set_title(String::formatted("{} - Font Editor", open_path.value()));
+        initialize(open_path.value(), move(new_font));
+    });
+    auto save_action = GUI::CommonActions::make_save_action([&](auto&) {
+        save_as(m_path);
+    });
+    auto cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
+        m_glyph_editor_widget->cut_glyph();
+    });
+    auto copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
+        m_glyph_editor_widget->copy_glyph();
+    });
+    auto paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
+        m_glyph_editor_widget->paste_glyph();
+        m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
+    });
+    auto delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
+        m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), m_edited_font->max_glyph_width());
+        m_glyph_editor_widget->delete_glyph();
+        m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
+        m_glyph_editor_width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
+    });
+    auto open_preview_action = GUI::Action::create("Preview", Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
+        if (!m_font_preview_window)
+            m_font_preview_window = create_font_preview_window(*this);
+        m_font_preview_window->show();
+        m_font_preview_window->move_to_front();
+    });
+    open_preview_action->set_checked(false);
+
+    toolbar.add_action(*open_action);
+    toolbar.add_action(*save_action);
+    toolbar.add_separator();
+    toolbar.add_action(*cut_action);
+    toolbar.add_action(*copy_action);
+    toolbar.add_action(*paste_action);
+    toolbar.add_action(*delete_action);
+    toolbar.add_separator();
+    toolbar.add_action(*open_preview_action);
 
     m_glyph_editor_widget->on_glyph_altered = [this, update_demo](u8 glyph) {
         m_glyph_map_widget->update_glyph(glyph);
@@ -276,7 +176,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
 
     m_glyph_map_widget->on_glyph_selected = [&](size_t glyph) {
         m_glyph_editor_widget->set_glyph(glyph);
-        glyph_width_spinbox.set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
+        m_glyph_editor_width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
         StringBuilder builder;
         builder.appendff("{:#02x} (", glyph);
         if (glyph < 128) {
@@ -286,58 +186,95 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
             builder.append(128 | (glyph % 64));
         }
         builder.append(')');
-        info_label.set_text(builder.to_string());
+        status_bar.set_text(builder.to_string());
     };
 
-    fixed_width_checkbox.on_checked = [&, update_demo](bool checked) {
+    m_name_textbox->on_change = [&] {
+        m_edited_font->set_name(m_name_textbox->text());
+    };
+
+    m_family_textbox->on_change = [&] {
+        m_edited_font->set_family(m_family_textbox->text());
+    };
+
+    m_fixed_width_checkbox->on_checked = [&, update_demo](bool checked) {
         m_edited_font->set_fixed_width(checked);
-        glyph_width_spinbox.set_enabled(!m_edited_font->is_fixed_width());
-        glyph_width_spinbox.set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
+        m_glyph_editor_width_spinbox->set_enabled(!m_edited_font->is_fixed_width());
+        m_glyph_editor_width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
         m_glyph_editor_widget->update();
         update_demo();
     };
 
-    glyph_width_spinbox.on_change = [this, update_demo](int value) {
+    m_glyph_editor_width_spinbox->on_change = [this, update_demo](int value) {
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), value);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
         update_demo();
     };
 
-    weight_spinbox.on_change = [this, update_demo](int value) {
+    m_weight_spinbox->on_change = [this, update_demo](int value) {
         m_edited_font->set_weight(value);
         update_demo();
     };
 
-    presentation_size_spinbox.on_change = [this, update_demo](int value) {
+    m_presentation_spinbox->on_change = [this, update_demo](int value) {
         m_edited_font->set_presentation_size(value);
         update_demo();
     };
 
-    spacing_spinbox.on_change = [this, update_demo](int value) {
+    m_spacing_spinbox->on_change = [this, update_demo](int value) {
         m_edited_font->set_glyph_spacing(value);
         update_demo();
     };
 
-    baseline_spinbox.on_change = [this, update_demo](int value) {
+    m_baseline_spinbox->on_change = [this, update_demo](int value) {
         m_edited_font->set_baseline(value);
         m_glyph_editor_widget->update();
         update_demo();
     };
 
-    mean_line_spinbox.on_change = [this, update_demo](int value) {
+    m_mean_line_spinbox->on_change = [this, update_demo](int value) {
         m_edited_font->set_mean_line(value);
         m_glyph_editor_widget->update();
         update_demo();
     };
 
-    // init widget
-    calculate_prefed_sizes();
-    m_glyph_map_widget->set_selected_glyph('A');
+    initialize(path, move(edited_font));
 }
 
 FontEditorWidget::~FontEditorWidget()
 {
+}
+
+void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& edited_font)
+{
+    if (m_edited_font == edited_font)
+        return;
+    m_path = path;
+    m_edited_font = edited_font;
+
+    m_glyph_editor_widget->initialize(*m_edited_font);
+    m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
+    m_left_column_container->set_fixed_width(m_glyph_editor_widget->preferred_width());
+    m_glyph_editor_width_spinbox->set_enabled(!m_edited_font->is_fixed_width());
+    m_glyph_editor_width_spinbox->set_max(m_edited_font->max_glyph_width());
+
+    m_glyph_map_widget->initialize(*m_edited_font);
+    m_glyph_map_widget->set_selected_glyph('A');
+
+    m_name_textbox->set_text(m_edited_font->name());
+    m_family_textbox->set_text(m_edited_font->family());
+
+    m_presentation_spinbox->set_value(m_edited_font->presentation_size());
+    m_weight_spinbox->set_value(m_edited_font->weight());
+    m_spacing_spinbox->set_value(m_edited_font->glyph_spacing());
+    m_mean_line_spinbox->set_value(m_edited_font->mean_line());
+    m_baseline_spinbox->set_value(m_edited_font->baseline());
+
+    m_fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width());
+
+    if (on_initialize)
+        on_initialize();
 }
 
 bool FontEditorWidget::save_as(const String& path)
@@ -349,4 +286,12 @@ bool FontEditorWidget::save_as(const String& path)
     }
     m_path = path;
     return true;
+}
+
+void FontEditorWidget::set_show_font_metadata(bool show)
+{
+    if (m_font_metadata == show)
+        return;
+    m_font_metadata = show;
+    m_font_metadata_groupbox->set_visible(m_font_metadata);
 }
