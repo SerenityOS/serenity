@@ -84,6 +84,11 @@ public:
         DefineProperty,
     };
 
+    enum class IntegrityLevel {
+        Sealed,
+        Frozen,
+    };
+
     Shape& shape() { return *m_shape; }
     const Shape& shape() const { return *m_shape; }
 
@@ -128,6 +133,8 @@ public:
 
     virtual bool is_extensible() const { return m_is_extensible; }
     virtual bool prevent_extensions();
+
+    bool set_integrity_level(IntegrityLevel);
 
     virtual Value value_of() const { return Value(const_cast<Object*>(this)); }
     virtual Value ordinary_to_primitive(Value::PreferredType preferred_type) const;
