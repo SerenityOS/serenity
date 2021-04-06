@@ -110,7 +110,7 @@ UNMAP_AFTER_INIT bool CommandLine::is_vmmouse_enabled() const
 
 UNMAP_AFTER_INIT PCIAccessLevel CommandLine::pci_access_level() const
 {
-    auto value = lookup("pci_ecam").value_or("on");
+    auto value = lookup("pci_ecam").value_or("off");
     if (value == "on")
         return PCIAccessLevel::MappingPerBus;
     if (value == "per-device")
