@@ -35,6 +35,7 @@ class Array : public Object {
 
 public:
     static Array* create(GlobalObject&);
+    static Array* create_from(GlobalObject&, const Vector<Value>&);
 
     explicit Array(Object& prototype);
     virtual void initialize(GlobalObject&) override;
