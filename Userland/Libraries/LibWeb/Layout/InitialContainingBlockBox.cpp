@@ -48,7 +48,7 @@ void InitialContainingBlockBox::build_stacking_context_tree()
 
     set_stacking_context(make<StackingContext>(*this, nullptr));
 
-    for_each_in_subtree_of_type<Box>([&](Box& box) {
+    for_each_in_inclusive_subtree_of_type<Box>([&](Box& box) {
         if (&box == this)
             return IterationDecision::Continue;
         if (!box.establishes_stacking_context()) {
@@ -101,7 +101,7 @@ void InitialContainingBlockBox::recompute_selection_states()
 
     auto selection = this->selection().normalized();
 
-    for_each_in_subtree([&](auto& layout_node) {
+    for_each_in_inclusive_subtree([&](auto& layout_node) {
         if (!selection.is_valid()) {
             // Everything gets SelectionState::None.
         } else if (&layout_node == selection.start().layout_node && &layout_node == selection.end().layout_node) {

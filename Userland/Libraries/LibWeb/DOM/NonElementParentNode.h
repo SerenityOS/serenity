@@ -39,7 +39,7 @@ public:
     RefPtr<Element> get_element_by_id(const FlyString& id) const
     {
         RefPtr<Element> found_element;
-        static_cast<const NodeType*>(this)->template for_each_in_subtree_of_type<Element>([&](auto& element) {
+        static_cast<const NodeType*>(this)->template for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
             if (element.attribute(HTML::AttributeNames::id) == id) {
                 found_element = &element;
                 return IterationDecision::Break;
