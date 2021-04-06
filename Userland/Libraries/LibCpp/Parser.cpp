@@ -251,7 +251,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(ASTNode& parent)
     return block_statement;
 }
 
-Parser::TemplatizedMatchResult Parser::match_type()
+bool Parser::match_type()
 {
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
@@ -262,17 +262,9 @@ Parser::TemplatizedMatchResult Parser::match_type()
     }
 
     if (!match_name())
-        return TemplatizedMatchResult::NoMatch;
-    parse_name(get_dummy_node());
+        return false;
 
-    if (peek(Token::Type::Less).has_value()) {
-        if (match_template_arguments()) {
-            return TemplatizedMatchResult::Templatized;
-        }
-        return TemplatizedMatchResult::NoMatch;
-    }
-
-    return TemplatizedMatchResult::Regular;
+    return true;
 }
 
 bool Parser::match_template_arguments()
@@ -285,7 +277,7 @@ bool Parser::match_template_arguments()
     consume();
 
     while (!eof() && peek().type() != Token::Type::Greater) {
-        if (match_type() == TemplatizedMatchResult::NoMatch)
+        if (!match_type())
             return false;
         parse_type(get_dummy_node());
     }
@@ -315,7 +307,7 @@ bool Parser::match_variable_declaration()
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
 
-    if (match_type() == TemplatizedMatchResult::NoMatch) {
+    if (!match_type()) {
         return false;
     }
 
@@ -426,7 +418,8 @@ bool Parser::match_secondary_expression()
         || type == Token::Type::PipePipe
         || type == Token::Type::ExclamationMarkEquals
         || type == Token::Type::PipePipe
-        || type == Token::Type::Arrow;
+        || type == Token::Type::Arrow
+        || type == Token::Type::LeftParen;
 }
 
 NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
@@ -458,8 +451,6 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression(ASTNode& parent)
         return parse_braced_init_list(parent);
 
     if (match_name()) {
-        if (match_function_call() != TemplatizedMatchResult::NoMatch)
-            return parse_function_call(parent);
         return parse_name(parent);
     }
 
@@ -595,6 +586,20 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(ASTNode& parent, No
         exp->set_end(position());
         return exp;
     }
+    case Token::Type::LeftParen: {
+        consume();
+        auto func = create_ast_node<FunctionCall>(parent, lhs->start(), {});
+        lhs->set_parent(*func);
+        func->m_callee = lhs;
+        while (peek().type() != Token::Type::RightParen && !eof()) {
+            func->m_arguments.append(parse_expression(*func));
+            if (peek().type() == Token::Type::Comma)
+                consume(Token::Type::Comma);
+        }
+        consume(Token::Type::RightParen);
+        func->set_end(position());
+        return func;
+    }
     default: {
         error(String::formatted("unexpected operator for expression. operator: {}", peek().to_string()));
         auto token = consume();
@@ -666,8 +671,9 @@ bool Parser::match_function_declaration()
 
     parse_function_qualifiers();
 
-    if (match_type() == TemplatizedMatchResult::NoMatch)
+    if (!match_type())
         return false;
+
     VERIFY(m_root_node);
     parse_type(get_dummy_node());
 
@@ -940,64 +946,6 @@ void Parser::print_tokens() const
     }
 }
 
-Parser::TemplatizedMatchResult Parser::match_function_call()
-{
-    save_state();
-    ScopeGuard state_guard = [this] { load_state(); };
-    if (!match_name())
-        return TemplatizedMatchResult::NoMatch;
-    parse_name(get_dummy_node());
-
-    bool is_templatized = false;
-    if (match_template_arguments()) {
-        is_templatized = true;
-        parse_template_arguments(get_dummy_node());
-    }
-
-    if (!match(Token::Type::LeftParen))
-        return TemplatizedMatchResult::NoMatch;
-
-    return is_templatized ? TemplatizedMatchResult::Templatized : TemplatizedMatchResult::Regular;
-}
-
-NonnullRefPtr<FunctionCall> Parser::parse_function_call(ASTNode& parent)
-{
-    SCOPE_LOGGER();
-
-    auto match_result = match_type();
-    if (match_result == TemplatizedMatchResult::NoMatch) {
-        error("expected type");
-        return create_ast_node<FunctionCall>(parent, position(), position());
-    }
-
-    bool is_templatized = match_result == TemplatizedMatchResult::Templatized;
-
-    RefPtr<FunctionCall> call;
-    if (is_templatized) {
-        call = create_ast_node<TemplatizedFunctionCall>(parent, position(), {});
-    } else {
-        call = create_ast_node<FunctionCall>(parent, position(), {});
-    }
-
-    call->m_name = parse_name(*call);
-    if (is_templatized) {
-        static_cast<TemplatizedFunctionCall&>(*call).m_template_arguments = parse_template_arguments(*call);
-    }
-
-    NonnullRefPtrVector<Expression> args;
-    consume(Token::Type::LeftParen);
-    while (peek().type() != Token::Type::RightParen && !eof()) {
-        args.append(parse_expression(*call));
-        if (peek().type() == Token::Type::Comma)
-            consume(Token::Type::Comma);
-    }
-    consume(Token::Type::RightParen);
-    call->m_arguments = move(args);
-    call->set_end(position());
-
-    return call.release_nonnull();
-}
-
 NonnullRefPtr<StringLiteral> Parser::parse_string_literal(ASTNode& parent)
 {
     SCOPE_LOGGER();
@@ -1161,19 +1109,12 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
 {
     SCOPE_LOGGER();
 
-    auto match_result = match_type();
-    if (match_result == TemplatizedMatchResult::NoMatch) {
+    if (!match_type()) {
         auto token = consume();
         return create_ast_node<Type>(parent, token.start(), token.end());
     }
-    bool is_templatized = match_result == TemplatizedMatchResult::Templatized;
 
-    RefPtr<Type> type;
-    if (is_templatized) {
-        type = create_ast_node<TemplatizedType>(parent, position(), {});
-    } else {
-        type = create_ast_node<Type>(parent, position(), {});
-    }
+    auto type = create_ast_node<Type>(parent, position(), {});
 
     auto qualifiers = parse_type_qualifiers();
     type->m_qualifiers = move(qualifiers);
@@ -1185,13 +1126,9 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
     if (!match_name()) {
         type->set_end(position());
         error(String::formatted("expected name instead of: {}", peek().text()));
-        return type.release_nonnull();
+        return type;
     }
     type->m_name = parse_name(*type);
-
-    if (is_templatized) {
-        static_cast<TemplatizedType&>(*type).m_template_arguments = parse_template_arguments(*type);
-    }
 
     while (!eof() && peek().type() == Token::Type::Asterisk) {
         type->set_end(position());
@@ -1203,7 +1140,7 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
     }
 
     type->set_end(position());
-    return type.release_nonnull();
+    return type;
 }
 
 NonnullRefPtr<ForStatement> Parser::parse_for_statement(ASTNode& parent)
@@ -1368,7 +1305,7 @@ bool Parser::match_name()
 
 NonnullRefPtr<Name> Parser::parse_name(ASTNode& parent)
 {
-    auto name_node = create_ast_node<Name>(parent, position(), {});
+    NonnullRefPtr<Name> name_node = create_ast_node<Name>(parent, position(), {});
     while (!eof() && (peek().type() == Token::Type::Identifier || peek().type() == Token::Type::KnownType)) {
         auto token = consume();
         name_node->m_scope.append(create_ast_node<Identifier>(*name_node, token.start(), token.end(), token.text()));
@@ -1380,6 +1317,22 @@ NonnullRefPtr<Name> Parser::parse_name(ASTNode& parent)
 
     VERIFY(!name_node->m_scope.is_empty());
     name_node->m_name = name_node->m_scope.take_last();
+
+    if (match_template_arguments()) {
+        consume(Token::Type::Less);
+        NonnullRefPtr<TemplatizedName> templatized_name = create_ast_node<TemplatizedName>(parent, name_node->start(), {});
+        templatized_name->m_name = move(name_node->m_name);
+        templatized_name->m_scope = move(name_node->m_scope);
+        name_node->set_end(position());
+        name_node = templatized_name;
+        while (peek().type() != Token::Type::Greater && !eof()) {
+            templatized_name->m_template_arguments.append(parse_type(*templatized_name));
+            if (peek().type() == Token::Type::Comma)
+                consume(Token::Type::Comma);
+        }
+        consume(Token::Type::Greater);
+    }
+
     name_node->set_end(position());
     return name_node;
 }
@@ -1407,7 +1360,7 @@ bool Parser::match_c_style_cast_expression()
     if (consume().type() != Token::Type::LeftParen)
         return false;
 
-    if (match_type() == TemplatizedMatchResult::NoMatch)
+    if (!match_type())
         return false;
     parse_type(get_dummy_node());
 
