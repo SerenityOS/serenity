@@ -85,8 +85,8 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
     {
         ScopedSpinLock lock(space().get_lock());
         for (auto& region : space().regions()) {
-            dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", &region, region.name(), region.vaddr());
-            auto region_clone = region.clone(*child);
+            dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", region, region->name(), region->vaddr());
+            auto region_clone = region->clone(*child);
             if (!region_clone) {
                 dbgln("fork: Cannot clone region, insufficient memory");
                 // TODO: tear down new process?
@@ -96,7 +96,7 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
             auto& child_region = child->space().add_region(region_clone.release_nonnull());
             child_region.map(child->space().page_directory(), ShouldFlushTLB::No);
 
-            if (&region == m_master_tls_region.unsafe_ptr())
+            if (region == m_master_tls_region.unsafe_ptr())
                 child->m_master_tls_region = child_region;
         }
 
