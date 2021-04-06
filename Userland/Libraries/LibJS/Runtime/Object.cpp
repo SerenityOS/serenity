@@ -187,9 +187,9 @@ Value Object::get_own_property(const PropertyName& property_name, Value receiver
     return value_here;
 }
 
-Value Object::get_own_properties(PropertyKind kind, bool only_enumerable_properties, GetOwnPropertyReturnType return_type) const
+MarkedValueList Object::get_own_properties(PropertyKind kind, bool only_enumerable_properties, GetOwnPropertyReturnType return_type) const
 {
-    auto* properties_array = Array::create(global_object());
+    MarkedValueList properties(heap());
 
     // FIXME: Support generic iterables
     if (is<StringObject>(*this)) {
@@ -197,54 +197,51 @@ Value Object::get_own_properties(PropertyKind kind, bool only_enumerable_propert
 
         for (size_t i = 0; i < str.length(); ++i) {
             if (kind == PropertyKind::Key) {
-                properties_array->define_property(i, js_string(vm(), String::number(i)));
+                properties.append(js_string(vm(), String::number(i)));
             } else if (kind == PropertyKind::Value) {
-                properties_array->define_property(i, js_string(vm(), String::formatted("{:c}", str[i])));
+                properties.append(js_string(vm(), String::formatted("{:c}", str[i])));
             } else {
                 auto* entry_array = Array::create(global_object());
                 entry_array->define_property(0, js_string(vm(), String::number(i)));
                 entry_array->define_property(1, js_string(vm(), String::formatted("{:c}", str[i])));
-                properties_array->define_property(i, entry_array);
+                properties.append(entry_array);
             }
             if (vm().exception())
-                return {};
+                return MarkedValueList { heap() };
         }
 
-        return properties_array;
+        return properties;
     }
 
-    size_t property_index = 0;
     for (auto& entry : m_indexed_properties) {
         auto value_and_attributes = entry.value_and_attributes(const_cast<Object*>(this));
         if (only_enumerable_properties && !value_and_attributes.attributes.is_enumerable())
             continue;
 
         if (kind == PropertyKind::Key) {
-            properties_array->define_property(property_index, js_string(vm(), String::number(entry.index())));
+            properties.append(js_string(vm(), String::number(entry.index())));
         } else if (kind == PropertyKind::Value) {
-            properties_array->define_property(property_index, value_and_attributes.value);
+            properties.append(value_and_attributes.value);
         } else {
             auto* entry_array = Array::create(global_object());
             entry_array->define_property(0, js_string(vm(), String::number(entry.index())));
             entry_array->define_property(1, value_and_attributes.value);
-            properties_array->define_property(property_index, entry_array);
+            properties.append(entry_array);
         }
         if (vm().exception())
-            return {};
-
-        ++property_index;
+            return MarkedValueList { heap() };
     }
 
     auto add_property_to_results = [&](auto& property) {
         if (kind == PropertyKind::Key) {
-            properties_array->define_property(property_index, property.key.to_value(vm()));
+            properties.append(property.key.to_value(vm()));
         } else if (kind == PropertyKind::Value) {
-            properties_array->define_property(property_index, get(property.key));
+            properties.append(get(property.key));
         } else {
             auto* entry_array = Array::create(global_object());
             entry_array->define_property(0, property.key.to_value(vm()));
             entry_array->define_property(1, get(property.key));
-            properties_array->define_property(property_index, entry_array);
+            properties.append(entry_array);
         }
     };
 
@@ -258,8 +255,7 @@ Value Object::get_own_properties(PropertyKind kind, bool only_enumerable_propert
                 continue;
             add_property_to_results(it);
             if (vm().exception())
-                return {};
-            ++property_index;
+                return MarkedValueList { heap() };
         }
     }
     if (return_type == GetOwnPropertyReturnType::All || return_type == GetOwnPropertyReturnType::SymbolOnly) {
@@ -270,16 +266,15 @@ Value Object::get_own_properties(PropertyKind kind, bool only_enumerable_propert
                 continue;
             add_property_to_results(it);
             if (vm().exception())
-                return {};
-            ++property_index;
+                return MarkedValueList { heap() };
         }
     }
 
-    return properties_array;
+    return properties;
 }
 
 // 7.3.23 EnumerableOwnPropertyNames, https://tc39.es/ecma262/#sec-enumerableownpropertynames
-Value Object::get_enumerable_own_property_names(PropertyKind kind) const
+MarkedValueList Object::get_enumerable_own_property_names(PropertyKind kind) const
 {
     return get_own_properties(kind, true, Object::GetOwnPropertyReturnType::StringOnly);
 }
