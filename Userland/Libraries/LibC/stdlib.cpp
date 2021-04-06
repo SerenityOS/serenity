@@ -1184,4 +1184,14 @@ int unlockpt([[maybe_unused]] int fd)
 {
     return 0;
 }
+
+long labs(long i)
+{
+    return i < 0 ? -i : i;
+}
+
+long long llabs(long long i)
+{
+    return i < 0 ? -i : i;
+}
 }
