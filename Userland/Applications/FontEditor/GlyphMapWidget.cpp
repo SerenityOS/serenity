@@ -29,26 +29,36 @@
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
 
-GlyphMapWidget::GlyphMapWidget(Gfx::BitmapFont& mutable_font)
-    : m_font(mutable_font)
+GlyphMapWidget::GlyphMapWidget()
 {
-    m_glyph_count = mutable_font.glyph_count();
-    set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
+    horizontal_scrollbar().set_visible(false);
 }
 
 GlyphMapWidget::~GlyphMapWidget()
 {
 }
 
-int GlyphMapWidget::preferred_width() const
+void GlyphMapWidget::initialize(Gfx::BitmapFont& mutable_font)
 {
-    return columns() * (font().max_glyph_width() + m_horizontal_spacing) + 2 + frame_thickness() * 2;
+    if (m_font == mutable_font)
+        return;
+    m_font = mutable_font;
+    m_glyph_count = mutable_font.glyph_count();
+    vertical_scrollbar().set_step(font().glyph_height() + m_vertical_spacing);
 }
 
-int GlyphMapWidget::preferred_height() const
+void GlyphMapWidget::resize_event(GUI::ResizeEvent& event)
 {
-    return rows() * (font().glyph_height() + m_vertical_spacing) + 2 + frame_thickness() * 2;
+    int event_width = event.size().width() - this->vertical_scrollbar().width() - (frame_thickness() * 2) - m_horizontal_spacing;
+    m_columns = max(event_width / (font().max_glyph_width() + m_horizontal_spacing), 1);
+    m_rows = ceil_div(m_glyph_count, m_columns);
+
+    int content_width = columns() * (font().max_glyph_width() + m_horizontal_spacing);
+    int content_height = rows() * (font().glyph_height() + m_vertical_spacing) + frame_thickness();
+    set_content_size({ content_width, content_height });
+
+    ScrollableWidget::resize_event(event);
 }
 
 void GlyphMapWidget::set_selected_glyph(int glyph)
@@ -71,7 +81,7 @@ Gfx::IntRect GlyphMapWidget::get_outer_rect(int glyph) const
         font().max_glyph_width() + m_horizontal_spacing,
         font().glyph_height() + m_horizontal_spacing
     }
-        .translated(frame_thickness(), frame_thickness());
+        .translated(frame_thickness() - horizontal_scrollbar().value(), frame_thickness() - vertical_scrollbar().value());
 }
 
 void GlyphMapWidget::update_glyph(int glyph)
@@ -84,10 +94,11 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
     GUI::Frame::paint_event(event);
 
     GUI::Painter painter(*this);
+    painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
 
     painter.set_font(font());
-    painter.fill_rect(frame_inner_rect(), palette().base());
+    painter.fill_rect(widget_inner_rect(), palette().base());
 
     for (int glyph = 0; glyph < m_glyph_count; ++glyph) {
         Gfx::IntRect outer_rect = get_outer_rect(glyph);
@@ -125,33 +136,39 @@ void GlyphMapWidget::keydown_event(GUI::KeyEvent& event)
     if (event.key() == KeyCode::Key_Up) {
         if (selected_glyph() >= m_columns) {
             set_selected_glyph(selected_glyph() - m_columns);
+            scroll_to_glyph(selected_glyph());
             return;
         }
     }
     if (event.key() == KeyCode::Key_Down) {
         if (selected_glyph() < m_glyph_count - m_columns) {
             set_selected_glyph(selected_glyph() + m_columns);
+            scroll_to_glyph(selected_glyph());
             return;
         }
     }
     if (event.key() == KeyCode::Key_Left) {
         if (selected_glyph() > 0) {
             set_selected_glyph(selected_glyph() - 1);
+            scroll_to_glyph(selected_glyph());
             return;
         }
     }
     if (event.key() == KeyCode::Key_Right) {
         if (selected_glyph() < m_glyph_count - 1) {
             set_selected_glyph(selected_glyph() + 1);
+            scroll_to_glyph(selected_glyph());
             return;
         }
     }
     if (event.ctrl() && event.key() == KeyCode::Key_Home) {
         set_selected_glyph(0);
+        scroll_to_glyph(selected_glyph());
         return;
     }
     if (event.ctrl() && event.key() == KeyCode::Key_End) {
         set_selected_glyph(m_glyph_count - 1);
+        scroll_to_glyph(selected_glyph());
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
@@ -165,4 +182,17 @@ void GlyphMapWidget::keydown_event(GUI::KeyEvent& event)
         set_selected_glyph(new_selection);
         return;
     }
+}
+
+void GlyphMapWidget::scroll_to_glyph(int glyph)
+{
+    int row = glyph / columns();
+    int column = glyph % columns();
+    auto scroll_rect = Gfx::IntRect {
+        column * (font().max_glyph_width() + m_horizontal_spacing) + 1,
+        row * (font().glyph_height() + m_vertical_spacing) + 1,
+        font().max_glyph_width() + m_horizontal_spacing,
+        font().glyph_height() + m_horizontal_spacing
+    };
+    scroll_into_view(scroll_rect, true, true);
 }
