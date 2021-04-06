@@ -37,7 +37,7 @@ StyleInvalidator::StyleInvalidator(DOM::Document& document)
     if (!m_document.should_invalidate_styles_on_attribute_changes())
         return;
     auto& style_resolver = m_document.style_resolver();
-    m_document.for_each_in_subtree_of_type<DOM::Element>([&](auto& element) {
+    m_document.for_each_in_inclusive_subtree_of_type<DOM::Element>([&](auto& element) {
         m_elements_and_matching_rules_before.set(&element, style_resolver.collect_matching_rules(element));
         return IterationDecision::Continue;
     });
@@ -48,7 +48,7 @@ StyleInvalidator::~StyleInvalidator()
     if (!m_document.should_invalidate_styles_on_attribute_changes())
         return;
     auto& style_resolver = m_document.style_resolver();
-    m_document.for_each_in_subtree_of_type<DOM::Element>([&](auto& element) {
+    m_document.for_each_in_inclusive_subtree_of_type<DOM::Element>([&](auto& element) {
         auto maybe_matching_rules_before = m_elements_and_matching_rules_before.get(&element);
         if (!maybe_matching_rules_before.has_value()) {
             element.set_needs_style_update(true);

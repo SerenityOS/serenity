@@ -114,7 +114,7 @@ void Document::removed_last_ref()
             // Gather up all the descendants of this document and prune them from the tree.
             // FIXME: This could definitely be more elegant.
             NonnullRefPtrVector<Node> descendants;
-            for_each_in_subtree([&](auto& node) {
+            for_each_in_inclusive_subtree([&](auto& node) {
                 if (&node != this)
                     descendants.append(node);
                 return IterationDecision::Continue;
@@ -316,7 +316,7 @@ void Document::tear_down_layout_tree()
 
     NonnullRefPtrVector<Layout::Node> layout_nodes;
 
-    m_layout_root->for_each_in_subtree([&](auto& layout_node) {
+    m_layout_root->for_each_in_inclusive_subtree([&](auto& layout_node) {
         layout_nodes.append(layout_node);
         return IterationDecision::Continue;
     });
@@ -505,7 +505,7 @@ void Document::set_hovered_node(Node* node)
 NonnullRefPtrVector<Element> Document::get_elements_by_name(const String& name) const
 {
     NonnullRefPtrVector<Element> elements;
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
+    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
         if (element.attribute(HTML::AttributeNames::name) == name)
             elements.append(element);
         return IterationDecision::Continue;
@@ -518,7 +518,7 @@ NonnullRefPtrVector<Element> Document::get_elements_by_tag_name(const FlyString&
     // FIXME: Support "*" for tag_name
     // https://dom.spec.whatwg.org/#concept-getelementsbytagname
     NonnullRefPtrVector<Element> elements;
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
+    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
         if (element.namespace_() == Namespace::HTML
                 ? element.local_name().to_lowercase() == tag_name.to_lowercase()
                 : element.local_name() == tag_name) {
@@ -532,7 +532,7 @@ NonnullRefPtrVector<Element> Document::get_elements_by_tag_name(const FlyString&
 NonnullRefPtrVector<Element> Document::get_elements_by_class_name(const FlyString& class_name) const
 {
     NonnullRefPtrVector<Element> elements;
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
+    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
         if (element.has_class(class_name, in_quirks_mode() ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
             elements.append(element);
         return IterationDecision::Continue;
@@ -661,7 +661,7 @@ NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_a
 
 void Document::adopt_node(Node& subtree_root)
 {
-    subtree_root.for_each_in_subtree([&](auto& node) {
+    subtree_root.for_each_in_inclusive_subtree([&](auto& node) {
         node.set_document({}, *this);
         return IterationDecision::Continue;
     });

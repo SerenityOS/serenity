@@ -120,7 +120,7 @@ Label* Label::label_for_control_node(LabelableNode& control)
     if (id.is_empty())
         return label;
 
-    control.document().layout_node()->for_each_in_subtree_of_type<Label>([&](auto& node) {
+    control.document().layout_node()->for_each_in_inclusive_subtree_of_type<Label>([&](auto& node) {
         if (node.dom_node().for_() == id) {
             label = &node;
             return IterationDecision::Break;
@@ -144,7 +144,7 @@ LabelableNode* Label::control_node()
     if (for_.is_empty())
         return control;
 
-    document().layout_node()->for_each_in_subtree_of_type<LabelableNode>([&](auto& node) {
+    document().layout_node()->for_each_in_inclusive_subtree_of_type<LabelableNode>([&](auto& node) {
         if (node.dom_node().attribute(HTML::AttributeNames::id) == for_) {
             control = &node;
             return IterationDecision::Break;

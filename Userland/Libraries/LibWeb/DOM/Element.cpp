@@ -350,7 +350,7 @@ NonnullRefPtrVector<Element> Element::get_elements_by_tag_name(const FlyString& 
     // FIXME: Support "*" for tag_name
     // https://dom.spec.whatwg.org/#concept-getelementsbytagname
     NonnullRefPtrVector<Element> elements;
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
+    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
         if (element.namespace_() == Namespace::HTML
                 ? element.local_name().to_lowercase() == tag_name.to_lowercase()
                 : element.local_name() == tag_name) {
@@ -364,7 +364,7 @@ NonnullRefPtrVector<Element> Element::get_elements_by_tag_name(const FlyString& 
 NonnullRefPtrVector<Element> Element::get_elements_by_class_name(const FlyString& class_name) const
 {
     NonnullRefPtrVector<Element> elements;
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
+    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
         if (element.has_class(class_name, m_document->in_quirks_mode() ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
             elements.append(element);
         return IterationDecision::Continue;
