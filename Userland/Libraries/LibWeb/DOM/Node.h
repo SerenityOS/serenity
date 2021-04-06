@@ -136,9 +136,10 @@ public:
     Element* parent_element();
     const Element* parent_element() const;
 
-    virtual void inserted_into(Node&);
-    virtual void removed_from(Node&) { }
+    virtual void inserted();
+    virtual void removed_from(Node*) { }
     virtual void children_changed() { }
+    virtual void adopted_from(const Document&) { }
 
     const Layout::Node* layout_node() const { return m_layout_node; }
     Layout::Node* layout_node() { return m_layout_node; }

@@ -54,9 +54,9 @@ void HTMLIFrameElement::parse_attribute(const FlyString& name, const String& val
         load_src(value);
 }
 
-void HTMLIFrameElement::inserted_into(Node& parent)
+void HTMLIFrameElement::inserted()
 {
-    FrameHostElement::inserted_into(parent);
+    FrameHostElement::inserted();
     if (is_connected())
         load_src(attribute(HTML::AttributeNames::src));
 }

@@ -39,7 +39,7 @@ public:
     HTMLLinkElement(DOM::Document&, QualifiedName);
     virtual ~HTMLLinkElement() override;
 
-    virtual void inserted_into(Node&) override;
+    virtual void inserted() override;
 
     String rel() const { return attribute(HTML::AttributeNames::rel); }
     String type() const { return attribute(HTML::AttributeNames::type); }

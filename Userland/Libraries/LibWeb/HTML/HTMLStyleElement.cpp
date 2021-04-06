@@ -60,7 +60,7 @@ void HTMLStyleElement::children_changed()
     HTMLElement::children_changed();
 }
 
-void HTMLStyleElement::removed_from(Node& old_parent)
+void HTMLStyleElement::removed_from(Node* old_parent)
 {
     if (m_css_loader.style_sheet()) {
         // FIXME: Remove the sheet from the document

@@ -40,7 +40,7 @@ public:
     virtual ~HTMLStyleElement() override;
 
     virtual void children_changed() override;
-    virtual void removed_from(Node&) override;
+    virtual void removed_from(Node*) override;
 
 private:
     CSSLoader m_css_loader;
