@@ -48,7 +48,9 @@ public:
     void prepare_script(Badge<HTMLDocumentParser>) { prepare_script(); }
     void execute_script();
 
-    virtual void inserted_into(Node&) override;
+    bool is_parser_inserted() const { return !!m_parser_document; }
+
+    virtual void inserted() override;
 
 private:
     void prepare_script();
@@ -59,7 +61,6 @@ private:
     WeakPtr<DOM::Document> m_preparation_time_document;
     bool m_non_blocking { false };
     bool m_already_started { false };
-    bool m_parser_inserted { false };
     bool m_from_an_external_file { false };
     bool m_script_ready { false };
     bool m_ready_to_be_parser_executed { false };
