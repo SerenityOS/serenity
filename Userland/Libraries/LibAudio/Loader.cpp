@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibAudio/Mp3Loader.h>
 #include <LibAudio/WavLoader.h>
 
 namespace Audio {
@@ -33,6 +34,11 @@ Loader::Loader(const StringView& path)
     m_plugin = make<WavLoaderPlugin>(path);
     if (m_plugin->sniff())
         return;
+
+    m_plugin = make<Mp3LoaderPlugin>(path);
+    if (m_plugin->sniff())
+        return;
+
     m_plugin = nullptr;
 }
 
@@ -41,6 +47,11 @@ Loader::Loader(const ByteBuffer& buffer)
     m_plugin = make<WavLoaderPlugin>(buffer);
     if (m_plugin->sniff())
         return;
+
+    m_plugin = make<Mp3LoaderPlugin>(buffer);
+    if (m_plugin->sniff())
+        return;
+
     m_plugin = nullptr;
 }
 
