@@ -203,9 +203,6 @@ void HTMLScriptElement::prepare_script()
     // FIXME: Cryptographic nonce
     // FIXME: Check "integrity" attribute
     // FIXME: Check "referrerpolicy" attribute
-
-    m_parser_inserted = !!m_parser_document;
-
     // FIXME: Check fetch options
 
     if (has_attribute(HTML::AttributeNames::src)) {
@@ -254,15 +251,15 @@ void HTMLScriptElement::prepare_script()
         }
     }
 
-    if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && has_attribute(HTML::AttributeNames::defer) && m_parser_inserted && !has_attribute(HTML::AttributeNames::async))
-        || (m_script_type == ScriptType::Module && m_parser_inserted && !has_attribute(HTML::AttributeNames::async))) {
+    if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && has_attribute(HTML::AttributeNames::defer) && is_parser_inserted() && !has_attribute(HTML::AttributeNames::async))
+        || (m_script_type == ScriptType::Module && is_parser_inserted() && !has_attribute(HTML::AttributeNames::async))) {
         document().add_script_to_execute_when_parsing_has_finished({}, *this);
         when_the_script_is_ready([this] {
             m_ready_to_be_parser_executed = true;
         });
     }
 
-    else if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && m_parser_inserted && !has_attribute(HTML::AttributeNames::async)) {
+    else if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && is_parser_inserted() && !has_attribute(HTML::AttributeNames::async)) {
         document().set_pending_parsing_blocking_script({}, this);
         when_the_script_is_ready([this] {
             m_ready_to_be_parser_executed = true;
@@ -329,13 +326,15 @@ void HTMLScriptElement::when_the_script_is_ready(Function<void()> callback)
     m_script_ready_callback = move(callback);
 }
 
-void HTMLScriptElement::inserted_into(Node& parent)
+void HTMLScriptElement::inserted()
 {
-    // FIXME: It would be nice to have a notification for "node became connected"
-    if (is_connected()) {
-        prepare_script();
+    if (!is_parser_inserted()) {
+        // FIXME: Only do this if the element was previously not connected.
+        if (is_connected()) {
+            prepare_script();
+        }
     }
-    HTMLElement::inserted_into(parent);
+    HTMLElement::inserted();
 }
 
 }
