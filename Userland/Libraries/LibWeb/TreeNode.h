@@ -192,6 +192,46 @@ public:
     }
 
     template<typename Callback>
+    IterationDecision for_each_in_subtree(Callback callback) const
+    {
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->for_each_in_inclusive_subtree(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename Callback>
+    IterationDecision for_each_in_subtree(Callback callback)
+    {
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->for_each_in_inclusive_subtree(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename U, typename Callback>
+    IterationDecision for_each_in_subtree_of_type(Callback callback)
+    {
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename U, typename Callback>
+    IterationDecision for_each_in_subtree_of_type(Callback callback) const
+    {
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename Callback>
     void for_each_child(Callback callback) const
     {
         return const_cast<TreeNode*>(this)->template for_each_child(move(callback));
