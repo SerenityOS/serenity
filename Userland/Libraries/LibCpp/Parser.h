@@ -93,14 +93,7 @@ private:
     bool match_c_style_cast_expression();
     bool match_sizeof_expression();
     bool match_braced_init_list();
-
-    enum class TemplatizedMatchResult {
-        NoMatch,
-        Regular,
-        Templatized,
-    };
-    TemplatizedMatchResult match_type();
-    TemplatizedMatchResult match_function_call();
+    bool match_type();
 
     Optional<NonnullRefPtrVector<Parameter>> parse_parameter_list(ASTNode& parent);
     Optional<Token> consume_whitespace();
@@ -165,7 +158,7 @@ private:
     create_ast_node(ASTNode& parent, const Position& start, Optional<Position> end, Args&&... args)
     {
         auto node = adopt(*new T(&parent, start, end, m_filename, forward<Args>(args)...));
-        if(!parent.is_dummy_node()) {
+        if (!parent.is_dummy_node()) {
             m_state.nodes.append(node);
         }
         return node;
@@ -180,13 +173,11 @@ private:
         return node;
     }
 
-
     DummyAstNode& get_dummy_node()
     {
-        static NonnullRefPtr<DummyAstNode> dummy  = adopt(*new DummyAstNode(nullptr, {}, {}, {}));
+        static NonnullRefPtr<DummyAstNode> dummy = adopt(*new DummyAstNode(nullptr, {}, {}, {}));
         return dummy;
     }
-
 
     bool match_attribute_specification();
     void consume_attribute_specification();

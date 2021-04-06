@@ -88,10 +88,25 @@ void Type::dump(size_t indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent + 1);
+    outln("{}", to_string());
+}
+
+String Type::to_string() const
+{
     String qualifiers_string;
     if (!m_qualifiers.is_empty())
         qualifiers_string = String::formatted("[{}] ", String::join(" ", m_qualifiers));
-    outln("{}{}", qualifiers_string, m_name.is_null() ? "" : m_name->full_name());
+    return String::formatted("{}{}", qualifiers_string, m_name.is_null() ? "" : m_name->full_name());
+}
+
+String Pointer::to_string() const
+{
+    if (!m_pointee)
+        return {};
+    StringBuilder builder;
+    builder.append(m_pointee->to_string());
+    builder.append("*");
+    return builder.to_string();
 }
 
 void Parameter::dump(size_t indent) const
@@ -254,8 +269,7 @@ void AssignmentExpression::dump(size_t indent) const
 void FunctionCall::dump(size_t indent) const
 {
     ASTNode::dump(indent);
-    print_indent(indent);
-    outln("{}", m_name->full_name());
+    m_callee->dump(indent + 1);
     for (const auto& arg : m_arguments) {
         arg.dump(indent + 1);
     }
@@ -460,26 +474,6 @@ void NullPointerLiteral::dump(size_t indent) const
     ASTNode::dump(indent);
 }
 
-void TemplatizedType::dump(size_t indent) const
-{
-    ASTNode::dump(indent);
-
-    String qualifiers_string;
-    if (!m_qualifiers.is_empty())
-        qualifiers_string = String::formatted("[{}] ", String::join(" ", m_qualifiers));
-
-    print_indent(indent + 1);
-    outln("{}{}", qualifiers_string, m_name);
-
-    print_indent(indent + 1);
-    outln("<");
-    for (auto& arg : m_template_arguments) {
-        arg.dump(indent + 1);
-    }
-    print_indent(indent + 1);
-    outln(">");
-}
-
 void Name::dump(size_t indent) const
 {
     ASTNode::dump(indent);
@@ -498,24 +492,16 @@ String Name::full_name() const
     return String::formatted("{}{}", builder.to_string(), m_name.is_null() ? "" : m_name->m_name);
 }
 
-void TemplatizedFunctionCall::dump(size_t indent) const
+String TemplatizedName::full_name() const
 {
-    ASTNode::dump(indent);
-
-    print_indent(indent);
-    outln("{}", m_name->full_name());
-
-    print_indent(indent + 1);
-    outln("<");
-    for (auto& arg : m_template_arguments) {
-        arg.dump(indent + 1);
+    StringBuilder name;
+    name.append(Name::full_name());
+    name.append('<');
+    for (auto& type : m_template_arguments) {
+        name.append(type.to_string());
     }
-    print_indent(indent + 1);
-    outln(">");
-
-    for (const auto& arg : m_arguments) {
-        arg.dump(indent + 1);
-    }
+    name.append('>');
+    return name.to_string();
 }
 
 void CppCastExpression::dump(size_t indent) const

@@ -398,22 +398,16 @@ struct TargetDeclaration {
 
 static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node)
 {
-    dbgln("get_target_declaration");
     if (!node.is_identifier()) {
         dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "node is not an identifier");
         return {};
     }
 
-    const ASTNode* n = &node;
-    while (n) {
-        dbgln("{}", n->class_name());
-        n = n->parent();
-    }
-
     String name = static_cast<const Identifier&>(node).m_name;
 
-    if ((node.parent() && node.parent()->is_function_call()) || (node.parent()->is_name() && node.parent()->parent() && node.parent()->parent()->is_function_call()))
+    if ((node.parent() && node.parent()->is_function_call()) || (node.parent()->is_name() && node.parent()->parent() && node.parent()->parent()->is_function_call())) {
         return TargetDeclaration { TargetDeclaration::Type::Function, name };
+    }
 
     if ((node.parent() && node.parent()->is_type()) || (node.parent()->is_name() && node.parent()->parent() && node.parent()->parent()->is_type()))
         return TargetDeclaration { TargetDeclaration::Type::Type, name };
