@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibGfx/Palette.h>
 #include <string.h>
 
 namespace GUI {
@@ -222,6 +223,22 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
             on_file_return();
         }
     };
+
+    auto& common_locations_frame = *widget.find_descendant_of_type_named<GUI::Frame>("common_locations_frame");
+    auto add_common_location_button = [&](auto& name, String path) {
+        auto& button = common_locations_frame.add<GUI::Button>();
+        button.set_button_style(Gfx::ButtonStyle::CoolBar);
+        button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        button.set_text(move(name));
+        button.set_icon(FileIconProvider::icon_for_path(path).bitmap_for_size(16));
+        button.set_fixed_height(22);
+        button.on_click = [this, path] {
+            set_path(path);
+        };
+    };
+    add_common_location_button("Home", Core::StandardPaths::home_directory());
+    add_common_location_button("Desktop", Core::StandardPaths::desktop_directory());
+    add_common_location_button("Root", "/");
 }
 
 FilePicker::~FilePicker()
