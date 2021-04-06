@@ -359,6 +359,9 @@ void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
             case CSS::Selector::SimpleSelector::PseudoClass::Root:
                 pseudo_class_description = "Root";
                 break;
+            case CSS::Selector::SimpleSelector::PseudoClass::FirstOfType:
+                pseudo_class_description = "FirstOfType";
+                break;
             case CSS::Selector::SimpleSelector::PseudoClass::Focus:
                 pseudo_class_description = "Focus";
                 break;
