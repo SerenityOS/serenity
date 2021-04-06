@@ -1,5 +1,5 @@
---- Python-3.9.2/config.sub	2021-02-21 20:22:43.901024503 +0100
-+++ Python-3.9.2/config.sub	2021-02-21 20:24:35.079400552 +0100
+--- Python-3.9.4/config.sub	2021-02-21 20:22:43.901024503 +0100
++++ Python-3.9.4/config.sub	2021-02-21 20:24:35.079400552 +0100
 @@ -1485,6 +1485,8 @@
  	-oss*)
  		os=-sysv3
@@ -9,9 +9,9 @@
  	-svr4*)
  		os=-sysv4
  		;;
---- Python-3.9.2/configure.ac	2021-02-21 20:22:43.900024509 +0100
-+++ Python-3.9.2/configure.ac	2021-02-21 20:24:35.084400524 +0100
-@@ -382,6 +382,9 @@
+--- Python-3.9.4/configure.ac	2021-04-06 20:59:45.319060429 +0200
++++ Python-3.9.4/configure.ac	2021-04-06 21:02:33.875267539 +0200
+@@ -389,6 +389,9 @@
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
  	case "$host" in
@@ -21,7 +21,7 @@
  	*-*-linux-android*)
  		ac_sys_system=Linux-android
  		;;
-@@ -428,6 +431,9 @@
+@@ -435,6 +438,9 @@
  AC_SUBST(_PYTHON_HOST_PLATFORM)
  if test "$cross_compiling" = yes; then
  	case "$host" in
@@ -31,8 +31,8 @@
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
---- Python-3.9.2/configure	2021-02-21 20:22:43.898024520 +0100
-+++ Python-3.9.2/configure	2021-02-21 20:24:35.096400457 +0100
+--- Python-3.9.4/configure	2021-02-21 20:22:43.898024520 +0100
++++ Python-3.9.4/configure	2021-02-21 20:24:35.096400457 +0100
 @@ -3292,6 +3292,9 @@
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
