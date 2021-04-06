@@ -38,7 +38,7 @@ NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(const RamdiskController& cont
 }
 
 RamdiskDevice::RamdiskDevice(const RamdiskController& controller, OwnPtr<Region>&& region, int major, int minor)
-    : StorageDevice(controller, major, minor, 512, m_region->size() / 512)
+    : StorageDevice(controller, major, minor, 512, region->size() / 512)
     , m_region(move(region))
 {
     dmesgln("Ramdisk: Device #{} @ {}, Capacity={}", minor, m_region->vaddr(), max_addressable_block() * 512);
