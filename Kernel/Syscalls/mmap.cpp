@@ -341,19 +341,23 @@ KResultOr<int> Process::sys$mprotect(Userspace<void*> addr, size_t size, int pro
             return EACCES;
         }
 
+        // Remove the old region from our regions tree, since were going to add another region
+        // with the exact same start address, but dont deallocate it yet
+        auto region = space().take_region(*old_region);
+        VERIFY(region);
+
+        // Unmap the old region here, specifying that we *don't* want the VM deallocated.
+        region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+
         // This vector is the region(s) adjacent to our range.
         // We need to allocate a new region for the range we wanted to change permission bits on.
-        auto adjacent_regions = space().split_region_around_range(*old_region, range_to_mprotect);
+        auto adjacent_regions = space().split_region_around_range(*region, range_to_mprotect);
 
-        size_t new_range_offset_in_vmobject = old_region->offset_in_vmobject() + (range_to_mprotect.base().get() - old_region->range().base().get());
-        auto& new_region = space().allocate_split_region(*old_region, range_to_mprotect, new_range_offset_in_vmobject);
+        size_t new_range_offset_in_vmobject = region->offset_in_vmobject() + (range_to_mprotect.base().get() - region->range().base().get());
+        auto& new_region = space().allocate_split_region(*region, range_to_mprotect, new_range_offset_in_vmobject);
         new_region.set_readable(prot & PROT_READ);
         new_region.set_writable(prot & PROT_WRITE);
         new_region.set_executable(prot & PROT_EXEC);
-
-        // Unmap the old region here, specifying that we *don't* want the VM deallocated.
-        old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
-        space().deallocate_region(*old_region);
 
         // Map the new regions using our page directory (they were just allocated and don't have one).
         for (auto* adjacent_region : adjacent_regions) {
@@ -475,11 +479,15 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
         if (!old_region->is_mmap())
             return EPERM;
 
-        auto new_regions = space().split_region_around_range(*old_region, range_to_unmap);
+        // Remove the old region from our regions tree, since were going to add another region
+        // with the exact same start address, but dont deallocate it yet
+        auto region = space().take_region(*old_region);
+        VERIFY(region);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
-        old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
-        space().deallocate_region(*old_region);
+        region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+
+        auto new_regions = space().split_region_around_range(*region, range_to_unmap);
 
         // Instead we give back the unwanted VM manually.
         space().page_directory().range_allocator().deallocate(range_to_unmap);
@@ -512,13 +520,16 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
             continue;
         }
 
-        // otherwise just split the regions and collect them for future mapping
-        new_regions.append(space().split_region_around_range(*old_region, range_to_unmap));
+        // Remove the old region from our regions tree, since were going to add another region
+        // with the exact same start address, but dont deallocate it yet
+        auto region = space().take_region(*old_region);
+        VERIFY(region);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
-        old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
-        bool res = space().deallocate_region(*old_region);
-        VERIFY(res);
+        region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+
+        // otherwise just split the regions and collect them for future mapping
+        new_regions.append(space().split_region_around_range(*region, range_to_unmap));
     }
     // Instead we give back the unwanted VM manually at the end.
     space().page_directory().range_allocator().deallocate(range_to_unmap);
@@ -559,7 +570,8 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
 
         // Unmap without deallocating the VM range since we're going to reuse it.
         old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
-        space().deallocate_region(*old_region);
+        bool success = space().deallocate_region(*old_region);
+        VERIFY(success);
 
         auto new_vmobject = PrivateInodeVMObject::create_with_inode(inode);
 
