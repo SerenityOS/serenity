@@ -118,6 +118,7 @@ namespace JS {
     P(flat)                                  \
     P(floor)                                 \
     P(forEach)                               \
+    P(freeze)                                \
     P(from)                                  \
     P(fromCharCode)                          \
     P(fround)                                \
@@ -206,6 +207,7 @@ namespace JS {
     P(resolve)                               \
     P(reverse)                               \
     P(round)                                 \
+    P(seal)                                  \
     P(set)                                   \
     P(setFullYear)                           \
     P(setHours)                              \
