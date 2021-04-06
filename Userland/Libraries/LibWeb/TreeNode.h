@@ -397,9 +397,6 @@ inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child, b
 
     child->m_previous_sibling = node;
 
-    if (m_first_child == child)
-        m_first_child = node;
-
     node->m_parent = static_cast<T*>(this);
     if (notify)
         node->inserted_into(static_cast<T&>(*this));
