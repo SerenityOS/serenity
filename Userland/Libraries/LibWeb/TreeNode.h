@@ -299,6 +299,17 @@ public:
         return nullptr;
     }
 
+    ~TreeNode()
+    {
+        VERIFY(!m_parent);
+        T* next_child = nullptr;
+        for (auto* child = m_first_child; child; child = next_child) {
+            next_child = child->m_next_sibling;
+            child->m_parent = nullptr;
+            child->unref();
+        }
+    }
+
 protected:
     TreeNode() { }
 
