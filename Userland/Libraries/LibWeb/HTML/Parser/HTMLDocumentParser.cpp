@@ -38,6 +38,7 @@
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
+#include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
@@ -2890,6 +2891,7 @@ void HTMLDocumentParser::process_using_the_rules_for_foreign_content(HTMLToken& 
     VERIFY_NOT_REACHED();
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#reset-the-insertion-mode-appropriately
 void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
 {
     for (ssize_t i = m_stack_of_open_elements.elements().size() - 1; i >= 0; --i) {
@@ -2903,7 +2905,22 @@ void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
         }
 
         if (node->local_name() == HTML::TagNames::select) {
-            TODO();
+            if (!last) {
+                for (ssize_t j = i; j > 0; --j) {
+                    auto& ancestor = m_stack_of_open_elements.elements().at(j - 1);
+
+                    if (is<HTMLTemplateElement>(ancestor))
+                        break;
+
+                    if (is<HTMLTableElement>(ancestor)) {
+                        m_insertion_mode = InsertionMode::InSelectInTable;
+                        return;
+                    }
+                }
+            }
+
+            m_insertion_mode = InsertionMode::InSelect;
+            return;
         }
 
         if (!last && node->local_name().is_one_of(HTML::TagNames::td, HTML::TagNames::th)) {
