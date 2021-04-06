@@ -554,6 +554,8 @@ public:
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Empty;
             } else if (pseudo_name.equals_ignoring_case("root")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Root;
+            } else if (pseudo_name.equals_ignoring_case("first-of-type")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::FirstOfType;
             } else if (pseudo_name.equals_ignoring_case("before")) {
                 simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::Before;
             } else if (pseudo_name.equals_ignoring_case("after")) {

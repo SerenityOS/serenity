@@ -90,6 +90,12 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
         if (!is<HTML::HTMLElement>(element))
             return false;
         break;
+    case CSS::Selector::SimpleSelector::PseudoClass::FirstOfType:
+        for (auto* sibling = element.previous_element_sibling(); sibling; sibling = sibling->previous_element_sibling()) {
+            if (sibling->tag_name() == element.tag_name())
+                return false;
+        }
+        break;
     }
 
     switch (component.attribute_match_type) {
