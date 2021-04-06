@@ -95,15 +95,37 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
     auto* array = Array::create(global_object);
 
+    Function* map_fn = nullptr;
+    if (!vm.argument(1).is_undefined()) {
+        auto callback = vm.argument(1);
+        if (!callback.is_function()) {
+            vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
+            return {};
+        }
+        map_fn = &callback.as_function();
+    }
+
     // Array.from() lets you create Arrays from:
     if (auto size = object->indexed_properties().array_like_size()) {
         // * array-like objects (objects with a length property and indexed elements)
         MarkedValueList elements(vm.heap());
         elements.ensure_capacity(size);
         for (size_t i = 0; i < size; ++i) {
-            elements.append(object->get(i));
-            if (vm.exception())
-                return {};
+            if (map_fn) {
+                auto element = object->get(i);
+                if (vm.exception())
+                    return {};
+
+                auto map_fn_result = vm.call(*map_fn, value, element);
+                if (vm.exception())
+                    return {};
+
+                elements.append(map_fn_result);
+            } else {
+                elements.append(object->get(i));
+                if (vm.exception())
+                    return {};
+            }
         }
         array->set_indexed_property_elements(move(elements));
     } else {
@@ -111,14 +133,23 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         get_iterator_values(global_object, value, [&](Value element) {
             if (vm.exception())
                 return IterationDecision::Break;
-            array->indexed_properties().append(element);
+
+            if (map_fn) {
+                auto map_fn_result = vm.call(*map_fn, value, element);
+                if (vm.exception())
+                    return IterationDecision::Break;
+
+                array->indexed_properties().append(map_fn_result);
+            } else {
+                array->indexed_properties().append(element);
+            }
+
             return IterationDecision::Continue;
         });
         if (vm.exception())
             return {};
     }
 
-    // FIXME: if interpreter.argument_count() >= 2: mapFn
     // FIXME: if interpreter.argument_count() >= 3: thisArg
 
     return array;
