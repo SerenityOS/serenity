@@ -36,6 +36,15 @@ Array* Array::create(GlobalObject& global_object)
     return global_object.heap().allocate<Array>(global_object, *global_object.array_prototype());
 }
 
+// 7.3.17 CreateArrayFromList, https://tc39.es/ecma262/#sec-createarrayfromlist
+Array* Array::create_from(GlobalObject& global_object, const Vector<Value>& values)
+{
+    auto* array = Array::create(global_object);
+    for (size_t i = 0; i < values.size(); ++i)
+        array->define_property(i, values[i]);
+    return array;
+}
+
 Array::Array(Object& prototype)
     : Object(prototype)
 {

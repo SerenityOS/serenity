@@ -25,6 +25,7 @@
  */
 
 #include <AK/Function.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -235,7 +236,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
     auto* target = get_target_object_from(global_object, "ownKeys");
     if (!target)
         return {};
-    return target->get_own_properties(PropertyKind::Key);
+    return Array::create_from(global_object, target->get_own_properties(PropertyKind::Key));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::prevent_extensions)
