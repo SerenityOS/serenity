@@ -98,13 +98,14 @@ public:
     }
 
     bool is_ancestor_of(const TreeNode&) const;
+    bool is_inclusive_ancestor_of(const TreeNode&) const;
+    bool is_descendant_of(const TreeNode&) const;
+    bool is_inclusive_descendant_of(const TreeNode&) const;
 
     void append_child(NonnullRefPtr<T> node);
     void prepend_child(NonnullRefPtr<T> node);
     void insert_before(NonnullRefPtr<T> node, RefPtr<T> child);
     void remove_child(NonnullRefPtr<T> node);
-
-    void remove_all_children();
 
     bool is_child_allowed(const T&) const { return true; }
 
@@ -324,6 +325,12 @@ public:
     }
 
     template<typename U>
+    bool has_child_of_type() const
+    {
+        return first_child_of_type<U>() != nullptr;
+    }
+
+    template<typename U>
     const U* first_ancestor_of_type() const
     {
         return const_cast<TreeNode*>(this)->template first_ancestor_of_type<U>();
@@ -364,14 +371,6 @@ private:
     T* m_next_sibling { nullptr };
     T* m_previous_sibling { nullptr };
 };
-
-template<typename T>
-inline void TreeNode<T>::remove_all_children()
-{
-    while (RefPtr<T> child = first_child())
-        remove_child(child.release_nonnull());
-}
-
 
 template<typename T>
 inline void TreeNode<T>::remove_child(NonnullRefPtr<T> node)
@@ -468,6 +467,24 @@ inline bool TreeNode<T>::is_ancestor_of(const TreeNode<T>& other) const
             return true;
     }
     return false;
+}
+
+template<typename T>
+inline bool TreeNode<T>::is_inclusive_ancestor_of(const TreeNode<T>& other) const
+{
+    return &other == this || is_ancestor_of(other);
+}
+
+template<typename T>
+inline bool TreeNode<T>::is_descendant_of(const TreeNode<T>& other) const
+{
+    return other.is_ancestor_of(*this);
+}
+
+template<typename T>
+inline bool TreeNode<T>::is_inclusive_descendant_of(const TreeNode<T>& other) const
+{
+    return other.is_inclusive_ancestor_of(*this);
 }
 
 }
