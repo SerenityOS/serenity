@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/Function.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/BitmapFont.h>
 
@@ -38,12 +37,16 @@ class FontEditorWidget final : public GUI::Widget {
 public:
     virtual ~FontEditorWidget() override;
 
-    int preferred_width() { return m_preferred_width; }
-    int preferred_height() { return m_preferred_height; }
-
     bool save_as(const String&);
 
     const String& path() { return m_path; }
+    const Gfx::BitmapFont& edited_font() { return *m_edited_font; }
+    void initialize(const String& path, RefPtr<Gfx::BitmapFont>&&);
+
+    bool is_showing_font_metadata() { return m_font_metadata; }
+    void set_show_font_metadata(bool b);
+
+    Function<void()> on_initialize;
 
 private:
     FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&);
@@ -52,7 +55,20 @@ private:
     RefPtr<GlyphMapWidget> m_glyph_map_widget;
     RefPtr<GlyphEditorWidget> m_glyph_editor_widget;
 
+    RefPtr<GUI::Window> m_font_preview_window;
+    RefPtr<GUI::Widget> m_left_column_container;
+    RefPtr<GUI::Widget> m_glyph_editor_container;
+    RefPtr<GUI::SpinBox> m_weight_spinbox;
+    RefPtr<GUI::SpinBox> m_spacing_spinbox;
+    RefPtr<GUI::SpinBox> m_baseline_spinbox;
+    RefPtr<GUI::SpinBox> m_mean_line_spinbox;
+    RefPtr<GUI::SpinBox> m_presentation_spinbox;
+    RefPtr<GUI::SpinBox> m_glyph_editor_width_spinbox;
+    RefPtr<GUI::TextBox> m_name_textbox;
+    RefPtr<GUI::TextBox> m_family_textbox;
+    RefPtr<GUI::CheckBox> m_fixed_width_checkbox;
+    RefPtr<GUI::GroupBox> m_font_metadata_groupbox;
+
     String m_path;
-    int m_preferred_width;
-    int m_preferred_height;
+    bool m_font_metadata { true };
 };

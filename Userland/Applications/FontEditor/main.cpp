@@ -98,23 +98,24 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_icon(app_icon.bitmap_for_size(16));
+    window->resize(440, 470);
+    window->set_main_widget<FontEditorWidget>(path, move(edited_font));
+    window->set_title(String::formatted("{} - Font Editor", path));
 
-    auto set_edited_font = [&](const String& path, RefPtr<Gfx::BitmapFont>&& font, Gfx::IntPoint point) {
+    auto set_edited_font = [&](const String& path, RefPtr<Gfx::BitmapFont>&& font) {
         // Convert 256 char font to 384 char font.
         if (font->type() == Gfx::FontTypes::Default)
             font->set_type(Gfx::FontTypes::LatinExtendedA);
 
         window->set_title(String::formatted("{} - Font Editor", path));
-        auto& font_editor_widget = window->set_main_widget<FontEditorWidget>(path, move(font));
-        window->set_rect({ point, { font_editor_widget.preferred_width(), font_editor_widget.preferred_height() } });
+        static_cast<FontEditorWidget*>(window->main_widget())->initialize(path, move(font));
     };
-    set_edited_font(path, move(edited_font), window->position());
 
     auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window, {}, "/res/fonts/");
         if (!open_path.has_value())
             return;
 
@@ -131,7 +132,7 @@ int main(int argc, char** argv)
             return;
         }
 
-        set_edited_font(open_path.value(), move(new_font), window->position());
+        set_edited_font(open_path.value(), move(new_font));
     }));
     app_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
         FontEditorWidget* editor = static_cast<FontEditorWidget*>(window->main_widget());
@@ -151,6 +152,13 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     }));
+
+    auto& view_menu = menubar->add_menu("View");
+    auto set_font_metadata = GUI::Action::create_checkable("Font metadata", { Mod_Ctrl, Key_M }, [&](auto& action) {
+        static_cast<FontEditorWidget*>(window->main_widget())->set_show_font_metadata(action.is_checked());
+    });
+    set_font_metadata->set_checked(true);
+    view_menu.add_action(*set_font_metadata);
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {

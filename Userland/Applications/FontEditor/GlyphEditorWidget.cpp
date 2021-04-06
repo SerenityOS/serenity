@@ -29,14 +29,19 @@
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
 
-GlyphEditorWidget::GlyphEditorWidget(Gfx::BitmapFont& mutable_font)
-    : m_font(mutable_font)
-{
-    set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
-}
-
 GlyphEditorWidget::~GlyphEditorWidget()
 {
+}
+
+void GlyphEditorWidget::initialize(Gfx::BitmapFont& mutable_font)
+{
+    if (m_font == mutable_font)
+        return;
+    m_font = mutable_font;
+    set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
+    m_clipboard_font = m_font->clone();
+    m_clipboard_glyph = m_clipboard_font->glyph(0).glyph_bitmap();
+    clear_clipboard_glyph();
 }
 
 void GlyphEditorWidget::set_glyph(int glyph)
@@ -45,6 +50,50 @@ void GlyphEditorWidget::set_glyph(int glyph)
         return;
     m_glyph = glyph;
     update();
+}
+
+void GlyphEditorWidget::delete_glyph()
+{
+    auto bitmap = font().glyph(m_glyph).glyph_bitmap();
+    for (int x = 0; x < bitmap.width(); x++)
+        for (int y = 0; y < bitmap.height(); y++)
+            bitmap.set_bit_at(x, y, false);
+    if (on_glyph_altered)
+        on_glyph_altered(m_glyph);
+    update();
+}
+
+void GlyphEditorWidget::cut_glyph()
+{
+    copy_glyph();
+    delete_glyph();
+}
+
+void GlyphEditorWidget::copy_glyph()
+{
+    clear_clipboard_glyph();
+    auto bitmap = font().glyph(m_glyph).glyph_bitmap();
+    for (int x = 0; x < bitmap.width(); x++)
+        for (int y = 0; y < bitmap.height(); y++)
+            m_clipboard_glyph.set_bit_at(x, y, bitmap.bit_at(x, y));
+}
+
+void GlyphEditorWidget::paste_glyph()
+{
+    auto bitmap = font().glyph(m_glyph).glyph_bitmap();
+    for (int x = 0; x < bitmap.width(); x++)
+        for (int y = 0; y < bitmap.height(); y++)
+            bitmap.set_bit_at(x, y, m_clipboard_glyph.bit_at(x, y));
+    if (on_glyph_altered)
+        on_glyph_altered(m_glyph);
+    update();
+}
+
+void GlyphEditorWidget::clear_clipboard_glyph()
+{
+    for (int x = 0; x < m_clipboard_glyph.width(); x++)
+        for (int y = 0; y < m_clipboard_glyph.height(); y++)
+            m_clipboard_glyph.set_bit_at(x, y, false);
 }
 
 void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
