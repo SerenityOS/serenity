@@ -55,6 +55,7 @@ public:
             Empty,
             Root,
             FirstOfType,
+            LastOfType,
         };
         PseudoClass pseudo_class { PseudoClass::None };
 

@@ -96,6 +96,12 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
                 return false;
         }
         break;
+    case CSS::Selector::SimpleSelector::PseudoClass::LastOfType:
+        for (auto* sibling = element.next_element_sibling(); sibling; sibling = sibling->next_element_sibling()) {
+            if (sibling->tag_name() == element.tag_name())
+                return false;
+        }
+        break;
     }
 
     switch (component.attribute_match_type) {
