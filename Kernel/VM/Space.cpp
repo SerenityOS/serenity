@@ -118,18 +118,21 @@ KResultOr<Region*> Space::allocate_region_with_vmobject(const Range& range, Nonn
 
 bool Space::deallocate_region(Region& region)
 {
-    OwnPtr<Region> region_protector;
+    return take_region(region);
+}
+
+OwnPtr<Region> Space::take_region(Region& region)
+{
     ScopedSpinLock lock(m_lock);
 
     if (m_region_lookup_cache.region.unsafe_ptr() == &region)
         m_region_lookup_cache.region = nullptr;
     for (size_t i = 0; i < m_regions.size(); ++i) {
         if (&m_regions[i] == &region) {
-            region_protector = m_regions.unstable_take(i);
-            return true;
+            return m_regions.unstable_take(i);
         }
     }
-    return false;
+    return {};
 }
 
 Region* Space::find_region_from_range(const Range& range)
