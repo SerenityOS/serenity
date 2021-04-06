@@ -70,7 +70,10 @@ RamdiskController::RamdiskController()
         if (used_memory_range.type == UsedMemoryRangeType::BootModule) {
             size_t length = page_round_up(used_memory_range.end.get()) - used_memory_range.start.get();
             auto region = MemoryManager::the().allocate_kernel_region(used_memory_range.start, length, "Ramdisk", Region::Access::Read | Region::Access::Write);
-            m_devices.append(RamdiskDevice::create(*this, move(region), 6, count));
+            if (!region)
+                dmesgln("RamdiskController: Failed to allocate kernel region of size {}", length);
+            else
+                m_devices.append(RamdiskDevice::create(*this, region.release_nonnull(), 6, count));
             count++;
         }
     }
