@@ -205,6 +205,8 @@
 #include <LibWeb/Bindings/PerformancePrototype.h>
 #include <LibWeb/Bindings/PerformanceTimingConstructor.h>
 #include <LibWeb/Bindings/PerformanceTimingPrototype.h>
+#include <LibWeb/Bindings/ProcessingInstructionConstructor.h>
+#include <LibWeb/Bindings/ProcessingInstructionPrototype.h>
 #include <LibWeb/Bindings/ProgressEventConstructor.h>
 #include <LibWeb/Bindings/ProgressEventPrototype.h>
 #include <LibWeb/Bindings/SVGElementConstructor.h>
@@ -337,6 +339,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Node)                      \
     ADD_WINDOW_OBJECT_INTERFACE(Performance)               \
     ADD_WINDOW_OBJECT_INTERFACE(PerformanceTiming)         \
+    ADD_WINDOW_OBJECT_INTERFACE(ProcessingInstruction)     \
     ADD_WINDOW_OBJECT_INTERFACE(ProgressEvent)             \
     ADD_WINDOW_OBJECT_INTERFACE(Screen)                    \
     ADD_WINDOW_OBJECT_INTERFACE(ShadowRoot)                \
