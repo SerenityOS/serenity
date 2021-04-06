@@ -33,6 +33,7 @@
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/TreeNode.h>
 
 namespace Web::DOM {
@@ -92,9 +93,13 @@ public:
 
     virtual bool is_editable() const;
 
-    RefPtr<Node> append_child(NonnullRefPtr<Node>, bool notify = true);
-    RefPtr<Node> insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool notify = true);
-    RefPtr<Node> remove_child(NonnullRefPtr<Node>);
+    NonnullRefPtr<Node> pre_insert(NonnullRefPtr<Node>, RefPtr<Node>);
+    NonnullRefPtr<Node> pre_remove(NonnullRefPtr<Node>);
+
+    NonnullRefPtr<Node> append_child(NonnullRefPtr<Node>);
+    void insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool suppress_observers = false);
+    void remove(bool suppress_observers = false);
+    void remove_all_children(bool suppress_observers = false);
 
     // NOTE: This is intended for the JS bindings.
     bool has_child_nodes() const { return has_children(); }
@@ -164,6 +169,12 @@ public:
 
     template<typename T>
     bool fast_is() const = delete;
+
+    ExceptionOr<void> ensure_pre_insertion_validity(NonnullRefPtr<Node> node, RefPtr<Node> child) const;
+
+    bool is_host_including_inclusive_ancestor_of(const Node&) const;
+
+    size_t element_child_count() const;
 
 protected:
     Node(Document&, NodeType);

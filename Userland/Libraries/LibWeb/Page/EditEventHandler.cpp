@@ -62,14 +62,14 @@ void EditEventHandler::handle_delete(DOM::Range& range)
         for (auto* parent = end->parent(); parent; parent = parent->parent())
             queued_for_deletion.remove(parent);
         for (auto* node : queued_for_deletion)
-            node->parent()->remove_child(*node);
+            node->remove();
 
         // Join the parent nodes of start and end.
         DOM::Node *insert_after = start, *remove_from = end, *parent_of_end = end->parent();
         while (remove_from) {
             auto* next_sibling = remove_from->next_sibling();
 
-            remove_from->parent()->remove_child(*remove_from);
+            remove_from->remove();
             insert_after->parent()->insert_before(*remove_from, *insert_after);
 
             insert_after = remove_from;
@@ -77,7 +77,7 @@ void EditEventHandler::handle_delete(DOM::Range& range)
         }
         if (!parent_of_end->has_children()) {
             if (parent_of_end->parent())
-                parent_of_end->parent()->remove_child(*parent_of_end);
+                parent_of_end->remove();
         }
 
         // Join the start and end nodes.
@@ -86,7 +86,7 @@ void EditEventHandler::handle_delete(DOM::Range& range)
         builder.append(end->data().substring_view(range.end_offset()));
 
         start->set_data(builder.to_string());
-        start->parent()->remove_child(*end);
+        end->remove();
     }
 
     // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
