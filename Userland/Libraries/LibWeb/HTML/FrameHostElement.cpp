@@ -41,9 +41,9 @@ FrameHostElement::~FrameHostElement()
 {
 }
 
-void FrameHostElement::inserted_into(Node& parent)
+void FrameHostElement::inserted()
 {
-    HTMLElement::inserted_into(parent);
+    HTMLElement::inserted();
     if (!is_connected())
         return;
     if (auto* frame = document().frame())

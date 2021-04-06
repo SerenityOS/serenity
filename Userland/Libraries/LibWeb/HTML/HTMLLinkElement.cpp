@@ -47,9 +47,9 @@ HTMLLinkElement::~HTMLLinkElement()
 {
 }
 
-void HTMLLinkElement::inserted_into(Node& node)
+void HTMLLinkElement::inserted()
 {
-    HTMLElement::inserted_into(node);
+    HTMLElement::inserted();
 
     if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
         m_css_loader.load_from_url(document().complete_url(href()));
