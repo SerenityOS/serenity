@@ -237,9 +237,10 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
         };
         return button;
     };
+
+    auto& root_button = add_common_location_button("Root", "/");
     auto& home_button = add_common_location_button("Home", Core::StandardPaths::home_directory());
     auto& desktop_button = add_common_location_button("Desktop", Core::StandardPaths::desktop_directory());
-    auto& root_button = add_common_location_button("Root", "/");
 
     m_model->on_complete = [&] {
         if (m_model->root_path() == Core::StandardPaths::home_directory()) {
