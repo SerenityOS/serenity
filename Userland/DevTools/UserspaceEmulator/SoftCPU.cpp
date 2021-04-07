@@ -27,6 +27,7 @@
 #include "SoftCPU.h"
 #include "Emulator.h"
 #include <AK/Assertions.h>
+#include <AK/BitCast.h>
 #include <AK/Debug.h>
 #include <math.h>
 #include <stdio.h>
@@ -56,15 +57,6 @@
     void SoftCPU::mnemonic##_RM32_imm8(const X86::Instruction& insn) { generic_RM32_unsigned_imm8<true>(op<ValueWithShadow<u32>>, insn); }
 
 namespace UserspaceEmulator {
-
-template<class Dest, class Source>
-static inline Dest bit_cast(Source source)
-{
-    static_assert(sizeof(Dest) == sizeof(Source));
-    Dest dest;
-    memcpy(&dest, &source, sizeof(dest));
-    return dest;
-}
 
 template<typename T>
 ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* message)
