@@ -35,7 +35,6 @@
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 
-#define UHCI_ENABLED 1
 static constexpr u8 MAXIMUM_NUMBER_OF_TDS = 128; // Upper pool limit. This consumes the second page we have allocated
 static constexpr u8 MAXIMUM_NUMBER_OF_QHS = 64;
 
@@ -90,9 +89,6 @@ UHCIController& UHCIController::the()
 
 UNMAP_AFTER_INIT void UHCIController::detect()
 {
-#if !UHCI_ENABLED
-    return;
-#endif
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
             return;
