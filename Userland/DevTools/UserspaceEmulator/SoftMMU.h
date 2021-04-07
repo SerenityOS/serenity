@@ -112,7 +112,7 @@ public:
 private:
     Emulator& m_emulator;
 
-    Region* m_page_to_region_map[786432];
+    Region* m_page_to_region_map[786432] = { nullptr };
 
     OwnPtr<Region> m_tls_region;
     NonnullOwnPtrVector<Region> m_regions;
