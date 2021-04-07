@@ -45,6 +45,7 @@ void GlyphMapWidget::initialize(Gfx::BitmapFont& mutable_font)
         return;
     m_font = mutable_font;
     m_glyph_count = mutable_font.glyph_count();
+    m_selected_glyph = 0;
     vertical_scrollbar().set_step(font().glyph_height() + m_vertical_spacing);
 }
 
