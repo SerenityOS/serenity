@@ -527,17 +527,13 @@ static bool decode_png_header(PNGLoadingContext& context)
         return true;
 
     if (!context.data || context.data_size < sizeof(png_header)) {
-#if PNG_DEBUG
-        dbgln("Missing PNG header");
-#endif
+        dbgln_if(PNG_DEBUG, "Missing PNG header");
         context.state = PNGLoadingContext::State::Error;
         return false;
     }
 
     if (memcmp(context.data, png_header, sizeof(png_header)) != 0) {
-#if PNG_DEBUG
-        dbgln("Invalid PNG header");
-#endif
+        dbgln_if(PNG_DEBUG, "Invalid PNG header");
         context.state = PNGLoadingContext::State::Error;
         return false;
     }
@@ -861,18 +857,16 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
     context.filter_method = ihdr.filter_method;
     context.interlace_method = ihdr.interlace_method;
 
-#if PNG_DEBUG
-    printf("PNG: %dx%d (%d bpp)\n", context.width, context.height, context.bit_depth);
-    printf("     Color type: %d\n", context.color_type);
-    printf("Compress Method: %d\n", context.compression_method);
-    printf("  Filter Method: %d\n", context.filter_method);
-    printf(" Interlace type: %d\n", context.interlace_method);
-#endif
+    if constexpr (PNG_DEBUG) {
+        printf("PNG: %dx%d (%d bpp)\n", context.width, context.height, context.bit_depth);
+        printf("     Color type: %d\n", context.color_type);
+        printf("Compress Method: %d\n", context.compression_method);
+        printf("  Filter Method: %d\n", context.filter_method);
+        printf(" Interlace type: %d\n", context.interlace_method);
+    }
 
     if (context.interlace_method != PngInterlaceMethod::Null && context.interlace_method != PngInterlaceMethod::Adam7) {
-#if PNG_DEBUG
-        dbgln("PNGLoader::process_IHDR: unknown interlace method: {}", context.interlace_method);
-#endif
+        dbgln_if(PNG_DEBUG, "PNGLoader::process_IHDR: unknown interlace method: {}", context.interlace_method);
         return false;
     }
 
@@ -934,36 +928,31 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
 {
     u32 chunk_size;
     if (!streamer.read(chunk_size)) {
-#if PNG_DEBUG
-        printf("Bail at chunk_size\n");
-#endif
+        if constexpr (PNG_DEBUG)
+            printf("Bail at chunk_size\n");
         return false;
     }
     u8 chunk_type[5];
     chunk_type[4] = '\0';
     if (!streamer.read_bytes(chunk_type, 4)) {
-#if PNG_DEBUG
-        printf("Bail at chunk_type\n");
-#endif
+        if constexpr (PNG_DEBUG)
+            printf("Bail at chunk_type\n");
         return false;
     }
     ReadonlyBytes chunk_data;
     if (!streamer.wrap_bytes(chunk_data, chunk_size)) {
-#if PNG_DEBUG
-        printf("Bail at chunk_data\n");
-#endif
+        if constexpr (PNG_DEBUG)
+            printf("Bail at chunk_data\n");
         return false;
     }
     u32 chunk_crc;
     if (!streamer.read(chunk_crc)) {
-#if PNG_DEBUG
-        printf("Bail at chunk_crc\n");
-#endif
+        if constexpr (PNG_DEBUG)
+            printf("Bail at chunk_crc\n");
         return false;
     }
-#if PNG_DEBUG
-    printf("Chunk type: '%s', size: %u, crc: %x\n", chunk_type, chunk_size, chunk_crc);
-#endif
+    if constexpr (PNG_DEBUG)
+        printf("Chunk type: '%s', size: %u, crc: %x\n", chunk_type, chunk_size, chunk_crc);
 
     if (!strcmp((const char*)chunk_type, "IHDR"))
         return process_IHDR(chunk_data, context);
