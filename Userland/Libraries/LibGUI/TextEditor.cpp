@@ -779,24 +779,24 @@ void TextEditor::keydown_event(KeyEvent& event)
             return;
         }
 
-    } else if (is_multi_line()) {
-        ArmedScopeGuard update_autocomplete { [&] {
-            if (m_autocomplete_box && m_autocomplete_box->is_visible()) {
-                m_autocomplete_provider->provide_completions([&](auto completions) {
-                    m_autocomplete_box->update_suggestions(move(completions));
-                });
-            }
-        } };
-
-        if (!event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Space) {
-            if (m_autocomplete_provider) {
-                try_show_autocomplete();
-                update_autocomplete.disarm();
-                return;
-            }
-        }
-    } else {
+    } else if (!is_multi_line()) {
         VERIFY_NOT_REACHED();
+    }
+
+    ArmedScopeGuard update_autocomplete { [&] {
+        if (m_autocomplete_box && m_autocomplete_box->is_visible()) {
+            m_autocomplete_provider->provide_completions([&](auto completions) {
+                m_autocomplete_box->update_suggestions(move(completions));
+            });
+        }
+    } };
+
+    if (is_multi_line() && !event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_Space) {
+        if (m_autocomplete_provider) {
+            try_show_autocomplete();
+            update_autocomplete.disarm();
+            return;
+        }
     }
 
     if (m_editing_engine->on_key(event))
