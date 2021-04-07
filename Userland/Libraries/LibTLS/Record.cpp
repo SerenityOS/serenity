@@ -28,7 +28,6 @@
 #include <AK/Endian.h>
 #include <AK/MemoryStream.h>
 #include <LibCore/Timer.h>
-#include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
 
@@ -192,7 +191,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
 
 void TLSv12::update_hash(ReadonlyBytes message, size_t header_size)
 {
-    dbgln("Update hash with message of size {}", message.size());
+    dbgln_if(TLS_DEBUG, "Update hash with message of size {}", message.size());
     m_context.handshake_hash.update(message.slice(header_size));
 }
 
@@ -201,14 +200,14 @@ ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<Readonl
     u64 sequence_number = AK::convert_between_host_and_network_endian(local ? m_context.local_sequence_number : m_context.remote_sequence_number);
     ensure_hmac(mac_length, local);
     auto& hmac = local ? *m_hmac_local : *m_hmac_remote;
-#if TLS_DEBUG
-    dbgln("========================= PACKET DATA ==========================");
-    print_buffer((const u8*)&sequence_number, sizeof(u64));
-    print_buffer(buf.data(), buf.size());
-    if (buf2.has_value())
-        print_buffer(buf2.value().data(), buf2.value().size());
-    dbgln("========================= PACKET DATA ==========================");
-#endif
+    if constexpr (TLS_DEBUG) {
+        dbgln("========================= PACKET DATA ==========================");
+        print_buffer((const u8*)&sequence_number, sizeof(u64));
+        print_buffer(buf.data(), buf.size());
+        if (buf2.has_value())
+            print_buffer(buf2.value().data(), buf2.value().size());
+        dbgln("========================= PACKET DATA ==========================");
+    }
     hmac.update((const u8*)&sequence_number, sizeof(u64));
     hmac.update(buf);
     if (buf2.has_value() && buf2.value().size()) {
@@ -345,10 +344,10 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
             length = decrypted_span.size();
 
-#if TLS_DEBUG
-            dbgln("Decrypted: ");
-            print_buffer(decrypted);
-#endif
+            if constexpr (TLS_DEBUG) {
+                dbgln("Decrypted: ");
+                print_buffer(decrypted);
+            }
 
             auto mac_size = mac_length();
             if (length < mac_size) {
@@ -396,9 +395,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         }
         break;
     case MessageType::Handshake:
-#if TLS_DEBUG
-        dbgln("tls handshake message");
-#endif
+        dbgln_if(TLS_DEBUG, "tls handshake message");
         payload_res = handle_payload(plain);
         break;
     case MessageType::ChangeCipher:
@@ -407,9 +404,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
             payload_res = (i8)Error::UnexpectedMessage;
         } else {
-#if TLS_DEBUG
-            dbgln("change cipher spec message");
-#endif
+            dbgln_if(TLS_DEBUG, "change cipher spec message");
             m_context.cipher_spec_set = true;
             m_context.remote_sequence_number = 0;
         }
