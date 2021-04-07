@@ -65,6 +65,9 @@ private:
     void update_html_preview();
     void update_statusbar();
 
+    void set_mode_displayable();
+    void set_mode_non_displayable();
+
     virtual void drop_event(GUI::DropEvent&) override;
 
     RefPtr<GUI::TextEditor> m_editor;

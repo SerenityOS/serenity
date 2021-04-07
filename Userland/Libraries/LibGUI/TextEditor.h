@@ -118,7 +118,7 @@ public:
     Function<void()> on_focusin;
     Function<void()> on_focusout;
 
-    void set_text(const StringView&);
+    bool set_text(const StringView&);
     void scroll_cursor_into_view();
     void scroll_position_into_view(const TextPosition&);
     size_t line_count() const { return document().line_count(); }

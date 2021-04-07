@@ -289,6 +289,7 @@ TextEditorWidget::TextEditorWidget()
         m_document_dirty = false;
         m_editor->set_text(StringView());
         set_path(LexicalPath());
+        set_mode_displayable();
         update_title();
     });
 
@@ -644,7 +645,14 @@ bool TextEditorWidget::open_file(const String& path)
         return false;
     }
 
-    m_editor->set_text(file->read_all());
+    auto could_render_text = m_editor->set_text(file->read_all());
+
+    if (!could_render_text) {
+        set_mode_non_displayable();
+    } else {
+        set_mode_displayable();
+    }
+
     m_document_dirty = false;
     m_document_opening = true;
 
@@ -764,4 +772,21 @@ void TextEditorWidget::update_statusbar()
         builder.appendff("        Selected: {} {} ({} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
     m_statusbar->set_text(builder.to_string());
+}
+
+void TextEditorWidget::set_mode_displayable()
+{
+    editor().set_mode(GUI::TextEditor::Editable);
+    editor().set_background_role(Gfx::ColorRole::Base);
+    editor().set_palette(GUI::Application::the()->palette());
+}
+
+void TextEditorWidget::set_mode_non_displayable()
+{
+    editor().set_mode(GUI::TextEditor::ReadOnly);
+    editor().set_background_role(Gfx::ColorRole::InactiveSelection);
+    auto palette = editor().palette();
+    palette.set_color(Gfx::ColorRole::BaseText, Color::from_rgb(0xffffff));
+    editor().set_palette(palette);
+    editor().document().set_text("The contents of this file could not be displayed. Is it a binary file?");
 }
