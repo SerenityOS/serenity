@@ -25,6 +25,8 @@
  */
 
 #include "GlyphEditorWidget.h"
+#include <AK/StringBuilder.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
@@ -39,9 +41,7 @@ void GlyphEditorWidget::initialize(Gfx::BitmapFont& mutable_font)
         return;
     m_font = mutable_font;
     set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
-    m_clipboard_font = m_font->clone();
-    m_clipboard_glyph = m_clipboard_font->glyph(0).glyph_bitmap();
-    clear_clipboard_glyph();
+    m_glyph = 0;
 }
 
 void GlyphEditorWidget::set_glyph(int glyph)
@@ -71,29 +71,60 @@ void GlyphEditorWidget::cut_glyph()
 
 void GlyphEditorWidget::copy_glyph()
 {
-    clear_clipboard_glyph();
     auto bitmap = font().glyph(m_glyph).glyph_bitmap();
-    for (int x = 0; x < bitmap.width(); x++)
-        for (int y = 0; y < bitmap.height(); y++)
-            m_clipboard_glyph.set_bit_at(x, y, bitmap.bit_at(x, y));
+    u8 bits[bitmap.width()][bitmap.height()];
+    for (int x = 0; x < bitmap.width(); x++) {
+        for (int y = 0; y < bitmap.height(); y++) {
+            bits[x][y] = bitmap.bit_at(x, y);
+        }
+    }
+
+    StringBuilder glyph_builder;
+    if (m_glyph < 128) {
+        glyph_builder.append(m_glyph);
+    } else {
+        glyph_builder.append(128 | 64 | (m_glyph / 64));
+        glyph_builder.append(128 | (m_glyph % 64));
+    }
+
+    HashMap<String, String> metadata;
+    metadata.set("char", glyph_builder.to_string());
+    metadata.set("width", String::format("%d", bitmap.width()));
+    metadata.set("height", String::format("%d", bitmap.height()));
+
+    auto data = ByteBuffer::copy(&bits[0], bitmap.width() * bitmap.height());
+    GUI::Clipboard::the().set_data(data, "glyph/x-fonteditor", metadata);
 }
 
 void GlyphEditorWidget::paste_glyph()
 {
+    auto mime_type = GUI::Clipboard::the().mime_type();
+    if (!mime_type.starts_with("glyph/"))
+        return;
+
+    auto byte_buffer = GUI::Clipboard::the().data();
+    auto buffer_height = GUI::Clipboard::the().data_and_type().metadata.get("height").value().to_int();
+    auto buffer_width = GUI::Clipboard::the().data_and_type().metadata.get("width").value().to_int();
+
+    u8 bits[buffer_width.value()][buffer_height.value()];
+    int i = 0;
+    for (int x = 0; x < buffer_width.value(); x++) {
+        for (int y = 0; y < buffer_height.value(); y++) {
+            bits[x][y] = byte_buffer[i];
+            i++;
+        }
+    }
+
     auto bitmap = font().glyph(m_glyph).glyph_bitmap();
-    for (int x = 0; x < bitmap.width(); x++)
-        for (int y = 0; y < bitmap.height(); y++)
-            bitmap.set_bit_at(x, y, m_clipboard_glyph.bit_at(x, y));
+    for (int x = 0; x < min(bitmap.width(), buffer_width.value()); x++) {
+        for (int y = 0; y < min(bitmap.height(), buffer_height.value()); y++) {
+            if (bits[x][y])
+                bitmap.set_bit_at(x, y, bits[x][y]);
+        }
+    }
     if (on_glyph_altered)
         on_glyph_altered(m_glyph);
     update();
-}
-
-void GlyphEditorWidget::clear_clipboard_glyph()
-{
-    for (int x = 0; x < m_clipboard_glyph.width(); x++)
-        for (int y = 0; y < m_clipboard_glyph.height(); y++)
-            m_clipboard_glyph.set_bit_at(x, y, false);
 }
 
 void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
