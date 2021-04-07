@@ -44,7 +44,6 @@ public:
     void copy_glyph();
     void paste_glyph();
     void delete_glyph();
-    void clear_clipboard_glyph();
 
     int preferred_width() const;
     int preferred_height() const;
@@ -63,8 +62,6 @@ private:
     void draw_at_mouse(const GUI::MouseEvent&);
 
     RefPtr<Gfx::BitmapFont> m_font;
-    RefPtr<Gfx::Font> m_clipboard_font;
-    Gfx::GlyphBitmap m_clipboard_glyph;
     int m_glyph { 0 };
     int m_scale { 10 };
 };
