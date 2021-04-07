@@ -8,5 +8,6 @@ makeopts="HOSTCC=${CC} HOSTLD=${CC}"
 depends=
 
 configure() {
-	run ./configure --disable-everything --enable-cross-compile --target-os=serenity --arch=i386 --disable-txtpages --disable-manpages --disable-podpages --disable-htmlpages --cross-prefix=${CC%gcc}
+	run ./configure --enable-cross-compile --target-os=serenity --arch=i386  --cross-prefix=${CC%gcc} \
+	    --disable-txtpages --disable-manpages --disable-podpages --disable-htmlpages
 }
