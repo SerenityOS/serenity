@@ -144,6 +144,9 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     InterruptManagement::initialize();
     ACPI::initialize();
 
+    // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
+    PCI::initialize();
+
     VFS::initialize();
 
     dmesgln("Starting SerenityOS...");
@@ -162,7 +165,6 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     VMWareBackdoor::the(); // don't wait until first mouse packet
     HIDManagement::initialize();
 
-    PCI::initialize();
     GraphicsManagement::the().initialize();
     ConsoleManagement::the().initialize();
 
