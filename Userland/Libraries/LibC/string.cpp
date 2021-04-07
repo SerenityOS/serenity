@@ -142,13 +142,26 @@ void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 
 void* memset(void* dest_ptr, int c, size_t n)
 {
-    void* original_dest = dest_ptr;
+    size_t dest = (size_t)dest_ptr;
+    // FIXME: Support starting at an unaligned address.
+    if (!(dest & 0x3) && n >= 12) {
+        size_t size_ts = n / sizeof(size_t);
+        size_t expanded_c = explode_byte((u8)c);
+        asm volatile(
+            "rep stosl\n"
+            : "=D"(dest)
+            : "D"(dest), "c"(size_ts), "a"(expanded_c)
+            : "memory");
+        n -= size_ts * sizeof(size_t);
+        if (n == 0)
+            return dest_ptr;
+    }
     asm volatile(
         "rep stosb\n"
-        : "=D"(dest_ptr), "=c"(n)
-        : "0"(dest_ptr), "1"(n), "a"(c)
+        : "=D"(dest), "=c"(n)
+        : "0"(dest), "1"(n), "a"(c)
         : "memory");
-    return original_dest;
+    return dest_ptr;
 }
 #else
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
