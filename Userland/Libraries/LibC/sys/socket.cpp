@@ -112,6 +112,12 @@ ssize_t recvfrom(int sockfd, void* buffer, size_t buffer_length, int flags, stru
     return rc;
 }
 
+int getnameinfo(const struct sockaddr*, socklen_t, char*, socklen_t, char*, socklen_t, int)
+{
+    // FIXME: Actually implement this
+    return 0;
+}
+
 ssize_t recv(int sockfd, void* buffer, size_t buffer_length, int flags)
 {
     return recvfrom(sockfd, buffer, buffer_length, flags, nullptr, nullptr);

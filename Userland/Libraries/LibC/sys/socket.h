@@ -154,6 +154,7 @@ ssize_t sendto(int sockfd, const void*, size_t, int flags, const struct sockaddr
 ssize_t recv(int sockfd, void*, size_t, int flags);
 ssize_t recvmsg(int sockfd, struct msghdr*, int flags);
 ssize_t recvfrom(int sockfd, void*, size_t, int flags, struct sockaddr*, socklen_t*);
+int getnameinfo(const struct sockaddr *addr, socklen_t addrlen, char *host, socklen_t hostlen, char *serv, socklen_t servlen, int flags);
 int getsockopt(int sockfd, int level, int option, void*, socklen_t*);
 int setsockopt(int sockfd, int level, int option, const void*, socklen_t);
 int getsockname(int sockfd, struct sockaddr*, socklen_t*);
