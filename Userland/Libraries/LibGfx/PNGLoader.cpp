@@ -829,7 +829,7 @@ static bool is_valid_compression_method(u8 compression_method)
 
 static bool is_valid_filter_method(u8 filter_method)
 {
-    return filter_method <= 4;
+    return filter_method == 0;
 }
 
 static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
