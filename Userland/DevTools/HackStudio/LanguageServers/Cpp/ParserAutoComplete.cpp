@@ -203,6 +203,8 @@ bool ParserAutoComplete::is_property(const ASTNode& node) const
 
 bool ParserAutoComplete::is_empty_property(const DocumentData& document, const ASTNode& node, const Position& autocomplete_position) const
 {
+    if (node.parent() == nullptr)
+        return false;
     if (!node.parent()->is_member_expression())
         return false;
     auto previous_token = document.parser().token_at(autocomplete_position);
