@@ -118,6 +118,71 @@ test("typed array from ArrayBuffer errors", () => {
     );
 });
 
+test("typed array from TypedArray", () => {
+    const u8Array = new Uint8Array(3);
+    u8Array[0] = 1;
+    u8Array[1] = 2;
+    u8Array[2] = 3;
+
+    TYPED_ARRAYS.forEach(T => {
+        const newTypedArray = new T(u8Array);
+        expect(newTypedArray[0]).toBe(1);
+        expect(newTypedArray[1]).toBe(2);
+        expect(newTypedArray[2]).toBe(3);
+    });
+});
+
+test("typed array from TypedArray element cast", () => {
+    const u32Array = new Uint32Array(2);
+    u32Array[0] = 0x100;
+    u32Array[1] = 0xff;
+    const u8Array = new Uint8Array(1);
+    u8Array[0] = 0xff;
+
+    const u32Expected = [
+        [0, 0xff],
+        [0x100, 0xff],
+        [0x100, 0xff],
+        [0, -1],
+        [0x100, 0xff],
+        [0x100, 0xff],
+        [0x100, 0xff],
+        [0x100, 0xff],
+    ];
+    const u8Expected = [0xff, 0xff, 0xff, -1, 0xff, 0xff, 0xff, 0xff];
+
+    TYPED_ARRAYS.forEach((T, i) => {
+        const newArrFromU32 = new T(u32Array);
+        expect(newArrFromU32[0]).toBe(u32Expected[i][0]);
+        expect(newArrFromU32[1]).toBe(u32Expected[i][1]);
+
+        const newArrFromU8 = new T(u8Array);
+        expect(newArrFromU8[0]).toBe(u8Expected[i]);
+    });
+});
+
+test("typed array created from TypedArray do not share buffer", () => {
+    const u8Array = new Uint8Array(2);
+    u8Array[0] = 1;
+    u8Array[1] = 2;
+
+    const u8Array2 = new Uint8Array(u8Array);
+    u8Array2[0] = 3;
+    u8Array2[1] = 4;
+
+    expect(u8Array[0]).toBe(1);
+    expect(u8Array[1]).toBe(2);
+
+    const i32Array = new Int32Array(u8Array);
+    expect(i32Array[0]).toBe(1);
+    expect(i32Array[1]).toBe(2);
+
+    i32Array[0] = 5;
+    i32Array[1] = 6;
+    expect(u8Array[0]).toBe(1);
+    expect(u8Array[1]).toBe(2);
+});
+
 test("TypedArray is not exposed on the global object", () => {
     expect(globalThis.TypedArray).toBeUndefined();
 });
