@@ -78,6 +78,8 @@ public:
 private:
     virtual void visit_edges(Visitor&) override;
 
+    JS_DECLARE_NATIVE_GETTER(top_getter);
+
     JS_DECLARE_NATIVE_GETTER(document_getter);
 
     JS_DECLARE_NATIVE_GETTER(performance_getter);

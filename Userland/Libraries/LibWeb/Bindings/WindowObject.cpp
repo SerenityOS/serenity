@@ -46,6 +46,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Origin.h>
+#include <LibWeb/Page/Frame.h>
 
 #include <LibWeb/Bindings/WindowObjectHelper.h>
 
@@ -66,6 +67,7 @@ void WindowObject::initialize_global_object()
     define_property("window", this, JS::Attribute::Enumerable);
     define_property("frames", this, JS::Attribute::Enumerable);
     define_property("self", this, JS::Attribute::Enumerable);
+    define_native_property("top", top_getter, JS::Attribute::Enumerable);
     define_native_property("document", document_getter, nullptr, JS::Attribute::Enumerable);
     define_native_property("performance", performance_getter, nullptr, JS::Attribute::Enumerable);
     define_native_property("screen", screen_getter, nullptr, JS::Attribute::Enumerable);
@@ -350,6 +352,18 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
 
     auto encoded = encode_base64(byte_string.span());
     return JS::js_string(vm, move(encoded));
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::top_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    auto* this_frame = impl->document().frame();
+    VERIFY(this_frame);
+    VERIFY(this_frame->main_frame().document());
+    auto& top_window = this_frame->main_frame().document()->window();
+    return top_window.wrapper();
 }
 
 JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)
