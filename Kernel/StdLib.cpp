@@ -282,9 +282,7 @@ void* memset(void* dest_ptr, int c, size_t n)
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && n >= 12) {
         size_t size_ts = n / sizeof(size_t);
-        size_t expanded_c = (u8)c;
-        expanded_c |= expanded_c << 8;
-        expanded_c |= expanded_c << 16;
+        size_t expanded_c = explode_byte((u8)c);
         asm volatile(
             "rep stosl\n"
             : "=D"(dest)
