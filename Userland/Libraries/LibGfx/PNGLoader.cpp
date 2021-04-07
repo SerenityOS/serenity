@@ -477,6 +477,7 @@ NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
     }
 
     u8 dummy_scanline[context.width * sizeof(RGBA32)];
+    memset(dummy_scanline, 0, sizeof(dummy_scanline));
 
     for (int y = 0; y < context.height; ++y) {
         auto filter = context.scanlines[y].filter;
