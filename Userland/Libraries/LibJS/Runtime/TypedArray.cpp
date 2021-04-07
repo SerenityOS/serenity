@@ -93,6 +93,48 @@ static void initialize_typed_array_from_array_buffer(GlobalObject& global_object
     typed_array.set_byte_offset(offset);
     typed_array.set_array_length(new_byte_length.value() / element_size);
 }
+template<typename T>
+static void initialize_typed_array_from_typed_array(GlobalObject& global_object, TypedArray<T>& dest_array, TypedArrayBase& src_array)
+{
+    auto& vm = global_object.vm();
+    if (vm.exception())
+        return;
+
+    // FIXME: 4. If IsDetachedBuffer(src_data) is true, throw a TypeError exception.
+    VERIFY(src_array.viewed_array_buffer());
+
+    auto src_array_length = src_array.array_length();
+    auto dest_element_size = dest_array.element_size();
+    Checked byte_length = src_array_length * dest_element_size;
+    if (byte_length.has_overflow()) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return;
+    }
+
+    // FIXME: 17.b If IsDetachedBuffer(array_buffer) is true, throw a TypeError exception.
+    // FIXME: 17.c If src_array.[[ContentType]] != dest_array.[[ContentType]], throw a TypeError exception.
+    auto array_buffer = ArrayBuffer::create(global_object, byte_length.value());
+    dest_array.set_array_length(src_array_length);
+    dest_array.set_viewed_array_buffer(array_buffer);
+    dest_array.set_byte_offset(0);
+    dest_array.set_byte_length(array_buffer->byte_length());
+
+    for (u32 i = 0; i < src_array_length; i++) {
+        Value v;
+#undef __JS_ENUMERATE
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    if (is<JS::ClassName>(src_array)) {                                                  \
+        auto& src = static_cast<JS::ClassName&>(src_array);                              \
+        v = src.get_by_index(i);                                                         \
+    }
+        JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+
+        VERIFY(!v.is_empty());
+
+        dest_array.put_by_index(i, v);
+    }
+}
 
 void TypedArrayBase::visit_edges(Visitor& visitor)
 {
@@ -147,8 +189,10 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         if (first_argument.is_object()) {                                                                                              \
             auto* typed_array = ClassName::create(global_object(), 0);                                                                 \
             if (first_argument.as_object().is_typed_array()) {                                                                         \
-                /* FIXME: Initialize from TypedArray */                                                                                \
-                TODO();                                                                                                                \
+                auto& arg_typed_array = static_cast<TypedArrayBase&>(first_argument.as_object());                                      \
+                initialize_typed_array_from_typed_array(global_object(), *typed_array, arg_typed_array);                               \
+                if (vm.exception())                                                                                                    \
+                    return {};                                                                                                         \
             } else if (is<ArrayBuffer>(first_argument.as_object())) {                                                                  \
                 auto& array_buffer = static_cast<ArrayBuffer&>(first_argument.as_object());                                            \
                 initialize_typed_array_from_array_buffer(global_object(), *typed_array, array_buffer, vm.argument(1), vm.argument(2)); \
