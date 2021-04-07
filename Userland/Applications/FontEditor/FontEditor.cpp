@@ -253,14 +253,13 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
     m_path = path;
     m_edited_font = edited_font;
 
+    m_glyph_map_widget->initialize(*m_edited_font);
     m_glyph_editor_widget->initialize(*m_edited_font);
+
     m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
     m_left_column_container->set_fixed_width(m_glyph_editor_widget->preferred_width());
     m_glyph_editor_width_spinbox->set_enabled(!m_edited_font->is_fixed_width());
     m_glyph_editor_width_spinbox->set_max(m_edited_font->max_glyph_width());
-
-    m_glyph_map_widget->initialize(*m_edited_font);
-    m_glyph_map_widget->set_selected_glyph('A');
 
     m_name_textbox->set_text(m_edited_font->name());
     m_family_textbox->set_text(m_edited_font->family());
@@ -272,6 +271,8 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
     m_baseline_spinbox->set_value(m_edited_font->baseline());
 
     m_fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width());
+
+    m_glyph_map_widget->set_selected_glyph('A');
 
     if (on_initialize)
         on_initialize();
