@@ -26,6 +26,7 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/ACPI/Parser.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/HID/I8042Controller.h>
 
@@ -125,7 +126,7 @@ UNMAP_AFTER_INIT void HIDManagement::enumerate()
     // emulation of the PS/2 controller if it was set by the BIOS.
     // If ACPI indicates we have an i8042 controller and the USB controller was
     // set to emulate PS/2, we should not initialize the PS/2 controller.
-    if (!ACPI::Parser::the()->have_8042())
+    if (!ACPI::Parser::the()->have_8042() || kernel_command_line().disable_ps2_controller())
         return;
     m_i8042_controller = I8042Controller::initialize();
     m_i8042_controller->detect_devices();
