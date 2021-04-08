@@ -391,7 +391,6 @@ void FormatBuilder::put_f64(
     FormatBuilder format_builder { string_builder };
 
     format_builder.put_i64(static_cast<i64>(value), base, false, upper_case, false, Align::Right, 0, ' ', sign_mode);
-    string_builder.append('.');
 
     if (precision > 0) {
         // FIXME: This is a terrible approximation but doing it properly would be a lot of work. If someone is up for that, a good
@@ -402,12 +401,22 @@ void FormatBuilder::put_f64(
         if (value < 0)
             value = -value;
 
-        for (u32 i = 0; i < precision; ++i)
-            value *= 10;
+        double epsilon = 0.5;
+        for (size_t i = 0; i < precision; ++i)
+            epsilon /= 10.0;
 
-        format_builder.put_u64(static_cast<u64>(value), base, false, upper_case, true, Align::Right, precision);
+        size_t visible_precision = 0;
+        for (; visible_precision < precision; ++visible_precision) {
+            if (value - static_cast<i64>(value) < epsilon)
+                break;
+            value *= 10.0;
+            epsilon *= 10.0;
+        }
 
-        // FIXME: Cut off trailing zeroes by default?
+        if (visible_precision > 0) {
+            string_builder.append('.');
+            format_builder.put_u64(static_cast<u64>(value), base, false, upper_case, true, Align::Right, visible_precision);
+        }
     }
 
     put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill);
