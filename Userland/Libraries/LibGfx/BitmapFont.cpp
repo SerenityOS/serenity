@@ -145,6 +145,8 @@ RefPtr<BitmapFont> BitmapFont::load_from_memory(const u8* data)
         type = FontTypes::Default;
     else if (header.type == 1)
         type = FontTypes::LatinExtendedA;
+    else if (header.type == 2)
+        type = FontTypes::Cyrillic;
     else
         VERIFY_NOT_REACHED();
 
@@ -165,6 +167,9 @@ size_t BitmapFont::glyph_count_by_type(FontTypes type)
 
     if (type == FontTypes::LatinExtendedA)
         return 384;
+
+    if (type == FontTypes::Cyrillic)
+        return 1280;
 
     dbgln("Unknown font type: {}", (int)type);
     VERIFY_NOT_REACHED();
