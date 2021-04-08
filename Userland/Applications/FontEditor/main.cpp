@@ -107,6 +107,11 @@ int main(int argc, char** argv)
         if (font->type() == Gfx::FontTypes::Default)
             font->set_type(Gfx::FontTypes::LatinExtendedA);
 
+        // Convert 384 char font to 1280 char font.
+        // Dirty hack. Should be refactored.
+        if (font->type() == Gfx::FontTypes::LatinExtendedA)
+            font->set_type(Gfx::FontTypes::Cyrillic);
+
         window->set_title(String::formatted("{} - Font Editor", path));
         static_cast<FontEditorWidget*>(window->main_widget())->initialize(path, move(font));
     };
