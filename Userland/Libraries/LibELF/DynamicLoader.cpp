@@ -414,7 +414,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
         if (!res.has_value()) {
-            if (symbol.bind() == STB_WEAK)
+            if (symbol.bind() == STB_WEAK || symbol.bind() == STB_GLOBAL)
                 return RelocationResult::ResolveLater;
             dbgln("ERROR: symbol not found: {}.", symbol.name());
             VERIFY_NOT_REACHED();
@@ -435,7 +435,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
         if (!res.has_value()) {
-            if (symbol.bind() == STB_WEAK)
+            if (symbol.bind() == STB_WEAK || symbol.bind() == STB_GLOBAL)
                 return RelocationResult::ResolveLater;
 
             // Symbol not found
@@ -540,7 +540,7 @@ void DynamicLoader::call_object_init_functions()
 
 Optional<DynamicObject::SymbolLookupResult> DynamicLoader::lookup_symbol(const ELF::DynamicObject::Symbol& symbol)
 {
-    if (symbol.is_undefined() || symbol.bind() == STB_WEAK)
+    if (symbol.is_undefined() || symbol.bind() == STB_WEAK || symbol.bind() == STB_GLOBAL)
         return DynamicLinker::lookup_global_symbol(symbol.name());
     return DynamicObject::SymbolLookupResult { symbol.value(), symbol.address(), symbol.bind(), &symbol.object() };
 }
