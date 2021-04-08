@@ -48,11 +48,13 @@ __BEGIN_DECLS
 #define PRIu32 "u"
 #define PRIu64 "llu"
 #define PRIx8 "b"
+#define PRIX8 "hhX"
 #define PRIx16 "w"
+#define PRIX16 "hX"
 #define PRIx32 "x"
 #define PRIX32 "X"
-#define PRIx64 "llx"
-#define PRIX64 "llX"
+#define PRIx64 __PRI64_PREFIX "x"
+#define PRIX64 __PRI64_PREFIX "X"
 
 #define __PRI64_PREFIX "ll"
 #define __PRIPTR_PREFIX
@@ -65,12 +67,30 @@ __BEGIN_DECLS
 #define PRIoMAX __PRI64_PREFIX "o"
 #define PRIuMAX __PRI64_PREFIX "u"
 
+#define SCNd8 "hhd"
+#define SCNd16 "hd"
+#define SCNd32 "ld"
+#define SCNd64 __PRI64_PREFIX "d"
+
 #define SCNdMAX __PRI64_PREFIX "d"
 #define SCNoMAX __PRI64_PREFIX "o"
 #define SCNuMAX __PRI64_PREFIX "u"
 
+#define SCNu8 "hhu"
+#define SCNu16 "hu"
+#define SCNu32 "lu"
 #define SCNu64 __PRI64_PREFIX "u"
 #define SCNd64 __PRI64_PREFIX "d"
+
+#define SCNi8 "hhi"
+#define SCNi16 "hi"
+#define SCNi32 "li"
+#define SCNi64 __PRI64_PREFIX "i"
+
+#define SCNx8 "hhx"
+#define SCNx16 "hx"
+#define SCNx32 "lx"
+#define SCNx64 __PRI64_PREFIX "x"
 
 typedef struct imaxdiv_t {
     intmax_t quot;
