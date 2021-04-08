@@ -252,11 +252,11 @@ TEST_CASE(file_descriptor)
 
 TEST_CASE(floating_point_numbers)
 {
-    EXPECT_EQ(String::formatted("{}", 1.12), "1.120000");
-    EXPECT_EQ(String::formatted("{}", 1.), "1.000000");
-    EXPECT_EQ(String::formatted("{:.3}", 1.12), "1.120");
+    EXPECT_EQ(String::formatted("{}", 1.12), "1.12");
+    EXPECT_EQ(String::formatted("{}", 1.), "1");
+    EXPECT_EQ(String::formatted("{:.3}", 1.12), "1.12");
     EXPECT_EQ(String::formatted("{:.1}", 1.12), "1.1");
-    EXPECT_EQ(String::formatted("{}", -1.12), "-1.120000");
+    EXPECT_EQ(String::formatted("{}", -1.12), "-1.12");
 
     // FIXME: There is always the question what we mean with the width field. Do we mean significant digits?
     //        Do we mean the whole width? This is what was the simplest to implement:
@@ -265,12 +265,12 @@ TEST_CASE(floating_point_numbers)
 
 TEST_CASE(no_precision_no_trailing_number)
 {
-    EXPECT_EQ(String::formatted("{:.0}", 0.1), "0.");
+    EXPECT_EQ(String::formatted("{:.0}", 0.1), "0");
 }
 
 TEST_CASE(yay_this_implementation_sucks)
 {
-    EXPECT_EQ(String::formatted("{:.0}", .99999999999), "0.");
+    EXPECT_EQ(String::formatted("{:.0}", .99999999999), "0");
 }
 
 TEST_CASE(format_nullptr)
