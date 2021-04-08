@@ -51,6 +51,7 @@ __BEGIN_DECLS
 #define SOCK_STREAM 1
 #define SOCK_DGRAM 2
 #define SOCK_RAW 3
+#define SOCK_SEQPACKET 4
 #define SOCK_NONBLOCK 04000
 #define SOCK_CLOEXEC 02000000
 
@@ -99,6 +100,21 @@ struct ucred {
 
 #define SOL_SOCKET 1
 #define SOMAXCONN 128
+
+enum {
+    TCP_CORK,
+    TCP_DEFER_ACCEPT,
+    TCP_INFO,
+    TCP_KEEPCNT,
+    TCP_KEEPIDLE,
+    TCP_KEEPINTVL,
+    TCP_LINGER2,
+    TCP_MAXSEG,
+    TCP_NODELAY,
+    TCP_QUICKACK,
+    TCP_SYNCNT,
+    TCP_WINDOW_CLAMP
+};
 
 enum {
     SO_RCVTIMEO,
