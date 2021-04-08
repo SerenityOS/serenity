@@ -294,4 +294,15 @@ TEST_CASE(use_format_string_formatter)
     EXPECT_EQ(String::formatted("{:*<10}", C { 42 }), "C(i=42)***");
 }
 
+TEST_CASE(long_long_regression)
+{
+    EXPECT_EQ(String::formatted("{}", 0x0123456789abcdefLL), "81985529216486895");
+
+    StringBuilder builder;
+    AK::FormatBuilder fmtbuilder { builder };
+    fmtbuilder.put_i64(0x0123456789abcdefLL);
+
+    EXPECT_EQ(builder.string_view(), "81985529216486895");
+}
+
 TEST_MAIN(Format)
