@@ -309,6 +309,13 @@ void StructOrClassDeclaration::dump(size_t indent) const
         member.dump(indent + 1);
     }
 }
+NonnullRefPtrVector<Declaration> StructOrClassDeclaration::declarations() const
+{
+    NonnullRefPtrVector<Declaration> declarations;
+    for (auto& member : m_members)
+        declarations.append(member);
+    return declarations;
+}
 
 void MemberDeclaration::dump(size_t indent) const
 {
