@@ -880,13 +880,12 @@ u32 Emulator::virt$mmap(u32 params_addr)
         mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot, move(name_str)));
     } else {
         auto region = MmapRegion::create_file_backed(final_address, final_size, params.prot, params.flags, params.fd, params.offset, move(name_str));
-        if (region->name() == "libc.so: .text") {
+        if (region->name() == "libc.so: .text" && !m_libc_start) {
             m_libc_start = final_address;
             m_libc_end = final_address + final_size;
             bool rc = find_malloc_symbols(*region);
             VERIFY(rc);
-        }
-        if (region->name() == "libsystem.so: .text") {
+        } else if (region->name() == "libsystem.so: .text" && !m_libsystem_start) {
             m_libsystem_start = final_address;
             m_libsystem_end = final_address + final_size;
         }
