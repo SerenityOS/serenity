@@ -155,6 +155,16 @@ UNMAP_AFTER_INIT HPETMode CommandLine::hpet_mode() const
     PANIC("Unknown HPETMode: {}", hpet_mode);
 }
 
+UNMAP_AFTER_INIT bool CommandLine::disable_ps2_controller() const
+{
+    return contains("disable_ps2_controller");
+}
+
+UNMAP_AFTER_INIT bool CommandLine::disable_physical_storage() const
+{
+    return contains("disable_physical_storage");
+}
+
 UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const
 {
     const auto ahci_reset_mode = lookup("ahci_reset_mode").value_or("controller");
