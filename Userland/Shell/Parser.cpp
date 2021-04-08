@@ -371,7 +371,7 @@ RefPtr<AST::Node> Parser::parse_function_decl()
         arguments.append({ arg_name, { name_offset, m_offset, start_line, line() } });
     }
 
-    consume_while(is_whitespace);
+    consume_while(is_any_of("\n\t "));
 
     {
         RefPtr<AST::Node> syntax_error;
