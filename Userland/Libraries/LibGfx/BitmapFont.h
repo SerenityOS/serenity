@@ -38,7 +38,10 @@ namespace Gfx {
 
 enum FontTypes {
     Default = 0,
-    LatinExtendedA = 1
+    LatinExtendedA = 1,
+    // There are many blocks between LatinExtendedA and Cyrrilic that has to be added later.
+    // Cyrrilic has to be switched to another number
+    Cyrillic = 2
 };
 
 class BitmapFont : public Font {
