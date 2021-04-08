@@ -521,7 +521,6 @@ public:
     {
     }
 
-    StringView m_name;
     Vector<StringView> m_entries;
 };
 
@@ -537,7 +536,6 @@ public:
     }
 
     RefPtr<Type> m_type;
-    StringView m_name;
     RefPtr<Expression> m_initial_value;
 };
 
@@ -549,6 +547,7 @@ public:
     virtual bool is_struct_or_class() const override { return true; }
     virtual bool is_struct() const override { return m_type == Type::Struct; }
     virtual bool is_class() const override { return m_type == Type::Class; }
+    virtual NonnullRefPtrVector<Declaration> declarations() const override;
 
     enum class Type {
         Struct,
@@ -683,7 +682,6 @@ public:
 
     virtual NonnullRefPtrVector<Declaration> declarations() const override { return m_declarations; }
 
-    StringView m_name;
     NonnullRefPtrVector<Declaration> m_declarations;
 };
 
