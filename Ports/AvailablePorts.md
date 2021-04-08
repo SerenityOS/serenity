@@ -31,6 +31,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`genemu`](genemu)             | Genesis / MegaDrive Emulator                  |                   | https://github.com/rasky/genemu                       |
 | [`git`](git/)                  | Git                                           | 2.26.0            | https://git-scm.com/                                  |
 | [`gmp`](gmp/)                  | GNU Multiple Precision Arithmetic Library     | 6.2.1             | https://gmplib.org/                                   |
+| [`gnucobol`](gnucobol/)        | GnuCOBOL                                      | 3.1.2             | https://gnucobol.sourceforge.io/                      |
 | [`gnuplot`](gnuplot/)          | Gnuplot                                       | 5.2.8             | http://www.gnuplot.info/                              |
 | [`grep`](grep/)                | GNU Grep                                      | 2.5.4             | https://www.gnu.org/software/grep/                    |
 | [`hatari`](hatari/)            | Atari ST/STE/TT/Falcon emulator               | 2.4.0-devel       | https://hatari.tuxfamily.org/                         |
