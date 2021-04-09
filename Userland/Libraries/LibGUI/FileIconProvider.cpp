@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,7 @@ static Icon s_hard_disk_icon;
 static Icon s_directory_icon;
 static Icon s_directory_open_icon;
 static Icon s_inaccessible_directory_icon;
+static Icon s_desktop_directory_icon;
 static Icon s_home_directory_icon;
 static Icon s_home_directory_open_icon;
 static Icon s_file_icon;
@@ -84,6 +85,7 @@ static void initialize_if_needed()
     s_inaccessible_directory_icon = Icon::default_icon("filetype-folder-inaccessible");
     s_home_directory_icon = Icon::default_icon("home-directory");
     s_home_directory_open_icon = Icon::default_icon("home-directory-open");
+    s_desktop_directory_icon = Icon::default_icon("desktop");
     s_file_icon = Icon::default_icon("filetype-unknown");
     s_symlink_icon = Icon::default_icon("filetype-symlink");
     s_socket_icon = Icon::default_icon("filetype-socket");
@@ -116,6 +118,12 @@ Icon FileIconProvider::home_directory_icon()
 {
     initialize_if_needed();
     return s_home_directory_icon;
+}
+
+Icon FileIconProvider::desktop_directory_icon()
+{
+    initialize_if_needed();
+    return s_desktop_directory_icon;
 }
 
 Icon FileIconProvider::home_directory_open_icon()
@@ -219,6 +227,8 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
     if (S_ISDIR(mode)) {
         if (path == Core::StandardPaths::home_directory())
             return s_home_directory_icon;
+        if (path == Core::StandardPaths::desktop_directory())
+            return s_desktop_directory_icon;
         if (access(path.characters(), R_OK | X_OK) < 0)
             return s_inaccessible_directory_icon;
         return s_directory_icon;

@@ -43,6 +43,7 @@ public:
     static Icon directory_open_icon();
     static Icon home_directory_icon();
     static Icon home_directory_open_icon();
+    static Icon desktop_directory_icon();
 };
 
 }
