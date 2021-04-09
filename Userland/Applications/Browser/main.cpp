@@ -39,6 +39,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
@@ -155,7 +156,13 @@ int main(int argc, char** argv)
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.load_from_gml(browser_window_gml);
 
+    auto& top_line = *widget.find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
+
     auto& tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
+
+    tab_widget.on_tab_count_change = [&](size_t tab_count) {
+        top_line.set_visible(tab_count > 1);
+    };
 
     auto default_favicon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png");
     VERIFY(default_favicon);
