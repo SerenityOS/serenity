@@ -287,7 +287,7 @@ Tab::Tab(Type type)
     auto& app_menu = m_menubar->add_menu("&File");
     app_menu.add_action(WindowActions::the().create_new_tab_action());
     app_menu.add_action(GUI::Action::create(
-        "Close tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
+        "&Close Tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
             on_tab_close_request(*this);
         },
         this));
@@ -326,7 +326,7 @@ Tab::Tab(Type type)
     go_menu.add_action(*m_reload_action);
 
     auto view_source_action = GUI::Action::create(
-        "View source", { Mod_Ctrl, Key_U }, [this](auto&) {
+        "View &Source", { Mod_Ctrl, Key_U }, [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 VERIFY(m_page_view->document());
                 auto url = m_page_view->document()->url();
@@ -339,7 +339,7 @@ Tab::Tab(Type type)
         this);
 
     auto inspect_dom_tree_action = GUI::Action::create(
-        "Inspect DOM tree", { Mod_None, Key_F12 }, [this](auto&) {
+        "Inspect &DOM Tree", { Mod_None, Key_F12 }, [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 if (!m_dom_inspector_window) {
                     m_dom_inspector_window = GUI::Window::construct(window());
@@ -363,7 +363,7 @@ Tab::Tab(Type type)
     inspect_menu.add_action(*inspect_dom_tree_action);
 
     inspect_menu.add_action(GUI::Action::create(
-        "Open JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
+        "Open &JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 if (!m_console_window) {
                     m_console_window = GUI::Window::construct(window());
@@ -398,7 +398,7 @@ Tab::Tab(Type type)
 
     auto& debug_menu = m_menubar->add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
-        "Dump DOM tree", [this](auto&) {
+        "Dump &DOM Tree", [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 Web::dump_tree(*m_page_view->document());
             } else {
@@ -407,7 +407,7 @@ Tab::Tab(Type type)
         },
         this));
     debug_menu.add_action(GUI::Action::create(
-        "Dump Layout tree", [this](auto&) {
+        "Dump &Layout Tree", [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 Web::dump_tree(*m_page_view->document()->layout_node());
             } else {
@@ -416,7 +416,7 @@ Tab::Tab(Type type)
         },
         this));
     debug_menu.add_action(GUI::Action::create(
-        "Dump Style sheets", [this](auto&) {
+        "Dump &Style Sheets", [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 for (auto& sheet : m_page_view->document()->style_sheets().sheets()) {
                     Web::dump_sheet(sheet);
@@ -426,12 +426,12 @@ Tab::Tab(Type type)
             }
         },
         this));
-    debug_menu.add_action(GUI::Action::create("Dump history", { Mod_Ctrl, Key_H }, [&](auto&) {
+    debug_menu.add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, Key_H }, [&](auto&) {
         m_history.dump();
     }));
     debug_menu.add_separator();
     auto line_box_borders_action = GUI::Action::create_checkable(
-        "Line box borders", [this](auto& action) {
+        "&Line Box Borders", [this](auto& action) {
             if (m_type == Type::InProcessWebView) {
                 m_page_view->set_should_show_line_box_borders(action.is_checked());
                 m_page_view->update();
@@ -444,7 +444,7 @@ Tab::Tab(Type type)
     debug_menu.add_action(line_box_borders_action);
 
     debug_menu.add_separator();
-    debug_menu.add_action(GUI::Action::create("Collect garbage", { Mod_Ctrl | Mod_Shift, Key_G }, [this](auto&) {
+    debug_menu.add_action(GUI::Action::create("Collect &Garbage", { Mod_Ctrl | Mod_Shift, Key_G }, [this](auto&) {
         if (m_type == Type::InProcessWebView) {
             if (auto* document = m_page_view->document()) {
                 document->interpreter().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
@@ -453,7 +453,7 @@ Tab::Tab(Type type)
             m_web_content_view->debug_request("collect-garbage");
         }
     }));
-    debug_menu.add_action(GUI::Action::create("Clear cache", { Mod_Ctrl | Mod_Shift, Key_C }, [this](auto&) {
+    debug_menu.add_action(GUI::Action::create("Clear &Cache", { Mod_Ctrl | Mod_Shift, Key_C }, [this](auto&) {
         if (m_type == Type::InProcessWebView) {
             Web::ResourceLoader::the().clear_cache();
         } else {
@@ -465,10 +465,10 @@ Tab::Tab(Type type)
     help_menu.add_action(WindowActions::the().about_action());
 
     m_tab_context_menu = GUI::Menu::construct();
-    m_tab_context_menu->add_action(GUI::Action::create("Reload Tab", [this](auto&) {
+    m_tab_context_menu->add_action(GUI::Action::create("&Reload Tab", [this](auto&) {
         m_reload_action->activate();
     }));
-    m_tab_context_menu->add_action(GUI::Action::create("Close Tab", [this](auto&) {
+    m_tab_context_menu->add_action(GUI::Action::create("&Close Tab", [this](auto&) {
         on_tab_close_request(*this);
     }));
 
