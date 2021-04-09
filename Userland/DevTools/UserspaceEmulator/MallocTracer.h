@@ -39,6 +39,14 @@ namespace UserspaceEmulator {
 class Emulator;
 class SoftCPU;
 
+struct GraphNode {
+    Vector<FlatPtr> edges_from_node {};
+
+    bool is_reachable { false };
+};
+
+using MemoryGraph = HashMap<FlatPtr, GraphNode>;
+
 struct Mallocation {
     bool contains(FlatPtr a) const
     {
@@ -87,9 +95,13 @@ private:
     Mallocation* find_mallocation(FlatPtr);
     Mallocation* find_mallocation_before(FlatPtr);
     Mallocation* find_mallocation_after(FlatPtr);
-    bool is_reachable(const Mallocation&) const;
+
+    void dump_memory_graph();
+    void populate_memory_graph();
 
     Emulator& m_emulator;
+
+    MemoryGraph m_memory_graph {};
 
     bool m_auditing_enabled { true };
 };
@@ -112,5 +124,4 @@ ALWAYS_INLINE Mallocation* MallocTracer::find_mallocation(const Region& region, 
         return nullptr;
     return mallocation;
 }
-
 }
