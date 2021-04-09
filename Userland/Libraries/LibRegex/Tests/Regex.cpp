@@ -538,6 +538,7 @@ TEST_CASE(ECMA262_match)
         { "^hel(?<LO>l.)1$", "hello1" },
         { "^hel(?<LO>l.)1*\\k<LO>.$", "hello1lo1" },
         { "^[-a-z1-3\\s]+$", "hell2 o1" },
+        { "^[\\0-\\x1f]$", "\n" },
         { .pattern = "\\bhello\\B", .subject = "hello1", .options = ECMAScriptFlags::Global },
         { "\\b.*\\b", "hello1" },
         { "[^\\D\\S]{2}", "1 " },
