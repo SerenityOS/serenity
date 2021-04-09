@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,29 +26,42 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/Noncopyable.h>
+#include <AK/String.h>
 #include <LibGUI/AutocompleteProvider.h>
-#include <LibGUI/Widget.h>
+#include <LibGUI/Icon.h>
 
 namespace HackStudio {
 
-class Locator final : public GUI::Widget {
-    C_OBJECT(Locator)
-public:
-    virtual ~Locator() override;
+class ProjectDeclarations {
+    AK_MAKE_NONCOPYABLE(ProjectDeclarations);
 
-    void open();
-    void close();
+public:
+    static ProjectDeclarations& the();
+    template<typename Func>
+    void for_each_declared_symbol(Func);
+
+    void set_declared_symbols(const String& filename, const Vector<GUI::AutocompleteProvider::Declaration>&);
+
+    static Optional<GUI::Icon> get_icon_for(GUI::AutocompleteProvider::DeclarationType);
+
+    Function<void()> on_update = nullptr;
 
 private:
-    void update_suggestions();
-    void open_suggestion(const GUI::ModelIndex&);
-
-    Locator(Core::Object* parent = nullptr);
-
-    RefPtr<GUI::TextBox> m_textbox;
-    RefPtr<GUI::Window> m_popup_window;
-    RefPtr<GUI::TableView> m_suggestion_view;
+    ProjectDeclarations() = default;
+    HashMap<String, Vector<GUI::AutocompleteProvider::Declaration>> m_document_to_declarations;
 };
+
+template<typename Func>
+void ProjectDeclarations::for_each_declared_symbol(Func f)
+{
+    for (auto& item : m_document_to_declarations) {
+        for (auto& decl : item.value) {
+            f(decl);
+        }
+    }
+}
 
 }
