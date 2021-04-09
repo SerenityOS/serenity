@@ -92,7 +92,7 @@ public:
         u8* ptr = a->data;
         a->allocation_size_in_chunks = chunks_needed;
 
-        m_bitmap.set_range(first_chunk.value(), chunks_needed, true);
+        m_bitmap.set_range_and_verify_that_all_bits_flip(first_chunk.value(), chunks_needed, true);
 
         m_allocated_chunks += chunks_needed;
         if constexpr (HEAP_SCRUB_BYTE_ALLOC != 0) {
@@ -113,7 +113,7 @@ public:
         VERIFY(m_bitmap.get(start));
 
         VERIFY((u8*)a + a->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
-        m_bitmap.set_range(start, a->allocation_size_in_chunks, false);
+        m_bitmap.set_range_and_verify_that_all_bits_flip(start, a->allocation_size_in_chunks, false);
 
         VERIFY(m_allocated_chunks >= a->allocation_size_in_chunks);
         m_allocated_chunks -= a->allocation_size_in_chunks;
