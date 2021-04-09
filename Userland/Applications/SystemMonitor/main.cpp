@@ -369,9 +369,9 @@ int main(int argc, char** argv)
         frequency_menu.add_action(*action);
     };
 
-    make_frequency_action("1 sec", 1000);
-    make_frequency_action("3 sec", 3000, true);
-    make_frequency_action("5 sec", 5000);
+    make_frequency_action("&1 Sec", 1000);
+    make_frequency_action("&3 Sec", 3000, true);
+    make_frequency_action("&5 Sec", 5000);
 
     auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window));
