@@ -30,11 +30,11 @@
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
+#include <ctype.h>
 
 namespace WindowServer {
 
 static MenuManager* s_the;
-static constexpr int s_search_timeout = 3000;
 
 MenuManager& MenuManager::the()
 {
@@ -45,10 +45,6 @@ MenuManager& MenuManager::the()
 MenuManager::MenuManager()
 {
     s_the = this;
-
-    m_search_timer = Core::Timer::create_single_shot(0, [this] {
-        m_current_search.clear();
-    });
 }
 
 MenuManager::~MenuManager()
@@ -91,23 +87,33 @@ void MenuManager::event(Core::Event& event)
             return;
         }
 
-        if (key_event.key() == Key_Backspace) {
-            m_current_search.clear();
-            return;
-        }
-
         if (m_current_menu && event.type() == Event::KeyDown
             && ((key_event.key() >= Key_A && key_event.key() <= Key_Z)
                 || (key_event.key() >= Key_0 && key_event.key() <= Key_9))) {
-            m_current_search.append_code_point(key_event.code_point());
-            m_search_timer->restart(s_search_timeout);
+
+            // FIXME: Maybe cache this on the menu instead of recomputing it on every alphanumeric menu keystroke?
+            HashMap<u32, size_t> alt_shortcut_to_item_index;
             for (int i = 0; i < m_current_menu->item_count(); ++i) {
-                auto text = m_current_menu->item(i).text();
-                if (text.to_lowercase().starts_with(m_current_search.to_string().to_lowercase())) {
-                    m_current_menu->set_hovered_item(i);
-                    return;
-                }
+                auto& item = m_current_menu->item(i);
+                if (!item.is_enabled())
+                    continue;
+                auto alt_shortcut = find_ampersand_shortcut_character(item.text());
+                if (!alt_shortcut)
+                    continue;
+                alt_shortcut_to_item_index.set(tolower(alt_shortcut), i);
             }
+
+            auto it = alt_shortcut_to_item_index.find(tolower(key_event.code_point()));
+
+            if (it != alt_shortcut_to_item_index.end()) {
+                auto& item = m_current_menu->item(it->value);
+                m_current_menu->set_hovered_item(it->value);
+                if (item.is_submenu())
+                    m_current_menu->descend_into_submenu_at_hovered_item();
+                else
+                    m_current_menu->open_hovered_item(false);
+            }
+
             return;
         }
 
@@ -246,7 +252,6 @@ void MenuManager::close_everyone()
         menu->clear_hovered_item();
     }
     m_open_menu_stack.clear();
-    m_current_search.clear();
     clear_current_menu();
     refresh();
 }
@@ -371,8 +376,6 @@ void MenuManager::set_current_menu(Menu* menu)
     if (menu == m_current_menu) {
         return;
     }
-
-    m_current_search.clear();
 
     Menu* previous_current_menu = m_current_menu;
     m_current_menu = menu;

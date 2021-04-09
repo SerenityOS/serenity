@@ -43,7 +43,7 @@
 
 namespace WindowServer {
 
-static u32 find_ampersand_shortcut_character(const String& string)
+u32 find_ampersand_shortcut_character(const StringView& string)
 {
     Utf8View utf8_view { string };
     for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
@@ -265,7 +265,7 @@ void Menu::draw()
             auto& previous_font = painter.font();
             if (item.is_default())
                 painter.set_font(Gfx::FontDatabase::default_bold_font());
-            painter.draw_text(text_rect, item.text(), Gfx::TextAlignment::CenterLeft, text_color);
+            painter.draw_ui_text(text_rect, item.text(), painter.font(), Gfx::TextAlignment::CenterLeft, text_color);
             if (!item.shortcut_text().is_empty()) {
                 painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), Gfx::TextAlignment::CenterRight, text_color);
             }
