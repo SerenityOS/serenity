@@ -61,7 +61,7 @@ public:
     const MenuItem& item(int index) const { return m_items.at(index); }
     MenuItem& item(int index) { return m_items.at(index); }
 
-    void add_item(NonnullOwnPtr<MenuItem>&& item) { m_items.append(move(item)); }
+    void add_item(NonnullOwnPtr<MenuItem>);
 
     String name() const { return m_name; }
 
@@ -128,6 +128,8 @@ public:
     void descend_into_submenu_at_hovered_item();
     void open_hovered_item(bool leave_menu_open);
 
+    const Vector<size_t>* items_with_alt_shortcut(u32 alt_shortcut) const;
+
 private:
     virtual void event(Core::Event&) override;
 
@@ -158,6 +160,8 @@ private:
     bool m_scrollable { false };
     int m_scroll_offset { 0 };
     int m_max_scroll_offset { 0 };
+
+    HashMap<u32, Vector<size_t>> m_alt_shortcut_character_to_item_indexes;
 };
 
 u32 find_ampersand_shortcut_character(const StringView&);
