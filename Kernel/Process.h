@@ -324,6 +324,7 @@ public:
     KResultOr<int> sys$setegid(gid_t);
     KResultOr<int> sys$setuid(uid_t);
     KResultOr<int> sys$setgid(gid_t);
+    KResultOr<int> sys$setreuid(uid_t, uid_t);
     KResultOr<int> sys$setresuid(uid_t, uid_t, uid_t);
     KResultOr<int> sys$setresgid(gid_t, gid_t, gid_t);
     KResultOr<unsigned> sys$alarm(unsigned seconds);
