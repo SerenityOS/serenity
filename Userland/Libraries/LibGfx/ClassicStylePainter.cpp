@@ -170,7 +170,7 @@ void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, co
 
     Color button_color = palette.button();
     Color highlight_color = palette.threed_highlight();
-    Color shadow_color = palette.threed_shadow1();
+    Color shadow_color = button_style == ButtonStyle::CoolBar ? palette.threed_shadow1() : palette.threed_shadow2();
 
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
@@ -178,10 +178,12 @@ void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, co
     if (pressed || checked) {
         // Base
         IntRect base_rect { 1, 1, rect.width() - 2, rect.height() - 2 };
-        if (checked && !pressed) {
-            painter.fill_rect_with_dither_pattern(base_rect, palette.button().lightened(1.3f), palette.button());
-        } else {
-            painter.fill_rect(base_rect, button_color);
+        if (button_style == ButtonStyle::CoolBar) {
+            if (checked && !pressed) {
+                painter.fill_rect_with_dither_pattern(base_rect, palette.button().lightened(1.3f), Color());
+            } else {
+                painter.fill_rect(base_rect, button_color);
+            }
         }
 
         // Sunken shadow
@@ -191,9 +193,11 @@ void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, co
         // Bottom highlight
         painter.draw_line({ rect.width() - 2, 1 }, { rect.width() - 2, rect.height() - 3 }, highlight_color);
         painter.draw_line({ 1, rect.height() - 2 }, { rect.width() - 2, rect.height() - 2 }, highlight_color);
-    } else if (button_style == ButtonStyle::CoolBar && hovered) {
-        // Base
-        painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
+    } else if (hovered) {
+        if (button_style == ButtonStyle::CoolBar) {
+            // Base
+            painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
+        }
 
         // Top highlight
         painter.draw_line({ 1, 1 }, { rect.width() - 2, 1 }, highlight_color);
