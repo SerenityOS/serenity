@@ -29,8 +29,14 @@
             }
         }
 
+        @GUI::Label {
+            text: "File name:"
+            text_alignment: "CenterRight"
+            fixed_height: 24
+        }
+
         @GUI::Widget {
-            fixed_height: 47
+            fixed_height: 20
         }
     }
 
@@ -61,12 +67,6 @@
             @GUI::Widget {
                 fixed_height: 24
                 layout: @GUI::HorizontalBoxLayout
-
-                @GUI::Label {
-                    text: "File name:"
-                    text_alignment: "CenterLeft"
-                    fixed_width: 80
-                }
 
                 @GUI::TextBox {
                     name: "filename_textbox"
