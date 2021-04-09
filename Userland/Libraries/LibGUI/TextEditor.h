@@ -108,7 +108,7 @@ public:
     void set_mode(const Mode);
 
     bool is_ruler_visible() const { return m_ruler_visible; }
-    void set_ruler_visible(bool b) { m_ruler_visible = b; }
+    void set_ruler_visible(bool);
 
     void set_icon(const Gfx::Bitmap*);
     const Gfx::Bitmap* icon() const { return m_icon; }

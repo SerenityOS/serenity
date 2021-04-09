@@ -1806,4 +1806,13 @@ int TextEditor::number_of_visible_lines() const
     return visible_content_rect().height() / line_height();
 }
 
+void TextEditor::set_ruler_visible(bool visible)
+{
+    if (m_ruler_visible == visible)
+        return;
+    m_ruler_visible = visible;
+    recompute_all_visual_lines();
+    update();
+}
+
 }
