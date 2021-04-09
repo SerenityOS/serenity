@@ -79,6 +79,7 @@ namespace Kernel {
     S(setegid)                \
     S(setuid)                 \
     S(setgid)                 \
+    S(setreuid)               \
     S(setresuid)              \
     S(setresgid)              \
     S(alarm)                  \
