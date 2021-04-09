@@ -491,6 +491,8 @@ Icon FileSystemModel::icon_for(const Node& node) const
                 return FileIconProvider::home_directory_open_icon();
             return FileIconProvider::home_directory_icon();
         }
+        if (node.full_path() == Core::StandardPaths::desktop_directory())
+            return FileIconProvider::desktop_directory_icon();
         if (node.is_selected() && node.is_accessible_directory)
             return FileIconProvider::directory_open_icon();
     }
