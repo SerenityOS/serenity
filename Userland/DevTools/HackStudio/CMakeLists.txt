@@ -31,6 +31,7 @@ set(SOURCES
     LanguageClient.cpp
     Locator.cpp
     Project.cpp
+    ProjectDeclarations.cpp
     ProjectFile.cpp
     ProjectTemplate.cpp
     TerminalWrapper.cpp

@@ -26,7 +26,7 @@
 
 #include "LanguageClient.h"
 #include "HackStudio.h"
-#include "Locator.h"
+#include "ProjectDeclarations.h"
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
@@ -122,7 +122,7 @@ HashMap<String, NonnullOwnPtr<ServerConnectionWrapper>> ServerConnectionInstance
 
 void ServerConnection::handle(const Messages::LanguageClient::DeclarationsInDocument& message)
 {
-    locator().set_declared_symbols(message.filename(), message.declarations());
+    ProjectDeclarations::the().set_declared_symbols(message.filename(), message.declarations());
 }
 
 void LanguageClient::search_declaration(const String& path, size_t line, size_t column)
