@@ -107,9 +107,12 @@ public:
             return;
         auto* a = (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
         VERIFY((u8*)a >= m_chunks && (u8*)ptr < m_chunks + m_total_chunks * CHUNK_SIZE);
-        VERIFY((u8*)a + a->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
         FlatPtr start = ((FlatPtr)a - (FlatPtr)m_chunks) / CHUNK_SIZE;
 
+        // First, verify that the start of the allocation at `ptr` is actually allocated.
+        VERIFY(m_bitmap.get(start));
+
+        VERIFY((u8*)a + a->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
         m_bitmap.set_range(start, a->allocation_size_in_chunks, false);
 
         VERIFY(m_allocated_chunks >= a->allocation_size_in_chunks);
