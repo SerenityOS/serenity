@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1806,7 +1806,7 @@ void Painter::blit_tiled(const IntRect& dst_rect, const Gfx::Bitmap& bitmap, con
     }
 }
 
-void Gfx::Painter::draw_ui_text(const StringView& text, const Gfx::IntRect& rect, const Gfx::Font& font, Gfx::Color color)
+void Gfx::Painter::draw_ui_text(const Gfx::IntRect& rect, const StringView& text, const Gfx::Font& font, Gfx::Color color)
 {
     auto parse_ampersand_string = [](const StringView& raw_text, Optional<size_t>& underline_offset) -> String {
         if (raw_text.is_empty())
