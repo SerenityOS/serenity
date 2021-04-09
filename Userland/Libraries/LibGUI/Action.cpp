@@ -41,109 +41,109 @@ namespace CommonActions {
 NonnullRefPtr<Action> make_about_action(const String& app_name, const Icon& app_icon, Window* parent)
 {
     auto weak_parent = AK::try_make_weak_ptr<Window>(parent);
-    return Action::create(String::formatted("About {}", app_name), app_icon.bitmap_for_size(16), [=](auto&) {
+    return Action::create(String::formatted("&About {}", app_name), app_icon.bitmap_for_size(16), [=](auto&) {
         AboutDialog::show(app_name, app_icon.bitmap_for_size(32), weak_parent.ptr());
     });
 }
 
 NonnullRefPtr<Action> make_open_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Open...", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), move(callback), parent);
+    return Action::create("&Open...", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_save_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), move(callback), parent);
+    return Action::create("&Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_save_as_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Save As...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), move(callback), parent);
+    return Action::create("Save &As...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_move_to_front_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Move to front", { Mod_Ctrl | Mod_Shift, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/move-to-front.png"), move(callback), parent);
+    return Action::create("Move to &Front", { Mod_Ctrl | Mod_Shift, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/move-to-front.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_move_to_back_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Move to back", { Mod_Ctrl | Mod_Shift, Key_Down }, Gfx::Bitmap::load_from_file("/res/icons/16x16/move-to-back.png"), move(callback), parent);
+    return Action::create("Move to &Back", { Mod_Ctrl | Mod_Shift, Key_Down }, Gfx::Bitmap::load_from_file("/res/icons/16x16/move-to-back.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_undo_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Undo", { Mod_Ctrl, Key_Z }, Gfx::Bitmap::load_from_file("/res/icons/16x16/undo.png"), move(callback), parent);
+    return Action::create("&Undo", { Mod_Ctrl, Key_Z }, Gfx::Bitmap::load_from_file("/res/icons/16x16/undo.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_redo_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Redo", { Mod_Ctrl, Key_Y }, Gfx::Bitmap::load_from_file("/res/icons/16x16/redo.png"), move(callback), parent);
+    return Action::create("&Redo", { Mod_Ctrl, Key_Y }, Gfx::Bitmap::load_from_file("/res/icons/16x16/redo.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_delete_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Delete", { Mod_None, Key_Delete }, Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"), move(callback), parent);
+    return Action::create("&Delete", { Mod_None, Key_Delete }, Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_cut_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Cut", { Mod_Ctrl, Key_X }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-cut.png"), move(callback), parent);
+    return Action::create("Cu&t", { Mod_Ctrl, Key_X }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-cut.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_copy_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Copy", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), move(callback), parent);
+    return Action::create("&Copy", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_paste_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Paste", { Mod_Ctrl, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"), move(callback), parent);
+    return Action::create("&Paste", { Mod_Ctrl, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Fullscreen", { Mod_None, Key_F11 }, move(callback), parent);
+    return Action::create("&Fullscreen", { Mod_None, Key_F11 }, move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_quit_action(Function<void(Action&)> callback)
 {
-    return Action::create("Quit", { Mod_Alt, Key_F4 }, move(callback));
+    return Action::create("&Quit", { Mod_Alt, Key_F4 }, move(callback));
 }
 
 NonnullRefPtr<Action> make_help_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Contents", { Mod_None, Key_F1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"), move(callback), parent);
+    return Action::create("&Contents", { Mod_None, Key_F1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_go_back_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Go back", { Mod_Alt, Key_Left }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"), move(callback), parent);
+    return Action::create("Go &Back", { Mod_Alt, Key_Left }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_go_forward_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Go forward", { Mod_Alt, Key_Right }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), move(callback), parent);
+    return Action::create("Go &Forward", { Mod_Alt, Key_Right }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_go_home_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Go home", { Mod_Alt, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-home.png"), move(callback), parent);
+    return Action::create("Go &Home", { Mod_Alt, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-home.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_reload_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Reload", { Mod_Ctrl, Key_R }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), move(callback), parent);
+    return Action::create("&Reload", { Mod_Ctrl, Key_R }, Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_select_all_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Select all", { Mod_Ctrl, Key_A }, Gfx::Bitmap::load_from_file("/res/icons/16x16/select-all.png"), move(callback), parent);
+    return Action::create("Select &All", { Mod_Ctrl, Key_A }, Gfx::Bitmap::load_from_file("/res/icons/16x16/select-all.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_properties_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Properties", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), move(callback), parent);
+    return Action::create("&Properties", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), move(callback), parent);
 }
 
 }
