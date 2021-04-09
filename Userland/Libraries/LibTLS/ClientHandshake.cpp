@@ -137,7 +137,7 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
         dbgln_if(TLS_DEBUG, "Extensions bytes total: {}", extensions_bytes_total);
     }
 
-    while ((ssize_t)buffer.size() - res >= 4) {
+    while (buffer.size() - res >= 4) {
         auto extension_type = (HandshakeExtension)AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(res));
         res += 2;
         u16 extension_length = AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(res));
@@ -240,10 +240,8 @@ ssize_t TLSv12::handle_finished(ReadonlyBytes buffer, WritePacketStage& write_pa
         return (i8)Error::NeedMoreData;
     }
 
-// TODO: Compare Hashes
-#if TLS_DEBUG
-    dbgln("FIXME: handle_finished :: Check message validity");
-#endif
+    // TODO: Compare Hashes
+    dbgln_if(TLS_DEBUG, "FIXME: handle_finished :: Check message validity");
     m_context.connection_status = ConnectionStatus::Established;
 
     if (m_handshake_timeout_timer) {
@@ -319,9 +317,7 @@ void TLSv12::build_random(PacketBuilder& builder)
 ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
 {
     if (m_context.connection_status == ConnectionStatus::Established) {
-#if TLS_DEBUG
-        dbgln("Renegotiation attempt ignored");
-#endif
+        dbgln_if(TLS_DEBUG, "Renegotiation attempt ignored");
         // FIXME: We should properly say "NoRenegotiation", but that causes a handshake failure
         //        so we just roll with it and pretend that we _did_ renegotiate
         //        This will cause issues when we decide to have long-lasting connections, but
@@ -373,9 +369,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[2];
-#if TLS_DEBUG
-            dbgln("server hello");
-#endif
+            dbgln_if(TLS_DEBUG, "server hello");
             if (m_context.is_server) {
                 dbgln("unsupported: server mode");
                 VERIFY_NOT_REACHED();
@@ -393,9 +387,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[4];
-#if TLS_DEBUG
-            dbgln("certificate");
-#endif
+            dbgln_if(TLS_DEBUG, "certificate");
             if (m_context.connection_status == ConnectionStatus::Negotiating) {
                 if (m_context.is_server) {
                     dbgln("unsupported: server mode");
@@ -428,9 +420,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[5];
-#if TLS_DEBUG
-            dbgln("server key exchange");
-#endif
+            dbgln_if(TLS_DEBUG, "server key exchange");
             if (m_context.is_server) {
                 dbgln("unsupported: server mode");
                 VERIFY_NOT_REACHED();
@@ -464,9 +454,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[7];
-#if TLS_DEBUG
-            dbgln("server hello done");
-#endif
+            dbgln_if(TLS_DEBUG, "server hello done");
             if (m_context.is_server) {
                 dbgln("unsupported: server mode");
                 VERIFY_NOT_REACHED();
@@ -483,9 +471,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[8];
-#if TLS_DEBUG
-            dbgln("certificate verify");
-#endif
+            dbgln_if(TLS_DEBUG, "certificate verify");
             if (m_context.connection_status == ConnectionStatus::KeyExchange) {
                 payload_res = handle_verify(buffer.slice(1, payload_size));
             } else {
@@ -499,9 +485,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[9];
-#if TLS_DEBUG
-            dbgln("client key exchange");
-#endif
+            dbgln_if(TLS_DEBUG, "client key exchange");
             if (m_context.is_server) {
                 dbgln("unsupported: server mode");
                 VERIFY_NOT_REACHED();
@@ -519,9 +503,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
                 break;
             }
             ++m_context.handshake_messages[10];
-#if TLS_DEBUG
-            dbgln("finished");
-#endif
+            dbgln_if(TLS_DEBUG, "finished");
             payload_res = handle_finished(buffer.slice(1, payload_size), write_packets);
             if (payload_res > 0) {
                 memset(m_context.handshake_messages, 0, sizeof(m_context.handshake_messages));
@@ -607,33 +589,25 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
             break;
         case WritePacketStage::ClientHandshake:
             if (m_context.client_verified == VerificationNeeded) {
-#if TLS_DEBUG
-                dbgln("> Client Certificate");
-#endif
+                dbgln_if(TLS_DEBUG, "> Client Certificate");
                 auto packet = build_certificate();
                 write_packet(packet);
                 m_context.client_verified = Verified;
             }
             {
-#if TLS_DEBUG
-                dbgln("> Key exchange");
-#endif
+                dbgln_if(TLS_DEBUG, "> Key exchange");
                 auto packet = build_client_key_exchange();
                 write_packet(packet);
             }
             {
-#if TLS_DEBUG
-                dbgln("> change cipher spec");
-#endif
+                dbgln_if(TLS_DEBUG, "> change cipher spec");
                 auto packet = build_change_cipher_spec();
                 write_packet(packet);
             }
             m_context.cipher_spec_set = 1;
             m_context.local_sequence_number = 0;
             {
-#if TLS_DEBUG
-                dbgln("> client finished");
-#endif
+                dbgln_if(TLS_DEBUG, "> client finished");
                 auto packet = build_finished();
                 write_packet(packet);
             }
@@ -647,16 +621,12 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
         case WritePacketStage::Finished:
             // finished
             {
-#if TLS_DEBUG
-                dbgln("> change cipher spec");
-#endif
+                dbgln_if(TLS_DEBUG, "> change cipher spec");
                 auto packet = build_change_cipher_spec();
                 write_packet(packet);
             }
             {
-#if TLS_DEBUG
-                dbgln("> client finished");
-#endif
+                dbgln_if(TLS_DEBUG, "> client finished");
                 auto packet = build_finished();
                 write_packet(packet);
             }
