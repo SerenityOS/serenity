@@ -214,7 +214,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
         const FileSystemModel::Node& node = m_model->node(local_index);
         auto path = node.full_path();
 
-        if (node.is_directory()) {
+        if (node.is_directory() || node.is_symlink_to_directory()) {
             set_path(path);
             // NOTE: 'node' is invalid from here on
         } else {
