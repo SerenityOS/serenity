@@ -96,11 +96,9 @@ See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/b
 
 Please see the [issue policy](https://github.com/SerenityOS/serenity/blob/master/CONTRIBUTING.md#issue-policy).
 
-## Communication hubs
+## Get in touch
 
-The main hub is `#serenityos` on the Freenode IRC network.
-
-We also have a project mailing list: [serenityos-dev](https://lists.sr.ht/~awesomekling/serenityos-dev).
+The main communication hub is `#serenityos` on the Freenode IRC network.
 
 ## Author
 
