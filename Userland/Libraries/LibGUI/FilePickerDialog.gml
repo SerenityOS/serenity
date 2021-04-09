@@ -3,11 +3,11 @@
 
     layout: @GUI::HorizontalBoxLayout {
         margins: [4, 4, 4, 4]
+        spacing: 3
     }
 
     @GUI::Widget {
         shrink_to_fit: true
-
         layout: @GUI::VerticalBoxLayout {
             margins: [4, 4, 4, 4]
         }
@@ -15,7 +15,7 @@
         @GUI::Label {
             text: "Look in:"
             text_alignment: "CenterRight"
-            fixed_height: 24
+            fixed_height: 20
         }
 
         @GUI::Frame {
@@ -28,18 +28,18 @@
                 spacing: 0
             }
         }
+
+        @GUI::Widget {
+            fixed_height: 47
+        }
     }
 
     @GUI::Widget {
-        layout: @GUI::VerticalBoxLayout {
-            margins: [4, 4, 4, 4]
-        }
+        layout: @GUI::VerticalBoxLayout
 
         @GUI::Widget {
             shrink_to_fit: true
-
-            layout: @GUI::HorizontalBoxLayout {
-            }
+            layout: @GUI::HorizontalBoxLayout
 
             @GUI::TextBox {
                 name: "location_textbox"
@@ -56,15 +56,11 @@
 
         @GUI::Widget {
             shrink_to_fit: true
-
-            layout: @GUI::VerticalBoxLayout {
-            }
+            layout: @GUI::VerticalBoxLayout
 
             @GUI::Widget {
                 fixed_height: 24
-
-                layout: @GUI::HorizontalBoxLayout {
-                }
+                layout: @GUI::HorizontalBoxLayout
 
                 @GUI::Label {
                     text: "File name:"
@@ -89,12 +85,9 @@
 
             @GUI::Widget {
                 fixed_height: 24
+                layout: @GUI::HorizontalBoxLayout
 
-                layout: @GUI::HorizontalBoxLayout {
-                }
-
-                @GUI::Widget {
-                }
+                @GUI::Widget
 
                 @GUI::Button {
                     name: "cancel_button"
