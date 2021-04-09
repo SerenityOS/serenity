@@ -178,11 +178,9 @@ private:
     enum class ReadDigitsInitialZeroState {
         Allow,
         Disallow,
-        Require,
     };
     enum class ReadDigitFollowPolicy {
         Any,
-        DisallowDigit,
         DisallowNonDigit,
     };
     StringView read_digits_as_string(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy follow_policy = ReadDigitFollowPolicy::Any, bool hex = false, int max_count = -1);
