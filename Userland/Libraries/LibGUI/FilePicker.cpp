@@ -223,9 +223,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
     };
 
     auto& common_locations_frame = *widget.find_descendant_of_type_named<GUI::Frame>("common_locations_frame");
+    common_locations_frame.set_background_role(Gfx::ColorRole::Tray);
     auto add_common_location_button = [&](auto& name, String path) -> GUI::Button& {
         auto& button = common_locations_frame.add<GUI::Button>();
-        button.set_button_style(Gfx::ButtonStyle::CoolBar);
+        button.set_button_style(Gfx::ButtonStyle::Tray);
+        button.set_foreground_role(Gfx::ColorRole::TrayText);
         button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         button.set_text(move(name));
         button.set_icon(FileIconProvider::icon_for_path(path).bitmap_for_size(16));
