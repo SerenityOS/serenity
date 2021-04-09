@@ -24,7 +24,7 @@
             fill_with_background_color: true
 
             layout: @GUI::VerticalBoxLayout {
-                margins: [2, 4, 2, 4]
+                margins: [2, 2, 2, 2]
                 spacing: 0
             }
         }
