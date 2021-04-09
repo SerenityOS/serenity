@@ -33,7 +33,8 @@ namespace Gfx {
 
 enum class ButtonStyle {
     Normal,
-    CoolBar
+    CoolBar,
+    Tray,
 };
 enum class FrameShadow {
     Plain,
