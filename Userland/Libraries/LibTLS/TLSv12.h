@@ -175,6 +175,10 @@ enum class HandshakeExtension : u16 {
     SignatureAlgorithms = 0x0d,
 };
 
+enum class NameType : u8 {
+    HostName = 0x00,
+};
+
 enum class WritePacketStage {
     Initial = 0,
     ClientHandshake = 1,
