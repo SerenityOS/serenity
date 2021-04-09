@@ -164,6 +164,16 @@ void FileSystemModel::Node::reify_if_needed()
     fetch_data(full_path(), parent == nullptr || parent->m_parent_of_root);
 }
 
+bool FileSystemModel::Node::is_symlink_to_directory() const
+{
+    if (!S_ISLNK(mode))
+        return false;
+    struct stat st;
+    if (lstat(symlink_target.characters(), &st) < 0)
+        return false;
+    return S_ISDIR(st.st_mode);
+}
+
 String FileSystemModel::Node::full_path() const
 {
     Vector<String, 32> lineage;
