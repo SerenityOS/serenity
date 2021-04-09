@@ -873,26 +873,14 @@ StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initi
     if (!match(TokenType::Char))
         return {};
 
-    if (initial_zero != ReadDigitsInitialZeroState::Allow) {
-        auto has_initial_zero = m_parser_state.current_token.value() == "0";
-        if (initial_zero == ReadDigitsInitialZeroState::Disallow && has_initial_zero)
-            return {};
-
-        if (initial_zero == ReadDigitsInitialZeroState::Require && !has_initial_zero)
-            return {};
-    }
+    if (initial_zero == ReadDigitsInitialZeroState::Disallow && m_parser_state.current_token.value() == "0")
+        return {};
 
     int count = 0;
     size_t offset = 0;
     auto start_token = m_parser_state.current_token;
     while (match(TokenType::Char)) {
         auto c = m_parser_state.current_token.value();
-        if (follow_policy == ReadDigitFollowPolicy::DisallowDigit) {
-            if (hex && AK::StringUtils::convert_to_uint_from_hex(c).has_value())
-                break;
-            if (!hex && c.to_uint().has_value())
-                break;
-        }
 
         if (follow_policy == ReadDigitFollowPolicy::DisallowNonDigit) {
             if (hex && !AK::StringUtils::convert_to_uint_from_hex(c).has_value())
@@ -1213,7 +1201,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     // '\0'
-    if (read_digits(ReadDigitsInitialZeroState::Require, ReadDigitFollowPolicy::DisallowDigit).has_value()) {
+    if (try_skip("0")) {
         match_length_minimum += 1;
         stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)0 } });
         return true;
@@ -1496,7 +1484,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             }
 
             // '\0'
-            if (read_digits(ReadDigitsInitialZeroState::Require, ReadDigitFollowPolicy::DisallowDigit).has_value())
+            if (try_skip("0"))
                 return { { .code_point = 0, .is_character_class = false } };
 
             // HexEscape
