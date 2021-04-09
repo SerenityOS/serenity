@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Tobias Christiansen <tobi@tobyase.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -306,36 +307,40 @@ void MallocTracer::audit_write(const Region& region, FlatPtr address, size_t siz
     }
 }
 
-bool MallocTracer::is_reachable(const Mallocation& mallocation) const
+void MallocTracer::populate_memory_graph()
 {
-    VERIFY(!mallocation.freed);
-
-    bool reachable = false;
-
-    // 1. Search in active (non-freed) mallocations for pointers to this mallocation
-    for_each_mallocation([&](auto& other_mallocation) {
-        if (&mallocation == &other_mallocation)
+    // Create Node for each live Mallocation
+    for_each_mallocation([&](auto& mallocation) {
+        if (mallocation.freed)
             return IterationDecision::Continue;
-        if (other_mallocation.freed)
+        m_memory_graph.set(mallocation.address, {});
+        return IterationDecision::Continue;
+    });
+
+    // Find pointers from each memory region to another
+    for_each_mallocation([&](auto& mallocation) {
+        if (mallocation.freed)
             return IterationDecision::Continue;
-        size_t pointers_in_mallocation = other_mallocation.size / sizeof(u32);
+
+        size_t pointers_in_mallocation = mallocation.size / sizeof(u32);
+
+        auto& edges_from_mallocation = m_memory_graph.find(mallocation.address)->value;
+
         for (size_t i = 0; i < pointers_in_mallocation; ++i) {
-            auto value = m_emulator.mmu().read32({ 0x23, other_mallocation.address + i * sizeof(u32) });
-            if (value.value() == mallocation.address && !value.is_uninitialized()) {
+            auto value = m_emulator.mmu().read32({ 0x23, mallocation.address + i * sizeof(u32) });
+            auto other_address = value.value();
+            if (!value.is_uninitialized() && m_memory_graph.contains(value.value())) {
 #if REACHABLE_DEBUG
-                reportln("mallocation {:p} is reachable from other mallocation {:p}", mallocation.address, other_mallocation.address);
+                reportln("region/mallocation {:p} is reachable from other mallocation {:p}", other_address, mallocation.address);
 #endif
-                reachable = true;
-                return IterationDecision::Break;
+                edges_from_mallocation.edges_from_node.append(other_address);
             }
         }
         return IterationDecision::Continue;
     });
 
-    if (reachable)
-        return true;
-
-    // 2. Search in other memory regions for pointers to this mallocation
+    // Find mallocations that are pointed to by other regions
+    Vector<FlatPtr> reachable_mallocations = {};
     m_emulator.mmu().for_each_region([&](auto& region) {
         // Skip the stack
         if (region.is_stack())
@@ -349,19 +354,49 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
             return IterationDecision::Continue;
 
         size_t pointers_in_region = region.size() / sizeof(u32);
+
         for (size_t i = 0; i < pointers_in_region; ++i) {
             auto value = region.read32(i * sizeof(u32));
-            if (value.value() == mallocation.address && !value.is_uninitialized()) {
+            auto other_address = value.value();
+            if (!value.is_uninitialized() && m_memory_graph.contains(value.value())) {
 #if REACHABLE_DEBUG
-                reportln("mallocation {:p} is reachable from region {:p}-{:p}", mallocation.address, region.base(), region.end() - 1);
+                reportln("region/mallocation {:p} is reachable from region {:p}-{:p}", other_address, region.base(), region.end() - 1);
 #endif
-                reachable = true;
-                return IterationDecision::Break;
+                m_memory_graph.find(other_address)->value.is_reachable = true;
+                reachable_mallocations.append(other_address);
             }
         }
         return IterationDecision::Continue;
     });
-    return reachable;
+
+    // Propagate reachability
+    // There are probably better ways to do that
+    Vector<FlatPtr> visited = {};
+    for (size_t i = 0; i < reachable_mallocations.size(); ++i) {
+        auto reachable = reachable_mallocations.at(i);
+        if (visited.contains_slow(reachable))
+            continue;
+        visited.append(reachable);
+        auto& mallocation_node = m_memory_graph.find(reachable)->value;
+
+        if (!mallocation_node.is_reachable)
+            mallocation_node.is_reachable = true;
+
+        for (auto& edge : mallocation_node.edges_from_node) {
+            reachable_mallocations.append(edge);
+        }
+    }
+}
+
+void MallocTracer::dump_memory_graph()
+{
+    for (auto& key : m_memory_graph.keys()) {
+        auto value = m_memory_graph.find(key)->value;
+        dbgln("Block {:p} [{}reachable] ({} edges)", key, !value.is_reachable ? "not " : "", value.edges_from_node.size());
+        for (auto& edge : value.edges_from_node) {
+            dbgln("  -> {:p}", edge);
+        }
+    }
 }
 
 void MallocTracer::dump_leak_report()
@@ -370,10 +405,20 @@ void MallocTracer::dump_leak_report()
 
     size_t bytes_leaked = 0;
     size_t leaks_found = 0;
+
+    populate_memory_graph();
+
+#if REACHABLE_DEBUG
+    dump_memory_graph();
+#endif
+
     for_each_mallocation([&](auto& mallocation) {
         if (mallocation.freed)
             return IterationDecision::Continue;
-        if (is_reachable(mallocation))
+
+        auto& value = m_memory_graph.find(mallocation.address)->value;
+
+        if (value.is_reachable)
             return IterationDecision::Continue;
         ++leaks_found;
         bytes_leaked += mallocation.size;
@@ -387,5 +432,4 @@ void MallocTracer::dump_leak_report()
     else
         reportln("\n=={}==  \033[31;1m{} leak(s) found: {} byte(s) leaked\033[0m", getpid(), leaks_found, bytes_leaked);
 }
-
 }
