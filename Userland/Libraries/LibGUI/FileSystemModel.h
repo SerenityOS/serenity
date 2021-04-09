@@ -79,6 +79,7 @@ public:
 
         mutable RefPtr<Gfx::Bitmap> thumbnail;
         bool is_directory() const { return S_ISDIR(mode); }
+        bool is_symlink_to_directory() const;
         bool is_executable() const { return mode & (S_IXUSR | S_IXGRP | S_IXOTH); }
 
         bool is_selected() const { return m_selected; }
