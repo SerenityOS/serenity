@@ -85,7 +85,7 @@ public:
     void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None);
     void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const Utf8View&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None);
     void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const Utf32View&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None);
-    void draw_ui_text(const Gfx::IntRect&, const StringView&, const Gfx::Font&, Gfx::Color);
+    void draw_ui_text(const Gfx::IntRect&, const StringView&, const Gfx::Font&, TextAlignment, Gfx::Color);
     void draw_glyph(const IntPoint&, u32, Color);
     void draw_glyph(const IntPoint&, u32, const Font&, Color);
     void draw_emoji(const IntPoint&, const Gfx::Bitmap&, const Font&);

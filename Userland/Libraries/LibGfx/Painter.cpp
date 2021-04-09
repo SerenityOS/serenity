@@ -1806,7 +1806,7 @@ void Painter::blit_tiled(const IntRect& dst_rect, const Gfx::Bitmap& bitmap, con
     }
 }
 
-void Gfx::Painter::draw_ui_text(const Gfx::IntRect& rect, const StringView& text, const Gfx::Font& font, Gfx::Color color)
+void Gfx::Painter::draw_ui_text(const Gfx::IntRect& rect, const StringView& text, const Gfx::Font& font, Gfx::TextAlignment text_alignment, Gfx::Color color)
 {
     auto parse_ampersand_string = [](const StringView& raw_text, Optional<size_t>& underline_offset) -> String {
         if (raw_text.is_empty())
@@ -1831,9 +1831,9 @@ void Gfx::Painter::draw_ui_text(const Gfx::IntRect& rect, const StringView& text
     auto name_to_draw = parse_ampersand_string(text, underline_offset);
 
     Gfx::IntRect text_rect { 0, 0, font.width(name_to_draw), font.glyph_height() };
-    text_rect.center_within(rect);
+    text_rect.align_within(rect, text_alignment);
 
-    draw_text(text_rect, name_to_draw, font, Gfx::TextAlignment::CenterLeft, color);
+    draw_text(text_rect, name_to_draw, font, text_alignment, color);
 
     if (underline_offset.has_value()) {
         Utf8View utf8_view { name_to_draw };
