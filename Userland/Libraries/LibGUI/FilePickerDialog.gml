@@ -9,13 +9,13 @@
     @GUI::Widget {
         shrink_to_fit: true
         layout: @GUI::VerticalBoxLayout {
-            margins: [4, 4, 4, 4]
+            margins: [4, 0, 4, 0]
         }
 
         @GUI::Label {
             text: "Look in:"
             text_alignment: "CenterRight"
-            fixed_height: 20
+            fixed_height: 24
         }
 
         @GUI::Frame {
@@ -36,7 +36,7 @@
         }
 
         @GUI::Widget {
-            fixed_height: 20
+            fixed_height: 24
         }
     }
 
