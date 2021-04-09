@@ -30,7 +30,6 @@
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
-#include <ctype.h>
 
 namespace WindowServer {
 
@@ -91,23 +90,13 @@ void MenuManager::event(Core::Event& event)
             && ((key_event.key() >= Key_A && key_event.key() <= Key_Z)
                 || (key_event.key() >= Key_0 && key_event.key() <= Key_9))) {
 
-            // FIXME: Maybe cache this on the menu instead of recomputing it on every alphanumeric menu keystroke?
-            HashMap<u32, size_t> alt_shortcut_to_item_index;
-            for (int i = 0; i < m_current_menu->item_count(); ++i) {
-                auto& item = m_current_menu->item(i);
-                if (!item.is_enabled())
-                    continue;
-                auto alt_shortcut = find_ampersand_shortcut_character(item.text());
-                if (!alt_shortcut)
-                    continue;
-                alt_shortcut_to_item_index.set(tolower(alt_shortcut), i);
-            }
-
-            auto it = alt_shortcut_to_item_index.find(tolower(key_event.code_point()));
-
-            if (it != alt_shortcut_to_item_index.end()) {
-                auto& item = m_current_menu->item(it->value);
-                m_current_menu->set_hovered_item(it->value);
+            if (auto* shortcut_item_indexes = m_current_menu->items_with_alt_shortcut(key_event.code_point())) {
+                VERIFY(!shortcut_item_indexes->is_empty());
+                // FIXME: If there are multiple items with the same Alt shortcut, we should cycle through them
+                //        with each keypress instead of activating immediately.
+                auto index = shortcut_item_indexes->at(0);
+                auto& item = m_current_menu->item(index);
+                m_current_menu->set_hovered_item(index);
                 if (item.is_submenu())
                     m_current_menu->descend_into_submenu_at_hovered_item();
                 else

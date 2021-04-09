@@ -40,6 +40,7 @@
 #include <LibGfx/Triangle.h>
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/WindowClientEndpoint.h>
+#include <ctype.h>
 
 namespace WindowServer {
 
@@ -636,6 +637,22 @@ void Menu::set_visible(bool visible)
     menu_window()->set_visible(visible);
     if (m_client)
         m_client->post_message(Messages::WindowClient::MenuVisibilityDidChange(m_menu_id, visible));
+}
+
+void Menu::add_item(NonnullOwnPtr<MenuItem> item)
+{
+    if (auto alt_shortcut = find_ampersand_shortcut_character(item->text())) {
+        m_alt_shortcut_character_to_item_indexes.ensure(tolower(alt_shortcut)).append(m_items.size());
+    }
+    m_items.append(move(item));
+}
+
+const Vector<size_t>* Menu::items_with_alt_shortcut(u32 alt_shortcut) const
+{
+    auto it = m_alt_shortcut_character_to_item_indexes.find(tolower(alt_shortcut));
+    if (it == m_alt_shortcut_character_to_item_indexes.end())
+        return nullptr;
+    return &it->value;
 }
 
 }
