@@ -68,15 +68,20 @@ void TabWidget::add_widget(const StringView& title, Widget& widget)
     m_tabs.append({ title, nullptr, &widget });
     add_child(widget);
     update_focus_policy();
+    if (on_tab_count_change)
+        on_tab_count_change(m_tabs.size());
 }
 
 void TabWidget::remove_widget(Widget& widget)
 {
+    VERIFY(widget.parent() == this);
     if (active_widget() == &widget)
         activate_next_tab();
     m_tabs.remove_first_matching([&widget](auto& entry) { return &widget == entry.widget; });
     remove_child(widget);
     update_focus_policy();
+    if (on_tab_count_change)
+        on_tab_count_change(m_tabs.size());
 }
 
 void TabWidget::update_focus_policy()
