@@ -115,7 +115,7 @@ public:
     u8* data() { return m_data; }
     const u8* data() const { return m_data; }
 
-    template<bool VALUE>
+    template<bool VALUE, bool verify_that_all_bits_flip>
     void set_range(size_t start, size_t len)
     {
         VERIFY(start < m_size);
@@ -131,16 +131,37 @@ public:
         u8 byte_mask = bitmask_first_byte[start % 8];
         if (first == last) {
             byte_mask &= bitmask_last_byte[(start + len) % 8];
+            if constexpr (verify_that_all_bits_flip) {
+                if constexpr (VALUE) {
+                    VERIFY((*first & byte_mask) == 0);
+                } else {
+                    VERIFY((*first & byte_mask) == byte_mask);
+                }
+            }
             if constexpr (VALUE)
                 *first |= byte_mask;
             else
                 *first &= ~byte_mask;
         } else {
+            if constexpr (verify_that_all_bits_flip) {
+                if constexpr (VALUE) {
+                    VERIFY((*first & byte_mask) == 0);
+                } else {
+                    VERIFY((*first & byte_mask) == byte_mask);
+                }
+            }
             if constexpr (VALUE)
                 *first |= byte_mask;
             else
                 *first &= ~byte_mask;
             byte_mask = bitmask_last_byte[(start + len) % 8];
+            if constexpr (verify_that_all_bits_flip) {
+                if constexpr (VALUE) {
+                    VERIFY((*last & byte_mask) == 0);
+                } else {
+                    VERIFY((*last & byte_mask) == byte_mask);
+                }
+            }
             if constexpr (VALUE)
                 *last |= byte_mask;
             else
@@ -157,9 +178,17 @@ public:
     void set_range(size_t start, size_t len, bool value)
     {
         if (value)
-            set_range<true>(start, len);
+            set_range<true, false>(start, len);
         else
-            set_range<false>(start, len);
+            set_range<false, false>(start, len);
+    }
+
+    void set_range_and_verify_that_all_bits_flip(size_t start, size_t len, bool value)
+    {
+        if (value)
+            set_range<true, true>(start, len);
+        else
+            set_range<false, true>(start, len);
     }
 
     void fill(bool value)

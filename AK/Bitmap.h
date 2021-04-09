@@ -129,7 +129,7 @@ public:
     }
 
     template<bool VALUE>
-    void set_range(size_t start, size_t len) { return view().set_range<VALUE>(start, len); }
+    void set_range(size_t start, size_t len) { return view().set_range<VALUE, false>(start, len); }
     void set_range(size_t start, size_t len, bool value) { return view().set_range(start, len, value); }
 
     void fill(bool value) { view().fill(value); }
