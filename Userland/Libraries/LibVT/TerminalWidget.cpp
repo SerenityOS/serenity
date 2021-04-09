@@ -141,17 +141,17 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
 
     m_terminal.set_size(m_config->read_num_entry("Window", "Width", 80), m_config->read_num_entry("Window", "Height", 25));
 
-    m_copy_action = GUI::Action::create("Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [this](auto&) {
+    m_copy_action = GUI::Action::create("&Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [this](auto&) {
         copy();
     });
     m_copy_action->set_swallow_key_event_when_disabled(true);
 
-    m_paste_action = GUI::Action::create("Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"), [this](auto&) {
+    m_paste_action = GUI::Action::create("&Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"), [this](auto&) {
         paste();
     });
     m_paste_action->set_swallow_key_event_when_disabled(true);
 
-    m_clear_including_history_action = GUI::Action::create("Clear including history", { Mod_Ctrl | Mod_Shift, Key_K }, [this](auto&) {
+    m_clear_including_history_action = GUI::Action::create("&Clear Including History", { Mod_Ctrl | Mod_Shift, Key_K }, [this](auto&) {
         clear_including_history();
     });
 
@@ -1026,7 +1026,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
             auto af = Desktop::AppFile::get_for_app(LexicalPath(handler).basename());
             if (!af->is_valid())
                 continue;
-            auto action = GUI::Action::create(String::formatted("Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
+            auto action = GUI::Action::create(String::formatted("&Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
                 Desktop::Launcher::open(m_context_menu_href, handler);
             });
 
@@ -1036,10 +1036,10 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
             m_context_menu_for_hyperlink->add_action(action);
         }
-        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy URL", [this](auto&) {
+        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy &URL", [this](auto&) {
             GUI::Clipboard::the().set_plain_text(m_context_menu_href);
         }));
-        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy name", [&](auto&) {
+        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy &Name", [&](auto&) {
             // file://courage/home/anon/something -> /home/anon/something
             auto path = URL(m_context_menu_href).path();
             // /home/anon/something -> something
