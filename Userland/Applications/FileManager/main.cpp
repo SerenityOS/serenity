@@ -332,11 +332,11 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
 
     auto desktop_view_context_menu = GUI::Menu::construct("Directory View");
 
-    auto file_manager_action = GUI::Action::create("Show in File Manager", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"), [&](const GUI::Action&) {
+    auto file_manager_action = GUI::Action::create("Show in &File Manager", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"), [&](const GUI::Action&) {
         Desktop::Launcher::open(URL::create_with_file_protocol(directory_view.path()));
     });
 
-    auto display_properties_action = GUI::Action::create("Display Settings", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"), [&](const GUI::Action&) {
+    auto display_properties_action = GUI::Action::create("&Display Settings", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"), [&](const GUI::Action&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/bin/DisplaySettings"));
     });
 
@@ -488,7 +488,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto tree_view_directory_context_menu = GUI::Menu::construct("Tree View Directory");
     auto tree_view_context_menu = GUI::Menu::construct("Tree View");
 
-    auto open_parent_directory_action = GUI::Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GUI::Action&) {
+    auto open_parent_directory_action = GUI::Action::create("Open &Parent Directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GUI::Action&) {
         directory_view.open_parent_directory();
     });
 
@@ -498,7 +498,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     RefPtr<GUI::Action> layout_folderpane_action;
 
     auto show_toolbar = config->read_bool_entry("Layout", "ShowToolbar", true);
-    layout_toolbar_action = GUI::Action::create_checkable("Toolbar", [&](auto& action) {
+    layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
         if (action.is_checked()) {
             main_toolbar.set_visible(true);
             toolbar_container.set_visible(true);
@@ -515,7 +515,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.set_visible(show_toolbar);
 
     auto show_location = config->read_bool_entry("Layout", "ShowLocationBar", true);
-    layout_location_action = GUI::Action::create_checkable("Location bar", [&](auto& action) {
+    layout_location_action = GUI::Action::create_checkable("&Location Bar", [&](auto& action) {
         if (action.is_checked()) {
             breadcrumb_toolbar.set_visible(true);
             location_toolbar.set_visible(false);
@@ -535,7 +535,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     toolbar_container.set_visible(show_location | show_toolbar);
 
-    layout_statusbar_action = GUI::Action::create_checkable("Status bar", [&](auto& action) {
+    layout_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
         action.is_checked() ? statusbar.set_visible(true) : statusbar.set_visible(false);
         config->write_bool_entry("Layout", "ShowStatusBar", action.is_checked());
         config->sync();
@@ -545,7 +545,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     layout_statusbar_action->set_checked(show_statusbar);
     statusbar.set_visible(show_statusbar);
 
-    layout_folderpane_action = GUI::Action::create_checkable("Folder pane", { Mod_Ctrl, Key_P }, [&](auto& action) {
+    layout_folderpane_action = GUI::Action::create_checkable("&Folder Pane", { Mod_Ctrl, Key_P }, [&](auto& action) {
         action.is_checked() ? tree_view.set_visible(true) : tree_view.set_visible(false);
         config->write_bool_entry("Layout", "ShowFolderPane", action.is_checked());
         config->sync();
@@ -569,7 +569,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     RefPtr<GUI::Action> view_as_columns_action;
 
     view_as_icons_action = GUI::Action::create_checkable(
-        "Icon view", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
+        "View as &Icons", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Icon);
             config->write_entry("DirectoryView", "ViewMode", "Icon");
             config->sync();
@@ -577,7 +577,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         window);
 
     view_as_table_action = GUI::Action::create_checkable(
-        "Table view", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
+        "View as &Table", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Table);
             config->write_entry("DirectoryView", "ViewMode", "Table");
             config->sync();
@@ -585,7 +585,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         window);
 
     view_as_columns_action = GUI::Action::create_checkable(
-        "Columns view", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GUI::Action&) {
+        "View as &Columns", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GUI::Action&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Columns);
             config->write_entry("DirectoryView", "ViewMode", "Columns");
             config->sync();
@@ -607,7 +607,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         return paths;
     };
 
-    auto select_all_action = GUI::Action::create("Select all", { Mod_Ctrl, KeyCode::Key_A }, [&](const GUI::Action&) {
+    auto select_all_action = GUI::CommonActions::make_select_all_action([&](auto&) {
         directory_view.current_view().select_all();
     });
 
@@ -645,7 +645,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto shortcut_action
         = GUI::Action::create(
-            "Create desktop shortcut",
+            "Create Desktop &Shortcut",
             {},
             Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-symlink.png"),
             [&](const GUI::Action&) {
@@ -741,12 +741,12 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     });
     focus_dependent_delete_action->set_enabled(false);
 
-    auto mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
+    auto mkdir_action = GUI::Action::create("New &Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
         directory_view.mkdir_action().activate();
         refresh_tree_view();
     });
 
-    auto touch_action = GUI::Action::create("New file...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
+    auto touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
         directory_view.touch_action().activate();
         refresh_tree_view();
     });
@@ -768,7 +768,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         GUI::Application::the()->quit();
     }));
 
-    auto action_show_dotfiles = GUI::Action::create_checkable("Show dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
+    auto action_show_dotfiles = GUI::Action::create_checkable("Show &Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
         directory_view.set_should_show_dotfiles(action.is_checked());
         refresh_tree_view();
         config->write_bool_entry("DirectoryView", "ShowDotFiles", action.is_checked());
@@ -780,7 +780,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     action_show_dotfiles->set_checked(show_dotfiles);
 
     auto& view_menu = menubar->add_menu("&View");
-    auto& layout_menu = view_menu.add_submenu("Layout");
+    auto& layout_menu = view_menu.add_submenu("&Layout");
     layout_menu.add_action(*layout_toolbar_action);
     layout_menu.add_action(*layout_location_action);
     layout_menu.add_action(*layout_statusbar_action);
@@ -794,7 +794,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     view_menu.add_separator();
     view_menu.add_action(action_show_dotfiles);
 
-    auto go_to_location_action = GUI::Action::create("Go to location...", { Mod_Ctrl, Key_L }, [&](auto&) {
+    auto go_to_location_action = GUI::Action::create("Go to &Location...", { Mod_Ctrl, Key_L }, [&](auto&) {
         toolbar_container.set_visible(true);
         location_toolbar.set_visible(true);
         breadcrumb_toolbar.set_visible(false);
