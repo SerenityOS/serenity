@@ -42,10 +42,10 @@ namespace WindowServer {
 
 class ClientConnection;
 class MenuBar;
-class Event;
 
 class Menu final : public Core::Object {
-    C_OBJECT(Menu)
+    C_OBJECT(Menu);
+
 public:
     Menu(ClientConnection*, int menu_id, String name);
     virtual ~Menu() override;
@@ -159,5 +159,7 @@ private:
     int m_scroll_offset { 0 };
     int m_max_scroll_offset { 0 };
 };
+
+u32 find_ampersand_shortcut_character(const StringView&);
 
 }
