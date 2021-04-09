@@ -278,8 +278,9 @@ int TabWidget::uniform_tab_width() const
     int maximum_tab_width = 160;
     int total_tab_width = m_tabs.size() * maximum_tab_width;
     int tab_width = maximum_tab_width;
-    if (total_tab_width > width())
-        tab_width = width() / m_tabs.size();
+    int available_width = width() - bar_margin() * 2;
+    if (total_tab_width > available_width)
+        tab_width = available_width / m_tabs.size();
     return max(tab_width, minimum_tab_width);
 }
 
@@ -293,7 +294,7 @@ void TabWidget::set_bar_visible(bool bar_visible)
 
 Gfx::IntRect TabWidget::button_rect(int index) const
 {
-    int x_offset = 2;
+    int x_offset = bar_margin();
     for (int i = 0; i < index; ++i) {
         auto tab_width = m_uniform_tabs ? uniform_tab_width() : m_tabs[i].width(font());
         x_offset += tab_width;

@@ -108,6 +108,7 @@ private:
     Gfx::IntRect container_rect() const;
     void update_bar();
     void update_focus_policy();
+    int bar_margin() const { return 2; }
 
     RefPtr<Widget> m_active_widget;
 
