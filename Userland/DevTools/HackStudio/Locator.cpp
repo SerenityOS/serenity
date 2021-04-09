@@ -27,6 +27,7 @@
 #include "Locator.h"
 #include "HackStudio.h"
 #include "Project.h"
+#include "ProjectDeclarations.h"
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FileIconProvider.h>
@@ -85,23 +86,9 @@ public:
             if (index.column() == Column::Filename)
                 return suggestion.as_symbol_declaration.value().position.file;
             if (index.column() == Column::Icon) {
-                static GUI::Icon struct_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Struct.png"));
-                static GUI::Icon class_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Class.png"));
-                static GUI::Icon function_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Function.png"));
-                static GUI::Icon variable_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Variable.png"));
-                static GUI::Icon preprocessor_icon(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Preprocessor.png"));
-                switch (suggestion.as_symbol_declaration.value().type) {
-                case GUI::AutocompleteProvider::DeclarationType::Struct:
-                    return struct_icon;
-                case GUI::AutocompleteProvider::DeclarationType::Class:
-                    return class_icon;
-                case GUI::AutocompleteProvider::DeclarationType::Function:
-                    return function_icon;
-                case GUI::AutocompleteProvider::DeclarationType::Variable:
-                    return variable_icon;
-                case GUI::AutocompleteProvider::DeclarationType::PreprocessorDefinition:
-                    return preprocessor_icon;
-                }
+                auto icon = ProjectDeclarations::get_icon_for(suggestion.as_symbol_declaration.value().type);
+                if (icon.has_value())
+                    return icon.value();
                 return {};
             }
         }
@@ -226,12 +213,10 @@ void Locator::update_suggestions()
             suggestions.append(LocatorSuggestionModel::Suggestion::create_filename(file.name()));
     });
 
-    for (auto& item : m_document_to_declarations) {
-        for (auto& decl : item.value) {
-            if (decl.name.contains(typed_text, CaseSensitivity::CaseInsensitive) || decl.scope.contains(typed_text, CaseSensitivity::CaseInsensitive))
-                suggestions.append((LocatorSuggestionModel::Suggestion::create_symbol_declaration(decl)));
-        }
-    }
+    ProjectDeclarations::the().for_each_declared_symbol([&suggestions, &typed_text](auto& decl) {
+        if (decl.name.contains(typed_text, CaseSensitivity::CaseInsensitive) || decl.scope.contains(typed_text, CaseSensitivity::CaseInsensitive))
+            suggestions.append((LocatorSuggestionModel::Suggestion::create_symbol_declaration(decl)));
+    });
 
     dbgln("I have {} suggestion(s):", suggestions.size());
     // Limit the debug logging otherwise this can be very slow for large projects
@@ -257,9 +242,4 @@ void Locator::update_suggestions()
     dbgln("Popup rect: {}", m_popup_window->rect());
     m_popup_window->show();
 }
-void Locator::set_declared_symbols(const String& filename, const Vector<GUI::AutocompleteProvider::Declaration>& declarations)
-{
-    m_document_to_declarations.set(filename, declarations);
-}
-
 }
