@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,13 +31,12 @@
 #include "Window.h"
 #include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/Object.h>
-#include <LibCore/Timer.h>
 
 namespace WindowServer {
 
 class MenuManager final : public Core::Object {
-    C_OBJECT(MenuManager)
+    C_OBJECT(MenuManager);
+
 public:
     static MenuManager& the();
 
@@ -79,9 +78,6 @@ private:
     WeakPtr<Menu> m_current_menu;
     WeakPtr<Window> m_previous_input_window;
     Vector<WeakPtr<Menu>> m_open_menu_stack;
-
-    RefPtr<Core::Timer> m_search_timer;
-    StringBuilder m_current_search;
 
     int m_theme_index { 0 };
 
