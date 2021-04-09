@@ -734,6 +734,7 @@ void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 
         m_selection.set({ position.row(), start_column }, { position.row(), end_column });
         update_copy_action();
+        update();
     }
     GUI::Frame::doubleclick_event(event);
 }
