@@ -2,8 +2,12 @@
     name: "browser"
     fill_with_background_color: true
 
-    layout: @GUI::VerticalBoxLayout {
-        spacing: 2
+    layout: @GUI::VerticalBoxLayout
+
+    @GUI::HorizontalSeparator {
+        name: "top_line"
+        fixed_height: 2
+        visible: false
     }
 
     @GUI::TabWidget {
