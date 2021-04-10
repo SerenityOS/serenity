@@ -144,7 +144,7 @@ int main(int argc, char** argv)
     // Actions
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
-            Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open image...");
+            auto path = GUI::FilePicker::get_open_filepath(window, "Open Image");
             if (path.has_value()) {
                 widget.load_from_file(path.value());
             }
@@ -165,10 +165,7 @@ int main(int argc, char** argv)
             if (msgbox_result == GUI::MessageBox::ExecCancel)
                 return;
 
-            auto unlink_result = unlink(widget.path().characters());
-            dbgln("unlink_result::{}", unlink_result);
-
-            if (unlink_result < 0) {
+            if (unlink(widget.path().characters()) < 0) {
                 int saved_errno = errno;
                 GUI::MessageBox::show(window,
                     String::formatted("unlink({}) failed: {}", path, strerror(saved_errno)),
@@ -186,47 +183,47 @@ int main(int argc, char** argv)
             app->quit();
         });
 
-    auto rotate_left_action = GUI::Action::create("Rotate Left", { Mod_None, Key_L },
+    auto rotate_left_action = GUI::Action::create("Rotate &Left", { Mod_None, Key_L },
         [&](auto&) {
             widget.rotate(Gfx::RotationDirection::Left);
         });
 
-    auto rotate_right_action = GUI::Action::create("Rotate Right", { Mod_None, Key_R },
+    auto rotate_right_action = GUI::Action::create("Rotate &Right", { Mod_None, Key_R },
         [&](auto&) {
             widget.rotate(Gfx::RotationDirection::Right);
         });
 
-    auto vertical_flip_action = GUI::Action::create("Vertical Flip", { Mod_None, Key_V },
+    auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, Key_V },
         [&](auto&) {
             widget.flip(Gfx::Orientation::Vertical);
         });
 
-    auto horizontal_flip_action = GUI::Action::create("Horizontal Flip", { Mod_None, Key_H },
+    auto horizontal_flip_action = GUI::Action::create("Flip &Horizontally", { Mod_None, Key_H },
         [&](auto&) {
             widget.flip(Gfx::Orientation::Horizontal);
         });
 
-    auto desktop_wallpaper_action = GUI::Action::create("Set as desktop wallpaper",
+    auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper",
         [&](auto&) {
             GUI::Desktop::the().set_wallpaper(widget.path());
         });
 
-    auto go_first_action = GUI::Action::create("First", { Mod_None, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"),
+    auto go_first_action = GUI::Action::create("Go to &First", { Mod_None, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"),
         [&](auto&) {
             widget.navigate(QSWidget::Directions::First);
         });
 
-    auto go_back_action = GUI::Action::create("Back", { Mod_None, Key_Left }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"),
+    auto go_back_action = GUI::Action::create("Go &Back", { Mod_None, Key_Left }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"),
         [&](auto&) {
             widget.navigate(QSWidget::Directions::Back);
         });
 
-    auto go_forward_action = GUI::Action::create("Forward", { Mod_None, Key_Right }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"),
+    auto go_forward_action = GUI::Action::create("Go &Forward", { Mod_None, Key_Right }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"),
         [&](auto&) {
             widget.navigate(QSWidget::Directions::Forward);
         });
 
-    auto go_last_action = GUI::Action::create("Last", { Mod_None, Key_End }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"),
+    auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, Key_End }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"),
         [&](auto&) {
             widget.navigate(QSWidget::Directions::Last);
         });
@@ -236,22 +233,22 @@ int main(int argc, char** argv)
             widget.on_doubleclick();
         });
 
-    auto zoom_in_action = GUI::Action::create("Zoom In", { Mod_None, Key_Plus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-in.png"),
+    auto zoom_in_action = GUI::Action::create("Zoom &In", { Mod_None, Key_Plus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-in.png"),
         [&](auto&) {
             widget.set_scale(widget.scale() + 10);
         });
 
-    auto zoom_reset_action = GUI::Action::create("Zoom 100%", { Mod_None, Key_0 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-reset.png"),
+    auto zoom_reset_action = GUI::Action::create("Zoom to &100%", { Mod_None, Key_0 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-reset.png"),
         [&](auto&) {
             widget.set_scale(100);
         });
 
-    auto zoom_out_action = GUI::Action::create("Zoom Out", { Mod_None, Key_Minus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-out.png"),
+    auto zoom_out_action = GUI::Action::create("Zoom &Out", { Mod_None, Key_Minus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-out.png"),
         [&](auto&) {
             widget.set_scale(widget.scale() - 10);
         });
 
-    auto hide_show_toolbar_action = GUI::Action::create("Hide/Show Toolbar", { Mod_Ctrl, Key_T },
+    auto hide_show_toolbar_action = GUI::Action::create("Hide/Show &Toolbar", { Mod_Ctrl, Key_T },
         [&](auto&) {
             toolbar_container.set_visible(!toolbar_container.is_visible());
         });
@@ -275,13 +272,13 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("File");
+    auto& app_menu = menubar->add_menu("&File");
     app_menu.add_action(open_action);
     app_menu.add_action(delete_action);
     app_menu.add_separator();
     app_menu.add_action(quit_action);
 
-    auto& image_menu = menubar->add_menu("Image");
+    auto& image_menu = menubar->add_menu("&Image");
     image_menu.add_action(rotate_left_action);
     image_menu.add_action(rotate_right_action);
     image_menu.add_action(vertical_flip_action);
@@ -289,13 +286,13 @@ int main(int argc, char** argv)
     image_menu.add_separator();
     image_menu.add_action(desktop_wallpaper_action);
 
-    auto& navigate_menu = menubar->add_menu("Navigate");
+    auto& navigate_menu = menubar->add_menu("&Navigate");
     navigate_menu.add_action(go_first_action);
     navigate_menu.add_action(go_back_action);
     navigate_menu.add_action(go_forward_action);
     navigate_menu.add_action(go_last_action);
 
-    auto& view_menu = menubar->add_menu("View");
+    auto& view_menu = menubar->add_menu("&View");
     view_menu.add_action(full_sceen_action);
     view_menu.add_separator();
     view_menu.add_action(zoom_in_action);
@@ -304,7 +301,7 @@ int main(int argc, char** argv)
     view_menu.add_separator();
     view_menu.add_action(hide_show_toolbar_action);
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/QuickShow.md"), "/bin/Help");
     }));
