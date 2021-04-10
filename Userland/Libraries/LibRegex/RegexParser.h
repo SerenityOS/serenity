@@ -179,12 +179,8 @@ private:
         Allow,
         Disallow,
     };
-    enum class ReadDigitFollowPolicy {
-        Any,
-        DisallowNonDigit,
-    };
-    StringView read_digits_as_string(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy follow_policy = ReadDigitFollowPolicy::Any, bool hex = false, int max_count = -1);
-    Optional<unsigned> read_digits(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy follow_policy = ReadDigitFollowPolicy::Any, bool hex = false, int max_count = -1);
+    StringView read_digits_as_string(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, bool hex = false, int max_count = -1);
+    Optional<unsigned> read_digits(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, bool hex = false, int max_count = -1);
     StringView read_capture_group_specifier(bool take_starting_angle_bracket = false);
 
     bool parse_pattern(ByteCode&, size_t&, bool unicode, bool named);
