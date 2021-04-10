@@ -17,5 +17,5 @@ build() {
 
 post_install() {
     mkdir -p "${SERENITY_BUILD_DIR}/Root/bin"
-    ln -s /usr/local/bin/bash "${SERENITY_BUILD_DIR}/Root/bin/bash"
+    ln -sf /usr/local/bin/bash "${SERENITY_BUILD_DIR}/Root/bin/bash"
 }
