@@ -119,3 +119,11 @@ test("named capture group with two '?' qualifiers", () => {
     expect(res[1]).toBeUndefined();
     expect(res.groups.foo).toBeUndefined();
 });
+
+// #6042
+test("non-greedy brace quantifier", () => {
+    let res = /a[a-z]{2,4}?/.exec("abcdefghi");
+
+    expect(res.length).toBe(1);
+    expect(res[0]).toBe("abc");
+});

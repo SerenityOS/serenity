@@ -968,10 +968,6 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
     }
 
     if (match(TokenType::Questionmark)) {
-        if (repetition_mark == Repetition::Explicit) {
-            set_error(Error::InvalidRepetitionMarker);
-            return false;
-        }
         consume();
         ungreedy = true;
     }
@@ -990,7 +986,7 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         match_length_minimum = 0;
         break;
     case Repetition::Explicit:
-        new_bytecode.insert_bytecode_repetition_min_max(stack, repeat_min.value(), repeat_max);
+        new_bytecode.insert_bytecode_repetition_min_max(stack, repeat_min.value(), repeat_max, !ungreedy);
         match_length_minimum *= repeat_min.value();
         break;
     case Repetition::None:
