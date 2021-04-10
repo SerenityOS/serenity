@@ -61,6 +61,8 @@ public:
         String file;
         size_t line { 0 };
         size_t column { 0 };
+
+        bool operator==(const ProjectLocation&) const;
     };
 
     enum class DeclarationType {
@@ -78,6 +80,8 @@ public:
         ProjectLocation position;
         DeclarationType type;
         String scope;
+
+        bool operator==(const Declaration&) const;
     };
 
     virtual void provide_completions(Function<void(Vector<Entry>)>) = 0;
