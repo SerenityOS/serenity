@@ -477,6 +477,8 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     auto rhs_result = m_rhs->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
+    if (rhs_result.is_nullish())
+        return {};
     auto* object = rhs_result.to_object(global_object);
     while (object) {
         auto property_names = object->get_enumerable_own_property_names(Object::PropertyKind::Key);

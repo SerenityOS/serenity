@@ -38,6 +38,12 @@ test("iterate through object", () => {
     expect(a).toEqual(["a", "b", "c"]);
 });
 
+test("iterate through undefined", () => {
+    for (const property in undefined) {
+        expect.fail();
+    }
+});
+
 test("use already-declared variable", () => {
     var property;
     for (property in "abc");
