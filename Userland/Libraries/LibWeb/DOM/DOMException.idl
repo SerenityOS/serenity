@@ -1,8 +1,6 @@
 interface DOMException {
 
-    // FIXME: Support parameter default values in WrapperGenerator
-    // constructor(optional DOMString message = "", optional DOMString name = "Error");
-    constructor(optional DOMString message, optional DOMString name);
+    constructor(optional DOMString message = "", optional DOMString name = "Error");
 
     readonly attribute DOMString name;
     readonly attribute DOMString message;
