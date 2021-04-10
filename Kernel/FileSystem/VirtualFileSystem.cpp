@@ -117,8 +117,7 @@ KResult VFS::unmount(Inode& guest_inode)
     for (size_t i = 0; i < m_mounts.size(); ++i) {
         auto& mount = m_mounts.at(i);
         if (&mount.guest() == &guest_inode) {
-            auto result = mount.guest_fs().prepare_to_unmount();
-            if (result.is_error()) {
+            if (auto result = mount.guest_fs().prepare_to_unmount(); result.is_error()) {
                 dbgln("VFS: Failed to unmount!");
                 return result;
             }
@@ -381,8 +380,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
 KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
     LexicalPath p(path);
-    auto result = validate_path_against_process_veil(String::formatted("{}/{}", parent_custody.absolute_path(), p.basename()), options);
-    if (result.is_error())
+    if (auto result = validate_path_against_process_veil(String::formatted("{}/{}", parent_custody.absolute_path(), p.basename()), options); result.is_error())
         return result;
 
     if (!is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode)) {
@@ -423,12 +421,11 @@ KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
         path = path.substring_view(0, path.length() - 1);
 
     RefPtr<Custody> parent_custody;
-    auto result = resolve_path(path, base, &parent_custody);
-    if (!result.is_error())
+    if (auto result = resolve_path(path, base, &parent_custody); !result.is_error())
         return EEXIST;
-    if (!parent_custody)
+    else if (!parent_custody)
         return ENOENT;
-    if (result.error() != -ENOENT)
+    else if (result.error() != -ENOENT)
         return result.error();
 
     auto& parent_inode = parent_custody->inode();
@@ -563,17 +560,14 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
         }
         if (new_inode.is_directory() && !old_inode.is_directory())
             return EISDIR;
-        auto result = new_parent_inode.remove_child(new_basename);
-        if (result.is_error())
+        if (auto result = new_parent_inode.remove_child(new_basename); result.is_error())
             return result;
     }
 
-    auto result = new_parent_inode.add_child(old_inode, new_basename, old_inode.mode());
-    if (result.is_error())
+    if (auto result = new_parent_inode.add_child(old_inode, new_basename, old_inode.mode()); result.is_error())
         return result;
 
-    result = old_parent_inode.remove_child(LexicalPath(old_path).basename());
-    if (result.is_error())
+    if (auto result = old_parent_inode.remove_child(LexicalPath(old_path).basename()); result.is_error())
         return result;
 
     return KSuccess;
@@ -609,8 +603,7 @@ KResult VFS::chown(Custody& custody, uid_t a_uid, gid_t a_gid)
 
     if (metadata.is_setuid() || metadata.is_setgid()) {
         dbgln_if(VFS_DEBUG, "VFS::chown(): Stripping SUID/SGID bits from {}", inode.identifier());
-        auto result = inode.chmod(metadata.mode & ~(04000 | 02000));
-        if (result.is_error())
+        if (auto result = inode.chmod(metadata.mode & ~(04000 | 02000)); result.is_error())
             return result;
     }
 
@@ -709,8 +702,7 @@ KResult VFS::unlink(StringView path, Custody& base)
     if (parent_custody->is_readonly())
         return EROFS;
 
-    auto result = parent_inode.remove_child(LexicalPath(path).basename());
-    if (result.is_error())
+    if (auto result = parent_inode.remove_child(LexicalPath(path).basename()); result.is_error())
         return result;
 
     return KSuccess;
@@ -786,12 +778,10 @@ KResult VFS::rmdir(StringView path, Custody& base)
     if (custody.is_readonly())
         return EROFS;
 
-    auto result = inode.remove_child(".");
-    if (result.is_error())
+    if (auto result = inode.remove_child("."); result.is_error())
         return result;
 
-    result = inode.remove_child("..");
-    if (result.is_error())
+    if (auto result = inode.remove_child(".."); result.is_error())
         return result;
 
     return parent_inode.remove_child(LexicalPath(path).basename());
@@ -937,8 +927,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         return custody_or_error.error();
 
     auto& custody = custody_or_error.value();
-    auto result = validate_path_against_process_veil(custody->absolute_path(), options);
-    if (result.is_error())
+    if (auto result = validate_path_against_process_veil(custody->absolute_path(), options); result.is_error())
         return result;
 
     return custody;
@@ -1028,8 +1017,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path
             if (!safe_to_follow_symlink(*child_inode, parent_metadata))
                 return EACCES;
 
-            auto result = validate_path_against_process_veil(custody->absolute_path(), options);
-            if (result.is_error())
+            if (auto result = validate_path_against_process_veil(custody->absolute_path(), options); result.is_error())
                 return result;
 
             auto symlink_target = child_inode->resolve_as_link(parent, out_parent, options, symlink_recursion_level + 1);
@@ -1051,5 +1039,4 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path
         *out_parent = custody->parent();
     return custody;
 }
-
 }
