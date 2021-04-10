@@ -896,14 +896,19 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
 
     for (auto bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; bi = bi.value() + 1) {
         auto block_index = m_block_list[bi.value()];
-        VERIFY(block_index.value());
         size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
         size_t num_bytes_to_copy = min((off_t)block_size - offset_into_block, remaining_count);
         auto buffer_offset = buffer.offset(nread);
-        auto result = fs().read_block(block_index, &buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache);
-        if (result.is_error()) {
-            dmesgln("Ext2FSInode[{}]::read_bytes(): Failed to read block {} (index {})", identifier(), block_index.value(), bi);
-            return result.error();
+        if (block_index.value() == 0) {
+            // This is a hole, act as if it's filled with zeroes.
+            if (!buffer_offset.memset(0, num_bytes_to_copy))
+                return -EFAULT;
+        } else {
+            auto result = fs().read_block(block_index, &buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache);
+            if (result.is_error()) {
+                dmesgln("Ext2FSInode[{}]::read_bytes(): Failed to read block {} (index {})", identifier(), block_index.value(), bi);
+                return result.error();
+            }
         }
         remaining_count -= num_bytes_to_copy;
         nread += num_bytes_to_copy;
@@ -1784,5 +1789,4 @@ KResult Ext2FS::prepare_to_unmount() const
     m_inode_cache.clear();
     return KSuccess;
 }
-
 }
