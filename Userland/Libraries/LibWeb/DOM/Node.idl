@@ -12,6 +12,7 @@ interface Node : EventTarget {
     readonly attribute Node? nextSibling;
     readonly attribute Node? parentNode;
     readonly attribute Element? parentElement;
+    readonly attribute boolean isConnected;
     attribute DOMString textContent;
 
     Node appendChild(Node node);
