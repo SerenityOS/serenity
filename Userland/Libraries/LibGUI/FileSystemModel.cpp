@@ -123,19 +123,28 @@ void FileSystemModel::Node::traverse_if_needed()
     }
     quick_sort(child_names);
 
-    for (auto& name : child_names) {
-        String child_path = String::formatted("{}/{}", full_path, name);
+    NonnullOwnPtrVector<Node> directory_children;
+    NonnullOwnPtrVector<Node> file_children;
+
+    for (auto& child_name : child_names) {
+        String child_path = String::formatted("{}/{}", full_path, child_name);
         auto child = adopt_own(*new Node(m_model));
         bool ok = child->fetch_data(child_path, false);
         if (!ok)
             continue;
         if (m_model.m_mode == DirectoriesOnly && !S_ISDIR(child->mode))
             continue;
-        child->name = name;
+        child->name = child_name;
         child->parent = this;
         total_size += child->size;
-        children.append(move(child));
+        if (S_ISDIR(child->mode))
+            directory_children.append(move(child));
+        else
+            file_children.append(move(child));
     }
+
+    children.append(move(directory_children));
+    children.append(move(file_children));
 
     if (!m_file_watcher) {
 
@@ -424,7 +433,9 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
         case Column::Icon:
             return node.is_directory() ? 0 : 1;
         case Column::Name:
-            return node.name;
+            // NOTE: The children of a Node are grouped by directory-or-file and then sorted alphabetically.
+            //       Hence, the sort value for the name column is simply the index row. :^)
+            return index.row();
         case Column::Size:
             return (int)node.size;
         case Column::Owner:
