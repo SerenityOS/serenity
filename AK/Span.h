@@ -167,16 +167,16 @@ public:
         __builtin_memcpy(this->data() + offset, data, data_size);
     }
 
-    ALWAYS_INLINE constexpr size_t copy_to(Span<typename RemoveConst<T>::Type> other) const
+    ALWAYS_INLINE constexpr size_t copy_to(Span<RemoveConst<T>> other) const
     {
         VERIFY(other.size() >= size());
-        return TypedTransfer<typename RemoveConst<T>::Type>::copy(other.data(), data(), size());
+        return TypedTransfer<RemoveConst<T>>::copy(other.data(), data(), size());
     }
 
-    ALWAYS_INLINE constexpr size_t copy_trimmed_to(Span<typename RemoveConst<T>::Type> other) const
+    ALWAYS_INLINE constexpr size_t copy_trimmed_to(Span<RemoveConst<T>> other) const
     {
         const auto count = min(size(), other.size());
-        return TypedTransfer<typename RemoveConst<T>::Type>::copy(other.data(), data(), count);
+        return TypedTransfer<RemoveConst<T>>::copy(other.data(), data(), count);
     }
 
     ALWAYS_INLINE constexpr size_t fill(const T& value)

@@ -34,12 +34,10 @@
 namespace Web::Bindings {
 
 template<typename>
-struct IsExceptionOr : AK::FalseType {
-};
+constexpr bool IsExceptionOr = false;
 
 template<typename T>
-struct IsExceptionOr<DOM::ExceptionOr<T>> : AK::TrueType {
-};
+constexpr bool IsExceptionOr<DOM::ExceptionOr<T>> = true;
 
 template<typename T>
 ALWAYS_INLINE bool throw_dom_exception(JS::VM& vm, JS::GlobalObject& global_object, DOM::ExceptionOr<T>& result)
@@ -51,17 +49,17 @@ ALWAYS_INLINE bool throw_dom_exception(JS::VM& vm, JS::GlobalObject& global_obje
     return false;
 }
 
-template<typename F, typename T = decltype(declval<F>()()), typename Ret = typename Conditional<!IsExceptionOr<T>::value && !IsVoid<T>::value, T, JS::Value>::Type>
+template<typename F, typename T = decltype(declval<F>()()), typename Ret = Conditional<!IsExceptionOr<T> && !IsVoid<T>, T, JS::Value>>
 Ret throw_dom_exception_if_needed(auto&& vm, auto&& global_object, F&& fn)
 {
-    if constexpr (IsExceptionOr<T>::value) {
+    if constexpr (IsExceptionOr<T>) {
         auto&& result = fn();
         if (throw_dom_exception(vm, global_object, result))
             return JS::Value();
         if constexpr (requires(T v) { v.value(); })
             return result.value();
         return JS::Value();
-    } else if constexpr (IsVoid<T>::value) {
+    } else if constexpr (IsVoid<T>) {
         fn();
         return JS::js_undefined();
     } else {
@@ -72,7 +70,7 @@ Ret throw_dom_exception_if_needed(auto&& vm, auto&& global_object, F&& fn)
 template<typename T>
 bool should_return_empty(T&& value)
 {
-    if constexpr (IsSame<JS::Value, T>::value)
+    if constexpr (IsSame<JS::Value, T>)
         return value.is_empty();
     return false;
 }

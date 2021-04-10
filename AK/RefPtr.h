@@ -379,7 +379,7 @@ public:
 
     ALWAYS_INLINE bool is_null() const { return PtrTraits::is_null(m_bits.load(AK::MemoryOrder::memory_order_relaxed)); }
 
-    template<typename U = T, typename EnableIf<IsSame<U, T>::value && !IsNullPointer<typename PtrTraits::NullType>::value>::Type* = nullptr>
+    template<typename U = T, typename EnableIf<IsSame<U, T> && !IsNullPointer<typename PtrTraits::NullType>>::Type* = nullptr>
     typename PtrTraits::NullType null_value() const
     {
         // make sure we are holding a null value
@@ -387,7 +387,7 @@ public:
         VERIFY(PtrTraits::is_null(bits));
         return PtrTraits::to_null_value(bits);
     }
-    template<typename U = T, typename EnableIf<IsSame<U, T>::value && !IsNullPointer<typename PtrTraits::NullType>::value>::Type* = nullptr>
+    template<typename U = T, typename EnableIf<IsSame<U, T> && !IsNullPointer<typename PtrTraits::NullType>>::Type* = nullptr>
     void set_null_value(typename PtrTraits::NullType value)
     {
         // make sure that new null value would be interpreted as a null value

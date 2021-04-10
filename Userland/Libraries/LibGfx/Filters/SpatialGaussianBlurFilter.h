@@ -31,7 +31,7 @@
 
 namespace Gfx {
 
-template<size_t N, typename = typename AK::EnableIf<N % 2 == 1>::Type>
+template<size_t N, typename = typename EnableIf<N % 2 == 1>::Type>
 class SpatialGaussianBlurFilter : public GenericConvolutionFilter<N> {
 public:
     SpatialGaussianBlurFilter() { }

@@ -132,7 +132,7 @@ public:
     template<typename U>
     void prepend(U&& value)
     {
-        static_assert(IsSame<T, U>::value);
+        static_assert(IsSame<T, U>);
         auto* node = new Node(forward<U>(value));
         if (!m_head) {
             VERIFY(!m_tail);

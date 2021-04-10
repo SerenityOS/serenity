@@ -534,7 +534,7 @@ void Formatter<FormatString>::vformat(FormatBuilder& builder, StringView fmtstr,
 }
 
 template<typename T>
-void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(FormatBuilder& builder, T value)
+void Formatter<T, typename EnableIf<IsIntegral<T>>::Type>::format(FormatBuilder& builder, T value)
 {
     if (m_mode == Mode::Character) {
         // FIXME: We just support ASCII for now, in the future maybe unicode?
@@ -587,7 +587,7 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(FormatB
 
     m_width = m_width.value_or(0);
 
-    if (IsSame<typename MakeUnsigned<T>::Type, T>::value)
+    if constexpr (IsSame<MakeUnsigned<T>, T>)
         builder.put_u64(value, base, m_alternative_form, upper_case, m_zero_pad, m_align, m_width.value(), m_fill, m_sign_mode);
     else
         builder.put_i64(value, base, m_alternative_form, upper_case, m_zero_pad, m_align, m_width.value(), m_fill, m_sign_mode);

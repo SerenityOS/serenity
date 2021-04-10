@@ -31,8 +31,8 @@
 
 TEST_CASE(is_integral_works_properly)
 {
-    EXPECT(!IsIntegral<const char*>::value);
-    EXPECT(IsIntegral<unsigned long>::value);
+    EXPECT(!IsIntegral<const char*>);
+    EXPECT(IsIntegral<unsigned long>);
 }
 
 TEST_CASE(format_string_literals)

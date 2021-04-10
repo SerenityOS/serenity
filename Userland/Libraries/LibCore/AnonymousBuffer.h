@@ -68,7 +68,7 @@ public:
     template<typename T>
     T* data()
     {
-        static_assert(IsVoid<T>::value || is_trivial<T>());
+        static_assert(IsVoid<T> || IsTrivial<T>);
         if (!m_impl)
             return nullptr;
         return (T*)m_impl->data();
@@ -77,7 +77,7 @@ public:
     template<typename T>
     const T* data() const
     {
-        static_assert(IsVoid<T>::value || is_trivial<T>());
+        static_assert(IsVoid<T> || IsTrivial<T>);
         if (!m_impl)
             return nullptr;
         return (const T*)m_impl->data();

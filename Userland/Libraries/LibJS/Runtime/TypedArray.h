@@ -101,7 +101,7 @@ public:
             return Value((i32)data()[property_index]);
         } else if constexpr (sizeof(T) == 4 || sizeof(T) == 8) {
             auto value = data()[property_index];
-            if constexpr (IsFloatingPoint<T>::value) {
+            if constexpr (IsFloatingPoint<T>) {
                 return Value((double)value);
             } else if constexpr (NumericLimits<T>::is_signed()) {
                 if (value > NumericLimits<i32>::max() || value < NumericLimits<i32>::min())

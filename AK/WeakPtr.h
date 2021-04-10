@@ -38,26 +38,26 @@ class WeakPtr {
 public:
     WeakPtr() = default;
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr(const WeakPtr<U>& other)
         : m_link(other.m_link)
     {
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr(WeakPtr<U>&& other)
         : m_link(other.take_link())
     {
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(WeakPtr<U>&& other)
     {
         m_link = other.take_link();
         return *this;
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(const WeakPtr<U>& other)
     {
         if ((const void*)this != (const void*)&other)
@@ -71,20 +71,20 @@ public:
         return *this;
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr(const U& object)
         : m_link(object.template make_weak_ptr<U>().take_link())
     {
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr(const U* object)
     {
         if (object)
             m_link = object->template make_weak_ptr<U>().take_link();
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr(const RefPtr<U>& object)
     {
         object.do_while_locked([&](U* obj) {
@@ -93,7 +93,7 @@ public:
         });
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr(const NonnullRefPtr<U>& object)
     {
         object.do_while_locked([&](U* obj) {
@@ -102,14 +102,14 @@ public:
         });
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(const U& object)
     {
         m_link = object.template make_weak_ptr<U>().take_link();
         return *this;
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(const U* object)
     {
         if (object)
@@ -119,7 +119,7 @@ public:
         return *this;
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(const RefPtr<U>& object)
     {
         object.do_while_locked([&](U* obj) {
@@ -131,7 +131,7 @@ public:
         return *this;
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>::value>::Type* = nullptr>
+    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
     WeakPtr& operator=(const NonnullRefPtr<U>& object)
     {
         object.do_while_locked([&](U* obj) {
@@ -199,7 +199,7 @@ template<typename T>
 template<typename U>
 inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
 {
-    if constexpr (IsBaseOf<RefCountedBase, T>::value) {
+    if constexpr (IsBaseOf<RefCountedBase, T>) {
         // Checking m_being_destroyed isn't sufficient when dealing with
         // a RefCounted type.The reference count will drop to 0 before the
         // destructor is invoked and revoke_weak_ptrs is called. So, try
@@ -223,7 +223,7 @@ inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
 
     WeakPtr<U> weak_ptr(m_link);
 
-    if constexpr (IsBaseOf<RefCountedBase, T>::value) {
+    if constexpr (IsBaseOf<RefCountedBase, T>) {
         // Now drop the reference we temporarily added
         if (static_cast<const T*>(this)->unref()) {
             // We just dropped the last reference, which should have called

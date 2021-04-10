@@ -277,19 +277,19 @@ struct ReadElement {
         case Short:
             return ReadElementConcrete<T, short, kind> {}(input_lexer, ap);
         case Long:
-            if constexpr (IsSame<T, int>::value)
+            if constexpr (IsSame<T, int>)
                 return ReadElementConcrete<T, long, kind> {}(input_lexer, ap);
-            if constexpr (IsSame<T, unsigned>::value)
+            if constexpr (IsSame<T, unsigned>)
                 return ReadElementConcrete<T, unsigned, kind> {}(input_lexer, ap);
-            if constexpr (IsSame<T, float>::value)
+            if constexpr (IsSame<T, float>)
                 return ReadElementConcrete<int, double, kind> {}(input_lexer, ap);
             return false;
         case LongLong:
-            if constexpr (IsSame<T, int>::value)
+            if constexpr (IsSame<T, int>)
                 return ReadElementConcrete<long long, long long, kind> {}(input_lexer, ap);
-            if constexpr (IsSame<T, unsigned>::value)
+            if constexpr (IsSame<T, unsigned>)
                 return ReadElementConcrete<unsigned long long, unsigned long long, kind> {}(input_lexer, ap);
-            if constexpr (IsSame<T, float>::value)
+            if constexpr (IsSame<T, float>)
                 return ReadElementConcrete<long long, double, kind> {}(input_lexer, ap);
             return false;
         case IntMax:

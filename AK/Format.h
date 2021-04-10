@@ -93,10 +93,10 @@ struct TypeErasedParameter {
     template<typename T>
     static Type get_type()
     {
-        if (IsIntegral<T>::value)
-            return get_type_from_size(sizeof(T), IsUnsigned<T>::value);
-
-        return Type::Custom;
+        if constexpr (IsIntegral<T>)
+            return get_type_from_size(sizeof(T), IsUnsigned<T>);
+        else
+            return Type::Custom;
     }
 
     size_t to_size() const;
@@ -269,7 +269,7 @@ struct StandardFormatter {
 };
 
 template<typename T>
-struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> : StandardFormatter {
+struct Formatter<T, typename EnableIf<IsIntegral<T>>::Type> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
@@ -416,11 +416,10 @@ void dmesgln(CheckedFormatString<Parameters...>&& fmt, const Parameters&... para
 #endif
 
 template<typename T, typename = void>
-struct HasFormatter : TrueType {
-};
+inline constexpr bool HasFormatter = true;
+
 template<typename T>
-struct HasFormatter<T, typename Formatter<T>::__no_formatter_defined> : FalseType {
-};
+inline constexpr bool HasFormatter<T, typename Formatter<T>::__no_formatter_defined> = false;
 
 template<typename T>
 class FormatIfSupported {
@@ -450,7 +449,7 @@ struct __FormatIfSupported<T, true> : Formatter<T> {
     }
 };
 template<typename T>
-struct Formatter<FormatIfSupported<T>> : __FormatIfSupported<T, HasFormatter<T>::value> {
+struct Formatter<FormatIfSupported<T>> : __FormatIfSupported<T, HasFormatter<T>> {
 };
 
 // This is a helper class, the idea is that if you want to implement a formatter you can inherit
