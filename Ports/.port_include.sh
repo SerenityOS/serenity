@@ -68,6 +68,13 @@ fetch() {
         IFS=$OLDIFS
         read url filename auth_sum<<< $(echo "$f")
         echo "URL: ${url}"
+
+        # FIXME: Serenity's curl port does not support https, even with openssl installed.
+        if ! curl https://example.com -so /dev/null; then
+            url=$(echo "$url" | sed "s/^https:\/\//http:\/\//")
+        fi
+
+
         # download files
         if [ -f "$filename" ]; then
             echo "$filename already exists"
@@ -99,8 +106,12 @@ fetch() {
         # extract
         if [ ! -f "$workdir"/.${filename}_extracted ]; then
             case "$filename" in
+                *.tar.gz|*.tgz)
+                    run_nocd tar -xzf "$filename"
+                    run touch .${filename}_extracted
+                    ;;
                 *.tar.gz|*.tar.bz|*.tar.bz2|*.tar.xz|*.tar.lz|.tbz*|*.txz|*.tgz)
-                    run_nocd tar xf "$filename"
+                    run_nocd tar -xf "$filename"
                     run touch .${filename}_extracted
                     ;;
                 *.gz)
@@ -123,16 +134,20 @@ fetch() {
 
     # check signature
     if [ "$auth_type" == "sig" ]; then
-        if $(gpg --verify $auth_opts); then
-            echo "- Signature check OK."
+        if $NO_GPG; then
+            echo "WARNING: gpg signature check was disabled by --no-gpg-verification"
         else
-            echo "- Signature check NOT OK"
-            for f in $files; do
-                rm -f $f
-            done
-            rm -rf "$workdir"
-            echo "  Signature mismatching, removed erronous download. Please run script again."
-            exit 1
+            if $(gpg --verify $auth_opts); then
+                echo "- Signature check OK."
+            else
+                echo "- Signature check NOT OK"
+                for f in $files; do
+                    rm -f $f
+                done
+                rm -rf "$workdir"
+                echo "  Signature mismatching, removed erronous download. Please run script again."
+                exit 1
+            fi
         fi
     fi
 
@@ -302,19 +317,29 @@ do_all() {
     do_install "${1:-}"
 }
 
-if [ -z "${1:-}" ]; then
-    do_all
-else
-    case "$1" in
-        fetch|patch|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall)
-            do_$1
-            ;;
-        --auto)
-            do_all $1
-            ;;
-        *)
-            >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, clean, clean_dist, clean_all, uninstall."
-            exit 1
-            ;;
-    esac
-fi
+NO_GPG=false
+parse_arguments() {
+    if [ -z "${1:-}" ]; then
+        do_all
+    else
+        case "$1" in
+            fetch|patch|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall)
+                do_$1
+                ;;
+            --auto)
+                do_all $1
+                ;;
+            --no-gpg-verification)
+                NO_GPG=true
+                shift
+                parse_arguments $@
+                ;;
+            *)
+                >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, clean, clean_dist, clean_all, uninstall."
+                exit 1
+                ;;
+        esac
+    fi
+}
+
+parse_arguments $@
