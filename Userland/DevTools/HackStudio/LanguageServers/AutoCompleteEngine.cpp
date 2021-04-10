@@ -41,6 +41,12 @@ AutoCompleteEngine::~AutoCompleteEngine()
 void AutoCompleteEngine::set_declarations_of_document(const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
 {
     VERIFY(set_declarations_of_document_callback);
+
+    // Optimization - Only notify callback if declerations have changed
+    if (auto previous_declarations = m_all_declarations.get(filename); previous_declarations.has_value()) {
+        if (previous_declarations.value() == declarations)
+            return;
+    }
     if (m_store_all_declarations)
         m_all_declarations.set(filename, declarations);
     set_declarations_of_document_callback(m_connection, filename, move(declarations));
