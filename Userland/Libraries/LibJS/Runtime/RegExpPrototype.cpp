@@ -307,7 +307,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     if (!exec)
         return {};
 
-    Vector<Object*> results;
+    MarkedValueList results(vm.heap());
 
     while (true) {
         auto result = vm.call(*exec, rx, string_value);
@@ -341,15 +341,16 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     String accumulated_result;
     size_t next_source_position = 0;
 
-    for (auto* result : results) {
-        size_t result_length = length_of_array_like(global_object, *result);
+    for (auto& result_value : results) {
+        auto& result = result_value.as_object();
+        size_t result_length = length_of_array_like(global_object, result);
         size_t n_captures = result_length == 0 ? 0 : result_length - 1;
 
-        auto matched = result->get(0).value_or(js_undefined());
+        auto matched = result.get(0).value_or(js_undefined());
         if (vm.exception())
             return {};
 
-        auto position_value = result->get(vm.names.index).value_or(js_undefined());
+        auto position_value = result.get(vm.names.index).value_or(js_undefined());
         if (vm.exception())
             return {};
 
@@ -359,9 +360,9 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
         position = clamp(position, static_cast<double>(0), static_cast<double>(string.length()));
 
-        Vector<Value> captures;
+        MarkedValueList captures(vm.heap());
         for (size_t n = 1; n <= n_captures; ++n) {
-            auto capture = result->get(n).value_or(js_undefined());
+            auto capture = result.get(n).value_or(js_undefined());
             if (vm.exception())
                 return {};
 
@@ -378,14 +379,15 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             captures.append(move(capture));
         }
 
-        auto named_captures = result->get(vm.names.groups).value_or(js_undefined());
+        auto named_captures = result.get(vm.names.groups).value_or(js_undefined());
         if (vm.exception())
             return {};
 
         String replacement;
 
         if (replace_value.is_function()) {
-            Vector<Value> replacer_args { matched };
+            MarkedValueList replacer_args(vm.heap());
+            replacer_args.append(matched);
             replacer_args.append(move(captures));
             replacer_args.append(Value(position));
             replacer_args.append(js_string(vm, string));
