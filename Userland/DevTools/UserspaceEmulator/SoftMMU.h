@@ -26,11 +26,15 @@ public:
     ValueWithShadow<u16> read16(X86::LogicalAddress);
     ValueWithShadow<u32> read32(X86::LogicalAddress);
     ValueWithShadow<u64> read64(X86::LogicalAddress);
+    ValueWithShadow<u128> read128(X86::LogicalAddress);
+    ValueWithShadow<u256> read256(X86::LogicalAddress);
 
     void write8(X86::LogicalAddress, ValueWithShadow<u8>);
     void write16(X86::LogicalAddress, ValueWithShadow<u16>);
     void write32(X86::LogicalAddress, ValueWithShadow<u32>);
     void write64(X86::LogicalAddress, ValueWithShadow<u64>);
+    void write128(X86::LogicalAddress, ValueWithShadow<u128>);
+    void write256(X86::LogicalAddress, ValueWithShadow<u256>);
 
     ALWAYS_INLINE Region* find_region(X86::LogicalAddress address)
     {

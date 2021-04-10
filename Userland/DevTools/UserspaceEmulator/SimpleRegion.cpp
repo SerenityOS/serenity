@@ -47,6 +47,18 @@ ValueWithShadow<u64> SimpleRegion::read64(u32 offset)
     return { *reinterpret_cast<const u64*>(m_data + offset), *reinterpret_cast<const u64*>(m_shadow_data + offset) };
 }
 
+ValueWithShadow<u128> SimpleRegion::read128(u32 offset)
+{
+    VERIFY(offset + 15 < size());
+    return { *reinterpret_cast<const u128*>(m_data + offset), *reinterpret_cast<const u128*>(m_shadow_data + offset) };
+}
+
+ValueWithShadow<u256> SimpleRegion::read256(u32 offset)
+{
+    VERIFY(offset + 31 < size());
+    return { *reinterpret_cast<const u256*>(m_data + offset), *reinterpret_cast<const u256*>(m_shadow_data + offset) };
+}
+
 void SimpleRegion::write8(u32 offset, ValueWithShadow<u8> value)
 {
     VERIFY(offset < size());
@@ -73,6 +85,18 @@ void SimpleRegion::write64(u32 offset, ValueWithShadow<u64> value)
     VERIFY(offset + 7 < size());
     *reinterpret_cast<u64*>(m_data + offset) = value.value();
     *reinterpret_cast<u64*>(m_shadow_data + offset) = value.shadow();
+}
+void SimpleRegion::write128(u32 offset, ValueWithShadow<u128> value)
+{
+    VERIFY(offset + 15 < size());
+    *reinterpret_cast<u128*>(m_data + offset) = value.value();
+    *reinterpret_cast<u128*>(m_shadow_data + offset) = value.shadow();
+}
+void SimpleRegion::write256(u32 offset, ValueWithShadow<u256> value)
+{
+    VERIFY(offset + 31 < size());
+    *reinterpret_cast<u256*>(m_data + offset) = value.value();
+    *reinterpret_cast<u256*>(m_shadow_data + offset) = value.shadow();
 }
 
 u8* SimpleRegion::cacheable_ptr(u32 offset)
