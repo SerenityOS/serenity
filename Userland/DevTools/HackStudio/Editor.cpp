@@ -43,6 +43,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
+#include <LibGUI/MessageBox.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -312,6 +313,24 @@ void Editor::leave_event(Core::Event& event)
 {
     m_hovering_editor = false;
     GUI::TextEditor::leave_event(event);
+}
+
+void Editor::drop_event(GUI::DropEvent& event)
+{
+    event.accept();
+    window()->move_to_front();
+
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
+            return;
+        if (urls.size() > 1) {
+            GUI::MessageBox::show(window(), "HackStudio can only open one file at a time!", "One at a time please!",
+            GUI::MessageBox::Type::Error);
+            return;
+        }
+        open_file(urls.first().path());
+    }
 }
 
 static HashMap<String, String>& include_paths()
