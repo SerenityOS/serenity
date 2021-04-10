@@ -137,6 +137,7 @@ public:
     virtual bool is_class() const { return false; }
     virtual bool is_function() const { return false; }
     virtual bool is_namespace() const { return false; }
+    virtual bool is_member() const { return false; }
     const StringView& name() const { return m_name; }
 
     StringView m_name;
@@ -529,6 +530,7 @@ public:
     virtual ~MemberDeclaration() override = default;
     virtual const char* class_name() const override { return "MemberDeclaration"; }
     virtual void dump(size_t indent) const override;
+    virtual bool is_member() const override { return true; }
 
     MemberDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : Declaration(parent, start, end, filename)
