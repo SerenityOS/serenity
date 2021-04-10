@@ -129,7 +129,7 @@ int main(int argc, char** argv)
 
     file_menu.add_action(
         GUI::Action::create(
-            "&New Image...", [&](auto&) {
+            "&New Image...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](auto&) {
                 auto dialog = PixelPaint::CreateNewImageDialog::construct(window);
                 if (dialog->exec() == GUI::Dialog::ExecOK) {
                     auto image = PixelPaint::Image::create_with_size(dialog->image_size());
