@@ -141,24 +141,24 @@ int main(int argc, char** argv)
     };
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("File");
+    auto& app_menu = menubar->add_menu("&File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
-    auto& view_menu = menubar->add_menu("View");
+    auto& view_menu = menubar->add_menu("&View");
 
-    auto invert_action = GUI::Action::create_checkable("Invert tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
+    auto invert_action = GUI::Action::create_checkable("&Invert Tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
         profile->set_inverted(action.is_checked());
     });
     invert_action->set_checked(false);
     view_menu.add_action(invert_action);
 
-    auto top_functions_action = GUI::Action::create_checkable("Top functions", { Mod_Ctrl, Key_T }, [&](auto& action) {
+    auto top_functions_action = GUI::Action::create_checkable("&Top Functions", { Mod_Ctrl, Key_T }, [&](auto& action) {
         profile->set_show_top_functions(action.is_checked());
     });
     top_functions_action->set_checked(false);
     view_menu.add_action(top_functions_action);
 
-    auto percent_action = GUI::Action::create_checkable("Show percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
+    auto percent_action = GUI::Action::create_checkable("Show &Percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
         profile->set_show_percentages(action.is_checked());
         tree_view.update();
         disassembly_view.update();
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
     percent_action->set_checked(false);
     view_menu.add_action(percent_action);
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Profiler.md"), "/bin/Help");
     }));
