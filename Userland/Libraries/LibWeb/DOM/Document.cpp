@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,6 +64,7 @@
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/SVG/TagNames.h>
+#include <LibWeb/UIEvents/MouseEvent.h>
 #include <ctype.h>
 
 namespace Web::DOM {
@@ -626,6 +628,61 @@ NonnullRefPtr<Comment> Document::create_comment(const String& data)
 NonnullRefPtr<Range> Document::create_range()
 {
     return Range::create(*this);
+}
+
+// https://dom.spec.whatwg.org/#dom-document-createevent
+NonnullRefPtr<Event> Document::create_event(const String& interface)
+{
+    auto interface_lowercase = interface.to_lowercase();
+    RefPtr<Event> event;
+    if (interface_lowercase == "beforeunloadevent") {
+        event = Event::create(""); // FIXME: Create BeforeUnloadEvent
+    } else if (interface_lowercase == "compositionevent") {
+        event = Event::create(""); // FIXME: Create CompositionEvent
+    } else if (interface_lowercase == "customevent") {
+        event = Event::create(""); // FIXME: Create CustomEvent
+    } else if (interface_lowercase == "devicemotionevent") {
+        event = Event::create(""); // FIXME: Create DeviceMotionEvent
+    } else if (interface_lowercase == "deviceorientationevent") {
+        event = Event::create(""); // FIXME: Create DeviceOrientationEvent
+    } else if (interface_lowercase == "dragevent") {
+        event = Event::create(""); // FIXME: Create DragEvent
+    } else if (interface_lowercase.is_one_of("event", "events")) {
+        event = Event::create("");
+    } else if (interface_lowercase == "focusevent") {
+        event = Event::create(""); // FIXME: Create FocusEvent
+    } else if (interface_lowercase == "hashchangeevent") {
+        event = Event::create(""); // FIXME: Create HashChangeEvent
+    } else if (interface_lowercase == "htmlevents") {
+        event = Event::create("");
+    } else if (interface_lowercase == "keyboardevent") {
+        event = Event::create(""); // FIXME: Create KeyboardEvent
+    } else if (interface_lowercase == "messageevent") {
+        event = Event::create(""); // FIXME: Create MessageEvent
+    } else if (interface_lowercase.is_one_of("mouseevent", "mouseevents")) {
+        event = UIEvents::MouseEvent::create("", 0, 0);
+    } else if (interface_lowercase == "storageevent") {
+        event = Event::create(""); // FIXME: Create StorageEvent
+    } else if (interface_lowercase == "svgevents") {
+        event = Event::create("");
+    } else if (interface_lowercase == "textevent") {
+        event = Event::create(""); // FIXME: Create CompositionEvent
+    } else if (interface_lowercase == "touchevent") {
+        event = Event::create(""); // FIXME: Create TouchEvent
+    } else if (interface_lowercase.is_one_of("uievent", "uievents")) {
+        event = UIEvents::UIEvent::create("");
+    } else {
+        // FIXME:
+        // 3. If constructor is null, then throw a "NotSupportedError" DOMException.
+        // 4. If the interface indicated by constructor is not exposed on the relevant global object of this, then throw a "NotSupportedError" DOMException.
+        TODO();
+    }
+    // Setting type to empty string is handled by each constructor.
+    // FIXME:
+    // 7. Initialize event’s timeStamp attribute to a DOMHighResTimeStamp representing the high resolution time from the time origin to now.
+    event->set_is_trusted(false);
+    event->set_initialized(false);
+    return event.release_nonnull();
 }
 
 void Document::set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement* script)
