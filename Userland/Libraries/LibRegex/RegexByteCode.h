@@ -362,26 +362,28 @@ public:
         // LABEL _END = alterantive_bytecode.size
     }
 
-    void insert_bytecode_repetition_min_max(ByteCode& bytecode_to_repeat, size_t minimum, Optional<size_t> maximum)
+    void insert_bytecode_repetition_min_max(ByteCode& bytecode_to_repeat, size_t minimum, Optional<size_t> maximum, bool greedy = true)
     {
         ByteCode new_bytecode;
         new_bytecode.insert_bytecode_repetition_n(bytecode_to_repeat, minimum);
 
         if (maximum.has_value()) {
+            auto jump_kind = static_cast<ByteCodeValueType>(greedy ? OpCodeId::ForkStay : OpCodeId::ForkJump);
             if (maximum.value() > minimum) {
                 auto diff = maximum.value() - minimum;
-                new_bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkStay));
+                new_bytecode.empend(jump_kind);
                 new_bytecode.empend(diff * (bytecode_to_repeat.size() + 2)); // Jump to the _END label
 
                 for (size_t i = 0; i < diff; ++i) {
                     new_bytecode.append(bytecode_to_repeat);
-                    new_bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkStay));
+                    new_bytecode.empend(jump_kind);
                     new_bytecode.empend((diff - i - 1) * (bytecode_to_repeat.size() + 2)); // Jump to the _END label
                 }
             }
         } else {
             // no maximum value set, repeat finding if possible
-            new_bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkJump));
+            auto jump_kind = static_cast<ByteCodeValueType>(greedy ? OpCodeId::ForkJump : OpCodeId::ForkStay);
+            new_bytecode.empend(jump_kind);
             new_bytecode.empend(-bytecode_to_repeat.size() - 2); // Jump to the last iteration
         }
 
