@@ -683,11 +683,11 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         // FIXME: Support deleting locals
         VERIFY(!reference.is_local_variable());
         if (reference.is_global_variable())
-            return global_object.delete_property(reference.name());
+            return Value(global_object.delete_property(reference.name()));
         auto* base_object = reference.base().to_object(global_object);
         if (!base_object)
             return {};
-        return base_object->delete_property(reference.name());
+        return Value(base_object->delete_property(reference.name()));
     }
 
     Value lhs_result;

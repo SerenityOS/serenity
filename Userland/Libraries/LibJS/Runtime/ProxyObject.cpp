@@ -390,33 +390,33 @@ bool ProxyObject::put(const PropertyName& name, Value value, Value receiver)
     return true;
 }
 
-Value ProxyObject::delete_property(const PropertyName& name)
+bool ProxyObject::delete_property(const PropertyName& name)
 {
     auto& vm = this->vm();
     if (m_is_revoked) {
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
-        return {};
+        return false;
     }
     auto trap = get_method(global_object(), Value(&m_handler), vm.names.deleteProperty);
     if (vm.exception())
-        return {};
+        return false;
     if (!trap)
         return m_target.delete_property(name);
     auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target), name.to_value(vm));
     if (vm.exception())
-        return {};
+        return false;
     if (!trap_result.to_boolean())
-        return Value(false);
+        return false;
     auto target_desc = m_target.get_own_property_descriptor(name);
     if (vm.exception())
-        return {};
+        return false;
     if (!target_desc.has_value())
-        return Value(true);
+        return true;
     if (!target_desc.value().attributes.is_configurable()) {
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyDeleteNonConfigurable);
-        return {};
+        return false;
     }
-    return Value(true);
+    return true;
 }
 
 void ProxyObject::visit_edges(Cell::Visitor& visitor)
