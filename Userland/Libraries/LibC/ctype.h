@@ -42,65 +42,122 @@ __BEGIN_DECLS
 
 extern const char _ctype_[256];
 
-int tolower(int);
-int toupper(int);
-
-static inline int isalnum(int c)
+static inline int __inline_isalnum(int c)
 {
-    return (_ctype_[(unsigned char)(c)] & (_U | _L | _N));
+    return _ctype_[(unsigned char)(c)] & (_U | _L | _N);
 }
 
-static inline int isalpha(int c)
+static inline int __inline_isalpha(int c)
 {
-    return (_ctype_[(unsigned char)(c)] & (_U | _L));
+    return _ctype_[(unsigned char)(c)] & (_U | _L);
 }
 
-static inline int iscntrl(int c)
+static inline int __inline_isascii(int c)
 {
-    return (_ctype_[(unsigned char)(c)] & (_C));
+    return (unsigned)c <= 127;
 }
 
-static inline int isdigit(int c)
+static inline int __inline_iscntrl(int c)
 {
-    return (_ctype_[(unsigned char)(c)] & (_N));
+    return _ctype_[(unsigned char)(c)] & (_C);
 }
 
-static inline int isxdigit(int c)
+static inline int __inline_isdigit(int c)
 {
-    return (_ctype_[(unsigned char)(c)] & (_N | _X));
+    return _ctype_[(unsigned char)(c)] & (_N);
 }
 
-static inline int isspace(int c)
+static inline int __inline_isxdigit(int c)
 {
-    return (_ctype_[(unsigned char)(c)] & (_S));
+    return _ctype_[(unsigned char)(c)] & (_N | _X);
 }
 
-static inline int ispunct(int c)
+static inline int __inline_isspace(int c)
 {
-    return (_ctype_[(unsigned char)(c)] & (_P));
+    return _ctype_[(unsigned char)(c)] & (_S);
 }
 
-static inline int isprint(int c)
+static inline int __inline_ispunct(int c)
 {
-    return (_ctype_[(unsigned char)(c)] & (_P | _U | _L | _N | _B));
+    return _ctype_[(unsigned char)(c)] & (_P);
 }
 
-static inline int isgraph(int c)
+static inline int __inline_isprint(int c)
 {
-    return (_ctype_[(unsigned char)(c)] & (_P | _U | _L | _N));
+    return _ctype_[(unsigned char)(c)] & (_P | _U | _L | _N | _B);
 }
 
-static inline int islower(int c)
+static inline int __inline_isgraph(int c)
 {
-    return ((_ctype_[(unsigned char)(c)] & (_U | _L)) == _L);
+    return _ctype_[(unsigned char)(c)] & (_P | _U | _L | _N);
 }
 
-static inline int isupper(int c)
+static inline int __inline_islower(int c)
 {
-    return ((_ctype_[(unsigned char)(c)] & (_U | _L)) == _U);
+    return _ctype_[(unsigned char)(c)] & (_L);
 }
 
-#define isascii(c) ((unsigned)c <= 127)
-#define toascii(c) ((c)&127)
+static inline int __inline_isupper(int c)
+{
+    return _ctype_[(unsigned char)(c)] & (_U);
+}
+
+static inline int __inline_toascii(int c)
+{
+    return c & 127;
+}
+
+static inline int __inline_tolower(int c)
+{
+    if (c >= 'A' && c <= 'Z')
+        return c | 0x20;
+    return c;
+}
+
+static inline int __inline_toupper(int c)
+{
+    if (c >= 'a' && c <= 'z')
+        return c & ~0x20;
+    return c;
+}
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int isalnum(int c);
+int isalpha(int c);
+int isascii(int c);
+int iscntrl(int c);
+int isdigit(int c);
+int isxdigit(int c);
+int isspace(int c);
+int ispunct(int c);
+int isprint(int c);
+int isgraph(int c);
+int islower(int c);
+int isupper(int c);
+int toascii(int c);
+int tolower(int c);
+int toupper(int c);
+
+#ifdef __cplusplus
+}
+#endif
+#define isalnum __inline_isalnum
+#define isalpha __inline_isalpha
+#define isascii __inline_isascii
+#define iscntrl __inline_iscntrl
+#define isdigit __inline_isdigit
+#define isxdigit __inline_isxdigit
+#define isspace __inline_isspace
+#define ispunct __inline_ispunct
+#define isprint __inline_isprint
+#define isgraph __inline_isgraph
+#define islower __inline_islower
+#define isupper __inline_isupper
+#define toascii __inline_toascii
+#define tolower __inline_tolower
+#define toupper __inline_toupper
 
 __END_DECLS
