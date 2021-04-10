@@ -417,16 +417,16 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
             auto level = plain[0];
             auto code = plain[1];
+            dbgln_if(TLS_DEBUG, "Alert received with level {}, code {}", level, code);
+
             if (level == (u8)AlertLevel::Critical) {
                 dbgln("We were alerted of a critical error: {} ({})", code, alert_name((AlertDescription)code));
                 m_context.critical_error = code;
                 try_disambiguate_error();
                 res = (i8)Error::UnknownError;
-            } else {
-                dbgln("Alert: {}", code);
             }
-            if (code == 0) {
-                // close notify
+
+            if (code == (u8)AlertDescription::CloseNotify) {
                 res += 2;
                 alert(AlertLevel::Critical, AlertDescription::CloseNotify);
                 m_context.connection_finished = true;
