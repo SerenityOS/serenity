@@ -522,7 +522,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     else
         scoped_generator.set("return_statement", "return {};");
 
-    // FIXME: Add support for optional to all types
+    // FIXME: Add support for optional and nullable to all types
     if (parameter.type.is_string()) {
         if (!optional) {
             scoped_generator.append(R"~~~(
@@ -541,13 +541,26 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
     } else if (parameter.type.name == "EventListener") {
-        scoped_generator.append(R"~~~(
+        if (parameter.type.nullable) {
+            scoped_generator.append(R"~~~(
+    RefPtr<EventListener> @cpp_name@;
+    if (!@js_name@@js_suffix@.is_null()) {
+        if (!@js_name@@js_suffix@.is_function()) {
+            vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
+            @return_statement@
+        }
+        @cpp_name@ = adopt(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
+    }
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_function()) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
         @return_statement@
     }
     auto @cpp_name@ = adopt(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
 )~~~");
+        }
     } else if (is_wrappable_type(parameter.type)) {
         scoped_generator.append(R"~~~(
     auto @cpp_name@_object = @js_name@@js_suffix@.to_object(global_object);
@@ -774,6 +787,7 @@ void generate_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
+#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
@@ -1111,6 +1125,8 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
+#include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>

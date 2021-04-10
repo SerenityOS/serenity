@@ -39,19 +39,25 @@ EventTarget::~EventTarget()
 {
 }
 
-void EventTarget::add_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener> listener)
+// https://dom.spec.whatwg.org/#add-an-event-listener
+void EventTarget::add_event_listener(const FlyString& event_name, RefPtr<EventListener> listener)
 {
+    if (listener.is_null())
+        return;
     auto existing_listener = m_listeners.first_matching([&](auto& entry) {
         return entry.listener->type() == event_name && &entry.listener->function() == &listener->function() && entry.listener->capture() == listener->capture();
     });
     if (existing_listener.has_value())
         return;
     listener->set_type(event_name);
-    m_listeners.append({ event_name, move(listener) });
+    m_listeners.append({ event_name, listener.release_nonnull() });
 }
 
-void EventTarget::remove_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener> listener)
+// https://dom.spec.whatwg.org/#remove-an-event-listener
+void EventTarget::remove_event_listener(const FlyString& event_name, RefPtr<EventListener> listener)
 {
+    if (listener.is_null())
+        return;
     m_listeners.remove_first_matching([&](auto& entry) {
         auto matches = entry.event_name == event_name && &entry.listener->function() == &listener->function() && entry.listener->capture() == listener->capture();
         if (matches)
