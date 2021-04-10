@@ -28,7 +28,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/FontPicker.h>
 #include <LibGUI/FontPickerDialogGML.h>
-#include <LibGUI/ItemListModel.h>
+#include <LibGUI/FontPickerWeightModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/ScrollBar.h>
@@ -36,55 +36,6 @@
 #include <LibGfx/FontDatabase.h>
 
 namespace GUI {
-
-struct FontWeightNameMapping {
-    constexpr FontWeightNameMapping(int w, const char* n)
-        : weight(w)
-        , name(n)
-    {
-    }
-    int weight { 0 };
-    StringView name;
-};
-
-static constexpr FontWeightNameMapping font_weight_names[] = {
-    { 100, "Thin" },
-    { 200, "Extra Light" },
-    { 300, "Light" },
-    { 400, "Regular" },
-    { 500, "Medium" },
-    { 600, "Semi Bold" },
-    { 700, "Bold" },
-    { 800, "Extra Bold" },
-    { 900, "Black" },
-    { 950, "Extra Black" },
-};
-
-static constexpr StringView weight_to_name(int weight)
-{
-    for (auto& it : font_weight_names) {
-        if (it.weight == weight)
-            return it.name;
-    }
-    return {};
-}
-
-class FontWeightListModel : public ItemListModel<int> {
-public:
-    FontWeightListModel(const Vector<int>& weights)
-        : ItemListModel(weights)
-    {
-    }
-
-    virtual Variant data(const ModelIndex& index, ModelRole role) const override
-    {
-        if (role == ModelRole::Custom)
-            return m_data.at(index.row());
-        if (role == ModelRole::Display)
-            return String(weight_to_name(m_data.at(index.row())));
-        return ItemListModel::data(index, role);
-    }
-};
 
 FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, bool fixed_width_only)
     : Dialog(parent_window)
