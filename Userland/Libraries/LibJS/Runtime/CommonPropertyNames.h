@@ -95,6 +95,7 @@ namespace JS {
     P(count)                                 \
     P(countReset)                            \
     P(debug)                                 \
+    P(defineProperties)                      \
     P(defineProperty)                        \
     P(deleteProperty)                        \
     P(description)                           \
