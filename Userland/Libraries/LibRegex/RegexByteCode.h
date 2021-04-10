@@ -150,7 +150,10 @@ class OpCode;
 class ByteCode : public Vector<ByteCodeValueType> {
 public:
     ByteCode() = default;
+    ByteCode(const ByteCode&) = default;
     virtual ~ByteCode() = default;
+
+    ByteCode& operator=(ByteCode&&) = default;
 
     void insert_bytecode_compare_values(Vector<CompareTypeAndValuePair>&& pairs)
     {
