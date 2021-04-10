@@ -5,6 +5,7 @@ compile_gml(Dialogs/NewProjectDialog.gml Dialogs/NewProjectDialogGML.h new_proje
 
 set(SOURCES
     CodeDocument.cpp
+        ClassViewWidget.cpp
     CursorTool.cpp
     Debugger/BacktraceModel.cpp
     Debugger/DebugInfoWidget.cpp

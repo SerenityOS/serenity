@@ -200,4 +200,14 @@ void AutocompleteBox::apply_suggestion()
     m_editor->insert_at_cursor_or_replace_selection(completion);
 }
 
+bool AutocompleteProvider::Declaration::operator==(const AutocompleteProvider::Declaration& other) const
+{
+    return name == other.name && position == other.position && type == other.type && scope == other.scope;
+}
+
+bool AutocompleteProvider::ProjectLocation::operator==(const ProjectLocation& other) const
+{
+    return file == other.file && line == other.line && column == other.column;
+}
+
 }

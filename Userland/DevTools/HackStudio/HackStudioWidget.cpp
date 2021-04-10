@@ -43,6 +43,7 @@
 #include "HackStudioWidget.h"
 #include "Locator.h"
 #include "Project.h"
+#include "ProjectDeclarations.h"
 #include "TerminalWrapper.h"
 #include "WidgetTool.h"
 #include "WidgetTreeModel.h"
@@ -108,7 +109,7 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
 
     auto& left_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
     left_hand_splitter.set_fixed_width(150);
-    create_project_tree_view(left_hand_splitter);
+    create_project_tab(left_hand_splitter);
     m_project_tree_view_context_menu = create_project_tree_view_context_menu();
 
     create_open_files_view(left_hand_splitter);
@@ -177,12 +178,11 @@ void HackStudioWidget::update_actions()
 void HackStudioWidget::on_action_tab_change()
 {
     update_actions();
-    auto git_widget = m_action_tab_widget->active_widget();
-    if (!git_widget)
+    auto active_widget = m_action_tab_widget->active_widget();
+    if (!active_widget)
         return;
-    if (StringView { "GitWidget" } != git_widget->class_name())
-        return;
-    reinterpret_cast<GitWidget*>(git_widget)->refresh();
+    if (StringView { "GitWidget" } == active_widget->class_name())
+        reinterpret_cast<GitWidget*>(active_widget)->refresh();
 }
 
 void HackStudioWidget::open_project(const String& root_path)
@@ -743,9 +743,8 @@ void HackStudioWidget::set_current_editor_wrapper(RefPtr<EditorWrapper> editor_w
     m_current_editor_wrapper = editor_wrapper;
 }
 
-void HackStudioWidget::create_project_tree_view(GUI::Widget& parent)
+void HackStudioWidget::configure_project_tree_view()
 {
-    m_project_tree_view = parent.add<GUI::TreeView>();
     m_project_tree_view->set_model(m_project->model());
     m_project_tree_view->set_selection_mode(GUI::AbstractView::SelectionMode::MultiSelection);
 
@@ -935,6 +934,20 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
     });
+}
+
+void HackStudioWidget::create_project_tab(GUI::Widget& parent)
+{
+    m_project_tab = parent.add<GUI::TabWidget>();
+    m_project_tab->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    m_project_tree_view = m_project_tab->add_tab<GUI::TreeView>("Files");
+    configure_project_tree_view();
+
+    m_class_view = m_project_tab->add_tab<ClassViewWidget>("ClassView");
+
+    ProjectDeclarations::the().on_update = [this]() {
+        m_class_view->refresh();
+    };
 }
 
 void HackStudioWidget::create_app_menubar(GUI::MenuBar& menubar)
