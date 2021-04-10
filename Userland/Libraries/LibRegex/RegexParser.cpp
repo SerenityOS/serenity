@@ -868,7 +868,7 @@ bool ECMA262Parser::parse_quantifiable_assertion(ByteCode& stack, size_t&, bool 
     return false;
 }
 
-StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initial_zero, ReadDigitFollowPolicy follow_policy, bool hex, int max_count)
+StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initial_zero, bool hex, int max_count)
 {
     if (!match(TokenType::Char))
         return {};
@@ -881,13 +881,6 @@ StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initi
     auto start_token = m_parser_state.current_token;
     while (match(TokenType::Char)) {
         auto& c = m_parser_state.current_token.value();
-
-        if (follow_policy == ReadDigitFollowPolicy::DisallowNonDigit) {
-            if (hex && !AK::StringUtils::convert_to_uint_from_hex(c).has_value())
-                break;
-            if (!hex && !c.to_uint().has_value())
-                break;
-        }
 
         if (max_count > 0 && count >= max_count)
             break;
@@ -904,9 +897,9 @@ StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initi
     return StringView { start_token.value().characters_without_null_termination(), offset };
 }
 
-Optional<unsigned> ECMA262Parser::read_digits(ECMA262Parser::ReadDigitsInitialZeroState initial_zero, ECMA262Parser::ReadDigitFollowPolicy follow_policy, bool hex, int max_count)
+Optional<unsigned> ECMA262Parser::read_digits(ECMA262Parser::ReadDigitsInitialZeroState initial_zero, bool hex, int max_count)
 {
-    auto str = read_digits_as_string(initial_zero, follow_policy, hex, max_count);
+    auto str = read_digits_as_string(initial_zero, hex, max_count);
     if (str.is_empty())
         return {};
     if (hex)
@@ -1116,7 +1109,7 @@ bool ECMA262Parser::parse_invalid_braced_quantifier()
 
 bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
 {
-    if (auto escape_str = read_digits_as_string(ReadDigitsInitialZeroState::Disallow, ReadDigitFollowPolicy::DisallowNonDigit); !escape_str.is_empty()) {
+    if (auto escape_str = read_digits_as_string(ReadDigitsInitialZeroState::Disallow); !escape_str.is_empty()) {
         if (auto escape = escape_str.to_uint(); escape.has_value()) {
             // See if this is a "back"-reference (we've already parsed the group it refers to)
             auto maybe_length = m_parser_state.capture_group_minimum_lengths.get(escape.value());
@@ -1220,7 +1213,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
 
     // HexEscape
     if (try_skip("x")) {
-        if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy::Any, true, 2); hex_escape.has_value()) {
+        if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, true, 2); hex_escape.has_value()) {
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)hex_escape.value() } });
             return true;
@@ -1236,7 +1229,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     if (try_skip("u")) {
-        if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy::Any, true, 4); code_point.has_value()) {
+        if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4); code_point.has_value()) {
             // FIXME: The minimum length depends on the mode - should be utf8-length in u8 mode.
             match_length_minimum += 1;
             StringBuilder builder;
@@ -1500,7 +1493,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
 
             // HexEscape
             if (try_skip("x")) {
-                if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy::Any, true, 2); hex_escape.has_value()) {
+                if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, true, 2); hex_escape.has_value()) {
                     return { { .code_point = hex_escape.value(), .is_character_class = false } };
                 } else if (!unicode) {
                     // '\x' is allowed in non-unicode mode, just matches 'x'.
@@ -1512,7 +1505,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             }
 
             if (try_skip("u")) {
-                if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy::Any, true, 4); code_point.has_value()) {
+                if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4); code_point.has_value()) {
                     // FIXME: While codepoint ranges are supported, codepoint matches as "Char" are not!
                     return { { .code_point = code_point.value(), .is_character_class = false } };
                 } else if (!unicode) {
