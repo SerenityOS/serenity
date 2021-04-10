@@ -281,8 +281,8 @@ bool IODevice::write(const u8* data, int size)
 {
     int rc = ::write(m_fd, data, size);
     if (rc < 0) {
-        perror("IODevice::write: write");
         set_error(errno);
+        perror("IODevice::write: write");
         return false;
     }
     return rc == size;
