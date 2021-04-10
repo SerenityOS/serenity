@@ -64,6 +64,7 @@ void ObjectConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.keys, keys, 1, attr);
     define_native_function(vm.names.values, values, 1, attr);
     define_native_function(vm.names.entries, entries, 1, attr);
+    define_native_function(vm.names.create, create, 2, attr);
 }
 
 ObjectConstructor::~ObjectConstructor()
@@ -309,6 +310,33 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
         return {};
 
     return Array::create_from(global_object, obj_arg->get_enumerable_own_property_names(PropertyKind::KeyAndValue));
+}
+
+// 20.1.2.2 Object.create, https://tc39.es/ecma262/#sec-object.create
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
+{
+    auto prototype_value = vm.argument(0);
+    auto properties = vm.argument(1);
+
+    Object* prototype;
+    if (prototype_value.is_null()) {
+        prototype = nullptr;
+    } else if (prototype_value.is_object()) {
+        prototype = &prototype_value.as_object();
+    } else {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
+        return {};
+    }
+
+    auto* object = Object::create_empty(global_object);
+    object->set_prototype(prototype);
+
+    if (!properties.is_undefined()) {
+        object->define_properties(properties);
+        if (vm.exception())
+            return {};
+    }
+    return object;
 }
 
 }
