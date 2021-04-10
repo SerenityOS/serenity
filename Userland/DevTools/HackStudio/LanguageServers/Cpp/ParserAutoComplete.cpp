@@ -37,7 +37,7 @@
 namespace LanguageServers::Cpp {
 
 ParserAutoComplete::ParserAutoComplete(ClientConnection& connection, const FileDB& filedb)
-    : AutoCompleteEngine(connection, filedb)
+    : AutoCompleteEngine(connection, filedb, true)
 {
 }
 
