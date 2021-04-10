@@ -44,35 +44,35 @@
                                                                              \
     [[nodiscard]] Prefix constexpr inline Enum operator|(Enum lhs, Enum rhs) \
     {                                                                        \
-        using Type = UnderlyingType<Enum>::Type;                             \
+        using Type = UnderlyingType<Enum>;                                   \
         return static_cast<Enum>(                                            \
             static_cast<Type>(lhs) | static_cast<Type>(rhs));                \
     }                                                                        \
                                                                              \
     [[nodiscard]] Prefix constexpr inline Enum operator&(Enum lhs, Enum rhs) \
     {                                                                        \
-        using Type = UnderlyingType<Enum>::Type;                             \
+        using Type = UnderlyingType<Enum>;                                   \
         return static_cast<Enum>(                                            \
             static_cast<Type>(lhs) & static_cast<Type>(rhs));                \
     }                                                                        \
                                                                              \
     [[nodiscard]] Prefix constexpr inline Enum operator^(Enum lhs, Enum rhs) \
     {                                                                        \
-        using Type = UnderlyingType<Enum>::Type;                             \
+        using Type = UnderlyingType<Enum>;                                   \
         return static_cast<Enum>(                                            \
             static_cast<Type>(lhs) ^ static_cast<Type>(rhs));                \
     }                                                                        \
                                                                              \
     [[nodiscard]] Prefix constexpr inline Enum operator~(Enum rhs)           \
     {                                                                        \
-        using Type = UnderlyingType<Enum>::Type;                             \
+        using Type = UnderlyingType<Enum>;                                   \
         return static_cast<Enum>(                                            \
             ~static_cast<Type>(rhs));                                        \
     }                                                                        \
                                                                              \
     Prefix constexpr inline Enum& operator|=(Enum& lhs, Enum rhs)            \
     {                                                                        \
-        using Type = UnderlyingType<Enum>::Type;                             \
+        using Type = UnderlyingType<Enum>;                                   \
         lhs = static_cast<Enum>(                                             \
             static_cast<Type>(lhs) | static_cast<Type>(rhs));                \
         return lhs;                                                          \
@@ -80,7 +80,7 @@
                                                                              \
     Prefix constexpr inline Enum& operator&=(Enum& lhs, Enum rhs)            \
     {                                                                        \
-        using Type = UnderlyingType<Enum>::Type;                             \
+        using Type = UnderlyingType<Enum>;                                   \
         lhs = static_cast<Enum>(                                             \
             static_cast<Type>(lhs) & static_cast<Type>(rhs));                \
         return lhs;                                                          \
@@ -88,7 +88,7 @@
                                                                              \
     Prefix constexpr inline Enum& operator^=(Enum& lhs, Enum rhs)            \
     {                                                                        \
-        using Type = UnderlyingType<Enum>::Type;                             \
+        using Type = UnderlyingType<Enum>;                                   \
         lhs = static_cast<Enum>(                                             \
             static_cast<Type>(lhs) ^ static_cast<Type>(rhs));                \
         return lhs;                                                          \
@@ -96,6 +96,6 @@
                                                                              \
     Prefix constexpr inline bool has_flag(Enum value, Enum mask)             \
     {                                                                        \
-        using Type = UnderlyingType<Enum>::Type;                             \
+        using Type = UnderlyingType<Enum>;                                   \
         return static_cast<Type>(value & mask) != 0;                         \
     }

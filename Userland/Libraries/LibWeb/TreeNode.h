@@ -49,7 +49,7 @@ public:
         VERIFY(!m_in_removed_last_ref);
         VERIFY(m_ref_count);
         if (!--m_ref_count) {
-            if constexpr (IsBaseOf<DOM::Node, T>::value) {
+            if constexpr (IsBaseOf<DOM::Node, T>) {
                 m_in_removed_last_ref = true;
                 static_cast<T*>(this)->removed_last_ref();
             } else {

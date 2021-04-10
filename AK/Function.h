@@ -39,13 +39,13 @@ class Function<Out(In...)> {
 public:
     Function() = default;
 
-    template<typename CallableType, class = typename EnableIf<!(IsPointer<CallableType>::value && IsFunction<typename RemovePointer<CallableType>::Type>::value) && IsRvalueReference<CallableType&&>::value>::Type>
+    template<typename CallableType, class = typename EnableIf<!(IsPointer<CallableType> && IsFunction<RemovePointer<CallableType>>)&&IsRvalueReference<CallableType&&>>::Type>
     Function(CallableType&& callable)
         : m_callable_wrapper(make<CallableWrapper<CallableType>>(move(callable)))
     {
     }
 
-    template<typename FunctionType, class = typename EnableIf<IsPointer<FunctionType>::value && IsFunction<typename RemovePointer<FunctionType>::Type>::value>::Type>
+    template<typename FunctionType, class = typename EnableIf<IsPointer<FunctionType> && IsFunction<RemovePointer<FunctionType>>>::Type>
     Function(FunctionType f)
         : m_callable_wrapper(make<CallableWrapper<FunctionType>>(move(f)))
     {
@@ -59,14 +59,14 @@ public:
 
     explicit operator bool() const { return !!m_callable_wrapper; }
 
-    template<typename CallableType, class = typename EnableIf<!(IsPointer<CallableType>::value && IsFunction<typename RemovePointer<CallableType>::Type>::value) && IsRvalueReference<CallableType&&>::value>::Type>
+    template<typename CallableType, class = typename EnableIf<!(IsPointer<CallableType> && IsFunction<RemovePointer<CallableType>>)&&IsRvalueReference<CallableType&&>>::Type>
     Function& operator=(CallableType&& callable)
     {
         m_callable_wrapper = make<CallableWrapper<CallableType>>(move(callable));
         return *this;
     }
 
-    template<typename FunctionType, class = typename EnableIf<IsPointer<FunctionType>::value && IsFunction<typename RemovePointer<FunctionType>::Type>::value>::Type>
+    template<typename FunctionType, class = typename EnableIf<IsPointer<FunctionType> && IsFunction<RemovePointer<FunctionType>>>::Type>
     Function& operator=(FunctionType f)
     {
         m_callable_wrapper = make<CallableWrapper<FunctionType>>(move(f));
@@ -103,7 +103,7 @@ private:
                 return m_callable(forward<In>(in)...);
             } else if constexpr (requires { m_callable(); }) {
                 return m_callable();
-            } else if constexpr (IsSame<void, Out>::value) {
+            } else if constexpr (IsVoid<Out>) {
                 return;
             } else {
                 return {};

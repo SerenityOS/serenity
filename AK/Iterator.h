@@ -89,9 +89,9 @@ private:
     static constexpr SimpleIterator begin(Container& container) { return { container, 0 }; }
     static constexpr SimpleIterator end(Container& container)
     {
-        using RawContainerType = typename RemoveCV<Container>::Type;
+        using RawContainerType = RemoveCV<Container>;
 
-        if constexpr (IsSame<StringView, RawContainerType>::value || IsSame<String, RawContainerType>::value)
+        if constexpr (IsSame<StringView, RawContainerType> || IsSame<String, RawContainerType>)
             return { container, container.length() };
         else
             return { container, container.size() };

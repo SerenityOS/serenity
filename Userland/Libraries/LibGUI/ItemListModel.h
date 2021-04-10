@@ -37,13 +37,13 @@ class ItemListModel : public Model {
 public:
     static constexpr auto IsTwoDimensional = requires(Container data)
     {
-        requires !IsVoid<ColumnNameListType>::value;
+        requires !IsVoid<ColumnNameListType>;
         data.at(0).at(0);
         data.at(0).size();
     };
 
     // Substitute 'void' for a dummy u8.
-    using ColumnNamesT = typename Conditional<IsVoid<ColumnNameListType>::value, u8, ColumnNameListType>::Type;
+    using ColumnNamesT = Conditional<IsVoid<ColumnNameListType>, u8, ColumnNameListType>;
 
     static NonnullRefPtr<ItemListModel> create(const Container& data, const ColumnNamesT& column_names, const Optional<size_t>& row_count = {}) requires(IsTwoDimensional)
     {

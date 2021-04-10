@@ -68,7 +68,7 @@ Result<T, ThreadError> Thread::join()
     }
 
     m_tid = 0;
-    if constexpr (IsVoid<T>::value)
+    if constexpr (IsVoid<T>)
         return {};
     else
         return { static_cast<T>(thread_return) };

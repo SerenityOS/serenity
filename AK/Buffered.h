@@ -41,7 +41,7 @@ template<typename StreamType, size_t Size = 4096, typename = void>
 class Buffered;
 
 template<typename StreamType, size_t Size>
-class Buffered<StreamType, Size, typename EnableIf<IsBaseOf<InputStream, StreamType>::value>::Type> final : public InputStream {
+class Buffered<StreamType, Size, typename EnableIf<IsBaseOf<InputStream, StreamType>>::Type> final : public InputStream {
     AK_MAKE_NONCOPYABLE(Buffered);
 
 public:
@@ -137,7 +137,7 @@ private:
 };
 
 template<typename StreamType, size_t Size>
-class Buffered<StreamType, Size, typename EnableIf<IsBaseOf<OutputStream, StreamType>::value>::Type> final : public OutputStream {
+class Buffered<StreamType, Size, typename EnableIf<IsBaseOf<OutputStream, StreamType>>::Type> final : public OutputStream {
     AK_MAKE_NONCOPYABLE(Buffered);
 
 public:

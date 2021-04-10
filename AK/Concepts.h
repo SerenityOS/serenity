@@ -33,19 +33,19 @@ namespace AK::Concepts {
 #if defined(__cpp_concepts) && !defined(__COVERITY__)
 
 template<typename T>
-concept Integral = IsIntegral<T>::value;
+concept Integral = IsIntegral<T>;
 
 template<typename T>
-concept FloatingPoint = IsFloatingPoint<T>::value;
+concept FloatingPoint = IsFloatingPoint<T>;
 
 template<typename T>
-concept Arithmetic = IsArithmetic<T>::value;
+concept Arithmetic = IsArithmetic<T>;
 
 template<typename T>
-concept Signed = IsSigned<T>::value;
+concept Signed = IsSigned<T>;
 
 template<typename T>
-concept Unsigned = IsUnsigned<T>::value;
+concept Unsigned = IsUnsigned<T>;
 
 #endif
 

@@ -276,7 +276,7 @@ public:
     }
 
     template<typename T>
-    static String number(T value) requires IsArithmetic<T>::value
+    static String number(T value) requires IsArithmetic<T>
     {
         return formatted("{}", value);
     }

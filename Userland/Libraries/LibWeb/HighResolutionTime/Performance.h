@@ -39,7 +39,7 @@ class Performance final
     , public Bindings::Wrappable {
 public:
     using WrapperType = Bindings::PerformanceWrapper;
-    using AllowOwnPtr = AK::TrueType;
+    using AllowOwnPtr = TrueType;
 
     explicit Performance(DOM::Window&);
     ~Performance();

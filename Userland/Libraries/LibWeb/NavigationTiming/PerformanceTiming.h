@@ -34,7 +34,7 @@ namespace Web::NavigationTiming {
 class PerformanceTiming final : public Bindings::Wrappable {
 public:
     using WrapperType = Bindings::PerformanceTimingWrapper;
-    using AllowOwnPtr = AK::TrueType;
+    using AllowOwnPtr = TrueType;
 
     explicit PerformanceTiming(DOM::Window&);
     ~PerformanceTiming();
