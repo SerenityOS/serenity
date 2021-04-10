@@ -133,6 +133,9 @@ void HeaderView::doubleclick_event(MouseEvent& event)
 
 void HeaderView::mousedown_event(MouseEvent& event)
 {
+    if (event.button() != GUI::MouseButton::Left)
+        return;
+
     if (!model())
         return;
 
