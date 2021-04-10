@@ -1844,7 +1844,7 @@ void Gfx::Painter::draw_ui_text(const Gfx::IntRect& rect, const StringView& text
                 int y = text_rect.bottom() + 1;
                 int x1 = text_rect.left() + width;
                 int x2 = x1 + font.glyph_or_emoji_width(*it);
-                draw_line({ x1, y }, { x2, y }, Color::Black);
+                draw_line({ x1, y }, { x2, y }, color);
                 break;
             }
             width += font.glyph_or_emoji_width(*it) + font.glyph_spacing();
