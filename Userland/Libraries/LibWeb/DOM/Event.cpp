@@ -56,4 +56,27 @@ void Event::set_cancelled_flag()
         m_cancelled = true;
 }
 
+// https://dom.spec.whatwg.org/#concept-event-initialize
+void Event::initialize(const String& type, bool bubbles, bool cancelable)
+{
+    m_initialized = true;
+    m_stop_propagation = false;
+    m_stop_immediate_propagation = false;
+    m_cancelled = false;
+    m_is_trusted = false;
+    m_target = nullptr;
+    m_type = type;
+    m_bubbles = bubbles;
+    m_cancelable = cancelable;
+}
+
+// https://dom.spec.whatwg.org/#dom-event-initevent
+void Event::init_event(const String& type, bool bubbles, bool cancelable)
+{
+    if (m_dispatch)
+        return;
+
+    initialize(type, bubbles, cancelable);
+}
+
 }
