@@ -657,22 +657,22 @@ void Window::ensure_window_menu()
         m_window_menu = Menu::construct(nullptr, -1, "(Window Menu)");
         m_window_menu->set_window_menu_of(*this);
 
-        auto minimize_item = make<MenuItem>(*m_window_menu, 1, m_minimized ? "Unminimize" : "Minimize");
+        auto minimize_item = make<MenuItem>(*m_window_menu, 1, m_minimized ? "&Unminimize" : "Mi&nimize");
         m_window_menu_minimize_item = minimize_item.ptr();
         m_window_menu->add_item(move(minimize_item));
 
-        auto maximize_item = make<MenuItem>(*m_window_menu, 2, m_maximized ? "Restore" : "Maximize");
+        auto maximize_item = make<MenuItem>(*m_window_menu, 2, m_maximized ? "&Restore" : "Ma&ximize");
         m_window_menu_maximize_item = maximize_item.ptr();
         m_window_menu->add_item(move(maximize_item));
 
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
-        auto menubar_visibility_item = make<MenuItem>(*m_window_menu, 4, "Menu bar");
+        auto menubar_visibility_item = make<MenuItem>(*m_window_menu, 4, "Menu &Bar");
         m_window_menu_menubar_visibility_item = menubar_visibility_item.ptr();
         menubar_visibility_item->set_checkable(true);
         m_window_menu->add_item(move(menubar_visibility_item));
 
-        auto close_item = make<MenuItem>(*m_window_menu, 3, "Close");
+        auto close_item = make<MenuItem>(*m_window_menu, 3, "&Close");
         m_window_menu_close_item = close_item.ptr();
         m_window_menu_close_item->set_icon(&close_icon());
         m_window_menu_close_item->set_default(true);
