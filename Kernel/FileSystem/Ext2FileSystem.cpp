@@ -900,10 +900,10 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
         size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
         size_t num_bytes_to_copy = min((off_t)block_size - offset_into_block, remaining_count);
         auto buffer_offset = buffer.offset(nread);
-        int err = fs().read_block(block_index, &buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache);
-        if (err < 0) {
+        auto result = fs().read_block(block_index, &buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache);
+        if (result.is_error()) {
             dmesgln("Ext2FSInode[{}]::read_bytes(): Failed to read block {} (index {})", identifier(), block_index.value(), bi);
-            return err;
+            return result.error();
         }
         remaining_count -= num_bytes_to_copy;
         nread += num_bytes_to_copy;
