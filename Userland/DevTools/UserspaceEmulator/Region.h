@@ -10,6 +10,7 @@
 #include "ValueWithShadow.h"
 #include <AK/TypeCasts.h>
 #include <AK/Types.h>
+#include <LibX86/Types.h>
 
 namespace UserspaceEmulator {
 
@@ -31,11 +32,15 @@ public:
     virtual void write16(u32 offset, ValueWithShadow<u16>) = 0;
     virtual void write32(u32 offset, ValueWithShadow<u32>) = 0;
     virtual void write64(u32 offset, ValueWithShadow<u64>) = 0;
+    virtual void write128(u32 offset, ValueWithShadow<u128>) = 0;
+    virtual void write256(u32 offset, ValueWithShadow<u256>) = 0;
 
     virtual ValueWithShadow<u8> read8(u32 offset) = 0;
     virtual ValueWithShadow<u16> read16(u32 offset) = 0;
     virtual ValueWithShadow<u32> read32(u32 offset) = 0;
     virtual ValueWithShadow<u64> read64(u32 offset) = 0;
+    virtual ValueWithShadow<u128> read128(u32 offset) = 0;
+    virtual ValueWithShadow<u256> read256(u32 offset) = 0;
 
     virtual u8* cacheable_ptr([[maybe_unused]] u32 offset) { return nullptr; }
 
