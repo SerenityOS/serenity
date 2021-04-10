@@ -38,6 +38,7 @@ public:
 
     int selected_glyph() const { return m_selected_glyph; }
     void set_selected_glyph(int);
+    void scroll_to_glyph(int glyph);
 
     int rows() const { return m_rows; }
     int columns() const { return m_columns; }
@@ -57,7 +58,6 @@ private:
     virtual void resize_event(GUI::ResizeEvent&) override;
 
     Gfx::IntRect get_outer_rect(int glyph) const;
-    void scroll_to_glyph(int glyph);
 
     RefPtr<Gfx::BitmapFont> m_font;
     int m_glyph_count { 384 };

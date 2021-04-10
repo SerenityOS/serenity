@@ -42,6 +42,7 @@ public:
     const String& path() { return m_path; }
     const Gfx::BitmapFont& edited_font() { return *m_edited_font; }
     void initialize(const String& path, RefPtr<Gfx::BitmapFont>&&);
+    void initialize_menubar(GUI::MenuBar&);
 
     bool is_showing_font_metadata() { return m_font_metadata; }
     void set_show_font_metadata(bool b);
@@ -55,10 +56,24 @@ private:
     RefPtr<GlyphMapWidget> m_glyph_map_widget;
     RefPtr<GlyphEditorWidget> m_glyph_editor_widget;
 
+    RefPtr<GUI::Action> m_new_action;
+    RefPtr<GUI::Action> m_open_action;
+    RefPtr<GUI::Action> m_save_action;
+    RefPtr<GUI::Action> m_save_as_action;
+
+    RefPtr<GUI::Action> m_cut_action;
+    RefPtr<GUI::Action> m_copy_action;
+    RefPtr<GUI::Action> m_paste_action;
+    RefPtr<GUI::Action> m_delete_action;
+
+    RefPtr<GUI::Action> m_open_preview_action;
+    RefPtr<GUI::Action> m_show_metadata_action;
+
     RefPtr<GUI::Window> m_font_preview_window;
     RefPtr<GUI::Widget> m_left_column_container;
     RefPtr<GUI::Widget> m_glyph_editor_container;
-    RefPtr<GUI::SpinBox> m_weight_spinbox;
+    RefPtr<GUI::ComboBox> m_weight_combobox;
+    RefPtr<GUI::ComboBox> m_type_combobox;
     RefPtr<GUI::SpinBox> m_spacing_spinbox;
     RefPtr<GUI::SpinBox> m_baseline_spinbox;
     RefPtr<GUI::SpinBox> m_mean_line_spinbox;
@@ -70,5 +85,7 @@ private:
     RefPtr<GUI::GroupBox> m_font_metadata_groupbox;
 
     String m_path;
+    Vector<String> m_font_weight_list;
+    Vector<String> m_font_type_list;
     bool m_font_metadata { true };
 };
