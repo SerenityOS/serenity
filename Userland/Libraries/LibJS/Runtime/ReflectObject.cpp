@@ -176,7 +176,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::delete_property)
         if (property_key_as_double >= 0 && (i32)property_key_as_double == property_key_as_double)
             property_name = PropertyName(property_key_as_double);
     }
-    return target->delete_property(property_name);
+    return Value(target->delete_property(property_name));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get)

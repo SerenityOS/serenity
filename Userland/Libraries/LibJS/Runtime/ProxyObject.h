@@ -57,7 +57,7 @@ public:
     virtual bool has_property(const PropertyName& name) const override;
     virtual Value get(const PropertyName& name, Value receiver) const override;
     virtual bool put(const PropertyName& name, Value value, Value receiver) override;
-    virtual Value delete_property(const PropertyName& name) override;
+    virtual bool delete_property(const PropertyName& name) override;
 
     void revoke() { m_is_revoked = true; }
 
