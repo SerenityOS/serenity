@@ -118,7 +118,7 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::MenuBar::construct();
 
-    auto& app_menu = menubar->add_menu("File");
+    auto& app_menu = menubar->add_menu("&File");
     app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window, {}, "/res/fonts/");
         if (!open_path.has_value())
@@ -158,14 +158,14 @@ int main(int argc, char** argv)
         app->quit();
     }));
 
-    auto& view_menu = menubar->add_menu("View");
-    auto set_font_metadata = GUI::Action::create_checkable("Font metadata", { Mod_Ctrl, Key_M }, [&](auto& action) {
+    auto& view_menu = menubar->add_menu("&View");
+    auto set_font_metadata = GUI::Action::create_checkable("Font &Metadata", { Mod_Ctrl, Key_M }, [&](auto& action) {
         static_cast<FontEditorWidget*>(window->main_widget())->set_show_font_metadata(action.is_checked());
     });
     set_font_metadata->set_checked(true);
     view_menu.add_action(*set_font_metadata);
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/FontEditor.md"), "/bin/Help");
     }));
