@@ -237,6 +237,6 @@ private:
 namespace AK {
 
 template<typename... Args>
-using CheckedFormatString = Format::Detail::CheckedFormatString<typename IdentityType<Args>::Type...>;
+using CheckedFormatString = Format::Detail::CheckedFormatString<IdentityType<Args>...>;
 
 }

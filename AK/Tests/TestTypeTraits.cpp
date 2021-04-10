@@ -29,13 +29,13 @@
 #include <AK/TypeList.h>
 
 #define STATIC_EXPECT_EQ(lhs, rhs) \
-    static_assert(IsSame<lhs, rhs>::value, "");
+    static_assert(IsSame<lhs, rhs>, "");
 
 #define STATIC_EXPECT_FALSE(Expression) \
-    static_assert(!Expression::value, "");
+    static_assert(!Expression, "");
 
 #define STATIC_EXPECT_TRUE(Expression) \
-    static_assert(Expression::value, "");
+    static_assert(Expression, "");
 
 #define EXPECT_TRAIT_TRUE(trait, ...)                                     \
     for_each_type<TypeList<__VA_ARGS__>>([]<typename T>(TypeWrapper<T>) { \
@@ -49,7 +49,7 @@
 
 #define EXPECT_EQ_WITH_TRAIT(trait, ListA, ListB)                                                   \
     for_each_type_zipped<ListA, ListB>([]<typename A, typename B>(TypeWrapper<A>, TypeWrapper<B>) { \
-        STATIC_EXPECT_EQ(typename trait<A>::Type, B);                                               \
+        STATIC_EXPECT_EQ(trait<A>, B);                                                              \
     })
 
 struct Empty {
@@ -120,7 +120,7 @@ TEST_CASE(AddConst)
 
 TEST_CASE(UnderlyingType)
 {
-    using Type = UnderlyingType<Enummer>::Type;
+    using Type = UnderlyingType<Enummer>;
 
     STATIC_EXPECT_EQ(Type, u8);
 }
