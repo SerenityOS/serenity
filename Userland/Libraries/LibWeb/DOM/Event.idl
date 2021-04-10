@@ -23,4 +23,6 @@ interface Event {
 
     readonly attribute boolean isTrusted;
 
+    undefined initEvent(DOMString type, optional boolean bubbles = false, optional boolean cancelable = false);
+
 };

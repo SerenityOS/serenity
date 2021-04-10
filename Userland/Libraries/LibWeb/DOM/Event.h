@@ -154,12 +154,16 @@ public:
         m_stop_immediate_propagation = true;
     }
 
+    void init_event(const String&, bool, bool);
+
 protected:
     explicit Event(const FlyString& type)
         : m_type(type)
         , m_initialized(true)
     {
     }
+
+    void initialize(const String&, bool, bool);
 
 private:
     FlyString m_type;
