@@ -54,7 +54,7 @@
 
             @GUI::GroupBox {
                 name: "font_metadata_groupbox"
-                title: "Font metadata"
+                title: "Metadata"
                 fixed_height: 220
                 layout: @GUI::VerticalBoxLayout {
                     margins: [8, 16, 8, 4]
@@ -97,6 +97,23 @@
                     }
 
                     @GUI::Label {
+                        name: "weight_label"
+                        fixed_width: 100
+                        text_alignment: "CenterLeft"
+                        text: "Weight:"
+                    }
+
+                    @GUI::ComboBox {
+                        name: "weight_combobox"
+                        model_only: true
+                    }
+                }
+
+                @GUI::Widget {
+                    layout: @GUI::HorizontalBoxLayout {
+                    }
+
+                    @GUI::Label {
                         name: "presentation_label"
                         fixed_width: 100
                         text_alignment: "CenterLeft"
@@ -107,24 +124,6 @@
                         name: "presentation_spinbox"
                         min: 0
                         max: 255
-                    }
-                }
-
-                @GUI::Widget {
-                    layout: @GUI::HorizontalBoxLayout {
-                    }
-
-                    @GUI::Label {
-                        name: "weight_label"
-                        fixed_width: 100
-                        text_alignment: "CenterLeft"
-                        text: "Weight:"
-                    }
-
-                    @GUI::SpinBox {
-                        name: "weight_spinbox"
-                        min: 0
-                        max: 65535
                     }
                 }
 
@@ -194,6 +193,12 @@
                     }
 
                     @GUI::Widget {
+                        fixed_width: 16
+                    }
+
+                    @GUI::ComboBox {
+                        name: "type_combobox"
+                        model_only: true
                     }
                 }
             }

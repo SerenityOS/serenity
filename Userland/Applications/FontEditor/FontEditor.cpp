@@ -29,13 +29,20 @@
 #include "GlyphMapWidget.h"
 #include <AK/StringBuilder.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/Clipboard.h>
+#include <LibGUI/ComboBox.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/FontPickerWeightModel.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
@@ -67,7 +74,6 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     preview_box.layout()->set_margins({ 8, 8, 8, 8 });
 
     auto& preview_label = preview_box.add<GUI::Label>();
-    preview_label.set_text("Five quacking zephyrs jolt my wax bed!");
     preview_label.set_font(editor.edited_font());
 
     editor.on_initialize = [&] {
@@ -75,10 +81,14 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     };
 
     auto& preview_textbox = main_widget.add<GUI::TextBox>();
-    preview_textbox.set_text("Five quacking zephyrs jolt my wax bed!");
+    preview_textbox.set_text("waxy and quivering jocks fumble the pizza");
+    preview_textbox.set_placeholder("Preview text");
 
     preview_textbox.on_change = [&] {
-        preview_label.set_text(preview_textbox.text());
+        auto preview = String::formatted("{}\n{}",
+            preview_textbox.text(),
+            preview_textbox.text().to_uppercase());
+        preview_label.set_text(preview);
     };
 
     return window;
@@ -97,7 +107,8 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     m_name_textbox = *find_descendant_of_type_named<GUI::TextBox>("name_textbox");
     m_family_textbox = *find_descendant_of_type_named<GUI::TextBox>("family_textbox");
     m_presentation_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("presentation_spinbox");
-    m_weight_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("weight_spinbox");
+    m_weight_combobox = *find_descendant_of_type_named<GUI::ComboBox>("weight_combobox");
+    m_type_combobox = *find_descendant_of_type_named<GUI::ComboBox>("type_combobox");
     m_spacing_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("spacing_spinbox");
     m_mean_line_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("mean_line_spinbox");
     m_baseline_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("baseline_spinbox");
@@ -132,60 +143,83 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         window()->set_title(String::formatted("{} - Font Editor", open_path.value()));
         initialize(open_path.value(), move(new_font));
     });
-    auto save_action = GUI::CommonActions::make_save_action([&](auto&) {
+    m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         save_as(m_path);
     });
-    auto cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
+    m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
+        LexicalPath lexical_path(m_path);
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), lexical_path.title(), lexical_path.extension());
+        if (!save_path.has_value())
+            return;
+
+        if (save_as(save_path.value()))
+            window()->set_title(String::formatted("{} - Font Editor", save_path.value()));
+    });
+    m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
         m_glyph_editor_widget->cut_glyph();
     });
-    auto copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
+    m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
         m_glyph_editor_widget->copy_glyph();
     });
-    auto paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
+    m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
         m_glyph_editor_widget->paste_glyph();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
     });
-    auto delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
+    m_paste_action->set_enabled(GUI::Clipboard::the().mime_type() == "glyph/x-fonteditor");
+    m_delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), m_edited_font->max_glyph_width());
         m_glyph_editor_widget->delete_glyph();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
         m_glyph_editor_width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
     });
-    auto open_preview_action = GUI::Action::create("Preview", Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
+    m_open_preview_action = GUI::Action::create("Preview Font", Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
         if (!m_font_preview_window)
             m_font_preview_window = create_font_preview_window(*this);
         m_font_preview_window->show();
         m_font_preview_window->move_to_front();
     });
-    open_preview_action->set_checked(false);
+    m_open_preview_action->set_checked(false);
+    m_show_metadata_action = GUI::Action::create_checkable("Font Metadata", { Mod_Ctrl, Key_M }, [&](auto& action) {
+        set_show_font_metadata(action.is_checked());
+    });
+    m_show_metadata_action->set_checked(true);
 
-    toolbar.add_action(*open_action);
-    toolbar.add_action(*save_action);
+    toolbar.add_action(*m_new_action);
+    toolbar.add_action(*m_open_action);
+    toolbar.add_action(*m_save_action);
     toolbar.add_separator();
-    toolbar.add_action(*cut_action);
-    toolbar.add_action(*copy_action);
-    toolbar.add_action(*paste_action);
-    toolbar.add_action(*delete_action);
+    toolbar.add_action(*m_cut_action);
+    toolbar.add_action(*m_copy_action);
+    toolbar.add_action(*m_paste_action);
+    toolbar.add_action(*m_delete_action);
     toolbar.add_separator();
-    toolbar.add_action(*open_preview_action);
+    toolbar.add_action(*m_open_preview_action);
 
-    m_glyph_editor_widget->on_glyph_altered = [this, update_demo](u8 glyph) {
+    GUI::Clipboard::the().on_change = [&](const String& data_type) {
+        m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");
+    };
+
+    m_glyph_editor_widget->on_glyph_altered = [this, update_demo](int glyph) {
         m_glyph_map_widget->update_glyph(glyph);
         update_demo();
     };
 
-    m_glyph_map_widget->on_glyph_selected = [&](size_t glyph) {
+    m_glyph_map_widget->on_glyph_selected = [&](int glyph) {
         m_glyph_editor_widget->set_glyph(glyph);
         m_glyph_editor_width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
         StringBuilder builder;
         builder.appendff("{:#02x} (", glyph);
         if (glyph < 128) {
-            builder.append(glyph);
+            if (glyph == 10)
+                builder.append("LF");
+            else
+                builder.append(glyph);
         } else {
             builder.append(128 | 64 | (glyph / 64));
             builder.append(128 | (glyph % 64));
         }
-        builder.append(')');
+        builder.append(") ");
+        builder.appendff("[{}x{}]", m_edited_font->glyph_width(glyph), m_edited_font->glyph_height());
         status_bar.set_text(builder.to_string());
     };
 
@@ -212,9 +246,12 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         update_demo();
     };
 
-    m_weight_spinbox->on_change = [this, update_demo](int value) {
-        m_edited_font->set_weight(value);
-        update_demo();
+    m_weight_combobox->on_change = [this]() {
+        m_edited_font->set_weight(GUI::name_to_weight(m_weight_combobox->text()));
+    };
+
+    m_type_combobox->on_change = [this](auto&, const auto& index) {
+        m_edited_font->set_type(static_cast<Gfx::FontTypes>(index.row()));
     };
 
     m_presentation_spinbox->on_change = [this, update_demo](int value) {
@@ -265,17 +302,74 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
     m_family_textbox->set_text(m_edited_font->family());
 
     m_presentation_spinbox->set_value(m_edited_font->presentation_size());
-    m_weight_spinbox->set_value(m_edited_font->weight());
     m_spacing_spinbox->set_value(m_edited_font->glyph_spacing());
     m_mean_line_spinbox->set_value(m_edited_font->mean_line());
     m_baseline_spinbox->set_value(m_edited_font->baseline());
 
+    m_font_weight_list.clear();
+    for (auto& it : GUI::font_weight_names)
+        m_font_weight_list.append(it.name);
+    m_weight_combobox->set_model(*GUI::ItemListModel<String>::create(m_font_weight_list));
+
+    int i = 0;
+    for (auto it : GUI::font_weight_names) {
+        if (it.weight == m_edited_font->weight()) {
+            m_weight_combobox->set_selected_index(i);
+            break;
+        }
+        i++;
+    }
+
+    m_font_type_list.clear();
+    StringBuilder type_count;
+    for (int i = 0; i < Gfx::FontTypes::__Count; i++) {
+        type_count.appendff("{}", Gfx::BitmapFont::type_name_by_type(static_cast<Gfx::FontTypes>(i)));
+        m_font_type_list.append(type_count.to_string());
+        type_count.clear();
+    }
+    m_type_combobox->set_model(*GUI::ItemListModel<String>::create(m_font_type_list));
+    m_type_combobox->set_selected_index(m_edited_font->type());
+
     m_fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width());
 
     m_glyph_map_widget->set_selected_glyph('A');
+    deferred_invoke([this](auto&) {
+        m_glyph_map_widget->set_focus(true);
+        m_glyph_map_widget->scroll_to_glyph(m_glyph_map_widget->selected_glyph());
+    });
 
     if (on_initialize)
         on_initialize();
+}
+
+void FontEditorWidget::initialize_menubar(GUI::MenuBar& menubar)
+{
+    auto& app_menu = menubar.add_menu("&File");
+    app_menu.add_action(*m_new_action);
+    app_menu.add_action(*m_open_action);
+    app_menu.add_action(*m_save_action);
+    app_menu.add_action(*m_save_as_action);
+    app_menu.add_separator();
+    app_menu.add_action(GUI::CommonActions::make_quit_action([this](auto&) {
+        GUI::Application::the()->quit();
+    }));
+
+    auto& edit_menu = menubar.add_menu("&Edit");
+    edit_menu.add_action(*m_cut_action);
+    edit_menu.add_action(*m_copy_action);
+    edit_menu.add_action(*m_paste_action);
+    edit_menu.add_action(*m_delete_action);
+
+    auto& view_menu = menubar.add_menu("&View");
+    view_menu.add_action(*m_open_preview_action);
+    view_menu.add_separator();
+    view_menu.add_action(*m_show_metadata_action);
+
+    auto& help_menu = menubar.add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/FontEditor.md"), "/bin/Help");
+    }));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Font Editor", GUI::Icon::default_icon("app-font-editor"), window()));
 }
 
 bool FontEditorWidget::save_as(const String& path)
