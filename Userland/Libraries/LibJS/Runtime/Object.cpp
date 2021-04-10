@@ -900,6 +900,49 @@ bool Object::define_native_property(const StringOrSymbol& property_name, AK::Fun
     return define_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
 }
 
+// 20.1.2.3.1 ObjectDefineProperties, https://tc39.es/ecma262/#sec-objectdefineproperties
+void Object::define_properties(Value properties)
+{
+    auto& vm = this->vm();
+    auto* props = properties.to_object(global_object());
+    if (!props)
+        return;
+    auto keys = props->get_own_properties(PropertyKind::Key);
+    if (vm.exception())
+        return;
+    struct NameAndDescriptor {
+        PropertyName name;
+        PropertyDescriptor descriptor;
+    };
+    Vector<NameAndDescriptor> descriptors;
+    for (auto& key : keys) {
+        auto property_name = PropertyName::from_value(global_object(), key);
+        auto property_descriptor = props->get_own_property_descriptor(property_name);
+        if (property_descriptor.has_value() && property_descriptor->attributes.is_enumerable()) {
+            auto descriptor_object = props->get(property_name);
+            if (vm.exception())
+                return;
+            if (!descriptor_object.is_object()) {
+                vm.throw_exception<TypeError>(global_object(), ErrorType::NotAnObject, descriptor_object.to_string_without_side_effects());
+                return;
+            }
+            auto descriptor = PropertyDescriptor::from_dictionary(vm, descriptor_object.as_object());
+            if (vm.exception())
+                return;
+            descriptors.append({ property_name, descriptor });
+        }
+    }
+    for (auto& [name, descriptor] : descriptors) {
+        // FIXME: The spec has both of this handled by DefinePropertyOrThrow(O, P, desc).
+        //        We should invest some time in improving object property handling, it not being
+        //        super close to the spec makes this and other things unnecessarily complicated.
+        if (descriptor.is_accessor_descriptor())
+            define_accessor(name, descriptor.getter, descriptor.setter, descriptor.attributes);
+        else
+            define_property(name, descriptor.value, descriptor.attributes);
+    }
+}
+
 void Object::visit_edges(Cell::Visitor& visitor)
 {
     Cell::visit_edges(visitor);
