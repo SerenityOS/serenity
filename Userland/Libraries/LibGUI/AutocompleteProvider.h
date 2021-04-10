@@ -69,6 +69,8 @@ public:
         Class,
         Variable,
         PreprocessorDefinition,
+        Namespace,
+        Member,
     };
 
     struct Declaration {
