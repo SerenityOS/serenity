@@ -44,12 +44,10 @@ class Application::TooltipWindow final : public Window {
     C_OBJECT(TooltipWindow);
 
 public:
-    void set_tooltip(String tooltip)
+    void set_tooltip(const String& tooltip)
     {
-        // FIXME: Add some kind of GUI::Label auto-sizing feature.
-        int text_width = m_label->font().width(tooltip);
-        set_rect(rect().x(), rect().y(), text_width + 10, m_label->font().glyph_height() + 8);
-        m_label->set_text(move(tooltip));
+        m_label->set_text(Gfx::parse_ampersand_string(tooltip));
+        set_rect(rect().x(), rect().y(), m_label->min_width() + 10, m_label->font().glyph_height() + 8);
     }
 
 private:
@@ -63,6 +61,7 @@ private:
         m_label->set_frame_thickness(1);
         m_label->set_frame_shape(Gfx::FrameShape::Container);
         m_label->set_frame_shadow(Gfx::FrameShadow::Plain);
+        m_label->set_autosize(true);
     }
 
     RefPtr<Label> m_label;
