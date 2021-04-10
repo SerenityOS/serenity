@@ -536,7 +536,7 @@ bool Object::define_property(const PropertyName& property_name, Value value, Pro
     return put_own_property(property_name.to_string_or_symbol(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 }
 
-bool Object::define_accessor(const PropertyName& property_name, Function& getter_or_setter, bool is_getter, PropertyAttributes attributes, bool throw_exceptions)
+bool Object::define_accessor(const PropertyName& property_name, Function* getter, Function* setter, PropertyAttributes attributes, bool throw_exceptions)
 {
     VERIFY(property_name.is_valid());
 
@@ -548,18 +548,18 @@ bool Object::define_accessor(const PropertyName& property_name, Function& getter
             accessor = &existing_property.as_accessor();
     }
     if (!accessor) {
-        accessor = Accessor::create(vm(), nullptr, nullptr);
+        accessor = Accessor::create(vm(), getter, setter);
         bool definition_success = define_property(property_name, accessor, attributes, throw_exceptions);
         if (vm().exception())
             return {};
         if (!definition_success)
             return false;
+    } else {
+        if (getter)
+            accessor->set_getter(getter);
+        if (setter)
+            accessor->set_setter(setter);
     }
-    if (is_getter)
-        accessor->set_getter(&getter_or_setter);
-    else
-        accessor->set_setter(&getter_or_setter);
-
     return true;
 }
 
