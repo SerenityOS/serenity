@@ -36,12 +36,13 @@
 
 namespace Gfx {
 
+// Note: Perhaps put glyph count directly in header
+// and sidestep FontType conflation/sync maintenance
 enum FontTypes {
     Default = 0,
-    LatinExtendedA = 1,
-    // There are many blocks between LatinExtendedA and Cyrrilic that has to be added later.
-    // Cyrrilic has to be switched to another number
-    Cyrillic = 2
+    LatinExtendedA,
+    Cyrillic,
+    __Count
 };
 
 class BitmapFont : public Font {
@@ -118,11 +119,13 @@ public:
 
     const Font& bold_variant() const;
 
+    static size_t glyph_count_by_type(FontTypes type);
+    static String type_name_by_type(FontTypes type);
+
 private:
     BitmapFont(String name, String family, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, bool owns_arrays = false);
 
     static RefPtr<BitmapFont> load_from_memory(const u8*);
-    static size_t glyph_count_by_type(FontTypes type);
 
     void update_x_height() { m_x_height = m_baseline - m_mean_line; };
 
