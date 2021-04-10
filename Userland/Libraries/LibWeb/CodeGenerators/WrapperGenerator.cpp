@@ -109,6 +109,7 @@ struct Parameter {
     Type type;
     String name;
     bool optional { false };
+    String optional_default_value {};
 };
 
 struct Function {
@@ -291,8 +292,20 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
                 consume_whitespace();
             auto type = parse_type();
             consume_whitespace();
-            auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')'; });
-            parameters.append({ move(type), move(name), optional });
+            auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')' || ch == '='; });
+            Parameter parameter = { move(type), move(name), optional };
+            consume_whitespace();
+            if (lexer.next_is(')')) {
+                parameters.append(parameter);
+                break;
+            }
+            if (lexer.next_is('=') && optional) {
+                assert_specific('=');
+                consume_whitespace();
+                auto default_value = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')'; });
+                parameter.optional_default_value = default_value;
+            }
+            parameters.append(parameter);
             if (lexer.next_is(')'))
                 break;
             assert_specific(',');
@@ -508,7 +521,7 @@ static bool is_wrappable_type(const IDL::Type& type)
 }
 
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, const String& js_name, const String& js_suffix, const String& cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false)
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, const String& js_name, const String& js_suffix, const String& cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false, String optional_default_value = {})
 {
     auto scoped_generator = generator.fork();
     scoped_generator.set("cpp_name", make_input_acceptable_cpp(cpp_name));
@@ -517,12 +530,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
     scoped_generator.set("parameter.type.name", parameter.type.name);
 
+    if (!optional_default_value.is_null())
+        scoped_generator.set("parameter.optional_default_value", optional_default_value);
+
     if (return_void)
         scoped_generator.set("return_statement", "return;");
     else
         scoped_generator.set("return_statement", "return {};");
 
-    // FIXME: Add support for optional and nullable to all types
+    // FIXME: Add support for optional, nullable and default values to all types
     if (parameter.type.is_string()) {
         if (!optional) {
             scoped_generator.append(R"~~~(
@@ -537,8 +553,16 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
         if (vm.exception())
             @return_statement@
+    })~~~");
+            if (!optional_default_value.is_null()) {
+                scoped_generator.append(R"~~~( else {
+        @cpp_name@ = @parameter.optional_default_value@;
     }
 )~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+)~~~");
+            }
         }
     } else if (parameter.type.name == "EventListener") {
         if (parameter.type.nullable) {
@@ -581,9 +605,35 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         @return_statement@
 )~~~");
     } else if (parameter.type.name == "boolean") {
-        scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @js_name@@js_suffix@.to_boolean();
+        if (!optional) {
+            scoped_generator.append(R"~~~(
+    bool @cpp_name@ = @js_name@@js_suffix@.to_boolean();
 )~~~");
+        } else {
+            if (!optional_default_value.is_null()) {
+                scoped_generator.append(R"~~~(
+    bool @cpp_name@;
+)~~~");
+            } else {
+                if (!optional_default_value.is_null()) {
+                    scoped_generator.append(R"~~~(
+    Optional<bool> @cpp_name@;
+)~~~");
+                }
+            }
+            scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined())
+        @cpp_name@ = @js_name@@js_suffix@.to_boolean();)~~~");
+            if (!optional_default_value.is_null()) {
+                scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = @parameter.optional_default_value@;
+)~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+)~~~");
+            }
+        }
     } else if (parameter.type.name == "unsigned long") {
         scoped_generator.append(R"~~~(
     auto @cpp_name@ = @js_name@@js_suffix@.to_u32(global_object);
@@ -647,7 +697,7 @@ static void generate_arguments(SourceGenerator& generator, const Vector<IDL::Par
     auto arg@argument.index@ = vm.argument(@argument.index@);
 )~~~");
         // FIXME: Parameters can have [LegacyNullToEmptyString] attached.
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), return_void, false, parameter.optional);
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), return_void, false, parameter.optional, parameter.optional_default_value);
         ++argument_index;
     }
 
