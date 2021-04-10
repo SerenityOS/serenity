@@ -25,4 +25,15 @@ afterInitialPageLoad(() => {
             HIDDEN TEXT
         `);
     });
+
+    test("Node.isConnected", () => {
+        var element = document.createElement("p");
+        expect(element.isConnected).toBeFalse();
+
+        document.body.appendChild(element);
+        expect(element.isConnected).toBeTrue();
+
+        document.body.removeChild(element);
+        expect(element.isConnected).toBeFalse();
+    });
 });
