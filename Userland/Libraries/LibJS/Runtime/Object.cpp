@@ -372,8 +372,6 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
         if (!metadata.has_value())
             return {};
         value = m_storage[metadata.value().offset];
-        if (vm().exception())
-            return {};
         attributes = metadata.value().attributes;
     }
 
