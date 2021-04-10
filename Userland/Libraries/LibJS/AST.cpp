@@ -814,21 +814,20 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         auto& target = method.is_static() ? *class_constructor : class_prototype.as_object();
         method_function.set_home_object(&target);
 
-        if (method.kind() == ClassMethod::Kind::Method) {
+        switch (method.kind()) {
+        case ClassMethod::Kind::Method:
             target.define_property(StringOrSymbol::from_value(global_object, key), method_value);
-        } else {
-            String accessor_name = [&] {
-                switch (method.kind()) {
-                case ClassMethod::Kind::Getter:
-                    return String::formatted("get {}", get_function_name(global_object, key));
-                case ClassMethod::Kind::Setter:
-                    return String::formatted("set {}", get_function_name(global_object, key));
-                default:
-                    VERIFY_NOT_REACHED();
-                }
-            }();
-            update_function_name(method_value, accessor_name);
-            target.define_accessor(StringOrSymbol::from_value(global_object, key), method_function, method.kind() == ClassMethod::Kind::Getter, Attribute::Configurable | Attribute::Enumerable);
+            break;
+        case ClassMethod::Kind::Getter:
+            update_function_name(method_value, String::formatted("get {}", get_function_name(global_object, key)));
+            target.define_accessor(StringOrSymbol::from_value(global_object, key), &method_function, nullptr, Attribute::Configurable | Attribute::Enumerable);
+            break;
+        case ClassMethod::Kind::Setter:
+            update_function_name(method_value, String::formatted("set {}", get_function_name(global_object, key)));
+            target.define_accessor(StringOrSymbol::from_value(global_object, key), nullptr, &method_function, Attribute::Configurable | Attribute::Enumerable);
+            break;
+        default:
+            VERIFY_NOT_REACHED();
         }
         if (interpreter.exception())
             return {};
@@ -1675,16 +1674,24 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 
         update_function_name(value, name);
 
-        if (property.type() == ObjectProperty::Type::Getter || property.type() == ObjectProperty::Type::Setter) {
+        switch (property.type()) {
+        case ObjectProperty::Type::Getter:
             VERIFY(value.is_function());
-            object->define_accessor(PropertyName::from_value(global_object, key), value.as_function(), property.type() == ObjectProperty::Type::Getter, Attribute::Configurable | Attribute::Enumerable);
-            if (interpreter.exception())
-                return {};
-        } else {
+            object->define_accessor(PropertyName::from_value(global_object, key), &value.as_function(), nullptr, Attribute::Configurable | Attribute::Enumerable);
+            break;
+        case ObjectProperty::Type::Setter:
+            VERIFY(value.is_function());
+            object->define_accessor(PropertyName::from_value(global_object, key), nullptr, &value.as_function(), Attribute::Configurable | Attribute::Enumerable);
+            break;
+        case ObjectProperty::Type::KeyValue:
             object->define_property(PropertyName::from_value(global_object, key), value);
-            if (interpreter.exception())
-                return {};
+            break;
+        case ObjectProperty::Type::Spread:
+        default:
+            VERIFY_NOT_REACHED();
         }
+        if (interpreter.exception())
+            return {};
     }
     return object;
 }
