@@ -45,8 +45,8 @@ public:
     void ref() { ref_event_target(); }
     void unref() { unref_event_target(); }
 
-    void add_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener>);
-    void remove_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener>);
+    void add_event_listener(const FlyString& event_name, RefPtr<EventListener>);
+    void remove_event_listener(const FlyString& event_name, RefPtr<EventListener>);
 
     void remove_from_event_listener_list(NonnullRefPtr<EventListener>);
 
