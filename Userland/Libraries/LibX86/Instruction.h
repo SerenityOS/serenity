@@ -380,6 +380,10 @@ public:
     void write32(CPU&, const Instruction&, T);
     template<typename CPU, typename T>
     void write64(CPU&, const Instruction&, T);
+    template<typename CPU, typename T>
+    void write128(CPU&, const Instruction&, T);
+    template<typename CPU, typename T>
+    void write256(CPU&, const Instruction&, T);
 
     template<typename CPU>
     typename CPU::ValueWithShadowType8 read8(CPU&, const Instruction&);
@@ -389,6 +393,10 @@ public:
     typename CPU::ValueWithShadowType32 read32(CPU&, const Instruction&);
     template<typename CPU>
     typename CPU::ValueWithShadowType64 read64(CPU&, const Instruction&);
+    template<typename CPU>
+    typename CPU::ValueWithShadowType128 read128(CPU&, const Instruction&);
+    template<typename CPU>
+    typename CPU::ValueWithShadowType256 read256(CPU&, const Instruction&);
 
     template<typename CPU>
     LogicalAddress resolve(const CPU&, const Instruction&);
@@ -680,6 +688,22 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write64(CPU& cpu, const Instructio
     cpu.write_memory64(address, value);
 }
 
+template<typename CPU, typename T>
+ALWAYS_INLINE void MemoryOrRegisterReference::write128(CPU& cpu, const Instruction& insn, T value)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    cpu.write_memory128(address, value);
+}
+
+template<typename CPU, typename T>
+ALWAYS_INLINE void MemoryOrRegisterReference::write256(CPU& cpu, const Instruction& insn, T value)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    cpu.write_memory256(address, value);
+}
+
 template<typename CPU>
 ALWAYS_INLINE typename CPU::ValueWithShadowType8 MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
 {
@@ -716,6 +740,22 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType64 MemoryOrRegisterReference::rea
     VERIFY(!is_register());
     auto address = resolve(cpu, insn);
     return cpu.read_memory64(address);
+}
+
+template<typename CPU>
+ALWAYS_INLINE typename CPU::ValueWithShadowType128 MemoryOrRegisterReference::read128(CPU& cpu, const Instruction& insn)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    return cpu.read_memory128(address);
+}
+
+template<typename CPU>
+ALWAYS_INLINE typename CPU::ValueWithShadowType256 MemoryOrRegisterReference::read256(CPU& cpu, const Instruction& insn)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    return cpu.read_memory256(address);
 }
 
 template<typename InstructionStreamType>

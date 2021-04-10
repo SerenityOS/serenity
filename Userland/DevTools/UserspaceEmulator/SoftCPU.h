@@ -39,6 +39,8 @@ public:
     using ValueWithShadowType16 = ValueWithShadow<u16>;
     using ValueWithShadowType32 = ValueWithShadow<u32>;
     using ValueWithShadowType64 = ValueWithShadow<u64>;
+    using ValueWithShadowType128 = ValueWithShadow<u128>;
+    using ValueWithShadowType256 = ValueWithShadow<u256>;
 
     explicit SoftCPU(Emulator&);
     void dump() const;
@@ -347,6 +349,8 @@ public:
     ValueWithShadow<u16> read_memory16(X86::LogicalAddress);
     ValueWithShadow<u32> read_memory32(X86::LogicalAddress);
     ValueWithShadow<u64> read_memory64(X86::LogicalAddress);
+    ValueWithShadow<u128> read_memory128(X86::LogicalAddress);
+    ValueWithShadow<u256> read_memory256(X86::LogicalAddress);
 
     template<typename T>
     ValueWithShadow<T> read_memory(X86::LogicalAddress address)
@@ -357,12 +361,20 @@ public:
             return read_memory16(address);
         if constexpr (sizeof(T) == 4)
             return read_memory32(address);
+        if constexpr (sizeof(T) == 8)
+            return read_memory64(address);
+        if constexpr (sizeof(T) == 16)
+            return read_memory128(address);
+        if constexpr (sizeof(T) == 32)
+            return read_memory256(address);
     }
 
     void write_memory8(X86::LogicalAddress, ValueWithShadow<u8>);
     void write_memory16(X86::LogicalAddress, ValueWithShadow<u16>);
     void write_memory32(X86::LogicalAddress, ValueWithShadow<u32>);
     void write_memory64(X86::LogicalAddress, ValueWithShadow<u64>);
+    void write_memory128(X86::LogicalAddress, ValueWithShadow<u128>);
+    void write_memory256(X86::LogicalAddress, ValueWithShadow<u256>);
 
     template<typename T>
     void write_memory(X86::LogicalAddress address, ValueWithShadow<T> data)
@@ -373,6 +385,12 @@ public:
             return write_memory16(address, data);
         if constexpr (sizeof(T) == 4)
             return write_memory32(address, data);
+        if constexpr (sizeof(T) == 8)
+            return write_memory64(address, data);
+        if constexpr (sizeof(T) == 16)
+            return write_memory128(address, data);
+        if constexpr (sizeof(T) == 32)
+            return write_memory256(address, data);
     }
 
     bool evaluate_condition(u8 condition) const
