@@ -1806,29 +1806,30 @@ void Painter::blit_tiled(const IntRect& dst_rect, const Gfx::Bitmap& bitmap, con
     }
 }
 
+String parse_ampersand_string(const StringView& raw_text, Optional<size_t>* underline_offset)
+{
+    if (raw_text.is_empty())
+        return String::empty();
+
+    StringBuilder builder;
+
+    for (size_t i = 0; i < raw_text.length(); ++i) {
+        if (raw_text[i] == '&') {
+            if (i != (raw_text.length() - 1) && raw_text[i + 1] == '&')
+                builder.append(raw_text[i]);
+            else if (underline_offset && !(*underline_offset).has_value())
+                *underline_offset = i;
+            continue;
+        }
+        builder.append(raw_text[i]);
+    }
+    return builder.to_string();
+}
+
 void Gfx::Painter::draw_ui_text(const Gfx::IntRect& rect, const StringView& text, const Gfx::Font& font, Gfx::TextAlignment text_alignment, Gfx::Color color)
 {
-    auto parse_ampersand_string = [](const StringView& raw_text, Optional<size_t>& underline_offset) -> String {
-        if (raw_text.is_empty())
-            return String::empty();
-
-        StringBuilder builder;
-
-        for (size_t i = 0; i < raw_text.length(); ++i) {
-            if (raw_text[i] == '&') {
-                if (i != (raw_text.length() - 1) && raw_text[i + 1] == '&')
-                    builder.append(raw_text[i]);
-                else if (!underline_offset.has_value())
-                    underline_offset = i;
-                continue;
-            }
-            builder.append(raw_text[i]);
-        }
-        return builder.to_string();
-    };
-
     Optional<size_t> underline_offset;
-    auto name_to_draw = parse_ampersand_string(text, underline_offset);
+    auto name_to_draw = parse_ampersand_string(text, &underline_offset);
 
     Gfx::IntRect text_rect { 0, 0, font.width(name_to_draw), font.glyph_height() };
     text_rect.align_within(rect, text_alignment);
