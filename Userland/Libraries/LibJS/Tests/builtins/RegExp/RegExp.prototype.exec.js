@@ -127,3 +127,12 @@ test("non-greedy brace quantifier", () => {
     expect(res.length).toBe(1);
     expect(res[0]).toBe("abc");
 });
+
+// #6208
+test("brace quantifier with invalid contents", () => {
+    let re = /{{lit-746579221856449}}|<!--{{lit-746579221856449}}-->/;
+    let res = re.exec("{{lit-746579221856449}}");
+
+    expect(res.length).toBe(1);
+    expect(res[0]).toBe("{{lit-746579221856449}}");
+});
