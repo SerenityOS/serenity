@@ -27,6 +27,7 @@
 #include "FontEditor.h"
 #include "GlyphEditorWidget.h"
 #include "GlyphMapWidget.h"
+#include "NewFontDialog.h"
 #include <AK/StringBuilder.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
 #include <LibDesktop/Launcher.h>
@@ -123,7 +124,42 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
             m_font_preview_window->update();
     };
 
-    auto open_action = GUI::CommonActions::make_open_action([&](auto&) {
+    m_new_action = GUI::Action::create("New Font...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-font.png"), [&](auto&) {
+        auto new_font_wizard = NewFontDialog::construct(window());
+        if (new_font_wizard->exec() == GUI::Dialog::ExecOK) {
+            auto metadata = new_font_wizard->new_font_metadata();
+
+            String name = metadata.name;
+            auto parts = name.split(' ');
+            if (parts.size() > 1)
+                name = parts[0];
+            parts.clear();
+
+            String weight = GUI::weight_to_name(metadata.weight).to_string();
+            parts = weight.split(' ');
+            if (parts.size() > 1)
+                weight = String::formatted("{}{}", parts[0], parts[1]);
+
+            RefPtr<Gfx::BitmapFont> new_font = Gfx::BitmapFont::create(metadata.glyph_height, metadata.glyph_width, metadata.is_fixed_width, metadata.type);
+            String path = String::formatted("/tmp/{}{}{}.font", name, weight, metadata.presentation_size);
+            if (!new_font) {
+                String message = String::formatted("Failed to create new font: {}\n", path);
+                GUI::MessageBox::show(window(), message, "Font Editor", GUI::MessageBox::Type::Error);
+                return;
+            }
+
+            new_font->set_name(metadata.name);
+            new_font->set_family(metadata.family);
+            new_font->set_presentation_size(metadata.presentation_size);
+            new_font->set_weight(metadata.weight);
+            new_font->set_baseline(metadata.baseline);
+            new_font->set_mean_line(metadata.mean_line);
+
+            window()->set_title(String::formatted("{} - Font Editor", path));
+            initialize(path, move(new_font));
+        }
+    });
+    m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/");
         if (!open_path.has_value())
             return;
