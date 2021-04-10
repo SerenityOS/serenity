@@ -486,6 +486,10 @@ GUI::AutocompleteProvider::DeclarationType ParserAutoComplete::type_of_declarati
         return GUI::AutocompleteProvider::DeclarationType::Function;
     if (decl.is_variable_declaration())
         return GUI::AutocompleteProvider::DeclarationType::Variable;
+    if (decl.is_namespace())
+        return GUI::AutocompleteProvider::DeclarationType::Namespace;
+    if (decl.is_member())
+        return GUI::AutocompleteProvider::DeclarationType::Member;
     return GUI::AutocompleteProvider::DeclarationType::Variable;
 }
 
