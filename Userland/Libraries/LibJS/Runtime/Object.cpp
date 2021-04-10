@@ -711,24 +711,24 @@ bool Object::put_own_property_by_index(u32 property_index, Value value, Property
     return true;
 }
 
-Value Object::delete_property(const PropertyName& property_name)
+bool Object::delete_property(const PropertyName& property_name)
 {
     VERIFY(property_name.is_valid());
 
     if (property_name.is_number())
-        return Value(m_indexed_properties.remove(property_name.as_number()));
+        return m_indexed_properties.remove(property_name.as_number());
 
     if (property_name.is_string()) {
         i32 property_index = property_name.as_string().to_int().value_or(-1);
         if (property_index >= 0)
-            return Value(m_indexed_properties.remove(property_index));
+            return m_indexed_properties.remove(property_index);
     }
 
     auto metadata = shape().lookup(property_name.to_string_or_symbol());
     if (!metadata.has_value())
-        return Value(true);
+        return true;
     if (!metadata.value().attributes.is_configurable())
-        return Value(false);
+        return false;
 
     size_t deleted_offset = metadata.value().offset;
 
@@ -736,7 +736,7 @@ Value Object::delete_property(const PropertyName& property_name)
 
     shape().remove_property_from_unique_shape(property_name.to_string_or_symbol(), deleted_offset);
     m_storage.remove(deleted_offset);
-    return Value(true);
+    return true;
 }
 
 void Object::ensure_shape_is_unique()
