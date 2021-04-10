@@ -880,7 +880,7 @@ StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initi
     size_t offset = 0;
     auto start_token = m_parser_state.current_token;
     while (match(TokenType::Char)) {
-        auto c = m_parser_state.current_token.value();
+        auto& c = m_parser_state.current_token.value();
 
         if (follow_policy == ReadDigitFollowPolicy::DisallowNonDigit) {
             if (hex && !AK::StringUtils::convert_to_uint_from_hex(c).has_value())
@@ -890,6 +890,11 @@ StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initi
         }
 
         if (max_count > 0 && count >= max_count)
+            break;
+
+        if (hex && !AK::StringUtils::convert_to_uint_from_hex(c).has_value())
+            break;
+        if (!hex && !c.to_uint().has_value())
             break;
 
         offset += consume().value().length();
@@ -933,31 +938,41 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         repetition_mark = Repetition::Optional;
     } else if (match(TokenType::LeftCurly)) {
         consume();
+        auto chars_consumed = 1;
         repetition_mark = Repetition::Explicit;
 
-        auto low_bound = read_digits();
+        auto low_bound_string = read_digits_as_string();
+        chars_consumed += low_bound_string.length();
+
+        auto low_bound = low_bound_string.to_uint();
 
         if (!low_bound.has_value()) {
-            set_error(Error::InvalidBraceContent);
-            return false;
+            back(chars_consumed + 1);
+            return true;
         }
 
         repeat_min = low_bound.value();
 
         if (match(TokenType::Comma)) {
             consume();
-            auto high_bound = read_digits();
-            if (high_bound.has_value())
+            ++chars_consumed;
+            auto high_bound_string = read_digits_as_string();
+            auto high_bound = high_bound_string.to_uint();
+            if (high_bound.has_value()) {
                 repeat_max = high_bound.value();
+                chars_consumed += high_bound_string.length();
+            }
         } else {
             repeat_max = repeat_min;
         }
 
         if (!match(TokenType::RightCurly)) {
-            set_error(Error::MismatchingBrace);
-            return false;
+            back(chars_consumed + 1);
+            return true;
         }
+
         consume();
+        ++chars_consumed;
 
         if (repeat_max.has_value()) {
             if (repeat_min.value() > repeat_max.value())
