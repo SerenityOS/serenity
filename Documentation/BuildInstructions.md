@@ -185,12 +185,15 @@ $ cd Toolchain
 $ ./BuildIt.sh
 ```
 
-Building the toolchain will also automatically create a `Build/i686/` directory for the build to live in.
-
-Once the toolchain has been built, go into the `Build/i686/` directory and run the commands. Note that while `ninja` seems to be faster, you can also just use GNU make, by omitting `-G Ninja` and calling `make` instead of `ninja`:
+Building the toolchain will also automatically create a `Build/i686/` directory for the build to live in. Once the toolchain has been built, go into the `Build/i686/` directory. Specifically, change the current directory to the `Build/` parent directory. To go there from `Toolchain/`, use this command:
 
 ```console
 $ cd ../Build/i686
+```
+
+Run the following commands from within the `Build/i686/` directory. Note that while `ninja` seems to be faster, you can also just use GNU make, by omitting `-G Ninja` and calling `make` instead of `ninja`:
+
+```console
 $ cmake ../.. -G Ninja
 $ ninja install
 ```
