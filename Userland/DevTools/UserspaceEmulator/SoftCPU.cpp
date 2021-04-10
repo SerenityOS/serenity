@@ -1798,7 +1798,18 @@ void SoftCPU::FNDISI(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FNCLEX(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FNINIT(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FNSETPM(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FLD_RM80(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FLD_RM80(const X86::Instruction& insn)
+{
+    VERIFY(!insn.modrm().is_register());
+
+    // long doubles can be up to 128 bits wide in memory for reasons (alignment) and only uses 80 bits of precision
+    // gcc uses 12 byte in 32 bit and 16 byte in 64 bit mode
+    // so in the 32 bit case we read a bit to much, but that shouldnt be that bad
+    auto new_f80 = insn.modrm().read128(*this, insn);
+    // FIXME: Respect shadow values
+    fpu_push(*(long double*)new_f80.value().bytes());
+}
 
 void SoftCPU::FUCOMI(const X86::Instruction& insn)
 {
@@ -1835,7 +1846,24 @@ void SoftCPU::FCOMI(const X86::Instruction& insn)
     m_flags_tainted = false;
 }
 
-void SoftCPU::FSTP_RM80(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FSTP_RM80(const X86::Instruction& insn)
+{
+    if (insn.modrm().is_register()) {
+        fpu_set(insn.modrm().register_index(), fpu_pop());
+    } else {
+        // FIXME: Respect shadow values
+        // long doubles can be up to 128 bits wide in memory for reasons (alignment) and only uses 80 bits of precision
+        // gcc uses 12 byte in 32 bit and 16 byte in 64 bit mode
+        // so in the 32 bit case we have to read first, to not override data on the overly big write
+        u128 f80 {};
+        if constexpr (sizeof(long double) == 12)
+            f80 = insn.modrm().read128(*this, insn).value();
+
+        *(long double*)f80.bytes() = fpu_pop();
+
+        insn.modrm().write128(*this, insn, shadow_wrap_as_initialized(f80));
+    }
+}
 
 void SoftCPU::FADD_RM64(const X86::Instruction& insn)
 {
