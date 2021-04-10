@@ -28,6 +28,7 @@
 
 #pragma once
 
+#include "ClassViewWidget.h"
 #include "Debugger/DebugInfoWidget.h"
 #include "Debugger/DisassemblyWidget.h"
 #include "EditorWrapper.h"
@@ -112,7 +113,6 @@ private:
     void reveal_action_tab(GUI::Widget&);
     void initialize_debugger();
 
-    void create_project_tree_view(GUI::Widget& parent);
     void create_open_files_view(GUI::Widget& parent);
     void create_form_editor(GUI::Widget& parent);
     void create_toolbar(GUI::Widget& parent);
@@ -123,6 +123,8 @@ private:
     void create_build_menubar(GUI::MenuBar&);
     void create_view_menubar(GUI::MenuBar&);
     void create_help_menubar(GUI::MenuBar&);
+    void create_project_tab(GUI::Widget& parent);
+    void configure_project_tree_view();
 
     void run(TerminalWrapper& wrapper);
     void build(TerminalWrapper& wrapper);
@@ -150,8 +152,10 @@ private:
     RefPtr<GUI::TreeView> m_form_widget_tree_view;
     RefPtr<DiffViewer> m_diff_viewer;
     RefPtr<GitWidget> m_git_widget;
+    RefPtr<ClassViewWidget> m_class_view;
     RefPtr<GUI::Menu> m_project_tree_view_context_menu;
     RefPtr<GUI::TabWidget> m_action_tab_widget;
+    RefPtr<GUI::TabWidget> m_project_tab;
     RefPtr<TerminalWrapper> m_terminal_wrapper;
     RefPtr<Locator> m_locator;
     RefPtr<FindInFilesWidget> m_find_in_files_widget;
