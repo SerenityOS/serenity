@@ -212,8 +212,8 @@ void ScrollBar::paint_event(PaintEvent& event)
 
     painter.fill_rect_with_dither_pattern(rect(), palette().button().lightened(1.3f), palette().button());
 
-    bool decrement_pressed = m_pressed_component == Component::DecrementButton;
-    bool increment_pressed = m_pressed_component == Component::IncrementButton;
+    bool decrement_pressed = (m_pressed_component == Component::DecrementButton) && (m_pressed_component == m_hovered_component);
+    bool increment_pressed = (m_pressed_component == Component::IncrementButton) && (m_pressed_component == m_hovered_component);
 
     Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::Normal, decrement_pressed, hovered_component_for_painting == Component::DecrementButton);
     Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::Normal, increment_pressed, hovered_component_for_painting == Component::IncrementButton);
