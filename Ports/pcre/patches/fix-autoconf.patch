@@ -1,0 +1,12 @@
+diff -Naur pcre-8.44/config.sub pcre-8.44.serenity/config.sub
+--- pcre-8.44/config.sub	2020-02-12 18:17:31.000000000 +0100
++++ pcre-8.44.serenity/config.sub	2021-04-12 01:21:59.467797075 +0200
+@@ -1390,7 +1390,7 @@
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+ 	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* \
+ 	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox* | -bme* \
+-	      | -midnightbsd*)
++	      | -midnightbsd* | -serenity*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)
