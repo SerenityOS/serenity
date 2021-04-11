@@ -325,9 +325,13 @@ bool ProxyObject::has_property(const PropertyName& name) const
     return trap_result.to_boolean();
 }
 
-Value ProxyObject::get(const PropertyName& name, Value receiver) const
+Value ProxyObject::get(const PropertyName& name, Value receiver, bool without_side_effects) const
 {
     auto& vm = this->vm();
+    if (without_side_effects) {
+        // Sorry, we're not going to call anything on this proxy.
+        return js_string(vm, "<ProxyObject>");
+    }
     if (m_is_revoked) {
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return {};
