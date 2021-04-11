@@ -26,6 +26,7 @@
 
 #include "BookmarksBarWidget.h"
 #include "Browser.h"
+#include "CookieJar.h"
 #include "Tab.h"
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
@@ -148,6 +149,8 @@ int main(int argc, char** argv)
     bool bookmarksbar_enabled = true;
     auto bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), bookmarksbar_enabled);
 
+    Browser::CookieJar cookie_jar;
+
     auto window = GUI::Window::construct();
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
@@ -214,6 +217,14 @@ int main(int argc, char** argv)
                 if (tab_widget.children().is_empty())
                     app->quit();
             });
+        };
+
+        new_tab.on_get_cookie = [&](auto& url) -> String {
+            return cookie_jar.get_cookie(url);
+        };
+
+        new_tab.on_set_cookie = [&](auto& url, auto& cookie) {
+            cookie_jar.set_cookie(url, cookie);
         };
 
         new_tab.load(url);
