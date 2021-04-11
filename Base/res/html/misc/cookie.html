@@ -1,0 +1,15 @@
+<body>
+    <input type=button onclick="setCookie('cookie1=value1')" value="Set Cookie 1" />
+    <input type=button onclick="setCookie('cookie2=value2')" value="Set Cookie 2" />
+    <input type=button onclick="setCookie('cookie3=value3')" value="Set Cookie 3" />
+    <br /><pre id=cookies></pre>
+
+    <script>
+        function setCookie(cookie) {
+            document.cookie = cookie;
+            document.getElementById('cookies').innerHTML = document.cookie;
+        }
+
+        document.getElementById('cookies').innerHTML = document.cookie;
+    </script>
+</body>
