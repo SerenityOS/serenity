@@ -454,6 +454,43 @@ void Node::remove_all_children(bool suppress_observers)
         child->remove(suppress_observers);
 }
 
+// https://dom.spec.whatwg.org/#dom-node-comparedocumentposition
+u16 Node::compare_document_position(RefPtr<Node> other)
+{
+    enum Position : u16 {
+        DOCUMENT_POSITION_EQUAL = 0,
+        DOCUMENT_POSITION_DISCONNECTED = 1,
+        DOCUMENT_POSITION_PRECEDING = 2,
+        DOCUMENT_POSITION_FOLLOWING = 4,
+        DOCUMENT_POSITION_CONTAINS = 8,
+        DOCUMENT_POSITION_CONTAINED_BY = 16,
+        DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 32,
+    };
+
+    if (this == other)
+        return DOCUMENT_POSITION_EQUAL;
+
+    Node* node1 = other.ptr();
+    Node* node2 = this;
+
+    // FIXME: Once LibWeb supports attribute nodes fix to follow the specification.
+    VERIFY(node1->type() != NodeType::ATTRIBUTE_NODE && node2->type() != NodeType::ATTRIBUTE_NODE);
+
+    if ((node1 == nullptr || node2 == nullptr) || (node1->root() != node2->root()))
+        return DOCUMENT_POSITION_DISCONNECTED | DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC | (node1 > node2 ? DOCUMENT_POSITION_PRECEDING : DOCUMENT_POSITION_FOLLOWING);
+
+    if (node1->is_ancestor_of(*node2))
+        return DOCUMENT_POSITION_CONTAINS | DOCUMENT_POSITION_PRECEDING;
+
+    if (node2->is_ancestor_of(*node1))
+        return DOCUMENT_POSITION_CONTAINED_BY | DOCUMENT_POSITION_FOLLOWING;
+
+    if (node1->is_before(*node2))
+        return DOCUMENT_POSITION_PRECEDING;
+    else
+        return DOCUMENT_POSITION_FOLLOWING;
+}
+
 // https://dom.spec.whatwg.org/#concept-tree-host-including-inclusive-ancestor
 bool Node::is_host_including_inclusive_ancestor_of(const Node& other) const
 {

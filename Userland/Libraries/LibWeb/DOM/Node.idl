@@ -32,4 +32,12 @@ interface Node : EventTarget {
     const unsigned short DOCUMENT_FRAGMENT_NODE = 11;
     const unsigned short NOTATION_NODE = 12;
 
+    unsigned short compareDocumentPosition(Node? otherNode);
+    // Node.compareDocumentPosition() constants
+    const unsigned short DOCUMENT_POSITION_DISCONNECTED = 1;
+    const unsigned short DOCUMENT_POSITION_PRECEDING = 2;
+    const unsigned short DOCUMENT_POSITION_FOLLOWING = 4;
+    const unsigned short DOCUMENT_POSITION_CONTAINS = 8;
+    const unsigned short DOCUMENT_POSITION_CONTAINED_BY = 16;
+    const unsigned short DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 32;
 };
