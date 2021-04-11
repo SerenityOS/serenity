@@ -155,6 +155,11 @@ void WebContentClient::handle(const Messages::WebContentClient::DidRequestLinkCo
     m_view.notify_server_did_request_link_context_menu({}, message.content_position(), message.url(), message.target(), message.modifiers());
 }
 
+void WebContentClient::handle(const Messages::WebContentClient::DidRequestImageContextMenu& message)
+{
+    m_view.notify_server_did_request_image_context_menu({}, message.content_position(), message.url(), message.target(), message.modifiers(), message.bitmap());
+}
+
 void WebContentClient::handle(const Messages::WebContentClient::DidGetSource& message)
 {
     m_view.notify_server_did_get_source(message.url(), message.source());
