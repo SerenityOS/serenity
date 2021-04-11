@@ -145,8 +145,22 @@ int main(int argc, char** argv)
     } else if (paths.size() == 1) {
         status = do_file_system_object(paths[0]);
     } else {
+        Vector<const char*> exists;
         for (auto& path : paths) {
+            if (Core::File::exists(path)) {
+                exists.append(path);
+            } else {
+                status = do_file_system_object(path);
+            }
+        }
+        for (size_t i = 0; i < exists.size(); ++i) {
+            auto path = exists.at(i);
+            printf("%s:\n", path);
             status = do_file_system_object(path);
+
+            if (i + 1 == exists.size() - 1) {
+                printf("\n");
+            }
         }
     }
     return status;
