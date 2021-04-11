@@ -53,3 +53,9 @@ void __assertion_failed(const char* msg)
 }
 #endif
 }
+
+void __crash()
+{
+    asm volatile("ud2");
+    __builtin_unreachable();
+}
