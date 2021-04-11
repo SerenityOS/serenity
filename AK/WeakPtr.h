@@ -143,7 +143,7 @@ public:
         return *this;
     }
 
-    RefPtr<T> strong_ref() const
+    [[nodiscard]] RefPtr<T> strong_ref() const
     {
         // This only works with RefCounted objects, but it is the only
         // safe way to get a strong reference from a WeakPtr. Any code
@@ -169,7 +169,7 @@ public:
     operator T*() { return unsafe_ptr(); }
 #endif
 
-    T* unsafe_ptr() const
+    [[nodiscard]] T* unsafe_ptr() const
     {
         T* ptr = nullptr;
         m_link.do_while_locked([&](WeakLink* link) {
@@ -181,10 +181,10 @@ public:
 
     operator bool() const { return m_link ? !m_link->is_null() : false; }
 
-    bool is_null() const { return !m_link || m_link->is_null(); }
+    [[nodiscard]] bool is_null() const { return !m_link || m_link->is_null(); }
     void clear() { m_link = nullptr; }
 
-    RefPtr<WeakLink> take_link() { return move(m_link); }
+    [[nodiscard]] RefPtr<WeakLink> take_link() { return move(m_link); }
 
 private:
     WeakPtr(const RefPtr<WeakLink>& link)
