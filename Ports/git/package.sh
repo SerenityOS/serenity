@@ -19,3 +19,4 @@ post_install() {
 export NO_OPENSSL=1
 export ac_cv_fread_reads_directories=no
 export ac_cv_snprintf_returns_bogus=no
+export ac_cv_iconv_omits_bom=no
