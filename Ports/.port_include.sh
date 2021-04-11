@@ -3,23 +3,40 @@ set -eu
 
 SCRIPT="$(dirname "${0}")"
 export SERENITY_ARCH="${SERENITY_ARCH:-i686}"
-export SERENITY_BUILD_DIR="${SERENITY_ROOT}/Build/${SERENITY_ARCH}"
-export CC="${SERENITY_ARCH}-pc-serenity-gcc"
-export CXX="${SERENITY_ARCH}-pc-serenity-g++"
-export AR="${SERENITY_ARCH}-pc-serenity-ar"
-export RANLIB="${SERENITY_ARCH}-pc-serenity-ranlib"
-export PATH="${SERENITY_ROOT}/Toolchain/Local/${SERENITY_ARCH}/bin:${PATH}"
-export PKG_CONFIG_DIR=""
-export PKG_CONFIG_SYSROOT_DIR="${SERENITY_BUILD_DIR}/Root"
-export PKG_CONFIG_LIBDIR="${PKG_CONFIG_SYSROOT_DIR}/usr/lib/pkgconfig/:${PKG_CONFIG_SYSROOT_DIR}/usr/local/lib/pkgconfig/"
+
+HOST_CC="${CC:=cc}"
+HOST_CXX="${CXX:=c++}"
+HOST_AR="${AR:=ar}"
+HOST_RANLIB="${RANLIB:=ranlib}"
+HOST_PATH="${PATH:=}"
+HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
+HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
+HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
+
+DESTDIR="/"
 
 maybe_source() {
     if [ -f "$1" ]; then
         . "$1"
     fi
 }
-DESTDIR="/"
-maybe_source "${SCRIPT}/.hosted_defs.sh"
+
+target_env() {
+    maybe_source "${SCRIPT}/.hosted_defs.sh"
+}
+
+target_env
+
+host_env() {
+    export CC="${HOST_CC}"
+    export CXX="${HOST_CXX}"
+    export AR="${HOST_AR}"
+    export RANLIB="${HOST_RANLIB}"
+    export PATH="${HOST_PATH}"
+    export PKG_CONFIG_DIR="${HOST_PKG_CONFIG_DIR}"
+    export PKG_CONFIG_SYSROOT_DIR="${HOST_PKG_CONFIG_SYSROOT_DIR}"
+    export PKG_CONFIG_LIBDIR="${HOST_PKG_CONFIG_LIBDIR}"
+}
 
 packagesdb="${DESTDIR}/usr/Ports/packages.db"
 
