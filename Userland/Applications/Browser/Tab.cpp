@@ -242,6 +242,17 @@ Tab::Tab(Type type)
             on_favicon_change(icon);
     };
 
+    hooks().on_get_cookie = [this](auto& url) -> String {
+        if (on_get_cookie)
+            return on_get_cookie(url);
+        return {};
+    };
+
+    hooks().on_set_cookie = [this](auto& url, auto& cookie) {
+        if (on_set_cookie)
+            on_set_cookie(url, cookie);
+    };
+
     hooks().on_get_source = [this](auto& url, auto& source) {
         view_source(url, source);
     };
