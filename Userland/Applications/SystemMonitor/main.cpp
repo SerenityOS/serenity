@@ -32,6 +32,7 @@
 #include "ProcessFileDescriptorMapWidget.h"
 #include "ProcessMemoryMapWidget.h"
 #include "ProcessModel.h"
+#include "ProcessStateWidget.h"
 #include "ProcessUnveiledPathsWidget.h"
 #include "ThreadStackWidget.h"
 #include <AK/NumberFormat.h>
@@ -472,6 +473,7 @@ NonnullRefPtr<GUI::Window> build_process_window(pid_t pid)
     auto& unavailable_process_widget = widget_stack.add<UnavailableProcessWidget>(String::formatted("Unable to access PID {}", pid));
 
     auto& process_tab_widget = widget_stack.add<GUI::TabWidget>();
+    process_tab_widget.add_tab<ProcessStateWidget>("State", pid);
     auto& memory_map_widget = process_tab_widget.add_tab<ProcessMemoryMapWidget>("Memory map");
     auto& open_files_widget = process_tab_widget.add_tab<ProcessFileDescriptorMapWidget>("Open files");
     auto& unveiled_paths_widget = process_tab_widget.add_tab<ProcessUnveiledPathsWidget>("Unveiled paths");
