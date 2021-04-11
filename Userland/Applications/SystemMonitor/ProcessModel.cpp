@@ -265,10 +265,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Column::Icon: {
             if (thread.current_state.kernel)
                 return m_kernel_process_icon;
-            auto icon = GUI::FileIconProvider::icon_for_executable(thread.current_state.executable).bitmap_for_size(16);
-            if (!icon)
-                return GUI::Icon();
-            return GUI::Icon(*icon);
+            return GUI::FileIconProvider::icon_for_executable(thread.current_state.executable);
         }
         case Column::PID:
             return thread.current_state.pid;
