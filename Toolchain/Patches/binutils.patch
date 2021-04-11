@@ -1,8 +1,8 @@
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 13d678e1..782ad689 100644
+index e7b55b0d..27c54fa4 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
-@@ -220,6 +220,26 @@ esac
+@@ -225,6 +225,26 @@ esac
  case "${targ}" in
  # START OF targmatch.h
  #ifdef BFD64
@@ -30,22 +30,22 @@ index 13d678e1..782ad689 100644
      targ_defvec=aarch64_mach_o_vec
      targ_selvecs="arm_mach_o_vec mach_o_le_vec mach_o_be_vec mach_o_fat_vec"
 diff --git a/config.sub b/config.sub
-index 5b158ac4..49f05c37 100755
+index b0f84923..41eb9993 100755
 --- a/config.sub
 +++ b/config.sub
-@@ -1342,6 +1342,7 @@ case $os in
+@@ -1693,6 +1693,7 @@ case $os in
+ 	# The portable systems comes first.
  	# Each alternative MUST end in a * to match a version number.
- 	# sysv* is not here because it comes later, after sysvr4.
- 	gnu* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
-+             | serenity* \
- 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]*\
+ 	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++	     | serenity* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
  	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
- 	     | sym* | kopensolaris* | plan9* \
+ 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index a4828c4c..4d75ca56 100644
+index 6f46e0a6..a563a572 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -121,6 +121,8 @@ esac
+@@ -123,6 +123,8 @@ esac
  generic_target=${cpu_type}-$vendor-$os
  # Note: This table is alpha-sorted, please try to keep it that way.
  case ${generic_target} in
@@ -55,10 +55,10 @@ index a4828c4c..4d75ca56 100644
    aarch64*-*-fuchsia*)			fmt=elf;;
    aarch64*-*-linux*)			fmt=elf em=linux
 diff --git a/ld/Makefile.am b/ld/Makefile.am
-index 0509c2e5..b1adc7c6 100644
+index 2c9a4873..1e1c97c2 100644
 --- a/ld/Makefile.am
 +++ b/ld/Makefile.am
-@@ -178,6 +178,7 @@ ALL_EMULATION_SOURCES = \
+@@ -174,6 +174,7 @@ ALL_EMULATION_SOURCES = \
  	earmelf_nbsd.c \
  	earmelf_phoenix.c \
  	earmelf_vxworks.c \
@@ -67,10 +67,10 @@ index 0509c2e5..b1adc7c6 100644
  	earmelfb_fbsd.c \
  	earmelfb_fuchsia.c \
 diff --git a/ld/Makefile.in b/ld/Makefile.in
-index 9898392a..9357b539 100644
+index b41941c8..a5be52e8 100644
 --- a/ld/Makefile.in
 +++ b/ld/Makefile.in
-@@ -665,6 +665,7 @@ ALL_EMULATION_SOURCES = \
+@@ -663,6 +663,7 @@ ALL_EMULATION_SOURCES = \
  	earmelf_nbsd.c \
  	earmelf_phoenix.c \
  	earmelf_vxworks.c \
@@ -78,7 +78,7 @@ index 9898392a..9357b539 100644
  	earmelfb.c \
  	earmelfb_fbsd.c \
  	earmelfb_fuchsia.c \
-@@ -779,6 +780,7 @@ ALL_EMULATION_SOURCES = \
+@@ -780,6 +781,7 @@ ALL_EMULATION_SOURCES = \
  	eelf_i386_vxworks.c \
  	eelf_iamcu.c \
  	eelf_s390.c \
@@ -87,20 +87,20 @@ index 9898392a..9357b539 100644
  	eh8300elf_linux.c \
  	eh8300helf.c \
 @@ -945,6 +947,7 @@ ALL_64_EMULATION_SOURCES = \
+ 	eelf_x86_64_cloudabi.c \
  	eelf_x86_64_fbsd.c \
- 	eelf_x86_64_nacl.c \
  	eelf_x86_64_sol2.c \
 +	eelf_x86_64_serenity.c \
  	ehppa64linux.c \
  	ei386pep.c \
  	emmo.c
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index c81bc8a7..a93a04c6 100644
+index 0c780b24..d7c187e1 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
-@@ -45,6 +45,19 @@ targ64_extra_libpath=
- # architecture variants should be kept together even if their names
- # break the alpha sorting.
+@@ -43,6 +43,19 @@ targ64_extra_libpath=
+ # Please try to keep this table more or less in alphabetic order - it
+ # makes it much easier to lookup a specific archictecture.
  case "${targ}" in
 +i[3-7]86-*-serenity*)
 +			targ_emul=elf_i386_serenity
@@ -116,8 +116,8 @@ index c81bc8a7..a93a04c6 100644
 +			targ_extra_emuls="armelf_serenity armelf"
 +			;;
  aarch64_be-*-elf)	targ_emul=aarch64elfb
- 			targ_extra_emuls="aarch64elf aarch64elf32 aarch64elf32b armelfb armelf" ;;
- aarch64-*-elf | aarch64-*-rtems*)
+ 			targ_extra_emuls="aarch64elf aarch64elf32 aarch64elf32b armelfb armelf"
+ 			;;
 diff --git a/ld/emulparams/armelf_serenity.sh b/ld/emulparams/armelf_serenity.sh
 new file mode 100644
 index 00000000..517cd626
