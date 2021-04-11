@@ -409,7 +409,7 @@ char* getwd(char* buf)
     return p;
 }
 
-int sleep(unsigned seconds)
+unsigned int sleep(unsigned int seconds)
 {
     struct timespec ts = { seconds, 0 };
     if (clock_nanosleep(CLOCK_MONOTONIC_COARSE, 0, &ts, nullptr) < 0)
