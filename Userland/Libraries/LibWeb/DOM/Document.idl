@@ -18,12 +18,6 @@ interface Document : Node {
     ArrayFromVector getElementsByTagName(DOMString tagName);
     ArrayFromVector getElementsByClassName(DOMString className);
 
-    readonly attribute Element? firstElementChild;
-    readonly attribute Element? lastElementChild;
-
-    Element? querySelector(DOMString selectors);
-    ArrayFromVector querySelectorAll(DOMString selectors);
-
     Element createElement(DOMString tagName);
     Element createElementNS(DOMString? namespace, DOMString qualifiedName);
     DocumentFragment createDocumentFragment();
@@ -47,6 +41,14 @@ interface Document : Node {
     readonly attribute DOMString readyState;
 
     attribute DOMString title;
+
+    // FIXME: These should all come from a ParentNode mixin
+    readonly attribute Element? firstElementChild;
+    readonly attribute Element? lastElementChild;
+    readonly attribute unsigned long childElementCount;
+
+    Element? querySelector(DOMString selectors);
+    ArrayFromVector querySelectorAll(DOMString selectors);
 
     // FIXME: These should all come from a GlobalEventHandlers mixin
     attribute EventHandler onabort;

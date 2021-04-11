@@ -80,4 +80,15 @@ RefPtr<Element> ParentNode::last_element_child()
     return last_child_of_type<Element>();
 }
 
+// https://dom.spec.whatwg.org/#dom-parentnode-childelementcount
+u32 ParentNode::child_element_count() const
+{
+    u32 count = 0;
+    for (auto* child = first_child(); child; child = child->next_sibling()) {
+        if (is<Element>(child))
+            ++count;
+    }
+    return count;
+}
+
 }

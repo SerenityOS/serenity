@@ -175,8 +175,6 @@ public:
 
     bool is_host_including_inclusive_ancestor_of(const Node&) const;
 
-    size_t element_child_count() const;
-
 protected:
     Node(Document&, NodeType);
 

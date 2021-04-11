@@ -204,7 +204,7 @@ ExceptionOr<void> Node::ensure_pre_insertion_validity(NonnullRefPtr<Node> node, 
 
     if (is<Document>(this)) {
         if (is<DocumentFragment>(*node)) {
-            auto node_element_child_count = node->element_child_count();
+            auto node_element_child_count = downcast<DocumentFragment>(*node).child_element_count();
             if ((node_element_child_count > 1 || node->has_child_of_type<Text>())
                 || (node_element_child_count == 1 && (has_child_of_type<Element>() || is<DocumentType>(child.ptr()) /* FIXME: or child is non-null and a doctype is following child. */))) {
                 return DOM::HierarchyRequestError::create("Invalid node type for insertion");
@@ -495,16 +495,6 @@ u16 Node::compare_document_position(RefPtr<Node> other)
 bool Node::is_host_including_inclusive_ancestor_of(const Node& other) const
 {
     return is_inclusive_ancestor_of(other) || (is<DocumentFragment>(other.root()) && downcast<DocumentFragment>(other.root())->host() && is_inclusive_ancestor_of(*downcast<DocumentFragment>(other.root())->host().ptr()));
-}
-
-size_t Node::element_child_count() const
-{
-    size_t count = 0;
-    for (auto* child = first_child(); child; child = child->next_sibling()) {
-        if (is<Element>(child))
-            ++count;
-    }
-    return count;
 }
 
 }
