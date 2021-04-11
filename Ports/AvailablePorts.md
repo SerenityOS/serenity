@@ -96,5 +96,6 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`vim`](vim/)                  | Vim                                           |                   | https://www.vim.org/                                  |
 | [`vitetris`](vitetris/)        | vitetris                                      | 0.59.1            | https://github.com/vicgeralds/vitetris                |
 | [`vttest`](vttest/)            | vttest                                        | 20210210          | https://invisible-island.net/vttest/                  |
+| [`yasm`](yasm/)                | Yasm Modular Assembler                        | 1.3.0             | https://yasm.tortall.net/                             |
 | [`zlib`](zlib/)                | zlib                                          | 1.2.11            | https://www.zlib.net/                                 |
 | [`zstd`](zstd/)                | Zstandard                                     | 1.4.4             | https://facebook.github.io/zstd/                      |
