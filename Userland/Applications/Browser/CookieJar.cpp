@@ -88,14 +88,14 @@ Optional<Cookie> CookieJar::parse_cookie(const String& cookie_string)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2
     StringView name_value_pair;
+    StringView unparsed_attributes;
 
     // 1. If the set-cookie-string contains a %x3B (";") character:
     if (auto position = cookie_string.find(';'); position.has_value()) {
         // The name-value-pair string consists of the characters up to, but not including, the first %x3B (";"), and the unparsed-
         // attributes consist of the remainder of the set-cookie-string (including the %x3B (";") in question).
-
-        // FIXME: Support optional cookie attributes. For now, ignore those attributes.
         name_value_pair = cookie_string.substring_view(0, position.value());
+        unparsed_attributes = cookie_string.substring_view(position.value());
     } else {
         // The name-value-pair string consists of all the characters contained in the set-cookie-string, and the unparsed-
         // attributes is the empty string.
@@ -126,7 +126,107 @@ Optional<Cookie> CookieJar::parse_cookie(const String& cookie_string)
         return {};
 
     // 6. The cookie-name is the name string, and the cookie-value is the value string.
-    return Cookie { name, value };
+    Cookie cookie { name, value };
+
+    parse_attributes(cookie, unparsed_attributes);
+    return cookie;
+}
+
+void CookieJar::parse_attributes(Cookie& cookie, StringView unparsed_attributes)
+{
+    // 1. If the unparsed-attributes string is empty, skip the rest of these steps.
+    if (unparsed_attributes.is_empty())
+        return;
+
+    // 2. Discard the first character of the unparsed-attributes (which will be a %x3B (";") character).
+    unparsed_attributes = unparsed_attributes.substring_view(1);
+
+    StringView cookie_av;
+
+    // 3. If the remaining unparsed-attributes contains a %x3B (";") character:
+    if (auto position = unparsed_attributes.find(';'); position.has_value()) {
+        // Consume the characters of the unparsed-attributes up to, but not including, the first %x3B (";") character.
+        cookie_av = unparsed_attributes.substring_view(0, position.value());
+        unparsed_attributes = unparsed_attributes.substring_view(position.value());
+    } else {
+        // Consume the remainder of the unparsed-attributes.
+        cookie_av = unparsed_attributes;
+        unparsed_attributes = {};
+    }
+
+    StringView attribute_name;
+    StringView attribute_value;
+
+    // 4. If the cookie-av string contains a %x3D ("=") character:
+    if (auto position = cookie_av.find('='); position.has_value()) {
+        // The (possibly empty) attribute-name string consists of the characters up to, but not including, the first %x3D ("=")
+        // character, and the (possibly empty) attribute-value string consists of the characters after the first %x3D ("=") character.
+        attribute_name = cookie_av.substring_view(0, position.value());
+
+        if (position.value() < cookie_av.length() - 1)
+            attribute_value = cookie_av.substring_view(position.value() + 1);
+    } else {
+        // The attribute-name string consists of the entire cookie-av string, and the attribute-value string is empty.
+        attribute_name = cookie_av;
+    }
+
+    // 5. Remove any leading or trailing WSP characters from the attribute-name string and the attribute-value string.
+    attribute_name = attribute_name.trim_whitespace();
+    attribute_value = attribute_value.trim_whitespace();
+
+    // 6. Process the attribute-name and attribute-value according to the requirements in the following subsections.
+    //    (Notice that attributes with unrecognized attribute-names are ignored.)
+    process_attribute(cookie, attribute_name, attribute_value);
+
+    // 7. Return to Step 1 of this algorithm.
+    parse_attributes(cookie, unparsed_attributes);
+}
+
+void CookieJar::process_attribute(Cookie& cookie, StringView attribute_name, StringView attribute_value)
+{
+    if (attribute_name.equals_ignoring_case("Expires")) {
+        on_expires_attribute(cookie, attribute_value);
+    } else if (attribute_name.equals_ignoring_case("Max-Age")) {
+        on_max_age_attribute(cookie, attribute_value);
+    } else if (attribute_name.equals_ignoring_case("Domain")) {
+        on_domain_attribute(cookie, attribute_value);
+    } else if (attribute_name.equals_ignoring_case("Path")) {
+        on_path_attribute(cookie, attribute_value);
+    } else if (attribute_name.equals_ignoring_case("Secure")) {
+        on_secure_attribute(cookie, attribute_value);
+    } else if (attribute_name.equals_ignoring_case("HttpOnly")) {
+        on_http_only_attribute(cookie, attribute_value);
+    }
+}
+
+void CookieJar::on_expires_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+{
+    // https://tools.ietf.org/html/rfc6265#section-5.2.1
+}
+
+void CookieJar::on_max_age_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+{
+    // https://tools.ietf.org/html/rfc6265#section-5.2.2
+}
+
+void CookieJar::on_domain_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+{
+    // https://tools.ietf.org/html/rfc6265#section-5.2.3
+}
+
+void CookieJar::on_path_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+{
+    // https://tools.ietf.org/html/rfc6265#section-5.2.4
+}
+
+void CookieJar::on_secure_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+{
+    // https://tools.ietf.org/html/rfc6265#section-5.2.5
+}
+
+void CookieJar::on_http_only_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+{
+    // https://tools.ietf.org/html/rfc6265#section-5.2.6
 }
 
 }
