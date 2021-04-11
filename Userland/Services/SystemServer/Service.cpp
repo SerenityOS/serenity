@@ -32,13 +32,13 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/Socket.h>
+#include <fcntl.h>
 #include <grp.h>
 #include <libgen.h>
 #include <pwd.h>
 #include <sched.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 static HashMap<pid_t, Service*> s_service_map;

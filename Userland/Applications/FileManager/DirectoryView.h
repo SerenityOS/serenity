@@ -35,6 +35,7 @@
 #include <LibGUI/IconView.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 
 namespace FileManager {
