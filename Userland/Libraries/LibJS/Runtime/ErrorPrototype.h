@@ -36,15 +36,10 @@ class ErrorPrototype final : public Object {
 public:
     explicit ErrorPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~ErrorPrototype() override;
+    virtual ~ErrorPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(to_string);
-
-    JS_DECLARE_NATIVE_GETTER(name_getter);
-    JS_DECLARE_NATIVE_SETTER(name_setter);
-
-    JS_DECLARE_NATIVE_GETTER(message_getter);
 };
 
 #define DECLARE_ERROR_SUBCLASS_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName) \
@@ -54,7 +49,7 @@ private:
     public:                                                                                     \
         explicit PrototypeName(GlobalObject&);                                                  \
         virtual void initialize(GlobalObject&) override { }                                     \
-        virtual ~PrototypeName() override;                                                      \
+        virtual ~PrototypeName() override = default;                                            \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \

@@ -124,7 +124,7 @@ public:
         // Ensure we got some stack space left, so the next function call doesn't kill us.
         // This value is merely a guess and might need tweaking at a later point.
         if (m_stack_info.size_free() < 16 * KiB)
-            throw_exception<Error>(global_object, "RuntimeError", "Call stack size limit exceeded");
+            throw_exception<Error>(global_object, "Call stack size limit exceeded");
         else
             m_call_stack.append(&call_frame);
     }

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +26,6 @@
  */
 
 #include <AK/Function.h>
-#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -44,85 +44,44 @@ void ErrorPrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_property(vm.names.name, name_getter, name_setter, attr);
-    define_native_property(vm.names.message, message_getter, {}, attr);
+    define_property(vm.names.name, js_string(vm, "Error"), attr);
+    define_property(vm.names.message, js_string(vm, ""), attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
 }
 
-ErrorPrototype::~ErrorPrototype()
-{
-}
-
-JS_DEFINE_NATIVE_GETTER(ErrorPrototype::name_getter)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<Error>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "Error");
-        return {};
-    }
-    return js_string(vm, static_cast<const Error*>(this_object)->name());
-}
-
-JS_DEFINE_NATIVE_SETTER(ErrorPrototype::name_setter)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return;
-    if (!is<Error>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "Error");
-        return;
-    }
-    auto name = value.to_string(global_object);
-    if (vm.exception())
-        return;
-    static_cast<Error*>(this_object)->set_name(name);
-}
-
-JS_DEFINE_NATIVE_GETTER(ErrorPrototype::message_getter)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<Error>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "Error");
-        return {};
-    }
-    return js_string(vm, static_cast<const Error*>(this_object)->message());
-}
-
+// 20.5.3.4 Error.prototype.toString, https://tc39.es/ecma262/#sec-error.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 {
-    if (!vm.this_value(global_object).is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, vm.this_value(global_object).to_string_without_side_effects());
+    auto this_value = vm.this_value(global_object);
+    if (!this_value.is_object()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, this_value.to_string_without_side_effects());
         return {};
     }
-    auto& this_object = vm.this_value(global_object).as_object();
+    auto& this_object = this_value.as_object();
 
     String name = "Error";
-    auto name_property = this_object.get(vm.names.name);
+    auto name_property = this_object.get(vm.names.name).value_or(js_undefined());
     if (vm.exception())
         return {};
-    if (!name_property.is_empty() && !name_property.is_undefined()) {
+    if (!name_property.is_undefined()) {
         name = name_property.to_string(global_object);
         if (vm.exception())
             return {};
     }
 
     String message = "";
-    auto message_property = this_object.get(vm.names.message);
+    auto message_property = this_object.get(vm.names.message).value_or(js_undefined());
     if (vm.exception())
         return {};
-    if (!message_property.is_empty() && !message_property.is_undefined()) {
+    if (!message_property.is_undefined()) {
         message = message_property.to_string(global_object);
         if (vm.exception())
             return {};
     }
 
-    if (name.length() == 0)
+    if (name.is_empty())
         return js_string(vm, message);
-    if (message.length() == 0)
+    if (message.is_empty())
         return js_string(vm, name);
     return js_string(vm, String::formatted("{}: {}", name, message));
 }
@@ -131,8 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
     PrototypeName::PrototypeName(GlobalObject& global_object)                            \
         : Object(*global_object.error_prototype())                                       \
     {                                                                                    \
-    }                                                                                    \
-    PrototypeName::~PrototypeName() { }
+    }
 
 JS_ENUMERATE_ERROR_SUBCLASSES
 #undef __JS_ENUMERATE

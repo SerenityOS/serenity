@@ -36,6 +36,7 @@ class MarkupGenerator {
 public:
     static String html_from_source(const StringView&);
     static String html_from_value(Value);
+    static String html_from_error(Object&);
 
 private:
     enum class StyleType {
