@@ -17,7 +17,7 @@ install() {
 post_install() {
     mkdir -p "${SERENITY_BUILD_DIR}/Root/bin"
     run make install-bin DESTDIR="${SERENITY_BUILD_DIR}/Root"
-    ln -s /usr/local/sbin/dmidecode "${SERENITY_BUILD_DIR}/Root/bin/dmidecode"
-    ln -s /usr/local/sbin/biosdecode "${SERENITY_BUILD_DIR}/Root/bin/biosdecode"
-    ln -s /usr/local/sbin/vpddecode "${SERENITY_BUILD_DIR}/Root/bin/vpddecode"
+    ln -sf /usr/local/sbin/dmidecode "${SERENITY_BUILD_DIR}/Root/bin/dmidecode"
+    ln -sf /usr/local/sbin/biosdecode "${SERENITY_BUILD_DIR}/Root/bin/biosdecode"
+    ln -sf /usr/local/sbin/vpddecode "${SERENITY_BUILD_DIR}/Root/bin/vpddecode"
 }
