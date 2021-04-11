@@ -74,7 +74,6 @@ typedef __INTPTR_TYPE__ intptr_t;
 
 typedef __UINTMAX_TYPE__ uintmax_t;
 #define UINTMAX_MAX __UINTMAX_MAX__
-#define UINTMAX_MIN __UINTMAX_MIN__
 
 typedef __INTMAX_TYPE__ intmax_t;
 #define INTMAX_MAX __INTMAX_MAX__
