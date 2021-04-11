@@ -40,3 +40,4 @@ compile_commands.json
 .idea/
 cmake-build-debug/
 sync-local.sh
+.vim/
