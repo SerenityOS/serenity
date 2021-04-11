@@ -94,14 +94,15 @@ public:
 
     GlobalObject& global_object() const { return *shape().global_object(); }
 
-    virtual Value get(const PropertyName&, Value receiver = {}) const;
+    virtual Value get(const PropertyName&, Value receiver = {}, bool without_side_effects = false) const;
+    Value get_without_side_effects(const PropertyName&) const;
 
     virtual bool has_property(const PropertyName&) const;
     bool has_own_property(const PropertyName&) const;
 
     virtual bool put(const PropertyName&, Value, Value receiver = {});
 
-    Value get_own_property(const PropertyName&, Value receiver) const;
+    Value get_own_property(const PropertyName&, Value receiver, bool without_side_effects = false) const;
     MarkedValueList get_own_properties(PropertyKind, bool only_enumerable_properties = false, GetOwnPropertyReturnType = GetOwnPropertyReturnType::All) const;
     MarkedValueList get_enumerable_own_property_names(PropertyKind) const;
     virtual Optional<PropertyDescriptor> get_own_property_descriptor(const PropertyName&) const;

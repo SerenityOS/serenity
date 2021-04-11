@@ -55,7 +55,7 @@ public:
     virtual Optional<PropertyDescriptor> get_own_property_descriptor(const PropertyName&) const override;
     virtual bool define_property(const StringOrSymbol& property_name, const Object& descriptor, bool throw_exceptions = true) override;
     virtual bool has_property(const PropertyName& name) const override;
-    virtual Value get(const PropertyName& name, Value receiver) const override;
+    virtual Value get(const PropertyName& name, Value receiver, bool without_side_effects = false) const override;
     virtual bool put(const PropertyName& name, Value value, Value receiver) override;
     virtual bool delete_property(const PropertyName& name) override;
 
