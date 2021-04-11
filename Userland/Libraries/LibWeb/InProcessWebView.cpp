@@ -433,4 +433,17 @@ String InProcessWebView::page_did_request_prompt(const String& message, const St
     return {};
 }
 
+String InProcessWebView::page_did_request_cookie(const URL& url)
+{
+    if (on_get_cookie)
+        return on_get_cookie(url);
+    return {};
+}
+
+void InProcessWebView::page_did_set_cookie(const URL& url, const String& cookie)
+{
+    if (on_set_cookie)
+        on_set_cookie(url, cookie);
+}
+
 }

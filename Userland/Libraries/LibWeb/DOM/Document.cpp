@@ -825,15 +825,17 @@ void Document::completely_finish_loading()
     dispatch_event(DOM::Event::create(HTML::EventNames::load));
 }
 
-String Document::cookie() const
+String Document::cookie()
 {
-    // FIXME: Support cookies!
+    if (auto* page = this->page())
+        return page->client().page_did_request_cookie(m_url);
     return {};
 }
 
-void Document::set_cookie(String)
+void Document::set_cookie(String cookie)
 {
-    // FIXME: Support cookies!
+    if (auto* page = this->page())
+        page->client().page_did_set_cookie(m_url, cookie);
 }
 
 }

@@ -25,4 +25,6 @@ endpoint WebContentClient = 90
     DidGetSource(URL url, String source) =|
     DidJSConsoleOutput(String method, String line) =|
     DidChangeFavicon(Gfx::ShareableBitmap favicon) =|
+    DidRequestCookie(URL url) => (String cookie)
+    DidSetCookie(URL url, String cookie) =|
 }

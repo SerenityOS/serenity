@@ -197,4 +197,15 @@ void WebContentClient::handle(const Messages::WebContentClient::DidChangeFavicon
     m_view.notify_server_did_change_favicon(*message.favicon().bitmap());
 }
 
+OwnPtr<Messages::WebContentClient::DidRequestCookieResponse> WebContentClient::handle(const Messages::WebContentClient::DidRequestCookie& message)
+{
+    auto result = m_view.notify_server_did_request_cookie({}, message.url());
+    return make<Messages::WebContentClient::DidRequestCookieResponse>(result);
+}
+
+void WebContentClient::handle(const Messages::WebContentClient::DidSetCookie& message)
+{
+    m_view.notify_server_did_set_cookie({}, message.url(), message.cookie());
+}
+
 }
