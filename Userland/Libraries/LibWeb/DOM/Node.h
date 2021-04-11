@@ -100,6 +100,7 @@ public:
     void insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool suppress_observers = false);
     void remove(bool suppress_observers = false);
     void remove_all_children(bool suppress_observers = false);
+    u16 compare_document_position(RefPtr<Node> other);
 
     // NOTE: This is intended for the JS bindings.
     bool has_child_nodes() const { return has_children(); }
