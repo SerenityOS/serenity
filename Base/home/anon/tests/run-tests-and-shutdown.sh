@@ -1,5 +1,6 @@
 #!/bin/sh
 
+echo
 echo "==== Running Tests on SerenityOS ===="
 
 run(index) {
