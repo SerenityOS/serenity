@@ -48,7 +48,6 @@ public:
     virtual ~SATADiskDevice() override;
 
     // ^StorageDevice
-    virtual Type type() const override { return StorageDevice::Type::SATA; }
     // ^BlockDevice
     virtual void start_request(AsyncBlockDeviceRequest&) override;
     virtual String device_name() const override;

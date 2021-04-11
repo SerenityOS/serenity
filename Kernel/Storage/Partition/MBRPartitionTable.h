@@ -68,7 +68,6 @@ public:
 
     bool is_protective_mbr() const;
     bool contains_ebr() const;
-    virtual Type type() const override { return Type::MBR; };
     virtual bool is_valid() const override { return m_valid; };
 
 protected:

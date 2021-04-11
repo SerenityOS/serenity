@@ -44,17 +44,10 @@ class AsyncBlockDeviceRequest;
 class StorageDevice;
 class StorageController : public RefCounted<StorageController> {
     AK_MAKE_ETERNAL
-public:
-    enum class Type : u8 {
-        Ramdisk,
-        IDE,
-        AHCI,
-        NVMe
-    };
 
+public:
     virtual ~StorageController() = default;
 
-    virtual Type type() const = 0;
     virtual RefPtr<StorageDevice> device(u32 index) const = 0;
     virtual size_t devices_count() const = 0;
 

@@ -41,9 +41,6 @@ public:
     RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Region>&&, int major, int minor);
     virtual ~RamdiskDevice() override;
 
-    // ^StorageDevice
-    virtual Type type() const override { return StorageDevice::Type::Ramdisk; }
-
     // ^BlockDevice
     virtual void start_request(AsyncBlockDeviceRequest&) override;
 

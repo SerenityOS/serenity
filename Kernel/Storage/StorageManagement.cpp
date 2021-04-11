@@ -225,13 +225,4 @@ StorageManagement& StorageManagement::the()
     return *s_the;
 }
 
-NonnullRefPtrVector<StorageController> StorageManagement::ide_controllers() const
-{
-    NonnullRefPtrVector<StorageController> ide_controllers;
-    for (auto& controller : m_controllers) {
-        if (controller.type() == StorageController::Type::IDE)
-            ide_controllers.append(controller);
-    }
-    return ide_controllers;
-}
 }

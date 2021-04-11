@@ -51,8 +51,6 @@ public:
     static int major_number();
     static int minor_number();
 
-    NonnullRefPtrVector<StorageController> ide_controllers() const;
-
 private:
     bool boot_argument_contains_partition_uuid();
 

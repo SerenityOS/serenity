@@ -43,7 +43,6 @@ public:
     static Result<NonnullOwnPtr<GUIDPartitionTable>, PartitionTable::Error> try_to_initialize(const StorageDevice&);
     explicit GUIDPartitionTable(const StorageDevice&);
 
-    virtual Type type() const override { return Type::GPT; };
     virtual bool is_valid() const override { return m_valid; };
 
 private:

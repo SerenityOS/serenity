@@ -43,7 +43,6 @@ public:
     static Result<NonnullOwnPtr<EBRPartitionTable>, PartitionTable::Error> try_to_initialize(const StorageDevice&);
     explicit EBRPartitionTable(const StorageDevice&);
     virtual bool is_valid() const override { return m_valid; };
-    virtual Type type() const override { return Type::EBR; };
 
 private:
     void search_extended_partition(const StorageDevice&, MBRPartitionTable&, u64, size_t limit);

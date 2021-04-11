@@ -44,7 +44,6 @@ public:
     static NonnullRefPtr<IDEController> initialize(PCI::Address address, bool force_pio);
     virtual ~IDEController() override;
 
-    virtual Type type() const override { return Type::IDE; }
     virtual RefPtr<StorageDevice> device(u32 index) const override;
     virtual bool reset() override;
     virtual bool shutdown() override;

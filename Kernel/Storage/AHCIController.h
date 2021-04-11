@@ -48,7 +48,6 @@ public:
     UNMAP_AFTER_INIT static NonnullRefPtr<AHCIController> initialize(PCI::Address address);
     virtual ~AHCIController() override;
 
-    virtual Type type() const override { return Type::AHCI; }
     virtual RefPtr<StorageDevice> device(u32 index) const override;
     virtual bool reset() override;
     virtual bool shutdown() override;
