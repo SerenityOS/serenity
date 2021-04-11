@@ -67,7 +67,8 @@ void WindowObject::initialize_global_object()
     define_property("window", this, JS::Attribute::Enumerable);
     define_property("frames", this, JS::Attribute::Enumerable);
     define_property("self", this, JS::Attribute::Enumerable);
-    define_native_property("top", top_getter, JS::Attribute::Enumerable);
+    define_native_property("top", top_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_property("parent", parent_getter, nullptr, JS::Attribute::Enumerable);
     define_native_property("document", document_getter, nullptr, JS::Attribute::Enumerable);
     define_native_property("performance", performance_getter, nullptr, JS::Attribute::Enumerable);
     define_native_property("screen", screen_getter, nullptr, JS::Attribute::Enumerable);
@@ -364,6 +365,22 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::top_getter)
     VERIFY(this_frame->main_frame().document());
     auto& top_window = this_frame->main_frame().document()->window();
     return top_window.wrapper();
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::parent_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    auto* this_frame = impl->document().frame();
+    VERIFY(this_frame);
+    if (this_frame->parent()) {
+        VERIFY(this_frame->parent()->document());
+        auto& parent_window = this_frame->parent()->document()->window();
+        return parent_window.wrapper();
+    }
+    VERIFY(this_frame == &this_frame->main_frame());
+    return impl->wrapper();
 }
 
 JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)
