@@ -35,6 +35,7 @@
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
 #include <ctype.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 
