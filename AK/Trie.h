@@ -201,7 +201,7 @@ public:
     ConstIterator begin() const { return ConstIterator(*this); }
     ConstIterator end() const { return ConstIterator::end(); }
 
-    bool is_empty() const { return m_children.is_empty(); }
+    [[nodiscard]] bool is_empty() const { return m_children.is_empty(); }
     void clear() { m_children.clear(); }
 
     BaseType deep_copy()
