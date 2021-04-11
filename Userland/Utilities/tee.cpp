@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 static Vector<int> collect_fds(Vector<const char*> paths, bool append, bool* err)

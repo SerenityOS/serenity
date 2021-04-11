@@ -29,6 +29,7 @@
 #include "SimpleRegion.h"
 #include <AK/Debug.h>
 #include <AK/Format.h>
+#include <fcntl.h>
 #include <sched.h>
 #include <serenity.h>
 #include <strings.h>
