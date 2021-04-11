@@ -47,16 +47,16 @@ public:
     ~IntrusiveList();
 
     void clear();
-    bool is_empty() const;
+    [[nodiscard]] bool is_empty() const;
     void append(T& n);
     void prepend(T& n);
     void remove(T& n);
-    bool contains(const T&) const;
-    T* first() const;
-    T* last() const;
+    [[nodiscard]] bool contains(const T&) const;
+    [[nodiscard]] T* first() const;
+    [[nodiscard]] T* last() const;
 
-    T* take_first();
-    T* take_last();
+    [[nodiscard]] T* take_first();
+    [[nodiscard]] T* take_last();
 
     class Iterator {
     public:
