@@ -98,7 +98,10 @@ Please see the [issue policy](https://github.com/SerenityOS/serenity/blob/master
 
 ## Get in touch
 
-The main communication hub is `#serenityos` on the Freenode IRC network.
+IRC: `#serenityos` on the Freenode IRC network.
+
+Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
+
 
 ## Author
 
