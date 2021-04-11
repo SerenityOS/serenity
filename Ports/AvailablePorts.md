@@ -49,6 +49,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`libgcrypt`](libgcrypt/)      | libgcrypt                                     | 1.9.2             | https://gnupg.org/software/libgcrypt/index.html       |
 | [`libgpg-error`](libgpg-error/)| libgpg-error                                  | 1.42              | https://gnupg.org/software/libgpg-error/index.html    |
 | [`libiconv`](libiconv/)        | GNU libiconv                                  | 1.16              | https://www.gnu.org/software/libiconv/                |
+| [`libicu`](libicu/)            | ICU                                           | 69.1              | http://site.icu-project.org/                          |
 | [`libksba`](libksba/)          | libksba                                       | 1.5.1             | https://gnupg.org/software/libksba/index.html         |
 | [`libjpeg`](libjpeg/)          | libjpeg                                       | 9d                | https://ijg.org/                                      |
 | [`libogg`](libogg/)            | libogg                                        | 1.3.4             | https://github.com/xiph/ogg                           |
