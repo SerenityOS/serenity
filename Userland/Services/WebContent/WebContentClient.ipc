@@ -18,6 +18,7 @@ endpoint WebContentClient = 90
     DidMiddleClickLink(URL url, String target, unsigned modifiers) =|
     DidRequestContextMenu(Gfx::IntPoint content_position) =|
     DidRequestLinkContextMenu(Gfx::IntPoint content_position, URL url, String target, unsigned modifiers) =|
+    DidRequestImageContextMenu(Gfx::IntPoint content_position, URL url, String target, unsigned modifiers, Gfx::ShareableBitmap bitmap) =|
     DidRequestAlert(String message) => ()
     DidRequestConfirm(String message) => (bool result)
     DidRequestPrompt(String message, String default_) => (String response)
