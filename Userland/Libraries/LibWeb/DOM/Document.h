@@ -73,7 +73,7 @@ public:
 
     virtual ~Document() override;
 
-    String cookie() const;
+    String cookie();
     void set_cookie(String);
 
     bool should_invalidate_styles_on_attribute_changes() const { return m_should_invalidate_styles_on_attribute_changes; }
