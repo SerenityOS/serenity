@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,10 +43,6 @@ void ErrorConstructor::initialize(GlobalObject& global_object)
     define_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
-ErrorConstructor::~ErrorConstructor()
-{
-}
-
 Value ErrorConstructor::call()
 {
     return construct(*this);
@@ -55,41 +51,46 @@ Value ErrorConstructor::call()
 Value ErrorConstructor::construct(Function&)
 {
     auto& vm = this->vm();
-    String message = "";
-    if (!vm.call_frame().arguments.is_empty() && !vm.call_frame().arguments[0].is_undefined()) {
-        message = vm.call_frame().arguments[0].to_string(global_object());
+    String message;
+    if (!vm.argument(0).is_undefined()) {
+        message = vm.argument(0).to_string(global_object());
         if (vm.exception())
             return {};
     }
-    return Error::create(global_object(), vm.names.Error, message);
+    return Error::create(global_object(), message);
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                 \
-    ConstructorName::ConstructorName(GlobalObject& global_object)                                        \
-        : NativeFunction(*global_object.function_prototype())                                            \
-    {                                                                                                    \
-    }                                                                                                    \
-    void ConstructorName::initialize(GlobalObject& global_object)                                        \
-    {                                                                                                    \
-        auto& vm = this->vm();                                                                           \
-        NativeFunction::initialize(global_object);                                                       \
-        define_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);                  \
-        define_property(vm.names.length, Value(1), Attribute::Configurable);                             \
-    }                                                                                                    \
-    ConstructorName::~ConstructorName() { }                                                              \
-    Value ConstructorName::call()                                                                        \
-    {                                                                                                    \
-        return construct(*this);                                                                         \
-    }                                                                                                    \
-    Value ConstructorName::construct(Function&)                                                          \
-    {                                                                                                    \
-        String message = "";                                                                             \
-        if (!vm().call_frame().arguments.is_empty() && !vm().call_frame().arguments[0].is_undefined()) { \
-            message = vm().call_frame().arguments[0].to_string(global_object());                         \
-            if (vm().exception())                                                                        \
-                return {};                                                                               \
-        }                                                                                                \
-        return ClassName::create(global_object(), message);                                              \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    ConstructorName::ConstructorName(GlobalObject& global_object)                        \
+        : NativeFunction(*global_object.function_prototype())                            \
+    {                                                                                    \
+    }                                                                                    \
+                                                                                         \
+    void ConstructorName::initialize(GlobalObject& global_object)                        \
+    {                                                                                    \
+        auto& vm = this->vm();                                                           \
+        NativeFunction::initialize(global_object);                                       \
+        define_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);  \
+        define_property(vm.names.length, Value(1), Attribute::Configurable);             \
+    }                                                                                    \
+                                                                                         \
+    ConstructorName::~ConstructorName() { }                                              \
+                                                                                         \
+    Value ConstructorName::call()                                                        \
+    {                                                                                    \
+        return construct(*this);                                                         \
+    }                                                                                    \
+                                                                                         \
+    Value ConstructorName::construct(Function&)                                          \
+    {                                                                                    \
+        auto& vm = this->vm();                                                           \
+        String message = "";                                                             \
+        if (!vm.argument(0).is_undefined()) {                                            \
+            message = vm.argument(0).to_string(global_object());                         \
+            if (vm.exception())                                                          \
+                return {};                                                               \
+        }                                                                                \
+        return ClassName::create(global_object(), message);                              \
     }
 
 JS_ENUMERATE_ERROR_SUBCLASSES

@@ -7,7 +7,7 @@ test("infinite recursion", () => {
         infiniteRecursion();
     } catch (e) {
         expect(e).toBeInstanceOf(Error);
-        expect(e.name).toBe("RuntimeError");
+        expect(e.name).toBe("Error");
         expect(e.message).toBe("Call stack size limit exceeded");
     }
 

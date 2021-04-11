@@ -294,9 +294,16 @@ void VM::throw_exception(Exception* exception)
 {
     if (should_log_exceptions()) {
         auto value = exception->value();
-        if (value.is_object() && is<Error>(value.as_object())) {
-            auto& error = static_cast<Error&>(value.as_object());
-            dbgln("Throwing JavaScript exception: [{}] {}", error.name(), error.message());
+        if (value.is_object()) {
+            auto& object = value.as_object();
+            auto name = object.get_without_side_effects(names.name).value_or(js_undefined());
+            auto message = object.get_without_side_effects(names.message).value_or(js_undefined());
+            if (name.is_accessor() || name.is_native_property() || message.is_accessor() || message.is_native_property()) {
+                // The result is not going to be useful, let's just print the value. This affects DOMExceptions, for example.
+                dbgln("Throwing JavaScript exception: {}", value);
+            } else {
+                dbgln("Throwing JavaScript exception: [{}] {}", name, message);
+            }
         } else {
             dbgln("Throwing JavaScript exception: {}", value);
         }

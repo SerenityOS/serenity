@@ -761,7 +761,7 @@ public:
 
     if (interface.extended_attributes.contains("CustomGet")) {
         generator.append(R"~~~(
-    virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}) const override;
+    virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}, bool without_side_effects = false) const override;
 )~~~");
     }
     if (interface.extended_attributes.contains("CustomPut")) {
