@@ -9,6 +9,7 @@ set(SOURCES
     ProcessMemoryMapWidget.cpp
     ProcessModel.cpp
     ProcessUnveiledPathsWidget.cpp
+    ProcessStateWidget.cpp
     ThreadStackWidget.cpp
 )
 
