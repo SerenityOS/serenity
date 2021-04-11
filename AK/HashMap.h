@@ -64,12 +64,12 @@ public:
     }
 #endif
 
-    bool is_empty() const
+    [[nodiscard]] bool is_empty() const
     {
         return m_table.is_empty();
     }
-    size_t size() const { return m_table.size(); }
-    size_t capacity() const { return m_table.capacity(); }
+    [[nodiscard]] size_t size() const { return m_table.size(); }
+    [[nodiscard]] size_t capacity() const { return m_table.capacity(); }
     void clear() { m_table.clear(); }
 
     HashSetResult set(const K& key, const V& value) { return m_table.set({ key, value }); }
