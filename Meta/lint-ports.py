@@ -14,7 +14,7 @@ IGNORE_FILES = {
     PORT_TABLE_FILE,
     'build_all.sh',
     'build_installed.sh',
-    'ReadMe.md'
+    'README.md'
 }
 
 

@@ -34,8 +34,8 @@ buffer while using the returned string.
 
 int main()
 {
-    char path1[] = "/home/anon/ReadMe.md";
-    dbgln("{}", basename(path1)); // should be "ReadMe.md"
+    char path1[] = "/home/anon/README.md";
+    dbgln("{}", basename(path1)); // should be "README.md"
 
     char path2[] = "foo/bar/";
     dbgln("{}", basename(path2)); // should be "bar"
