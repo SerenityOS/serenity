@@ -142,9 +142,9 @@ public:
         swap(a.m_deleted_count, b.m_deleted_count);
     }
 
-    bool is_empty() const { return !m_size; }
-    size_t size() const { return m_size; }
-    size_t capacity() const { return m_capacity; }
+    [[nodiscard]] bool is_empty() const { return !m_size; }
+    [[nodiscard]] size_t size() const { return m_size; }
+    [[nodiscard]] size_t capacity() const { return m_capacity; }
 
     template<typename U, size_t N>
     void set_from(U (&from_array)[N])
@@ -352,8 +352,8 @@ private:
         }
     }
 
-    size_t used_bucket_count() const { return m_size + m_deleted_count; }
-    bool should_grow() const { return ((used_bucket_count() + 1) * 100) >= (m_capacity * load_factor_in_percent); }
+    [[nodiscard]] size_t used_bucket_count() const { return m_size + m_deleted_count; }
+    [[nodiscard]] bool should_grow() const { return ((used_bucket_count() + 1) * 100) >= (m_capacity * load_factor_in_percent); }
 
     Bucket* m_buckets { nullptr };
     size_t m_size { 0 };
