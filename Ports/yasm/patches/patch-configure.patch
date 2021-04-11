@@ -1,0 +1,30 @@
+diff --git a/configure b/patched-configure
+index d58618be9..ad8678a12 100755
+--- a/configure
++++ b/patched-configure
+@@ -6306,25 +6306,6 @@ IFS=$ac_save_IFS
+ case $build_os in *\ *) build_os=`echo "$build_os" | sed 's/ /-/g'`;; esac
+ 
+ 
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking host system type" >&5
+-$as_echo_n "checking host system type... " >&6; }
+-if ${ac_cv_host+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-  if test "x$host_alias" = x; then
+-  ac_cv_host=$ac_cv_build
+-else
+-  ac_cv_host=`$SHELL "$ac_aux_dir/config.sub" $host_alias` ||
+-    as_fn_error $? "$SHELL $ac_aux_dir/config.sub $host_alias failed" "$LINENO" 5
+-fi
+-
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_host" >&5
+-$as_echo "$ac_cv_host" >&6; }
+-case $ac_cv_host in
+-*-*-*) ;;
+-*) as_fn_error $? "invalid value of canonical host" "$LINENO" 5;;
+-esac
+ host=$ac_cv_host
+ ac_save_IFS=$IFS; IFS='-'
+ set x $ac_cv_host
