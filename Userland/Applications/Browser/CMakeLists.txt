@@ -6,6 +6,7 @@ set(SOURCES
     BookmarksBarWidget.cpp
     BrowserConsoleClient.cpp
     ConsoleWidget.cpp
+    CookieJar.cpp
     DownloadWidget.cpp
     History.cpp
     InspectorWidget.cpp
