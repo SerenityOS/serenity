@@ -118,7 +118,7 @@ NewProjectDialog::NewProjectDialog(GUI::Window* parent)
 
     m_browse_button = *find_descendant_of_type_named<GUI::Button>("browse_button");
     m_browse_button->on_click = [this](auto) {
-        Optional<String> path = GUI::FilePicker::get_open_filepath(this);
+        Optional<String> path = GUI::FilePicker::get_open_filepath(this, {}, Core::StandardPaths::home_directory(), true);
         if (path.has_value())
             m_create_in_input->set_text(path.value().view());
     };
