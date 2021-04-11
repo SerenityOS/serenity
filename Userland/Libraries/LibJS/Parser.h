@@ -147,6 +147,10 @@ public:
         }
     }
 
+    struct TokenMemoization {
+        bool try_parse_arrow_function_expression_failed;
+    };
+
 private:
     friend class ScopePusher;
 
@@ -171,6 +175,9 @@ private:
     void load_state();
     void discard_saved_state();
     Position position() const;
+
+    bool try_parse_arrow_function_expression_failed_at_position(const Position&) const;
+    void set_try_parse_arrow_function_expression_failed_at_position(const Position&, bool);
 
     struct RulePosition {
         AK_MAKE_NONCOPYABLE(RulePosition);
@@ -220,9 +227,23 @@ private:
         explicit ParserState(Lexer);
     };
 
+    class PositionKeyTraits {
+    public:
+        static int hash(const Position& position)
+        {
+            return int_hash(position.line) ^ int_hash(position.column);
+        }
+
+        static bool equals(const Position& a, const Position& b)
+        {
+            return a.column == b.column && a.line == b.line;
+        }
+    };
+
     Vector<Position> m_rule_starts;
     ParserState m_parser_state;
     FlyString m_filename;
     Vector<ParserState> m_saved_state;
+    HashMap<Position, TokenMemoization, PositionKeyTraits> m_token_memoizations;
 };
 }
