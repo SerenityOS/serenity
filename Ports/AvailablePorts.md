@@ -72,6 +72,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`ncurses`](ncurses/)          | ncurses                                       | 6.2               | https://invisible-island.net/ncurses/announce.html    |
 | [`neofetch`](neofetch/)        | neofetch                                      | 7.1.0             | https://github.com/dylanaraps/neofetch                |
 | [`nesalizer`](nesalizer/)      | Nesalizer                                     |                   | https://github.com/SerenityOS/nesalizer               |
+| [`nethack`](nethack/)          | nethack                                       | 3.6.6             | https://www.nethack.org/                              |
 | [`ninja`](ninja/)              | Ninja                                         | 1.8.2             | https://ninja-build.org/                              |
 | [`npth`](npth/)                | New GNU Portable Threads Library              | 1.6               | https://gnupg.org/software/npth/index.html            |
 | [`ntbtls`](ntbtls/)            | The Not Too Bad TLS Library                   | 0.2.0             | https://gnupg.org/software/ntbtls/index.html          |
