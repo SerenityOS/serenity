@@ -190,7 +190,11 @@ bool TextDocumentLine::set_text(TextDocument& document, const StringView& text)
     m_text.clear();
     Utf8View utf8_view(text);
     if (!utf8_view.validate()) {
-        return false;
+        for (const auto& c : text) {
+            m_text.append(c);
+        }
+
+        return true;
     }
     for (auto code_point : utf8_view)
         m_text.append(code_point);
