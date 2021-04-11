@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -201,6 +201,11 @@ String PageHost::page_did_request_prompt(const String& message, const String& de
 void PageHost::page_did_change_favicon(const Gfx::Bitmap& favicon)
 {
     m_client.post_message(Messages::WebContentClient::DidChangeFavicon(favicon.to_shareable_bitmap()));
+}
+
+void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, const URL& url, const String& target, unsigned modifiers, const Gfx::Bitmap* bitmap)
+{
+    m_client.post_message(Messages::WebContentClient::DidRequestImageContextMenu(content_position, url, target, modifiers, bitmap->to_shareable_bitmap()));
 }
 
 }

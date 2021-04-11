@@ -72,6 +72,7 @@ public:
     void notify_server_did_finish_loading(Badge<WebContentClient>, const URL&);
     void notify_server_did_request_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&);
     void notify_server_did_request_link_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers);
+    void notify_server_did_request_image_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers, const Gfx::ShareableBitmap&);
     void notify_server_did_request_alert(Badge<WebContentClient>, const String& message);
     bool notify_server_did_request_confirm(Badge<WebContentClient>, const String& message);
     String notify_server_did_request_prompt(Badge<WebContentClient>, const String& message, const String& default_);
