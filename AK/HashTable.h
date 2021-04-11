@@ -87,7 +87,7 @@ class HashTable {
 
 public:
     HashTable() = default;
-    HashTable(size_t capacity) { rehash(capacity); }
+    explicit HashTable(size_t capacity) { rehash(capacity); }
 
     ~HashTable()
     {
