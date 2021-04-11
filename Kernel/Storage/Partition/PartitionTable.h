@@ -36,12 +36,6 @@ namespace Kernel {
 
 class PartitionTable {
 public:
-    enum class Type {
-        MBR,
-        EBR,
-        GPT,
-        BSD
-    };
     enum class Error {
         Invalid,
         MBRProtective,
@@ -51,7 +45,6 @@ public:
 public:
     Optional<DiskPartitionMetadata> partition(unsigned index);
     size_t partitions_count() const { return m_partitions.size(); }
-    virtual Type type() const = 0;
     virtual ~PartitionTable() = default;
     virtual bool is_valid() const = 0;
 
