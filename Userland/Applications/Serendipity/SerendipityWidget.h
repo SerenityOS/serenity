@@ -37,6 +37,8 @@ public:
 private:
     SerendipityWidget();
 
+    virtual void paint_event(GUI::PaintEvent&) override;
+
     void set_random_tip();
     void open_and_parse_tips_file();
     void open_and_parse_readme_file();
