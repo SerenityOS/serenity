@@ -187,6 +187,7 @@ enum {
 #define _SC_PAGESIZE _SC_PAGESIZE
 #define _SC_TTY_NAME_MAX _SC_TTY_NAME_MAX
 #define _SC_GETPW_R_SIZE_MAX _SC_GETPW_R_SIZE_MAX
+#define _SC_CLK_TCK _SC_CLK_TCK
 
 long sysconf(int name);
 
