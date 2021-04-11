@@ -234,7 +234,7 @@ bool Object::test_integrity_level(IntegrityLevel level)
     return true;
 }
 
-Value Object::get_own_property(const PropertyName& property_name, Value receiver) const
+Value Object::get_own_property(const PropertyName& property_name, Value receiver, bool without_side_effects) const
 {
     VERIFY(property_name.is_valid());
     VERIFY(!receiver.is_empty());
@@ -254,10 +254,12 @@ Value Object::get_own_property(const PropertyName& property_name, Value receiver
     }
 
     VERIFY(!value_here.is_empty());
-    if (value_here.is_accessor())
-        return value_here.as_accessor().call_getter(receiver);
-    if (value_here.is_native_property())
-        return call_native_property_getter(value_here.as_native_property(), receiver);
+    if (!without_side_effects) {
+        if (value_here.is_accessor())
+            return value_here.as_accessor().call_getter(receiver);
+        if (value_here.is_native_property())
+            return call_native_property_getter(value_here.as_native_property(), receiver);
+    }
     return value_here;
 }
 
@@ -769,7 +771,7 @@ Value Object::get_by_index(u32 property_index) const
     return {};
 }
 
-Value Object::get(const PropertyName& property_name, Value receiver) const
+Value Object::get(const PropertyName& property_name, Value receiver, bool without_side_effects) const
 {
     VERIFY(property_name.is_valid());
 
@@ -788,7 +790,7 @@ Value Object::get(const PropertyName& property_name, Value receiver) const
 
     const Object* object = this;
     while (object) {
-        auto value = object->get_own_property(property_name, receiver);
+        auto value = object->get_own_property(property_name, receiver, without_side_effects);
         if (vm().exception())
             return {};
         if (!value.is_empty())
@@ -798,6 +800,11 @@ Value Object::get(const PropertyName& property_name, Value receiver) const
             return {};
     }
     return {};
+}
+
+Value Object::get_without_side_effects(const PropertyName& property_name) const
+{
+    return get(property_name, {}, true);
 }
 
 bool Object::put_by_index(u32 property_index, Value value)
