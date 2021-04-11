@@ -751,19 +751,16 @@ Value Object::get_by_index(u32 property_index) const
 {
     const Object* object = this;
     while (object) {
-        if (is<StringObject>(*this)) {
-            auto& string = static_cast<const StringObject*>(this)->primitive_string().string();
+        if (is<StringObject>(*object)) {
+            auto& string = static_cast<const StringObject&>(*object).primitive_string().string();
             if (property_index < string.length())
                 return js_string(heap(), string.substring(property_index, 1));
-            return js_undefined();
-        }
-        if (static_cast<size_t>(property_index) < object->m_indexed_properties.array_like_size()) {
+        } else if (static_cast<size_t>(property_index) < object->m_indexed_properties.array_like_size()) {
             auto result = object->m_indexed_properties.get(const_cast<Object*>(this), property_index);
             if (vm().exception())
                 return {};
             if (result.has_value() && !result.value().value.is_empty())
                 return result.value().value;
-            return {};
         }
         object = object->prototype();
         if (vm().exception())
