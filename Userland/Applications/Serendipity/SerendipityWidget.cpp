@@ -31,7 +31,8 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGUI/Painter.h>
+#include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
@@ -42,9 +43,6 @@
 SerendipityWidget::SerendipityWidget()
 {
     load_from_gml(serendipity_window_gml);
-
-    auto& banner_label = *find_descendant_of_type_named<GUI::Label>("banner_label");
-    banner_label.set_icon(Gfx::Bitmap::load_from_file("/res/graphics/welcome-serendipity.png"));
 
     auto& tip_frame = *find_descendant_of_type_named<GUI::Frame>("tip_frame");
     tip_frame.set_background_role(Gfx::ColorRole::Base);
@@ -152,4 +150,15 @@ void SerendipityWidget::set_random_tip()
     while (n >= m_tips.size());
     m_initial_tip_index = n;
     m_tip_label->set_text(m_tips[n]);
+}
+
+void SerendipityWidget::paint_event(GUI::PaintEvent& event)
+{
+    GUI::Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+
+    static auto font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular24.font");
+    painter.draw_text({ 12, 4, 1, 30 }, "Welcome to ", *font, Gfx::TextAlignment::CenterLeft, palette().base_text());
+    painter.draw_text({ 12 + font->width("Welcome to "), 4, 1, 30 }, "Serenity", font->bold_variant(), Gfx::TextAlignment::CenterLeft, palette().base_text());
+    painter.draw_text({ 12 + font->width("Welcome to ") + font->bold_variant().width("Serenity"), 4, 1, 30 }, "OS", font->bold_variant(), Gfx::TextAlignment::CenterLeft, palette().base() == palette().window() ? palette().base_text() : palette().base());
 }

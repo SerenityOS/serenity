@@ -6,16 +6,6 @@
 
     @GUI::Widget {
         fixed_height: 30
-        layout: @GUI::HorizontalBoxLayout {
-            margins: [4, 0, 0, 0]
-        }
-
-        @GUI::Label {
-            name: "banner_label"
-            fixed_width: 251
-        }
-
-        @GUI::Widget
     }
 
     @GUI::Widget {
