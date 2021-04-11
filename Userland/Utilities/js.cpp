@@ -239,18 +239,25 @@ static void print_function(const JS::Object& object, HashTable<JS::Object*>&)
         out(" {}", static_cast<const JS::NativeFunction&>(object).name());
 }
 
-static void print_date(const JS::Object& date, HashTable<JS::Object*>&)
+static void print_date(const JS::Object& object, HashTable<JS::Object*>&)
 {
     print_type("Date");
-    out(" \033[34;1m{}\033[0m", static_cast<const JS::Date&>(date).string());
+    out(" \033[34;1m{}\033[0m", static_cast<const JS::Date&>(object).string());
 }
 
-static void print_error(const JS::Object& object, HashTable<JS::Object*>&)
+static void print_error(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
-    auto& error = static_cast<const JS::Error&>(object);
-    print_type(error.name());
-    if (!error.message().is_empty())
-        out(" \033[31;1m{}\033[0m", error.message());
+    auto name = object.get_without_side_effects(vm->names.name).value_or(JS::js_undefined());
+    auto message = object.get_without_side_effects(vm->names.message).value_or(JS::js_undefined());
+    if (name.is_accessor() || name.is_native_property() || message.is_accessor() || message.is_native_property()) {
+        print_value(&object, seen_objects);
+    } else {
+        auto name_string = name.to_string_without_side_effects();
+        auto message_string = message.to_string_without_side_effects();
+        print_type(name_string);
+        if (!message_string.is_empty())
+            out(" \033[31;1m{}\033[0m", message_string);
+    }
 }
 
 static void print_regexp_object(const JS::Object& object, HashTable<JS::Object*>&)
@@ -498,9 +505,11 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
     }
 
     auto handle_exception = [&] {
+        auto* exception = vm->exception();
+        vm->clear_exception();
         out("Uncaught exception: ");
-        print(vm->exception()->value());
-        auto trace = vm->exception()->trace();
+        print(exception->value());
+        auto& trace = exception->trace();
         if (trace.size() > 1) {
             unsigned repetitions = 0;
             for (size_t i = 0; i < trace.size(); ++i) {
@@ -522,7 +531,6 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
                 repetitions = 0;
             }
         }
-        vm->clear_exception();
     };
 
     if (vm->exception()) {
@@ -532,8 +540,8 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
     if (s_print_last_result)
         print(vm->last_value());
     if (vm->exception()) {
-        return false;
         handle_exception();
+        return false;
     }
     return true;
 }
@@ -738,7 +746,7 @@ int main(int argc, char** argv)
     OwnPtr<JS::Interpreter> interpreter;
 
     interrupt_interpreter = [&] {
-        auto error = JS::Error::create(interpreter->global_object(), "Error", "Received SIGINT");
+        auto error = JS::Error::create(interpreter->global_object(), "Received SIGINT");
         vm->throw_exception(interpreter->global_object(), error);
     };
 

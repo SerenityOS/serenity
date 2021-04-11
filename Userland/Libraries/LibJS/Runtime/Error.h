@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,19 +36,10 @@ class Error : public Object {
     JS_OBJECT(Error, Object);
 
 public:
-    static Error* create(GlobalObject&, const FlyString& name, const String& message);
+    static Error* create(GlobalObject&, const String& message = {});
 
-    Error(const FlyString& name, const String& message, Object& prototype);
-    virtual ~Error() override;
-
-    const FlyString& name() const { return m_name; }
-    const String& message() const { return m_message; }
-
-    void set_name(const FlyString& name) { m_name = name; }
-
-private:
-    FlyString m_name;
-    String m_message;
+    explicit Error(Object& prototype);
+    virtual ~Error() override = default;
 };
 
 #define DECLARE_ERROR_SUBCLASS(ClassName, snake_name, PrototypeName, ConstructorName) \
@@ -55,10 +47,10 @@ private:
         JS_OBJECT(ClassName, Error);                                                  \
                                                                                       \
     public:                                                                           \
-        static ClassName* create(GlobalObject&, const String& message);               \
+        static ClassName* create(GlobalObject&, const String& message = {});          \
                                                                                       \
-        ClassName(const String& message, Object& prototype);                          \
-        virtual ~ClassName() override;                                                \
+        explicit ClassName(Object& prototype);                                        \
+        virtual ~ClassName() override = default;                                      \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
