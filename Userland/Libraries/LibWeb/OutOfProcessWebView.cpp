@@ -365,6 +365,19 @@ void OutOfProcessWebView::notify_server_did_change_favicon(const Gfx::Bitmap& fa
         on_favicon_change(favicon);
 }
 
+String OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentClient>, const URL& url)
+{
+    if (on_get_cookie)
+        return on_get_cookie(url);
+    return {};
+}
+
+void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, const URL& url, const String& cookie)
+{
+    if (on_set_cookie)
+        on_set_cookie(url, cookie);
+}
+
 void OutOfProcessWebView::did_scroll()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));

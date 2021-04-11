@@ -208,4 +208,14 @@ void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_
     m_client.post_message(Messages::WebContentClient::DidRequestImageContextMenu(content_position, url, target, modifiers, bitmap->to_shareable_bitmap()));
 }
 
+String PageHost::page_did_request_cookie(const URL& url)
+{
+    return m_client.send_sync<Messages::WebContentClient::DidRequestCookie>(url)->cookie();
+}
+
+void PageHost::page_did_set_cookie(const URL& url, const String& cookie)
+{
+    m_client.post_message(Messages::WebContentClient::DidSetCookie(url, cookie));
+}
+
 }
