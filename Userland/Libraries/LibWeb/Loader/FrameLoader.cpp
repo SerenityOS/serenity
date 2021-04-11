@@ -274,6 +274,11 @@ void FrameLoader::resource_did_load()
         return;
     }
 
+    // FIXME: Support multiple instances of the Set-Cookie response header.
+    auto set_cookie = resource()->response_headers().get("Set-Cookie");
+    if (set_cookie.has_value())
+        document->set_cookie(set_cookie.value());
+
     if (!url.fragment().is_empty())
         frame().scroll_to_anchor(url.fragment());
 
