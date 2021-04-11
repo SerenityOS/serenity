@@ -70,6 +70,8 @@ public:
     Function<void(const URL&)> on_tab_open_request;
     Function<void(Tab&)> on_tab_close_request;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
+    Function<String(const URL& url)> on_get_cookie;
+    Function<void(const URL& url, const String& cookie)> on_set_cookie;
 
     const String& title() const { return m_title; }
     const Gfx::Bitmap* icon() const { return m_icon; }
