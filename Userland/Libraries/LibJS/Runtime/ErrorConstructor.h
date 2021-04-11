@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@ class ErrorConstructor final : public NativeFunction {
 public:
     explicit ErrorConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~ErrorConstructor() override;
+    virtual ~ErrorConstructor() override = default;
 
     virtual Value call() override;
     virtual Value construct(Function& new_target) override;

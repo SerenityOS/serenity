@@ -54,16 +54,15 @@ void WebContentConsoleClient::handle_input(const String& js_source)
     }
 
     if (m_interpreter->exception()) {
-        output_html.append("Uncaught exception: ");
-        auto error = m_interpreter->exception()->value();
-        if (error.is_object() && is<Web::Bindings::DOMExceptionWrapper>(error.as_object())) {
-            auto& dom_exception_wrapper = static_cast<Web::Bindings::DOMExceptionWrapper&>(error.as_object());
-            error = JS::Error::create(m_interpreter->global_object(), dom_exception_wrapper.impl().name(), dom_exception_wrapper.impl().message());
-        }
-        output_html.append(JS::MarkupGenerator::html_from_value(error));
-        print_html(output_html.string_view());
-
+        auto* exception = m_interpreter->exception();
         m_interpreter->vm().clear_exception();
+        output_html.append("Uncaught exception: ");
+        auto error = exception->value();
+        if (error.is_object())
+            output_html.append(JS::MarkupGenerator::html_from_error(error.as_object()));
+        else
+            output_html.append(JS::MarkupGenerator::html_from_value(error));
+        print_html(output_html.string_view());
         return;
     }
 

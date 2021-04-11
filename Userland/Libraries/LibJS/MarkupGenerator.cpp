@@ -53,6 +53,14 @@ String MarkupGenerator::html_from_value(Value value)
     return output_html.to_string();
 }
 
+String MarkupGenerator::html_from_error(Object& object)
+{
+    StringBuilder output_html;
+    HashTable<Object*> seen_objects;
+    error_to_html(object, output_html, seen_objects);
+    return output_html.to_string();
+}
+
 void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, HashTable<Object*> seen_objects)
 {
     if (value.is_empty()) {
@@ -156,10 +164,16 @@ void MarkupGenerator::date_to_html(const Object& date, StringBuilder& html_outpu
 
 void MarkupGenerator::error_to_html(const Object& object, StringBuilder& html_output, HashTable<Object*>&)
 {
-    auto& error = static_cast<const Error&>(object);
-    html_output.append(wrap_string_in_style(String::formatted("[{}]", error.name()), StyleType::Invalid));
-    if (!error.message().is_empty()) {
-        html_output.appendff(": {}", escape_html_entities(error.message()));
+    auto name = object.get_without_side_effects("name").value_or(JS::js_undefined());
+    auto message = object.get_without_side_effects("message").value_or(JS::js_undefined());
+    if (name.is_accessor() || name.is_native_property() || message.is_accessor() || message.is_native_property()) {
+        html_output.append(wrap_string_in_style(JS::Value(&object).to_string_without_side_effects(), StyleType::Invalid));
+    } else {
+        auto name_string = name.to_string_without_side_effects();
+        auto message_string = message.to_string_without_side_effects();
+        html_output.append(wrap_string_in_style(String::formatted("[{}]", name_string), StyleType::Invalid));
+        if (!message_string.is_empty())
+            html_output.appendff(": {}", escape_html_entities(message_string));
     }
 }
 
