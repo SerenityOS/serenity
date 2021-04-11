@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -154,7 +154,7 @@ int main(int argc, char** argv)
     };
 
     auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("File");
+    auto& app_menu = menubar->add_menu("&File");
 
     app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
@@ -194,8 +194,8 @@ int main(int argc, char** argv)
         app->quit();
     }));
 
-    auto& edit_menu = menubar->add_menu("Edit");
-    edit_menu.add_action(GUI::Action::create("Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, [&](auto&) {
+    auto& edit_menu = menubar->add_menu("&Edit");
+    edit_menu.add_action(GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, [&](auto&) {
         auto source = editor.text();
         GUI::GMLLexer lexer(source);
         for (auto& token : lexer.lex()) {
@@ -223,7 +223,7 @@ int main(int argc, char** argv)
         }
     }));
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Playground.md"), "/bin/Help");
     }));
