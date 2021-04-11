@@ -33,9 +33,9 @@ __BEGIN_DECLS
 
 typedef ssize_t regoff_t;
 
-struct regex_t {
+typedef struct {
     void* __data;
-};
+} regex_t;
 
 enum __Regex_Error {
     __Regex_NoError,
@@ -76,11 +76,11 @@ enum ReError {
     REG_NOMATCH,                                    // regexec() failed to match.
 };
 
-struct regmatch_t {
+typedef struct {
     regoff_t rm_so;  // byte offset from start of string to start of substring
     regoff_t rm_eo;  // byte offset from start of string of the first character after the end of substring
     regoff_t rm_cnt; // number of matches
-};
+} regmatch_t;
 
 enum __RegexAllFlags {
     __Regex_Global = 1,                                      // All matches (don't return after first match)
