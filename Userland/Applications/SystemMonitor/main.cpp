@@ -41,6 +41,7 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/JsonArrayModel.h>
@@ -58,6 +59,7 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibPCIDB/Database.h>
 #include <serenity.h>
@@ -432,6 +434,39 @@ NonnullRefPtr<GUI::Window> build_process_window(pid_t pid)
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
+
+    auto& hero_container = main_widget.add<GUI::Widget>();
+    hero_container.set_shrink_to_fit(true);
+    hero_container.set_layout<GUI::HorizontalBoxLayout>();
+    hero_container.layout()->set_margins({ 4, 4, 4, 4 });
+    hero_container.layout()->set_spacing(8);
+
+    auto& icon_label = hero_container.add<GUI::Label>();
+    icon_label.set_fixed_size(32, 32);
+
+    GUI::ModelIndex process_index;
+    for (int row = 0; row < ProcessModel::the().row_count({}); ++row) {
+        auto index = ProcessModel::the().index(row, ProcessModel::Column::PID);
+        if (index.data().to_i32() == pid) {
+            process_index = index;
+            break;
+        }
+    }
+
+    VERIFY(process_index.is_valid());
+    if (auto icon_data = process_index.sibling_at_column(ProcessModel::Column::Icon).data(); icon_data.is_icon()) {
+        icon_label.set_icon(icon_data.as_icon().bitmap_for_size(32));
+    }
+
+    auto& process_name_label = hero_container.add<GUI::Label>();
+    process_name_label.set_font(Gfx::FontDatabase::default_bold_font());
+    process_name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    process_name_label.set_text(String::formatted("{} (PID {})",
+        process_index.sibling_at_column(ProcessModel::Column::Name).data().to_string(),
+        pid));
+
+    auto& separator = main_widget.add<GUI::HorizontalSeparator>();
+    separator.set_fixed_height(2);
 
     auto& widget_stack = main_widget.add<GUI::StackWidget>();
     auto& unavailable_process_widget = widget_stack.add<UnavailableProcessWidget>(String::formatted("Unable to access PID {}", pid));
