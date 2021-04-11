@@ -45,6 +45,7 @@
     __ENUMERATE_SHELL_BUILTIN(cd)      \
     __ENUMERATE_SHELL_BUILTIN(cdh)     \
     __ENUMERATE_SHELL_BUILTIN(pwd)     \
+    __ENUMERATE_SHELL_BUILTIN(type)    \
     __ENUMERATE_SHELL_BUILTIN(exec)    \
     __ENUMERATE_SHELL_BUILTIN(exit)    \
     __ENUMERATE_SHELL_BUILTIN(export)  \

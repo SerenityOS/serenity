@@ -26,6 +26,7 @@
 
 #include "AST.h"
 #include "Shell.h"
+#include "Shell/Formatter.h"
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/ArgsParser.h>
@@ -125,6 +126,76 @@ int Shell::builtin_bg(int argc, const char** argv)
     }
 
     return 0;
+}
+
+int Shell::builtin_type(int argc, const char** argv)
+{
+
+    Vector<const char*> commands;
+    bool dont_show_function_source = false;
+
+    Core::ArgsParser parser;
+    parser.set_general_help("Display information about commands.");
+    parser.add_positional_argument(commands, "Command(s) to list info about", "command");
+    parser.add_option(dont_show_function_source, "Do not show functions source.", "no-fn-source", 'f');
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    bool something_not_found = false;
+
+    for (auto& command : commands) {
+        // check if it is an alias
+        if (auto alias = m_aliases.get(command); alias.has_value()) {
+            printf("%s is aliased to `%s`\n", escape_token(command).characters(), escape_token(alias.value()).characters());
+            continue;
+        }
+
+        // check if it is a function
+        if (auto function = m_functions.get(command); function.has_value()) {
+            auto fn = function.value();
+            printf("%s is a function\n", command);
+            if (!dont_show_function_source) {
+                StringBuilder builder;
+                builder.append(fn.name);
+                builder.append("(");
+                for (size_t i = 0; i < fn.arguments.size(); i++) {
+                    builder.append(fn.arguments[i]);
+                    if (!(i == fn.arguments.size() - 1))
+                        builder.append(" ");
+                }
+                builder.append(") {\n");
+                if (fn.body) {
+                    auto formatter = Formatter(*fn.body);
+                    builder.append(formatter.format());
+                    printf("%s\n}\n", builder.build().characters());
+                } else {
+                    printf("%s\n}\n", builder.build().characters());
+                }
+            }
+            continue;
+        }
+
+        // check if its a builtin
+        if (has_builtin(command)) {
+            printf("%s is a shell builtin\n", command);
+            continue;
+        }
+
+        // check if its an executable in PATH
+        auto fullpath = Core::find_executable_in_path(command);
+        if (!fullpath.is_null()) {
+            printf("%s is %s\n", command, escape_token(fullpath).characters());
+            continue;
+        }
+        something_not_found = true;
+        printf("type: %s not found\n", command);
+    }
+
+    if (something_not_found)
+        return 1;
+    else
+        return 0;
 }
 
 int Shell::builtin_cd(int argc, const char** argv)
