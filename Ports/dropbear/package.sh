@@ -12,5 +12,3 @@ useconfigure=true
 configopts="--disable-zlib "
 # Serenity's utmp is not fully compatible with what dropbear expects.
 configopts+="--disable-utmp --disable-wtmp --disable-login --disable-lastlog "
-# not added automatically
-configopts+="--enable-static"
