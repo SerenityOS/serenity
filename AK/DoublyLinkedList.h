@@ -44,7 +44,7 @@ public:
     }
     ElementType& operator*() { return m_node->value; }
     ElementType* operator->() { return &m_node->value; }
-    bool is_end() const { return !m_node; }
+    [[nodiscard]] bool is_end() const { return !m_node; }
     static DoublyLinkedListIterator universal_end() { return DoublyLinkedListIterator(nullptr); }
 
 private:
@@ -76,7 +76,7 @@ public:
     DoublyLinkedList() = default;
     ~DoublyLinkedList() { clear(); }
 
-    bool is_empty() const { return !m_head; }
+    [[nodiscard]] bool is_empty() const { return !m_head; }
 
     void clear()
     {
@@ -89,22 +89,22 @@ public:
         m_tail = nullptr;
     }
 
-    T& first()
+    [[nodiscard]] T& first()
     {
         VERIFY(m_head);
         return m_head->value;
     }
-    const T& first() const
+    [[nodiscard]] const T& first() const
     {
         VERIFY(m_head);
         return m_head->value;
     }
-    T& last()
+    [[nodiscard]] T& last()
     {
         VERIFY(m_head);
         return m_tail->value;
     }
-    const T& last() const
+    [[nodiscard]] const T& last() const
     {
         VERIFY(m_head);
         return m_tail->value;
@@ -147,7 +147,7 @@ public:
         m_head = node;
     }
 
-    bool contains_slow(const T& value) const
+    [[nodiscard]] bool contains_slow(const T& value) const
     {
         return find(value) != end();
     }
