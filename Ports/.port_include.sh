@@ -70,7 +70,7 @@ fetch() {
         echo "URL: ${url}"
 
         # FIXME: Serenity's curl port does not support https, even with openssl installed.
-        if ! curl https://example.com -so /dev/null; then
+        if which curl && ! curl https://example.com -so /dev/null; then
             url=$(echo "$url" | sed "s/^https:\/\//http:\/\//")
         fi
 
@@ -79,7 +79,11 @@ fetch() {
         if [ -f "$filename" ]; then
             echo "$filename already exists"
         else
-            run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
+            if which curl; then
+                run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
+            else
+                run_nocd pro "$url" > "$filename"
+            fi
         fi
 
         # check md5sum if given
