@@ -627,11 +627,14 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
 
     switch (m_parser_state.m_current_token.type()) {
     case TokenType::ParenOpen: {
+        auto paren_position = position();
         consume(TokenType::ParenOpen);
-        if (match(TokenType::ParenClose) || match(TokenType::Identifier) || match(TokenType::TripleDot)) {
+        if ((match(TokenType::ParenClose) || match(TokenType::Identifier) || match(TokenType::TripleDot)) && !try_parse_arrow_function_expression_failed_at_position(paren_position)) {
             auto arrow_function_result = try_parse_arrow_function_expression(true);
             if (!arrow_function_result.is_null())
                 return arrow_function_result.release_nonnull();
+
+            set_try_parse_arrow_function_expression_failed_at_position(paren_position, true);
         }
         auto expression = parse_expression(0);
         consume(TokenType::ParenClose);
@@ -651,9 +654,13 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
             syntax_error("'super' keyword unexpected here");
         return create_ast_node<SuperExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() });
     case TokenType::Identifier: {
-        auto arrow_function_result = try_parse_arrow_function_expression(false);
-        if (!arrow_function_result.is_null())
-            return arrow_function_result.release_nonnull();
+        if (!try_parse_arrow_function_expression_failed_at_position(position())) {
+            auto arrow_function_result = try_parse_arrow_function_expression(false);
+            if (!arrow_function_result.is_null())
+                return arrow_function_result.release_nonnull();
+
+            set_try_parse_arrow_function_expression_failed_at_position(position(), true);
+        }
         return create_ast_node<Identifier>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, consume().value());
     }
     case TokenType::NumericLiteral:
@@ -2037,6 +2044,20 @@ Position Parser::position() const
         m_parser_state.m_current_token.line_number(),
         m_parser_state.m_current_token.line_column()
     };
+}
+
+bool Parser::try_parse_arrow_function_expression_failed_at_position(const Position& position) const
+{
+    auto it = m_token_memoizations.find(position);
+    if (it == m_token_memoizations.end())
+        return false;
+
+    return (*it).value.try_parse_arrow_function_expression_failed;
+}
+
+void Parser::set_try_parse_arrow_function_expression_failed_at_position(const Position& position, bool failed)
+{
+    m_token_memoizations.set(position, { failed });
 }
 
 void Parser::syntax_error(const String& message, Optional<Position> position)
