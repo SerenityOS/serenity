@@ -46,6 +46,14 @@ public:
 private:
     static Optional<String> canonicalize_domain(const URL& url);
     static Optional<Cookie> parse_cookie(const String& cookie_string);
+    static void parse_attributes(Cookie& cookie, StringView unparsed_attributes);
+    static void process_attribute(Cookie& cookie, StringView attribute_name, StringView attribute_value);
+    static void on_expires_attribute(Cookie& cookie, StringView attribute_value);
+    static void on_max_age_attribute(Cookie& cookie, StringView attribute_value);
+    static void on_domain_attribute(Cookie& cookie, StringView attribute_value);
+    static void on_path_attribute(Cookie& cookie, StringView attribute_value);
+    static void on_secure_attribute(Cookie& cookie, StringView attribute_value);
+    static void on_http_only_attribute(Cookie& cookie, StringView attribute_value);
 
     HashMap<String, Vector<Cookie>> m_cookies;
 };
