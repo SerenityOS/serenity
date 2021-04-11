@@ -197,7 +197,7 @@ Icon FileIconProvider::icon_for_executable(const String& path)
 
         RefPtr<Gfx::Bitmap> bitmap;
         if (section.is_undefined()) {
-            bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size)->clone();
+            bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size);
         } else {
             bitmap = Gfx::load_png_from_memory(reinterpret_cast<const u8*>(section.raw_data()), section.size());
         }
