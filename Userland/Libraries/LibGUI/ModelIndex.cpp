@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,21 @@ Variant ModelIndex::data(ModelRole role) const
 
     VERIFY(model());
     return model()->data(*this, role);
+}
+
+ModelIndex ModelIndex::sibling(int row, int column) const
+{
+    if (!is_valid())
+        return {};
+    VERIFY(model());
+    return model()->index(row, column, parent());
+}
+
+ModelIndex ModelIndex::sibling_at_column(int column) const
+{
+    if (!is_valid())
+        return {};
+    return sibling(row(), column);
 }
 
 }
