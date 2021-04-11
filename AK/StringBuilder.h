@@ -57,15 +57,15 @@ public:
         vformat(*this, fmtstr.view(), VariadicFormatParams { parameters... });
     }
 
-    String build() const;
-    String to_string() const;
-    ByteBuffer to_byte_buffer() const;
+    [[nodiscard]] String build() const;
+    [[nodiscard]] String to_string() const;
+    [[nodiscard]] ByteBuffer to_byte_buffer() const;
 
-    StringView string_view() const;
+    [[nodiscard]] StringView string_view() const;
     void clear();
 
-    size_t length() const { return m_length; }
-    bool is_empty() const { return m_length == 0; }
+    [[nodiscard]] size_t length() const { return m_length; }
+    [[nodiscard]] bool is_empty() const { return m_length == 0; }
     void trim(size_t count) { m_length -= count; }
 
     template<class SeparatorType, class CollectionType>
