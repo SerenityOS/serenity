@@ -1,0 +1,165 @@
+diff -Naur NetHack-NetHack-3.6.6_Released/include/decl.h NetHack-NetHack-3.6.6_Released.serenity/include/decl.h
+--- NetHack-NetHack-3.6.6_Released/include/decl.h	2020-03-08 18:29:31.000000000 +0100
++++ NetHack-NetHack-3.6.6_Released.serenity/include/decl.h	2021-04-11 22:49:31.732927985 +0200
+@@ -411,7 +411,7 @@
+     xchar spovartyp; /* one of SPOVAR_foo */
+     union {
+         char *str;
+-        long l;
++        int32_t l;
+     } vardata;
+ };
+ 
+diff -Naur NetHack-NetHack-3.6.6_Released/src/rumors.c NetHack-NetHack-3.6.6_Released.serenity/src/rumors.c
+--- NetHack-NetHack-3.6.6_Released/src/rumors.c	2020-03-08 18:29:31.000000000 +0100
++++ NetHack-NetHack-3.6.6_Released.serenity/src/rumors.c	2021-04-11 22:54:52.239553162 +0200
+@@ -54,7 +54,7 @@
+ /* oracles are handled differently from rumors... */
+ static int oracle_flg = 0; /* -1=>don't use, 0=>need init, 1=>init done */
+ static unsigned oracle_cnt = 0;
+-static unsigned long *oracle_loc = 0;
++static uint32_t *oracle_loc = 0;
+ 
+ STATIC_OVL void
+ init_rumors(fp)
+@@ -384,7 +384,7 @@
+     (void) dlb_fgets(line, sizeof line, fp);
+     if (sscanf(line, "%5d\n", &cnt) == 1 && cnt > 0) {
+         oracle_cnt = (unsigned) cnt;
+-        oracle_loc = (unsigned long *) alloc((unsigned) cnt * sizeof(long));
++        oracle_loc = (uint32_t *) alloc((unsigned) cnt * sizeof(uint32_t));
+         for (i = 0; i < cnt; i++) {
+             (void) dlb_fgets(line, sizeof line, fp);
+             (void) sscanf(line, "%5lx\n", &oracle_loc[i]);
+@@ -401,7 +401,7 @@
+         bwrite(fd, (genericptr_t) &oracle_cnt, sizeof oracle_cnt);
+         if (oracle_cnt)
+             bwrite(fd, (genericptr_t) oracle_loc, 
+-                    oracle_cnt * sizeof(long));
++                    oracle_cnt * sizeof(uint32_t));
+     }
+     if (release_data(mode)) {
+         if (oracle_cnt) {
+@@ -417,8 +417,8 @@
+ {
+     mread(fd, (genericptr_t) &oracle_cnt, sizeof oracle_cnt);
+     if (oracle_cnt) {
+-        oracle_loc = (unsigned long *) alloc(oracle_cnt * sizeof(long));
+-        mread(fd, (genericptr_t) oracle_loc, oracle_cnt * sizeof(long));
++        oracle_loc = (uint32_t *) alloc(oracle_cnt * sizeof(uint32_t));
++        mread(fd, (genericptr_t) oracle_loc, oracle_cnt * sizeof(uint32_t));
+         oracle_flg = 1; /* no need to call init_oracles() */
+     }
+ }
+@@ -452,7 +452,7 @@
+         if (oracle_cnt <= 1 && !special)
+             goto close_oracles; /*(shouldn't happen)*/
+         oracle_idx = special ? 0 : rnd((int) oracle_cnt - 1);
+-        (void) dlb_fseek(oracles, (long) oracle_loc[oracle_idx], SEEK_SET);
++        (void) dlb_fseek(oracles, (int32_t) oracle_loc[oracle_idx], SEEK_SET);
+         if (!special) /* move offset of very last one into this slot */
+             oracle_loc[oracle_idx] = oracle_loc[--oracle_cnt];
+ 
+diff -Naur NetHack-NetHack-3.6.6_Released/util/makedefs.c NetHack-NetHack-3.6.6_Released.serenity/util/makedefs.c
+--- NetHack-NetHack-3.6.6_Released/util/makedefs.c	2020-03-08 18:29:31.000000000 +0100
++++ NetHack-NetHack-3.6.6_Released.serenity/util/makedefs.c	2021-04-11 22:52:12.216276961 +0200
+@@ -2626,7 +2626,7 @@
+ {
+     int i, j;
+     long count = 0L, hdr_offset = sizeof(int)
+-                                  + (sizeof(char) * LEN_HDR + sizeof(long))
++                                  + (sizeof(char) * LEN_HDR + sizeof(int32_t))
+                                         * qt_hdr.n_hdr;
+ 
+     for (i = 0; i < qt_hdr.n_hdr; i++) {
+@@ -2656,7 +2656,7 @@
+     (void) fwrite((genericptr_t) & (qt_hdr.n_hdr), sizeof(int), 1, ofp);
+     (void) fwrite((genericptr_t) & (qt_hdr.id[0][0]), sizeof(char) * LEN_HDR,
+                   qt_hdr.n_hdr, ofp);
+-    (void) fwrite((genericptr_t) & (qt_hdr.offset[0]), sizeof(long),
++    (void) fwrite((genericptr_t) & (qt_hdr.offset[0]), sizeof(int32_t),
+                   qt_hdr.n_hdr, ofp);
+     if (debug) {
+         for (i = 0; i < qt_hdr.n_hdr; i++)
+diff -Naur NetHack-NetHack-3.6.6_Released/include/qtext.h NetHack-NetHack-3.6.6_Released.serenity/include/qtext.h
+--- NetHack-NetHack-3.6.6_Released/include/qtext.h	2021-04-11 23:02:18.288478651 +0200
++++ NetHack-NetHack-3.6.6_Released.serenity/include/qtext.h	2021-04-11 23:02:34.328795871 +0200
+@@ -12,7 +12,7 @@
+ struct qtmsg {
+     int msgnum;
+     char delivery;
+-    long offset, size, summary_size;
++    int32_t offset, size, summary_size;
+ };
+ 
+ #ifdef MAKEDEFS_C /***** MAKEDEFS *****/
+@@ -27,7 +27,7 @@
+ struct qthdr {
+     int n_hdr;
+     char id[N_HDR][LEN_HDR];
+-    long offset[N_HDR];
++    int32_t offset[N_HDR];
+ };
+ 
+ /* Error message macros */
+diff -Naur NetHack-NetHack-3.6.6_Released/src/region.c NetHack-NetHack-3.6.6_Released.serenity/src/region.c
+--- NetHack-NetHack-3.6.6_Released/src/region.c	2020-03-08 18:29:31.000000000 +0100
++++ NetHack-NetHack-3.6.6_Released.serenity/src/region.c	2021-04-11 22:57:14.059084358 +0200
+@@ -663,7 +663,7 @@
+         bwrite(fd, (genericptr_t) &n, sizeof n);
+         if (n > 0)
+             bwrite(fd, (genericptr_t) regions[i]->leave_msg, n);
+-        bwrite(fd, (genericptr_t) &regions[i]->ttl, sizeof(long));
++        bwrite(fd, (genericptr_t) &regions[i]->ttl, sizeof(int32_t));
+         bwrite(fd, (genericptr_t) &regions[i]->expire_f, sizeof(short));
+         bwrite(fd, (genericptr_t) &regions[i]->can_enter_f, sizeof(short));
+         bwrite(fd, (genericptr_t) &regions[i]->enter_f, sizeof(short));
+@@ -693,7 +693,7 @@
+ {
+     int i, j;
+     unsigned n;
+-    long tmstamp;
++    int32_t tmstamp;
+     char *msg_buf;
+ 
+     clear_regions(); /* Just for security */
+@@ -737,7 +737,7 @@
+         } else
+             regions[i]->leave_msg = (const char *) 0;
+ 
+-        mread(fd, (genericptr_t) &regions[i]->ttl, sizeof(long));
++        mread(fd, (genericptr_t) &regions[i]->ttl, sizeof(int32_t));
+         /* check for expired region */
+         if (regions[i]->ttl >= 0L)
+             regions[i]->ttl =
+diff -Naur NetHack-NetHack-3.6.6_Released/include/global.h NetHack-NetHack-3.6.6_Released.serenity/include/global.h
+--- NetHack-NetHack-3.6.6_Released/include/global.h	2021-04-11 22:32:59.310062482 +0200
++++ NetHack-NetHack-3.6.6_Released.serenity/include/global.h	2021-04-11 22:32:31.736197272 +0200
+@@ -293,11 +293,11 @@
+ /* Used for consistency checks of various data files; declare it here so
+    that utility programs which include config.h but not hack.h can see it. */
+ struct version_info {
+-    unsigned long incarnation;   /* actual version number */
+-    unsigned long feature_set;   /* bitmask of config settings */
+-    unsigned long entity_count;  /* # of monsters and objects */
+-    unsigned long struct_sizes1; /* size of key structs */
+-    unsigned long struct_sizes2; /* size of more key structs */
++    uint32_t incarnation;   /* actual version number */
++    uint32_t feature_set;   /* bitmask of config settings */
++    uint32_t entity_count;  /* # of monsters and objects */
++    uint32_t struct_sizes1; /* size of key structs */
++    uint32_t struct_sizes2; /* size of more key structs */
+ };
+ 
+ struct savefile_info {
+diff -Naur NetHack-NetHack-3.6.6_Released/include/unixconf.h NetHack-NetHack-3.6.6_Released.serenity/include/unixconf.h
+--- NetHack-NetHack-3.6.6_Released/include/unixconf.h	2021-04-11 22:32:31.719530283 +0200
++++ NetHack-NetHack-3.6.6_Released.serenity/include/unixconf.h	2021-04-11 22:33:55.461144660 +0200
+@@ -323,6 +323,7 @@
+ 
+ #if defined(POSIX_TYPES) || defined(__GNUC__)
+ #include <stdlib.h>
++#include <stdint.h>
+ #include <unistd.h>
+ #endif
+ 
