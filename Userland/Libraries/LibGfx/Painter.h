@@ -171,4 +171,6 @@ private:
     Painter& m_painter;
 };
 
+String parse_ampersand_string(const StringView&, Optional<size_t>* underline_offset = nullptr);
+
 }

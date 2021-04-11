@@ -90,13 +90,13 @@ public:
     }
 
     template<typename T, typename Callback>
-    void for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>::value;
+    void for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>;
 
     template<typename T>
-    T* find_child_of_type_named(const String&) requires IsBaseOf<Object, T>::value;
+    T* find_child_of_type_named(const String&) requires IsBaseOf<Object, T>;
 
     template<typename T>
-    T* find_descendant_of_type_named(const String&) requires IsBaseOf<Object, T>::value;
+    T* find_descendant_of_type_named(const String&) requires IsBaseOf<Object, T>;
 
     bool is_ancestor_of(const Object&) const;
 
@@ -187,7 +187,7 @@ struct AK::Formatter<Core::Object> : AK::Formatter<FormatString> {
 
 namespace Core {
 template<typename T, typename Callback>
-inline void Object::for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>::value
+inline void Object::for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>
 {
     for_each_child([&](auto& child) {
         if (auto* child_as_t = dynamic_cast<T*>(&child); child_as_t)
@@ -197,7 +197,7 @@ inline void Object::for_each_child_of_type(Callback callback) requires IsBaseOf<
 }
 
 template<typename T>
-T* Object::find_child_of_type_named(const String& name) requires IsBaseOf<Object, T>::value
+T* Object::find_child_of_type_named(const String& name) requires IsBaseOf<Object, T>
 {
     T* found_child = nullptr;
     for_each_child_of_type<T>([&](auto& child) {
@@ -212,7 +212,7 @@ T* Object::find_child_of_type_named(const String& name) requires IsBaseOf<Object
 }
 
 template<typename T>
-T* Object::find_descendant_of_type_named(const String& name) requires IsBaseOf<Object, T>::value
+T* Object::find_descendant_of_type_named(const String& name) requires IsBaseOf<Object, T>
 {
     auto* this_as_t = dynamic_cast<T*>(this);
     if (this_as_t && this->name() == name)

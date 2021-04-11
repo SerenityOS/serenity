@@ -133,14 +133,14 @@ void SerendipityWidget::open_and_parse_tips_file()
 
 void SerendipityWidget::open_and_parse_readme_file()
 {
-    auto file = Core::File::construct("/home/anon/ReadMe.md");
+    auto file = Core::File::construct("/home/anon/README.md");
     if (!file->open(Core::IODevice::ReadOnly))
         return;
 
     auto document = Markdown::Document::parse(file->read_all());
     if (document) {
         auto html = document->render_to_html();
-        m_web_view->load_html(html, URL::create_with_file_protocol("/home/anon/ReadMe.md"));
+        m_web_view->load_html(html, URL::create_with_file_protocol("/home/anon/README.md"));
     }
 }
 

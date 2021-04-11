@@ -61,7 +61,8 @@ namespace {
 
 class OptionParser {
 public:
-    OptionParser(int argc, char** argv, const StringView& short_options, const option* long_options, int* out_long_option_index = nullptr);
+    OptionParser(int argc, char* const* argv, const StringView& short_options, const option* long_options, int* out_long_option_index = nullptr);
+    ~OptionParser();
     int getopt();
 
 private:
@@ -85,13 +86,14 @@ private:
     size_t m_consumed_args { 0 };
 };
 
-OptionParser::OptionParser(int argc, char** argv, const StringView& short_options, const option* long_options, int* out_long_option_index)
+OptionParser::OptionParser(int argc, char* const* argv, const StringView& short_options, const option* long_options, int* out_long_option_index)
     : m_argc(argc)
-    , m_argv(argv)
     , m_short_options(short_options)
     , m_long_options(long_options)
     , m_out_long_option_index(out_long_option_index)
 {
+    m_argv = new char*[m_argc + 1];
+    memmove(m_argv, argv, sizeof(char*) * (m_argc + 1));
     // In the following case:
     // $ foo bar -o baz
     // we want to parse the option (-o baz) first, and leave the argument (bar)
@@ -110,6 +112,11 @@ OptionParser::OptionParser(int argc, char** argv, const StringView& short_option
 
     optopt = 0;
     optarg = nullptr;
+}
+
+OptionParser::~OptionParser()
+{
+    delete[] m_argv;
 }
 
 int OptionParser::getopt()
@@ -355,14 +362,14 @@ bool OptionParser::find_next_option()
 
 }
 
-int getopt(int argc, char** argv, const char* short_options)
+int getopt(int argc, char* const* argv, const char* short_options)
 {
     option dummy { nullptr, 0, nullptr, 0 };
     OptionParser parser { argc, argv, short_options, &dummy };
     return parser.getopt();
 }
 
-int getopt_long(int argc, char** argv, const char* short_options, const struct option* long_options, int* out_long_option_index)
+int getopt_long(int argc, char* const* argv, const char* short_options, const struct option* long_options, int* out_long_option_index)
 {
     OptionParser parser { argc, argv, short_options, long_options, out_long_option_index };
     return parser.getopt();

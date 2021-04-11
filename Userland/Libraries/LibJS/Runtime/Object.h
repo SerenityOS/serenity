@@ -110,12 +110,14 @@ public:
     virtual bool define_property(const StringOrSymbol& property_name, const Object& descriptor, bool throw_exceptions = true);
     bool define_property(const PropertyName&, Value value, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
     bool define_property_without_transition(const PropertyName&, Value value, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
-    bool define_accessor(const PropertyName&, Function& getter_or_setter, bool is_getter, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
+    bool define_accessor(const PropertyName&, Function* getter, Function* setter, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
 
     bool define_native_function(const StringOrSymbol& property_name, AK::Function<Value(VM&, GlobalObject&)>, i32 length = 0, PropertyAttributes attributes = default_attributes);
     bool define_native_property(const StringOrSymbol& property_name, AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attributes = default_attributes);
 
-    virtual Value delete_property(const PropertyName&);
+    void define_properties(Value properties);
+
+    virtual bool delete_property(const PropertyName&);
 
     virtual bool is_array() const { return false; }
     virtual bool is_function() const { return false; }

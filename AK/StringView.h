@@ -65,34 +65,34 @@ public:
     StringView(const String&);
     StringView(const FlyString&);
 
-    bool is_null() const { return !m_characters; }
-    bool is_empty() const { return m_length == 0; }
+    [[nodiscard]] bool is_null() const { return !m_characters; }
+    [[nodiscard]] bool is_empty() const { return m_length == 0; }
 
-    const char* characters_without_null_termination() const { return m_characters; }
-    size_t length() const { return m_length; }
+    [[nodiscard]] const char* characters_without_null_termination() const { return m_characters; }
+    [[nodiscard]] size_t length() const { return m_length; }
 
-    ReadonlyBytes bytes() const { return { m_characters, m_length }; }
+    [[nodiscard]] ReadonlyBytes bytes() const { return { m_characters, m_length }; }
 
     const char& operator[](size_t index) const { return m_characters[index]; }
 
     using ConstIterator = SimpleIterator<const StringView, const char>;
 
-    constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
-    constexpr ConstIterator end() const { return ConstIterator::end(*this); }
+    [[nodiscard]] constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
+    [[nodiscard]] constexpr ConstIterator end() const { return ConstIterator::end(*this); }
 
-    unsigned hash() const;
+    [[nodiscard]] unsigned hash() const;
 
-    bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    bool starts_with(char) const;
-    bool ends_with(char) const;
-    bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
-    bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
-    bool contains(char) const;
-    bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    bool equals_ignoring_case(const StringView& other) const;
+    [[nodiscard]] bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool starts_with(char) const;
+    [[nodiscard]] bool ends_with(char) const;
+    [[nodiscard]] bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    [[nodiscard]] bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    [[nodiscard]] bool contains(char) const;
+    [[nodiscard]] bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool equals_ignoring_case(const StringView& other) const;
 
-    StringView trim_whitespace(TrimMode mode = TrimMode::Both) const { return StringUtils::trim_whitespace(*this, mode); }
+    [[nodiscard]] StringView trim_whitespace(TrimMode mode = TrimMode::Both) const { return StringUtils::trim_whitespace(*this, mode); }
 
     Optional<size_t> find_first_of(char) const;
     Optional<size_t> find_first_of(const StringView&) const;
@@ -103,16 +103,16 @@ public:
     Optional<size_t> find(const StringView&) const;
     Optional<size_t> find(char c) const;
 
-    StringView substring_view(size_t start, size_t length) const;
-    StringView substring_view(size_t start) const;
-    Vector<StringView> split_view(char, bool keep_empty = false) const;
-    Vector<StringView> split_view(const StringView&, bool keep_empty = false) const;
+    [[nodiscard]] StringView substring_view(size_t start, size_t length) const;
+    [[nodiscard]] StringView substring_view(size_t start) const;
+    [[nodiscard]] Vector<StringView> split_view(char, bool keep_empty = false) const;
+    [[nodiscard]] Vector<StringView> split_view(const StringView&, bool keep_empty = false) const;
 
     // Create a Vector of StringViews split by line endings. As of CommonMark
     // 0.29, the spec defines a line ending as "a newline (U+000A), a carriage
     // return (U+000D) not followed by a newline, or a carriage return and a
     // following newline.".
-    Vector<StringView> lines(bool consider_cr = true) const;
+    [[nodiscard]] Vector<StringView> lines(bool consider_cr = true) const;
 
     template<typename T = int>
     Optional<T> to_int() const;
@@ -135,8 +135,8 @@ public:
     //     StringView substr { "oo" };
     //
     // would not work.
-    StringView substring_view_starting_from_substring(const StringView& substring) const;
-    StringView substring_view_starting_after_substring(const StringView& substring) const;
+    [[nodiscard]] StringView substring_view_starting_from_substring(const StringView& substring) const;
+    [[nodiscard]] StringView substring_view_starting_after_substring(const StringView& substring) const;
 
     bool operator==(const char* cstring) const
     {
@@ -187,12 +187,12 @@ public:
 
     const StringImpl* impl() const { return m_impl; }
 
-    String to_string() const;
+    [[nodiscard]] String to_string() const;
 
-    bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
+    [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
     template<typename T, typename... Rest>
-    bool is_one_of(const T& string, Rest... rest) const
+    [[nodiscard]] bool is_one_of(const T& string, Rest... rest) const
     {
         if (*this == string)
             return true;
@@ -200,7 +200,7 @@ public:
     }
 
 private:
-    bool is_one_of() const { return false; }
+    [[nodiscard]] bool is_one_of() const { return false; }
 
     friend class String;
     const StringImpl* m_impl { nullptr };

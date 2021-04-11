@@ -372,8 +372,6 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
         if (!metadata.has_value())
             return {};
         value = m_storage[metadata.value().offset];
-        if (vm().exception())
-            return {};
         attributes = metadata.value().attributes;
     }
 
@@ -538,7 +536,7 @@ bool Object::define_property(const PropertyName& property_name, Value value, Pro
     return put_own_property(property_name.to_string_or_symbol(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 }
 
-bool Object::define_accessor(const PropertyName& property_name, Function& getter_or_setter, bool is_getter, PropertyAttributes attributes, bool throw_exceptions)
+bool Object::define_accessor(const PropertyName& property_name, Function* getter, Function* setter, PropertyAttributes attributes, bool throw_exceptions)
 {
     VERIFY(property_name.is_valid());
 
@@ -550,18 +548,18 @@ bool Object::define_accessor(const PropertyName& property_name, Function& getter
             accessor = &existing_property.as_accessor();
     }
     if (!accessor) {
-        accessor = Accessor::create(vm(), nullptr, nullptr);
+        accessor = Accessor::create(vm(), getter, setter);
         bool definition_success = define_property(property_name, accessor, attributes, throw_exceptions);
         if (vm().exception())
             return {};
         if (!definition_success)
             return false;
+    } else {
+        if (getter)
+            accessor->set_getter(getter);
+        if (setter)
+            accessor->set_setter(setter);
     }
-    if (is_getter)
-        accessor->set_getter(&getter_or_setter);
-    else
-        accessor->set_setter(&getter_or_setter);
-
     return true;
 }
 
@@ -713,24 +711,24 @@ bool Object::put_own_property_by_index(u32 property_index, Value value, Property
     return true;
 }
 
-Value Object::delete_property(const PropertyName& property_name)
+bool Object::delete_property(const PropertyName& property_name)
 {
     VERIFY(property_name.is_valid());
 
     if (property_name.is_number())
-        return Value(m_indexed_properties.remove(property_name.as_number()));
+        return m_indexed_properties.remove(property_name.as_number());
 
     if (property_name.is_string()) {
         i32 property_index = property_name.as_string().to_int().value_or(-1);
         if (property_index >= 0)
-            return Value(m_indexed_properties.remove(property_index));
+            return m_indexed_properties.remove(property_index);
     }
 
     auto metadata = shape().lookup(property_name.to_string_or_symbol());
     if (!metadata.has_value())
-        return Value(true);
+        return true;
     if (!metadata.value().attributes.is_configurable())
-        return Value(false);
+        return false;
 
     size_t deleted_offset = metadata.value().offset;
 
@@ -738,7 +736,7 @@ Value Object::delete_property(const PropertyName& property_name)
 
     shape().remove_property_from_unique_shape(property_name.to_string_or_symbol(), deleted_offset);
     m_storage.remove(deleted_offset);
-    return Value(true);
+    return true;
 }
 
 void Object::ensure_shape_is_unique()
@@ -900,6 +898,49 @@ bool Object::define_native_function(const StringOrSymbol& property_name, AK::Fun
 bool Object::define_native_property(const StringOrSymbol& property_name, AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
 {
     return define_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
+}
+
+// 20.1.2.3.1 ObjectDefineProperties, https://tc39.es/ecma262/#sec-objectdefineproperties
+void Object::define_properties(Value properties)
+{
+    auto& vm = this->vm();
+    auto* props = properties.to_object(global_object());
+    if (!props)
+        return;
+    auto keys = props->get_own_properties(PropertyKind::Key);
+    if (vm.exception())
+        return;
+    struct NameAndDescriptor {
+        PropertyName name;
+        PropertyDescriptor descriptor;
+    };
+    Vector<NameAndDescriptor> descriptors;
+    for (auto& key : keys) {
+        auto property_name = PropertyName::from_value(global_object(), key);
+        auto property_descriptor = props->get_own_property_descriptor(property_name);
+        if (property_descriptor.has_value() && property_descriptor->attributes.is_enumerable()) {
+            auto descriptor_object = props->get(property_name);
+            if (vm.exception())
+                return;
+            if (!descriptor_object.is_object()) {
+                vm.throw_exception<TypeError>(global_object(), ErrorType::NotAnObject, descriptor_object.to_string_without_side_effects());
+                return;
+            }
+            auto descriptor = PropertyDescriptor::from_dictionary(vm, descriptor_object.as_object());
+            if (vm.exception())
+                return;
+            descriptors.append({ property_name, descriptor });
+        }
+    }
+    for (auto& [name, descriptor] : descriptors) {
+        // FIXME: The spec has both of this handled by DefinePropertyOrThrow(O, P, desc).
+        //        We should invest some time in improving object property handling, it not being
+        //        super close to the spec makes this and other things unnecessarily complicated.
+        if (descriptor.is_accessor_descriptor())
+            define_accessor(name, descriptor.getter, descriptor.setter, descriptor.attributes);
+        else
+            define_property(name, descriptor.value, descriptor.attributes);
+    }
 }
 
 void Object::visit_edges(Cell::Visitor& visitor)

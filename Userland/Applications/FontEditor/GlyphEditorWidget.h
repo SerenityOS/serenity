@@ -51,7 +51,7 @@ public:
     Gfx::BitmapFont& font() { return *m_font; }
     const Gfx::BitmapFont& font() const { return *m_font; }
 
-    Function<void(u8)> on_glyph_altered;
+    Function<void(int)> on_glyph_altered;
 
 private:
     GlyphEditorWidget() {};

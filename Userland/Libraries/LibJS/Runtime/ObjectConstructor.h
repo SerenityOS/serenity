@@ -46,6 +46,7 @@ private:
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(define_property_);
+    JS_DECLARE_NATIVE_FUNCTION(define_properties);
     JS_DECLARE_NATIVE_FUNCTION(is);
     JS_DECLARE_NATIVE_FUNCTION(get_own_property_descriptor);
     JS_DECLARE_NATIVE_FUNCTION(get_own_property_names);
@@ -60,6 +61,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(keys);
     JS_DECLARE_NATIVE_FUNCTION(values);
     JS_DECLARE_NATIVE_FUNCTION(entries);
+    JS_DECLARE_NATIVE_FUNCTION(create);
 };
 
 }

@@ -175,6 +175,21 @@ size_t BitmapFont::glyph_count_by_type(FontTypes type)
     VERIFY_NOT_REACHED();
 }
 
+String BitmapFont::type_name_by_type(FontTypes type)
+{
+    if (type == FontTypes::Default)
+        return "Default";
+
+    if (type == FontTypes::LatinExtendedA)
+        return "LatinExtendedA";
+
+    if (type == FontTypes::Cyrillic)
+        return "Cyrillic";
+
+    dbgln("Unknown font type: {}", (int)type);
+    VERIFY_NOT_REACHED();
+}
+
 RefPtr<BitmapFont> BitmapFont::load_from_file(const StringView& path)
 {
     if (Core::File::is_device(path))

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,6 +60,9 @@ public:
     const Model* model() const { return m_model; }
 
     Variant data(ModelRole = ModelRole::Display) const;
+
+    ModelIndex sibling(int row, int column) const;
+    ModelIndex sibling_at_column(int column) const;
 
 private:
     ModelIndex(const Model& model, int row, int column, void* internal_data)
