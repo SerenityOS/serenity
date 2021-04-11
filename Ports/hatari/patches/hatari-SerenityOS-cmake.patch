@@ -1,158 +1,6 @@
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 62743a7e..17451668 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -1,12 +1,13 @@
- cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
- 
--project(Hatari C)
-+project(hatari C)
- enable_testing()
- 
--set(APP_NAME "Hatari")
-+set(APP_NAME "hatari")
- 
--set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
- 
-+include(FindPkgConfig)
- include(CheckIncludeFiles)
- include(CheckFunctionExists)
- include(CheckStructHasMember)
-@@ -40,16 +41,15 @@ function (check_large_file)
- endfunction (check_large_file)
- 
- 
--
- # ##########################
- # Conditional build features
- # ##########################
- 
- set(ENABLE_DSP_EMU 1
-     CACHE BOOL "Enable DSP 56k emulator for Falcon mode")
--set(ENABLE_TRACING 1
-+set(ENABLE_TRACING 0
-     CACHE BOOL "Enable tracing messages for debugging")
--set(ENABLE_SMALL_MEM 0
-+set(ENABLE_SMALL_MEM 1
-     CACHE BOOL "Enable to use less memory - at the expense of emulation speed")
- 
- # Run-time checks with GCC / LLVM (Clang) AddressSanitizer:
-@@ -81,29 +81,18 @@ else()
- 	set(ENABLE_MAN_PAGES 0 CACHE BOOL "Built and install man pages")
- endif()
- 
--if(APPLE)
--	set(ENABLE_OSX_BUNDLE 1
--	    CACHE BOOL "Built Hatari as macOS application bundle")
--	# set(CMAKE_OSX_ARCHITECTURES "i386" CACHE STRING "Target architectures" FORCE)
--	# set(CMAKE_OSX_SYSROOT "/Developer/SDKs/MacOSX10.6.sdk" CACHE STRING "10.6 SDK" FORCE)
--	# set(CMAKE_OSX_DEPLOYMENT_TARGET "10.5" CACHE STRING "Target Min 10.5" FORCE)
--	set(ADDITIONAL_INCLUDES ${FRAMEWORKS})
--	set_source_files_properties(${FRAMEWORKS} PROPERTIES MACOSX_PACKAGE_LOCATION Frameworks)
--else()
--	set(ENABLE_OSX_BUNDLE 0
-+set(ENABLE_OSX_BUNDLE 0
- 	    CACHE BOOL "Built Hatari as macOS application bundle")
--endif(APPLE)
- 
- # ####################
- # Check for libraries:
- # ####################
- 
--find_package(SDL2)
--if(NOT SDL2_FOUND)
--	message(FATAL_ERROR "SDL2 library not found!")
--endif(NOT SDL2_FOUND)
--
--find_package(Math)
-+find_package(SDL2 REQUIRED)
-+if("${SDL2_LIBRARIES}" STREQUAL "")
-+    message(WARNING "SDL2_LIBRARIES wasn't set, manually setting to SDL2::SDL2")
-+    set(SDL2_LIBRARIES "SDL2::SDL2")
-+endif()
- 
- find_package(Readline)
- if(Readline_FOUND)
-@@ -175,13 +164,6 @@ if(DETECTED_SDL_CFLAGS)
- 	# message(STATUS "Additional CFLAGS of SDL: ${DETECTED_SDL_CFLAGS}")
- endif(DETECTED_SDL_CFLAGS)
- 
--if(ENABLE_OSX_BUNDLE)
--	# Use OSX native alert windows
--	add_definitions(-DALERT_HOOKS=1)
--	# We still want to use our SDLMain.m with SDL2
--	add_definitions(-DSDL_MAIN_NEEDED=1)
--endif(ENABLE_OSX_BUNDLE)
--
- # ###########################
- # Check for optional headers:
- # ###########################
-@@ -189,7 +171,7 @@ endif(ENABLE_OSX_BUNDLE)
- check_include_files(termios.h HAVE_TERMIOS_H)
- check_include_files(sys/ioctl.h HAVE_SYS_IOCTL_H)
- check_include_files(strings.h HAVE_STRINGS_H)
--check_include_files(${SDL2_INCLUDE_DIR}/SDL_config.h HAVE_SDL_CONFIG_H)
-+check_include_files(${SDL2_INCLUDE_DIRS}/SDL_config.h HAVE_SDL_CONFIG_H)
- check_include_files(sys/time.h HAVE_SYS_TIME_H)
- check_include_files(sys/times.h HAVE_SYS_TIMES_H)
- check_include_files(utime.h HAVE_UTIME_H)
-@@ -268,16 +250,8 @@ if(NOT DATADIR)
- endif()
- 
- if(NOT BIN2DATADIR)
--	if(WIN32)
--		set(BIN2DATADIR "."
--		    CACHE STRING "Relative path from bindir to datadir")
--	elseif(ENABLE_OSX_BUNDLE)
--		set(BIN2DATADIR "../Resources"
-+	set(BIN2DATADIR "../share/hatari"
- 		    CACHE STRING "Relative path from bindir to datadir")
--	else()
--		set(BIN2DATADIR "../share/hatari"
--		    CACHE STRING "Relative path from bindir to datadir")
--	endif(WIN32)
- 	mark_as_advanced(BIN2DATADIR)
- endif()
- 
-@@ -290,23 +264,14 @@ if(NOT DOCDIR)
- endif()
- 
- if(NOT ETCDIR)
--	if(WIN32)
--		set(ETCDIR .)
--	else()
--		set(ETCDIR /etc)
--	endif()
-+	set(ETCDIR /etc)
- endif()
- 
- if(NOT ICONDIR)
- 	set(ICONDIR share/icons/hicolor)
- endif()
- 
--if(ENABLE_OSX_BUNDLE)
--	# put the config files in the app's bundle
--	add_definitions(-DCONFDIR=\"../Resources\")
--else()
--	add_definitions(-DCONFDIR=\"${ETCDIR}\")
--endif()
-+add_definitions(-DCONFDIR=\"${ETCDIR}\")
- 
- # #########################################
- # Create config.h and recurse into subdirs:
-@@ -407,4 +372,4 @@ if(NOT HAVE_SYS_TIMES_H)
-   message("        ==> using inaccurate SDL_GetTicks() instead")
- endif()
- 
--message( "" )
-+message( "" )
-\ No newline at end of file
-diff --git a/cmake/FindMath.cmake b/cmake/FindMath.cmake
-deleted file mode 100644
-index 030b3871..00000000
---- a/cmake/FindMath.cmake
-+++ /dev/null
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/cmake/FindMath.cmake hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/cmake/FindMath.cmake
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/cmake/FindMath.cmake	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/cmake/FindMath.cmake	1970-01-01 01:00:00.000000000 +0100
 @@ -1,15 +0,0 @@
 -
 -if(MATH_INCLUDE_DIR)
@@ -169,11 +17,9 @@ index 030b3871..00000000
 -                                  MATH_LIBRARY MATH_INCLUDE_DIR)
 -
 -mark_as_advanced(MATH_LIBRARY MATH_INCLUDE_DIR)
-diff --git a/cmake/FindSDL2.cmake b/cmake/FindSDL2.cmake
-deleted file mode 100644
-index 5856493f..00000000
---- a/cmake/FindSDL2.cmake
-+++ /dev/null
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/cmake/FindSDL2.cmake hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/cmake/FindSDL2.cmake
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/cmake/FindSDL2.cmake	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/cmake/FindSDL2.cmake	1970-01-01 01:00:00.000000000 +0100
 @@ -1,177 +0,0 @@
 -# Locate SDL2 library
 -# This module defines
@@ -352,11 +198,211 @@ index 5856493f..00000000
 -INCLUDE(FindPackageHandleStandardArgs)
 -
 -FIND_PACKAGE_HANDLE_STANDARD_ARGS(SDL2 REQUIRED_VARS SDL2_LIBRARY SDL2_INCLUDE_DIR)
-diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index d0b23d32..82f9d15c 100644
---- a/src/CMakeLists.txt
-+++ b/src/CMakeLists.txt
-@@ -14,38 +14,8 @@ set(SOURCES
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/CMakeLists.txt hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/CMakeLists.txt
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/CMakeLists.txt	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/CMakeLists.txt	2021-04-12 01:33:11.661432941 +0200
+@@ -1,12 +1,13 @@
+ cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+ 
+-project(Hatari C)
++project(hatari C)
+ enable_testing()
+ 
+-set(APP_NAME "Hatari")
++set(APP_NAME "hatari")
+ 
+-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
++set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+ 
++include(FindPkgConfig)
+ include(CheckIncludeFiles)
+ include(CheckFunctionExists)
+ include(CheckStructHasMember)
+@@ -40,16 +41,15 @@
+ endfunction (check_large_file)
+ 
+ 
+-
+ # ##########################
+ # Conditional build features
+ # ##########################
+ 
+ set(ENABLE_DSP_EMU 1
+     CACHE BOOL "Enable DSP 56k emulator for Falcon mode")
+-set(ENABLE_TRACING 1
++set(ENABLE_TRACING 0
+     CACHE BOOL "Enable tracing messages for debugging")
+-set(ENABLE_SMALL_MEM 0
++set(ENABLE_SMALL_MEM 1
+     CACHE BOOL "Enable to use less memory - at the expense of emulation speed")
+ 
+ # Run-time checks with GCC / LLVM (Clang) AddressSanitizer:
+@@ -81,29 +81,18 @@
+ 	set(ENABLE_MAN_PAGES 0 CACHE BOOL "Built and install man pages")
+ endif()
+ 
+-if(APPLE)
+-	set(ENABLE_OSX_BUNDLE 1
+-	    CACHE BOOL "Built Hatari as macOS application bundle")
+-	# set(CMAKE_OSX_ARCHITECTURES "i386" CACHE STRING "Target architectures" FORCE)
+-	# set(CMAKE_OSX_SYSROOT "/Developer/SDKs/MacOSX10.6.sdk" CACHE STRING "10.6 SDK" FORCE)
+-	# set(CMAKE_OSX_DEPLOYMENT_TARGET "10.5" CACHE STRING "Target Min 10.5" FORCE)
+-	set(ADDITIONAL_INCLUDES ${FRAMEWORKS})
+-	set_source_files_properties(${FRAMEWORKS} PROPERTIES MACOSX_PACKAGE_LOCATION Frameworks)
+-else()
+-	set(ENABLE_OSX_BUNDLE 0
++set(ENABLE_OSX_BUNDLE 0
+ 	    CACHE BOOL "Built Hatari as macOS application bundle")
+-endif(APPLE)
+ 
+ # ####################
+ # Check for libraries:
+ # ####################
+ 
+-find_package(SDL2)
+-if(NOT SDL2_FOUND)
+-	message(FATAL_ERROR "SDL2 library not found!")
+-endif(NOT SDL2_FOUND)
+-
+-find_package(Math)
++find_package(SDL2 REQUIRED)
++if("${SDL2_LIBRARIES}" STREQUAL "")
++    message(WARNING "SDL2_LIBRARIES wasn't set, manually setting to SDL2::SDL2")
++    set(SDL2_LIBRARIES "SDL2::SDL2")
++endif()
+ 
+ find_package(Readline)
+ if(Readline_FOUND)
+@@ -175,13 +164,6 @@
+ 	# message(STATUS "Additional CFLAGS of SDL: ${DETECTED_SDL_CFLAGS}")
+ endif(DETECTED_SDL_CFLAGS)
+ 
+-if(ENABLE_OSX_BUNDLE)
+-	# Use OSX native alert windows
+-	add_definitions(-DALERT_HOOKS=1)
+-	# We still want to use our SDLMain.m with SDL2
+-	add_definitions(-DSDL_MAIN_NEEDED=1)
+-endif(ENABLE_OSX_BUNDLE)
+-
+ # ###########################
+ # Check for optional headers:
+ # ###########################
+@@ -189,7 +171,7 @@
+ check_include_files(termios.h HAVE_TERMIOS_H)
+ check_include_files(sys/ioctl.h HAVE_SYS_IOCTL_H)
+ check_include_files(strings.h HAVE_STRINGS_H)
+-check_include_files(${SDL2_INCLUDE_DIR}/SDL_config.h HAVE_SDL_CONFIG_H)
++check_include_files(${SDL2_INCLUDE_DIRS}/SDL_config.h HAVE_SDL_CONFIG_H)
+ check_include_files(sys/time.h HAVE_SYS_TIME_H)
+ check_include_files(sys/times.h HAVE_SYS_TIMES_H)
+ check_include_files(utime.h HAVE_UTIME_H)
+@@ -268,16 +250,8 @@
+ endif()
+ 
+ if(NOT BIN2DATADIR)
+-	if(WIN32)
+-		set(BIN2DATADIR "."
+-		    CACHE STRING "Relative path from bindir to datadir")
+-	elseif(ENABLE_OSX_BUNDLE)
+-		set(BIN2DATADIR "../Resources"
++	set(BIN2DATADIR "../share/hatari"
+ 		    CACHE STRING "Relative path from bindir to datadir")
+-	else()
+-		set(BIN2DATADIR "../share/hatari"
+-		    CACHE STRING "Relative path from bindir to datadir")
+-	endif(WIN32)
+ 	mark_as_advanced(BIN2DATADIR)
+ endif()
+ 
+@@ -290,23 +264,14 @@
+ endif()
+ 
+ if(NOT ETCDIR)
+-	if(WIN32)
+-		set(ETCDIR .)
+-	else()
+-		set(ETCDIR /etc)
+-	endif()
++	set(ETCDIR /etc)
+ endif()
+ 
+ if(NOT ICONDIR)
+ 	set(ICONDIR share/icons/hicolor)
+ endif()
+ 
+-if(ENABLE_OSX_BUNDLE)
+-	# put the config files in the app's bundle
+-	add_definitions(-DCONFDIR=\"../Resources\")
+-else()
+-	add_definitions(-DCONFDIR=\"${ETCDIR}\")
+-endif()
++add_definitions(-DCONFDIR=\"${ETCDIR}\")
+ 
+ # #########################################
+ # Create config.h and recurse into subdirs:
+@@ -407,4 +372,4 @@
+   message("        ==> using inaccurate SDL_GetTicks() instead")
+ endif()
+ 
+-message( "" )
++message( "" )
+\ No newline at end of file
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/audio.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/audio.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/audio.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/audio.c	2021-04-12 01:33:11.661432941 +0200
+@@ -8,7 +8,7 @@
+ */
+ const char Audio_fileid[] = "Hatari audio.c";
+ 
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ 
+ #include "main.h"
+ #include "audio.h"
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/avi_record.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/avi_record.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/avi_record.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/avi_record.c	2021-04-12 01:33:11.661432941 +0200
+@@ -80,8 +80,8 @@
+ 
+ const char AVIRecord_fileid[] = "Hatari avi_record.c";
+ 
+-#include <SDL.h>
+-#include <SDL_endian.h>
++#include <SDL2/SDL.h>
++#include <SDL2/SDL_endian.h>
+ #include <sys/types.h>  /* For off_t */
+ 
+ #include "main.h"
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/blitter.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/blitter.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/blitter.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/blitter.c	2021-04-12 01:33:11.661432941 +0200
+@@ -104,7 +104,7 @@
+ 
+ const char Blitter_fileid[] = "Hatari blitter.c";
+ 
+-#include <SDL_types.h>
++#include <SDL2/SDL_types.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/clocks_timings.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/clocks_timings.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/clocks_timings.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/clocks_timings.c	2021-04-12 01:33:11.661432941 +0200
+@@ -119,8 +119,8 @@
+ 
+ const char ClocksTimings_fileid[] = "Hatari clocks_timings.c";
+ 
+-#include <SDL.h>
+-#include <SDL_endian.h>
++#include <SDL2/SDL.h>
++#include <SDL2/SDL_endian.h>
+ 
+ #include "main.h"
+ #include "configuration.h"
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/CMakeLists.txt hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/CMakeLists.txt
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/CMakeLists.txt	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/CMakeLists.txt	2021-04-12 01:33:11.661432941 +0200
+@@ -14,38 +14,8 @@
  # Disk image code is shared with the hmsa tool, so we put it into a library:
  add_library(Floppy createBlankImage.c dim.c msa.c st.c zip.c)
  
@@ -397,7 +443,7 @@ index d0b23d32..82f9d15c 100644
  
  if(ZLIB_FOUND)
  	include_directories(${ZLIB_INCLUDE_DIR})
-@@ -74,81 +44,9 @@ add_subdirectory(falcon)
+@@ -74,81 +44,9 @@
  add_subdirectory(gui-sdl)
  add_subdirectory(cpu)
  
@@ -482,7 +528,7 @@ index d0b23d32..82f9d15c 100644
  
  if(READLINE_FOUND)
  	target_link_libraries(hatari ${READLINE_LIBRARY})
-@@ -182,19 +80,9 @@ if(UDEV_FOUND)
+@@ -182,19 +80,9 @@
  	target_link_libraries(hatari ${UDEV_LIBRARY})
  endif(UDEV_FOUND)
  
@@ -508,66 +554,9 @@ index d0b23d32..82f9d15c 100644
 +if(TOS_IMG_FILE)
 +	install(FILES tos.img DESTINATION ${DATADIR})
 +endif(TOS_IMG_FILE)
-diff --git a/src/audio.c b/src/audio.c
-index c4d0043e..4518e28f 100644
---- a/src/audio.c
-+++ b/src/audio.c
-@@ -8,7 +8,7 @@
- */
- const char Audio_fileid[] = "Hatari audio.c";
- 
--#include <SDL.h>
-+#include <SDL2/SDL.h>
- 
- #include "main.h"
- #include "audio.h"
-diff --git a/src/avi_record.c b/src/avi_record.c
-index 9d1a426e..34772587 100644
---- a/src/avi_record.c
-+++ b/src/avi_record.c
-@@ -80,8 +80,8 @@
- 
- const char AVIRecord_fileid[] = "Hatari avi_record.c";
- 
--#include <SDL.h>
--#include <SDL_endian.h>
-+#include <SDL2/SDL.h>
-+#include <SDL2/SDL_endian.h>
- #include <sys/types.h>  /* For off_t */
- 
- #include "main.h"
-diff --git a/src/blitter.c b/src/blitter.c
-index 11934d4d..8113aa88 100644
---- a/src/blitter.c
-+++ b/src/blitter.c
-@@ -104,7 +104,7 @@
- 
- const char Blitter_fileid[] = "Hatari blitter.c";
- 
--#include <SDL_types.h>
-+#include <SDL2/SDL_types.h>
- #include <stdio.h>
- #include <stdlib.h>
- 
-diff --git a/src/clocks_timings.c b/src/clocks_timings.c
-index 29ef410b..7bed4c8e 100644
---- a/src/clocks_timings.c
-+++ b/src/clocks_timings.c
-@@ -119,8 +119,8 @@ FALCON :
- 
- const char ClocksTimings_fileid[] = "Hatari clocks_timings.c";
- 
--#include <SDL.h>
--#include <SDL_endian.h>
-+#include <SDL2/SDL.h>
-+#include <SDL2/SDL_endian.h>
- 
- #include "main.h"
- #include "configuration.h"
-diff --git a/src/configuration.c b/src/configuration.c
-index 15daca88..1bf9d520 100644
---- a/src/configuration.c
-+++ b/src/configuration.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/configuration.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/configuration.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/configuration.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/configuration.c	2021-04-12 01:33:11.661432941 +0200
 @@ -11,7 +11,7 @@
  */
  const char Configuration_fileid[] = "Hatari configuration.c";
@@ -577,10 +566,9 @@ index 15daca88..1bf9d520 100644
  #include <SDL_joystick.h>
  
  #include "main.h"
-diff --git a/src/cpu/CMakeLists.txt b/src/cpu/CMakeLists.txt
-index 0ce4e6a0..4e8fe778 100644
---- a/src/cpu/CMakeLists.txt
-+++ b/src/cpu/CMakeLists.txt
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/cpu/CMakeLists.txt hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/cpu/CMakeLists.txt
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/cpu/CMakeLists.txt	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/cpu/CMakeLists.txt	2021-04-12 01:33:11.661432941 +0200
 @@ -1,5 +1,5 @@
  
 -include_directories(. ../.. ../includes ${SDL2_INCLUDE_DIR} softfloat
@@ -588,10 +576,9 @@ index 0ce4e6a0..4e8fe778 100644
                      ${CMAKE_CURRENT_BINARY_DIR})
  
  # The sources generated by gencpu:
-diff --git a/src/cpu/maccess.h b/src/cpu/maccess.h
-index db5b8647..160bd395 100644
---- a/src/cpu/maccess.h
-+++ b/src/cpu/maccess.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/cpu/maccess.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/cpu/maccess.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/cpu/maccess.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/cpu/maccess.h	2021-04-12 01:33:11.661432941 +0200
 @@ -14,7 +14,7 @@
  #ifndef UAE_MACCESS_H
  #define UAE_MACCESS_H
@@ -601,10 +588,9 @@ index db5b8647..160bd395 100644
  
  /* Can the actual CPU access unaligned memory? */
  #ifndef CPU_CAN_ACCESS_UNALIGNED
-diff --git a/src/cpu/memory.c b/src/cpu/memory.c
-index 42db37c1..5b96c0de 100644
---- a/src/cpu/memory.c
-+++ b/src/cpu/memory.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/cpu/memory.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/cpu/memory.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/cpu/memory.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/cpu/memory.c	2021-04-12 01:33:11.661432941 +0200
 @@ -12,7 +12,7 @@
    */
  const char Memory_fileid[] = "Hatari memory.c";
@@ -614,11 +600,10 @@ index 42db37c1..5b96c0de 100644
  #include "main.h"
  #include "sysdeps.h"
  #include "hatari-glue.h"
-diff --git a/src/debug/debugui.c b/src/debug/debugui.c
-index 5def12a0..e0078258 100644
---- a/src/debug/debugui.c
-+++ b/src/debug/debugui.c
-@@ -13,7 +13,7 @@ const char DebugUI_fileid[] = "Hatari debugui.c";
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/debug/debugui.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/debug/debugui.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/debug/debugui.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/debug/debugui.c	2021-04-12 01:33:11.661432941 +0200
+@@ -13,7 +13,7 @@
  #include <ctype.h>
  #include <stdio.h>
  #include <unistd.h>
@@ -627,11 +612,10 @@ index 5def12a0..e0078258 100644
  
  #include "config.h"
  
-diff --git a/src/debug/evaluate.c b/src/debug/evaluate.c
-index 0ca4fa05..776fcbfb 100644
---- a/src/debug/evaluate.c
-+++ b/src/debug/evaluate.c
-@@ -20,7 +20,7 @@ const char Eval_fileid[] = "Hatari calculate.c";
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/debug/evaluate.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/debug/evaluate.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/debug/evaluate.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/debug/evaluate.c	2021-04-12 01:33:11.661432941 +0200
+@@ -20,7 +20,7 @@
  #include <stdio.h>
  #include <stdlib.h>
  #include <stdbool.h>
@@ -640,10 +624,9 @@ index 0ca4fa05..776fcbfb 100644
  #include <inttypes.h>
  #include "configuration.h"
  #include "dsp.h"
-diff --git a/src/debug/log.h b/src/debug/log.h
-index 9be233f9..ae4c6f8f 100644
---- a/src/debug/log.h
-+++ b/src/debug/log.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/debug/log.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/debug/log.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/debug/log.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/debug/log.h	2021-04-12 01:33:11.661432941 +0200
 @@ -8,7 +8,7 @@
  #define HATARI_LOG_H
  
@@ -653,11 +636,10 @@ index 9be233f9..ae4c6f8f 100644
  
  
  /* Exception debugging
-diff --git a/src/debug/symbols.c b/src/debug/symbols.c
-index bd60e7e9..7cadc68d 100644
---- a/src/debug/symbols.c
-+++ b/src/debug/symbols.c
-@@ -23,8 +23,8 @@ const char Symbols_fileid[] = "Hatari symbols.c";
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/debug/symbols.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/debug/symbols.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/debug/symbols.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/debug/symbols.c	2021-04-12 01:33:11.661432941 +0200
+@@ -23,8 +23,8 @@
  #include <stdio.h>
  #include <string.h>
  #include <assert.h>
@@ -668,10 +650,9 @@ index bd60e7e9..7cadc68d 100644
  #include "main.h"
  #include "file.h"
  #include "options.h"
-diff --git a/src/falcon/dsp_core.h b/src/falcon/dsp_core.h
-index 4998715b..a8cee8e8 100644
---- a/src/falcon/dsp_core.h
-+++ b/src/falcon/dsp_core.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/falcon/dsp_core.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/falcon/dsp_core.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/falcon/dsp_core.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/falcon/dsp_core.h	2021-04-12 01:33:11.661432941 +0200
 @@ -22,7 +22,7 @@
  #ifndef DSP_CORE_H
  #define DSP_CORE_H
@@ -681,11 +662,10 @@ index 4998715b..a8cee8e8 100644
  
  #ifdef __cplusplus
  extern "C" {
-diff --git a/src/floppy.c b/src/floppy.c
-index 86211c6c..447de36d 100644
---- a/src/floppy.c
-+++ b/src/floppy.c
-@@ -25,7 +25,7 @@ const char Floppy_fileid[] = "Hatari floppy.c";
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/floppy.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/floppy.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/floppy.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/floppy.c	2021-04-12 01:33:11.661432941 +0200
+@@ -25,7 +25,7 @@
  
  #include <sys/stat.h>
  #include <assert.h>
@@ -694,10 +674,9 @@ index 86211c6c..447de36d 100644
  
  #include "main.h"
  #include "configuration.h"
-diff --git a/src/gui-sdl/CMakeLists.txt b/src/gui-sdl/CMakeLists.txt
-index 4fe1a086..46f16a9f 100644
---- a/src/gui-sdl/CMakeLists.txt
-+++ b/src/gui-sdl/CMakeLists.txt
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/gui-sdl/CMakeLists.txt hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/gui-sdl/CMakeLists.txt
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/gui-sdl/CMakeLists.txt	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/gui-sdl/CMakeLists.txt	2021-04-12 01:33:11.661432941 +0200
 @@ -1,5 +1,5 @@
  
 -include_directories(. ../.. ../debug ../includes ${SDL2_INCLUDE_DIR})
@@ -705,10 +684,9 @@ index 4fe1a086..46f16a9f 100644
  
  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
  	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-write-strings")
-diff --git a/src/gui-sdl/dlgFileSelect.c b/src/gui-sdl/dlgFileSelect.c
-index 46458321..72dbd389 100644
---- a/src/gui-sdl/dlgFileSelect.c
-+++ b/src/gui-sdl/dlgFileSelect.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/gui-sdl/dlgFileSelect.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/gui-sdl/dlgFileSelect.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/gui-sdl/dlgFileSelect.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/gui-sdl/dlgFileSelect.c	2021-04-12 01:33:11.661432941 +0200
 @@ -8,7 +8,7 @@
  */
  const char DlgFileSelect_fileid[] = "Hatari dlgFileSelect.c";
@@ -718,10 +696,9 @@ index 46458321..72dbd389 100644
  #include <sys/stat.h>
  #include <unistd.h>
  
-diff --git a/src/gui-sdl/sdlgui.c b/src/gui-sdl/sdlgui.c
-index fe7b0dd5..4508e461 100644
---- a/src/gui-sdl/sdlgui.c
-+++ b/src/gui-sdl/sdlgui.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/gui-sdl/sdlgui.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/gui-sdl/sdlgui.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/gui-sdl/sdlgui.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/gui-sdl/sdlgui.c	2021-04-12 01:33:11.661432941 +0200
 @@ -8,7 +8,7 @@
  */
  const char SDLGui_fileid[] = "Hatari sdlgui.c";
@@ -731,10 +708,9 @@ index fe7b0dd5..4508e461 100644
  #include <ctype.h>
  #include <string.h>
  #include <stdlib.h>
-diff --git a/src/hdc.c b/src/hdc.c
-index e6f3488c..76e759f5 100644
---- a/src/hdc.c
-+++ b/src/hdc.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/hdc.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/hdc.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/hdc.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/hdc.c	2021-04-12 01:33:11.661432941 +0200
 @@ -9,7 +9,7 @@
  const char HDC_fileid[] = "Hatari hdc.c";
  
@@ -744,10 +720,9 @@ index e6f3488c..76e759f5 100644
  
  #include "main.h"
  #include "configuration.h"
-diff --git a/src/ide.c b/src/ide.c
-index e07f6061..6d0083fc 100644
---- a/src/ide.c
-+++ b/src/ide.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/ide.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/ide.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/ide.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/ide.c	2021-04-12 01:33:11.661432941 +0200
 @@ -7,7 +7,7 @@
    This is where we intercept read/writes to/from the IDE controller hardware.
  */
@@ -757,10 +732,9 @@ index e07f6061..6d0083fc 100644
  #include <errno.h>
  
  #include <sys/types.h>
-diff --git a/src/includes/cycles.h b/src/includes/cycles.h
-index 3165778a..b95589f5 100644
---- a/src/includes/cycles.h
-+++ b/src/includes/cycles.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/cycles.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/cycles.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/cycles.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/cycles.h	2021-04-12 01:33:11.661432941 +0200
 @@ -9,7 +9,7 @@
  #define HATARI_CYCLES_H
  
@@ -770,10 +744,9 @@ index 3165778a..b95589f5 100644
  
  enum
  {
-diff --git a/src/includes/keymap.h b/src/includes/keymap.h
-index cb7f9b19..5ef5f9a2 100644
---- a/src/includes/keymap.h
-+++ b/src/includes/keymap.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/keymap.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/keymap.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/keymap.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/keymap.h	2021-04-12 01:33:11.661432941 +0200
 @@ -8,7 +8,7 @@
  #ifndef HATARI_KEYMAP_H
  #define HATARI_KEYMAP_H
@@ -783,10 +756,9 @@ index cb7f9b19..5ef5f9a2 100644
  
  /* TODO: Get rid of these defines later... */
  #define SDLKey SDL_Keycode
-diff --git a/src/includes/main.h b/src/includes/main.h
-index e6b983ad..c0f3c1ca 100644
---- a/src/includes/main.h
-+++ b/src/includes/main.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/main.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/main.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/main.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/main.h	2021-04-12 01:33:11.661432941 +0200
 @@ -14,7 +14,7 @@
  #include <stdlib.h>
  #include <string.h>
@@ -796,10 +768,9 @@ index e6b983ad..c0f3c1ca 100644
  #include <stdbool.h>
  #include <math.h>
  
-diff --git a/src/includes/screen.h b/src/includes/screen.h
-index a08243de..7b17d20c 100644
---- a/src/includes/screen.h
-+++ b/src/includes/screen.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/screen.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/screen.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/screen.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/screen.h	2021-04-12 01:33:11.661432941 +0200
 @@ -8,7 +8,7 @@
  #ifndef HATARI_SCREEN_H
  #define HATARI_SCREEN_H
@@ -809,10 +780,9 @@ index a08243de..7b17d20c 100644
  
  extern SDL_Window *sdlWindow;
  
-diff --git a/src/includes/screenSnapShot.h b/src/includes/screenSnapShot.h
-index 5727759e..d8cfcc87 100644
---- a/src/includes/screenSnapShot.h
-+++ b/src/includes/screenSnapShot.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/screenSnapShot.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/screenSnapShot.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/screenSnapShot.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/screenSnapShot.h	2021-04-12 01:33:11.661432941 +0200
 @@ -8,7 +8,7 @@
  #ifndef HATARI_SCREENSNAPSHOT_H
  #define HATARI_SCREENSNAPSHOT_H
@@ -822,10 +792,9 @@ index 5727759e..d8cfcc87 100644
  
  extern int ScreenSnapShot_SavePNG_ToFile(SDL_Surface *surface, int destw,
  		int desth, FILE *fp, int png_compression_level, int png_filter,
-diff --git a/src/includes/sdlgui.h b/src/includes/sdlgui.h
-index b69040ab..82826f0b 100644
---- a/src/includes/sdlgui.h
-+++ b/src/includes/sdlgui.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/sdlgui.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/sdlgui.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/sdlgui.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/sdlgui.h	2021-04-12 01:33:11.661432941 +0200
 @@ -10,7 +10,7 @@
  #ifndef HATARI_SDLGUI_H
  #define HATARI_SDLGUI_H
@@ -835,11 +804,10 @@ index b69040ab..82826f0b 100644
  
  /* object types: */
  enum
-diff --git a/src/includes/sound.h b/src/includes/sound.h
-index f4e7d8da..4d2dafa4 100644
---- a/src/includes/sound.h
-+++ b/src/includes/sound.h
-@@ -23,7 +23,7 @@ extern Sint16	MixBuffer[MIXBUFFER_SIZE][2];
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/sound.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/sound.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/sound.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/sound.h	2021-04-12 01:33:11.661432941 +0200
+@@ -23,7 +23,7 @@
  extern bool	Sound_BufferIndexNeedReset;
  
  /* STSound sound renderer active */
@@ -848,10 +816,9 @@ index f4e7d8da..4d2dafa4 100644
  
  
  /* Internal data types */
-diff --git a/src/includes/statusbar.h b/src/includes/statusbar.h
-index 9b7ec46f..9fe51180 100644
---- a/src/includes/statusbar.h
-+++ b/src/includes/statusbar.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/statusbar.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/statusbar.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/statusbar.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/statusbar.h	2021-04-12 01:33:11.661432941 +0200
 @@ -7,7 +7,7 @@
  #ifndef HATARI_STATUSBAR_H
  #define HATARI_STATUSBAR_H
@@ -861,10 +828,9 @@ index 9b7ec46f..9fe51180 100644
  
  /* must correspond to max value returned by Statusbar_GetHeightForSize() */
  #define STATUSBAR_MAX_HEIGHT (2*(2*8+2))
-diff --git a/src/includes/utils.h b/src/includes/utils.h
-index ea85e3c9..90b0345d 100644
---- a/src/includes/utils.h
-+++ b/src/includes/utils.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/utils.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/utils.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/includes/utils.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/includes/utils.h	2021-04-12 01:33:11.661432941 +0200
 @@ -7,7 +7,7 @@
  #ifndef HATARI_UTILS_H
  #define HATARI_UTILS_H
@@ -874,10 +840,9 @@ index ea85e3c9..90b0345d 100644
  
  
  #define CRC32_POLY	0x04c11db7	/* IEEE 802.3 recommendation */
-diff --git a/src/inffile.c b/src/inffile.c
-index 58f50544..cabb61df 100644
---- a/src/inffile.c
-+++ b/src/inffile.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/inffile.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/inffile.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/inffile.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/inffile.c	2021-04-12 01:33:11.661432941 +0200
 @@ -8,7 +8,7 @@
  */
  const char INFFILE_fileid[] = "Hatari inffile.c";
@@ -887,10 +852,9 @@ index 58f50544..cabb61df 100644
  #include <assert.h>
  #include <errno.h>
  #include <ctype.h>
-diff --git a/src/joy.c b/src/joy.c
-index 7c8de347..763c2ce4 100644
---- a/src/joy.c
-+++ b/src/joy.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/joy.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/joy.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/joy.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/joy.c	2021-04-12 01:33:11.661432941 +0200
 @@ -10,7 +10,7 @@
  */
  const char Joy_fileid[] = "Hatari joy.c";
@@ -900,10 +864,9 @@ index 7c8de347..763c2ce4 100644
  
  #include "main.h"
  #include "configuration.h"
-diff --git a/src/lilo.c b/src/lilo.c
-index d28b5a47..57929df1 100644
---- a/src/lilo.c
-+++ b/src/lilo.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/lilo.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/lilo.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/lilo.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/lilo.c	2021-04-12 01:33:11.661432941 +0200
 @@ -19,7 +19,7 @@
  #include "stMemory.h"	/* STRam etc */
  #include "symbols.h"
@@ -913,18 +876,11 @@ index d28b5a47..57929df1 100644
  
  bool bUseLilo;
  
-diff --git a/src/main.c b/src/main.c
-index 61e487f4..6346817e 100644
---- a/src/main.c
-+++ b/src/main.c
-@@ -8,9 +8,13 @@
- */
- const char Main_fileid[] = "Hatari main.c";
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/main.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/main.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/main.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/main.c	2021-04-12 01:33:27.341750432 +0200
+@@ -10,7 +10,7 @@
  
-+#ifndef _SC_CLK_TCK
-+#define _SC_CLK_TCK 2
-+#endif
-+
  #include <time.h>
  #include <errno.h>
 -#include <SDL.h>
@@ -932,10 +888,9 @@ index 61e487f4..6346817e 100644
  
  #include "main.h"
  #include "version.h"
-diff --git a/src/memorySnapShot.c b/src/memorySnapShot.c
-index fa6837f9..329a08ed 100644
---- a/src/memorySnapShot.c
-+++ b/src/memorySnapShot.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/memorySnapShot.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/memorySnapShot.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/memorySnapShot.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/memorySnapShot.c	2021-04-12 01:33:11.661432941 +0200
 @@ -18,7 +18,7 @@
  */
  const char MemorySnapShot_fileid[] = "Hatari memorySnapShot.c";
@@ -945,10 +900,9 @@ index fa6837f9..329a08ed 100644
  #include <errno.h>
  
  #include "main.h"
-diff --git a/src/midi.c b/src/midi.c
-index 9dc74c0b..8681d12a 100644
---- a/src/midi.c
-+++ b/src/midi.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/midi.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/midi.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/midi.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/midi.c	2021-04-12 01:33:11.661432941 +0200
 @@ -22,7 +22,7 @@
  */
  const char Midi_fileid[] = "Hatari midi.c";
@@ -958,10 +912,9 @@ index 9dc74c0b..8681d12a 100644
  
  #include "main.h"
  #include "configuration.h"
-diff --git a/src/msa.c b/src/msa.c
-index ecbf3f49..deef1580 100644
---- a/src/msa.c
-+++ b/src/msa.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/msa.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/msa.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/msa.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/msa.c	2021-04-12 01:33:11.661432941 +0200
 @@ -8,7 +8,7 @@
  */
  const char MSA_fileid[] = "Hatari msa.c";
@@ -971,11 +924,10 @@ index ecbf3f49..deef1580 100644
  
  #include "main.h"
  #include "file.h"
-diff --git a/src/options.c b/src/options.c
-index f2e54d0c..e505ebd9 100644
---- a/src/options.c
-+++ b/src/options.c
-@@ -18,7 +18,7 @@ const char Options_fileid[] = "Hatari options.c";
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/options.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/options.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/options.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/options.c	2021-04-12 01:33:11.661432941 +0200
+@@ -18,7 +18,7 @@
  #include <stdlib.h>
  #include <string.h>
  #include <assert.h>
@@ -984,10 +936,9 @@ index f2e54d0c..e505ebd9 100644
  
  #include "main.h"
  #include "version.h"
-diff --git a/src/resolution.c b/src/resolution.c
-index c725c3b6..7fd201e9 100644
---- a/src/resolution.c
-+++ b/src/resolution.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/resolution.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/resolution.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/resolution.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/resolution.c	2021-04-12 01:33:11.661432941 +0200
 @@ -8,7 +8,7 @@
  */
  const char Resolution_fileid[] = "Hatari resolution.c";
@@ -997,10 +948,9 @@ index c725c3b6..7fd201e9 100644
  #include "main.h"
  #include "configuration.h"
  #include "log.h"
-diff --git a/src/rs232.c b/src/rs232.c
-index 2935267a..661d95d8 100644
---- a/src/rs232.c
-+++ b/src/rs232.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/rs232.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/rs232.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/rs232.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/rs232.c	2021-04-12 01:33:11.661432941 +0200
 @@ -15,7 +15,7 @@
  */
  const char RS232_fileid[] = "Hatari rs232.c";
@@ -1010,10 +960,9 @@ index 2935267a..661d95d8 100644
  #include <SDL_thread.h>
  #include <errno.h>
  
-diff --git a/src/screen.c b/src/screen.c
-index 2ec93d56..7a5e08e7 100644
---- a/src/screen.c
-+++ b/src/screen.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/screen.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/screen.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/screen.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/screen.c	2021-04-12 01:33:11.661432941 +0200
 @@ -26,8 +26,8 @@
  
  const char Screen_fileid[] = "Hatari screen.c";
@@ -1025,7 +974,7 @@ index 2ec93d56..7a5e08e7 100644
  #include <assert.h>
  
  #include "main.h"
-@@ -493,7 +493,7 @@ bool Screen_SetSDLVideoSize(int width, int height, int bitdepth, bool bForceChan
+@@ -493,7 +493,7 @@
  		int rm, bm, gm;
  		SDL_RendererInfo sRenderInfo = { 0 };
  
@@ -1034,10 +983,9 @@ index 2ec93d56..7a5e08e7 100644
  		if (!sdlRenderer)
  		{
  			fprintf(stderr, "ERROR: Failed to create %dx%d renderer!\n",
-diff --git a/src/screenConvert.c b/src/screenConvert.c
-index 2bf3a6d5..7d541b58 100644
---- a/src/screenConvert.c
-+++ b/src/screenConvert.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/screenConvert.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/screenConvert.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/screenConvert.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/screenConvert.c	2021-04-12 01:33:11.661432941 +0200
 @@ -5,7 +5,7 @@
    or at your option any later version. Read the file gpl.txt for details.
  */
@@ -1047,10 +995,9 @@ index 2bf3a6d5..7d541b58 100644
  #include "main.h"
  #include "configuration.h"
  #include "log.h"
-diff --git a/src/screenSnapShot.c b/src/screenSnapShot.c
-index 37e0307e..72975035 100644
---- a/src/screenSnapShot.c
-+++ b/src/screenSnapShot.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/screenSnapShot.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/screenSnapShot.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/screenSnapShot.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/screenSnapShot.c	2021-04-12 01:33:11.661432941 +0200
 @@ -8,7 +8,7 @@
  */
  const char ScreenSnapShot_fileid[] = "Hatari screenSnapShot.c";
@@ -1060,10 +1007,9 @@ index 37e0307e..72975035 100644
  #include <dirent.h>
  #include <string.h>
  #include "main.h"
-diff --git a/src/shortcut.c b/src/shortcut.c
-index 6ca22d94..4fa12967 100644
---- a/src/shortcut.c
-+++ b/src/shortcut.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/shortcut.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/shortcut.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/shortcut.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/shortcut.c	2021-04-12 01:33:11.661432941 +0200
 @@ -8,7 +8,7 @@
  */
  const char ShortCut_fileid[] = "Hatari shortcut.c";
@@ -1073,10 +1019,9 @@ index 6ca22d94..4fa12967 100644
  
  #include "main.h"
  #include "dialog.h"
-diff --git a/src/spec512.c b/src/spec512.c
-index bd145e0a..1be6bbc2 100644
---- a/src/spec512.c
-+++ b/src/spec512.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/spec512.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/spec512.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/spec512.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/spec512.c	2021-04-12 01:33:11.661432941 +0200
 @@ -68,7 +68,7 @@
  
  const char Spec512_fileid[] = "Hatari spec512.c";
@@ -1086,11 +1031,10 @@ index bd145e0a..1be6bbc2 100644
  
  #include "main.h"
  #include "configuration.h"
-diff --git a/src/str.c b/src/str.c
-index 507194cf..b7dd0567 100644
---- a/src/str.c
-+++ b/src/str.c
-@@ -13,7 +13,7 @@ const char Str_fileid[] = "Hatari str.c";
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/str.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/str.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/str.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/str.c	2021-04-12 01:33:11.661432941 +0200
+@@ -13,7 +13,7 @@
  #include <stdbool.h>
  #include <stdlib.h>
  #include <locale.h>
@@ -1099,10 +1043,9 @@ index 507194cf..b7dd0567 100644
  #include "configuration.h"
  #include "str.h"
  
-diff --git a/src/tos.c b/src/tos.c
-index da19681d..40169791 100644
---- a/src/tos.c
-+++ b/src/tos.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/tos.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/tos.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/tos.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/tos.c	2021-04-12 01:33:11.661432941 +0200
 @@ -18,7 +18,7 @@
    to select any of these images we bring up an error. */
  const char TOS_fileid[] = "Hatari tos.c";
@@ -1112,10 +1055,9 @@ index da19681d..40169791 100644
  
  #include "main.h"
  #include "configuration.h"
-diff --git a/src/video.c b/src/video.c
-index 78808cfe..a19e3c87 100644
---- a/src/video.c
-+++ b/src/video.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/video.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/video.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/video.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/video.c	2021-04-12 01:33:11.664766340 +0200
 @@ -425,7 +425,7 @@
  
  const char Video_fileid[] = "Hatari video.c";
@@ -1125,10 +1067,9 @@ index 78808cfe..a19e3c87 100644
  
  #include "main.h"
  #include "configuration.h"
-diff --git a/src/wavFormat.c b/src/wavFormat.c
-index 31c6f40a..7f5b960d 100644
---- a/src/wavFormat.c
-+++ b/src/wavFormat.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/wavFormat.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/wavFormat.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/src/wavFormat.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/src/wavFormat.c	2021-04-12 01:33:11.664766340 +0200
 @@ -35,7 +35,7 @@
  */
  const char WAVFormat_fileid[] = "Hatari wavFormat.c";
@@ -1138,11 +1079,10 @@ index 31c6f40a..7f5b960d 100644
  
  #include "main.h"
  #include "audio.h"
-diff --git a/tests/debugger/CMakeLists.txt b/tests/debugger/CMakeLists.txt
-index 9fe45468..51faf5d2 100644
---- a/tests/debugger/CMakeLists.txt
-+++ b/tests/debugger/CMakeLists.txt
-@@ -3,7 +3,7 @@ set(TEST_SOURCE_DIR ${CMAKE_SOURCE_DIR}/tests/debugger)
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tests/debugger/CMakeLists.txt hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tests/debugger/CMakeLists.txt
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tests/debugger/CMakeLists.txt	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tests/debugger/CMakeLists.txt	2021-04-12 01:33:11.664766340 +0200
+@@ -3,7 +3,7 @@
  
  include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src/includes
  		    ${CMAKE_SOURCE_DIR}/src/debug ${CMAKE_SOURCE_DIR}/src/falcon
@@ -1151,10 +1091,9 @@ index 9fe45468..51faf5d2 100644
  		    ${CMAKE_SOURCE_DIR}/src/cpu)
  
  add_library(DebuggerTestLib test-dummies.c  ${CMAKE_SOURCE_DIR}/src/str.c
-diff --git a/tests/debugger/test-evaluate.c b/tests/debugger/test-evaluate.c
-index cefaeca7..3ca9c93f 100644
---- a/tests/debugger/test-evaluate.c
-+++ b/tests/debugger/test-evaluate.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tests/debugger/test-evaluate.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tests/debugger/test-evaluate.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tests/debugger/test-evaluate.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tests/debugger/test-evaluate.c	2021-04-12 01:33:11.664766340 +0200
 @@ -3,7 +3,7 @@
   * (including Hatari variable and CPU register values in expressions)
   */
@@ -1164,10 +1103,9 @@ index cefaeca7..3ca9c93f 100644
  #include <stdbool.h>
  #include "stMemory.h"
  #include "evaluate.h"
-diff --git a/tests/debugger/test-symbols.c b/tests/debugger/test-symbols.c
-index e7466c33..fe1d994e 100644
---- a/tests/debugger/test-symbols.c
-+++ b/tests/debugger/test-symbols.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tests/debugger/test-symbols.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tests/debugger/test-symbols.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tests/debugger/test-symbols.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tests/debugger/test-symbols.c	2021-04-12 01:33:11.664766340 +0200
 @@ -2,7 +2,7 @@
   * Code to test Hatari symbol/address (re-)loading in src/debug/symbols.c
   */
@@ -1177,10 +1115,9 @@ index e7466c33..fe1d994e 100644
  #include <stdbool.h>
  #include "debug_priv.h"
  #include "symbols.h"
-diff --git a/tools/debugger/CMakeLists.txt b/tools/debugger/CMakeLists.txt
-index 334a3bc2..c3558bd0 100644
---- a/tools/debugger/CMakeLists.txt
-+++ b/tools/debugger/CMakeLists.txt
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tools/debugger/CMakeLists.txt hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tools/debugger/CMakeLists.txt
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tools/debugger/CMakeLists.txt	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tools/debugger/CMakeLists.txt	2021-04-12 01:33:11.664766340 +0200
 @@ -1,5 +1,5 @@
  
 -include_directories(${SDL2_INCLUDE_DIR})
@@ -1188,10 +1125,9 @@ index 334a3bc2..c3558bd0 100644
  
  add_executable(gst2ascii gst2ascii.c)
  
-diff --git a/tools/debugger/gst2ascii.c b/tools/debugger/gst2ascii.c
-index 8572a93f..a00e397c 100644
---- a/tools/debugger/gst2ascii.c
-+++ b/tools/debugger/gst2ascii.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tools/debugger/gst2ascii.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tools/debugger/gst2ascii.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tools/debugger/gst2ascii.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tools/debugger/gst2ascii.c	2021-04-12 01:33:11.664766340 +0200
 @@ -22,7 +22,7 @@
  # define SDL_SwapBE16(x) x
  # define SDL_SwapBE32(x) x
@@ -1201,10 +1137,9 @@ index 8572a93f..a00e397c 100644
  #endif
  #include <assert.h>
  #include "../../src/debug/a.out.h"
-diff --git a/tools/hmsa/CMakeLists.txt b/tools/hmsa/CMakeLists.txt
-index 639fafe2..fe11a53f 100644
---- a/tools/hmsa/CMakeLists.txt
-+++ b/tools/hmsa/CMakeLists.txt
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tools/hmsa/CMakeLists.txt hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tools/hmsa/CMakeLists.txt
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tools/hmsa/CMakeLists.txt	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tools/hmsa/CMakeLists.txt	2021-04-12 01:33:11.664766340 +0200
 @@ -1,6 +1,6 @@
  
  include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src/includes
@@ -1213,7 +1148,7 @@ index 639fafe2..fe11a53f 100644
  
  set(HMSA_SOURCES hmsa.c floppy.c ../../src/file.c)
  
-@@ -11,11 +11,7 @@ endif(ZLIB_FOUND)
+@@ -11,11 +11,7 @@
  
  add_executable(hmsa ${HMSA_SOURCES})
  
@@ -1226,10 +1161,9 @@ index 639fafe2..fe11a53f 100644
  
  if(ZLIB_FOUND)
  	target_link_libraries(hmsa ${ZLIB_LIBRARY})
-diff --git a/tools/hmsa/floppy.c b/tools/hmsa/floppy.c
-index 7553540a..c1f96155 100644
---- a/tools/hmsa/floppy.c
-+++ b/tools/hmsa/floppy.c
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tools/hmsa/floppy.c hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tools/hmsa/floppy.c
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tools/hmsa/floppy.c	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tools/hmsa/floppy.c	2021-04-12 01:33:11.664766340 +0200
 @@ -8,7 +8,7 @@
  */
  
@@ -1239,10 +1173,9 @@ index 7553540a..c1f96155 100644
  
  #include "hmsa.h"
  #include "floppy.h"
-diff --git a/tools/hmsa/hmsa.h b/tools/hmsa/hmsa.h
-index ffa249cb..21b954ed 100644
---- a/tools/hmsa/hmsa.h
-+++ b/tools/hmsa/hmsa.h
+diff -Naur hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tools/hmsa/hmsa.h hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tools/hmsa/hmsa.h
+--- hatari-353379e1f8a847cc0e284541d2b40fd49d175d22/tools/hmsa/hmsa.h	2021-03-12 22:36:10.000000000 +0100
++++ hatari-353379e1f8a847cc0e284541d2b40fd49d175d22.serenity/tools/hmsa/hmsa.h	2021-04-12 01:33:11.664766340 +0200
 @@ -8,7 +8,7 @@
  #ifndef HMSA_H
  #define HMSA_H
