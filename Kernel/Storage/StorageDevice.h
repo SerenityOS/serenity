@@ -37,16 +37,8 @@ namespace Kernel {
 class StorageDevice : public BlockDevice {
     friend class StorageManagement;
     AK_MAKE_ETERNAL
-public:
-    enum class Type : u8 {
-        Ramdisk,
-        IDE,
-        SATA,
-        NVMe,
-    };
 
 public:
-    virtual Type type() const = 0;
     virtual u64 max_addressable_block() const { return m_max_addressable_block; }
 
     NonnullRefPtr<StorageController> controller() const;
