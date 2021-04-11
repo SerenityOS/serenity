@@ -81,6 +81,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`openssl`](openssl/)          | OpenSSL                                       | 1.0.2             | https://www.openssl.org/                              |
 | [`oksh`](oksh/)                | oksh                                          | 6.8.1             | https://github.com/ibara/oksh                         |
 | [`patch`](patch/)              | patch (OpenBSD)                               | 6.6               | https://github.com/ibara/libpuffy                     |
+| [`pcre`](pcre/)                | Perl-compatible Regular Expressions (PCRE)    | 8.44              | https://www.pcre.org/                                 |
 | [`pcre2`](pcre2/)              | Perl-compatible Regular Expressions (PCRE2)   | 10.34             | https://www.pcre.org/                                 |
 | [`pkgconf`](pkgconf/)          | pkgconf                                       | 1.7.3             | https://github.com/pkgconf/pkgconf                    |
 | [`SDLPoP`](SDLPoP/)            | Prince of Persia game                         |                   | https://github.com/NagyD/SDLPoP                       |
