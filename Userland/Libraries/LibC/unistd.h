@@ -106,7 +106,7 @@ int chdir(const char* path);
 int fchdir(int fd);
 char* getcwd(char* buffer, size_t size);
 char* getwd(char* buffer);
-int sleep(unsigned seconds);
+unsigned int sleep(unsigned int seconds);
 int usleep(useconds_t);
 int gethostname(char*, size_t);
 int sethostname(const char*, ssize_t);
