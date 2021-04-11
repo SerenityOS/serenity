@@ -48,9 +48,9 @@
 
 namespace GUI {
 
-Optional<String> FilePicker::get_open_filepath(Window* parent_window, const String& window_title, const StringView& path)
+Optional<String> FilePicker::get_open_filepath(Window* parent_window, const String& window_title, const StringView& path, bool folder)
 {
-    auto picker = FilePicker::construct(parent_window, Mode::Open, "", path);
+    auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, "", path);
 
     if (!window_title.is_null())
         picker->set_title(window_title);
@@ -89,6 +89,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
     switch (m_mode) {
     case Mode::Open:
     case Mode::OpenMultiple:
+    case Mode::OpenFolder:
         set_title("Open");
         set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
         break;
@@ -180,8 +181,12 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
         const FileSystemModel::Node& node = m_model->node(local_index);
         LexicalPath path { node.full_path() };
 
-        if (!node.is_directory())
+        auto should_open_folder = m_mode == Mode::OpenFolder;
+        if (should_open_folder == node.is_directory()) {
             m_filename_textbox->set_text(node.name);
+        } else {
+            m_filename_textbox->clear();
+        }
     };
 
     m_context_menu = GUI::Menu::construct();
