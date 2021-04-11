@@ -606,7 +606,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type.name);
         VERIFY_NOT_REACHED();
     }
-};
+}
 
 template<typename FunctionType>
 static void generate_argument_count_check(SourceGenerator& generator, FunctionType& function)
@@ -631,7 +631,7 @@ static void generate_argument_count_check(SourceGenerator& generator, FunctionTy
         return {};
     }
 )~~~");
-};
+}
 
 static void generate_arguments(SourceGenerator& generator, const Vector<IDL::Parameter>& parameters, StringBuilder& arguments_builder, bool return_void = false)
 {
@@ -652,7 +652,7 @@ static void generate_arguments(SourceGenerator& generator, const Vector<IDL::Par
     }
 
     arguments_builder.join(", ", parameter_names);
-};
+}
 
 static void generate_header(const IDL::Interface& interface)
 {
