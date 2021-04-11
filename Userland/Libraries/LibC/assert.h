@@ -45,10 +45,9 @@ __attribute__((noreturn)) void __assertion_failed(const char* msg);
 #    define VERIFY_NOT_REACHED() CRASH()
 #endif
 
-#define CRASH()              \
-    do {                     \
-        asm volatile("ud2"); \
-    } while (0)
+__attribute__((noreturn)) void __crash();
+
+#define CRASH() __crash()
 #define VERIFY assert
 #define TODO VERIFY_NOT_REACHED
 
