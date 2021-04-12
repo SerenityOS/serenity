@@ -90,7 +90,8 @@ KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
         inode.identifier(),
         flags);
 
-    if (mount_point_is_in_use(mount_point)) return EBUSY;
+    if (mount_point_is_in_use(mount_point))
+        return EBUSY;
 
     Mount mount { file_system, &mount_point, flags };
     m_mounts.append(move(mount));
@@ -103,7 +104,8 @@ KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
 
     dbgln("VFS: Bind-mounting {} at {}", source.absolute_path(), mount_point.absolute_path());
 
-    if (mount_point_is_in_use(mount_point)) return EBUSY;
+    if (mount_point_is_in_use(mount_point))
+        return EBUSY;
 
     Mount mount { source.inode(), mount_point, flags };
     m_mounts.append(move(mount));
