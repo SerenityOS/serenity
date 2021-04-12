@@ -254,12 +254,7 @@ static void parse_variable_location(const Dwarf::DIE& variable_die, DebugInfo::V
 
 OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters& regs, u32 address_offset) const
 {
-    VERIFY(variable_die.tag() == Dwarf::EntryTag::Variable
-        || variable_die.tag() == Dwarf::EntryTag::Member
-        || variable_die.tag() == Dwarf::EntryTag::FormalParameter
-        || variable_die.tag() == Dwarf::EntryTag::EnumerationType
-        || variable_die.tag() == Dwarf::EntryTag::Enumerator
-        || variable_die.tag() == Dwarf::EntryTag::StructureType);
+    VERIFY(is_variable_tag_supported(variable_die.tag()));
 
     if (variable_die.tag() == Dwarf::EntryTag::FormalParameter
         && !variable_die.get_attribute(Dwarf::Attribute::Name).has_value()) {
@@ -302,7 +297,7 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
         type_die.value().for_each_child([&](const Dwarf::DIE& member) {
             if (member.is_null())
                 return;
-            if (member.tag() == Dwarf::EntryTag::SubProgram)
+            if (!is_variable_tag_supported(member.tag()))
                 return;
 
             auto member_variable = create_variable_info(member, regs, variable_info->location_data.address);
@@ -328,6 +323,16 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
     }
 
     return variable_info;
+}
+
+bool DebugInfo::is_variable_tag_supported(const Dwarf::EntryTag& tag)
+{
+    return tag == Dwarf::EntryTag::Variable
+        || tag == Dwarf::EntryTag::Member
+        || tag == Dwarf::EntryTag::FormalParameter
+        || tag == Dwarf::EntryTag::EnumerationType
+        || tag == Dwarf::EntryTag::Enumerator
+        || tag == Dwarf::EntryTag::StructureType;
 }
 
 String DebugInfo::name_of_containing_function(u32 address) const
