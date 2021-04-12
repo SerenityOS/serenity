@@ -70,9 +70,9 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
     auto position = create_source_position(file, line);
 
     if (change_type == BreakpointChange::Added) {
-        Debugger::the().m_breakpoints.append(position);
+        m_breakpoints.append(position);
     } else {
-        Debugger::the().m_breakpoints.remove_all_matching([&](Debug::DebugInfo::SourcePosition val) { return val == position; });
+        m_breakpoints.remove_all_matching([&](const Debug::DebugInfo::SourcePosition& val) { return val == position; });
     }
 
     auto session = Debugger::the().session();
@@ -99,9 +99,9 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
 
 Debug::DebugInfo::SourcePosition Debugger::create_source_position(const String& file, size_t line)
 {
-    if (!file.starts_with('/') && !file.starts_with("./"))
-        return { String::formatted("./{}", file), line + 1 };
-    return { file, line + 1 };
+    if (file.starts_with("/"))
+        return { file, line + 1 };
+    return { LexicalPath::canonicalized_path(String::formatted("{}/{}", m_source_root, file)), line + 1 };
 }
 
 int Debugger::start_static()
