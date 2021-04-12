@@ -126,6 +126,7 @@ private:
     KResult validate_path_against_process_veil(StringView path, int options);
 
     bool is_vfs_root(InodeIdentifier) const;
+    bool mount_point_is_in_use(Custody&) const;
 
     KResult traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntryView&)>);
 

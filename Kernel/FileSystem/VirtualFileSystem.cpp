@@ -68,6 +68,17 @@ InodeIdentifier VFS::root_inode_id() const
     return m_root_inode->identifier();
 }
 
+bool VFS::mount_point_is_in_use(Custody& mount_point) const
+{
+    for (auto existing_mount : m_mounts) {
+        if (&existing_mount.guest() == &mount_point.inode()) {
+            dbgln("VFS: Mount point {} already in use!", mount_point.absolute_path());
+            return true;
+        }
+    }
+    return false;
+}
+
 KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
 {
     LOCKER(m_lock);
@@ -78,7 +89,9 @@ KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
         mount_point.absolute_path(),
         inode.identifier(),
         flags);
-    // FIXME: check that this is not already a mount point
+
+    if (mount_point_is_in_use(mount_point)) return EBUSY;
+
     Mount mount { file_system, &mount_point, flags };
     m_mounts.append(move(mount));
     return KSuccess;
@@ -89,7 +102,9 @@ KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
     LOCKER(m_lock);
 
     dbgln("VFS: Bind-mounting {} at {}", source.absolute_path(), mount_point.absolute_path());
-    // FIXME: check that this is not already a mount point
+
+    if (mount_point_is_in_use(mount_point)) return EBUSY;
+
     Mount mount { source.inode(), mount_point, flags };
     m_mounts.append(move(mount));
     return KSuccess;

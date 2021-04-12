@@ -121,10 +121,12 @@ KResultOr<int> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> use
     }
 
     auto result = VFS::the().mount(fs.release_nonnull(), target_custody, params.flags);
-    if (!description.is_null())
-        dbgln("mount: successfully mounted {} on {}", description->absolute_path(), target);
-    else
-        dbgln("mount: successfully mounted {}", target);
+    if (result == KSuccess) {
+        if (!description.is_null())
+            dbgln("mount: successfully mounted {} on {}", description->absolute_path(), target);
+        else
+            dbgln("mount: successfully mounted {}", target);
+    }
     return result;
 }
 
