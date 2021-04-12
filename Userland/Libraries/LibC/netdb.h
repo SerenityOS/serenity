@@ -97,6 +97,7 @@ struct addrinfo {
 #define EAI_SERVICE 9
 #define EAI_SOCKTYPE 10
 #define EAI_SYSTEM 11
+#define EAI_OVERFLOW 12
 
 #define AI_PASSIVE 0x0001
 #define AI_CANONNAME 0x0002
@@ -109,8 +110,12 @@ struct addrinfo {
 #define NI_MAXHOST 1025
 #define NI_MAXSERV 32
 
+#define NI_NUMERICHOST 1
+#define NI_NUMERICSERV 2
+
 int getaddrinfo(const char* __restrict node, const char* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res);
 void freeaddrinfo(struct addrinfo* res);
 const char* gai_strerror(int errcode);
+int getnameinfo(const struct sockaddr* __restrict addr, socklen_t addrlen, char* __restrict host, socklen_t hostlen, char* __restrict serv, socklen_t servlen, int flags);
 
 __END_DECLS
