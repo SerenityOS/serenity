@@ -1,0 +1,12 @@
+diff -Naur emersion-mrsh-d9763a3/configure emersion-mrsh-d9763a3.serenity/configure
+--- emersion-mrsh-d9763a3/configure	2021-04-12 10:11:00.100738824 +0200
++++ emersion-mrsh-d9763a3.serenity/configure	2021-04-12 10:11:57.028449759 +0200
+@@ -198,7 +198,7 @@
+ 	fi
+ done
+ 
+-for flag in -fPIC -Wl,--no-undefined -Wl,--as-needed
++for flag in -fPIC -Wl,--as-needed
+ do
+ 	test_ldflags "$flag"
+ done

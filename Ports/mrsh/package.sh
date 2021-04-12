@@ -5,3 +5,5 @@ files="https://codeload.github.com/emersion/mrsh/legacy.tar.gz/${version} emersi
 useconfigure=true
 makeopts=
 workdir=emersion-mrsh-d9763a3
+
+export CFLAGS=-Wno-deprecated-declarations
