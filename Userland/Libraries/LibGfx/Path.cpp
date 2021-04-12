@@ -50,7 +50,7 @@ void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, d
         }
 
         // Move the endpoint by a small amount to avoid division by zero.
-        next_point.move_by(0.01f, 0.01f);
+        next_point.translate_by(0.01f, 0.01f);
     }
 
     // Find (cx, cy), theta_1, theta_delta

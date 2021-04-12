@@ -71,7 +71,7 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         auto adjusted_rect = gadget.rect;
 
         if (gadget.is_moving) {
-            adjusted_rect.move_by(0, gadget.movement_delta.y());
+            adjusted_rect.translate_by(0, gadget.movement_delta.y());
         }
 
         if (gadget.is_moving) {

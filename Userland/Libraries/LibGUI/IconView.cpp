@@ -381,7 +381,7 @@ void IconView::update_item_rects(int item_index, ItemData& item_data) const
 {
     auto item_rect = this->item_rect(item_index);
     item_data.icon_rect.center_within(item_rect);
-    item_data.icon_rect.move_by(0, item_data.icon_offset_y);
+    item_data.icon_rect.translate_by(0, item_data.icon_offset_y);
     item_data.text_rect.center_horizontally_within(item_rect);
     item_data.text_rect.set_top(item_rect.y() + item_data.text_offset_y);
 }
@@ -418,7 +418,7 @@ void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Fo
     item_data.icon_rect = { 0, 0, 32, 32 };
     item_data.icon_rect.center_within(item_rect);
     item_data.icon_offset_y = -font.glyph_height() - 6;
-    item_data.icon_rect.move_by(0, item_data.icon_offset_y);
+    item_data.icon_rect.translate_by(0, item_data.icon_offset_y);
 
     int unwrapped_text_width = font.width(item_data.text);
     int available_width = item_rect.width() - 6;

@@ -575,7 +575,7 @@ Gfx::IntRect Widget::window_relative_rect() const
 {
     auto rect = relative_rect();
     for (auto* parent = parent_widget(); parent; parent = parent->parent_widget()) {
-        rect.move_by(parent->relative_position());
+        rect.translate_by(parent->relative_position());
     }
     return rect;
 }
@@ -957,7 +957,7 @@ void Widget::set_content_margins(const Margins& margins)
 Gfx::IntRect Widget::content_rect() const
 {
     auto rect = relative_rect();
-    rect.move_by(m_content_margins.left(), m_content_margins.top());
+    rect.translate_by(m_content_margins.left(), m_content_margins.top());
     rect.set_width(rect.width() - (m_content_margins.left() + m_content_margins.right()));
     rect.set_height(rect.height() - (m_content_margins.top() + m_content_margins.bottom()));
     return rect;

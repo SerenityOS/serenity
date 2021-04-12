@@ -8,6 +8,7 @@
 
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
+#include <LibGfx/AffineTransform.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
 #include <LibIPC/Forward.h>
@@ -19,7 +20,7 @@ namespace Gfx {
 template<typename T>
 class Point {
 public:
-    Point() { }
+    Point() = default;
 
     Point(T x, T y)
         : m_x(x)
@@ -41,41 +42,74 @@ public:
     {
     }
 
-    T x() const { return m_x; }
-    T y() const { return m_y; }
+    [[nodiscard]] ALWAYS_INLINE T x() const { return m_x; }
+    [[nodiscard]] ALWAYS_INLINE T y() const { return m_y; }
 
-    void set_x(T x) { m_x = x; }
-    void set_y(T y) { m_y = y; }
+    ALWAYS_INLINE void set_x(T x) { m_x = x; }
+    ALWAYS_INLINE void set_y(T y) { m_y = y; }
 
-    void move_by(T dx, T dy)
+    [[nodiscard]] ALWAYS_INLINE bool is_null() const { return !m_x && !m_y; }
+    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return m_x <= 0 && m_y <= 0; }
+
+    void translate_by(T dx, T dy)
     {
         m_x += dx;
         m_y += dy;
     }
 
-    void move_by(const Point<T>& delta)
+    ALWAYS_INLINE void translate_by(T dboth) { translate_by(dboth, dboth); }
+    ALWAYS_INLINE void translate_by(const Point<T>& delta) { translate_by(delta.x(), delta.y()); }
+
+    void scale_by(T dx, T dy)
     {
-        move_by(delta.x(), delta.y());
+        m_x *= dx;
+        m_y *= dy;
     }
+
+    ALWAYS_INLINE void scale_by(T dboth) { scale_by(dboth, dboth); }
+    ALWAYS_INLINE void scale_by(const Point<T>& delta) { scale_by(delta.x(), delta.y()); }
+
+    void transform_by(const AffineTransform& transform) { *this = transform.map(*this); }
 
     Point<T> translated(const Point<T>& delta) const
     {
         Point<T> point = *this;
-        point.move_by(delta);
+        point.translate_by(delta);
         return point;
     }
 
     Point<T> translated(T dx, T dy) const
     {
         Point<T> point = *this;
-        point.move_by(dx, dy);
+        point.translate_by(dx, dy);
         return point;
     }
 
     Point<T> translated(T dboth) const
     {
         Point<T> point = *this;
-        point.move_by(dboth, dboth);
+        point.translate_by(dboth, dboth);
+        return point;
+    }
+
+    Point<T> scaled(const Point<T>& delta) const
+    {
+        Point<T> point = *this;
+        point.scale_by(delta);
+        return point;
+    }
+
+    Point<T> scaled(T sx, T sy) const
+    {
+        Point<T> point = *this;
+        point.scale_by(sx, sy);
+        return point;
+    }
+
+    Point<T> transformed(const AffineTransform& transform) const
+    {
+        Point<T> point = *this;
+        point.transform_by(transform);
         return point;
     }
 
@@ -86,6 +120,11 @@ public:
         point.constrain(rect);
         return point;
     }
+
+    Point<T> moved_left(T amount) const { return { x() - amount, y() }; }
+    Point<T> moved_right(T amount) const { return { x() + amount, y() }; }
+    Point<T> moved_up(T amount) const { return { x(), y() - amount }; }
+    Point<T> moved_down(T amount) const { return { x(), y() + amount }; }
 
     template<class U>
     bool operator==(const Point<U>& other) const
@@ -136,8 +175,6 @@ public:
         m_y /= factor;
         return *this;
     }
-
-    bool is_null() const { return !m_x && !m_y; }
 
     T primary_offset_for_orientation(Orientation orientation) const
     {

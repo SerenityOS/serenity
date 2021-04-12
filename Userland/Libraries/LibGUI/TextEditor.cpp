@@ -134,7 +134,7 @@ TextPosition TextEditor::text_position_at_content_position(const Gfx::IntPoint& 
 {
     auto position = content_position;
     if (is_single_line() && icon())
-        position.move_by(-(icon_size() + icon_padding()), 0);
+        position.translate_by(-(icon_size() + icon_padding()), 0);
 
     size_t line_index = 0;
 
@@ -194,9 +194,9 @@ TextPosition TextEditor::text_position_at_content_position(const Gfx::IntPoint& 
 TextPosition TextEditor::text_position_at(const Gfx::IntPoint& widget_position) const
 {
     auto content_position = widget_position;
-    content_position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
-    content_position.move_by(-(m_horizontal_content_padding + ruler_width()), 0);
-    content_position.move_by(-frame_thickness(), -frame_thickness());
+    content_position.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
+    content_position.translate_by(-(m_horizontal_content_padding + ruler_width()), 0);
+    content_position.translate_by(-frame_thickness(), -frame_thickness());
     return text_position_at_content_position(content_position);
 }
 
@@ -435,8 +435,8 @@ void TextEditor::paint_event(PaintEvent& event)
         height() - height_occupied_by_horizontal_scrollbar()
     };
     if (m_ruler_visible)
-        text_clip_rect.move_by(-ruler_width(), 0);
-    text_clip_rect.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
+        text_clip_rect.translate_by(-ruler_width(), 0);
+    text_clip_rect.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
     painter.add_clip_rect(text_clip_rect);
 
     size_t span_index = 0;
@@ -507,7 +507,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     if (underline) {
                         painter.draw_line(span_rect.bottom_left().translated(0, 1), span_rect.bottom_right().translated(0, 1), color);
                     }
-                    span_rect.move_by(span_rect.width(), 0);
+                    span_rect.translate_by(span_rect.width(), 0);
                 };
                 for (;;) {
                     if (span_index >= document().spans().size()) {
@@ -1015,8 +1015,8 @@ Gfx::IntRect TextEditor::line_widget_rect(size_t line_index) const
     auto rect = line_content_rect(line_index);
     rect.set_x(frame_thickness());
     rect.set_width(frame_inner_rect().width());
-    rect.move_by(0, -(vertical_scrollbar().value()));
-    rect.move_by(0, frame_thickness());
+    rect.translate_by(0, -(vertical_scrollbar().value()));
+    rect.translate_by(0, frame_thickness());
     rect.intersect(frame_inner_rect());
     return rect;
 }
@@ -1567,7 +1567,7 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
         if (is_single_line()) {
             visual_line_rect.center_vertically_within(editor_visible_text_rect);
             if (m_icon)
-                visual_line_rect.move_by(icon_size() + icon_padding(), 0);
+                visual_line_rect.translate_by(icon_size() + icon_padding(), 0);
         }
         if (callback(visual_line_rect, visual_line_view, start_of_line, visual_line_index == visual_data.visual_line_breaks.size() - 1) == IterationDecision::Break)
             break;

@@ -319,7 +319,7 @@ void ClassicStylePainter::paint_progressbar(Painter& painter, const IntRect& rec
         float progress_height = progress * rect.height();
         hole_rect = { 0, 0, rect.width(), (int)(rect.height() - progress_height) };
     }
-    hole_rect.move_by(rect.location());
+    hole_rect.translate_by(rect.location());
     hole_rect.set_right_without_resize(rect.right());
     PainterStateSaver saver(painter);
     painter.fill_rect(hole_rect, palette.base());

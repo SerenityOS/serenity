@@ -154,7 +154,7 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
                 // Shift subsequent sibling fragments to the right to adjust for change in width.
                 for (size_t j = i + 1; j < line_box.fragments().size(); ++j) {
                     auto offset = line_box.fragments()[j].offset();
-                    offset.move_by(diff, 0);
+                    offset.translate_by(diff, 0);
                     line_box.fragments()[j].set_offset(offset);
                 }
             }

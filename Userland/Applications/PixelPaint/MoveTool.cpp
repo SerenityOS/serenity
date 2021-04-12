@@ -66,16 +66,16 @@ void MoveTool::on_keydown(GUI::KeyEvent& event)
 
     switch (event.key()) {
     case Key_Up:
-        new_location.move_by(0, -1);
+        new_location.translate_by(0, -1);
         break;
     case Key_Down:
-        new_location.move_by(0, 1);
+        new_location.translate_by(0, 1);
         break;
     case Key_Left:
-        new_location.move_by(-1, 0);
+        new_location.translate_by(-1, 0);
         break;
     case Key_Right:
-        new_location.move_by(1, 0);
+        new_location.translate_by(1, 0);
         break;
     default:
         return;

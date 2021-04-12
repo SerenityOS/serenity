@@ -225,16 +225,16 @@ Gfx::IntRect ScrollableWidget::widget_inner_rect() const
 Gfx::IntPoint ScrollableWidget::to_content_position(const Gfx::IntPoint& widget_position) const
 {
     auto content_position = widget_position;
-    content_position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
-    content_position.move_by(-frame_thickness(), -frame_thickness());
+    content_position.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
+    content_position.translate_by(-frame_thickness(), -frame_thickness());
     return content_position;
 }
 
 Gfx::IntPoint ScrollableWidget::to_widget_position(const Gfx::IntPoint& content_position) const
 {
     auto widget_position = content_position;
-    widget_position.move_by(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
-    widget_position.move_by(frame_thickness(), frame_thickness());
+    widget_position.translate_by(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
+    widget_position.translate_by(frame_thickness(), frame_thickness());
     return widget_position;
 }
 

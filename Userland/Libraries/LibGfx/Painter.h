@@ -100,7 +100,7 @@ public:
     void clear_clip_rect();
 
     void translate(int dx, int dy) { translate({ dx, dy }); }
-    void translate(const IntPoint& delta) { state().translation.move_by(delta); }
+    void translate(const IntPoint& delta) { state().translation.translate_by(delta); }
 
     Gfx::Bitmap* target() { return m_target.ptr(); }
 

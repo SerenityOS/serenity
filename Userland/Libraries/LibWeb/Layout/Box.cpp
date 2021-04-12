@@ -154,7 +154,7 @@ const Gfx::FloatRect Box::absolute_rect() const
 {
     Gfx::FloatRect rect { effective_offset(), size() };
     for (auto* block = containing_block(); block; block = block->containing_block()) {
-        rect.move_by(block->effective_offset());
+        rect.translate_by(block->effective_offset());
     }
     return rect;
 }
