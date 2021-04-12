@@ -88,16 +88,3 @@ index fd7b257..9f5ced8 100644
    free(p);
  }
  
-diff --git a/src/util.c b/src/util.c
-index df83952..58c95c8 100644
---- a/src/util.c
-+++ b/src/util.c
-@@ -136,7 +136,7 @@ jv jq_realpath(jv path) {
- #ifdef _PC_PATH_MAX
-   path_max = pathconf(jv_string_value(path),_PC_PATH_MAX);
- #else
--  path_max = PATH_MAX;
-+  path_max = 4096;
- #endif
-   if (path_max > 0) {
-      buf = jv_mem_alloc(path_max);
