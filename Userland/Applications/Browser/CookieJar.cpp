@@ -56,7 +56,7 @@ void CookieJar::set_cookie(const URL& url, const String& cookie_string)
     if (!domain.has_value())
         return;
 
-    auto new_cookie = parse_cookie(cookie_string, *domain);
+    auto new_cookie = parse_cookie(cookie_string, *domain, default_path(url));
     if (!new_cookie.has_value())
         return;
 
@@ -86,7 +86,29 @@ Optional<String> CookieJar::canonicalize_domain(const URL& url)
     return url.host().to_lowercase();
 }
 
-Optional<Cookie> CookieJar::parse_cookie(const String& cookie_string, String default_domain)
+String CookieJar::default_path(const URL& url)
+{
+    // https://tools.ietf.org/html/rfc6265#section-5.1.4
+
+    // 1. Let uri-path be the path portion of the request-uri if such a portion exists (and empty otherwise).
+    String uri_path = url.path();
+
+    // 2. If the uri-path is empty or if the first character of the uri-path is not a %x2F ("/") character, output %x2F ("/") and skip the remaining steps.
+    if (uri_path.is_empty() || (uri_path[0] != '/'))
+        return "/";
+
+    StringView uri_path_view = uri_path;
+    std::size_t last_separator = uri_path_view.find_last_of('/').value();
+
+    // 3. If the uri-path contains no more than one %x2F ("/") character, output %x2F ("/") and skip the remaining step.
+    if (last_separator == 0)
+        return "/";
+
+    // 4. Output the characters of the uri-path from the first character up to, but not including, the right-most %x2F ("/").
+    return uri_path.substring(0, last_separator);
+}
+
+Optional<Cookie> CookieJar::parse_cookie(const String& cookie_string, String default_domain, String default_path)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2
     StringView name_value_pair;
@@ -132,6 +154,7 @@ Optional<Cookie> CookieJar::parse_cookie(const String& cookie_string, String def
 
     cookie.expiry_time = Core::DateTime::create(AK::NumericLimits<unsigned>::max());
     cookie.domain = move(default_domain);
+    cookie.path = move(default_path);
 
     parse_attributes(cookie, unparsed_attributes);
     return cookie;
@@ -255,9 +278,17 @@ void CookieJar::on_domain_attribute(Cookie& cookie, StringView attribute_value)
     cookie.domain = String(cookie_domain).to_lowercase();
 }
 
-void CookieJar::on_path_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+void CookieJar::on_path_attribute(Cookie& cookie, StringView attribute_value)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2.4
+
+    // If the attribute-value is empty or if the first character of the attribute-value is not %x2F ("/"):
+    if (attribute_value.is_empty() || attribute_value[0] != '/')
+        // Let cookie-path be the default-path.
+        return;
+
+    // Let cookie-path be the attribute-value
+    cookie.path = attribute_value;
 }
 
 void CookieJar::on_secure_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)

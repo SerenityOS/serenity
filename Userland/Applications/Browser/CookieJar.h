@@ -39,6 +39,7 @@ struct Cookie {
     String value;
     Core::DateTime expiry_time {};
     String domain {};
+    String path {};
 };
 
 class CookieJar {
@@ -48,7 +49,8 @@ public:
 
 private:
     static Optional<String> canonicalize_domain(const URL& url);
-    static Optional<Cookie> parse_cookie(const String& cookie_string, String default_domain);
+    static String default_path(const URL& url);
+    static Optional<Cookie> parse_cookie(const String& cookie_string, String default_domain, String default_path);
     static void parse_attributes(Cookie& cookie, StringView unparsed_attributes);
     static void process_attribute(Cookie& cookie, StringView attribute_name, StringView attribute_value);
     static void on_expires_attribute(Cookie& cookie, StringView attribute_value);
