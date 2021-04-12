@@ -119,6 +119,12 @@ int isascii(int c)
     return ((unsigned)c <= 127);
 }
 
+#undef isblank
+int isblank(int c)
+{
+    return __inline_isblank(c);
+}
+
 #undef toascii
 int toascii(int c)
 {
