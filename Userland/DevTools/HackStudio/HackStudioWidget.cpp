@@ -198,7 +198,9 @@ void HackStudioWidget::open_project(const String& root_path)
         m_project_tree_view->update();
     }
     if (Debugger::is_initialized()) {
-        Debugger::the().reset_breakpoints();
+        auto& debugger = Debugger::the();
+        debugger.reset_breakpoints();
+        debugger.set_source_root(m_project->root_path());
     }
 }
 
