@@ -342,7 +342,7 @@ struct servent* getservent()
         return nullptr;
 
     __getserv_buffer.s_name = const_cast<char*>(__getserv_name_buffer.characters());
-    __getserv_buffer.s_port = __getserv_port_buffer;
+    __getserv_buffer.s_port = htons(__getserv_port_buffer);
     __getserv_buffer.s_proto = const_cast<char*>(__getserv_protocol_buffer.characters());
 
     __getserv_alias_list.clear_with_capacity();
