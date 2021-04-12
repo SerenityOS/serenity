@@ -25,6 +25,7 @@
  */
 
 #include "DirectoryView.h"
+#include "FileOperationProgressWidget.h"
 #include "FileUtils.h"
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
@@ -44,6 +45,29 @@
 #include <unistd.h>
 
 namespace FileManager {
+
+enum class FileOperation {
+    Copy,
+};
+
+static HashTable<RefPtr<GUI::Window>> file_operation_windows;
+
+static void run_file_operation([[maybe_unused]] FileOperation operation, const String& source, const String& destination, GUI::Window* parent_window)
+{
+    // FIXME: Don't use popen() like this, very string injection friendly..
+    FILE* helper_pipe = popen(String::formatted("/bin/FileOperation Copy {} {}", source, LexicalPath(destination).dirname()).characters(), "r");
+    VERIFY(helper_pipe);
+
+    auto window = GUI::Window::construct();
+    file_operation_windows.set(window);
+
+    window->set_title("Copying Files...");
+    window->set_main_widget<FileOperationProgressWidget>(helper_pipe);
+    window->resize(320, 200);
+    if (parent_window)
+        window->center_within(*parent_window);
+    window->show();
+}
 
 NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(const LauncherHandler&)> launch_handler)
 {
@@ -578,12 +602,8 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
         if (url_to_copy.path() == new_path)
             continue;
 
-        if (auto result = Core::File::copy_file_or_directory(new_path, url_to_copy.path()); result.is_error()) {
-            auto error_message = String::formatted("Could not copy {} into {}: {}", url_to_copy.to_string(), new_path, result.error().error_code);
-            GUI::MessageBox::show(window(), error_message, "File Manager", GUI::MessageBox::Type::Error);
-        } else {
-            had_accepted_drop = true;
-        }
+        run_file_operation(FileOperation::Copy, url_to_copy.path(), new_path, window());
+        had_accepted_drop = true;
     }
     if (had_accepted_drop && on_accepted_drop)
         on_accepted_drop();
