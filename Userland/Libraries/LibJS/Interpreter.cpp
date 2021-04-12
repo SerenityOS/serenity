@@ -142,7 +142,7 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
 
     // If we unwind all the way, just reset m_unwind_until so that future "return" doesn't break.
     if (m_scope_stack.is_empty())
-        vm().unwind(ScopeType::None);
+        vm().stop_unwind();
 }
 
 void Interpreter::push_scope(ScopeFrame frame)
@@ -176,7 +176,7 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
     }
 
     if (vm().unwind_until() == scope_type)
-        vm().unwind(ScopeType::None);
+        vm().stop_unwind();
 
     exit_scope(block);
 
