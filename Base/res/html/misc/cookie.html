@@ -1,7 +1,8 @@
 <body>
-    <input type=button onclick="setCookie('cookie1=value1')" value="Set Cookie 1" />
-    <input type=button onclick="setCookie('cookie2=value2')" value="Set Cookie 2" />
-    <input type=button onclick="setCookie('cookie3=value3')" value="Set Cookie 3" />
+    <input type=button onclick="setCookie('cookie1=value1; max-age=100; path=/res/html')" value="Set Cookie 1" />
+    <input type=button onclick="setCookie('cookie2=value2; expires=Sat, 23 Jan 2060 08:10:36 GMT')" value="Set Cookie 2" />
+    <input type=button onclick="setCookie('cookie3=value3; domain=serenityos.org')" value="Set Cookie 3" />
+    <input type=button onclick="setCookie('cookie4=value4; httponly; secure')" value="Set Cookie 4" />
     <br /><pre id=cookies></pre>
 
     <script>
