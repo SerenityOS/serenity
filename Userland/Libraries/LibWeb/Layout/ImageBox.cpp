@@ -110,7 +110,7 @@ bool ImageBox::renders_as_alt_text() const
 
 void ImageBox::frame_did_set_viewport_rect(const Gfx::IntRect& viewport_rect)
 {
-    m_image_loader.set_visible_in_viewport(viewport_rect.to<float>().intersects(absolute_rect()));
+    m_image_loader.set_visible_in_viewport(viewport_rect.to_type<float>().intersects(absolute_rect()));
 }
 
 }

@@ -138,7 +138,7 @@ void Compositor::compose()
             auto invalidate_rect = dirty_rect.intersected(frame_rect);
             if (!invalidate_rect.is_empty()) {
                 auto inner_rect_offset = window.rect().location() - frame_rect.location();
-                invalidate_rect.move_by(-(frame_rect.location() + inner_rect_offset));
+                invalidate_rect.translate_by(-(frame_rect.location() + inner_rect_offset));
                 window.invalidate_no_notify(invalidate_rect);
                 m_invalidated_window = true;
             }
@@ -449,7 +449,7 @@ void Compositor::compose()
             if (!wm.dnd_text().is_empty()) {
                 auto text_rect = dnd_rect;
                 if (wm.dnd_bitmap())
-                    text_rect.move_by(wm.dnd_bitmap()->width() + 8, 0);
+                    text_rect.translate_by(wm.dnd_bitmap()->width() + 8, 0);
                 back_painter.draw_text(text_rect, wm.dnd_text(), Gfx::TextAlignment::CenterLeft, wm.palette().selection_text());
             }
             if (wm.dnd_bitmap()) {

@@ -256,7 +256,7 @@ void SolitaireWidget::mousemove_event(GUI::MouseEvent& event)
 
     for (auto& to_intersect : m_focused_cards) {
         mark_intersecting_stacks_dirty(to_intersect);
-        to_intersect.rect().move_by(dx, dy);
+        to_intersect.rect().translate_by(dx, dy);
     }
 
     m_mouse_down_location = click_location;

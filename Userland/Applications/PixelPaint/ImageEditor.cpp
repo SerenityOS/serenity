@@ -162,7 +162,7 @@ GUI::MouseEvent ImageEditor::event_with_pan_and_scale_applied(const GUI::MouseEv
 GUI::MouseEvent ImageEditor::event_adjusted_for_layer(const GUI::MouseEvent& event, const Layer& layer) const
 {
     auto image_position = editor_position_to_image_position(event.position());
-    image_position.move_by(-layer.location().x(), -layer.location().y());
+    image_position.translate_by(-layer.location().x(), -layer.location().y());
     return {
         static_cast<GUI::Event::Type>(event.type()),
         Gfx::IntPoint(image_position.x(), image_position.y()),

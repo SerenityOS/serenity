@@ -95,7 +95,7 @@ public:
             // TODO: We probably don't need the entire source_rect, we could inflate
             // the target_rect appropriately
             apply_cache.m_target = Gfx::Bitmap::create(source.format(), source_rect.size());
-            target_rect.move_by(-target_rect.location());
+            target_rect.translate_by(-target_rect.location());
         }
 
         Bitmap* render_target_bitmap = (&target != &source) ? &target : apply_cache.m_target.ptr();

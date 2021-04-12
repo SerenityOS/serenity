@@ -1070,28 +1070,28 @@ void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& fon
 
     if (is_vertically_centered_text_alignment(alignment)) {
         int distance_from_baseline_to_bottom = (font.glyph_height() - 1) - font.baseline();
-        rect.move_by(0, distance_from_baseline_to_bottom / 2);
+        rect.translate_by(0, distance_from_baseline_to_bottom / 2);
     }
 
     auto point = rect.location();
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
 
     if (direction == TextDirection::RTL) {
-        point.move_by(rect.width(), 0); // Start drawing from the end
-        space_width = -space_width;     // Draw spaces backwards
+        point.translate_by(rect.width(), 0); // Start drawing from the end
+        space_width = -space_width;          // Draw spaces backwards
     }
 
     for (u32 code_point : final_text) {
         if (code_point == ' ') {
-            point.move_by(space_width, 0);
+            point.translate_by(space_width, 0);
             continue;
         }
         IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.glyph_height());
         if (direction == TextDirection::RTL)
-            point.move_by(-glyph_size.width(), 0); // If we are drawing right to left, we have to move backwards before drawing the glyph
+            point.translate_by(-glyph_size.width(), 0); // If we are drawing right to left, we have to move backwards before drawing the glyph
         draw_glyph({ point, glyph_size }, code_point);
         if (direction == TextDirection::LTR)
-            point.move_by(glyph_size.width(), 0);
+            point.translate_by(glyph_size.width(), 0);
     }
 }
 
@@ -1414,7 +1414,7 @@ void Painter::set_pixel(const IntPoint& p, Color color)
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     auto point = p;
-    point.move_by(state().translation);
+    point.translate_by(state().translation);
     if (!clip_rect().contains(point))
         return;
     m_target->scanline(point.y())[point.x()] = color.value();

@@ -112,7 +112,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             const char* note_name = note_names[note % notes_per_octave];
 
             background_painter.draw_text(note_name_rect, note_name, Gfx::TextAlignment::CenterLeft);
-            note_name_rect.move_by(Gfx::FontDatabase::default_font().width(note_name) + 2, 0);
+            note_name_rect.translate_by(Gfx::FontDatabase::default_font().width(note_name) + 2, 0);
             if (note % notes_per_octave == 0)
                 background_painter.draw_text(note_name_rect, String::formatted("{}", note / notes_per_octave + 1), Gfx::TextAlignment::CenterLeft);
         }

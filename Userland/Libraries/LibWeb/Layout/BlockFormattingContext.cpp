@@ -550,7 +550,7 @@ static Gfx::FloatRect rect_in_coordinate_space(const Box& box, const Box& contex
     for (auto* ancestor = box.parent(); ancestor; ancestor = ancestor->parent()) {
         if (is<Box>(*ancestor)) {
             auto offset = downcast<Box>(*ancestor).effective_offset();
-            rect.move_by(offset);
+            rect.translate_by(offset);
         }
         if (ancestor == &context_box)
             break;

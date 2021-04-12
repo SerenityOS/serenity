@@ -319,7 +319,7 @@ bool Node::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned
         if (!containing_block->is_scrollable())
             return false;
         auto new_offset = containing_block->scroll_offset();
-        new_offset.move_by(0, wheel_delta);
+        new_offset.translate_by(0, wheel_delta);
         containing_block->set_scroll_offset(new_offset);
         return true;
     }

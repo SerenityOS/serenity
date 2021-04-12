@@ -541,7 +541,7 @@ bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame)
 
     auto outer_rect = frame().render_rect();
     auto inner_rect = rect;
-    inner_rect.move_by(position());
+    inner_rect.translate_by(position());
     // FIXME: This seems slightly wrong; the inner rect shouldn't intersect the border part of the outer rect.
     inner_rect.intersect(outer_rect);
     if (inner_rect.is_empty())
@@ -976,7 +976,7 @@ void Window::set_menubar(Menubar* menubar)
         m_menubar->for_each_menu([&](Menu& menu) {
             int text_width = wm.font().width(Gfx::parse_ampersand_string(menu.name()));
             menu.set_rect_in_window_menubar({ next_menu_location.x(), 0, text_width + menubar_menu_margin, menubar_rect.height() });
-            next_menu_location.move_by(menu.rect_in_window_menubar().width(), 0);
+            next_menu_location.translate_by(menu.rect_in_window_menubar().width(), 0);
             return IterationDecision::Continue;
         });
     }

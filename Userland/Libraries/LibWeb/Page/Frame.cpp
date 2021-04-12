@@ -182,7 +182,7 @@ void Frame::scroll_to_anchor(const String& fragment)
     if (is<Layout::Box>(layout_node)) {
         auto& layout_box = downcast<Layout::Box>(layout_node);
         auto padding_box = layout_box.box_model().padding_box();
-        float_rect.move_by(-padding_box.left, -padding_box.top);
+        float_rect.translate_by(-padding_box.left, -padding_box.top);
     }
 
     if (m_page)
@@ -206,7 +206,7 @@ Gfx::IntPoint Frame::to_main_frame_position(const Gfx::IntPoint& a_position)
             return {};
         if (!ancestor->host_element()->layout_node())
             return {};
-        position.move_by(ancestor->host_element()->layout_node()->box_type_agnostic_position().to_type<int>());
+        position.translate_by(ancestor->host_element()->layout_node()->box_type_agnostic_position().to_type<int>());
     }
     return position;
 }
