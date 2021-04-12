@@ -32,6 +32,7 @@
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringUtils.h>
+#include <AK/Vector.h>
 
 namespace AK {
 
@@ -107,6 +108,29 @@ public:
     [[nodiscard]] StringView substring_view(size_t start) const;
     [[nodiscard]] Vector<StringView> split_view(char, bool keep_empty = false) const;
     [[nodiscard]] Vector<StringView> split_view(const StringView&, bool keep_empty = false) const;
+
+    template<typename UnaryPredicate>
+    [[nodiscard]] Vector<StringView> split_view_if(UnaryPredicate&& predicate, bool keep_empty = false) const
+    {
+        if (is_empty())
+            return {};
+
+        Vector<StringView> v;
+        size_t substart = 0;
+        for (size_t i = 0; i < length(); ++i) {
+            char ch = characters_without_null_termination()[i];
+            if (predicate(ch)) {
+                size_t sublen = i - substart;
+                if (sublen != 0 || keep_empty)
+                    v.append(substring_view(substart, sublen));
+                substart = i + 1;
+            }
+        }
+        size_t taillen = length() - substart;
+        if (taillen != 0 || keep_empty)
+            v.append(substring_view(substart, taillen));
+        return v;
+    }
 
     // Create a Vector of StringViews split by line endings. As of CommonMark
     // 0.29, the spec defines a line ending as "a newline (U+000A), a carriage
