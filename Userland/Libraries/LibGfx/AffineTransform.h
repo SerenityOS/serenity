@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <LibGfx/Forward.h>
 
@@ -36,18 +37,28 @@ public:
     template<typename T>
     Rect<T> map(const Rect<T>&) const;
 
-    float a() const { return m_values[0]; }
-    float b() const { return m_values[1]; }
-    float c() const { return m_values[2]; }
-    float d() const { return m_values[3]; }
-    float e() const { return m_values[4]; }
-    float f() const { return m_values[5]; }
+    [[nodiscard]] ALWAYS_INLINE float a() const { return m_values[0]; }
+    [[nodiscard]] ALWAYS_INLINE float b() const { return m_values[1]; }
+    [[nodiscard]] ALWAYS_INLINE float c() const { return m_values[2]; }
+    [[nodiscard]] ALWAYS_INLINE float d() const { return m_values[3]; }
+    [[nodiscard]] ALWAYS_INLINE float e() const { return m_values[4]; }
+    [[nodiscard]] ALWAYS_INLINE float f() const { return m_values[5]; }
 
-    float x_scale() const;
-    float y_scale() const;
+    [[nodiscard]] float x_scale() const;
+    [[nodiscard]] float y_scale() const;
+    [[nodiscard]] FloatPoint scale() const;
+    [[nodiscard]] float x_translation() const;
+    [[nodiscard]] float y_translation() const;
+    [[nodiscard]] FloatPoint translation() const;
 
     AffineTransform& scale(float sx, float sy);
+    AffineTransform& scale(const FloatPoint& s);
+    AffineTransform& set_scale(float sx, float sy);
+    AffineTransform& set_scale(const FloatPoint& s);
     AffineTransform& translate(float tx, float ty);
+    AffineTransform& translate(const FloatPoint& t);
+    AffineTransform& set_translation(float tx, float ty);
+    AffineTransform& set_translation(const FloatPoint& t);
     AffineTransform& rotate_radians(float);
     AffineTransform& multiply(const AffineTransform&);
 
@@ -56,3 +67,11 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<Gfx::AffineTransform> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, Gfx::AffineTransform value)
+    {
+        return Formatter<FormatString>::format(builder, "[{} {} {} {} {} {}]", value.a(), value.b(), value.c(), value.d(), value.e(), value.f());
+    }
+};
