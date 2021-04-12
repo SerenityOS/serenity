@@ -188,7 +188,7 @@ void Application::tooltip_show_timer_did_fire()
     const int margin = 30;
     Gfx::IntPoint adjusted_pos = WindowServerConnection::the().send_sync<Messages::WindowServer::GetGlobalCursorPosition>()->position();
 
-    adjusted_pos.move_by(0, 18);
+    adjusted_pos.translate_by(0, 18);
 
     if (adjusted_pos.x() + m_tooltip_window->width() >= desktop_rect.width() - margin) {
         adjusted_pos = adjusted_pos.translated(-m_tooltip_window->width(), 0);

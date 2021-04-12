@@ -164,9 +164,9 @@ void CardStack::push(NonnullRefPtr<Card> card)
 
     if (size && size % m_rules.step == 0) {
         if (peek().is_upside_down())
-            top_most_position.move_by(m_rules.shift_x, m_rules.shift_y_upside_down);
+            top_most_position.translate_by(m_rules.shift_x, m_rules.shift_y_upside_down);
         else
-            top_most_position.move_by(m_rules.shift_x, m_rules.shift_y);
+            top_most_position.translate_by(m_rules.shift_x, m_rules.shift_y);
     }
 
     if (m_type == Stock)

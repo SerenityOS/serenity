@@ -157,7 +157,7 @@ void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, O
     auto text_rect = Gfx::IntRect(x, y, max_width.has_value() ? max_width.value() : painter->font().width(text), painter->font().glyph_height());
     auto transformed_rect = m_transform.map(text_rect);
     painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, m_fill_style);
-    did_draw(transformed_rect.to<float>());
+    did_draw(transformed_rect.to_type<float>());
 }
 
 void CanvasRenderingContext2D::begin_path()

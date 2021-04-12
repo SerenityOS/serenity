@@ -301,7 +301,7 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
         auto text_rect = menu.rect_in_window_menubar();
         Color text_color = palette.window_text();
         if (MenuManager::the().is_open(menu))
-            text_rect.move_by(1, 1);
+            text_rect.translate_by(1, 1);
         bool paint_as_pressed = MenuManager::the().is_open(menu);
         bool paint_as_hovered = !paint_as_pressed && &menu == MenuManager::the().hovered_menu();
         if (paint_as_pressed || paint_as_hovered) {
@@ -546,7 +546,7 @@ void WindowFrame::invalidate(Gfx::IntRect relative_rect)
 {
     auto frame_rect = rect();
     auto window_rect = m_window.rect();
-    relative_rect.move_by(frame_rect.x() - window_rect.x(), frame_rect.y() - window_rect.y());
+    relative_rect.translate_by(frame_rect.x() - window_rect.x(), frame_rect.y() - window_rect.y());
     m_dirty = true;
     m_window.invalidate(relative_rect, true);
 }

@@ -197,7 +197,7 @@ void TabWidget::paint_event(PaintEvent& event)
         if (!icon)
             return;
         Gfx::IntRect icon_rect { button_rect.x(), button_rect.y(), 16, 16 };
-        icon_rect.move_by(4, 3);
+        icon_rect.translate_by(4, 3);
         painter.draw_scaled_bitmap(icon_rect, *icon, icon->rect());
         text_rect.set_x(icon_rect.right() + 1 + 4);
         text_rect.intersect(button_rect);
@@ -281,13 +281,13 @@ Gfx::IntRect TabWidget::button_rect(int index) const
     }
     Gfx::IntRect rect { x_offset, 0, m_uniform_tabs ? uniform_tab_width() : m_tabs[index].width(font()), bar_height() };
     if (m_tabs[index].widget != m_active_widget) {
-        rect.move_by(0, m_tab_position == TabPosition::Top ? 2 : 0);
+        rect.translate_by(0, m_tab_position == TabPosition::Top ? 2 : 0);
         rect.set_height(rect.height() - 2);
     } else {
-        rect.move_by(-2, 0);
+        rect.translate_by(-2, 0);
         rect.set_width(rect.width() + 4);
     }
-    rect.move_by(bar_rect().location());
+    rect.translate_by(bar_rect().location());
     return rect;
 }
 

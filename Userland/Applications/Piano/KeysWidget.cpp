@@ -242,7 +242,7 @@ int KeysWidget::note_for_event_position(const Gfx::IntPoint& a_point) const
         return -1;
 
     auto point = a_point;
-    point.move_by(-frame_thickness(), -frame_thickness());
+    point.translate_by(-frame_thickness(), -frame_thickness());
 
     int white_keys = point.x() / white_key_width;
     int note = note_from_white_keys(white_keys);

@@ -80,7 +80,7 @@ static void paint_custom_progressbar(GUI::Painter& painter, const Gfx::IntRect& 
     }
 
     Gfx::IntRect hole_rect { (int)progress_width, 0, (int)(rect.width() - progress_width), rect.height() };
-    hole_rect.move_by(rect.location());
+    hole_rect.translate_by(rect.location());
     hole_rect.set_right_without_resize(rect.right());
     Gfx::PainterStateSaver saver(painter);
     painter.add_clip_rect(hole_rect);
@@ -109,7 +109,7 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
         icon_location.set_x(content_rect.x());
 
     if (!text().is_empty()) {
-        content_rect.move_by(icon.width() + 4, 0);
+        content_rect.translate_by(icon.width() + 4, 0);
         content_rect.set_width(content_rect.width() - icon.width() - 4);
     }
 
@@ -119,8 +119,8 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
     text_rect.align_within(content_rect, text_alignment());
 
     if (is_being_pressed() || is_checked()) {
-        text_rect.move_by(1, 1);
-        icon_location.move_by(1, 1);
+        text_rect.translate_by(1, 1);
+        icon_location.translate_by(1, 1);
     }
 
     if (window.progress().has_value()) {

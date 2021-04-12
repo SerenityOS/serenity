@@ -133,7 +133,7 @@ Window& Menu::ensure_menu_window()
         else if (item.type() == MenuItem::Separator)
             height = 8;
         item.set_rect({ next_item_location, { width - frame_thickness() * 2, height } });
-        next_item_location.move_by(0, height);
+        next_item_location.translate_by(0, height);
     }
 
     int window_height_available = Screen::the().height() - frame_thickness() * 2;
@@ -236,7 +236,7 @@ void Menu::draw()
                     painter.blit_filtered(icon_rect.location().translated(1, 1), *item.icon(), item.icon()->rect(), [&shadow_color](auto) {
                         return shadow_color;
                     });
-                    icon_rect.move_by(-1, -1);
+                    icon_rect.translate_by(-1, -1);
                 }
                 if (item.is_enabled())
                     painter.blit(icon_rect.location(), *item.icon(), item.icon()->rect());

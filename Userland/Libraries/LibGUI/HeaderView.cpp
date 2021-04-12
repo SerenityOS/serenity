@@ -246,7 +246,7 @@ void HeaderView::paint_horizontal(Painter& painter)
         }
         auto text_rect = cell_rect.shrunken(m_table_view.horizontal_padding() * 2, 0);
         if (pressed)
-            text_rect.move_by(1, 1);
+            text_rect.translate_by(1, 1);
         painter.draw_text(text_rect, text, font(), section_alignment(section), palette().button_text());
         x_offset += section_width + m_table_view.horizontal_padding() * 2;
     }
@@ -274,7 +274,7 @@ void HeaderView::paint_vertical(Painter& painter)
         String text = String::number(section);
         auto text_rect = cell_rect.shrunken(m_table_view.horizontal_padding() * 2, 0);
         if (pressed)
-            text_rect.move_by(1, 1);
+            text_rect.translate_by(1, 1);
         painter.draw_text(text_rect, text, font(), section_alignment(section), palette().button_text());
         y_offset += section_size;
     }
