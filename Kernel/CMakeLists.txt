@@ -54,6 +54,7 @@ set(KERNEL_SOURCES
     Graphics/BochsGraphicsAdapter.cpp
     Graphics/FramebufferDevice.cpp
     Graphics/GraphicsManagement.cpp
+    Graphics/IntelNativeGraphicsAdapter.cpp
     Graphics/RawFramebufferDevice.cpp
     Graphics/VGACompatibleAdapter.cpp
     Storage/Partition/DiskPartition.cpp
