@@ -28,6 +28,7 @@
 
 #include "BreakpointCallback.h"
 #include <AK/Function.h>
+#include <AK/LexicalPath.h>
 #include <AK/Vector.h>
 #include <LibDebug/DebugSession.h>
 #include <LibThread/Lock.h>
@@ -52,9 +53,10 @@ public:
 
     static bool is_initialized();
 
-    static void on_breakpoint_change(const String& file, size_t line, BreakpointChange change_type);
+    void on_breakpoint_change(const String& file, size_t line, BreakpointChange change_type);
 
     void set_executable_path(const String& path) { m_executable_path = path; }
+    void set_source_root(const String& source_root) { m_source_root = source_root; }
 
     Debug::DebugSession* session() { return m_debug_session.ptr(); }
 
@@ -108,7 +110,7 @@ private:
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback);
 
-    static Debug::DebugInfo::SourcePosition create_source_position(const String& file, size_t line);
+    Debug::DebugInfo::SourcePosition create_source_position(const String& file, size_t line);
 
     void start();
     int debugger_loop();
