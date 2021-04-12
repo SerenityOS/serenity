@@ -27,6 +27,7 @@
 #include "CookieJar.h"
 #include <AK/AllOf.h>
 #include <AK/NumericLimits.h>
+#include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <ctype.h>
 
@@ -75,6 +76,32 @@ void CookieJar::set_cookie(const URL& url, const String& cookie_string)
     }
 
     it->value.append(move(*new_cookie));
+}
+
+void CookieJar::dump_cookies() const
+{
+    static const char* url_color = "\033[34;1m";
+    static const char* cookie_color = "\033[31m";
+    static const char* attribute_color = "\033[33m";
+    static const char* no_color = "\033[0m";
+
+    StringBuilder builder;
+    builder.appendff("{} URLs with cookies\n", m_cookies.size());
+
+    for (const auto& url_and_cookies : m_cookies) {
+        builder.appendff("{}Cookies for:{} {}\n", url_color, no_color, url_and_cookies.key.is_empty() ? "file://" : url_and_cookies.key);
+
+        for (const auto& cookie : url_and_cookies.value) {
+            builder.appendff("\t{}{}{} = {}{}{}\n", cookie_color, cookie.name, no_color, cookie_color, cookie.value, no_color);
+            builder.appendff("\t\t{}Expiry{} = {}\n", attribute_color, no_color, cookie.expiry_time.to_string());
+            builder.appendff("\t\t{}Domain{} = {}\n", attribute_color, no_color, cookie.domain);
+            builder.appendff("\t\t{}Path{} = {}\n", attribute_color, no_color, cookie.path);
+            builder.appendff("\t\t{}Secure{} = {:s}\n", attribute_color, no_color, cookie.secure);
+            builder.appendff("\t\t{}HttpOnly{} = {:s}\n", attribute_color, no_color, cookie.http_only);
+        }
+    }
+
+    dbgln("{}", builder.build());
 }
 
 Optional<String> CookieJar::canonicalize_domain(const URL& url)
