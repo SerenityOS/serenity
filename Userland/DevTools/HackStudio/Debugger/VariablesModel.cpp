@@ -83,7 +83,8 @@ static String variable_value_as_string(const Debug::DebugInfo::VariableInfo& var
         auto it = variable.type->members.find_if([&enumerator_value = value.value()](const auto& enumerator) {
             return enumerator->constant_data.as_u32 == enumerator_value;
         });
-        VERIFY(!it.is_end());
+        if (it.is_end())
+            return String::formatted("Unknown ({})", value.value());
         return String::formatted("{}::{}", variable.type_name, (*it)->name);
     }
 
