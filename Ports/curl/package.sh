@@ -10,8 +10,3 @@ depends=zlib
 auth_type="sig"
 auth_import_key="27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2"
 auth_opts="curl-${version}.tar.bz2.asc curl-${version}.tar.bz2"
-
-pre_configure() {
-    # serenity's getaddrinfo exists but is a stub
-    export curl_disallow_getaddrinfo=yes
-}
