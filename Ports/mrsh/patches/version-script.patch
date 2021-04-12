@@ -1,0 +1,27 @@
+diff -Naur emersion-mrsh-d9763a3/libmrsh.serenity.sym emersion-mrsh-d9763a3.serenity/libmrsh.serenity.sym
+--- emersion-mrsh-d9763a3/libmrsh.serenity.sym	1970-01-01 01:00:00.000000000 +0100
++++ emersion-mrsh-d9763a3.serenity/libmrsh.serenity.sym	2021-04-12 09:48:47.446767471 +0200
+@@ -0,0 +1,7 @@
++{
++	global:
++		mrsh_*;
++		main;
++	local:
++		*;
++};
+diff -Naur emersion-mrsh-d9763a3/configure emersion-mrsh-d9763a3.serenity/configure
+--- emersion-mrsh-d9763a3/configure	2021-04-12 10:05:17.437801859 +0200
++++ emersion-mrsh-d9763a3.serenity/configure	2021-04-12 10:05:10.304338346 +0200
+@@ -217,9 +217,11 @@
+ fi
+ 
+ printf "Checking for exported symbol restrictions... "
+-if ! \
++if ! (\
+ 	test_ldflags -Wl,--version-script="libmrsh.gnu.sym" || \
++	test_ldflags -Wl,--version-script="libmrsh.serenity.sym" || \
+ 	test_ldflags -Wl,-exported_symbols_list,"libmrsh.darwin.sym"
++)
+ then
+ 	echo no
+ 	echo "Unable to specify exported symbols (is $(uname) supported?)" >&2
