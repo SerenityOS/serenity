@@ -117,10 +117,10 @@ private:
     BlockBasedFS& m_fs;
     size_t m_entry_count { 10000 };
     mutable HashMap<BlockBasedFS::BlockIndex, CacheEntry*> m_hash;
-    mutable IntrusiveList<CacheEntry, &CacheEntry::list_node> m_clean_list;
-    mutable IntrusiveList<CacheEntry, &CacheEntry::list_node> m_dirty_list;
     KBuffer m_cached_block_data;
     KBuffer m_entries;
+    mutable IntrusiveList<CacheEntry, &CacheEntry::list_node> m_clean_list;
+    mutable IntrusiveList<CacheEntry, &CacheEntry::list_node> m_dirty_list;
     bool m_dirty { false };
 };
 
