@@ -1988,14 +1988,29 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         // execute() the finalizer without an exception in our way.
         auto* previous_exception = interpreter.exception();
         interpreter.vm().clear_exception();
+
+        // Remember what scope type we were unwinding to, and temporarily
+        // clear it as well (e.g. return from handler).
+        auto unwind_until = interpreter.vm().unwind_until();
         interpreter.vm().stop_unwind();
-        result = m_finalizer->execute(interpreter, global_object);
-        // If we previously had an exception and the finalizer didn't
-        // throw a new one, restore the old one.
-        // FIXME: This will print debug output in throw_exception() for
-        // a second time with m_should_log_exceptions enabled.
-        if (previous_exception && !interpreter.exception())
-            interpreter.vm().throw_exception(previous_exception);
+
+        auto finalizer_result = m_finalizer->execute(interpreter, global_object);
+        if (interpreter.vm().should_unwind()) {
+            // This was NOT a 'normal' completion (e.g. return from finalizer).
+            result = finalizer_result;
+        } else {
+            // Continue unwinding to whatever we found ourselves unwinding
+            // to when the finalizer was entered (e.g. return from handler,
+            // which is unaffected by normal completion from finalizer).
+            interpreter.vm().unwind(unwind_until);
+
+            // If we previously had an exception and the finalizer didn't
+            // throw a new one, restore the old one.
+            // FIXME: This will print debug output in throw_exception() for
+            // a second time with m_should_log_exceptions enabled.
+            if (previous_exception && !interpreter.exception())
+                interpreter.vm().throw_exception(previous_exception);
+        }
     }
 
     return result;

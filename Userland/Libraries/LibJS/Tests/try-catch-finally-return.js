@@ -32,3 +32,15 @@ test("return from finally block", () => {
     }
     expect(foo()).toBe("baz");
 });
+
+test("return from catch block with empty finally", () => {
+    function foo() {
+        try {
+            throw "foo";
+        } catch {
+            return "bar";
+        } finally {
+        }
+    }
+    expect(foo()).toBe("bar");
+});
