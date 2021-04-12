@@ -25,7 +25,9 @@
  */
 
 #include "CookieJar.h"
+#include <AK/NumericLimits.h>
 #include <AK/URL.h>
+#include <ctype.h>
 
 namespace Browser {
 
@@ -128,6 +130,8 @@ Optional<Cookie> CookieJar::parse_cookie(const String& cookie_string)
     // 6. The cookie-name is the name string, and the cookie-value is the value string.
     Cookie cookie { name, value };
 
+    cookie.expiry_time = Core::DateTime::create(AK::NumericLimits<unsigned>::max());
+
     parse_attributes(cookie, unparsed_attributes);
     return cookie;
 }
@@ -204,9 +208,27 @@ void CookieJar::on_expires_attribute([[maybe_unused]] Cookie& cookie, [[maybe_un
     // https://tools.ietf.org/html/rfc6265#section-5.2.1
 }
 
-void CookieJar::on_max_age_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+void CookieJar::on_max_age_attribute(Cookie& cookie, StringView attribute_value)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2.2
+
+    // If the first character of the attribute-value is not a DIGIT or a "-" character, ignore the cookie-av.
+    if (attribute_value.is_empty() || (!isdigit(attribute_value[0]) && (attribute_value[0] != '-')))
+        return;
+
+    // Let delta-seconds be the attribute-value converted to an integer.
+    if (auto delta_seconds = attribute_value.to_int(); delta_seconds.has_value()) {
+        Core::DateTime expiry_time;
+
+        if (*delta_seconds <= 0) {
+            // If delta-seconds is less than or equal to zero (0), let expiry-time be the earliest representable date and time.
+            cookie.expiry_time = Core::DateTime::from_timestamp(0);
+        } else {
+            // Otherwise, let the expiry-time be the current date and time plus delta-seconds seconds.
+            time_t now = Core::DateTime::now().timestamp();
+            cookie.expiry_time = Core::DateTime::from_timestamp(now + *delta_seconds);
+        }
+    }
 }
 
 void CookieJar::on_domain_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
