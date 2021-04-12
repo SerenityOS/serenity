@@ -182,7 +182,11 @@ public:
         m_unwind_until = type;
         m_unwind_until_label = label;
     }
-    void stop_unwind() { m_unwind_until = ScopeType::None; }
+    void stop_unwind()
+    {
+        m_unwind_until = ScopeType::None;
+        m_unwind_until_label = {};
+    }
     bool should_unwind_until(ScopeType type, FlyString label = {}) const
     {
         if (m_unwind_until_label.is_null())
