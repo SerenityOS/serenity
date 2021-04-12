@@ -227,6 +227,10 @@ int main(int argc, char** argv)
             cookie_jar.set_cookie(url, cookie);
         };
 
+        new_tab.on_dump_cookies = [&]() {
+            cookie_jar.dump_cookies();
+        };
+
         new_tab.load(url);
 
         dbgln("Added new tab {:p}, loading {}", &new_tab, url);

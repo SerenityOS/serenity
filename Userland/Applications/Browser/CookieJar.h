@@ -48,6 +48,7 @@ class CookieJar {
 public:
     String get_cookie(const URL& url) const;
     void set_cookie(const URL& url, const String& cookie);
+    void dump_cookies() const;
 
 private:
     static Optional<String> canonicalize_domain(const URL& url);
