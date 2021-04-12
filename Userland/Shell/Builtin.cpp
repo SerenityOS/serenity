@@ -1010,6 +1010,8 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
         retval = builtin_##builtin(argv.size() - 1, argv.data());        \
         if (!has_error(ShellError::None))                                \
             raise_error(m_error, m_error_description, command.position); \
+        fflush(stdout);                                                  \
+        fflush(stderr);                                                  \
         return true;                                                     \
     }
 
