@@ -40,6 +40,8 @@ struct Cookie {
     Core::DateTime expiry_time {};
     String domain {};
     String path {};
+    bool secure { false };
+    bool http_only { false };
 };
 
 class CookieJar {
@@ -57,8 +59,8 @@ private:
     static void on_max_age_attribute(Cookie& cookie, StringView attribute_value);
     static void on_domain_attribute(Cookie& cookie, StringView attribute_value);
     static void on_path_attribute(Cookie& cookie, StringView attribute_value);
-    static void on_secure_attribute(Cookie& cookie, StringView attribute_value);
-    static void on_http_only_attribute(Cookie& cookie, StringView attribute_value);
+    static void on_secure_attribute(Cookie& cookie);
+    static void on_http_only_attribute(Cookie& cookie);
 
     HashMap<String, Vector<Cookie>> m_cookies;
 };

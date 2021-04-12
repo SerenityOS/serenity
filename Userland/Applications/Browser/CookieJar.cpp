@@ -221,9 +221,9 @@ void CookieJar::process_attribute(Cookie& cookie, StringView attribute_name, Str
     } else if (attribute_name.equals_ignoring_case("Path")) {
         on_path_attribute(cookie, attribute_value);
     } else if (attribute_name.equals_ignoring_case("Secure")) {
-        on_secure_attribute(cookie, attribute_value);
+        on_secure_attribute(cookie);
     } else if (attribute_name.equals_ignoring_case("HttpOnly")) {
-        on_http_only_attribute(cookie, attribute_value);
+        on_http_only_attribute(cookie);
     }
 }
 
@@ -291,14 +291,16 @@ void CookieJar::on_path_attribute(Cookie& cookie, StringView attribute_value)
     cookie.path = attribute_value;
 }
 
-void CookieJar::on_secure_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+void CookieJar::on_secure_attribute(Cookie& cookie)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2.5
+    cookie.secure = true;
 }
 
-void CookieJar::on_http_only_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+void CookieJar::on_http_only_attribute(Cookie& cookie)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2.6
+    cookie.http_only = true;
 }
 
 }
