@@ -115,7 +115,7 @@ int Menu::content_width() const
         if (item.type() != MenuItem::Text)
             continue;
         auto& use_font = item.is_default() ? Gfx::FontDatabase::default_bold_font() : font();
-        int text_width = use_font.width(item.text());
+        int text_width = use_font.width(Gfx::parse_ampersand_string(item.text()));
         if (!item.shortcut_text().is_empty()) {
             int shortcut_width = use_font.width(item.shortcut_text());
             widest_shortcut = max(shortcut_width, widest_shortcut);
