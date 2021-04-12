@@ -285,23 +285,31 @@ RefPtr<CSS::ColorStyleValue> parse_color(const CSS::ParsingContext& context, con
     return nullptr;
 }
 
-RefPtr<CSS::StringStyleValue> parse_line_style(const CSS::ParsingContext& context, const StringView& part)
+RefPtr<CSS::IdentifierStyleValue> parse_line_style(const CSS::ParsingContext& context, const StringView& part)
 {
     auto parsed_value = parse_css_value(context, part);
-    if (!parsed_value || !parsed_value->is_string())
+    if (!parsed_value || parsed_value->type() != CSS::StyleValue::Type::Identifier)
         return nullptr;
-    auto value = static_ptr_cast<CSS::StringStyleValue>(parsed_value);
-    if (value->to_string() == "dotted")
+    auto value = static_ptr_cast<CSS::IdentifierStyleValue>(parsed_value);
+    if (value->id() == CSS::ValueID::Dotted)
         return value;
-    if (value->to_string() == "dashed")
+    if (value->id() == CSS::ValueID::Dashed)
         return value;
-    if (value->to_string() == "solid")
+    if (value->id() == CSS::ValueID::Solid)
         return value;
-    if (value->to_string() == "double")
+    if (value->id() == CSS::ValueID::Double)
         return value;
-    if (value->to_string() == "groove")
+    if (value->id() == CSS::ValueID::Groove)
         return value;
-    if (value->to_string() == "ridge")
+    if (value->id() == CSS::ValueID::Ridge)
+        return value;
+    if (value->id() == CSS::ValueID::None)
+        return value;
+    if (value->id() == CSS::ValueID::Hidden)
+        return value;
+    if (value->id() == CSS::ValueID::Inset)
+        return value;
+    if (value->id() == CSS::ValueID::Outset)
         return value;
     return nullptr;
 }
