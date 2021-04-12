@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Format.h>
 #include <AK/MemMem.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
@@ -376,7 +377,7 @@ int sys_nerr = EMAXERRNO;
 char* strerror(int errnum)
 {
     if (errnum < 0 || errnum >= EMAXERRNO) {
-        printf("strerror() missing string for errnum=%d\n", errnum);
+        dbgln("strerror() missing string for errnum={}", errnum);
         return const_cast<char*>("Unknown error");
     }
     return const_cast<char*>(sys_errlist[errnum]);
@@ -385,7 +386,7 @@ char* strerror(int errnum)
 char* strsignal(int signum)
 {
     if (signum >= NSIG) {
-        printf("strsignal() missing string for signum=%d\n", signum);
+        dbgln("strsignal() missing string for signum={}", signum);
         return const_cast<char*>("Unknown signal");
     }
     return const_cast<char*>(sys_siglist[signum]);
