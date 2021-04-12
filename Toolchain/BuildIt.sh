@@ -239,15 +239,6 @@ pushd "$DIR/Build/$ARCH"
                                             --enable-lto \
                                             ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
 
-        echo "XXX build gcc and libgcc"
-        "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
-        if [ "$(uname -s)" = "OpenBSD" ]; then
-            ln -sf liblto_plugin.so.0.0 gcc/liblto_plugin.so
-        fi
-        "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
-        echo "XXX install gcc and libgcc"
-        "$MAKE" install-gcc install-target-libgcc || exit 1
-
         echo "XXX serenity libc and libm headers"
         mkdir -p "$BUILD"
         pushd "$BUILD"
@@ -260,6 +251,15 @@ pushd "$DIR/Build/$ARCH"
             done
             unset SRC_ROOT
         popd
+
+        echo "XXX build gcc and libgcc"
+        "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
+        if [ "$(uname -s)" = "OpenBSD" ]; then
+            ln -sf liblto_plugin.so.0.0 gcc/liblto_plugin.so
+        fi
+        "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
+        echo "XXX install gcc and libgcc"
+        "$MAKE" install-gcc install-target-libgcc || exit 1
 
         echo "XXX build libstdc++"
         "$MAKE" -j "$MAKEJOBS" all-target-libstdc++-v3 || exit 1
