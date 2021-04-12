@@ -102,6 +102,11 @@ static inline int __inline_isupper(int c)
     return _ctype_[(unsigned char)(c)] & (_U);
 }
 
+static inline int __inline_isblank(int c)
+{
+    return _ctype_[(unsigned char)(c)] & (_B) || (c == '\t');
+}
+
 static inline int __inline_toascii(int c)
 {
     return c & 127;
@@ -137,6 +142,7 @@ int isprint(int c);
 int isgraph(int c);
 int islower(int c);
 int isupper(int c);
+int isblank(int c);
 int toascii(int c);
 int tolower(int c);
 int toupper(int c);
@@ -156,6 +162,7 @@ int toupper(int c);
 #define isgraph __inline_isgraph
 #define islower __inline_islower
 #define isupper __inline_isupper
+#define isblank __inline_isblank
 #define toascii __inline_toascii
 #define tolower __inline_tolower
 #define toupper __inline_toupper
