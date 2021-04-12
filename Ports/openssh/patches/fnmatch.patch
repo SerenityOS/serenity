@@ -1,0 +1,20 @@
+diff -Naur openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676/openbsd-compat/fnmatch.h openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676.serenity/openbsd-compat/fnmatch.h
+--- openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676/openbsd-compat/fnmatch.h	2021-04-12 13:48:40.263056972 +0200
++++ openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676.serenity/openbsd-compat/fnmatch.h	2021-04-12 13:48:03.432331975 +0200
+@@ -34,6 +34,16 @@
+ 
+ /* OPENBSD ORIGINAL: include/fnmatch.h */
+ 
++#ifdef __serenity__
++#define	FNM_NOMATCH	1	/* Match failed. */
++
++#define	FNM_NOESCAPE	0x01	/* Disable backslash escaping. */
++#define	FNM_PATHNAME	0x02	/* Slash must be matched by slash. */
++#define	FNM_PERIOD	0x04	/* Period must be matched by period. */
++#define	FNM_CASEFOLD	0x10	/* Case insensitive search. */
++#define	FNM_LEADING_DIR	0x08	/* Ignore /<tail> after Imatch. */
++#endif
++
+ #ifndef HAVE_FNMATCH_H
+ /* Ensure we define FNM_CASEFOLD */
+ #define __BSD_VISIBLE 1
