@@ -56,7 +56,7 @@ void CookieJar::set_cookie(const URL& url, const String& cookie_string)
     if (!domain.has_value())
         return;
 
-    auto new_cookie = parse_cookie(cookie_string);
+    auto new_cookie = parse_cookie(cookie_string, *domain);
     if (!new_cookie.has_value())
         return;
 
@@ -86,7 +86,7 @@ Optional<String> CookieJar::canonicalize_domain(const URL& url)
     return url.host().to_lowercase();
 }
 
-Optional<Cookie> CookieJar::parse_cookie(const String& cookie_string)
+Optional<Cookie> CookieJar::parse_cookie(const String& cookie_string, String default_domain)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2
     StringView name_value_pair;
@@ -131,6 +131,7 @@ Optional<Cookie> CookieJar::parse_cookie(const String& cookie_string)
     Cookie cookie { name, value };
 
     cookie.expiry_time = Core::DateTime::create(AK::NumericLimits<unsigned>::max());
+    cookie.domain = move(default_domain);
 
     parse_attributes(cookie, unparsed_attributes);
     return cookie;
@@ -231,9 +232,27 @@ void CookieJar::on_max_age_attribute(Cookie& cookie, StringView attribute_value)
     }
 }
 
-void CookieJar::on_domain_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+void CookieJar::on_domain_attribute(Cookie& cookie, StringView attribute_value)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2.3
+
+    // If the attribute-value is empty, the behavior is undefined. However, the user agent SHOULD ignore the cookie-av entirely.
+    if (attribute_value.is_empty())
+        return;
+
+    StringView cookie_domain;
+
+    // If the first character of the attribute-value string is %x2E ("."):
+    if (attribute_value[0] == '.') {
+        // Let cookie-domain be the attribute-value without the leading %x2E (".") character.
+        cookie_domain = attribute_value.substring_view(1);
+    } else {
+        // Let cookie-domain be the entire attribute-value.
+        cookie_domain = attribute_value;
+    }
+
+    // Convert the cookie-domain to lower case.
+    cookie.domain = String(cookie_domain).to_lowercase();
 }
 
 void CookieJar::on_path_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
