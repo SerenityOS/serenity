@@ -440,6 +440,10 @@ Tab::Tab(Type type)
     debug_menu.add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, Key_H }, [&](auto&) {
         m_history.dump();
     }));
+    debug_menu.add_action(GUI::Action::create("Dump C&ookies", [&](auto&) {
+        if (on_dump_cookies)
+            on_dump_cookies();
+    }));
     debug_menu.add_separator();
     auto line_box_borders_action = GUI::Action::create_checkable(
         "&Line Box Borders", [this](auto& action) {
