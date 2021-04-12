@@ -105,6 +105,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         map_fn = &callback.as_function();
     }
 
+    auto this_arg = vm.argument(2);
+
     // Array.from() lets you create Arrays from:
     if (auto size = object->indexed_properties().array_like_size()) {
         // * array-like objects (objects with a length property and indexed elements)
@@ -116,7 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
                 if (vm.exception())
                     return {};
 
-                auto map_fn_result = vm.call(*map_fn, value, element);
+                auto map_fn_result = vm.call(*map_fn, this_arg, element, Value((i32)i));
                 if (vm.exception())
                     return {};
 
@@ -130,12 +132,14 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         array->set_indexed_property_elements(move(elements));
     } else {
         // * iterable objects
+        i32 i = 0;
         get_iterator_values(global_object, value, [&](Value element) {
             if (vm.exception())
                 return IterationDecision::Break;
 
             if (map_fn) {
-                auto map_fn_result = vm.call(*map_fn, value, element);
+                auto map_fn_result = vm.call(*map_fn, this_arg, element, Value(i));
+                i++;
                 if (vm.exception())
                     return IterationDecision::Break;
 
@@ -149,8 +153,6 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         if (vm.exception())
             return {};
     }
-
-    // FIXME: if interpreter.argument_count() >= 3: thisArg
 
     return array;
 }
