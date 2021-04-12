@@ -25,6 +25,7 @@
  */
 
 #include "CookieJar.h"
+#include <AK/AllOf.h>
 #include <AK/NumericLimits.h>
 #include <AK/URL.h>
 #include <ctype.h>
@@ -227,9 +228,11 @@ void CookieJar::process_attribute(Cookie& cookie, StringView attribute_name, Str
     }
 }
 
-void CookieJar::on_expires_attribute([[maybe_unused]] Cookie& cookie, [[maybe_unused]] StringView attribute_value)
+void CookieJar::on_expires_attribute(Cookie& cookie, StringView attribute_value)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2.1
+    if (auto expiry_time = parse_date_time(attribute_value); expiry_time.has_value())
+        cookie.expiry_time = *expiry_time;
 }
 
 void CookieJar::on_max_age_attribute(Cookie& cookie, StringView attribute_value)
@@ -301,6 +304,117 @@ void CookieJar::on_http_only_attribute(Cookie& cookie)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2.6
     cookie.http_only = true;
+}
+
+Optional<Core::DateTime> CookieJar::parse_date_time(StringView date_string)
+{
+    // https://tools.ietf.org/html/rfc6265#section-5.1.1
+    unsigned hour = 0;
+    unsigned minute = 0;
+    unsigned second = 0;
+    unsigned day_of_month = 0;
+    unsigned month = 0;
+    unsigned year = 0;
+
+    auto to_uint = [](StringView token, unsigned& result) {
+        if (!all_of(token.begin(), token.end(), isdigit))
+            return false;
+
+        if (auto converted = token.to_uint(); converted.has_value()) {
+            result = *converted;
+            return true;
+        }
+
+        return false;
+    };
+
+    auto parse_time = [&](StringView token) {
+        Vector<StringView> parts = token.split_view(':');
+        if (parts.size() != 3)
+            return false;
+
+        for (const auto& part : parts) {
+            if (part.is_empty() || part.length() > 2)
+                return false;
+        }
+
+        return to_uint(parts[0], hour) && to_uint(parts[1], minute) && to_uint(parts[2], second);
+    };
+
+    auto parse_day_of_month = [&](StringView token) {
+        if (token.is_empty() || token.length() > 2)
+            return false;
+        return to_uint(token, day_of_month);
+    };
+
+    auto parse_month = [&](StringView token) {
+        static const char* months[] { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
+
+        for (unsigned i = 0; i < 12; ++i) {
+            if (token.equals_ignoring_case(months[i])) {
+                month = i + 1;
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    auto parse_year = [&](StringView token) {
+        if (token.length() != 2 && token.length() != 4)
+            return false;
+        return to_uint(token, year);
+    };
+
+    auto is_delimeter = [](char ch) {
+        return ch == 0x09 || (ch >= 0x20 && ch <= 0x2f) || (ch >= 0x3b && ch <= 0x40) || (ch >= 0x5b && ch <= 0x60) || (ch >= 0x7b && ch <= 0x7e);
+    };
+
+    // 1. Using the grammar below, divide the cookie-date into date-tokens.
+    Vector<StringView> date_tokens = date_string.split_view_if(is_delimeter);
+
+    // 2. Process each date-token sequentially in the order the date-tokens appear in the cookie-date.
+    bool found_time = false;
+    bool found_day_of_month = false;
+    bool found_month = false;
+    bool found_year = false;
+
+    for (const auto& date_token : date_tokens) {
+        if (!found_time && parse_time(date_token)) {
+            found_time = true;
+        } else if (!found_day_of_month && parse_day_of_month(date_token)) {
+            found_day_of_month = true;
+        } else if (!found_month && parse_month(date_token)) {
+            found_month = true;
+        } else if (!found_year && parse_year(date_token)) {
+            found_year = true;
+        }
+    }
+
+    // 3. If the year-value is greater than or equal to 70 and less than or equal to 99, increment the year-value by 1900.
+    if (year >= 70 && year <= 99)
+        year += 1900;
+
+    // 4. If the year-value is greater than or equal to 0 and less than or equal to 69, increment the year-value by 2000.
+    if (year <= 69)
+        year += 2000;
+
+    // 5. Abort these steps and fail to parse the cookie-date if:
+    if (!found_time || !found_day_of_month || !found_month || !found_year)
+        return {};
+    if (day_of_month < 1 || day_of_month > 31)
+        return {};
+    if (year < 1601)
+        return {};
+    if (hour > 23)
+        return {};
+    if (minute > 59)
+        return {};
+    if (second > 59)
+        return {};
+
+    // FIXME: Fail on dates that do not exist.
+    return Core::DateTime::create(year, month, day_of_month, hour, minute, second);
 }
 
 }

@@ -61,6 +61,7 @@ private:
     static void on_path_attribute(Cookie& cookie, StringView attribute_value);
     static void on_secure_attribute(Cookie& cookie);
     static void on_http_only_attribute(Cookie& cookie);
+    static Optional<Core::DateTime> parse_date_time(StringView date_string);
 
     HashMap<String, Vector<Cookie>> m_cookies;
 };
