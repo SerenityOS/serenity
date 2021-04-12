@@ -136,3 +136,15 @@ test("brace quantifier with invalid contents", () => {
     expect(res.length).toBe(1);
     expect(res[0]).toBe("{{lit-746579221856449}}");
 });
+
+// #6256
+test("empty character class semantics", () => {
+    // Should not match zero-length strings.
+    let res = /[]/.exec("");
+    expect(res).toBe(null);
+
+    // Inverse form, should match anything.
+    res = /[^]/.exec("x");
+    expect(res.length).toBe(1);
+    expect(res[0]).toBe("x");
+});

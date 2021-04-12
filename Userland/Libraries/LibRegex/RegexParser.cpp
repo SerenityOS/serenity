@@ -1418,6 +1418,9 @@ bool ECMA262Parser::parse_character_class(ByteCode& stack, size_t& match_length_
 
     if (match(TokenType::RightBracket)) {
         consume();
+        // Should only have at most an 'Inverse'
+        VERIFY(compares.size() <= 1);
+        stack.insert_bytecode_compare_values(move(compares));
         return true;
     }
 
