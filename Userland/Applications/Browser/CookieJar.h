@@ -30,12 +30,14 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/DateTime.h>
 
 namespace Browser {
 
 struct Cookie {
     String name;
     String value;
+    Core::DateTime expiry_time {};
 };
 
 class CookieJar {
