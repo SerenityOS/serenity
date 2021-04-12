@@ -252,7 +252,7 @@ static void parse_variable_location(const Dwarf::DIE& variable_die, DebugInfo::V
     }
 }
 
-OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters& regs) const
+OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters& regs, u32 address_offset) const
 {
     VERIFY(variable_die.tag() == Dwarf::EntryTag::Variable
         || variable_die.tag() == Dwarf::EntryTag::Member
@@ -290,6 +290,7 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
         }
     } else {
         parse_variable_location(variable_die, *variable_info, regs);
+        variable_info->location_data.address += address_offset;
     }
 
     if (type_die.has_value()) {
@@ -301,20 +302,19 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
         type_die.value().for_each_child([&](const Dwarf::DIE& member) {
             if (member.is_null())
                 return;
-            auto member_variable = create_variable_info(member, regs);
+            if (member.tag() == Dwarf::EntryTag::SubProgram)
+                return;
+
+            auto member_variable = create_variable_info(member, regs, variable_info->location_data.address);
             VERIFY(member_variable);
 
             if (type_die.value().tag() == Dwarf::EntryTag::EnumerationType) {
                 member_variable->parent = type_info.ptr();
                 type_info->members.append(member_variable.release_nonnull());
             } else {
-                if (variable_info->location_type == DebugInfo::VariableInfo::LocationType::None) {
+                if (variable_info->location_type == DebugInfo::VariableInfo::LocationType::None)
                     return;
-                }
                 VERIFY(variable_info->location_type == DebugInfo::VariableInfo::LocationType::Address);
-
-                if (member_variable->location_type == DebugInfo::VariableInfo::LocationType::Address)
-                    member_variable->location_data.address += variable_info->location_data.address;
 
                 member_variable->parent = variable_info.ptr();
                 variable_info->members.append(member_variable.release_nonnull());
