@@ -2013,7 +2013,7 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         }
     }
 
-    return result;
+    return result.value_or(js_undefined());
 }
 
 Value CatchClause::execute(Interpreter& interpreter, GlobalObject&) const
