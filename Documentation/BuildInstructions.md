@@ -165,7 +165,7 @@ $ doas pkg_add coreutils qemu sudo
 ### FreeBSD prerequisites
 
 ```console
-$ pkg add bash coreutils git gmake ninja sudo
+$ pkg install bash coreutils git gmake ninja sudo
 ```
 
 ### Windows prerequisites
