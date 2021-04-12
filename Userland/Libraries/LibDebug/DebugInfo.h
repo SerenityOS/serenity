@@ -140,7 +140,7 @@ private:
     void prepare_variable_scopes();
     void prepare_lines();
     void parse_scopes_impl(const Dwarf::DIE& die);
-    OwnPtr<VariableInfo> create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters&) const;
+    OwnPtr<VariableInfo> create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters&, u32 address_offset = 0) const;
 
     NonnullOwnPtr<const ELF::Image> m_elf;
     String m_source_root;
