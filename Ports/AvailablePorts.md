@@ -17,6 +17,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`cmatrix`](cmatrix/)          | cmatrix                                       |                   | https://github.com/abishekvashok/cmatrix              |
 | [`curl`](curl/)                | curl                                          | 7.65.3            | https://curl.se/                                      |
 | [`dash`](dash/)                | DASH                                          | 0.5.10.2          | http://gondor.apana.org.au/~herbert/dash              |
+| [`dialog`](dialog/)            | Dialog                                        | 1.3-20210324      | https://invisible-island.net/dialog/                  |
 | [`diffutils`](diffutils/)      | GNU Diffutils                                 | 3.5               | https://www.gnu.org/software/diffutils/               |
 | [`dmidecode`](dmidecode/)      | dmidecode                                     | 3.3               | https://github.com/mirror/dmidecode                   |
 | [`doom`](doom/)                | DOOM                                          |                   | https://github.com/SerenityOS/SerenityDOOM            |
