@@ -87,7 +87,7 @@ UNMAP_AFTER_INIT void initialize()
 typedef KResultOr<FlatPtr> (Process::*Handler)(FlatPtr, FlatPtr, FlatPtr);
 typedef KResultOr<FlatPtr> (Process::*HandlerWithRegisterState)(RegisterState&);
 #define __ENUMERATE_SYSCALL(x) reinterpret_cast<Handler>(&Process::sys$##x),
-static Handler s_syscall_table[] = {
+static const Handler s_syscall_table[] = {
     ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
 };
 #undef __ENUMERATE_SYSCALL
