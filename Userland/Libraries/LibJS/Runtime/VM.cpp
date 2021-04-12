@@ -290,10 +290,10 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     return this_value;
 }
 
-void VM::throw_exception(Exception* exception)
+void VM::throw_exception(Exception& exception)
 {
     if (should_log_exceptions()) {
-        auto value = exception->value();
+        auto value = exception.value();
         if (value.is_object()) {
             auto& object = value.as_object();
             auto name = object.get_without_side_effects(names.name).value_or(js_undefined());
@@ -317,7 +317,7 @@ void VM::throw_exception(Exception* exception)
         }
     }
 
-    m_exception = exception;
+    set_exception(exception);
     unwind(ScopeType::Try);
 }
 

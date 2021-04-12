@@ -86,11 +86,8 @@ public:
     void push_interpreter(Interpreter&);
     void pop_interpreter(Interpreter&);
 
-    Exception* exception()
-    {
-        return m_exception;
-    }
-
+    Exception* exception() { return m_exception; }
+    void set_exception(Exception& exception) { m_exception = &exception; }
     void clear_exception() { m_exception = nullptr; }
 
     class InterpreterExecutionScope {
@@ -207,10 +204,10 @@ public:
         return throw_exception(global_object, T::create(global_object, forward<Args>(args)...));
     }
 
-    void throw_exception(Exception*);
+    void throw_exception(Exception&);
     void throw_exception(GlobalObject& global_object, Value value)
     {
-        return throw_exception(heap().allocate<Exception>(global_object, value));
+        return throw_exception(*heap().allocate<Exception>(global_object, value));
     }
 
     template<typename T, typename... Args>
