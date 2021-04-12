@@ -26,7 +26,6 @@
 
 #include "CookieJar.h"
 #include <AK/AllOf.h>
-#include <AK/NumericLimits.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <ctype.h>
@@ -180,7 +179,7 @@ Optional<Cookie> CookieJar::parse_cookie(const String& cookie_string, String def
     // 6. The cookie-name is the name string, and the cookie-value is the value string.
     Cookie cookie { name, value };
 
-    cookie.expiry_time = Core::DateTime::create(AK::NumericLimits<unsigned>::max());
+    cookie.expiry_time = Core::DateTime::create(9999, 12, 31, 23, 59, 59);
     cookie.domain = move(default_domain);
     cookie.path = move(default_path);
 
