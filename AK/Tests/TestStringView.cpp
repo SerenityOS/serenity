@@ -164,6 +164,12 @@ TEST_CASE(find_last_of)
 
     EXPECT_EQ(test_string_view.find_last_of('3').has_value(), false);
     EXPECT_EQ(test_string_view.find_last_of("fghi").has_value(), false);
+
+    test_string_view = "/";
+    EXPECT_EQ(test_string_view.find_last_of('/').has_value(), true);
+    EXPECT_EQ(test_string_view.find_last_of('/').value(), 0U);
+    EXPECT_EQ(test_string_view.find_last_of("/").has_value(), true);
+    EXPECT_EQ(test_string_view.find_last_of("/").value(), 0U);
 }
 
 TEST_CASE(split_view)
