@@ -11,6 +11,7 @@ set(SOURCES
     Bindings/ScriptExecutionContext.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
+    Cookie/ParsedCookie.cpp
     CSS/CSSImportRule.cpp
     CSS/CSSRule.cpp
     CSS/CSSStyleDeclaration.cpp
