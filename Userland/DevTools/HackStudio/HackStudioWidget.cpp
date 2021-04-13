@@ -676,6 +676,7 @@ void HackStudioWidget::initialize_debugger()
                 m_debug_info_widget->program_stopped();
                 m_disassembly_widget->program_stopped();
                 m_stop_action->set_enabled(false);
+                m_debugger_thread.clear();
                 HackStudioWidget::hide_action_tabs();
                 GUI::MessageBox::show(window(), "Program Exited", "Debugger", GUI::MessageBox::Type::Information);
             }));
