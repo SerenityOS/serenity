@@ -7,6 +7,7 @@
 
 #include "Editor.h"
 #include "Debugger/Debugger.h"
+#include "Debugger/EvaluateExpressionDialog.h"
 #include "EditorWrapper.h"
 #include "HackStudio.h"
 #include "Language.h"
@@ -16,6 +17,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCpp/SyntaxHighlighter.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
@@ -42,6 +44,15 @@ Editor::Editor()
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
     m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
+    m_evaluate_expression_action = GUI::Action::create("Evaluate expression", { Mod_Ctrl, Key_E }, [this](auto&) {
+        if (!execution_position().has_value()) {
+            GUI::MessageBox::show(window(), "Program is not running", "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+        auto dialog = EvaluateExpressionDialog::construct(window());
+        dialog->exec();
+    });
+    add_custom_context_menu_action(*m_evaluate_expression_action);
 }
 
 Editor::~Editor()
