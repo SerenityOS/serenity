@@ -143,7 +143,7 @@ public:
     String active_window_shadow_path() const { return path(PathRole::ActiveWindowShadow); }
     String inactive_window_shadow_path() const { return path(PathRole::InactiveWindowShadow); }
     String menu_shadow_path() const { return path(PathRole::MenuShadow); }
-    String task_bar_shadow_path() const { return path(PathRole::TaskBarShadow); }
+    String taskbar_shadow_path() const { return path(PathRole::TaskbarShadow); }
     String tooltip_shadow_path() const { return path(PathRole::TooltipShadow); }
 
     Color color(ColorRole role) const { return m_impl->color(role); }

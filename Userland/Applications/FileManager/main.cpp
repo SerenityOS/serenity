@@ -42,7 +42,7 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/BreadcrumbBar.h>
+#include <LibGUI/Breadcrumbbar.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/FileIconProvider.h>
@@ -50,15 +50,15 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ProgressBar.h>
+#include <LibGUI/Progressbar.h>
 #include <LibGUI/Splitter.h>
-#include <LibGUI/StatusBar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TextEditor.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -411,16 +411,16 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     widget.load_from_gml(file_manager_window_gml);
 
-    auto& toolbar_container = *widget.find_descendant_of_type_named<GUI::ToolBarContainer>("toolbar_container");
-    auto& main_toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("main_toolbar");
-    auto& location_toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("location_toolbar");
+    auto& toolbar_container = *widget.find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
+    auto& main_toolbar = *widget.find_descendant_of_type_named<GUI::Toolbar>("main_toolbar");
+    auto& location_toolbar = *widget.find_descendant_of_type_named<GUI::Toolbar>("location_toolbar");
     location_toolbar.layout()->set_margins({ 6, 3, 6, 3 });
 
     auto& location_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("location_textbox");
 
-    auto& breadcrumb_toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("breadcrumb_toolbar");
+    auto& breadcrumb_toolbar = *widget.find_descendant_of_type_named<GUI::Toolbar>("breadcrumb_toolbar");
     breadcrumb_toolbar.layout()->set_margins({ 6, 0, 6, 0 });
-    auto& breadcrumb_bar = *widget.find_descendant_of_type_named<GUI::BreadcrumbBar>("breadcrumb_bar");
+    auto& breadcrumbbar = *widget.find_descendant_of_type_named<GUI::Breadcrumbbar>("breadcrumbbar");
 
     auto& splitter = *widget.find_descendant_of_type_named<GUI::HorizontalSplitter>("splitter");
     auto& tree_view = *widget.find_descendant_of_type_named<GUI::TreeView>("tree_view");
@@ -446,10 +446,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     // Open the root directory. FIXME: This is awkward.
     tree_view.toggle_index(directories_model->index(0, 0, {}));
 
-    auto& statusbar = *widget.find_descendant_of_type_named<GUI::StatusBar>("statusbar");
+    auto& statusbar = *widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
-    auto& progressbar = *widget.find_descendant_of_type_named<GUI::ProgressBar>("progressbar");
-    progressbar.set_format(GUI::ProgressBar::Format::ValueSlashMax);
+    auto& progressbar = *widget.find_descendant_of_type_named<GUI::Progressbar>("progressbar");
+    progressbar.set_format(GUI::Progressbar::Format::ValueSlashMax);
     progressbar.set_frame_shape(Gfx::FrameShape::Panel);
     progressbar.set_frame_shadow(Gfx::FrameShadow::Sunken);
     progressbar.set_frame_thickness(1);
@@ -537,11 +537,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     layout_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
         action.is_checked() ? statusbar.set_visible(true) : statusbar.set_visible(false);
-        config->write_bool_entry("Layout", "ShowStatusBar", action.is_checked());
+        config->write_bool_entry("Layout", "ShowStatusbar", action.is_checked());
         config->sync();
     });
 
-    auto show_statusbar = config->read_bool_entry("Layout", "ShowStatusBar", true);
+    auto show_statusbar = config->read_bool_entry("Layout", "ShowStatusbar", true);
     layout_statusbar_action->set_checked(show_statusbar);
     statusbar.set_visible(show_statusbar);
 
@@ -751,7 +751,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         refresh_tree_view();
     });
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
     auto& app_menu = menubar->add_menu("&File");
     app_menu.add_action(mkdir_action);
@@ -845,20 +845,20 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         {
             LexicalPath lexical_path(new_path);
 
-            auto segment_index_of_new_path_in_breadcrumb_bar = [&]() -> Optional<size_t> {
-                for (size_t i = 0; i < breadcrumb_bar.segment_count(); ++i) {
-                    if (breadcrumb_bar.segment_data(i) == new_path)
+            auto segment_index_of_new_path_in_breadcrumbbar = [&]() -> Optional<size_t> {
+                for (size_t i = 0; i < breadcrumbbar.segment_count(); ++i) {
+                    if (breadcrumbbar.segment_data(i) == new_path)
                         return i;
                 }
                 return {};
             }();
 
-            if (segment_index_of_new_path_in_breadcrumb_bar.has_value()) {
-                breadcrumb_bar.set_selected_segment(segment_index_of_new_path_in_breadcrumb_bar.value());
+            if (segment_index_of_new_path_in_breadcrumbbar.has_value()) {
+                breadcrumbbar.set_selected_segment(segment_index_of_new_path_in_breadcrumbbar.value());
             } else {
-                breadcrumb_bar.clear_segments();
+                breadcrumbbar.clear_segments();
 
-                breadcrumb_bar.append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
+                breadcrumbbar.append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
                 StringBuilder builder;
 
                 for (auto& part : lexical_path.parts()) {
@@ -866,13 +866,13 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                     builder.append('/');
                     builder.append(part);
 
-                    breadcrumb_bar.append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
+                    breadcrumbbar.append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
                 }
 
-                breadcrumb_bar.set_selected_segment(breadcrumb_bar.segment_count() - 1);
+                breadcrumbbar.set_selected_segment(breadcrumbbar.segment_count() - 1);
 
-                breadcrumb_bar.on_segment_click = [&](size_t segment_index) {
-                    directory_view.open(breadcrumb_bar.segment_data(segment_index));
+                breadcrumbbar.on_segment_click = [&](size_t segment_index) {
+                    directory_view.open(breadcrumbbar.segment_data(segment_index));
                 };
             }
         }
@@ -1045,18 +1045,18 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             refresh_tree_view();
     };
 
-    breadcrumb_bar.on_segment_drop = [&](size_t segment_index, const GUI::DropEvent& event) {
+    breadcrumbbar.on_segment_drop = [&](size_t segment_index, const GUI::DropEvent& event) {
         if (!event.mime_data().has_urls())
             return;
-        copy_urls_to_directory(event.mime_data().urls(), breadcrumb_bar.segment_data(segment_index));
+        copy_urls_to_directory(event.mime_data().urls(), breadcrumbbar.segment_data(segment_index));
     };
 
-    breadcrumb_bar.on_segment_drag_enter = [&](size_t, GUI::DragEvent& event) {
+    breadcrumbbar.on_segment_drag_enter = [&](size_t, GUI::DragEvent& event) {
         if (event.mime_types().contains_slow("text/uri-list"))
             event.accept();
     };
 
-    breadcrumb_bar.on_doubleclick = [&](const GUI::MouseEvent&) {
+    breadcrumbbar.on_doubleclick = [&](const GUI::MouseEvent&) {
         go_to_location_action->activate();
     };
 

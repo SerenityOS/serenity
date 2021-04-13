@@ -977,7 +977,7 @@ bool Window::hit_test(const Gfx::IntPoint& point, bool include_frame) const
     return color.alpha() >= threshold;
 }
 
-void Window::set_menubar(MenuBar* menubar)
+void Window::set_menubar(Menubar* menubar)
 {
     if (m_menubar == menubar)
         return;

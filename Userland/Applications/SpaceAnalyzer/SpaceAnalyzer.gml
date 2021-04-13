@@ -3,10 +3,10 @@
         spacing: 0
     }
 
-    @GUI::ToolBarContainer {
-        @GUI::BreadcrumbBar {
+    @GUI::ToolbarContainer {
+        @GUI::Breadcrumbbar {
             fixed_height: 25
-            name: "breadcrumb_bar"
+            name: "breadcrumbbar"
         }
     }
 
@@ -14,7 +14,7 @@
         name: "tree_map"
     }
 
-    @GUI::StatusBar {
-        name: "status_bar"
+    @GUI::Statusbar {
+        name: "statusbar"
     }
 }

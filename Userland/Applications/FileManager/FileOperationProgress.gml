@@ -36,9 +36,9 @@
         }
     }
 
-    @GUI::ProgressBar {
+    @GUI::Progressbar {
         fixed_height: 22
-        name: "current_file_progress_bar"
+        name: "current_file_progressbar"
         min: 0
     }
 
@@ -62,9 +62,9 @@
         }
     }
 
-    @GUI::ProgressBar {
+    @GUI::Progressbar {
         fixed_height: 22
-        name: "overall_progress_bar"
+        name: "overall_progressbar"
         min: 0
     }
 

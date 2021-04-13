@@ -85,7 +85,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
                 auto emoji_text = builder.to_string();
                 auto& button = horizontal_container.add<Button>(emoji_text);
                 button.set_min_size(16, 16);
-                button.set_button_style(Gfx::ButtonStyle::CoolBar);
+                button.set_button_style(Gfx::ButtonStyle::Coolbar);
                 button.on_click = [this, button = &button](auto) {
                     m_selected_emoji_text = button->text();
                     done(ExecOK);

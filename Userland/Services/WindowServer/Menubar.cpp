@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,36 +24,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "Menubar.h"
+#include "Menu.h"
 
-#include <AK/Forward.h>
-#include <AK/NonnullRefPtrVector.h>
-#include <LibCore/Object.h>
-#include <LibGUI/Forward.h>
+namespace WindowServer {
 
-namespace GUI {
+Menubar::Menubar(ClientConnection& client, int menubar_id)
+    : m_client(client)
+    , m_menubar_id(menubar_id)
+{
+}
 
-class MenuBar : public Core::Object {
-    C_OBJECT(MenuBar);
+Menubar::~Menubar()
+{
+}
 
-public:
-    ~MenuBar();
-
-    Menu& add_menu(String name);
-
-    void notify_added_to_window(Badge<Window>);
-    void notify_removed_from_window(Badge<Window>);
-
-    int menubar_id() const { return m_menubar_id; }
-
-private:
-    MenuBar();
-
-    int realize_menubar();
-    void unrealize_menubar();
-
-    int m_menubar_id { -1 };
-    NonnullRefPtrVector<Menu> m_menus;
-};
+void Menubar::add_menu(Menu& menu)
+{
+    m_menus.append(&menu);
+}
 
 }

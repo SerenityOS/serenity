@@ -35,12 +35,12 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/StatusBar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
-#include <LibGUI/ToolBar.h>
+#include <LibGUI/Toolbar.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -67,7 +67,7 @@ HexEditorWidget::HexEditorWidget()
             update_title();
     };
 
-    m_statusbar = add<GUI::StatusBar>(5);
+    m_statusbar = add<GUI::Statusbar>(5);
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         if (m_document_dirty) {
@@ -135,7 +135,7 @@ HexEditorWidget::~HexEditorWidget()
 {
 }
 
-void HexEditorWidget::initialize_menubar(GUI::MenuBar& menubar)
+void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
 {
     auto& app_menu = menubar.add_menu("File");
     app_menu.add_action(*m_new_action);

@@ -34,9 +34,9 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/StatusBar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
 #include <time.h>
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 
     auto& board_view = main_widget.add<BoardView>(&game.board());
     board_view.set_focus(true);
-    auto& statusbar = main_widget.add<GUI::StatusBar>();
+    auto& statusbar = main_widget.add<GUI::Statusbar>();
 
     auto update = [&]() {
         board_view.set_board(&game.board());
@@ -178,7 +178,7 @@ int main(int argc, char** argv)
         }
     };
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
     auto& app_menu = menubar->add_menu("File");
 

@@ -72,8 +72,8 @@ void DebugInfoWidget::init_toolbar()
 DebugInfoWidget::DebugInfoWidget()
 {
     set_layout<GUI::VerticalBoxLayout>();
-    auto& toolbar_container = add<GUI::ToolBarContainer>();
-    m_toolbar = toolbar_container.add<GUI::ToolBar>();
+    auto& toolbar_container = add<GUI::ToolbarContainer>();
+    m_toolbar = toolbar_container.add<GUI::Toolbar>();
     init_toolbar();
     auto& bottom_box = add<GUI::Widget>();
     bottom_box.set_layout<GUI::HorizontalBoxLayout>();

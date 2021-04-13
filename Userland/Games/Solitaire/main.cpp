@@ -29,7 +29,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
         window->set_title(String::formatted("Score: {} - Solitaire", score));
     });
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("Game");
 
     app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {

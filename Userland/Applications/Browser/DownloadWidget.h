@@ -29,7 +29,7 @@
 #include <AK/URL.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/FileStream.h>
-#include <LibGUI/ProgressBar.h>
+#include <LibGUI/Progressbar.h>
 #include <LibGUI/Widget.h>
 #include <LibProtocol/Download.h>
 
@@ -50,7 +50,7 @@ private:
     URL m_url;
     String m_destination_path;
     RefPtr<Protocol::Download> m_download;
-    RefPtr<GUI::ProgressBar> m_progress_bar;
+    RefPtr<GUI::Progressbar> m_progressbar;
     RefPtr<GUI::Label> m_progress_label;
     RefPtr<GUI::Button> m_cancel_button;
     RefPtr<GUI::Button> m_close_button;

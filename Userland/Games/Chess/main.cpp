@@ -33,7 +33,7 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <unistd.h>
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
     widget.set_coordinates(config->read_bool_entry("Style", "Coordinates", true));
     widget.set_show_available_moves(config->read_bool_entry("Style", "ShowAvailableMoves", true));
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("Game");
 
     app_menu.add_action(GUI::Action::create("Resign", { Mod_None, Key_F3 }, [&](auto&) {

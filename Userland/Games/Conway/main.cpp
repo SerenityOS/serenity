@@ -28,7 +28,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     auto& game = window->set_main_widget<Game>();
     window->set_minimum_size(game.columns(), game.rows());
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
     auto& app_menu = menubar->add_menu("Game");
 

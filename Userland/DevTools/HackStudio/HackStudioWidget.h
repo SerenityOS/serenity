@@ -41,7 +41,7 @@
 #include "ProjectFile.h"
 #include "TerminalWrapper.h"
 #include <LibGUI/ActionGroup.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
 #include <LibThread/Thread.h>
@@ -62,7 +62,7 @@ public:
     void set_current_editor_wrapper(RefPtr<EditorWrapper>);
 
     String currently_open_file() const { return m_currently_open_file; }
-    void initialize_menubar(GUI::MenuBar&);
+    void initialize_menubar(GUI::Menubar&);
 
     Locator& locator()
     {
@@ -117,12 +117,12 @@ private:
     void create_form_editor(GUI::Widget& parent);
     void create_toolbar(GUI::Widget& parent);
     void create_action_tab(GUI::Widget& parent);
-    void create_app_menubar(GUI::MenuBar&);
-    void create_project_menubar(GUI::MenuBar&);
-    void create_edit_menubar(GUI::MenuBar&);
-    void create_build_menubar(GUI::MenuBar&);
-    void create_view_menubar(GUI::MenuBar&);
-    void create_help_menubar(GUI::MenuBar&);
+    void create_app_menubar(GUI::Menubar&);
+    void create_project_menubar(GUI::Menubar&);
+    void create_edit_menubar(GUI::Menubar&);
+    void create_build_menubar(GUI::Menubar&);
+    void create_view_menubar(GUI::Menubar&);
+    void create_help_menubar(GUI::Menubar&);
     void create_project_tab(GUI::Widget& parent);
     void configure_project_tree_view();
 

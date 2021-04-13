@@ -24,42 +24,58 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/Badge.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuItem.h>
+#include <LibGUI/Menubar.h>
+#include <LibGUI/WindowServerConnection.h>
 
-#include "Menu.h"
-#include <AK/Vector.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
+namespace GUI {
 
-namespace WindowServer {
+Menubar::Menubar()
+{
+}
 
-class MenuBar
-    : public RefCounted<MenuBar>
-    , public Weakable<MenuBar> {
-public:
-    static NonnullRefPtr<MenuBar> create(ClientConnection& client, int menubar_id) { return adopt(*new MenuBar(client, menubar_id)); }
-    ~MenuBar();
+Menubar::~Menubar()
+{
+    unrealize_menubar();
+}
 
-    ClientConnection& client() { return m_client; }
-    const ClientConnection& client() const { return m_client; }
-    int menubar_id() const { return m_menubar_id; }
-    void add_menu(Menu&);
+Menu& Menubar::add_menu(String name)
+{
+    auto& menu = add<Menu>(move(name));
+    m_menus.append(menu);
+    return menu;
+}
 
-    template<typename Callback>
-    void for_each_menu(Callback callback)
-    {
-        for (auto& menu : m_menus) {
-            if (callback(*menu) == IterationDecision::Break)
-                return;
-        }
+int Menubar::realize_menubar()
+{
+    return WindowServerConnection::the().send_sync<Messages::WindowServer::CreateMenubar>()->menubar_id();
+}
+
+void Menubar::unrealize_menubar()
+{
+    if (m_menubar_id == -1)
+        return;
+    WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyMenubar>(m_menubar_id);
+    m_menubar_id = -1;
+}
+
+void Menubar::notify_added_to_window(Badge<Window>)
+{
+    VERIFY(m_menubar_id == -1);
+    m_menubar_id = realize_menubar();
+    VERIFY(m_menubar_id != -1);
+    for (auto& menu : m_menus) {
+        int menu_id = menu.realize_menu();
+        VERIFY(menu_id != -1);
+        WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuToMenubar>(m_menubar_id, menu_id);
     }
+}
 
-private:
-    MenuBar(ClientConnection&, int menubar_id);
-
-    ClientConnection& m_client;
-    int m_menubar_id { 0 };
-    Vector<Menu*> m_menus;
-};
+void Menubar::notify_removed_from_window(Badge<Window>)
+{
+    unrealize_menubar();
+}
 
 }

@@ -36,7 +36,7 @@
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Splitter.h>
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
         });
     };
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("&File");
 
     app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {

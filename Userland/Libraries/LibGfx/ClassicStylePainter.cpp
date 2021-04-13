@@ -165,12 +165,12 @@ void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, co
     if (button_style == ButtonStyle::Normal)
         return paint_button_new(painter, rect, palette, pressed, checked, hovered, enabled, focused);
 
-    if (button_style == ButtonStyle::CoolBar && !enabled)
+    if (button_style == ButtonStyle::Coolbar && !enabled)
         return;
 
     Color button_color = palette.button();
     Color highlight_color = palette.threed_highlight();
-    Color shadow_color = button_style == ButtonStyle::CoolBar ? palette.threed_shadow1() : palette.threed_shadow2();
+    Color shadow_color = button_style == ButtonStyle::Coolbar ? palette.threed_shadow1() : palette.threed_shadow2();
 
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
@@ -178,7 +178,7 @@ void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, co
     if (pressed || checked) {
         // Base
         IntRect base_rect { 1, 1, rect.width() - 2, rect.height() - 2 };
-        if (button_style == ButtonStyle::CoolBar) {
+        if (button_style == ButtonStyle::Coolbar) {
             if (checked && !pressed) {
                 painter.fill_rect_with_dither_pattern(base_rect, palette.button().lightened(1.3f), Color());
             } else {
@@ -194,7 +194,7 @@ void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, co
         painter.draw_line({ rect.width() - 2, 1 }, { rect.width() - 2, rect.height() - 3 }, highlight_color);
         painter.draw_line({ 1, rect.height() - 2 }, { rect.width() - 2, rect.height() - 2 }, highlight_color);
     } else if (hovered) {
-        if (button_style == ButtonStyle::CoolBar) {
+        if (button_style == ButtonStyle::Coolbar) {
             // Base
             painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
         }
@@ -313,7 +313,7 @@ void ClassicStylePainter::paint_window_frame(Painter& painter, const IntRect& re
     painter.draw_line(rect.bottom_left().translated(3, -3), rect.bottom_right().translated(-3, -3), base_color);
 }
 
-void ClassicStylePainter::paint_progress_bar(Painter& painter, const IntRect& rect, const Palette& palette, int min, int max, int value, const StringView& text, Orientation orientation)
+void ClassicStylePainter::paint_progressbar(Painter& painter, const IntRect& rect, const Palette& palette, int min, int max, int value, const StringView& text, Orientation orientation)
 {
     // First we fill the entire widget with the gradient. This incurs a bit of
     // overdraw but ensures a consistent look throughout the progression.

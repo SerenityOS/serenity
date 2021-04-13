@@ -41,7 +41,7 @@
 #include <LibGUI/MultiView.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TextBox.h>
-#include <LibGUI/ToolBar.h>
+#include <LibGUI/Toolbar.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <string.h>
@@ -104,7 +104,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
     if (!widget.load_from_gml(file_picker_dialog_gml))
         VERIFY_NOT_REACHED();
 
-    auto& toolbar = *widget.find_descendant_of_type_named<GUI::ToolBar>("toolbar");
+    auto& toolbar = *widget.find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     toolbar.set_has_frame(false);
 
     m_location_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("location_textbox");

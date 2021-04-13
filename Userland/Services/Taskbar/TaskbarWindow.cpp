@@ -136,7 +136,7 @@ void TaskbarWindow::create_quick_launch_bar()
         const int button_size = 24;
         auto& button = quick_launch_bar.add<GUI::Button>();
         button.set_fixed_size(button_size, button_size);
-        button.set_button_style(Gfx::ButtonStyle::CoolBar);
+        button.set_button_style(Gfx::ButtonStyle::Coolbar);
         button.set_icon(af->icon().bitmap_for_size(16));
         button.set_tooltip(af->name());
         button.on_click = [app_executable](auto) {

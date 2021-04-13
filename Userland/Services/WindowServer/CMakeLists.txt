@@ -9,7 +9,7 @@ set(SOURCES
     Cursor.cpp
     EventLoop.cpp
     main.cpp
-    MenuBar.cpp
+        Menubar.cpp
     Menu.cpp
     MenuItem.cpp
     MenuManager.cpp

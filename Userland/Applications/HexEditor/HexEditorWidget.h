@@ -42,7 +42,7 @@ class HexEditorWidget final : public GUI::Widget {
 public:
     virtual ~HexEditorWidget() override;
     void open_file(const String& path);
-    void initialize_menubar(GUI::MenuBar&);
+    void initialize_menubar(GUI::Menubar&);
     bool request_close();
 
 private:
@@ -69,7 +69,7 @@ private:
 
     GUI::ActionGroup m_bytes_per_row_actions;
 
-    RefPtr<GUI::StatusBar> m_statusbar;
+    RefPtr<GUI::Statusbar> m_statusbar;
 
     bool m_document_dirty { false };
 };

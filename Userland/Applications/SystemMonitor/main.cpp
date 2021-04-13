@@ -49,15 +49,15 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/LazyWidget.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/StackWidget.h>
-#include <LibGUI/StatusBar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
-#include <LibGUI/ToolBar.h>
+#include <LibGUI/Toolbar.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
@@ -76,7 +76,7 @@ static NonnullRefPtr<GUI::Widget> build_devices_tab();
 static NonnullRefPtr<GUI::Widget> build_graphs_tab();
 static NonnullRefPtr<GUI::Widget> build_processors_tab();
 
-static RefPtr<GUI::StatusBar> statusbar;
+static RefPtr<GUI::Statusbar> statusbar;
 
 class UnavailableProcessWidget final : public GUI::Frame {
     C_OBJECT(UnavailableProcessWidget)
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
     tabwidget_container.layout()->set_margins({ 4, 0, 4, 4 });
     auto& tabwidget = tabwidget_container.add<GUI::TabWidget>();
 
-    statusbar = main_widget.add<GUI::StatusBar>(3);
+    statusbar = main_widget.add<GUI::Statusbar>(3);
 
     auto process_model = ProcessModel::create();
     process_model->on_state_update = [&](int process_count, int thread_count) {
@@ -340,7 +340,7 @@ int main(int argc, char** argv)
         },
         &process_table_view);
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("&File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
@@ -408,9 +408,9 @@ int main(int argc, char** argv)
     return app->exec();
 }
 
-class ProgressBarPaintingDelegate final : public GUI::TableCellPaintingDelegate {
+class ProgressbarPaintingDelegate final : public GUI::TableCellPaintingDelegate {
 public:
-    virtual ~ProgressBarPaintingDelegate() override { }
+    virtual ~ProgressbarPaintingDelegate() override { }
 
     virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, const Palette& palette, const GUI::ModelIndex& index) override
     {
@@ -421,7 +421,7 @@ public:
         String text;
         if (data.is_string())
             text = data.as_string();
-        Gfx::StylePainter::paint_progress_bar(painter, rect, palette, 0, 100, percentage, text);
+        Gfx::StylePainter::paint_progressbar(painter, rect, palette, 0, 100, percentage, text);
         painter.draw_rect(rect, Color::Black);
     }
 };
@@ -580,7 +580,7 @@ NonnullRefPtr<GUI::Widget> build_file_systems_tab()
         df_fields.empend("block_size", "Block size", Gfx::TextAlignment::CenterRight);
         fs_table_view.set_model(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/df", move(df_fields))));
 
-        fs_table_view.set_column_painting_delegate(3, make<ProgressBarPaintingDelegate>());
+        fs_table_view.set_column_painting_delegate(3, make<ProgressbarPaintingDelegate>());
 
         fs_table_view.model()->update();
     };

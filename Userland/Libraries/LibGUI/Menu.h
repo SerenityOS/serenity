@@ -66,7 +66,7 @@ public:
     bool is_visible() const { return m_visible; }
 
 private:
-    friend class MenuBar;
+    friend class Menubar;
 
     int realize_menu(RefPtr<Action> default_action = nullptr);
     void unrealize_menu();

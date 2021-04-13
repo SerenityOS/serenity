@@ -27,16 +27,16 @@
 #include <AK/Assertions.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ProgressBar.h>
+#include <LibGUI/Progressbar.h>
 #include <LibGfx/Palette.h>
 
-REGISTER_WIDGET(GUI, ProgressBar)
-REGISTER_WIDGET(GUI, VerticalProgressBar)
-REGISTER_WIDGET(GUI, HorizontalProgressBar)
+REGISTER_WIDGET(GUI, Progressbar)
+REGISTER_WIDGET(GUI, VerticalProgressbar)
+REGISTER_WIDGET(GUI, HorizontalProgressbar)
 
 namespace GUI {
 
-ProgressBar::ProgressBar(Orientation orientation)
+Progressbar::Progressbar(Orientation orientation)
     : m_orientation(orientation)
 {
     REGISTER_STRING_PROPERTY("text", text, set_text);
@@ -48,11 +48,11 @@ ProgressBar::ProgressBar(Orientation orientation)
     REGISTER_INT_PROPERTY("max", max, set_max);
 }
 
-ProgressBar::~ProgressBar()
+Progressbar::~Progressbar()
 {
 }
 
-void ProgressBar::set_value(int value)
+void Progressbar::set_value(int value)
 {
     if (m_value == value)
         return;
@@ -60,7 +60,7 @@ void ProgressBar::set_value(int value)
     update();
 }
 
-void ProgressBar::set_range(int min, int max)
+void Progressbar::set_range(int min, int max)
 {
     VERIFY(min <= max);
     m_min = min;
@@ -68,7 +68,7 @@ void ProgressBar::set_range(int min, int max)
     m_value = clamp(m_value, m_min, m_max);
 }
 
-void ProgressBar::paint_event(PaintEvent& event)
+void Progressbar::paint_event(PaintEvent& event)
 {
     Frame::paint_event(event);
 
@@ -93,10 +93,10 @@ void ProgressBar::paint_event(PaintEvent& event)
         progress_text = builder.to_string();
     }
 
-    Gfx::StylePainter::paint_progress_bar(painter, rect, palette(), m_min, m_max, m_value, progress_text, m_orientation);
+    Gfx::StylePainter::paint_progressbar(painter, rect, palette(), m_min, m_max, m_value, progress_text, m_orientation);
 }
 
-void ProgressBar::set_orientation(Orientation value)
+void Progressbar::set_orientation(Orientation value)
 {
     if (m_orientation == value)
         return;

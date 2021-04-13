@@ -26,7 +26,7 @@
 
 #include "HexEditorWidget.h"
 #include <LibGUI/Icon.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     hex_editor_widget.initialize_menubar(menubar);
     window->set_menubar(menubar);
     window->show();

@@ -192,7 +192,7 @@ void WindowSwitcher::draw()
             rect_text_color = palette.threed_shadow1();
         } else {
             if (static_cast<int>(index) == m_hovered_index)
-                Gfx::StylePainter::paint_button(painter, item_rect, palette, Gfx::ButtonStyle::CoolBar, false, true);
+                Gfx::StylePainter::paint_button(painter, item_rect, palette, Gfx::ButtonStyle::Coolbar, false, true);
             text_color = palette.window_text();
             rect_text_color = palette.threed_shadow2();
         }

@@ -27,7 +27,7 @@
 #pragma once
 
 #include "Menu.h"
-#include "MenuBar.h"
+#include "Menubar.h"
 #include "Window.h"
 #include <AK/HashMap.h>
 #include <AK/StringBuilder.h>

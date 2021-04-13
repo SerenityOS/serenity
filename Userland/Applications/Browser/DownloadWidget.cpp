@@ -36,7 +36,7 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/ProgressBar.h>
+#include <LibGUI/Progressbar.h>
 #include <LibGUI/Window.h>
 #include <LibProtocol/Client.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -91,8 +91,8 @@ DownloadWidget::DownloadWidget(const URL& url)
     source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     source_label.set_fixed_height(16);
 
-    m_progress_bar = add<GUI::ProgressBar>();
-    m_progress_bar->set_fixed_height(20);
+    m_progressbar = add<GUI::Progressbar>();
+    m_progressbar->set_fixed_height(20);
 
     m_progress_label = add<GUI::Label>();
     m_progress_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -127,15 +127,15 @@ DownloadWidget::~DownloadWidget()
 
 void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
 {
-    m_progress_bar->set_min(0);
+    m_progressbar->set_min(0);
     if (total_size.has_value()) {
         int percent = roundf(((float)downloaded_size / (float)total_size.value()) * 100.0f);
         window()->set_progress(percent);
-        m_progress_bar->set_max(total_size.value());
+        m_progressbar->set_max(total_size.value());
     } else {
-        m_progress_bar->set_max(0);
+        m_progressbar->set_max(0);
     }
-    m_progress_bar->set_value(downloaded_size);
+    m_progressbar->set_value(downloaded_size);
 
     {
         StringBuilder builder;

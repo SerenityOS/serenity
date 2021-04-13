@@ -43,13 +43,13 @@
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
-#include <LibGUI/StatusBar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TextBox.h>
-#include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
@@ -99,8 +99,8 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
 {
     load_from_gml(font_editor_window_gml);
 
-    auto& toolbar = *find_descendant_of_type_named<GUI::ToolBar>("toolbar");
-    auto& status_bar = *find_descendant_of_type_named<GUI::StatusBar>("status_bar");
+    auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
+    auto& statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     auto& glyph_map_container = *find_descendant_of_type_named<GUI::Widget>("glyph_map_container");
     m_glyph_editor_container = *find_descendant_of_type_named<GUI::Widget>("glyph_editor_container");
     m_left_column_container = *find_descendant_of_type_named<GUI::Widget>("left_column_container");
@@ -256,7 +256,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         }
         builder.append(") ");
         builder.appendff("[{}x{}]", m_edited_font->glyph_width(glyph), m_edited_font->glyph_height());
-        status_bar.set_text(builder.to_string());
+        statusbar.set_text(builder.to_string());
     };
 
     m_name_textbox->on_change = [&] {
@@ -378,7 +378,7 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
         on_initialize();
 }
 
-void FontEditorWidget::initialize_menubar(GUI::MenuBar& menubar)
+void FontEditorWidget::initialize_menubar(GUI::Menubar& menubar)
 {
     auto& app_menu = menubar.add_menu("&File");
     app_menu.add_action(*m_new_action);

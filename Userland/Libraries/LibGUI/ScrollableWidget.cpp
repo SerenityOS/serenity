@@ -24,21 +24,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/ScrollBar.h>
 #include <LibGUI/ScrollableWidget.h>
+#include <LibGUI/Scrollbar.h>
 
 namespace GUI {
 
 ScrollableWidget::ScrollableWidget()
 {
-    m_vertical_scrollbar = add<ScrollableWidgetScrollBar>(*this, Orientation::Vertical);
+    m_vertical_scrollbar = add<ScrollableWidgetScrollbar>(*this, Orientation::Vertical);
     m_vertical_scrollbar->set_step(4);
     m_vertical_scrollbar->on_change = [this](int) {
         did_scroll();
         update();
     };
 
-    m_horizontal_scrollbar = add<ScrollableWidgetScrollBar>(*this, Orientation::Horizontal);
+    m_horizontal_scrollbar = add<ScrollableWidgetScrollbar>(*this, Orientation::Horizontal);
     m_horizontal_scrollbar->set_step(4);
     m_horizontal_scrollbar->set_page_step(30);
     m_horizontal_scrollbar->on_change = [this](int) {
