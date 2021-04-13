@@ -55,7 +55,7 @@ String CookieJar::get_cookie(const URL& url, Web::Cookie::Source)
     return builder.build();
 }
 
-void CookieJar::set_cookie(const URL& url, const String& cookie_string, Web::Cookie::Source)
+void CookieJar::set_cookie(const URL& url, const String& cookie_string, Web::Cookie::Source source)
 {
     auto domain = canonicalize_domain(url);
     if (!domain.has_value())
@@ -65,7 +65,7 @@ void CookieJar::set_cookie(const URL& url, const String& cookie_string, Web::Coo
     if (!parsed_cookie.has_value())
         return;
 
-    store_cookie(parsed_cookie.value(), url, move(domain.value()));
+    store_cookie(parsed_cookie.value(), url, move(domain.value()), source);
     purge_expired_cookies();
 }
 
@@ -152,7 +152,7 @@ String CookieJar::default_path(const URL& url)
     return uri_path.substring(0, last_separator);
 }
 
-void CookieJar::store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain)
+void CookieJar::store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.3
 
@@ -215,7 +215,8 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL
     cookie.http_only = parsed_cookie.http_only_attribute_present;
 
     // 10. If the cookie was received from a "non-HTTP" API and the cookie's http-only-flag is set, abort these steps and ignore the cookie entirely.
-    // FIXME: Update CookieJar to track where the cookie originated (an HTTP request vs document.cookie).
+    if (source != Web::Cookie::Source::Http && cookie.http_only)
+        return;
 
     // 11. If the cookie store contains a cookie with the same name, domain, and path as the newly created cookie:
     CookieStorageKey key { cookie.name, cookie.domain, cookie.path };
@@ -223,7 +224,8 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL
     if (auto old_cookie = m_cookies.find(key); old_cookie != m_cookies.end()) {
         // If the newly created cookie was received from a "non-HTTP" API and the old-cookie's http-only-flag is set, abort these
         // steps and ignore the newly created cookie entirely.
-        // FIXME: Similar to step 10, CookieJar needs to track where the cookie originated.
+        if (source != Web::Cookie::Source::Http && old_cookie->value.http_only)
+            return;
 
         // Update the creation-time of the newly created cookie to match the creation-time of the old-cookie.
         cookie.creation_time = old_cookie->value.creation_time;
