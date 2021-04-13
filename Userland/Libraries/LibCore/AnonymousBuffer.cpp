@@ -64,6 +64,7 @@ AnonymousBuffer AnonymousBuffer::create_with_size(size_t size)
         return {};
     }
     if (ftruncate(fd, size) < 0) {
+        close(fd);
         perror("ftruncate");
         return {};
     }
