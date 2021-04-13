@@ -26,6 +26,7 @@
 
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
+#include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
@@ -243,12 +244,18 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
     auto& root_button = add_common_location_button("Root", "/");
     auto& home_button = add_common_location_button("Home", Core::StandardPaths::home_directory());
     auto& desktop_button = add_common_location_button("Desktop", Core::StandardPaths::desktop_directory());
+    auto& documents_button = add_common_location_button("My Documents", Core::StandardPaths::documents_directory());
+    auto& downloads_button = add_common_location_button("Downloads", Core::StandardPaths::downloads_directory());
 
     m_model->on_complete = [&] {
         if (m_model->root_path() == Core::StandardPaths::home_directory()) {
             home_button.set_checked(true);
         } else if (m_model->root_path() == Core::StandardPaths::desktop_directory()) {
             desktop_button.set_checked(true);
+        } else if (m_model->root_path() == Core::StandardPaths::downloads_directory()) {
+            downloads_button.set_checked(true);
+        } else if (m_model->root_path() == Core::StandardPaths::documents_directory()) {
+            documents_button.set_checked(true);
         } else if (m_model->root_path() == "/") {
             root_button.set_checked(true);
         } else {
