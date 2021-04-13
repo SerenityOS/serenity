@@ -29,6 +29,7 @@
 #include <AK/Noncopyable.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Frame.h>
+#include <LibGfx/Palette.h>
 
 class Field;
 class SquareButton;
@@ -118,6 +119,7 @@ private:
     RefPtr<Gfx::Bitmap> m_good_face_bitmap;
     RefPtr<Gfx::Bitmap> m_bad_face_bitmap;
     RefPtr<Gfx::Bitmap> m_number_bitmap[8];
+    Gfx::Palette m_mine_palette;
     GUI::Button& m_face_button;
     GUI::Label& m_flag_label;
     GUI::Label& m_time_label;

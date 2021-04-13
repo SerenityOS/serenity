@@ -28,6 +28,7 @@
 #include <AK/HashTable.h>
 #include <AK/Queue.h>
 #include <LibCore/ConfigFile.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
@@ -124,7 +125,8 @@ private:
 };
 
 Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed)
-    : m_face_button(face_button)
+    : m_mine_palette(GUI::Application::the()->palette().impl().clone())
+    , m_face_button(face_button)
     , m_flag_label(flag_label)
     , m_time_label(time_label)
     , m_on_size_changed(move(on_size_changed))
@@ -145,6 +147,8 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
     m_bad_face_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/face-bad.png");
     for (int i = 0; i < 8; ++i)
         m_number_bitmap[i] = Gfx::Bitmap::load_from_file(String::formatted("/res/icons/minesweeper/{}.png", i + 1));
+    // Square with mine will be filled with background color later, i.e. red
+    m_mine_palette.set_color(Gfx::ColorRole::Base, Color::from_rgb(0xff4040));
 
     set_fill_with_background_color(true);
     reset();
@@ -254,10 +258,7 @@ void Field::reset()
             square.is_swept = false;
             if (!square.label) {
                 square.label = add<SquareLabel>(square);
-                // Square with mine will be filled with background color later, i.e. red
-                auto palette = square.label->palette();
-                palette.set_color(Gfx::ColorRole::Base, Color::from_rgb(0xff4040));
-                square.label->set_palette(palette);
+                square.label->set_palette(m_mine_palette);
                 square.label->set_background_role(Gfx::ColorRole::Base);
             }
             square.label->set_fill_with_background_color(false);
