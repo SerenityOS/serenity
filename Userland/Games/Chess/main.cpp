@@ -97,17 +97,17 @@ int main(int argc, char** argv)
     widget.set_show_available_moves(config->read_bool_entry("Style", "ShowAvailableMoves", true));
 
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("Game");
+    auto& game_menu = menubar->add_menu("&Game");
 
-    app_menu.add_action(GUI::Action::create("Resign", { Mod_None, Key_F3 }, [&](auto&) {
+    game_menu.add_action(GUI::Action::create("&Resign", { Mod_None, Key_F3 }, [&](auto&) {
         widget.resign();
     }));
-    app_menu.add_action(GUI::Action::create("Flip Board", { Mod_Ctrl, Key_F }, [&](auto&) {
+    game_menu.add_action(GUI::Action::create("&Flip Board", { Mod_Ctrl, Key_F }, [&](auto&) {
         widget.flip_board();
     }));
-    app_menu.add_separator();
+    game_menu.add_separator();
 
-    app_menu.add_action(GUI::Action::create("Import PGN...", { Mod_Ctrl, Key_O }, [&](auto&) {
+    game_menu.add_action(GUI::Action::create("&Import PGN...", { Mod_Ctrl, Key_O }, [&](auto&) {
         Optional<String> import_path = GUI::FilePicker::get_open_filepath(window);
 
         if (!import_path.has_value())
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
 
         dbgln("Imported PGN file from {}", import_path.value());
     }));
-    app_menu.add_action(GUI::Action::create("Export PGN...", { Mod_Ctrl, Key_S }, [&](auto&) {
+    game_menu.add_action(GUI::Action::create("&Export PGN...", { Mod_Ctrl, Key_S }, [&](auto&) {
         Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "pgn");
 
         if (!export_path.has_value())
@@ -133,28 +133,28 @@ int main(int argc, char** argv)
 
         dbgln("Exported PGN file to {}", export_path.value());
     }));
-    app_menu.add_action(GUI::Action::create("Copy FEN", { Mod_Ctrl, Key_C }, [&](auto&) {
+    game_menu.add_action(GUI::Action::create("&Copy FEN", { Mod_Ctrl, Key_C }, [&](auto&) {
         GUI::Clipboard::the().set_data(widget.get_fen().bytes());
         GUI::MessageBox::show(window, "Board state copied to clipboard as FEN.", "Copy FEN", GUI::MessageBox::Type::Information);
     }));
-    app_menu.add_separator();
+    game_menu.add_separator();
 
-    app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
+    game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
         if (widget.board().game_result() == Chess::Board::Result::NotFinished) {
             if (widget.resign() < 0)
                 return;
         }
         widget.reset();
     }));
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    game_menu.add_separator();
+    game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
-    auto& style_menu = menubar->add_menu("Style");
+    auto& style_menu = menubar->add_menu("&Style");
     GUI::ActionGroup piece_set_action_group;
     piece_set_action_group.set_exclusive(true);
-    auto& piece_set_menu = style_menu.add_submenu("Piece Set");
+    auto& piece_set_menu = style_menu.add_submenu("&Piece Set");
     piece_set_menu.set_icon(app_icon.bitmap_for_size(16));
 
     Core::DirIterator di("/res/icons/chess/sets/", Core::DirIterator::SkipParentAndBaseDir);
@@ -209,11 +209,11 @@ int main(int argc, char** argv)
     show_available_moves_action->set_checked(widget.show_available_moves());
     style_menu.add_action(show_available_moves_action);
 
-    auto& engine_menu = menubar->add_menu("Engine");
+    auto& engine_menu = menubar->add_menu("&Engine");
 
     GUI::ActionGroup engines_action_group;
     engines_action_group.set_exclusive(true);
-    auto& engine_submenu = engine_menu.add_submenu("Engine");
+    auto& engine_submenu = engine_menu.add_submenu("&Engine");
     for (auto& engine : Vector({ "Human", "ChessEngine" })) {
         auto action = GUI::Action::create_checkable(engine, [&](auto& action) {
             if (action.text() == "Human") {
@@ -230,8 +230,8 @@ int main(int argc, char** argv)
         engine_submenu.add_action(*action);
     }
 
-    auto& help_menu = menubar->add_menu("Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Chess", app_icon, window));
+    auto& help_menu = menubar->add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_about_action("&Chess", app_icon, window));
 
     window->set_menubar(move(menubar));
 
