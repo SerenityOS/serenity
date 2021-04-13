@@ -110,6 +110,11 @@ int Debugger::start_static()
     return 0;
 }
 
+void Debugger::stop()
+{
+    set_requested_debugger_action(DebuggerAction::Exit);
+}
+
 void Debugger::start()
 {
     m_debug_session = Debug::DebugSession::exec_and_attach(m_executable_path, m_source_root);
@@ -190,11 +195,9 @@ int Debugger::debugger_loop()
             do_step_over(regs);
             return Debug::DebugSession::DebugDecision::Continue;
         case DebuggerAction::Exit:
-            // NOTE: Is detaching from the debuggee the best thing to do here?
-            // We could display a dialog in the UI, remind the user that there is
-            // a live debugged process, and ask whether they want to terminate/detach.
             dbgln("Debugger exiting");
-            return Debug::DebugSession::DebugDecision::Detach;
+            m_on_exit_callback();
+            return Debug::DebugSession::DebugDecision::Kill;
         }
         VERIFY_NOT_REACHED();
     });

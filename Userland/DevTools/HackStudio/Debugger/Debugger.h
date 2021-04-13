@@ -60,6 +60,8 @@ public:
 
     Debug::DebugSession* session() { return m_debug_session.ptr(); }
 
+    void stop();
+
     // Thread entry point
     static int start_static();
 
