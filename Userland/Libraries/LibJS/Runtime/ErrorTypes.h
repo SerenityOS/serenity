@@ -170,6 +170,7 @@
     M(TypedArrayOutOfRangeByteOffset, "Typed array byte offset {} is out of range for buffer with length {}")                           \
     M(TypedArrayOutOfRangeByteOffsetOrLength, "Typed array range {}:{} is out of range for buffer with length {}")                      \
     M(UnknownIdentifier, "'{}' is not defined")                                                                                         \
+    M(URIMalformed, "URI malformed")                                                                                                    \
     /* LibWeb bindings */                                                                                                               \
     M(NotAByteString, "Argument to {}() must be a byte string")                                                                         \
     M(BadArgCountOne, "{}() needs one argument")                                                                                        \

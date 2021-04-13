@@ -96,12 +96,16 @@ namespace JS {
     P(countReset)                            \
     P(create)                                \
     P(debug)                                 \
+    P(decodeURI)                             \
+    P(decodeURIComponent)                    \
     P(defineProperties)                      \
     P(defineProperty)                        \
     P(deleteProperty)                        \
     P(description)                           \
     P(done)                                  \
     P(dotAll)                                \
+    P(encodeURI)                             \
+    P(encodeURIComponent)                    \
     P(endsWith)                              \
     P(entries)                               \
     P(enumerable)                            \

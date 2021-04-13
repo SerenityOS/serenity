@@ -25,6 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Hex.h>
+#include <AK/Platform.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Console.h>
@@ -126,6 +128,10 @@ void GlobalObject::initialize_global_object()
     define_native_function(vm.names.parseFloat, parse_float, 1, attr);
     define_native_function(vm.names.parseInt, parse_int, 1, attr);
     define_native_function(vm.names.eval, eval, 1, attr);
+    define_native_function(vm.names.encodeURI, encode_uri, 1, attr);
+    define_native_function(vm.names.decodeURI, decode_uri, 1, attr);
+    define_native_function(vm.names.encodeURIComponent, encode_uri_component, 1, attr);
+    define_native_function(vm.names.decodeURIComponent, decode_uri_component, 1, attr);
 
     define_property(vm.names.NaN, js_nan(), 0);
     define_property(vm.names.Infinity, js_infinity(), 0);
@@ -338,6 +344,119 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
     if (vm.exception())
         return {};
     return vm.last_value();
+}
+
+// 19.2.6.1.1 Encode ( string, unescapedSet )
+static String encode([[maybe_unused]] JS::GlobalObject& global_object, const String& string, StringView unescaped_set)
+{
+    StringBuilder encoded_builder;
+    for (unsigned char code_unit : string) {
+        if (unescaped_set.contains(code_unit)) {
+            encoded_builder.append(code_unit);
+            continue;
+        }
+        // FIXME: check for unpaired surrogates and throw URIError
+        encoded_builder.appendff("%{:02X}", code_unit);
+    }
+    return encoded_builder.build();
+}
+
+// 19.2.6.1.2 Decode ( string, reservedSet )
+static String decode(JS::GlobalObject& global_object, const String& string, StringView reserved_set)
+{
+    StringBuilder decoded_builder;
+    auto expected_continuation_bytes = 0;
+    for (size_t k = 0; k < string.length(); k++) {
+        auto code_unit = string[k];
+        if (code_unit != '%') {
+            if (expected_continuation_bytes > 0) {
+                global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
+                return {};
+            }
+            decoded_builder.append(code_unit);
+            continue;
+        }
+        if (k + 2 >= string.length()) {
+            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
+            return {};
+        }
+        auto first_digit = decode_hex_digit(string[k + 1]);
+        if (first_digit >= 16) {
+            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
+            return {};
+        }
+        auto second_digit = decode_hex_digit(string[k + 2]);
+        if (second_digit >= 16) {
+            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
+            return {};
+        }
+        char decoded_code_unit = (first_digit << 4) | second_digit;
+        k += 2;
+        if (expected_continuation_bytes > 0) {
+            decoded_builder.append(decoded_code_unit);
+            expected_continuation_bytes--;
+            continue;
+        }
+        if ((decoded_code_unit & 0x80) == 0) {
+            if (reserved_set.contains(decoded_code_unit))
+                decoded_builder.append(string.substring_view(k - 2, 3));
+            else
+                decoded_builder.append(decoded_code_unit);
+            continue;
+        }
+        auto leading_ones = count_trailing_zeroes_32_safe(~decoded_code_unit) - 24;
+        if (leading_ones == 1 || leading_ones > 4) {
+            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
+            return {};
+        }
+        decoded_builder.append(decoded_code_unit);
+        expected_continuation_bytes = leading_ones - 1;
+    }
+    return decoded_builder.build();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
+{
+    auto uri_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto encoded = encode(global_object, uri_string, ";/?:@&=+$,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()#"sv);
+    if (vm.exception())
+        return {};
+    return js_string(vm, move(encoded));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
+{
+    auto uri_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto decoded = decode(global_object, uri_string, ";/?:@&=+$,#"sv);
+    if (vm.exception())
+        return {};
+    return js_string(vm, move(decoded));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
+{
+    auto uri_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto encoded = encode(global_object, uri_string, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"sv);
+    if (vm.exception())
+        return {};
+    return js_string(vm, move(encoded));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
+{
+    auto uri_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto decoded = decode(global_object, uri_string, ""sv);
+    if (vm.exception())
+        return {};
+    return js_string(vm, move(decoded));
 }
 
 }
