@@ -55,6 +55,7 @@ public:
     // NOTE: This is for the JS bindings
     const FlyString& tag_name() const { return local_name(); }
 
+    const FlyString& prefix() const { return m_qualified_name.prefix(); }
     const FlyString& namespace_() const { return m_qualified_name.namespace_(); }
 
     // NOTE: This is for the JS bindings
