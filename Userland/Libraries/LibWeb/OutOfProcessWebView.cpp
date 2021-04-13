@@ -365,17 +365,17 @@ void OutOfProcessWebView::notify_server_did_change_favicon(const Gfx::Bitmap& fa
         on_favicon_change(favicon);
 }
 
-String OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentClient>, const URL& url)
+String OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentClient>, const URL& url, Cookie::Source source)
 {
     if (on_get_cookie)
-        return on_get_cookie(url);
+        return on_get_cookie(url, source);
     return {};
 }
 
-void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, const URL& url, const String& cookie)
+void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, const URL& url, const String& cookie, Cookie::Source source)
 {
     if (on_set_cookie)
-        on_set_cookie(url, cookie);
+        on_set_cookie(url, cookie, source);
 }
 
 void OutOfProcessWebView::did_scroll()

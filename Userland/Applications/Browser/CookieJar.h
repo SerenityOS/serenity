@@ -46,8 +46,8 @@ struct CookieStorageKey {
 
 class CookieJar {
 public:
-    String get_cookie(const URL& url);
-    void set_cookie(const URL& url, const String& cookie);
+    String get_cookie(const URL& url, Web::Cookie::Source source);
+    void set_cookie(const URL& url, const String& cookie, Web::Cookie::Source source);
     void dump_cookies() const;
 
 private:

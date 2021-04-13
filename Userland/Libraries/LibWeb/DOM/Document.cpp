@@ -821,17 +821,17 @@ void Document::completely_finish_loading()
     dispatch_event(DOM::Event::create(HTML::EventNames::load));
 }
 
-String Document::cookie()
+String Document::cookie(Cookie::Source source)
 {
     if (auto* page = this->page())
-        return page->client().page_did_request_cookie(m_url);
+        return page->client().page_did_request_cookie(m_url, source);
     return {};
 }
 
-void Document::set_cookie(String cookie)
+void Document::set_cookie(String cookie, Cookie::Source source)
 {
     if (auto* page = this->page())
-        page->client().page_did_set_cookie(m_url, cookie);
+        page->client().page_did_set_cookie(m_url, cookie, source);
 }
 
 }
