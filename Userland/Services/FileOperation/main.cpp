@@ -120,8 +120,9 @@ int perform_copy(const String& source, const String& destination)
 
     for (size_t i = 0; i < items.size(); ++i) {
         auto& item = items[i];
+        off_t item_done = 0;
         auto print_progress = [&] {
-            outln("PROGRESS {} {} {} {} {}", i, items.size(), bytes_copied_so_far, total_bytes_to_copy, item.source);
+            outln("PROGRESS {} {} {} {} {} {} {}", i, items.size(), bytes_copied_so_far, total_bytes_to_copy, item_done, item.size, item.source);
         };
         if (item.type == WorkItem::Type::CreateDirectory) {
             outln("MKDIR {}", item.destination);
@@ -146,6 +147,7 @@ int perform_copy(const String& source, const String& destination)
         auto& destination_file = *destination_file_or_error.value();
 
         while (true) {
+            print_progress();
             auto buffer = source_file.read(65536);
             if (buffer.is_null())
                 break;
@@ -153,6 +155,7 @@ int perform_copy(const String& source, const String& destination)
                 warnln("Failed to write to destination file: {}", destination_file.error_string());
                 return 1;
             }
+            item_done += buffer.size();
             bytes_copied_so_far += buffer.size();
             print_progress();
             // FIXME: Remove this once the kernel is smart enough to schedule other threads
