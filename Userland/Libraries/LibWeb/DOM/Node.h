@@ -102,6 +102,9 @@ public:
     void remove_all_children(bool suppress_observers = false);
     u16 compare_document_position(RefPtr<Node> other);
 
+    NonnullRefPtr<Node> clone_node(Document* document = nullptr, bool clone_children = false) const;
+    ExceptionOr<NonnullRefPtr<Node>> clone_node_binding(bool deep) const;
+
     // NOTE: This is intended for the JS bindings.
     bool has_child_nodes() const { return has_children(); }
     NonnullRefPtrVector<Node> child_nodes() const;

@@ -35,7 +35,7 @@ class ProcessingInstruction final : public CharacterData {
 public:
     using WrapperType = Bindings::ProcessingInstructionWrapper;
 
-    ProcessingInstruction(Document&, const String&, const String&);
+    ProcessingInstruction(Document&, const String& data, const String& target);
     virtual ~ProcessingInstruction() override;
 
     virtual FlyString node_name() const override { return m_target; }

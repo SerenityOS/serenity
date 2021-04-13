@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +44,7 @@
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Origin.h>
 
 namespace Web::DOM {
 
@@ -361,6 +363,70 @@ void Node::remove(bool suppress_observers)
     }
 
     parent->children_changed();
+}
+
+// https://dom.spec.whatwg.org/#concept-node-clone
+NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) const
+{
+    if (!document)
+        document = m_document;
+    RefPtr<Node> copy;
+    if (is<Element>(this)) {
+        auto& element = *downcast<Element>(this);
+        auto qualified_name = QualifiedName(element.local_name(), element.prefix(), element.namespace_());
+        auto element_copy = adopt(*new Element(*document, move(qualified_name)));
+        element.for_each_attribute([&](auto& name, auto& value) {
+            element_copy->set_attribute(name, value);
+        });
+        copy = move(element_copy);
+    } else if (is<Document>(this)) {
+        auto document_ = downcast<Document>(this);
+        auto document_copy = Document::create(document_->url());
+        document_copy->set_encoding(document_->encoding());
+        document_copy->set_content_type(document_->content_type());
+        document_copy->set_origin(document_->origin());
+        document_copy->set_quirks_mode(document_->mode());
+        // FIXME: Set type ("xml" or "html")
+        copy = move(document_copy);
+    } else if (is<DocumentType>(this)) {
+        auto document_type = downcast<DocumentType>(this);
+        auto document_type_copy = adopt(*new DocumentType(*document));
+        document_type_copy->set_name(document_type->name());
+        document_type_copy->set_public_id(document_type->public_id());
+        document_type_copy->set_system_id(document_type->system_id());
+        copy = move(document_type_copy);
+    } else if (is<Text>(this)) {
+        auto text = downcast<Text>(this);
+        auto text_copy = adopt(*new Text(*document, text->data()));
+        copy = move(text_copy);
+    } else if (is<Comment>(this)) {
+        auto comment = downcast<Comment>(this);
+        auto comment_copy = adopt(*new Comment(*document, comment->data()));
+        copy = move(comment_copy);
+    } else if (is<ProcessingInstruction>(this)) {
+        auto processing_instruction = downcast<ProcessingInstruction>(this);
+        auto processing_instruction_copy = adopt(*new ProcessingInstruction(*document, processing_instruction->data(), processing_instruction->target()));
+        copy = move(processing_instruction_copy);
+    } else {
+        dbgln("clone_node() not implemented for NodeType {}", (u16)m_type);
+        TODO();
+    }
+    // FIXME: 4. Set copy’s node document and document to copy, if copy is a document, and set copy’s node document to document otherwise.
+    // FIXME: 5. Run any cloning steps defined for node in other applicable specifications and pass copy, node, document and the clone children flag if set, as parameters.
+    if (clone_children) {
+        for_each_child([&](auto& child) {
+            copy->append_child(child.clone_node(document, true));
+        });
+    }
+    return copy.release_nonnull();
+}
+
+// https://dom.spec.whatwg.org/#dom-node-clonenode
+ExceptionOr<NonnullRefPtr<Node>> Node::clone_node_binding(bool deep) const
+{
+    if (is<ShadowRoot>(*this))
+        return NotSupportedError::create("Cannot clone shadow root");
+    return clone_node(nullptr, deep);
 }
 
 void Node::set_document(Badge<Document>, Document& document)
