@@ -6,6 +6,7 @@
 
 #include "DebuggerGlobalJSObject.h"
 #include "Debugger.h"
+#include "DebuggerVariableJSObject.h"
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ProxyObject.h>
 
@@ -83,45 +84,16 @@ Optional<JS::Value> DebuggerGlobalJSObject::debugger_to_js(const Debug::DebugInf
         return JS::Value(value.value() != 0);
     }
 
-    auto& global = const_cast<DebuggerGlobalJSObject&>(*this);
-
-    auto* object = JS::Object::create_empty(global);
-    auto* handler = JS::Object::create_empty(global);
-    auto proxy = JS::ProxyObject::create(global, *object, *handler);
-
-    auto set = [&](JS::VM& vm, JS::GlobalObject&) {
-        auto property = vm.argument(1).value_or(JS::js_undefined());
-        if (!property.is_string())
-            return JS::Value(false);
-        auto property_name = property.as_string().string();
-
-        auto value = vm.argument(2).value_or(JS::js_undefined());
-        dbgln("prop name {}", property_name);
-
-        auto it = variable.members.find_if([&](auto& variable) {
-            dbgln("candidate debugger var name: {}", variable->name);
-            return variable->name == property_name;
-        });
-        if (it.is_end())
-            return JS::Value(false);
-        auto& member = **it;
-        dbgln("Found var {}", member.name);
-
-        auto new_value = js_to_debugger(value, member);
-        Debugger::the().session()->poke((u32*)member.location_data.address, new_value.value());
-
-        return JS::Value(true);
-    };
-
-    handler->define_native_function("set", move(set), 4);
-
+    auto* object = DebuggerVariableJSObject::create(const_cast<DebuggerGlobalJSObject&>(*this), variable);
     for (auto& member : variable.members) {
         auto member_value = debugger_to_js(member);
         if (!member_value.has_value())
             continue;
-        object->put(member.name, member_value.value());
+        object->put(member.name, member_value.value(), {});
     }
-    return proxy;
+    object->finish_writing_properties();
+
+    return JS::Value(object);
 }
 
 Optional<u32> DebuggerGlobalJSObject::js_to_debugger(JS::Value value, const Debug::DebugInfo::VariableInfo& variable) const

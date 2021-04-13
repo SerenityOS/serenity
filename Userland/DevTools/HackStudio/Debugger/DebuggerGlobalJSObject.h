@@ -23,7 +23,6 @@ public:
     JS::Value get(const JS::PropertyName& name, JS::Value receiver, bool without_side_effects) const override;
     bool put(const JS::PropertyName& name, JS::Value value, JS::Value receiver) override;
 
-private:
     Optional<JS::Value> debugger_to_js(const Debug::DebugInfo::VariableInfo&) const;
     Optional<u32> js_to_debugger(JS::Value value, const Debug::DebugInfo::VariableInfo&) const;
 
