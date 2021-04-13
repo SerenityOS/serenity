@@ -37,7 +37,7 @@ public:
     virtual ~FileOperationProgressWidget() override;
 
 private:
-    explicit FileOperationProgressWidget(FILE* helper_pipe);
+    explicit FileOperationProgressWidget(NonnullRefPtr<Core::File> helper_pipe);
 
     void did_finish();
     void did_error();
@@ -46,6 +46,6 @@ private:
     void close_pipe();
 
     RefPtr<Core::Notifier> m_notifier;
-    FILE* m_helper_pipe { nullptr };
+    RefPtr<Core::File> m_helper_pipe;
 };
 }
