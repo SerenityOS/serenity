@@ -276,21 +276,14 @@ diff -ur a/stress-ng.h b/stress-ng.h
  #include <setjmp.h>
  #include <signal.h>
  #include <stdarg.h>
-@@ -1093,14 +1092,6 @@
+@@ -1092,6 +1092,7 @@
  #define PACKED
  #endif
  
--/* force inlining hint */
--#if defined(__GNUC__) && NEED_GNUC(3,4,0)	/* or possibly earlier */ \
-- && ((!defined(__s390__) && !defined(__s390x__)) || NEED_GNUC(6,0,1))
--#define ALWAYS_INLINE	__attribute__ ((always_inline))
--#else
--#define ALWAYS_INLINE
--#endif
--
- /* force no inlining hint */
- #if defined(__GNUC__) && NEED_GNUC(3,4,0)	/* or possibly earier */
- #define NOINLINE	__attribute__ ((noinline))
++#undef ALWAYS_INLINE
+ /* force inlining hint */
+ #if defined(__GNUC__) && NEED_GNUC(3,4,0)	/* or possibly earlier */ \
+  && ((!defined(__s390__) && !defined(__s390x__)) || NEED_GNUC(6,0,1))
 @@ -2230,7 +2221,6 @@
  		uint64_t timeout[STRESS_PROCS_MAX];	/* Shared futex timeouts */
  	} futex;
@@ -579,3 +572,58 @@ iff -ur a/stress-schedpolicy.c b/stress-schedpolicy.c
  #if defined(SCHED_RR)
  		case SCHED_RR:
 
+diff -Naur stress-ng-0.11.23/core-net.c stress-ng-0.11.23.serenity/core-net.c
+--- stress-ng-0.11.23/core-net.c	2021-04-13 03:20:49.389317525 +0200
++++ stress-ng-0.11.23.serenity/core-net.c	2021-04-13 03:21:42.786948162 +0200
+@@ -114,6 +114,7 @@
+ 		break;
+ 	}
+ #endif
++#ifndef __serenity__
+ #if defined(AF_INET6)
+ 	case AF_INET6: {
+ 		static struct sockaddr_in6 addr;
+@@ -138,6 +139,7 @@
+ 		break;
+ 	}
+ #endif
++#endif
+ #if defined(AF_UNIX)
+ 	case AF_UNIX: {
+ 		static struct sockaddr_un addr;
+@@ -176,6 +178,7 @@
+ 		break;
+ 	}
+ #endif
++#ifndef __serenity__
+ #if defined(AF_INET6)
+ 	case AF_INET6: {
+ 		struct sockaddr_in6 *addr = (struct sockaddr_in6 *)sockaddr;
+@@ -183,6 +186,7 @@
+ 		break;
+ 	}
+ #endif
++#endif
+ #if defined(AF_UNIX)
+ 	case AF_UNIX:
+ 		break;
+diff -Naur stress-ng-0.11.23/stress-zlib.c stress-ng-0.11.23.serenity/stress-zlib.c
+--- stress-ng-0.11.23/stress-zlib.c	2021-04-13 03:29:29.112182330 +0200
++++ stress-ng-0.11.23.serenity/stress-zlib.c	2021-04-13 03:28:52.128162386 +0200
+@@ -698,14 +698,14 @@
+ 	register int i;
+ 
+ 	if (UNLIKELY(!seeded)) {
+-		srand48(stress_mwc32());
++		srand(stress_mwc32());
+ 		seeded = true;
+ 	}
+ 
+ 	(void)args;
+ 
+ 	for (i = 0; i < n; i++, data++)
+-		*data = lrand48();
++		*data = rand();
+ }
+ 
+ /*
