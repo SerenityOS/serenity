@@ -64,11 +64,14 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
     if (!region.vmobject().is_private_inode())
         return false;
 
-    Elf32_Ehdr header;
-    if (!copy_from_user(&header, region.vaddr().as_ptr(), sizeof(header)))
-        return false;
+    auto& inode_vm = static_cast<const InodeVMObject&>(region.vmobject());
+    auto& inode = inode_vm.inode();
 
-    auto& inode = static_cast<const InodeVMObject&>(region.vmobject());
+    Elf32_Ehdr header;
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&header);
+    auto nread = inode.read_bytes(0, sizeof(header), buffer, nullptr);
+    if (nread != sizeof(header))
+        return false;
 
     // The file is a valid ELF binary
     if (!ELF::validate_elf_header(header, inode.size()))
