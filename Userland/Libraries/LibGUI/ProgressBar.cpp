@@ -62,7 +62,7 @@ void ProgressBar::set_value(int value)
 
 void ProgressBar::set_range(int min, int max)
 {
-    VERIFY(min < max);
+    VERIFY(min <= max);
     m_min = min;
     m_max = max;
     m_value = clamp(m_value, m_min, m_max);
