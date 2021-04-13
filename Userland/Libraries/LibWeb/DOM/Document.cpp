@@ -743,17 +743,13 @@ void Document::adopt_node(Node& node)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-adoptnode
-NonnullRefPtr<Node> Document::adopt_node_binding(NonnullRefPtr<Node> node)
+ExceptionOr<NonnullRefPtr<Node>> Document::adopt_node_binding(NonnullRefPtr<Node> node)
 {
-    if (is<Document>(*node)) {
-        dbgln("Document::adopt_node_binding: Cannot adopt a document into a document (FIXME: throw as NotSupportedError exception, see issue #6075");
-        return node;
-    }
+    if (is<Document>(*node))
+        return DOM ::NotSupportedError::create("Cannot adopt a document into a document");
 
-    if (is<ShadowRoot>(*node)) {
-        dbgln("Document::adopt_node_binding: Cannot adopt a shadow root into a document (FIXME: throw as HierarchyRequestError exception, see issue #6075");
-        return node;
-    }
+    if (is<ShadowRoot>(*node))
+        return DOM::HierarchyRequestError::create("Cannot adopt a shadow root into a document");
 
     if (is<DocumentFragment>(*node) && downcast<DocumentFragment>(*node).host())
         return node;
