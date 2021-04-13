@@ -35,7 +35,7 @@
 
 namespace AK {
 
-static u8 decode_hex_digit(char digit)
+u8 decode_hex_digit(char digit)
 {
     if (digit >= '0' && digit <= '9')
         return digit - '0';

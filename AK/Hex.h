@@ -33,6 +33,8 @@
 
 namespace AK {
 
+u8 decode_hex_digit(char);
+
 Optional<ByteBuffer> decode_hex(const StringView&);
 
 String encode_hex(ReadonlyBytes);
@@ -40,4 +42,5 @@ String encode_hex(ReadonlyBytes);
 }
 
 using AK::decode_hex;
+using AK::decode_hex_digit;
 using AK::encode_hex;
