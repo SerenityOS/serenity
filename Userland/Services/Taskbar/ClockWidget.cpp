@@ -80,7 +80,7 @@ ClockWidget::ClockWidget()
     navigation_container.layout()->set_margins({ 2, 2, 3, 2 });
 
     m_prev_date = navigation_container.add<GUI::Button>();
-    m_prev_date->set_button_style(Gfx::ButtonStyle::CoolBar);
+    m_prev_date->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_prev_date->set_fixed_size(24, 24);
     m_prev_date->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"));
     m_prev_date->on_click = [&](auto) {
@@ -103,7 +103,7 @@ ClockWidget::ClockWidget()
     };
 
     m_selected_calendar_button = navigation_container.add<GUI::Button>();
-    m_selected_calendar_button->set_button_style(Gfx::ButtonStyle::CoolBar);
+    m_selected_calendar_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_selected_calendar_button->set_fixed_height(24);
     m_selected_calendar_button->on_click = [&](auto) {
         m_calendar->toggle_mode();
@@ -114,7 +114,7 @@ ClockWidget::ClockWidget()
     };
 
     m_next_date = navigation_container.add<GUI::Button>();
-    m_next_date->set_button_style(Gfx::ButtonStyle::CoolBar);
+    m_next_date->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_next_date->set_fixed_size(24, 24);
     m_next_date->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"));
     m_next_date->on_click = [&](auto) {
@@ -164,7 +164,7 @@ ClockWidget::ClockWidget()
     settings_container.layout()->add_spacer();
 
     m_jump_to_button = settings_container.add<GUI::Button>();
-    m_jump_to_button->set_button_style(Gfx::ButtonStyle::CoolBar);
+    m_jump_to_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_jump_to_button->set_fixed_size(24, 24);
     m_jump_to_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"));
     m_jump_to_button->set_tooltip("Jump to today");
@@ -173,7 +173,7 @@ ClockWidget::ClockWidget()
     };
 
     m_calendar_launcher = settings_container.add<GUI::Button>();
-    m_calendar_launcher->set_button_style(Gfx::ButtonStyle::CoolBar);
+    m_calendar_launcher->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_calendar_launcher->set_fixed_size(24, 24);
     m_calendar_launcher->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calendar.png"));
     m_calendar_launcher->set_tooltip("Calendar");

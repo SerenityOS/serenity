@@ -32,8 +32,8 @@
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/Compositor.h>
 #include <WindowServer/Menu.h>
-#include <WindowServer/MenuBar.h>
 #include <WindowServer/MenuItem.h>
+#include <WindowServer/Menubar.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/Window.h>
 #include <WindowServer/WindowClientEndpoint.h>
@@ -104,7 +104,7 @@ void ClientConnection::notify_about_new_screen_rect(const Gfx::IntRect& rect)
 OwnPtr<Messages::WindowServer::CreateMenubarResponse> ClientConnection::handle(const Messages::WindowServer::CreateMenubar&)
 {
     int menubar_id = m_next_menubar_id++;
-    auto menubar = MenuBar::create(*this, menubar_id);
+    auto menubar = Menubar::create(*this, menubar_id);
     m_menubars.set(menubar_id, move(menubar));
     return make<Messages::WindowServer::CreateMenubarResponse>(menubar_id);
 }
@@ -155,7 +155,7 @@ OwnPtr<Messages::WindowServer::SetWindowMenubarResponse> ClientConnection::handl
         }
         window = it->value;
     }
-    RefPtr<MenuBar> menubar;
+    RefPtr<Menubar> menubar;
     if (message.menubar_id() != -1) {
         auto it = m_menubars.find(message.menubar_id());
         if (it == m_menubars.end()) {

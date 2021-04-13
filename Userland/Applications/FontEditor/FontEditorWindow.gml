@@ -3,10 +3,10 @@
     layout: @GUI::VerticalBoxLayout {
     }
 
-    @GUI::ToolBarContainer {
+    @GUI::ToolbarContainer {
         name: "toolbar_container"
 
-        @GUI::ToolBar {
+        @GUI::Toolbar {
             name: "toolbar"
         }
     }
@@ -205,7 +205,7 @@
         }
     }
 
-    @GUI::StatusBar {
-        name: "status_bar"
+    @GUI::Statusbar {
+        name: "statusbar"
     }
 }

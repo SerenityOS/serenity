@@ -33,8 +33,8 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/TableView.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <sys/arch/i386/regs.h>
@@ -61,7 +61,7 @@ private:
     RefPtr<GUI::TableView> m_registers_view;
     RefPtr<GUI::ListView> m_backtrace_view;
     RefPtr<GUI::Menu> m_variable_context_menu;
-    RefPtr<GUI::ToolBar> m_toolbar;
+    RefPtr<GUI::Toolbar> m_toolbar;
     RefPtr<GUI::Action> m_continue_action;
     RefPtr<GUI::Action> m_singlestep_action;
     RefPtr<GUI::Action> m_step_in_action;

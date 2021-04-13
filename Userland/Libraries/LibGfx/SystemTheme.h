@@ -148,7 +148,7 @@ enum class PathRole {
     TitleButtonIcons,
     InactiveWindowShadow,
     ActiveWindowShadow,
-    TaskBarShadow,
+    TaskbarShadow,
     MenuShadow,
     TooltipShadow,
     __Count,

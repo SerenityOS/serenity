@@ -34,7 +34,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Notification.h>
 #include <LibGUI/Widget.h>
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
 
     s_window->set_title(String::formatted("{} - Hack Studio", s_hack_studio_widget->project().name()));
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     s_hack_studio_widget->initialize_menubar(menubar);
     s_window->set_menubar(menubar);
 

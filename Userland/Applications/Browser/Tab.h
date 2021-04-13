@@ -103,9 +103,9 @@ private:
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<GUI::Window> m_dom_inspector_window;
     RefPtr<GUI::Window> m_console_window;
-    RefPtr<GUI::StatusBar> m_statusbar;
-    RefPtr<GUI::MenuBar> m_menubar;
-    RefPtr<GUI::ToolBarContainer> m_toolbar_container;
+    RefPtr<GUI::Statusbar> m_statusbar;
+    RefPtr<GUI::Menubar> m_menubar;
+    RefPtr<GUI::ToolbarContainer> m_toolbar_container;
 
     RefPtr<GUI::Menu> m_link_context_menu;
     RefPtr<GUI::Action> m_link_context_menu_default_action;

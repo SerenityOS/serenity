@@ -41,7 +41,7 @@
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/OpacitySlider.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/SpinBox.h>
@@ -426,7 +426,7 @@ int main(int argc, char** argv)
     terminal.context_menu().add_separator();
     terminal.context_menu().add_action(open_settings_action);
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
     auto& app_menu = menubar->add_menu("&File");
     app_menu.add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {

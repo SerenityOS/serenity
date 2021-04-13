@@ -131,7 +131,7 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
         set_visible(false);
 
     m_additional = GUI::Button::construct();
-    m_additional->set_button_style(Gfx::ButtonStyle::CoolBar);
+    m_additional->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_additional->set_text(">");
     m_additional->set_fixed_size(14, 20);
     m_additional->set_focus_policy(GUI::FocusPolicy::TabFocus);
@@ -208,7 +208,7 @@ void BookmarksBarWidget::model_did_update(unsigned)
         auto& button = add<GUI::Button>();
         m_bookmarks.append(button);
 
-        button.set_button_style(Gfx::ButtonStyle::CoolBar);
+        button.set_button_style(Gfx::ButtonStyle::Coolbar);
         button.set_text(title);
         button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
         button.set_fixed_size(font().width(title) + 32, 20);

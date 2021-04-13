@@ -32,14 +32,14 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SeparatorWidget.h>
-#include <LibGUI/ToolBar.h>
+#include <LibGUI/Toolbar.h>
 #include <LibGfx/Palette.h>
 
-REGISTER_WIDGET(GUI, ToolBar)
+REGISTER_WIDGET(GUI, Toolbar)
 
 namespace GUI {
 
-ToolBar::ToolBar(Orientation orientation, int button_size)
+Toolbar::Toolbar(Orientation orientation, int button_size)
     : m_orientation(orientation)
     , m_button_size(button_size)
 {
@@ -53,18 +53,18 @@ ToolBar::ToolBar(Orientation orientation, int button_size)
     layout()->set_margins({ 2, 2, 2, 2 });
 }
 
-ToolBar::~ToolBar()
+Toolbar::~Toolbar()
 {
 }
 
-class ToolBarButton final : public Button {
-    C_OBJECT(ToolBarButton);
+class ToolbarButton final : public Button {
+    C_OBJECT(ToolbarButton);
 
 public:
-    virtual ~ToolBarButton() override { }
+    virtual ~ToolbarButton() override { }
 
 private:
-    explicit ToolBarButton(Action& action)
+    explicit ToolbarButton(Action& action)
     {
         if (action.group() && action.group()->is_exclusive())
             set_exclusive(true);
@@ -75,7 +75,7 @@ private:
             set_icon(action.icon());
         else
             set_text(action.text());
-        set_button_style(Gfx::ButtonStyle::CoolBar);
+        set_button_style(Gfx::ButtonStyle::Coolbar);
     }
     String tooltip(const Action& action) const
     {
@@ -90,19 +90,19 @@ private:
     }
 };
 
-void ToolBar::add_action(Action& action)
+void Toolbar::add_action(Action& action)
 {
     auto item = make<Item>();
     item->type = Item::Type::Action;
     item->action = action;
 
-    auto& button = add<ToolBarButton>(action);
+    auto& button = add<ToolbarButton>(action);
     button.set_fixed_size(m_button_size + 8, m_button_size + 8);
 
     m_items.append(move(item));
 }
 
-void ToolBar::add_separator()
+void Toolbar::add_separator()
 {
     auto item = make<Item>();
     item->type = Item::Type::Separator;
@@ -110,7 +110,7 @@ void ToolBar::add_separator()
     m_items.append(move(item));
 }
 
-void ToolBar::paint_event(PaintEvent& event)
+void Toolbar::paint_event(PaintEvent& event)
 {
     Painter painter(*this);
     painter.add_clip_rect(event.rect());

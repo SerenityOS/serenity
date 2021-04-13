@@ -28,16 +28,16 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ResizeCorner.h>
-#include <LibGUI/StatusBar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
-REGISTER_WIDGET(GUI, StatusBar)
+REGISTER_WIDGET(GUI, Statusbar)
 
 namespace GUI {
 
-StatusBar::StatusBar(int label_count)
+Statusbar::Statusbar(int label_count)
 {
     set_fixed_height(18);
     set_layout<HorizontalBoxLayout>();
@@ -55,11 +55,11 @@ StatusBar::StatusBar(int label_count)
     REGISTER_STRING_PROPERTY("text", text, set_text);
 }
 
-StatusBar::~StatusBar()
+Statusbar::~Statusbar()
 {
 }
 
-NonnullRefPtr<Label> StatusBar::create_label()
+NonnullRefPtr<Label> Statusbar::create_label()
 {
     auto& label = add<Label>();
     label.set_frame_shadow(Gfx::FrameShadow::Sunken);
@@ -69,34 +69,34 @@ NonnullRefPtr<Label> StatusBar::create_label()
     return label;
 }
 
-void StatusBar::set_text(const StringView& text)
+void Statusbar::set_text(const StringView& text)
 {
     m_labels.first().set_text(text);
 }
 
-String StatusBar::text() const
+String Statusbar::text() const
 {
     return m_labels.first().text();
 }
 
-void StatusBar::set_text(int index, const StringView& text)
+void Statusbar::set_text(int index, const StringView& text)
 {
     m_labels.at(index).set_text(text);
 }
 
-String StatusBar::text(int index) const
+String Statusbar::text(int index) const
 {
     return m_labels.at(index).text();
 }
 
-void StatusBar::paint_event(PaintEvent& event)
+void Statusbar::paint_event(PaintEvent& event)
 {
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.fill_rect(rect(), palette().button());
 }
 
-void StatusBar::resize_event(ResizeEvent& event)
+void Statusbar::resize_event(ResizeEvent& event)
 {
     if (window())
         m_corner->set_visible(window()->is_maximized() ? false : true);

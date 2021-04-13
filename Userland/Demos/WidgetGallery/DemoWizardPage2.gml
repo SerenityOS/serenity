@@ -9,8 +9,8 @@
         fixed_height: 32
     }
 
-    @GUI::ProgressBar {
-        name: "page_2_progress_bar"
+    @GUI::Progressbar {
+        name: "page_2_progressbar"
         fixed_height: 28
     }
 

@@ -34,7 +34,7 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
     auto& flag_label = container.add<GUI::Label>();
     auto& face_button = container.add<GUI::Button>();
     face_button.set_focus_policy(GUI::FocusPolicy::TabFocus);
-    face_button.set_button_style(Gfx::ButtonStyle::CoolBar);
+    face_button.set_button_style(Gfx::ButtonStyle::Coolbar);
     face_button.set_fixed_size(36, 36);
 
     auto& time_image = container.add<GUI::ImageWidget>();
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
         window->resize(size);
     });
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
     auto& app_menu = menubar->add_menu("Game");
 

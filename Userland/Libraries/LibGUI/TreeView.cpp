@@ -28,7 +28,7 @@
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/TreeView.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>

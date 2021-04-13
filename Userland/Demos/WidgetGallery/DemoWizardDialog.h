@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibGUI/ProgressBar.h>
+#include <LibGUI/Progressbar.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/Wizards/CoverWizardPage.h>
@@ -47,7 +47,7 @@ private:
     RefPtr<GUI::TextBox> m_page_1_location_text_box;
 
     RefPtr<GUI::WizardPage> m_page_2;
-    RefPtr<GUI::ProgressBar> m_page_2_progress_bar;
+    RefPtr<GUI::Progressbar> m_page_2_progressbar;
     int m_page_2_progress_value { 0 };
     RefPtr<Core::Timer> m_page_2_timer;
 

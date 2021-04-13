@@ -31,7 +31,7 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/OpacitySlider.h>
-#include <LibGUI/ProgressBar.h>
+#include <LibGUI/Progressbar.h>
 #include <LibGUI/Slider.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
@@ -61,12 +61,12 @@ private:
     RefPtr<GUI::HorizontalSlider> m_horizontal_slider_left;
     RefPtr<GUI::HorizontalSlider> m_horizontal_slider_right;
 
-    RefPtr<GUI::VerticalProgressBar> m_vertical_progressbar_left;
-    RefPtr<GUI::VerticalProgressBar> m_vertical_progressbar_right;
-    RefPtr<GUI::HorizontalProgressBar> m_horizontal_progressbar;
+    RefPtr<GUI::VerticalProgressbar> m_vertical_progressbar_left;
+    RefPtr<GUI::VerticalProgressbar> m_vertical_progressbar_right;
+    RefPtr<GUI::HorizontalProgressbar> m_horizontal_progressbar;
 
-    RefPtr<GUI::ScrollBar> m_enabled_scrollbar;
-    RefPtr<GUI::ScrollBar> m_disabled_scrollbar;
+    RefPtr<GUI::Scrollbar> m_enabled_scrollbar;
+    RefPtr<GUI::Scrollbar> m_disabled_scrollbar;
 
     RefPtr<GUI::TextEditor> m_text_editor;
     RefPtr<GUI::TextEditor> m_wizard_output;

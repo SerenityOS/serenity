@@ -38,8 +38,8 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Slider.h>
 #include <LibGUI/Splitter.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
@@ -75,8 +75,8 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
         this->manager().seek(value);
     };
 
-    auto& toolbar_container = m_player_view->add<GUI::ToolBarContainer>();
-    auto& menubar = toolbar_container.add<GUI::ToolBar>();
+    auto& toolbar_container = m_player_view->add<GUI::ToolbarContainer>();
+    auto& menubar = toolbar_container.add<GUI::Toolbar>();
 
     m_play_button = menubar.add<GUI::Button>();
     m_play_button->set_icon(is_paused() ? (!has_loaded_file() ? *m_play_icon : *m_pause_icon) : *m_pause_icon);

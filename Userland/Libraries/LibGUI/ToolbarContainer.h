@@ -24,47 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/BoxLayout.h>
-#include <LibGUI/Painter.h>
-#include <LibGUI/ToolBarContainer.h>
-#include <LibGfx/Palette.h>
-#include <LibGfx/StylePainter.h>
+#pragma once
 
-REGISTER_WIDGET(GUI, ToolBarContainer)
+#include <LibGUI/Frame.h>
+#include <LibGUI/Toolbar.h>
 
 namespace GUI {
 
-ToolBarContainer::ToolBarContainer(Gfx::Orientation orientation)
-    : m_orientation(orientation)
-{
-    set_fill_with_background_color(true);
+class ToolbarContainer : public Frame {
+    C_OBJECT(ToolbarContainer);
 
-    set_frame_thickness(2);
-    set_frame_shape(Gfx::FrameShape::Box);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
+public:
+private:
+    explicit ToolbarContainer(Gfx::Orientation = Gfx::Orientation::Horizontal);
 
-    auto& layout = set_layout<VerticalBoxLayout>();
-    layout.set_spacing(2);
-    layout.set_margins({ 2, 2, 2, 2 });
+    virtual void paint_event(GUI::PaintEvent&) override;
 
-    set_shrink_to_fit(true);
-}
-
-void ToolBarContainer::paint_event(GUI::PaintEvent& event)
-{
-    Painter painter(*this);
-    painter.add_clip_rect(event.rect());
-
-    for_each_child_widget([&](auto& widget) {
-        if (widget.is_visible()) {
-            auto rect = widget.relative_rect();
-            painter.draw_line(rect.top_left().translated(0, -1), rect.top_right().translated(0, -1), palette().threed_highlight());
-            painter.draw_line(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), palette().threed_shadow1());
-        }
-        return IterationDecision::Continue;
-    });
-
-    Frame::paint_event(event);
-}
+    Gfx::Orientation m_orientation { Gfx::Orientation::Horizontal };
+};
 
 }

@@ -30,7 +30,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -233,7 +233,7 @@ int main(int argc, char** argv)
     root_widget.set_layout<GUI::VerticalBoxLayout>();
     root_widget.layout()->set_spacing(0);
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
     auto& help_menu = menubar->add_menu("Help");

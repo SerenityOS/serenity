@@ -58,7 +58,7 @@ DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
         "Installation in progress...",
         "Please wait. Do not turn off your computer.");
     m_page_2->body_widget().load_from_gml(demo_wizard_page_2_gml);
-    m_page_2_progress_bar = m_page_2->body_widget().find_descendant_of_type_named<GUI::ProgressBar>("page_2_progress_bar");
+    m_page_2_progressbar = m_page_2->body_widget().find_descendant_of_type_named<GUI::Progressbar>("page_2_progressbar");
     m_page_2_timer = Core::Timer::construct(this);
     m_page_2->on_page_enter = [&]() {
         m_page_2_progress_value = 0;
@@ -71,7 +71,7 @@ DemoWizardDialog::DemoWizardDialog(GUI::Window* parent_window)
     m_page_2_timer->on_timeout = [&]() {
         if (m_page_2_progress_value < 100)
             m_page_2_progress_value++;
-        m_page_2_progress_bar->set_value(m_page_2_progress_value);
+        m_page_2_progressbar->set_value(m_page_2_progress_value);
 
         // Go to final page on progress completion
         if (m_page_2_progress_value == 100) {

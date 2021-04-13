@@ -31,7 +31,7 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
         });
 
     // Menu
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(open_action);

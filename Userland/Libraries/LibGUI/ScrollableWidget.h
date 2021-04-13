@@ -27,7 +27,7 @@
 #pragma once
 
 #include <LibGUI/Frame.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 
 namespace GUI {
 
@@ -60,10 +60,10 @@ public:
     Gfx::IntSize available_size() const;
     Gfx::IntSize excess_size() const;
 
-    ScrollBar& vertical_scrollbar() { return *m_vertical_scrollbar; }
-    const ScrollBar& vertical_scrollbar() const { return *m_vertical_scrollbar; }
-    ScrollBar& horizontal_scrollbar() { return *m_horizontal_scrollbar; }
-    const ScrollBar& horizontal_scrollbar() const { return *m_horizontal_scrollbar; }
+    Scrollbar& vertical_scrollbar() { return *m_vertical_scrollbar; }
+    const Scrollbar& vertical_scrollbar() const { return *m_vertical_scrollbar; }
+    Scrollbar& horizontal_scrollbar() { return *m_horizontal_scrollbar; }
+    const Scrollbar& horizontal_scrollbar() const { return *m_horizontal_scrollbar; }
     Widget& corner_widget() { return *m_corner_widget; }
     const Widget& corner_widget() const { return *m_corner_widget; }
 
@@ -92,12 +92,12 @@ protected:
     void set_size_occupied_by_fixed_elements(const Gfx::IntSize&);
 
 private:
-    class ScrollableWidgetScrollBar final : public ScrollBar {
-        C_OBJECT(ScrollableWidgetScrollBar);
+    class ScrollableWidgetScrollbar final : public Scrollbar {
+        C_OBJECT(ScrollableWidgetScrollbar);
 
     protected:
-        explicit ScrollableWidgetScrollBar(ScrollableWidget& owner, Gfx::Orientation orientation)
-            : ScrollBar(orientation)
+        explicit ScrollableWidgetScrollbar(ScrollableWidget& owner, Gfx::Orientation orientation)
+            : Scrollbar(orientation)
             , m_owner(owner)
         {
         }
@@ -110,13 +110,13 @@ private:
     private:
         ScrollableWidget& m_owner;
     };
-    friend class ScrollableWidgetScrollBar;
+    friend class ScrollableWidgetScrollbar;
 
     void update_scrollbar_ranges();
     void handle_wheel_event(MouseEvent&, Widget&);
 
-    RefPtr<ScrollableWidgetScrollBar> m_vertical_scrollbar;
-    RefPtr<ScrollableWidgetScrollBar> m_horizontal_scrollbar;
+    RefPtr<ScrollableWidgetScrollbar> m_vertical_scrollbar;
+    RefPtr<ScrollableWidgetScrollbar> m_horizontal_scrollbar;
     RefPtr<Widget> m_corner_widget;
     Gfx::IntSize m_content_size;
     Gfx::IntSize m_size_occupied_by_fixed_elements;

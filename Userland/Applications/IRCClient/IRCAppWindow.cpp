@@ -33,12 +33,12 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 
 static IRCAppWindow* s_the;
 
@@ -257,7 +257,7 @@ void IRCAppWindow::setup_actions()
 
 void IRCAppWindow::setup_menus()
 {
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         dbgln("Terminal: Quit menu activated!");
@@ -307,8 +307,8 @@ void IRCAppWindow::setup_widgets()
     widget.set_layout<GUI::VerticalBoxLayout>();
     widget.layout()->set_spacing(0);
 
-    auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
-    auto& toolbar = toolbar_container.add<GUI::ToolBar>();
+    auto& toolbar_container = widget.add<GUI::ToolbarContainer>();
+    auto& toolbar = toolbar_container.add<GUI::Toolbar>();
     toolbar.set_has_frame(false);
     toolbar.add_action(*m_change_nick_action);
     toolbar.add_separator();

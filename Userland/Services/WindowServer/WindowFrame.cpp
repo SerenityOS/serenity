@@ -65,12 +65,12 @@ static int s_last_title_button_icons_scale;
 static Gfx::Bitmap* s_active_window_shadow;
 static Gfx::Bitmap* s_inactive_window_shadow;
 static Gfx::Bitmap* s_menu_shadow;
-static Gfx::Bitmap* s_task_bar_shadow;
+static Gfx::Bitmap* s_taskbar_shadow;
 static Gfx::Bitmap* s_tooltip_shadow;
 static String s_last_active_window_shadow_path;
 static String s_last_inactive_window_shadow_path;
 static String s_last_menu_shadow_path;
-static String s_last_task_bar_shadow_path;
+static String s_last_taskbar_shadow_path;
 static String s_last_tooltip_shadow_path;
 
 static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& rect)
@@ -195,7 +195,7 @@ void WindowFrame::reload_config()
     load_shadow(WindowManager::the().palette().active_window_shadow_path(), s_last_active_window_shadow_path, s_active_window_shadow);
     load_shadow(WindowManager::the().palette().inactive_window_shadow_path(), s_last_inactive_window_shadow_path, s_inactive_window_shadow);
     load_shadow(WindowManager::the().palette().menu_shadow_path(), s_last_menu_shadow_path, s_menu_shadow);
-    load_shadow(WindowManager::the().palette().task_bar_shadow_path(), s_last_task_bar_shadow_path, s_task_bar_shadow);
+    load_shadow(WindowManager::the().palette().taskbar_shadow_path(), s_last_taskbar_shadow_path, s_taskbar_shadow);
     load_shadow(WindowManager::the().palette().tooltip_shadow_path(), s_last_tooltip_shadow_path, s_tooltip_shadow);
 }
 
@@ -211,7 +211,7 @@ Gfx::Bitmap* WindowFrame::window_shadow() const
     case WindowType::Tooltip:
         return s_tooltip_shadow;
     case WindowType::Taskbar:
-        return s_task_bar_shadow;
+        return s_taskbar_shadow;
     case WindowType::AppletArea:
         return nullptr;
     default:
@@ -315,7 +315,7 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
         bool paint_as_pressed = MenuManager::the().is_open(menu);
         bool paint_as_hovered = !paint_as_pressed && &menu == MenuManager::the().hovered_menu();
         if (paint_as_pressed || paint_as_hovered) {
-            Gfx::StylePainter::paint_button(painter, menu.rect_in_window_menubar(), palette, Gfx::ButtonStyle::CoolBar, paint_as_pressed, paint_as_hovered);
+            Gfx::StylePainter::paint_button(painter, menu.rect_in_window_menubar(), palette, Gfx::ButtonStyle::Coolbar, paint_as_pressed, paint_as_hovered);
         }
         painter.draw_ui_text(text_rect, menu.name(), font, Gfx::TextAlignment::Center, text_color);
         return IterationDecision::Continue;

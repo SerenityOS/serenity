@@ -30,10 +30,10 @@
 
 namespace GUI {
 
-class ProgressBar : public Frame {
-    C_OBJECT(ProgressBar)
+class Progressbar : public Frame {
+    C_OBJECT(Progressbar)
 public:
-    virtual ~ProgressBar() override;
+    virtual ~Progressbar() override;
 
     void set_range(int min, int max);
     void set_min(int min) { set_range(min, max()); }
@@ -59,7 +59,7 @@ public:
     void set_format(Format format) { m_format = format; }
 
 protected:
-    ProgressBar(Orientation = Orientation::Horizontal);
+    Progressbar(Orientation = Orientation::Horizontal);
 
     virtual void paint_event(PaintEvent&) override;
 
@@ -72,28 +72,28 @@ private:
     Orientation m_orientation { Orientation::Horizontal };
 };
 
-class VerticalProgressBar final : public ProgressBar {
-    C_OBJECT(VerticalProgressBar);
+class VerticalProgressbar final : public Progressbar {
+    C_OBJECT(VerticalProgressbar);
 
 public:
-    virtual ~VerticalProgressBar() override { }
+    virtual ~VerticalProgressbar() override { }
 
 private:
-    VerticalProgressBar()
-        : ProgressBar(Orientation::Vertical)
+    VerticalProgressbar()
+        : Progressbar(Orientation::Vertical)
     {
     }
 };
 
-class HorizontalProgressBar final : public ProgressBar {
-    C_OBJECT(HorizontalProgressBar);
+class HorizontalProgressbar final : public Progressbar {
+    C_OBJECT(HorizontalProgressbar);
 
 public:
-    virtual ~HorizontalProgressBar() override { }
+    virtual ~HorizontalProgressbar() override { }
 
 private:
-    HorizontalProgressBar()
-        : ProgressBar(Orientation::Horizontal)
+    HorizontalProgressbar()
+        : Progressbar(Orientation::Horizontal)
     {
     }
 };

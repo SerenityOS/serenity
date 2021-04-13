@@ -4,12 +4,12 @@
         spacing: 2
     }
 
-    @GUI::ToolBarContainer {
+    @GUI::ToolbarContainer {
         name: "toolbar_container"
-        @GUI::ToolBar {
+        @GUI::Toolbar {
             name: "main_toolbar"
         }
-        @GUI::ToolBar {
+        @GUI::Toolbar {
             name: "location_toolbar"
             visible: false
 
@@ -23,7 +23,7 @@
                 fixed_height: 22
             }
         }
-        @GUI::ToolBar {
+        @GUI::Toolbar {
             name: "breadcrumb_toolbar"
 
             @GUI::Label {
@@ -31,8 +31,8 @@
                 autosize: true
             }
 
-            @GUI::BreadcrumbBar {
-                name: "breadcrumb_bar"
+            @GUI::Breadcrumbbar {
+                name: "breadcrumbbar"
             }
         }
     }
@@ -47,10 +47,10 @@
 
     }
 
-    @GUI::StatusBar {
+    @GUI::Statusbar {
         name: "statusbar"
 
-        @GUI::ProgressBar {
+        @GUI::Progressbar {
             name: "progressbar"
             text: "Generating thumbnails: "
             visible: false

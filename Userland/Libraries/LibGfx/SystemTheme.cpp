@@ -121,7 +121,7 @@ Core::AnonymousBuffer load_system_theme(const String& path)
     DO_PATH(TitleButtonIcons, false);
     DO_PATH(ActiveWindowShadow, true);
     DO_PATH(InactiveWindowShadow, true);
-    DO_PATH(TaskBarShadow, true);
+    DO_PATH(TaskbarShadow, true);
     DO_PATH(MenuShadow, true);
     DO_PATH(TooltipShadow, true);
 

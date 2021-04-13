@@ -31,7 +31,7 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/RadioButton.h>
-#include <LibGUI/StatusBar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/WindowTheme.h>
@@ -65,7 +65,7 @@ private:
         m_checkbox->set_text("Check box");
         m_radio = add<GUI::RadioButton>();
         m_radio->set_text("Radio button");
-        m_statusbar = add<GUI::StatusBar>();
+        m_statusbar = add<GUI::Statusbar>();
         m_statusbar->set_text("Status bar");
         m_editor = add<GUI::TextEditor>();
         m_editor->set_text("Text editor\nwith multiple\nlines.");
@@ -84,7 +84,7 @@ private:
     RefPtr<GUI::Button> m_button;
     RefPtr<GUI::CheckBox> m_checkbox;
     RefPtr<GUI::RadioButton> m_radio;
-    RefPtr<GUI::StatusBar> m_statusbar;
+    RefPtr<GUI::Statusbar> m_statusbar;
 };
 
 PreviewWidget::PreviewWidget(const Gfx::Palette& preview_palette)

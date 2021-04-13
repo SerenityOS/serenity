@@ -31,7 +31,7 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>

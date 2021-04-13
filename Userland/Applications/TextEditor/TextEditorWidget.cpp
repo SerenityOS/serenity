@@ -47,15 +47,15 @@
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/Splitter.h>
-#include <LibGUI/StatusBar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGfx/Font.h>
 #include <LibJS/SyntaxHighlighter.h>
@@ -69,8 +69,8 @@ TextEditorWidget::TextEditorWidget()
 
     m_config = Core::ConfigFile::get_for_app("TextEditor");
 
-    m_toolbar = *find_descendant_of_type_named<GUI::ToolBar>("toolbar");
-    m_toolbar_container = *find_descendant_of_type_named<GUI::ToolBarContainer>("toolbar_container");
+    m_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
+    m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
 
     m_editor = *find_descendant_of_type_named<GUI::TextEditor>("editor");
     m_editor->set_ruler_visible(true);
@@ -272,7 +272,7 @@ TextEditorWidget::TextEditorWidget()
     m_editor->add_custom_context_menu_action(*m_find_next_action);
     m_editor->add_custom_context_menu_action(*m_find_previous_action);
 
-    m_statusbar = *find_descendant_of_type_named<GUI::StatusBar>("statusbar");
+    m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     m_editor->on_cursor_change = [this] { update_statusbar(); };
     m_editor->on_selection_change = [this] { update_statusbar(); };
@@ -359,7 +359,7 @@ TextEditorWidget::~TextEditorWidget()
 {
 }
 
-void TextEditorWidget::initialize_menubar(GUI::MenuBar& menubar)
+void TextEditorWidget::initialize_menubar(GUI::Menubar& menubar)
 {
     auto& app_menu = menubar.add_menu("&File");
     app_menu.add_action(*m_new_action);
@@ -423,10 +423,10 @@ void TextEditorWidget::initialize_menubar(GUI::MenuBar& menubar)
 
     m_layout_statusbar_action = GUI::Action::create_checkable("&Status Bar", [&](auto& action) {
         action.is_checked() ? m_statusbar->set_visible(true) : m_statusbar->set_visible(false);
-        m_config->write_bool_entry("Layout", "ShowStatusBar", action.is_checked());
+        m_config->write_bool_entry("Layout", "ShowStatusbar", action.is_checked());
         m_config->sync();
     });
-    auto show_statusbar = m_config->read_bool_entry("Layout", "ShowStatusBar", true);
+    auto show_statusbar = m_config->read_bool_entry("Layout", "ShowStatusbar", true);
     m_layout_statusbar_action->set_checked(show_statusbar);
     m_statusbar->set_visible(show_statusbar);
 

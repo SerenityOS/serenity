@@ -31,7 +31,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/ProgressBar.h>
+#include <LibGUI/Progressbar.h>
 #include <LibGUI/Window.h>
 
 namespace FileManager {
@@ -99,17 +99,17 @@ void FileOperationProgressWidget::did_error()
 void FileOperationProgressWidget::did_progress([[maybe_unused]] off_t bytes_done, [[maybe_unused]] off_t total_byte_count, size_t files_done, size_t total_file_count, off_t current_file_done, off_t current_file_size, const StringView& current_file_name)
 {
     auto& current_file_label = *find_descendant_of_type_named<GUI::Label>("current_file_label");
-    auto& current_file_progress_bar = *find_descendant_of_type_named<GUI::ProgressBar>("current_file_progress_bar");
+    auto& current_file_progressbar = *find_descendant_of_type_named<GUI::Progressbar>("current_file_progressbar");
     auto& overall_progress_label = *find_descendant_of_type_named<GUI::Label>("overall_progress_label");
-    auto& overall_progress_bar = *find_descendant_of_type_named<GUI::ProgressBar>("overall_progress_bar");
+    auto& overall_progressbar = *find_descendant_of_type_named<GUI::Progressbar>("overall_progressbar");
 
     current_file_label.set_text(current_file_name);
-    current_file_progress_bar.set_max(current_file_size);
-    current_file_progress_bar.set_value(current_file_done);
+    current_file_progressbar.set_max(current_file_size);
+    current_file_progressbar.set_value(current_file_done);
 
     overall_progress_label.set_text(String::formatted("{} of {}", files_done, total_file_count));
-    overall_progress_bar.set_max(total_file_count);
-    overall_progress_bar.set_value(files_done);
+    overall_progressbar.set_max(total_file_count);
+    overall_progressbar.set_value(files_done);
 }
 
 void FileOperationProgressWidget::close_pipe()

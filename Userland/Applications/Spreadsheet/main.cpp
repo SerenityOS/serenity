@@ -35,7 +35,7 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <unistd.h>
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
     if (filename)
         spreadsheet_widget.load(filename);
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("File");
 
     app_menu.add_action(GUI::Action::create("Add New Sheet", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"), [&](auto&) {
