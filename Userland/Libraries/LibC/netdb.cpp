@@ -362,6 +362,9 @@ struct servent* getservent()
 
 struct servent* getservbyname(const char* name, const char* protocol)
 {
+    if (name == nullptr)
+        return nullptr;
+
     bool previous_file_open_setting = keep_service_file_open;
     setservent(1);
     struct servent* current_service = nullptr;
@@ -689,10 +692,14 @@ int getaddrinfo(const char* __restrict node, const char* __restrict service, con
         svc_ent = getservbyname(service, proto);
     }
     if (!svc_ent) {
-        char* end;
-        port = htons(strtol(service, &end, 10));
-        if (*end)
-            return EAI_FAIL;
+        if (service) {
+            char* end;
+            port = htons(strtol(service, &end, 10));
+            if (*end)
+                return EAI_FAIL;
+        } else {
+            port = htons(0);
+        }
 
         if (hints && hints->ai_socktype != 0)
             socktype = hints->ai_socktype;
