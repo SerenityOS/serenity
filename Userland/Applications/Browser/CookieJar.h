@@ -29,7 +29,7 @@
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
+#include <AK/Traits.h>
 #include <LibCore/DateTime.h>
 
 namespace Browser {
@@ -37,11 +37,25 @@ namespace Browser {
 struct Cookie {
     String name;
     String value;
+    Core::DateTime creation_time {};
+    Core::DateTime last_access_time {};
     Core::DateTime expiry_time {};
     String domain {};
     String path {};
     bool secure { false };
     bool http_only { false };
+    bool host_only { false };
+    bool persistent { false };
+};
+
+struct ParsedCookie;
+
+struct CookieStorageKey {
+    bool operator==(const CookieStorageKey&) const = default;
+
+    String name;
+    String domain;
+    String path;
 };
 
 class CookieJar {
@@ -53,18 +67,37 @@ public:
 private:
     static Optional<String> canonicalize_domain(const URL& url);
     static String default_path(const URL& url);
-    static Optional<Cookie> parse_cookie(const String& cookie_string, String default_domain, String default_path);
-    static void parse_attributes(Cookie& cookie, StringView unparsed_attributes);
-    static void process_attribute(Cookie& cookie, StringView attribute_name, StringView attribute_value);
-    static void on_expires_attribute(Cookie& cookie, StringView attribute_value);
-    static void on_max_age_attribute(Cookie& cookie, StringView attribute_value);
-    static void on_domain_attribute(Cookie& cookie, StringView attribute_value);
-    static void on_path_attribute(Cookie& cookie, StringView attribute_value);
-    static void on_secure_attribute(Cookie& cookie);
-    static void on_http_only_attribute(Cookie& cookie);
+    static Optional<ParsedCookie> parse_cookie(const String& cookie_string);
+    static void parse_attributes(ParsedCookie& parsed_cookie, StringView unparsed_attributes);
+    static void process_attribute(ParsedCookie& parsed_cookie, StringView attribute_name, StringView attribute_value);
+    static void on_expires_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
+    static void on_max_age_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
+    static void on_domain_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
+    static void on_path_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
+    static void on_secure_attribute(ParsedCookie& parsed_cookie);
+    static void on_http_only_attribute(ParsedCookie& parsed_cookie);
     static Optional<Core::DateTime> parse_date_time(StringView date_string);
+    static bool domain_matches(const String& string, const String& domain_string);
 
-    HashMap<String, Vector<Cookie>> m_cookies;
+    void store_cookie(ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain);
+
+    HashMap<CookieStorageKey, Cookie> m_cookies;
+};
+
+}
+
+namespace AK {
+
+template<>
+struct Traits<Browser::CookieStorageKey> : public GenericTraits<Browser::CookieStorageKey> {
+    static unsigned hash(const Browser::CookieStorageKey& key)
+    {
+        unsigned hash = 0;
+        hash = pair_int_hash(hash, string_hash(key.name.characters(), key.name.length()));
+        hash = pair_int_hash(hash, string_hash(key.domain.characters(), key.domain.length()));
+        hash = pair_int_hash(hash, string_hash(key.path.characters(), key.path.length()));
+        return hash;
+    }
 };
 
 }
