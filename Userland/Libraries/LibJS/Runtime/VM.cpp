@@ -173,6 +173,8 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 
         for (auto* scope = current_scope(); scope; scope = scope->parent()) {
             auto possible_match = scope->get_from_scope(name);
+            if (exception())
+                return {};
             if (possible_match.has_value())
                 return possible_match.value().value;
         }
