@@ -104,8 +104,8 @@ template<typename T>
 bool should_return_empty(const Optional<T>& value)
 {
     if constexpr (IsSame<JS::Value, T>)
-        return value.has_value() && value.value().is_empty();
-    return false;
+        return !value.has_value() || value.value().is_empty();
+    return !value.has_value();
 }
 
 }
