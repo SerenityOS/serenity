@@ -31,11 +31,11 @@
 
 namespace GUI {
 
-class ScrollBar : public AbstractSlider {
-    C_OBJECT(ScrollBar);
+class Scrollbar : public AbstractSlider {
+    C_OBJECT(Scrollbar);
 
 public:
-    virtual ~ScrollBar() override;
+    virtual ~Scrollbar() override;
 
     bool is_scrollable() const { return max() != min(); }
 
@@ -50,7 +50,7 @@ public:
     };
 
 protected:
-    explicit ScrollBar(Gfx::Orientation = Gfx::Orientation::Vertical);
+    explicit Scrollbar(Gfx::Orientation = Gfx::Orientation::Vertical);
 
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;

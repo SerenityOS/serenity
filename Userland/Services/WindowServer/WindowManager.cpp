@@ -28,8 +28,8 @@
 #include "Compositor.h"
 #include "EventLoop.h"
 #include "Menu.h"
-#include "MenuBar.h"
 #include "MenuItem.h"
+#include "Menubar.h"
 #include "Screen.h"
 #include "Window.h"
 #include <AK/StdLibExtras.h>

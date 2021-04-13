@@ -35,7 +35,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/TableView.h>
 #include <LibGfx/Palette.h>
 

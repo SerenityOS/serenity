@@ -210,7 +210,7 @@ private:
     RefPtr<Core::Timer> m_auto_scroll_timer;
     RefPtr<Core::ConfigFile> m_config;
 
-    RefPtr<GUI::ScrollBar> m_scrollbar;
+    RefPtr<GUI::Scrollbar> m_scrollbar;
 
     RefPtr<GUI::Action> m_copy_action;
     RefPtr<GUI::Action> m_paste_action;

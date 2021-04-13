@@ -28,7 +28,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <unistd.h>
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     auto& game = window->set_main_widget<Breakout::Game>();
     window->show();
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
     auto& app_menu = menubar->add_menu("Game");
     app_menu.add_action(GUI::Action::create_checkable("Pause", { {}, Key_P }, [&](auto& action) {

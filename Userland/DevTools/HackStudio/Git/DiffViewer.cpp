@@ -29,7 +29,7 @@
 #include <LibDiff/Hunks.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>

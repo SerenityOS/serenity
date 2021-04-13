@@ -30,7 +30,7 @@
 #include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -198,7 +198,7 @@ int main(int argc, char** argv)
     auto& main_widget = window->set_main_widget<MainFrame>();
     main_widget.set_fill_with_background_color(true);
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 

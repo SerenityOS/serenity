@@ -34,7 +34,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/ProcessChooser.h>
@@ -128,7 +128,7 @@ int main(int argc, char** argv)
     window->resize(685, 500);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 

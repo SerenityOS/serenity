@@ -39,8 +39,8 @@
 #include <LibGfx/Rect.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/Event.h>
-#include <WindowServer/MenuBar.h>
 #include <WindowServer/MenuManager.h>
+#include <WindowServer/Menubar.h>
 #include <WindowServer/Window.h>
 #include <WindowServer/WindowSwitcher.h>
 #include <WindowServer/WindowType.h>

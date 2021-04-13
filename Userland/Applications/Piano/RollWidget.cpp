@@ -28,7 +28,7 @@
 #include "RollWidget.h"
 #include "TrackManager.h"
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <math.h>

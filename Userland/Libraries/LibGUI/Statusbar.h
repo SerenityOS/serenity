@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,40 +30,25 @@
 
 namespace GUI {
 
-class BreadcrumbBar : public GUI::Widget {
-    C_OBJECT(BreadcrumbBar);
-
+class Statusbar : public Widget {
+    C_OBJECT(Statusbar)
 public:
-    virtual ~BreadcrumbBar() override;
+    virtual ~Statusbar() override;
 
-    void clear_segments();
-    void append_segment(String text, const Gfx::Bitmap* icon = nullptr, String data = {}, String tooltip = {});
+    String text() const;
+    String text(int index) const;
+    void set_text(const StringView&);
+    void set_text(int index, const StringView&);
 
-    size_t segment_count() const { return m_segments.size(); }
-    String segment_data(size_t index) const { return m_segments[index].data; }
-
-    void set_selected_segment(Optional<size_t> index);
-    Optional<size_t> selected_segment() const { return m_selected_segment; }
-
-    Function<void(size_t index)> on_segment_click;
-    Function<void(size_t index, DropEvent&)> on_segment_drop;
-    Function<void(size_t index, DragEvent&)> on_segment_drag_enter;
-    Function<void(MouseEvent& event)> on_doubleclick;
+protected:
+    explicit Statusbar(int label_count = 1);
+    virtual void paint_event(PaintEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
 
 private:
-    BreadcrumbBar();
-
-    struct Segment {
-        RefPtr<const Gfx::Bitmap> icon;
-        String text;
-        String data;
-        WeakPtr<GUI::Button> button;
-    };
-
-    Vector<Segment> m_segments;
-    Optional<size_t> m_selected_segment;
-
-    virtual void doubleclick_event(GUI::MouseEvent&) override;
+    NonnullRefPtr<Label> create_label();
+    NonnullRefPtrVector<Label> m_labels;
+    RefPtr<ResizeCorner> m_corner;
 };
 
 }

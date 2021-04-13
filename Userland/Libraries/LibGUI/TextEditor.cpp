@@ -37,7 +37,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/RegularEditingEngine.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>

@@ -55,7 +55,7 @@ public:
     void set_auto_detect_preview_mode(bool value) { m_auto_detect_preview_mode = value; }
 
     void update_title();
-    void initialize_menubar(GUI::MenuBar&);
+    void initialize_menubar(GUI::Menubar&);
 
 private:
     TextEditorWidget();
@@ -92,9 +92,9 @@ private:
     RefPtr<GUI::Action> m_markdown_preview_action;
     RefPtr<GUI::Action> m_html_preview_action;
 
-    RefPtr<GUI::ToolBar> m_toolbar;
-    RefPtr<GUI::ToolBarContainer> m_toolbar_container;
-    RefPtr<GUI::StatusBar> m_statusbar;
+    RefPtr<GUI::Toolbar> m_toolbar;
+    RefPtr<GUI::ToolbarContainer> m_toolbar_container;
+    RefPtr<GUI::Statusbar> m_statusbar;
 
     RefPtr<GUI::TextBox> m_find_textbox;
     RefPtr<GUI::TextBox> m_replace_textbox;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,24 +24,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "MenuBar.h"
-#include "Menu.h"
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Painter.h>
+#include <LibGUI/ToolbarContainer.h>
+#include <LibGfx/Palette.h>
+#include <LibGfx/StylePainter.h>
 
-namespace WindowServer {
+REGISTER_WIDGET(GUI, ToolbarContainer)
 
-MenuBar::MenuBar(ClientConnection& client, int menubar_id)
-    : m_client(client)
-    , m_menubar_id(menubar_id)
+namespace GUI {
+
+ToolbarContainer::ToolbarContainer(Gfx::Orientation orientation)
+    : m_orientation(orientation)
 {
+    set_fill_with_background_color(true);
+
+    set_frame_thickness(2);
+    set_frame_shape(Gfx::FrameShape::Box);
+    set_frame_shadow(Gfx::FrameShadow::Sunken);
+
+    auto& layout = set_layout<VerticalBoxLayout>();
+    layout.set_spacing(2);
+    layout.set_margins({ 2, 2, 2, 2 });
+
+    set_shrink_to_fit(true);
 }
 
-MenuBar::~MenuBar()
+void ToolbarContainer::paint_event(GUI::PaintEvent& event)
 {
-}
+    Painter painter(*this);
+    painter.add_clip_rect(event.rect());
 
-void MenuBar::add_menu(Menu& menu)
-{
-    m_menus.append(&menu);
+    for_each_child_widget([&](auto& widget) {
+        if (widget.is_visible()) {
+            auto rect = widget.relative_rect();
+            painter.draw_line(rect.top_left().translated(0, -1), rect.top_right().translated(0, -1), palette().threed_highlight());
+            painter.draw_line(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), palette().threed_shadow1());
+        }
+        return IterationDecision::Continue;
+    });
+
+    Frame::paint_event(event);
 }
 
 }

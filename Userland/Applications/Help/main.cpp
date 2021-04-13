@@ -36,13 +36,13 @@
 #include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextBox.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <LibMarkdown/Document.h>
@@ -107,8 +107,8 @@ int main(int argc, char* argv[])
     widget.set_fill_with_background_color(true);
     widget.layout()->set_spacing(2);
 
-    auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
-    auto& toolbar = toolbar_container.add<GUI::ToolBar>();
+    auto& toolbar_container = widget.add<GUI::ToolbarContainer>();
+    auto& toolbar = toolbar_container.add<GUI::Toolbar>();
 
     auto& splitter = widget.add<GUI::HorizontalSplitter>();
 
@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
     toolbar.add_action(*go_forward_action);
     toolbar.add_action(*go_home_action);
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_about_action("Help", app_icon, window));

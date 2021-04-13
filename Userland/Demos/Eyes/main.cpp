@@ -29,7 +29,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <unistd.h>
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 
     auto& eyes = window->set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns);
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 

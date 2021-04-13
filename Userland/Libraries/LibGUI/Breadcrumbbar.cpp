@@ -25,13 +25,13 @@
  */
 
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/BreadcrumbBar.h>
+#include <LibGUI/Breadcrumbbar.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
-REGISTER_WIDGET(GUI, BreadcrumbBar)
+REGISTER_WIDGET(GUI, Breadcrumbbar)
 
 namespace GUI {
 
@@ -76,26 +76,26 @@ private:
     BreadcrumbButton() { }
 };
 
-BreadcrumbBar::BreadcrumbBar()
+Breadcrumbbar::Breadcrumbbar()
 {
     auto& layout = set_layout<HorizontalBoxLayout>();
     layout.set_spacing(0);
 }
 
-BreadcrumbBar::~BreadcrumbBar()
+Breadcrumbbar::~Breadcrumbbar()
 {
 }
 
-void BreadcrumbBar::clear_segments()
+void Breadcrumbbar::clear_segments()
 {
     m_segments.clear();
     remove_all_children();
 }
 
-void BreadcrumbBar::append_segment(String text, const Gfx::Bitmap* icon, String data, String tooltip)
+void Breadcrumbbar::append_segment(String text, const Gfx::Bitmap* icon, String data, String tooltip)
 {
     auto& button = add<BreadcrumbButton>();
-    button.set_button_style(Gfx::ButtonStyle::CoolBar);
+    button.set_button_style(Gfx::ButtonStyle::Coolbar);
     button.set_text(text);
     button.set_icon(icon);
     button.set_tooltip(move(tooltip));
@@ -125,7 +125,7 @@ void BreadcrumbBar::append_segment(String text, const Gfx::Bitmap* icon, String 
     m_segments.append(move(segment));
 }
 
-void BreadcrumbBar::set_selected_segment(Optional<size_t> index)
+void Breadcrumbbar::set_selected_segment(Optional<size_t> index)
 {
     if (!index.has_value()) {
         for_each_child_of_type<GUI::AbstractButton>([&](auto& button) {
@@ -140,7 +140,7 @@ void BreadcrumbBar::set_selected_segment(Optional<size_t> index)
     segment.button->set_checked(true);
 }
 
-void BreadcrumbBar::doubleclick_event(MouseEvent& event)
+void Breadcrumbbar::doubleclick_event(MouseEvent& event)
 {
     if (on_doubleclick)
         on_doubleclick(event);

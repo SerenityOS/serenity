@@ -39,12 +39,12 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
-#include <LibGUI/StatusBar.h>
+#include <LibGUI/Menubar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextBox.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/Dump.h>
@@ -99,8 +99,8 @@ Tab::Tab(Type type)
 {
     load_from_gml(tab_gml);
 
-    m_toolbar_container = *find_descendant_of_type_named<GUI::ToolBarContainer>("toolbar_container");
-    auto& toolbar = *find_descendant_of_type_named<GUI::ToolBar>("toolbar");
+    m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
+    auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
 
     auto& webview_container = *find_descendant_of_type_named<GUI::Widget>("webview_container");
 
@@ -136,7 +136,7 @@ Tab::Tab(Type type)
     }));
 
     m_bookmark_button = toolbar.add<GUI::Button>();
-    m_bookmark_button->set_button_style(Gfx::ButtonStyle::CoolBar);
+    m_bookmark_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_bookmark_button->set_focus_policy(GUI::FocusPolicy::TabFocus);
     m_bookmark_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/bookmark-contour.png"));
     m_bookmark_button->set_fixed_size(22, 22);
@@ -280,7 +280,7 @@ Tab::Tab(Type type)
         },
         this);
 
-    m_statusbar = *find_descendant_of_type_named<GUI::StatusBar>("statusbar");
+    m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     hooks().on_link_hover = [this](auto& url) {
         if (url.is_valid())
@@ -293,7 +293,7 @@ Tab::Tab(Type type)
         load(url);
     };
 
-    m_menubar = GUI::MenuBar::construct();
+    m_menubar = GUI::Menubar::construct();
 
     auto& app_menu = m_menubar->add_menu("&File");
     app_menu.add_action(WindowActions::the().create_new_tab_action());

@@ -44,7 +44,7 @@ namespace WindowServer {
 class Compositor;
 class Window;
 class Menu;
-class MenuBar;
+class Menubar;
 
 class ClientConnection final
     : public IPC::ClientConnection<WindowClientEndpoint, WindowServerEndpoint>
@@ -175,7 +175,7 @@ private:
     Window* window_from_id(i32 window_id);
 
     HashMap<int, NonnullRefPtr<Window>> m_windows;
-    HashMap<int, NonnullRefPtr<MenuBar>> m_menubars;
+    HashMap<int, NonnullRefPtr<Menubar>> m_menubars;
     HashMap<int, NonnullRefPtr<Menu>> m_menus;
 
     RefPtr<Core::Timer> m_ping_timer;

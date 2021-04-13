@@ -26,7 +26,7 @@
 
 #include "TextEditorWidget.h"
 #include <LibCore/ArgsParser.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -85,7 +85,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     text_widget.initialize_menubar(menubar);
     window->set_menubar(menubar);
 

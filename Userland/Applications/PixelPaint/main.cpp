@@ -44,7 +44,7 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& file_menu = menubar->add_menu("&File");
 
     auto open_image_file = [&](auto& path) {

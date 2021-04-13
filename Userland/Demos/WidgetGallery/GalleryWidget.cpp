@@ -191,10 +191,10 @@ GalleryWidget::GalleryWidget()
     auto& sliders_tab = tab_widget.add_tab<GUI::Widget>("Sliders");
     sliders_tab.load_from_gml(sliders_tab_gml);
 
-    m_vertical_progressbar_left = sliders_tab.find_descendant_of_type_named<GUI::VerticalProgressBar>("vertical_progressbar_left");
+    m_vertical_progressbar_left = sliders_tab.find_descendant_of_type_named<GUI::VerticalProgressbar>("vertical_progressbar_left");
     m_vertical_progressbar_left->set_value(0);
 
-    m_vertical_progressbar_right = sliders_tab.find_descendant_of_type_named<GUI::VerticalProgressBar>("vertical_progressbar_right");
+    m_vertical_progressbar_right = sliders_tab.find_descendant_of_type_named<GUI::VerticalProgressbar>("vertical_progressbar_right");
     m_vertical_progressbar_right->set_value(100);
 
     m_vertical_slider_left = sliders_tab.find_descendant_of_type_named<GUI::VerticalSlider>("vertical_slider_left");
@@ -208,7 +208,7 @@ GalleryWidget::GalleryWidget()
         m_vertical_progressbar_right->set_value((100 / m_vertical_slider_right->max()) * (m_vertical_slider_right->max() - value));
     };
 
-    m_horizontal_progressbar = sliders_tab.find_descendant_of_type_named<GUI::HorizontalProgressBar>("horizontal_progressbar");
+    m_horizontal_progressbar = sliders_tab.find_descendant_of_type_named<GUI::HorizontalProgressbar>("horizontal_progressbar");
     m_horizontal_progressbar->set_value(0);
 
     m_horizontal_slider_left = sliders_tab.find_descendant_of_type_named<GUI::HorizontalSlider>("horizontal_slider_left");
@@ -225,10 +225,10 @@ GalleryWidget::GalleryWidget()
         m_horizontal_slider_left->set_value((value * 100) / m_horizontal_slider_right->max());
     };
 
-    m_enabled_scrollbar = sliders_tab.find_descendant_of_type_named<GUI::ScrollBar>("enabled_scrollbar");
+    m_enabled_scrollbar = sliders_tab.find_descendant_of_type_named<GUI::Scrollbar>("enabled_scrollbar");
     m_enabled_scrollbar->set_orientation(Orientation::Horizontal);
 
-    m_disabled_scrollbar = sliders_tab.find_descendant_of_type_named<GUI::ScrollBar>("disabled_scrollbar");
+    m_disabled_scrollbar = sliders_tab.find_descendant_of_type_named<GUI::Scrollbar>("disabled_scrollbar");
     m_disabled_scrollbar->set_orientation(Orientation::Horizontal);
 
     m_opacity_imagewidget = sliders_tab.find_descendant_of_type_named<GUI::ImageWidget>("opacity_imagewidget");

@@ -30,7 +30,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     window->set_main_widget(tab_widget.ptr());
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](const GUI::Action&) {

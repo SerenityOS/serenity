@@ -35,7 +35,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Event.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -1084,7 +1084,7 @@ Gfx::Bitmap* Window::back_bitmap()
     return m_back_store ? &m_back_store->bitmap() : nullptr;
 }
 
-void Window::set_menubar(RefPtr<MenuBar> menubar)
+void Window::set_menubar(RefPtr<Menubar> menubar)
 {
     if (m_menubar == menubar)
         return;

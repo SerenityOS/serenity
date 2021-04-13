@@ -66,7 +66,7 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/Splitter.h>
@@ -75,8 +75,8 @@
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGUI/Widget.h>
@@ -103,7 +103,7 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
 
     open_project(path_to_project);
 
-    auto& toolbar_container = add<GUI::ToolBarContainer>();
+    auto& toolbar_container = add<GUI::ToolbarContainer>();
 
     auto& outer_splitter = add<GUI::HorizontalSplitter>();
 
@@ -785,7 +785,7 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
 {
     m_form_inner_container = parent.add<GUI::Widget>();
     m_form_inner_container->set_layout<GUI::HorizontalBoxLayout>();
-    auto& form_widgets_toolbar = m_form_inner_container->add<GUI::ToolBar>(Orientation::Vertical, 26);
+    auto& form_widgets_toolbar = m_form_inner_container->add<GUI::Toolbar>(Orientation::Vertical, 26);
     form_widgets_toolbar.set_fixed_width(38);
 
     GUI::ActionGroup tool_actions;
@@ -868,7 +868,7 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
 
 void HackStudioWidget::create_toolbar(GUI::Widget& parent)
 {
-    auto& toolbar = parent.add<GUI::ToolBar>();
+    auto& toolbar = parent.add<GUI::Toolbar>();
     toolbar.add_action(*m_new_file_action);
     toolbar.add_action(*m_new_directory_action);
     toolbar.add_action(*m_save_action);
@@ -950,7 +950,7 @@ void HackStudioWidget::create_project_tab(GUI::Widget& parent)
     };
 }
 
-void HackStudioWidget::create_app_menubar(GUI::MenuBar& menubar)
+void HackStudioWidget::create_app_menubar(GUI::Menubar& menubar)
 {
     auto& file_menu = menubar.add_menu("&File");
     file_menu.add_action(*m_new_project_action);
@@ -962,7 +962,7 @@ void HackStudioWidget::create_app_menubar(GUI::MenuBar& menubar)
     }));
 }
 
-void HackStudioWidget::create_project_menubar(GUI::MenuBar& menubar)
+void HackStudioWidget::create_project_menubar(GUI::Menubar& menubar)
 {
     auto& project_menu = menubar.add_menu("&Project");
     project_menu.add_action(*m_new_file_action);
@@ -971,7 +971,7 @@ void HackStudioWidget::create_project_menubar(GUI::MenuBar& menubar)
     project_menu.add_action(*create_set_autocomplete_mode_action());
 }
 
-void HackStudioWidget::create_edit_menubar(GUI::MenuBar& menubar)
+void HackStudioWidget::create_edit_menubar(GUI::Menubar& menubar)
 {
     auto& edit_menu = menubar.add_menu("&Edit");
     edit_menu.add_action(GUI::Action::create("Find in Files...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [this](auto&) {
@@ -991,7 +991,7 @@ void HackStudioWidget::create_edit_menubar(GUI::MenuBar& menubar)
     edit_menu.add_action(vim_emulation_setting_action);
 }
 
-void HackStudioWidget::create_build_menubar(GUI::MenuBar& menubar)
+void HackStudioWidget::create_build_menubar(GUI::Menubar& menubar)
 {
     auto& build_menu = menubar.add_menu("&Build");
     build_menu.add_action(*m_build_action);
@@ -1002,7 +1002,7 @@ void HackStudioWidget::create_build_menubar(GUI::MenuBar& menubar)
     build_menu.add_action(*m_debug_action);
 }
 
-void HackStudioWidget::create_view_menubar(GUI::MenuBar& menubar)
+void HackStudioWidget::create_view_menubar(GUI::Menubar& menubar)
 {
     auto hide_action_tabs_action = GUI::Action::create("&Hide Action Tabs", { Mod_Ctrl | Mod_Shift, Key_X }, [this](auto&) {
         hide_action_tabs();
@@ -1048,7 +1048,7 @@ void HackStudioWidget::create_view_menubar(GUI::MenuBar& menubar)
     view_menu.add_action(*m_remove_current_terminal_action);
 }
 
-void HackStudioWidget::create_help_menubar(GUI::MenuBar& menubar)
+void HackStudioWidget::create_help_menubar(GUI::Menubar& menubar)
 {
     auto& help_menu = menubar.add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Hack Studio", GUI::Icon::default_icon("app-hack-studio"), window()));
@@ -1073,7 +1073,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_set_autocomplete_mode_action
     return action;
 }
 
-void HackStudioWidget::initialize_menubar(GUI::MenuBar& menubar)
+void HackStudioWidget::initialize_menubar(GUI::Menubar& menubar)
 {
     create_app_menubar(menubar);
     create_project_menubar(menubar);

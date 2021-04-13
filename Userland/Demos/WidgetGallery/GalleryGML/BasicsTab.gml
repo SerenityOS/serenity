@@ -126,15 +126,15 @@
 
                 @GUI::Button {
                     name: "enabled_coolbar_button"
-                    text: "CoolBar button"
-                    button_style: "CoolBar"
+                    text: "Coolbar button"
+                    button_style: "Coolbar"
                 }
 
                 @GUI::Button {
                     name: "disabled_coolbar_button"
                     text: "Disabled"
                     enabled: "false"
-                    button_style: "CoolBar"
+                    button_style: "Coolbar"
                 }
 
                 @GUI::Widget {

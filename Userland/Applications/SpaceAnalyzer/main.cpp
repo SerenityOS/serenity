@@ -35,13 +35,13 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/BreadcrumbBar.h>
+#include <LibGUI/Breadcrumbbar.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/StatusBar.h>
+#include <LibGUI/Statusbar.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -209,7 +209,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
     update_totals(root);
 }
 
-static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidget, GUI::StatusBar& statusbar)
+static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidget, GUI::Statusbar& statusbar)
 {
     // Build an in-memory tree mirroring the filesystem and for each node
     // calculate the sum of the file size for all its descendants.
@@ -285,12 +285,12 @@ int main(int argc, char* argv[])
     // Load widgets.
     auto& mainwidget = window->set_main_widget<GUI::Widget>();
     mainwidget.load_from_gml(space_analyzer_gml);
-    auto& breadcrumbbar = *mainwidget.find_descendant_of_type_named<GUI::BreadcrumbBar>("breadcrumb_bar");
+    auto& breadcrumbbar = *mainwidget.find_descendant_of_type_named<GUI::Breadcrumbbar>("breadcrumbbar");
     auto& treemapwidget = *mainwidget.find_descendant_of_type_named<SpaceAnalyzer::TreeMapWidget>("tree_map");
-    auto& statusbar = *mainwidget.find_descendant_of_type_named<GUI::StatusBar>("status_bar");
+    auto& statusbar = *mainwidget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     // Configure the menubar.
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::Action::create("Analyze", [&](auto&) {
         analyze(tree, treemapwidget, statusbar);

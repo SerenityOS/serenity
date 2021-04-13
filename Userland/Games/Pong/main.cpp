@@ -29,7 +29,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <unistd.h>
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     window->set_main_widget<Pong::Game>();
     window->show();
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
     auto& app_menu = menubar->add_menu("Game");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {

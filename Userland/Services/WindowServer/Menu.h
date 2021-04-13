@@ -41,7 +41,7 @@
 namespace WindowServer {
 
 class ClientConnection;
-class MenuBar;
+class Menubar;
 
 class Menu final : public Core::Object {
     C_OBJECT(Menu);

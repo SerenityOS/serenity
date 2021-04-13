@@ -72,7 +72,7 @@ void TaskbarButton::resize_event(GUI::ResizeEvent& event)
     return GUI::Button::resize_event(event);
 }
 
-static void paint_custom_progress_bar(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::IntRect& text_rect, const Palette& palette, int min, int max, int value, const StringView& text, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
+static void paint_custom_progressbar(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::IntRect& text_rect, const Palette& palette, int min, int max, int value, const StringView& text, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
 {
     float range_size = max - min;
     float progress = (value - min) / range_size;
@@ -145,7 +145,7 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
         if (is_being_pressed() || is_checked()) {
             adjusted_rect.set_height(adjusted_rect.height() + 1);
         }
-        paint_custom_progress_bar(painter, adjusted_rect, text_rect, palette(), 0, 100, window.progress(), text(), font, text_alignment());
+        paint_custom_progressbar(painter, adjusted_rect, text_rect, palette(), 0, 100, window.progress(), text(), font, text_alignment());
     }
 
     if (is_enabled()) {

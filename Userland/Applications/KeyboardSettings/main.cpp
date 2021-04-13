@@ -37,7 +37,7 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibKeyboard/CharacterMap.h>
@@ -186,7 +186,7 @@ int main(int argc, char** argv)
             app->quit();
         });
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
     auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(quit_action);

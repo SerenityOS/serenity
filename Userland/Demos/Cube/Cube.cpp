@@ -30,7 +30,7 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -263,7 +263,7 @@ int main(int argc, char** argv)
     auto app_icon = GUI::Icon::default_icon("app-cube");
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     auto& app_menu = menubar->add_menu("File");
     auto show_window_frame_action = GUI::Action::create_checkable("Show window frame", [&](auto& action) {
         cube.set_show_window_frame(action.is_checked());

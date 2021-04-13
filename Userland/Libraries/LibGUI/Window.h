@@ -211,7 +211,7 @@ public:
 
     void did_disable_focused_widget(Badge<Widget>);
 
-    void set_menubar(RefPtr<MenuBar>);
+    void set_menubar(RefPtr<Menubar>);
 
 protected:
     Window(Core::Object* parent = nullptr);
@@ -245,7 +245,7 @@ private:
     OwnPtr<WindowBackingStore> m_front_store;
     OwnPtr<WindowBackingStore> m_back_store;
 
-    RefPtr<MenuBar> m_menubar;
+    RefPtr<Menubar> m_menubar;
 
     RefPtr<Gfx::Bitmap> m_icon;
     RefPtr<Gfx::Bitmap> m_custom_cursor;

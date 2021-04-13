@@ -43,7 +43,7 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
@@ -107,7 +107,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     m_visual_beep_timer = add<Core::Timer>();
     m_auto_scroll_timer = add<Core::Timer>();
 
-    m_scrollbar = add<GUI::ScrollBar>(Orientation::Vertical);
+    m_scrollbar = add<GUI::Scrollbar>(Orientation::Vertical);
     m_scrollbar->set_relative_rect(0, 0, 16, 0);
     m_scrollbar->on_change = [this](int) {
         update();

@@ -51,7 +51,7 @@
                 name: "location_textbox"
             }
 
-            @GUI::ToolBar {
+            @GUI::Toolbar {
                 name: "toolbar"
             }
         }

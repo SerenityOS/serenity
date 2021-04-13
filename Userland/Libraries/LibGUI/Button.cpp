@@ -49,7 +49,7 @@ Button::Button(String text)
     REGISTER_ENUM_PROPERTY(
         "button_style", button_style, set_button_style, Gfx::ButtonStyle,
         { Gfx::ButtonStyle::Normal, "Normal" },
-        { Gfx::ButtonStyle::CoolBar, "CoolBar" });
+        { Gfx::ButtonStyle::Coolbar, "Coolbar" });
 }
 
 Button::~Button()
@@ -77,7 +77,7 @@ void Button::paint_event(PaintEvent& event)
 
     if (paint_pressed || is_checked()) {
         painter.translate(1, 1);
-    } else if (m_icon && is_enabled() && is_hovered() && button_style() == Gfx::ButtonStyle::CoolBar) {
+    } else if (m_icon && is_enabled() && is_hovered() && button_style() == Gfx::ButtonStyle::Coolbar) {
         auto shadow_color = palette().button().darkened(0.7f);
         painter.blit_filtered(icon_location.translated(1, 1), *m_icon, m_icon->rect(), [&shadow_color](auto) {
             return shadow_color;

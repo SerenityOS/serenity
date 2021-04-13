@@ -31,7 +31,7 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>

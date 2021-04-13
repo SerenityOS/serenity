@@ -26,41 +26,34 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
-#include <LibGUI/Widget.h>
+#include <AK/Forward.h>
+#include <AK/NonnullRefPtrVector.h>
+#include <LibCore/Object.h>
+#include <LibGUI/Forward.h>
 
 namespace GUI {
 
-class ToolBar : public Widget {
-    C_OBJECT(ToolBar)
+class Menubar : public Core::Object {
+    C_OBJECT(Menubar);
+
 public:
-    virtual ~ToolBar() override;
+    ~Menubar();
 
-    void add_action(Action&);
-    void add_separator();
+    Menu& add_menu(String name);
 
-    bool has_frame() const { return m_has_frame; }
-    void set_has_frame(bool has_frame) { m_has_frame = has_frame; }
+    void notify_added_to_window(Badge<Window>);
+    void notify_removed_from_window(Badge<Window>);
 
-protected:
-    explicit ToolBar(Gfx::Orientation = Gfx::Orientation::Horizontal, int button_size = 16);
-
-    virtual void paint_event(PaintEvent&) override;
+    int menubar_id() const { return m_menubar_id; }
 
 private:
-    struct Item {
-        enum class Type {
-            Invalid,
-            Separator,
-            Action
-        };
-        Type type { Type::Invalid };
-        RefPtr<Action> action;
-    };
-    NonnullOwnPtrVector<Item> m_items;
-    const Gfx::Orientation m_orientation;
-    int m_button_size { 16 };
-    bool m_has_frame { true };
+    Menubar();
+
+    int realize_menubar();
+    void unrealize_menubar();
+
+    int m_menubar_id { -1 };
+    NonnullRefPtrVector<Menu> m_menus;
 };
 
 }

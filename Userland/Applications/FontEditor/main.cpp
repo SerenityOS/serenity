@@ -30,7 +30,7 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/BitmapFont.h>
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 
     auto& font_editor = window->set_main_widget<FontEditorWidget>(path, move(edited_font));
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     font_editor.initialize_menubar(menubar);
     window->set_menubar(move(menubar));
 

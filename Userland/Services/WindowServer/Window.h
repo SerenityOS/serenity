@@ -43,7 +43,7 @@ class ClientConnection;
 class Cursor;
 class KeyEvent;
 class Menu;
-class MenuBar;
+class Menubar;
 class MenuItem;
 class MouseEvent;
 
@@ -333,9 +333,9 @@ public:
     Gfx::DisjointRectSet& transparency_rects() { return m_transparency_rects; }
     Gfx::DisjointRectSet& transparency_wallpaper_rects() { return m_transparency_wallpaper_rects; }
 
-    MenuBar* menubar() { return m_menubar; }
-    const MenuBar* menubar() const { return m_menubar; }
-    void set_menubar(MenuBar*);
+    Menubar* menubar() { return m_menubar; }
+    const Menubar* menubar() const { return m_menubar; }
+    void set_menubar(Menubar*);
 
 private:
     virtual void event(Core::Event&) override;
@@ -354,7 +354,7 @@ private:
     Vector<WeakPtr<Window>> m_child_windows;
     Vector<WeakPtr<Window>> m_accessory_windows;
 
-    RefPtr<MenuBar> m_menubar;
+    RefPtr<Menubar> m_menubar;
 
     String m_title;
     Gfx::IntRect m_rect;

@@ -42,7 +42,7 @@
         @GUI::Widget {
         }
 
-        @GUI::ScrollBar {
+        @GUI::Scrollbar {
             name: "enabled_scrollbar"
             fixed_height: 16
             fixed_width: -1
@@ -60,7 +60,7 @@
         @GUI::Widget {
         }
 
-        @GUI::ScrollBar {
+        @GUI::Scrollbar {
             name: "disabled_scrollbar"
             fixed_height: 16
             fixed_width: -1
@@ -75,7 +75,7 @@
             margins: [8, 8, 8, 8]
         }
 
-        @GUI::VerticalProgressBar {
+        @GUI::VerticalProgressbar {
             name: "vertical_progressbar_left"
             fixed_width: 36
         }
@@ -103,7 +103,7 @@
         @GUI::VerticalSeparator {
         }
 
-        @GUI::VerticalProgressBar {
+        @GUI::VerticalProgressbar {
             name: "vertical_progressbar_right"
             fixed_width: 36
         }
@@ -160,7 +160,7 @@
         @GUI::HorizontalSeparator {
         }
 
-        @GUI::HorizontalProgressBar {
+        @GUI::HorizontalProgressbar {
             name: "horizontal_progressbar"
             fixed_height: 20
         }
