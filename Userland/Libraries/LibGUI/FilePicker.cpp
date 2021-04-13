@@ -244,23 +244,25 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
     auto& home_button = add_common_location_button("Home", Core::StandardPaths::home_directory());
     auto& desktop_button = add_common_location_button("Desktop", Core::StandardPaths::desktop_directory());
     auto& documents_button = add_common_location_button("My Documents", Core::StandardPaths::documents_directory());
-    auto& downloads_button = add_common_location_button("Downloads", Core::StandardPaths::downloads_directory());
+    auto& downloads_button = add_common_location_button("My Downloads", Core::StandardPaths::downloads_directory());
 
     m_model->on_complete = [&] {
-        if (m_model->root_path() == Core::StandardPaths::home_directory()) {
+        if (m_model->root_path() == "/") {
+            root_button.set_checked(true);
+        } else if (m_model->root_path() == Core::StandardPaths::home_directory()) {
             home_button.set_checked(true);
         } else if (m_model->root_path() == Core::StandardPaths::desktop_directory()) {
             desktop_button.set_checked(true);
-        } else if (m_model->root_path() == Core::StandardPaths::downloads_directory()) {
-            downloads_button.set_checked(true);
         } else if (m_model->root_path() == Core::StandardPaths::documents_directory()) {
             documents_button.set_checked(true);
-        } else if (m_model->root_path() == "/") {
-            root_button.set_checked(true);
+        } else if (m_model->root_path() == Core::StandardPaths::downloads_directory()) {
+            downloads_button.set_checked(true);
         } else {
+            root_button.set_checked(false);
             home_button.set_checked(false);
             desktop_button.set_checked(false);
-            root_button.set_checked(false);
+            documents_button.set_checked(false);
+            downloads_button.set_checked(false);
         }
     };
 
