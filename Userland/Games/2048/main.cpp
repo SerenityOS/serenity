@@ -180,30 +180,30 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("File");
+    auto& game_menu = menubar->add_menu("&Game");
 
-    app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
+    game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
         start_a_new_game();
     }));
 
-    app_menu.add_action(GUI::CommonActions::make_undo_action([&](auto&) {
+    game_menu.add_action(GUI::CommonActions::make_undo_action([&](auto&) {
         if (undo_stack.is_empty())
             return;
         game = undo_stack.take_last();
         update();
     }));
 
-    app_menu.add_separator();
+    game_menu.add_separator();
 
-    app_menu.add_action(GUI::Action::create("Settings", [&](auto&) {
+    game_menu.add_action(GUI::Action::create("&Settings...", [&](auto&) {
         change_settings();
     }));
 
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("2048", app_icon, window));
 
     window->set_menubar(move(menubar));
