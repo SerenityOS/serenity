@@ -60,7 +60,7 @@ struct CookieStorageKey {
 
 class CookieJar {
 public:
-    String get_cookie(const URL& url) const;
+    String get_cookie(const URL& url);
     void set_cookie(const URL& url, const String& cookie);
     void dump_cookies() const;
 
@@ -80,6 +80,7 @@ private:
     static bool domain_matches(const String& string, const String& domain_string);
 
     void store_cookie(ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain);
+    void purge_expired_cookies();
 
     HashMap<CookieStorageKey, Cookie> m_cookies;
 };
