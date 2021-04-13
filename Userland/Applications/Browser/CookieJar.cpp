@@ -45,8 +45,10 @@ struct ParsedCookie {
     bool http_only_attribute_present { false };
 };
 
-String CookieJar::get_cookie(const URL& url) const
+String CookieJar::get_cookie(const URL& url)
 {
+    purge_expired_cookies();
+
     auto domain = canonicalize_domain(url);
     if (!domain.has_value())
         return {};
@@ -76,6 +78,7 @@ void CookieJar::set_cookie(const URL& url, const String& cookie_string)
         return;
 
     store_cookie(parsed_cookie.value(), url, move(domain.value()));
+    purge_expired_cookies();
 }
 
 void CookieJar::dump_cookies() const
@@ -547,6 +550,20 @@ void CookieJar::store_cookie(ParsedCookie& parsed_cookie, const URL& url, String
 
     // 12. Insert the newly created cookie into the cookie store.
     m_cookies.set(key, move(cookie));
+}
+
+void CookieJar::purge_expired_cookies()
+{
+    time_t now = Core::DateTime::now().timestamp();
+    Vector<CookieStorageKey> keys_to_evict;
+
+    for (const auto& cookie : m_cookies) {
+        if (cookie.value.expiry_time.timestamp() < now)
+            keys_to_evict.append(cookie.key);
+    }
+
+    for (const auto& key : keys_to_evict)
+        m_cookies.remove(key);
 }
 
 }
