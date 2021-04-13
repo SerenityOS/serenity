@@ -27,6 +27,10 @@
 
 #pragma once
 
+namespace Web::Cookie {
+struct ParsedCookie;
+}
+
 namespace Web::CSS {
 class CSSRule;
 class CSSImportRule;

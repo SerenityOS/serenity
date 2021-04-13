@@ -31,6 +31,7 @@
 #include <AK/String.h>
 #include <AK/Traits.h>
 #include <LibCore/DateTime.h>
+#include <LibWeb/Forward.h>
 
 namespace Browser {
 
@@ -48,8 +49,6 @@ struct Cookie {
     bool persistent { false };
 };
 
-struct ParsedCookie;
-
 struct CookieStorageKey {
     bool operator==(const CookieStorageKey&) const = default;
 
@@ -66,20 +65,10 @@ public:
 
 private:
     static Optional<String> canonicalize_domain(const URL& url);
-    static String default_path(const URL& url);
-    static Optional<ParsedCookie> parse_cookie(const String& cookie_string);
-    static void parse_attributes(ParsedCookie& parsed_cookie, StringView unparsed_attributes);
-    static void process_attribute(ParsedCookie& parsed_cookie, StringView attribute_name, StringView attribute_value);
-    static void on_expires_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
-    static void on_max_age_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
-    static void on_domain_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
-    static void on_path_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
-    static void on_secure_attribute(ParsedCookie& parsed_cookie);
-    static void on_http_only_attribute(ParsedCookie& parsed_cookie);
-    static Optional<Core::DateTime> parse_date_time(StringView date_string);
     static bool domain_matches(const String& string, const String& domain_string);
+    static String default_path(const URL& url);
 
-    void store_cookie(ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain);
+    void store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain);
     void purge_expired_cookies();
 
     HashMap<CookieStorageKey, Cookie> m_cookies;
