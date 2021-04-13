@@ -84,6 +84,10 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(parse_float);
     JS_DECLARE_NATIVE_FUNCTION(parse_int);
     JS_DECLARE_NATIVE_FUNCTION(eval);
+    JS_DECLARE_NATIVE_FUNCTION(encode_uri);
+    JS_DECLARE_NATIVE_FUNCTION(decode_uri);
+    JS_DECLARE_NATIVE_FUNCTION(encode_uri_component);
+    JS_DECLARE_NATIVE_FUNCTION(decode_uri_component);
 
     NonnullOwnPtr<Console> m_console;
 
