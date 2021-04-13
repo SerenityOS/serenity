@@ -276,7 +276,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
         auto main_executable_loader = load_main_executable(main_program_name);
         auto entry_point = main_executable_loader->image().entry();
         if (main_executable_loader->is_dynamic())
-            entry_point = entry_point.offset(main_executable_loader->text_segment_load_address().get());
+            entry_point = entry_point.offset(main_executable_loader->base_address().get());
         return (EntryPointFunction)(entry_point.as_ptr());
     }();
 
