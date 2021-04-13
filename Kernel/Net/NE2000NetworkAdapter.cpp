@@ -195,7 +195,7 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address
     dmesgln("NE2000: Interrupt line: {}", m_interrupt_line);
 
     int ram_errors = ram_test();
-    dmesgln("NE2000: RAM test {}, got {} byte errors", (ram_errors > 0 ? "OK" : "KO"), ram_errors);
+    dmesgln("NE2000: RAM test {}, got {} byte errors", (ram_errors == 0 ? "OK" : "KO"), ram_errors);
 
     reset();
     set_mac_address(m_mac_address);
