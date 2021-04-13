@@ -219,12 +219,12 @@ int main(int argc, char** argv)
             });
         };
 
-        new_tab.on_get_cookie = [&](auto& url) -> String {
-            return cookie_jar.get_cookie(url);
+        new_tab.on_get_cookie = [&](auto& url, auto source) -> String {
+            return cookie_jar.get_cookie(url, source);
         };
 
-        new_tab.on_set_cookie = [&](auto& url, auto& cookie) {
-            cookie_jar.set_cookie(url, cookie);
+        new_tab.on_set_cookie = [&](auto& url, auto& cookie, auto source) {
+            cookie_jar.set_cookie(url, cookie, source);
         };
 
         new_tab.on_dump_cookies = [&]() {

@@ -31,6 +31,11 @@
 
 namespace Web::Cookie {
 
+enum class Source {
+    NonHttp,
+    Http,
+};
+
 struct Cookie {
     String name;
     String value;
