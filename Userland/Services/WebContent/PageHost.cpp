@@ -208,14 +208,14 @@ void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_
     m_client.post_message(Messages::WebContentClient::DidRequestImageContextMenu(content_position, url, target, modifiers, bitmap->to_shareable_bitmap()));
 }
 
-String PageHost::page_did_request_cookie(const URL& url)
+String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
 {
-    return m_client.send_sync<Messages::WebContentClient::DidRequestCookie>(url)->cookie();
+    return m_client.send_sync<Messages::WebContentClient::DidRequestCookie>(url, static_cast<u8>(source))->cookie();
 }
 
-void PageHost::page_did_set_cookie(const URL& url, const String& cookie)
+void PageHost::page_did_set_cookie(const URL& url, const String& cookie, Web::Cookie::Source source)
 {
-    m_client.post_message(Messages::WebContentClient::DidSetCookie(url, cookie));
+    m_client.post_message(Messages::WebContentClient::DidSetCookie(url, cookie, static_cast<u8>(source)));
 }
 
 }

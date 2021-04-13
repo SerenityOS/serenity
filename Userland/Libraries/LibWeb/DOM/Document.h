@@ -40,6 +40,7 @@
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/CSS/StyleSheetList.h>
+#include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/DOM/DOMImplementation.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
@@ -73,8 +74,8 @@ public:
 
     virtual ~Document() override;
 
-    String cookie();
-    void set_cookie(String);
+    String cookie(Cookie::Source = Cookie::Source::NonHttp);
+    void set_cookie(String, Cookie::Source = Cookie::Source::NonHttp);
 
     bool should_invalidate_styles_on_attribute_changes() const { return m_should_invalidate_styles_on_attribute_changes; }
     void set_should_invalidate_styles_on_attribute_changes(bool b) { m_should_invalidate_styles_on_attribute_changes = b; }

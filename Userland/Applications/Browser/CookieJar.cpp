@@ -33,7 +33,7 @@
 
 namespace Browser {
 
-String CookieJar::get_cookie(const URL& url)
+String CookieJar::get_cookie(const URL& url, Web::Cookie::Source)
 {
     purge_expired_cookies();
 
@@ -55,7 +55,7 @@ String CookieJar::get_cookie(const URL& url)
     return builder.build();
 }
 
-void CookieJar::set_cookie(const URL& url, const String& cookie_string)
+void CookieJar::set_cookie(const URL& url, const String& cookie_string, Web::Cookie::Source)
 {
     auto domain = canonicalize_domain(url);
     if (!domain.has_value())
