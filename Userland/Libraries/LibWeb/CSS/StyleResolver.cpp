@@ -664,6 +664,28 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    // FIXME: parse other values as well
+    if (property_id == CSS::PropertyID::Font) {
+        auto parts = split_on_whitespace(value.to_string());
+        if (parts.size() < 2)
+            return;
+        auto size_parts = parts[0].split_view('/');
+        if (size_parts.size() == 2) {
+            auto size = parse_css_value(context, size_parts[0]);
+            if (!size)
+                return;
+            style.set_property(CSS::PropertyID::FontSize, size.release_nonnull());
+        } else if (size_parts.size() == 1) {
+            auto size = parse_css_value(context, parts[0]);
+            if (!size)
+                return;
+            style.set_property(CSS::PropertyID::FontSize, size.release_nonnull());
+        }
+        auto family = parse_css_value(context, parts[1]);
+        style.set_property(CSS::PropertyID::FontFamily, family.release_nonnull());
+        return;
+    }
+
     style.set_property(property_id, value);
 }
 
