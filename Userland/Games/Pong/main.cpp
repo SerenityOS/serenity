@@ -76,12 +76,12 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("Game");
+    auto& app_menu = menubar->add_menu("&Game");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Pong", app_icon, window));
 
     window->set_menubar(move(menubar));
