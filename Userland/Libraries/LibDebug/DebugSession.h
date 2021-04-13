@@ -352,7 +352,8 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
             break;
         }
         if (decision == DebugDecision::Kill) {
-            VERIFY_NOT_REACHED(); // TODO: implement
+            kill(m_debuggee_pid, SIGTERM);
+            break;
         }
 
         if (state == State::SingleStep && !did_single_step) {

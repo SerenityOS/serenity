@@ -626,6 +626,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
         Debugger::the().set_executable_path(get_project_executable_path());
         m_debugger_thread = LibThread::Thread::construct(Debugger::start_static);
         m_debugger_thread->start();
+        m_stop_action->set_enabled(true);
     });
 }
 
@@ -662,16 +663,19 @@ void HackStudioWidget::initialize_debugger()
         [this]() {
             Core::EventLoop::main().post_event(*window(), make<Core::DeferredInvocationEvent>([this](auto&) {
                 m_debug_info_widget->set_debug_actions_enabled(false);
-                if (m_current_editor_in_execution) {
+                if (m_current_editor_in_execution)
                     m_current_editor_in_execution->editor().clear_execution_position();
-                }
             }));
             Core::EventLoop::wake();
         },
         [this]() {
             Core::EventLoop::main().post_event(*window(), make<Core::DeferredInvocationEvent>([this](auto&) {
+                m_debug_info_widget->set_debug_actions_enabled(false);
+                if (m_current_editor_in_execution)
+                    m_current_editor_in_execution->editor().clear_execution_position();
                 m_debug_info_widget->program_stopped();
                 m_disassembly_widget->program_stopped();
+                m_stop_action->set_enabled(false);
                 HackStudioWidget::hide_action_tabs();
                 GUI::MessageBox::show(window(), "Program Exited", "Debugger", GUI::MessageBox::Type::Information);
             }));
@@ -1060,7 +1064,12 @@ void HackStudioWidget::create_help_menubar(GUI::Menubar& menubar)
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_stop_action()
 {
     auto action = GUI::Action::create("&Stop", Gfx::Bitmap::load_from_file("/res/icons/16x16/program-stop.png"), [this](auto&) {
-        m_terminal_wrapper->kill_running_command();
+        if (!Debugger::the().session()) {
+            m_terminal_wrapper->kill_running_command();
+            return;
+        }
+
+        Debugger::the().stop();
     });
 
     action->set_enabled(false);
@@ -1089,7 +1098,7 @@ void HackStudioWidget::initialize_menubar(GUI::Menubar& menubar)
 HackStudioWidget::~HackStudioWidget()
 {
     if (!m_debugger_thread.is_null()) {
-        Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::Exit);
+        Debugger::the().stop();
         dbgln("Waiting for debugger thread to terminate");
         auto rc = m_debugger_thread->join();
         if (rc.is_error()) {
