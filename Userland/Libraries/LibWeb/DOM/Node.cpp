@@ -280,13 +280,11 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
 }
 
 // https://dom.spec.whatwg.org/#concept-node-pre-insert
-NonnullRefPtr<Node> Node::pre_insert(NonnullRefPtr<Node> node, RefPtr<Node> child)
+ExceptionOr<NonnullRefPtr<Node>> Node::pre_insert(NonnullRefPtr<Node> node, RefPtr<Node> child)
 {
     auto validity_result = ensure_pre_insertion_validity(node, child);
-    if (validity_result.is_exception()) {
-        dbgln("Node::pre_insert: ensure_pre_insertion_validity failed: {}. (FIXME: throw as exception, see issue #6075)", validity_result.exception().message());
-        return node;
-    }
+    if (validity_result.is_exception())
+        return NonnullRefPtr<DOMException>(validity_result.exception());
 
     auto reference_child = child;
     if (reference_child == node)
@@ -297,12 +295,10 @@ NonnullRefPtr<Node> Node::pre_insert(NonnullRefPtr<Node> node, RefPtr<Node> chil
 }
 
 // https://dom.spec.whatwg.org/#concept-node-pre-remove
-NonnullRefPtr<Node> Node::pre_remove(NonnullRefPtr<Node> child)
+ExceptionOr<NonnullRefPtr<Node>> Node::pre_remove(NonnullRefPtr<Node> child)
 {
-    if (child->parent() != this) {
-        dbgln("Node::pre_remove: Child doesn't belong to this node. (FIXME: throw NotFoundError DOMException, see issue #6075)");
-        return child;
-    }
+    if (child->parent() != this)
+        return DOM::NotFoundError::create("Child does not belong to this node");
 
     child->remove();
 
@@ -310,7 +306,7 @@ NonnullRefPtr<Node> Node::pre_remove(NonnullRefPtr<Node> child)
 }
 
 // https://dom.spec.whatwg.org/#concept-node-append
-NonnullRefPtr<Node> Node::append_child(NonnullRefPtr<Node> node)
+ExceptionOr<NonnullRefPtr<Node>> Node::append_child(NonnullRefPtr<Node> node)
 {
     return pre_insert(node, nullptr);
 }
