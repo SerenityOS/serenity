@@ -976,9 +976,8 @@ HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_a
 
     if (!m_stack_of_open_elements.contains(*formatting_element)) {
         PARSE_ERROR();
-        // FIXME: If formatting element is not in the stack of open elements,
-        // then this is a parse error; remove the element from the list, and return.
-        TODO();
+        m_list_of_active_formatting_elements.remove(*formatting_element);
+        return AdoptionAgencyAlgorithmOutcome::DoNothing;
     }
 
     if (!m_stack_of_open_elements.has_in_scope(*formatting_element)) {
