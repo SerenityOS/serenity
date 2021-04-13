@@ -26,7 +26,6 @@
 
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
-#include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
