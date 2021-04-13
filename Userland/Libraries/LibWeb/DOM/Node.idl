@@ -18,6 +18,7 @@ interface Node : EventTarget {
     Node appendChild(Node node);
     [ImplementedAs=pre_insert] Node insertBefore(Node node, Node? child);
     [ImplementedAs=pre_remove] Node removeChild(Node child);
+    [ImplementedAs=clone_node_binding] Node cloneNode(optional boolean deep = false);
 
     const unsigned short ELEMENT_NODE = 1;
     const unsigned short ATTRIBUTE_NODE = 2;
