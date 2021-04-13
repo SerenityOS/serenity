@@ -6,7 +6,9 @@ Everyone is welcome to work on the project, and while we have lots of fun, it's 
 
 ## Communication
 
-The easiest way to get in touch is by joining the `#serenityos` channel on the Freenode IRC network.
+IRC: `#serenityos` on the Freenode IRC network.
+
+Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
 
 ## Issue policy
 
@@ -15,7 +17,7 @@ Unlike many other software projects, SerenityOS is not concerned with gaining th
 That said, please do file any bugs you find, keeping the following in mind:
 
 * One issue per bug. Putting multiple things in the same issue makes both discussion and completion unnecessarily complicated.
-* No build issues (or other support requests). If the GitHub Actions CI build succeeds, the build problem is most likely on your side. Work it out locally, or ask on IRC.
+* No build issues (or other support requests). If the GitHub Actions CI build succeeds, the build problem is most likely on your side. Work it out locally, or ask in the `#build-problems` channel on Discord.
 
 ## Feature policy
 
