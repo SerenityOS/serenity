@@ -157,7 +157,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL
     // https://tools.ietf.org/html/rfc6265#section-5.3
 
     // 2. Create a new cookie with name cookie-name, value cookie-value. Set the creation-time and the last-access-time to the current date and time.
-    Cookie cookie { move(parsed_cookie.name), move(parsed_cookie.value) };
+    Web::Cookie::Cookie cookie { move(parsed_cookie.name), move(parsed_cookie.value) };
     cookie.creation_time = Core::DateTime::now();
     cookie.last_access_time = cookie.creation_time;
 

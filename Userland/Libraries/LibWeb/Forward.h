@@ -28,6 +28,7 @@
 #pragma once
 
 namespace Web::Cookie {
+struct Cookie;
 struct ParsedCookie;
 }
 

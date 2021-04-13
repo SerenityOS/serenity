@@ -26,55 +26,23 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/Optional.h>
 #include <AK/String.h>
-#include <AK/Traits.h>
 #include <LibCore/DateTime.h>
-#include <LibWeb/Cookie/Cookie.h>
-#include <LibWeb/Forward.h>
 
-namespace Browser {
+namespace Web::Cookie {
 
-struct CookieStorageKey {
-    bool operator==(const CookieStorageKey&) const = default;
-
+struct Cookie {
     String name;
-    String domain;
-    String path;
-};
-
-class CookieJar {
-public:
-    String get_cookie(const URL& url);
-    void set_cookie(const URL& url, const String& cookie);
-    void dump_cookies() const;
-
-private:
-    static Optional<String> canonicalize_domain(const URL& url);
-    static bool domain_matches(const String& string, const String& domain_string);
-    static String default_path(const URL& url);
-
-    void store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain);
-    void purge_expired_cookies();
-
-    HashMap<CookieStorageKey, Web::Cookie::Cookie> m_cookies;
-};
-
-}
-
-namespace AK {
-
-template<>
-struct Traits<Browser::CookieStorageKey> : public GenericTraits<Browser::CookieStorageKey> {
-    static unsigned hash(const Browser::CookieStorageKey& key)
-    {
-        unsigned hash = 0;
-        hash = pair_int_hash(hash, string_hash(key.name.characters(), key.name.length()));
-        hash = pair_int_hash(hash, string_hash(key.domain.characters(), key.domain.length()));
-        hash = pair_int_hash(hash, string_hash(key.path.characters(), key.path.length()));
-        return hash;
-    }
+    String value;
+    Core::DateTime creation_time {};
+    Core::DateTime last_access_time {};
+    Core::DateTime expiry_time {};
+    String domain {};
+    String path {};
+    bool secure { false };
+    bool http_only { false };
+    bool host_only { false };
+    bool persistent { false };
 };
 
 }
