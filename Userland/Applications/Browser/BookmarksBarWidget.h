@@ -43,6 +43,7 @@ public:
     virtual ~BookmarksBarWidget() override;
 
     void set_model(RefPtr<GUI::Model>);
+    void set_max_bookmarks(int);
     GUI::Model* model() { return m_model.ptr(); }
     const GUI::Model* model() const { return m_model.ptr(); }
 
@@ -76,6 +77,7 @@ private:
 
     NonnullRefPtrVector<GUI::Button> m_bookmarks;
 
+    int m_max_bookmarks { 300 };
     int m_last_visible_index { -1 };
 };
 

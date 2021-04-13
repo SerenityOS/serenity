@@ -33,6 +33,7 @@
 #include <LibGUI/Event.h>
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
@@ -185,6 +186,13 @@ void BookmarksBarWidget::set_model(RefPtr<GUI::Model> model)
     m_model->register_client(*this);
 }
 
+void BookmarksBarWidget::set_max_bookmarks(int max_bookmarks)
+{
+    if (max_bookmarks == m_max_bookmarks)
+        return;
+    m_max_bookmarks = max_bookmarks;
+}
+
 void BookmarksBarWidget::resize_event(GUI::ResizeEvent& event)
 {
     Widget::resize_event(event);
@@ -310,6 +318,10 @@ bool BookmarksBarWidget::add_bookmark(const String& url, const String& title)
     values.append(url);
 
     auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
+    if (json_model.row_count() == m_max_bookmarks) {
+        GUI::MessageBox::show(window(), String::format("Sorry, you have too many bookmarks. The maximum amount is %d.", m_max_bookmarks), "Too many bookmarks!", GUI::MessageBox::Type::Error);
+        return false;
+    }
     if (json_model.add(move(values))) {
         json_model.store();
         return true;

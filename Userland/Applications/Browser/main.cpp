@@ -149,6 +149,8 @@ int main(int argc, char** argv)
     bool bookmarksbar_enabled = true;
     auto bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), bookmarksbar_enabled);
 
+    bookmarks_bar->set_max_bookmarks(m_config->read_num_entry("Preferences", "MaxBookmarks"));
+
     Browser::CookieJar cookie_jar;
 
     auto window = GUI::Window::construct();
