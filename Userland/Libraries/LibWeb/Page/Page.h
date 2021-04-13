@@ -111,8 +111,8 @@ public:
     virtual void page_did_request_alert(const String&) { }
     virtual bool page_did_request_confirm(const String&) { return false; }
     virtual String page_did_request_prompt(const String&, const String&) { return {}; }
-    virtual String page_did_request_cookie(const URL&) { return {}; }
-    virtual void page_did_set_cookie(const URL&, const String&) { }
+    virtual String page_did_request_cookie(const URL&, Cookie::Source) { return {}; }
+    virtual void page_did_set_cookie(const URL&, const String&, Cookie::Source) { }
 };
 
 }

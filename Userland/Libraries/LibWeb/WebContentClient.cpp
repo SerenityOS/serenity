@@ -199,13 +199,13 @@ void WebContentClient::handle(const Messages::WebContentClient::DidChangeFavicon
 
 OwnPtr<Messages::WebContentClient::DidRequestCookieResponse> WebContentClient::handle(const Messages::WebContentClient::DidRequestCookie& message)
 {
-    auto result = m_view.notify_server_did_request_cookie({}, message.url());
+    auto result = m_view.notify_server_did_request_cookie({}, message.url(), static_cast<Cookie::Source>(message.source()));
     return make<Messages::WebContentClient::DidRequestCookieResponse>(result);
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidSetCookie& message)
 {
-    m_view.notify_server_did_set_cookie({}, message.url(), message.cookie());
+    m_view.notify_server_did_set_cookie({}, message.url(), message.cookie(), static_cast<Cookie::Source>(message.source()));
 }
 
 }

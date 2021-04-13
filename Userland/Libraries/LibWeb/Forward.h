@@ -30,6 +30,7 @@
 namespace Web::Cookie {
 struct Cookie;
 struct ParsedCookie;
+enum class Source;
 }
 
 namespace Web::CSS {
