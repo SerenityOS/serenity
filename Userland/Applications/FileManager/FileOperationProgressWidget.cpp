@@ -64,13 +64,15 @@ FileOperationProgressWidget::FileOperationProgressWidget(NonnullRefPtr<Core::Fil
         }
 
         if (parts[0] == "PROGRESS"sv) {
-            VERIFY(parts.size() >= 6);
+            VERIFY(parts.size() >= 8);
             did_progress(
                 parts[3].to_uint().value_or(0),
                 parts[4].to_uint().value_or(0),
                 parts[1].to_uint().value_or(0),
                 parts[2].to_uint().value_or(0),
-                parts[5]);
+                parts[5].to_uint().value_or(0),
+                parts[6].to_uint().value_or(0),
+                parts[7]);
         }
     };
 }
@@ -94,7 +96,7 @@ void FileOperationProgressWidget::did_error()
     window()->close();
 }
 
-void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byte_count, size_t files_done, size_t total_file_count, const StringView& current_file_name)
+void FileOperationProgressWidget::did_progress([[maybe_unused]] off_t bytes_done, [[maybe_unused]] off_t total_byte_count, size_t files_done, size_t total_file_count, off_t current_file_done, off_t current_file_size, const StringView& current_file_name)
 {
     auto& current_file_label = *find_descendant_of_type_named<GUI::Label>("current_file_label");
     auto& current_file_progress_bar = *find_descendant_of_type_named<GUI::ProgressBar>("current_file_progress_bar");
@@ -102,8 +104,8 @@ void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byt
     auto& overall_progress_bar = *find_descendant_of_type_named<GUI::ProgressBar>("overall_progress_bar");
 
     current_file_label.set_text(current_file_name);
-    current_file_progress_bar.set_max(total_byte_count);
-    current_file_progress_bar.set_value(bytes_done);
+    current_file_progress_bar.set_max(current_file_size);
+    current_file_progress_bar.set_value(current_file_done);
 
     overall_progress_label.set_text(String::formatted("{} of {}", files_done, total_file_count));
     overall_progress_bar.set_max(total_file_count);
