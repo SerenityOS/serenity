@@ -26,6 +26,7 @@
 
 #include "FileOperationProgressWidget.h"
 #include <Applications/FileManager/FileOperationProgressGML.h>
+#include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
@@ -35,8 +36,8 @@
 
 namespace FileManager {
 
-FileOperationProgressWidget::FileOperationProgressWidget(FILE* helper_pipe)
-    : m_helper_pipe(helper_pipe)
+FileOperationProgressWidget::FileOperationProgressWidget(NonnullRefPtr<Core::File> helper_pipe)
+    : m_helper_pipe(move(helper_pipe))
 {
     load_from_gml(file_operation_progress_gml);
 
@@ -47,17 +48,17 @@ FileOperationProgressWidget::FileOperationProgressWidget(FILE* helper_pipe)
         window()->close();
     };
 
-    m_notifier = Core::Notifier::construct(fileno(m_helper_pipe), Core::Notifier::Read);
+    m_notifier = Core::Notifier::construct(m_helper_pipe->fd(), Core::Notifier::Read);
     m_notifier->on_ready_to_read = [this] {
-        char buffer[8192];
-        if (!fgets(buffer, sizeof(buffer), m_helper_pipe)) {
+        auto line = m_helper_pipe->read_line();
+        if (line.is_null()) {
             did_error();
             return;
         }
-        auto parts = StringView(buffer).split_view(' ');
+        auto parts = line.split_view(' ');
         VERIFY(!parts.is_empty());
 
-        if (parts[0] == "FINISH\n"sv) {
+        if (parts[0] == "FINISH"sv) {
             did_finish();
             return;
         }
@@ -113,7 +114,6 @@ void FileOperationProgressWidget::close_pipe()
 {
     if (!m_helper_pipe)
         return;
-    pclose(m_helper_pipe);
     m_helper_pipe = nullptr;
     if (m_notifier)
         m_notifier->on_ready_to_read = nullptr;
