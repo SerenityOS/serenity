@@ -478,6 +478,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     }
 
     auto specified_max_height = computed_values.max_height().resolved_or_auto(box, containing_block.height());
+    auto specified_min_height = computed_values.min_height().resolved_or_auto(box, containing_block.height());
 
     box.box_model().margin.top = computed_values.margin().top.resolved_or_zero(box, containing_block.width()).to_px(box);
     box.box_model().margin.bottom = computed_values.margin().bottom.resolved_or_zero(box, containing_block.width()).to_px(box);
@@ -498,6 +499,8 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         float used_height = specified_height.to_px(box);
         if (!specified_max_height.is_auto())
             used_height = min(used_height, specified_max_height.to_px(box));
+        if (!specified_min_height.is_auto())
+            used_height = max(used_height, specified_min_height.to_px(box));
         box.set_height(used_height);
     }
 }
