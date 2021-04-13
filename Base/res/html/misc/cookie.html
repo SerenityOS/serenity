@@ -1,9 +1,22 @@
 <body>
-    <input type=button onclick="setCookie('cookie1=value1; max-age=100; path=/res/html')" value="Set Cookie 1" />
-    <input type=button onclick="setCookie('cookie2=value2; expires=Sat, 23 Jan 2060 08:10:36 GMT')" value="Set Cookie 2" />
-    <input type=button onclick="setCookie('cookie3=value3; domain=serenityos.org')" value="Set Cookie 3" />
-    <input type=button onclick="setCookie('cookie4=value4; httponly; secure')" value="Set Cookie 4" />
-    <br /><pre id=cookies></pre>
+    <h3>Valid cookies:</h3>
+    <br /><input type=button onclick="setCookie(this.value)" value="cookie1=value1; max-age=5; path=/res/html" />
+    <br /><input type=button onclick="setCookie(this.value)" value="cookie2=value2; expires=Sat, 23 Jan 2060 08:10:36 GMT" />
+    <br /><input type=button onclick="setCookie(this.value)" value="cookie3=value3; secure" />
+    <br />
+
+    <h3>Invalid cookies (the browser should reject these):</h3>
+    <br /><input id=invalid1 type=button onclick="setCookie(this.value)" value="cookie4=value4; domain=serenityos.org" />
+    <label for=invalid1>The Domain attribute does not domain-match this page</label>
+    <br /><input id=invalid2 type=button onclick="setCookie(this.value)" value="cookie5=value5; httponly" />
+    <label for=invalid2>The cookie is HttpOnly thus cannot be set via JavaScript (*not yet implemented*)</label>
+    <br /><input id=invalid3 type=button onclick="setCookie(this.value)" value="cookie6=value6; max-age=-1" />
+    <label for=invalid3>The cookie expired in the past</label>
+    <br /><input id=invalid4 type=button onclick="setCookie(this.value)" value="cookie7=value7; expires=Mon, 23 Jan 1989 08:10:36 GMT" />
+    <label for=invalid4>The cookie expired in the past</label>
+    <br />
+
+    <pre>document.cookie = <span id=cookies></span></pre>
 
     <script>
         function setCookie(cookie) {
