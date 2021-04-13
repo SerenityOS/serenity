@@ -188,6 +188,14 @@
     "inherited": false,
     "initial": "none"
   },
+  "font": {
+    "longhands": [
+      "font-family",
+      "font-size",
+      "font-variant",
+      "font-weight"
+    ]
+  },
   "font-family": {
     "inherited": true,
     "initial": "sans-serif"
