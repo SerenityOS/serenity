@@ -1514,9 +1514,11 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@function.name:snakecase@)
         function_generator.set(".arguments", arguments_builder.string_view());
 
         function_generator.append(R"~~~(
-    auto retval = throw_dom_exception_if_needed(vm, global_object, [&] { return impl->@function.cpp_name@(@.arguments@); });
-    if (should_return_empty(retval))
+    auto result = throw_dom_exception_if_needed(vm, global_object, [&] { return impl->@function.cpp_name@(@.arguments@); });
+    if (should_return_empty(result))
         return JS::Value();
+
+    [[maybe_unused]] auto retval = result.release_value();
 )~~~");
 
         generate_return_statement(function.return_type);
