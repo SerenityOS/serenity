@@ -38,6 +38,22 @@
 
 namespace ELF {
 
+class LoadedSegment {
+public:
+    LoadedSegment(VirtualAddress address, size_t size)
+        : m_address(address)
+        , m_size(size)
+    {
+    }
+
+    VirtualAddress address() const { return m_address; }
+    size_t size() const { return m_size; }
+
+private:
+    VirtualAddress m_address;
+    size_t m_size;
+};
+
 class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
     static RefPtr<DynamicLoader> try_create(int fd, String filename);
@@ -74,7 +90,8 @@ public:
     template<typename F>
     void for_each_needed_library(F) const;
 
-    VirtualAddress text_segment_load_address() const { return m_text_segment_load_address; }
+    VirtualAddress base_address() const { return m_base_address; }
+    const Vector<LoadedSegment> text_segments() const { return m_text_segments; }
     bool is_dynamic() const { return m_elf_image.is_dynamic(); }
 
     static Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&);
@@ -141,8 +158,8 @@ private:
 
     RefPtr<DynamicObject> m_dynamic_object;
 
-    VirtualAddress m_text_segment_load_address;
-    size_t m_text_segment_size { 0 };
+    VirtualAddress m_base_address;
+    Vector<LoadedSegment> m_text_segments;
 
     VirtualAddress m_relro_segment_address;
     size_t m_relro_segment_size { 0 };

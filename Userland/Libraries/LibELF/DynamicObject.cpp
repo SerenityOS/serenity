@@ -38,9 +38,9 @@ namespace ELF {
 
 static const char* name_for_dtag(Elf32_Sword d_tag);
 
-DynamicObject::DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_addresss)
+DynamicObject::DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address)
     : m_base_address(base_address)
-    , m_dynamic_address(dynamic_section_addresss)
+    , m_dynamic_address(dynamic_section_address)
 {
     auto* header = (Elf32_Ehdr*)base_address.as_ptr();
     auto* pheader = (Elf32_Phdr*)(base_address.as_ptr() + header->e_phoff);
