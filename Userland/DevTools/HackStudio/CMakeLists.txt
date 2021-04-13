@@ -10,7 +10,8 @@ set(SOURCES
     Debugger/BacktraceModel.cpp
     Debugger/DebugInfoWidget.cpp
     Debugger/Debugger.cpp
-        Debugger/DebuggerGlobalJSObject.cpp
+    Debugger/DebuggerGlobalJSObject.cpp
+    Debugger/DebuggerVariableJSObject.cpp
     Debugger/DisassemblyModel.cpp
     Debugger/DisassemblyWidget.cpp
     Debugger/EvaluateExpressionDialog.cpp
