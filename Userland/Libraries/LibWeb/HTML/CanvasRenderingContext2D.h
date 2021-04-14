@@ -33,6 +33,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -73,6 +74,7 @@ public:
     void move_to(float x, float y);
     void line_to(float x, float y);
     void quadratic_curve_to(float cx, float cy, float x, float y);
+    void rect(float x, float y, float width, float height);
     void stroke();
 
     // FIXME: We should only have one fill(), really. Fix the wrapper generator!

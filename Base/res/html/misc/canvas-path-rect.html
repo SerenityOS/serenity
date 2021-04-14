@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>canvas path - rect example</title>
+</head>
+<body>
+<canvas width=500 height=500></canvas>
+<script>
+
+    function drawRect() {
+        var canvas = document.querySelector("canvas");
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, 500, 500);
+
+        ctx.fillStyle = 'red';
+        ctx.beginPath();
+        ctx.rect(10, 20, 150, 100);
+        ctx.fill();
+
+        ctx.fillStyle = 'green';
+        ctx.beginPath();
+        ctx.rect(200, 210, 100, 100);
+        ctx.fill('evenodd');
+    }
+
+    drawRect();
+
+</script>
+</body>
+</html>
