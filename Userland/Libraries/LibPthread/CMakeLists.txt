@@ -1,6 +1,7 @@
 set(SOURCES
     pthread.cpp
     pthread_once.cpp
+    semaphore.cpp
 )
 
 serenity_libc(LibPthread pthread)

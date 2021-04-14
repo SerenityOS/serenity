@@ -26,12 +26,17 @@
 
 #pragma once
 
+#include <pthread.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS
 
-typedef int sem_t;
+typedef struct {
+    pthread_mutex_t mtx;
+    pthread_cond_t cv;
+    int value;
+} sem_t;
 
 int sem_close(sem_t*);
 int sem_destroy(sem_t*);
