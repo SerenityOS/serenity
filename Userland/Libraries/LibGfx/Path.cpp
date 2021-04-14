@@ -33,6 +33,93 @@
 
 namespace Gfx {
 
+void Path::elliptical_arc_to(const FloatPoint& next_point, const FloatPoint& radii, double x_axis_rotation, bool large_arc, bool sweep)
+{
+    double rx = radii.x();
+    double ry = radii.y();
+
+    double x_axis_rotation_c = cos(x_axis_rotation);
+    double x_axis_rotation_s = sin(x_axis_rotation);
+
+    // Find the last point
+    FloatPoint last_point { 0, 0 };
+    if (!m_segments.is_empty())
+        last_point = m_segments.last().point();
+
+    // Step 1 of out-of-range radii correction
+    if (rx == 0.0 || ry == 0.0) {
+        append_segment<LineSegment>(next_point);
+        return;
+    }
+
+    // Step 2 of out-of-range radii correction
+    if (rx < 0)
+        rx *= -1.0;
+    if (ry < 0)
+        ry *= -1.0;
+
+    // Find (cx, cy), theta_1, theta_delta
+    // Step 1: Compute (x1', y1')
+    auto x_avg = (last_point.x() - next_point.x()) / 2.0f;
+    auto y_avg = (last_point.y() - next_point.y()) / 2.0f;
+    auto x1p = x_axis_rotation_c * x_avg + x_axis_rotation_s * y_avg;
+    auto y1p = -x_axis_rotation_s * x_avg + x_axis_rotation_c * y_avg;
+
+    // Step 2: Compute (cx', cy')
+    double x1p_sq = pow(x1p, 2.0);
+    double y1p_sq = pow(y1p, 2.0);
+    double rx_sq = pow(rx, 2.0);
+    double ry_sq = pow(ry, 2.0);
+
+    // Step 3 of out-of-range radii correction
+    double lambda = x1p_sq / rx_sq + y1p_sq / ry_sq;
+    double multiplier;
+
+    if (lambda > 1.0) {
+        auto lambda_sqrt = sqrt(lambda);
+        rx *= lambda_sqrt;
+        ry *= lambda_sqrt;
+        multiplier = 0.0;
+    } else {
+        double numerator = rx_sq * ry_sq - rx_sq * y1p_sq - ry_sq * x1p_sq;
+        double denominator = rx_sq * y1p_sq + ry_sq * x1p_sq;
+        multiplier = sqrt(numerator / denominator);
+    }
+
+    if (large_arc == sweep)
+        multiplier *= -1.0;
+
+    double cxp = multiplier * rx * y1p / ry;
+    double cyp = multiplier * -ry * x1p / rx;
+
+    // Step 3: Compute (cx, cy) from (cx', cy')
+    x_avg = (last_point.x() + next_point.x()) / 2.0f;
+    y_avg = (last_point.y() + next_point.y()) / 2.0f;
+    double cx = x_axis_rotation_c * cxp - x_axis_rotation_s * cyp + x_avg;
+    double cy = x_axis_rotation_s * cxp + x_axis_rotation_c * cyp + y_avg;
+
+    double theta_1 = atan2((y1p - cyp) / ry, (x1p - cxp) / rx);
+    double theta_2 = atan2((-y1p - cyp) / ry, (-x1p - cxp) / rx);
+
+    auto theta_delta = theta_2 - theta_1;
+
+    if (!sweep && theta_delta > 0.0f) {
+        theta_delta -= M_TAU;
+    } else if (sweep && theta_delta < 0) {
+        theta_delta += M_TAU;
+    }
+
+    append_segment<EllipticalArcSegment>(
+        next_point,
+        FloatPoint(cx, cy),
+        FloatPoint(rx, ry),
+        static_cast<float>(x_axis_rotation),
+        static_cast<float>(theta_1),
+        static_cast<float>(theta_delta));
+
+    invalidate_split_lines();
+}
+
 void Path::close()
 {
     if (m_segments.size() <= 1)
