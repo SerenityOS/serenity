@@ -33,7 +33,7 @@
 
 namespace Browser {
 
-String CookieJar::get_cookie(const URL& url, Web::Cookie::Source)
+String CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
 {
     purge_expired_cookies();
 
@@ -41,15 +41,16 @@ String CookieJar::get_cookie(const URL& url, Web::Cookie::Source)
     if (!domain.has_value())
         return {};
 
+    Vector<Web::Cookie::Cookie*> cookie_list = get_matching_cookies(url, domain.value(), source);
     StringBuilder builder;
 
-    for (const auto& cookie : m_cookies) {
-        if (!domain_matches(domain.value(), cookie.value.domain))
-            continue;
-
+    for (const auto* cookie : cookie_list) {
+        // If there is an unprocessed cookie in the cookie-list, output the characters %x3B and %x20 ("; ")
         if (!builder.is_empty())
             builder.append("; ");
-        builder.appendff("{}={}", cookie.value.name, cookie.value.value);
+
+        // Output the cookie's name, the %x3D ("=") character, and the cookie's value.
+        builder.appendff("{}={}", cookie->name, cookie->value);
     }
 
     return builder.build();
@@ -128,6 +129,29 @@ bool CookieJar::domain_matches(const String& string, const String& domain_string
         return false;
 
     return true;
+}
+
+bool CookieJar::path_matches(const String& request_path, const String& cookie_path)
+{
+    // https://tools.ietf.org/html/rfc6265#section-5.1.4
+
+    // A request-path path-matches a given cookie-path if at least one of the following conditions holds:
+
+    // The cookie-path and the request-path are identical.
+    if (request_path == cookie_path)
+        return true;
+
+    if (request_path.starts_with(cookie_path)) {
+        // The cookie-path is a prefix of the request-path, and the last character of the cookie-path is %x2F ("/").
+        if (cookie_path.ends_with('/'))
+            return true;
+
+        // The cookie-path is a prefix of the request-path, and the first character of the request-path that is not included in the cookie-path is a %x2F ("/") character.
+        if (request_path[cookie_path.length()] == '/')
+            return true;
+    }
+
+    return false;
 }
 
 String CookieJar::default_path(const URL& url)
@@ -236,6 +260,55 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL
 
     // 12. Insert the newly created cookie into the cookie store.
     m_cookies.set(key, move(cookie));
+}
+
+Vector<Web::Cookie::Cookie*> CookieJar::get_matching_cookies(const URL& url, const String& canonicalized_domain, Web::Cookie::Source source)
+{
+    // https://tools.ietf.org/html/rfc6265#section-5.4
+
+    auto now = Core::DateTime::now();
+
+    // 1. Let cookie-list be the set of cookies from the cookie store that meets all of the following requirements:
+    Vector<Web::Cookie::Cookie*> cookie_list;
+
+    for (auto& cookie : m_cookies) {
+        // Either: The cookie's host-only-flag is true and the canonicalized request-host is identical to the cookie's domain.
+        // Or: The cookie's host-only-flag is false and the canonicalized request-host domain-matches the cookie's domain.
+        bool is_host_only_and_has_identical_domain = cookie.value.host_only && (canonicalized_domain == cookie.value.domain);
+        bool is_not_host_only_and_domain_matches = !cookie.value.host_only && domain_matches(canonicalized_domain, cookie.value.domain);
+        if (!is_host_only_and_has_identical_domain && !is_not_host_only_and_domain_matches)
+            continue;
+
+        // The request-uri's path path-matches the cookie's path.
+        if (!path_matches(url.path(), cookie.value.path))
+            continue;
+
+        // If the cookie's secure-only-flag is true, then the request-uri's scheme must denote a "secure" protocol.
+        if (cookie.value.secure && (url.protocol() != "https"))
+            continue;
+
+        // If the cookie's http-only-flag is true, then exclude the cookie if the cookie-string is being generated for a "non-HTTP" API.
+        if (cookie.value.http_only && (source != Web::Cookie::Source::Http))
+            continue;
+
+        // 2.  The user agent SHOULD sort the cookie-list in the following order:
+        //   - Cookies with longer paths are listed before cookies with shorter paths.
+        //   - Among cookies that have equal-length path fields, cookies with earlier creation-times are listed before cookies with later creation-times.
+        cookie_list.insert_before_matching(&cookie.value, [&cookie](auto* entry) {
+            if (cookie.value.path.length() > entry->path.length()) {
+                return true;
+            } else if (cookie.value.path.length() == entry->path.length()) {
+                if (cookie.value.creation_time.timestamp() < entry->creation_time.timestamp())
+                    return true;
+            }
+            return false;
+        });
+
+        // 3. Update the last-access-time of each cookie in the cookie-list to the current date and time.
+        cookie.value.last_access_time = now;
+    }
+
+    return cookie_list;
 }
 
 void CookieJar::purge_expired_cookies()
