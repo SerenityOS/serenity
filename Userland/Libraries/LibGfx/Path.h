@@ -155,6 +155,10 @@ public:
     }
 
     void elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, double x_axis_rotation, bool large_arc, bool sweep);
+    void arc_to(const FloatPoint& point, float radius, bool large_arc, bool sweep)
+    {
+        elliptical_arc_to(point, { radius, radius }, 0, large_arc, sweep);
+    }
 
     void close();
     void close_all_subpaths();
