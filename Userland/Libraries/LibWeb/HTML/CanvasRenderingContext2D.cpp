@@ -188,6 +188,17 @@ void CanvasRenderingContext2D::quadratic_curve_to(float cx, float cy, float x, f
     m_path.quadratic_bezier_curve_to({ cx, cy }, { x, y });
 }
 
+void CanvasRenderingContext2D::rect(float x, float y, float width, float height)
+{
+    m_path.move_to({ x, y });
+    if (width == 0 || height == 0)
+        return;
+    m_path.line_to({ x + width, y });
+    m_path.line_to({ x + width, y + height });
+    m_path.line_to({ x, y + height });
+    m_path.close();
+}
+
 void CanvasRenderingContext2D::stroke()
 {
     auto painter = this->painter();
