@@ -1696,7 +1696,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 #endif
 
             if (active_list.size() > 1) {
-                auto winding_number { 0 };
+                auto winding_number { winding_rule == WindingRule::Nonzero ? 1 : 0 };
                 for (size_t i = 1; i < active_list.size(); ++i) {
                     auto& previous = active_list[i - 1];
                     auto& current = active_list[i];
