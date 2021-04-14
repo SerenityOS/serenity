@@ -1,0 +1,4 @@
+# sudoers file
+# Put any users you want to allow to run programs as root here
+root
+anon
