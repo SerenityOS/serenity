@@ -1,0 +1,27 @@
++++ emu2-master/src/dosnames.c	2021-04-14 07:15:44.036839086 -0700
+@@ -9,6 +9,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <strings.h>
+ #include <sys/stat.h>
+ 
+ // DOS directory entries.
+@@ -179,7 +180,7 @@
+     struct dirent **dir;
+     struct dos_file_list *ret;
+ 
+-    int n = scandir(path, &dir, 0, dos_unix_sort);
++    int n = 0; //scandir(path, &dir, 0, dos_unix_sort);
+     if(n <= 0)
+         return 0;
+ 
+@@ -589,7 +590,7 @@
+ static struct dos_file_list *find_first_file(char *fspec)
+ {
+     // Now, separate the path to the spec
+-    char *glob, *unixpath, *p = rindex(fspec, '/');
++    char *glob, *unixpath, *p = strrchr(fspec, '/');
+     if(!p)
+     {
+         glob = fspec;
