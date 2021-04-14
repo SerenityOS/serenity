@@ -48,7 +48,7 @@ ResourceLoader& ResourceLoader::the()
 
 ResourceLoader::ResourceLoader()
     : m_protocol_client(Protocol::Client::construct())
-    , m_user_agent("Mozilla/4.0 (SerenityOS; x86) LibWeb+LibJS (Not KHTML, nor Gecko) LibWeb")
+    , m_user_agent(default_user_agent)
 {
 }
 

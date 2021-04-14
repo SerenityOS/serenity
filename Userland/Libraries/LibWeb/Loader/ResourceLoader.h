@@ -37,6 +37,8 @@ class Client;
 
 namespace Web {
 
+constexpr auto default_user_agent = "Mozilla/4.0 (SerenityOS; x86) LibWeb+LibJS (Not KHTML, nor Gecko) LibWeb";
+
 class ResourceLoader : public Core::Object {
     C_OBJECT(ResourceLoader)
 public:
@@ -55,6 +57,7 @@ public:
     Protocol::Client& protocol_client() { return *m_protocol_client; }
 
     const String& user_agent() const { return m_user_agent; }
+    void set_user_agent(const String& user_agent) { m_user_agent = user_agent; }
 
     void clear_cache();
 
