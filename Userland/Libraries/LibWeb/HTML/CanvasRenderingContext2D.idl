@@ -15,6 +15,7 @@ interface CanvasRenderingContext2D {
     undefined moveTo(double x, double y);
     undefined lineTo(double x, double y);
     undefined quadraticCurveTo(double cpx, double cpy, double x, double y);
+    undefined rect(double x, double y, double width, double height);
 
     undefined drawImage(HTMLImageElement image, double dx, double dy);
 
