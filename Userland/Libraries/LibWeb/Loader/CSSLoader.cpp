@@ -29,6 +29,7 @@
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
 #include <LibWeb/CSS/StyleSheet.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Loader/CSSLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -56,8 +57,7 @@ void CSSLoader::load_from_url(const URL& url)
     m_style_sheet = CSS::CSSStyleSheet::create({});
     m_style_sheet->set_owner_node(&m_owner_element);
 
-    LoadRequest request;
-    request.set_url(url);
+    auto request = LoadRequest::create_for_url_on_page(url, m_owner_element.document().page());
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 }
 
