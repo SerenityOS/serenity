@@ -63,6 +63,7 @@ chmod 0400 mnt/res/kernel.map
 chmod 0400 mnt/boot/Kernel
 chmod 4750 mnt/bin/su
 chmod 4755 mnt/bin/passwd
+chmod 4751 mnt/bin/pls
 chmod 4755 mnt/bin/ping
 chmod 4755 mnt/bin/traceroute
 chmod 4750 mnt/bin/reboot
