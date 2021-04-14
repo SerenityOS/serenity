@@ -290,41 +290,67 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
         variable_info->location_data.address += address_offset;
     }
 
-    if (type_die.has_value()) {
-        OwnPtr<VariableInfo> type_info;
-        if (type_die.value().tag() == Dwarf::EntryTag::EnumerationType || type_die.value().tag() == Dwarf::EntryTag::StructureType) {
-            type_info = create_variable_info(type_die.value(), regs);
-        }
-
-        type_die.value().for_each_child([&](const Dwarf::DIE& member) {
-            if (member.is_null())
-                return;
-            if (!is_variable_tag_supported(member.tag()))
-                return;
-
-            auto member_variable = create_variable_info(member, regs, variable_info->location_data.address);
-            VERIFY(member_variable);
-
-            if (type_die.value().tag() == Dwarf::EntryTag::EnumerationType) {
-                member_variable->parent = type_info.ptr();
-                type_info->members.append(member_variable.release_nonnull());
-            } else {
-                if (variable_info->location_type == DebugInfo::VariableInfo::LocationType::None)
-                    return;
-                VERIFY(variable_info->location_type == DebugInfo::VariableInfo::LocationType::Address);
-
-                member_variable->parent = variable_info.ptr();
-                variable_info->members.append(member_variable.release_nonnull());
-            }
-        });
-
-        if (type_info) {
-            variable_info->type = move(type_info);
-            variable_info->type->type_tag = type_die.value().tag();
-        }
-    }
+    if (type_die.has_value())
+        add_type_info_to_variable(type_die.value(), regs, variable_info);
 
     return variable_info;
+}
+
+void DebugInfo::add_type_info_to_variable(const Dwarf::DIE& type_die, const PtraceRegisters& regs, DebugInfo::VariableInfo* parent_variable) const
+{
+    OwnPtr<VariableInfo> type_info;
+    auto is_array_type = type_die.tag() == Dwarf::EntryTag::ArrayType;
+
+    if (type_die.tag() == Dwarf::EntryTag::EnumerationType
+        || type_die.tag() == Dwarf::EntryTag::StructureType
+        || is_array_type) {
+        type_info = create_variable_info(type_die, regs);
+    }
+
+    type_die.for_each_child([&](const Dwarf::DIE& member) {
+        if (member.is_null())
+            return;
+
+        if (is_array_type && member.tag() == Dwarf::EntryTag::SubRangeType) {
+            auto upper_bound = member.get_attribute(Dwarf::Attribute::UpperBound);
+            VERIFY(upper_bound.has_value());
+            auto size = upper_bound.value().data.as_u32 + 1;
+            type_info->dimension_sizes.append(size);
+            return;
+        }
+
+        if (!is_variable_tag_supported(member.tag()))
+            return;
+
+        auto member_variable = create_variable_info(member, regs, parent_variable->location_data.address);
+        VERIFY(member_variable);
+
+        if (type_die.tag() == Dwarf::EntryTag::EnumerationType) {
+            member_variable->parent = type_info.ptr();
+            type_info->members.append(member_variable.release_nonnull());
+        } else {
+            if (parent_variable->location_type != DebugInfo::VariableInfo::LocationType::Address)
+                return;
+
+            member_variable->parent = parent_variable;
+            parent_variable->members.append(member_variable.release_nonnull());
+        }
+    });
+
+    if (type_info) {
+        if (is_array_type) {
+            StringBuilder array_type_name;
+            array_type_name.append(type_info->type_name);
+            for (auto array_size : type_info->dimension_sizes) {
+                array_type_name.append("[");
+                array_type_name.append(String::formatted("{:d}", array_size));
+                array_type_name.append("]");
+            }
+            parent_variable->type_name = array_type_name.to_string();
+        }
+        parent_variable->type = move(type_info);
+        parent_variable->type->type_tag = type_die.tag();
+    }
 }
 
 bool DebugInfo::is_variable_tag_supported(const Dwarf::EntryTag& tag)
@@ -334,7 +360,8 @@ bool DebugInfo::is_variable_tag_supported(const Dwarf::EntryTag& tag)
         || tag == Dwarf::EntryTag::FormalParameter
         || tag == Dwarf::EntryTag::EnumerationType
         || tag == Dwarf::EntryTag::Enumerator
-        || tag == Dwarf::EntryTag::StructureType;
+        || tag == Dwarf::EntryTag::StructureType
+        || tag == Dwarf::EntryTag::ArrayType;
 }
 
 String DebugInfo::name_of_containing_function(u32 address) const
