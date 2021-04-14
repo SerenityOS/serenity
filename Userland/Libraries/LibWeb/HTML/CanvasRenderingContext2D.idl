@@ -10,7 +10,7 @@ interface CanvasRenderingContext2D {
 
     undefined beginPath();
     undefined closePath();
-    undefined fill(DOMString fillRule);
+    undefined fill(optional DOMString fillRule = "nonzero");
     undefined stroke();
     undefined moveTo(double x, double y);
     undefined lineTo(double x, double y);
