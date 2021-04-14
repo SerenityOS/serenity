@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <limits.h>
 #include <pthread.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
@@ -47,5 +48,7 @@ int sem_post(sem_t*);
 int sem_trywait(sem_t*);
 int sem_unlink(const char*);
 int sem_wait(sem_t*);
+
+#define SEM_VALUE_MAX INT_MAX
 
 __END_DECLS
