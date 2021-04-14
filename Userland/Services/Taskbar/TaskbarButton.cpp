@@ -28,6 +28,7 @@
 #include "WindowList.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/WindowManagerServerConnection.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
@@ -45,13 +46,17 @@ TaskbarButton::~TaskbarButton()
 
 void TaskbarButton::context_menu_event(GUI::ContextMenuEvent&)
 {
-    GUI::WindowServerConnection::the().post_message(Messages::WindowServer::WM_PopupWindowMenu(m_identifier.client_id(), m_identifier.window_id(), screen_relative_rect().location()));
+    GUI::WindowManagerServerConnection::the().post_message(
+        Messages::WindowManagerServer::PopupWindowMenu(
+            m_identifier.client_id(),
+            m_identifier.window_id(),
+            screen_relative_rect().location()));
 }
 
 void TaskbarButton::update_taskbar_rect()
 {
-    GUI::WindowServerConnection::the().post_message(
-        Messages::WindowServer::WM_SetWindowTaskbarRect(
+    GUI::WindowManagerServerConnection::the().post_message(
+        Messages::WindowManagerServer::SetWindowTaskbarRect(
             m_identifier.client_id(),
             m_identifier.window_id(),
             screen_relative_rect()));
@@ -59,8 +64,8 @@ void TaskbarButton::update_taskbar_rect()
 
 void TaskbarButton::clear_taskbar_rect()
 {
-    GUI::WindowServerConnection::the().post_message(
-        Messages::WindowServer::WM_SetWindowTaskbarRect(
+    GUI::WindowManagerServerConnection::the().post_message(
+        Messages::WindowManagerServer::SetWindowTaskbarRect(
             m_identifier.client_id(),
             m_identifier.window_id(),
             {}));

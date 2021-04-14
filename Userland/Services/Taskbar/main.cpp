@@ -36,7 +36,9 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/WindowManagerServerConnection.h>
 #include <LibGUI/WindowServerConnection.h>
+#include <WindowServer/Window.h>
 #include <serenity.h>
 #include <signal.h>
 #include <spawn.h>
@@ -61,6 +63,9 @@ int main(int argc, char** argv)
             ;
     });
 
+    // We need to obtain the WM connection here as well before the pledge shortening.
+    GUI::WindowManagerServerConnection::the();
+
     if (pledge("stdio recvfd sendfd accept proc exec rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -71,6 +76,11 @@ int main(int argc, char** argv)
 
     auto window = TaskbarWindow::construct(move(menu));
     window->show();
+
+    window->make_window_manager(
+        WindowServer::WMEventMask::WindowStateChanges
+        | WindowServer::WMEventMask::WindowRemovals
+        | WindowServer::WMEventMask::WindowIconChanges);
 
     return app->exec();
 }
