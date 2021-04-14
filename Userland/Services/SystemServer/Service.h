@@ -51,6 +51,17 @@ private:
 
     void spawn(int socket_fd = -1);
 
+    /// SocketDescriptor describes the details of a single socket that was
+    /// requested by a service.
+    struct SocketDescriptor {
+        /// The path of the socket.
+        String path;
+        /// File descriptor of the socket. -1 if the socket hasn't been opened.
+        int fd { -1 };
+        /// File permissions of the socket.
+        mode_t permissions;
+    };
+
     // Path to the executable. By default this is /bin/{m_name}.
     String m_executable_path;
     // Extra arguments, starting from argv[1], to pass when exec'ing.
@@ -60,10 +71,6 @@ private:
     int m_priority { 1 };
     // Whether we should re-launch it if it exits.
     bool m_keep_alive { false };
-    // Path to the socket to create and listen on on behalf of this service.
-    String m_socket_path;
-    // File system permissions for the socket.
-    mode_t m_socket_permissions { 0 };
     // Whether we should accept connections on the socket and pass the accepted
     // (and not listening) socket to the service. This requires a multi-instance
     // service.
@@ -80,14 +87,14 @@ private:
     bool m_multi_instance { false };
     // Environment variables to pass to the service.
     Vector<String> m_environment;
+    // Socket descriptors for this service.
+    Vector<SocketDescriptor> m_sockets;
 
     // The resolved user account to run this service as.
     Optional<Core::Account> m_account;
 
     // For single-instance services, PID of the running instance of this service.
     pid_t m_pid { -1 };
-    // An open fd to the socket.
-    int m_socket_fd { -1 };
     RefPtr<Core::Notifier> m_socket_notifier;
 
     // Timer since we last spawned the service.
@@ -96,7 +103,8 @@ private:
     // times where it has exited unsuccessfully and too quickly.
     int m_restart_attempts { 0 };
 
-    void setup_socket();
+    void setup_socket(SocketDescriptor&);
+    void setup_sockets();
     void setup_notifier();
     void handle_socket_connection();
 };
