@@ -215,7 +215,7 @@ static Optional<Dwarf::DIE> parse_variable_type_die(const Dwarf::DIE& variable_d
         variable_info.type_name = type_name.value().data.as_string;
     } else {
         dbgln("Unnamed DWARF type at offset: {}", type_die.offset());
-        variable_info.name = "[Unnamed Type]";
+        variable_info.type_name = "[Unnamed Type]";
     }
 
     return type_die;
@@ -263,7 +263,9 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
     }
 
     NonnullOwnPtr<VariableInfo> variable_info = make<VariableInfo>();
-    variable_info->name = variable_die.get_attribute(Dwarf::Attribute::Name).value().data.as_string;
+    auto name_attribute = variable_die.get_attribute(Dwarf::Attribute::Name);
+    if (name_attribute.has_value())
+        variable_info->name = name_attribute.value().data.as_string;
 
     auto type_die = parse_variable_type_die(variable_die, *variable_info);
 
