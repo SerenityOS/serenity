@@ -29,6 +29,7 @@
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/Socket.h>
@@ -51,63 +52,69 @@ Service* Service::find_by_pid(pid_t pid)
     return (*it).value;
 }
 
-void Service::setup_socket()
+void Service::setup_socket(SocketDescriptor& socket)
 {
-    VERIFY(!m_socket_path.is_null());
-    VERIFY(m_socket_fd == -1);
+    VERIFY(socket.fd == -1);
 
-    auto ok = Core::File::ensure_parent_directories(m_socket_path);
+    auto ok = Core::File::ensure_parent_directories(socket.path);
     VERIFY(ok);
 
     // Note: we use SOCK_CLOEXEC here to make sure we don't leak every socket to
     // all the clients. We'll make the one we do need to pass down !CLOEXEC later
     // after forking off the process.
-    m_socket_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
-    if (m_socket_fd < 0) {
+    int socket_fd = ::socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+    if (socket_fd < 0) {
         perror("socket");
         VERIFY_NOT_REACHED();
     }
+    socket.fd = socket_fd;
 
     if (m_account.has_value()) {
         auto& account = m_account.value();
-        if (fchown(m_socket_fd, account.uid(), account.gid()) < 0) {
+        if (fchown(socket_fd, account.uid(), account.gid()) < 0) {
             perror("fchown");
             VERIFY_NOT_REACHED();
         }
     }
 
-    if (fchmod(m_socket_fd, m_socket_permissions) < 0) {
+    if (fchmod(socket_fd, socket.permissions) < 0) {
         perror("fchmod");
         VERIFY_NOT_REACHED();
     }
 
-    auto socket_address = Core::SocketAddress::local(m_socket_path);
+    auto socket_address = Core::SocketAddress::local(socket.path);
     auto un_optional = socket_address.to_sockaddr_un();
     if (!un_optional.has_value()) {
-        dbgln("Socket name {} is too long. BUG! This should have failed earlier!", m_socket_path);
+        dbgln("Socket name {} is too long. BUG! This should have failed earlier!", socket.path);
         VERIFY_NOT_REACHED();
     }
     auto un = un_optional.value();
-    int rc = bind(m_socket_fd, (const sockaddr*)&un, sizeof(un));
+    int rc = bind(socket_fd, (const sockaddr*)&un, sizeof(un));
     if (rc < 0) {
         perror("bind");
         VERIFY_NOT_REACHED();
     }
 
-    rc = listen(m_socket_fd, 16);
+    rc = listen(socket_fd, 16);
     if (rc < 0) {
         perror("listen");
         VERIFY_NOT_REACHED();
     }
 }
 
+void Service::setup_sockets()
+{
+    for (SocketDescriptor& socket : m_sockets)
+        setup_socket(socket);
+}
+
 void Service::setup_notifier()
 {
     VERIFY(m_lazy);
-    VERIFY(m_socket_fd >= 0);
+    VERIFY(m_sockets.size() == 1);
     VERIFY(!m_socket_notifier);
 
-    m_socket_notifier = Core::Notifier::construct(m_socket_fd, Core::Notifier::Event::Read, this);
+    m_socket_notifier = Core::Notifier::construct(m_sockets[0].fd, Core::Notifier::Event::Read, this);
     m_socket_notifier->on_ready_to_read = [this] {
         handle_socket_connection();
     };
@@ -115,10 +122,13 @@ void Service::setup_notifier()
 
 void Service::handle_socket_connection()
 {
+    VERIFY(m_sockets.size() == 1);
     dbgln_if(SERVICE_DEBUG, "Ready to read on behalf of {}", name());
 
+    int socket_fd = m_sockets[0].fd;
+
     if (m_accept_socket_connections) {
-        int accepted_fd = accept(m_socket_fd, nullptr, nullptr);
+        int accepted_fd = accept(socket_fd, nullptr, nullptr);
         if (accepted_fd < 0) {
             perror("accept");
             return;
@@ -128,7 +138,7 @@ void Service::handle_socket_connection()
     } else {
         remove_child(*m_socket_notifier);
         m_socket_notifier = nullptr;
-        spawn(m_socket_fd);
+        spawn(socket_fd);
     }
 }
 
@@ -139,7 +149,7 @@ void Service::activate()
     if (m_lazy)
         setup_notifier();
     else
-        spawn(m_socket_fd);
+        spawn();
 }
 
 void Service::spawn(int socket_fd)
@@ -198,12 +208,31 @@ void Service::spawn(int socket_fd)
             dup2(STDIN_FILENO, STDERR_FILENO);
         }
 
+        StringBuilder builder;
+
         if (socket_fd >= 0) {
-            VERIFY(!m_socket_path.is_null());
-            VERIFY(socket_fd > 3);
-            dup2(socket_fd, 3);
+            // We were spawned by socket activation. We currently only support
+            // single sockets for socket activation, so make sure that's the case.
+            VERIFY(m_sockets.size() == 1);
+
+            int fd = dup(socket_fd);
+            builder.appendf("%s:%d", m_sockets[0].path.characters(), fd);
+        } else {
+            // We were spawned as a regular process, so dup every socket for this
+            // service and let the service know via SOCKET_TAKEOVER.
+            for (unsigned i = 0; i < m_sockets.size(); i++) {
+                SocketDescriptor& socket = m_sockets.at(i);
+
+                int new_fd = dup(socket.fd);
+                if (i != 0)
+                    builder.append(" ");
+                builder.appendf("%s:%d", socket.path.characters(), new_fd);
+            }
+        }
+
+        if (!m_sockets.is_empty()) {
             // The new descriptor is !CLOEXEC here.
-            setenv("SOCKET_TAKEOVER", "1", true);
+            setenv("SOCKET_TAKEOVER", builder.to_string().characters(), true);
         }
 
         if (m_account.has_value()) {
@@ -306,22 +335,39 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
     m_multi_instance = config.read_bool_entry(name, "MultiInstance");
     m_accept_socket_connections = config.read_bool_entry(name, "AcceptSocketConnections");
 
-    m_socket_path = config.read_entry(name, "Socket");
+    String socket_entry = config.read_entry(name, "Socket");
+    String socket_permissions_entry = config.read_entry(name, "SocketPermissions", "0600");
 
-    // Lazy requires Socket.
-    VERIFY(!m_lazy || !m_socket_path.is_null());
-    // AcceptSocketConnections always requires Socket, Lazy, and MultiInstance.
-    VERIFY(!m_accept_socket_connections || (!m_socket_path.is_null() && m_lazy && m_multi_instance));
+    if (!socket_entry.is_null()) {
+        Vector<String> socket_paths = socket_entry.split(',');
+        Vector<String> socket_perms = socket_permissions_entry.split(',');
+        m_sockets.ensure_capacity(socket_paths.size());
+
+        // Need i here to iterate along with all other vectors.
+        for (unsigned i = 0; i < socket_paths.size(); i++) {
+            String& path = socket_paths.at(i);
+
+            // Socket path (plus NUL) must fit into the structs sent to the Kernel.
+            VERIFY(path.length() < UNIX_PATH_MAX);
+
+            // This is done so that the last permission repeats for every other
+            // socket. So you can define a single permission, and have it
+            // be applied for every socket.
+            mode_t permissions = strtol(socket_perms.at(min(socket_perms.size() - 1, (long unsigned)i)).characters(), nullptr, 8) & 0777;
+
+            m_sockets.empend(path, -1, permissions);
+        }
+    }
+
+    // Lazy requires Socket, but only one.
+    VERIFY(!m_lazy || m_sockets.size() == 1);
+    // AcceptSocketConnections always requires Socket (single), Lazy, and MultiInstance.
+    VERIFY(!m_accept_socket_connections || (m_sockets.size() == 1 && m_lazy && m_multi_instance));
     // MultiInstance doesn't work with KeepAlive.
     VERIFY(!m_multi_instance || !m_keep_alive);
-    // Socket path (plus NUL) must fit into the structs sent to the Kernel.
-    VERIFY(m_socket_path.length() < UNIX_PATH_MAX);
 
-    if (!m_socket_path.is_null() && is_enabled()) {
-        auto socket_permissions_string = config.read_entry(name, "SocketPermissions", "0600");
-        m_socket_permissions = strtol(socket_permissions_string.characters(), nullptr, 8) & 0777;
-        setup_socket();
-    }
+    if (is_enabled())
+        setup_sockets();
 }
 
 void Service::save_to(JsonObject& json)
@@ -346,13 +392,20 @@ void Service::save_to(JsonObject& json)
     for (String& env : m_environment)
         boot_modes.append(env);
     json.set("environment", environment);
+
+    JsonArray sockets;
+    for (SocketDescriptor &socket : m_sockets) {
+        JsonObject socket_obj;
+        socket_obj.set("path", socket.path);
+        socket_obj.set("permissions", socket.permissions);
+        sockets.append(socket);
+    }
+    json.set("sockets", sockets);
     */
 
     json.set("stdio_file_path", m_stdio_file_path);
     json.set("priority", m_priority);
     json.set("keep_alive", m_keep_alive);
-    json.set("socket_path", m_socket_path);
-    json.set("socket_permissions", m_socket_permissions);
     json.set("lazy", m_lazy);
     json.set("user", m_user);
     json.set("multi_instance", m_multi_instance);
