@@ -5,9 +5,12 @@ useconfigure=true
 files="https://ffmpeg.org/releases/ffmpeg-${version}.tar.xz ffmpeg-${version}.tar.xz
 https://ffmpeg.org/releases/ffmpeg-${version}.tar.xz.asc ffmpeg-${version}.tar.xz.asc"
 makeopts="HOSTCC=${CC} HOSTLD=${CC}"
-depends=
+depends="SDL2"
 
 configure() {
-	run ./configure --enable-cross-compile --target-os=serenity --arch=i386  --cross-prefix=${CC%gcc} \
-	    --disable-txtpages --disable-manpages --disable-podpages --disable-htmlpages
+	run ./configure --enable-cross-compile --target-os=serenity --arch=i686 \
+	    --enable-ffmpeg --enable-ffprobe --enable-ffplay --cross-prefix=${CC%gcc} \
+	    --disable-txtpages --disable-manpages --disable-podpages \
+	    --disable-static --enable-shared \
+	    --enable-debug --disable-stripping # Remove Before PR!
 }
