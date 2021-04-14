@@ -27,6 +27,7 @@
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
+#include <AK/Format.h>
 #include <AK/IDAllocator.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
@@ -154,9 +155,7 @@ public:
             u32 length;
             int nread = m_socket->read((u8*)&length, sizeof(length));
             if (nread == 0) {
-#    ifdef EVENTLOOP_DEBUG
-                dbgln("RPC client disconnected");
-#    endif
+                dbgln_if(EVENTLOOP_DEBUG, "RPC client disconnected");
                 shutdown();
                 return;
             }
@@ -307,9 +306,7 @@ EventLoop::EventLoop()
 #endif
     }
 
-#if EVENTLOOP_DEBUG
-    dbgln("{} Core::EventLoop constructed :)", getpid());
-#endif
+    dbgln_if(EVENTLOOP_DEBUG, "{} Core::EventLoop constructed :)", getpid());
 }
 
 EventLoop::~EventLoop()
@@ -345,18 +342,14 @@ EventLoop& EventLoop::current()
 
 void EventLoop::quit(int code)
 {
-#if EVENTLOOP_DEBUG
-    dbgln("Core::EventLoop::quit({})", code);
-#endif
+    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::quit({})", code);
     m_exit_requested = true;
     m_exit_code = code;
 }
 
 void EventLoop::unquit()
 {
-#if EVENTLOOP_DEBUG
-    dbgln("Core::EventLoop::unquit()");
-#endif
+    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::unquit()");
     m_exit_requested = false;
     m_exit_code = 0;
 }
@@ -408,19 +401,16 @@ void EventLoop::pump(WaitMode mode)
         auto& queued_event = events.at(i);
         auto receiver = queued_event.receiver.strong_ref();
         auto& event = *queued_event.event;
-#if EVENTLOOP_DEBUG
         if (receiver)
-            dbgln("Core::EventLoop: {} event {}", *receiver, event.type());
-#endif
+            dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: {} event {}", *receiver, event.type());
+
         if (!receiver) {
             switch (event.type()) {
             case Event::Quit:
                 VERIFY_NOT_REACHED();
                 return;
             default:
-#if EVENTLOOP_DEBUG
-                dbgln("Event type {} with no receiver :(", event.type());
-#endif
+                dbgln_if(EVENTLOOP_DEBUG, "Event type {} with no receiver :(", event.type());
                 break;
             }
         } else if (event.type() == Event::Type::DeferredInvoke) {
@@ -435,9 +425,7 @@ void EventLoop::pump(WaitMode mode)
 
         if (m_exit_requested) {
             LOCKER(m_private->lock);
-#if EVENTLOOP_DEBUG
-            dbgln("Core::EventLoop: Exit requested. Rejigging {} events.", events.size() - i);
-#endif
+            dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: Exit requested. Rejigging {} events.", events.size() - i);
             decltype(m_queued_events) new_event_queue;
             new_event_queue.ensure_capacity(m_queued_events.size() + events.size());
             for (++i; i < events.size(); ++i)
@@ -452,9 +440,7 @@ void EventLoop::pump(WaitMode mode)
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
     LOCKER(m_private->lock);
-#if EVENTLOOP_DEBUG
-    dbgln("Core::EventLoop::post_event: ({}) << receivier={}, event={}", m_queued_events.size(), receiver, event);
-#endif
+    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::post_event: ({}) << receivier={}, event={}", m_queued_events.size(), receiver, event);
     m_queued_events.empend(receiver, move(event));
 }
 
@@ -462,16 +448,12 @@ SignalHandlers::SignalHandlers(int signo, void (*handle_signal)(int))
     : m_signo(signo)
     , m_original_handler(signal(signo, handle_signal))
 {
-#if EVENTLOOP_DEBUG
-    dbgln("Core::EventLoop: Registered handler for signal {}", m_signo);
-#endif
+    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: Registered handler for signal {}", m_signo);
 }
 
 SignalHandlers::~SignalHandlers()
 {
-#if EVENTLOOP_DEBUG
-    dbgln("Core::EventLoop: Unregistering handler for signal {}", m_signo);
-#endif
+    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: Unregistering handler for signal {}", m_signo);
     signal(m_signo, m_original_handler);
 }
 
@@ -535,9 +517,7 @@ void EventLoop::dispatch_signal(int signo)
         // This allows a handler to unregister/register while the handlers
         // are being called!
         auto handler = handlers->value;
-#if EVENTLOOP_DEBUG
-        dbgln("Core::EventLoop: dispatching signal {}", signo);
-#endif
+        dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: dispatching signal {}", signo);
         handler->dispatch();
     }
 }
@@ -677,9 +657,8 @@ try_select_again:
                 return;
             goto try_select_again;
         }
-#if EVENTLOOP_DEBUG
-        dbgln("Core::EventLoop::wait_for_event: {} ({}: {})", marked_fd_count, saved_errno, strerror(saved_errno));
-#endif
+        dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::wait_for_event: {} ({}: {})", marked_fd_count, saved_errno, strerror(saved_errno));
+
         // Blow up, similar to Core::safe_syscall.
         VERIFY_NOT_REACHED();
     }
@@ -720,9 +699,9 @@ try_select_again:
             && owner && !owner->is_visible_for_timer_purposes()) {
             continue;
         }
-#if EVENTLOOP_DEBUG
-        dbgln("Core::EventLoop: Timer {} has expired, sending Core::TimerEvent to {}", timer.timer_id, *owner);
-#endif
+
+        dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: Timer {} has expired, sending Core::TimerEvent to {}", timer.timer_id, *owner);
+
         if (owner)
             post_event(*owner, make<TimerEvent>(timer.timer_id));
         if (timer.should_reload) {
