@@ -48,8 +48,15 @@ int sem_getvalue(sem_t*, int*)
 
 int sem_init(sem_t* sem, int shared, unsigned int value)
 {
-    if (shared)
-        return ENOSYS;
+    if (shared) {
+        errno = ENOSYS;
+        return -1;
+    }
+
+    if (value > SEM_VALUE_MAX) {
+        errno = EINVAL;
+        return -1;
+    }
 
     if (pthread_mutex_init(&sem->mtx, nullptr) != 0)
         return -1;
@@ -70,6 +77,12 @@ sem_t* sem_open(const char*, int, ...)
 
 int sem_post(sem_t* sem)
 {
+    if (sem->value == SEM_VALUE_MAX) {
+        pthread_mutex_unlock(&sem->mtx);
+        errno = EOVERFLOW;
+        return -1;
+    }
+
     sem->value++;
 
     pthread_cond_signal(&sem->cv);
