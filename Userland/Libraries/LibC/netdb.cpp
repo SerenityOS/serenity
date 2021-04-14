@@ -794,14 +794,15 @@ const char* gai_strerror(int errcode)
 
 int getnameinfo(const struct sockaddr* __restrict addr, socklen_t addrlen, char* __restrict host, socklen_t hostlen, char* __restrict serv, socklen_t servlen, int flags)
 {
-    (void)flags;
-
     if (addr->sa_family != AF_INET || addrlen < sizeof(sockaddr_in))
         return EAI_FAMILY;
 
     const sockaddr_in* sin = reinterpret_cast<const sockaddr_in*>(addr);
 
     if (host && hostlen > 0) {
+        if (flags & NI_NAMEREQD)
+            dbgln("getnameinfo flag NI_NAMEREQD not implemented");
+
         if (!inet_ntop(AF_INET, &sin->sin_addr, host, hostlen)) {
             if (errno == ENOSPC)
                 return EAI_OVERFLOW;
