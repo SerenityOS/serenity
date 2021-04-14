@@ -51,9 +51,25 @@ int sem_destroy(sem_t* sem)
     return 0;
 }
 
-int sem_getvalue(sem_t*, int*)
+int sem_getvalue(sem_t* sem, int* sval)
 {
-    VERIFY_NOT_REACHED();
+    auto rc = pthread_mutex_trylock(&sem->mtx);
+
+    if (rc == EBUSY) {
+        *sval = 0;
+        return 0;
+    }
+
+    if (rc != 0) {
+        errno = rc;
+        return -1;
+    }
+
+    *sval = sem->value;
+
+    pthread_mutex_unlock(&sem->mtx);
+
+    return 0;
 }
 
 int sem_init(sem_t* sem, int shared, unsigned int value)
