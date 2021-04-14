@@ -843,11 +843,9 @@ void WindowFrame::paint_simple_rect_shadow(Gfx::Painter& painter, const Gfx::Int
         int right_corners_left = max(containing_horizontal_rect.right() - corner_piece_width + 1, left_corners_right + 1);
         painter.blit({ containing_horizontal_rect.left(), y }, shadow_bitmap, { 0, src_row * base_size, corner_piece_width, base_size });
         painter.blit({ right_corners_left, y }, shadow_bitmap, { 5 * base_size - corner_piece_width, src_row * base_size, corner_piece_width, base_size });
-        if (containing_horizontal_rect.width() > 2 * corner_piece_width) {
-            for (int x = left_corners_right; x < right_corners_left; x += base_size) {
-                auto width = min(right_corners_left - x, base_size);
-                painter.blit({ x, y }, shadow_bitmap, { corner_piece_width, src_row * base_size, width, base_size });
-            }
+        for (int x = left_corners_right; x < right_corners_left; x += base_size) {
+            auto width = min(right_corners_left - x, base_size);
+            painter.blit({ x, y }, shadow_bitmap, { corner_piece_width, src_row * base_size, width, base_size });
         }
     };
 
@@ -862,11 +860,9 @@ void WindowFrame::paint_simple_rect_shadow(Gfx::Painter& painter, const Gfx::Int
         int bottom_corners_top = base_size + max(half_height, sides_height - corner_piece_height);
         painter.blit({ x + hshift, containing_rect.top() + top_corners_bottom - corner_piece_height }, shadow_bitmap, { base_size * 5 + hsrcshift, src_row * base_size, base_size - hsrcshift, corner_piece_height });
         painter.blit({ x + hshift, containing_rect.top() + bottom_corners_top }, shadow_bitmap, { base_size * 7 + hsrcshift, src_row * base_size + base_size - corner_piece_height, base_size - hsrcshift, corner_piece_height });
-        if (sides_height > 2 * base_size) {
-            for (int y = top_corners_bottom; y < bottom_corners_top; y += base_size) {
-                auto height = min(bottom_corners_top - y, base_size);
-                painter.blit({ x, containing_rect.top() + y }, shadow_bitmap, { base_size * 6, src_row * base_size, base_size, height });
-            }
+        for (int y = top_corners_bottom; y < bottom_corners_top; y += base_size) {
+            auto height = min(bottom_corners_top - y, base_size);
+            painter.blit({ x, containing_rect.top() + y }, shadow_bitmap, { base_size * 6, src_row * base_size, base_size, height });
         }
     };
 
