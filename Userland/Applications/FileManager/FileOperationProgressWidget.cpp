@@ -167,8 +167,10 @@ void FileOperationProgressWidget::close_pipe()
     if (!m_helper_pipe)
         return;
     m_helper_pipe = nullptr;
-    if (m_notifier)
+    if (m_notifier) {
+        m_notifier->set_enabled(false);
         m_notifier->on_ready_to_read = nullptr;
+    }
     m_notifier = nullptr;
 }
 
