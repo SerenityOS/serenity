@@ -2,7 +2,7 @@
     <h3>Valid cookies:</h3>
     <br /><input type=button onclick="setCookie(this.value)" value="cookie1=value1; max-age=5; path=/res/html" />
     <br /><input type=button onclick="setCookie(this.value)" value="cookie2=value2; expires=Sat, 23 Jan 2060 08:10:36 GMT" />
-    <br /><input type=button onclick="setCookie(this.value)" value="cookie3=value3; secure" />
+    <br /><input type=button onclick="setCookie(this.value)" value="cookie3=value3" />
     <br />
 
     <h3>Invalid cookies (the browser should reject these):</h3>
@@ -14,6 +14,13 @@
     <label for=invalid3>The cookie expired in the past</label>
     <br /><input id=invalid4 type=button onclick="setCookie(this.value)" value="cookie7=value7; expires=Mon, 23 Jan 1989 08:10:36 GMT" />
     <label for=invalid4>The cookie expired in the past</label>
+    <br />
+
+    <h3>Unretrievable cookies (the browser should accept these but not display them):</h3>
+    <br /><input id=locked1 type=button onclick="setCookie(this.value)" value="cookie8=value8; path=/not/this/path" />
+    <label for=locked1>The Path attribute does not path-match this page</label>
+    <br /><input id=locked2 type=button onclick="setCookie(this.value)" value="cookie9=value9; secure" />
+    <label for=locked2>The cookie is Secure thus cannot be viewed by a file:// page</label>
     <br />
 
     <pre>document.cookie = <span id=cookies></span></pre>
