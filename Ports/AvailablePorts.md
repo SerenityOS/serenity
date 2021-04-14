@@ -67,6 +67,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`neofetch`](neofetch/)        | neofetch                                      | 7.1.0             | https://github.com/dylanaraps/neofetch                |
 | [`nesalizer`](nesalizer/)      | Nesalizer                                     |                   | https://github.com/SerenityOS/nesalizer               |
 | [`ninja`](ninja/)              | Ninja                                         | 1.8.2             | https://ninja-build.org/                              |
+| [`npth`](npth/)                | New GNU Portable Threads Library              | 1.6               | https://gnupg.org/software/npth/index.html            |
 | [`nyancat`](nyancat/)          | Nyancat                                       |                   | https://github.com/klange/nyancat                     |
 | [`openssh`](openssh/)          | OpenSSH                                       | 8.3-9ca7e9c       | https://github.com/openssh/openssh-portable           |
 | [`openssl`](openssl/)          | OpenSSL                                       | 1.0.2             | https://www.openssl.org/                              |
