@@ -112,6 +112,7 @@ struct addrinfo {
 
 #define NI_NUMERICHOST 1
 #define NI_NUMERICSERV 2
+#define NI_NAMEREQD 3
 
 int getaddrinfo(const char* __restrict node, const char* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res);
 void freeaddrinfo(struct addrinfo* res);
