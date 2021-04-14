@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - name: Wait for tests to finish
-        uses: IdanHo/action-wait-for-check@890bf0671eeeac09faf19f57deb4397eeccc59aa
+        uses: IdanHo/action-wait-for-check@7b2192dd83108237d2f2e6518f6351be333a955c
         id: wait-for-tests
         if: ${{ (github.event['pull_request'] && github.event['action'] == 'opened' && !(github.event['pull_request'] == 'draft')) || github.event['commits'] }}
         with:
