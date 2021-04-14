@@ -1734,16 +1734,10 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    auto object_value = m_object->execute(interpreter, global_object);
+    auto reference = to_reference(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    auto* object_result = object_value.to_object(global_object);
-    if (interpreter.exception())
-        return {};
-    auto property_name = computed_property_name(interpreter, global_object);
-    if (!property_name.is_valid())
-        return {};
-    return object_result->get(property_name).value_or(js_undefined());
+    return reference.get(global_object);
 }
 
 void MetaProperty::dump(int indent) const
