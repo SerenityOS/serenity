@@ -53,6 +53,7 @@ private:
     RefPtr<ListView> m_family_list_view;
     RefPtr<ListView> m_weight_list_view;
     RefPtr<ListView> m_size_list_view;
+    RefPtr<SpinBox> m_size_spin_box;
     RefPtr<Label> m_sample_text_label;
 
     Vector<String> m_families;

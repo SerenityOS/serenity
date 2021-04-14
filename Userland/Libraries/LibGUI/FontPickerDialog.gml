@@ -53,6 +53,10 @@
                 fixed_height: 16
             }
 
+            @GUI::SpinBox {
+                name: "size_spin_box"
+            }
+
             @GUI::ListView {
                 name: "size_list_view"
             }
