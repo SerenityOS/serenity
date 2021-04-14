@@ -11,11 +11,13 @@ jobs:
       - name: Wait for tests to finish
         uses: IdanHo/action-wait-for-check@890bf0671eeeac09faf19f57deb4397eeccc59aa
         id: wait-for-tests
+        if: ${{ (github.event['pull_request'] && github.event['action'] == 'opened' && !(github.event['pull_request'] == 'draft')) || github.event['commits'] }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           excludedCheckName: "notify_discord"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           timeoutSeconds: 3600
+          intervalSeconds: 100
 
       - name: Discord action notification
         env:
