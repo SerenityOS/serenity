@@ -202,9 +202,8 @@ DOM::ExceptionOr<void> XMLHttpRequest::send()
         return {};
     }
 
-    LoadRequest request;
+    auto request = LoadRequest::create_for_url_on_page(request_url, m_window->document().page());
     request.set_method(m_method);
-    request.set_url(request_url);
     for (auto& it : m_request_headers)
         request.set_header(it.key, it.value);
 
