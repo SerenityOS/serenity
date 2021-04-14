@@ -195,6 +195,7 @@ void CanvasRenderingContext2D::stroke()
         return;
 
     painter->stroke_path(m_path, m_stroke_style, m_line_width);
+    did_draw(m_path.bounding_box());
 }
 
 void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
@@ -206,6 +207,7 @@ void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
     auto path = m_path;
     path.close_all_subpaths();
     painter->fill_path(path, m_fill_style, winding);
+    did_draw(m_path.bounding_box());
 }
 
 void CanvasRenderingContext2D::fill(const String& fill_rule)
