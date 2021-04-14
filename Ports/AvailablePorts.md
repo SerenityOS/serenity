@@ -45,6 +45,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`libexpat`](libexpat/)        | Expat                                         | 2.2.9             | https://libexpat.github.io/                           |
 | [`libffi`](libffi/)            | libffi                                        | 3.3               | https://www.sourceware.org/libffi/                    |
 | [`libiconv`](libiconv/)        | GNU libiconv                                  | 1.16              | https://www.gnu.org/software/libiconv/                |
+| [`libksba`](libksba/)          | libksba                                       | 1.5.1             | https://gnupg.org/software/libksba/index.html         |
 | [`libjpeg`](libjpeg/)          | libjpeg                                       | 9d                | https://ijg.org/                                      |
 | [`libogg`](libogg/)            | libogg                                        | 1.3.4             | https://github.com/xiph/ogg                           |
 | [`libpng`](libpng/)            | libpng                                        | 1.6.37            | https://libpng.org/                                   |
