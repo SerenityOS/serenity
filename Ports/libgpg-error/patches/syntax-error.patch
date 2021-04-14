@@ -1,0 +1,11 @@
+diff -Naur libgpg-error-1.42/src/gen-lock-obj.sh libgpg-error-1.42.serenity/src/gen-lock-obj.sh
+--- libgpg-error-1.42/src/gen-lock-obj.sh	2021-03-04 11:05:29.000000000 +0100
++++ libgpg-error-1.42.serenity/src/gen-lock-obj.sh	2021-04-14 02:17:50.977517154 +0200
+@@ -124,7 +124,6 @@
+ fi
+ 
+ cat <<'EOF'
+-}}}
+ ##
+ ## Local Variables:
+ ## mode: c
