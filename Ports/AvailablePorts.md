@@ -62,7 +62,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`mbedtls`](mbedtls/)          | Mbed TLS                                      | 2.16.2            | https://tls.mbed.org/                                 |
 | [`mrsh`](mrsh/)                | mrsh                                          | d9763a3           | https://mrsh.sh/                                      |
 | [`nano`](nano/)                | GNU nano                                      | 4.5               | https://www.nano-editor.org/                          |
-| [`nasm`](nasm/)                | Netwide Assembler (NASM)                      | 2.14.02           | https://www.nasm.us/                                  |
+| [`nasm`](nasm/)                | Netwide Assembler (NASM)                      | 2.15.05           | https://www.nasm.us/                                  |
 | [`ncurses`](ncurses/)          | ncurses                                       | 6.2               | https://invisible-island.net/ncurses/announce.html    |
 | [`neofetch`](neofetch/)        | neofetch                                      | 7.1.0             | https://github.com/dylanaraps/neofetch                |
 | [`nesalizer`](nesalizer/)      | Nesalizer                                     |                   | https://github.com/SerenityOS/nesalizer               |
