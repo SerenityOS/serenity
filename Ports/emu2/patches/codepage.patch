@@ -1,0 +1,9 @@
++++ emu2-master/src/codepage.c	2021-04-14 07:13:48.165698165 -0700
+@@ -3,6 +3,7 @@
+ #include "env.h"
+ #include <stdlib.h>
+ #include <string.h>
++#include <strings.h>
+ 
+ /* List of code-pages */
+ struct cp_data
