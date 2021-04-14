@@ -1,10 +1,18 @@
-test("basic functionality", () => {
-    expect(Error.prototype).not.toHaveProperty("length");
+describe("normal behavior", () => {
+    test("initial name value is type name", () => {
+        expect(Error.prototype.name).toBe("Error");
+        expect(EvalError.prototype.name).toBe("EvalError");
+        expect(RangeError.prototype.name).toBe("RangeError");
+        expect(ReferenceError.prototype.name).toBe("ReferenceError");
+        expect(SyntaxError.prototype.name).toBe("SyntaxError");
+        expect(TypeError.prototype.name).toBe("TypeError");
+    });
 
-    var changedInstance = new Error("");
-    changedInstance.name = "NewCustomError";
-    expect(changedInstance.name).toBe("NewCustomError");
-
-    var normalInstance = new Error("");
-    expect(normalInstance.name).toBe("Error");
+    test("Error gets name via prototype", () => {
+        const error = new Error();
+        expect(error.hasOwnProperty("name")).toBeFalse();
+        expect(error.name).toBe("Error");
+        Error.prototype.name = "Foo";
+        expect(error.name).toBe("Foo");
+    });
 });
