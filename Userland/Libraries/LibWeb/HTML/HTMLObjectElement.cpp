@@ -36,6 +36,7 @@ namespace Web::HTML {
 
 HTMLObjectElement::HTMLObjectElement(DOM::Document& document, QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
+    , m_image_loader(*this)
 {
     m_image_loader.on_load = [this] {
         m_should_show_fallback_content = false;

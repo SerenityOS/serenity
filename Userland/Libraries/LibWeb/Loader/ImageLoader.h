@@ -34,7 +34,7 @@ namespace Web {
 
 class ImageLoader : public ImageResourceClient {
 public:
-    ImageLoader();
+    ImageLoader(DOM::Element& owner_element);
 
     void load(const URL&);
 
@@ -68,6 +68,8 @@ private:
         Loaded,
         Failed,
     };
+
+    DOM::Element& m_owner_element;
 
     mutable bool m_visible_in_viewport { false };
 
