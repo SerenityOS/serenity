@@ -42,6 +42,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`klong`](klong/)              | Klong                                         | 20190926          | http://t3x.org/klong/                                 |
 | [`less`](less/)                | less                                          | 530               | http://www.greenwoodsoftware.com/less/                |
 | [`libarchive`](libarchive/)    | libarchive                                    | 3.4.0             | https://libarchive.org/                               |
+| [`libassuan`](libassuan/)      | libassuan                                     | 2.5.5             | https://gnupg.org/software/libassuan/index.html       |
 | [`libexpat`](libexpat/)        | Expat                                         | 2.2.9             | https://libexpat.github.io/                           |
 | [`libffi`](libffi/)            | libffi                                        | 3.3               | https://www.sourceware.org/libffi/                    |
 | [`libiconv`](libiconv/)        | GNU libiconv                                  | 1.16              | https://www.gnu.org/software/libiconv/                |
