@@ -15,7 +15,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           excludedCheckName: "notify_discord"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          timeoutSeconds: 1200
+          timeoutSeconds: 3600
 
       - name: Discord action notification
         env:
