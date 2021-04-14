@@ -27,21 +27,24 @@
 #include <AK/Debug.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Element.h>
 #include <LibWeb/Loader/ImageLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web {
 
-ImageLoader::ImageLoader()
-    : m_timer(Core::Timer::construct())
+ImageLoader::ImageLoader(DOM::Element& owner_element)
+    : m_owner_element(owner_element)
+    , m_timer(Core::Timer::construct())
 {
 }
 
 void ImageLoader::load(const URL& url)
 {
     m_loading_state = LoadingState::Loading;
-    LoadRequest request;
-    request.set_url(url);
+
+    auto request = LoadRequest::create_for_url_on_page(url, m_owner_element.document().page());
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
 }
 
