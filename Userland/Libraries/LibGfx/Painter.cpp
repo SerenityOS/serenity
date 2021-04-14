@@ -34,6 +34,7 @@
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/Memory.h>
+#include <AK/Queue.h>
 #include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
@@ -1432,21 +1433,6 @@ void Painter::draw_line(const IntPoint& p1, const IntPoint& p2, Color color, int
     }
 }
 
-static void split_quadratic_bezier_curve(const FloatPoint& original_control, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
-{
-    auto po1_midpoint = original_control + p1;
-    po1_midpoint /= 2;
-
-    auto po2_midpoint = original_control + p2;
-    po2_midpoint /= 2;
-
-    auto new_segment = po1_midpoint + po2_midpoint;
-    new_segment /= 2;
-
-    Painter::for_each_line_segment_on_bezier_curve(po1_midpoint, p1, new_segment, callback);
-    Painter::for_each_line_segment_on_bezier_curve(po2_midpoint, new_segment, p2, callback);
-}
-
 static bool can_approximate_bezier_curve(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& control)
 {
     constexpr static int tolerance = 15;
@@ -1467,35 +1453,41 @@ static bool can_approximate_bezier_curve(const FloatPoint& p1, const FloatPoint&
 // static
 void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
 {
-    if (can_approximate_bezier_curve(p1, p2, control_point)) {
-        callback(p1, p2);
-    } else {
-        split_quadratic_bezier_curve(control_point, p1, p2, callback);
+    struct SegmentDescriptor {
+        FloatPoint control_point;
+        FloatPoint p1;
+        FloatPoint p2;
+    };
+
+    static constexpr auto split_quadratic_bezier_curve = [](const FloatPoint& original_control, const FloatPoint& p1, const FloatPoint& p2, auto& segments) {
+        auto po1_midpoint = original_control + p1;
+        po1_midpoint /= 2;
+
+        auto po2_midpoint = original_control + p2;
+        po2_midpoint /= 2;
+
+        auto new_segment = po1_midpoint + po2_midpoint;
+        new_segment /= 2;
+
+        segments.enqueue({ po1_midpoint, p1, new_segment });
+        segments.enqueue({ po2_midpoint, new_segment, p2 });
+    };
+
+    Queue<SegmentDescriptor> segments;
+    segments.enqueue({ control_point, p1, p2 });
+    while (!segments.is_empty()) {
+        auto segment = segments.dequeue();
+
+        if (can_approximate_bezier_curve(segment.p1, segment.p2, segment.control_point))
+            callback(segment.p1, segment.p2);
+        else
+            split_quadratic_bezier_curve(segment.control_point, segment.p1, segment.p2, segments);
     }
 }
 
 void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&& callback)
 {
     for_each_line_segment_on_bezier_curve(control_point, p1, p2, callback);
-}
-
-static void split_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
-{
-    auto half_theta_delta = theta_delta / 2;
-    auto theta_mid = theta_1 + half_theta_delta;
-
-    auto xc = cosf(x_axis_rotation);
-    auto xs = sinf(x_axis_rotation);
-    auto tc = cosf(theta_1 + half_theta_delta);
-    auto ts = sinf(theta_1 + half_theta_delta);
-
-    auto x2 = xc * radii.x() * tc - xs * radii.y() * ts + center.x();
-    auto y2 = xs * radii.x() * tc + xc * radii.y() * ts + center.y();
-
-    FloatPoint mid_point = { x2, y2 };
-
-    Painter::for_each_line_segment_on_elliptical_arc(p1, mid_point, center, radii, x_axis_rotation, theta_1, half_theta_delta, callback);
-    Painter::for_each_line_segment_on_elliptical_arc(mid_point, p2, center, radii, x_axis_rotation, theta_mid, half_theta_delta, callback);
 }
 
 static bool can_approximate_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta)
@@ -1515,7 +1507,8 @@ static bool can_approximate_elliptical_arc(const FloatPoint& p1, const FloatPoin
     auto ellipse_mid_point = FloatPoint { x2, y2 };
     auto line_mid_point = p1 + (p2 - p1) / 2.0f;
 
-    return ellipse_mid_point.distance_from(line_mid_point) < tolerance;
+    auto v = ellipse_mid_point.distance_from(line_mid_point);
+    return v < tolerance;
 }
 
 void Painter::draw_quadratic_bezier_curve(const IntPoint& control_point, const IntPoint& p1, const IntPoint& p2, Color color, int thickness, LineStyle style)
@@ -1530,10 +1523,39 @@ void Painter::draw_quadratic_bezier_curve(const IntPoint& control_point, const I
 // static
 void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
 {
-    if (can_approximate_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta)) {
-        callback(p1, p2);
-    } else {
-        split_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, callback);
+    struct SegmentDescriptor {
+        FloatPoint p1;
+        FloatPoint p2;
+        float theta;
+        float theta_delta;
+    };
+
+    static constexpr auto split_elliptical_arc = [](const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, auto& segments) {
+        auto half_theta_delta = theta_delta / 2;
+        auto theta_mid = theta_1 + half_theta_delta;
+
+        auto xc = cosf(x_axis_rotation);
+        auto xs = sinf(x_axis_rotation);
+        auto tc = cosf(theta_1 + half_theta_delta);
+        auto ts = sinf(theta_1 + half_theta_delta);
+
+        auto x2 = xc * radii.x() * tc - xs * radii.y() * ts + center.x();
+        auto y2 = xs * radii.x() * tc + xc * radii.y() * ts + center.y();
+
+        FloatPoint mid_point = { x2, y2 };
+
+        segments.enqueue({ p1, mid_point, theta_1, half_theta_delta });
+        segments.enqueue({ mid_point, p2, theta_mid, half_theta_delta });
+    };
+
+    Queue<SegmentDescriptor> segments;
+    segments.enqueue({ p1, p2, theta_1, theta_delta });
+    while (!segments.is_empty()) {
+        auto segment = segments.dequeue();
+        if (can_approximate_elliptical_arc(segment.p1, segment.p2, center, radii, x_axis_rotation, segment.theta, segment.theta_delta))
+            callback(segment.p1, segment.p2);
+        else
+            split_elliptical_arc(segment.p1, segment.p2, center, radii, x_axis_rotation, segment.theta, segment.theta_delta, segments);
     }
 }
 
