@@ -273,37 +273,6 @@ void WindowServerConnection::handle(const Messages::WindowClient::MenuItemActiva
         action->activate(menu);
 }
 
-void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowStateChanged& message)
-{
-    if (auto* window = Window::from_window_id(message.wm_id()))
-        Core::EventLoop::current().post_event(*window, make<WMWindowStateChangedEvent>(message.client_id(), message.window_id(), message.parent_client_id(), message.parent_window_id(), message.title(), message.rect(), message.is_active(), message.is_modal(), static_cast<WindowType>(message.window_type()), message.is_minimized(), message.is_frameless(), message.progress()));
-}
-
-void WindowServerConnection::handle(const Messages::WindowClient::WM_AppletAreaSizeChanged& message)
-{
-    if (auto* window = Window::from_window_id(message.wm_id()))
-        Core::EventLoop::current().post_event(*window, make<WMAppletAreaSizeChangedEvent>(message.size()));
-}
-
-void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowRectChanged& message)
-{
-    if (auto* window = Window::from_window_id(message.wm_id()))
-        Core::EventLoop::current().post_event(*window, make<WMWindowRectChangedEvent>(message.client_id(), message.window_id(), message.rect()));
-}
-
-void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowIconBitmapChanged& message)
-{
-    if (auto* window = Window::from_window_id(message.wm_id())) {
-        Core::EventLoop::current().post_event(*window, make<WMWindowIconBitmapChangedEvent>(message.client_id(), message.window_id(), message.bitmap().bitmap()));
-    }
-}
-
-void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowRemoved& message)
-{
-    if (auto* window = Window::from_window_id(message.wm_id()))
-        Core::EventLoop::current().post_event(*window, make<WMWindowRemovedEvent>(message.client_id(), message.window_id()));
-}
-
 void WindowServerConnection::handle(const Messages::WindowClient::ScreenRectChanged& message)
 {
     Desktop::the().did_receive_screen_rect({}, message.rect());

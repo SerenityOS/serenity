@@ -45,6 +45,7 @@ class Compositor;
 class Window;
 class Menu;
 class Menubar;
+class WMClientConnection;
 
 class ClientConnection final
     : public IPC::ClientConnection<WindowClientEndpoint, WindowServerEndpoint>
@@ -132,11 +133,6 @@ private:
     virtual OwnPtr<Messages::WindowServer::SetGlobalCursorTrackingResponse> handle(const Messages::WindowServer::SetGlobalCursorTracking&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowOpacityResponse> handle(const Messages::WindowServer::SetWindowOpacity&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> handle(const Messages::WindowServer::SetWindowBackingStore&) override;
-    virtual void handle(const Messages::WindowServer::WM_SetActiveWindow&) override;
-    virtual void handle(const Messages::WindowServer::WM_SetWindowMinimized&) override;
-    virtual void handle(const Messages::WindowServer::WM_StartWindowResize&) override;
-    virtual void handle(const Messages::WindowServer::WM_PopupWindowMenu&) override;
-    virtual OwnPtr<Messages::WindowServer::WM_SetAppletAreaPositionResponse> handle(const Messages::WindowServer::WM_SetAppletAreaPosition&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowHasAlphaChannelResponse> handle(const Messages::WindowServer::SetWindowHasAlphaChannel&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowAlphaHitThresholdResponse> handle(const Messages::WindowServer::SetWindowAlphaHitThreshold&) override;
     virtual OwnPtr<Messages::WindowServer::MoveWindowToFrontResponse> handle(const Messages::WindowServer::MoveWindowToFront&) override;
@@ -152,7 +148,6 @@ private:
     virtual OwnPtr<Messages::WindowServer::PopupMenuResponse> handle(const Messages::WindowServer::PopupMenu&) override;
     virtual OwnPtr<Messages::WindowServer::DismissMenuResponse> handle(const Messages::WindowServer::DismissMenu&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> handle(const Messages::WindowServer::SetWindowIconBitmap&) override;
-    virtual void handle(const Messages::WindowServer::WM_SetWindowTaskbarRect&) override;
     virtual OwnPtr<Messages::WindowServer::StartDragResponse> handle(const Messages::WindowServer::StartDrag&) override;
     virtual OwnPtr<Messages::WindowServer::SetSystemThemeResponse> handle(const Messages::WindowServer::SetSystemTheme&) override;
     virtual OwnPtr<Messages::WindowServer::GetSystemThemeResponse> handle(const Messages::WindowServer::GetSystemTheme&) override;
@@ -186,6 +181,9 @@ private:
 
     bool m_has_display_link { false };
     bool m_unresponsive { false };
+
+    // Need this to get private client connection stuff
+    friend WMClientConnection;
 };
 
 }

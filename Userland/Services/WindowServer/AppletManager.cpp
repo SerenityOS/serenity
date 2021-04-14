@@ -155,7 +155,7 @@ void AppletManager::relayout()
 
     repaint();
 
-    WindowManager::the().tell_wm_listeners_applet_area_size_changed(rect.size());
+    WindowManager::the().tell_wms_applet_area_size_changed(rect.size());
 }
 
 void AppletManager::repaint()

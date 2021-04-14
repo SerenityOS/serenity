@@ -1,0 +1,12 @@
+endpoint WindowManagerServer = 1871
+{
+    SetEventMask(u32 event_mask) => ()
+    SetManagerWindow(i32 window_id) => ()
+
+    SetActiveWindow(i32 client_id, i32 window_id) =|
+    SetWindowMinimized(i32 client_id, i32 window_id, bool minimized) =|
+    StartWindowResize(i32 client_id, i32 window_id) =|
+    PopupWindowMenu(i32 client_id, i32 window_id, Gfx::IntPoint screen_position) =|
+    SetWindowTaskbarRect(i32 client_id, i32 window_id, Gfx::IntRect rect) =|
+    SetAppletAreaPosition(Gfx::IntPoint position) => ()
+}

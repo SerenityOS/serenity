@@ -100,9 +100,6 @@ public:
     void window_menu_activate_default();
     void request_close();
 
-    unsigned wm_event_mask() const { return m_wm_event_mask; }
-    void set_wm_event_mask(unsigned mask) { m_wm_event_mask = mask; }
-
     bool is_minimized() const { return m_minimized; }
     void set_minimized(bool);
 
@@ -136,8 +133,6 @@ public:
     const WindowFrame& frame() const { return m_frame; }
 
     Window* blocking_modal_window();
-
-    bool listens_to_wm_events() const { return m_listens_to_wm_events; }
 
     ClientConnection* client() { return m_client; }
     const ClientConnection* client() const { return m_client; }
@@ -381,7 +376,6 @@ private:
     bool m_frameless { false };
     bool m_resizable { false };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
-    bool m_listens_to_wm_events { false };
     bool m_minimized { false };
     bool m_maximized { false };
     bool m_fullscreen { false };
@@ -411,7 +405,6 @@ private:
     RefPtr<Cursor> m_cursor;
     RefPtr<Cursor> m_cursor_override;
     WindowFrame m_frame;
-    unsigned m_wm_event_mask { 0 };
     Gfx::DisjointRectSet m_pending_paint_rects;
     Gfx::IntRect m_unmaximized_rect;
     Gfx::IntRect m_rect_in_applet_area;
