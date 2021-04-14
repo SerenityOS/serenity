@@ -25,41 +25,94 @@
  */
 
 #include <AK/Assertions.h>
+#include <errno.h>
 #include <semaphore.h>
 
 int sem_close(sem_t*)
 {
-    VERIFY_NOT_REACHED();
+    errno = ENOSYS;
+    return -1;
 }
-int sem_destroy(sem_t*)
+
+int sem_destroy(sem_t* sem)
 {
-    VERIFY_NOT_REACHED();
+    pthread_mutex_destroy(&sem->mtx);
+    pthread_cond_destroy(&sem->cv);
+    return 0;
 }
+
 int sem_getvalue(sem_t*, int*)
 {
     VERIFY_NOT_REACHED();
 }
-int sem_init(sem_t*, int, unsigned int)
+
+int sem_init(sem_t* sem, int shared, unsigned int value)
 {
-    VERIFY_NOT_REACHED();
+    if (shared)
+        return ENOSYS;
+
+    if (pthread_mutex_init(&sem->mtx, nullptr) != 0)
+        return -1;
+
+    if (pthread_cond_init(&sem->cv, nullptr) != 0)
+        return -1;
+
+    sem->value = value;
+
+    return 0;
 }
+
 sem_t* sem_open(const char*, int, ...)
 {
-    VERIFY_NOT_REACHED();
+    errno = ENOSYS;
+    return nullptr;
 }
-int sem_post(sem_t*)
+
+int sem_post(sem_t* sem)
 {
-    VERIFY_NOT_REACHED();
+    sem->value++;
+
+    pthread_cond_signal(&sem->cv);
+
+    pthread_mutex_unlock(&sem->mtx);
+
+    return 0;
 }
-int sem_trywait(sem_t*)
+
+int sem_trywait(sem_t* sem)
 {
-    VERIFY_NOT_REACHED();
+    if (pthread_mutex_lock(&sem->mtx) != 0)
+        return -1;
+
+    if (sem->value == 0) {
+        pthread_mutex_unlock(&sem->mtx);
+        errno = EAGAIN;
+        return -1;
+    }
+
+    sem->value--;
+
+    return 0;
 }
+
 int sem_unlink(const char*)
 {
-    VERIFY_NOT_REACHED();
+    return ENOSYS;
 }
-int sem_wait(sem_t*)
+
+int sem_wait(sem_t* sem)
 {
-    VERIFY_NOT_REACHED();
+    if (pthread_mutex_lock(&sem->mtx) != 0)
+        return -1;
+
+    while (sem->value == 0) {
+        if (pthread_cond_wait(&sem->cv, &sem->mtx) != 0) {
+            pthread_mutex_unlock(&sem->mtx);
+            return -1;
+        }
+    }
+
+    sem->value--;
+
+    return 0;
 }
