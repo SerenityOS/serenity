@@ -9,7 +9,7 @@ configopts="--with-libgpg-error-prefix=${SERENITY_BUILD_DIR}/Root/usr/local \
   --with-npth-prefix=${SERENITY_BUILD_DIR}/Root/usr/local \
   --disable-dirmngr"
 files="https://gnupg.org/ftp/gcrypt/gnupg/gnupg-${version}.tar.bz2 gnupg-${version}.tar.bz2"
-depends="libiconv libgpg-error libgcrypt libassuan npth ntbtls"
+depends="libiconv libgpg-error libgcrypt libksba libassuan npth ntbtls"
 
 pre_configure() {
     export GPGRT_CONFIG="${SERENITY_BUILD_DIR}/Root/usr/local/bin/gpgrt-config"
