@@ -1,0 +1,14 @@
++++ emu2-master/src/main.c	2021-04-14 07:16:54.192314882 -0700
+@@ -304,12 +304,6 @@
+     signal(SIGQUIT, exit_handler);
+     signal(SIGPIPE, exit_handler);
+     signal(SIGTERM, exit_handler);
+-    struct itimerval itv;
+-    itv.it_interval.tv_sec = 0;
+-    itv.it_interval.tv_usec = 54925;
+-    itv.it_value.tv_sec = 0;
+-    itv.it_value.tv_usec = 54925;
+-    setitimer(ITIMER_REAL, &itv, 0);
+     init_bios_mem();
+     while(1)
+     {
