@@ -35,11 +35,20 @@ class LocalSocket final : public Socket {
 public:
     virtual ~LocalSocket() override;
 
-    static RefPtr<LocalSocket> take_over_accepted_socket_from_system_server();
+    static RefPtr<LocalSocket> take_over_accepted_socket_from_system_server(String const& socket_path = String());
 
 private:
     explicit LocalSocket(Object* parent = nullptr);
     LocalSocket(int fd, Object* parent = nullptr);
+
+    // FIXME: better place to put this so both LocalSocket and LocalServer can
+    // enjoy it?
+    friend class LocalServer;
+
+    static void parse_sockets_from_system_server();
+
+    static HashMap<String, int> s_overtaken_sockets;
+    static bool s_overtaken_sockets_parsed;
 };
 
 }

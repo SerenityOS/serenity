@@ -50,28 +50,39 @@ LocalServer::~LocalServer()
         ::close(m_fd);
 }
 
-bool LocalServer::take_over_from_system_server()
+bool LocalServer::take_over_from_system_server(String const& socket_path)
 {
     if (m_listening)
         return false;
 
-    constexpr auto socket_takeover = "SOCKET_TAKEOVER";
+    if (!LocalSocket::s_overtaken_sockets_parsed)
+        LocalSocket::parse_sockets_from_system_server();
 
-    if (getenv(socket_takeover)) {
+    int fd = -1;
+    if (socket_path.is_null()) {
+        // We want the first (and only) socket.
+        if (LocalSocket::s_overtaken_sockets.size() == 1) {
+            fd = LocalSocket::s_overtaken_sockets.begin()->value;
+        }
+    } else {
+        auto it = LocalSocket::s_overtaken_sockets.find(socket_path);
+        if (it != LocalSocket::s_overtaken_sockets.end()) {
+            fd = it->value;
+        }
+    }
+
+    if (fd >= 0) {
         // Sanity check: it has to be a socket.
         struct stat stat;
-        int rc = fstat(3, &stat);
+        int rc = fstat(fd, &stat);
         if (rc == 0 && S_ISSOCK(stat.st_mode)) {
-            // The SystemServer has passed us the socket as fd 3,
-            // so use that instead of creating our own.
-            m_fd = 3;
+            // The SystemServer has passed us the socket, so use that instead of
+            // creating our own.
+            m_fd = fd;
             // It had to be !CLOEXEC for obvious reasons, but we
             // don't need it to be !CLOEXEC anymore, so set the
             // CLOEXEC flag now.
             fcntl(m_fd, F_SETFD, FD_CLOEXEC);
-            // We wouldn't want our children to think we're passing
-            // them a socket either, so unset the env variable.
-            unsetenv(socket_takeover);
 
             m_listening = true;
             setup_notifier();
