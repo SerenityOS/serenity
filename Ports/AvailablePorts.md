@@ -45,6 +45,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`libassuan`](libassuan/)      | libassuan                                     | 2.5.5             | https://gnupg.org/software/libassuan/index.html       |
 | [`libexpat`](libexpat/)        | Expat                                         | 2.2.9             | https://libexpat.github.io/                           |
 | [`libffi`](libffi/)            | libffi                                        | 3.3               | https://www.sourceware.org/libffi/                    |
+| [`libgcrypt`](libgcrypt/)      | libgcrypt                                     | 1.9.2             | https://gnupg.org/software/libgcrypt/index.html       |
 | [`libgpg-error`](libgpg-error/)| libgpg-error                                  | 1.42              | https://gnupg.org/software/libgpg-error/index.html    |
 | [`libiconv`](libiconv/)        | GNU libiconv                                  | 1.16              | https://www.gnu.org/software/libiconv/                |
 | [`libksba`](libksba/)          | libksba                                       | 1.5.1             | https://gnupg.org/software/libksba/index.html         |
