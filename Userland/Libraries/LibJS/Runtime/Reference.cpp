@@ -51,15 +51,15 @@ void Reference::put(GlobalObject& global_object, Value value)
 
     if (!base.is_object() && vm.in_strict_mode()) {
         if (base.is_nullish())
-            vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishAssignment, m_name.to_value(global_object.vm()).to_string_without_side_effects(), base.to_string_without_side_effects());
+            vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name.to_value(vm).to_string_without_side_effects(), base.to_string_without_side_effects());
         else
-            vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveAssignment, m_name.to_value(global_object.vm()).to_string_without_side_effects(), base.typeof(), base.to_string_without_side_effects());
+            vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveSetProperty, m_name.to_value(vm).to_string_without_side_effects(), base.typeof(), base.to_string_without_side_effects());
         return;
     }
 
     if (base.is_nullish()) {
         // This will always fail the to_object() call below, let's throw the TypeError ourselves with a nice message instead.
-        vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishAssignment, m_name.to_value(global_object.vm()).to_string_without_side_effects(), base.to_string_without_side_effects());
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name.to_value(vm).to_string_without_side_effects(), base.to_string_without_side_effects());
         return;
     }
 
@@ -103,7 +103,15 @@ Value Reference::get(GlobalObject& global_object)
         return value;
     }
 
-    auto* object = base().to_object(global_object);
+    auto base = this->base();
+
+    if (base.is_nullish()) {
+        // This will always fail the to_object() call below, let's throw the TypeError ourselves with a nice message instead.
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishGetProperty, m_name.to_value(vm).to_string_without_side_effects(), base.to_string_without_side_effects());
+        return {};
+    }
+
+    auto* object = base.to_object(global_object);
     if (!object)
         return {};
 
