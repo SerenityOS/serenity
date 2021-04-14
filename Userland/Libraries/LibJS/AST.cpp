@@ -147,22 +147,35 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
 
     if (is<MemberExpression>(*m_callee)) {
         auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
-        bool is_super_property_lookup = is<SuperExpression>(member_expression.object());
-        auto lookup_target = is_super_property_lookup ? interpreter.current_environment()->get_super_base() : member_expression.object().execute(interpreter, global_object);
-        if (vm.exception())
-            return {};
-        if (is_super_property_lookup && lookup_target.is_nullish()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects());
-            return {};
+        Value callee;
+        Object* this_value = nullptr;
+
+        if (is<SuperExpression>(member_expression.object())) {
+            auto super_base = interpreter.current_environment()->get_super_base();
+            if (super_base.is_nullish()) {
+                vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, super_base.to_string_without_side_effects());
+                return {};
+            }
+            auto property_name = member_expression.computed_property_name(interpreter, global_object);
+            if (!property_name.is_valid())
+                return {};
+            auto reference = Reference(super_base, property_name);
+            callee = reference.get(global_object);
+            if (vm.exception())
+                return {};
+            this_value = &vm.this_value(global_object).as_object();
+        } else {
+            auto reference = member_expression.to_reference(interpreter, global_object);
+            if (vm.exception())
+                return {};
+            callee = reference.get(global_object);
+            if (vm.exception())
+                return {};
+            this_value = reference.base().to_object(global_object);
+            if (vm.exception())
+                return {};
         }
 
-        auto* this_value = is_super_property_lookup ? &vm.this_value(global_object).as_object() : lookup_target.to_object(global_object);
-        if (vm.exception())
-            return {};
-        auto property_name = member_expression.computed_property_name(interpreter, global_object);
-        if (!property_name.is_valid())
-            return {};
-        auto callee = lookup_target.to_object(global_object)->get(property_name).value_or(js_undefined());
         return { this_value, callee };
     }
     return { &global_object, m_callee->execute(interpreter, global_object) };
