@@ -80,6 +80,8 @@ public:
 
     int window_id() const { return m_window_id; }
 
+    void make_window_manager(unsigned event_mask);
+
     String title() const;
     void set_title(String);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,33 +26,32 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
-#include <LibCore/Notifier.h>
+#include <LibIPC/ServerConnection.h>
+#include <WindowServer/WindowManagerClientEndpoint.h>
+#include <WindowServer/WindowManagerServerEndpoint.h>
 
-namespace WindowServer {
+namespace GUI {
 
-class ClientConnection;
-
-class EventLoop {
+class WindowManagerServerConnection
+    : public IPC::ServerConnection<WindowManagerClientEndpoint, WindowManagerServerEndpoint>
+    , public WindowManagerClientEndpoint {
+    C_OBJECT(WindowManagerServerConnection)
 public:
-    EventLoop();
-    virtual ~EventLoop();
+    WindowManagerServerConnection()
+        : IPC::ServerConnection<WindowManagerClientEndpoint, WindowManagerServerEndpoint>(*this, "/tmp/portal/wm")
+    {
+        handshake();
+    }
 
-    int exec() { return m_event_loop.exec(); }
+    virtual void handshake() override;
+    static WindowManagerServerConnection& the();
 
 private:
-    void drain_mouse();
-    void drain_keyboard();
-
-    Core::EventLoop m_event_loop;
-    int m_keyboard_fd { -1 };
-    RefPtr<Core::Notifier> m_keyboard_notifier;
-    int m_mouse_fd { -1 };
-    RefPtr<Core::Notifier> m_mouse_notifier;
-    RefPtr<Core::LocalServer> m_window_server;
-    RefPtr<Core::LocalServer> m_wm_server;
+    virtual void handle(const Messages::WindowManagerClient::WindowRemoved&) override;
+    virtual void handle(const Messages::WindowManagerClient::WindowStateChanged&) override;
+    virtual void handle(const Messages::WindowManagerClient::WindowIconBitmapChanged&) override;
+    virtual void handle(const Messages::WindowManagerClient::WindowRectChanged&) override;
+    virtual void handle(const Messages::WindowManagerClient::AppletAreaSizeChanged&) override;
 };
 
 }

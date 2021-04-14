@@ -113,12 +113,6 @@ Window::Window(ClientConnection& client, WindowType window_type, int window_id, 
     , m_icon(default_window_icon())
     , m_frame(*this)
 {
-    // FIXME: This should not be hard-coded here.
-    if (m_type == WindowType::Taskbar) {
-        m_wm_event_mask = WMEventMask::WindowStateChanges | WMEventMask::WindowRemovals | WMEventMask::WindowIconChanges;
-        m_listens_to_wm_events = true;
-    }
-
     // Set default minimum size for Normal windows
     if (m_type == WindowType::Normal)
         m_minimum_size = s_default_normal_minimum_size;
