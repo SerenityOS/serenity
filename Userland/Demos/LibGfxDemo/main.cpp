@@ -141,7 +141,7 @@ void Canvas::draw()
     path.quadratic_bezier_curve_to({ 320, 500 }, { 220, 400 });
     path.line_to({ 300, 440 });
     path.line_to({ 90, 460 });
-    path.quadratic_bezier_curve_to({ 260, 500 }, { 200, 540 });
+    path.elliptical_arc_to({ 260, 540 }, { 40, 30 }, 0, true, false);
     path.close();
     painter.fill_path(path, Color::Yellow, Gfx::Painter::WindingRule::EvenOdd);
 
