@@ -63,11 +63,22 @@ FileOperationProgressWidget::FileOperationProgressWidget(NonnullRefPtr<Core::Fil
     m_notifier->on_ready_to_read = [this] {
         auto line = m_helper_pipe->read_line();
         if (line.is_null()) {
-            did_error();
+            did_error("Read from pipe returned null.");
             return;
         }
+
         auto parts = line.split_view(' ');
         VERIFY(!parts.is_empty());
+
+        if (parts[0] == "ERROR"sv) {
+            did_error(line.substring(6));
+            return;
+        }
+
+        if (parts[0] == "WARN"sv) {
+            did_error(line.substring(5));
+            return;
+        }
 
         if (parts[0] == "FINISH"sv) {
             did_finish();
@@ -101,11 +112,11 @@ void FileOperationProgressWidget::did_finish()
     window()->close();
 }
 
-void FileOperationProgressWidget::did_error()
+void FileOperationProgressWidget::did_error(const String message)
 {
     // FIXME: Communicate more with the user about errors.
     close_pipe();
-    GUI::MessageBox::show(window(), "An error occurred", "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+    GUI::MessageBox::show(window(), String::formatted("An error occurred: {}", message), "Error", GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
     window()->close();
 }
 

@@ -33,6 +33,8 @@
 #include <sys/stat.h>
 
 static int perform_copy(const String& source, const String& destination);
+static void report_error(String message);
+static void report_warning(String message);
 
 int main(int argc, char** argv)
 {
@@ -49,7 +51,7 @@ int main(int argc, char** argv)
     if (operation == "Copy")
         return perform_copy(source, destination);
 
-    warnln("Unknown operation '{}'", operation);
+    report_warning(String::formatted("Unknown operation '{}'", operation));
     return 0;
 }
 
@@ -64,11 +66,22 @@ struct WorkItem {
     off_t size;
 };
 
+static void report_error(String message)
+{
+    outln("ERROR {}", message);
+}
+
+static void report_warning(String message)
+{
+    outln("WARN {}", message);
+}
+
 static bool collect_work_items(const String& source, const String& destination, Vector<WorkItem>& items)
 {
     struct stat st = {};
     if (stat(source.characters(), &st) < 0) {
-        perror("stat");
+        auto original_errno = errno;
+        report_error(String::formatted("stat: {}", strerror(original_errno)));
         return false;
     }
 
@@ -127,7 +140,8 @@ int perform_copy(const String& source, const String& destination)
         if (item.type == WorkItem::Type::CreateDirectory) {
             outln("MKDIR {}", item.destination);
             if (mkdir(item.destination.characters(), 0755) < 0 && errno != EEXIST) {
-                perror("mkdir");
+                auto original_errno = errno;
+                report_error(String::formatted("mkdir: {}", strerror(original_errno)));
                 return 1;
             }
             continue;
@@ -135,12 +149,12 @@ int perform_copy(const String& source, const String& destination)
         VERIFY(item.type == WorkItem::Type::CopyFile);
         auto source_file_or_error = Core::File::open(item.source, Core::File::ReadOnly);
         if (source_file_or_error.is_error()) {
-            warnln("Failed to open {} for reading: {}", item.source, source_file_or_error.error());
+            report_warning(String::formatted("Failed to open {} for reading: {}", item.source, source_file_or_error.error()));
             return 1;
         }
         auto destination_file_or_error = Core::File::open(item.destination, (Core::IODevice::OpenMode)(Core::File::WriteOnly | Core::File::Truncate));
         if (destination_file_or_error.is_error()) {
-            warnln("Failed to open {} for write: {}", item.destination, destination_file_or_error.error());
+            report_warning(String::formatted("Failed to open {} for write: {}", item.destination, destination_file_or_error.error()));
             return 1;
         }
         auto& source_file = *source_file_or_error.value();
@@ -152,7 +166,7 @@ int perform_copy(const String& source, const String& destination)
             if (buffer.is_null())
                 break;
             if (!destination_file.write(buffer)) {
-                warnln("Failed to write to destination file: {}", destination_file.error_string());
+                report_warning(String::formatted("Failed to write to destination file: {}", destination_file.error_string()));
                 return 1;
             }
             item_done += buffer.size();
