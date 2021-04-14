@@ -39,6 +39,8 @@ public:
     {
     }
 
+    static LoadRequest create_for_url_on_page(const URL& url, Page* page);
+
     bool is_valid() const { return m_url.is_valid(); }
 
     const URL& url() const { return m_url; }

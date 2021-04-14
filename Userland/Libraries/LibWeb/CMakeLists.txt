@@ -193,6 +193,7 @@ set(SOURCES
     Loader/FrameLoader.cpp
     Loader/ImageLoader.cpp
     Loader/ImageResource.cpp
+    Loader/LoadRequest.cpp
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
     Namespace.cpp
