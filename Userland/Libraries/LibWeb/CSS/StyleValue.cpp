@@ -175,8 +175,7 @@ ImageStyleValue::ImageStyleValue(const URL& url, DOM::Document& document)
     , m_url(url)
     , m_document(document)
 {
-    LoadRequest request;
-    request.set_url(url);
+    auto request = LoadRequest::create_for_url_on_page(url, document.page());
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
 }
 

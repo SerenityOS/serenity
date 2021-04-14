@@ -204,9 +204,7 @@ bool FrameLoader::load(const URL& url, Type type)
         return false;
     }
 
-    LoadRequest request;
-    request.set_url(url);
-
+    auto request = LoadRequest::create_for_url_on_page(url, frame().page());
     return load(request, type);
 }
 
