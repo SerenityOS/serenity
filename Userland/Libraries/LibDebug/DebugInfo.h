@@ -94,6 +94,7 @@ public:
         OwnPtr<VariableInfo> type;
         NonnullOwnPtrVector<VariableInfo> members;
         VariableInfo* parent { nullptr };
+        Vector<u32> dimension_sizes;
 
         bool is_enum_type() const { return type && type->type_tag == Dwarf::EntryTag::EnumerationType; }
     };
@@ -142,6 +143,7 @@ private:
     void parse_scopes_impl(const Dwarf::DIE& die);
     OwnPtr<VariableInfo> create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters&, u32 address_offset = 0) const;
     static bool is_variable_tag_supported(const Dwarf::EntryTag& tag);
+    void add_type_info_to_variable(const Dwarf::DIE& type_die, const PtraceRegisters& regs, DebugInfo::VariableInfo* parent_variable) const;
 
     NonnullOwnPtr<const ELF::Image> m_elf;
     String m_source_root;
