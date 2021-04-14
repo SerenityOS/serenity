@@ -3,7 +3,7 @@ port=SDL2_mixer
 version=2.0.4
 useconfigure=true
 files="https://www.libsdl.org/projects/SDL_mixer/release/SDL2_mixer-${version}.tar.gz SDL2_mixer-${version}.tar.gz"
-depends="SDL2"
+depends="SDL2 libvorbis"
 
 configure() {
     run ./configure \
