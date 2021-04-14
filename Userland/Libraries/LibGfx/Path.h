@@ -154,11 +154,7 @@ public:
         invalidate_split_lines();
     }
 
-    void elliptical_arc_to(const FloatPoint& point, const FloatPoint& center, const FloatPoint& radii, float x_axis_rotation, float theta_1, float theta_delta)
-    {
-        append_segment<EllipticalArcSegment>(point, center, radii, x_axis_rotation, theta_1, theta_delta);
-        invalidate_split_lines();
-    }
+    void elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, double x_axis_rotation, bool large_arc, bool sweep);
 
     void close();
     void close_all_subpaths();
