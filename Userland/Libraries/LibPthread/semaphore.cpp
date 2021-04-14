@@ -36,8 +36,18 @@ int sem_close(sem_t*)
 
 int sem_destroy(sem_t* sem)
 {
-    pthread_mutex_destroy(&sem->mtx);
-    pthread_cond_destroy(&sem->cv);
+    auto rc = pthread_mutex_destroy(&sem->mtx);
+    if (rc != 0) {
+        errno = rc;
+        return -1;
+    }
+
+    rc = pthread_cond_destroy(&sem->cv);
+    if (rc != 0) {
+        errno = rc;
+        return -1;
+    }
+
     return 0;
 }
 
@@ -58,11 +68,17 @@ int sem_init(sem_t* sem, int shared, unsigned int value)
         return -1;
     }
 
-    if (pthread_mutex_init(&sem->mtx, nullptr) != 0)
+    auto rc = pthread_mutex_init(&sem->mtx, nullptr);
+    if (rc != 0) {
+        errno = rc;
         return -1;
+    }
 
-    if (pthread_cond_init(&sem->cv, nullptr) != 0)
+    rc = pthread_cond_init(&sem->cv, nullptr);
+    if (rc != 0) {
+        errno = rc;
         return -1;
+    }
 
     sem->value = value;
 
@@ -85,17 +101,29 @@ int sem_post(sem_t* sem)
 
     sem->value++;
 
-    pthread_cond_signal(&sem->cv);
+    auto rc = pthread_cond_signal(&sem->cv);
+    if (rc != 0) {
+        pthread_mutex_unlock(&sem->mtx);
+        errno = rc;
+        return -1;
+    }
 
-    pthread_mutex_unlock(&sem->mtx);
+    rc = pthread_mutex_unlock(&sem->mtx);
+    if (errno != 0) {
+        errno = rc;
+        return -1;
+    }
 
     return 0;
 }
 
 int sem_trywait(sem_t* sem)
 {
-    if (pthread_mutex_lock(&sem->mtx) != 0)
+    auto rc = pthread_mutex_lock(&sem->mtx);
+    if (rc != 0) {
+        errno = rc;
         return -1;
+    }
 
     if (sem->value == 0) {
         pthread_mutex_unlock(&sem->mtx);
@@ -110,17 +138,23 @@ int sem_trywait(sem_t* sem)
 
 int sem_unlink(const char*)
 {
-    return ENOSYS;
+    errno = ENOSYS;
+    return -1;
 }
 
 int sem_wait(sem_t* sem)
 {
-    if (pthread_mutex_lock(&sem->mtx) != 0)
+    auto rc = pthread_mutex_lock(&sem->mtx);
+    if (errno != 0) {
+        errno = rc;
         return -1;
+    }
 
     while (sem->value == 0) {
-        if (pthread_cond_wait(&sem->cv, &sem->mtx) != 0) {
+        rc = pthread_cond_wait(&sem->cv, &sem->mtx);
+        if (rc != 0) {
             pthread_mutex_unlock(&sem->mtx);
+            errno = rc;
             return -1;
         }
     }
