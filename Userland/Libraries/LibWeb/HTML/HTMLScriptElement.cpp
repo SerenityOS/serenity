@@ -224,10 +224,12 @@ void HTMLScriptElement::prepare_script()
         }
 
         if (m_script_type == ScriptType::Classic) {
+            auto request = LoadRequest::create_for_url_on_page(url, document().page());
+
             // FIXME: This load should be made asynchronous and the parser should spin an event loop etc.
             m_script_filename = url.basename();
             ResourceLoader::the().load_sync(
-                url,
+                request,
                 [this, url](auto data, auto&, auto) {
                     if (data.is_null()) {
                         dbgln("HTMLScriptElement: Failed to load {}", url);
