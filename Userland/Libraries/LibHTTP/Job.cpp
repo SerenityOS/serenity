@@ -288,7 +288,8 @@ void Job::on_socket_connected()
             } else {
                 auto transfer_encoding = m_headers.get("Transfer-Encoding");
                 if (transfer_encoding.has_value()) {
-                    auto encoding = transfer_encoding.value();
+                    // Note: Some servers add extra spaces around 'chunked', see #6302.
+                    auto encoding = transfer_encoding.value().trim_whitespace();
 
                     dbgln_if(JOB_DEBUG, "Job: This content has transfer encoding '{}'", encoding);
                     if (encoding.equals_ignoring_case("chunked")) {
