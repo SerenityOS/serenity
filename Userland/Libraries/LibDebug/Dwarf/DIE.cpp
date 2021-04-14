@@ -139,6 +139,22 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         value.data.as_u32 = data + m_compilation_unit.offset();
         break;
     }
+    case AttributeDataForm::Data8: {
+        u64 data;
+        debug_info_stream >> data;
+            VERIFY(!debug_info_stream.has_any_error());
+        value.type = AttributeValue::Type::UnsignedNumber;
+        value.data.as_u32 = static_cast<u32>(data); // FIXME: Do we need to properly handle 64-Bit values?
+        break;
+    }
+    case AttributeDataForm::Ref8: {
+        u64 data;
+        debug_info_stream >> data;
+            VERIFY(!debug_info_stream.has_any_error());
+        value.type = AttributeValue::Type::DieReference;
+        value.data.as_u32 = data + m_compilation_unit.offset(); // FIXME: Do we need to properly handle 64-Bit values?
+        break;
+    }
     case AttributeDataForm::FlagPresent: {
         value.type = AttributeValue::Type::Boolean;
         value.data.as_bool = true;
