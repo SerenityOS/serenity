@@ -53,9 +53,11 @@ public:
 private:
     static Optional<String> canonicalize_domain(const URL& url);
     static bool domain_matches(const String& string, const String& domain_string);
+    static bool path_matches(const String& request_path, const String& cookie_path);
     static String default_path(const URL& url);
 
     void store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source);
+    Vector<Web::Cookie::Cookie*> get_matching_cookies(const URL& url, const String& canonicalized_domain, Web::Cookie::Source source);
     void purge_expired_cookies();
 
     HashMap<CookieStorageKey, Web::Cookie::Cookie> m_cookies;
