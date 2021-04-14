@@ -1,6 +1,9 @@
 test("basic functionality", () => {
     expect(String.prototype.substr).toHaveLength(2);
 
+    expect("".substr(1)).toBe("");
+    expect("".substr()).toBe("");
+    expect("".substr(-1)).toBe("");
     expect("hello friends".substr()).toBe("hello friends");
     expect("hello friends".substr(1)).toBe("ello friends");
     expect("hello friends".substr(0, 5)).toBe("hello");

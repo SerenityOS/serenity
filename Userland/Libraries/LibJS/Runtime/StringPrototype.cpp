@@ -424,28 +424,31 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
         return js_string(vm, string);
 
     // FIXME: this should index a UTF-16 code_point view of the string.
-    auto string_length = (i32)string.length();
+    auto size = (i32)string.length();
 
-    auto start_argument = vm.argument(0).to_i32(global_object);
+    auto int_start = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+    if (Value(int_start).is_negative_infinity())
+        int_start = 0;
+    if (int_start < 0)
+        int_start = max(size + (i32)int_start, 0);
+
+    auto length = vm.argument(1);
+
+    auto int_length = length.is_undefined() ? size : length.to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};
 
-    auto start = start_argument < 0 ? (string_length - -start_argument) : start_argument;
-
-    auto length = string_length - start;
-    if (vm.argument_count() >= 2) {
-        auto length_argument = vm.argument(1).to_i32(global_object);
-        if (vm.exception())
-            return {};
-        length = max(0, min(length_argument, length));
-        if (vm.exception())
-            return {};
-    }
-
-    if (length == 0)
+    if (Value(int_start).is_positive_infinity() || (int_length <= 0) || Value(int_length).is_positive_infinity())
         return js_string(vm, String(""));
 
-    auto string_part = string.substring(start, length);
+    auto int_end = min((i32)(int_start + int_length), size);
+
+    if (int_start >= int_end)
+        return js_string(vm, String(""));
+
+    auto string_part = string.substring(int_start, int_end - int_start);
     return js_string(vm, string_part);
 }
 
