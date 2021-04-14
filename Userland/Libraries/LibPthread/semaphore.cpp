@@ -93,6 +93,12 @@ sem_t* sem_open(const char*, int, ...)
 
 int sem_post(sem_t* sem)
 {
+    auto rc = pthread_mutex_lock(&sem->mtx);
+    if (rc != 0) {
+        errno = rc;
+        return -1;
+    }
+
     if (sem->value == SEM_VALUE_MAX) {
         pthread_mutex_unlock(&sem->mtx);
         errno = EOVERFLOW;
@@ -101,7 +107,7 @@ int sem_post(sem_t* sem)
 
     sem->value++;
 
-    auto rc = pthread_cond_signal(&sem->cv);
+    rc = pthread_cond_signal(&sem->cv);
     if (rc != 0) {
         pthread_mutex_unlock(&sem->mtx);
         errno = rc;
@@ -133,6 +139,12 @@ int sem_trywait(sem_t* sem)
 
     sem->value--;
 
+    rc = pthread_mutex_unlock(&sem->mtx);
+    if (rc != 0) {
+        errno = rc;
+        return -1;
+    }
+
     return 0;
 }
 
@@ -160,6 +172,12 @@ int sem_wait(sem_t* sem)
     }
 
     sem->value--;
+
+    rc = pthread_mutex_unlock(&sem->mtx);
+    if (rc != 0) {
+        errno = rc;
+        return -1;
+    }
 
     return 0;
 }
