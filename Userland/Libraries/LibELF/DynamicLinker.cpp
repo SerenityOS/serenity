@@ -101,7 +101,10 @@ static void map_library(const String& name)
     // TODO: Do we want to also look for libs in other paths too?
     String path = String::formatted("/usr/lib/{}", name);
     int fd = open(path.characters(), O_RDONLY);
-    VERIFY(fd >= 0);
+    if (fd < 0) {
+        fprintf(stderr, "Could not find required shared library: %s\n", path.characters());
+        VERIFY_NOT_REACHED();
+    }
     map_library(name, fd);
 }
 
