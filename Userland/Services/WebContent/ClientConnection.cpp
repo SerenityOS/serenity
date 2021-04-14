@@ -220,6 +220,10 @@ void ClientConnection::handle(const Messages::WebContentServer::DebugRequest& me
     if (message.request() == "clear-cache") {
         Web::ResourceLoader::the().clear_cache();
     }
+
+    if (message.request() == "spoof-user-agent") {
+        Web::ResourceLoader::the().set_user_agent(message.argument());
+    }
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::GetSource&)

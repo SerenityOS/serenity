@@ -28,6 +28,7 @@
 
 #include "History.h"
 #include <AK/URL.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibHTTP/HttpJob.h>
@@ -114,6 +115,9 @@ private:
     RefPtr<GUI::Menu> m_image_context_menu;
     Gfx::ShareableBitmap m_image_context_menu_bitmap;
     URL m_image_context_menu_url;
+
+    GUI::ActionGroup m_user_agent_spoof_actions;
+    RefPtr<GUI::Action> m_disable_user_agent_spoofing;
 
     RefPtr<GUI::Menu> m_tab_context_menu;
     RefPtr<GUI::Menu> m_page_context_menu;

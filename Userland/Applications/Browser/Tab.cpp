@@ -38,6 +38,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Statusbar.h>
@@ -475,6 +476,52 @@ Tab::Tab(Type type)
             m_web_content_view->debug_request("clear-cache");
         }
     }));
+
+    m_user_agent_spoof_actions.set_exclusive(true);
+    auto& spoof_user_agent_menu = debug_menu.add_submenu("Spoof User Agent");
+    m_disable_user_agent_spoofing = GUI::Action::create_checkable("Disabled", [&](auto&) {
+        if (m_type == Type::InProcessWebView) {
+            Web::ResourceLoader::the().set_user_agent(Web::default_user_agent);
+        } else {
+            m_web_content_view->debug_request("spoof-user-agent", Web::default_user_agent);
+        }
+    });
+    m_disable_user_agent_spoofing->set_checked(true);
+    spoof_user_agent_menu.add_action(*m_disable_user_agent_spoofing);
+    m_user_agent_spoof_actions.add_action(*m_disable_user_agent_spoofing);
+
+    auto add_user_agent = [&](auto& name, auto& user_agent) {
+        auto action = GUI::Action::create_checkable(name, [&](auto&) {
+            if (m_type == Type::InProcessWebView) {
+                Web::ResourceLoader::the().set_user_agent(user_agent);
+            } else {
+                m_web_content_view->debug_request("spoof-user-agent", user_agent);
+            }
+        });
+        spoof_user_agent_menu.add_action(action);
+        m_user_agent_spoof_actions.add_action(action);
+    };
+    add_user_agent("Chrome Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36");
+    add_user_agent("Firefox Linux Desktop", "Mozilla/5.0 (X11; Linux i686; rv:87.0) Gecko/20100101 Firefox/87.0");
+    add_user_agent("Safari macOS Desktop", "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_2_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15");
+    add_user_agent("Chrome Android Mobile", "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.66 Mobile Safari/537.36");
+    add_user_agent("Firefox Android Mobile", "Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/86.0");
+    add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1");
+
+    auto custom_user_agent = GUI::Action::create_checkable("Custom", [&](auto&) {
+        String user_agent;
+        if (GUI::InputBox::show(window(), user_agent, "Enter User Agent:", "Custom User Agent") != GUI::InputBox::ExecOK || user_agent.is_empty() || user_agent.is_null()) {
+            m_disable_user_agent_spoofing->activate();
+            return;
+        }
+        if (m_type == Type::InProcessWebView) {
+            Web::ResourceLoader::the().set_user_agent(user_agent);
+        } else {
+            m_web_content_view->debug_request("spoof-user-agent", user_agent);
+        }
+    });
+    spoof_user_agent_menu.add_action(custom_user_agent);
+    m_user_agent_spoof_actions.add_action(custom_user_agent);
 
     auto& help_menu = m_menubar->add_menu("&Help");
     help_menu.add_action(WindowActions::the().about_action());
