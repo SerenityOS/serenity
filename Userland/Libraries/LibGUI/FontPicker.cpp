@@ -32,6 +32,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Scrollbar.h>
+#include <LibGUI/SpinBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/FontDatabase.h>
 
@@ -56,6 +57,9 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     m_weight_list_view = *widget.find_descendant_of_type_named<ListView>("weight_list_view");
     m_weight_list_view->set_model(adopt(*new FontWeightListModel(m_weights)));
     m_weight_list_view->horizontal_scrollbar().set_visible(false);
+
+    m_size_spin_box = *widget.find_descendant_of_type_named<SpinBox>("size_spin_box");
+    m_size_spin_box->set_range(1, 255);
 
     m_size_list_view = *widget.find_descendant_of_type_named<ListView>("size_list_view");
     m_size_list_view->set_model(ItemListModel<int>::create(m_sizes));
@@ -93,6 +97,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     };
 
     m_weight_list_view->on_selection = [this](auto& index) {
+        bool font_is_fixed_size = false;
         m_weight = index.data(ModelRole::Custom).to_i32();
         m_sizes.clear();
         dbgln("Selected weight: {}", m_weight.value());
@@ -100,11 +105,16 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
             if (m_fixed_width_only && !typeface.is_fixed_width())
                 return;
             if (typeface.family() == m_family.value() && (int)typeface.weight() == m_weight.value()) {
-                if (typeface.is_fixed_size()) {
+                font_is_fixed_size = typeface.is_fixed_size();
+                if (font_is_fixed_size) {
+                    m_size_spin_box->set_visible(false);
+
                     typeface.for_each_fixed_size_font([&](auto& font) {
                         m_sizes.append(font.presentation_size());
                     });
                 } else {
+                    m_size_spin_box->set_visible(true);
+
                     m_sizes.append(8);
                     m_sizes.append(10);
                     m_sizes.append(12);
@@ -119,18 +129,45 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
             }
         });
         quick_sort(m_sizes);
-        Optional<size_t> index_of_old_size_in_new_list;
-        if (m_size.has_value()) {
-            index_of_old_size_in_new_list = m_sizes.find_first_index(m_size.value());
-        }
-
         m_size_list_view->model()->update();
-        m_size_list_view->set_cursor(m_size_list_view->model()->index(index_of_old_size_in_new_list.value_or(0)), GUI::AbstractView::SelectionUpdate::Set);
+        m_size_list_view->set_selection_mode(GUI::AbstractView::SelectionMode::SingleSelection);
+
+        if (m_size.has_value()) {
+            Optional<size_t> index_of_old_size_in_new_list = m_sizes.find_first_index(m_size.value());
+            if (index_of_old_size_in_new_list.has_value()) {
+                m_size_list_view->set_cursor(m_size_list_view->model()->index(index_of_old_size_in_new_list.value()), GUI::AbstractView::SelectionUpdate::Set);
+            } else {
+                if (font_is_fixed_size) {
+                    m_size_list_view->set_cursor(m_size_list_view->model()->index(0), GUI::AbstractView::SelectionUpdate::Set);
+                } else {
+                    m_size_list_view->set_selection_mode(GUI::AbstractView::SelectionMode::NoSelection);
+                    m_size_spin_box->set_value(m_size.value());
+                }
+            }
+        } else {
+            m_size_list_view->set_cursor(m_size_list_view->model()->index(0), GUI::AbstractView::SelectionUpdate::Set);
+        }
         update_font();
     };
 
     m_size_list_view->on_selection = [this](auto& index) {
         m_size = index.data().to_i32();
+        m_size_spin_box->set_value(m_size.value());
+        update_font();
+    };
+
+    m_size_spin_box->on_change = [this](int value) {
+        m_size = value;
+
+        Optional<size_t> index_of_new_size_in_list = m_sizes.find_first_index(m_size.value());
+
+        if (index_of_new_size_in_list.has_value()) {
+            m_size_list_view->set_selection_mode(GUI::AbstractView::SelectionMode::SingleSelection);
+            m_size_list_view->set_cursor(m_size_list_view->model()->index(index_of_new_size_in_list.value()), GUI::AbstractView::SelectionUpdate::Set);
+        } else {
+            m_size_list_view->set_selection_mode(GUI::AbstractView::SelectionMode::NoSelection);
+        }
+
         update_font();
     };
 
