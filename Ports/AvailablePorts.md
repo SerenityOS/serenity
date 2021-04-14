@@ -71,6 +71,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`nesalizer`](nesalizer/)      | Nesalizer                                     |                   | https://github.com/SerenityOS/nesalizer               |
 | [`ninja`](ninja/)              | Ninja                                         | 1.8.2             | https://ninja-build.org/                              |
 | [`npth`](npth/)                | New GNU Portable Threads Library              | 1.6               | https://gnupg.org/software/npth/index.html            |
+| [`ntbtls`](ntbtls/)            | The Not Too Bad TLS Library                   | 0.2.0             | https://gnupg.org/software/ntbtls/index.html          |
 | [`nyancat`](nyancat/)          | Nyancat                                       |                   | https://github.com/klange/nyancat                     |
 | [`openssh`](openssh/)          | OpenSSH                                       | 8.3-9ca7e9c       | https://github.com/openssh/openssh-portable           |
 | [`openssl`](openssl/)          | OpenSSL                                       | 1.0.2             | https://www.openssl.org/                              |
