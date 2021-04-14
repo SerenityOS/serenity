@@ -33,6 +33,7 @@
 #include <WindowServer/Event.h>
 #include <WindowServer/EventLoop.h>
 #include <WindowServer/Screen.h>
+#include <WindowServer/WMClientConnection.h>
 #include <WindowServer/WindowManager.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -46,16 +47,19 @@
 namespace WindowServer {
 
 EventLoop::EventLoop()
-    : m_server(Core::LocalServer::construct())
+    : m_window_server(Core::LocalServer::construct())
+    , m_wm_server(Core::LocalServer::construct())
 {
     m_keyboard_fd = open("/dev/keyboard", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     m_mouse_fd = open("/dev/mouse", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 
-    bool ok = m_server->take_over_from_system_server();
+    bool ok = m_window_server->take_over_from_system_server("/tmp/portal/window");
+    VERIFY(ok);
+    ok = m_wm_server->take_over_from_system_server("/tmp/portal/wm");
     VERIFY(ok);
 
-    m_server->on_ready_to_accept = [this] {
-        auto client_socket = m_server->accept();
+    m_window_server->on_ready_to_accept = [this] {
+        auto client_socket = m_window_server->accept();
         if (!client_socket) {
             dbgln("WindowServer: accept failed.");
             return;
@@ -63,6 +67,17 @@ EventLoop::EventLoop()
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
         IPC::new_client_connection<ClientConnection>(client_socket.release_nonnull(), client_id);
+    };
+
+    m_wm_server->on_ready_to_accept = [this] {
+        auto client_socket = m_wm_server->accept();
+        if (!client_socket) {
+            dbgln("WindowServer: WM accept failed.");
+            return;
+        }
+        static int s_next_wm_id = 0;
+        int wm_id = ++s_next_wm_id;
+        IPC::new_client_connection<WMClientConnection>(client_socket.release_nonnull(), wm_id);
     };
 
     if (m_keyboard_fd >= 0) {

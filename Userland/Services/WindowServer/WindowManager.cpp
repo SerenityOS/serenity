@@ -209,21 +209,9 @@ void WindowManager::add_window(Window& window)
 
     Compositor::the().invalidate_occlusions();
 
-    if (window.listens_to_wm_events()) {
-        for_each_window([&](Window& other_window) {
-            if (&window != &other_window) {
-                tell_wm_listener_about_window(window, other_window);
-                tell_wm_listener_about_window_icon(window, other_window);
-            }
-            return IterationDecision::Continue;
-        });
-        if (auto* applet_area_window = AppletManager::the().window())
-            tell_wm_listeners_applet_area_size_changed(applet_area_window->size());
-    }
-
     window.invalidate(true, true);
 
-    tell_wm_listeners_window_state_changed(window);
+    tell_wms_window_state_changed(window);
 }
 
 void WindowManager::move_to_front_and_make_active(Window& window)
@@ -295,71 +283,96 @@ void WindowManager::remove_window(Window& window)
 
     Compositor::the().invalidate_occlusions();
 
-    for_each_window_listening_to_wm_events([&window](Window& listener) {
-        if (!(listener.wm_event_mask() & WMEventMask::WindowRemovals))
+    for_each_window_manager([&window](WMClientConnection& conn) {
+        if (conn.window_id() < 0 || !(conn.event_mask() & WMEventMask::WindowRemovals))
             return IterationDecision::Continue;
         if (!window.is_internal() && !window.is_modal())
-            listener.client()->post_message(Messages::WindowClient::WM_WindowRemoved(listener.window_id(), window.client_id(), window.window_id()));
+            conn.post_message(Messages::WindowManagerClient::WindowRemoved(conn.window_id(), window.client_id(), window.window_id()));
         return IterationDecision::Continue;
     });
 }
 
-void WindowManager::tell_wm_listener_about_window(Window& listener, Window& window)
+void WindowManager::greet_window_manager(WMClientConnection& conn)
 {
-    if (!(listener.wm_event_mask() & WMEventMask::WindowStateChanges))
+    if (conn.window_id() < 0)
+        return;
+
+    for_each_window([&](Window& other_window) {
+        //if (conn.window_id() != other_window.window_id()) {
+        tell_wm_about_window(conn, other_window);
+        tell_wm_about_window_icon(conn, other_window);
+        //}
+        return IterationDecision::Continue;
+    });
+    if (auto* applet_area_window = AppletManager::the().window())
+        tell_wms_applet_area_size_changed(applet_area_window->size());
+}
+
+void WindowManager::tell_wm_about_window(WMClientConnection& conn, Window& window)
+{
+    if (conn.window_id() < 0)
+        return;
+    if (!(conn.event_mask() & WMEventMask::WindowStateChanges))
         return;
     if (window.is_internal())
         return;
     auto* parent = window.parent_window();
-    listener.client()->post_message(Messages::WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.title(), window.rect(), window.progress()));
+    conn.post_message(Messages::WindowManagerClient::WindowStateChanged(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.title(), window.rect(), window.progress()));
 }
 
-void WindowManager::tell_wm_listener_about_window_rect(Window& listener, Window& window)
+void WindowManager::tell_wm_about_window_rect(WMClientConnection& conn, Window& window)
 {
-    if (!(listener.wm_event_mask() & WMEventMask::WindowRectChanges))
+    if (conn.window_id() < 0)
+        return;
+    if (!(conn.event_mask() & WMEventMask::WindowRectChanges))
         return;
     if (window.is_internal())
         return;
-    listener.client()->post_message(Messages::WindowClient::WM_WindowRectChanged(listener.window_id(), window.client_id(), window.window_id(), window.rect()));
+    conn.post_message(Messages::WindowManagerClient::WindowRectChanged(conn.window_id(), window.client_id(), window.window_id(), window.rect()));
 }
 
-void WindowManager::tell_wm_listener_about_window_icon(Window& listener, Window& window)
+void WindowManager::tell_wm_about_window_icon(WMClientConnection& conn, Window& window)
 {
-    if (!(listener.wm_event_mask() & WMEventMask::WindowIconChanges))
+    if (conn.window_id() < 0)
+        return;
+    if (!(conn.event_mask() & WMEventMask::WindowIconChanges))
         return;
     if (window.is_internal())
         return;
-    listener.client()->post_message(Messages::WindowClient::WM_WindowIconBitmapChanged(listener.window_id(), window.client_id(), window.window_id(), window.icon().to_shareable_bitmap()));
+    conn.post_message(Messages::WindowManagerClient::WindowIconBitmapChanged(conn.window_id(), window.client_id(), window.window_id(), window.icon().to_shareable_bitmap()));
 }
 
-void WindowManager::tell_wm_listeners_window_state_changed(Window& window)
+void WindowManager::tell_wms_window_state_changed(Window& window)
 {
-    for_each_window_listening_to_wm_events([&](Window& listener) {
-        tell_wm_listener_about_window(listener, window);
+    for_each_window_manager([&](WMClientConnection& conn) {
+        tell_wm_about_window(conn, window);
         return IterationDecision::Continue;
     });
 }
 
-void WindowManager::tell_wm_listeners_window_icon_changed(Window& window)
+void WindowManager::tell_wms_window_icon_changed(Window& window)
 {
-    for_each_window_listening_to_wm_events([&](Window& listener) {
-        tell_wm_listener_about_window_icon(listener, window);
+    for_each_window_manager([&](WMClientConnection& conn) {
+        tell_wm_about_window_icon(conn, window);
         return IterationDecision::Continue;
     });
 }
 
-void WindowManager::tell_wm_listeners_window_rect_changed(Window& window)
+void WindowManager::tell_wms_window_rect_changed(Window& window)
 {
-    for_each_window_listening_to_wm_events([&](Window& listener) {
-        tell_wm_listener_about_window_rect(listener, window);
+    for_each_window_manager([&](WMClientConnection& conn) {
+        tell_wm_about_window_rect(conn, window);
         return IterationDecision::Continue;
     });
 }
 
-void WindowManager::tell_wm_listeners_applet_area_size_changed(const Gfx::IntSize& size)
+void WindowManager::tell_wms_applet_area_size_changed(const Gfx::IntSize& size)
 {
-    for_each_window_listening_to_wm_events([&](Window& listener) {
-        listener.client()->post_message(Messages::WindowClient::WM_AppletAreaSizeChanged(listener.window_id(), size));
+    for_each_window_manager([&](WMClientConnection& conn) {
+        if (conn.window_id() < 0)
+            return IterationDecision::Continue;
+
+        conn.post_message(Messages::WindowManagerClient::AppletAreaSizeChanged(conn.window_id(), size));
         return IterationDecision::Continue;
     });
 }
@@ -379,7 +392,7 @@ void WindowManager::notify_title_changed(Window& window)
     if (m_switcher.is_visible())
         m_switcher.refresh();
 
-    tell_wm_listeners_window_state_changed(window);
+    tell_wms_window_state_changed(window);
 }
 
 void WindowManager::notify_modal_unparented(Window& window)
@@ -392,7 +405,7 @@ void WindowManager::notify_modal_unparented(Window& window)
     if (m_switcher.is_visible())
         m_switcher.refresh();
 
-    tell_wm_listeners_window_state_changed(window);
+    tell_wms_window_state_changed(window);
 }
 
 void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect)
@@ -402,7 +415,7 @@ void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
 
-    tell_wm_listeners_window_rect_changed(window);
+    tell_wms_window_rect_changed(window);
 
     if (window.type() == WindowType::Applet)
         AppletManager::the().relayout();
@@ -417,7 +430,7 @@ void WindowManager::notify_opacity_changed(Window&)
 
 void WindowManager::notify_minimization_state_changed(Window& window)
 {
-    tell_wm_listeners_window_state_changed(window);
+    tell_wms_window_state_changed(window);
 
     if (window.client())
         window.client()->post_message(Messages::WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
@@ -434,7 +447,7 @@ void WindowManager::notify_occlusion_state_changed(Window& window)
 
 void WindowManager::notify_progress_changed(Window& window)
 {
-    tell_wm_listeners_window_state_changed(window);
+    tell_wms_window_state_changed(window);
 }
 
 bool WindowManager::pick_new_active_window(Window* previous_active)
@@ -1360,14 +1373,14 @@ void WindowManager::set_active_window(Window* window, bool make_input)
         previously_active_window->invalidate(true, true);
         m_active_window = nullptr;
         m_active_input_tracking_window = nullptr;
-        tell_wm_listeners_window_state_changed(*previously_active_window);
+        tell_wms_window_state_changed(*previously_active_window);
     }
 
     if (window) {
         m_active_window = *window;
         Core::EventLoop::current().post_event(*m_active_window, make<Event>(Event::WindowActivated));
         m_active_window->invalidate(true, true);
-        tell_wm_listeners_window_state_changed(*m_active_window);
+        tell_wms_window_state_changed(*m_active_window);
     }
 
     // Window shapes may have changed (e.g. shadows for inactive/active windows)

@@ -39,6 +39,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGUI/WindowManagerServerConnection.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 #include <fcntl.h>
@@ -313,6 +314,14 @@ void Window::set_window_type(WindowType window_type)
         else
             m_minimum_size_when_windowless = { 1, 1 };
     }
+}
+
+void Window::make_window_manager(unsigned event_mask)
+{
+    GUI::WindowManagerServerConnection::the()
+        .post_message(Messages::WindowManagerServer::SetEventMask(event_mask));
+    GUI::WindowManagerServerConnection::the()
+        .post_message(Messages::WindowManagerServer::SetManagerWindow(m_window_id));
 }
 
 void Window::set_cursor(Gfx::StandardCursor cursor)

@@ -41,6 +41,7 @@
 #include <WindowServer/Event.h>
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Menubar.h>
+#include <WindowServer/WMClientConnection.h>
 #include <WindowServer/Window.h>
 #include <WindowServer/WindowSwitcher.h>
 #include <WindowServer/WindowType.h>
@@ -169,10 +170,11 @@ public:
     void clear_resize_candidate();
     ResizeDirection resize_direction_of_window(const Window&);
 
-    void tell_wm_listeners_window_state_changed(Window&);
-    void tell_wm_listeners_window_icon_changed(Window&);
-    void tell_wm_listeners_window_rect_changed(Window&);
-    void tell_wm_listeners_applet_area_size_changed(const Gfx::IntSize&);
+    void greet_window_manager(WMClientConnection&);
+    void tell_wms_window_state_changed(Window&);
+    void tell_wms_window_icon_changed(Window&);
+    void tell_wms_window_rect_changed(Window&);
+    void tell_wms_applet_area_size_changed(const Gfx::IntSize&);
 
     bool is_active_window_or_accessory(Window&) const;
 
@@ -263,17 +265,18 @@ private:
     template<typename Callback>
     IterationDecision for_each_visible_window_from_back_to_front(Callback);
     template<typename Callback>
-    void for_each_window_listening_to_wm_events(Callback);
-    template<typename Callback>
     void for_each_window(Callback);
     template<typename Callback>
     IterationDecision for_each_window_of_type_from_front_to_back(WindowType, Callback, bool ignore_highlight = false);
 
+    template<typename Callback>
+    void for_each_window_manager(Callback);
+
     virtual void event(Core::Event&) override;
     void paint_window_frame(const Window&);
-    void tell_wm_listener_about_window(Window& listener, Window&);
-    void tell_wm_listener_about_window_icon(Window& listener, Window&);
-    void tell_wm_listener_about_window_rect(Window& listener, Window&);
+    void tell_wm_about_window(WMClientConnection& conn, Window&);
+    void tell_wm_about_window_icon(WMClientConnection& conn, Window&);
+    void tell_wm_about_window_rect(WMClientConnection& conn, Window&);
     bool pick_new_active_window(Window*);
 
     void do_move_to_front(Window&, bool, bool);
@@ -460,12 +463,13 @@ IterationDecision WindowManager::for_each_visible_window_from_front_to_back(Call
 }
 
 template<typename Callback>
-void WindowManager::for_each_window_listening_to_wm_events(Callback callback)
+void WindowManager::for_each_window_manager(Callback callback)
 {
-    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (!window->listens_to_wm_events())
-            continue;
-        if (callback(*window) == IterationDecision::Break)
+    auto& connections = WMClientConnection::s_connections;
+
+    // FIXME: this isn't really ordered... does it need to be?
+    for (auto it = connections.begin(); it != connections.end(); ++it) {
+        if (callback(*it->value) == IterationDecision::Break)
             return;
     }
 }
