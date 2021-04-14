@@ -90,6 +90,15 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
     PrototypeName::PrototypeName(GlobalObject& global_object)                            \
         : Object(*global_object.error_prototype())                                       \
     {                                                                                    \
+    }                                                                                    \
+                                                                                         \
+    void PrototypeName::initialize(GlobalObject& global_object)                          \
+    {                                                                                    \
+        auto& vm = this->vm();                                                           \
+        Object::initialize(global_object);                                               \
+        u8 attr = Attribute::Writable | Attribute::Configurable;                         \
+        define_property(vm.names.name, js_string(vm, #ClassName), attr);                 \
+        define_property(vm.names.message, js_string(vm, ""), attr);                      \
     }
 
 JS_ENUMERATE_ERROR_SUBCLASSES
