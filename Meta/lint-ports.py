@@ -36,7 +36,7 @@ def read_port_dirs():
     """Check Ports directory for unexpected files and check each port has a package.sh file.
 
     Returns:
-        list: all ports (set), errors encountered (bool)
+        list: all ports (set), no errors encountered (bool)
     """
 
     ports = set()
@@ -57,23 +57,63 @@ def read_port_dirs():
     return ports, all_good
 
 
+def check_package_files(ports):
+    """Check port package.sh file for required properties.
+
+    Args:
+        ports (set): List of all ports to check
+
+    Returns:
+        bool: no errors encountered
+    """
+
+    packages = set()
+    all_good = True
+    for port in ports:
+        package_file = port + '/package.sh'
+        if not os.path.exists(package_file):
+            continue
+        packages.add(package_file)
+
+    for package in packages:
+        with open(package, 'r') as fp:
+            data = fp.read()
+
+            if 'port=' not in data:
+                print('"Ports/{}" is missing "port" property'.format(package))
+                all_good = False
+
+            if 'version=' not in data:
+                print('"Ports/{}" is missing "version" property'.format(package))
+                all_good = False
+
+            if 'files=' not in data:
+                print('"Ports/{}" is missing "files" property'.format(package))
+                all_good = False
+
+    return all_good
+
+
 def run():
-    """Check Ports directory contents for errors."""
+    """Check Ports directory and package files for errors."""
 
     from_table = read_port_table(PORT_TABLE_FILE)
-    from_fs, all_good = read_port_dirs()
+    ports, all_good = read_port_dirs()
 
-    if from_table - from_fs:
+    if from_table - ports:
         all_good = False
         print('AvailablePorts.md lists ports that do not appear in the file system:')
-        for port in sorted(from_table - from_fs):
+        for port in sorted(from_table - ports):
             print('    {}'.format(port))
 
-    if from_fs - from_table:
+    if ports - from_table:
         all_good = False
         print('AvailablePorts.md is missing the following ports:')
-        for port in sorted(from_fs - from_table):
+        for port in sorted(ports - from_table):
             print('    {}'.format(port))
+
+    if not check_package_files(ports):
+        all_good = False
 
     if not all_good:
         sys.exit(1)
