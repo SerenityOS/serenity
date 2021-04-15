@@ -223,9 +223,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         if (offset < 0 || offset >= static_cast<int>(m_buffer.size()))
             return;
 
-#if HEX_DEBUG
-        outln("HexEditor::mousedown_event(hex): offset={}", offset);
-#endif
+        dbgln_if(HEX_DEBUG, "HexEditor::mousedown_event(hex): offset={}", offset);
 
         m_edit_mode = EditMode::Hex;
         m_byte_position = 0;
@@ -245,9 +243,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
         if (offset < 0 || offset >= static_cast<int>(m_buffer.size()))
             return;
 
-#if HEX_DEBUG
-        outln("HexEditor::mousedown_event(text): offset={}", offset);
-#endif
+        dbgln_if(HEX_DEBUG, "HexEditor::mousedown_event(text): offset={}", offset);
 
         m_position = offset;
         m_byte_position = 0;
@@ -345,9 +341,7 @@ void HexEditor::scroll_position_into_view(int position)
 
 void HexEditor::keydown_event(GUI::KeyEvent& event)
 {
-#if HEX_DEBUG
-    outln("HexEditor::keydown_event key={}", static_cast<u8>(event.key()));
-#endif
+    dbgln_if(HEX_DEBUG, "HexEditor::keydown_event key={}", static_cast<u8>(event.key()));
 
     if (event.key() == KeyCode::Key_Up) {
         if (m_position - bytes_per_row() >= 0) {
