@@ -13,5 +13,4 @@ auth_opts="--keyring ./gnu-keyring.gpg libiconv-${version}.tar.gz.sig"
 install() {
     run make DESTDIR=$DESTDIR $installopts install
     run ${SERENITY_ARCH}-pc-serenity-gcc -shared -o $DESTDIR/usr/local/lib/libiconv.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libiconv.a -Wl,--no-whole-archive
-    run ln -sf ../local/lib/libiconv.so $DESTDIR/usr/lib/libiconv.so
 }

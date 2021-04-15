@@ -10,5 +10,11 @@ auth_import_key="783FCD8E58BCAFBA"
 auth_opts="zlib-${version}.tar.gz.asc"
 
 configure() {
-    run ./configure --static
+    run ./configure
+}
+
+install() {
+    run make DESTDIR=$DESTDIR $installopts install
+    ${CC} -shared -o $DESTDIR/usr/local/lib/libz.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libz.a -Wl,--no-whole-archive
+    rm -f $DESTDIR/usr/local/lib/libz.la
 }

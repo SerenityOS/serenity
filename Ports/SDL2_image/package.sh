@@ -19,4 +19,6 @@ build() {
 
 install() {
     run make -k DESTDIR="${SERENITY_BUILD_DIR}/Root" install
+    ${CC} -shared -o $DESTDIR/usr/local/lib/libSDL2_image.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libSDL2_image.a -Wl,--no-whole-archive
+    rm -f $DESTDIR/usr/local/lib/libSDL2_image.la
 }
