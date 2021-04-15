@@ -972,6 +972,9 @@ public:
     u32 signal_mask() const;
     void clear_signals();
 
+    KResultOr<u32> peek_debug_register(u32 register_index);
+    KResult poke_debug_register(u32 register_index, u32 data);
+
     void set_dump_backtrace_on_finalization() { m_dump_backtrace_on_finalization = true; }
 
     DispatchSignalResult dispatch_one_pending_signal();

@@ -363,14 +363,15 @@ void debug_handler(TrapFrame* trap)
         PANIC("Debug exception in ring 0");
     }
     constexpr u8 REASON_SINGLESTEP = 14;
-    bool is_reason_singlestep = (read_dr6() & (1 << REASON_SINGLESTEP));
-    if (!is_reason_singlestep)
+    auto debug_status = read_dr6();
+    auto should_trap_mask = (1 << REASON_SINGLESTEP) | 0b1111;
+    if ((debug_status & should_trap_mask) == 0)
         return;
-
     if (auto tracer = process.tracer()) {
         tracer->set_regs(regs);
     }
     current_thread->send_urgent_signal_to_self(SIGTRAP);
+    write_dr6(debug_status & ~(should_trap_mask));
 }
 
 EH_ENTRY_NO_CODE(3, breakpoint);
