@@ -5,7 +5,7 @@ version=git
 workdir="${port}-master"
 useconfigure=true
 files="https://github.com/rasky/genemu/archive/master.tar.gz ${version}.tar.gz"
-configopts="-DCMAKE_TOOLCHAIN_FILE=${SERENITY_ROOT}/Toolchain/CMakeToolchain.txt"
+configopts="-DCMAKE_TOOLCHAIN_FILE=${SERENITY_ROOT}/Toolchain/CMake/CMakeToolchain.txt"
 depends="SDL2"
 
 configure() {

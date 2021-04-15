@@ -4,7 +4,7 @@ useconfigure=true
 version=git
 depends="ncurses"
 workdir=cmatrix-master
-configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMakeToolchain.txt"
+configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMake/CMakeToolchain.txt"
 files="https://github.com/abishekvashok/cmatrix/archive/refs/heads/master.zip cmatrix.zip"
 
 configure() {
