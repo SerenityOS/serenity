@@ -700,6 +700,7 @@ void Window::ensure_window_menu()
                 item.set_checked(!item.is_checked());
                 m_should_show_menubar = item.is_checked();
                 frame().invalidate();
+                recalculate_rect();
                 Compositor::the().invalidate_occlusions();
                 Compositor::the().invalidate_screen();
                 break;
