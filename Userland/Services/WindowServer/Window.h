@@ -71,6 +71,13 @@ enum class PopupMenuItem {
     Maximize,
 };
 
+enum class WindowMenuAction {
+    MinimizeOrUnminimize = 0,
+    MaximizeOrRestore,
+    ToggleMenubarVisibility,
+    Close,
+};
+
 enum class WindowMenuDefaultAction {
     None = 0,
     BasedOnWindowState,

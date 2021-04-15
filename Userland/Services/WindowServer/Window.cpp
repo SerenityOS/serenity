@@ -657,22 +657,22 @@ void Window::ensure_window_menu()
         m_window_menu = Menu::construct(nullptr, -1, "(Window Menu)");
         m_window_menu->set_window_menu_of(*this);
 
-        auto minimize_item = make<MenuItem>(*m_window_menu, 1, m_minimized ? "&Unminimize" : "Mi&nimize");
+        auto minimize_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::MinimizeOrUnminimize, m_minimized ? "&Unminimize" : "Mi&nimize");
         m_window_menu_minimize_item = minimize_item.ptr();
         m_window_menu->add_item(move(minimize_item));
 
-        auto maximize_item = make<MenuItem>(*m_window_menu, 2, m_maximized ? "&Restore" : "Ma&ximize");
+        auto maximize_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::MaximizeOrRestore, m_maximized ? "&Restore" : "Ma&ximize");
         m_window_menu_maximize_item = maximize_item.ptr();
         m_window_menu->add_item(move(maximize_item));
 
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
-        auto menubar_visibility_item = make<MenuItem>(*m_window_menu, 4, "Menu &Bar");
+        auto menubar_visibility_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::ToggleMenubarVisibility, "Menu &Bar");
         m_window_menu_menubar_visibility_item = menubar_visibility_item.ptr();
         menubar_visibility_item->set_checkable(true);
         m_window_menu->add_item(move(menubar_visibility_item));
 
-        auto close_item = make<MenuItem>(*m_window_menu, 3, "&Close");
+        auto close_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::Close, "&Close");
         m_window_menu_close_item = close_item.ptr();
         m_window_menu_close_item->set_icon(&close_icon());
         m_window_menu_close_item->set_default(true);
@@ -682,20 +682,20 @@ void Window::ensure_window_menu()
         m_window_menu->item((int)PopupMenuItem::Maximize).set_enabled(m_resizable);
 
         m_window_menu->on_item_activation = [&](auto& item) {
-            switch (item.identifier()) {
-            case 1:
+            switch (static_cast<WindowMenuAction>(item.identifier())) {
+            case WindowMenuAction::MinimizeOrUnminimize:
                 WindowManager::the().minimize_windows(*this, !m_minimized);
                 if (!m_minimized)
                     WindowManager::the().move_to_front_and_make_active(*this);
                 break;
-            case 2:
+            case WindowMenuAction::MaximizeOrRestore:
                 WindowManager::the().maximize_windows(*this, !m_maximized);
                 WindowManager::the().move_to_front_and_make_active(*this);
                 break;
-            case 3:
+            case WindowMenuAction::Close:
                 request_close();
                 break;
-            case 4:
+            case WindowMenuAction::ToggleMenubarVisibility:
                 frame().invalidate();
                 item.set_checked(!item.is_checked());
                 m_should_show_menubar = item.is_checked();
