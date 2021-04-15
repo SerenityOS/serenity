@@ -86,8 +86,7 @@ bool VirtIOQueue::supply_buffer(const u8* buffer, u32 len, BufferType buffer_typ
     full_memory_barrier();
 
     auto device_flags = m_device->flags;
-    dbgln("VirtIODevice: supplied buffer... should notify: {}", device_flags);
-    return device_flags & 1;
+    return !(device_flags & 1); // if bit 1 is enabled the device disabled interrupts
 }
 bool VirtIOQueue::new_data_available() const
 {
