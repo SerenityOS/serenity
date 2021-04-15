@@ -20,4 +20,6 @@ build() {
 
 install() {
     run make -k DESTDIR="${SERENITY_BUILD_DIR}/Root" install
+    ${CC} -shared -o $DESTDIR/usr/local/lib/libSDL2_mixer.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libSDL2_mixer.a -Wl,--no-whole-archive -Wl,--no-as-needed -lvorbis -lvorbisfile
+    rm -f $DESTDIR/usr/local/lib/libSDL2_mixer.la
 }
