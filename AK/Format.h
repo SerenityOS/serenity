@@ -384,13 +384,29 @@ void outln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... par
 
 inline void outln() { outln(stdout); }
 
+#    define outln_if(flag, fmt, ...)       \
+        do {                               \
+            if constexpr (flag)            \
+                outln(fmt, ##__VA_ARGS__); \
+        } while (0)
+
 template<typename... Parameters>
-void warn(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { out(stderr, move(fmtstr), parameters...); }
+void warn(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+{
+    out(stderr, move(fmtstr), parameters...);
+}
 
 template<typename... Parameters>
 void warnln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { outln(stderr, move(fmtstr), parameters...); }
 
 inline void warnln() { outln(stderr); }
+
+#    define warnln_if(flag, fmt, ...)      \
+        do {                               \
+            if constexpr (flag)            \
+                outln(fmt, ##__VA_ARGS__); \
+        } while (0)
+
 #endif
 
 void vdbgln(StringView fmtstr, TypeErasedFormatParams);
