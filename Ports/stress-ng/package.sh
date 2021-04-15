@@ -7,4 +7,5 @@ depends=zlib
 pre_configure() {
     export CFLAGS="-I${SERENITY_BUILD_DIR}/Root/usr/local/include"
     export LDFLAGS="-L${SERENITY_BUILD_DIR}/Root/usr/local/lib -lzlib"
+
 }

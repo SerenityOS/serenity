@@ -13,10 +13,10 @@ diff -Naur NetHack-NetHack-3.6.6_Released/sys/unix/hints/serenity NetHack-NetHac
 +
 +
 +#PREFIX=/usr
-+PREFIX=/usr
++PREFIX=/usr/local
 +HACKDIR=/var/games/nethack
-+SHELLDIR = $(SERENITY_BUILD_DIR)/Root/usr/bin
-+INSTDIR=$(SERENITY_BUILD_DIR)/Root/usr/lib/nethack
++SHELLDIR = $(SERENITY_BUILD_DIR)/Root/usr/local/bin
++INSTDIR=$(SERENITY_BUILD_DIR)/Root/usr/local/lib/nethack
 +VARDIR = $(SERENITY_BUILD_DIR)/Root$(HACKDIR)
 +
 +

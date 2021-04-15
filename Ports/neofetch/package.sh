@@ -5,3 +5,7 @@ version=7.1.0
 useconfigure=false
 depends="bash jq"
 files="https://github.com/dylanaraps/neofetch/archive/${version}.tar.gz neofetch-${version}.tar.gz"
+
+install() {
+    run make DESTDIR=$DESTDIR PREFIX=/usr/local $installopts install
+}

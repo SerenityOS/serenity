@@ -8,8 +8,7 @@ files="https://www.libsdl.org/projects/SDL_image/release/SDL2_image-${version}.t
 configure() {
     run ./configure \
         --host="${SERENITY_ARCH}-pc-serenity" \
-        --with-sdl-prefix="${SERENITY_BUILD_DIR}/Root/usr" \
-        --prefix="/usr"                                    \
+        --with-sdl-prefix="${SERENITY_BUILD_DIR}/Root/usr/local" \
         --enable-webp=false --enable-webp-shared=false     \
         LDFLAGS="-lgui -lgfx -lipc -lcore -lm"
 }

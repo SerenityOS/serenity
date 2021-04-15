@@ -1,0 +1,12 @@
+diff -Naur emu2-ff276eb0a755a3e784f73da00b5db6c1b25c1f83/Makefile emu2-ff276eb0a755a3e784f73da00b5db6c1b25c1f83.serenity/Makefile
+--- emu2-ff276eb0a755a3e784f73da00b5db6c1b25c1f83/Makefile	2021-04-14 15:58:46.000000000 +0200
++++ emu2-ff276eb0a755a3e784f73da00b5db6c1b25c1f83.serenity/Makefile	2021-04-16 00:42:15.680769941 +0200
+@@ -2,7 +2,7 @@
+ CFLAGS=-O3 -flto -Wall -g -Werror=implicit-function-declaration -Werror=int-conversion
+ LDLIBS=-lm
+ INSTALL=install
+-PREFIX=/usr
++PREFIX=/usr/local
+ 
+ OBJS=\
+  cpu.o\

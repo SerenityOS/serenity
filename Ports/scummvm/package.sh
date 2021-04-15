@@ -9,7 +9,6 @@ configure() {
     export LIBS="-lgui -lgfx -lcore"
     run ./configure \
         --host="${SERENITY_ARCH}-pc-serenity" \
-        --prefix=/usr                         \
         --opengl-mode=none                    \
-        --with-sdl-prefix="${SERENITY_BUILD_DIR}/Root/usr"
+        --with-sdl-prefix="${SERENITY_BUILD_DIR}/Root/usr/local"
 }

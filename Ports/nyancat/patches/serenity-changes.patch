@@ -8,10 +8,10 @@ index 1dd50ef..e435044 100644
  install: all
 -	install src/nyancat /usr/bin/${package}
 -	gzip -9 -c < nyancat.1 > /usr/share/man/man1/nyancat.1.gz
-+	mkdir -p ${DESTDIR}/usr/bin
-+	install src/nyancat ${DESTDIR}/usr/bin/${package}
-+	mkdir -p ${DESTDIR}/usr/share/man/man1
-+	gzip -9 -c < nyancat.1 > ${DESTDIR}/usr/share/man/man1/nyancat.1.gz
++	mkdir -p ${DESTDIR}/usr/local/bin
++	install src/nyancat ${DESTDIR}/usr/local/bin/${package}
++	mkdir -p ${DESTDIR}/usr/local/share/man/man1
++	gzip -9 -c < nyancat.1 > ${DESTDIR}/usr/local/share/man/man1/nyancat.1.gz
  
  .PHONY: FORCE all clean check dist distcheck install
 diff --git a/src/nyancat.c b/src/nyancat.c
