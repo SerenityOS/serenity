@@ -33,7 +33,7 @@ namespace Kernel {
 
 enum class BufferType {
     DeviceReadable = 0,
-    DeviceWritable = 1
+    DeviceWritable = 2
 };
 
 class VirtIOQueue {
@@ -92,6 +92,7 @@ private:
     u16 m_free_buffers;
     u16 m_free_head { 0 };
     u16 m_used_tail { 0 };
+    u16 m_driver_index_shadow { 0 };
 
     OwnPtr<VirtIOQueueDescriptor> m_descriptors { nullptr };
     OwnPtr<VirtIOQueueDriver> m_driver { nullptr };
