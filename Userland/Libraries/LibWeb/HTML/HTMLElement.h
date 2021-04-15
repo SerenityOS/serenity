@@ -50,6 +50,9 @@ public:
     String inner_text();
     void set_inner_text(StringView);
 
+    unsigned offset_top() const;
+    unsigned offset_left() const;
+
     bool cannot_navigate() const;
 
 protected:

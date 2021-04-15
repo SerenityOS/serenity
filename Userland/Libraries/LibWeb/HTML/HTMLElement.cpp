@@ -27,13 +27,13 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
-#include <LibJS/Runtime/ScriptFunction.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -139,6 +139,24 @@ String HTMLElement::inner_text()
     recurse(*layout_node());
 
     return builder.to_string();
+}
+
+unsigned HTMLElement::offset_top() const
+{
+    if (is<HTML::HTMLBodyElement>(this) || !layout_node() || !parent_element() || !parent_element()->layout_node())
+        return 0;
+    auto position = layout_node()->box_type_agnostic_position();
+    auto parent_position = parent_element()->layout_node()->box_type_agnostic_position();
+    return position.y() - parent_position.y();
+}
+
+unsigned HTMLElement::offset_left() const
+{
+    if (is<HTML::HTMLBodyElement>(this) || !layout_node() || !parent_element() || !parent_element()->layout_node())
+        return 0;
+    auto position = layout_node()->box_type_agnostic_position();
+    auto parent_position = parent_element()->layout_node()->box_type_agnostic_position();
+    return position.x() - parent_position.x();
 }
 
 bool HTMLElement::cannot_navigate() const
