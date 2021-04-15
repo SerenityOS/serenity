@@ -372,7 +372,7 @@ String OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentCli
     return {};
 }
 
-void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, const URL& url, const String& cookie, Cookie::Source source)
+void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, const URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source)
 {
     if (on_set_cookie)
         on_set_cookie(url, cookie, source);
