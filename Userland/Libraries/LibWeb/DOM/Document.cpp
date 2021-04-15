@@ -660,7 +660,7 @@ NonnullRefPtr<Event> Document::create_event(const String& interface)
     } else if (interface_lowercase == "messageevent") {
         event = Event::create(""); // FIXME: Create MessageEvent
     } else if (interface_lowercase.is_one_of("mouseevent", "mouseevents")) {
-        event = UIEvents::MouseEvent::create("", 0, 0);
+        event = UIEvents::MouseEvent::create("", 0, 0, 0, 0);
     } else if (interface_lowercase == "storageevent") {
         event = Event::create(""); // FIXME: Create StorageEvent
     } else if (interface_lowercase == "svgevents") {
