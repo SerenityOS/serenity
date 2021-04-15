@@ -33,6 +33,9 @@ namespace TextCodec {
 class Decoder {
 public:
     virtual String to_utf8(const StringView&) = 0;
+
+protected:
+    virtual ~Decoder() = default;
 };
 
 class UTF8Decoder final : public Decoder {

@@ -75,6 +75,9 @@ public:
     virtual void visit(const AST::VariableDeclarations*);
     virtual void visit(const AST::WriteAppendRedirection*);
     virtual void visit(const AST::WriteRedirection*);
+
+protected:
+    virtual ~NodeVisitor() = default;
 };
 
 }

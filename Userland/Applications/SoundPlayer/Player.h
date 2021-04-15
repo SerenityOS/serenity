@@ -84,6 +84,8 @@ public:
     PlaybackManager& manager() { return m_player_state.manager; }
 
 protected:
+    virtual ~Player() = default;
+
     PlayerState m_player_state;
     RefPtr<PlaylistModel> m_playlist_model;
 };

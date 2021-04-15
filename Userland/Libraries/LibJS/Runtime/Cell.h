@@ -58,6 +58,7 @@ public:
 
     protected:
         virtual void visit_impl(Cell*) = 0;
+        virtual ~Visitor() = default;
     };
 
     virtual void visit_edges(Visitor&) { }

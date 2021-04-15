@@ -69,6 +69,7 @@ public:
 
 protected:
     explicit Parser(PhysicalAddress rsdp);
+    virtual ~Parser() = default;
 
 private:
     static void set_the(Parser&);

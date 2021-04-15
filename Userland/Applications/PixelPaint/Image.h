@@ -49,6 +49,9 @@ public:
     virtual void image_did_modify_layer_stack() { }
     virtual void image_did_change() { }
     virtual void image_select_layer(Layer*) { }
+
+protected:
+    virtual ~ImageClient() = default;
 };
 
 class Image : public RefCounted<Image> {

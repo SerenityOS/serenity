@@ -99,6 +99,8 @@ public:
         s_the = this;
     }
 
+    virtual ~TestRunner() = default;
+
     void run();
 
     const Test::Counts& counts() const { return m_counts; }

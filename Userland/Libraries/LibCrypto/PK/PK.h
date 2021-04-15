@@ -60,6 +60,8 @@ public:
     virtual size_t output_size() const = 0;
 
 protected:
+    virtual ~PKSystem() = default;
+
     PublicKeyType m_public_key;
     PrivateKeyType m_private_key;
 };
