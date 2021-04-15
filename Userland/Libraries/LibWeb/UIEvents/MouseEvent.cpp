@@ -30,10 +30,12 @@
 
 namespace Web::UIEvents {
 
-MouseEvent::MouseEvent(const FlyString& event_name, i32 offset_x, i32 offset_y)
+MouseEvent::MouseEvent(const FlyString& event_name, i32 offset_x, i32 offset_y, i32 client_x, i32 client_y)
     : UIEvent(event_name)
     , m_offset_x(offset_x)
     , m_offset_y(offset_y)
+    , m_client_x(client_x)
+    , m_client_y(client_y)
 {
     set_event_characteristics();
 }

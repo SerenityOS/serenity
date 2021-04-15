@@ -182,7 +182,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
             return false;
         }
         auto offset = compute_mouse_event_offset(position, *result.layout_node);
-        node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mouseup, offset.x(), offset.y()));
+        node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mouseup, offset.x(), offset.y(), position.x(), position.y()));
         handled_event = true;
     }
 
@@ -230,7 +230,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             page->set_focused_frame({}, m_frame);
 
         auto offset = compute_mouse_event_offset(position, *result.layout_node);
-        node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousedown, offset.x(), offset.y()));
+        node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousedown, offset.x(), offset.y(), position.x(), position.y()));
     }
 
     // NOTE: Dispatching an event may have disturbed the world.
@@ -337,7 +337,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
                 hovered_node_cursor = cursor_css_to_gfx(cursor);
 
             auto offset = compute_mouse_event_offset(position, *result.layout_node);
-            node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousemove, offset.x(), offset.y()));
+            node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousemove, offset.x(), offset.y(), position.x(), position.y()));
             // NOTE: Dispatching an event may have disturbed the world.
             if (!layout_root() || layout_root() != node->document().layout_node())
                 return true;
