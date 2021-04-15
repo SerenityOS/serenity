@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SerendipityWidget.h"
+#include "WelcomeWidget.h"
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto app_icon = GUI::Icon::default_icon("app-serendipity");
+    auto app_icon = GUI::Icon::default_icon("app-welcome");
 
     auto window = GUI::Window::construct();
     window->resize(480, 250);
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
     window->set_title("Welcome");
     window->set_minimum_size(480, 250);
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->set_main_widget<SerendipityWidget>();
+    window->set_main_widget<WelcomeWidget>();
 
     window->show();
 

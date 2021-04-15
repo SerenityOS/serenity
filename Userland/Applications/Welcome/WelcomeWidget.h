@@ -29,13 +29,14 @@
 #include <LibGUI/Widget.h>
 #include <LibWeb/OutOfProcessWebView.h>
 
-class SerendipityWidget final : public GUI::Widget {
-    C_OBJECT(SerendipityWidget)
+class WelcomeWidget final : public GUI::Widget {
+    C_OBJECT(WelcomeWidget);
+
 public:
-    virtual ~SerendipityWidget() override;
+    virtual ~WelcomeWidget() override;
 
 private:
-    SerendipityWidget();
+    WelcomeWidget();
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
