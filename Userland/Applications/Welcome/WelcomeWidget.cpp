@@ -24,12 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SerendipityWidget.h"
-#include <Applications/Serendipity/SerendipityWindowGML.h>
+#include "WelcomeWidget.h"
+#include <Applications/Tips/TipsWindowGML.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BitmapFont.h>
@@ -40,16 +39,16 @@
 #include <spawn.h>
 #include <time.h>
 
-SerendipityWidget::SerendipityWidget()
+WelcomeWidget::WelcomeWidget()
 {
-    load_from_gml(serendipity_window_gml);
+    load_from_gml(tips_window_gml);
 
     auto& tip_frame = *find_descendant_of_type_named<GUI::Frame>("tip_frame");
     tip_frame.set_background_role(Gfx::ColorRole::Base);
     tip_frame.set_fill_with_background_color(true);
 
     auto& light_bulb_label = *find_descendant_of_type_named<GUI::Label>("light_bulb_label");
-    light_bulb_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/32x32/app-serendipity.png"));
+    light_bulb_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/32x32/app-welcome.png"));
 
     m_web_view = *find_descendant_of_type_named<Web::OutOfProcessWebView>("web_view");
 
@@ -100,11 +99,11 @@ SerendipityWidget::SerendipityWidget()
     set_random_tip();
 }
 
-SerendipityWidget::~SerendipityWidget()
+WelcomeWidget::~WelcomeWidget()
 {
 }
 
-void SerendipityWidget::open_and_parse_tips_file()
+void WelcomeWidget::open_and_parse_tips_file()
 {
     auto file = Core::File::construct("/home/anon/Documents/tips.txt");
     if (!file->open(Core::IODevice::ReadOnly)) {
@@ -126,7 +125,7 @@ void SerendipityWidget::open_and_parse_tips_file()
     }
 }
 
-void SerendipityWidget::open_and_parse_readme_file()
+void WelcomeWidget::open_and_parse_readme_file()
 {
     auto file = Core::File::construct("/home/anon/README.md");
     if (!file->open(Core::IODevice::ReadOnly))
@@ -139,7 +138,7 @@ void SerendipityWidget::open_and_parse_readme_file()
     }
 }
 
-void SerendipityWidget::set_random_tip()
+void WelcomeWidget::set_random_tip()
 {
     if (m_tips.is_empty())
         return;
@@ -152,7 +151,7 @@ void SerendipityWidget::set_random_tip()
     m_tip_label->set_text(m_tips[n]);
 }
 
-void SerendipityWidget::paint_event(GUI::PaintEvent& event)
+void WelcomeWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
