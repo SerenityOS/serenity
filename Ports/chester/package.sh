@@ -4,7 +4,7 @@ useconfigure=true
 version=git
 depends="SDL2"
 workdir=chester-public
-configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMakeToolchain.txt"
+configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMake/CMakeToolchain.txt"
 files="https://github.com/veikkos/chester/archive/public.tar.gz chester.tar.gz"
 
 configure() {
