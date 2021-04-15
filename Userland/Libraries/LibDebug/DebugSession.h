@@ -54,6 +54,9 @@ public:
     bool poke(u32* address, u32 data);
     Optional<u32> peek(u32* address) const;
 
+    bool poke_debug(u32 register_index, u32 data);
+    Optional<u32> peek_debug(u32 register_index) const;
+
     enum class BreakPointState {
         Enabled,
         Disabled,
@@ -86,6 +89,17 @@ public:
     bool enable_breakpoint(void* address);
     bool remove_breakpoint(void* address);
     bool breakpoint_exists(void* address) const;
+
+    struct WatchPoint {
+        void* address { nullptr };
+        u32 debug_register_index { 0 };
+        u32 ebp { 0 };
+    };
+
+    bool insert_watchpoint(void* address, u32 ebp);
+    bool remove_watchpoint(void* address);
+    bool disable_watchpoint(void* address);
+    bool watchpoint_exists(void* address) const;
 
     void dump_breakpoints()
     {
@@ -182,6 +196,7 @@ private:
     bool m_is_debuggee_dead { false };
 
     HashMap<void*, BreakPoint> m_breakpoints;
+    HashMap<void*, WatchPoint> m_watchpoints;
 
     // Maps from base address to loaded library
     HashMap<String, NonnullOwnPtr<LoadedLibrary>> m_loaded_libraries;
@@ -223,6 +238,45 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
             state = State::FreeRun;
 
         auto regs = get_registers();
+
+        auto debug_status = peek_debug(DEBUG_STATUS_REGISTER);
+        if (debug_status.has_value() && (debug_status.value() & 0b1111) > 0) {
+            // Tripped a watchpoint
+            auto watchpoint_index = debug_status.value() & 0b1111;
+            Optional<WatchPoint> watchpoint {};
+            for (auto wp : m_watchpoints) {
+                if ((watchpoint_index & (1 << wp.value.debug_register_index)) == 0)
+                    continue;
+                watchpoint = wp.value;
+                break;
+            }
+            if (watchpoint.has_value()) {
+                auto required_ebp = watchpoint.value().ebp;
+                auto found_ebp = false;
+
+                u32 current_ebp = regs.ebp;
+                u32 current_instruction = regs.eip;
+                do {
+                    if (current_ebp == required_ebp) {
+                        found_ebp = true;
+                        break;
+                    }
+                    auto return_address = peek(reinterpret_cast<u32*>(current_ebp + sizeof(FlatPtr)));
+                    auto next_ebp = peek(reinterpret_cast<u32*>(current_ebp));
+                    VERIFY(return_address.has_value());
+                    VERIFY(next_ebp.has_value());
+                    current_instruction = return_address.value();
+                    current_ebp = next_ebp.value();
+                } while (current_ebp && current_instruction);
+
+                if (!found_ebp) {
+                    dbgln("Removing watchpoint at {:p} because it went out of scope!", watchpoint.value().address);
+                    remove_watchpoint(watchpoint.value().address);
+                    continue;
+                }
+            }
+        }
+
         Optional<BreakPoint> current_breakpoint;
 
         if (state == State::FreeRun || state == State::Syscall) {
