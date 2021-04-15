@@ -622,6 +622,9 @@ public:
     virtual void wrap_0xD2(const Instruction&) = 0;
     virtual void wrap_0xD3_16(const Instruction&) = 0;
     virtual void wrap_0xD3_32(const Instruction&) = 0;
+
+protected:
+    virtual ~Interpreter() = default;
 };
 
 typedef void (Interpreter::*InstructionHandler)(const Instruction&);
