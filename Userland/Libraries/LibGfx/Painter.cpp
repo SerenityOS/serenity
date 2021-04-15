@@ -299,7 +299,7 @@ void Painter::draw_ellipse_intersecting(const IntRect& rect, Color color, int th
         return (sin(theta) * rect.height() / sqrt(2)) + rect.center().y();
     };
 
-    for (float theta = 0; theta < 2 * M_PI; theta += increment) {
+    for (auto theta = 0.0; theta < 2 * M_PI; theta += increment) {
         draw_line({ ellipse_x(theta), ellipse_y(theta) }, { ellipse_x(theta + increment), ellipse_y(theta + increment) }, color, thickness);
     }
 }

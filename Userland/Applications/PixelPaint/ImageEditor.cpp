@@ -380,9 +380,10 @@ void ImageEditor::scale_centered_on_position(const Gfx::IntPoint& position, floa
     if (m_scale > 100.0f)
         m_scale = 100.0f;
 
-    auto focus_point = Gfx::FloatPoint(
-        m_pan_origin.x() - ((float)position.x() - (float)width() / 2.0) / old_scale,
-        m_pan_origin.y() - ((float)position.y() - (float)height() / 2.0) / old_scale);
+    Gfx::FloatPoint focus_point {
+        m_pan_origin.x() - (position.x() - width() / 2.0f) / old_scale,
+        m_pan_origin.y() - (position.y() - height() / 2.0f) / old_scale
+    };
 
     m_pan_origin = Gfx::FloatPoint(
         focus_point.x() - m_scale / old_scale * (focus_point.x() - m_pan_origin.x()),

@@ -194,7 +194,7 @@ static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
     Core::ElapsedTimer clock;
     clock.start();
     auto update_timer = Core::Timer::construct(100, [&] {
-        timer_label.set_text(String::format("%.1f seconds", (float)clock.elapsed() / 1000.0f));
+        timer_label.set_text(String::formatted("{:.1} seconds", clock.elapsed() / 1000.0f));
     });
 
     auto& stop_button = widget.add<GUI::Button>("Stop");

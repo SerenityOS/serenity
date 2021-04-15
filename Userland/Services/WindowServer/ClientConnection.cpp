@@ -616,7 +616,7 @@ void ClientConnection::handle(const Messages::WindowServer::DidFinishPainting& m
     auto& window = *(*it).value;
     for (auto& rect : message.rects())
         window.invalidate(rect);
-    if (window.has_alpha_channel() && window.alpha_hit_threshold() > 0.0)
+    if (window.has_alpha_channel() && window.alpha_hit_threshold() > 0.0f)
         WindowManager::the().reevaluate_hovered_window(&window);
 
     WindowSwitcher::the().refresh_if_needed();
@@ -940,11 +940,12 @@ OwnPtr<Messages::WindowServer::GetGlobalCursorPositionResponse> ClientConnection
 
 OwnPtr<Messages::WindowServer::SetMouseAccelerationResponse> ClientConnection::handle(const Messages::WindowServer::SetMouseAcceleration& message)
 {
-    if (message.factor() < mouse_accel_min || message.factor() > mouse_accel_max) {
+    double factor = message.factor();
+    if (factor < mouse_accel_min || factor > mouse_accel_max) {
         did_misbehave("SetMouseAcceleration with bad acceleration factor");
         return {};
     }
-    WindowManager::the().set_acceleration_factor(message.factor());
+    WindowManager::the().set_acceleration_factor(factor);
     return make<Messages::WindowServer::SetMouseAccelerationResponse>();
 }
 

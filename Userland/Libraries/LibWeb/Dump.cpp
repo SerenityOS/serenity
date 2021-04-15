@@ -189,7 +189,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
 
         if (show_box_model) {
             // Dump the horizontal box properties
-            builder.appendf(" [%g+%g+%g %g %g+%g+%g]",
+            builder.appendff(" [{}+{}+{} {} {}+{}+{}]",
                 box.box_model().margin.left,
                 box.box_model().border.left,
                 box.box_model().padding.left,
@@ -199,7 +199,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
                 box.box_model().margin.right);
 
             // And the vertical box properties
-            builder.appendf(" [%g+%g+%g %g %g+%g+%g]",
+            builder.appendff(" [{}+{}+{} {} {}+{}+{}]",
                 box.box_model().margin.top,
                 box.box_model().border.top,
                 box.box_model().padding.top,

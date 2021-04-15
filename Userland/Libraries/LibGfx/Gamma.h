@@ -95,7 +95,7 @@ inline f32x4 gamma_accurate_lerp4(f32x4 v1, f32x4 v2, float mix)
 // Assumes x is in range [0, 1]
 constexpr float gamma_to_linear(float x)
 {
-    return (0.8 + 0.2 * x) * x * x;
+    return (0.8f + 0.2f * x) * x * x;
 }
 
 // Transform scalar from linear space to gamma2.2 space
@@ -105,7 +105,7 @@ inline float linear_to_gamma(float x)
     // Source for approximation: https://mimosa-pudica.net/fast-gamma/
     constexpr float a = 0.00279491;
     constexpr float b = 1.15907984;
-    float c = (b / sqrt(1 + a)) - 1;
+    float c = (b / sqrtf(1 + a)) - 1;
     return ((b / __builtin_sqrtf(x + a)) - c) * x;
 }
 
@@ -135,9 +135,9 @@ inline Color gamma_accurate_blend(Color a, Color b, float mix)
     return Color(out[0], out[1], out[2]);
 #    else
     return {
-        static_cast<u8>(255. * gamma_accurate_lerp(a.red() / 255., b.red() / 255., mix)),
-        static_cast<u8>(255. * gamma_accurate_lerp(a.green() / 255., b.green() / 255., mix)),
-        static_cast<u8>(255. * gamma_accurate_lerp(a.blue() / 255., b.blue() / 255., mix)),
+        static_cast<u8>(255.f * gamma_accurate_lerp(a.red() / 255.f, b.red() / 255.f, mix)),
+        static_cast<u8>(255.f * gamma_accurate_lerp(a.green() / 255.f, b.green() / 255.f, mix)),
+        static_cast<u8>(255.f * gamma_accurate_lerp(a.blue() / 255.f, b.blue() / 255.f, mix)),
     };
 #    endif
 }
