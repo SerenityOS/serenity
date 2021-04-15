@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <LibIPC/Forward.h>
 #include <time.h>
 
 namespace Core {
@@ -68,5 +69,12 @@ private:
     unsigned m_minute { 0 };
     unsigned m_second { 0 };
 };
+
+}
+
+namespace IPC {
+
+bool encode(IPC::Encoder&, const Core::DateTime&);
+bool decode(IPC::Decoder&, Core::DateTime&);
 
 }
