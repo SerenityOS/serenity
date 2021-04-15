@@ -495,7 +495,7 @@ float tanhf(float x) NOEXCEPT
     return (float)tanhl(x);
 }
 
-static long double ampsin(long double angle) NOEXCEPT
+[[maybe_unused]] static long double ampsin(long double angle) NOEXCEPT
 {
     long double looped_angle = fmodl(M_PI + angle, M_TAU) - M_PI;
     long double looped_angle_squared = looped_angle * looped_angle;
@@ -514,7 +514,13 @@ static long double ampsin(long double angle) NOEXCEPT
 
 long double tanl(long double angle) NOEXCEPT
 {
-    return ampsin(angle) / ampsin(M_PI_2 + angle);
+    long double ret = 0.0, one;
+    __asm__(
+        "fptan"
+        : "=t"(one), "=u"(ret)
+        : "0"(angle));
+
+    return ret;
 }
 
 double tan(double angle) NOEXCEPT
@@ -721,8 +727,6 @@ float coshf(float x) NOEXCEPT
 
 long double atan2l(long double y, long double x) NOEXCEPT
 {
-    if (x > 0)
-        return atanl(y / x);
     if (x == 0) {
         if (y > 0)
             return M_PI_2;
@@ -730,9 +734,13 @@ long double atan2l(long double y, long double x) NOEXCEPT
             return -M_PI_2;
         return 0;
     }
-    if (y >= 0)
-        return atanl(y / x) + M_PI;
-    return atanl(y / x) - M_PI;
+
+    long double result = 0; //atanl(y / x);
+    __asm__("fpatan"
+            : "=t"(result)
+            : "0"(x), "u"(y)
+            : "st(1)");
+    return result;
 }
 
 double atan2(double y, double x) NOEXCEPT
