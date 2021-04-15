@@ -40,7 +40,8 @@ int ptrace(int request, pid_t tid, void* addr, int data)
 
     u32 out_data;
     Syscall::SC_ptrace_peek_params peek_params;
-    if (request == PT_PEEK) {
+    auto is_peek_type = request == PT_PEEK || request == PT_PEEKDEBUG;
+    if (is_peek_type) {
         peek_params.address = reinterpret_cast<u32*>(addr);
         peek_params.out_data = &out_data;
         addr = &peek_params;
@@ -54,7 +55,7 @@ int ptrace(int request, pid_t tid, void* addr, int data)
     };
     int rc = syscall(SC_ptrace, &params);
 
-    if (request == PT_PEEK) {
+    if (is_peek_type) {
         if (rc < 0) {
             errno = -rc;
             return -1;

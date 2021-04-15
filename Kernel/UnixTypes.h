@@ -690,6 +690,8 @@ struct rtentry {
 #define PT_PEEK 7
 #define PT_POKE 8
 #define PT_SETREGS 9
+#define PT_POKEDEBUG 10
+#define PT_PEEKDEBUG 11
 
 // Used in struct dirent
 enum {

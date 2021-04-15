@@ -39,6 +39,8 @@ __BEGIN_DECLS
 #define PT_PEEK 7
 #define PT_POKE 8
 #define PT_SETREGS 9
+#define PT_POKEDEBUG 10
+#define PT_PEEKDEBUG 11
 
 // FIXME: PID/TID ISSUE
 // Affects the entirety of LibDebug and Userland/strace.cpp.
