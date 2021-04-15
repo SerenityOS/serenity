@@ -27,6 +27,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
+#include <LibCore/DateTime.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/File.h>
@@ -203,6 +204,16 @@ bool decode(Decoder& decoder, Core::AnonymousBuffer& buffer)
 
     buffer = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), size);
     return buffer.is_valid();
+}
+
+bool decode(Decoder& decoder, Core::DateTime& datetime)
+{
+    i64 timestamp = -1;
+    if (!decoder.decode(timestamp))
+        return false;
+
+    datetime = Core::DateTime::from_timestamp(static_cast<time_t>(timestamp));
+    return true;
 }
 
 }
