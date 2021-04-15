@@ -25,7 +25,7 @@
  */
 
 #include "WelcomeWidget.h"
-#include <Applications/Tips/TipsWindowGML.h>
+#include <Applications/Welcome/WelcomeWindowGML.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
@@ -41,7 +41,7 @@
 
 WelcomeWidget::WelcomeWidget()
 {
-    load_from_gml(tips_window_gml);
+    load_from_gml(welcome_window_gml);
 
     auto& tip_frame = *find_descendant_of_type_named<GUI::Frame>("tip_frame");
     tip_frame.set_background_role(Gfx::ColorRole::Base);
