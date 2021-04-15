@@ -29,6 +29,15 @@
 #include <float.h>
 #include <math.h>
 
+TEST_CASE(atan2)
+{
+    EXPECT_APPROXIMATE(atan2(-1, -0.0e0), -M_PI_2);
+    EXPECT_APPROXIMATE(atan2(-0.0e0, -1), -M_PI);
+    EXPECT_APPROXIMATE(atan2(0.0e0, -1), M_PI);
+    EXPECT_APPROXIMATE(atan2(-0.0e0, 1), -0.0e0);
+    EXPECT_APPROXIMATE(atan2(0.0e0, 1), 0.0e0);
+}
+
 TEST_CASE(trig)
 {
     EXPECT_APPROXIMATE(sin(1234), 0.601927);
