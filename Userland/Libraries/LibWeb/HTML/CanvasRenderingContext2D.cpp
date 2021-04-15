@@ -188,6 +188,65 @@ void CanvasRenderingContext2D::quadratic_curve_to(float cx, float cy, float x, f
     m_path.quadratic_bezier_curve_to({ cx, cy }, { x, y });
 }
 
+void CanvasRenderingContext2D::arc(float x, float y, float radius, float start_angle, float end_angle, bool counter_clockwise)
+{
+    ellipse(x, y, radius, radius, 0, start_angle, end_angle, counter_clockwise);
+}
+
+void CanvasRenderingContext2D::ellipse(float x, float y, float radius_x, float radius_y, float rotation, float start_angle, float end_angle, bool counter_clockwise)
+{
+    if ((!counter_clockwise && (end_angle - start_angle) >= M_TAU)
+        || (counter_clockwise && (start_angle - end_angle) >= M_TAU)) {
+        start_angle = 0;
+        end_angle = M_TAU;
+    } else {
+        start_angle = fmodf(start_angle, M_TAU);
+        end_angle = fmodf(end_angle, M_TAU);
+    }
+
+    // Then, figure out where the ends of the arc are.
+    // To do so, we can pretend that the center of this ellipse is at (0, 0),
+    // and the whole coordinate system is rotated `rotation` radians around the x axis, centered on `center`.
+    // The sign of the resulting relative positions is just whether our angle is on one of the left quadrants.
+    auto sin_rotation = sinf(rotation);
+    auto cos_rotation = cosf(rotation);
+
+    auto resolve_point_with_angle = [&](float angle) {
+        auto tan_relative = tanf(angle);
+        auto tan2 = tan_relative * tan_relative;
+
+        auto ab = radius_x * radius_y;
+        auto a2 = radius_x * radius_x;
+        auto b2 = radius_y * radius_y;
+        auto sqrt = sqrtf(b2 + a2 * tan2);
+
+        auto relative_x_position = ab / sqrt;
+        auto relative_y_position = ab * tan_relative / sqrt;
+
+        // Make sure to set the correct sign
+        float sn = sinf(angle) >= 0 ? 1 : -1;
+        relative_x_position *= sn;
+        relative_y_position *= sn;
+
+        // Now rotate it (back) around the center point by 'rotation' radians, then move it back to our actual origin.
+        auto relative_rotated_x_position = relative_x_position * cos_rotation - relative_y_position * sin_rotation;
+        auto relative_rotated_y_position = relative_x_position * sin_rotation + relative_y_position * cos_rotation;
+        return Gfx::FloatPoint { relative_rotated_x_position + x, relative_rotated_y_position + y };
+    };
+
+    auto start_point = resolve_point_with_angle(start_angle);
+    auto end_point = resolve_point_with_angle(end_angle);
+
+    m_path.move_to(start_point);
+
+    auto delta_theta = end_angle - start_angle;
+
+    // FIXME: This is still goofy for some values.
+    m_path.elliptical_arc_to(end_point, { radius_x, radius_y }, rotation, delta_theta > M_PI, !counter_clockwise);
+
+    m_path.close();
+}
+
 void CanvasRenderingContext2D::rect(float x, float y, float width, float height)
 {
     m_path.move_to({ x, y });

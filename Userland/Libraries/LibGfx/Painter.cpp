@@ -1492,7 +1492,7 @@ void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_po
 
 static bool can_approximate_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta)
 {
-    constexpr static float tolerance = 0.5f;
+    constexpr static float tolerance = 0.3f;
 
     auto half_theta_delta = theta_delta / 2.0f;
 
