@@ -66,6 +66,8 @@ protected:
     u16 early_read_type(Address address);
 
     Access();
+    virtual ~Access() = default;
+
     Vector<PhysicalID> m_physical_ids;
 };
 

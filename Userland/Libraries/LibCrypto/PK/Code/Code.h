@@ -48,6 +48,8 @@ public:
     HashFunction& hasher() { return m_hasher; }
 
 protected:
+    virtual ~Code() = default;
+
     HashFunction m_hasher;
 };
 
