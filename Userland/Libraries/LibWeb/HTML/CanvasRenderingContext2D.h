@@ -74,6 +74,9 @@ public:
     void move_to(float x, float y);
     void line_to(float x, float y);
     void quadratic_curve_to(float cx, float cy, float x, float y);
+
+    void arc(float x, float y, float radius, float start_angle, float end_angle, bool counter_clockwise);
+    void ellipse(float x, float y, float radius_x, float radius_y, float rotation, float start_angle, float end_angle, bool counter_clockwise);
     void rect(float x, float y, float width, float height);
     void stroke();
 
