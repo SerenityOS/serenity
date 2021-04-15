@@ -56,6 +56,8 @@ private:
 
     NonnullRefPtr<GUI::Widget> build_variables_tab();
     NonnullRefPtr<GUI::Widget> build_registers_tab();
+    bool does_variable_support_writing(const Debug::DebugInfo::VariableInfo*);
+    RefPtr<GUI::Menu> get_context_menu_for_variable(const GUI::ModelIndex&);
 
     RefPtr<GUI::TreeView> m_variables_view;
     RefPtr<GUI::TableView> m_registers_view;
