@@ -223,15 +223,15 @@ Vector<String> HackStudioWidget::selected_file_paths() const
     return files;
 }
 
-void HackStudioWidget::open_file(const String& full_filename)
+bool HackStudioWidget::open_file(const String& full_filename)
 {
     String filename = full_filename;
     if (full_filename.starts_with(project().root_path())) {
         filename = LexicalPath::relative_path(full_filename, project().root_path());
     }
     dbgln("HackStudio is opening {}", filename);
-    if (Core::File::is_directory(filename))
-        return;
+    if (Core::File::is_directory(filename) || !Core::File::exists(filename))
+        return false;
 
     if (!currently_open_file().is_empty()) {
         // Since the file is previously open, it should always be in m_open_files.
@@ -282,6 +282,7 @@ void HackStudioWidget::open_file(const String& full_filename)
     current_editor_wrapper().filename_label().set_text(filename);
 
     current_editor().set_focus(true);
+    return true;
 }
 
 EditorWrapper& HackStudioWidget::current_editor_wrapper()
@@ -647,7 +648,8 @@ void HackStudioWidget::initialize_debugger()
                 make<Core::DeferredInvocationEvent>(
                     [this, source_position, &regs](auto&) {
                         m_current_editor_in_execution = get_editor_of_file(source_position.value().file_path);
-                        m_current_editor_in_execution->editor().set_execution_position(source_position.value().line_number - 1);
+                        if (m_current_editor_in_execution)
+                            m_current_editor_in_execution->editor().set_execution_position(source_position.value().line_number - 1);
                         m_debug_info_widget->update_state(*Debugger::the().session(), regs);
                         m_debug_info_widget->set_debug_actions_enabled(true);
                         m_disassembly_widget->update_state(*Debugger::the().session(), regs);
@@ -689,7 +691,7 @@ String HackStudioWidget::get_full_path_of_serenity_source(const String& file)
     return String::formatted("{}/{}", serenity_sources_base, relative_path_builder.to_string());
 }
 
-NonnullRefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(const String& file_name)
+RefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(const String& file_name)
 {
 
     String file_path = file_name;
@@ -700,7 +702,8 @@ NonnullRefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(const String& 
         file_path = get_full_path_of_serenity_source(file_name);
     }
 
-    open_file(file_path);
+    if (!open_file(file_path))
+        return nullptr;
     return current_editor_wrapper();
 }
 
