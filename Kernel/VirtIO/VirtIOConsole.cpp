@@ -61,9 +61,14 @@ VirtIOConsole::VirtIOConsole(PCI::Address address)
             get_queue(RECEIVEQ).on_data_available = [&]() {
                 dbgln("VirtIOConsole: receive_queue on_data_available");
             };
+            m_receive_region = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIOConsole Receive", Region::Access::Read | Region::Access::Write);
+            if (m_receive_region) {
+                supply_buffer_and_notify(RECEIVEQ, m_receive_region->physical_page(0)->paddr().as_ptr(), m_receive_region->size(), BufferType::DeviceWritable);
+            }
             get_queue(TRANSMITQ).on_data_available = [&]() {
                 dbgln("VirtIOConsole: send_queue on_data_available");
             };
+            m_transmit_region = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIOConsole Transmit", Region::Access::Read | Region::Access::Write);
             dbgln("TODO: Populate receive queue with a receive buffer");
         }
     }
@@ -101,17 +106,14 @@ KResultOr<size_t> VirtIOConsole::write(FileDescription&, u64, const UserOrKernel
 {
     if (!size)
         return 0;
+    VERIFY(size <= PAGE_SIZE);
 
-    dbgln("VirtIOConsole: Write with size {}, kernel: {}", size, data.is_kernel_buffer());
+    if (!data.read(m_transmit_region->vaddr().as_ptr(), size)) {
+        return Kernel::KResult((ErrnoCode)-EFAULT);
+    }
+    supply_buffer_and_notify(TRANSMITQ, m_transmit_region->physical_page(0)->paddr().as_ptr(), size, BufferType::DeviceReadable);
 
-    ssize_t nread = data.read_buffered<256>(size, [&](const u8* bytes, size_t bytes_count) {
-        supply_buffer_and_notify(TRANSMITQ, bytes, bytes_count, BufferType::DeviceReadable);
-        return (ssize_t)bytes_count;
-    });
-
-    if (nread < 0)
-        return Kernel::KResult((ErrnoCode)-nread);
-    return (size_t)nread;
+    return size;
 }
 
 }

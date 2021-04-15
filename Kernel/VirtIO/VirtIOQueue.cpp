@@ -64,15 +64,15 @@ void VirtIOQueue::disable_interrupts()
     m_driver->flags = 1;
 }
 
-bool VirtIOQueue::supply_buffer(const u8* buffer, u32 len, BufferType buffer_type)
+bool VirtIOQueue::supply_buffer(Badge<VirtIODevice>, const u8* buffer, u32 length, BufferType buffer_type)
 {
-    VERIFY(buffer && len > 0);
+    VERIFY(buffer && length > 0);
     VERIFY(m_free_buffers > 0);
 
     auto descriptor_index = m_free_head;
     m_descriptors[descriptor_index].flags = static_cast<u16>(buffer_type);
     m_descriptors[descriptor_index].address = reinterpret_cast<u64>(buffer);
-    m_descriptors[descriptor_index].length = len;
+    m_descriptors[descriptor_index].length = length;
 
     m_free_buffers--;
     m_free_head = (m_free_head + 1) % m_queue_size;
