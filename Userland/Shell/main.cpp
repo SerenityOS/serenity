@@ -71,6 +71,11 @@ int main(int argc, char** argv)
     RefPtr<::Shell::Shell> shell;
     bool attempt_interactive = false;
 
+    bool posix_mode = false;
+
+    if (StringView("/bin/sh") == argv[0] || StringView("sh") == argv[0])
+        posix_mode = true;
+
     auto initialize = [&] {
         editor = Line::Editor::construct();
         editor->initialize();
@@ -79,6 +84,7 @@ int main(int argc, char** argv)
         s_shell = shell.ptr();
 
         s_shell->setup_signals();
+        s_shell->options.posix_mode = posix_mode;
 
 #ifndef __serenity__
         sigset_t blocked;
@@ -119,6 +125,7 @@ int main(int argc, char** argv)
     parser.add_option(skip_rc_files, "Skip running shellrc files", "skip-shellrc", 0);
     parser.add_option(format, "Format the given file into stdout and exit", "format", 0, "file");
     parser.add_option(should_format_live, "Enable live formatting", "live-formatting", 'f');
+    parser.add_option(posix_mode, "Enable POSIX Bourne shell compatibility mode", "posix-mode", 0);
     parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
     parser.add_positional_argument(script_args, "Extra arguments to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
 

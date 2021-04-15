@@ -70,7 +70,8 @@
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
-    __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")
+    __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")                  \
+    __ENUMERATE_SHELL_OPTION(posix_mode, false, "Enable POSIX Bourne shell compatibility mode")
 
 #define ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS()           \
     __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(concat_lists)  \
