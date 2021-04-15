@@ -440,7 +440,7 @@ String InProcessWebView::page_did_request_cookie(const URL& url, Cookie::Source 
     return {};
 }
 
-void InProcessWebView::page_did_set_cookie(const URL& url, const String& cookie, Cookie::Source source)
+void InProcessWebView::page_did_set_cookie(const URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source)
 {
     if (on_set_cookie)
         on_set_cookie(url, cookie, source);

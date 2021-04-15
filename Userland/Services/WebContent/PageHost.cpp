@@ -28,6 +28,7 @@
 #include "ClientConnection.h"
 #include <LibGfx/Painter.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Page/Frame.h>
 #include <WebContent/WebContentClientEndpoint.h>
@@ -213,7 +214,7 @@ String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source sou
     return m_client.send_sync<Messages::WebContentClient::DidRequestCookie>(url, static_cast<u8>(source))->cookie();
 }
 
-void PageHost::page_did_set_cookie(const URL& url, const String& cookie, Web::Cookie::Source source)
+void PageHost::page_did_set_cookie(const URL& url, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)
 {
     m_client.post_message(Messages::WebContentClient::DidSetCookie(url, cookie, static_cast<u8>(source)));
 }

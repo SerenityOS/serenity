@@ -56,17 +56,13 @@ String CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
     return builder.build();
 }
 
-void CookieJar::set_cookie(const URL& url, const String& cookie_string, Web::Cookie::Source source)
+void CookieJar::set_cookie(const URL& url, const Web::Cookie::ParsedCookie& parsed_cookie, Web::Cookie::Source source)
 {
     auto domain = canonicalize_domain(url);
     if (!domain.has_value())
         return;
 
-    auto parsed_cookie = Web::Cookie::parse_cookie(cookie_string);
-    if (!parsed_cookie.has_value())
-        return;
-
-    store_cookie(parsed_cookie.value(), url, move(domain.value()), source);
+    store_cookie(parsed_cookie, url, move(domain.value()), source);
     purge_expired_cookies();
 }
 
@@ -176,12 +172,12 @@ String CookieJar::default_path(const URL& url)
     return uri_path.substring(0, last_separator);
 }
 
-void CookieJar::store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source)
+void CookieJar::store_cookie(const Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.3
 
     // 2. Create a new cookie with name cookie-name, value cookie-value. Set the creation-time and the last-access-time to the current date and time.
-    Web::Cookie::Cookie cookie { move(parsed_cookie.name), move(parsed_cookie.value) };
+    Web::Cookie::Cookie cookie { parsed_cookie.name, parsed_cookie.value };
     cookie.creation_time = Core::DateTime::now();
     cookie.last_access_time = cookie.creation_time;
 
@@ -189,12 +185,12 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL
         // 3. If the cookie-attribute-list contains an attribute with an attribute-name of "Max-Age": Set the cookie's persistent-flag to true.
         // Set the cookie's expiry-time to attribute-value of the last attribute in the cookie-attribute-list with an attribute-name of "Max-Age".
         cookie.persistent = true;
-        cookie.expiry_time = move(parsed_cookie.expiry_time_from_max_age_attribute.value());
+        cookie.expiry_time = parsed_cookie.expiry_time_from_max_age_attribute.value();
     } else if (parsed_cookie.expiry_time_from_expires_attribute.has_value()) {
         // If the cookie-attribute-list contains an attribute with an attribute-name of "Expires": Set the cookie's persistent-flag to true.
         // Set the cookie's expiry-time to attribute-value of the last attribute in the cookie-attribute-list with an attribute-name of "Expires".
         cookie.persistent = true;
-        cookie.expiry_time = move(parsed_cookie.expiry_time_from_expires_attribute.value());
+        cookie.expiry_time = parsed_cookie.expiry_time_from_expires_attribute.value();
     } else {
         // Set the cookie's persistent-flag to false. Set the cookie's expiry-time to the latest representable gddate.
         cookie.persistent = false;
@@ -204,7 +200,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL
     // 4. If the cookie-attribute-list contains an attribute with an attribute-name of "Domain":
     if (parsed_cookie.domain.has_value()) {
         // Let the domain-attribute be the attribute-value of the last attribute in the cookie-attribute-list with an attribute-name of "Domain".
-        cookie.domain = move(parsed_cookie.domain.value());
+        cookie.domain = parsed_cookie.domain.value();
     }
 
     // 5. If the user agent is configured to reject "public suffixes" and the domain-attribute is a public suffix:
@@ -227,7 +223,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL
     // 7. If the cookie-attribute-list contains an attribute with an attribute-name of "Path":
     if (parsed_cookie.path.has_value()) {
         // Set the cookie's path to attribute-value of the last attribute in the cookie-attribute-list with an attribute-name of "Path".
-        cookie.path = move(parsed_cookie.path.value());
+        cookie.path = parsed_cookie.path.value();
     } else {
         cookie.path = default_path(url);
     }

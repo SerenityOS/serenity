@@ -80,7 +80,7 @@ private:
     virtual void page_did_change_favicon(const Gfx::Bitmap&) override;
     virtual void page_did_request_image_context_menu(const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers, const Gfx::Bitmap*) override;
     virtual String page_did_request_cookie(const URL&, Web::Cookie::Source) override;
-    virtual void page_did_set_cookie(const URL&, const String&, Web::Cookie::Source) override;
+    virtual void page_did_set_cookie(const URL&, const Web::Cookie::ParsedCookie&, Web::Cookie::Source) override;
 
     explicit PageHost(ClientConnection&);
 

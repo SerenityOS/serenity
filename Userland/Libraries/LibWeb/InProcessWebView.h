@@ -112,7 +112,7 @@ private:
     virtual bool page_did_request_confirm(const String&) override;
     virtual String page_did_request_prompt(const String&, const String&) override;
     virtual String page_did_request_cookie(const URL&, Cookie::Source) override;
-    virtual void page_did_set_cookie(const URL&, const String&, Cookie::Source) override;
+    virtual void page_did_set_cookie(const URL&, const Cookie::ParsedCookie&, Cookie::Source) override;
 
     void layout_and_sync_size();
 

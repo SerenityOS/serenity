@@ -80,7 +80,7 @@ public:
     void notify_server_did_js_console_output(const String& method, const String& line);
     void notify_server_did_change_favicon(const Gfx::Bitmap& favicon);
     String notify_server_did_request_cookie(Badge<WebContentClient>, const URL& url, Cookie::Source source);
-    void notify_server_did_set_cookie(Badge<WebContentClient>, const URL& url, const String& cookie, Cookie::Source source);
+    void notify_server_did_set_cookie(Badge<WebContentClient>, const URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source);
 
 private:
     OutOfProcessWebView();

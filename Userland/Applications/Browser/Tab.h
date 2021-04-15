@@ -72,7 +72,7 @@ public:
     Function<void(Tab&)> on_tab_close_request;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
     Function<String(const URL& url, Web::Cookie::Source source)> on_get_cookie;
-    Function<void(const URL& url, const String& cookie, Web::Cookie::Source source)> on_set_cookie;
+    Function<void(const URL& url, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void()> on_dump_cookies;
 
     const String& title() const { return m_title; }
