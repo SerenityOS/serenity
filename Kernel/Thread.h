@@ -763,6 +763,9 @@ public:
     RegisterState& get_register_dump_from_stack();
     const RegisterState& get_register_dump_from_stack() const { return const_cast<Thread*>(this)->get_register_dump_from_stack(); }
 
+    DebugRegisterState& debug_register_state() { return m_debug_register_state; }
+    const DebugRegisterState& debug_register_state() const { return m_debug_register_state; }
+
     TSS& tss() { return m_tss; }
     const TSS& tss() const { return m_tss; }
     State state() const { return m_state; }
@@ -1200,6 +1203,7 @@ private:
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
     TSS m_tss {};
+    DebugRegisterState m_debug_register_state {};
     TrapFrame* m_current_trap { nullptr };
     u32 m_saved_critical { 1 };
     IntrusiveListNode<Thread> m_ready_queue_node;
