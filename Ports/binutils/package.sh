@@ -3,9 +3,9 @@ port=binutils
 version=2.32
 useconfigure=true
 configopts="--target=${SERENITY_ARCH}-pc-serenity --with-sysroot=/ --with-build-sysroot=${SERENITY_BUILD_DIR}/Root --disable-werror --disable-gdb --disable-nls"
-files="https://ftp.gnu.org/gnu/binutils/binutils-${version}.tar.xz binutils-${version}.tar.xz
-https://ftp.gnu.org/gnu/binutils/binutils-${version}.tar.xz.sig binutils-${version}.tar.xz.sig
-https://ftp.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
+files="https://ftpmirror.gnu.org/gnu/binutils/binutils-${version}.tar.xz binutils-${version}.tar.xz
+https://ftpmirror.gnu.org/gnu/binutils/binutils-${version}.tar.xz.sig binutils-${version}.tar.xz.sig
+https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
 auth_type="sig"
 auth_opts="--keyring ./gnu-keyring.gpg binutils-${version}.tar.xz.sig"
 export ac_cv_func_getrusage=no
