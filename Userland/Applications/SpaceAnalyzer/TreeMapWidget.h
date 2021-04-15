@@ -37,6 +37,9 @@ struct TreeMapNode {
     virtual size_t num_children() const = 0;
     virtual const TreeMapNode& child_at(size_t i) const = 0;
     virtual void sort_children_by_area() const = 0;
+
+protected:
+    virtual ~TreeMapNode() = default;
 };
 
 struct TreeMap : public RefCounted<TreeMap> {

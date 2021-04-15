@@ -92,6 +92,9 @@ public:
         ptr[index] = (u8)value;
     }
 
+protected:
+    virtual ~CipherBlock() = default;
+
 private:
     virtual Bytes bytes() = 0;
     PaddingMode m_padding_mode;
@@ -131,6 +134,9 @@ public:
     virtual void decrypt_block(const BlockType& in, BlockType& out) = 0;
 
     virtual String class_name() const = 0;
+
+protected:
+    virtual ~Cipher() = default;
 
 private:
     PaddingMode m_padding_mode;

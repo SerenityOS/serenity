@@ -93,6 +93,8 @@ public:
     virtual Value count_reset() = 0;
 
 protected:
+    virtual ~ConsoleClient() = default;
+
     VM& vm();
 
     GlobalObject& global_object() { return m_console.global_object(); }

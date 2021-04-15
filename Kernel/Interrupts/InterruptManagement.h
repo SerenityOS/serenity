@@ -83,6 +83,9 @@ public:
     void enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>);
     IRQController& get_interrupt_controller(int index);
 
+protected:
+    virtual ~InterruptManagement() = default;
+
 private:
     InterruptManagement();
     PhysicalAddress search_for_madt();

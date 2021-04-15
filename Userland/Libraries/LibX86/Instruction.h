@@ -41,6 +41,9 @@ typedef void (Interpreter::*InstructionHandler)(const Instruction&);
 class SymbolProvider {
 public:
     virtual String symbolicate(FlatPtr, u32* offset = nullptr) const = 0;
+
+protected:
+    virtual ~SymbolProvider() = default;
 };
 
 template<typename T>
@@ -316,6 +319,9 @@ public:
     virtual u16 read16() = 0;
     virtual u32 read32() = 0;
     virtual u64 read64() = 0;
+
+protected:
+    virtual ~InstructionStream() = default;
 };
 
 class SimpleInstructionStream final : public InstructionStream {

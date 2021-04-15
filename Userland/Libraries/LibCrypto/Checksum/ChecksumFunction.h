@@ -35,6 +35,9 @@ class ChecksumFunction {
 public:
     virtual void update(ReadonlyBytes data) = 0;
     virtual ChecksumType digest() = 0;
+
+protected:
+    virtual ~ChecksumFunction() = default;
 };
 
 }
