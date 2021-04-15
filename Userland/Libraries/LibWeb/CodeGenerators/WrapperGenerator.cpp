@@ -599,11 +599,39 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto& @cpp_name@ = static_cast<@parameter.type.name@Wrapper*>(@cpp_name@_object)->impl();
 )~~~");
     } else if (parameter.type.name == "double") {
-        scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @js_name@@js_suffix@.to_double(global_object);
+        if (!optional) {
+            scoped_generator.append(R"~~~(
+    double @cpp_name@ = @js_name@@js_suffix@.to_double(global_object);
     if (vm.exception())
         @return_statement@
 )~~~");
+        } else {
+            if (!optional_default_value.is_null()) {
+                scoped_generator.append(R"~~~(
+    double @cpp_name@;
+)~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+    Optional<double> @cpp_name@;
+)~~~");
+            }
+            scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined()) {
+        @cpp_name@ = @js_name@@js_suffix@.to_double(global_object);
+        if (vm.exception())
+            @return_statement@
+    }
+)~~~");
+            if (!optional_default_value.is_null()) {
+                scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = @parameter.optional_default_value@;
+)~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+)~~~");
+            }
+        }
     } else if (parameter.type.name == "boolean") {
         if (!optional) {
             scoped_generator.append(R"~~~(
