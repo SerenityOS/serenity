@@ -14,6 +14,8 @@
     <label for=invalid3>The cookie expired in the past</label>
     <br /><input id=invalid4 type=button onclick="setCookie(this.value)" value="cookie7=value7; expires=Mon, 23 Jan 1989 08:10:36 GMT" />
     <label for=invalid4>The cookie expired in the past</label>
+    <br /><input id=invalid5 type=button onclick="setTooLargeCookie()" value="cookie10=[more than 4096 chars]" />
+    <label for=invalid5>The cookie is too large</label>
     <br />
 
     <h3>Unretrievable cookies (the browser should accept these but not display them):</h3>
@@ -29,6 +31,11 @@
         function setCookie(cookie) {
             document.cookie = cookie;
             document.getElementById('cookies').innerHTML = document.cookie;
+        }
+
+        function setTooLargeCookie() {
+            const cookie = 'name=' + 'x'.repeat(4 << 10);
+            setCookie(cookie);
         }
 
         document.getElementById('cookies').innerHTML = document.cookie;
