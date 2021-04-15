@@ -5,4 +5,4 @@ version=1.0.4
 files="https://downloads.sourceforge.net/project/sdl2gfx/SDL2_gfx-${version}.tar.gz SDL2_gfx-${version}.tar.gz"
 depends="SDL2"
 useconfigure=true
-configopts="--with-sdl-prefix=${SERENITY_BUILD_DIR}/Root/usr"
+configopts="--with-sdl-prefix=${SERENITY_BUILD_DIR}/Root/usr/local"
