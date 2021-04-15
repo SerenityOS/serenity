@@ -30,11 +30,14 @@
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
+#include <math.h>
 
 namespace Gfx {
 
-void Path::elliptical_arc_to(const FloatPoint& next_point, const FloatPoint& radii, double x_axis_rotation, bool large_arc, bool sweep)
+void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, double x_axis_rotation, bool large_arc, bool sweep)
 {
+    auto next_point = point;
+
     double rx = radii.x();
     double ry = radii.y();
 
@@ -57,6 +60,18 @@ void Path::elliptical_arc_to(const FloatPoint& next_point, const FloatPoint& rad
         rx *= -1.0;
     if (ry < 0)
         ry *= -1.0;
+
+    // POSSIBLY HACK: Handle the case where both points are the same.
+    auto same_endpoints = next_point == last_point;
+    if (same_endpoints) {
+        if (!large_arc) {
+            // Nothing is going to be drawn anyway.
+            return;
+        }
+
+        // Move the endpoint by a small amount to avoid division by zero.
+        next_point.move_by(0.01f, 0.01f);
+    }
 
     // Find (cx, cy), theta_1, theta_delta
     // Step 1: Compute (x1', y1')
@@ -104,20 +119,18 @@ void Path::elliptical_arc_to(const FloatPoint& next_point, const FloatPoint& rad
     auto theta_delta = theta_2 - theta_1;
 
     if (!sweep && theta_delta > 0.0f) {
-        theta_delta -= M_TAU;
+        theta_delta -= 2 * M_PI;
     } else if (sweep && theta_delta < 0) {
-        theta_delta += M_TAU;
+        theta_delta += 2 * M_PI;
     }
 
-    append_segment<EllipticalArcSegment>(
+    elliptical_arc_to(
         next_point,
-        FloatPoint(cx, cy),
-        FloatPoint(rx, ry),
-        static_cast<float>(x_axis_rotation),
-        static_cast<float>(theta_1),
-        static_cast<float>(theta_delta));
-
-    invalidate_split_lines();
+        { cx, cy },
+        { rx, ry },
+        x_axis_rotation,
+        theta_1,
+        theta_delta);
 }
 
 void Path::close()
