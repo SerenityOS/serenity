@@ -53,7 +53,7 @@ class HackStudioWidget : public GUI::Widget {
 
 public:
     virtual ~HackStudioWidget() override;
-    void open_file(const String& filename);
+    bool open_file(const String& filename);
 
     void update_actions();
     Project& project();
@@ -106,7 +106,7 @@ private:
     NonnullRefPtr<GUI::Action> create_set_autocomplete_mode_action();
 
     void add_new_editor(GUI::Widget& parent);
-    NonnullRefPtr<EditorWrapper> get_editor_of_file(const String& file_name);
+    RefPtr<EditorWrapper> get_editor_of_file(const String& file_name);
     String get_project_executable_path() const;
 
     void on_action_tab_change();
