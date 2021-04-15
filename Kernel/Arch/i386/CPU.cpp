@@ -855,18 +855,69 @@ FlatPtr read_cr4()
     return cr4;
 }
 
-FlatPtr read_dr6()
+void read_debug_registers_into(DebugRegisterState& state)
 {
-    FlatPtr dr6;
-#if ARCH(I386)
-    asm("mov %%dr6, %%eax"
-        : "=a"(dr6));
-#else
-    asm("mov %%dr6, %%rax"
-        : "=a"(dr6));
-#endif
-    return dr6;
+    state.dr0 = read_dr0();
+    state.dr1 = read_dr1();
+    state.dr2 = read_dr2();
+    state.dr3 = read_dr3();
+    state.dr6 = read_dr6();
+    state.dr7 = read_dr7();
 }
+
+void write_debug_registers_from(const DebugRegisterState& state)
+{
+    write_dr0(state.dr0);
+    write_dr1(state.dr1);
+    write_dr2(state.dr2);
+    write_dr3(state.dr3);
+    write_dr6(state.dr6);
+    write_dr7(state.dr7);
+}
+
+void clear_debug_registers()
+{
+    write_dr0(0);
+    write_dr1(0);
+    write_dr2(0);
+    write_dr3(0);
+    write_dr7(1 << 10); // Bit 10 is reserved and must be set to 1.
+}
+
+#if ARCH(I386)
+#    define DEFINE_DEBUG_REGISTER(index)                         \
+        FlatPtr read_dr##index()                                 \
+        {                                                        \
+            FlatPtr value;                                       \
+            asm("mov %%dr" #index ", %%eax"                      \
+                : "=a"(value));                                  \
+            return value;                                        \
+        }                                                        \
+        void write_dr##index(FlatPtr value)                      \
+        {                                                        \
+            asm volatile("mov %%eax, %%dr" #index ::"a"(value)); \
+        }
+#else
+#    define DEFINE_DEBUG_REGISTER(index)                         \
+        FlatPtr read_dr##index()                                 \
+        {                                                        \
+            FlatPtr value;                                       \
+            asm("mov %%dr" #index ", %%rax"                      \
+                : "=a"(value));                                  \
+            return value;                                        \
+        }                                                        \
+        void write_dr##index(FlatPtr value)                      \
+        {                                                        \
+            asm volatile("mov %%rax, %%dr" #index ::"a"(value)); \
+        }
+#endif
+
+DEFINE_DEBUG_REGISTER(0);
+DEFINE_DEBUG_REGISTER(1);
+DEFINE_DEBUG_REGISTER(2);
+DEFINE_DEBUG_REGISTER(3);
+DEFINE_DEBUG_REGISTER(6);
+DEFINE_DEBUG_REGISTER(7);
 
 #define XCR_XFEATURE_ENABLED_MASK 0
 
@@ -1391,6 +1442,15 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     set_fs(to_tss.fs);
     set_gs(to_tss.gs);
 
+    if (from_thread->process().is_traced())
+        read_debug_registers_into(from_thread->debug_register_state());
+
+    if (to_thread->process().is_traced()) {
+        write_debug_registers_from(to_thread->debug_register_state());
+    } else {
+        clear_debug_registers();
+    }
+
     auto& processor = Processor::current();
     auto& tls_descriptor = processor.get_gdt_entry(GDT_SELECTOR_TLS);
     tls_descriptor.set_base(to_thread->thread_specific_data());
@@ -1404,7 +1464,6 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
 
-    // TODO: debug registers
     // TODO: ioperm?
 }
 

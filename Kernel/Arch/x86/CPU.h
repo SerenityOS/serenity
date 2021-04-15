@@ -430,6 +430,15 @@ struct [[gnu::packed]] RegisterState {
     FlatPtr userspace_ss;
 };
 
+struct [[gnu::packed]] DebugRegisterState {
+    FlatPtr dr0;
+    FlatPtr dr1;
+    FlatPtr dr2;
+    FlatPtr dr3;
+    FlatPtr dr6;
+    FlatPtr dr7;
+};
+
 #if ARCH(I386)
 #    define REGISTER_STATE_SIZE (19 * 4)
 #else
@@ -476,7 +485,21 @@ void write_cr3(FlatPtr);
 void write_cr4(FlatPtr);
 void write_xcr0(u64);
 
+void read_debug_registers_into(DebugRegisterState&);
+void write_debug_registers_from(const DebugRegisterState&);
+void clear_debug_registers();
+FlatPtr read_dr0();
+void write_dr0(FlatPtr);
+FlatPtr read_dr1();
+void write_dr1(FlatPtr);
+FlatPtr read_dr2();
+void write_dr2(FlatPtr);
+FlatPtr read_dr3();
+void write_dr3(FlatPtr);
 FlatPtr read_dr6();
+void write_dr6(FlatPtr);
+FlatPtr read_dr7();
+void write_dr7(FlatPtr);
 
 static inline bool is_kernel_mode()
 {
