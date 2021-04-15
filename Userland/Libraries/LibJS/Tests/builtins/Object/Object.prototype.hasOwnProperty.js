@@ -10,4 +10,9 @@ test("basic functionality", () => {
     o.undefined = 2;
     expect(o.hasOwnProperty()).toBeTrue();
     expect(o.hasOwnProperty(undefined)).toBeTrue();
+
+    var testSymbol = Symbol("real");
+    o[testSymbol] = 3;
+    expect(o.hasOwnProperty(testSymbol)).toBeTrue();
+    expect(o.hasOwnProperty(Symbol("fake"))).toBeFalse();
 });
