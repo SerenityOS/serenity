@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/MemoryManager.h>
 
@@ -35,6 +36,8 @@ enum class BufferType {
     DeviceReadable = 0,
     DeviceWritable = 2
 };
+
+class VirtIODevice;
 
 class VirtIOQueue {
 public:
@@ -51,7 +54,7 @@ public:
     PhysicalAddress driver_area() const { return to_physical(m_driver.ptr()); }
     PhysicalAddress device_area() const { return to_physical(m_device.ptr()); }
 
-    bool supply_buffer(const u8* buffer, u32 len, BufferType);
+    bool supply_buffer(Badge<VirtIODevice>, const u8* buffer, u32 length, BufferType);
     bool new_data_available() const;
 
     bool handle_interrupt();

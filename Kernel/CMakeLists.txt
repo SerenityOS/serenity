@@ -220,6 +220,9 @@ set(KERNEL_SOURCES
     TimerQueue.cpp
     UBSanitizer.cpp
     UserOrKernelBuffer.cpp
+    VirtIO/VirtIO.cpp
+    VirtIO/VirtIOConsole.cpp
+    VirtIO/VirtIOQueue.cpp
     VM/AnonymousVMObject.cpp
     VM/ContiguousVMObject.cpp
     VM/InodeVMObject.cpp
