@@ -101,10 +101,10 @@ public:
 
     MenuItem* hovered_item() const;
 
-    void set_hovered_item(int index)
+    void set_hovered_index(int index, bool make_input = false)
     {
         m_hovered_item_index = index;
-        update_for_new_hovered_item();
+        update_for_new_hovered_item(make_input);
     }
 
     void clear_hovered_item();

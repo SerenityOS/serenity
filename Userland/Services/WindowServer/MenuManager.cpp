@@ -96,7 +96,7 @@ void MenuManager::event(Core::Event& event)
                 //        with each keypress instead of activating immediately.
                 auto index = shortcut_item_indexes->at(0);
                 auto& item = m_current_menu->item(index);
-                m_current_menu->set_hovered_item(index);
+                m_current_menu->set_hovered_index(index);
                 if (item.is_submenu())
                     m_current_menu->descend_into_submenu_at_hovered_item();
                 else
@@ -117,7 +117,7 @@ void MenuManager::event(Core::Event& event)
                     set_current_menu(m_open_menu_stack.at(it.index() - 1));
                 else {
                     if (m_current_menu->hovered_item())
-                        m_current_menu->set_hovered_item(-1);
+                        m_current_menu->set_hovered_index(-1);
                     else {
                         auto* target_menu = previous_menu(m_current_menu);
                         if (target_menu) {
