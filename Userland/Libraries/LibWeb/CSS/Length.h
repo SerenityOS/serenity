@@ -73,7 +73,7 @@ public:
         if (is_undefined())
             return fallback_for_undefined;
         if (is_percentage())
-            return make_px(raw_value() / 100.0 * reference_for_percent);
+            return make_px(raw_value() / 100.0f * reference_for_percent);
         if (is_relative())
             return make_px(to_px(layout_node));
         return *this;

@@ -35,9 +35,9 @@ struct MousePacket;
 
 namespace WindowServer {
 
-const double mouse_accel_max = 3.5;
-const double mouse_accel_min = 0.5;
-const unsigned scroll_step_size_min = 1;
+constexpr double mouse_accel_max = 3.5;
+constexpr double mouse_accel_min = 0.5;
+constexpr unsigned scroll_step_size_min = 1;
 
 class Screen {
 public:
