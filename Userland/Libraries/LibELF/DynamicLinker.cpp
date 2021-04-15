@@ -99,13 +99,18 @@ static void map_library(const String& name, int fd)
 static void map_library(const String& name)
 {
     // TODO: Do we want to also look for libs in other paths too?
-    String path = String::formatted("/usr/lib/{}", name);
-    int fd = open(path.characters(), O_RDONLY);
-    if (fd < 0) {
-        fprintf(stderr, "Could not find required shared library: %s\n", path.characters());
-        VERIFY_NOT_REACHED();
+    const char* search_paths[] = { "/usr/lib/{}", "/usr/local/lib/{}" };
+    for (auto& search_path : search_paths) {
+        auto path = String::formatted(search_path, name);
+        int fd = open(path.characters(), O_RDONLY);
+        if (fd < 0)
+            continue;
+        map_library(name, fd);
+        return;
     }
-    map_library(name, fd);
+
+    fprintf(stderr, "Could not find required shared library: %s\n", name.characters());
+    VERIFY_NOT_REACHED();
 }
 
 static String get_library_name(const StringView& path)
