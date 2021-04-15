@@ -325,15 +325,15 @@ using AK::TestSuite;
         }                                                                                      \
     } while (false)
 
-#define EXPECT_APPROXIMATE(a, b)                                                                    \
-    do {                                                                                            \
-        auto expect_close_lhs = a;                                                                  \
-        auto expect_close_rhs = b;                                                                  \
-        auto expect_close_diff = expect_close_lhs - expect_close_rhs;                               \
-        if (fabs(expect_close_diff) >= 0.000001) {                                                  \
-            warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_APPROXIMATE({}, {})"                       \
-                   " failed with lhs={}, rhs={}, (lhs-rhs)={}",                                     \
-                __FILE__, __LINE__, #a, #b, expect_close_lhs, expect_close_rhs, expect_close_diff); \
-            current_test_case_did_fail();                                                           \
-        }                                                                                           \
+#define EXPECT_APPROXIMATE(a, b)                                                                                \
+    do {                                                                                                        \
+        auto expect_close_lhs = a;                                                                              \
+        auto expect_close_rhs = b;                                                                              \
+        auto expect_close_diff = static_cast<double>(expect_close_lhs) - static_cast<double>(expect_close_rhs); \
+        if (abs(expect_close_diff) >= 0.000001) {                                                               \
+            warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_APPROXIMATE({}, {})"                                   \
+                   " failed with lhs={}, rhs={}, (lhs-rhs)={}",                                                 \
+                __FILE__, __LINE__, #a, #b, expect_close_lhs, expect_close_rhs, expect_close_diff);             \
+            current_test_case_did_fail();                                                                       \
+        }                                                                                                       \
     } while (false)

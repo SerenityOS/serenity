@@ -82,7 +82,7 @@ void BrushTool::draw_point(Gfx::Bitmap& bitmap, const Gfx::Color& color, const G
             if (distance >= m_size)
                 continue;
 
-            auto falloff = (1.0 - (distance / (float)m_size)) * (1.0f / (100 - m_hardness));
+            auto falloff = (1.0 - double { distance / m_size }) * (1.0 / (100 - m_hardness));
             auto pixel_color = color;
             pixel_color.set_alpha(falloff * 255);
             bitmap.set_pixel(x, y, bitmap.get_pixel(x, y).blend(pixel_color));

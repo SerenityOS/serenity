@@ -214,7 +214,7 @@ Rasterizer::Rasterizer(Gfx::IntSize size)
 {
     m_data.resize(m_size.width() * m_size.height());
     for (int i = 0; i < m_size.width() * m_size.height(); i++) {
-        m_data[i] = 0.0;
+        m_data[i] = 0.0f;
     }
 }
 
@@ -234,13 +234,13 @@ RefPtr<Gfx::Bitmap> Rasterizer::accumulate()
         for (int x = 0; x < m_size.width(); x++) {
             accumulator += m_data[y * m_size.width() + x];
             float value = accumulator;
-            if (value < 0.0) {
+            if (value < 0.0f) {
                 value = -value;
             }
-            if (value > 1.0) {
+            if (value > 1.0f) {
                 value = 1.0;
             }
-            u8 alpha = value * 255.0;
+            u8 alpha = value * 255.0f;
             bitmap->set_pixel(x, y, base_color.with_alpha(alpha));
         }
     }
@@ -250,31 +250,31 @@ RefPtr<Gfx::Bitmap> Rasterizer::accumulate()
 void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
 {
     // FIXME: Shift x and y according to dy/dx
-    if (p0.x() < 0.0) {
+    if (p0.x() < 0.0f) {
         p0.set_x(roundf(p0.x()));
     }
-    if (p0.y() < 0.0) {
+    if (p0.y() < 0.0f) {
         p0.set_y(roundf(p0.y()));
     }
-    if (p1.x() < 0.0) {
+    if (p1.x() < 0.0f) {
         p1.set_x(roundf(p1.x()));
     }
-    if (p1.y() < 0.0) {
+    if (p1.y() < 0.0f) {
         p1.set_y(roundf(p1.y()));
     }
 
-    if (!(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height())) {
+    if (!(p0.x() >= 0.0f && p0.y() >= 0.0f && p0.x() <= m_size.width() && p0.y() <= m_size.height())) {
         dbgln("!P0({},{})", p0.x(), p0.y());
         return;
     }
 
-    if (!(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height())) {
+    if (!(p1.x() >= 0.0f && p1.y() >= 0.0f && p1.x() <= m_size.width() && p1.y() <= m_size.height())) {
         dbgln("!P1({},{})", p1.x(), p1.y());
         return;
     }
 
-    VERIFY(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height());
-    VERIFY(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height());
+    VERIFY(p0.x() >= 0.0f && p0.y() >= 0.0f && p0.x() <= m_size.width() && p0.y() <= m_size.height());
+    VERIFY(p1.x() >= 0.0f && p1.y() >= 0.0f && p1.x() <= m_size.width() && p1.y() <= m_size.height());
 
     // If we're on the same Y, there's no need to draw
     if (p0.y() == p1.y()) {
@@ -300,8 +300,8 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
         float dy = min(y + 1.0f, p1.y()) - max((float)y, p0.y());
         float directed_dy = dy * direction;
         float x_next = x_cur + dy * dxdy;
-        if (x_next < 0.0) {
-            x_next = 0.0;
+        if (x_next < 0.0f) {
+            x_next = 0.0f;
         }
         float x0 = x_cur;
         float x1 = x_next;
@@ -313,19 +313,19 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
         float x1_ceil = ceil(x1);
         u32 x0i = x0_floor;
 
-        if (x1_ceil <= x0_floor + 1.0) {
+        if (x1_ceil <= x0_floor + 1.0f) {
             // If x0 and x1 are within the same pixel, then area to the right is (1 - (mid(x0, x1) - x0_floor)) * dy
-            float area = ((x0 + x1) * 0.5) - x0_floor;
-            m_data[line_offset + x0i] += directed_dy * (1.0 - area);
+            float area = ((x0 + x1) * 0.5f) - x0_floor;
+            m_data[line_offset + x0i] += directed_dy * (1.0f - area);
             m_data[line_offset + x0i + 1] += directed_dy * area;
         } else {
-            float dydx = 1.0 / dxdy;
+            float dydx = 1.0f / dxdy;
             if (dydx < 0)
                 dydx = -dydx;
 
-            float x0_right = 1.0 - (x0 - x0_floor);
+            float x0_right = 1.0f - (x0 - x0_floor);
             u32 x1_floor_i = floor(x1);
-            float area_upto_here = 0.5 * x0_right * x0_right * dydx;
+            float area_upto_here = 0.5f * x0_right * x0_right * dydx;
             m_data[line_offset + x0i] += direction * area_upto_here;
             for (u32 x = x0i + 1; x < x1_floor_i; x++) {
                 m_data[line_offset + x] += direction * dydx;

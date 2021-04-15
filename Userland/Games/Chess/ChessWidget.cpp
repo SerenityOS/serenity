@@ -111,15 +111,18 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         float dx = B.x() - A.x();
         float dy = A.y() - B.y();
         float phi = atan2f(dy, dx);
-        float hdx = h * cos(phi);
-        float hdy = h * sin(phi);
+        float hdx = h * cosf(phi);
+        float hdy = h * sinf(phi);
 
-        Gfx::FloatPoint A1(A.x() - (w1 / 2) * cos(M_PI_2 - phi), A.y() - (w1 / 2) * sin(M_PI_2 - phi));
-        Gfx::FloatPoint B3(A.x() + (w1 / 2) * cos(M_PI_2 - phi), A.y() + (w1 / 2) * sin(M_PI_2 - phi));
+        const auto cos_pi_2_phi = cosf(float { M_PI_2 } - phi);
+        const auto sin_pi_2_phi = sinf(float { M_PI_2 } - phi);
+
+        Gfx::FloatPoint A1(A.x() - (w1 / 2) * cos_pi_2_phi, A.y() - (w1 / 2) * sin_pi_2_phi);
+        Gfx::FloatPoint B3(A.x() + (w1 / 2) * cos_pi_2_phi, A.y() + (w1 / 2) * sin_pi_2_phi);
         Gfx::FloatPoint A2(A1.x() + (dx - hdx), A1.y() - (dy - hdy));
         Gfx::FloatPoint B2(B3.x() + (dx - hdx), B3.y() - (dy - hdy));
-        Gfx::FloatPoint A3(A2.x() - w2 * cos(M_PI_2 - phi), A2.y() - w2 * sin(M_PI_2 - phi));
-        Gfx::FloatPoint B1(B2.x() + w2 * cos(M_PI_2 - phi), B2.y() + w2 * sin(M_PI_2 - phi));
+        Gfx::FloatPoint A3(A2.x() - w2 * cos_pi_2_phi, A2.y() - w2 * sin_pi_2_phi);
+        Gfx::FloatPoint B1(B2.x() + w2 * cos_pi_2_phi, B2.y() + w2 * sin_pi_2_phi);
 
         auto path = Gfx::Path();
         path.move_to(A);

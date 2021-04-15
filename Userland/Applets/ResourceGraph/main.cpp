@@ -74,7 +74,7 @@ private:
                 m_last_cpu_idle = idle;
                 float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
                 m_history.enqueue(cpu);
-                m_tooltip = String::format("CPU usage: %.1f%%", 100 * cpu);
+                m_tooltip = String::formatted("CPU usage: {:.1}%", 100 * cpu);
             } else {
                 m_history.enqueue(-1);
                 m_tooltip = StringView("Unable to determine CPU usage");
@@ -87,7 +87,7 @@ private:
                 double total_memory = allocated + available;
                 double memory = (double)allocated / total_memory;
                 m_history.enqueue(memory);
-                m_tooltip = String::format("Memory: %.1f MiB of %.1f MiB in use", (float)(allocated / MiB), (float)(total_memory / MiB));
+                m_tooltip = String::formatted("Memory: {} MiB of {:.1} MiB in use", allocated / MiB, total_memory / MiB);
             } else {
                 m_history.enqueue(-1);
                 m_tooltip = StringView("Unable to determine memory usage");

@@ -160,7 +160,7 @@ String IntRect::to_string() const
 template<>
 String FloatRect::to_string() const
 {
-    return String::format("[%f,%f %fx%f]", x(), y(), width(), height());
+    return String::formatted("[{},{} {}x{}]", x(), y(), width(), height());
 }
 
 }

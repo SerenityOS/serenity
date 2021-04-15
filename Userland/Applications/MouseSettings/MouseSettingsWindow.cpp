@@ -68,7 +68,7 @@ MouseSettingsWindow::MouseSettingsWindow()
     m_speed_slider->on_change = [&](const int value) {
         m_speed_label->set_text(String::formatted("{} %", value));
     };
-    const int slider_value = speed_slider_scale * GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetMouseAcceleration>()->factor();
+    const int slider_value = float { speed_slider_scale } * GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetMouseAcceleration>()->factor();
     m_speed_slider->set_value(slider_value);
 
     m_scroll_length_spinbox = *main_widget.find_descendant_of_type_named<GUI::SpinBox>("scroll_length_spinbox");

@@ -235,9 +235,10 @@ void QSWidget::mousewheel_event(GUI::MouseEvent& event)
     // We want the image after scaling to be panned in such a way that the cursor
     // will still point to the same image pixel. Basically, we need to solve
     // (m_pan_origin + focus_point) / old_scale_factor = (new_m_pan_origin + focus_point) / new_scale_factor.
-    auto focus_point = Gfx::FloatPoint(
-        (float)event.x() - (float)width() / 2.0,
-        (float)event.y() - (float)height() / 2.0);
+    Gfx::FloatPoint focus_point {
+        event.x() - width() / 2.0f,
+        event.y() - height() / 2.0f
+    };
 
     // A little algebra shows that new m_pan_origin equals to:
     m_pan_origin = (m_pan_origin + focus_point) * (new_scale_factor / old_scale_factor) - focus_point;

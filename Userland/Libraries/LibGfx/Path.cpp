@@ -75,8 +75,8 @@ void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, d
 
     // Find (cx, cy), theta_1, theta_delta
     // Step 1: Compute (x1', y1')
-    auto x_avg = (last_point.x() - next_point.x()) / 2.0f;
-    auto y_avg = (last_point.y() - next_point.y()) / 2.0f;
+    auto x_avg = static_cast<double>(last_point.x() - next_point.x()) / 2.0;
+    auto y_avg = static_cast<double>(last_point.y() - next_point.y()) / 2.0;
     auto x1p = x_axis_rotation_c * x_avg + x_axis_rotation_s * y_avg;
     auto y1p = -x_axis_rotation_s * x_avg + x_axis_rotation_c * y_avg;
 
@@ -118,7 +118,7 @@ void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, d
 
     auto theta_delta = theta_2 - theta_1;
 
-    if (!sweep && theta_delta > 0.0f) {
+    if (!sweep && theta_delta > 0.0) {
         theta_delta -= 2 * M_PI;
     } else if (sweep && theta_delta < 0) {
         theta_delta += 2 * M_PI;
@@ -226,7 +226,7 @@ String Path::to_string() const
             break;
         case Segment::Type::EllipticalArcTo: {
             auto& arc = static_cast<const EllipticalArcSegment&>(segment);
-            builder.appendf(", %s, %s, %f, %f, %f",
+            builder.appendff(", {}, {}, {}, {}, {}",
                 arc.radii().to_string().characters(),
                 arc.center().to_string().characters(),
                 arc.x_axis_rotation(),

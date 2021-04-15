@@ -92,7 +92,7 @@ void SolitaireWidget::create_new_animation_card()
     card->set_position({ rand() % (SolitaireWidget::width - Card::width), rand() % (SolitaireWidget::height / 8) });
 
     int x_sgn = card->position().x() > (SolitaireWidget::width / 2) ? -1 : 1;
-    m_animation = Animation(card, rand_float() + .4, x_sgn * ((rand() % 3) + 2), .6 + rand_float() * .4);
+    m_animation = Animation(card, rand_float() + .4f, x_sgn * ((rand() % 3) + 2), .6f + rand_float() * .4f);
 }
 
 void SolitaireWidget::start_game_over_animation()
