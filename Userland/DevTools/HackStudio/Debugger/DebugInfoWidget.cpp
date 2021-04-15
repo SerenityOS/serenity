@@ -99,6 +99,46 @@ DebugInfoWidget::DebugInfoWidget()
     };
 }
 
+bool DebugInfoWidget::does_variable_support_writing(const Debug::DebugInfo::VariableInfo* variable)
+{
+    if (variable->location_type != Debug::DebugInfo::VariableInfo::LocationType::Address)
+        return false;
+    return variable->is_enum_type() || variable->type_name.is_one_of("int", "bool");
+}
+
+RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::ModelIndex& index)
+{
+    if (!index.is_valid())
+        return nullptr;
+    auto context_menu = GUI::Menu::construct();
+
+    auto* variable = static_cast<const Debug::DebugInfo::VariableInfo*>(index.internal_data());
+    if (does_variable_support_writing(variable)) {
+        context_menu->add_action(GUI::Action::create("Change value", [&](auto&) {
+            String value;
+            if (GUI::InputBox::show(window(), value, "Enter new value:", "Set variable value") == GUI::InputBox::ExecOK) {
+                auto& model = static_cast<VariablesModel&>(*m_variables_view->model());
+                model.set_variable_value(index, value, window());
+            }
+        }));
+    }
+
+    auto variable_address = (u32*)variable->location_data.address;
+    if (Debugger::the().session()->watchpoint_exists(variable_address)) {
+        context_menu->add_action(GUI::Action::create("Remove watchpoint", [variable_address](auto&) {
+            Debugger::the().session()->remove_watchpoint(variable_address);
+        }));
+    } else {
+        auto& backtrace_model = static_cast<BacktraceModel&>(*m_backtrace_view->model());
+        auto current_frame = m_backtrace_view->selection().first().row();
+        auto ebp = backtrace_model.frames()[current_frame].frame_base;
+        context_menu->add_action(GUI::Action::create("Add watchpoint", [variable_address, ebp](auto&) {
+            Debugger::the().session()->insert_watchpoint(variable_address, ebp);
+        }));
+    }
+    return context_menu;
+}
+
 NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_variables_tab()
 {
     auto variables_widget = GUI::Widget::construct();
@@ -106,38 +146,11 @@ NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_variables_tab()
 
     m_variables_view = variables_widget->add<GUI::TreeView>();
 
-    auto is_valid_index = [](auto& index) {
-        if (!index.is_valid())
-            return false;
-        auto* variable = static_cast<const Debug::DebugInfo::VariableInfo*>(index.internal_data());
-        if (variable->location_type != Debug::DebugInfo::VariableInfo::LocationType::Address)
-            return false;
-        return variable->is_enum_type() || variable->type_name.is_one_of("int", "bool");
+    m_variables_view->on_context_menu_request = [this](auto& index, auto& event) {
+        m_variable_context_menu = get_context_menu_for_variable(index);
+        if (m_variable_context_menu)
+            m_variable_context_menu->popup(event.screen_position());
     };
-
-    m_variables_view->on_context_menu_request = [this, is_valid_index](auto& index, auto& event) {
-        if (!is_valid_index(index))
-            return;
-        m_variable_context_menu->popup(event.screen_position());
-    };
-
-    m_variables_view->on_activation = [this, is_valid_index](auto& index) {
-        if (!is_valid_index(index))
-            return;
-
-        String value;
-        if (GUI::InputBox::show(window(), value, "Enter new value:", "Set variable value") == GUI::InputBox::ExecOK) {
-            auto& model = static_cast<VariablesModel&>(*m_variables_view->model());
-            model.set_variable_value(index, value, window());
-        }
-    };
-
-    auto edit_variable_action = GUI::Action::create("Change value", [this](auto&) {
-        m_variables_view->on_activation(m_variables_view->selection().first());
-    });
-
-    m_variable_context_menu = GUI::Menu::construct();
-    m_variable_context_menu->add_action(edit_variable_action);
 
     return variables_widget;
 }
