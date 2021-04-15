@@ -32,6 +32,7 @@
 #include <LibCore/File.h>
 #include <LibRegex/Regex.h>
 #include <stdlib.h>
+#include <sys/mman.h>
 
 namespace Debug {
 
@@ -51,6 +52,11 @@ DebugSession::~DebugSession()
         disable_breakpoint(bp.key);
     }
     m_breakpoints.clear();
+
+    for (const auto& wp : m_watchpoints) {
+        disable_watchpoint(wp.key);
+    }
+    m_watchpoints.clear();
 
     if (ptrace(PT_DETACH, m_debuggee_pid, 0, 0) < 0) {
         perror("PT_DETACH");
@@ -141,6 +147,24 @@ Optional<u32> DebugSession::peek(u32* address) const
     return result;
 }
 
+bool DebugSession::poke_debug(u32 register_index, u32 data)
+{
+    if (ptrace(PT_POKEDEBUG, m_debuggee_pid, reinterpret_cast<u32*>(register_index), data) < 0) {
+        perror("PT_POKEDEBUG");
+        return false;
+    }
+    return true;
+}
+
+Optional<u32> DebugSession::peek_debug(u32 register_index) const
+{
+    Optional<u32> result;
+    int rc = ptrace(PT_PEEKDEBUG, m_debuggee_pid, reinterpret_cast<u32*>(register_index), 0);
+    if (errno == 0)
+        result = static_cast<u32>(rc);
+    return result;
+}
+
 bool DebugSession::insert_breakpoint(void* address)
 {
     // We insert a software breakpoint by
@@ -207,6 +231,68 @@ bool DebugSession::remove_breakpoint(void* address)
 bool DebugSession::breakpoint_exists(void* address) const
 {
     return m_breakpoints.contains(address);
+}
+
+bool DebugSession::insert_watchpoint(void* address, u32 ebp)
+{
+    auto current_register_status = peek_debug(DEBUG_CONTROL_REGISTER);
+    if (!current_register_status.has_value())
+        return false;
+    u32 dr7_value = current_register_status.value();
+    u32 next_available_index;
+    for (next_available_index = 0; next_available_index < 4; next_available_index++) {
+        auto bitmask = 1 << (next_available_index * 2);
+        if ((dr7_value & bitmask) == 0)
+            break;
+    }
+    if (next_available_index > 3)
+        return false;
+    WatchPoint watchpoint { address, next_available_index, ebp };
+
+    if (!poke_debug(next_available_index, reinterpret_cast<uintptr_t>(address)))
+        return false;
+
+    dr7_value |= (1u << (next_available_index * 2)); // Enable local breakpoint for our index
+    auto condition_shift = 16 + (next_available_index * 4);
+    dr7_value &= ~(0b11u << condition_shift);
+    dr7_value |= 1u << condition_shift; // Trigger on writes
+    auto length_shift = 18 + (next_available_index * 4);
+    dr7_value &= ~(0b11u << length_shift);
+    // FIXME: take variable size into account?
+    dr7_value |= 0b11u << length_shift; // 4 bytes wide
+    if (!poke_debug(DEBUG_CONTROL_REGISTER, dr7_value))
+        return false;
+
+    m_watchpoints.set(address, watchpoint);
+    return true;
+}
+
+bool DebugSession::remove_watchpoint(void* address)
+{
+    if (!disable_watchpoint(address))
+        return false;
+    return m_watchpoints.remove(address);
+}
+
+bool DebugSession::disable_watchpoint(void* address)
+{
+    VERIFY(watchpoint_exists(address));
+    auto watchpoint = m_watchpoints.get(address).value();
+    if (!poke_debug(watchpoint.debug_register_index, 0))
+        return false;
+    auto current_register_status = peek_debug(DEBUG_CONTROL_REGISTER);
+    if (!current_register_status.has_value())
+        return false;
+    u32 dr7_value = current_register_status.value();
+    dr7_value &= ~(1u << watchpoint.debug_register_index * 2);
+    if (!poke_debug(watchpoint.debug_register_index, dr7_value))
+        return false;
+    return true;
+}
+
+bool DebugSession::watchpoint_exists(void* address) const
+{
+    return m_watchpoints.contains(address);
 }
 
 PtraceRegisters DebugSession::get_registers() const
@@ -278,6 +364,8 @@ void DebugSession::detach()
     for (auto& breakpoint : m_breakpoints.keys()) {
         remove_breakpoint(breakpoint);
     }
+    for (auto& watchpoint : m_watchpoints.keys())
+        remove_watchpoint(watchpoint);
     continue_debuggee();
 }
 
