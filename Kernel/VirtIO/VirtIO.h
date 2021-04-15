@@ -56,6 +56,7 @@ namespace Kernel {
 
 #define VIRTIO_F_VERSION_1 ((u64)1 << 32)
 #define VIRTIO_F_RING_PACKED ((u64)1 << 34)
+#define VIRTIO_F_IN_ORDER ((u64)1 << 35)
 
 #define VIRTIO_PCI_CAP_COMMON_CFG 1
 #define VIRTIO_PCI_CAP_NOTIFY_CFG 2
