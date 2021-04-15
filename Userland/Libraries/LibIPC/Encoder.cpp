@@ -28,6 +28,7 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
+#include <LibCore/DateTime.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/Encoder.h>
 #include <LibIPC/File.h>
@@ -180,4 +181,11 @@ bool encode(Encoder& encoder, const Core::AnonymousBuffer& buffer)
     }
     return true;
 }
+
+bool encode(Encoder& encoder, const Core::DateTime& datetime)
+{
+    encoder << static_cast<i64>(datetime.timestamp());
+    return true;
+}
+
 }
