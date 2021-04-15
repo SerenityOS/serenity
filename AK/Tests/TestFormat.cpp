@@ -273,6 +273,12 @@ TEST_CASE(yay_this_implementation_sucks)
     EXPECT_EQ(String::formatted("{:.0}", .99999999999), "0");
 }
 
+TEST_CASE(magnitude_less_than_zero)
+{
+    EXPECT_EQ(String::formatted("{}", -0.654), "-0.654");
+    EXPECT_EQ(String::formatted("{}", 0.654), "0.654");
+}
+
 TEST_CASE(format_nullptr)
 {
     EXPECT_EQ(String::formatted("{}", nullptr), String::formatted("{:p}", static_cast<FlatPtr>(0)));
