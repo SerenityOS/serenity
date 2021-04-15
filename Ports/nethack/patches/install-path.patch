@@ -12,7 +12,7 @@ diff -Naur NetHack-NetHack-3.6.6_Released/sys/unix/nethack.sh NetHack-NetHack-3.
 +HACKDIR=/var/games/nethack/
  export HACKDIR
 -HACK=$HACKDIR/nethack
-+HACK=/usr/lib/nethack/nethack
++HACK=/usr/local/lib/nethack/nethack
  
  # Since Nethack.ad is installed in HACKDIR, add it to XUSERFILESEARCHPATH
  case "x$XUSERFILESEARCHPATH" in
