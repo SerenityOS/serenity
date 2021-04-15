@@ -153,6 +153,19 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
             return EFAULT;
         return peer->process().poke_user_data(Userspace<u32*> { (FlatPtr)params.addr }, params.data);
 
+    case PT_PEEKDEBUG: {
+        Kernel::Syscall::SC_ptrace_peek_params peek_params {};
+        if (!copy_from_user(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr)))
+            return EFAULT;
+        auto result = peer->peek_debug_register(reinterpret_cast<uintptr_t>(peek_params.address));
+        if (result.is_error())
+            return result.error();
+        if (!copy_to_user(peek_params.out_data, &result.value()))
+            return EFAULT;
+        break;
+    }
+    case PT_POKEDEBUG:
+        return peer->poke_debug_register(reinterpret_cast<uintptr_t>(params.addr), params.data);
     default:
         return EINVAL;
     }
@@ -226,6 +239,58 @@ KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
         return EFAULT;
     }
 
+    return KSuccess;
+}
+
+KResultOr<u32> Thread::peek_debug_register(u32 register_index)
+{
+    u32 data;
+    switch (register_index) {
+    case 0:
+        data = m_debug_register_state.dr0;
+        break;
+    case 1:
+        data = m_debug_register_state.dr1;
+        break;
+    case 2:
+        data = m_debug_register_state.dr2;
+        break;
+    case 3:
+        data = m_debug_register_state.dr3;
+        break;
+    case 6:
+        data = m_debug_register_state.dr6;
+        break;
+    case 7:
+        data = m_debug_register_state.dr7;
+        break;
+    default:
+        return EINVAL;
+    }
+    return data;
+}
+
+KResult Thread::poke_debug_register(u32 register_index, u32 data)
+{
+    switch (register_index) {
+    case 0:
+        m_debug_register_state.dr0 = data;
+        break;
+    case 1:
+        m_debug_register_state.dr1 = data;
+        break;
+    case 2:
+        m_debug_register_state.dr2 = data;
+        break;
+    case 3:
+        m_debug_register_state.dr3 = data;
+        break;
+    case 7:
+        m_debug_register_state.dr7 = data;
+        break;
+    default:
+        return EINVAL;
+    }
     return KSuccess;
 }
 
