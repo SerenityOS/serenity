@@ -36,6 +36,8 @@ namespace AK {
 template<typename T>
 class alignas(T) [[nodiscard]] Optional {
 public:
+    using ValueType = T;
+
     ALWAYS_INLINE Optional() = default;
 
     ALWAYS_INLINE Optional(const T& value)
