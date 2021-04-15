@@ -615,11 +615,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     bool @cpp_name@;
 )~~~");
             } else {
-                if (!optional_default_value.is_null()) {
-                    scoped_generator.append(R"~~~(
+                scoped_generator.append(R"~~~(
     Optional<bool> @cpp_name@;
 )~~~");
-                }
             }
             scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_undefined())
