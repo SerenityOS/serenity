@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "CallTracer.h"
 #include "MallocTracer.h"
 #include "RangeAllocator.h"
 #include "Report.h"
@@ -40,9 +41,12 @@
 #include <signal.h>
 #include <sys/types.h>
 
+extern bool g_call_tracing;
+
 namespace UserspaceEmulator {
 
 class MallocTracer;
+class CallTracer;
 
 class Emulator {
 public:
@@ -61,6 +65,13 @@ public:
     SoftMMU& mmu() { return m_mmu; }
 
     MallocTracer* malloc_tracer() { return m_malloc_tracer; }
+    CallTracer* call_tracer() { return m_call_tracer; }
+
+    void trace_call_if_needed(FlatPtr address)
+    {
+        if (call_tracer())
+            call_tracer()->register_call(address, m_cpu.base_eip());
+    }
 
     bool is_in_malloc_or_free() const;
     bool is_in_loader_code() const;
@@ -80,6 +91,7 @@ private:
     SoftCPU m_cpu;
 
     OwnPtr<MallocTracer> m_malloc_tracer;
+    OwnPtr<CallTracer> m_call_tracer;
 
     void setup_stack(Vector<ELF::AuxiliaryValue>);
     Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String executable_path, int executable_fd) const;
@@ -196,6 +208,8 @@ private:
     void dispatch_one_pending_signal();
     const MmapRegion* find_text_region(FlatPtr address);
     String create_backtrace_line(FlatPtr address);
+
+    void create_profiler_file();
 
     bool m_shutdown { false };
     int m_exit_status { 0 };

@@ -35,6 +35,7 @@
 #include <string.h>
 
 bool g_report_to_debug = false;
+bool g_call_tracing = false;
 
 int main(int argc, char** argv, char** env)
 {
@@ -42,6 +43,7 @@ int main(int argc, char** argv, char** env)
 
     Core::ArgsParser parser;
     parser.add_option(g_report_to_debug, "Write reports to the debug log", "report-to-debug", 0);
+    parser.add_option(g_call_tracing, "Trace all call-instructions", "trace-calls", 'c');
     parser.add_positional_argument(command, "Command to emulate", "command");
     parser.parse(argc, argv);
 

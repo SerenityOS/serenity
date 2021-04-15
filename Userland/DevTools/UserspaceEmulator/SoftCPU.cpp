@@ -1180,6 +1180,7 @@ void SoftCPU::CALL_RM32(const X86::Instruction& insn)
     push32(shadow_wrap_as_initialized(eip()));
     auto address = insn.modrm().read32(*this, insn);
     warn_if_uninitialized(address, "call rm32");
+    m_emulator.trace_call_if_needed(address.value());
     set_eip(address.value());
 }
 
@@ -1190,7 +1191,9 @@ void SoftCPU::CALL_imm16_imm32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::CALL_imm32(const X86::Instruction& insn)
 {
     push32(shadow_wrap_as_initialized(eip()));
-    set_eip(eip() + (i32)insn.imm32());
+    auto address = eip() + (i32)insn.imm32();
+    m_emulator.trace_call_if_needed(address);
+    set_eip(address);
 }
 
 void SoftCPU::CBW(const X86::Instruction&)

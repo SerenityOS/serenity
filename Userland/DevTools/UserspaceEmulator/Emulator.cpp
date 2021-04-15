@@ -30,8 +30,11 @@
 #include "SoftCPU.h"
 #include <AK/Debug.h>
 #include <AK/Format.h>
+#include <AK/JsonObjectSerializer.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
+#include <AK/StringBuilder.h>
+#include <LibCore/File.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
@@ -65,6 +68,9 @@ Emulator::Emulator(const String& executable_path, const Vector<String>& argument
     , m_cpu(*this)
 {
     m_malloc_tracer = make<MallocTracer>(*this);
+
+    if (g_call_tracing)
+        m_call_tracer = make<CallTracer>(*this);
 
     static constexpr FlatPtr userspace_range_base = 0x00800000;
     static constexpr FlatPtr userspace_range_ceiling = 0xbe000000;
@@ -253,10 +259,61 @@ int Emulator::exec()
         }
     }
 
-    if (auto* tracer = malloc_tracer())
-        tracer->dump_leak_report();
+    if (malloc_tracer())
+        malloc_tracer()->dump_leak_report();
+
+    if (call_tracer()) {
+        call_tracer()->dump_calls();
+        create_profiler_file();
+    }
 
     return m_exit_status;
+}
+
+void Emulator::create_profiler_file()
+{
+    StringBuilder builder;
+    JsonObjectSerializer object(builder);
+
+    object.add("type", "calltrace");
+
+    auto processes_array = object.add_array("processes");
+    auto process_object = processes_array.add_object();
+    process_object.add("pid", getpid());
+    process_object.add("executable", m_executable_path);
+
+    auto regions_array = process_object.add_array("regions");
+    const_cast<SoftMMU&>(m_mmu).for_each_region([&](const Region& region) {
+        auto region_object = regions_array.add_object();
+
+        auto name = is<MmapRegion>(region) ? static_cast<const MmapRegion&>(region).name() : "";
+        region_object.add("name", name);
+        region_object.add("base", region.base());
+        region_object.add("size", region.size());
+
+        region_object.finish();
+        return IterationDecision::Continue;
+    });
+
+    regions_array.finish();
+    process_object.finish();
+    processes_array.finish();
+
+    call_tracer()->to_json(object);
+
+    object.finish();
+
+    auto filename = String::formatted("calltrace.{}", getpid());
+    auto file_or_error = Core::File::open(filename, Core::File::OpenMode::WriteOnly);
+    if (file_or_error.is_error()) {
+        warnln("Couldn't open '{}': {}", filename, file_or_error.error());
+        return;
+    }
+
+    auto file = file_or_error.value();
+
+    if (!file->write(builder.to_string()))
+        warnln("Couldn't write calltrace file {}!", filename);
 }
 
 Vector<FlatPtr> Emulator::raw_backtrace()

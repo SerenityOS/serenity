@@ -1,4 +1,5 @@
 set(SOURCES
+    CallTracer.cpp
     Emulator.cpp
     Emulator_syscalls.cpp
     MallocTracer.cpp
