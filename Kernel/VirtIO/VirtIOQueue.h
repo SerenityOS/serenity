@@ -47,9 +47,9 @@ public:
     void enable_interrupts();
     void disable_interrupts();
 
-    PhysicalAddress descriptor_area() const { return to_physical(m_descriptors); }
-    PhysicalAddress driver_area() const { return to_physical(m_driver); }
-    PhysicalAddress device_area() const { return to_physical(m_device); }
+    PhysicalAddress descriptor_area() const { return to_physical(m_descriptors.ptr()); }
+    PhysicalAddress driver_area() const { return to_physical(m_driver.ptr()); }
+    PhysicalAddress device_area() const { return to_physical(m_device.ptr()); }
 
     bool supply_buffer(const u8* buffer, u32 len, BufferType);
     bool new_data_available() const;
@@ -58,30 +58,30 @@ public:
     Function<void()> on_data_available;
 
 private:
-    PhysicalAddress to_physical(void* ptr) const
+    PhysicalAddress to_physical(const void* ptr) const
     {
         auto offset = FlatPtr(ptr) - m_region->vaddr().get();
         return m_region->physical_page(0)->paddr().offset(offset);
     }
-    struct VirtIOQueueDescriptor {
+    struct [[gnu::packed]] VirtIOQueueDescriptor {
         u64 address;
         u32 length;
         u16 flags;
         u16 next;
     };
 
-    struct VirtIOQueueDriver {
+    struct [[gnu::packed]] VirtIOQueueDriver {
         u16 flags;
         u16 index;
         u16 rings[];
     };
 
-    struct VirtIOQueueDeviceItem {
+    struct [[gnu::packed]] VirtIOQueueDeviceItem {
         u32 index;
         u32 length;
     };
 
-    struct VirtIOQueueDevice {
+    struct [[gnu::packed]] VirtIOQueueDevice {
         u16 flags;
         u16 index;
         VirtIOQueueDeviceItem rings[];
@@ -93,9 +93,9 @@ private:
     u16 m_free_head { 0 };
     u16 m_used_tail { 0 };
 
-    VirtIOQueueDescriptor* m_descriptors { nullptr };
-    VirtIOQueueDriver* m_driver { nullptr };
-    VirtIOQueueDevice* m_device { nullptr };
+    OwnPtr<VirtIOQueueDescriptor> m_descriptors { nullptr };
+    OwnPtr<VirtIOQueueDriver> m_driver { nullptr };
+    OwnPtr<VirtIOQueueDevice> m_device { nullptr };
     OwnPtr<Region> m_region;
     SpinLock<u8> m_lock;
 };
