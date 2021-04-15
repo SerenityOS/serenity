@@ -1,4 +1,4 @@
-## SerenityOS network booting
+## SerenityOS network booting via TFTP and DHCP
 
 By network booting, this guide implies a target computer (physical or virtual) that tries to boot over the network through PXE. The setup presented here is also diskless, as the bootloader and the root file system are supplied over the network. This can be achieved using GRUB2 or PXELINUX although only GRUB2 provides a framebuffer to display the Serenity desktop.
 
@@ -143,3 +143,37 @@ echo 0 > /sys/devices/virtual/net/br0/bridge/multicast_querier
 
 qemu-system-i386 -m 4096 -netdev tap,ifname=tap0,script=no,downscript=no,id=network0 -device e1000,netdev=network0 -boot n -debugcon stdio -s
 ```
+
+## SerenityOS network booting via USB (iPXE)
+
+It is possible to boot SerenityOS with the help of a USB drive. This option seems to be reliable if netbooting with TFTP fails due to bugs in firmware. For USB booting, you will need to ensure your BIOS supports such feature.
+
+You will need to have a USB drive you will be willing to wipe, so make sure to back up it first.
+You will also need to setup an HTTP server on your local network. Any HTTP server implementation
+will work, therefore we leave it to the reader to decide on which software to use
+and to figure out the right configuration for it.
+
+After that, do a `git clone` of the iPXE project. Then you will need to create an iPXE script.
+Add the following file in the root folder of the project:
+```
+#!ipxe
+console --x 1280 --y 1024
+dhcp
+kernel http://X.Y.Z.W/Kernel serial_debug root=/dev/ramdisk0
+imgfetch http://X.Y.Z.W/ramdisk
+boot
+```
+This file can be called in any name you'd want. For the sake of simplicity in this guide,
+this file is named `script.ipxe` from now on.
+Don't forget to replace `X.Y.Z.W` with your HTTP server IP address.
+For troubleshooting purposes, you could add `disable_physical_storage` and `disable_ps2_controller` 
+if you suspect our implementation fails to work with your hardware. 
+Because iPXE (unlike GRUB) doesn't support VESA VBE modesetting when booting a multiboot kernel,
+you might not see any output, so add the `boot_mode=text` argument as well to boot into VGA text mode.
+
+In the `src` folder you should run:
+```sh
+make EMBED=../script.ipxe bin/ipxe.usb
+```
+
+After it compiled, you will need to `dd` the `bin/ipxe.usb` file to your USB drive.
