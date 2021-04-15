@@ -9,6 +9,9 @@ interface HTMLElement : Element {
 
     [LegacyNullToEmptyString] attribute DOMString innerText;
 
+    readonly attribute long offsetTop;
+    readonly attribute long offsetLeft;
+
     // FIXME: These should all come from a GlobalEventHandlers mixin
     attribute EventHandler onabort;
     attribute EventHandler onauxclick;
