@@ -4,7 +4,7 @@ useconfigure=true
 version=1.7.3
 depends="zlib"
 workdir=libzip-${version}
-configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMakeToolchain.txt"
+configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMake/CMakeToolchain.txt"
 files="https://libzip.org/download/libzip-${version}.tar.gz libzip-${version}.tar.gz"
 
 configure() {

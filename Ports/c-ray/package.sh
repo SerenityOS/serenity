@@ -4,7 +4,7 @@ version=git
 workdir=c-ray-master
 useconfigure=true
 files="https://github.com/vkoskiv/c-ray/archive/master.tar.gz c-ray-git.tar.gz"
-configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMakeToolchain.txt"
+configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMake/CMakeToolchain.txt"
 depends="SDL2"
 
 configure() {

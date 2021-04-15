@@ -4,7 +4,7 @@ useconfigure=true
 version=git
 depends="SDL2 SDL2_mixer SDL2_image"
 workdir=Super-Mario-Clone-Cpp-master
-configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMakeToolchain.txt"
+configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMake/CMakeToolchain.txt"
 files="https://github.com/Bennyhwanggggg/Super-Mario-Clone-Cpp/archive/refs/heads/master.zip master.zip"
 install_location="Root/opt/Super_Mario"
 
