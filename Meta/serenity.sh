@@ -3,56 +3,57 @@ set -e
 
 ARG0=$0
 print_help() {
+    NAME=$(basename "$ARG0")
     cat <<EOF
-Usage: $ARG0 COMMAND [TARGET] [ARGS...]
+Usage: $NAME COMMAND [TARGET] [ARGS...]
   Supported TARGETs: i686 (default), x86_64, lagom
   Supported COMMANDs:
     build:      Compiles the target binaries, [ARGS...] are passed through to ninja
     install:    Installs the target binary
     image:      Creates a disk image with the installed binaries
-    run:        TARGET lagom: $ARG0 run lagom LAGOM_EXECUTABLE [ARGS...]
+    run:        TARGET lagom: $NAME run lagom LAGOM_EXECUTABLE [ARGS...]
                     Runs the Lagom-built LAGOM_EXECUTABLE on the build host, e.g.
                     'shell' or 'js', [ARGS...] are passed through to the executable
-                All other TARGETs: $ARG0 run [TARGET] [KERNEL_CMD_LINE]
+                All other TARGETs: $NAME run [TARGET] [KERNEL_CMD_LINE]
                     Runs the built image in QEMU, and optionally passes the
                     KERNEL_CMD_LINE to the Kernel
     gdb:        Same as run, but also starts a gdb remote session.
-                TARGET lagom: $ARG0 gdb lagom LAGOM_EXECUTABLE [-ex 'any gdb command']...
+                TARGET lagom: $NAME gdb lagom LAGOM_EXECUTABLE [-ex 'any gdb command']...
                     Passes through '-ex' commands to gdb
-                All other TARGETs: $ARG0 gdb [TARGET] [KERNEL_CMD_LINE] [-ex 'any gdb command']...
+                All other TARGETs: $NAME gdb [TARGET] [KERNEL_CMD_LINE] [-ex 'any gdb command']...
                     If specified, passes the KERNEL_CMD_LINE to the Kernel
                     Passes through '-ex' commands to gdb
-    test:       TARGET lagom: $ARG0 test lagom [TEST_NAME_PATTERN]
+    test:       TARGET lagom: $NAME test lagom [TEST_NAME_PATTERN]
                     Runs the unit tests on the build host, or if TEST_NAME_PATTERN
                     is specified tests matching it.
-                All other TARGETs: $ARG0 test [TARGET]
+                All other TARGETs: $NAME test [TARGET]
                     Runs the built image in QEMU in self-test mode, by passing
                     boot_mode=self-test to the Kernel
     delete:     Removes the build environment for TARGET
     recreate:   Deletes and re-creates the build environment for TARGET
     rebuild:    Deletes and re-creates the build environment, and compiles for TARGET
-    kaddr2line: $ARG0 kaddr2line TARGET ADDRESS
+    kaddr2line: $NAME kaddr2line TARGET ADDRESS
                     Resolves the ADDRESS in the Kernel/Kernel binary to a file:line
-    addr2line:  $ARG0 addr2line TARGET BINARY_FILE ADDRESS
+    addr2line:  $NAME addr2line TARGET BINARY_FILE ADDRESS
                     Resolves the ADDRESS in BINARY_FILE to a file:line. It will
                     attempt to find the BINARY_FILE in the appropriate build directory
 
     rebuild-toolchain: Deletes and re-builds the TARGET's toolchain
 
   Examples:
-    $ARG0 run i686 smp=on
+    $NAME run i686 smp=on
         Runs the image in QEMU passing "smp=on" to the kernel command line
-    $ARG0 run
+    $NAME run
         Runs the image for the default TARGET i686 in QEMU
-    $ARG0 run lagom js -A
+    $NAME run lagom js -A
         Runs the Lagom-built js(1) REPL
-    $ARG0 test lagom
+    $NAME test lagom
         Runs the unit tests on the build host
-    $ARG0 kaddr2line i686 0x12345678
+    $NAME kaddr2line i686 0x12345678
         Resolves the address 0x12345678 in the Kernel binary
-    $ARG0 addr2line i686 WindowServer 0x12345678
+    $NAME addr2line i686 WindowServer 0x12345678
         Resolves the address 0x12345678 in the WindowServer binary
-    $ARG0 gdb i686 smp=on -ex 'hb *init'
+    $NAME gdb i686 smp=on -ex 'hb *init'
         Runs the image for the TARGET i686 in qemu and attaches a gdb session
         setting a breakpoint at the init() function in the Kernel.
 EOF
