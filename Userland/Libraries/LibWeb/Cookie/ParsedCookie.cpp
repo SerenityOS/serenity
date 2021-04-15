@@ -30,6 +30,8 @@
 
 namespace Web::Cookie {
 
+static constexpr size_t s_max_cookie_size = 4096;
+
 static void parse_attributes(ParsedCookie& parsed_cookie, StringView unparsed_attributes);
 static void process_attribute(ParsedCookie& parsed_cookie, StringView attribute_name, StringView attribute_value);
 static void on_expires_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
@@ -43,6 +45,10 @@ static Optional<Core::DateTime> parse_date_time(StringView date_string);
 Optional<ParsedCookie> parse_cookie(const String& cookie_string)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2
+
+    if (cookie_string.length() > s_max_cookie_size)
+        return {};
+
     StringView name_value_pair;
     StringView unparsed_attributes;
 
