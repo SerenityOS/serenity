@@ -13,3 +13,8 @@ configure() {
         FT2_CFLAGS="-I${SERENITY_BUILD_DIR}/Root/usr/local/include/freetype2" \
         LIBS="-lgui -lgfx -lipc -lcore -lcompress"
 }
+
+install() {
+    run make install DESTDIR=$DESTDIR $installopts
+    run ${CC} -shared -o $DESTDIR/usr/local/lib/libSDL2_ttf.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libSDL2_ttf.a -Wl,--no-whole-archive
+}
