@@ -493,7 +493,7 @@ void Window::handle_keydown_event(const KeyEvent& event)
         if (menu_to_open) {
             frame().open_menubar_menu(*menu_to_open);
             if (!menu_to_open->is_empty())
-                menu_to_open->set_hovered_item(0);
+                menu_to_open->set_hovered_index(0);
             return;
         }
     }
