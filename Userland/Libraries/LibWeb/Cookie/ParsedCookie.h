@@ -29,6 +29,7 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
+#include <LibIPC/Forward.h>
 
 namespace Web::Cookie {
 
@@ -44,5 +45,12 @@ struct ParsedCookie {
 };
 
 Optional<ParsedCookie> parse_cookie(const String& cookie_string);
+
+}
+
+namespace IPC {
+
+bool encode(IPC::Encoder&, const Web::Cookie::ParsedCookie&);
+bool decode(IPC::Decoder&, Web::Cookie::ParsedCookie&);
 
 }

@@ -25,7 +25,10 @@
  */
 
 #include "ParsedCookie.h"
+#include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
+#include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 #include <ctype.h>
 
 namespace Web::Cookie {
@@ -350,4 +353,40 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
     return Core::DateTime::create(year, month, day_of_month, hour, minute, second);
 }
 
+}
+
+bool IPC::encode(IPC::Encoder& encoder, const Web::Cookie::ParsedCookie& cookie)
+{
+    encoder << cookie.name;
+    encoder << cookie.value;
+    encoder << cookie.expiry_time_from_expires_attribute;
+    encoder << cookie.expiry_time_from_max_age_attribute;
+    encoder << cookie.domain;
+    encoder << cookie.path;
+    encoder << cookie.secure_attribute_present;
+    encoder << cookie.http_only_attribute_present;
+
+    return true;
+}
+
+bool IPC::decode(IPC::Decoder& decoder, Web::Cookie::ParsedCookie& cookie)
+{
+    if (!decoder.decode(cookie.name))
+        return false;
+    if (!decoder.decode(cookie.value))
+        return false;
+    if (!decoder.decode(cookie.expiry_time_from_expires_attribute))
+        return false;
+    if (!decoder.decode(cookie.expiry_time_from_max_age_attribute))
+        return false;
+    if (!decoder.decode(cookie.domain))
+        return false;
+    if (!decoder.decode(cookie.path))
+        return false;
+    if (!decoder.decode(cookie.secure_attribute_present))
+        return false;
+    if (!decoder.decode(cookie.http_only_attribute_present))
+        return false;
+
+    return true;
 }

@@ -47,7 +47,7 @@ struct CookieStorageKey {
 class CookieJar {
 public:
     String get_cookie(const URL& url, Web::Cookie::Source source);
-    void set_cookie(const URL& url, const String& cookie, Web::Cookie::Source source);
+    void set_cookie(const URL& url, const Web::Cookie::ParsedCookie& parsed_cookie, Web::Cookie::Source source);
     void dump_cookies() const;
 
 private:
@@ -56,7 +56,7 @@ private:
     static bool path_matches(const String& request_path, const String& cookie_path);
     static String default_path(const URL& url);
 
-    void store_cookie(Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source);
+    void store_cookie(const Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source);
     Vector<Web::Cookie::Cookie*> get_matching_cookies(const URL& url, const String& canonicalized_domain, Web::Cookie::Source source);
     void purge_expired_cookies();
 
