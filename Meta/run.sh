@@ -73,7 +73,10 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device ahci,id=ahci
 -device ide-hd,bus=ahci.0,drive=disk,unit=0
 -usb
--debugcon stdio
+-device virtio-serial
+-chardev stdio,id=stdout,mux=on
+-device virtconsole,chardev=stdout
+-device isa-debugcon,chardev=stdout
 -soundhw pcspk
 -device sb16
 "

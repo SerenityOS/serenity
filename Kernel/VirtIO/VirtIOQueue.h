@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,8 +29,12 @@
 #include <AK/Badge.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/ScatterGatherList.h>
 
 namespace Kernel {
+
+#define VIRTQ_DESC_F_NEXT 1
+#define VIRTQ_DESC_F_INDIRECT 4
 
 enum class BufferType {
     DeviceReadable = 0,
@@ -44,7 +48,7 @@ public:
     VirtIOQueue(u16 queue_size, u16 notify_offset);
     ~VirtIOQueue();
 
-    bool is_null() const { return !m_region; }
+    bool is_null() const { return !m_queue_region; }
     u16 notify_offset() const { return m_notify_offset; }
 
     void enable_interrupts();
@@ -54,17 +58,18 @@ public:
     PhysicalAddress driver_area() const { return to_physical(m_driver.ptr()); }
     PhysicalAddress device_area() const { return to_physical(m_device.ptr()); }
 
-    bool supply_buffer(Badge<VirtIODevice>, const u8* buffer, u32 length, BufferType);
+    bool supply_buffer(Badge<VirtIODevice>, const ScatterGatherList&, BufferType, void* token);
     bool new_data_available() const;
-
-    bool handle_interrupt();
-    Function<void()> on_data_available;
+    void* get_buffer(size_t*);
+    void discard_used_buffers();
 
 private:
+    void pop_buffer(u16 descriptor_index);
+
     PhysicalAddress to_physical(const void* ptr) const
     {
-        auto offset = FlatPtr(ptr) - m_region->vaddr().get();
-        return m_region->physical_page(0)->paddr().offset(offset);
+        auto offset = FlatPtr(ptr) - m_queue_region->vaddr().get();
+        return m_queue_region->physical_page(0)->paddr().offset(offset);
     }
     struct [[gnu::packed]] VirtIOQueueDescriptor {
         u64 address;
@@ -100,7 +105,8 @@ private:
     OwnPtr<VirtIOQueueDescriptor> m_descriptors { nullptr };
     OwnPtr<VirtIOQueueDriver> m_driver { nullptr };
     OwnPtr<VirtIOQueueDevice> m_device { nullptr };
-    OwnPtr<Region> m_region;
+    Vector<void*> m_tokens;
+    OwnPtr<Region> m_queue_region;
     SpinLock<u8> m_lock;
 };
 

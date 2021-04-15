@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,12 +24,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/VM/ScatterGatherList.h>
 #include <Kernel/VirtIO/VirtIOConsole.h>
 
 namespace Kernel {
 
+unsigned VirtIOConsole::next_device_id = 0;
+
 VirtIOConsole::VirtIOConsole(PCI::Address address)
-    : CharacterDevice(229, 0)
+    : CharacterDevice(229, next_device_id++)
     , VirtIODevice(address, "VirtIOConsole")
 {
     if (auto cfg = get_config(ConfigurationType::Device)) {
@@ -54,22 +57,15 @@ VirtIOConsole::VirtIOConsole(PCI::Address address)
                 }
             });
             dbgln("VirtIOConsole: cols: {}, rows: {}, max nr ports {}", cols, rows, max_nr_ports);
-            set_requested_queue_count(2 + max_nr_ports * 2); // base receiveq/transmitq for port0 + 2 per every additional port
-            success = finish_init();
+            success = setup_queues(2 + max_nr_ports * 2); // base receiveq/transmitq for port0 + 2 per every additional port
         }
         if (success) {
-            get_queue(RECEIVEQ).on_data_available = [&]() {
-                dbgln("VirtIOConsole: receive_queue on_data_available");
-            };
+            finish_init();
             m_receive_region = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIOConsole Receive", Region::Access::Read | Region::Access::Write);
             if (m_receive_region) {
-                supply_buffer_and_notify(RECEIVEQ, m_receive_region->physical_page(0)->paddr().as_ptr(), m_receive_region->size(), BufferType::DeviceWritable);
+                supply_buffer_and_notify(RECEIVEQ, ScatterGatherList::create_from_physical(m_receive_region->physical_page(0)->paddr(), m_receive_region->size()), BufferType::DeviceWritable, m_receive_region->vaddr().as_ptr());
             }
-            get_queue(TRANSMITQ).on_data_available = [&]() {
-                dbgln("VirtIOConsole: send_queue on_data_available");
-            };
             m_transmit_region = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIOConsole Transmit", Region::Access::Read | Region::Access::Write);
-            dbgln("TODO: Populate receive queue with a receive buffer");
         }
     }
 }
@@ -82,6 +78,21 @@ bool VirtIOConsole::handle_device_config_change()
 {
     dbgln("VirtIOConsole: Handle device config change");
     return true;
+}
+
+void VirtIOConsole::handle_queue_update(u16 queue_index)
+{
+    VERIFY(queue_index <= TRANSMITQ);
+    switch (queue_index) {
+    case RECEIVEQ:
+        get_queue(RECEIVEQ).discard_used_buffers(); // TODO: do something with incoming data (users writing into qemu console) instead of just clearing
+        break;
+    case TRANSMITQ:
+        get_queue(TRANSMITQ).discard_used_buffers(); // clear outgoing buffers that the device finished with
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 bool VirtIOConsole::can_read(const FileDescription&, size_t) const
@@ -106,12 +117,9 @@ KResultOr<size_t> VirtIOConsole::write(FileDescription&, u64, const UserOrKernel
 {
     if (!size)
         return 0;
-    VERIFY(size <= PAGE_SIZE);
 
-    if (!data.read(m_transmit_region->vaddr().as_ptr(), size)) {
-        return Kernel::KResult((ErrnoCode)-EFAULT);
-    }
-    supply_buffer_and_notify(TRANSMITQ, m_transmit_region->physical_page(0)->paddr().as_ptr(), size, BufferType::DeviceReadable);
+    auto scatter_list = ScatterGatherList::create_from_buffer(static_cast<const u8*>(data.user_or_kernel_ptr()), size);
+    supply_buffer_and_notify(TRANSMITQ, scatter_list, BufferType::DeviceReadable, const_cast<void*>(data.user_or_kernel_ptr()));
 
     return size;
 }

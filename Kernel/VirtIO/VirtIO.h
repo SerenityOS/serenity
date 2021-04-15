@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Device.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/ScatterGatherList.h>
 #include <Kernel/VirtIO/VirtIOQueue.h>
 
 namespace Kernel {
@@ -54,6 +55,7 @@ namespace Kernel {
 #define DEVICE_STATUS_DEVICE_NEEDS_RESET (1 << 6)
 #define DEVICE_STATUS_FAILED (1 << 7)
 
+#define VIRTIO_F_INDIRECT_DESC ((u64)1 << 28)
 #define VIRTIO_F_VERSION_1 ((u64)1 << 32)
 #define VIRTIO_F_RING_PACKED ((u64)1 << 34)
 #define VIRTIO_F_IN_ORDER ((u64)1 << 35)
@@ -181,14 +183,14 @@ protected:
     void clear_status_bit(u8);
     void set_status_bit(u8);
     u64 get_device_features();
-    bool finish_init();
+    bool setup_queues(u16 requested_queue_count = 0);
+    void finish_init();
 
     VirtIOQueue& get_queue(u16 queue_index)
     {
         VERIFY(queue_index < m_queue_count);
         return m_queues[queue_index];
     }
-    void set_requested_queue_count(u16);
 
     template<typename F>
     bool negotiate_features(F f)
@@ -210,10 +212,10 @@ protected:
         return is_feature_set(m_accepted_features, feature);
     }
 
-    void supply_buffer_and_notify(u16 queue_index, const u8* buffer, u32 len, BufferType);
+    void supply_buffer_and_notify(u16 queue_index, const ScatterGatherList&, BufferType, void* token);
 
-    virtual void handle_irq(const RegisterState&) override;
     virtual bool handle_device_config_change() = 0;
+    virtual void handle_queue_update(u16 queue_index) = 0;
 
 private:
     template<typename T>
@@ -230,7 +232,6 @@ private:
 
     bool accept_device_features(u64 device_features, u64 accepted_features);
 
-    bool setup_queues();
     bool setup_queue(u16 queue_index);
     bool activate_queue(u16 queue_index);
     void notify_queue(u16 queue_index);
@@ -238,6 +239,7 @@ private:
     void reset_device();
 
     u8 isr_status();
+    virtual void handle_irq(const RegisterState&) override;
 
     NonnullOwnPtrVector<VirtIOQueue> m_queues;
     NonnullOwnPtrVector<Configuration> m_configs;
@@ -252,6 +254,7 @@ private:
     u8 m_status { 0 };
     u64 m_accepted_features { 0 };
     bool m_did_accept_features { false };
+    bool m_did_setup_queues { false };
     u32 m_notify_multiplier { 0 };
 };
 
