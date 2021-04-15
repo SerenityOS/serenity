@@ -29,6 +29,7 @@
 #include <AK/HashMap.h>
 #include <LibIPC/ClientConnection.h>
 #include <LibJS/Forward.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Forward.h>
 #include <WebContent/Forward.h>
 #include <WebContent/WebContentClientEndpoint.h>

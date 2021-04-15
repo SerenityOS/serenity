@@ -34,6 +34,7 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
@@ -828,10 +829,14 @@ String Document::cookie(Cookie::Source source)
     return {};
 }
 
-void Document::set_cookie(String cookie, Cookie::Source source)
+void Document::set_cookie(String cookie_string, Cookie::Source source)
 {
+    auto cookie = Cookie::parse_cookie(cookie_string);
+    if (!cookie.has_value())
+        return;
+
     if (auto* page = this->page())
-        page->client().page_did_set_cookie(m_url, cookie, source);
+        page->client().page_did_set_cookie(m_url, cookie.value(), source);
 }
 
 }
