@@ -163,6 +163,22 @@ OwnPtr<Gfx::Painter> CanvasRenderingContext2D::painter()
     return make<Gfx::Painter>(*m_element->bitmap());
 }
 
+void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, Optional<double> max_width)
+{
+    if (max_width.has_value() && max_width.value() <= 0)
+        return;
+
+    auto painter = this->painter();
+    if (!painter)
+        return;
+
+    // FIXME: painter only supports integer rects for text right now, so this effectively chops off any fractional position
+    auto text_rect = Gfx::IntRect(x, y, max_width.has_value() ? max_width.value() : painter->font().width(text), painter->font().glyph_height());
+    auto transformed_rect = m_transform.map(text_rect);
+    painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, m_fill_style);
+    did_draw(transformed_rect.to<float>());
+}
+
 void CanvasRenderingContext2D::begin_path()
 {
     m_path = Gfx::Path();

@@ -20,6 +20,8 @@ interface CanvasRenderingContext2D {
     undefined ellipse(double x, double y, double radiusX, double radiusY, double rotation, double startAngle, double endAngle, optional boolean counterclockwise = false);
     undefined rect(double x, double y, double width, double height);
 
+    undefined fillText(DOMString text, double x, double y, optional double maxWidth);
+
     undefined drawImage(HTMLImageElement image, double dx, double dy);
 
     attribute DOMString fillStyle;

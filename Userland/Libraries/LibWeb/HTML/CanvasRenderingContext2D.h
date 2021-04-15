@@ -80,6 +80,8 @@ public:
     void rect(float x, float y, float width, float height);
     void stroke();
 
+    void fill_text(const String&, float x, float y, Optional<double> max_width);
+
     // FIXME: We should only have one fill(), really. Fix the wrapper generator!
     void fill(Gfx::Painter::WindingRule);
     void fill(const String& fill_rule);
