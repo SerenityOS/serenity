@@ -160,6 +160,20 @@ public:
         elliptical_arc_to(point, { radius, radius }, 0, large_arc, sweep);
     }
 
+    // Note: This does not do any sanity checks!
+    void elliptical_arc_to(const FloatPoint& endpoint, const FloatPoint& center, const FloatPoint& radii, double x_axis_rotation, double theta, double theta_delta)
+    {
+        append_segment<EllipticalArcSegment>(
+            endpoint,
+            center,
+            radii,
+            x_axis_rotation,
+            theta,
+            theta_delta);
+
+        invalidate_split_lines();
+    }
+
     void close();
     void close_all_subpaths();
 
