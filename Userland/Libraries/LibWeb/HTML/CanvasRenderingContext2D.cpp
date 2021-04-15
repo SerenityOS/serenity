@@ -219,13 +219,13 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::ellipse(float x, float y, float
     if (radius_y < 0)
         return DOM::IndexSizeError::create(String::formatted("The minor-axis radius provided ({}) is negative.", radius_y));
 
-    if ((!counter_clockwise && (end_angle - start_angle) >= M_TAU)
-        || (counter_clockwise && (start_angle - end_angle) >= M_TAU)) {
+    if (constexpr float tau = M_TAU; (!counter_clockwise && (end_angle - start_angle) >= tau)
+        || (counter_clockwise && (start_angle - end_angle) >= tau)) {
         start_angle = 0;
-        end_angle = M_TAU;
+        end_angle = tau;
     } else {
-        start_angle = fmodf(start_angle, M_TAU);
-        end_angle = fmodf(end_angle, M_TAU);
+        start_angle = fmodf(start_angle, tau);
+        end_angle = fmodf(end_angle, tau);
     }
 
     // Then, figure out where the ends of the arc are.
@@ -263,7 +263,7 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::ellipse(float x, float y, float
 
     m_path.move_to(start_point);
 
-    auto delta_theta = end_angle - start_angle;
+    double delta_theta = end_angle - start_angle;
 
     // FIXME: This is still goofy for some values.
     m_path.elliptical_arc_to(end_point, { radius_x, radius_y }, rotation, delta_theta > M_PI, !counter_clockwise);

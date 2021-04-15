@@ -172,9 +172,9 @@ static FloatType internal_to_integer(FloatType x, RoundingMode rounding_mode)
         // We could do this ourselves, but this saves us from manually
         // handling overflow.
         if (extractor.sign)
-            extractor.d -= 1.0;
+            extractor.d -= static_cast<FloatType>(1.0);
         else
-            extractor.d += 1.0;
+            extractor.d += static_cast<FloatType>(1.0);
     }
 
     return extractor.d;
@@ -339,7 +339,7 @@ static FloatT internal_gamma(FloatT x) NOEXCEPT
     }
 
     // Stirling approximation
-    return sqrtl(2.0 * M_PI / x) * powl(x / M_E, x);
+    return sqrtl(2.0 * M_PI / static_cast<long double>(x)) * powl(static_cast<long double>(x) / M_E, static_cast<long double>(x));
 }
 
 extern "C" {
@@ -386,7 +386,7 @@ double cos(double angle) NOEXCEPT
 
 float cosf(float angle) NOEXCEPT
 {
-    return sinf(angle + M_PI_2);
+    return sinf(angle + static_cast<float>(M_PI_2));
 }
 
 long double sinl(long double angle) NOEXCEPT
@@ -636,7 +636,7 @@ double fmod(double index, double period) NOEXCEPT
 
 float fmodf(float index, float period) NOEXCEPT
 {
-    return index - trunc(index / period) * period;
+    return index - truncf(index / period) * period;
 }
 
 // FIXME: These aren't exactly like fmod, but these definitions are probably good enough for now
@@ -818,7 +818,7 @@ double acos(double x) NOEXCEPT
 
 float acosf(float x) NOEXCEPT
 {
-    return M_PI_2 - asinf(x);
+    return static_cast<float>(M_PI_2) - asinf(x);
 }
 
 long double fabsl(long double value) NOEXCEPT
@@ -1104,9 +1104,9 @@ double lgamma_r(double value, int* sign) NOEXCEPT
 
 float lgammaf_r(float value, int* sign) NOEXCEPT
 {
-    if (value == 1.0 || value == 2.0)
+    if (value == 1.0f || value == 2.0f)
         return 0.0;
-    if (isinf(value) || value == 0.0)
+    if (isinf(value) || value == 0.0f)
         return INFINITY;
     float result = logf(internal_gamma(value));
     *sign = signbit(result) ? -1 : 1;

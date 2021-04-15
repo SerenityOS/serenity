@@ -516,7 +516,7 @@ Gfx::Path& SVGPathElement::get_path()
         case PathInstructionType::EllipticalArc: {
             double rx = data[0];
             double ry = data[1];
-            double x_axis_rotation = data[2] * M_DEG2RAD;
+            double x_axis_rotation = double { data[2] } * M_DEG2RAD;
             double large_arc_flag = data[3];
             double sweep_flag = data[4];
             auto& last_point = path.segments().last().point();
