@@ -59,8 +59,8 @@ private:
     virtual bool handle_device_config_change() override;
     virtual String device_name() const override { return String::formatted("hvc{}", minor()); }
 
-    VirtIOQueue* m_receive_queue { nullptr };
-    VirtIOQueue* m_send_queue { nullptr };
+    OwnPtr<Region> m_receive_region;
+    OwnPtr<Region> m_transmit_region;
 };
 
 }
