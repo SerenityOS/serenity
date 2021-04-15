@@ -1235,6 +1235,44 @@ String TextEditor::selected_text() const
     return document().text_in_range(m_selection);
 }
 
+int TextEditor::selected_word_count() const
+{
+    int word_count = 0;
+    bool in_word = false;
+    auto selection = this->selected_text();
+    for (char c : selection) {
+        if (in_word && isspace(c)) {
+            in_word = false;
+            word_count++;
+            continue;
+        }
+        if (!in_word && !isspace(c))
+            in_word = true;
+    }
+    if (in_word)
+        word_count++;
+
+    return word_count;
+}
+
+size_t TextEditor::selected_line_count() const
+{
+    size_t first_line;
+    size_t last_line;
+    auto selection = this->normalized_selection();
+    if (!selection.is_valid()) {
+        first_line = this->cursor().line();
+        last_line = this->cursor().line();
+    } else {
+        first_line = selection.start().line();
+        last_line = selection.end().line();
+    }
+    if (first_line == last_line || selection.start().column() == 0 || selection.start().column() != 0)
+        last_line += 1;
+
+    return last_line - first_line;
+}
+
 void TextEditor::delete_selection()
 {
     auto selection = normalized_selection();

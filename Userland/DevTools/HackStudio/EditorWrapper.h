@@ -59,7 +59,6 @@ private:
     EditorWrapper();
 
     RefPtr<GUI::Label> m_filename_label;
-    RefPtr<GUI::Label> m_cursor_label;
     RefPtr<Editor> m_editor;
 };
 

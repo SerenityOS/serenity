@@ -125,6 +125,7 @@ private:
     void create_help_menubar(GUI::Menubar&);
     void create_project_tab(GUI::Widget& parent);
     void configure_project_tree_view();
+    void update_statusbar();
 
     void run(TerminalWrapper& wrapper);
     void build(TerminalWrapper& wrapper);
@@ -156,6 +157,7 @@ private:
     RefPtr<GUI::Menu> m_project_tree_view_context_menu;
     RefPtr<GUI::TabWidget> m_action_tab_widget;
     RefPtr<GUI::TabWidget> m_project_tab;
+    RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<TerminalWrapper> m_terminal_wrapper;
     RefPtr<Locator> m_locator;
     RefPtr<FindInFilesWidget> m_find_in_files_widget;

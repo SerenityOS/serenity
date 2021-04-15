@@ -135,6 +135,8 @@ public:
     bool write_to_file(const String& path);
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
+    int selected_word_count() const;
+    size_t selected_line_count() const;
     void set_selection(const TextRange&);
     void clear_selection();
     bool can_undo() const { return document().can_undo(); }
