@@ -424,6 +424,7 @@ void Emulator::dispatch_one_pending_signal()
         if (action == DefaultSignalAction::Ignore)
             return;
         reportln("\n=={}== Got signal {} ({}), no handler registered", getpid(), signum, strsignal(signum));
+        dump_backtrace();
         m_shutdown = true;
         return;
     }
