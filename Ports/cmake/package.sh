@@ -2,7 +2,8 @@
 port=cmake
 version=3.19.4
 useconfigure=false
-files="https://github.com/Kitware/CMake/releases/download/v$version/cmake-$version.tar.gz cmake-$version.tar.gz"
+files="https://github.com/Kitware/CMake/releases/download/v$version/cmake-$version.tar.gz cmake-$version.tar.gz 2a71f16c61bac5402004066d193fc14e"
+auth_type=md5
 depends="bash gcc make sed"
 
 port_path=$(realpath $(dirname ${BASH_SOURCE[0]}))

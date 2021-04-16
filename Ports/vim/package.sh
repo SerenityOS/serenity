@@ -3,7 +3,8 @@ port=vim
 version=git
 workdir=vim-master
 useconfigure="true"
-files="https://github.com/vim/vim/archive/master.tar.gz vim-git.tar.gz"
+files="https://github.com/vim/vim/archive/master.tar.gz vim-git.tar.gz 9f999815c6afc320612d55f93f0db67b"
+auth_type=md5
 configopts="--with-tlib=tinfo --with-features=normal"
 depends="ncurses"
 

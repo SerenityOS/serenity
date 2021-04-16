@@ -2,7 +2,8 @@
 port=libpng
 version=1.6.37
 useconfigure=true
-files="https://download.sourceforge.net/libpng/libpng-${version}.tar.gz libpng-${version}.tar.gz"
+files="https://download.sourceforge.net/libpng/libpng-${version}.tar.gz libpng-${version}.tar.gz 6c7519f6c75939efa0ed3053197abd54"
+auth_type=md5
 depends="zlib"
 
 install() {
