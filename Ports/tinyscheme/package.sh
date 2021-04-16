@@ -2,7 +2,7 @@
 port=tinyscheme
 version=1.42
 files="https://downloads.sourceforge.net/project/tinyscheme/tinyscheme/tinyscheme-${version}/tinyscheme-${version}.tar.gz tinyscheme-${version}.tar.gz 273ac5ffe5305986b329e9045f2aea89"
-
+auth_type=md5
 useconfigure=false
 
 build() {

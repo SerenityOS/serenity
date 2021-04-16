@@ -3,7 +3,8 @@ port=c-ray
 version=git
 workdir=c-ray-master
 useconfigure=true
-files="https://github.com/vkoskiv/c-ray/archive/master.tar.gz c-ray-git.tar.gz"
+files="https://github.com/vkoskiv/c-ray/archive/master.tar.gz c-ray-git.tar.gz 939b40cdb642b78a2b300b5b2981e337"
+auth_type=md5
 configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMake/CMakeToolchain.txt"
 depends="SDL2"
 

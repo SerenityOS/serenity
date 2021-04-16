@@ -2,7 +2,8 @@
 port=SDL2_ttf
 version=2.0.15
 useconfigure=true
-files="https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-${version}.tar.gz SDL2_ttf-${version}.tar.gz"
+files="https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-${version}.tar.gz SDL2_ttf-${version}.tar.gz 04fe06ff7623d7bdcb704e82f5f88391"
+auth_type=md5
 depends="SDL2 freetype"
 
 configure() {

@@ -2,7 +2,8 @@
 port=git
 version=2.31.1
 useconfigure="true"
-files="https://mirrors.edge.kernel.org/pub/software/scm/git/git-${version}.tar.xz git-${version}.tar.xz"
+files="https://mirrors.edge.kernel.org/pub/software/scm/git/git-${version}.tar.xz git-${version}.tar.xz 51bd18a1af964dd3b1c7b0220889ebb6"
+auth_type=md5
 configopts="--target=${SERENITY_ARCH}-pc-serenity CFLAGS=-DNO_IPV6"
 depends="zlib"
 
