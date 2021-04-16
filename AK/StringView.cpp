@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,15 +35,13 @@
 namespace AK {
 
 StringView::StringView(const String& string)
-    : m_impl(string.impl())
-    , m_characters(string.characters())
+    : m_characters(string.characters())
     , m_length(string.length())
 {
 }
 
 StringView::StringView(const FlyString& string)
-    : m_impl(string.impl())
-    , m_characters(string.characters())
+    : m_characters(string.characters())
     , m_length(string.length())
 {
 }
@@ -251,8 +249,6 @@ unsigned StringView::hash() const
 {
     if (is_empty())
         return 0;
-    if (m_impl)
-        return m_impl->hash();
     return string_hash(characters_without_null_termination(), length());
 }
 
