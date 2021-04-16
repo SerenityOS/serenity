@@ -113,9 +113,9 @@ static void map_library(const String& name)
     VERIFY_NOT_REACHED();
 }
 
-static String get_library_name(const StringView& path)
+static String get_library_name(String path)
 {
-    return LexicalPath(path).basename();
+    return LexicalPath(move(path)).basename();
 }
 
 static Vector<String> get_dependencies(const String& name)
