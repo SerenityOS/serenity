@@ -88,7 +88,7 @@ class Thread
     friend class Process;
     friend class ProtectedProcessBase;
     friend class Scheduler;
-    friend class ThreadReadyQueue;
+    friend struct ThreadReadyQueue;
 
     static SpinLock<u8> g_tid_map_lock;
     static HashMap<ThreadID, Thread*>* g_tid_map;
@@ -1129,7 +1129,7 @@ public:
 private:
     Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region> kernel_stack_region);
 
-    IntrusiveListNode m_process_thread_list_node;
+    IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
 
     friend class WaitQueue;
@@ -1202,7 +1202,7 @@ private:
     TSS m_tss {};
     TrapFrame* m_current_trap { nullptr };
     u32 m_saved_critical { 1 };
-    IntrusiveListNode m_ready_queue_node;
+    IntrusiveListNode<Thread> m_ready_queue_node;
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
     u32 m_ticks_left { 0 };

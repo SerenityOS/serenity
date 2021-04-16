@@ -86,7 +86,7 @@ public:
         return cell_from_possible_pointer((FlatPtr)cell);
     }
 
-    IntrusiveListNode m_list_node;
+    IntrusiveListNode<HeapBlock> m_list_node;
 
 private:
     HeapBlock(Heap&, size_t cell_size);
