@@ -75,7 +75,7 @@ public:
     virtual const char* class_name() const = 0;
 
     const String& name() const { return m_name; }
-    void set_name(const StringView& name) { m_name = name; }
+    void set_name(String name) { m_name = move(name); }
 
     NonnullRefPtrVector<Object>& children() { return m_children; }
     const NonnullRefPtrVector<Object>& children() const { return m_children; }
@@ -120,8 +120,8 @@ public:
 
     void save_to(JsonObject&);
 
-    bool set_property(const StringView& name, const JsonValue& value);
-    JsonValue property(const StringView& name) const;
+    bool set_property(String const& name, const JsonValue& value);
+    JsonValue property(String const& name) const;
     const HashMap<String, NonnullOwnPtr<Property>>& properties() const { return m_properties; }
 
     static IntrusiveList<Object, RawPtr<Object>, &Object::m_all_objects_list_node>& all_objects();
