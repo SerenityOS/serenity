@@ -56,7 +56,7 @@ set(SOURCES
     LinkLabel.cpp
     ListView.cpp
     Menu.cpp
-        Menubar.cpp
+    Menubar.cpp
     MenuItem.cpp
     MessageBox.cpp
     Model.cpp
@@ -72,7 +72,7 @@ set(SOURCES
     RegularEditingEngine.cpp
     ResizeCorner.cpp
     RunningProcessesModel.cpp
-        Scrollbar.cpp
+    Scrollbar.cpp
     ScrollableWidget.cpp
     SeparatorWidget.cpp
     Shortcut.cpp
@@ -81,14 +81,14 @@ set(SOURCES
     SpinBox.cpp
     Splitter.cpp
     StackWidget.cpp
-        Statusbar.cpp
+    Statusbar.cpp
     TabWidget.cpp
     TableView.cpp
     TextBox.cpp
     TextDocument.cpp
     TextEditor.cpp
-        Toolbar.cpp
-        ToolbarContainer.cpp
+    Toolbar.cpp
+    ToolbarContainer.cpp
     TreeView.cpp
     UndoStack.cpp
     Variant.cpp
