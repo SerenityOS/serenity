@@ -141,7 +141,7 @@ private:
 
         int connected_adapters = 0;
         json.value().as_array().for_each([&adapter_info, include_loopback, &connected_adapters](auto& value) {
-            auto if_object = value.as_object();
+            auto& if_object = value.as_object();
             auto ip_address = if_object.get("ipv4_address").to_string();
             auto ifname = if_object.get("name").to_string();
 
@@ -151,7 +151,7 @@ private:
             if (ip_address != "null")
                 connected_adapters++;
 
-            adapter_info.appendf("%s: %s\n", ifname.characters(), ip_address.characters());
+            adapter_info.appendff("{}: {}\n", ifname, ip_address);
         });
 
         // show connected icon so long as at least one adapter is connected
