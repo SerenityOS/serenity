@@ -43,6 +43,13 @@ describe("correct behavior", () => {
         Object.defineProperty(o, "baz", { value: "qux", enumerable: false });
         expect(JSON.stringify(o)).toBe('{"foo":"bar"}');
     });
+
+    test("ignores symbol properties", () => {
+        let o = { foo: "bar" };
+        let sym = Symbol("baz");
+        o[sym] = "qux";
+        expect(JSON.stringify(o)).toBe('{"foo":"bar"}');
+    });
 });
 
 describe("errors", () => {
