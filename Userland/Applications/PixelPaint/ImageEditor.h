@@ -65,6 +65,7 @@ public:
 
     void scale_centered_on_position(const Gfx::IntPoint&, float);
     void reset_scale_and_position();
+    void scale_by(float);
 
     Color primary_color() const { return m_primary_color; }
     void set_primary_color(Color);
@@ -107,6 +108,7 @@ private:
     GUI::MouseEvent event_adjusted_for_layer(const GUI::MouseEvent&, const Layer&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(const GUI::MouseEvent&) const;
 
+    void clamped_scale(float);
     void relayout();
 
     RefPtr<Image> m_image;
