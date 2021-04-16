@@ -59,6 +59,13 @@ public:
         {
         }
 
+        IOAddressGroup(const IOAddressGroup& other, IOAddress bus_master_base)
+            : m_io_base(other.io_base())
+            , m_control_base(other.control_base())
+            , m_bus_master_base(bus_master_base)
+        {
+        }
+
         // Disable default implementations that would use surprising integer promotion.
         bool operator==(const IOAddressGroup&) const = delete;
         bool operator<=(const IOAddressGroup&) const = delete;
@@ -126,7 +133,8 @@ protected:
     String channel_type_string() const;
 
     void try_disambiguate_error();
-    void wait_until_not_busy();
+    bool wait_until_not_busy(bool slave, size_t milliseconds_timeout);
+    bool wait_until_not_busy(size_t milliseconds_timeout);
 
     void start_request(AsyncBlockDeviceRequest&, bool, u16);
 
