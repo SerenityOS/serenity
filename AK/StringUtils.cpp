@@ -54,22 +54,20 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
         return true;
     }
 
-    if (case_sensitivity == CaseSensitivity::CaseInsensitive) {
-        const String str_lower = String(str).to_lowercase();
-        const String mask_lower = String(mask).to_lowercase();
-        return matches(str_lower, mask_lower, CaseSensitivity::CaseSensitive, match_spans);
-    }
-
     const char* string_ptr = str.characters_without_null_termination();
     const char* string_start = str.characters_without_null_termination();
     const char* string_end = string_ptr + str.length();
     const char* mask_ptr = mask.characters_without_null_termination();
     const char* mask_end = mask_ptr + mask.length();
 
-    auto matches_one = [](char ch, char p) {
+    auto matches_one = [](char ch, char p, CaseSensitivity case_sensitivity) {
         if (p == '?')
             return true;
-        return p == ch && ch != 0;
+        if (ch == 0)
+            return false;
+        if (case_sensitivity == CaseSensitivity::CaseSensitive)
+            return p == ch;
+        return tolower(p) == tolower(ch);
     };
     while (string_ptr < string_end && mask_ptr < mask_end) {
         auto string_start_ptr = string_ptr;
@@ -79,7 +77,7 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
                 record_span(string_ptr - string_start, string_end - string_ptr);
                 return true;
             }
-            while (string_ptr < string_end && !matches(string_ptr, mask_ptr + 1))
+            while (string_ptr < string_end && !matches(string_ptr, mask_ptr + 1, case_sensitivity))
                 ++string_ptr;
             record_span(string_start_ptr - string_start, string_ptr - string_start_ptr);
             --string_ptr;
@@ -88,7 +86,7 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
             record_span(string_ptr - string_start, 1);
             break;
         default:
-            if (!matches_one(*string_ptr, *mask_ptr))
+            if (!matches_one(*string_ptr, *mask_ptr, case_sensitivity))
                 return false;
             break;
         }
