@@ -51,8 +51,8 @@ Menu* Menu::from_menu_id(int menu_id)
     return (*it).value;
 }
 
-Menu::Menu(const StringView& name)
-    : m_name(name)
+Menu::Menu(String name)
+    : m_name(move(name))
 {
 }
 

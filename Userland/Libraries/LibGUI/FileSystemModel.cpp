@@ -36,7 +36,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibThread/BackgroundAction.h>
-#include <dirent.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -200,9 +199,9 @@ String FileSystemModel::Node::full_path() const
     return LexicalPath::canonicalized_path(builder.to_string());
 }
 
-ModelIndex FileSystemModel::index(const StringView& path, int column) const
+ModelIndex FileSystemModel::index(String path, int column) const
 {
-    LexicalPath lexical_path(path);
+    LexicalPath lexical_path(move(path));
     const Node* node = m_root->m_parent_of_root ? &m_root->children.first() : m_root;
     if (lexical_path.string() == "/")
         return node->index(column);
@@ -232,8 +231,8 @@ String FileSystemModel::full_path(const ModelIndex& index) const
     return node.full_path();
 }
 
-FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
-    : m_root_path(LexicalPath::canonicalized_path(root_path))
+FileSystemModel::FileSystemModel(String root_path, Mode mode)
+    : m_root_path(LexicalPath::canonicalized_path(move(root_path)))
     , m_mode(mode)
 {
     setpwent();
@@ -319,12 +318,12 @@ void FileSystemModel::update_node_on_selection(const ModelIndex& index, const bo
     node.set_selected(selected);
 }
 
-void FileSystemModel::set_root_path(const StringView& root_path)
+void FileSystemModel::set_root_path(String root_path)
 {
     if (root_path.is_null())
         m_root_path = {};
     else
-        m_root_path = LexicalPath::canonicalized_path(root_path);
+        m_root_path = LexicalPath::canonicalized_path(move(root_path));
     update();
 
     if (m_root->has_error()) {

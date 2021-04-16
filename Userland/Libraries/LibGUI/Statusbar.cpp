@@ -69,9 +69,9 @@ NonnullRefPtr<Label> Statusbar::create_label()
     return label;
 }
 
-void Statusbar::set_text(const StringView& text)
+void Statusbar::set_text(String text)
 {
-    m_labels.first().set_text(text);
+    m_labels.first().set_text(move(text));
 }
 
 String Statusbar::text() const
@@ -79,9 +79,9 @@ String Statusbar::text() const
     return m_labels.first().text();
 }
 
-void Statusbar::set_text(int index, const StringView& text)
+void Statusbar::set_text(int index, String text)
 {
-    m_labels.at(index).set_text(text);
+    m_labels.at(index).set_text(move(text));
 }
 
 String Statusbar::text(int index) const
