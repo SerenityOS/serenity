@@ -224,6 +224,15 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         dbgln("SetIsa: {}", isa);
         break;
     }
+    case StandardOpcodes::FixAdvancePc: {
+        u16 delta = 0;
+        m_stream >> delta;
+#if DWARF_DEBUG
+        dbgln("FixAdvancePC by: {} to: {:p}", delta, m_address + delta);
+#endif
+        m_address += delta;
+        break;
+    }
     default:
         dbgln("Unhandled LineProgram opcode {}", opcode);
         VERIFY_NOT_REACHED();
