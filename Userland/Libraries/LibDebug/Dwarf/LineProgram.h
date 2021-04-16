@@ -55,7 +55,7 @@ private:
 
     void handle_extended_opcode();
     void handle_standard_opcode(u8 opcode);
-    void handle_sepcial_opcode(u8 opcode);
+    void handle_special_opcode(u8 opcode);
 
     struct [[gnu::packed]] UnitHeader32 {
         u32 length;
