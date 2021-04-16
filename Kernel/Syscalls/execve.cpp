@@ -255,7 +255,13 @@ enum class ShouldAllocateTls {
     Yes,
 };
 
-static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, FileDescription& object_description, FlatPtr load_offset, ShouldAllocateTls should_allocate_tls)
+enum class ShouldAllowSyscalls {
+    No,
+    Yes,
+};
+
+static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, FileDescription& object_description,
+    FlatPtr load_offset, ShouldAllocateTls should_allocate_tls, ShouldAllowSyscalls should_allow_syscalls)
 {
     auto& inode = *(object_description.inode());
     auto vmobject = SharedInodeVMObject::create_with_inode(inode);
@@ -392,6 +398,8 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
             ph_load_result = region_or_error.error();
             return IterationDecision::Break;
         }
+        if (should_allow_syscalls == ShouldAllowSyscalls::Yes)
+            region_or_error.value()->set_syscall_region(true);
         if (program_header.offset() == 0)
             load_base_address = (FlatPtr)region_or_error.value()->vaddr().as_ptr();
         return IterationDecision::Continue;
@@ -442,7 +450,7 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
     });
 
     if (interpreter_description.is_null()) {
-        auto result = load_elf_object(new_space.release_nonnull(), main_program_description, FlatPtr { 0 }, ShouldAllocateTls::Yes);
+        auto result = load_elf_object(new_space.release_nonnull(), main_program_description, FlatPtr { 0 }, ShouldAllocateTls::Yes, ShouldAllowSyscalls::No);
         if (result.is_error())
             return result.error();
 
@@ -458,7 +466,7 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
         return interpreter_load_offset.error();
     }
 
-    auto interpreter_load_result = load_elf_object(new_space.release_nonnull(), *interpreter_description, interpreter_load_offset.value(), ShouldAllocateTls::No);
+    auto interpreter_load_result = load_elf_object(new_space.release_nonnull(), *interpreter_description, interpreter_load_offset.value(), ShouldAllocateTls::No, ShouldAllowSyscalls::Yes);
 
     if (interpreter_load_result.is_error())
         return interpreter_load_result.error();
