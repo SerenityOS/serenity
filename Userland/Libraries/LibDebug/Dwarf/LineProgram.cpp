@@ -98,6 +98,9 @@ void LineProgram::append_to_line_info()
     if (!m_is_statement)
         return;
 
+    if (m_file_index >= m_source_files.size())
+        return;
+
     String directory = m_source_directories[m_source_files[m_file_index].directory_index];
 
     StringBuilder full_path(directory.length() + m_source_files[m_file_index].name.length() + 1);
