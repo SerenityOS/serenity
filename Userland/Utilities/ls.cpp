@@ -51,6 +51,8 @@
 static int do_file_system_object_long(const char* path);
 static int do_file_system_object_short(const char* path);
 
+static bool print_names(const char* path, size_t longest_name, const Vector<String>& names);
+
 static bool flag_classify = false;
 static bool flag_colorize = false;
 static bool flag_long = false;
@@ -145,20 +147,39 @@ int main(int argc, char** argv)
     } else if (paths.size() == 1) {
         status = do_file_system_object(paths[0]);
     } else {
-        Vector<const char*> exists;
+        Vector<const char*> directories;
+        Vector<String> names;
+        size_t longest_name = 0;
         for (auto& path : paths) {
             if (Core::File::exists(path)) {
-                exists.append(path);
+                if (Core::File::is_directory(path)) {
+                    directories.append(path);
+                } else {
+                    names.append(path);
+                    if (names.last().length() > longest_name)
+                        longest_name = names.last().length();
+                }
             } else {
                 status = do_file_system_object(path);
             }
         }
-        for (size_t i = 0; i < exists.size(); ++i) {
-            auto path = exists.at(i);
+
+        quick_sort(names);
+        if (print_names(".", longest_name, names)) {
+            printf("\n");
+        }
+
+        if (names.size() > 0) {
+            printf("\n");
+        }
+
+        quick_sort(directories, [](String a, String b) { return a < b; });
+        for (size_t i = 0; i < directories.size(); ++i) {
+            auto path = directories.at(i);
             printf("%s:\n", path);
             status = do_file_system_object(path);
 
-            if (i + 1 == exists.size() - 1) {
+            if (i < directories.size() - 1) {
                 printf("\n");
             }
         }
@@ -440,6 +461,38 @@ static bool print_filesystem_object_short(const char* path, const char* name, si
     return true;
 }
 
+static bool print_names(const char* path, size_t longest_name, const Vector<String>& names)
+{
+    size_t printed_on_row = 0;
+    size_t nprinted = 0;
+    for (size_t i = 0; i < names.size(); ++i) {
+        auto& name = names[i];
+        StringBuilder builder;
+        builder.append(path);
+        builder.append('/');
+        builder.append(name);
+        if (!print_filesystem_object_short(builder.to_string().characters(), name.characters(), &nprinted))
+            return 2;
+        int offset = 0;
+        if (terminal_columns > longest_name)
+            offset = terminal_columns % longest_name / (terminal_columns / longest_name);
+
+        // The offset must be at least 2 because:
+        // - With each file an additional char is printed e.g. '@','*'.
+        // - Each filename must be separated by a space.
+        size_t column_width = longest_name + max(offset, 2);
+        printed_on_row += column_width;
+
+        for (size_t j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
+            printf(" ");
+        if ((printed_on_row + column_width) >= terminal_columns) {
+            printf("\n");
+            printed_on_row = 0;
+        }
+    }
+    return printed_on_row;
+}
+
 int do_file_system_object_short(const char* path)
 {
     if (flag_list_directories_only) {
@@ -485,34 +538,7 @@ int do_file_system_object_short(const char* path)
     }
     quick_sort(names);
 
-    size_t printed_on_row = 0;
-    size_t nprinted = 0;
-    for (size_t i = 0; i < names.size(); ++i) {
-        auto& name = names[i];
-        StringBuilder builder;
-        builder.append(path);
-        builder.append('/');
-        builder.append(name);
-        if (!print_filesystem_object_short(builder.to_string().characters(), name.characters(), &nprinted))
-            return 2;
-        int offset = 0;
-        if (terminal_columns > longest_name)
-            offset = terminal_columns % longest_name / (terminal_columns / longest_name);
-
-        // The offset must be at least 2 because:
-        // - With each file an additional char is printed e.g. '@','*'.
-        // - Each filename must be separated by a space.
-        size_t column_width = longest_name + max(offset, 2);
-        printed_on_row += column_width;
-
-        for (size_t j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
-            printf(" ");
-        if ((printed_on_row + column_width) >= terminal_columns) {
-            printf("\n");
-            printed_on_row = 0;
-        }
-    }
-    if (printed_on_row)
+    if (print_names(path, longest_name, names))
         printf("\n");
     return 0;
 }
