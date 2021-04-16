@@ -423,10 +423,8 @@ Value JSONObject::parse_json_value(GlobalObject& global_object, const JsonValue&
         return Value(parse_json_array(global_object, value.as_array()));
     if (value.is_null())
         return js_null();
-#if !defined(KERNEL)
     if (value.is_double())
         return Value(value.as_double());
-#endif
     if (value.is_number())
         return Value(value.to_i32(0));
     if (value.is_string())
