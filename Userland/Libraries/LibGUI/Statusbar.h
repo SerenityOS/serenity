@@ -37,8 +37,8 @@ public:
 
     String text() const;
     String text(int index) const;
-    void set_text(const StringView&);
-    void set_text(int index, const StringView&);
+    void set_text(String);
+    void set_text(int index, String);
 
 protected:
     explicit Statusbar(int label_count = 1);

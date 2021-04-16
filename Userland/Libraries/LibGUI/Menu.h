@@ -38,7 +38,6 @@ namespace GUI {
 class Menu final : public Core::Object {
     C_OBJECT(Menu)
 public:
-    explicit Menu(const StringView& name = "");
     virtual ~Menu() override;
 
     void realize_menu_if_needed();
@@ -67,6 +66,8 @@ public:
 
 private:
     friend class Menubar;
+
+    explicit Menu(String name = "");
 
     int realize_menu(RefPtr<Action> default_action = nullptr);
     void unrealize_menu();
