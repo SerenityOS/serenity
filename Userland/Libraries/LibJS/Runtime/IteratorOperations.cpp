@@ -92,6 +92,21 @@ void iterator_close([[maybe_unused]] Object& iterator)
     TODO();
 }
 
+MarkedValueList iterable_to_list(GlobalObject& global_object, Value iterable, Value method)
+{
+    auto& vm = global_object.vm();
+    MarkedValueList values(vm.heap());
+    get_iterator_values(
+        global_object, iterable, [&](auto value) {
+            if (vm.exception())
+                return IterationDecision::Break;
+            values.append(value);
+            return IterationDecision::Continue;
+        },
+        method);
+    return values;
+}
+
 Value create_iterator_result_object(GlobalObject& global_object, Value value, bool done)
 {
     auto& vm = global_object.vm();
@@ -101,11 +116,11 @@ Value create_iterator_result_object(GlobalObject& global_object, Value value, bo
     return object;
 }
 
-void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<IterationDecision(Value)> callback)
+void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<IterationDecision(Value)> callback, Value method)
 {
     auto& vm = global_object.vm();
 
-    auto iterator = get_iterator(global_object, value);
+    auto iterator = get_iterator(global_object, value, "sync", method);
     if (!iterator)
         return;
 
