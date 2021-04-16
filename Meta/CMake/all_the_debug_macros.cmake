@@ -187,5 +187,11 @@ set(LANGUAGE_SERVER_DEBUG ON)
 # set(LOG_DEBUG ON)
 # False positive: UHCI_USBCMD_SOFTWARE_DEBUG is a flag, but for a bitset, not a feature.
 # set(UHCI_USBCMD_SOFTWARE_DEBUG ON)
+# False positive: DEBUG_CONTROL_REGISTER represents a specification constant.
+# set(DEBUG_CONTROL_REGISTER ON)
+# False positive: DEBUG_STATUS_REGISTER represents a specification constant.
+# set(DEBUG_STATUS_REGISTER ON)
+# False positive: DEFINE_DEBUG_REGISTER is used to define read/write methods for debug registers.
+# set(DEFINE_DEBUG_REGISTER ON)
 # Clogs up build: The WrapperGenerator stuff is run at compile time.
 # set(WRAPPER_GENERATOR_DEBUG ON)
