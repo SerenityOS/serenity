@@ -220,12 +220,12 @@ void Window::hide()
     }
 }
 
-void Window::set_title(const StringView& title)
+void Window::set_title(String title)
 {
-    m_title_when_windowless = title;
+    m_title_when_windowless = move(title);
     if (!is_visible())
         return;
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowTitle>(m_window_id, title);
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowTitle>(m_window_id, m_title_when_windowless);
 }
 
 String Window::title() const

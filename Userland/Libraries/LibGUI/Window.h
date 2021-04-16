@@ -81,7 +81,7 @@ public:
     int window_id() const { return m_window_id; }
 
     String title() const;
-    void set_title(const StringView&);
+    void set_title(String);
 
     Color background_color() const { return m_background_color; }
     void set_background_color(Color color) { m_background_color = color; }
