@@ -441,6 +441,10 @@ u16 URL::default_port_for_protocol(const String& protocol)
         return 6667;
     if (protocol == "ircs")
         return 6697;
+    if (protocol == "ws")
+        return 80;
+    if (protocol == "wss")
+        return 443;
     return 0;
 }
 
