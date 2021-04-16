@@ -1,128 +1,147 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "VirtualConsole.h"
+#include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
+#include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/IO.h>
 #include <Kernel/StdLib.h>
+#include <Kernel/TTY/ConsoleManagement.h>
 
 namespace Kernel {
 
-static u8* s_vga_buffer;
-static VirtualConsole* s_consoles[s_max_virtual_consoles];
-static int s_active_console;
-static RecursiveSpinLock s_lock;
-
-void VirtualConsole::flush_vga_cursor()
+ConsoleImpl::ConsoleImpl(VirtualConsole& client)
+    : Terminal(client)
 {
-    u16 value = m_current_vga_start_address + (m_terminal.cursor_row() * columns() + m_terminal.cursor_column());
-    IO::out8(0x3d4, 0x0e);
-    IO::out8(0x3d5, MSB(value));
-    IO::out8(0x3d4, 0x0f);
-    IO::out8(0x3d5, LSB(value));
 }
 
-UNMAP_AFTER_INIT void VirtualConsole::initialize()
+void ConsoleImpl::invalidate_cursor()
 {
-    s_vga_buffer = (u8*)0xc00b8000;
-    s_active_console = -1;
+}
+void ConsoleImpl::clear()
+{
+    m_client.clear();
+}
+void ConsoleImpl::clear_including_history()
+{
+}
+
+void ConsoleImpl::set_size(u16 determined_columns, u16 determined_rows)
+{
+    VERIFY(determined_columns);
+    VERIFY(determined_rows);
+
+    if (determined_columns == columns() && determined_rows == rows())
+        return;
+
+    m_columns = determined_columns;
+    m_rows = determined_rows;
+
+    m_cursor_row = min<size_t>((int)m_cursor_row, rows() - 1);
+    m_cursor_column = min<size_t>((int)m_cursor_column, columns() - 1);
+    m_saved_cursor_row = min<size_t>((int)m_saved_cursor_row, rows() - 1);
+    m_saved_cursor_column = min<size_t>((int)m_saved_cursor_column, columns() - 1);
+
+    m_horizontal_tabs.resize(determined_columns);
+    for (unsigned i = 0; i < determined_columns; ++i)
+        m_horizontal_tabs[i] = (i % 8) == 0;
+    // Rightmost column is always last tab on line.
+    m_horizontal_tabs[determined_columns - 1] = 1;
+    m_client.terminal_did_resize(m_columns, m_rows);
+}
+void ConsoleImpl::scroll_up()
+{
+    // NOTE: We have to invalidate the cursor first.
+    m_client.invalidate_cursor(m_cursor_row);
+    m_client.scroll_up();
+}
+void ConsoleImpl::scroll_down()
+{
+}
+void ConsoleImpl::newline()
+{
+    u16 new_row = m_cursor_row;
+    u16 max_row = rows() - 1;
+    if (new_row == max_row) {
+        // NOTE: We have to invalidate the cursor first.
+        m_client.invalidate_cursor(new_row);
+        m_client.scroll_up();
+    } else {
+        ++new_row;
+    }
+    set_cursor(new_row, 0);
+}
+void ConsoleImpl::put_character_at(unsigned row, unsigned column, u32 ch)
+{
+    m_client.put_character_at(row, column, ch, m_current_attribute);
+    m_last_code_point = ch;
+}
+void ConsoleImpl::set_window_title(const String&)
+{
+}
+void ConsoleImpl::ICH(Parameters)
+{
+    // FIXME: Implement this
+}
+void ConsoleImpl::IL(Parameters)
+{
+    // FIXME: Implement this
+}
+void ConsoleImpl::DCH(Parameters)
+{
+    // FIXME: Implement this
+}
+void ConsoleImpl::DL(Parameters)
+{
+    // FIXME: Implement this
 }
 
 void VirtualConsole::set_graphical(bool graphical)
 {
-    if (graphical)
-        set_vga_start_row(0);
-
     m_graphical = graphical;
+}
+
+UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
+{
+    return adopt_ref(*new VirtualConsole(index));
 }
 
 UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
     : TTY(4, index)
     , m_index(index)
-    , m_terminal(*this)
+    , m_console_impl(*this)
 {
-    VERIFY(index < s_max_virtual_consoles);
-
     m_tty_name = String::formatted("/dev/tty{}", m_index);
-    m_terminal.set_size(80, 25);
+    VERIFY(GraphicsManagement::the().console());
+    set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
+    m_console_impl.set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
 
-    s_consoles[index] = this;
+    // Allocate twice of the max row * max column * sizeof(Cell) to ensure we can some sort of history mechanism...
+    auto size = GraphicsManagement::the().console()->max_column() * GraphicsManagement::the().console()->max_row() * sizeof(Cell) * 2;
+    m_cells = MM.allocate_kernel_region(page_round_up(size), "Virtual Console Cells", Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
+
+    // Add the lines, so we also ensure they will be flushed now
+    for (size_t row = 0; row < rows(); row++) {
+        m_lines.append({ true });
+    }
+    clear();
+    VERIFY(m_cells);
 }
 
 UNMAP_AFTER_INIT VirtualConsole::~VirtualConsole()
 {
     VERIFY_NOT_REACHED();
 }
-
-void VirtualConsole::switch_to(unsigned index)
-{
-    if ((int)index == s_active_console)
-        return;
-    VERIFY(index < s_max_virtual_consoles);
-    VERIFY(s_consoles[index]);
-
-    ScopedSpinLock lock(s_lock);
-    if (s_active_console != -1) {
-        auto* active_console = s_consoles[s_active_console];
-        // We won't know how to switch away from a graphical console until we
-        // can set the video mode on our own. Just stop anyone from trying for
-        // now.
-        if (active_console->is_graphical()) {
-            dbgln("Cannot switch away from graphical console yet :(");
-            return;
-        }
-        active_console->set_active(false);
-    }
-    dbgln("VC: Switch to {} ({})", index, s_consoles[index]);
-    s_active_console = index;
-    s_consoles[s_active_console]->set_active(true);
-}
-
-void VirtualConsole::set_active(bool active)
-{
-    if (active == m_active)
-        return;
-
-    ScopedSpinLock lock(s_lock);
-
-    m_active = active;
-
-    if (active) {
-        set_vga_start_row(0);
-        HIDManagement::the().set_client(this);
-
-        m_terminal.m_need_full_flush = true;
-        flush_dirty_lines();
-    } else {
-        HIDManagement::the().set_client(nullptr);
-    }
-}
-
-enum class VGAColor : u8 {
-    Black = 0,
-    Blue,
-    Green,
-    Cyan,
-    Red,
-    Magenta,
-    Brown,
-    LightGray,
-    DarkGray,
-    BrightBlue,
-    BrightGreen,
-    BrightCyan,
-    BrightRed,
-    BrightMagenta,
-    Yellow,
-    White,
-};
 
 enum class ANSIColor : u8 {
     Black = 0,
@@ -144,60 +163,53 @@ enum class ANSIColor : u8 {
     __Count,
 };
 
-static inline VGAColor ansi_color_to_vga(ANSIColor color)
+static inline Graphics::Console::Color ansi_color_to_standard_vga_color(ANSIColor color)
 {
     switch (color) {
     case ANSIColor::Black:
-        return VGAColor::Black;
+        return Graphics::Console::Color::Black;
     case ANSIColor::Red:
-        return VGAColor::Red;
+        return Graphics::Console::Color::Red;
     case ANSIColor::Brown:
-        return VGAColor::Brown;
+        return Graphics::Console::Color::Brown;
     case ANSIColor::Blue:
-        return VGAColor::Blue;
+        return Graphics::Console::Color::Blue;
     case ANSIColor::Magenta:
-        return VGAColor::Magenta;
+        return Graphics::Console::Color::Magenta;
     case ANSIColor::Green:
-        return VGAColor::Green;
+        return Graphics::Console::Color::Green;
     case ANSIColor::Cyan:
-        return VGAColor::Cyan;
+        return Graphics::Console::Color::Cyan;
     case ANSIColor::LightGray:
-        return VGAColor::LightGray;
+        return Graphics::Console::Color::LightGray;
     case ANSIColor::DarkGray:
-        return VGAColor::DarkGray;
+        return Graphics::Console::Color::DarkGray;
     case ANSIColor::BrightRed:
-        return VGAColor::BrightRed;
+        return Graphics::Console::Color::BrightRed;
     case ANSIColor::BrightGreen:
-        return VGAColor::BrightGreen;
+        return Graphics::Console::Color::BrightGreen;
     case ANSIColor::Yellow:
-        return VGAColor::Yellow;
+        return Graphics::Console::Color::Yellow;
     case ANSIColor::BrightBlue:
-        return VGAColor::BrightBlue;
+        return Graphics::Console::Color::BrightBlue;
     case ANSIColor::BrightMagenta:
-        return VGAColor::BrightMagenta;
+        return Graphics::Console::Color::BrightMagenta;
     case ANSIColor::BrightCyan:
-        return VGAColor::BrightCyan;
+        return Graphics::Console::Color::BrightCyan;
     case ANSIColor::White:
-        return VGAColor::White;
+        return Graphics::Console::Color::White;
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-static inline u8 xterm_color_to_vga(u32 color)
+static inline Graphics::Console::Color xterm_to_standard_color(u32 color)
 {
     for (u8 i = 0; i < (u8)ANSIColor::__Count; i++) {
         if (xterm_colors[i] == color)
-            return (u8)ansi_color_to_vga((ANSIColor)i);
+            return (Graphics::Console::Color)ansi_color_to_standard_vga_color((ANSIColor)i);
     }
-    return (u8)VGAColor::LightGray;
-}
-
-void VirtualConsole::clear_vga_row(u16 row)
-{
-    u16* linemem = (u16*)&m_current_vga_window[row * 160];
-    for (u16 i = 0; i < columns(); ++i)
-        linemem[i] = 0x0720;
+    return Graphics::Console::Color::LightGray;
 }
 
 void VirtualConsole::on_key_pressed(KeyEvent event)
@@ -209,26 +221,18 @@ void VirtualConsole::on_key_pressed(KeyEvent event)
     if (!event.is_press())
         return;
 
-    if (event.key == KeyCode::Key_PageUp && event.flags == Mod_Shift) {
-        // TODO: scroll up
-        return;
-    }
-    if (event.key == KeyCode::Key_PageDown && event.flags == Mod_Shift) {
-        // TODO: scroll down
-        return;
-    }
-
     Processor::deferred_call_queue([this, event]() {
-        m_terminal.handle_key_press(event.key, event.code_point, event.flags);
+        m_console_impl.handle_key_press(event.key, event.code_point, event.flags);
     });
 }
 
 ssize_t VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, ssize_t size)
 {
-    ScopedSpinLock lock(s_lock);
+    ScopedSpinLock global_lock(ConsoleManagement::the().tty_write_lock());
+    ScopedSpinLock lock(m_lock);
     auto result = data.read_buffered<512>((size_t)size, [&](u8 const* buffer, size_t buffer_bytes) {
         for (size_t i = 0; i < buffer_bytes; ++i)
-            m_terminal.on_input(buffer[i]);
+            m_console_impl.on_input(buffer[i]);
         return buffer_bytes;
     });
     if (m_active)
@@ -238,52 +242,51 @@ ssize_t VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, ssize_t siz
     return (ssize_t)result.value();
 }
 
-void VirtualConsole::set_vga_start_row(u16 row)
+void VirtualConsole::set_active(bool active)
 {
-    m_vga_start_row = row;
-    m_current_vga_start_address = row * columns();
-    m_current_vga_window = s_vga_buffer + row * 160;
-    IO::out8(0x3d4, 0x0c);
-    IO::out8(0x3d5, MSB(m_current_vga_start_address));
-    IO::out8(0x3d4, 0x0d);
-    IO::out8(0x3d5, LSB(m_current_vga_start_address));
+    VERIFY(ConsoleManagement::the().m_lock.is_locked());
+    VERIFY(m_active != active);
+    m_active = active;
+
+    if (active) {
+        HIDManagement::the().set_client(this);
+
+        m_console_impl.m_need_full_flush = true;
+        flush_dirty_lines();
+    } else {
+        HIDManagement::the().set_client(nullptr);
+    }
 }
 
-static inline u8 attribute_to_vga(const VT::Attribute& attribute)
+void VirtualConsole::emit_char(char ch)
 {
-    u8 vga_attr = 0x07;
-
-    if (attribute.flags & VT::Attribute::Bold)
-        vga_attr |= 0x08;
-
-    // Background color
-    vga_attr &= ~0x70;
-    vga_attr |= xterm_color_to_vga(attribute.effective_background_color()) << 8;
-
-    // Foreground color
-    vga_attr &= ~0x7;
-    vga_attr |= xterm_color_to_vga(attribute.effective_foreground_color());
-
-    return vga_attr;
+    echo(ch);
 }
 
 void VirtualConsole::flush_dirty_lines()
 {
-    for (u16 visual_row = 0; visual_row < m_terminal.rows(); ++visual_row) {
-        auto& line = m_terminal.visible_line(visual_row);
-        if (!line.is_dirty() && !m_terminal.m_need_full_flush)
+    VERIFY(GraphicsManagement::is_initialized());
+    VERIFY(GraphicsManagement::the().console());
+    for (u16 visual_row = 0; visual_row < rows(); ++visual_row) {
+        auto& line = m_lines[visual_row];
+        if (!line.dirty && !m_console_impl.m_need_full_flush)
             continue;
-        for (size_t column = 0; column < line.length(); ++column) {
-            u32 code_point = line.code_point(column);
-            auto attribute = line.attribute_at(column);
-            u16 vga_index = (visual_row * 160) + (column * 2);
-            m_current_vga_window[vga_index] = code_point < 128 ? code_point : '?';
-            m_current_vga_window[vga_index + 1] = attribute_to_vga(attribute);
+        for (size_t column = 0; column < columns(); ++column) {
+            auto& cell = cell_at(column, visual_row);
+
+            auto foreground_color = xterm_to_standard_color(cell.attribute.effective_foreground_color());
+            if (cell.attribute.flags & VT::Attribute::Flags::Bold)
+                foreground_color = (Graphics::Console::Color)((u8)foreground_color | 0x08);
+            GraphicsManagement::the().console()->write(column,
+                visual_row,
+                ((u8)cell.ch < 128 ? cell.ch : '?'),
+                xterm_to_standard_color(cell.attribute.effective_background_color()),
+                foreground_color);
         }
-        line.set_dirty(false);
+        line.dirty = false;
     }
-    flush_vga_cursor();
-    m_terminal.m_need_full_flush = false;
+    GraphicsManagement::the().console()->set_cursor(m_console_impl.cursor_column(), m_console_impl.cursor_row());
+    m_console_impl.m_need_full_flush = false;
 }
 
 void VirtualConsole::beep()
@@ -304,9 +307,8 @@ void VirtualConsole::set_window_progress(int, int)
 
 void VirtualConsole::terminal_did_resize(u16 columns, u16 rows)
 {
-    VERIFY(columns == 80);
-    VERIFY(rows == 25);
-    set_size(columns, rows);
+    // FIXME: Allocate more Region(s) or deallocate them if needed...
+    dbgln("VC {}: Resized to {} x {}", index(), columns, rows);
 }
 
 void VirtualConsole::terminal_history_changed()
@@ -331,6 +333,68 @@ void VirtualConsole::echo(u8 ch)
         auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
         on_tty_write(buffer, 1);
     }
+}
+
+VirtualConsole::Cell& VirtualConsole::cell_at(size_t x, size_t y)
+{
+    auto* ptr = (VirtualConsole::Cell*)(m_cells->vaddr().as_ptr());
+    ptr += (y * columns()) + x;
+    return *ptr;
+}
+
+void VirtualConsole::clear()
+{
+    auto* cell = (Cell*)m_cells->vaddr().as_ptr();
+    for (size_t y = 0; y < rows(); y++) {
+        m_lines[y].dirty = true;
+        for (size_t x = 0; x < columns(); x++) {
+            cell[x].clear();
+        }
+        cell += columns();
+    }
+    m_console_impl.set_cursor(0, 0);
+}
+
+void VirtualConsole::scroll_up()
+{
+    memmove(m_cells->vaddr().as_ptr(), m_cells->vaddr().offset(columns() * sizeof(Cell)).as_ptr(), ((rows() - 1) * columns() * sizeof(Cell)));
+    clear_line(rows() - 1);
+    m_console_impl.m_need_full_flush = true;
+}
+
+void VirtualConsole::newline()
+{
+}
+
+void VirtualConsole::clear_line(size_t y_index)
+{
+    m_lines[y_index].dirty = true;
+    for (size_t x = 0; x < columns(); x++) {
+        auto& cell = cell_at(x, y_index);
+        cell.clear();
+    }
+}
+
+void VirtualConsole::put_character_at(unsigned row, unsigned column, u32 code_point, const VT::Attribute& attribute)
+{
+    VERIFY(row < rows());
+    VERIFY(column < columns());
+    auto& line = m_lines[row];
+    auto& cell = cell_at(column, row);
+    cell.attribute.foreground_color = attribute.foreground_color;
+    cell.attribute.background_color = attribute.background_color;
+    cell.attribute.flags = attribute.flags;
+    if (code_point > 128)
+        cell.ch = ' ';
+    else
+        cell.ch = code_point;
+    cell.attribute.flags |= VT::Attribute::Flags::Touched;
+    line.dirty = true;
+}
+
+void VirtualConsole::invalidate_cursor(size_t row)
+{
+    m_lines[row].dirty = true;
 }
 
 }

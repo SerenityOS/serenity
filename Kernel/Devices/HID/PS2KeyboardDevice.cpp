@@ -15,7 +15,7 @@
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/HID/PS2KeyboardDevice.h>
 #include <Kernel/IO.h>
-#include <Kernel/TTY/VirtualConsole.h>
+#include <Kernel/TTY/ConsoleManagement.h>
 
 namespace Kernel {
 
@@ -69,7 +69,7 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
         if (m_modifiers & Mod_Alt) {
             switch (ch) {
             case 0x02 ... 0x07: // 1 to 6
-                VirtualConsole::switch_to(ch - 0x02);
+                ConsoleManagement::the().switch_to(ch - 0x02);
                 break;
             default:
                 key_state_changed(ch, pressed);

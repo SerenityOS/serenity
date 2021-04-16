@@ -9,19 +9,23 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibVT/Terminal.h>
+#ifdef KERNEL
+#    include <Kernel/TTY/VirtualConsole.h>
+#endif
 
 namespace VT {
 
+#ifndef KERNEL
 Terminal::Terminal(TerminalClient& client)
+#else
+Terminal::Terminal(Kernel::VirtualConsole& client)
+#endif
     : m_client(client)
     , m_parser(*this)
 {
 }
 
-Terminal::~Terminal()
-{
-}
-
+#ifndef KERNEL
 void Terminal::clear()
 {
     for (size_t i = 0; i < rows(); ++i)
@@ -38,6 +42,7 @@ void Terminal::clear_including_history()
 
     m_client.terminal_history_changed();
 }
+#endif
 
 void Terminal::alter_mode(bool should_set, Parameters params, Intermediates intermediates)
 {
@@ -445,6 +450,7 @@ void Terminal::SD(Parameters params)
         scroll_down();
 }
 
+#ifndef KERNEL
 void Terminal::IL(Parameters params)
 {
     int count = 1;
@@ -461,12 +467,14 @@ void Terminal::IL(Parameters params)
 
     m_need_full_flush = true;
 }
+#endif
 
 void Terminal::DA(Parameters)
 {
     emit_string("\033[?1;0c");
 }
 
+#ifndef KERNEL
 void Terminal::DL(Parameters params)
 {
     int count = 1;
@@ -511,6 +519,7 @@ void Terminal::DCH(Parameters params)
 
     line.set_dirty(true);
 }
+#endif
 
 void Terminal::newline()
 {
@@ -527,6 +536,7 @@ void Terminal::carriage_return()
     set_cursor(m_cursor_row, 0);
 }
 
+#ifndef KERNEL
 void Terminal::scroll_up()
 {
     // NOTE: We have to invalidate the cursor first.
@@ -550,6 +560,20 @@ void Terminal::scroll_down()
     m_need_full_flush = true;
 }
 
+void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
+{
+    VERIFY(row < rows());
+    VERIFY(column < columns());
+    auto& line = m_lines[row];
+    line.set_code_point(column, code_point);
+    line.attribute_at(column) = m_current_attribute;
+    line.attribute_at(column).flags |= Attribute::Touched;
+    line.set_dirty(true);
+
+    m_last_code_point = code_point;
+}
+#endif
+
 void Terminal::set_cursor(unsigned a_row, unsigned a_column)
 {
     unsigned row = min(a_row, m_rows - 1u);
@@ -563,19 +587,6 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column)
     m_cursor_column = column;
     m_stomp = false;
     invalidate_cursor();
-}
-
-void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
-{
-    VERIFY(row < rows());
-    VERIFY(column < columns());
-    auto& line = m_lines[row];
-    line.set_code_point(column, code_point);
-    line.attribute_at(column) = m_current_attribute;
-    line.attribute_at(column).flags |= Attribute::Touched;
-    line.set_dirty(true);
-
-    m_last_code_point = code_point;
 }
 
 void Terminal::NEL()
@@ -607,6 +618,7 @@ void Terminal::DSR(Parameters params)
     }
 }
 
+#ifndef KERNEL
 void Terminal::ICH(Parameters params)
 {
     int num = 0;
@@ -628,6 +640,7 @@ void Terminal::ICH(Parameters params)
 
     line.set_dirty(true);
 }
+#endif
 
 void Terminal::on_input(u8 byte)
 {
@@ -837,6 +850,7 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
                 // Should we expose the raw OSC string from the parser? Or join by semicolon?
                 break;
             case 8:
+#ifndef KERNEL
                 if (parameters.size() < 2) {
                     dbgln("Attempted to set href but gave too few parameters");
                 } else if (parameters[2].is_empty()) {
@@ -847,6 +861,7 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
                     // FIXME: Respect the provided ID
                     m_current_attribute.href_id = String::number(m_next_href_id++);
                 }
+#endif
                 break;
             case 9:
                 if (parameters.size() < 2 || parameters[1].is_empty() || parameters[2].is_empty())
@@ -1034,6 +1049,7 @@ void Terminal::unimplemented_osc_sequence(OscParameters parameters, u8 last_byte
     dbgln("{}", builder.string_view());
 }
 
+#ifndef KERNEL
 void Terminal::set_size(u16 columns, u16 rows)
 {
     if (!columns)
@@ -1073,7 +1089,9 @@ void Terminal::set_size(u16 columns, u16 rows)
 
     m_client.terminal_did_resize(m_columns, m_rows);
 }
+#endif
 
+#ifndef KERNEL
 void Terminal::invalidate_cursor()
 {
     m_lines[m_cursor_row].set_dirty(true);
@@ -1090,5 +1108,6 @@ Attribute Terminal::attribute_at(const Position& position) const
         return {};
     return line.attribute_at(position.column());
 }
+#endif
 
 }
