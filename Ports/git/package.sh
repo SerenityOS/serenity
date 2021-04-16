@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=git
-version=2.26.0
+version=2.31.1
 useconfigure="true"
 files="https://mirrors.edge.kernel.org/pub/software/scm/git/git-${version}.tar.xz git-${version}.tar.xz"
 configopts="--target=${SERENITY_ARCH}-pc-serenity CFLAGS=-DNO_IPV6"
