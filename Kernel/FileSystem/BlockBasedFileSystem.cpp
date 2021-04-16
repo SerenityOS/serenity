@@ -32,7 +32,7 @@
 namespace Kernel {
 
 struct CacheEntry {
-    IntrusiveListNode list_node;
+    IntrusiveListNode<CacheEntry> list_node;
     BlockBasedFS::BlockIndex block_index { 0 };
     u8* data { nullptr };
     bool has_data { false };
@@ -117,8 +117,8 @@ private:
     BlockBasedFS& m_fs;
     size_t m_entry_count { 10000 };
     mutable HashMap<BlockBasedFS::BlockIndex, CacheEntry*> m_hash;
-    mutable IntrusiveList<CacheEntry, &CacheEntry::list_node> m_clean_list;
-    mutable IntrusiveList<CacheEntry, &CacheEntry::list_node> m_dirty_list;
+    mutable IntrusiveList<CacheEntry, RawPtr<CacheEntry>, &CacheEntry::list_node> m_clean_list;
+    mutable IntrusiveList<CacheEntry, RawPtr<CacheEntry>, &CacheEntry::list_node> m_dirty_list;
     KBuffer m_cached_block_data;
     KBuffer m_entries;
     bool m_dirty { false };
