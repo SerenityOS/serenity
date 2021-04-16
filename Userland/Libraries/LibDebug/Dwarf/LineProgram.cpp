@@ -226,7 +226,7 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         VERIFY_NOT_REACHED();
     }
 }
-void LineProgram::handle_sepcial_opcode(u8 opcode)
+void LineProgram::handle_special_opcode(u8 opcode)
 {
     u8 adjusted_opcode = opcode - SPECIAL_OPCODES_BASE;
     ssize_t address_increment = (adjusted_opcode / m_unit_header.line_range) * m_unit_header.min_instruction_length;
@@ -258,7 +258,7 @@ void LineProgram::run_program()
         } else if (opcode >= 1 && opcode <= 12) {
             handle_standard_opcode(opcode);
         } else {
-            handle_sepcial_opcode(opcode);
+            handle_special_opcode(opcode);
         }
     }
 }
