@@ -8,6 +8,11 @@ cd "${script_path}/.."
 MISSING_FLAGS=n
 
 while IFS= read -r FLAG; do
+    # Ignore ELF_DEBUG because it's not a debug flag.
+    if [ "$FLAG" = "ELF_DEBUG" ]; then
+        continue
+    fi
+
     # We simply search whether the CMakeLists.txt *ever* sets the flag.
     # There are (basically) no false positives, but there might be false negatives,
     # for example we intentionally don't check for commented-out lines here.

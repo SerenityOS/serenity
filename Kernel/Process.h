@@ -49,8 +49,8 @@
 #include <Kernel/VM/AllocationStrategy.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <Kernel/VM/Space.h>
+#include <LibC/elf.h>
 #include <LibC/signal_numbers.h>
-#include <LibELF/exec_elf.h>
 
 namespace Kernel {
 

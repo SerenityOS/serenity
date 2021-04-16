@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Gunnar Beutner <gunnar@beutner.name>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,24 +24,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <assert.h>
+#include <link.h>
 
-#include <AK/Result.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <LibC/link.h>
-#include <LibELF/DynamicObject.h>
+extern "C" {
 
-namespace ELF {
+using DlIteratePhdrCallbackFunction = int (*)(struct dl_phdr_info*, size_t, void*);
+using DlIteratePhdrFunction = int (*)(DlIteratePhdrCallbackFunction, void*);
 
-class DynamicLinker {
-public:
-    static Optional<DynamicObject::SymbolLookupResult> lookup_global_symbol(const StringView& symbol);
-    [[noreturn]] static void linker_main(String&& main_program_name, int fd, bool is_secure, int argc, char** argv, char** envp);
+DlIteratePhdrFunction __dl_iterate_phdr;
 
-private:
-    DynamicLinker() = delete;
-    ~DynamicLinker() = delete;
-};
-
+int dl_iterate_phdr(int (*callback)(struct dl_phdr_info* info, size_t size, void* data), void* data)
+{
+    return __dl_iterate_phdr(callback, data);
+}
 }

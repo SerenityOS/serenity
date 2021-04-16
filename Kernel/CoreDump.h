@@ -31,7 +31,6 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/Forward.h>
-#include <LibELF/exec_elf.h>
 
 namespace Kernel {
 

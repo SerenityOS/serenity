@@ -28,8 +28,8 @@
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
 #include <AK/String.h>
+#include <LibC/elf.h>
 #include <LibELF/Validation.h>
-#include <LibELF/exec_elf.h>
 
 namespace ELF {
 
