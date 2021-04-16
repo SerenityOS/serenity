@@ -227,6 +227,10 @@ Optional<u8> get_capabilities_pointer(Address);
 Vector<Capability> get_capabilities(Address);
 void enable_bus_mastering(Address);
 void disable_bus_mastering(Address);
+void enable_io_space(Address);
+void disable_io_space(Address);
+void enable_memory_space(Address);
+void disable_memory_space(Address);
 PhysicalID get_physical_id(Address address);
 
 class Access;
