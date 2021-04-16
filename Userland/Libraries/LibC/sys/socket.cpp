@@ -114,7 +114,7 @@ ssize_t recvfrom(int sockfd, void* buffer, size_t buffer_length, int flags, stru
 
 int getnameinfo(const struct sockaddr*, socklen_t, char*, socklen_t, char*, socklen_t, int)
 {
-    // FIXME: Actually implement this
+    TODO();
     return 0;
 }
 
