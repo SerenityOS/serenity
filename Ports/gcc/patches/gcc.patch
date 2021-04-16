@@ -102,10 +102,14 @@ diff -ruN a/gcc/config/arm/serenity-elf.h b/gcc/config/arm/serenity-elf.h
 diff -ruN a/gcc/config/serenity.h b/gcc/config/serenity.h
 --- a/gcc/config/serenity.h	1970-01-01 02:00:00.000000000 +0200
 +++ b/gcc/config/serenity.h	2020-12-12 10:43:35.280270540 +0200
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,41 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
 +#define TARGET_SERENITY 1
++
++#if defined(HAVE_LD_EH_FRAME_HDR)
++#define LINK_EH_SPEC "%{!static|static-pie:--eh-frame-hdr} "
++#endif
 +
 +/* Default arguments you want when running your
 +   i686-serenity-gcc/x86_64-serenity-gcc toolchain */
@@ -200,16 +204,16 @@ diff -ruN a/libgcc/config.host b/libgcc/config.host
  	;;
 +i[34567]86-*-serenity*)
 +	extra_parts="$extra_parts crti.o crtbegin.o crtbeginS.o crtend.o crtendS.o crtn.o"
-+	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic t-slibgcc"
++	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic t-slibgcc t-eh-dw2-dip"
 +	;;
 +x86_64-*-serenity*)
 +	extra_parts="$extra_parts crti.o crtbegin.o crtbeginS.o crtend.o crtendS.o crtn.o"
-+	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic t-slibgcc"
++	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic t-slibgcc t-eh-dw2-dip"
 +	;;
 +arm-*-serenity*)
 +	tmake_file="${tmake_file} t-fixedpoint-gnu-prefix t-crtfm"
 +	tmake_file="$tmake_file arm/t-arm arm/t-elf t-softfp-sfdf t-softfp-excl arm/t-softfp t-softfp"
-+	tmake_file="${tmake_file} arm/t-bpabi"
++	tmake_file="${tmake_file} arm/t-bpabi t-eh-dw2-dip"
 +	tm_file="$tm_file arm/bpabi-lib.h"
 +	unwind_header=config/arm/unwind-arm.h
 +	extra_parts="$extra_parts crti.o crtn.o"
@@ -6224,3 +6228,32 @@ diff -ruN a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
    arm*-*-symbianelf*)
      # This is a freestanding configuration; there is nothing to do here.
      ;;
+diff -Naur gcc-10.3.0/libgcc/unwind-dw2-fde-dip.c gcc-10.3.0.serenity/libgcc/unwind-dw2-fde-dip.c
+--- gcc-10.3.0/libgcc/unwind-dw2-fde-dip.c	2021-04-16 22:25:49.268958198 +0200
++++ gcc-10.3.0.serenity/libgcc/unwind-dw2-fde-dip.c	2021-04-16 22:26:09.732716890 +0200
+@@ -59,6 +59,12 @@
+ 
+ #if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
+     && defined(TARGET_DL_ITERATE_PHDR) \
++    && defined(__serenity__)
++# define USE_PT_GNU_EH_FRAME
++#endif
++
++#if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
++    && defined(TARGET_DL_ITERATE_PHDR) \
+     && defined(__linux__)
+ # define USE_PT_GNU_EH_FRAME
+ #endif
+diff -Naur gcc-10.3.0/gcc/configure gcc-10.3.0.serenity/gcc/configure
+--- gcc-10.3.0/gcc/configure	2021-04-08 13:57:03.698170877 +0200
++++ gcc-10.3.0.serenity/gcc/configure	2021-04-16 22:40:03.969286691 +0200
+@@ -29982,6 +29982,9 @@
+   *-linux-musl*)
+     gcc_cv_target_dl_iterate_phdr=yes
+     ;;
++  *-serenity*)
++    gcc_cv_target_dl_iterate_phdr=yes
++    ;;
+ esac
+ 
+ if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
