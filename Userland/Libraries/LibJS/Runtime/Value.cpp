@@ -1020,10 +1020,10 @@ Value in(GlobalObject& global_object, Value lhs, Value rhs)
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::InOperatorWithObject);
         return {};
     }
-    auto lhs_string = lhs.to_string(global_object);
+    auto lhs_string_or_symbol = StringOrSymbol::from_value(global_object, lhs);
     if (global_object.vm().exception())
         return {};
-    return Value(rhs.as_object().has_property(lhs_string));
+    return Value(rhs.as_object().has_property(lhs_string_or_symbol));
 }
 
 Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
