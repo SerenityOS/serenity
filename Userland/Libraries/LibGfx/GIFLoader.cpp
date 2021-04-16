@@ -104,7 +104,7 @@ struct GIFLoadingContext {
     RefPtr<Gfx::Bitmap> prev_frame_buffer;
 };
 
-RefPtr<Gfx::Bitmap> load_gif(const StringView& path)
+RefPtr<Gfx::Bitmap> load_gif(String const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())

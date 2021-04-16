@@ -190,7 +190,7 @@ private:
 static RefPtr<Gfx::Bitmap> load_png_impl(const u8*, size_t);
 static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
-RefPtr<Gfx::Bitmap> load_png(const StringView& path)
+RefPtr<Gfx::Bitmap> load_png(String const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())

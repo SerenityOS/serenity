@@ -186,7 +186,7 @@ struct BMPLoadingContext {
 
 static RefPtr<Bitmap> load_bmp_impl(const u8*, size_t);
 
-RefPtr<Gfx::Bitmap> load_bmp(const StringView& path)
+RefPtr<Gfx::Bitmap> load_bmp(String const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
