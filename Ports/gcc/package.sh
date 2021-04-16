@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=gcc
-version=10.2.0
+version=10.3.0
 useconfigure=true
 configopts="--target=${SERENITY_ARCH}-pc-serenity --with-sysroot=/ --with-build-sysroot=${SERENITY_BUILD_DIR}/Root --with-newlib --enable-languages=c,c++ --disable-lto --disable-nls --enable-shared --enable-default-pie --enable-host-shared"
 files="https://ftpmirror.gnu.org/gnu/gcc/gcc-${version}/gcc-${version}.tar.xz gcc-${version}.tar.xz
