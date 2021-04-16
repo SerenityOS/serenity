@@ -67,7 +67,7 @@ class Object
     AK_MAKE_NONCOPYABLE(Object);
     AK_MAKE_NONMOVABLE(Object);
 
-    IntrusiveListNode m_all_objects_list_node;
+    IntrusiveListNode<Object> m_all_objects_list_node;
 
 public:
     virtual ~Object();
@@ -124,7 +124,7 @@ public:
     JsonValue property(const StringView& name) const;
     const HashMap<String, NonnullOwnPtr<Property>>& properties() const { return m_properties; }
 
-    static IntrusiveList<Object, &Object::m_all_objects_list_node>& all_objects();
+    static IntrusiveList<Object, RawPtr<Object>, &Object::m_all_objects_list_node>& all_objects();
 
     void dispatch_event(Core::Event&, Object* stay_within = nullptr);
 

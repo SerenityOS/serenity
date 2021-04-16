@@ -63,7 +63,7 @@ public:
 private:
     const size_t m_cell_size;
 
-    typedef IntrusiveList<HeapBlock, &HeapBlock::m_list_node> BlockList;
+    typedef IntrusiveList<HeapBlock, RawPtr<HeapBlock>, &HeapBlock::m_list_node> BlockList;
     BlockList m_full_blocks;
     BlockList m_usable_blocks;
 };

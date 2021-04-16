@@ -120,7 +120,7 @@ protected:
     mode_t m_umask { 022 };
     VirtualAddress m_signal_trampoline;
     Atomic<u32> m_thread_count { 0 };
-    IntrusiveList<Thread, &Thread::m_process_thread_list_node> m_thread_list;
+    IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_process_thread_list_node> m_thread_list;
     u8 m_termination_status { 0 };
     u8 m_termination_signal { 0 };
 };

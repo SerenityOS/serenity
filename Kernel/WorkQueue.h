@@ -75,7 +75,7 @@ public:
 
 private:
     struct WorkItem {
-        IntrusiveListNode m_node;
+        IntrusiveListNode<WorkItem> m_node;
         void (*function)(void*);
         void* data;
         void (*free_data)(void*);
@@ -86,7 +86,7 @@ private:
 
     RefPtr<Thread> m_thread;
     WaitQueue m_wait_queue;
-    IntrusiveList<WorkItem, &WorkItem::m_node> m_items;
+    IntrusiveList<WorkItem, RawPtr<WorkItem>, &WorkItem::m_node> m_items;
     SpinLock<u8> m_lock;
 };
 
