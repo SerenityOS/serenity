@@ -135,6 +135,37 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
         dest_array.put_by_index(i, v);
     }
 }
+template<typename T>
+static void initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, const Object& array_like)
+{
+    // 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
+
+    auto& vm = global_object.vm();
+    auto length = length_of_array_like(global_object, array_like);
+    if (vm.exception())
+        return;
+
+    auto element_size = typed_array.element_size();
+    if (Checked<size_t>::multiplication_would_overflow(element_size, length)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return;
+    }
+    auto byte_length = element_size * length;
+    auto array_buffer = ArrayBuffer::create(global_object, byte_length);
+    typed_array.set_viewed_array_buffer(array_buffer);
+    typed_array.set_byte_length(byte_length);
+    typed_array.set_byte_offset(0);
+    typed_array.set_array_length(length);
+
+    for (size_t k = 0; k < length; k++) {
+        auto value = array_like.get(k).value_or(js_undefined());
+        if (vm.exception())
+            return;
+        typed_array.put_by_index(k, value);
+        if (vm.exception())
+            return;
+    }
+}
 
 void TypedArrayBase::visit_edges(Visitor& visitor)
 {
@@ -199,8 +230,17 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                 if (vm.exception())                                                                                                    \
                     return {};                                                                                                         \
             } else {                                                                                                                   \
-                /* FIXME: Initialize from Iterator or Array-like object */                                                             \
-                TODO();                                                                                                                \
+                auto iterator = first_argument.as_object().get(vm.well_known_symbol_iterator());                                       \
+                if (vm.exception())                                                                                                    \
+                    return {};                                                                                                         \
+                if (iterator.is_function()) {                                                                                          \
+                    /* FIXME: Initialize from Iterator */                                                                              \
+                    TODO();                                                                                                            \
+                } else {                                                                                                               \
+                    initialize_typed_array_from_array_like(global_object(), *typed_array, first_argument.as_object());                 \
+                }                                                                                                                      \
+                if (vm.exception())                                                                                                    \
+                    return {};                                                                                                         \
             }                                                                                                                          \
             return typed_array;                                                                                                        \
         }                                                                                                                              \
