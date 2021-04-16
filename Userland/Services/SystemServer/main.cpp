@@ -57,10 +57,19 @@ static void parse_boot_mode()
     const String cmdline = String::copy(f->read_all(), Chomp);
     dbgln("Read command line: {}", cmdline);
 
-    for (auto& part : cmdline.split_view(' ')) {
-        auto pair = part.split_view('=', 2);
-        if (pair.size() == 2 && pair[0] == "boot_mode")
-            g_boot_mode = pair[1];
+    // FIXME: Support more than one framebuffer detection
+    struct stat file_state;
+    int rc = lstat("/dev/fb0", &file_state);
+    if (rc < 0) {
+        for (auto& part : cmdline.split_view(' ')) {
+            auto pair = part.split_view('=', 2);
+            if (pair.size() == 2 && pair[0] == "boot_mode")
+                g_boot_mode = pair[1];
+        }
+        // We could boot into self-test which is not graphical too.
+        if (g_boot_mode == "self-test")
+            return;
+        g_boot_mode = "text";
     }
     dbgln("Booting in {} mode", g_boot_mode);
 }

@@ -45,6 +45,7 @@
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Storage/StorageManagement.h>
+#include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/Tasks/FinalizerTask.h>
@@ -138,12 +139,13 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
         (*ctor)();
 
+    ConsoleDevice::initialize();
+
     APIC::initialize();
     InterruptManagement::initialize();
     ACPI::initialize();
 
     VFS::initialize();
-    ConsoleDevice::initialize();
 
     dmesgln("Starting SerenityOS...");
 
@@ -160,12 +162,11 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
 
     VMWareBackdoor::the(); // don't wait until first mouse packet
     HIDManagement::initialize();
-    VirtualConsole::initialize();
-    tty0 = new VirtualConsole(0);
-    for (unsigned i = 1; i < s_max_virtual_consoles; i++) {
-        new VirtualConsole(i);
-    }
-    VirtualConsole::switch_to(0);
+
+    PCI::initialize();
+    GraphicsManagement::the().initialize();
+    ConsoleManagement::the().initialize();
+    ConsoleManagement::the().switch_to(0);
 
     Thread::initialize();
     Process::initialize();
@@ -230,10 +231,7 @@ void init_stage2(void*)
     SyncTask::spawn();
     FinalizerTask::spawn();
 
-    PCI::initialize();
     auto boot_profiling = kernel_command_line().is_boot_profiling_enabled();
-
-    GraphicsManagement::the().initialize();
 
     USB::UHCIController::detect();
 
@@ -274,7 +272,8 @@ void init_stage2(void*)
     int error;
 
     // FIXME: It would be nicer to set the mode from userspace.
-    tty0->set_graphical(!GraphicsManagement::the().is_text_mode_enabled());
+    // FIXME: It would be smarter to not hardcode that the first tty is the only graphical one
+    ConsoleManagement::the().first_tty()->set_graphical(GraphicsManagement::the().framebuffer_devices_exist());
     RefPtr<Thread> thread;
     auto userspace_init = kernel_command_line().userspace_init();
     auto init_args = kernel_command_line().userspace_init_args();
