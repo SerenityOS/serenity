@@ -46,17 +46,17 @@
 
 namespace Core {
 
-Result<NonnullRefPtr<File>, String> File::open(const String& filename, IODevice::OpenMode mode, mode_t permissions)
+Result<NonnullRefPtr<File>, String> File::open(String filename, IODevice::OpenMode mode, mode_t permissions)
 {
-    auto file = File::construct(filename);
+    auto file = File::construct(move(filename));
     if (!file->open_impl(mode, permissions))
         return String(file->error_string());
     return file;
 }
 
-File::File(const StringView& filename, Object* parent)
+File::File(String filename, Object* parent)
     : IODevice(parent)
-    , m_filename(filename)
+    , m_filename(move(filename))
 {
 }
 
@@ -191,12 +191,12 @@ bool File::ensure_parent_directories(const String& path)
 
 #ifdef __serenity__
 
-String File::read_link(const StringView& link_path)
+String File::read_link(String const& link_path)
 {
     // First, try using a 64-byte buffer, that ought to be enough for anybody.
     char small_buffer[64];
 
-    int rc = serenity_readlink(link_path.characters_without_null_termination(), link_path.length(), small_buffer, sizeof(small_buffer));
+    int rc = serenity_readlink(link_path.characters(), link_path.length(), small_buffer, sizeof(small_buffer));
     if (rc < 0)
         return {};
 
@@ -210,7 +210,7 @@ String File::read_link(const StringView& link_path)
     char* large_buffer_ptr;
     auto large_buffer = StringImpl::create_uninitialized(size, large_buffer_ptr);
 
-    rc = serenity_readlink(link_path.characters_without_null_termination(), link_path.length(), large_buffer_ptr, size);
+    rc = serenity_readlink(link_path.characters(), link_path.length(), large_buffer_ptr, size);
     if (rc < 0)
         return {};
 
@@ -232,17 +232,15 @@ String File::read_link(const StringView& link_path)
 
 // This is a sad version for other systems. It has to always make a copy of the
 // link path, and to always make two syscalls to get the right size first.
-String File::read_link(const StringView& link_path)
+String File::read_link(String const& link_path)
 {
-    String link_path_str = link_path;
-    struct stat statbuf;
-    int rc = lstat(link_path_str.characters(), &statbuf);
+    struct stat statbuf = {};
+    int rc = lstat(link_path.characters(), &statbuf);
     if (rc < 0)
         return {};
     char* buffer_ptr;
     auto buffer = StringImpl::create_uninitialized(statbuf.st_size, buffer_ptr);
-    rc = readlink(link_path_str.characters(), buffer_ptr, statbuf.st_size);
-    if (rc < 0)
+    if (readlink(link_path.characters(), buffer_ptr, statbuf.st_size) < 0)
         return {};
     // (See above.)
     if (rc == statbuf.st_size)

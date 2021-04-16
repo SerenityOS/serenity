@@ -39,10 +39,10 @@ class File final : public IODevice {
 public:
     virtual ~File() override;
 
-    static Result<NonnullRefPtr<File>, String> open(const String& filename, IODevice::OpenMode, mode_t = 0644);
+    static Result<NonnullRefPtr<File>, String> open(String filename, IODevice::OpenMode, mode_t = 0644);
 
     String filename() const { return m_filename; }
-    void set_filename(const StringView& filename) { m_filename = filename; }
+    void set_filename(const String filename) { m_filename = move(filename); }
 
     bool is_directory() const;
     static bool is_directory(const String& filename);
@@ -78,7 +78,7 @@ public:
     static Result<void, CopyError> copy_file_or_directory(const String& dst_path, const String& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes);
 
     static String real_path_for(const String& filename);
-    static String read_link(const StringView& link_path);
+    static String read_link(String const& link_path);
     static Result<void, OSError> link_file(const String& dst_path, const String& src_path);
 
     struct RemoveError {
@@ -104,7 +104,7 @@ private:
         : IODevice(parent)
     {
     }
-    explicit File(const StringView&, Object* parent = nullptr);
+    explicit File(String filename, Object* parent = nullptr);
 
     bool open_impl(IODevice::OpenMode, mode_t);
 
