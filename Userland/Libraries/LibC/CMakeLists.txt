@@ -13,6 +13,7 @@ set(LIBC_SOURCES
     ioctl.cpp
     libcinit.cpp
     libgen.cpp
+    link.cpp
     locale.cpp
     malloc.cpp
     mman.cpp

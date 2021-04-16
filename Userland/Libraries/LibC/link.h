@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Gunnar Beutner <gunnar@beutner.name>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,24 @@
 
 #pragma once
 
-#include <AK/Result.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <LibC/link.h>
-#include <LibELF/DynamicObject.h>
+#ifndef __serenity__
+#    include <LibC/elf.h>
+#else
+#    include <elf.h>
+#endif
+#include <sys/cdefs.h>
 
-namespace ELF {
+__BEGIN_DECLS
 
-class DynamicLinker {
-public:
-    static Optional<DynamicObject::SymbolLookupResult> lookup_global_symbol(const StringView& symbol);
-    [[noreturn]] static void linker_main(String&& main_program_name, int fd, bool is_secure, int argc, char** argv, char** envp);
+#define ElfW(type) Elf32_##type
 
-private:
-    DynamicLinker() = delete;
-    ~DynamicLinker() = delete;
+struct dl_phdr_info {
+    Elf32_Addr dlpi_addr;
+    const char* dlpi_name;
+    const Elf32_Phdr* dlpi_phdr;
+    Elf32_Half dlpi_phnum;
 };
 
-}
+int dl_iterate_phdr(int (*callback)(struct dl_phdr_info* info, size_t size, void* data), void* data);
+
+__END_DECLS

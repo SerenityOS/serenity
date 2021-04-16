@@ -29,14 +29,15 @@
 
 #include <AK/Assertions.h>
 #include <AK/RefCounted.h>
+#include <AK/String.h>
 #include <Kernel/VirtualAddress.h>
-#include <LibELF/exec_elf.h>
+#include <LibC/elf.h>
 
 namespace ELF {
 
 class DynamicObject : public RefCounted<DynamicObject> {
 public:
-    static NonnullRefPtr<DynamicObject> create(VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    static NonnullRefPtr<DynamicObject> create(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
     ~DynamicObject();
     void dump() const;
@@ -238,6 +239,8 @@ public:
     VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset.value()); }
     VirtualAddress base_address() const { return m_base_address; }
 
+    const String& filename() const { return m_filename; }
+
     StringView rpath() const { return m_has_rpath ? symbol_string_table_string(m_rpath_index) : StringView {}; }
     StringView runpath() const { return m_has_runpath ? symbol_string_table_string(m_runpath_index) : StringView {}; }
     StringView soname() const { return m_has_soname ? symbol_string_table_string(m_soname_index) : StringView {}; }
@@ -246,6 +249,9 @@ public:
     Optional<FlatPtr> tls_size() const { return m_tls_size; }
     void set_tls_offset(FlatPtr offset) { m_tls_offset = offset; }
     void set_tls_size(FlatPtr size) { m_tls_size = size; }
+
+    Elf32_Half program_header_count() const;
+    const Elf32_Phdr* program_headers() const;
 
     template<typename F>
     void for_each_needed_library(F) const;
@@ -275,11 +281,13 @@ public:
     bool elf_is_dynamic() const { return m_is_elf_dynamic; }
 
 private:
-    explicit DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    explicit DynamicObject(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
     StringView symbol_string_table_string(Elf32_Word) const;
     const char* raw_symbol_string_table_string(Elf32_Word) const;
     void parse();
+
+    String m_filename;
 
     VirtualAddress m_base_address;
     VirtualAddress m_dynamic_address;
