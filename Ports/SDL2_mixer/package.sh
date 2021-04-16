@@ -2,7 +2,8 @@
 port=SDL2_mixer
 version=2.0.4
 useconfigure=true
-files="https://www.libsdl.org/projects/SDL_mixer/release/SDL2_mixer-${version}.tar.gz SDL2_mixer-${version}.tar.gz"
+files="https://www.libsdl.org/projects/SDL_mixer/release/SDL2_mixer-${version}.tar.gz SDL2_mixer-${version}.tar.gz a36e8410cac46b00a4d01752b32c3eb1"
+auth_type=md5
 depends="SDL2 libvorbis"
 
 configure() {
