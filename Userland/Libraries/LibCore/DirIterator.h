@@ -40,7 +40,7 @@ public:
         SkipParentAndBaseDir = 0x2,
     };
 
-    DirIterator(const StringView& path, Flags = Flags::NoFlags);
+    explicit DirIterator(String path, Flags = Flags::NoFlags);
     ~DirIterator();
 
     bool has_error() const { return m_error != 0; }
