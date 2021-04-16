@@ -67,7 +67,7 @@ public:
 
     virtual ~DirectoryView() override;
 
-    void open(const StringView& path);
+    void open(String const& path);
     String path() const { return model().root_path(); }
     void open_parent_directory();
     void open_previous_directory();
@@ -173,7 +173,7 @@ private:
     NonnullRefPtr<GUI::SortingProxyModel> m_sorting_model;
     size_t m_path_history_position { 0 };
     Vector<String> m_path_history;
-    void add_path_to_history(const StringView& path);
+    void add_path_to_history(String);
 
     RefPtr<GUI::Label> m_error_label;
 
