@@ -117,7 +117,7 @@ public:
     static RefPtr<Bitmap> create_shareable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     static RefPtr<Bitmap> create_purgeable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, int intrinsic_scale, size_t pitch, void*);
-    static RefPtr<Bitmap> load_from_file(const StringView& path, int scale_factor = 1);
+    static RefPtr<Bitmap> load_from_file(String const& path, int scale_factor = 1);
     static RefPtr<Bitmap> create_with_anon_fd(BitmapFormat, int anon_fd, const IntSize&, int intrinsic_scale, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile);
     static RefPtr<Bitmap> create_from_serialized_byte_buffer(ByteBuffer&& buffer);
     static bool is_path_a_supported_image_format(const StringView& path)
@@ -221,7 +221,7 @@ public:
     bool has_alpha_channel() const { return m_format == BitmapFormat::BGRA8888; }
     BitmapFormat format() const { return m_format; }
 
-    void set_mmap_name(const StringView&);
+    void set_mmap_name(String const&);
 
     static constexpr size_t size_in_bytes(size_t pitch, int physical_height) { return pitch * physical_height; }
     size_t size_in_bytes() const { return size_in_bytes(m_pitch, physical_height()); }

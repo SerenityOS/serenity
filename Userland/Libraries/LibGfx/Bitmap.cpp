@@ -143,7 +143,7 @@ RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const IntSize& size, 
     return adopt(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
-RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path, int scale_factor)
+RefPtr<Bitmap> Bitmap::load_from_file(String const& path, int scale_factor)
 {
     if (scale_factor > 1 && path.starts_with("/res/")) {
         LexicalPath lexical_path { path };
@@ -439,11 +439,11 @@ Bitmap::~Bitmap()
     delete[] m_palette;
 }
 
-void Bitmap::set_mmap_name([[maybe_unused]] const StringView& name)
+void Bitmap::set_mmap_name([[maybe_unused]] String const& name)
 {
     VERIFY(m_needs_munmap);
 #ifdef __serenity__
-    ::set_mmap_name(m_data, size_in_bytes(), name.to_string().characters());
+    ::set_mmap_name(m_data, size_in_bytes(), name.characters());
 #endif
 }
 
