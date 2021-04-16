@@ -11,6 +11,8 @@
 #include <Kernel/Graphics/Bochs.h>
 #include <Kernel/Graphics/BochsFramebufferDevice.h>
 #include <Kernel/Graphics/BochsGraphicsAdapter.h>
+#include <Kernel/Graphics/Console/FramebufferConsole.h>
+#include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/Process.h>
@@ -52,19 +54,24 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_add
     , m_mmio_registers(PCI::get_BAR2(pci_address) & 0xfffffff0)
 {
     set_safe_resolution();
+    // We assume safe resolutio is 1024x768x32
+    m_framebuffer_console = Graphics::FramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_address) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
+    // FIXME: This is a very wrong way to do this...
+    GraphicsManagement::the().m_console = m_framebuffer_console;
 }
 
 UNMAP_AFTER_INIT void BochsGraphicsAdapter::initialize_framebuffer_devices()
 {
     // FIXME: Find a better way to determine default resolution...
-    m_framebuffer = BochsFramebufferDevice::create(*this, PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffff0), 1024 * 4, 1024, 768);
+    m_framebuffer_device = BochsFramebufferDevice::create(*this, PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffff0), 1024 * 4, 1024, 768);
+    m_framebuffer_device->initialize();
 }
 
 GraphicsDevice::Type BochsGraphicsAdapter::type() const
 {
     if (PCI::get_class(pci_address()) == 0x3 && PCI::get_subclass(pci_address()) == 0x0)
         return Type::VGACompatible;
-    return Type::Bochs; 
+    return Type::Bochs;
 }
 
 void BochsGraphicsAdapter::set_safe_resolution()
@@ -119,8 +126,33 @@ bool BochsGraphicsAdapter::validate_setup_resolution(size_t width, size_t height
 
 void BochsGraphicsAdapter::set_y_offset(size_t y_offset)
 {
+    if (m_console_enabled)
+        return;
     auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
     registers->bochs_regs.y_offset = y_offset;
+}
+
+void BochsGraphicsAdapter::enable_consoles()
+{
+    ScopedSpinLock lock(m_console_mode_switch_lock);
+    VERIFY(m_framebuffer_console);
+    m_console_enabled = true;
+    auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
+    registers->bochs_regs.y_offset = 0;
+    if (m_framebuffer_device)
+        m_framebuffer_device->dectivate_writes();
+    m_framebuffer_console->enable();
+}
+void BochsGraphicsAdapter::disable_consoles()
+{
+    ScopedSpinLock lock(m_console_mode_switch_lock);
+    VERIFY(m_framebuffer_console);
+    VERIFY(m_framebuffer_device);
+    m_console_enabled = false;
+    auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
+    registers->bochs_regs.y_offset = 0;
+    m_framebuffer_console->disable();
+    m_framebuffer_device->activate_writes();
 }
 
 }
