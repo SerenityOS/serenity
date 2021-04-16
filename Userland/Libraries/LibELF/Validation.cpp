@@ -271,6 +271,7 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
             break;
         case PT_LOAD:
         case PT_DYNAMIC:
+        case PT_GNU_EH_FRAME:
         case PT_NOTE:
         case PT_PHDR:
         case PT_TLS:
