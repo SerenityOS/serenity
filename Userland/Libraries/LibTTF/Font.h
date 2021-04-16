@@ -66,7 +66,7 @@ class Font : public RefCounted<Font> {
     AK_MAKE_NONCOPYABLE(Font);
 
 public:
-    static RefPtr<Font> load_from_file(const StringView& path, unsigned index = 0);
+    static RefPtr<Font> load_from_file(String path, unsigned index = 0);
     static RefPtr<Font> load_from_memory(ByteBuffer&, unsigned index = 0);
 
     ScaledFontMetrics metrics(float x_scale, float y_scale) const;
