@@ -1,0 +1,59 @@
+diff --git a/builtin/log.c b/builtin/log.c
+index f67b67d..ae6ebee 100644
+--- a/builtin/log.c
++++ b/builtin/log.c
+@@ -354,7 +354,6 @@ static void log_show_early(struct rev_info *revs, struct commit_list *list)
+ 	 */
+ 	early_output_timer.it_value.tv_sec = 0;
+ 	early_output_timer.it_value.tv_usec = 500000;
+-	setitimer(ITIMER_REAL, &early_output_timer, NULL);
+ }
+ 
+ static void early_output(int signal)
+@@ -388,7 +387,6 @@ static void setup_early_output(void)
+ 	 */
+ 	early_output_timer.it_value.tv_sec = 0;
+ 	early_output_timer.it_value.tv_usec = 100000;
+-	setitimer(ITIMER_REAL, &early_output_timer, NULL);
+ }
+ 
+ static void finish_early_output(struct rev_info *rev)
+diff --git a/git-compat-util.h b/git-compat-util.h
+index 3b2738c..618f6d2 100644
+--- a/git-compat-util.h
++++ b/git-compat-util.h
+@@ -1251,14 +1251,6 @@ int warn_on_fopen_errors(const char *path);
+ #endif
+ 
+ #ifndef _POSIX_THREAD_SAFE_FUNCTIONS
+-static inline void flockfile(FILE *fh)
+-{
+-	; /* nothing */
+-}
+-static inline void funlockfile(FILE *fh)
+-{
+-	; /* nothing */
+-}
+ #define getc_unlocked(fh) getc(fh)
+ #endif
+ 
+diff --git a/progress.c b/progress.c
+index 31014e6..d48acce 100644
+--- a/progress.c
++++ b/progress.c
+@@ -83,7 +83,6 @@ static void set_progress_signal(void)
+ 	v.it_interval.tv_sec = 1;
+ 	v.it_interval.tv_usec = 0;
+ 	v.it_value = v.it_interval;
+-	setitimer(ITIMER_REAL, &v, NULL);
+ }
+ 
+ static void clear_progress_signal(void)
+@@ -93,7 +92,6 @@ static void clear_progress_signal(void)
+ 	if (progress_testing)
+ 		return;
+ 
+-	setitimer(ITIMER_REAL, &v, NULL);
+ 	signal(SIGALRM, SIG_IGN);
+ 	progress_update = 0;
+ }
