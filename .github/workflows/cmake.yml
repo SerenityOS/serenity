@@ -38,9 +38,9 @@ jobs:
       # These aren't:
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main"
+        sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main"
         sudo apt-get update
-        sudo apt-get install clang-format-11 libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm e2fsprogs qemu-utils qemu-system-i386 ccache
+        sudo apt-get install clang-format-12 libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm e2fsprogs qemu-utils qemu-system-i386 ccache
     - name: Use GCC 10 instead
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 
@@ -52,7 +52,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 requests
     - name: Check versions
-      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version
+      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-12 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version
 
     # === PREPARE FOR BUILDING ===
 
@@ -228,7 +228,6 @@ jobs:
     needs: [build_and_test_serenity, build_and_test_lagom]
     runs-on: ubuntu-20.04
     if: always() && github.repository == 'SerenityOS/serenity' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
-
     steps:
     - uses: actions/checkout@v2
     # Sets environment variable env.WORKFLOW_CONCLUSION to one of [neutral, success, skipped, cancelled, timed_out, action_required, failure]
