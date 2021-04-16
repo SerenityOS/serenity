@@ -41,6 +41,8 @@ Value create_iterator_result_object(GlobalObject&, Value value, bool done);
 Object* iterator_next(Object& iterator, Value value = {});
 void iterator_close(Object& iterator);
 
-void get_iterator_values(GlobalObject&, Value value, AK::Function<IterationDecision(Value)> callback);
+MarkedValueList iterable_to_list(GlobalObject&, Value iterable, Value method = {});
+
+void get_iterator_values(GlobalObject&, Value value, AK::Function<IterationDecision(Value)> callback, Value method = {});
 
 }
