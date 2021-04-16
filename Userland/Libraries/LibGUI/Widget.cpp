@@ -983,9 +983,9 @@ Gfx::IntRect Widget::content_rect() const
     return rect;
 }
 
-void Widget::set_tooltip(const StringView& tooltip)
+void Widget::set_tooltip(String tooltip)
 {
-    m_tooltip = tooltip;
+    m_tooltip = move(tooltip);
     if (Application::the()->tooltip_source_widget() == this)
         show_or_hide_tooltip();
 }
