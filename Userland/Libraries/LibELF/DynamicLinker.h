@@ -27,9 +27,7 @@
 #pragma once
 
 #include <AK/Result.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibC/link.h>
 #include <LibELF/DynamicObject.h>
 
 namespace ELF {
