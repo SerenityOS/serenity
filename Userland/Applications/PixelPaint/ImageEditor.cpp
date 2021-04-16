@@ -392,6 +392,15 @@ void ImageEditor::scale_centered_on_position(const Gfx::IntPoint& position, floa
         relayout();
 }
 
+void ImageEditor::reset_scale_and_position()
+{
+    if (m_scale != 1.0f)
+        m_scale = 1.0f;
+    
+    m_pan_origin = Gfx::FloatPoint(0, 0);
+    relayout();
+}
+
 void ImageEditor::relayout()
 {
     if (!image())
