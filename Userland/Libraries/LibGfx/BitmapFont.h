@@ -50,8 +50,8 @@ public:
     NonnullRefPtr<Font> clone() const;
     static NonnullRefPtr<BitmapFont> create(u8 glyph_height, u8 glyph_width, bool fixed, FontTypes type);
 
-    static RefPtr<BitmapFont> load_from_file(const StringView& path);
-    bool write_to_file(const StringView& path);
+    static RefPtr<BitmapFont> load_from_file(String const& path);
+    bool write_to_file(String const& path);
 
     ~BitmapFont();
 

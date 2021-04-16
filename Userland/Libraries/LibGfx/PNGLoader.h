@@ -31,7 +31,7 @@
 
 namespace Gfx {
 
-RefPtr<Gfx::Bitmap> load_png(const StringView& path);
+RefPtr<Gfx::Bitmap> load_png(String const& path);
 RefPtr<Gfx::Bitmap> load_png_from_memory(const u8*, size_t);
 
 struct PNGLoadingContext;

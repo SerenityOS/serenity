@@ -1252,7 +1252,7 @@ static RefPtr<Gfx::Bitmap> load_jpg_impl(const u8* data, size_t data_size)
     return context.bitmap;
 }
 
-RefPtr<Gfx::Bitmap> load_jpg(const StringView& path)
+RefPtr<Gfx::Bitmap> load_jpg(String const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())

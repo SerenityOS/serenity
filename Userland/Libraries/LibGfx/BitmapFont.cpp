@@ -190,7 +190,7 @@ String BitmapFont::type_name_by_type(FontTypes type)
     VERIFY_NOT_REACHED();
 }
 
-RefPtr<BitmapFont> BitmapFont::load_from_file(const StringView& path)
+RefPtr<BitmapFont> BitmapFont::load_from_file(String const& path)
 {
     if (Core::File::is_device(path))
         return nullptr;
@@ -207,7 +207,7 @@ RefPtr<BitmapFont> BitmapFont::load_from_file(const StringView& path)
     return font;
 }
 
-bool BitmapFont::write_to_file(const StringView& path)
+bool BitmapFont::write_to_file(String const& path)
 {
     FontFileHeader header;
     memset(&header, 0, sizeof(FontFileHeader));
