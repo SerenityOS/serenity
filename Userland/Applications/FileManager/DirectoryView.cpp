@@ -392,7 +392,7 @@ void DirectoryView::set_view_mode(ViewMode mode)
     VERIFY_NOT_REACHED();
 }
 
-void DirectoryView::add_path_to_history(const StringView& path)
+void DirectoryView::add_path_to_history(String path)
 {
     if (m_path_history.size() && m_path_history.at(m_path_history_position) == path)
         return;
@@ -400,11 +400,11 @@ void DirectoryView::add_path_to_history(const StringView& path)
     if (m_path_history_position < m_path_history.size())
         m_path_history.resize(m_path_history_position + 1);
 
-    m_path_history.append(path);
+    m_path_history.append(move(path));
     m_path_history_position = m_path_history.size() - 1;
 }
 
-void DirectoryView::open(const StringView& path)
+void DirectoryView::open(String const& path)
 {
     auto real_path = Core::File::real_path_for(path);
 
