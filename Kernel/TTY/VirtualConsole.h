@@ -1,35 +1,91 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Noncopyable.h>
+#include <AK/NonnullOwnPtrVector.h>
+#include <AK/String.h>
+#include <AK/Vector.h>
+#include <Kernel/API/KeyCode.h>
 #include <Kernel/ConsoleDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
+#include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/TTY/TTY.h>
+#include <LibVT/Attribute.h>
+#include <LibVT/Position.h>
 #include <LibVT/Terminal.h>
 
 namespace Kernel {
 
-static constexpr unsigned s_max_virtual_consoles = 6;
+class ConsoleManagement;
+class VirtualConsole;
+// FIXME: This implementation has no knowledge about keeping terminal history...
+class ConsoleImpl final : public VT::Terminal {
+public:
+    explicit ConsoleImpl(VirtualConsole&);
+
+    virtual void set_size(u16 columns, u16 rows) override;
+
+private:
+    virtual void invalidate_cursor() override;
+    virtual void clear() override;
+    virtual void clear_including_history() override;
+
+    virtual void scroll_up() override;
+    virtual void scroll_down() override;
+    virtual void newline() override;
+    virtual void put_character_at(unsigned row, unsigned column, u32 ch) override;
+    virtual void set_window_title(const String&) override;
+
+    virtual void ICH(Parameters) override;
+
+    virtual void IL(Parameters) override;
+    virtual void DCH(Parameters) override;
+    virtual void DL(Parameters) override;
+};
 
 class VirtualConsole final : public TTY
     , public KeyboardClient
     , public VT::TerminalClient {
     AK_MAKE_ETERNAL
+    friend class ConsoleManagement;
+    friend class ConsoleImpl;
+    friend class VT::Terminal;
+
 public:
-    VirtualConsole(const unsigned index);
+    struct Line {
+        bool dirty;
+    };
+
+    struct Cell {
+        void clear()
+        {
+            ch = ' ';
+            attribute.reset();
+        }
+        char ch;
+        VT::Attribute attribute;
+    };
+
+public:
+    static NonnullRefPtr<VirtualConsole> create(size_t index);
+
     virtual ~VirtualConsole() override;
 
-    static void switch_to(unsigned);
-    static void initialize();
+    size_t index() const { return m_index; }
 
     bool is_graphical() { return m_graphical; }
     void set_graphical(bool graphical);
 
+    void emit_char(char);
+
 private:
+    VirtualConsole(const unsigned index);
     // ^KeyboardClient
     virtual void on_key_pressed(KeyEvent) override;
 
@@ -53,23 +109,37 @@ private:
     virtual String device_name() const override;
 
     void set_active(bool);
-
-    void flush_vga_cursor();
     void flush_dirty_lines();
 
     unsigned m_index;
     bool m_active { false };
     bool m_graphical { false };
 
-    void clear_vga_row(u16 row);
-    void set_vga_start_row(u16 row);
-    u16 m_vga_start_row { 0 };
-    u16 m_current_vga_start_address { 0 };
-    u8* m_current_vga_window { nullptr };
-
-    VT::Terminal m_terminal;
-
     String m_tty_name;
+    RecursiveSpinLock m_lock;
+
+private:
+    void invalidate_cursor(size_t row);
+
+    void clear();
+
+    void inject_string(const StringView&);
+
+    Cell& cell_at(size_t column, size_t row);
+
+    typedef Vector<unsigned, 4> ParamVector;
+
+    void on_code_point(u32);
+
+    void scroll_down();
+    void scroll_up();
+    void newline();
+    void clear_line(size_t index);
+    void put_character_at(unsigned row, unsigned column, u32 ch, const VT::Attribute&);
+
+    OwnPtr<Region> m_cells;
+    Vector<VirtualConsole::Line> m_lines;
+    ConsoleImpl m_console_impl;
 };
 
 }

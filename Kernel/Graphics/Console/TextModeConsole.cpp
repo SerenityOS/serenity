@@ -1,0 +1,203 @@
+/*
+ * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <Kernel/Graphics/Console/TextModeConsole.h>
+#include <Kernel/Graphics/GraphicsManagement.h>
+#include <Kernel/IO.h>
+
+namespace Kernel::Graphics {
+
+UNMAP_AFTER_INIT NonnullRefPtr<TextModeConsole> TextModeConsole::initialize(const VGACompatibleAdapter& adapter)
+{
+    return adopt_ref(*new TextModeConsole(adapter));
+}
+
+UNMAP_AFTER_INIT TextModeConsole::TextModeConsole(const VGACompatibleAdapter& adapter)
+    : VGAConsole(adapter, VGAConsole::Mode::TextMode, 80, 25)
+    , m_current_vga_window(m_vga_region->vaddr().offset(0x18000).as_ptr())
+{
+    for (size_t index = 0; index < height(); index++) {
+        clear_vga_row(index);
+    }
+    dbgln("Text mode console initialized!");
+}
+
+enum VGAColor : u8 {
+    Black = 0,
+    Blue,
+    Green,
+    Cyan,
+    Red,
+    Magenta,
+    Brown,
+    LightGray,
+    DarkGray,
+    BrightBlue,
+    BrightGreen,
+    BrightCyan,
+    BrightRed,
+    BrightMagenta,
+    Yellow,
+    White,
+};
+
+static inline VGAColor convert_standard_color_to_vga_color(Console::Color color)
+{
+    switch (color) {
+    case Console::Color::Black:
+        return VGAColor::Black;
+    case Console::Color::Red:
+        return VGAColor::Red;
+    case Console::Color::Brown:
+        return VGAColor::Brown;
+    case Console::Color::Blue:
+        return VGAColor::Blue;
+    case Console::Color::Magenta:
+        return VGAColor::Magenta;
+    case Console::Color::Green:
+        return VGAColor::Green;
+    case Console::Color::Cyan:
+        return VGAColor::Cyan;
+    case Console::Color::LightGray:
+        return VGAColor::LightGray;
+    case Console::Color::DarkGray:
+        return VGAColor::DarkGray;
+    case Console::Color::BrightRed:
+        return VGAColor::BrightRed;
+    case Console::Color::BrightGreen:
+        return VGAColor::BrightGreen;
+    case Console::Color::Yellow:
+        return VGAColor::Yellow;
+    case Console::Color::BrightBlue:
+        return VGAColor::BrightBlue;
+    case Console::Color::BrightMagenta:
+        return VGAColor::BrightMagenta;
+    case Console::Color::BrightCyan:
+        return VGAColor::BrightCyan;
+    case Console::Color::White:
+        return VGAColor::White;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+void TextModeConsole::set_cursor(size_t x, size_t y)
+{
+    ScopedSpinLock main_lock(GraphicsManagement::the().main_vga_lock());
+    ScopedSpinLock lock(m_vga_lock);
+    m_cursor_x = x;
+    m_cursor_y = y;
+    u16 value = m_current_vga_start_address + (y * width() + x);
+    IO::out8(0x3d4, 0x0e);
+    IO::out8(0x3d5, MSB(value));
+    IO::out8(0x3d4, 0x0f);
+    IO::out8(0x3d5, LSB(value));
+}
+void TextModeConsole::hide_cursor()
+{
+    ScopedSpinLock main_lock(GraphicsManagement::the().main_vga_lock());
+    ScopedSpinLock lock(m_vga_lock);
+    IO::out8(0x3D4, 0xA);
+    IO::out8(0x3D5, 0x20);
+}
+void TextModeConsole::show_cursor()
+{
+    ScopedSpinLock main_lock(GraphicsManagement::the().main_vga_lock());
+    ScopedSpinLock lock(m_vga_lock);
+    IO::out8(0x3D4, 0xA);
+    IO::out8(0x3D5, 0x20);
+}
+
+void TextModeConsole::clear(size_t x, size_t y, size_t length) const
+{
+    ScopedSpinLock lock(m_vga_lock);
+    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
+    for (size_t index = 0; index < length; index++) {
+        buf[index] = 0x0720;
+    }
+}
+void TextModeConsole::write(size_t x, size_t y, char ch) const
+{
+    ScopedSpinLock lock(m_vga_lock);
+    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
+    *buf = (m_default_foreground_color << 8) | (m_default_background_color << 12) | ch;
+    m_x = x + 1;
+    if (m_x >= max_column()) {
+        m_x = 0;
+        m_y = y + 1;
+        if (m_y >= max_row())
+            m_y = 0;
+    }
+}
+void TextModeConsole::write(size_t x, size_t y, String cstring) const
+{
+    ScopedSpinLock lock(m_vga_lock);
+    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
+    u16 color_mask = (m_default_foreground_color << 8) | (m_default_background_color << 12);
+    for (size_t index = 0; index < cstring.length(); index++) {
+        buf[index] = color_mask | cstring[index];
+    }
+    m_x = x + cstring.length();
+    if (m_x >= max_column()) {
+        m_x = 0;
+        m_y = y + 1;
+        if (m_y >= max_row())
+            m_y = 0;
+    }
+}
+void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color foreground) const
+{
+    ScopedSpinLock lock(m_vga_lock);
+    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
+    *buf = foreground << 8 | background << 12 | ch;
+    m_x = x + 1;
+    if (m_x >= max_column()) {
+        m_x = 0;
+        m_y = y + 1;
+        if (m_y >= max_row())
+            m_y = 0;
+    }
+}
+void TextModeConsole::write(size_t x, size_t y, String cstring, Color background, Color foreground) const
+{
+    ScopedSpinLock lock(m_vga_lock);
+    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
+    u16 color_mask = foreground << 8 | background << 12;
+    for (size_t index = 0; index < cstring.length(); index++) {
+        buf[index] = color_mask | cstring[index];
+    }
+    m_x = x + cstring.length();
+    if (m_x >= max_column()) {
+        m_x = 0;
+        m_y = y + 1;
+        if (m_y >= max_row())
+            m_y = 0;
+    }
+}
+
+void TextModeConsole::clear_vga_row(u16 row)
+{
+    clear(row * width(), width(), width());
+}
+
+void TextModeConsole::set_vga_start_row(u16 row)
+{
+    ScopedSpinLock lock(m_vga_lock);
+    m_vga_start_row = row;
+    m_current_vga_start_address = row * width();
+    m_current_vga_window = m_current_vga_window + row * width() * bytes_per_base_glyph();
+    IO::out8(0x3d4, 0x0c);
+    IO::out8(0x3d5, MSB(m_current_vga_start_address));
+    IO::out8(0x3d4, 0x0d);
+    IO::out8(0x3d5, LSB(m_current_vga_start_address));
+}
+
+void TextModeConsole::write(char ch) const
+{
+    write(m_x, m_y, ch);
+}
+
+}

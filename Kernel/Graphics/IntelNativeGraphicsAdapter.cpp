@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Graphics/Console/FramebufferConsole.h>
 #include <Kernel/Graphics/Definitions.h>
+#include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/IntelNativeGraphicsAdapter.h>
 #include <Kernel/IO.h>
 #include <Kernel/PhysicalAddress.h>
@@ -165,7 +167,7 @@ Optional<IntelNativeGraphicsAdapter::PLLSettings> IntelNativeGraphicsAdapter::cr
 }
 
 IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::Address address)
-    : PCI::DeviceController(address)
+    : VGACompatibleAdapter(address)
     , m_registers(PCI::get_BAR0(address) & 0xfffffffc)
     , m_framebuffer_addr(PCI::get_BAR2(address) & 0xfffffffc)
 {
@@ -182,10 +184,24 @@ IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::Address address)
         set_gmbus_pin_pair(GMBusPinPair::DedicatedAnalog);
     }
     gmbus_read_edid();
-    auto modesetting = calculate_modesetting_from_edid(m_crt_edid, 0);
-    dmesgln("Intel Native Graphics Adapter @ {}, preferred resolution is {:d}x{:d}", address, modesetting.horizontal.active, modesetting.vertical.active);
 
+    auto modesetting = calculate_modesetting_from_edid(m_crt_edid, 0);
+    dmesgln("Intel Native Graphics Adapter @ {}, preferred resolution is {:d}x{:d}", pci_address(), modesetting.horizontal.active, modesetting.vertical.active);
     set_crt_resolution(modesetting.horizontal.active, modesetting.vertical.active);
+    auto framebuffer_address = PhysicalAddress(PCI::get_BAR2(pci_address()) & 0xfffffff0);
+    VERIFY(!framebuffer_address.is_null());
+    VERIFY(m_framebuffer_pitch != 0);
+    VERIFY(m_framebuffer_height != 0);
+    VERIFY(m_framebuffer_width != 0);
+    m_framebuffer_console = Graphics::FramebufferConsole::initialize(framebuffer_address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch);
+    // FIXME: This is a very wrong way to do this...
+    GraphicsManagement::the().m_console = m_framebuffer_console;
+}
+
+void IntelNativeGraphicsAdapter::enable_vga_plane()
+{
+    VERIFY(m_control_lock.is_locked());
+    VERIFY(m_modeset_lock.is_locked());
 }
 
 static inline const char* convert_register_index_to_string(IntelGraphics::RegisterIndex index)
@@ -269,6 +285,7 @@ bool IntelNativeGraphicsAdapter::pipe_a_enabled() const
     VERIFY(m_control_lock.is_locked());
     return read_from_register(IntelGraphics::RegisterIndex::PipeAConf) & (1 << 30);
 }
+
 bool IntelNativeGraphicsAdapter::pipe_b_enabled() const
 {
     VERIFY(m_control_lock.is_locked());
@@ -396,7 +413,7 @@ bool IntelNativeGraphicsAdapter::set_crt_resolution(size_t width, size_t height)
         VERIFY_NOT_REACHED();
     auto settings = pll_settings.value();
     dbgln_if(INTEL_GRAPHICS_DEBUG, "PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
-    set_dpll_registers(pll_settings.value(), dac_multiplier);
+    enable_dpll_without_vga(pll_settings.value(), dac_multiplier);
     set_display_timings(modesetting);
     auto address = PhysicalAddress(PCI::get_BAR2(pci_address()) & 0xfffffff0);
     VERIFY(!address.is_null());
@@ -404,7 +421,7 @@ bool IntelNativeGraphicsAdapter::set_crt_resolution(size_t width, size_t height)
 
     m_framebuffer_width = width;
     m_framebuffer_height = height;
-    m_framebuffer_stride = width * 4;
+    m_framebuffer_pitch = width * 4;
 
     return true;
 }
@@ -538,7 +555,7 @@ void IntelNativeGraphicsAdapter::enable_primary_plane(PhysicalAddress fb_address
     write_to_register(IntelGraphics::RegisterIndex::DisplayPlaneAControl, (read_from_register(IntelGraphics::RegisterIndex::DisplayPlaneAControl) & (~(0b1111 << 26))) | (0b0110 << 26) | (1 << 31));
 }
 
-void IntelNativeGraphicsAdapter::set_dpll_registers(const PLLSettings& settings, size_t dac_multiplier)
+void IntelNativeGraphicsAdapter::set_dpll_registers(const PLLSettings& settings)
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
@@ -546,6 +563,14 @@ void IntelNativeGraphicsAdapter::set_dpll_registers(const PLLSettings& settings,
     write_to_register(IntelGraphics::RegisterIndex::DPLLDivisorA1, (settings.m2 - 2) | ((settings.m1 - 2) << 8) | ((settings.n - 2) << 16));
 
     write_to_register(IntelGraphics::RegisterIndex::DPLLControlA, read_from_register(IntelGraphics::RegisterIndex::DPLLControlA) & ~0x80000000);
+}
+
+void IntelNativeGraphicsAdapter::enable_dpll_without_vga(const PLLSettings& settings, size_t dac_multiplier)
+{
+    VERIFY(m_control_lock.is_locked());
+    VERIFY(m_modeset_lock.is_locked());
+
+    set_dpll_registers(settings);
 
     IO::delay(200);
 
@@ -597,9 +622,10 @@ void IntelNativeGraphicsAdapter::initialize_framebuffer_devices()
 {
     auto address = PhysicalAddress(PCI::get_BAR2(pci_address()) & 0xfffffff0);
     VERIFY(!address.is_null());
-    VERIFY(m_framebuffer_stride != 0);
+    VERIFY(m_framebuffer_pitch != 0);
     VERIFY(m_framebuffer_height != 0);
     VERIFY(m_framebuffer_width != 0);
-    m_framebuffer = m_framebuffer = RawFramebufferDevice::create(*this, address, m_framebuffer_stride, m_framebuffer_width, m_framebuffer_height);
+    m_framebuffer_device = RawFramebufferDevice::create(*this, address, m_framebuffer_pitch, m_framebuffer_width, m_framebuffer_height);
+    m_framebuffer_device->initialize();
 }
 }

@@ -2455,8 +2455,8 @@ void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, con
 void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
 {
     asm volatile("cli");
-    dmesgln("ASSERTION FAILED: {}", msg);
-    dmesgln("{}:{} in {}", file, line, func);
+    critical_dmesgln("ASSERTION FAILED: {}", msg);
+    critical_dmesgln("{}:{} in {}", file, line, func);
 
     abort();
 }

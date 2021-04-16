@@ -677,6 +677,29 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams params)
     const auto string = builder.string_view();
     kernelputstr(string.characters_without_null_termination(), string.length());
 }
+
+void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams params)
+{
+    // FIXME: Try to avoid memory allocations further to prevent faulting
+    // at OOM conditions.
+
+    StringBuilder builder;
+#    ifdef __serenity__
+    if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
+        auto& thread = *Kernel::Thread::current();
+        builder.appendff("[{}({}:{})]: ", thread.process().name(), thread.pid().value(), thread.tid().value());
+    } else {
+        builder.appendff("[Kernel]: ");
+    }
+#    endif
+
+    vformat(builder, fmtstr, params);
+    builder.append('\n');
+
+    const auto string = builder.string_view();
+    kernelcriticalputstr(string.characters_without_null_termination(), string.length());
+}
+
 #endif
 
 template struct Formatter<unsigned char, void>;

@@ -14,7 +14,7 @@
 namespace Kernel {
 
 enum class BootMode {
-    Text,
+    NoFramebufferDevices,
     SelfTest,
     Graphical
 };
@@ -59,7 +59,7 @@ public:
     [[nodiscard]] bool is_vmmouse_enabled() const;
     [[nodiscard]] PCIAccessLevel pci_access_level() const;
     [[nodiscard]] bool is_legacy_time_enabled() const;
-    [[nodiscard]] bool is_text_mode() const;
+    [[nodiscard]] bool is_no_framebuffer_devices_mode() const;
     [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] BootMode boot_mode() const;

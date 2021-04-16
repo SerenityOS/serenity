@@ -25,9 +25,15 @@ public:
     virtual ~GraphicsDevice() = default;
     virtual void initialize_framebuffer_devices() = 0;
     virtual Type type() const = 0;
+    virtual void enable_consoles() = 0;
+    virtual void disable_consoles() = 0;
+    bool consoles_enabled() const { return m_consoles_enabled; }
+    virtual bool framebuffer_devices_initialized() const = 0;
 
 protected:
     GraphicsDevice() = default;
+
+    bool m_consoles_enabled { false };
 };
 
 }

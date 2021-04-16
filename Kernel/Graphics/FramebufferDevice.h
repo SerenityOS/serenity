@@ -6,11 +6,14 @@
 
 #pragma once
 
+#include <AK/NonnullOwnPtr.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/PhysicalAddress.h>
+#include <Kernel/SpinLock.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 
 namespace Kernel {
 
@@ -24,9 +27,12 @@ public:
     virtual mode_t required_mode() const override { return 0660; }
     virtual String device_name() const override;
 
+    virtual void dectivate_writes();
+    virtual void activate_writes();
     virtual size_t framebuffer_size_in_bytes() const { return m_framebuffer_pitch * m_framebuffer_height; }
 
     virtual ~FramebufferDevice() {};
+    void initialize();
 
 protected:
     virtual bool set_resolution(size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch);
@@ -44,6 +50,17 @@ protected:
     size_t m_framebuffer_pitch { 0 };
     size_t m_framebuffer_width { 0 };
     size_t m_framebuffer_height { 0 };
+
+private:
+    SpinLock<u8> m_activation_lock;
+
+    RefPtr<AnonymousVMObject> m_real_framebuffer_vmobject;
+    RefPtr<AnonymousVMObject> m_swapped_framebuffer_vmobject;
+    OwnPtr<Region> m_real_framebuffer_region;
+    OwnPtr<Region> m_swapped_framebuffer_region;
+
+    RefPtr<AnonymousVMObject> m_userspace_real_framebuffer_vmobject;
+    Region* m_userspace_framebuffer_region { nullptr };
 };
 
 }

@@ -8,6 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <Kernel/Graphics/Console/FramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/PCI/DeviceController.h>
 #include <Kernel/PhysicalAddress.h>
@@ -25,11 +26,15 @@ class BochsGraphicsAdapter final : public GraphicsDevice
 public:
     static NonnullRefPtr<BochsGraphicsAdapter> initialize(PCI::Address);
     virtual ~BochsGraphicsAdapter() = default;
+    virtual bool framebuffer_devices_initialized() const override { return !m_framebuffer_device.is_null(); }
 
 private:
     // ^GraphicsDevice
     virtual void initialize_framebuffer_devices() override;
     virtual Type type() const override;
+
+    virtual void enable_consoles() override;
+    virtual void disable_consoles() override;
 
     explicit BochsGraphicsAdapter(PCI::Address);
 
@@ -43,7 +48,10 @@ private:
     void set_y_offset(size_t);
 
     PhysicalAddress m_mmio_registers;
-    RefPtr<BochsFramebufferDevice> m_framebuffer;
+    RefPtr<BochsFramebufferDevice> m_framebuffer_device;
+    RefPtr<Graphics::FramebufferConsole> m_framebuffer_console;
+    SpinLock<u8> m_console_mode_switch_lock;
+    bool m_console_enabled { false };
 };
 
 }

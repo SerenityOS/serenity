@@ -50,6 +50,9 @@ set(KERNEL_SOURCES
     Devices/HID/PS2KeyboardDevice.cpp
     Devices/HID/PS2MouseDevice.cpp
     Devices/HID/VMWareMouseDevice.cpp
+    Graphics/Console/FramebufferConsole.cpp
+    Graphics/Console/TextModeConsole.cpp
+    Graphics/Console/VGAConsole.cpp
     Graphics/BochsFramebufferDevice.cpp
     Graphics/BochsGraphicsAdapter.cpp
     Graphics/FramebufferDevice.cpp
@@ -205,6 +208,7 @@ set(KERNEL_SOURCES
     Syscalls/waitid.cpp
     Syscalls/inode_watcher.cpp
     Syscalls/write.cpp
+    TTY/ConsoleManagement.cpp
     TTY/MasterPTY.cpp
     TTY/PTYMultiplexer.cpp
     TTY/SlavePTY.cpp

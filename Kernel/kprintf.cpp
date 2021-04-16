@@ -7,9 +7,12 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/Types.h>
 #include <Kernel/ConsoleDevice.h>
+#include <Kernel/Graphics/Console/Console.h>
+#include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
 #include <Kernel/Process.h>
 #include <Kernel/SpinLock.h>
+#include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/kstdio.h>
 
 #include <LibC/stdarg.h>
@@ -60,6 +63,20 @@ static void serial_putch(char ch)
         was_cr = false;
 }
 
+static void critical_console_out(char ch)
+{
+    if (serial_debug)
+        serial_putch(ch);
+    // No need to output things to the real ConsoleDevice as no one is likely
+    // to read it (because we are in a fatal situation, so only print things and halt)
+    IO::out8(0xe9, ch);
+    // We emit chars directly to the string. this is necessary in few cases,
+    // especially when we want to avoid any memory allocations...
+    if (GraphicsManagement::is_initialized() && GraphicsManagement::the().console()) {
+        GraphicsManagement::the().console()->write(ch);
+    }
+}
+
 static void console_out(char ch)
 {
     if (serial_debug)
@@ -71,6 +88,9 @@ static void console_out(char ch)
         ConsoleDevice::the().put_char(ch);
     } else {
         IO::out8(0xe9, ch);
+    }
+    if (ConsoleManagement::is_initialized()) {
+        ConsoleManagement::the().debug_tty()->emit_char(ch);
     }
 }
 
@@ -144,4 +164,13 @@ extern "C" void kernelputstr(const char* characters, size_t length)
     ScopedSpinLock lock(s_log_lock);
     for (size_t i = 0; i < length; ++i)
         console_out(characters[i]);
+}
+
+extern "C" void kernelcriticalputstr(const char* characters, size_t length)
+{
+    if (!characters)
+        return;
+    ScopedSpinLock lock(s_log_lock);
+    for (size_t i = 0; i < length; ++i)
+        critical_console_out(characters[i]);
 }

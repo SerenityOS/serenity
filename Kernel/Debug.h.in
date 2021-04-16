@@ -306,6 +306,10 @@
 #cmakedefine01 VIRTIO_DEBUG
 #endif
 
+#ifndef VIRTUAL_CONSOLE_DEBUG
+#cmakedefine01 VIRTUAL_CONSOLE_DEBUG
+#endif
+
 #ifndef VRA_DEBUG
 #cmakedefine01 VRA_DEBUG
 #endif

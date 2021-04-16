@@ -13,7 +13,7 @@ namespace Kernel {
 
 void __panic(const char* file, unsigned int line, const char* function)
 {
-    dmesgln("at {}:{} in {}", file, line, function);
+    critical_dmesgln("at {}:{} in {}", file, line, function);
     dump_backtrace();
     Processor::halt();
 }

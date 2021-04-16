@@ -436,6 +436,16 @@ void dmesgln(CheckedFormatString<Parameters...>&& fmt, const Parameters&... para
 {
     vdmesgln(fmt.view(), VariadicFormatParams { parameters... });
 }
+
+void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams);
+
+// be very careful to not cause any allocations here, since we could be in
+// a very unstable situation
+template<typename... Parameters>
+void critical_dmesgln(CheckedFormatString<Parameters...>&& fmt, const Parameters&... parameters)
+{
+    v_critical_dmesgln(fmt.view(), VariadicFormatParams { parameters... });
+}
 #endif
 
 template<typename T, typename = void>
@@ -492,6 +502,7 @@ struct Formatter<FormatString> : Formatter<String> {
 } // namespace AK
 
 #ifdef KERNEL
+using AK::critical_dmesgln;
 using AK::dmesgln;
 #else
 using AK::out;

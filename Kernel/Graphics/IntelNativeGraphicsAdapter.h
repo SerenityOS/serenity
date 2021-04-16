@@ -9,8 +9,8 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Graphics/Definitions.h>
-#include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/Graphics/RawFramebufferDevice.h>
+#include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/PCI/DeviceController.h>
 #include <Kernel/PhysicalAddress.h>
 
@@ -47,8 +47,7 @@ enum RegisterIndex {
 }
 
 class IntelNativeGraphicsAdapter final
-    : public GraphicsDevice
-    , public PCI::DeviceController {
+    : public VGACompatibleAdapter {
     AK_MAKE_ETERNAL
 public:
     struct PLLSettings {
@@ -129,6 +128,7 @@ private:
     void enable_output(PhysicalAddress fb_address, size_t width);
 
     void disable_vga_emulation();
+    void enable_vga_plane();
 
     void disable_dac_output();
     void enable_dac_output();
@@ -138,7 +138,9 @@ private:
     void disable_pipe_b();
     void disable_dpll();
 
-    void set_dpll_registers(const PLLSettings&, size_t dac_multiplier);
+    void set_dpll_registers(const PLLSettings&);
+
+    void enable_dpll_without_vga(const PLLSettings&, size_t dac_multiplier);
     void set_display_timings(const Graphics::Modesetting&);
     void enable_pipe_a();
     void set_framebuffer_parameters(size_t, size_t);
@@ -166,15 +168,7 @@ private:
     Graphics::VideoInfoBlock m_crt_edid;
     const PhysicalAddress m_registers;
     const PhysicalAddress m_framebuffer_addr;
-
     OwnPtr<Region> m_registers_region;
-
-    size_t m_framebuffer_width { 0 };
-    size_t m_framebuffer_height { 0 };
-    size_t m_framebuffer_stride { 0 };
-
-protected:
-    RefPtr<RawFramebufferDevice> m_framebuffer;
 };
 
 }

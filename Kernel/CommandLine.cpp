@@ -171,8 +171,8 @@ UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const
 UNMAP_AFTER_INIT BootMode CommandLine::boot_mode() const
 {
     const auto boot_mode = lookup("boot_mode").value_or("graphical");
-    if (boot_mode == "text") {
-        return BootMode::Text;
+    if (boot_mode == "no-fbdev") {
+        return BootMode::NoFramebufferDevices;
     } else if (boot_mode == "self-test") {
         return BootMode::SelfTest;
     } else if (boot_mode == "graphical") {
@@ -181,10 +181,10 @@ UNMAP_AFTER_INIT BootMode CommandLine::boot_mode() const
     PANIC("Unknown BootMode: {}", boot_mode);
 }
 
-UNMAP_AFTER_INIT bool CommandLine::is_text_mode() const
+UNMAP_AFTER_INIT bool CommandLine::is_no_framebuffer_devices_mode() const
 {
     const auto mode = boot_mode();
-    return mode == BootMode::Text || mode == BootMode::SelfTest;
+    return mode == BootMode::NoFramebufferDevices || mode == BootMode::SelfTest;
 }
 
 String CommandLine::userspace_init() const
