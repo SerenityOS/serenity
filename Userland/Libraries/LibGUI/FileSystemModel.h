@@ -118,16 +118,16 @@ public:
         bool fetch_data(const String& full_path, bool is_root);
     };
 
-    static NonnullRefPtr<FileSystemModel> create(const StringView& root_path = "/", Mode mode = Mode::FilesAndDirectories)
+    static NonnullRefPtr<FileSystemModel> create(String root_path = "/", Mode mode = Mode::FilesAndDirectories)
     {
         return adopt(*new FileSystemModel(root_path, mode));
     }
     virtual ~FileSystemModel() override;
 
     String root_path() const { return m_root_path; }
-    void set_root_path(const StringView&);
+    void set_root_path(String);
     String full_path(const ModelIndex&) const;
-    ModelIndex index(const StringView& path, int column) const;
+    ModelIndex index(String path, int column) const;
 
     void update_node_on_selection(const ModelIndex&, const bool);
     ModelIndex m_previously_selected_index {};
@@ -163,7 +163,7 @@ public:
     void set_should_show_dotfiles(bool);
 
 private:
-    FileSystemModel(const StringView& root_path, Mode);
+    FileSystemModel(String root_path, Mode);
 
     String name_for_uid(uid_t) const;
     String name_for_gid(gid_t) const;
