@@ -31,11 +31,11 @@
 
 namespace Core {
 
-DirIterator::DirIterator(const StringView& path, Flags flags)
-    : m_path(path)
+DirIterator::DirIterator(String path, Flags flags)
+    : m_path(move(path))
     , m_flags(flags)
 {
-    m_dir = opendir(path.to_string().characters());
+    m_dir = opendir(m_path.characters());
     if (!m_dir) {
         m_error = errno;
     }
