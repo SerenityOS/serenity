@@ -578,6 +578,17 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
             return 0;
         }
 
+        case SIOCGIFNETMASK: {
+            u16 sa_family = AF_INET;
+            if (!copy_to_user(&user_ifr->ifr_addr.sa_family, &sa_family))
+                return -EFAULT;
+            auto ip4_netmask = adapter->ipv4_netmask().to_u32();
+            // NOTE: NOT ifr_netmask.
+            if (!copy_to_user(&((sockaddr_in&)user_ifr->ifr_addr).sin_addr.s_addr, &ip4_netmask, sizeof(ip4_netmask)))
+                return -EFAULT;
+            return 0;
+        }
+
         case SIOCGIFHWADDR: {
             u16 sa_family = AF_INET;
             if (!copy_to_user(&user_ifr->ifr_hwaddr.sa_family, &sa_family))
@@ -586,6 +597,51 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
             if (!copy_to_user(ifr.ifr_hwaddr.sa_data, &mac_address, sizeof(MACAddress)))
                 return -EFAULT;
             return 0;
+        }
+
+        case SIOCGIFBRDADDR: {
+            u16 sa_family = AF_INET;
+            if (!copy_to_user(&user_ifr->ifr_addr.sa_family, &sa_family))
+                return -EFAULT;
+
+            // Broadcast address is basically the reverse of the netmask, i.e.
+            // instead of zeroing out the end, you OR with 1 instead.
+            auto ip4_netmask = adapter->ipv4_netmask().to_u32();
+            auto broadcast_addr = adapter->ipv4_address().to_u32() | ~ip4_netmask;
+
+            if (!copy_to_user(&((sockaddr_in&)user_ifr->ifr_addr).sin_addr.s_addr, &broadcast_addr, sizeof(broadcast_addr)))
+                return -EFAULT;
+            return 0;
+        }
+
+        case SIOCGIFMTU: {
+            u16 sa_family = AF_INET;
+            if (!copy_to_user(&user_ifr->ifr_addr.sa_family, &sa_family))
+                return -EFAULT;
+
+            auto ip4_metric = adapter->mtu();
+
+            if (!copy_to_user(&user_ifr->ifr_metric, &ip4_metric, sizeof(ip4_metric)))
+                return -EFAULT;
+            return 0;
+        }
+
+        case SIOCGIFFLAGS: {
+            u16 sa_family = AF_INET;
+            if (!copy_to_user(&user_ifr->ifr_addr.sa_family, &sa_family))
+                return -EFAULT;
+
+            // FIXME: stub!
+            short flags = 1;
+
+            if (!copy_to_user(&user_ifr->ifr_flags, &flags, sizeof(flags)))
+                return -EFAULT;
+            return 0;
+        }
+
+        case SIOCGIFCONF: {
+            // FIXME: stub!
+            return -EINVAL;
         }
         }
 
@@ -597,6 +653,11 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     case SIOCSIFNETMASK:
     case SIOCGIFADDR:
     case SIOCGIFHWADDR:
+    case SIOCGIFNETMASK:
+    case SIOCGIFBRDADDR:
+    case SIOCGIFMTU:
+    case SIOCGIFFLAGS:
+    case SIOCGIFCONF:
         return ioctl_interface();
 
     case SIOCADDRT:
