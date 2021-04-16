@@ -41,7 +41,7 @@ By default this will be located at `/mnt/c/Program Files/qemu/qemu-system-i386.e
 - Locate the _Windows_ path to the SerenityOS disk image, as native QEMU will be accessing it via the Windows filesystem. If your build tree is located in the WSL2 partition, this will be accessible under the `\\wsl$` network file share (see [notes below](#note-on-filesystems)).
 
 - Set the `SERENITY_DISK_IMAGE` environment variable to the full path of the SerenityOS disk image file from above. For example: \
-`export SERENITY_DISK_IMAGE='\\wsl$\Ubuntu-20.04\home\username\serenity\Build\_disk_image'`
+`export SERENITY_DISK_IMAGE='\\wsl$\Ubuntu-20.04\home\username\serenity\Build\i686\_disk_image'`
 
 - `ninja run` as usual.
 
