@@ -12,8 +12,6 @@ set(SERENITYOS 1)
 
 set(CMAKE_SYSTEM_PROCESSOR "$ENV{SERENITY_ARCH}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
-
 set(SERENITY_BUILD_DIR $ENV{SERENITY_ROOT}/Build/$ENV{SERENITY_ARCH})
 
 # where to read from/write to

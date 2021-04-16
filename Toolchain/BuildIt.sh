@@ -75,7 +75,6 @@ GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.gz"
 GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
 
-
 # === CHECK CACHE AND REUSE ===
 
 pushd "$DIR"
@@ -189,16 +188,20 @@ popd
 
 # === COMPILE AND INSTALL ===
 
+rm -rf "$PREFIX"
 mkdir -p "$PREFIX"
-mkdir -p "$DIR/Build/$ARCH/binutils"
-mkdir -p "$DIR/Build/$ARCH/gcc"
 
 if [ -z "$MAKEJOBS" ]; then
     MAKEJOBS=$($NPROC)
 fi
 
+mkdir -p "$DIR/Build/$ARCH"
+
 pushd "$DIR/Build/$ARCH"
     unset PKG_CONFIG_LIBDIR # Just in case
+
+    rm -rf binutils
+    mkdir -p binutils
 
     pushd binutils
         echo "XXX configure binutils"
@@ -222,55 +225,85 @@ pushd "$DIR/Build/$ARCH"
         "$MAKE" install || exit 1
     popd
 
-    pushd gcc
-        if [ "$(uname -s)" = "OpenBSD" ]; then
-            perl -pi -e 's/-no-pie/-nopie/g' "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/configure"
-        fi
+    echo "XXX serenity libc and libm headers"
+    mkdir -p "$BUILD"
+    pushd "$BUILD"
+        mkdir -p Root/usr/include/
+        SRC_ROOT=$($REALPATH "$DIR"/..)
+        FILES=$(find "$SRC_ROOT"/Userland/Libraries/LibC "$SRC_ROOT"/Userland/Libraries/LibM -name '*.h' -print)
+        for header in $FILES; do
+            target=$(echo "$header" | sed -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Userland/Libraries/LibM@@")
+            $INSTALL -D "$header" "Root/usr/include/$target"
+        done
+        unset SRC_ROOT
+    popd
 
-        echo "XXX configure gcc and libgcc"
-        "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
-                                            --target="$TARGET" \
-                                            --with-sysroot="$SYSROOT" \
-                                            --disable-nls \
-                                            --with-newlib \
-                                            --enable-shared \
-                                            --enable-languages=c,c++ \
-                                            --enable-default-pie \
-                                            --enable-lto \
-                                            ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+    if [ "$(uname -s)" = "OpenBSD" ]; then
+        perl -pi -e 's/-no-pie/-nopie/g' "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/configure"
+    fi
 
-        echo "XXX serenity libc and libm headers"
-        mkdir -p "$BUILD"
-        pushd "$BUILD"
-            mkdir -p Root/usr/include/
-            SRC_ROOT=$($REALPATH "$DIR"/..)
-            FILES=$(find "$SRC_ROOT"/Userland/Libraries/LibC "$SRC_ROOT"/Userland/Libraries/LibM -name '*.h' -print)
-            for header in $FILES; do
-                target=$(echo "$header" | sed -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Userland/Libraries/LibM@@")
-                $INSTALL -D "$header" "Root/usr/include/$target"
-            done
-            unset SRC_ROOT
+    if [ ! -f $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-userland.h ]; then
+        cp $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-kernel.h
+    fi
+
+    for STAGE in Userland Kernel; do
+        rm -rf gcc
+        mkdir -p gcc
+
+        pushd gcc
+            TEMPTARGET="$BUILD/Temp"
+            rm -rf "$TEMPTARGET"
+
+            echo "XXX configure gcc and libgcc"
+            if [ "$STAGE" = "Userland" ]; then
+                REALTARGET="$PREFIX"
+            else
+                REALTARGET="$PREFIX/Kernel"
+            fi
+
+            cp $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-kernel.h $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h
+            if [ "$STAGE" = "Userland" ]; then
+                sed -i 's@-fno-exceptions @@' $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h
+            fi
+
+            "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
+                                                --target="$TARGET" \
+                                                --with-sysroot="$SYSROOT" \
+                                                --disable-nls \
+                                                --with-newlib \
+                                                --enable-shared \
+                                                --enable-languages=c,c++ \
+                                                --enable-default-pie \
+                                                --enable-lto \
+                                                ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+
+            if [ "$STAGE" = "Userland" ]; then
+                echo "XXX build gcc and libgcc"
+                "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
+                if [ "$(uname -s)" = "OpenBSD" ]; then
+                    ln -sf liblto_plugin.so.0.0 gcc/liblto_plugin.so
+                fi
+                "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
+                echo "XXX install gcc and libgcc"
+                "$MAKE" DESTDIR=$TEMPTARGET install-gcc install-target-libgcc || exit 1
+            fi
+
+            echo "XXX build libstdc++"
+            "$MAKE" -j "$MAKEJOBS" all-target-libstdc++-v3 || exit 1
+            echo "XXX install libstdc++"
+            "$MAKE" DESTDIR=$TEMPTARGET install-target-libstdc++-v3 || exit 1
+
+            mkdir -p "$REALTARGET"
+            cp -a $TEMPTARGET/$PREFIX/* "$REALTARGET/"
+            rm -rf "$TEMPTARGET"
         popd
 
-        echo "XXX build gcc and libgcc"
-        "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
-        if [ "$(uname -s)" = "OpenBSD" ]; then
-            ln -sf liblto_plugin.so.0.0 gcc/liblto_plugin.so
+        if [ "$STAGE" = "Userland" ]; then
+            if [ "$(uname -s)" = "OpenBSD" ]; then
+                cd "$DIR/Local/${ARCH}/libexec/gcc/$TARGET/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
+            fi
         fi
-        "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
-        echo "XXX install gcc and libgcc"
-        "$MAKE" install-gcc install-target-libgcc || exit 1
-
-        echo "XXX build libstdc++"
-        "$MAKE" -j "$MAKEJOBS" all-target-libstdc++-v3 || exit 1
-        echo "XXX install libstdc++"
-        "$MAKE" install-target-libstdc++-v3 || exit 1
-
-        if [ "$(uname -s)" = "OpenBSD" ]; then
-            cd "$DIR/Local/${ARCH}/libexec/gcc/$TARGET/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
-        fi
-
-    popd
+    done
 popd
 
 
