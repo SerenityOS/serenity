@@ -135,7 +135,7 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
         if (force_pio)
             m_channels.append(IDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
         else
-            m_channels.append(BMIDEChannel::create(*this, irq_line, { primary_control_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+            m_channels.append(BMIDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
     } else {
         if (force_pio)
             m_channels.append(IDEChannel::create(*this, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
