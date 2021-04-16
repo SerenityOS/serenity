@@ -217,6 +217,14 @@ int main(int argc, char** argv)
         image_editor.redo();
     });
     edit_menu.add_action(redo_action);
+    
+    auto& view_menu = menubar->add_menu("&View");
+    view_menu.add_action(GUI::Action::create(
+        "&Reset Zoom", { Mod_Ctrl, Key_0 }, [&](auto&) {
+            image_editor.reset_scale_and_position();
+            return;
+        },
+        window));
 
     auto& tool_menu = menubar->add_menu("&Tool");
     toolbox.for_each_tool([&](auto& tool) {
