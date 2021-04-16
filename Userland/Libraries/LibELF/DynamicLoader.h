@@ -31,9 +31,9 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <LibC/elf.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
-#include <LibELF/exec_elf.h>
 #include <sys/mman.h>
 
 namespace ELF {

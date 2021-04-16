@@ -37,8 +37,8 @@
 #include <Kernel/RTC.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/ProcessPagingScope.h>
+#include <LibC/elf.h>
 #include <LibELF/CoreDump.h>
-#include <LibELF/exec_elf.h>
 
 namespace Kernel {
 

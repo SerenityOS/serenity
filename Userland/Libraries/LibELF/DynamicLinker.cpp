@@ -32,6 +32,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/ScopeGuard.h>
+#include <LibC/link.h>
 #include <LibC/mman.h>
 #include <LibC/unistd.h>
 #include <LibELF/AuxiliaryVector.h>
@@ -52,6 +53,8 @@ Vector<NonnullRefPtr<ELF::DynamicObject>> g_global_objects;
 
 using EntryPointFunction = int (*)(int, char**, char**);
 using LibCExitFunction = void (*)(int);
+using DlIteratePhdrCallbackFunction = int (*)(struct dl_phdr_info*, size_t, void*);
+using DlIteratePhdrFunction = int (*)(DlIteratePhdrCallbackFunction, void*);
 
 size_t g_current_tls_offset = 0;
 size_t g_total_tls_size = 0;
@@ -162,6 +165,24 @@ static void allocate_tls()
     g_total_tls_size = total_tls_size;
 }
 
+static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
+{
+    for (auto& object : g_global_objects) {
+        auto info = dl_phdr_info {
+            .dlpi_addr = (ElfW(Addr))object->base_address().as_ptr(),
+            .dlpi_name = object->filename().characters(),
+            .dlpi_phdr = object->program_headers(),
+            .dlpi_phnum = object->program_header_count()
+        };
+
+        auto res = callback(&info, sizeof(info), data);
+        if (res != 0)
+            return res;
+    }
+
+    return 0;
+}
+
 static void initialize_libc(DynamicObject& libc)
 {
     // Traditionally, `_start` of the main program initializes libc.
@@ -180,6 +201,10 @@ static void initialize_libc(DynamicObject& libc)
     res = libc.lookup_symbol("exit"sv);
     VERIFY(res.has_value());
     g_libc_exit = (LibCExitFunction)res.value().address.as_ptr();
+
+    res = libc.lookup_symbol("__dl_iterate_phdr"sv);
+    VERIFY(res.has_value());
+    *((DlIteratePhdrFunction*)res.value().address.as_ptr()) = __dl_iterate_phdr;
 
     res = libc.lookup_symbol("__libc_init"sv);
     VERIFY(res.has_value());

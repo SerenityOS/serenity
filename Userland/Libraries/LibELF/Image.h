@@ -29,7 +29,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/VirtualAddress.h>
-#include <LibELF/exec_elf.h>
+#include <LibC/elf.h>
 
 namespace ELF {
 

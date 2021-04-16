@@ -30,10 +30,13 @@
  * formerly known as "elf_abi.h".
  */
 
-#ifndef _SYS_EXEC_ELF_H_
-#define _SYS_EXEC_ELF_H_
+#pragma once
 
-#include <AK/Types.h>
+#ifndef KERNEL
+#    include <sys/types.h>
+#else
+#    include <AK/Types.h>
+#endif
 
 typedef uint8_t Elf_Byte;
 
@@ -788,5 +791,3 @@ struct elf_args {
 #define R_386_RELATIVE 8   /* Base address + Addned */
 #define R_386_TLS_TPOFF 14 /* Negative offset into the static TLS storage */
 #define R_386_TLS_TPOFF32 37
-
-#endif /* _SYS_EXEC_ELF_H_ */

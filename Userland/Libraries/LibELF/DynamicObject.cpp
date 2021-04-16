@@ -28,18 +28,19 @@
 #include <AK/Debug.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <LibC/elf.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Hashes.h>
-#include <LibELF/exec_elf.h>
 #include <string.h>
 
 namespace ELF {
 
 static const char* name_for_dtag(Elf32_Sword d_tag);
 
-DynamicObject::DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address)
-    : m_base_address(base_address)
+DynamicObject::DynamicObject(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address)
+    : m_filename(filename)
+    , m_base_address(base_address)
     , m_dynamic_address(dynamic_section_address)
 {
     auto* header = (Elf32_Ehdr*)base_address.as_ptr();
@@ -255,6 +256,18 @@ DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
     return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv));
 }
 
+Elf32_Half DynamicObject::program_header_count() const
+{
+    auto* header = (const Elf32_Ehdr*)m_base_address.as_ptr();
+    return header->e_phnum;
+}
+
+const Elf32_Phdr* DynamicObject::program_headers() const
+{
+    auto* header = (const Elf32_Ehdr*)m_base_address.as_ptr();
+    return (const Elf32_Phdr*)(m_base_address.as_ptr() + header->e_phoff);
+}
+
 auto DynamicObject::HashSection::lookup_sysv_symbol(const StringView& name, u32 hash_value) const -> Optional<Symbol>
 {
     u32* hash_table_begin = (u32*)address().as_ptr();
@@ -447,9 +460,9 @@ auto DynamicObject::lookup_symbol(const StringView& name, u32 gnu_hash, u32 sysv
     return SymbolLookupResult { symbol.value(), symbol.address(), symbol.bind(), this };
 }
 
-NonnullRefPtr<DynamicObject> DynamicObject::create(VirtualAddress base_address, VirtualAddress dynamic_section_address)
+NonnullRefPtr<DynamicObject> DynamicObject::create(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address)
 {
-    return adopt(*new DynamicObject(base_address, dynamic_section_address));
+    return adopt(*new DynamicObject(filename, base_address, dynamic_section_address));
 }
 
 // offset is in PLT relocation table
