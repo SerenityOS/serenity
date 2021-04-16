@@ -34,7 +34,7 @@ namespace AK {
 class LexicalPath {
 public:
     LexicalPath() = default;
-    explicit LexicalPath(const StringView&);
+    explicit LexicalPath(String);
 
     bool is_valid() const { return m_is_valid; }
     bool is_absolute() const { return m_is_absolute; }
@@ -49,8 +49,8 @@ public:
 
     bool has_extension(const StringView&) const;
 
-    static String canonicalized_path(const StringView&);
-    static String relative_path(const String absolute_path, const String& prefix);
+    static String canonicalized_path(String);
+    static String relative_path(String absolute_path, String const& prefix);
 
 private:
     void canonicalize();
