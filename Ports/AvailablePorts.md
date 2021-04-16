@@ -29,7 +29,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`flex`](flex/)                | flex                                          | 2.6.4             | https://github.com/westes/flex                        |
 | [`freetype`](freetype/)        | FreeType                                      | 2.10.4            | https://www.freetype.org/                             |
 | [`frotz`](frotz/)              | Frotz                                         |                   | https://gitlab.com/DavidGriffith/frotz                |
-| [`gcc`](gcc/)                  | GNU Compiler Collection                       | 10.2.0            | https://gcc.gnu.org/                                  |
+| [`gcc`](gcc/)                  | GNU Compiler Collection                       | 10.3.0            | https://gcc.gnu.org/                                  |
 | [`genemu`](genemu)             | Genesis / MegaDrive Emulator                  |                   | https://github.com/rasky/genemu                       |
 | [`git`](git/)                  | Git                                           | 2.31.1            | https://git-scm.com/                                  |
 | [`gmp`](gmp/)                  | GNU Multiple Precision Arithmetic Library     | 6.2.1             | https://gmplib.org/                                   |
