@@ -187,6 +187,24 @@ ID get_id(Address address)
     return { read16(address, PCI_VENDOR_ID), read16(address, PCI_DEVICE_ID) };
 }
 
+void enable_io_space(Address address)
+{
+    write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) | (1 << 0));
+}
+void disable_io_space(Address address)
+{
+    write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) & ~(1 << 0));
+}
+
+void enable_memory_space(Address address)
+{
+    write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) | (1 << 1));
+}
+void disable_memory_space(Address address)
+{
+    write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) & ~(1 << 1));
+}
+
 void enable_interrupt_line(Address address)
 {
     write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) & ~(1 << 10));
