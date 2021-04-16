@@ -49,6 +49,13 @@ constexpr T&& move(T& arg)
 
 using std::move;
 
+namespace AK::Detail {
+template<typename T>
+struct _RawPtr {
+    using Type = T*;
+};
+}
+
 namespace AK {
 
 template<typename T>
@@ -122,6 +129,9 @@ constexpr T exchange(T& slot, U&& value)
     return old_value;
 }
 
+template<typename T>
+using RawPtr = typename Detail::_RawPtr<T>::Type;
+
 }
 
 using AK::array_size;
@@ -132,4 +142,5 @@ using AK::exchange;
 using AK::forward;
 using AK::max;
 using AK::min;
+using AK::RawPtr;
 using AK::swap;

@@ -73,7 +73,7 @@ Atomic<bool> g_finalizer_has_work { false };
 READONLY_AFTER_INIT static Process* s_colonel_process;
 
 struct ThreadReadyQueue {
-    IntrusiveList<Thread, &Thread::m_ready_queue_node> thread_list;
+    IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_ready_queue_node> thread_list;
 };
 static SpinLock<u8> g_ready_queues_lock;
 static u32 g_ready_queues_mask;
