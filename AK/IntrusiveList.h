@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/BitCast.h>
 
 namespace AK {
 
@@ -269,7 +270,13 @@ inline typename IntrusiveList<T, member>::ConstIterator IntrusiveList<T, member>
 template<class T, IntrusiveListNode T::*member>
 inline T* IntrusiveList<T, member>::node_to_value(IntrusiveListNode& node)
 {
-    return (T*)((char*)&node - ((char*)&(((T*)nullptr)->*member) - (char*)nullptr));
+    // Note: Since this might seem odd, here's an explanation on what this function actually does:
+    //       `node` is a reference that resides in some part of the actual value (of type T), the
+    //       placement (i.e. offset) of which is described by the pointer-to-data-member parameter
+    //       named `member`.
+    //       This function effectively takes in the address of the data member, and returns the address
+    //       of the value (of type T) holding that member.
+    return bit_cast<T*>(bit_cast<unsigned char*>(&node) - bit_cast<unsigned char*>(member));
 }
 
 inline IntrusiveListNode::~IntrusiveListNode()
