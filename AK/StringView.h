@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -209,8 +209,6 @@ public:
         return m_length < other.m_length;
     }
 
-    const StringImpl* impl() const { return m_impl; }
-
     [[nodiscard]] String to_string() const;
 
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
@@ -227,7 +225,6 @@ private:
     [[nodiscard]] bool is_one_of() const { return false; }
 
     friend class String;
-    const StringImpl* m_impl { nullptr };
     const char* m_characters { nullptr };
     size_t m_length { 0 };
 };

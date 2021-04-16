@@ -219,8 +219,6 @@ static inline char to_lowercase(char c)
 
 bool equals_ignoring_case(const StringView& a, const StringView& b)
 {
-    if (a.impl() && a.impl() == b.impl())
-        return true;
     if (a.length() != b.length())
         return false;
     for (size_t i = 0; i < a.length(); ++i) {
