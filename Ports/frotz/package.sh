@@ -2,7 +2,8 @@
 port=frotz
 version=git
 workdir=frotz-master
-files="https://gitlab.com/DavidGriffith/frotz/-/archive/master/frotz-master.zip frotz-master.zip"
+files="https://gitlab.com/DavidGriffith/frotz/-/archive/master/frotz-master.zip frotz-master.zip eeaad3d51354491b07c7f30384c0cede"
+auth_type=md5
 depends="ncurses"
 
 build() {

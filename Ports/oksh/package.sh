@@ -4,7 +4,8 @@ useconfigure=true
 version=6.8.1
 depends="ncurses"
 workdir=oksh-${version}
-files="https://github.com/ibara/oksh/releases/download/oksh-${version}/oksh-${version}.tar.gz oksh-${version}.tar.gz"
+files="https://github.com/ibara/oksh/releases/download/oksh-${version}/oksh-${version}.tar.gz oksh-${version}.tar.gz ce8b7c278e6d36bbbd7b54c218fae7ba"
+auth_type=md5
 
 configure() {
     export CC=${SERENITY_ROOT}/Toolchain/Local/${SERENITY_ARCH}/bin/${SERENITY_ARCH}-pc-serenity-gcc 
