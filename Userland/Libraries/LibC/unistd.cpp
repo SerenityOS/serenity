@@ -295,6 +295,12 @@ ssize_t write(int fd, const void* buf, size_t count)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+ssize_t fdcopy(int srcfd, int dstfd, size_t count)
+{
+    int rc = syscall(SC_fdcopy, srcfd, dstfd, count);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int ttyname_r(int fd, char* buffer, size_t size)
 {
     int rc = syscall(SC_ttyname, fd, buffer, size);

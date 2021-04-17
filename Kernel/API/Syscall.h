@@ -192,7 +192,8 @@ namespace Kernel {
     S(anon_create)            \
     S(msyscall)               \
     S(readv)                  \
-    S(emuctl)
+    S(emuctl)                 \
+    S(fdcopy)
 
 namespace Syscall {
 

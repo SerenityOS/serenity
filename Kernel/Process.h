@@ -296,6 +296,7 @@ public:
     KResultOr<ssize_t> sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count);
     KResultOr<ssize_t> sys$write(int fd, Userspace<const u8*>, ssize_t);
     KResultOr<ssize_t> sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count);
+    KResultOr<ssize_t> sys$fdcopy(int srcfd, int dstfd, ssize_t count);
     KResultOr<int> sys$fstat(int fd, Userspace<stat*>);
     KResultOr<int> sys$stat(Userspace<const Syscall::SC_stat_params*>);
     KResultOr<int> sys$lseek(int fd, Userspace<off_t*>, int whence);

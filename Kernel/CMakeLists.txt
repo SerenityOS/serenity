@@ -146,6 +146,7 @@ set(KERNEL_SOURCES
     Syscalls/execve.cpp
     Syscalls/exit.cpp
     Syscalls/fcntl.cpp
+    Syscalls/fdcopy.cpp
     Syscalls/fork.cpp
     Syscalls/ftruncate.cpp
     Syscalls/futex.cpp
