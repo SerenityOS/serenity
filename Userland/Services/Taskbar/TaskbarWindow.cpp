@@ -84,14 +84,15 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     main_widget.set_layout<GUI::HorizontalBoxLayout>();
     main_widget.layout()->set_margins({ 3, 3, 3, 1 });
 
-    auto& start_button = main_widget.add<GUI::Button>("Serenity");
-    start_button.set_font(Gfx::FontDatabase::default_bold_font());
-    start_button.set_icon_spacing(0);
-    start_button.set_fixed_size(80, 22);
+    m_start_button = GUI::Button::construct("Serenity");
+    m_start_button->set_font(Gfx::FontDatabase::default_bold_font());
+    m_start_button->set_icon_spacing(0);
+    m_start_button->set_fixed_size(80, 22);
     auto app_icon = GUI::Icon::default_icon("ladybug");
-    start_button.set_icon(app_icon.bitmap_for_size(16));
-    start_button.set_menu(m_start_menu);
+    m_start_button->set_icon(app_icon.bitmap_for_size(16));
+    m_start_button->set_menu(m_start_menu);
 
+    main_widget.add_child(*m_start_button);
     create_quick_launch_bar();
 
     m_task_button_container = main_widget.add<GUI::Widget>();
@@ -336,6 +337,14 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         m_applet_area_size = changed_event.size();
         m_applet_area_container->set_fixed_size(changed_event.size().width() + 8, 22);
         update_applet_area();
+        break;
+    }
+    case GUI::Event::WM_SuperKeyPressed: {
+        if (m_start_menu->is_visible()) {
+            m_start_menu->dismiss();
+        } else {
+            m_start_menu->popup(m_start_button->screen_relative_rect().top_left());
+        }
         break;
     }
     default:
