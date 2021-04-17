@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Gunnar Beutner <gunnar@beutner.name>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,46 +24,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Types.h>
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/internals.h>
-#include <unistd.h>
+#pragma once
 
-#ifndef _DYNAMIC_LOADER
-extern "C" {
+#include <LibPthread/pthread.h>
 
-extern u32 __stack_chk_guard;
+struct PthreadFunctions {
+    int (*pthread_mutex_trylock)(pthread_mutex_t* mutex);
+    int (*pthread_mutex_destroy)(pthread_mutex_t*);
 
-int main(int, char**, char**);
+    int (*pthread_mutexattr_init)(pthread_mutexattr_t*);
+    int (*pthread_mutexattr_settype)(pthread_mutexattr_t*, int);
+    int (*pthread_mutexattr_destroy)(pthread_mutexattr_t*);
 
-// Tell the compiler that this may be called from somewhere else.
-int _start(int argc, char** argv, char** env);
+    int (*pthread_once)(pthread_once_t*, void (*)(void));
 
-int _start(int argc, char** argv, char** env)
-{
-    u32 original_stack_chk = __stack_chk_guard;
-    arc4random_buf(&__stack_chk_guard, sizeof(__stack_chk_guard));
+    int (*pthread_cond_broadcast)(pthread_cond_t*);
+    int (*pthread_cond_init)(pthread_cond_t*, const pthread_condattr_t*);
+    int (*pthread_cond_signal)(pthread_cond_t*);
+    int (*pthread_cond_wait)(pthread_cond_t*, pthread_mutex_t*);
+    int (*pthread_cond_destroy)(pthread_cond_t*);
+    int (*pthread_cond_timedwait)(pthread_cond_t*, pthread_mutex_t*, const struct timespec*);
+};
 
-    if (__stack_chk_guard == 0)
-        __stack_chk_guard = original_stack_chk;
-
-    environ = env;
-    __environ_is_malloced = false;
-
-    _init();
-
-    int status = main(argc, argv, environ);
-
-    exit(status);
-
-    // We should never get here, but if we ever do, make sure to
-    // restore the stack guard to the value we entered _start with.
-    // Then we won't trigger the stack canary check on the way out.
-    __stack_chk_guard = original_stack_chk;
-
-    return 20150614;
-}
-}
-#endif
+void __init_pthread_forward(PthreadFunctions);
