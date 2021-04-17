@@ -88,8 +88,8 @@ public:
     String text() const { return m_text; }
     void set_text(String text) { m_text = move(text); }
 
-    String const& long_text() const { return m_long_text; }
-    void set_long_text(String long_text) { m_long_text = move(long_text); }
+    String const& status_tip() const { return m_status_tip; }
+    void set_status_tip(String status_tip) { m_status_tip = move(status_tip); }
 
     Shortcut shortcut() const { return m_shortcut; }
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
@@ -138,7 +138,7 @@ private:
     void for_each_menu_item(Callback);
 
     String m_text;
-    String m_long_text;
+    String m_status_tip;
     RefPtr<Gfx::Bitmap> m_icon;
     Shortcut m_shortcut;
     bool m_enabled { true };

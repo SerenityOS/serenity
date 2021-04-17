@@ -276,7 +276,7 @@ TextEditorWidget::TextEditorWidget()
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
-        auto text = action.long_text();
+        auto text = action.status_tip();
         if (text.is_empty())
             text = Gfx::parse_ampersand_string(action.text());
         m_statusbar->set_override_text(move(text));
