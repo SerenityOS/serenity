@@ -58,6 +58,7 @@ protected:
         float preferred_minimum_width { 0 };
     };
 
+    static float compute_auto_height_for_block_level_element(const Box& box);
     static float tentative_width_for_replaced_element(const ReplacedBox&, const CSS::Length& width);
     static float tentative_height_for_replaced_element(const ReplacedBox&, const CSS::Length& width);
 
