@@ -556,8 +556,11 @@ int Menu::item_index_at(const Gfx::IntPoint& position)
 {
     int i = 0;
     for (auto& item : m_items) {
-        if (item.rect().contains(position))
+        if (item.rect().contains(position)) {
+            if (item.type() == MenuItem::Type::Separator)
+                return -1;
             return i;
+        }
         ++i;
     }
     return -1;
