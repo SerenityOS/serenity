@@ -49,6 +49,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_create_new_tab();
         },
         &window);
+    m_create_new_tab_action->set_status_tip("Open a new tab");
 
     m_next_tab_action = GUI::Action::create(
         "&Next Tab", { Mod_Ctrl, Key_PageDown }, [this](auto&) {
@@ -56,6 +57,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_next_tab();
         },
         &window);
+    m_next_tab_action->set_status_tip("Switch to the next tab");
 
     m_previous_tab_action = GUI::Action::create(
         "&Previous Tab", { Mod_Ctrl, Key_PageUp }, [this](auto&) {
@@ -63,6 +65,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_previous_tab();
         },
         &window);
+    m_previous_tab_action->set_status_tip("Switch to the previous tab");
 
     m_about_action = GUI::Action::create(
         "&About Browser", GUI::Icon::default_icon("app-browser").bitmap_for_size(16), [this](const GUI::Action&) {
@@ -70,6 +73,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_about();
         },
         &window);
+    m_about_action->set_status_tip("Show application about box");
 
     m_show_bookmarks_bar_action = GUI::Action::create_checkable(
         "&Bookmarks Bar", { Mod_Ctrl, Key_B },
@@ -78,6 +82,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_show_bookmarks_bar(action);
         },
         &window);
+    m_show_bookmarks_bar_action->set_status_tip("Show/hide the bookmarks bar");
 }
 
 }
