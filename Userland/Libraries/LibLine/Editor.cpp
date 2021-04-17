@@ -208,6 +208,7 @@ Editor::~Editor()
 void Editor::get_terminal_size()
 {
     struct winsize ws;
+
     if (ioctl(STDERR_FILENO, TIOCGWINSZ, &ws) < 0) {
         m_num_columns = 80;
         m_num_lines = 25;
@@ -502,8 +503,8 @@ void Editor::initialize()
     struct termios termios;
     tcgetattr(0, &termios);
     m_default_termios = termios; // grab a copy to restore
-    if (m_was_resized)
-        get_terminal_size();
+
+    get_terminal_size();
 
     if (m_configuration.operation_mode == Configuration::Unset) {
         auto istty = isatty(STDIN_FILENO) && isatty(STDERR_FILENO);
@@ -628,6 +629,13 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
 
         return Error::ReadFailure;
     }
+
+    auto old_cols = m_num_columns;
+    auto old_lines = m_num_lines;
+    get_terminal_size();
+
+    if (m_num_columns != old_cols || m_num_lines != old_lines)
+        m_refresh_needed = true;
 
     set_prompt(prompt);
     reset();
