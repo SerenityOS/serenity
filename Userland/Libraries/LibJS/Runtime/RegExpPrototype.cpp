@@ -346,7 +346,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         size_t result_length = length_of_array_like(global_object, result);
         size_t n_captures = result_length == 0 ? 0 : result_length - 1;
 
-        auto matched = result.get(0).value_or(js_undefined());
+        auto matched_value = result.get(0).value_or(js_undefined());
+        if (vm.exception())
+            return {};
+
+        auto matched = matched_value.to_string(global_object);
         if (vm.exception())
             return {};
 
@@ -387,7 +391,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
         if (replace_value.is_function()) {
             MarkedValueList replacer_args(vm.heap());
-            replacer_args.append(matched);
+            replacer_args.append(js_string(vm, matched));
             replacer_args.append(move(captures));
             replacer_args.append(Value(position));
             replacer_args.append(js_string(vm, string));
@@ -416,7 +420,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             builder.append(replacement);
 
             accumulated_result = builder.build();
-            next_source_position = position + matched.as_string().string().length();
+            next_source_position = position + matched.length();
         }
     }
 
