@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2021, Matthew Olsson <matthewcolsson@gmail.com>
+ * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -156,6 +158,11 @@ struct Interface {
     Vector<Constructor> constructors;
     Vector<Function> functions;
 
+    Optional<Function> named_getter;
+    Optional<Function> named_setter;
+    Optional<Function> indexed_getter;
+    Optional<Function> indexed_setter;
+
     // Added for convenience after parsing
     String wrapper_class;
     String wrapper_base_class;
@@ -163,6 +170,9 @@ struct Interface {
     String constructor_class;
     String prototype_class;
     String prototype_base_class;
+
+    bool has_idl_getter() const { return named_getter.has_value() || indexed_getter.has_value(); }
+    bool has_idl_setter() const { return named_setter.has_value() || indexed_setter.has_value(); }
 };
 
 static OwnPtr<Interface> parse_interface(StringView filename, const StringView& input)
@@ -315,6 +325,14 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
     };
 
     auto parse_function = [&](HashMap<String, String>& extended_attributes) {
+        bool getter = lexer.consume_specific("getter");
+        if (getter)
+            consume_whitespace();
+
+        bool setter = lexer.consume_specific("setter");
+        if (setter)
+            consume_whitespace();
+
         auto return_type = parse_type();
         consume_whitespace();
         auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '('; });
@@ -325,7 +343,31 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         consume_whitespace();
         assert_specific(';');
 
-        interface->functions.append(Function { return_type, name, move(parameters), move(extended_attributes) });
+        Function function { return_type, name, move(parameters), move(extended_attributes) };
+
+        if (getter) {
+            VERIFY(function.parameters.size() == 1);
+            auto getter_type = function.parameters.first().type.name;
+            if (getter_type == "DOMString") {
+                interface->named_getter = function;
+            } else if (getter_type == "unsigned long") {
+                interface->indexed_getter = function;
+            } else {
+                VERIFY_NOT_REACHED();
+            }
+        } else if (setter) {
+            VERIFY(function.parameters.size() == 2);
+            auto setter_type = function.parameters.first().type.name;
+            if (setter_type == "DOMString") {
+                interface->named_setter = function;
+            } else if (setter_type == "unsigned long") {
+                interface->indexed_setter = function;
+            } else {
+                VERIFY_NOT_REACHED();
+            }
+        }
+
+        interface->functions.append(function);
     };
 
     auto parse_constructor = [&] {
@@ -709,6 +751,18 @@ static void generate_argument_count_check(SourceGenerator& generator, FunctionTy
 )~~~");
 }
 
+static String generate_argument(SourceGenerator& generator, const IDL::Parameter& parameter, size_t argument_index, bool return_void = false)
+{
+    generator.set("argument.index", String::number(argument_index));
+
+    generator.append(R"~~~(
+    auto arg@argument.index@ = vm.argument(@argument.index@);
+)~~~");
+    // FIXME: Parameters can have [LegacyNullToEmptyString] attached.
+    generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), return_void, false, parameter.optional, parameter.optional_default_value);
+    return make_input_acceptable_cpp(parameter.name.to_snakecase());
+}
+
 static void generate_arguments(SourceGenerator& generator, const Vector<IDL::Parameter>& parameters, StringBuilder& arguments_builder, bool return_void = false)
 {
     auto arguments_generator = generator.fork();
@@ -716,18 +770,209 @@ static void generate_arguments(SourceGenerator& generator, const Vector<IDL::Par
     Vector<String> parameter_names;
     size_t argument_index = 0;
     for (auto& parameter : parameters) {
-        parameter_names.append(make_input_acceptable_cpp(parameter.name.to_snakecase()));
-        arguments_generator.set("argument.index", String::number(argument_index));
-
-        arguments_generator.append(R"~~~(
-    auto arg@argument.index@ = vm.argument(@argument.index@);
-)~~~");
-        // FIXME: Parameters can have [LegacyNullToEmptyString] attached.
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), return_void, false, parameter.optional, parameter.optional_default_value);
+        parameter_names.append(generate_argument(generator, parameter, argument_index, return_void));
         ++argument_index;
     }
 
     arguments_builder.join(", ", parameter_names);
+}
+
+static void generate_return_statement(SourceGenerator& generator, const IDL::Type& return_type)
+{
+    auto scoped_generator = generator.fork();
+    scoped_generator.set("return_type", return_type.name);
+
+    if (return_type.name == "undefined") {
+        scoped_generator.append(R"~~~(
+    return JS::js_undefined();
+)~~~");
+        return;
+    }
+
+    if (return_type.nullable) {
+        if (return_type.is_string()) {
+            scoped_generator.append(R"~~~(
+    if (retval.is_null())
+        return JS::js_null();
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    if (!retval)
+        return JS::js_null();
+)~~~");
+        }
+    }
+
+    if (return_type.is_string()) {
+        scoped_generator.append(R"~~~(
+    return JS::js_string(vm, retval);
+)~~~");
+    } else if (return_type.name == "ArrayFromVector") {
+        // FIXME: Remove this fake type hack once it's no longer needed.
+        //        Basically once we have NodeList we can throw this out.
+        scoped_generator.append(R"~~~(
+    auto* new_array = JS::Array::create(global_object);
+    for (auto& element : retval)
+        new_array->indexed_properties().append(wrap(global_object, element));
+
+    return new_array;
+)~~~");
+    } else if (return_type.name == "boolean" || return_type.name == "double") {
+        scoped_generator.append(R"~~~(
+    return JS::Value(retval);
+)~~~");
+    } else if (return_type.name == "short" || return_type.name == "unsigned short" || return_type.name == "long" || return_type.name == "unsigned long") {
+        scoped_generator.append(R"~~~(
+    return JS::Value((i32)retval);
+)~~~");
+    } else if (return_type.name == "Uint8ClampedArray") {
+        scoped_generator.append(R"~~~(
+    return retval;
+)~~~");
+    } else if (return_type.name == "EventHandler") {
+        scoped_generator.append(R"~~~(
+    return retval.callback.cell();
+)~~~");
+    } else {
+        scoped_generator.append(R"~~~(
+    return wrap(global_object, const_cast<@return_type@&>(*retval));
+)~~~");
+    }
+};
+
+static void generate_getter(SourceGenerator& generator, const IDL::Function& getter, bool indexed)
+{
+    auto scoped_generator = generator.fork();
+    if (indexed) {
+        scoped_generator.set("function.condition", "property.is_number() && property.as_number() >= 0");
+        scoped_generator.set("function.argument", "property.as_number()");
+    } else {
+        scoped_generator.set("function.condition", "property.is_string()");
+        scoped_generator.set("function.argument", "property.as_string()");
+    }
+
+    scoped_generator.set("function.cpp_name", getter.name.to_snakecase());
+
+    scoped_generator.append(R"~~~(
+    if (@function.condition@) {
+        auto result = throw_dom_exception_if_needed(vm, global_object, [&] {
+            return impl().@function.cpp_name@(@function.argument@);
+        });
+        if (should_return_empty(result))
+            return JS::Value();
+
+        [[maybe_unused]] auto retval = result.release_value();
+)~~~");
+
+    generate_return_statement(scoped_generator, getter.return_type);
+
+    scoped_generator.append(R"~~~(
+    }
+)~~~");
+}
+
+static void generate_setter(SourceGenerator& generator, const IDL::Function& setter, bool indexed)
+{
+    auto scoped_generator = generator.fork();
+    if (indexed) {
+        scoped_generator.set("function.condition", "property.is_number() && property.as_number() >= 0");
+        scoped_generator.set("function.argument", "property.as_number()");
+    } else {
+        scoped_generator.set("function.condition", "property.is_string()");
+        scoped_generator.set("function.argument", "property.as_string()");
+    }
+
+    scoped_generator.set("function.cpp_name", setter.name.to_snakecase());
+    scoped_generator.set("function.value", generate_argument(scoped_generator, setter.parameters[0], 0));
+
+    scoped_generator.append(R"~~~(
+    if (@function.condition@) {
+        throw_dom_exception_if_needed(vm, global_object, [&] {
+            return impl().@function.cpp_name@(@function.argument@, @function.value@);
+        });
+        if (should_return_empty(result))
+            return JS::Value();
+
+        [[maybe_unused]] auto retval = result.release_value();
+)~~~");
+
+    generate_return_statement(scoped_generator, setter.return_type);
+
+    scoped_generator.append(R"~~~(
+    }
+)~~~");
+}
+
+static void generate_implementation_includes(SourceGenerator& generator)
+{
+    generator.append(R"~~~(
+#include <AK/Function.h>
+#include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Uint8ClampedArray.h>
+#include <LibWeb/Bindings/@prototype_class@.h>
+#include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
+#include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
+#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
+#include <LibWeb/Bindings/CommentWrapper.h>
+#include <LibWeb/Bindings/DOMImplementationWrapper.h>
+#include <LibWeb/Bindings/DocumentFragmentWrapper.h>
+#include <LibWeb/Bindings/DocumentTypeWrapper.h>
+#include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
+#include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/EventWrapperFactory.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
+#include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
+#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
+#include <LibWeb/Bindings/ImageDataWrapper.h>
+#include <LibWeb/Bindings/NodeWrapperFactory.h>
+#include <LibWeb/Bindings/PerformanceTimingWrapper.h>
+#include <LibWeb/Bindings/RangeWrapper.h>
+#include <LibWeb/Bindings/StyleSheetListWrapper.h>
+#include <LibWeb/Bindings/TextWrapper.h>
+#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/Range.h>
+#include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/EventHandler.h>
+#include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/NavigationTiming/PerformanceTiming.h>
+#include <LibWeb/Origin.h>
+
+#if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
+#    include <LibWeb/Bindings/@prototype_base_class@.h>
+#endif
+#if __has_include(<LibWeb/CSS/@name@.h>)
+#    include <LibWeb/CSS/@name@.h>
+#elif __has_include(<LibWeb/DOM/@name@.h>)
+#    include <LibWeb/DOM/@name@.h>
+#elif __has_include(<LibWeb/HTML/@name@.h>)
+#    include <LibWeb/HTML/@name@.h>
+#elif __has_include(<LibWeb/UIEvents/@name@.h>)
+#    include <LibWeb/UIEvents/@name@.h>
+#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
+#    include <LibWeb/HighResolutionTime/@name@.h>
+#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
+#    include <LibWeb/NavigationTiming/@name@.h>
+#elif __has_include(<LibWeb/SVG/@name@.h>)
+#    include <LibWeb/SVG/@name@.h>
+#elif __has_include(<LibWeb/XHR/@name@.h>)
+#    include <LibWeb/XHR/@name@.h>
+#endif
+
+// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::CSS;
+using namespace Web::DOM;
+using namespace Web::HTML;
+using namespace Web::NavigationTiming;
+using namespace Web::XHR;
+)~~~");
 }
 
 static void generate_header(const IDL::Interface& interface)
@@ -785,14 +1030,15 @@ public:
     virtual ~@wrapper_class@() override;
 )~~~");
 
-    if (interface.extended_attributes.contains("CustomGet")) {
+    if (interface.has_idl_getter() || interface.extended_attributes.contains("CustomGet")) {
         generator.append(R"~~~(
-    virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}, bool without_side_effects = false) const override;
+virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}, bool without_side_effects = false) const override;
 )~~~");
     }
-    if (interface.extended_attributes.contains("CustomPut")) {
+
+    if (interface.has_idl_setter() || interface.extended_attributes.contains("CustomPut")) {
         generator.append(R"~~~(
-    virtual bool put(const JS::PropertyName&, JS::Value, JS::Value receiver = {}) override;
+virtual bool put(const JS::PropertyName&, JS::Value, JS::Value receiver = {}) override;
 )~~~");
     }
 
@@ -844,43 +1090,12 @@ void generate_implementation(const IDL::Interface& interface)
     generator.set("wrapper_class", interface.wrapper_class);
     generator.set("wrapper_base_class", interface.wrapper_base_class);
     generator.set("prototype_class", interface.prototype_class);
+    generator.set("prototype_base_class", interface.prototype_base_class);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
+    generate_implementation_includes(generator);
+
     generator.append(R"~~~(
-#include <AK/FlyString.h>
-#include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
-#include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Uint8ClampedArray.h>
-#include <LibJS/Runtime/Value.h>
-#include <LibWeb/Bindings/@prototype_class@.h>
-#include <LibWeb/Bindings/@wrapper_class@.h>
-#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
-#include <LibWeb/Bindings/CommentWrapper.h>
-#include <LibWeb/Bindings/DOMImplementationWrapper.h>
-#include <LibWeb/Bindings/DocumentFragmentWrapper.h>
-#include <LibWeb/Bindings/DocumentTypeWrapper.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
-#include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
-#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
-#include <LibWeb/Bindings/ImageDataWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/TextWrapper.h>
-#include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/Origin.h>
-
-// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
-using namespace Web::CSS;
-using namespace Web::DOM;
-using namespace Web::HTML;
-
 namespace Web::Bindings {
 
 @wrapper_class@* @wrapper_class@::create(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
@@ -924,6 +1139,42 @@ void @wrapper_class@::initialize(JS::GlobalObject& global_object)
 @wrapper_class@* wrap(JS::GlobalObject& global_object, @fully_qualified_name@& impl)
 {
     return static_cast<@wrapper_class@*>(wrap_impl(global_object, impl));
+}
+)~~~");
+    }
+
+    if (interface.has_idl_getter()) {
+        generator.append(R"~~~(
+JS::Value @wrapper_class@::get(const JS::PropertyName& property, JS::Value receiver, bool without_side_effects) const
+{
+    auto& vm = this->vm();
+    auto& global_object = this->global_object();
+    auto value = Object::get(property, receiver, without_side_effects);
+    if (!value.is_undefined() && !value.is_empty())
+        return value;
+)~~~");
+        if (interface.named_getter.has_value())
+            generate_getter(generator, interface.named_getter.value(), false);
+        if (interface.indexed_getter.has_value())
+            generate_getter(generator, interface.indexed_getter.value(), true);
+
+        generator.append(R"~~~(
+    return value;
+}
+)~~~");
+    } else if (interface.has_idl_setter()) {
+        generator.append(R"~~~(
+bool @wrapper_class@::put(const JS::PropertyName& name, JS::Value value, JS::Value receiver) const
+{
+    auto& vm = this->vm();
+)~~~");
+        if (interface.named_setter.has_value())
+            generate_setter(generator, interface.named_setter.value(), false);
+        if (interface.indexed_setter.has_value())
+            generate_setter(generator, interface.indexed_setter.value(), true);
+
+        generator.append(R"~~~(
+    return Object::put(name, value, receiver);
 }
 )~~~");
     }
@@ -1183,73 +1434,9 @@ void generate_prototype_implementation(const IDL::Interface& interface)
     generator.set("prototype_class:snakecase", interface.prototype_class.to_snakecase());
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
+    generate_implementation_includes(generator);
+
     generator.append(R"~~~(
-#include <AK/Function.h>
-#include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
-#include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Uint8ClampedArray.h>
-#include <LibWeb/Bindings/@prototype_class@.h>
-#include <LibWeb/Bindings/@wrapper_class@.h>
-#include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
-#include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
-#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
-#include <LibWeb/Bindings/CommentWrapper.h>
-#include <LibWeb/Bindings/DOMImplementationWrapper.h>
-#include <LibWeb/Bindings/DocumentFragmentWrapper.h>
-#include <LibWeb/Bindings/DocumentTypeWrapper.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
-#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
-#include <LibWeb/Bindings/EventWrapper.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
-#include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
-#include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
-#include <LibWeb/Bindings/HTMLImageElementWrapper.h>
-#include <LibWeb/Bindings/ImageDataWrapper.h>
-#include <LibWeb/Bindings/NodeWrapperFactory.h>
-#include <LibWeb/Bindings/PerformanceTimingWrapper.h>
-#include <LibWeb/Bindings/RangeWrapper.h>
-#include <LibWeb/Bindings/StyleSheetListWrapper.h>
-#include <LibWeb/Bindings/TextWrapper.h>
-#include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/DOM/Range.h>
-#include <LibWeb/DOM/Window.h>
-#include <LibWeb/HTML/EventHandler.h>
-#include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/NavigationTiming/PerformanceTiming.h>
-#include <LibWeb/Origin.h>
-
-#if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)
-#    include <LibWeb/Bindings/@prototype_base_class@.h>
-#endif
-#if __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#endif
-
-// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
-using namespace Web::CSS;
-using namespace Web::DOM;
-using namespace Web::HTML;
-using namespace Web::NavigationTiming;
-using namespace Web::XHR;
 
 namespace Web::Bindings {
 
@@ -1353,68 +1540,6 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 )~~~");
     }
 
-    auto generate_return_statement = [&](auto& return_type) {
-        auto scoped_generator = generator.fork();
-        scoped_generator.set("return_type", return_type.name);
-
-        if (return_type.name == "undefined") {
-            scoped_generator.append(R"~~~(
-    return JS::js_undefined();
-)~~~");
-            return;
-        }
-
-        if (return_type.nullable) {
-            if (return_type.is_string()) {
-                scoped_generator.append(R"~~~(
-    if (retval.is_null())
-        return JS::js_null();
-)~~~");
-            } else {
-                scoped_generator.append(R"~~~(
-    if (!retval)
-        return JS::js_null();
-)~~~");
-            }
-        }
-
-        if (return_type.is_string()) {
-            scoped_generator.append(R"~~~(
-    return JS::js_string(vm, retval);
-)~~~");
-        } else if (return_type.name == "ArrayFromVector") {
-            // FIXME: Remove this fake type hack once it's no longer needed.
-            //        Basically once we have NodeList we can throw this out.
-            scoped_generator.append(R"~~~(
-    auto* new_array = JS::Array::create(global_object);
-    for (auto& element : retval)
-        new_array->indexed_properties().append(wrap(global_object, element));
-
-    return new_array;
-)~~~");
-        } else if (return_type.name == "boolean" || return_type.name == "double") {
-            scoped_generator.append(R"~~~(
-    return JS::Value(retval);
-)~~~");
-        } else if (return_type.name == "short" || return_type.name == "unsigned short" || return_type.name == "long" || return_type.name == "unsigned long") {
-            scoped_generator.append(R"~~~(
-    return JS::Value((i32)retval);
-)~~~");
-        } else if (return_type.name == "Uint8ClampedArray") {
-            scoped_generator.append(R"~~~(
-    return retval;
-)~~~");
-        } else if (return_type.name == "EventHandler") {
-            scoped_generator.append(R"~~~(
-    return retval.callback.cell();
-)~~~");
-        } else {
-            scoped_generator.append(R"~~~(
-    return wrap(global_object, const_cast<@return_type@&>(*retval));
-)~~~");
-        }
-    };
-
     for (auto& attribute : interface.attributes) {
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
@@ -1470,7 +1595,7 @@ JS_DEFINE_NATIVE_GETTER(@prototype_class@::@attribute.getter_callback@)
 )~~~");
         }
 
-        generate_return_statement(attribute.type);
+        generate_return_statement(attribute_generator, attribute.type);
 
         attribute_generator.append(R"~~~(
 }
@@ -1547,7 +1672,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@function.name:snakecase@)
     [[maybe_unused]] auto retval = result.release_value();
 )~~~");
 
-        generate_return_statement(function.return_type);
+        generate_return_statement(function_generator, function.return_type);
 
         function_generator.append(R"~~~(
 }
