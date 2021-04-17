@@ -486,7 +486,7 @@ Tab::Tab(Type type)
             m_web_content_view->debug_request("spoof-user-agent", Web::default_user_agent);
         }
     });
-    m_disable_user_agent_spoofing->set_long_text(Web::default_user_agent);
+    m_disable_user_agent_spoofing->set_status_tip(Web::default_user_agent);
     spoof_user_agent_menu.add_action(*m_disable_user_agent_spoofing);
     m_user_agent_spoof_actions.add_action(*m_disable_user_agent_spoofing);
     m_disable_user_agent_spoofing->set_checked(true);
@@ -499,7 +499,7 @@ Tab::Tab(Type type)
                 m_web_content_view->debug_request("spoof-user-agent", user_agent);
             }
         });
-        action->set_long_text(user_agent);
+        action->set_status_tip(user_agent);
         spoof_user_agent_menu.add_action(action);
         m_user_agent_spoof_actions.add_action(action);
     };
@@ -521,7 +521,7 @@ Tab::Tab(Type type)
         } else {
             m_web_content_view->debug_request("spoof-user-agent", user_agent);
         }
-        action.set_long_text(user_agent);
+        action.set_status_tip(user_agent);
     });
     spoof_user_agent_menu.add_action(custom_user_agent);
     m_user_agent_spoof_actions.add_action(custom_user_agent);
@@ -661,8 +661,8 @@ void Tab::action_entered(GUI::Action& action)
     m_user_agent_spoof_actions.for_each_action([&](GUI::Action& user_agent_action) {
         if (&action != &user_agent_action)
             return IterationDecision::Continue;
-        if (!user_agent_action.long_text().is_empty())
-            m_statusbar->set_override_text(user_agent_action.long_text());
+        if (!user_agent_action.status_tip().is_empty())
+            m_statusbar->set_override_text(user_agent_action.status_tip());
         return IterationDecision::Break;
     });
 }
