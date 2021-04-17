@@ -457,11 +457,13 @@ void DirectoryView::update_statusbar()
     if (m_view_mode == ViewMode::Invalid)
         return;
 
-    size_t total_size = model().node({}).total_size;
+    StringBuilder builder;
+
     if (current_view().selection().is_empty()) {
-        set_status_message(String::formatted("{} item(s) ({})",
-            model().row_count(),
-            human_readable_size(total_size)));
+        int total_item_count = model().row_count();
+        size_t total_size = model().node({}).total_size;
+        builder.appendff("{} item{} ({})", total_item_count, total_item_count != 1 ? "s" : "", human_readable_size(total_size));
+        set_status_message(builder.string_view());
         return;
     }
 
@@ -473,14 +475,7 @@ void DirectoryView::update_statusbar()
         selected_byte_count += node.size;
     });
 
-    StringBuilder builder;
-    builder.append(String::number(selected_item_count));
-    builder.append(" item");
-    if (selected_item_count != 1)
-        builder.append('s');
-    builder.append(" selected (");
-    builder.append(human_readable_size(selected_byte_count).characters());
-    builder.append(')');
+    builder.appendff("{} item{} selected ({})", selected_item_count, selected_item_count != 1 ? "s" : "", human_readable_size(selected_byte_count));
 
     if (selected_item_count == 1) {
         auto& node = this->node(current_view().selection().first());
@@ -490,7 +485,7 @@ void DirectoryView::update_statusbar()
         }
     }
 
-    set_status_message(builder.to_string());
+    set_status_message(builder.string_view());
 }
 
 void DirectoryView::set_should_show_dotfiles(bool show_dotfiles)
