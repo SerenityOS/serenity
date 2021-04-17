@@ -47,8 +47,13 @@ Statusbar::Statusbar(int label_count)
     if (label_count < 1)
         label_count = 1;
 
-    for (auto i = 0; i < label_count; i++)
-        m_labels.append(create_label());
+    for (auto i = 0; i < label_count; i++) {
+        m_segments.append(Segment {
+            .label = create_label(),
+            .text = {},
+            .override_text = {},
+        });
+    }
 
     m_corner = add<ResizeCorner>();
 
@@ -71,22 +76,40 @@ NonnullRefPtr<Label> Statusbar::create_label()
 
 void Statusbar::set_text(String text)
 {
-    m_labels.first().set_text(move(text));
+    set_text(0, move(text));
 }
 
 String Statusbar::text() const
 {
-    return m_labels.first().text();
+    return text(0);
 }
 
-void Statusbar::set_text(int index, String text)
+void Statusbar::set_text(size_t index, String text)
 {
-    m_labels.at(index).set_text(move(text));
+    m_segments.at(index).text = move(text);
+    update_label(index);
 }
 
-String Statusbar::text(int index) const
+void Statusbar::update_label(size_t index)
 {
-    return m_labels.at(index).text();
+    auto& segment = m_segments.at(index);
+    segment.label->set_text(segment.override_text.is_null() ? segment.text : segment.override_text);
+}
+
+String Statusbar::text(size_t index) const
+{
+    return m_segments.at(index).label->text();
+}
+
+void Statusbar::set_override_text(String override_text)
+{
+    set_override_text(0, move(override_text));
+}
+
+void Statusbar::set_override_text(size_t index, String override_text)
+{
+    m_segments.at(index).override_text = move(override_text);
+    update_label(index);
 }
 
 void Statusbar::paint_event(PaintEvent& event)
@@ -103,5 +126,4 @@ void Statusbar::resize_event(ResizeEvent& event)
 
     Widget::resize_event(event);
 }
-
 }
