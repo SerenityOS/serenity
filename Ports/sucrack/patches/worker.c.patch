@@ -1,0 +1,11 @@
+--- sucrack-1.2.3/src/worker.c	2021-01-12 04:49:47.855552826 -0800
++++ sucrack-1.2.3/src/worker.c	2021-01-09 22:57:46.975300031 -0800
+@@ -134,7 +134,7 @@
+     while(num--) {
+ 	if (workers[num]) {
+ 	    if (force) {
+-		pthread_cancel(workers[num]->pt);
++		//pthread_cancel(workers[num]->pt);
+ 	    }
+ 	    pthread_join(workers[num]->pt, 0);
+ 	    debug_printf("worker %i killed\n", num);

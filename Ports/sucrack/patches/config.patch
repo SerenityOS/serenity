@@ -1,0 +1,10 @@
+--- sucrack-1.2.3/config.sub	2021-01-09 22:37:47.033171762 -0800
++++ sucrack-1.2.3/config.sub	2021-01-09 22:37:56.017098044 -0800
+@@ -1090,6 +1090,7 @@
+ 	# Each alternative MUST END IN A *, to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+ 	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	      | -serenity* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -solaris* | -sym* \
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \

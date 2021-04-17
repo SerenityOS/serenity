@@ -1,0 +1,11 @@
+--- sucrack-1.2.3/src/util.c	2007-09-21 03:17:21.000000000 -0700
++++ sucrack-1.2.3/src/util.c	2021-01-09 22:57:46.975300031 -0800
+@@ -29,7 +29,7 @@
+ #include <termios.h>
+ #include <unistd.h>
+ #include <stdarg.h>
+-#include <sys/poll.h>
++#include <poll.h>
+ 
+ #include "util.h"
+ 

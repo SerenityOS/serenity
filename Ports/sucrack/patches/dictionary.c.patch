@@ -1,0 +1,11 @@
+--- sucrack-1.2.3/src/dictionary.c	2021-01-12 04:49:53.259512707 -0800
++++ sucrack-1.2.3/src/dictionary.c	2021-01-09 22:57:46.975300031 -0800
+@@ -414,7 +414,7 @@
+ dict_kill(int force)
+ {
+     if (force) {
+-	pthread_cancel(dict_thread);
++	//pthread_cancel(dict_thread);
+     }
+     pthread_join(dict_thread, 0);
+ }
