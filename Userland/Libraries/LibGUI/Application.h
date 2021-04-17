@@ -95,8 +95,13 @@ public:
     }
     void notify_drag_cancelled(Badge<WindowServerConnection>);
 
+    Function<void(Action&)> on_action_enter;
+    Function<void(Action&)> on_action_leave;
+
 private:
     Application(int argc, char** argv);
+
+    virtual void event(Core::Event&) override;
 
     void tooltip_show_timer_did_fire();
     void tooltip_hide_timer_did_fire();
