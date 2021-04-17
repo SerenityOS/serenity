@@ -26,11 +26,9 @@
 
 #include <AK/Atomic.h>
 #include <AK/NeverDestroyed.h>
-#include <AK/Types.h>
 #include <AK/Vector.h>
 #include <bits/pthread_integration.h>
 #include <sched.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 namespace {
@@ -110,9 +108,10 @@ int __pthread_self()
     return gettid();
 }
 
-int __pthread_mutex_lock(void* mutexp)
+int pthread_self() __attribute__((weak, alias("__pthread_self")));
+
+int __pthread_mutex_lock(pthread_mutex_t* mutex)
 {
-    auto* mutex = reinterpret_cast<pthread_mutex_t*>(mutexp);
     auto& atomic = reinterpret_cast<Atomic<u32>&>(mutex->lock);
     pthread_t this_thread = __pthread_self();
     for (;;) {
@@ -131,9 +130,10 @@ int __pthread_mutex_lock(void* mutexp)
     }
 }
 
-int __pthread_mutex_unlock(void* mutexp)
+int pthread_mutex_lock(pthread_mutex_t*) __attribute__((weak, alias("__pthread_mutex_lock")));
+
+int __pthread_mutex_unlock(pthread_mutex_t* mutex)
 {
-    auto* mutex = reinterpret_cast<pthread_mutex_t*>(mutexp);
     if (mutex->type == __PTHREAD_MUTEX_RECURSIVE && mutex->level > 0) {
         mutex->level--;
         return 0;
@@ -143,14 +143,16 @@ int __pthread_mutex_unlock(void* mutexp)
     return 0;
 }
 
-int __pthread_mutex_init(void* mutexp, const void* attrp)
+int pthread_mutex_unlock(pthread_mutex_t*) __attribute__((weak, alias("__pthread_mutex_unlock")));
+
+int __pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
 {
-    auto* mutex = reinterpret_cast<pthread_mutex_t*>(mutexp);
-    auto* attributes = reinterpret_cast<const pthread_mutexattr_t*>(attrp);
     mutex->lock = 0;
     mutex->owner = 0;
     mutex->level = 0;
     mutex->type = attributes ? attributes->type : __PTHREAD_MUTEX_NORMAL;
     return 0;
 }
+
+int pthread_mutex_init(pthread_mutex_t*, const pthread_mutexattr_t*) __attribute__((weak, alias("__pthread_mutex_init")));
 }

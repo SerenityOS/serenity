@@ -49,8 +49,6 @@
 #include <syscall.h>
 #include <unistd.h>
 
-void (*__libc_pthread_key_destroy_for_current_thread)() = nullptr;
-
 static void strtons(const char* str, char** endptr)
 {
     assert(endptr);
@@ -228,8 +226,9 @@ void exit(int status)
     fflush(stdout);
     fflush(stderr);
 
-    if (__libc_pthread_key_destroy_for_current_thread)
-        __libc_pthread_key_destroy_for_current_thread();
+#ifndef _DYNAMIC_LOADER
+    __pthread_key_destroy_for_current_thread();
+#endif
 
     _exit(status);
 }
