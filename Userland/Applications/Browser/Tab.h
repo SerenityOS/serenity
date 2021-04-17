@@ -67,6 +67,9 @@ public:
     void did_become_active();
     void context_menu_requested(const Gfx::IntPoint& screen_position);
 
+    void action_entered(GUI::Action&);
+    void action_left(GUI::Action&);
+
     Function<void(String)> on_title_change;
     Function<void(const URL&)> on_tab_open_request;
     Function<void(Tab&)> on_tab_close_request;
