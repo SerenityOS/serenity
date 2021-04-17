@@ -106,6 +106,8 @@ set(SOURCES
 set(GENERATED_SOURCES
     ../../Services/WindowServer/WindowClientEndpoint.h
     ../../Services/WindowServer/WindowServerEndpoint.h
+    ../../Services/WindowServer/WindowManagerClientEndpoint.h
+    ../../Services/WindowServer/WindowManagerServerEndpoint.h
     ../../Services/NotificationServer/NotificationClientEndpoint.h
     ../../Services/NotificationServer/NotificationServerEndpoint.h
     ../../Services/Clipboard/ClipboardClientEndpoint.h
