@@ -277,7 +277,8 @@ public:
         options[next_option_offset++] = (u8)option;
         memcpy(options + next_option_offset, &length, 1);
         next_option_offset++;
-        memcpy(options + next_option_offset, data, length);
+        if (data && length)
+            memcpy(options + next_option_offset, data, length);
         next_option_offset += length;
     }
 
