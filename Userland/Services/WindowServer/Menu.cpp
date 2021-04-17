@@ -300,15 +300,16 @@ MenuItem* Menu::hovered_item() const
 
 void Menu::update_for_new_hovered_item(bool make_input)
 {
-    auto* hovered_item = this->hovered_item();
-    if (hovered_item && hovered_item->is_submenu()) {
-        VERIFY(menu_window());
-        MenuManager::the().close_everyone_not_in_lineage(*hovered_item->submenu());
-        hovered_item->submenu()->do_popup(hovered_item->rect().top_right().translated(menu_window()->rect().location()), make_input, true);
-    } else {
-        MenuManager::the().close_everyone_not_in_lineage(*this);
-        ensure_menu_window();
-        set_visible(true);
+    if (auto* hovered_item = this->hovered_item()) {
+        if (hovered_item->is_submenu()) {
+            VERIFY(menu_window());
+            MenuManager::the().close_everyone_not_in_lineage(*hovered_item->submenu());
+            hovered_item->submenu()->do_popup(hovered_item->rect().top_right().translated(menu_window()->rect().location()), make_input, true);
+        } else {
+            MenuManager::the().close_everyone_not_in_lineage(*this);
+            ensure_menu_window();
+            set_visible(true);
+        }
     }
     redraw();
 }
@@ -461,10 +462,7 @@ void Menu::event(Core::Event& event)
 
 void Menu::clear_hovered_item()
 {
-    if (!hovered_item())
-        return;
-    m_hovered_item_index = -1;
-    redraw();
+    set_hovered_index(-1);
 }
 
 void Menu::start_activation_animation(MenuItem& item)
@@ -648,6 +646,22 @@ const Vector<size_t>* Menu::items_with_alt_shortcut(u32 alt_shortcut) const
     if (it == m_alt_shortcut_character_to_item_indexes.end())
         return nullptr;
     return &it->value;
+}
+
+void Menu::set_hovered_index(int index, bool make_input)
+{
+    if (m_hovered_item_index == index)
+        return;
+    if (auto* old_hovered_item = hovered_item()) {
+        if (client())
+            client()->post_message(Messages::WindowClient::MenuItemLeft(m_menu_id, old_hovered_item->identifier()));
+    }
+    m_hovered_item_index = index;
+    update_for_new_hovered_item(make_input);
+    if (auto* new_hovered_item = hovered_item()) {
+        if (client())
+            client()->post_message(Messages::WindowClient::MenuItemEntered(m_menu_id, new_hovered_item->identifier()));
+    }
 }
 
 }

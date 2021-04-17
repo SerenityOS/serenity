@@ -273,6 +273,38 @@ void WindowServerConnection::handle(const Messages::WindowClient::MenuItemActiva
         action->activate(menu);
 }
 
+void WindowServerConnection::handle(Messages::WindowClient::MenuItemEntered const& message)
+{
+    auto* menu = Menu::from_menu_id(message.menu_id());
+    if (!menu) {
+        dbgln("WindowServerConnection received MenuItemEntered for invalid menu ID {}", message.menu_id());
+        return;
+    }
+    auto* action = menu->action_at(message.identifier());
+    if (!action)
+        return;
+    auto* app = Application::the();
+    if (!app)
+        return;
+    Core::EventLoop::current().post_event(*app, make<ActionEvent>(GUI::Event::ActionEnter, *action));
+}
+
+void WindowServerConnection::handle(Messages::WindowClient::MenuItemLeft const& message)
+{
+    auto* menu = Menu::from_menu_id(message.menu_id());
+    if (!menu) {
+        dbgln("WindowServerConnection received MenuItemLeft for invalid menu ID {}", message.menu_id());
+        return;
+    }
+    auto* action = menu->action_at(message.identifier());
+    if (!action)
+        return;
+    auto* app = Application::the();
+    if (!app)
+        return;
+    Core::EventLoop::current().post_event(*app, make<ActionEvent>(GUI::Event::ActionLeave, *action));
+}
+
 void WindowServerConnection::handle(const Messages::WindowClient::ScreenRectChanged& message)
 {
     Desktop::the().did_receive_screen_rect({}, message.rect());
