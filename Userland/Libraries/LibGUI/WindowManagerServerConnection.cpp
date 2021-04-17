@@ -74,4 +74,10 @@ void WindowManagerServerConnection::handle(const Messages::WindowManagerClient::
     if (auto* window = Window::from_window_id(message.wm_id()))
         Core::EventLoop::current().post_event(*window, make<WMWindowRemovedEvent>(message.client_id(), message.window_id()));
 }
+
+void WindowManagerServerConnection::handle(const Messages::WindowManagerClient::SuperKeyPressed& message)
+{
+    if (auto* window = Window::from_window_id(message.wm_id()))
+        Core::EventLoop::current().post_event(*window, make<WMSuperKeyPressedEvent>(message.wm_id()));
+}
 }
