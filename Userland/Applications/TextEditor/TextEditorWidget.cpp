@@ -58,6 +58,7 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Painter.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
@@ -273,6 +274,17 @@ TextEditorWidget::TextEditorWidget()
     m_editor->add_custom_context_menu_action(*m_find_previous_action);
 
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+
+    GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
+        auto text = action.long_text();
+        if (text.is_empty())
+            text = Gfx::parse_ampersand_string(action.text());
+        m_statusbar->set_override_text(move(text));
+    };
+
+    GUI::Application::the()->on_action_leave = [this](GUI::Action&) {
+        m_statusbar->set_override_text({});
+    };
 
     m_editor->on_cursor_change = [this] { update_statusbar(); };
     m_editor->on_selection_change = [this] { update_statusbar(); };
