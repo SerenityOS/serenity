@@ -36,9 +36,11 @@ public:
     virtual ~Statusbar() override;
 
     String text() const;
-    String text(int index) const;
+    String text(size_t index) const;
     void set_text(String);
-    void set_text(int index, String);
+    void set_text(size_t index, String);
+    void set_override_text(String);
+    void set_override_text(size_t index, String);
 
 protected:
     explicit Statusbar(int label_count = 1);
@@ -47,7 +49,13 @@ protected:
 
 private:
     NonnullRefPtr<Label> create_label();
-    NonnullRefPtrVector<Label> m_labels;
+    struct Segment {
+        NonnullRefPtr<GUI::Label> label;
+        String text;
+        String override_text;
+    };
+    void update_label(size_t);
+    Vector<Segment> m_segments;
     RefPtr<ResizeCorner> m_corner;
 };
 
