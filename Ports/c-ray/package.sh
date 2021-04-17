@@ -1,12 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=c-ray
-version=git
-workdir=c-ray-master
+version=c094d64570c30c70f4003e9428d31a2a0d9d3d41
 useconfigure=true
-files="https://github.com/vkoskiv/c-ray/archive/master.tar.gz c-ray-git.tar.gz 939b40cdb642b78a2b300b5b2981e337"
+files="https://github.com/vkoskiv/c-ray/archive/${version}.tar.gz ${version}.tar.gz b83e3c6a1462486257dfe38d309b47c2"
 auth_type=md5
 configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMake/CMakeToolchain.txt"
 depends="SDL2"
+workdir="${port}-${version}"
 
 configure() {
     run cmake $configopts
@@ -14,5 +14,5 @@ configure() {
 
 install() {
 	mkdir -p "${SERENITY_BUILD_DIR}/Root/home/anon/c-ray"
-	cp -r c-ray-master/* "${SERENITY_BUILD_DIR}/Root/home/anon/c-ray"
+	cp -r "${port}-${version}"/* "${SERENITY_BUILD_DIR}/Root/home/anon/c-ray"
 }
