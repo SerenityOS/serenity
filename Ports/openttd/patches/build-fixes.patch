@@ -1,0 +1,116 @@
+diff -Naur openttd-1.11.0/cmake/CompileFlags.cmake openttd-1.11.0.serenity/cmake/CompileFlags.cmake
+--- openttd-1.11.0/cmake/CompileFlags.cmake	2021-04-01 14:33:44.000000000 +0200
++++ openttd-1.11.0.serenity/cmake/CompileFlags.cmake	2021-04-19 19:30:33.457232215 +0200
+@@ -154,7 +154,7 @@
+         message(FATAL_ERROR "No warning flags are set for this compiler yet; please consider creating a Pull Request to add support for this compiler.")
+     endif()
+ 
+-    if(NOT WIN32)
++    if(NOT WIN32 AND NOT SERENITYOS)
+         # rdynamic is used to get useful stack traces from crash reports.
+         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
+     endif()
+diff -Naur openttd-1.11.0/src/network/core/address.cpp openttd-1.11.0.serenity/src/network/core/address.cpp
+--- openttd-1.11.0/src/network/core/address.cpp	2021-04-01 14:33:44.000000000 +0200
++++ openttd-1.11.0.serenity/src/network/core/address.cpp	2021-04-19 19:30:33.457232215 +0200
+@@ -372,7 +372,7 @@
+ 		DEBUG(net, 3, "[%s] could not set reusable %s sockets for port %s: %s", type, family, address, strerror(errno));
+ 	}
+ 
+-#ifndef __OS2__
++#if !defined(__OS2__) && !defined(__serenity__)
+ 	if (runp->ai_family == AF_INET6 &&
+ 			setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (const char*)&on, sizeof(on)) == -1) {
+ 		DEBUG(net, 3, "[%s] could not disable IPv4 over IPv6 on port %s: %s", type, address, strerror(errno));
+diff -Naur openttd-1.11.0/src/network/core/host.cpp openttd-1.11.0.serenity/src/network/core/host.cpp
+--- openttd-1.11.0/src/network/core/host.cpp	2021-04-01 14:33:44.000000000 +0200
++++ openttd-1.11.0.serenity/src/network/core/host.cpp	2021-04-19 19:30:33.457232215 +0200
+@@ -147,6 +147,7 @@
+ 
+ static void NetworkFindBroadcastIPsInternal(NetworkAddressList *broadcast) // !GETIFADDRS implementation
+ {
++#ifndef __serenity__
+ 	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
+ 	if (sock == INVALID_SOCKET) return;
+ 
+@@ -183,6 +184,7 @@
+ 	}
+ 
+ 	closesocket(sock);
++#endif
+ }
+ #endif /* all NetworkFindBroadcastIPsInternals */
+ 
+diff -Naur openttd-1.11.0/src/network/core/os_abstraction.h openttd-1.11.0.serenity/src/network/core/os_abstraction.h
+--- openttd-1.11.0/src/network/core/os_abstraction.h	2021-04-01 14:33:44.000000000 +0200
++++ openttd-1.11.0.serenity/src/network/core/os_abstraction.h	2021-04-19 19:30:33.457232215 +0200
+@@ -59,13 +59,14 @@
+ #	include <unistd.h>
+ #	include <sys/ioctl.h>
+ #	include <sys/socket.h>
++#	include <sys/select.h>
+ #	include <netinet/in.h>
+ #	include <netinet/tcp.h>
+ #	include <arpa/inet.h>
+ #	include <net/if.h>
+ /* According to glibc/NEWS, <ifaddrs.h> appeared in glibc-2.3. */
+ #	if !defined(__sgi__) && !defined(SUNOS) && !defined(__INNOTEK_LIBC__) \
+-	   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX)
++	   && !(defined(__GLIBC__) && (__GLIBC__ <= 2) && (__GLIBC_MINOR__ <= 2)) && !defined(__dietlibc__) && !defined(HPUX) && !defined(__serenity__)
+ /* If for any reason ifaddrs.h does not exist on your system, comment out
+  *   the following two lines and an alternative way will be used to fetch
+  *   the list of IPs from the system. */
+diff -Naur openttd-1.11.0/src/os/unix/unix.cpp openttd-1.11.0.serenity/src/os/unix/unix.cpp
+--- openttd-1.11.0/src/os/unix/unix.cpp	2021-04-01 14:33:44.000000000 +0200
++++ openttd-1.11.0.serenity/src/os/unix/unix.cpp	2021-04-19 19:30:33.457232215 +0200
+@@ -42,9 +42,11 @@
+ #	define HAS_SYSCTL
+ #endif
+ 
++#ifndef __serenity__
+ #ifdef HAS_STATVFS
+ #include <sys/statvfs.h>
+ #endif
++#endif
+ 
+ #ifdef HAS_SYSCTL
+ #include <sys/sysctl.h>
+@@ -84,7 +86,7 @@
+ 
+ 	if (statfs(path, &s) != 0) return false;
+ 	free = (uint64)s.f_bsize * s.f_bavail;
+-#elif defined(HAS_STATVFS)
++#elif defined(HAS_STATVFS) && !defined(__serenity__)
+ 	struct statvfs s;
+ 
+ 	if (statvfs(path, &s) != 0) return false;
+diff -Naur openttd-1.11.0/src/stdafx.h openttd-1.11.0.serenity/src/stdafx.h
+--- openttd-1.11.0/src/stdafx.h	2021-04-01 14:33:44.000000000 +0200
++++ openttd-1.11.0.serenity/src/stdafx.h	2021-04-19 20:08:30.758187723 +0200
+@@ -28,7 +28,7 @@
+ #	define TROUBLED_INTS
+ #endif
+ 
+-#if defined(__HAIKU__) || defined(__CYGWIN__)
++#if defined(__HAIKU__) || defined(__CYGWIN__) || defined(__serenity__)
+ #	include <strings.h> /* strncasecmp */
+ #endif
+ 
+@@ -107,7 +107,7 @@
+ #	define strcasecmp stricmp
+ #endif
+ 
+-#if defined(SUNOS) || defined(HPUX) || defined(__CYGWIN__)
++#if defined(SUNOS) || defined(HPUX) || defined(__CYGWIN__) || defined(__serenity__)
+ #	include <alloca.h>
+ #endif
+ 
+@@ -307,7 +307,7 @@
+ typedef unsigned char byte;
+ 
+ /* This is already defined in unix, but not in QNX Neutrino (6.x) or Cygwin. */
+-#if (!defined(UNIX) && !defined(__HAIKU__)) || defined(__QNXNTO__) || defined(__CYGWIN__)
++#if (!defined(UNIX) && !defined(__HAIKU__)) || defined(__QNXNTO__) || defined(__CYGWIN__) || defined(__serenity__)
+ 	typedef unsigned int uint;
+ #endif
+ 
