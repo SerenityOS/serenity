@@ -34,7 +34,7 @@ namespace Shell {
 
 String Formatter::format()
 {
-    auto node = m_root_node ? m_root_node : Parser(m_source).parse();
+    auto node = m_root_node ? m_root_node : Parser(m_source, m_shell_options).parse();
     if (m_cursor >= 0)
         m_output_cursor = m_cursor;
 

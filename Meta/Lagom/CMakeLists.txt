@@ -166,9 +166,14 @@ if (BUILD_LAGOM)
 
         foreach(TEST_PATH ${SHELL_TESTS})
             get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
+            if(${TEST_NAME} MATCHES "posix")
+                set(SHELL_ARGS "--posix-mode")
+            else()
+                set(SHELL_ARGS "")
+            endif()
             add_test(
                 NAME "Shell-${TEST_NAME}"
-                COMMAND shell_lagom --skip-shellrc "${TEST_PATH}"
+                COMMAND shell_lagom --skip-shellrc ${SHELL_ARGS} "${TEST_PATH}"
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Shell/Tests
             )
             set_tests_properties("Shell-${TEST_NAME}" PROPERTIES

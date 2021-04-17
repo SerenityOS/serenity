@@ -27,6 +27,7 @@
 #pragma once
 
 #include "Job.h"
+#include "Options.h"
 #include "Parser.h"
 #include <AK/CircularQueue.h>
 #include <AK/HashMap.h>
@@ -67,11 +68,6 @@
     __ENUMERATE_SHELL_BUILTIN(bg)      \
     __ENUMERATE_SHELL_BUILTIN(wait)    \
     __ENUMERATE_SHELL_BUILTIN(dump)
-
-#define ENUMERATE_SHELL_OPTIONS()                                                                                    \
-    __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
-    __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")                  \
-    __ENUMERATE_SHELL_OPTION(posix_mode, false, "Enable POSIX Bourne shell compatibility mode")
 
 #define ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS()           \
     __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(concat_lists)  \
@@ -269,14 +265,7 @@ public:
         }
     }
 
-#define __ENUMERATE_SHELL_OPTION(name, default_, description) \
-    bool name { default_ };
-
-    struct Options {
-        ENUMERATE_SHELL_OPTIONS();
-    } options;
-
-#undef __ENUMERATE_SHELL_OPTION
+    struct Options options;
 
 private:
     Shell(Line::Editor&, bool attempt_interactive);

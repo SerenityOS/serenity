@@ -310,7 +310,7 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
             auto alias = resolve_alias(command.argv[0]);
             if (!alias.is_null()) {
                 auto argv0 = command.argv.take_first();
-                auto subcommand_ast = Parser { alias }.parse();
+                auto subcommand_ast = Parser { alias, options }.parse();
                 if (subcommand_ast) {
                     while (subcommand_ast->is_execute()) {
                         auto* ast = static_cast<AST::Execute*>(subcommand_ast.ptr());
@@ -490,7 +490,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
 
 String Shell::format(const StringView& source, ssize_t& cursor) const
 {
-    Formatter formatter(source, cursor);
+    Formatter formatter(source, options, cursor);
     auto result = formatter.format();
     cursor = formatter.cursor();
 
@@ -559,7 +559,7 @@ int Shell::run_command(const StringView& cmd, Optional<SourcePosition> source_po
     if (cmd.is_empty())
         return 0;
 
-    auto command = Parser(cmd, m_is_interactive).parse();
+    auto command = Parser(cmd, options, m_is_interactive).parse();
 
     if (!command)
         return 0;
@@ -1281,7 +1281,7 @@ void Shell::add_entry_to_cache(const String& entry)
 void Shell::highlight(Line::Editor& editor) const
 {
     auto line = editor.line();
-    Parser parser(line, m_is_interactive);
+    Parser parser(line, options, m_is_interactive);
     auto ast = parser.parse();
     if (!ast)
         return;
@@ -1292,7 +1292,7 @@ Vector<Line::CompletionSuggestion> Shell::complete()
 {
     auto line = m_editor->line(m_editor->cursor());
 
-    Parser parser(line, m_is_interactive);
+    Parser parser(line, options, m_is_interactive);
 
     auto ast = parser.parse();
 
@@ -1574,7 +1574,8 @@ bool Shell::has_history_event(StringView source)
         bool has_history_event { false };
     } visitor;
 
-    auto ast = Parser { source, true }.parse();
+    // FIXME: figure out what options to pass.
+    auto ast = Parser { source, {}, true }.parse();
     if (!ast)
         return false;
 
@@ -1767,8 +1768,8 @@ Shell::Shell(Line::Editor& editor, bool attempt_interactive)
         cache_path();
     }
 
-    m_editor->register_key_input_callback('\n', [](Line::Editor& editor) {
-        auto ast = Parser(editor.line()).parse();
+    m_editor->register_key_input_callback('\n', [this](Line::Editor& editor) {
+        auto ast = Parser(editor.line(), options).parse();
         if (ast && ast->is_syntax_error() && ast->syntax_error_node().is_continuable())
             return true;
 

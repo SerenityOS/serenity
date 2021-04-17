@@ -1441,7 +1441,7 @@ RefPtr<Value> HistoryEvent::run(RefPtr<Shell> shell)
     }
 
     // Then, split it up to "words".
-    auto nodes = Parser { resolved_history }.parse_as_multiple_expressions();
+    auto nodes = Parser { resolved_history, shell->options }.parse_as_multiple_expressions();
 
     // Now take the "words" as described by the word selectors.
     bool is_range = m_selector.word_selector_range.end.has_value();

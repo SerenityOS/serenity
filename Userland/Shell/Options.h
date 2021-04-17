@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,31 +26,20 @@
 
 #pragma once
 
-#include "Options.h"
-#include <LibSyntax/Highlighter.h>
+#define ENUMERATE_SHELL_OPTIONS()                                                                                    \
+    __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
+    __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")                  \
+    __ENUMERATE_SHELL_OPTION(posix_mode, false, "Enable POSIX Bourne shell compatibility mode")
 
 namespace Shell {
 
-class SyntaxHighlighter : public Syntax::Highlighter {
-public:
-    SyntaxHighlighter(Options shell_options)
-        : m_shell_options(shell_options)
-    {
-    }
-    virtual ~SyntaxHighlighter() override;
+#define __ENUMERATE_SHELL_OPTION(name, default_, description) \
+    bool name { default_ };
 
-    virtual bool is_identifier(void*) const override;
-    virtual bool is_navigatable(void*) const override;
-
-    virtual Syntax::Language language() const override { return Syntax::Language::Shell; }
-    virtual void rehighlight(const Palette&) override;
-
-protected:
-    virtual Vector<MatchingTokenPair> matching_token_pairs() const override;
-    virtual bool token_types_equal(void*, void*) const override;
-
-private:
-    Options m_shell_options;
+struct Options {
+    ENUMERATE_SHELL_OPTIONS();
 };
+
+#undef __ENUMERATE_SHELL_OPTION
 
 }

@@ -27,6 +27,7 @@
 #pragma once
 
 #include "NodeVisitor.h"
+#include "Options.h"
 #include <AK/Forward.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -37,10 +38,11 @@ namespace Shell {
 
 class Formatter final : public AST::NodeVisitor {
 public:
-    Formatter(const StringView& source, ssize_t cursor = -1)
+    Formatter(const StringView& source, Options shell_options, ssize_t cursor = -1)
         : m_builder(round_up_to_power_of_two(source.length(), 16))
         , m_source(source)
         , m_cursor(cursor)
+        , m_shell_options(shell_options)
     {
         size_t offset = 0;
         for (auto ptr = m_source.end() - 1; ptr >= m_source.begin() && isspace(*ptr); --ptr)
@@ -113,7 +115,7 @@ private:
 
     StringBuilder& current_builder() { return m_builder; }
 
-    struct Options {
+    struct {
         size_t max_line_length_hint { 80 };
         bool explicit_parentheses { false };
         bool explicit_braces { false };
@@ -134,6 +136,8 @@ private:
     const AST::Node* m_last_visited_node { nullptr };
 
     StringView m_trivia;
+
+    Options m_shell_options;
 };
 
 }

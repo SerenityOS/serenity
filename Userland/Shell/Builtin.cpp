@@ -47,7 +47,7 @@ int Shell::builtin_dump(int argc, const char** argv)
     if (argc != 2)
         return 1;
 
-    Parser { argv[1] }.parse()->dump(0);
+    Parser { argv[1], options }.parse()->dump(0);
     return 0;
 }
 

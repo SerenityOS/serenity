@@ -163,7 +163,7 @@ RefPtr<AST::Node> Parser::parse()
 RefPtr<AST::Node> Parser::parse_as_single_expression()
 {
     auto input = Shell::escape_token_for_double_quotes(m_input);
-    Parser parser { input };
+    Parser parser { input, m_options };
     return parser.parse_expression();
 }
 
@@ -212,6 +212,11 @@ Parser::SequenceParseResult Parser::parse_sequence()
     NonnullRefPtrVector<AST::Node> left;
 
     auto rule_start = push_start();
+
+    if (m_options.posix_mode && (next_is("else") || next_is("elif") || next_is("fi"))) {
+        return { move(left), {}, ShouldReadMoreSequences::No };
+    }
+
     {
         auto var_decls = parse_variable_decls();
         if (var_decls)
@@ -729,60 +734,98 @@ RefPtr<AST::Node> Parser::parse_if_expr()
             condition = create<AST::SyntaxError>("Expected a logical sequence after 'if'", true);
     }
 
-    auto parse_braced_toplevel = [&]() -> RefPtr<AST::Node> {
-        RefPtr<AST::Node> body;
-        {
-            auto obrace_error_start = push_start();
-            if (!expect('{')) {
-                body = create<AST::SyntaxError>("Expected an open brace '{' to start an 'if' true branch", true);
+    auto parse_posix_if = [&]() -> RefPtr<AST::Node> {
+        expect("then");
+        consume_while(is_any_of(" \t\n"));
+
+        Optional<AST::Position> else_position;
+        RefPtr<AST::Node> true_branch = parse_toplevel();
+        if (expect("fi"))
+            return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), nullptr);
+
+        auto else_start = push_start();
+        else_position = AST::Position { else_start->offset, m_offset, else_start->line, line() };
+
+        RefPtr<AST::Node> else_branch;
+        if (expect("el")) {
+            if (next_is("if")) {
+                else_branch = parse_if_expr();
+            } else if (expect("se")) {
+                RefPtr<AST::Node> else_branch = parse_toplevel();
+                if (!expect("fi"))
+                    else_branch = create<AST::SyntaxError>("Expected 'fi' after end of 'if' false branch", true);
+            } else {
+                else_branch = create<AST::SyntaxError>("Expected 'else', 'elif', or 'fi' after end of 'if' true branch", true);
             }
+            return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), move(else_branch));
         }
 
-        if (!body)
-            body = parse_toplevel();
-
-        {
-            auto cbrace_error_start = push_start();
-            if (!expect('}')) {
-                auto error_start = push_start();
-                RefPtr<AST::SyntaxError> syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end an 'if' true branch", true);
-                if (body)
-                    body->set_is_syntax_error(*syntax_error);
-                else
-                    body = syntax_error;
-            }
-        }
-
-        return body;
+        return create<AST::SyntaxError>("Expected 'else', 'elif', or 'fi' after end of 'if' true branch", true);
     };
 
-    consume_while(is_any_of(" \t\n"));
-    auto true_branch = parse_braced_toplevel();
+    auto parse_serenity_if = [&]() -> RefPtr<AST::Node> {
+        auto parse_braced_toplevel = [&]() -> RefPtr<AST::Node> {
+            RefPtr<AST::Node> body;
+            {
+                auto obrace_error_start = push_start();
+                if (!expect('{')) {
+                    body = create<AST::SyntaxError>("Expected an open brace '{' to start an 'if' true branch", true);
+                }
+            }
 
-    auto end_before_else = m_offset;
-    auto line_before_else = line();
-    consume_while(is_any_of(" \t\n"));
-    Optional<AST::Position> else_position;
-    {
-        auto else_start = push_start();
-        if (expect("else"))
-            else_position = AST::Position { else_start->offset, m_offset, else_start->line, line() };
-        else
-            restore_to(end_before_else, line_before_else);
-    }
+            if (!body)
+                body = parse_toplevel();
 
-    if (else_position.has_value()) {
+            {
+                auto cbrace_error_start = push_start();
+                if (!expect('}')) {
+                    auto error_start = push_start();
+                    RefPtr<AST::SyntaxError> syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end an 'if' true branch", true);
+                    if (body)
+                        body->set_is_syntax_error(*syntax_error);
+                    else
+                        body = syntax_error;
+                }
+            }
+
+            return body;
+        };
+
         consume_while(is_any_of(" \t\n"));
-        if (peek() == '{') {
-            auto false_branch = parse_braced_toplevel();
-            return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), move(false_branch)); // If expr true_branch Else false_branch
+        auto true_branch = parse_braced_toplevel();
+
+        auto end_before_else = m_offset;
+        auto line_before_else = line();
+        consume_while(is_any_of(" \t\n"));
+        Optional<AST::Position> else_position;
+        {
+            auto else_start = push_start();
+            if (expect("else"))
+                else_position = AST::Position { else_start->offset, m_offset, else_start->line, line() };
+            else
+                restore_to(end_before_else, line_before_else);
         }
 
-        auto else_if_branch = parse_if_expr();
-        return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), move(else_if_branch)); // If expr true_branch Else If ...
-    }
+        if (else_position.has_value()) {
+            consume_while(is_any_of(" \t\n"));
+            if (peek() == '{') {
+                auto false_branch = parse_braced_toplevel();
+                return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), move(false_branch)); // If expr true_branch Else false_branch
+            }
 
-    return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), nullptr); // If expr true_branch
+            auto else_if_branch = parse_if_expr();
+            return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), move(else_if_branch)); // If expr true_branch Else If ...
+        }
+
+        return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), nullptr); // If expr true_branch
+    };
+
+    //FIXME: support multiple commands chained with semicolons in if conditions in posix mode
+    consume_while(is_any_of(" \t\n;"));
+    if (m_options.posix_mode && next_is("then"))
+        return parse_posix_if();
+
+    return parse_serenity_if();
 }
 
 RefPtr<AST::Node> Parser::parse_subshell()

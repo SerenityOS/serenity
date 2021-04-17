@@ -554,7 +554,7 @@ void SyntaxHighlighter::rehighlight(const Palette& palette)
 {
     auto text = m_client->get_text();
 
-    Parser parser(text);
+    Parser parser(text, m_shell_options);
     auto ast = parser.parse();
 
     Vector<GUI::TextDocumentSpan> spans;

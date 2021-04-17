@@ -27,6 +27,7 @@
 #pragma once
 
 #include "AST.h"
+#include "Options.h"
 #include <AK/Function.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
@@ -37,9 +38,10 @@ namespace Shell {
 
 class Parser {
 public:
-    Parser(StringView input, bool interactive = false)
+    Parser(StringView input, Options options, bool interactive = false)
         : m_input(move(input))
         , m_in_interactive_mode(interactive)
+        , m_options(options)
     {
     }
 
@@ -168,6 +170,7 @@ private:
     bool m_is_in_brace_expansion_spec { false };
     bool m_continuation_controls_allowed { false };
     bool m_in_interactive_mode { false };
+    Options m_options;
 };
 
 #if 0
