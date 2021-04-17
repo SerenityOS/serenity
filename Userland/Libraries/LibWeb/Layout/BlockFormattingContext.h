@@ -56,8 +56,6 @@ private:
 
     void compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox&);
 
-    [[nodiscard]] static float compute_auto_height_for_block_level_element(const Box&);
-
     void layout_initial_containing_block(LayoutMode);
 
     void layout_block_level_children(Box&, LayoutMode);
