@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,10 @@
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/EventLoop.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Painter.h>
@@ -87,6 +89,22 @@ private:
             builder.append(")");
         }
         return builder.to_string();
+    }
+
+    virtual void enter_event(Core::Event& event) override
+    {
+        auto* app = Application::the();
+        if (app && action())
+            Core::EventLoop::current().post_event(*app, make<ActionEvent>(ActionEvent::Type::ActionEnter, *action()));
+        return Button::enter_event(event);
+    }
+
+    virtual void leave_event(Core::Event& event) override
+    {
+        auto* app = Application::the();
+        if (app && action())
+            Core::EventLoop::current().post_event(*app, make<ActionEvent>(ActionEvent::Type::ActionLeave, *action()));
+        return Button::leave_event(event);
     }
 };
 
