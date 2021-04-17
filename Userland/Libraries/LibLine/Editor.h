@@ -81,6 +81,10 @@ struct Configuration {
         NoSignalHandlers,
     };
 
+    struct DefaultTextEditor {
+        String command;
+    };
+
     Configuration()
     {
     }
@@ -96,6 +100,7 @@ struct Configuration {
     void set(OperationMode mode) { operation_mode = mode; }
     void set(SignalHandler mode) { m_signal_mode = mode; }
     void set(const KeyBinding& binding) { keybindings.append(binding); }
+    void set(DefaultTextEditor editor) { m_default_text_editor = move(editor.command); }
 
     static Configuration from_config(const StringView& libname = "line");
 
@@ -103,6 +108,7 @@ struct Configuration {
     SignalHandler m_signal_mode { SignalHandler::WithSignalHandlers };
     OperationMode operation_mode { OperationMode::Unset };
     Vector<KeyBinding> keybindings;
+    String m_default_text_editor {};
 };
 
 #define ENUMERATE_EDITOR_INTERNAL_FUNCTIONS(M) \
@@ -130,7 +136,8 @@ struct Configuration {
     M(erase_alnum_word_forwards)               \
     M(capitalize_word)                         \
     M(lowercase_word)                          \
-    M(uppercase_word)
+    M(uppercase_word)                          \
+    M(edit_in_external_editor)
 
 #define EDITOR_INTERNAL_FUNCTION(name) \
     [](auto& editor) { editor.name();  return false; }

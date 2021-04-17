@@ -62,6 +62,7 @@ Configuration Configuration::from_config(const StringView& libname)
     // Read behaviour options.
     auto refresh = config_file->read_entry("behaviour", "refresh", "lazy");
     auto operation = config_file->read_entry("behaviour", "operation_mode");
+    auto default_text_editor = config_file->read_entry("behaviour", "default_text_editor");
 
     if (refresh.equals_ignoring_case("lazy"))
         configuration.set(Configuration::Lazy);
@@ -76,6 +77,11 @@ Configuration Configuration::from_config(const StringView& libname)
         configuration.set(Configuration::OperationMode::NonInteractive);
     else
         configuration.set(Configuration::OperationMode::Unset);
+
+    if (!default_text_editor.is_empty())
+        configuration.set(DefaultTextEditor { move(default_text_editor) });
+    else
+        configuration.set(DefaultTextEditor { "/bin/TextEditor" });
 
     // Read keybinds.
 
@@ -167,6 +173,9 @@ void Editor::set_default_keybinds()
     register_key_input_callback(ctrl('R'), EDITOR_INTERNAL_FUNCTION(enter_search));
     register_key_input_callback(ctrl('T'), EDITOR_INTERNAL_FUNCTION(transpose_characters));
     register_key_input_callback('\n', EDITOR_INTERNAL_FUNCTION(finish));
+
+    // ^X^E: Edit in external editor
+    register_key_input_callback(Vector<Key> { ctrl('X'), ctrl('E') }, EDITOR_INTERNAL_FUNCTION(edit_in_external_editor));
 
     // ^[.: alt-.: insert last arg of previous command (similar to `!$`)
     register_key_input_callback(Key { '.', Key::Alt }, EDITOR_INTERNAL_FUNCTION(insert_last_words));

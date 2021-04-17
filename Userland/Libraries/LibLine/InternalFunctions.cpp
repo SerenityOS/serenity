@@ -24,12 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
+#include <LibCore/File.h>
 #include <LibLine/Editor.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 namespace {
 constexpr u32 ctrl(char c) { return c & 0x3f; }
@@ -522,4 +526,91 @@ void Editor::uppercase_word()
     case_change_word(CaseChangeOp::Uppercase);
 }
 
+void Editor::edit_in_external_editor()
+{
+    const auto* editor_command = getenv("EDITOR");
+    if (!editor_command)
+        editor_command = m_configuration.m_default_text_editor.characters();
+
+    char file_path[] = "/tmp/line-XXXXXX";
+    auto fd = mkstemp(file_path);
+
+    if (fd < 0) {
+        perror("mktemp");
+        return;
+    }
+
+    {
+        auto* fp = fdopen(fd, "rw");
+        if (!fp) {
+            perror("fdopen");
+            return;
+        }
+
+        StringBuilder builder;
+        builder.append(Utf32View { m_buffer.data(), m_buffer.size() });
+        auto view = builder.string_view();
+        size_t remaining_size = view.length();
+
+        while (remaining_size > 0)
+            remaining_size = fwrite(view.characters_without_null_termination() - remaining_size, sizeof(char), remaining_size, fp);
+
+        fclose(fp);
+    }
+
+    ScopeGuard remove_temp_file_guard {
+        [fd, file_path] {
+            close(fd);
+            unlink(file_path);
+        }
+    };
+
+    Vector<const char*> args { editor_command, file_path, nullptr };
+    auto pid = vfork();
+
+    if (pid == -1) {
+        perror("vfork");
+        return;
+    }
+
+    if (pid == 0) {
+        execvp(editor_command, const_cast<char* const*>(args.data()));
+        perror("execv");
+        _exit(126);
+    } else {
+        int wstatus = 0;
+        do {
+            waitpid(pid, &wstatus, 0);
+        } while (errno == EINTR);
+
+        if (!(WIFEXITED(wstatus) && WEXITSTATUS(wstatus) == 0))
+            return;
+    }
+
+    {
+        auto file_or_error = Core::File::open(file_path, Core::IODevice::OpenMode::ReadOnly);
+        if (file_or_error.is_error())
+            return;
+
+        auto file = file_or_error.release_value();
+        auto contents = file->read_all();
+        StringView data { contents };
+        while (data.ends_with('\n'))
+            data = data.substring_view(0, data.length() - 1);
+
+        m_cursor = 0;
+        m_chars_touched_in_the_middle = m_buffer.size();
+        m_buffer.clear_with_capacity();
+        m_refresh_needed = true;
+
+        Utf8View view { data };
+        if (view.validate()) {
+            for (auto cp : view)
+                insert(cp);
+        } else {
+            for (auto ch : data)
+                insert(ch);
+        }
+    }
+}
 }
