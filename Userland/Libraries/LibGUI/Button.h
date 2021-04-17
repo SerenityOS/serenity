@@ -56,6 +56,8 @@ public:
     virtual void click(unsigned modifiers = 0) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
 
+    Action* action() { return m_action; }
+    Action const* action() const { return m_action; }
     void set_action(Action&);
 
     virtual bool is_uncheckable() const override;
