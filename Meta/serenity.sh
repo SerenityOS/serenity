@@ -104,8 +104,11 @@ create_build_dir() {
 
 cmd_with_target() {
     is_valid_target || ( >&2 echo "Unknown target: $TARGET"; usage )
-    SERENITY_ROOT="$(get_top_dir)"
-    export SERENITY_ROOT
+
+    if [ ! -d "$SERENITY_ROOT" ]; then
+        SERENITY_ROOT="$(get_top_dir)"
+        export SERENITY_ROOT
+    fi
     BUILD_DIR="$SERENITY_ROOT/Build/$TARGET"
     if [ "$TARGET" != "lagom" ]; then
         export SERENITY_ARCH="$TARGET"
@@ -136,7 +139,7 @@ delete_target() {
 }
 
 build_toolchain() {
-    ( cd Toolchain && ARCH="$TARGET" ./BuildIt.sh )
+    ( cd "$SERENITY_ROOT/Toolchain" && ARCH="$TARGET" ./BuildIt.sh )
 }
 
 ensure_toolchain() {
