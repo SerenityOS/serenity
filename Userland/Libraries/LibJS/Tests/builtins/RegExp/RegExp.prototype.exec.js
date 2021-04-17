@@ -148,3 +148,10 @@ test("empty character class semantics", () => {
     expect(res.length).toBe(1);
     expect(res[0]).toBe("x");
 });
+
+// #6409
+test("undefined match result", () => {
+    const r = /foo/;
+    r.exec = () => ({});
+    expect(r[Symbol.replace]()).toBe("undefined");
+});
