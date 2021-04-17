@@ -117,9 +117,12 @@ struct InodeMetadata {
         buffer.st_size = size;
         buffer.st_blksize = block_size;
         buffer.st_blocks = block_count;
-        buffer.st_atime = atime;
-        buffer.st_mtime = mtime;
-        buffer.st_ctime = ctime;
+        buffer.st_atim.tv_sec = atime;
+        buffer.st_atim.tv_nsec = 0;
+        buffer.st_mtim.tv_sec = mtime;
+        buffer.st_mtim.tv_nsec = 0;
+        buffer.st_ctim.tv_sec = ctime;
+        buffer.st_ctim.tv_nsec = 0;
         return KSuccess;
     }
 
