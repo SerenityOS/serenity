@@ -75,6 +75,8 @@ static bool output_is_terminal = false;
 static HashMap<uid_t, String> users;
 static HashMap<gid_t, String> groups;
 
+static bool is_a_tty = false;
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio rpath tty", nullptr) < 0) {
@@ -89,7 +91,9 @@ int main(int argc, char** argv)
         terminal_columns = ws.ws_col;
         output_is_terminal = true;
     }
-    if (!isatty(STDOUT_FILENO)) {
+
+    is_a_tty = isatty(STDOUT_FILENO);
+    if (!is_a_tty) {
         flag_disable_hyperlinks = true;
     } else {
         flag_colorize = true;
@@ -483,8 +487,10 @@ static bool print_names(const char* path, size_t longest_name, const Vector<Stri
         size_t column_width = longest_name + max(offset, 2);
         printed_on_row += column_width;
 
-        for (size_t j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
-            printf(" ");
+        if (is_a_tty) {
+            for (size_t j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
+                printf(" ");
+        }
         if ((printed_on_row + column_width) >= terminal_columns) {
             printf("\n");
             printed_on_row = 0;
