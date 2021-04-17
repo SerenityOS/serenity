@@ -37,7 +37,6 @@ Usage: $NAME COMMAND [TARGET] [ARGS...]
     addr2line:  $NAME addr2line TARGET BINARY_FILE ADDRESS
                     Resolves the ADDRESS in BINARY_FILE to a file:line. It will
                     attempt to find the BINARY_FILE in the appropriate build directory
-
     rebuild-toolchain: Deletes and re-builds the TARGET's toolchain
 
   Examples:
