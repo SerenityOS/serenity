@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=vim
-version=git
-workdir=vim-master
+version=8.2.2772
+workdir="${port}-${version}"
 useconfigure="true"
-files="https://github.com/vim/vim/archive/master.tar.gz vim-git.tar.gz 9f999815c6afc320612d55f93f0db67b"
+files="https://github.com/vim/vim/archive/refs/tags/v${version}.tar.gz vim-v${version}.tar.gz 0dbd7323008c1d95d0396e119210630f"
 auth_type=md5
 configopts="--with-tlib=tinfo --with-features=normal"
 depends="ncurses"
