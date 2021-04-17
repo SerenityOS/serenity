@@ -29,6 +29,7 @@
 #include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Progressbar.h>
@@ -42,6 +43,16 @@ FileOperationProgressWidget::FileOperationProgressWidget(NonnullRefPtr<Core::Fil
     load_from_gml(file_operation_progress_gml);
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("button");
+
+    auto& file_copy_animation = *find_descendant_of_type_named<GUI::ImageWidget>("file_copy_animation");
+    file_copy_animation.load_from_file("/res/graphics/file-flying-animation.gif");
+    file_copy_animation.animate();
+
+    auto& source_folder_icon = *find_descendant_of_type_named<GUI::ImageWidget>("source_folder_icon");
+    source_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png");
+
+    auto& destination_folder_icon = *find_descendant_of_type_named<GUI::ImageWidget>("destination_folder_icon");
+    destination_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png");
 
     button.on_click = [this] {
         close_pipe();

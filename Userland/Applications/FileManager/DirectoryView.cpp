@@ -95,7 +95,7 @@ static void run_file_operation([[maybe_unused]] FileOperation operation, const S
 
     window->set_title("Copying Files...");
     window->set_main_widget<FileOperationProgressWidget>(pipe_input_file);
-    window->resize(320, 200);
+    window->resize(320, 190);
     if (parent_window)
         window->center_within(*parent_window);
     window->show();

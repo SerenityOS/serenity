@@ -5,6 +5,25 @@
         margins: [4, 4, 4, 4]
     }
 
+    @GUI::Widget {
+        fixed_height: 32
+
+        layout: @GUI::HorizontalBoxLayout {
+        }
+
+        @GUI::ImageWidget {
+            name: "source_folder_icon"
+        }
+
+        @GUI::ImageWidget {
+            name: "file_copy_animation"
+        }
+
+        @GUI::ImageWidget {
+            name: "destination_folder_icon"
+        }
+    }
+
     @GUI::Label {
         text: "Copying files..."
         text_alignment: "CenterLeft"
