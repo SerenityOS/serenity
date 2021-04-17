@@ -146,6 +146,4 @@ int pthread_rwlockattr_setpshared(pthread_rwlockattr_t*, int);
 
 int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void));
 
-void __pthread_key_destroy_for_current_thread();
-
 __END_DECLS
