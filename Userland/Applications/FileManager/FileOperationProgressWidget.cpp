@@ -86,6 +86,8 @@ FileOperationProgressWidget::FileOperationProgressWidget(NonnullRefPtr<Core::Fil
                 parts[7]);
         }
     };
+
+    m_elapsed_timer.start();
 }
 
 FileOperationProgressWidget::~FileOperationProgressWidget()
@@ -107,20 +109,57 @@ void FileOperationProgressWidget::did_error()
     window()->close();
 }
 
-void FileOperationProgressWidget::did_progress([[maybe_unused]] off_t bytes_done, [[maybe_unused]] off_t total_byte_count, size_t files_done, size_t total_file_count, off_t current_file_done, off_t current_file_size, const StringView& current_file_name)
+String FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_byte_count)
 {
+    int elapsed = m_elapsed_timer.elapsed() / 1000;
+
+    if (bytes_done == 0 || elapsed < 3)
+        return "Estimating...";
+
+    off_t bytes_left = total_byte_count - bytes_done;
+    int seconds_remaining = (bytes_left * elapsed) / bytes_done;
+
+    if (seconds_remaining < 30)
+        return String::formatted("{} seconds", 5 + seconds_remaining - seconds_remaining % 5);
+    if (seconds_remaining < 60)
+        return "About a minute";
+    if (seconds_remaining < 90)
+        return "Over a minute";
+    if (seconds_remaining < 120)
+        return "Less than two minutes";
+
+    time_t minutes_remaining = seconds_remaining / 60;
+    seconds_remaining %= 60;
+
+    if (minutes_remaining < 60) {
+        if (seconds_remaining < 30)
+            return String::formatted("About {} minutes", minutes_remaining);
+        return String::formatted("Over {} minutes", minutes_remaining);
+    }
+
+    time_t hours_remaining = minutes_remaining / 60;
+    minutes_remaining %= 60;
+
+    return String::formatted("{} hours and {} minutes", hours_remaining, minutes_remaining);
+}
+
+void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byte_count, size_t files_done, size_t total_file_count, [[maybe_unused]] off_t current_file_done, [[maybe_unused]] off_t current_file_size, const StringView& current_file_name)
+{
+    auto& files_copied_label = *find_descendant_of_type_named<GUI::Label>("files_copied_label");
     auto& current_file_label = *find_descendant_of_type_named<GUI::Label>("current_file_label");
-    auto& current_file_progressbar = *find_descendant_of_type_named<GUI::Progressbar>("current_file_progressbar");
-    auto& overall_progress_label = *find_descendant_of_type_named<GUI::Label>("overall_progress_label");
     auto& overall_progressbar = *find_descendant_of_type_named<GUI::Progressbar>("overall_progressbar");
+    auto& estimated_time_label = *find_descendant_of_type_named<GUI::Label>("estimated_time_label");
 
     current_file_label.set_text(current_file_name);
-    current_file_progressbar.set_max(current_file_size);
-    current_file_progressbar.set_value(current_file_done);
 
-    overall_progress_label.set_text(String::formatted("{} of {}", files_done, total_file_count));
-    overall_progressbar.set_max(total_file_count);
-    overall_progressbar.set_value(files_done);
+    files_copied_label.set_text(String::formatted("Copying file {} of {}", files_done, total_file_count));
+    estimated_time_label.set_text(estimate_time(bytes_done, total_byte_count));
+
+    if (total_byte_count) {
+        window()->set_progress(100.0f * bytes_done / total_byte_count);
+        overall_progressbar.set_max(total_byte_count);
+        overall_progressbar.set_value(bytes_done);
+    }
 }
 
 void FileOperationProgressWidget::close_pipe()
