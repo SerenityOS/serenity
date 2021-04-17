@@ -31,6 +31,7 @@
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
 #include <LibELF/AuxiliaryVector.h>
+#include <LibPthread/pthread.h>
 #include <alloca.h>
 #include <assert.h>
 #include <ctype.h>
@@ -47,6 +48,8 @@
 #include <sys/wait.h>
 #include <syscall.h>
 #include <unistd.h>
+
+void (*__libc_pthread_key_destroy_for_current_thread)() = nullptr;
 
 static void strtons(const char* str, char** endptr)
 {
@@ -224,6 +227,10 @@ void exit(int status)
     _fini();
     fflush(stdout);
     fflush(stderr);
+
+    if (__libc_pthread_key_destroy_for_current_thread)
+        __libc_pthread_key_destroy_for_current_thread();
+
     _exit(status);
 }
 

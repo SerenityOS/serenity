@@ -46,24 +46,16 @@
 namespace {
 using PthreadAttrImpl = Syscall::SC_create_thread_params;
 
-struct KeyDestroyer {
-    ~KeyDestroyer() { destroy_for_current_thread(); }
-    static void destroy_for_current_thread();
-};
-
 } // end anonymous namespace
 
 constexpr size_t required_stack_alignment = 4 * MiB;
 constexpr size_t highest_reasonable_guard_size = 32 * PAGE_SIZE;
 constexpr size_t highest_reasonable_stack_size = 8 * MiB; // That's the default in Ubuntu?
 
-// Create an RAII object with a global destructor to destroy pthread keys for the main thread.
-// Impact of this: Any global object that wants to do something with pthread_getspecific
-// in its destructor from the main thread might be in for a nasty surprise.
-static KeyDestroyer s_key_destroyer;
-
 #define __RETURN_PTHREAD_ERROR(rc) \
     return ((rc) < 0 ? -(rc) : 0)
+
+extern void (*__libc_pthread_key_destroy_for_current_thread)();
 
 extern "C" {
 
@@ -105,7 +97,7 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
 
 [[noreturn]] static void exit_thread(void* code)
 {
-    KeyDestroyer::destroy_for_current_thread();
+    __pthread_key_destroy_for_current_thread();
     syscall(SC_exit_thread, code);
     VERIFY_NOT_REACHED();
 }
@@ -592,7 +584,12 @@ int pthread_setspecific(pthread_key_t key, const void* value)
     return 0;
 }
 
-void KeyDestroyer::destroy_for_current_thread()
+[[gnu::constructor]] static void set_libc_key_destructor()
+{
+    __libc_pthread_key_destroy_for_current_thread = __pthread_key_destroy_for_current_thread;
+}
+
+void __pthread_key_destroy_for_current_thread()
 {
     // This function will either be called during exit_thread, for a pthread, or
     // during global program shutdown for the main thread.
