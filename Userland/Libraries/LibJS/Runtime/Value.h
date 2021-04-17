@@ -37,8 +37,6 @@
 
 // 2 ** 53 - 1
 static constexpr double MAX_ARRAY_LIKE_INDEX = 9007199254740991.0;
-// 2 ** 32 - 1
-static constexpr double MAX_U32 = 4294967295.0;
 // Unique bit representation of negative zero (only sign bit set)
 static constexpr u64 NEGATIVE_ZERO_BITS = ((u64)1 << 63);
 
