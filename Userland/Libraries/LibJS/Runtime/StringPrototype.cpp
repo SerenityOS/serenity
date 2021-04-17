@@ -531,7 +531,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     auto* result = Array::create(global_object);
     size_t result_len = 0;
 
-    auto limit = static_cast<u32>(MAX_U32);
+    auto limit = NumericLimits<u32>::max();
     if (!vm.argument(1).is_undefined()) {
         limit = vm.argument(1).to_u32(global_object);
         if (vm.exception())
