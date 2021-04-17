@@ -61,6 +61,32 @@ int IODevice::read(u8* buffer, int length)
     return read_buffer.size();
 }
 
+size_t IODevice::copy_from(const IODevice& source, size_t buffer_size)
+{
+#ifndef __serenity__
+    (void)source;
+    (void)buffer_size;
+    return 0;
+#else
+    if (!source.is_readable())
+        return 0;
+    if (!is_writable())
+        return 0;
+
+    size_t total_copied = 0;
+    while (true) {
+        ssize_t copied = ::fdcopy(source.fd(), fd(), buffer_size);
+        if (!copied)
+            return total_copied;
+        if (copied == -1) {
+            set_error(errno);
+            return 0;
+        }
+        total_copied += copied;
+    }
+#endif
+}
+
 ByteBuffer IODevice::read(size_t max_size)
 {
     if (m_fd < 0)

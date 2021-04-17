@@ -86,6 +86,8 @@ public:
     ByteBuffer read_all();
     String read_line(size_t max_size = 16384);
 
+    size_t copy_from(const IODevice& source, size_t buffer_size = 65536);
+
     bool write(const u8*, int size);
     bool write(const StringView&);
 
