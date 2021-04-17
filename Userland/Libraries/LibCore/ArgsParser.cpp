@@ -288,6 +288,22 @@ void ArgsParser::add_option(const char*& value, const char* help_string, const c
     add_option(move(option));
 }
 
+void ArgsParser::add_option(String& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+{
+    Option option {
+        true,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        [&value](const char* s) {
+            value = s;
+            return true;
+        }
+    };
+    add_option(move(option));
+}
+
 void ArgsParser::add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
 {
     Option option {
