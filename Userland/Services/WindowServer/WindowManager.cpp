@@ -34,6 +34,7 @@
 #include "Window.h"
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
+#include <LibGUI/WindowManagerServerConnection.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font.h>
@@ -373,6 +374,17 @@ void WindowManager::tell_wms_applet_area_size_changed(const Gfx::IntSize& size)
             return IterationDecision::Continue;
 
         conn.post_message(Messages::WindowManagerClient::AppletAreaSizeChanged(conn.window_id(), size));
+        return IterationDecision::Continue;
+    });
+}
+
+void WindowManager::tell_wms_super_key_pressed()
+{
+    for_each_window_manager([](WMClientConnection& conn) {
+        if (conn.window_id() < 0)
+            return IterationDecision::Continue;
+
+        conn.post_message(Messages::WindowManagerClient::SuperKeyPressed(conn.window_id()));
         return IterationDecision::Continue;
     });
 }
@@ -1182,6 +1194,9 @@ Gfx::IntRect WindowManager::arena_rect_for_type(WindowType type) const
 void WindowManager::event(Core::Event& event)
 {
     if (static_cast<Event&>(event).is_mouse_event()) {
+        if (event.type() != Event::MouseMove)
+            m_previous_event_was_super_keydown = false;
+
         Window* hovered_window = nullptr;
         process_mouse_event(static_cast<MouseEvent&>(event), hovered_window);
         set_hovered_window(hovered_window);
@@ -1211,7 +1226,17 @@ void WindowManager::event(Core::Event& event)
             return;
         }
 
-        if (MenuManager::the().current_menu()) {
+        if (key_event.type() == Event::KeyDown && key_event.key() == Key_Super) {
+            m_previous_event_was_super_keydown = true;
+        } else if (m_previous_event_was_super_keydown) {
+            m_previous_event_was_super_keydown = false;
+            if (!m_dnd_client && key_event.type() == Event::KeyUp && key_event.key() == Key_Super) {
+                tell_wms_super_key_pressed();
+                return;
+            }
+        }
+
+        if (MenuManager::the().current_menu() && key_event.key() != Key_Super) {
             MenuManager::the().dispatch_event(event);
             return;
         }
