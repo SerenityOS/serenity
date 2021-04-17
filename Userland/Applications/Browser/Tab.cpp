@@ -113,12 +113,14 @@ Tab::Tab(Type type)
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { go_back(); }, this);
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { go_forward(); }, this);
     m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) { load(g_home_url); }, this);
+    m_go_home_action->set_status_tip("Go to home page");
 
     toolbar.add_action(*m_go_back_action);
     toolbar.add_action(*m_go_forward_action);
     toolbar.add_action(*m_go_home_action);
 
     m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) { reload(); }, this);
+    m_reload_action->set_status_tip("Reload current page");
 
     toolbar.add_action(*m_reload_action);
 
@@ -298,11 +300,14 @@ Tab::Tab(Type type)
 
     auto& app_menu = m_menubar->add_menu("&File");
     app_menu.add_action(WindowActions::the().create_new_tab_action());
-    app_menu.add_action(GUI::Action::create(
+
+    auto close_tab_action = GUI::Action::create(
         "&Close Tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
             on_tab_close_request(*this);
         },
-        this));
+        this);
+    close_tab_action->set_status_tip("Close current tab");
+    app_menu.add_action(close_tab_action);
 
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
@@ -349,6 +354,7 @@ Tab::Tab(Type type)
             }
         },
         this);
+    view_source_action->set_status_tip("View source code of the current page");
 
     auto inspect_dom_tree_action = GUI::Action::create(
         "Inspect &DOM Tree", { Mod_None, Key_F12 }, [this](auto&) {
@@ -369,12 +375,13 @@ Tab::Tab(Type type)
             }
         },
         this);
+    inspect_dom_tree_action->set_status_tip("Open DOM inspector window for this page");
 
     auto& inspect_menu = m_menubar->add_menu("&Inspect");
     inspect_menu.add_action(*view_source_action);
     inspect_menu.add_action(*inspect_dom_tree_action);
 
-    inspect_menu.add_action(GUI::Action::create(
+    auto js_console_action = GUI::Action::create(
         "Open &JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 if (!m_console_window) {
@@ -406,7 +413,9 @@ Tab::Tab(Type type)
                 m_console_window->move_to_front();
             }
         },
-        this));
+        this);
+    js_console_action->set_status_tip("Open JavaScript console for this page");
+    inspect_menu.add_action(js_console_action);
 
     auto& debug_menu = m_menubar->add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
