@@ -26,7 +26,7 @@
  */
 
 #include <AK/Platform.h>
-
+#include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/USB/UHCIController.h>
 #include <Kernel/Process.h>
@@ -89,6 +89,9 @@ UHCIController& UHCIController::the()
 
 UNMAP_AFTER_INIT void UHCIController::detect()
 {
+    if (kernel_command_line().disable_uhci_controller())
+        return;
+
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
             return;
