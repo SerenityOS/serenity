@@ -28,6 +28,12 @@ fi
 
 SYSTEM_NAME="$(uname -s)"
 
+# We *most definitely* don't need debug symbols in the linker/compiler.
+# This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 120 MiB.
+# Hence, this might actually cause marginal speedups, although the point is to not waste space as blatantly.
+export CFLAGS="-g0"
+export CXXFLAGS="-g0"
+
 if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
     MAKE=gmake
     MD5SUM="md5 -q"
@@ -312,22 +318,6 @@ pushd "$DIR/Build/$ARCH"
             fi
         fi
     done
-popd
-
-
-# == STRIP BINARIES TO SAVE SPACE ==
-
-pushd "$DIR"
-    # Stripping doesn't seem to work on macOS.
-    if [ "$SYSTEM_NAME" != "Darwin" ]; then
-        # We *most definitely* don't need debug symbols in the linker/compiler.
-        # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 120 MiB.
-        # Hence, this might actually cause marginal speedups, although the point is to not waste space as blatantly.
-        echo "Stripping executables ..."
-        echo "Before: $(du -sh Local)"
-        find Local/ -type f -executable ! -name '*.la' ! -name '*.sh' ! -name 'mk*' -exec strip {} +
-        echo "After: $(du -sh Local)"
-    fi
 popd
 
 
