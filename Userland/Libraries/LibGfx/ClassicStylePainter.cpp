@@ -147,8 +147,8 @@ static void paint_button_new(Painter& painter, const IntRect& a_rect, const Pale
         painter.fill_rect({ 0, 0, rect.width(), rect.height() }, button_color);
 
         // Top highlight
-        painter.draw_line({ 1, 1 }, { rect.width() - 3, 1 }, highlight_color);
-        painter.draw_line({ 1, 1 }, { 1, rect.height() - 3 }, highlight_color);
+        painter.draw_line({ 0, 0 }, { rect.width() - 2, 0 }, highlight_color);
+        painter.draw_line({ 0, 0 }, { 0, rect.height() - 2 }, highlight_color);
 
         // Outer shadow
         painter.draw_line({ 0, rect.height() - 1 }, { rect.width() - 1, rect.height() - 1 }, shadow_color2);
