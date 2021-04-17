@@ -1,0 +1,22 @@
+diff -Naur openttd-1.11.0/src/spritecache.cpp openttd-1.11.0.serenity/src/spritecache.cpp
+--- openttd-1.11.0/src/spritecache.cpp	2021-04-01 14:33:44.000000000 +0200
++++ openttd-1.11.0.serenity/src/spritecache.cpp	2021-04-18 21:03:15.916430052 +0200
+@@ -915,6 +915,7 @@
+ 	/* Remember 'target_size' from the previous allocation attempt, so we do not try to reach the target_size multiple times in case of failure. */
+ 	static uint last_alloc_attempt = 0;
+ 
++#ifndef __serenity__
+ 	if (_spritecache_ptr == nullptr || (_allocated_sprite_cache_size != target_size && target_size != last_alloc_attempt)) {
+ 		delete[] reinterpret_cast<byte *>(_spritecache_ptr);
+ 
+@@ -950,6 +951,10 @@
+ 			ScheduleErrorMessage(msg);
+ 		}
+ 	}
++#else
++    _allocated_sprite_cache_size = target_size / 5;
++    _spritecache_ptr = reinterpret_cast<MemBlock *>(new byte[_allocated_sprite_cache_size]);
++#endif
+ 
+ 	/* A big free block */
+ 	_spritecache_ptr->size = (_allocated_sprite_cache_size - sizeof(MemBlock)) | S_FREE_MASK;

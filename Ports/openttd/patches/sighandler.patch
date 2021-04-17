@@ -1,0 +1,12 @@
+diff -Naur openttd-1.11.0/src/os/unix/crashlog_unix.cpp openttd-1.11.0.serenity/src/os/unix/crashlog_unix.cpp
+--- openttd-1.11.0/src/os/unix/crashlog_unix.cpp	2021-04-01 14:33:44.000000000 +0200
++++ openttd-1.11.0.serenity/src/os/unix/crashlog_unix.cpp	2021-04-18 21:40:06.426298674 +0200
+@@ -178,7 +178,7 @@
+ /* static */ void CrashLog::InitialiseCrashLog()
+ {
+ 	for (const int *i = _signals_to_handle; i != endof(_signals_to_handle); i++) {
+-		signal(*i, HandleCrash);
++		//signal(*i, HandleCrash);
+ 	}
+ }
+ 
