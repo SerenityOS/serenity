@@ -278,4 +278,20 @@ void Application::notify_drag_cancelled(Badge<WindowServerConnection>)
     set_drag_hovered_widget_impl(nullptr);
 }
 
+void Application::event(Core::Event& event)
+{
+    if (event.type() == GUI::Event::ActionEnter || event.type() == GUI::Event::ActionLeave) {
+        auto& action_event = static_cast<ActionEvent&>(event);
+        auto& action = action_event.action();
+        if (action_event.type() == GUI::Event::ActionEnter) {
+            if (on_action_enter)
+                on_action_enter(action);
+        } else {
+            if (on_action_leave)
+                on_action_leave(action);
+        }
+    }
+    Object::event(event);
+}
+
 }
