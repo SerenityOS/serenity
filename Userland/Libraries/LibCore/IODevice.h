@@ -72,6 +72,8 @@ public:
     unsigned mode() const { return m_mode; }
     bool is_open() const { return m_mode != NotOpen; }
     bool eof() const { return m_eof; }
+    bool is_readable() const { return mode() & OpenMode::ReadOnly; }
+    bool is_writable() const { return mode() & OpenMode::WriteOnly; }
 
     int error() const { return m_error; }
     const char* error_string() const;
