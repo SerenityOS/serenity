@@ -59,4 +59,5 @@ private:
 
     Gfx::IntSize m_applet_area_size;
     RefPtr<GUI::Frame> m_applet_area_container;
+    RefPtr<GUI::Button> m_start_button;
 };
