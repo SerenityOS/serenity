@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -87,6 +87,10 @@ public:
 
     String text() const { return m_text; }
     void set_text(String text) { m_text = move(text); }
+
+    String const& long_text() const { return m_long_text; }
+    void set_long_text(String long_text) { m_long_text = move(long_text); }
+
     Shortcut shortcut() const { return m_shortcut; }
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
     void set_icon(const Gfx::Bitmap*);
@@ -134,6 +138,7 @@ private:
     void for_each_menu_item(Callback);
 
     String m_text;
+    String m_long_text;
     RefPtr<Gfx::Bitmap> m_icon;
     Shortcut m_shortcut;
     bool m_enabled { true };
