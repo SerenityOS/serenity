@@ -82,6 +82,7 @@ public:
         WM_WindowRectChanged,
         WM_WindowIconBitmapChanged,
         WM_AppletAreaSizeChanged,
+        WM_SuperKeyPressed,
         __End_WM_Events,
     };
 
@@ -111,6 +112,14 @@ public:
 private:
     int m_client_id { -1 };
     int m_window_id { -1 };
+};
+
+class WMSuperKeyPressedEvent : public WMEvent {
+public:
+    explicit WMSuperKeyPressedEvent(int client_id)
+        : WMEvent(Event::Type::WM_SuperKeyPressed, client_id, 0)
+    {
+    }
 };
 
 class WMAppletAreaSizeChangedEvent : public WMEvent {
