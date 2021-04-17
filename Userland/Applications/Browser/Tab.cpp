@@ -658,23 +658,12 @@ Web::WebViewHooks& Tab::hooks()
 
 void Tab::action_entered(GUI::Action& action)
 {
-    m_user_agent_spoof_actions.for_each_action([&](GUI::Action& user_agent_action) {
-        if (&action != &user_agent_action)
-            return IterationDecision::Continue;
-        if (!user_agent_action.status_tip().is_empty())
-            m_statusbar->set_override_text(user_agent_action.status_tip());
-        return IterationDecision::Break;
-    });
+    m_statusbar->set_override_text(action.status_tip());
 }
 
-void Tab::action_left(GUI::Action& action)
+void Tab::action_left(GUI::Action&)
 {
-    m_user_agent_spoof_actions.for_each_action([&](auto& user_agent_action) {
-        if (&action != &user_agent_action)
-            return IterationDecision::Continue;
-        m_statusbar->set_override_text({});
-        return IterationDecision::Break;
-    });
+    m_statusbar->set_override_text({});
 }
 
 }
