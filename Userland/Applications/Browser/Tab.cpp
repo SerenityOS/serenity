@@ -486,9 +486,10 @@ Tab::Tab(Type type)
             m_web_content_view->debug_request("spoof-user-agent", Web::default_user_agent);
         }
     });
-    m_disable_user_agent_spoofing->set_checked(true);
+    m_disable_user_agent_spoofing->set_long_text(Web::default_user_agent);
     spoof_user_agent_menu.add_action(*m_disable_user_agent_spoofing);
     m_user_agent_spoof_actions.add_action(*m_disable_user_agent_spoofing);
+    m_disable_user_agent_spoofing->set_checked(true);
 
     auto add_user_agent = [&](auto& name, auto& user_agent) {
         auto action = GUI::Action::create_checkable(name, [&](auto&) {
@@ -498,6 +499,7 @@ Tab::Tab(Type type)
                 m_web_content_view->debug_request("spoof-user-agent", user_agent);
             }
         });
+        action->set_long_text(user_agent);
         spoof_user_agent_menu.add_action(action);
         m_user_agent_spoof_actions.add_action(action);
     };
@@ -508,7 +510,7 @@ Tab::Tab(Type type)
     add_user_agent("Firefox Android Mobile", "Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/86.0");
     add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1");
 
-    auto custom_user_agent = GUI::Action::create_checkable("Custom", [&](auto&) {
+    auto custom_user_agent = GUI::Action::create_checkable("Custom", [&](auto& action) {
         String user_agent;
         if (GUI::InputBox::show(window(), user_agent, "Enter User Agent:", "Custom User Agent") != GUI::InputBox::ExecOK || user_agent.is_empty() || user_agent.is_null()) {
             m_disable_user_agent_spoofing->activate();
@@ -519,6 +521,7 @@ Tab::Tab(Type type)
         } else {
             m_web_content_view->debug_request("spoof-user-agent", user_agent);
         }
+        action.set_long_text(user_agent);
     });
     spoof_user_agent_menu.add_action(custom_user_agent);
     m_user_agent_spoof_actions.add_action(custom_user_agent);
@@ -651,6 +654,27 @@ Web::WebViewHooks& Tab::hooks()
     if (m_type == Type::InProcessWebView)
         return *m_page_view;
     return *m_web_content_view;
+}
+
+void Tab::action_entered(GUI::Action& action)
+{
+    m_user_agent_spoof_actions.for_each_action([&](GUI::Action& user_agent_action) {
+        if (&action != &user_agent_action)
+            return IterationDecision::Continue;
+        if (!user_agent_action.long_text().is_empty())
+            m_statusbar->set_override_text(user_agent_action.long_text());
+        return IterationDecision::Break;
+    });
+}
+
+void Tab::action_left(GUI::Action& action)
+{
+    m_user_agent_spoof_actions.for_each_action([&](auto& user_agent_action) {
+        if (&action != &user_agent_action)
+            return IterationDecision::Continue;
+        m_statusbar->set_override_text({});
+        return IterationDecision::Break;
+    });
 }
 
 }

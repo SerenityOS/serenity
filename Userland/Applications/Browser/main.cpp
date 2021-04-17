@@ -248,6 +248,20 @@ int main(int argc, char** argv)
         }
     }
 
+    app->on_action_enter = [&](GUI::Action& action) {
+        auto* tab = static_cast<Browser::Tab*>(tab_widget.active_widget());
+        if (!tab)
+            return;
+        tab->action_entered(action);
+    };
+
+    app->on_action_leave = [&](auto& action) {
+        auto* tab = static_cast<Browser::Tab*>(tab_widget.active_widget());
+        if (!tab)
+            return;
+        tab->action_left(action);
+    };
+
     window_actions.on_create_new_tab = [&] {
         create_new_tab(Browser::g_home_url, true);
     };
