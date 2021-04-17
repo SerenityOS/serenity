@@ -56,7 +56,7 @@ static Function* get_target_function_from(GlobalObject& global_object, const Str
     return &target.as_function();
 }
 
-static void prepare_arguments_list(GlobalObject& global_object, Value value, MarkedValueList* arguments)
+static void prepare_arguments_list(GlobalObject& global_object, Value value, MarkedValueList& arguments)
 {
     auto& vm = global_object.vm();
     if (!value.is_object()) {
@@ -71,7 +71,7 @@ static void prepare_arguments_list(GlobalObject& global_object, Value value, Mar
         auto element = arguments_list.get(String::number(i));
         if (vm.exception())
             return;
-        arguments->append(element.value_or(js_undefined()));
+        arguments.append(element.value_or(js_undefined()));
     }
 }
 
@@ -111,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::apply)
         return {};
     auto this_arg = vm.argument(1);
     MarkedValueList arguments(vm.heap());
-    prepare_arguments_list(global_object, vm.argument(2), &arguments);
+    prepare_arguments_list(global_object, vm.argument(2), arguments);
     if (vm.exception())
         return {};
     return vm.call(*target, this_arg, move(arguments));
@@ -123,7 +123,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::construct)
     if (!target)
         return {};
     MarkedValueList arguments(vm.heap());
-    prepare_arguments_list(global_object, vm.argument(1), &arguments);
+    prepare_arguments_list(global_object, vm.argument(1), arguments);
     if (vm.exception())
         return {};
     auto* new_target = target;
