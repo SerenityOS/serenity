@@ -26,6 +26,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Format.h>
+#include <LibC/bits/pthread_integration.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,6 +47,7 @@ static constexpr size_t max_atexit_entry_count = PAGE_SIZE / sizeof(AtExitEntry)
 
 static AtExitEntry* atexit_entries;
 static size_t atexit_entry_count = 0;
+static pthread_mutex_t atexit_mutex = __PTHREAD_MUTEX_INITIALIZER;
 
 static void lock_atexit_handlers()
 {
@@ -65,12 +67,17 @@ static void unlock_atexit_handlers()
 
 int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle)
 {
-    if (atexit_entry_count >= max_atexit_entry_count)
+    __pthread_mutex_lock(&atexit_mutex);
+
+    if (atexit_entry_count >= max_atexit_entry_count) {
+        __pthread_mutex_unlock(&atexit_mutex);
         return -1;
+    }
 
     if (!atexit_entries) {
         atexit_entries = (AtExitEntry*)mmap(nullptr, PAGE_SIZE, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
         if (atexit_entries == MAP_FAILED) {
+            __pthread_mutex_unlock(&atexit_mutex);
             perror("__cxa_atexit mmap");
             _exit(1);
         }
@@ -79,6 +86,8 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
     unlock_atexit_handlers();
     atexit_entries[atexit_entry_count++] = { exit_function, parameter, dso_handle, false };
     lock_atexit_handlers();
+
+    __pthread_mutex_unlock(&atexit_mutex);
 
     return 0;
 }
@@ -92,6 +101,8 @@ void __cxa_finalize(void* dso_handle)
     // Multiple calls to __cxa_finalize shall not result in calling termination function entries multiple times;
     // the implementation may either remove entries or mark them finished.
 
+    __pthread_mutex_lock(&atexit_mutex);
+
     ssize_t entry_index = atexit_entry_count;
 
     dbgln_if(GLOBAL_DTORS_DEBUG, "__cxa_finalize: {} entries in the finalizer list", entry_index);
@@ -104,9 +115,13 @@ void __cxa_finalize(void* dso_handle)
             unlock_atexit_handlers();
             exit_entry.has_been_called = true;
             lock_atexit_handlers();
+            __pthread_mutex_unlock(&atexit_mutex);
             exit_entry.method(exit_entry.parameter);
+            __pthread_mutex_lock(&atexit_mutex);
         }
     }
+
+    __pthread_mutex_unlock(&atexit_mutex);
 }
 
 [[noreturn]] void __cxa_pure_virtual()
