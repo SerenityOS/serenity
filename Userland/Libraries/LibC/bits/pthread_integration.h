@@ -27,6 +27,7 @@
 #pragma once
 
 #include <sys/cdefs.h>
+#include <sys/types.h>
 
 __BEGIN_DECLS
 
@@ -37,11 +38,20 @@ void __pthread_fork_atfork_register_prepare(void (*)(void));
 void __pthread_fork_atfork_register_parent(void (*)(void));
 void __pthread_fork_atfork_register_child(void (*)(void));
 
-int __pthread_mutex_lock(void*);
-int __pthread_mutex_unlock(void*);
-int __pthread_mutex_init(void*, const void*);
+int __pthread_mutex_lock(pthread_mutex_t*);
+int __pthread_mutex_unlock(pthread_mutex_t*);
+int __pthread_mutex_init(pthread_mutex_t*, const pthread_mutexattr_t*);
+
+typedef void (*KeyDestructor)(void*);
+
+int __pthread_key_create(pthread_key_t*, KeyDestructor);
+int __pthread_key_delete(pthread_key_t);
+void* __pthread_getspecific(pthread_key_t);
+int __pthread_setspecific(pthread_key_t, const void*);
 
 int __pthread_self();
+
+void __pthread_key_destroy_for_current_thread();
 
 #define __PTHREAD_MUTEX_NORMAL 0
 #define __PTHREAD_MUTEX_RECURSIVE 1
