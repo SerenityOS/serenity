@@ -52,6 +52,7 @@ private:
     virtual void handle(const Messages::WindowManagerClient::WindowIconBitmapChanged&) override;
     virtual void handle(const Messages::WindowManagerClient::WindowRectChanged&) override;
     virtual void handle(const Messages::WindowManagerClient::AppletAreaSizeChanged&) override;
+    virtual void handle(const Messages::WindowManagerClient::SuperKeyPressed&) override;
 };
 
 }
