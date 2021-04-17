@@ -33,7 +33,7 @@ namespace TextCodec {
 namespace {
 Latin1Decoder& latin1_decoder()
 {
-    static Latin1Decoder* decoder;
+    static Latin1Decoder* decoder = nullptr;
     if (!decoder)
         decoder = new Latin1Decoder;
     return *decoder;
@@ -41,7 +41,7 @@ Latin1Decoder& latin1_decoder()
 
 UTF8Decoder& utf8_decoder()
 {
-    static UTF8Decoder* decoder;
+    static UTF8Decoder* decoder = nullptr;
     if (!decoder)
         decoder = new UTF8Decoder;
     return *decoder;
@@ -49,7 +49,7 @@ UTF8Decoder& utf8_decoder()
 
 UTF16BEDecoder& utf16be_decoder()
 {
-    static UTF16BEDecoder* decoder;
+    static UTF16BEDecoder* decoder = nullptr;
     if (!decoder)
         decoder = new UTF16BEDecoder;
     return *decoder;
@@ -60,6 +60,14 @@ Latin2Decoder& latin2_decoder()
     static Latin2Decoder* decoder = nullptr;
     if (!decoder)
         decoder = new Latin2Decoder;
+    return *decoder;
+}
+
+HebrewDecoder& hebrew_decoder()
+{
+    static HebrewDecoder* decoder = nullptr;
+    if (!decoder)
+        decoder = new HebrewDecoder;
     return *decoder;
 }
 
@@ -76,6 +84,8 @@ Decoder* decoder_for(const String& a_encoding)
         return &utf16be_decoder();
     if (encoding.equals_ignoring_case("iso-8859-2"))
         return &latin2_decoder();
+    if (encoding.equals_ignoring_case("windows-1255"))
+        return &hebrew_decoder();
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
     return nullptr;
 }
@@ -288,6 +298,29 @@ String Latin2Decoder::to_utf8(const StringView& input)
         builder.append_code_point(convert_latin2_to_utf8(c));
     }
 
+    return builder.to_string();
+}
+
+String HebrewDecoder::to_utf8(const StringView& input)
+{
+    static constexpr Array<u32, 128> translation_table = {
+        0x20AC, 0xFFFD, 0x201A, 0x192, 0x201E, 0x2026, 0x2020, 0x2021, 0x2C6, 0x2030, 0xFFFD, 0x2039, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
+        0xFFFD, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0x2DC, 0x2122, 0xFFFD, 0x203A, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
+        0xA0, 0xA1, 0xA2, 0xA3, 0x20AA, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xD7, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF,
+        0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xF7, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF,
+        0x5B0, 0x5B1, 0x5B2, 0x5B3, 0x5B4, 0x5B5, 0x5B6, 0x5B7, 0x5B8, 0x5B9, 0x5BA, 0x5BB, 0x5BC, 0x5BD, 0x5BE, 0x5BF,
+        0x5C0, 0x5C1, 0x5C2, 0x5C3, 0x5F0, 0x5F1, 0x5F2, 0x5F3, 0x5F4, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
+        0x5D0, 0x5D1, 0x5D2, 0x5D3, 0x5D4, 0x5D5, 0x5D6, 0x5D7, 0x5D8, 0x5D9, 0x5DA, 0x5DB, 0x5DC, 0x5DD, 0x5DE, 0x5DF,
+        0x5E0, 0x5E1, 0x5E2, 0x5E3, 0x5E4, 0x5E5, 0x5E6, 0x5E7, 0x5E8, 0x5E9, 0x5EA, 0xFFFD, 0xFFFD, 0x200E, 0x200F, 0xFFFD
+    };
+    StringBuilder builder(input.length());
+    for (unsigned char ch : input) {
+        if (ch < 0x80) { // Superset of ASCII
+            builder.append(ch);
+        } else {
+            builder.append_code_point(translation_table[ch - 0x80]);
+        }
+    }
     return builder.to_string();
 }
 
