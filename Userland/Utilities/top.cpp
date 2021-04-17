@@ -201,8 +201,8 @@ int main(int, char**)
             u32 times_scheduled_before = (*jt).value.times_scheduled;
             u32 times_scheduled_diff = times_scheduled_now - times_scheduled_before;
             it.value.times_scheduled_since_prev = times_scheduled_diff;
-            it.value.cpu_percent = ((times_scheduled_diff * 100) / sum_diff);
-            it.value.cpu_percent_decimal = (((times_scheduled_diff * 1000) / sum_diff) % 10);
+            it.value.cpu_percent = sum_diff > 0 ? ((times_scheduled_diff * 100) / sum_diff) : 0;
+            it.value.cpu_percent_decimal = sum_diff > 0 ? (((times_scheduled_diff * 1000) / sum_diff) % 10) : 0;
             threads.append(&it.value);
         }
 
