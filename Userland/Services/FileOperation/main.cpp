@@ -148,15 +148,17 @@ int perform_copy(const String& source, const String& destination)
 
         while (true) {
             print_progress();
-            auto buffer = source_file.read(65536);
-            if (buffer.is_null())
-                break;
-            if (!destination_file.write(buffer)) {
+
+            size_t copied = destination_file.copy_from(source_file);
+            if (destination_file.has_error()) {
                 warnln("Failed to write to destination file: {}", destination_file.error_string());
                 return 1;
             }
-            item_done += buffer.size();
-            bytes_copied_so_far += buffer.size();
+            if (copied == 0)
+                break;
+
+            item_done += copied;
+            bytes_copied_so_far += copied;
             print_progress();
             // FIXME: Remove this once the kernel is smart enough to schedule other threads
             //        while we're doing heavy I/O. Right now, copying a large file will totally
