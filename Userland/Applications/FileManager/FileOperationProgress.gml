@@ -29,6 +29,7 @@
         text_alignment: "CenterLeft"
         font_weight: "Bold"
         fixed_height: 32
+        name: "files_copied_label"
     }
 
     @GUI::HorizontalSeparator {
@@ -36,7 +37,7 @@
     }
 
     @GUI::Widget {
-        fixed_height: 32
+        fixed_height: 22
 
         layout: @GUI::HorizontalBoxLayout {
         }
@@ -55,28 +56,22 @@
         }
     }
 
-    @GUI::Progressbar {
-        fixed_height: 22
-        name: "current_file_progressbar"
-        min: 0
-    }
-
     @GUI::Widget {
-        fixed_height: 32
+        fixed_height: 22
 
         layout: @GUI::HorizontalBoxLayout {
         }
 
         @GUI::Label {
-            text: "Overall progress: "
+            text: "Time left: "
             font_weight: "Bold"
             text_alignment: "CenterLeft"
-            fixed_width: 120
+            fixed_width: 80
         }
 
         @GUI::Label {
-            name: "overall_progress_label"
-            text: "Placeholder"
+            name: "estimated_time_label"
+            text: "Estimating..."
             text_alignment: "CenterLeft"
         }
     }
