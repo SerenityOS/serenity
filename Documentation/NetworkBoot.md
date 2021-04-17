@@ -166,8 +166,12 @@ boot
 This file can be called in any name you'd want. For the sake of simplicity in this guide,
 this file is named `script.ipxe` from now on.
 Don't forget to replace `X.Y.Z.W` with your HTTP server IP address.
-For troubleshooting purposes, you could add `disable_physical_storage` and `disable_ps2_controller` 
-if you suspect our implementation fails to work with your hardware. 
+
+For troubleshooting purposes, you can add the following command line arguments if you suspect our implementation fails to work with your hardware:
+- `disable_physical_storage`
+- `disable_ps2_controller`
+- `disable_uhci_controller`
+
 Because iPXE (unlike GRUB) doesn't support VESA VBE modesetting when booting a multiboot kernel,
 you might not see any output, so add the `boot_mode=text` argument as well to boot into VGA text mode.
 
