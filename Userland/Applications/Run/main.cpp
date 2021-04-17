@@ -27,6 +27,7 @@
 #include "RunWindow.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Desktop.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
@@ -45,6 +46,7 @@ int main(int argc, char** argv)
 
     auto window = RunWindow::construct();
 
+    window->move_to(12, GUI::Desktop::the().rect().bottom() - GUI::Desktop::the().taskbar_height() - 12 - window->height());
     window->show();
 
     return app->exec();
