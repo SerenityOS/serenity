@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Tobias Christiansen <tobi@tobyase.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,8 +30,10 @@
 
 namespace Web::Layout {
 
-ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document)
+ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType style_type, size_t index)
     : Box(document, nullptr, CSS::StyleProperties::create())
+    , m_list_style_type(style_type)
+    , m_index(index)
 {
 }
 
