@@ -48,17 +48,23 @@ NonnullRefPtr<Action> make_about_action(const String& app_name, const Icon& app_
 
 NonnullRefPtr<Action> make_open_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("&Open...", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), move(callback), parent);
+    auto action = Action::create("&Open...", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), move(callback), parent);
+    action->set_long_text("Open an existing file");
+    return action;
 }
 
 NonnullRefPtr<Action> make_save_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("&Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), move(callback), parent);
+    auto action = Action::create("&Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), move(callback), parent);
+    action->set_long_text("Save the current file");
+    return action;
 }
 
 NonnullRefPtr<Action> make_save_as_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Save &As...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), move(callback), parent);
+    auto action = Action::create("Save &As...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), move(callback), parent);
+    action->set_long_text("Save the current file with a new name");
+    return action;
 }
 
 NonnullRefPtr<Action> make_move_to_front_action(Function<void(Action&)> callback, Core::Object* parent)
