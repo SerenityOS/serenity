@@ -175,6 +175,7 @@ public:
     void tell_wms_window_icon_changed(Window&);
     void tell_wms_window_rect_changed(Window&);
     void tell_wms_applet_area_size_changed(const Gfx::IntSize&);
+    void tell_wms_super_key_pressed();
 
     bool is_active_window_or_accessory(Window&) const;
 
@@ -334,6 +335,7 @@ private:
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
     int m_max_distance_for_double_click { 4 };
+    bool m_previous_event_was_super_keydown { false };
 
     WeakPtr<Window> m_active_window;
     WeakPtr<Window> m_hovered_window;
