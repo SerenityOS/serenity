@@ -451,20 +451,25 @@ struct termios {
     speed_t c_ospeed;
 };
 
+struct timespec {
+    time_t tv_sec; /* Seconds */
+    long tv_nsec;  /* Nanoseconds */
+};
+
 struct stat {
-    dev_t st_dev;         /* ID of device containing file */
-    ino_t st_ino;         /* inode number */
-    mode_t st_mode;       /* protection */
-    nlink_t st_nlink;     /* number of hard links */
-    uid_t st_uid;         /* user ID of owner */
-    gid_t st_gid;         /* group ID of owner */
-    dev_t st_rdev;        /* device ID (if special file) */
-    off_t st_size;        /* total size, in bytes */
-    blksize_t st_blksize; /* blocksize for file system I/O */
-    blkcnt_t st_blocks;   /* number of 512B blocks allocated */
-    time_t st_atime;      /* time of last access */
-    time_t st_mtime;      /* time of last modification */
-    time_t st_ctime;      /* time of last status change */
+    dev_t st_dev;            /* ID of device containing file */
+    ino_t st_ino;            /* inode number */
+    mode_t st_mode;          /* protection */
+    nlink_t st_nlink;        /* number of hard links */
+    uid_t st_uid;            /* user ID of owner */
+    gid_t st_gid;            /* group ID of owner */
+    dev_t st_rdev;           /* device ID (if special file) */
+    off_t st_size;           /* total size, in bytes */
+    blksize_t st_blksize;    /* blocksize for file system I/O */
+    blkcnt_t st_blocks;      /* number of 512B blocks allocated */
+    struct timespec st_atim; /* time of last access */
+    struct timespec st_mtim; /* time of last modification */
+    struct timespec st_ctim; /* time of last status change */
 };
 
 #define POLLIN (1u << 0)
@@ -573,11 +578,6 @@ typedef i32 suseconds_t;
 struct timeval {
     time_t tv_sec;
     suseconds_t tv_usec;
-};
-
-struct timespec {
-    time_t tv_sec;
-    long tv_nsec;
 };
 
 typedef enum {
