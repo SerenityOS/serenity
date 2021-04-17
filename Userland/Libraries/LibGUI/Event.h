@@ -31,6 +31,7 @@
 #include <Kernel/API/KeyCode.h>
 #include <LibCore/Event.h>
 #include <LibGUI/FocusSource.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/WindowType.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Point.h>
@@ -72,6 +73,8 @@ public:
         Drop,
         ThemeChange,
         ScreenRectChange,
+        ActionEnter,
+        ActionLeave,
 
         __Begin_WM_Events,
         WM_WindowRemoved,
@@ -426,6 +429,18 @@ public:
 
 private:
     FocusSource m_source { FocusSource::Programmatic };
+};
+
+class ActionEvent final : public Event {
+public:
+    ActionEvent(Type, Action&);
+    ~ActionEvent();
+
+    Action const& action() const { return *m_action; }
+    Action& action() { return *m_action; }
+
+private:
+    NonnullRefPtr<Action> m_action;
 };
 
 }

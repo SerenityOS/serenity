@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibCore/MimeData.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Event.h>
 
 namespace GUI {
@@ -67,6 +68,16 @@ String KeyEvent::to_string() const
             builder.append('+');
     }
     return builder.to_string();
+}
+
+ActionEvent::ActionEvent(Type type, Action& action)
+    : Event(type)
+    , m_action(action)
+{
+}
+
+ActionEvent::~ActionEvent()
+{
 }
 
 }
