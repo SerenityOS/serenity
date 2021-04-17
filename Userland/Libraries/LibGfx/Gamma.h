@@ -78,7 +78,7 @@ inline f32x4 linear_to_gamma4(f32x4 x)
     // Source for approximation: https://mimosa-pudica.net/fast-gamma/
     constexpr float a = 0.00279491f;
     constexpr float b = 1.15907984f;
-    float c = (b / sqrt(1 + a)) - 1;
+    float c = (b / sqrtf(1.0f + a)) - 1;
     return ((b * __builtin_ia32_rsqrtps(x + a)) - c) * x;
 }
 
