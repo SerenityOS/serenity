@@ -6,7 +6,7 @@ cd "$script_path/.." || exit 1
 # We simply check if the file starts with:
 # /*
 #  * Copyright
-LICENSE_HEADER_PATTERN=$'^/\*\n \* Copyright'
+LICENSE_HEADER_PATTERN=$'^([^\n]*\n)?/\*\n \* Copyright'
 MISSING_LICENSE_HEADER_ERRORS=()
 
 # We check that "#pragma once" is present
