@@ -190,8 +190,8 @@ template<typename T, typename Callback>
 inline void Object::for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>
 {
     for_each_child([&](auto& child) {
-        if (auto* child_as_t = dynamic_cast<T*>(&child); child_as_t)
-            return callback(*child_as_t);
+        if (is<T>(child))
+            return callback(static_cast<T&>(child));
         return IterationDecision::Continue;
     });
 }
@@ -212,11 +212,11 @@ T* Object::find_child_of_type_named(const String& name) requires IsBaseOf<Object
 }
 
 template<typename T>
-T* Object::find_descendant_of_type_named(const String& name) requires IsBaseOf<Object, T>
+T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<Object, T>
 {
-    auto* this_as_t = dynamic_cast<T*>(this);
-    if (this_as_t && this->name() == name)
-        return this_as_t;
+    if (is<T>(*this) && this->name() == name) {
+        return static_cast<T*>(this);
+    }
     T* found_child = nullptr;
     for_each_child([&](auto& child) {
         found_child = child.template find_descendant_of_type_named<T>(name);
