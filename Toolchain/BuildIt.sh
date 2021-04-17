@@ -235,7 +235,6 @@ pushd "$DIR/Build/$ARCH"
                                             --with-newlib \
                                             --enable-shared \
                                             --enable-languages=c,c++ \
-                                            --enable-default-pie \
                                             --enable-lto \
                                             ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
 
