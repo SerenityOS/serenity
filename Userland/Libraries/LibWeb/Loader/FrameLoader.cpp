@@ -25,10 +25,12 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/JsonObject.h>
 #include <AK/LexicalPath.h>
 #include <LibGemini/Document.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibMarkdown/Document.h>
+#include <LibTemplate/Template.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
@@ -226,13 +228,17 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
         error_page_url,
         [this, failed_url, error](auto data, auto&, auto) {
             VERIFY(!data.is_null());
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-            auto html = String::format(
-                String::copy(data).characters(),
-                escape_html_entities(failed_url.to_string()).characters(),
-                escape_html_entities(error).characters());
-#pragma GCC diagnostic pop
-            auto document = HTML::parse_html_document(html, failed_url, "utf-8");
+            auto error_file_template = Template::Template::from_string(String::copy(data));
+            if (error_file_template.is_error()) {
+                dbgln("Failed to parse error page template: {}", error_file_template.error());
+                VERIFY_NOT_REACHED();
+            }
+            JsonObject params;
+            params.set("url", escape_html_entities(failed_url.to_string()));
+            params.set("error", escape_html_entities(error).characters());
+            auto html = error_file_template.value().instantiate(params);
+            VERIFY(!html.is_error());
+            auto document = HTML::parse_html_document(html.value(), failed_url, "utf-8");
             VERIFY(document);
             frame().set_document(document);
         },
