@@ -5,7 +5,7 @@ files="https://ftpmirror.gnu.org/gnu/ed/ed-${version}.tar.lz ed-${version}.tar.l
 https://ftpmirror.gnu.org/gnu/ed/ed-${version}.tar.lz.sig ed-${version}.tar.lz.sig
 https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
 auth_type="sig"
-auth_opts="--keyring ./gnu-keyring.gpg cflow-${version}.tar.bz2.sig"
+auth_opts="--keyring ./gnu-keyring.gpg ed-${version}.tar.lz.sig"
 useconfigure=true
 depends=pcre2
 
