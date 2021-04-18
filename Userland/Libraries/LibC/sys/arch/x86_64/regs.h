@@ -130,7 +130,7 @@ struct [[gnu::packed]] PtraceRegisters {
         };
     };
 
-    // These may not be used, unless we go back into compatability mode
+    // These may not be used, unless we go back into compatibility mode
     u32 cs;
     u32 ss;
     u32 ds;

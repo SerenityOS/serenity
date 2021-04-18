@@ -22,7 +22,7 @@ jobs:
       - name: Discord action notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          CUSTOM_GITHUB_EVENT_NAME: ${{ github.event_name == 'pull_request_target' && 'pull_request' || github.event_name }} # fake the event type as discord doesnt know how to parse the special pull_request_target context
+          CUSTOM_GITHUB_EVENT_NAME: ${{ github.event_name == 'pull_request_target' && 'pull_request' || github.event_name }} # fake the event type as discord doesn't know how to parse the special pull_request_target context
         uses: IdanHo/action-discord@754598254f288e6d8e9fca637832e3c163515ba8
         if: ${{ (github.event['pull_request'] && github.event['action'] == 'opened' && !(github.event['pull_request'] == 'draft')) || github.event['commits'] }}
 

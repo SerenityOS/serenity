@@ -333,7 +333,7 @@ int main(int argc, char* argv[])
                 }
             } else {
                 GUI::MessageBox::show(window,
-                    String::formatted("Successfuly deleted \"{}\".", selected_node_path),
+                    String::formatted("Successfully deleted \"{}\".", selected_node_path),
                     "Deletion completed",
                     GUI::MessageBox::Type::Information,
                     GUI::MessageBox::InputType::OK);

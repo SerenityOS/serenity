@@ -952,12 +952,12 @@ u32 Emulator::virt$unveil(u32)
 u32 Emulator::virt$mprotect(FlatPtr base, size_t size, int prot)
 {
     round_to_page_size(base, size);
-    bool has_non_mmaped_region = false;
+    bool has_non_mmapped_region = false;
 
     mmu().for_regions_in({ 0x23, base }, size, [&](Region* region) {
         if (region) {
             if (!is<MmapRegion>(*region)) {
-                has_non_mmaped_region = true;
+                has_non_mmapped_region = true;
                 return IterationDecision::Break;
             }
             auto& mmap_region = *(MmapRegion*)region;
@@ -965,7 +965,7 @@ u32 Emulator::virt$mprotect(FlatPtr base, size_t size, int prot)
         }
         return IterationDecision::Continue;
     });
-    if (has_non_mmaped_region)
+    if (has_non_mmapped_region)
         return -EINVAL;
 
     return 0;

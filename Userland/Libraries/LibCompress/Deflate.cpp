@@ -574,7 +574,7 @@ size_t DeflateCompressor::compare_match_candidate(size_t start, size_t candidate
 {
     VERIFY(previous_match_length < maximum_match_length);
 
-    // We firstly check that the match is at least (prev_match_length + 1) long, we check backwards as theres a higher chance the end mismatches
+    // We firstly check that the match is at least (prev_match_length + 1) long, we check backwards as there's a higher chance the end mismatches
     for (ssize_t i = previous_match_length; i >= 0; i--) {
         if (m_rolling_window[start + i] != m_rolling_window[candidate + i])
             return 0;
@@ -597,7 +597,7 @@ size_t DeflateCompressor::find_back_match(size_t start, u16 hash, size_t previou
     if (previous_match_length == 0)
         previous_match_length = min_match_length - 1; // we only care about matches that are at least min_match_length long
     if (previous_match_length >= maximum_match_length)
-        return 0; // we cant improve a maximum length match
+        return 0; // we can't improve a maximum length match
     if (previous_match_length >= m_compression_constants.max_lazy_length)
         return 0; // the previous match is already pretty, we shouldn't waste another full search
     if (previous_match_length >= m_compression_constants.good_match_length)
@@ -627,7 +627,7 @@ size_t DeflateCompressor::find_back_match(size_t start, u16 hash, size_t previou
         candidate = m_hash_prev[candidate % window_size];
     }
     if (!match_found)
-        return 0;                 // we didnt find any matches
+        return 0;                 // we didn't find any matches
     return previous_match_length; // we found matches, but they were at most previous_match_length long
 }
 
@@ -1040,7 +1040,7 @@ void DeflateCompressor::flush()
     auto fixed_huffman_size = fixed_block_length();
     auto dynamic_huffman_size = dynamic_block_length(dynamic_literal_bit_lengths, dynamic_distance_bit_lengths, code_lengths_bit_lengths, code_lengths_frequencies, code_lengths_count);
 
-    // If the compression somehow didnt reduce the size enough, just write out the block uncompressed as it allows for much faster decompression
+    // If the compression somehow didn't reduce the size enough, just write out the block uncompressed as it allows for much faster decompression
     if (uncompressed_size <= min(fixed_huffman_size, dynamic_huffman_size)) {
         write_uncompressed();
     } else if (fixed_huffman_size <= dynamic_huffman_size) { // If the fixed and dynamic huffman codes come out the same size, prefer the fixed version, as it takes less time to decode

@@ -506,7 +506,7 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
     // slow: without caching
     const auto& regions = space().find_regions_intersecting(range_to_unmap);
 
-    // check if any of the regions is not mmaped, to not accientally
+    // check if any of the regions is not mmapped, to not accientally
     // error-out with just half a region map left
     for (auto* region : regions) {
         if (!region->is_mmap())

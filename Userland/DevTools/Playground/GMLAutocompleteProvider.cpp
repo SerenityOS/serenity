@@ -78,7 +78,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
             break;
         case InClassName:
             if (token.m_type != GUI::GMLToken::Type::LeftCurly) {
-                // Close empty class and imediately handle our parent's next child
+                // Close empty class and immediately handle our parent's next child
                 class_names.take_last();
                 state = previous_states.take_last();
 

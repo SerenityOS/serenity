@@ -233,7 +233,7 @@ protected:
             m_minimum = successor(node);
 
         // removal assumes the node has 0 or 1 child, so if we have 2, relink with the successor first (by definition the successor has no left child)
-        // FIXME: since we dont know how a value is represented in the node, we cant simply swap the values and keys, and instead we relink the nodes
+        // FIXME: since we dont know how a value is represented in the node, we can't simply swap the values and keys, and instead we relink the nodes
         //  in place, this is quite a bit more expensive, as well as much less readable, is there a better way?
         if (node->left_child && node->right_child) {
             auto* successor_node = successor(node); // this is always non-null as all nodes besides the maximum node have a successor, and the maximum node has no right child
@@ -352,7 +352,7 @@ protected:
             }
             parent = node->parent;
         }
-        node->color = Color::Black; // by this point node cant be null
+        node->color = Color::Black; // by this point node can't be null
     }
 
     static Node* successor(Node* node)

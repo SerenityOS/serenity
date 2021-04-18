@@ -122,7 +122,7 @@ struct [[gnu::packed]] ATAIdentifyBlock {
 
     u16 maximum_logical_sectors_per_drq;
     u16 trusted_computing_features;
-    u16 capabilites[2];
+    u16 capabilities[2];
     u16 obsolete5[2];
     u16 validity_flags;
     u16 obsolete6[5];
