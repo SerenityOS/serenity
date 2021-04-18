@@ -42,8 +42,8 @@ public:
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 
-    String data() const { return attribute(HTML::AttributeNames::data); }
-    String type() const { return attribute(HTML::AttributeNames::type); }
+    String data() const { return get_attribute(HTML::AttributeNames::data); }
+    String type() const { return get_attribute(HTML::AttributeNames::type); }
 
 private:
     virtual RefPtr<Layout::Node> create_layout_node() override;

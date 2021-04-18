@@ -39,7 +39,7 @@ public:
 
     virtual RefPtr<Layout::Node> create_layout_node() override;
 
-    String for_() const { return attribute(HTML::AttributeNames::for_); }
+    String for_() const { return get_attribute(HTML::AttributeNames::for_); }
 };
 
 }

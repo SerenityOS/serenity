@@ -508,7 +508,7 @@ NonnullRefPtrVector<Element> Document::get_elements_by_name(const String& name) 
 {
     NonnullRefPtrVector<Element> elements;
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (element.attribute(HTML::AttributeNames::name) == name)
+        if (element.get_attribute(HTML::AttributeNames::name) == name)
             elements.append(element);
         return IterationDecision::Continue;
     });

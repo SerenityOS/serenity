@@ -59,53 +59,257 @@ Element::~Element()
 {
 }
 
-Attribute* Element::find_attribute(const FlyString& name)
+Vector<FlyString> Element::get_attribute_names() const
+{
+    Vector<FlyString> attribute_names;
+    for (auto& attribute : m_attributes) {
+        attribute_names.append(attribute.name());
+    }
+    return attribute_names;
+}
+
+String Element::get_attribute(const FlyString& qualified_name) const
+{
+    auto desired_attribute = get_attribute_by_name(qualified_name);
+    if (!desired_attribute)
+        return FlyString();
+    return desired_attribute->value();
+}
+
+String Element::get_attribute_ns(const FlyString& namespace_, const FlyString& local_name) const
+{
+    auto desired_attribute = get_attribute_by_namespace_and_local(namespace_, local_name);
+    if (!desired_attribute)
+        return FlyString();
+    return desired_attribute->value();
+}
+
+void Element::set_attribute(const FlyString& qualified_name, const String& value)
+{
+    // FIXME: If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
+    auto attribute = get_attribute_by_name(qualified_name);
+    if (!attribute) {
+        create_and_add_attribute(qualified_name, value);
+        return;
+    }
+    change_attribute_value(*attribute, value);
+}
+
+void Element::set_attribute_ns(const FlyString& namespace_, const FlyString& qualified_name, const String& value)
+{
+    auto extracted = QualifiedName::validate_and_extract(namespace_, qualified_name);
+    set_attribute_value(extracted.local_name(), value, extracted.prefix(), extracted.namespace_());
+}
+
+void Element::remove_attribute(const FlyString& qualified_name)
+{
+    remove_attribute_by_name(qualified_name);
+}
+
+void Element::remove_attribute_ns(const FlyString& namespace_, const FlyString& local_name)
+{
+    remove_attribute_by_namespace_and_local(namespace_, local_name);
+}
+
+bool Element::toggle_attribute(const FlyString& qualified_name, Optional<bool> force)
+{
+    // FIXME: If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
+    auto attribute = get_attribute_by_name(qualified_name);
+    if (!attribute) {
+        if (!force.has_value() || force.value() == true) {
+            create_and_add_attribute(qualified_name, "");
+            return true;
+        }
+        return false;
+    }
+    if (!force.has_value() || force.value() == false) {
+        remove_attribute_by_name(qualified_name);
+        return false;
+    }
+    return true;
+}
+
+bool Element::has_attribute(const FlyString& qualified_name) const
+{
+    return !get_attribute_by_name(qualified_name).is_null();
+}
+
+bool Element::has_attribute_ns(const FlyString& namespace_, const FlyString& local_name) const
+{
+    return !get_attribute_by_namespace_and_local(namespace_, local_name).is_null();
+}
+
+RefPtr<Attr> Element::get_attribute_node(const FlyString& qualified_name)
+{
+    return get_attribute_by_name(qualified_name);
+}
+
+RefPtr<Attr> Element::get_attribute_node_ns(const FlyString& namespace_, const FlyString& local_name)
+{
+    return get_attribute_by_namespace_and_local(namespace_, local_name);
+}
+
+RefPtr<Attr> Element::set_attribute_node(Attr& attr)
+{
+    return set_attribute(attr);
+}
+
+RefPtr<Attr> Element::set_attribute_node_ns(Attr& attr)
+{
+    return set_attribute(attr);
+}
+
+NonnullRefPtr<Attr> Element::remove_attribute_node(Attr& attr)
+{
+    if (!has_attribute(attr)) {
+        // FIXME: throw a "NotFoundError" DOMException.
+        TODO();
+    }
+    remove_attribute(attr);
+    return attr;
+}
+
+NonnullRefPtr<Attr> Element::create_and_add_attribute(const FlyString& name, const String& value)
+{
+    auto new_attribute = document().create_attribute(name);
+    new_attribute->set_value(value);
+    new_attribute->set_owner_element(this);
+    append_attribute(new_attribute);
+    return new_attribute;
+}
+
+void Element::handle_attribute_changes(const Attr& attribute, [[maybe_unused]] const String& old_value, const String& new_value)
+{
+    // FIXME: https://dom.spec.whatwg.org/#handle-attribute-changes
+
+    // FIXME: Handle removal?
+    if (!new_value.is_null()) {
+        // FIXME: Should this be qualified_name?
+        parse_attribute(attribute.local_name(), new_value);
+    }
+}
+
+void Element::change_attribute_value(Attr& attribute, const String& value)
+{
+    CSS::StyleInvalidator style_invalidator(document());
+    handle_attribute_changes(attribute, attribute.value(), value);
+    attribute.set_value(value);
+}
+
+void Element::append_attribute(Attr& attribute)
+{
+    CSS::StyleInvalidator style_invalidator(document());
+    handle_attribute_changes(attribute, {}, attribute.value());
+    m_attributes.append(attribute);
+}
+
+void Element::remove_attribute(Attr& to_remove)
+{
+    CSS::StyleInvalidator style_invalidator(document());
+    handle_attribute_changes(to_remove, to_remove.value(), {});
+    m_attributes.remove_first_matching([&](auto& attribute) {
+        return attribute == &to_remove;
+    });
+}
+
+void Element::replace_attribute(Attr& old_attribute, Attr& new_attribute)
+{
+    CSS::StyleInvalidator style_invalidator(document());
+    handle_attribute_changes(old_attribute, old_attribute.value(), new_attribute.value());
+    for (size_t i = 0; i < m_attributes.size(); i++) {
+        if (&m_attributes.at(i) == &old_attribute) {
+            remove(i);
+            m_attributes.insert(i, new_attribute);
+        }
+    }
+}
+
+bool Element::has_attribute(Attr& desired) const
 {
     for (auto& attribute : m_attributes) {
-        if (attribute.name() == name)
+        if (&attribute == &desired)
+            return true;
+    }
+    return false;
+}
+
+RefPtr<Attr> Element::get_attribute_by_name(const FlyString& qualified_name)
+{
+    auto name_to_lookup = qualified_name;
+    // FIXME: This also needs to ensure document() is an HTML document
+    if (namespace_() == Namespace::HTML)
+        name_to_lookup = name_to_lookup.to_lowercase();
+    for (auto& attribute : m_attributes) {
+        if (attribute.name() == name_to_lookup)
             return &attribute;
     }
     return nullptr;
 }
 
-const Attribute* Element::find_attribute(const FlyString& name) const
+RefPtr<Attr> Element::get_attribute_by_name(const FlyString& qualified_name) const
 {
+    return const_cast<Element*>(this)->get_attribute_by_name(qualified_name);
+}
+
+RefPtr<Attr> Element::get_attribute_by_namespace_and_local(const FlyString& namespace_, const FlyString& local_name)
+{
+    auto namespace_to_lookup = namespace_.length() == 0 ? FlyString() : namespace_;
     for (auto& attribute : m_attributes) {
-        if (attribute.name() == name)
+        if (attribute.namespace_uri() == namespace_to_lookup && attribute.local_name() == local_name)
             return &attribute;
     }
     return nullptr;
 }
 
-String Element::attribute(const FlyString& name) const
+RefPtr<Attr> Element::get_attribute_by_namespace_and_local(const FlyString& namespace_, const FlyString& local_name) const
 {
-    if (auto* attribute = find_attribute(name))
-        return attribute->value();
-    return {};
+    return const_cast<Element*>(this)->get_attribute_by_namespace_and_local(namespace_, local_name);
 }
 
-ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& value)
+RefPtr<Attr> Element::set_attribute(Attr& attribute)
 {
-    // FIXME: Proper name validation
-    if (name.is_empty())
-        return InvalidCharacterError::create("Attribute name must not be empty");
+    if (attribute.owner_element() != nullptr && attribute.owner_element() != this) {
+        // FIXME: throw an "InUseAttributeError" DOMException.
+        TODO();
+    }
 
-    CSS::StyleInvalidator style_invalidator(document());
-
-    if (auto* attribute = find_attribute(name))
-        attribute->set_value(value);
-    else
-        m_attributes.empend(name, value);
-
-    parse_attribute(name, value);
-    return {};
+    auto old_attribute = get_attribute_by_namespace_and_local(attribute.namespace_uri(), attribute.local_name());
+    if (old_attribute == attribute)
+        return attribute;
+    if (old_attribute) {
+        replace_attribute(*old_attribute, attribute);
+    } else {
+        append_attribute(attribute);
+    }
+    return old_attribute;
 }
 
-void Element::remove_attribute(const FlyString& name)
+void Element::set_attribute_value(const FlyString& local_name, const String& value, const FlyString& prefix, const FlyString& namespace_)
 {
-    CSS::StyleInvalidator style_invalidator(document());
+    auto attribute = get_attribute_by_namespace_and_local(namespace_, local_name);
+    if (!attribute) {
+        auto new_attribute = create_and_add_attribute(local_name, value);
+        new_attribute->set_prefix(prefix);
+        new_attribute->set_namespace_uri(namespace_);
+        return;
+    }
+    change_attribute_value(*attribute, value);
+}
 
-    m_attributes.remove_first_matching([&](auto& attribute) { return attribute.name() == name; });
+RefPtr<Attr> Element::remove_attribute_by_name(const FlyString& qualified_name)
+{
+    auto attribute = get_attribute_by_name(qualified_name);
+    if (attribute)
+        remove_attribute(*attribute);
+    return attribute;
+}
+
+RefPtr<Attr> Element::remove_attribute_by_namespace_and_local(const FlyString& namespace_, const FlyString& local_name)
+{
+    auto attribute = get_attribute_by_namespace_and_local(namespace_, local_name);
+    if (attribute)
+        remove_attribute(*attribute);
+    return attribute;
 }
 
 bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensitivity) const

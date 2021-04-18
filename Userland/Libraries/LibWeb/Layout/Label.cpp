@@ -116,7 +116,7 @@ Label* Label::label_for_control_node(LabelableNode& control)
     if (!control.document().layout_node())
         return label;
 
-    String id = control.dom_node().attribute(HTML::AttributeNames::id);
+    String id = control.dom_node().get_attribute(HTML::AttributeNames::id);
     if (id.is_empty())
         return label;
 
@@ -145,7 +145,7 @@ LabelableNode* Label::control_node()
         return control;
 
     document().layout_node()->for_each_in_inclusive_subtree_of_type<LabelableNode>([&](auto& node) {
-        if (node.dom_node().attribute(HTML::AttributeNames::id) == for_) {
+        if (node.dom_node().get_attribute(HTML::AttributeNames::id) == for_) {
             control = &node;
             return IterationDecision::Break;
         }

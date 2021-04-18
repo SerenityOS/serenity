@@ -112,7 +112,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
     if (layout_node.dom_node() && is<DOM::Element>(*layout_node.dom_node())) {
         auto& element = downcast<DOM::Element>(*layout_node.dom_node());
         StringBuilder builder;
-        auto id = element.attribute(HTML::AttributeNames::id);
+        auto id = element.get_attribute(HTML::AttributeNames::id);
         if (!id.is_empty()) {
             builder.append('#');
             builder.append(id);

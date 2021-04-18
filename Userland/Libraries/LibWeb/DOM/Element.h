@@ -28,7 +28,6 @@
 
 #include <AK/FlyString.h>
 #include <AK/String.h>
-#include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
@@ -61,18 +60,52 @@ public:
     // NOTE: This is for the JS bindings
     const FlyString& namespace_uri() const { return namespace_(); }
 
-    bool has_attribute(const FlyString& name) const { return !attribute(name).is_null(); }
+    // DOM spec's IDL exposed attribute-related functions
     bool has_attributes() const { return !m_attributes.is_empty(); }
-    String attribute(const FlyString& name) const;
-    String get_attribute(const FlyString& name) const { return attribute(name); }
-    ExceptionOr<void> set_attribute(const FlyString& name, const String& value);
-    void remove_attribute(const FlyString& name);
+    Vector<FlyString> get_attribute_names() const;
+    String get_attribute(const FlyString& qualified_name) const;
+    String get_attribute_ns(const FlyString& namespace_, const FlyString& local_name) const;
+    void set_attribute(const FlyString& qualified_name, const String& value);
+    void set_attribute_ns(const FlyString& namespace_, const FlyString& qualified_name, const String& value);
+    void remove_attribute(const FlyString& qualified_name);
+    void remove_attribute_ns(const FlyString& namespace_, const FlyString& local_name);
+    bool toggle_attribute(const FlyString& qualified_name, Optional<bool> force);
+    bool has_attribute(const FlyString& qualified_name) const;
+    bool has_attribute_ns(const FlyString& namespace_, const FlyString& local_name) const;
+
+    RefPtr<Attr> get_attribute_node(const FlyString& qualified_name);
+    RefPtr<Attr> get_attribute_node_ns(const FlyString& namespace_, const FlyString& local_name);
+    RefPtr<Attr> set_attribute_node(Attr&);
+    RefPtr<Attr> set_attribute_node_ns(Attr&);
+    NonnullRefPtr<Attr> remove_attribute_node(Attr&);
+    // End DOM spec's IDL exposed attribute-related functions
+
+    // DOM spec's common attribute operations
+    NonnullRefPtrVector<Attr>& attribute_list() { return m_attributes; }
+    NonnullRefPtr<Attr> create_and_add_attribute(const FlyString& name, const String& value);
+
+    void handle_attribute_changes(const Attr&, const String& old_value, const String& new_value);
+    void change_attribute_value(Attr&, const String& value);
+    void append_attribute(Attr&);
+    void remove_attribute(Attr&);
+    void replace_attribute(Attr& old_attribute, Attr& new_attribute);
+    bool has_attribute(Attr&) const;
+    RefPtr<Attr> get_attribute_by_name(const FlyString& qualified_name);
+    RefPtr<Attr> get_attribute_by_name(const FlyString& qualified_name) const;
+    RefPtr<Attr> get_attribute_by_namespace_and_local(const FlyString& namespace_, const FlyString& local_name);
+    RefPtr<Attr> get_attribute_by_namespace_and_local(const FlyString& namespace_, const FlyString& local_name) const;
+    RefPtr<Attr> set_attribute(Attr&);
+    void set_attribute_value(const FlyString& local_name, const String& value, const FlyString& prefix = FlyString(), const FlyString& namespace_ = FlyString());
+    RefPtr<Attr> remove_attribute_by_name(const FlyString& qualified_name);
+    RefPtr<Attr> remove_attribute_by_namespace_and_local(const FlyString& namespace_, const FlyString& local_name);
+    // End DOM spec's common attribute operations
 
     template<typename Callback>
     void for_each_attribute(Callback callback) const
     {
         for (auto& attribute : m_attributes)
-            callback(attribute.name(), attribute.value());
+            // FIXME: Should this be qualified_name?
+            callback(attribute.local_name(), attribute.value());
     }
 
     bool has_class(const FlyString&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
@@ -86,7 +119,7 @@ public:
     Layout::NodeWithStyle* layout_node() { return static_cast<Layout::NodeWithStyle*>(Node::layout_node()); }
     const Layout::NodeWithStyle* layout_node() const { return static_cast<const Layout::NodeWithStyle*>(Node::layout_node()); }
 
-    String name() const { return attribute(HTML::AttributeNames::name); }
+    String name() const { return get_attribute(HTML::AttributeNames::name); }
 
     const CSS::StyleProperties* specified_css_values() const { return m_specified_css_values.ptr(); }
     NonnullRefPtr<CSS::StyleProperties> computed_style();
@@ -113,11 +146,9 @@ protected:
     RefPtr<Layout::Node> create_layout_node() override;
 
 private:
-    Attribute* find_attribute(const FlyString& name);
-    const Attribute* find_attribute(const FlyString& name) const;
-
     QualifiedName m_qualified_name;
-    Vector<Attribute> m_attributes;
+
+    NonnullRefPtrVector<Attr> m_attributes;
 
     RefPtr<CSS::CSSStyleDeclaration> m_inline_style;
 

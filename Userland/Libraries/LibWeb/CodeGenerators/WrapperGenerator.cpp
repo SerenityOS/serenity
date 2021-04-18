@@ -1612,7 +1612,7 @@ JS_DEFINE_NATIVE_GETTER(@prototype_class@::@attribute.getter_callback@)
         if (attribute.extended_attributes.contains("Reflect")) {
             if (attribute.type->name != "boolean") {
                 attribute_generator.append(R"~~~(
-    auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
+    auto retval = impl->get_attribute(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
             } else {
                 attribute_generator.append(R"~~~(

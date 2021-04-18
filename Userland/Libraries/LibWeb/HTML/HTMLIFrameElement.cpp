@@ -58,7 +58,7 @@ void HTMLIFrameElement::inserted()
 {
     FrameHostElement::inserted();
     if (is_connected())
-        load_src(attribute(HTML::AttributeNames::src));
+        load_src(get_attribute(HTML::AttributeNames::src));
 }
 
 void HTMLIFrameElement::load_src(const String& value)

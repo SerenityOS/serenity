@@ -86,7 +86,7 @@ void HTMLScriptElement::execute_script()
             document().set_current_script({}, nullptr);
 
         if (m_from_an_external_file)
-            dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running script {}", attribute(HTML::AttributeNames::src));
+            dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running script {}", get_attribute(HTML::AttributeNames::src));
         else
             dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running inline script");
 
@@ -141,14 +141,14 @@ void HTMLScriptElement::prepare_script()
     String script_block_type;
     bool has_type = has_attribute(HTML::AttributeNames::type);
     bool has_language = has_attribute(HTML::AttributeNames::language);
-    if ((has_type && attribute(HTML::AttributeNames::type).is_empty())
-        || (!has_type && has_language && attribute(HTML::AttributeNames::language).is_empty())
+    if ((has_type && get_attribute(HTML::AttributeNames::type).is_empty())
+        || (!has_type && has_language && get_attribute(HTML::AttributeNames::language).is_empty())
         || (!has_type && !has_language)) {
         script_block_type = "text/javascript";
     } else if (has_type) {
-        script_block_type = attribute(HTML::AttributeNames::type).trim_whitespace();
-    } else if (!attribute(HTML::AttributeNames::language).is_empty()) {
-        script_block_type = String::formatted("text/{}", attribute(HTML::AttributeNames::language));
+        script_block_type = get_attribute(HTML::AttributeNames::type).trim_whitespace();
+    } else if (!get_attribute(HTML::AttributeNames::language).is_empty()) {
+        script_block_type = String::formatted("text/{}", get_attribute(HTML::AttributeNames::language));
     }
 
     if (is_javascript_mime_type_essence_match(script_block_type)) {
@@ -183,8 +183,8 @@ void HTMLScriptElement::prepare_script()
     // FIXME: Check CSP
 
     if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::event) && has_attribute(HTML::AttributeNames::for_)) {
-        auto for_ = attribute(HTML::AttributeNames::for_).trim_whitespace();
-        auto event = attribute(HTML::AttributeNames::event).trim_whitespace();
+        auto for_ = get_attribute(HTML::AttributeNames::for_).trim_whitespace();
+        auto event = get_attribute(HTML::AttributeNames::event).trim_whitespace();
 
         if (!for_.equals_ignoring_case("window")) {
             dbgln("HTMLScriptElement: Refusing to run classic script because the provided 'for' attribute is not equal to 'window'");
@@ -206,7 +206,7 @@ void HTMLScriptElement::prepare_script()
     // FIXME: Check fetch options
 
     if (has_attribute(HTML::AttributeNames::src)) {
-        auto src = attribute(HTML::AttributeNames::src);
+        auto src = get_attribute(HTML::AttributeNames::src);
         if (src.is_empty()) {
             dbgln("HTMLScriptElement: Refusing to run script because the src attribute is empty.");
             // FIXME: Queue a task to do this.

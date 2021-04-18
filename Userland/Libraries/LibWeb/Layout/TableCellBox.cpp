@@ -48,7 +48,7 @@ size_t TableCellBox::colspan() const
 {
     if (!dom_node())
         return 1;
-    return downcast<DOM::Element>(*dom_node()).attribute(HTML::AttributeNames::colspan).to_uint().value_or(1);
+    return downcast<DOM::Element>(*dom_node()).get_attribute(HTML::AttributeNames::colspan).to_uint().value_or(1);
 }
 
 float TableCellBox::width_of_logical_containing_block() const

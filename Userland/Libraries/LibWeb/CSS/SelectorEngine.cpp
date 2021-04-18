@@ -110,11 +110,11 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
             return false;
         break;
     case CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch:
-        if (element.attribute(component.attribute_name) != component.attribute_value)
+        if (element.get_attribute(component.attribute_name) != component.attribute_value)
             return false;
         break;
     case CSS::Selector::SimpleSelector::AttributeMatchType::Contains:
-        if (!element.attribute(component.attribute_name).split(' ').contains_slow(component.attribute_value))
+        if (!element.get_attribute(component.attribute_name).split(' ').contains_slow(component.attribute_value))
             return false;
         break;
     default:
@@ -125,7 +125,7 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
     case CSS::Selector::SimpleSelector::Type::Universal:
         return true;
     case CSS::Selector::SimpleSelector::Type::Id:
-        return component.value == element.attribute(HTML::AttributeNames::id);
+        return component.value == element.get_attribute(HTML::AttributeNames::id);
     case CSS::Selector::SimpleSelector::Type::Class:
         return element.has_class(component.value);
     case CSS::Selector::SimpleSelector::Type::TagName:

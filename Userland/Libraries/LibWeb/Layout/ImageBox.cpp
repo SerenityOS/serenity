@@ -46,12 +46,12 @@ ImageBox::~ImageBox()
 
 int ImageBox::preferred_width() const
 {
-    return dom_node().attribute(HTML::AttributeNames::width).to_int().value_or(m_image_loader.width());
+    return dom_node().get_attribute(HTML::AttributeNames::width).to_int().value_or(m_image_loader.width());
 }
 
 int ImageBox::preferred_height() const
 {
-    return dom_node().attribute(HTML::AttributeNames::height).to_int().value_or(m_image_loader.height());
+    return dom_node().get_attribute(HTML::AttributeNames::height).to_int().value_or(m_image_loader.height());
 }
 
 void ImageBox::prepare_for_replaced_layout()

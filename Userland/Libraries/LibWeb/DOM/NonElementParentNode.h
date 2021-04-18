@@ -40,7 +40,7 @@ public:
     {
         RefPtr<Element> found_element;
         static_cast<const NodeType*>(this)->template for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-            if (element.attribute(HTML::AttributeNames::id) == id) {
+            if (element.get_attribute(HTML::AttributeNames::id) == id) {
                 found_element = &element;
                 return IterationDecision::Break;
             }

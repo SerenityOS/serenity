@@ -126,7 +126,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
 
     // FIXME: This assumes that we want a text box. Is that always true?
     auto shadow_root = adopt(*new DOM::ShadowRoot(document(), *this));
-    auto initial_value = attribute(HTML::AttributeNames::value);
+    auto initial_value = get_attribute(HTML::AttributeNames::value);
     if (initial_value.is_null())
         initial_value = String::empty();
     auto element = document().create_element(HTML::TagNames::div);

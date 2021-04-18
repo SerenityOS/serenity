@@ -52,7 +52,7 @@ HTMLElement::~HTMLElement()
 
 HTMLElement::ContentEditableState HTMLElement::content_editable_state() const
 {
-    auto contenteditable = attribute(HTML::AttributeNames::contenteditable);
+    auto contenteditable = get_attribute(HTML::AttributeNames::contenteditable);
     // "true" and the empty string map to the "true" state.
     if ((!contenteditable.is_null() && contenteditable.is_empty()) || contenteditable.equals_ignoring_case("true"))
         return ContentEditableState::True;

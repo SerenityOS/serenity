@@ -37,8 +37,8 @@ public:
     HTMLAnchorElement(DOM::Document&, QualifiedName);
     virtual ~HTMLAnchorElement() override;
 
-    String href() const { return attribute(HTML::AttributeNames::href); }
-    String target() const { return attribute(HTML::AttributeNames::target); }
+    String href() const { return get_attribute(HTML::AttributeNames::href); }
+    String target() const { return get_attribute(HTML::AttributeNames::target); }
 
     virtual bool is_focusable() const override { return has_attribute(HTML::AttributeNames::href); }
 };

@@ -2,11 +2,23 @@ interface Element : Node {
     readonly attribute DOMString? namespaceURI;
     readonly attribute DOMString tagName;
 
-    DOMString? getAttribute(DOMString qualifiedName);
-    undefined setAttribute(DOMString qualifiedName, DOMString value);
-    undefined removeAttribute(DOMString qualifiedName);
-    boolean hasAttribute(DOMString qualifiedName);
     boolean hasAttributes();
+    sequence<DOMString> getAttributeNames();
+    DOMString? getAttribute(DOMString qualifiedName);
+    DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
+    undefined setAttribute(DOMString qualifiedName, DOMString value);
+    undefined setAttributeNS(DOMString? namespace, DOMString qualifiedName, DOMString value);
+    undefined removeAttribute(DOMString qualifiedName);
+    undefined removeAttributeNS(DOMString? namespace, DOMString localName);
+    boolean toggleAttribute(DOMString qualifiedName, optional boolean force);
+    boolean hasAttribute(DOMString qualifiedName);
+    boolean hasAttributeNS(DOMString? namespace, DOMString localName);
+
+    Attr? getAttributeNode(DOMString qualifiedName);
+    Attr? getAttributeNodeNS(DOMString? namespace, DOMString localName);
+    Attr? setAttributeNode(Attr attr);
+    Attr? setAttributeNodeNS(Attr attr);
+    Attr removeAttributeNode(Attr attr);
 
     // FIXME: These should return https://dom.spec.whatwg.org/#htmlcollection, but a sequence is essentially equivalent.
     sequence<Element> getElementsByTagName(DOMString tagName);

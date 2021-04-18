@@ -39,9 +39,9 @@ public:
 
     virtual RefPtr<Layout::Node> create_layout_node() override;
 
-    String type() const { return attribute(HTML::AttributeNames::type); }
-    String default_value() const { return attribute(HTML::AttributeNames::value); }
-    String name() const { return attribute(HTML::AttributeNames::name); }
+    String type() const { return get_attribute(HTML::AttributeNames::type); }
+    String default_value() const { return get_attribute(HTML::AttributeNames::value); }
+    String name() const { return get_attribute(HTML::AttributeNames::name); }
 
     String value() const;
     void set_value(String);

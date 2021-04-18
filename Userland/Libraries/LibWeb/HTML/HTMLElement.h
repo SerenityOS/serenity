@@ -41,7 +41,7 @@ public:
     HTMLElement(DOM::Document&, QualifiedName);
     virtual ~HTMLElement() override;
 
-    String title() const { return attribute(HTML::AttributeNames::title); }
+    String title() const { return get_attribute(HTML::AttributeNames::title); }
 
     virtual bool is_editable() const final;
     String content_editable() const;

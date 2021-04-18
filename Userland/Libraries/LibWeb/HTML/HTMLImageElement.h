@@ -43,8 +43,8 @@ public:
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 
-    String alt() const { return attribute(HTML::AttributeNames::alt); }
-    String src() const { return attribute(HTML::AttributeNames::src); }
+    String alt() const { return get_attribute(HTML::AttributeNames::alt); }
+    String src() const { return get_attribute(HTML::AttributeNames::src); }
 
     const Gfx::Bitmap* bitmap() const;
 

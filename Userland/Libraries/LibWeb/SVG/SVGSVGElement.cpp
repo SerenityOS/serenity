@@ -50,12 +50,12 @@ RefPtr<Layout::Node> SVGSVGElement::create_layout_node()
 
 unsigned SVGSVGElement::width() const
 {
-    return attribute(HTML::AttributeNames::width).to_uint().value_or(300);
+    return get_attribute(HTML::AttributeNames::width).to_uint().value_or(300);
 }
 
 unsigned SVGSVGElement::height() const
 {
-    return attribute(HTML::AttributeNames::height).to_uint().value_or(150);
+    return get_attribute(HTML::AttributeNames::height).to_uint().value_or(150);
 }
 
 }

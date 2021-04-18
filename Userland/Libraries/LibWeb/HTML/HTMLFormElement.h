@@ -38,8 +38,8 @@ public:
     HTMLFormElement(DOM::Document&, QualifiedName);
     virtual ~HTMLFormElement() override;
 
-    String action() const { return attribute(HTML::AttributeNames::action); }
-    String method() const { return attribute(HTML::AttributeNames::method); }
+    String action() const { return get_attribute(HTML::AttributeNames::action); }
+    String method() const { return get_attribute(HTML::AttributeNames::method); }
 
     void submit_form(RefPtr<HTMLElement> submitter, bool from_submit_binding = false);
 

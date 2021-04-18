@@ -50,8 +50,8 @@ void FrameBox::prepare_for_replaced_layout()
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
     // FIXME: Do proper error checking, etc.
-    set_intrinsic_width(dom_node().attribute(HTML::AttributeNames::width).to_int().value_or(300));
-    set_intrinsic_height(dom_node().attribute(HTML::AttributeNames::height).to_int().value_or(150));
+    set_intrinsic_width(dom_node().get_attribute(HTML::AttributeNames::width).to_int().value_or(300));
+    set_intrinsic_height(dom_node().get_attribute(HTML::AttributeNames::height).to_int().value_or(150));
 }
 
 void FrameBox::paint(PaintContext& context, PaintPhase phase)
