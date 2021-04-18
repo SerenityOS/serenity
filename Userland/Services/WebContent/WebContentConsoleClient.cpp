@@ -81,7 +81,7 @@ void WebContentConsoleClient::clear_output()
 
 JS::Value WebContentConsoleClient::log()
 {
-    print_html(vm().join_arguments());
+    print_html(escape_html_entities(vm().join_arguments()));
     return JS::js_undefined();
 }
 
@@ -90,7 +90,7 @@ JS::Value WebContentConsoleClient::info()
     StringBuilder html;
     html.append("<span class=\"info\">");
     html.append("(i) ");
-    html.append(vm().join_arguments());
+    html.append(escape_html_entities(vm().join_arguments()));
     html.append("</span>");
     print_html(html.string_view());
     return JS::js_undefined();
@@ -101,7 +101,7 @@ JS::Value WebContentConsoleClient::debug()
     StringBuilder html;
     html.append("<span class=\"debug\">");
     html.append("(d) ");
-    html.append(vm().join_arguments());
+    html.append(escape_html_entities(vm().join_arguments()));
     html.append("</span>");
     print_html(html.string_view());
     return JS::js_undefined();
@@ -112,7 +112,7 @@ JS::Value WebContentConsoleClient::warn()
     StringBuilder html;
     html.append("<span class=\"warn\">");
     html.append("(w) ");
-    html.append(vm().join_arguments());
+    html.append(escape_html_entities(vm().join_arguments()));
     html.append("</span>");
     print_html(html.string_view());
     return JS::js_undefined();
@@ -123,7 +123,7 @@ JS::Value WebContentConsoleClient::error()
     StringBuilder html;
     html.append("<span class=\"error\">");
     html.append("(e) ");
-    html.append(vm().join_arguments());
+    html.append(escape_html_entities(vm().join_arguments()));
     html.append("</span>");
     print_html(html.string_view());
     return JS::js_undefined();
@@ -138,7 +138,7 @@ JS::Value WebContentConsoleClient::clear()
 JS::Value WebContentConsoleClient::trace()
 {
     StringBuilder html;
-    html.append(vm().join_arguments());
+    html.append(escape_html_entities(vm().join_arguments()));
     auto trace = get_trace();
     for (auto& function_name : trace) {
         if (function_name.is_empty())
