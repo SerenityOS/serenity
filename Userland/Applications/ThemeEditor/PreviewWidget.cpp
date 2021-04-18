@@ -130,8 +130,8 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
     auto paint_window = [&](auto& title, const Gfx::IntRect& rect, auto state, const Gfx::Bitmap& icon) {
         int window_button_width = m_preview_palette.window_title_button_width();
         int window_button_height = m_preview_palette.window_title_button_height();
-        auto title_bar_text_rect = Gfx::WindowTheme::current().title_bar_text_rect(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette);
-        int pos = title_bar_text_rect.right() + 1;
+        auto titlebar_text_rect = Gfx::WindowTheme::current().titlebar_text_rect(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette);
+        int pos = titlebar_text_rect.right() + 1;
 
         Vector<Button> buttons;
         buttons.append(Button { {}, m_close_bitmap });
@@ -141,7 +141,7 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
         for (auto& button : buttons) {
             pos -= window_button_width;
             Gfx::IntRect rect { pos, 0, window_button_width, window_button_height };
-            rect.center_vertically_within(title_bar_text_rect);
+            rect.center_vertically_within(titlebar_text_rect);
             button.rect = rect;
         }
 
