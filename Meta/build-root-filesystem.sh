@@ -7,6 +7,7 @@ phys_gid=3
 utmp_gid=5
 window_uid=13
 window_gid=13
+locate_gid=18
 
 CP="cp"
 
@@ -55,6 +56,7 @@ chown 0:$wheel_gid mnt/bin/passwd
 chown 0:$phys_gid mnt/bin/keymap
 chown 0:$phys_gid mnt/bin/shutdown
 chown 0:$phys_gid mnt/bin/reboot
+chown 0:$locate_gid mnt/bin/locate
 chown 0:0 mnt/boot/Kernel
 chown 0:0 mnt/res/kernel.map
 chmod 0400 mnt/res/kernel.map
@@ -73,7 +75,7 @@ chmod 755 mnt/res/devel/templates/*.postcreate
 echo "done"
 
 printf "creating initial filesystem structure... "
-for dir in bin etc proc mnt tmp boot mod var/run; do
+for dir in bin etc proc mnt tmp boot mod var/run var/lib; do
     mkdir -p mnt/$dir
 done
 chmod 700 mnt/boot
@@ -85,6 +87,11 @@ printf "creating utmp file... "
 touch mnt/var/run/utmp
 chown 0:$utmp_gid mnt/var/run/utmp
 chmod 664 mnt/var/run/utmp
+echo "done"
+
+printf "creating locate folder..."
+mkdir mnt/var/lib/locate
+chown 0:$locate_gid mnt/var/lib/locate
 echo "done"
 
 printf "setting up device nodes folder... "
