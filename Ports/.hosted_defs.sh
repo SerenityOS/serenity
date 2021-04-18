@@ -9,5 +9,6 @@ export PATH="${SERENITY_ROOT}/Toolchain/Local/${SERENITY_ARCH}/bin:${PATH}"
 export PKG_CONFIG_DIR=""
 export PKG_CONFIG_SYSROOT_DIR="${SERENITY_BUILD_DIR}/Root"
 export PKG_CONFIG_LIBDIR="${PKG_CONFIG_SYSROOT_DIR}/usr/lib/pkgconfig/:${PKG_CONFIG_SYSROOT_DIR}/usr/local/lib/pkgconfig"
+enable_ccache
 
 DESTDIR="${SERENITY_BUILD_DIR}/Root"

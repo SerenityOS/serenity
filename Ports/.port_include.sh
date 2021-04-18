@@ -21,6 +21,13 @@ maybe_source() {
     fi
 }
 
+enable_ccache() {
+    if command -v ccache &>/dev/null; then
+        export CC="ccache ${CC}"
+        export CXX="ccache ${CXX}"
+    fi
+}
+
 target_env() {
     maybe_source "${SCRIPT}/.hosted_defs.sh"
 }
@@ -36,6 +43,7 @@ host_env() {
     export PKG_CONFIG_DIR="${HOST_PKG_CONFIG_DIR}"
     export PKG_CONFIG_SYSROOT_DIR="${HOST_PKG_CONFIG_SYSROOT_DIR}"
     export PKG_CONFIG_LIBDIR="${HOST_PKG_CONFIG_LIBDIR}"
+    enable_ccache
 }
 
 packagesdb="${DESTDIR}/usr/Ports/packages.db"
