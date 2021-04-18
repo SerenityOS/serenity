@@ -28,6 +28,22 @@ public:
     void set_y(T value) { m_y = value; }
     void set_z(T value) { m_z = value; }
 
+    Vector3& operator+=(const Vector3& other)
+    {
+        m_x += other.m_x;
+        m_y += other.m_y;
+        m_z += other.m_z;
+        return *this;
+    }
+
+    Vector3& operator-=(const Vector3& other)
+    {
+        m_x -= other.m_x;
+        m_y -= other.m_y;
+        m_z -= other.m_z;
+        return *this;
+    }
+
     Vector3 operator+(const Vector3& other) const
     {
         return Vector3(m_x + other.m_x, m_y + other.m_y, m_z + other.m_z);
