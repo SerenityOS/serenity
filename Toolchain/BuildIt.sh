@@ -26,7 +26,9 @@ else
     INSTALL=install
 fi
 
-if [ "$(uname -s)" = "OpenBSD" ]; then
+SYSTEM_NAME="$(uname -s)"
+
+if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
     MAKE=gmake
     MD5SUM="md5 -q"
     NPROC="sysctl -n hw.ncpuonline"
@@ -35,7 +37,7 @@ if [ "$(uname -s)" = "OpenBSD" ]; then
     export CXX=eg++
     export with_gmp=/usr/local
     export LDFLAGS=-Wl,-z,notext
-elif [ "$(uname -s)" = "FreeBSD" ]; then
+elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
     MAKE=gmake
     MD5SUM="md5 -q"
     NPROC="sysctl -n hw.ncpu"
@@ -78,7 +80,7 @@ GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
 buildstep() {
     NAME=$1
     shift
-    if [ "$(uname -s)" = "Darwin" ]; then
+    if [ "$SYSTEM_NAME" = "Darwin" ]; then
         "$@" 2>&1 | sed 's|^|['"${NAME}"'] |'
     else
         "$@" 2>&1 | sed 's|^|\x1b[34m['"${NAME}"']\x1b[39m |'
@@ -188,7 +190,7 @@ pushd "$DIR/Tarballs"
         $MD5SUM "$DIR/Patches/gcc.patch" > .patch.applied
     popd
 
-    if [ "$(uname)" = "Darwin" ]; then
+    if [ "$SYSTEM_NAME" = "Darwin" ]; then
         pushd "gcc-${GCC_VERSION}"
         ./contrib/download_prerequisites
         popd
@@ -221,7 +223,7 @@ pushd "$DIR/Build/$ARCH"
                                                  --enable-shared \
                                                  --disable-nls \
                                                  ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
-        if [ "$(uname)" = "Darwin" ]; then
+        if [ "$SYSTEM_NAME" = "Darwin" ]; then
             # under macOS generated makefiles are not resolving the "intl"
             # dependency properly to allow linking its own copy of
             # libintl when building with --enable-shared.
@@ -248,7 +250,7 @@ pushd "$DIR/Build/$ARCH"
         unset SRC_ROOT
     popd
 
-    if [ "$(uname -s)" = "OpenBSD" ]; then
+    if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
         perl -pi -e 's/-no-pie/-nopie/g' "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/configure"
     fi
 
@@ -290,7 +292,7 @@ pushd "$DIR/Build/$ARCH"
             if [ "$STAGE" = "Userland" ]; then
                 echo "XXX build gcc and libgcc"
                 buildstep "gcc/build" "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
-                if [ "$(uname -s)" = "OpenBSD" ]; then
+                if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
                     ln -sf liblto_plugin.so.0.0 gcc/liblto_plugin.so
                 fi
                 buildstep "libgcc/build" "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
@@ -309,7 +311,7 @@ pushd "$DIR/Build/$ARCH"
         popd
 
         if [ "$STAGE" = "Userland" ]; then
-            if [ "$(uname -s)" = "OpenBSD" ]; then
+            if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
                 cd "$DIR/Local/${ARCH}/libexec/gcc/$TARGET/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
             fi
         fi
@@ -321,7 +323,7 @@ popd
 
 pushd "$DIR"
     # Stripping doesn't seem to work on macOS.
-    if [ "$(uname)" != "Darwin" ]; then
+    if [ "$SYSTEM_NAME" != "Darwin" ]; then
         # We *most definitely* don't need debug symbols in the linker/compiler.
         # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 120 MiB.
         # Hence, this might actually cause marginal speedups, although the point is to not waste space as blatantly.
