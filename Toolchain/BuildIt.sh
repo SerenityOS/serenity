@@ -78,7 +78,11 @@ GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
 buildstep() {
     NAME=$1
     shift
-    "$@" 2>&1 | sed 's|^|\x1b[34m['"${NAME}"']\x1b[39m |'
+    if [ "$(uname -s)" = "Darwin" ]; then
+        "$@" 2>&1 | sed 's|^|['"${NAME}"'] |'
+    else
+        "$@" 2>&1 | sed 's|^|\x1b[34m['"${NAME}"']\x1b[39m |'
+    fi
 }
 
 # === CHECK CACHE AND REUSE ===
@@ -269,7 +273,7 @@ pushd "$DIR/Build/$ARCH"
 
             cp $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-kernel.h $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h
             if [ "$STAGE" = "Userland" ]; then
-                sed -i 's@-fno-exceptions @@' $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h
+                sed -i='' 's@-fno-exceptions @@' $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h
             fi
 
             buildstep "gcc/configure/${STAGE,,}" "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
