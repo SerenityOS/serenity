@@ -448,6 +448,17 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto& statusbar = *widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
+    GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
+        auto text = action.status_tip();
+        if (text.is_empty())
+            text = Gfx::parse_ampersand_string(action.text());
+        statusbar.set_override_text(move(text));
+    };
+
+    GUI::Application::the()->on_action_leave = [&statusbar](GUI::Action&) {
+        statusbar.set_override_text({});
+    };
+
     auto& progressbar = *widget.find_descendant_of_type_named<GUI::Progressbar>("progressbar");
     progressbar.set_format(GUI::Progressbar::Format::ValueSlashMax);
     progressbar.set_frame_shape(Gfx::FrameShape::Panel);
