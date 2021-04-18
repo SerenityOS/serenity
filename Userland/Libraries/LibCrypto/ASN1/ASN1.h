@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <LibCore/DateTime.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
 namespace Crypto::ASN1 {
@@ -70,5 +71,8 @@ struct Tag {
 String kind_name(Kind);
 String class_name(Class);
 String type_name(Type);
+
+Optional<Core::DateTime> parse_utc_time(const StringView&);
+Optional<Core::DateTime> parse_generalized_time(const StringView&);
 
 }
