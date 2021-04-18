@@ -79,6 +79,7 @@ static SpinLock<u8> g_ready_queues_lock;
 static u32 g_ready_queues_mask;
 static constexpr u32 g_ready_queue_buckets = sizeof(g_ready_queues_mask) * 8;
 READONLY_AFTER_INIT static ThreadReadyQueue* g_ready_queues; // g_ready_queue_buckets entries
+static void dump_thread_list();
 
 static inline u32 thread_priority_to_priority_index(u32 thread_priority)
 {
@@ -235,29 +236,7 @@ bool Scheduler::pick_next()
     }
 
     if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
-        dbgln("Scheduler thread list for processor {}:", Processor::id());
-        Thread::for_each([&](Thread& thread) -> IterationDecision {
-            switch (thread.state()) {
-            case Thread::Dying:
-                dbgln("  {:12} {} @ {:04x}:{:08x} Finalizable: {}",
-                    thread.state_string(),
-                    thread,
-                    thread.tss().cs,
-                    thread.tss().eip,
-                    thread.is_finalizable());
-                break;
-            default:
-                dbgln("  {:12} Pr:{:2} {} @ {:04x}:{:08x}",
-                    thread.state_string(),
-                    thread.priority(),
-                    thread,
-                    thread.tss().cs,
-                    thread.tss().eip);
-                break;
-            }
-
-            return IterationDecision::Continue;
-        });
+        dump_thread_list();
     }
 
     auto pending_beneficiary = scheduler_data.m_pending_beneficiary.strong_ref();
@@ -631,6 +610,53 @@ void Scheduler::idle_loop(void*)
             yield();
 #endif
     }
+}
+
+void Scheduler::dump_scheduler_state()
+{
+    dump_thread_list();
+}
+
+void dump_thread_list()
+{
+    dbgln("Scheduler thread list for processor {}:", Processor::id());
+
+    auto get_cs = [](Thread& thread) -> u16 {
+        if (!thread.current_trap())
+            return thread.tss().cs;
+        return thread.get_register_dump_from_stack().cs;
+    };
+
+    auto get_eip = [](Thread& thread) -> u32 {
+        if (!thread.current_trap())
+            return thread.tss().eip;
+        return thread.get_register_dump_from_stack().eip;
+    };
+
+    Thread::for_each([&](Thread& thread) -> IterationDecision {
+        switch (thread.state()) {
+        case Thread::Dying:
+            dbgln("  {:14} {:30} @ {:04x}:{:08x} Finalizable: {}, (nsched: {})",
+                thread.state_string(),
+                thread,
+                get_cs(thread),
+                get_eip(thread),
+                thread.is_finalizable(),
+                thread.times_scheduled());
+            break;
+        default:
+            dbgln("  {:14} Pr:{:2} {:30} @ {:04x}:{:08x} (nsched: {})",
+                thread.state_string(),
+                thread.priority(),
+                thread,
+                get_cs(thread),
+                get_eip(thread),
+                thread.times_scheduled());
+            break;
+        }
+
+        return IterationDecision::Continue;
+    });
 }
 
 }

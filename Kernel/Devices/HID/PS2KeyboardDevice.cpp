@@ -53,6 +53,11 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
         return;
     }
 
+    if (m_modifiers == (Mod_Alt | Mod_Shift) && byte == 0x58) {
+        // Alt+Shift+F12 pressed, dump some kernel state to the debug console.
+        Scheduler::dump_scheduler_state();
+    }
+
     dbgln_if(KEYBOARD_DEBUG, "Keyboard::irq_handle_byte_read: {:#02x} {}", ch, (pressed ? "down" : "up"));
     switch (ch) {
     case 0x38:
