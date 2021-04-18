@@ -358,6 +358,10 @@
 #cmakedefine01 SPAM_DEBUG
 #endif
 
+#ifndef SQL_DEBUG
+#cmakedefine01 SQL_DEBUG
+#endif
+
 #ifndef STRINGIMPL_DEBUG
 #cmakedefine01 STRINGIMPL_DEBUG
 #endif
