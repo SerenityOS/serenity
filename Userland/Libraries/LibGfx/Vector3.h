@@ -10,7 +10,7 @@
 
 namespace Gfx {
 template<typename T>
-class Vector3 {
+class Vector3 final {
 public:
     Vector3() = default;
     Vector3(T x, T y, T z)
