@@ -243,19 +243,19 @@ Gfx::IntRect WindowFrame::menubar_rect() const
     return Gfx::WindowTheme::current().menubar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette(), menu_row_count());
 }
 
-Gfx::IntRect WindowFrame::title_bar_rect() const
+Gfx::IntRect WindowFrame::titlebar_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().titlebar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
 }
 
-Gfx::IntRect WindowFrame::title_bar_icon_rect() const
+Gfx::IntRect WindowFrame::titlebar_icon_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_icon_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().titlebar_icon_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
 }
 
-Gfx::IntRect WindowFrame::title_bar_text_rect() const
+Gfx::IntRect WindowFrame::titlebar_text_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_text_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().titlebar_text_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
 }
 
 Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
@@ -539,10 +539,10 @@ Gfx::IntRect WindowFrame::render_rect() const
     return inflated_for_shadow(rect());
 }
 
-void WindowFrame::invalidate_title_bar()
+void WindowFrame::invalidate_titlebar()
 {
     m_dirty = true;
-    invalidate(title_bar_rect());
+    invalidate(titlebar_rect());
 }
 
 void WindowFrame::invalidate()
@@ -636,7 +636,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
         if (m_window.blocking_modal_window())
             return;
 
-        if (title_bar_icon_rect().contains(event.position())) {
+        if (titlebar_icon_rect().contains(event.position())) {
             if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right)) {
                 // Manually start a potential double click. Since we're opening
                 // a menu, we will only receive the MouseDown event, so we
@@ -650,7 +650,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
                 auto& wm = WindowManager::the();
                 wm.start_menu_doubleclick(m_window, event);
 
-                m_window.popup_window_menu(title_bar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
+                m_window.popup_window_menu(titlebar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
                 return;
             } else if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
                 // Since the MouseDown event opened a menu, another MouseUp
@@ -670,10 +670,10 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
     // This is slightly hackish, but expand the title bar rect by two pixels downwards,
     // so that mouse events between the title bar and window contents don't act like
     // mouse events on the border.
-    auto adjusted_title_bar_rect = title_bar_rect();
-    adjusted_title_bar_rect.set_height(adjusted_title_bar_rect.height() + 2);
+    auto adjusted_titlebar_rect = titlebar_rect();
+    adjusted_titlebar_rect.set_height(adjusted_titlebar_rect.height() + 2);
 
-    if (adjusted_title_bar_rect.contains(event.position())) {
+    if (adjusted_titlebar_rect.contains(event.position())) {
         wm.clear_resize_candidate();
 
         if (event.type() == Event::MouseDown)
@@ -778,7 +778,7 @@ void WindowFrame::start_flash_animation()
     if (!m_flash_timer) {
         m_flash_timer = Core::Timer::construct(100, [this] {
             VERIFY(m_flash_counter);
-            invalidate_title_bar();
+            invalidate_titlebar();
             if (!--m_flash_counter)
                 m_flash_timer->stop();
         });

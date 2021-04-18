@@ -1471,8 +1471,8 @@ Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
     Gfx::IntRect rect = Screen::the().rect();
 
     // Subtract window title bar (leaving the border)
-    rect.set_y(rect.y() + window.frame().title_bar_rect().height() + window.frame().menubar_rect().height());
-    rect.set_height(rect.height() - window.frame().title_bar_rect().height() - window.frame().menubar_rect().height());
+    rect.set_y(rect.y() + window.frame().titlebar_rect().height() + window.frame().menubar_rect().height());
+    rect.set_height(rect.height() - window.frame().titlebar_rect().height() - window.frame().menubar_rect().height());
 
     // Subtract taskbar window height if present
     const_cast<WindowManager*>(this)->for_each_visible_window_of_type_from_back_to_front(WindowType::Taskbar, [&rect](Window& taskbar_window) {
@@ -1578,7 +1578,7 @@ void WindowManager::maximize_windows(Window& window, bool maximized)
 Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint& desired)
 {
     // FIXME: Find a  better source for the width and height to shift by.
-    Gfx::IntPoint shift(8, Gfx::WindowTheme::current().title_bar_height(Gfx::WindowTheme::WindowType::Normal, palette()) + 10);
+    Gfx::IntPoint shift(8, Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, palette()) + 10);
 
     // FIXME: Find a better source for this.
     int taskbar_height = 28;
@@ -1596,7 +1596,7 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint
         point = overlap_window->position() + shift;
         point = { point.x() % Screen::the().width(),
             (point.y() >= (Screen::the().height() - taskbar_height))
-                ? Gfx::WindowTheme::current().title_bar_height(Gfx::WindowTheme::WindowType::Normal, palette())
+                ? Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, palette())
                 : point.y() };
     } else {
         point = desired;

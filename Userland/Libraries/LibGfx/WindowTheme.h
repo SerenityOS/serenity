@@ -55,10 +55,10 @@ public:
     virtual void paint_tool_window_frame(Painter&, WindowState, const IntRect& window_rect, const StringView& title, const Palette&, const IntRect& leftmost_button_rect) const = 0;
     virtual void paint_notification_frame(Painter&, const IntRect& window_rect, const Palette&, const IntRect& close_button_rect) const = 0;
 
-    virtual int title_bar_height(WindowType, const Palette&) const = 0;
-    virtual IntRect title_bar_rect(WindowType, const IntRect& window_rect, const Palette&) const = 0;
-    virtual IntRect title_bar_icon_rect(WindowType, const IntRect& window_rect, const Palette&) const = 0;
-    virtual IntRect title_bar_text_rect(WindowType, const IntRect& window_rect, const Palette&) const = 0;
+    virtual int titlebar_height(WindowType, const Palette&) const = 0;
+    virtual IntRect titlebar_rect(WindowType, const IntRect& window_rect, const Palette&) const = 0;
+    virtual IntRect titlebar_icon_rect(WindowType, const IntRect& window_rect, const Palette&) const = 0;
+    virtual IntRect titlebar_text_rect(WindowType, const IntRect& window_rect, const Palette&) const = 0;
 
     virtual IntRect menubar_rect(WindowType, const IntRect& window_rect, const Palette&, int menu_row_count) const = 0;
 

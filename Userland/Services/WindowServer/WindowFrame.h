@@ -54,13 +54,13 @@ public:
     void render_to_cache();
     void on_mouse_event(const MouseEvent&);
     void notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect);
-    void invalidate_title_bar();
+    void invalidate_titlebar();
     void invalidate(Gfx::IntRect relative_rect);
     void invalidate();
 
-    Gfx::IntRect title_bar_rect() const;
-    Gfx::IntRect title_bar_icon_rect() const;
-    Gfx::IntRect title_bar_text_rect() const;
+    Gfx::IntRect titlebar_rect() const;
+    Gfx::IntRect titlebar_icon_rect() const;
+    Gfx::IntRect titlebar_text_rect() const;
 
     Gfx::IntRect menubar_rect() const;
     int menu_row_count() const;
