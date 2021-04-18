@@ -43,6 +43,7 @@ enum class Kind : u8 {
     PrintableString = 0x13,
     Utf8String = 0x0c,
     UTCTime = 0x017,
+    GeneralizedTime = 0x018,
     Sequence = 0x10,
     Set = 0x11,
     // Choice = ??,
