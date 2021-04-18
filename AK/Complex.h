@@ -316,11 +316,11 @@ static constexpr bool approx_eq(const Complex<T>& a, const Complex<U>& b, const 
     return x.magnitude() <= margin;
 }
 
-//complex version of exp()
+// complex version of exp()
 template<AK::Concepts::Arithmetic T>
 static constexpr Complex<T> cexp(const Complex<T>& a)
 {
-    //FIXME: this can probably be faster and not use so many expensive trigonometric functions
+    // FIXME: this can probably be faster and not use so many expensive trigonometric functions
     if constexpr (sizeof(T) <= sizeof(float)) {
         return expf(a.real()) * Complex<T>(cosf(a.imag()), sinf(a.imag()));
     } else if constexpr (sizeof(T) <= sizeof(double)) {
