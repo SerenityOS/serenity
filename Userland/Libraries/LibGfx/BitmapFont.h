@@ -70,6 +70,8 @@ public:
     u8 glyph_height() const { return m_glyph_height; }
     int x_height() const { return m_x_height; }
 
+    u8 raw_glyph_width(size_t ch) const { return m_glyph_widths[ch]; }
+
     u8 min_glyph_width() const { return m_min_glyph_width; }
     u8 max_glyph_width() const { return m_max_glyph_width; }
     u8 glyph_fixed_width() const { return m_glyph_width; }
