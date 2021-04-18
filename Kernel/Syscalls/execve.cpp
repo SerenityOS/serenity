@@ -792,10 +792,11 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
     if (main_program_header.e_type == ET_DYN) {
         // If it's ET_DYN with no PT_INTERP, then it's a dynamic executable responsible
         // for its own relocation (i.e. it's /usr/lib/Loader.so)
-        if (path != "/usr/lib/Loader.so")
+        if (path != "/usr/lib/Loader.so") {
             dmesgln("exec({}): WARNING - Dynamic ELF executable without a PT_INTERP header, and isn't /usr/lib/Loader.so", path);
-        else
+        } else {
             dbgln("exec(={}): WARNING - Hold on, you cannot execute the loader!", path);
+        }
         
         return ENOEXEC;
     }
