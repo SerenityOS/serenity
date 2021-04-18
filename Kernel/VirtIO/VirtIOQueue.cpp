@@ -145,4 +145,9 @@ void VirtIOQueue::pop_buffer(u16 descriptor_index)
     m_free_head = descriptor_index;
 }
 
+bool VirtIOQueue::can_write() const
+{
+    return m_free_buffers > 0;
+}
+
 }

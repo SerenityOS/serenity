@@ -110,7 +110,7 @@ KResultOr<size_t> VirtIOConsole::read(FileDescription&, u64, [[maybe_unused]] Us
 
 bool VirtIOConsole::can_write(const FileDescription&, size_t) const
 {
-    return true;
+    return get_queue(TRANSMITQ).can_write();
 }
 
 KResultOr<size_t> VirtIOConsole::write(FileDescription&, u64, const UserOrKernelBuffer& data, size_t size)
