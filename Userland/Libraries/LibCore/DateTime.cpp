@@ -249,10 +249,4 @@ String DateTime::to_string(const String& format) const
     return builder.build();
 }
 
-bool DateTime::is_before(const String& other) const
-{
-    auto now_string = String::formatted("{:04}{:02}{:02}{:02}{:02}{:02}Z", year(), month(), weekday(), hour(), minute(), second());
-    return __builtin_strcasecmp(now_string.characters(), other.characters()) < 0;
-}
-
 }

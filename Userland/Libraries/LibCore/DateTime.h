@@ -56,9 +56,6 @@ public:
     static DateTime now();
     static DateTime from_timestamp(time_t);
 
-    // FIXME: This should be replaced with a proper comparison
-    //        operator when we get the equivalent of strptime
-    bool is_before(const String&) const;
     bool operator<(const DateTime& other) const { return m_timestamp < other.m_timestamp; }
 
 private:
