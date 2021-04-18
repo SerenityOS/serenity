@@ -116,11 +116,11 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
         }
     }
 
-#if HEAP_DEBUG
-    dbgln("gather_roots:");
-    for (auto* root : roots)
-        dbgln("  + {}", root);
-#endif
+    if constexpr (HEAP_DEBUG) {
+        dbgln("gather_roots:");
+        for (auto* root : roots)
+            dbgln("  + {}", root);
+    }
 }
 
 __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
@@ -239,12 +239,12 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
         allocator_for_size(block->cell_size()).block_did_become_usable({}, *block);
     }
 
-#if HEAP_DEBUG
-    for_each_block([&](auto& block) {
-        dbgln(" > Live HeapBlock @ {}: cell_size={}", &block, block.cell_size());
-        return IterationDecision::Continue;
-    });
-#endif
+    if constexpr (HEAP_DEBUG) {
+        for_each_block([&](auto& block) {
+            dbgln(" > Live HeapBlock @ {}: cell_size={}", &block, block.cell_size());
+            return IterationDecision::Continue;
+        });
+    }
 
     int time_spent = measurement_timer.elapsed();
 
