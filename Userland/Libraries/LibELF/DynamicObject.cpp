@@ -475,7 +475,7 @@ VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
 
     auto result = DynamicLoader::lookup_symbol(symbol);
     if (!result.has_value()) {
-        dbgln("did not find symbol: {}", symbol.name());
+        dbgln("did not find symbol while doing relocations for library {}: {}", m_filename, symbol.name());
         VERIFY_NOT_REACHED();
     }
 
