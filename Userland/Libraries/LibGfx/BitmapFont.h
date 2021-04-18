@@ -107,7 +107,7 @@ public:
         m_glyph_widths[ch] = width;
     }
 
-    int glyph_count() const { return m_glyph_count; }
+    size_t glyph_count() const { return m_glyph_count; }
 
     FontTypes type() { return m_type; }
     void set_type(FontTypes type);
