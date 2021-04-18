@@ -71,6 +71,7 @@ void TableFormattingContext::run(Box& box, LayoutMode)
 
         row_group_box.set_height(content_height);
 
+        row_group_box.set_offset(0, total_content_height);
         total_content_height += content_height;
     });
 
