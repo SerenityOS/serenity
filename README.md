@@ -129,6 +129,7 @@ Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
 * **Andrew Kaster** - [ADKaster](https://github.com/ADKaster)
 * **thankyouverycool** - [thankyouverycool](https://github.com/thankyouverycool)
 * **Idan Horowitz** - [IdanHo](https://github.com/IdanHo)
+* **Gunnar Beutner** - [gunnarbeutner](https://github.com/gunnarbeutner)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
