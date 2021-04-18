@@ -227,9 +227,9 @@ pushd "$DIR/Build/$ARCH"
             # under macOS generated makefiles are not resolving the "intl"
             # dependency properly to allow linking its own copy of
             # libintl when building with --enable-shared.
-            "$MAKE" -j "$MAKEJOBS" || true
+            buildstep "binutils/build" "$MAKE" -j "$MAKEJOBS" || true
             pushd intl
-            "$MAKE" all-yes
+            buildstep "binutils/build" "$MAKE" all-yes
             popd
         fi
         echo "XXX build binutils"
