@@ -67,13 +67,13 @@ jobs:
         # *and* as actual output variable, in this order.
         message("  set-output name=time::${current_date}")
         message("::set-output name=time::${current_date}")
-        message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
-        message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
+        message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
+        message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
     - name: Toolchain cache
       uses: actions/cache@v2
       with:
         path: ${{ github.workspace }}/Toolchain/Cache/
-        # This assumes that *ALL* LibC headers have an impact on the Toolchain.
+        # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
         # This is wrong, and causes more Toolchain rebuilds than necessary.
         # However, we want to avoid false cache hits at all costs.
         key: ${{ runner.os }}-toolchain-i686-${{ steps.stamps.outputs.libc_headers }}

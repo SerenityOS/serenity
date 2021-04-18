@@ -6,7 +6,7 @@ diff -ruN a/config.sub b/config.sub
  #   Copyright 1992-2019 Free Software Foundation, Inc.
  
 -timestamp='2019-06-30'
-+timestamp='2020-05-16'
++timestamp='2021-04-20'
  
  # This file is free software; you can redistribute it and/or modify it
  # under the terms of the GNU General Public License as published by
@@ -102,7 +102,7 @@ diff -ruN a/gcc/config/arm/serenity-elf.h b/gcc/config/arm/serenity-elf.h
 diff -ruN a/gcc/config/serenity.h b/gcc/config/serenity.h
 --- a/gcc/config/serenity.h	1970-01-01 02:00:00.000000000 +0200
 +++ b/gcc/config/serenity.h	2020-12-12 10:43:35.280270540 +0200
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,44 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
 +#define TARGET_SERENITY 1
@@ -114,7 +114,7 @@ diff -ruN a/gcc/config/serenity.h b/gcc/config/serenity.h
 +/* Default arguments you want when running your
 +   i686-serenity-gcc/x86_64-serenity-gcc toolchain */
 +#undef LIB_SPEC
-+#define LIB_SPEC "-lc" /* link against C standard library */
++#define LIB_SPEC "%{pthread:-lpthread} -lc" /* link against C standard library */
 +
 +/* Files that are linked before user code.
 +   The %s tells GCC to look for these files in the library directory. */
@@ -134,6 +134,9 @@ diff -ruN a/gcc/config/serenity.h b/gcc/config/serenity.h
 +#undef CC1PLUS_SPEC
 +#define CC1PLUS_SPEC "-fno-exceptions -ftls-model=initial-exec"
 +
++#undef CPP_SPEC
++#define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT}"
++
 +/* Additional predefined macros. */
 +#undef TARGET_OS_CPP_BUILTINS
 +#define TARGET_OS_CPP_BUILTINS()      \
@@ -144,10 +147,46 @@ diff -ruN a/gcc/config/serenity.h b/gcc/config/serenity.h
 +    builtin_assert ("system=unix");   \
 +    builtin_assert ("system=posix");   \
 +  } while(0);
+diff -ruN a/gcc/config/serenity.opt b/gcc/config/serenity.opt
+--- a/gcc/config/serenity.opt	1970-01-01 01:00:00.000000000 +0100
++++ b/gcc/config/serenity.opt	2021-04-18 11:59:44.933484216 +0200
+@@ -0,0 +1,32 @@
++; SerenityOS options.
++
++; Copyright (C) 2021 Gunnar Beutner <gunnar@beutner.name>
++;
++; This file is part of GCC.
++;
++; GCC is free software; you can redistribute it and/or modify it under
++; the terms of the GNU General Public License as published by the Free
++; Software Foundation; either version 3, or (at your option) any later
++; version.
++;
++; GCC is distributed in the hope that it will be useful, but WITHOUT ANY
++; WARRANTY; without even the implied warranty of MERCHANTABILITY or
++; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++; for more details.
++;
++; You should have received a copy of the GNU General Public License
++; along with GCC; see the file COPYING3.  If not see
++; <http://www.gnu.org/licenses/>.
++
++; See the GCC internals manual (options.texi) for a description of
++; this file's format.
++
++; Please try to keep this file in ASCII collating order.
++
++posix
++Driver
++
++pthread
++Driver
++
++; This comment is to ensure we retain the blank line above.
 diff -ruN a/gcc/config.gcc b/gcc/config.gcc
 --- a/gcc/config.gcc	2020-07-23 09:35:17.316384243 +0300
 +++ b/gcc/config.gcc	2020-12-12 10:43:35.280270540 +0200
-@@ -675,6 +675,11 @@
+@@ -675,6 +675,12 @@
  
  # Common parts for widely ported systems.
  case ${target} in
@@ -155,11 +194,12 @@ diff -ruN a/gcc/config.gcc b/gcc/config.gcc
 +  gas=yes
 +  gnu_ld=yes
 +  default_use_cxa_atexit=yes
++  extra_options="${extra_options} serenity.opt"
 +  ;;
  *-*-darwin*)
    tmake_file="t-darwin "
    tm_file="${tm_file} darwin.h"
-@@ -1033,6 +1038,15 @@
+@@ -1063,6 +1069,15 @@
  esac
  
  case ${target} in
@@ -224,7 +264,7 @@ diff -ruN a/libgcc/config.host b/libgcc/config.host
 diff -ruN a/libstdc++-v3/configure b/libstdc++-v3/configure
 --- a/libstdc++-v3/configure	2020-07-23 09:35:19.188404867 +0300
 +++ b/libstdc++-v3/configure	2020-12-12 10:43:35.288270409 +0200
-@@ -29846,6 +29846,5986 @@
+@@ -29217,6 +29217,5986 @@
  
  # Base decisions on target environment.
  case "${host}" in
