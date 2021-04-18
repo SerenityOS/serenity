@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <LibWeb/Namespace.h>
 
 namespace Web {
 
@@ -42,6 +43,40 @@ public:
     const FlyString& local_name() const { return m_local_name; }
     const FlyString& prefix() const { return m_prefix; }
     const FlyString& namespace_() const { return m_namespace; }
+
+    // Implementation of https://dom.spec.whatwg.org/#validate-and-extract
+    static QualifiedName validate_and_extract(const FlyString& namespace_, const FlyString& qualified_name)
+    {
+        auto result_namespace = namespace_;
+        if (result_namespace.is_empty())
+            result_namespace = FlyString();
+        // FIXME: Validate qualified_name https://dom.spec.whatwg.org/#validate
+        FlyString prefix;
+        auto local_name = qualified_name;
+        if (qualified_name.view().contains(':')) {
+            auto split = qualified_name.view().split_view(':');
+            prefix = split[0];
+            local_name = split[1];
+        }
+        if (!prefix.is_null() && namespace_.is_null()) {
+            // FIXME: throw a "NamespaceError" DOMException.
+            TODO();
+        }
+        if (prefix == "xml" && namespace_ != Web::Namespace::XML) {
+            // FIXME: throw a "NamespaceError" DOMException.
+            TODO();
+        }
+        auto names_have_xmlns = qualified_name == "xmlns" || prefix == "xmlns";
+        if (names_have_xmlns && namespace_ != Web::Namespace::XMLNS) {
+            // FIXME: throw a "NamespaceError" DOMException.
+            TODO();
+        }
+        if (namespace_ == Namespace::XMLNS && !names_have_xmlns) {
+            // FIXME: throw a "NamespaceError" DOMException.
+            TODO();
+        }
+        return QualifiedName(local_name, prefix, result_namespace);
+    }
 
 private:
     FlyString m_local_name;
