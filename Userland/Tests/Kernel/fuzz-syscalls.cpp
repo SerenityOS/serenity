@@ -38,7 +38,7 @@
 
 static bool is_deadly_syscall(int fn)
 {
-    return fn == SC_exit || fn == SC_fork || fn == SC_sigreturn || fn == SC_exit_thread || fn == SC_abort;
+    return fn == SC_exit || fn == SC_fork || fn == SC_sigreturn || fn == SC_exit_thread;
 }
 
 static bool is_unfuzzable_syscall(int fn)

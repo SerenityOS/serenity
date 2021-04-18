@@ -35,12 +35,13 @@
 #    define VERIFY_NOT_REACHED() VERIFY(false)
 #else
 #    define VERIFY(expr)
-#    define VERIFY_NOT_REACHED() CRASH()
+#    define VERIFY_NOT_REACHED() _abort()
 #endif
-#define CRASH()              \
-    do {                     \
-        asm volatile("ud2"); \
-    } while (0)
+
+extern "C" {
+[[noreturn]] void _abort();
+[[noreturn]] void abort();
+}
 
 #define VERIFY_INTERRUPTS_DISABLED() VERIFY(!(cpu_flags() & 0x200))
 #define VERIFY_INTERRUPTS_ENABLED() VERIFY(cpu_flags() & 0x200)

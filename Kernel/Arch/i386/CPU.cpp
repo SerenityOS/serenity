@@ -33,6 +33,7 @@
 #include <Kernel/Arch/x86/ISRStubs.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Arch/x86/SafeMem.h>
+#include <Kernel/Assertions.h>
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
@@ -2419,6 +2420,13 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
     dmesgln("ASSERTION FAILED: {}", msg);
     dmesgln("{}:{} in {}", file, line, func);
 
+    abort();
+}
+#endif
+
+[[noreturn]] void abort()
+{
+#ifdef DEBUG
     // Switch back to the current process's page tables if there are any.
     // Otherwise stack walking will be a disaster.
     auto process = Process::current();
@@ -2427,8 +2435,16 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
 
     Kernel::dump_backtrace();
     Processor::halt();
-}
 #endif
+
+    abort();
+}
+
+[[noreturn]] void _abort()
+{
+    asm volatile("ud2");
+    __builtin_unreachable();
+}
 
 NonMaskableInterruptDisabler::NonMaskableInterruptDisabler()
 {
