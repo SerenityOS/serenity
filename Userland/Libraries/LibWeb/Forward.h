@@ -50,6 +50,7 @@ enum class Display;
 }
 
 namespace Web::DOM {
+class Attr;
 class CharacterData;
 class Comment;
 class Document;
@@ -216,6 +217,7 @@ class XMLHttpRequestEventTarget;
 }
 
 namespace Web::Bindings {
+class AttrWrapper;
 class CSSStyleDeclarationWrapper;
 class CSSStyleSheetWrapper;
 class CanvasRenderingContext2DWrapper;

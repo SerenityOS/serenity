@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibWeb/Bindings/AttrWrapper.h>
 #include <LibWeb/Bindings/CharacterDataWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
 #include <LibWeb/Bindings/DocumentFragmentWrapper.h>
@@ -341,6 +342,8 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Text>(node)));
     if (is<DOM::CharacterData>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::CharacterData>(node)));
+    if (is<DOM::Attr>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Attr>(node)));
     return static_cast<NodeWrapper*>(wrap_impl(global_object, node));
 }
 

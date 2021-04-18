@@ -38,6 +38,7 @@ set(SOURCES
     CSS/StyleValue.cpp
     CSS/ValueID.cpp
     CSS/ValueID.h
+    DOM/Attr.cpp
     DOM/CharacterData.cpp
     DOM/CharacterData.idl
     DOM/Comment.cpp
@@ -298,6 +299,7 @@ libweb_js_wrapper(CSS/CSSStyleSheet)
 libweb_js_wrapper(CSS/Screen)
 libweb_js_wrapper(CSS/StyleSheet)
 libweb_js_wrapper(CSS/StyleSheetList)
+libweb_js_wrapper(DOM/Attr)
 libweb_js_wrapper(DOM/CharacterData)
 libweb_js_wrapper(DOM/Comment)
 libweb_js_wrapper(DOM/Document)

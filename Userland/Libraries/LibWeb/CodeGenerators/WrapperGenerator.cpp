@@ -577,6 +577,8 @@ static bool is_wrappable_type(const IDL::Type& type)
         return true;
     if (type.name == "ImageData")
         return true;
+    if (type.name == "Attr")
+        return true;
     return false;
 }
 
@@ -941,6 +943,7 @@ static void generate_implementation_includes(SourceGenerator& generator)
 #include <LibJS/Runtime/Uint8ClampedArray.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/AttrWrapper.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
 #include <LibWeb/Bindings/CSSStyleSheetWrapper.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>

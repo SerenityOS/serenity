@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Hunter Salyer <thefalsehonesty@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,28 +24,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "Attr.h"
 
-#include <AK/FlyString.h>
+namespace Web::DOM {
 
-namespace Web {
+Attr::Attr(Document& document, const FlyString& name, const String& value)
+    : Node(document, NodeType::ATTRIBUTE_NODE)
+    , m_local_name(name)
+    , m_qualified_name(name)
+    , m_value(value)
+{
+}
 
-class Attribute {
-public:
-    Attribute(const FlyString& name, const String& value)
-        : m_name(name)
-        , m_value(value)
-    {
+Attr::~Attr()
+{
+}
+
+void Attr::set_prefix(const FlyString& prefix)
+{
+    m_prefix = prefix;
+    if (prefix.is_null()) {
+        m_qualified_name = m_local_name;
+        return;
     }
-
-    const FlyString& name() const { return m_name; }
-    const String& value() const { return m_value; }
-
-    void set_value(const String& value) { m_value = value; }
-
-private:
-    FlyString m_name;
-    String m_value;
-};
+    m_qualified_name = String::formatted("{}:{}", prefix, m_local_name);
+}
 
 }
