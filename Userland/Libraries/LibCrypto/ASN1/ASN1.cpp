@@ -53,6 +53,8 @@ String kind_name(Kind kind)
         return "UTF8String";
     case Kind::UTCTime:
         return "UTCTime";
+    case Kind::GeneralizedTime:
+        return "GeneralizedTime";
     case Kind::Sequence:
         return "Sequence";
     case Kind::Set:
