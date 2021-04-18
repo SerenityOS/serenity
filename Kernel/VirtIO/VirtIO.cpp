@@ -345,7 +345,7 @@ void VirtIODevice::finish_init()
 {
     VERIFY(m_did_accept_features);                 // ensure features were negotiated
     VERIFY(m_did_setup_queues);                    // ensure queues were set-up
-    VERIFY(!(m_status & DEVICE_STATUS_DRIVER_OK)); // ensure we didnt already finish the initialization
+    VERIFY(!(m_status & DEVICE_STATUS_DRIVER_OK)); // ensure we didn't already finish the initialization
 
     set_status_bit(DEVICE_STATUS_DRIVER_OK);
     dbgln_if(VIRTIO_DEBUG, "{}: Finished initialization", m_class_name);

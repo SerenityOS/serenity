@@ -577,7 +577,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     if (span.range.end().line() > line_index || span.range.end().column() >= start_of_visual_line + visual_line_text.length()) {
                         if (visual_line_text.length() == 0) {
                             // subtracting 1 would wrap around
-                            // scince there is nothing to draw here just move on
+                            // since there is nothing to draw here just move on
                             break;
                         }
                         span_end = visual_line_text.length() - 1;

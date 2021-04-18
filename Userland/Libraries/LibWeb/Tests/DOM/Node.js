@@ -43,7 +43,7 @@ afterInitialPageLoad(() => {
 
         expect(head.compareDocumentPosition(head)).toBe(0);
 
-        // FIXME: Can be uncommented once the IDL parser correctly implements nullable paramaters.
+        // FIXME: Can be uncommented once the IDL parser correctly implements nullable parameters.
         // expect(head.compareDocumentPosition(null) & Node.DOCUMENT_POSITION_DISCONNECTED | Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC).
         //    toBe(Node.DOCUMENT_POSITION_DISCONNECTED | Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
 

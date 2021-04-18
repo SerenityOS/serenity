@@ -63,7 +63,7 @@ ByteBuffer Reader::decompress_coredump(const ReadonlyBytes& raw_coredump)
         return ByteBuffer::copy(raw_coredump); // handle old format core dumps (uncompressed)
     auto decompressed_coredump = Compress::GzipDecompressor::decompress_all(raw_coredump);
     if (!decompressed_coredump.has_value())
-        return ByteBuffer::copy(raw_coredump); // if we didnt manage to decompress it, try and parse it as decompressed core dump
+        return ByteBuffer::copy(raw_coredump); // if we didn't manage to decompress it, try and parse it as decompressed core dump
     return decompressed_coredump.value();
 }
 

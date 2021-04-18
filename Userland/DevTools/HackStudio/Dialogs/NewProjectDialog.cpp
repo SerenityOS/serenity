@@ -233,7 +233,7 @@ void NewProjectDialog::do_create_project()
 
     auto creation_result = project_template->create_project(maybe_project_name.value(), maybe_project_full_path.value());
     if (!creation_result.is_error()) {
-        // Succesfully created, attempt to open the new project
+        // Successfully created, attempt to open the new project
         m_created_project_path = maybe_project_full_path.value();
         done(ExecResult::ExecOK);
     } else {

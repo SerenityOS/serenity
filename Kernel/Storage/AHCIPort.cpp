@@ -516,7 +516,7 @@ bool AHCIPort::spin_until_ready() const
         spin++;
     }
     if (spin == 100) {
-        dbgln_if(AHCI_DEBUG, "AHCI Port {}: SPIN exceeded 100 miliseconds threshold", representative_port_index());
+        dbgln_if(AHCI_DEBUG, "AHCI Port {}: SPIN exceeded 100 milliseconds threshold", representative_port_index());
         return false;
     }
     return true;

@@ -222,7 +222,7 @@ start:
     movl %cr0, %eax
     orl $0x80000000, %eax
     movl %eax, %cr0
-    /* Now we are in 32-bit compatablity mode, We still need to load a 64-bit GDT */
+    /* Now we are in 32-bit compatibility mode, We still need to load a 64-bit GDT */
 
     /* set up stack */
     mov $stack_top, %esp

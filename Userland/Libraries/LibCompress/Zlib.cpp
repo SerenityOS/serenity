@@ -55,7 +55,7 @@ Optional<Zlib> Zlib::try_create(ReadonlyBytes data)
         return {}; // we dont support pre-defined dictionaries
 
     if ((compression_info * 256 + flags) % 31 != 0)
-        return {}; // error correction code doesnt match
+        return {}; // error correction code doesn't match
 
     zlib.m_data_bytes = data.slice(2, data.size() - 2 - 4);
     return zlib;

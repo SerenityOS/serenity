@@ -131,7 +131,7 @@ bool TarInputStream::valid() const
             || (header_magic == posix1_tar_magic && header_version == posix1_tar_version)))
         return false;
 
-    // POSIX.1-1988 tar does not have magic numbers, so we also neet to verify the header checksum.
+    // POSIX.1-1988 tar does not have magic numbers, so we also need to verify the header checksum.
     return header().checksum() == header().expected_checksum();
 }
 

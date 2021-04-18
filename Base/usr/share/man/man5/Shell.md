@@ -80,7 +80,7 @@ Removes the prefix _prefix_ (if present) from the given _string_.
 Concatenates all the given expressions as lists, and evaluates to a list.
 
 - ${regex\_replace _pattern_ _replacement-template_ _string_}
-Replaces all occurences of the regular expression _pattern_ in the given _string_, using the given _replacement-template_.
+Replaces all occurrences of the regular expression _pattern_ in the given _string_, using the given _replacement-template_.
 Capture groups in _pattern_ can be referred to as `\<group_number>` in the _replacement template_, for example, to reference capture group 1, use `\1`.
 
 ##### Evaluate expression
