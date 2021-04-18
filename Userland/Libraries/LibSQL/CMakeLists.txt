@@ -1,5 +1,6 @@
 set(SOURCES
     Lexer.cpp
+    Parser.cpp
     Token.cpp
 )
 
