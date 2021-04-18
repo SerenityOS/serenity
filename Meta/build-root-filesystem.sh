@@ -70,6 +70,8 @@ chmod 4750 mnt/bin/shutdown
 chmod 4750 mnt/bin/keymap
 chown 0:$utmp_gid mnt/bin/utmpupdate
 chmod 2755 mnt/bin/utmpupdate
+chown 0:$locate_gid mnt/bin/locate
+chmod 2755 mnt/bin/locate
 chmod 600 mnt/etc/shadow
 chmod 755 mnt/res/devel/templates/*.postcreate
 echo "done"
