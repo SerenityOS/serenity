@@ -30,6 +30,7 @@
 #include <AK/Forward.h>
 #include <AK/Singleton.h>
 #include <AK/Types.h>
+#include <LibCore/DateTime.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/PK/RSA.h>
 
@@ -45,34 +46,30 @@ enum class CertificateKeyAlgorithm {
 };
 
 struct Certificate {
-    u16 version;
-    CertificateKeyAlgorithm algorithm;
-    CertificateKeyAlgorithm key_algorithm;
-    CertificateKeyAlgorithm ec_algorithm;
-    ByteBuffer exponent;
-    Crypto::PK::RSAPublicKey<Crypto::UnsignedBigInteger> public_key;
-    Crypto::PK::RSAPrivateKey<Crypto::UnsignedBigInteger> private_key;
-    String issuer_country;
-    String issuer_state;
-    String issuer_location;
-    String issuer_entity;
-    String issuer_subject;
-    String issuer_unit;
-    String not_before;
-    String not_after;
-    String country;
-    String state;
-    String location;
-    String entity;
-    String subject;
-    String unit;
+    u16 version { 0 };
+    CertificateKeyAlgorithm algorithm { CertificateKeyAlgorithm::Unsupported };
+    CertificateKeyAlgorithm key_algorithm { CertificateKeyAlgorithm::Unsupported };
+    CertificateKeyAlgorithm ec_algorithm { CertificateKeyAlgorithm::Unsupported };
+    ByteBuffer exponent {};
+    Crypto::PK::RSAPublicKey<Crypto::UnsignedBigInteger> public_key {};
+    Crypto::PK::RSAPrivateKey<Crypto::UnsignedBigInteger> private_key {};
+    struct Name {
+        String country;
+        String state;
+        String location;
+        String entity;
+        String subject;
+        String unit;
+    } issuer, subject;
+    Core::DateTime not_before;
+    Core::DateTime not_after;
     Vector<String> SAN;
-    u8* ocsp;
+    u8* ocsp { nullptr };
     Crypto::UnsignedBigInteger serial_number;
-    ByteBuffer sign_key;
-    ByteBuffer fingerprint;
-    ByteBuffer der;
-    ByteBuffer data;
+    ByteBuffer sign_key {};
+    ByteBuffer fingerprint {};
+    ByteBuffer der {};
+    ByteBuffer data {};
 
     bool is_valid() const;
 };
