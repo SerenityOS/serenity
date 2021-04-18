@@ -797,7 +797,6 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
         } else {
             dbgln("exec(={}): WARNING - Hold on, you cannot execute the loader!", path);
         }
-        
         return ENOEXEC;
     }
 
