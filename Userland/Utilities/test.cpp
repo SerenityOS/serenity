@@ -356,15 +356,6 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
         fatal_error("Unmatched \033[1m(");
     }
 
-    if (arg == "!") {
-        if (should_treat_expression_as_single_string(argv[optind]))
-            return make<StringCompare>(move(arg), "", StringCompare::NotEqual);
-        auto command = parse_complex_expression(argv);
-        if (!command)
-            fatal_error("Expected an expression after \033[1m!");
-        return make<Not>(command.release_nonnull());
-    }
-
     // Try to read a unary op.
     if (arg.starts_with('-') && arg.length() == 2) {
         optind++;
@@ -464,6 +455,17 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
         --optind;
         return make<StringCompare>("", lhs, StringCompare::NotEqual);
     } else {
+        // Now that we know it's not a well-formed expression, see if it's actually a negation
+        if (lhs == "!") {
+            if (should_treat_expression_as_single_string(arg))
+                return make<StringCompare>(move(lhs), "", StringCompare::NotEqual);
+
+            auto command = parse_complex_expression(argv);
+            if (!command)
+                fatal_error("Expected an expression after \x1b[1m!");
+
+            return make<Not>(command.release_nonnull());
+        }
         --optind;
         return make<StringCompare>("", lhs, StringCompare::NotEqual);
     }
