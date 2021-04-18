@@ -12,7 +12,7 @@ f() { ls }
 if not [ "$(type f)" = "f is a function f() { ls }" ] { fail "'type' on a function not working" }
 
 
-if not [ "$(type f -f)" = "f is a function" ] { fail "'type' on a function not working with -f" }
+if not [ "$(type -f f)" = "f is a function" ] { fail "'type' on a function not working with -f" }
 
 alias l=ls
 
