@@ -63,10 +63,7 @@ NonnullRefPtr<Font> BitmapFont::clone() const
     auto* new_rows = static_cast<unsigned*>(malloc(bytes_per_glyph * m_glyph_count));
     memcpy(new_rows, m_rows, bytes_per_glyph * m_glyph_count);
     auto* new_widths = static_cast<u8*>(malloc(m_glyph_count));
-    if (m_glyph_widths)
-        memcpy(new_widths, m_glyph_widths, m_glyph_count);
-    else
-        memset(new_widths, m_glyph_width, m_glyph_count);
+    memcpy(new_widths, m_glyph_widths, m_glyph_count);
     return adopt(*new BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_type, m_baseline, m_mean_line, m_presentation_size, m_weight, true));
 }
 
@@ -77,7 +74,7 @@ NonnullRefPtr<BitmapFont> BitmapFont::create(u8 glyph_height, u8 glyph_width, bo
     auto* new_rows = static_cast<unsigned*>(malloc(bytes_per_glyph * count));
     memset(new_rows, 0, bytes_per_glyph * count);
     auto* new_widths = static_cast<u8*>(malloc(count));
-    memset(new_widths, glyph_width, count);
+    memset(new_widths, 0, count);
     return adopt(*new BitmapFont("Untitled", "Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1, type, 0, 0, 0, 400, true));
 }
 
@@ -99,6 +96,9 @@ BitmapFont::BitmapFont(String name, String family, unsigned* rows, u8* widths, b
     , m_fixed_width(is_fixed_width)
     , m_owns_arrays(owns_arrays)
 {
+    VERIFY(m_rows);
+    VERIFY(m_glyph_widths);
+
     update_x_height();
 
     m_glyph_count = glyph_count_by_type(m_type);
@@ -111,7 +111,7 @@ BitmapFont::BitmapFont(String name, String family, unsigned* rows, u8* widths, b
             maximum = max(maximum, m_glyph_widths[i]);
         }
         m_min_glyph_width = minimum;
-        m_max_glyph_width = maximum;
+        m_max_glyph_width = max(maximum, m_glyph_width);
     }
 }
 
@@ -156,9 +156,7 @@ RefPtr<BitmapFont> BitmapFont::load_from_memory(const u8* data)
     size_t bytes_per_glyph = sizeof(unsigned) * header.glyph_height;
 
     auto* rows = const_cast<unsigned*>((const unsigned*)(data + sizeof(FontFileHeader)));
-    u8* widths = nullptr;
-    if (header.is_variable_width)
-        widths = (u8*)(rows) + count * bytes_per_glyph;
+    u8* widths = (u8*)(rows) + count * bytes_per_glyph;
     return adopt(*new BitmapFont(String(header.name), String(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, type, header.baseline, header.mean_line, header.presentation_size, header.weight));
 }
 
