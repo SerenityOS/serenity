@@ -60,6 +60,7 @@ public:
 
     bool supply_buffer(Badge<VirtIODevice>, const ScatterGatherList&, BufferType, void* token);
     bool new_data_available() const;
+    bool can_write() const;
     void* get_buffer(size_t*);
     void discard_used_buffers();
 
