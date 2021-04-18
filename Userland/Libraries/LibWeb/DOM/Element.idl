@@ -8,8 +8,9 @@ interface Element : Node {
     boolean hasAttribute(DOMString qualifiedName);
     boolean hasAttributes();
 
-    ArrayFromVector getElementsByTagName(DOMString tagName);
-    ArrayFromVector getElementsByClassName(DOMString className);
+    // FIXME: These should return https://dom.spec.whatwg.org/#htmlcollection, but a sequence is essentially equivalent.
+    sequence<Element> getElementsByTagName(DOMString tagName);
+    sequence<Element> getElementsByClassName(DOMString className);
 
     [LegacyNullToEmptyString] attribute DOMString innerHTML;
     [Reflect] attribute DOMString id;
@@ -26,5 +27,6 @@ interface Element : Node {
     readonly attribute unsigned long childElementCount;
 
     Element? querySelector(DOMString selectors);
-    ArrayFromVector querySelectorAll(DOMString selectors);
+    // FIXME: This should return https://dom.spec.whatwg.org/#nodelist, but a sequence is essentially equivalent.
+    sequence<Node> querySelectorAll(DOMString selectors);
 };

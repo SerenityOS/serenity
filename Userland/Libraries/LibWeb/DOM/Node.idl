@@ -4,8 +4,8 @@ interface Node : EventTarget {
     readonly attribute DOMString nodeName;
 
     boolean hasChildNodes();
-    // FIXME: This should be a NodeList
-    readonly attribute ArrayFromVector childNodes;
+    // FIXME: This should return https://dom.spec.whatwg.org/#nodelist, but a sequence is essentially equivalent.
+    readonly attribute sequence<Node> childNodes;
     readonly attribute Node? firstChild;
     readonly attribute Node? lastChild;
     readonly attribute Node? previousSibling;

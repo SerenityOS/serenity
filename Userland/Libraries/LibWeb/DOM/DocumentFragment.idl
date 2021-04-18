@@ -8,6 +8,7 @@ interface DocumentFragment : Node {
     readonly attribute unsigned long childElementCount;
 
     Element? querySelector(DOMString selectors);
-    ArrayFromVector querySelectorAll(DOMString selectors);
+    // FIXME: These should return https://dom.spec.whatwg.org/#nodelist, but a sequence is essentially equivalent.
+    sequence<Node> querySelectorAll(DOMString selectors);
 
 };

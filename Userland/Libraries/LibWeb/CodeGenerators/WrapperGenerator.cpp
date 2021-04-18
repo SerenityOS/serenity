@@ -101,21 +101,30 @@ static size_t get_function_length(FunctionType& function)
     return length;
 }
 
-struct Type {
+struct Type : public RefCounted<Type> {
     String name;
     bool nullable { false };
+    RefPtr<Type> generic_parameter { nullptr };
+
+    Type(String name, bool nullable, RefPtr<Type> generic_parameter)
+        : name(move(name))
+        , nullable(nullable)
+        , generic_parameter(move(generic_parameter))
+    {
+    }
+
     bool is_string() const { return name.is_one_of("ByteString", "CSSOMString", "DOMString", "USVString"); }
 };
 
 struct Parameter {
-    Type type;
+    NonnullRefPtr<Type> type;
     String name;
     bool optional { false };
     String optional_default_value {};
 };
 
 struct Function {
-    Type return_type;
+    NonnullRefPtr<Type> return_type;
     String name;
     Vector<Parameter> parameters;
     HashMap<String, String> extended_attributes;
@@ -131,14 +140,14 @@ struct Constructor {
 };
 
 struct Constant {
-    Type type;
+    NonnullRefPtr<Type> type;
     String name;
     String value;
 };
 
 struct Attribute {
     bool readonly { false };
-    Type type;
+    NonnullRefPtr<Type> type;
     String name;
     HashMap<String, String> extended_attributes;
 
@@ -236,17 +245,26 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
     }
     assert_specific('{');
 
-    auto parse_type = [&] {
+    AK::Function<NonnullRefPtr<Type>()> parse_type = [&] {
+        bool sequence = lexer.consume_specific("sequence<");
+        if (sequence) {
+            auto generic_type = parse_type();
+            VERIFY(lexer.consume_specific('>'));
+            auto nullable = lexer.consume_specific('?');
+            consume_whitespace();
+            return adopt(*new Type("sequence", nullable, move(generic_type)));
+        }
+
         bool unsigned_ = lexer.consume_specific("unsigned");
         if (unsigned_)
             consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '?'; });
+        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '?' || ch == '>'; });
         auto nullable = lexer.consume_specific('?');
         StringBuilder builder;
         if (unsigned_)
             builder.append("unsigned ");
         builder.append(name);
-        return Type { builder.to_string(), nullable };
+        return adopt(*new Type(builder.to_string(), nullable, nullptr));
     };
 
     auto parse_attribute = [&](HashMap<String, String>& extended_attributes) {
@@ -259,17 +277,18 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
 
         auto type = parse_type();
         consume_whitespace();
-        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
+        auto name = String(lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; }));
         consume_whitespace();
 
         assert_specific(';');
-        Attribute attribute;
-        attribute.readonly = readonly;
-        attribute.type = type;
-        attribute.name = name;
-        attribute.getter_callback_name = String::formatted("{}_getter", attribute.name.to_snakecase());
-        attribute.setter_callback_name = String::formatted("{}_setter", attribute.name.to_snakecase());
-        attribute.extended_attributes = move(extended_attributes);
+        Attribute attribute {
+            readonly,
+            move(type),
+            name,
+            move(extended_attributes),
+            String::formatted("{}_getter", name.to_snakecase()),
+            String::formatted("{}_setter", name.to_snakecase())
+        };
         interface->attributes.append(move(attribute));
     };
 
@@ -277,18 +296,17 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         lexer.consume_specific("const");
         consume_whitespace();
 
-        Constant constant;
-        constant.type = parse_type();
+        auto type = parse_type();
         consume_whitespace();
-        constant.name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '='; });
+        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '='; });
         consume_whitespace();
         lexer.consume_specific('=');
         consume_whitespace();
-        constant.value = lexer.consume_while([](auto ch) { return !isspace(ch) && ch != ';'; });
+        auto value = lexer.consume_while([](auto ch) { return !isspace(ch) && ch != ';'; });
         consume_whitespace();
         assert_specific(';');
 
-        interface->constants.append(move(constant));
+        interface->constants.append(Constant { move(type), name, value });
     };
 
     auto parse_parameters = [&] {
@@ -303,10 +321,10 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
             auto type = parse_type();
             consume_whitespace();
             auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')' || ch == '='; });
-            Parameter parameter = { move(type), move(name), optional };
+            Parameter parameter = { move(type), name, optional };
             consume_whitespace();
             if (lexer.next_is(')')) {
-                parameters.append(parameter);
+                parameters.append(move(parameter));
                 break;
             }
             if (lexer.next_is('=') && optional) {
@@ -315,7 +333,7 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
                 auto default_value = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')'; });
                 parameter.optional_default_value = default_value;
             }
-            parameters.append(parameter);
+            parameters.append(move(parameter));
             if (lexer.next_is(')'))
                 break;
             assert_specific(',');
@@ -343,11 +361,11 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         consume_whitespace();
         assert_specific(';');
 
-        Function function { return_type, name, move(parameters), move(extended_attributes) };
+        Function function { move(return_type), name, move(parameters), move(extended_attributes) };
 
         if (getter) {
             VERIFY(function.parameters.size() == 1);
-            auto getter_type = function.parameters.first().type.name;
+            auto getter_type = function.parameters.first().type->name;
             if (getter_type == "DOMString") {
                 interface->named_getter = function;
             } else if (getter_type == "unsigned long") {
@@ -357,7 +375,7 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
             }
         } else if (setter) {
             VERIFY(function.parameters.size() == 2);
-            auto setter_type = function.parameters.first().type.name;
+            auto setter_type = function.parameters.first().type->name;
             if (setter_type == "DOMString") {
                 interface->named_setter = function;
             } else if (setter_type == "unsigned long") {
@@ -484,21 +502,21 @@ int main(int argc, char** argv)
         for (auto& attribute : interface->attributes) {
             dbgln("  {}{}{} {}",
                 attribute.readonly ? "readonly " : "",
-                attribute.type.name,
-                attribute.type.nullable ? "?" : "",
+                attribute.type->name,
+                attribute.type->nullable ? "?" : "",
                 attribute.name);
         }
 
         dbgln("Functions:");
         for (auto& function : interface->functions) {
             dbgln("  {}{} {}",
-                function.return_type.name,
-                function.return_type.nullable ? "?" : "",
+                function.return_type->name,
+                function.return_type->nullable ? "?" : "",
                 function.name);
             for (auto& parameter : function.parameters) {
                 dbgln("    {}{} {}",
-                    parameter.type.name,
-                    parameter.type.nullable ? "?" : "",
+                    parameter.type->name,
+                    parameter.type->nullable ? "?" : "",
                     parameter.name);
             }
         }
@@ -570,7 +588,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     scoped_generator.set("js_name", js_name);
     scoped_generator.set("js_suffix", js_suffix);
     scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
-    scoped_generator.set("parameter.type.name", parameter.type.name);
+    scoped_generator.set("parameter.type->name", parameter.type->name);
 
     if (!optional_default_value.is_null())
         scoped_generator.set("parameter.optional_default_value", optional_default_value);
@@ -581,7 +599,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         scoped_generator.set("return_statement", "return {};");
 
     // FIXME: Add support for optional, nullable and default values to all types
-    if (parameter.type.is_string()) {
+    if (parameter.type->is_string()) {
         if (!optional) {
             scoped_generator.append(R"~~~(
     auto @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
@@ -606,8 +624,8 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
             }
         }
-    } else if (parameter.type.name == "EventListener") {
-        if (parameter.type.nullable) {
+    } else if (parameter.type->name == "EventListener") {
+        if (parameter.type->nullable) {
             scoped_generator.append(R"~~~(
     RefPtr<EventListener> @cpp_name@;
     if (!@js_name@@js_suffix@.is_null()) {
@@ -627,20 +645,20 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto @cpp_name@ = adopt(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
 )~~~");
         }
-    } else if (is_wrappable_type(parameter.type)) {
+    } else if (is_wrappable_type(*parameter.type)) {
         scoped_generator.append(R"~~~(
     auto @cpp_name@_object = @js_name@@js_suffix@.to_object(global_object);
     if (vm.exception())
         @return_statement@
 
-    if (!is<@parameter.type.name@Wrapper>(@cpp_name@_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "@parameter.type.name@");
+    if (!is<@parameter.type->name@Wrapper>(@cpp_name@_object)) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "@parameter.type->name@");
         @return_statement@
     }
 
-    auto& @cpp_name@ = static_cast<@parameter.type.name@Wrapper*>(@cpp_name@_object)->impl();
+    auto& @cpp_name@ = static_cast<@parameter.type->name@Wrapper*>(@cpp_name@_object)->impl();
 )~~~");
-    } else if (parameter.type.name == "double") {
+    } else if (parameter.type->name == "double") {
         if (!optional) {
             scoped_generator.append(R"~~~(
     double @cpp_name@ = @js_name@@js_suffix@.to_double(global_object);
@@ -674,7 +692,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
             }
         }
-    } else if (parameter.type.name == "boolean") {
+    } else if (parameter.type->name == "boolean") {
         if (!optional) {
             scoped_generator.append(R"~~~(
     bool @cpp_name@ = @js_name@@js_suffix@.to_boolean();
@@ -702,13 +720,13 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
             }
         }
-    } else if (parameter.type.name == "unsigned long") {
+    } else if (parameter.type->name == "unsigned long") {
         scoped_generator.append(R"~~~(
     auto @cpp_name@ = @js_name@@js_suffix@.to_u32(global_object);
     if (vm.exception())
         @return_statement@
 )~~~");
-    } else if (parameter.type.name == "EventHandler") {
+    } else if (parameter.type->name == "EventHandler") {
         // x.onfoo = function() { ... }
         scoped_generator.append(R"~~~(
     HTML::EventHandler @cpp_name@;
@@ -721,7 +739,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     }
 )~~~");
     } else {
-        dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type.name);
+        dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type->name);
         VERIFY_NOT_REACHED();
     }
 }
@@ -807,9 +825,7 @@ static void generate_return_statement(SourceGenerator& generator, const IDL::Typ
         scoped_generator.append(R"~~~(
     return JS::js_string(vm, retval);
 )~~~");
-    } else if (return_type.name == "ArrayFromVector") {
-        // FIXME: Remove this fake type hack once it's no longer needed.
-        //        Basically once we have NodeList we can throw this out.
+    } else if (return_type.name == "sequence") {
         scoped_generator.append(R"~~~(
     auto* new_array = JS::Array::create(global_object);
     for (auto& element : retval)
@@ -864,7 +880,7 @@ static void generate_getter(SourceGenerator& generator, const IDL::Function& get
         [[maybe_unused]] auto retval = result.release_value();
 )~~~");
 
-    generate_return_statement(scoped_generator, getter.return_type);
+    generate_return_statement(scoped_generator, *getter.return_type);
 
     scoped_generator.append(R"~~~(
     }
@@ -896,7 +912,7 @@ static void generate_setter(SourceGenerator& generator, const IDL::Function& set
         [[maybe_unused]] auto retval = result.release_value();
 )~~~");
 
-    generate_return_statement(scoped_generator, setter.return_type);
+    generate_return_statement(scoped_generator, *setter.return_type);
 
     scoped_generator.append(R"~~~(
     }
@@ -1580,7 +1596,7 @@ JS_DEFINE_NATIVE_GETTER(@prototype_class@::@attribute.getter_callback@)
         }
 
         if (attribute.extended_attributes.contains("Reflect")) {
-            if (attribute.type.name != "boolean") {
+            if (attribute.type->name != "boolean") {
                 attribute_generator.append(R"~~~(
     auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
@@ -1595,7 +1611,7 @@ JS_DEFINE_NATIVE_GETTER(@prototype_class@::@attribute.getter_callback@)
 )~~~");
         }
 
-        generate_return_statement(attribute_generator, attribute.type);
+        generate_return_statement(attribute_generator, *attribute.type);
 
         attribute_generator.append(R"~~~(
 }
@@ -1613,7 +1629,7 @@ JS_DEFINE_NATIVE_SETTER(@prototype_class@::@attribute.setter_callback@)
             generate_to_cpp(generator, attribute, "value", "", "cpp_value", true, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
 
             if (attribute.extended_attributes.contains("Reflect")) {
-                if (attribute.type.name != "boolean") {
+                if (attribute.type->name != "boolean") {
                     attribute_generator.append(R"~~~(
     impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value);
 )~~~");
@@ -1672,7 +1688,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@function.name:snakecase@)
     [[maybe_unused]] auto retval = result.release_value();
 )~~~");
 
-        generate_return_statement(function_generator, function.return_type);
+        generate_return_statement(function_generator, *function.return_type);
 
         function_generator.append(R"~~~(
 }

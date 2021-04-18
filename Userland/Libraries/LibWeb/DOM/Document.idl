@@ -14,9 +14,10 @@ interface Document : Node {
     attribute DOMString cookie;
 
     Element? getElementById(DOMString id);
-    ArrayFromVector getElementsByName(DOMString name);
-    ArrayFromVector getElementsByTagName(DOMString tagName);
-    ArrayFromVector getElementsByClassName(DOMString className);
+    // FIXME: These should return https://dom.spec.whatwg.org/#htmlcollection, but a sequence is essentially equivalent.
+    sequence<Element> getElementsByName(DOMString name);
+    sequence<Element> getElementsByTagName(DOMString tagName);
+    sequence<Element> getElementsByClassName(DOMString className);
 
     Element createElement(DOMString tagName);
     Element createElementNS(DOMString? namespace, DOMString qualifiedName);
@@ -48,7 +49,8 @@ interface Document : Node {
     readonly attribute unsigned long childElementCount;
 
     Element? querySelector(DOMString selectors);
-    ArrayFromVector querySelectorAll(DOMString selectors);
+    // FIXME: These should return https://dom.spec.whatwg.org/#nodelist, but a sequence is essentially equivalent.
+    sequence<Node> querySelectorAll(DOMString selectors);
 
     // FIXME: These should all come from a GlobalEventHandlers mixin
     attribute EventHandler onabort;
