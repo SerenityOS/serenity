@@ -156,7 +156,7 @@ public:
     virtual String name() const override { return String::formatted("{} {}", family(), variant()); }
     virtual bool is_fixed_width() const override { return m_font->is_fixed_width(); }
     virtual u8 glyph_spacing() const override { return m_x_scale; } // FIXME: Read from font
-    virtual int glyph_count() const override { return m_font->glyph_count(); }
+    virtual size_t glyph_count() const override { return m_font->glyph_count(); }
     virtual String family() const override { return m_font->family(); }
     virtual String variant() const override { return m_font->variant(); }
     virtual String qualified_name() const override { return String::formatted("{} {} {}", family(), presentation_size(), weight()); }
