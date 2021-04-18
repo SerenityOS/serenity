@@ -131,7 +131,6 @@ set(KERNEL_SOURCES
     StdLib.cpp
     Syscall.cpp
     Syscalls/anon_create.cpp
-    Syscalls/abort.cpp
     Syscalls/access.cpp
     Syscalls/alarm.cpp
     Syscalls/beep.cpp
