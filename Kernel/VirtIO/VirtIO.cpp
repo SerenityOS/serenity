@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/CommandLine.h>
 #include <Kernel/VirtIO/VirtIO.h>
 #include <Kernel/VirtIO/VirtIOConsole.h>
 #include <Kernel/VirtIO/VirtIORNG.h>
@@ -32,6 +33,8 @@ namespace Kernel {
 
 void VirtIO::detect()
 {
+    if (kernel_command_line().disable_virtio())
+        return;
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null() || id.is_null())
             return;

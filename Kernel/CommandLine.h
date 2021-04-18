@@ -87,6 +87,7 @@ public:
     [[nodiscard]] bool disable_physical_storage() const;
     [[nodiscard]] bool disable_ps2_controller() const;
     [[nodiscard]] bool disable_uhci_controller() const;
+    [[nodiscard]] bool disable_virtio() const;
     [[nodiscard]] AHCIResetMode ahci_reset_mode() const;
     [[nodiscard]] String userspace_init() const;
     [[nodiscard]] Vector<String> userspace_init_args() const;
