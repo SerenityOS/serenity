@@ -65,6 +65,7 @@ file(GLOB LIBX86_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibX86/*.cp
 file(GLOB LIBJS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*.cpp")
 file(GLOB LIBJS_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*/*.cpp")
 file(GLOB LIBCOMPRESS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCompress/*.cpp")
+file(GLOB LIBCOMPRESS_TESTS CONFIGURE_DEPENDS "../../Userland/Libraries/LibCompress/Tests/*.cpp")
 file(GLOB LIBCRYPTO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*.cpp")
 file(GLOB LIBCRYPTO_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*/*.cpp")
 file(GLOB LIBTLS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTLS/*.cpp")
@@ -140,16 +141,6 @@ if (BUILD_LAGOM)
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
-        add_executable(test-compress_lagom ../../Userland/Utilities/test-compress.cpp)
-        set_target_properties(test-compress_lagom PROPERTIES OUTPUT_NAME test-compress)
-        target_link_libraries(test-compress_lagom Lagom)
-        target_link_libraries(test-compress_lagom stdc++)
-        add_test(
-            NAME Compress
-            COMMAND test-compress_lagom
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
-
         add_executable(disasm_lagom ../../Userland/Utilities/disasm.cpp)
         set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
         target_link_libraries(disasm_lagom Lagom)
@@ -205,6 +196,17 @@ if (BUILD_LAGOM)
                 NAME ${name}_lagom
                 COMMAND ${name}_lagom
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+        endforeach()
+
+        foreach(source ${LIBCOMPRESS_TESTS})
+            get_filename_component(name ${source} NAME_WE)
+            add_executable(${name}_lagom ${source} ${LIBCOMPRESS_SOURCES})
+            target_link_libraries(${name}_lagom Lagom)
+            add_test(
+                    NAME ${name}_lagom
+                    COMMAND ${name}_lagom
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
         endforeach()
 

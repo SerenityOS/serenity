@@ -15,7 +15,7 @@ run(index) {
 }
 
 # TODO: test-web requires the window server
-system_tests=((test-js --show-progress=false) test-pthread test-compress /usr/Tests/LibM/test-math (test-crypto -t bigint))
+system_tests=((test-js --show-progress=false) test-pthread /usr/Tests/LibM/test-math (test-crypto -t bigint))
 # FIXME: Running too much at once is likely to run into #5541. Remove commented out find below when stable
 all_tests=${concat_lists $system_tests} #$(find /usr/Tests -type f | grep -v Kernel | grep -v .inc | shuf))
 count_of_all_tests=${length $all_tests}
