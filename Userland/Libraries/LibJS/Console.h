@@ -57,13 +57,11 @@ public:
     Value info();
     Value log();
     Value warn();
-
     Value clear();
-
     Value trace();
-
     Value count();
     Value count_reset();
+    Value assert_();
 
     unsigned counter_increment(String label);
     bool counter_reset(String label);
@@ -77,7 +75,7 @@ private:
 
 class ConsoleClient {
 public:
-    ConsoleClient(Console& console)
+    explicit ConsoleClient(Console& console)
         : m_console(console)
     {
     }
@@ -91,6 +89,7 @@ public:
     virtual Value trace() = 0;
     virtual Value count() = 0;
     virtual Value count_reset() = 0;
+    virtual Value assert_() = 0;
 
 protected:
     virtual ~ConsoleClient() = default;

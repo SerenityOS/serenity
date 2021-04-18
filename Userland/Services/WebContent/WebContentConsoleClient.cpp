@@ -168,4 +168,25 @@ JS::Value WebContentConsoleClient::count_reset()
     return JS::js_undefined();
 }
 
+JS::Value WebContentConsoleClient::assert_()
+{
+    auto& vm = this->vm();
+    if (!vm.argument(0).to_boolean()) {
+        StringBuilder html;
+        if (vm.argument_count() > 1) {
+            html.append("<span class=\"error\">");
+            html.append("Assertion failed:");
+            html.append("</span>");
+            html.append(" ");
+            html.append(escape_html_entities(vm.join_arguments(1)));
+        } else {
+            html.append("<span class=\"error\">");
+            html.append("Assertion failed");
+            html.append("</span>");
+        }
+        print_html(html.string_view());
+    }
+    return JS::js_undefined();
+}
+
 }

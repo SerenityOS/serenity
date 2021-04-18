@@ -650,32 +650,38 @@ public:
         outln("{}", vm().join_arguments());
         return JS::js_undefined();
     }
+
     virtual JS::Value info() override
     {
         outln("(i) {}", vm().join_arguments());
         return JS::js_undefined();
     }
+
     virtual JS::Value debug() override
     {
         outln("\033[36;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
+
     virtual JS::Value warn() override
     {
         outln("\033[33;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
+
     virtual JS::Value error() override
     {
         outln("\033[31;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
+
     virtual JS::Value clear() override
     {
         out("\033[3J\033[H\033[2J");
         fflush(stdout);
         return JS::js_undefined();
     }
+
     virtual JS::Value trace() override
     {
         outln("{}", vm().join_arguments());
@@ -687,6 +693,7 @@ public:
         }
         return JS::js_undefined();
     }
+
     virtual JS::Value count() override
     {
         auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
@@ -694,6 +701,7 @@ public:
         outln("{}: {}", label, counter_value);
         return JS::js_undefined();
     }
+
     virtual JS::Value count_reset() override
     {
         auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
@@ -701,6 +709,20 @@ public:
             outln("{}: 0", label);
         else
             outln("\033[33;1m\"{}\" doesn't have a count\033[0m", label);
+        return JS::js_undefined();
+    }
+
+    virtual JS::Value assert_() override
+    {
+        auto& vm = this->vm();
+        if (!vm.argument(0).to_boolean()) {
+            if (vm.argument_count() > 1) {
+                out("\033[31;1mAssertion failed:\033[0m");
+                outln(" {}", vm.join_arguments(1));
+            } else {
+                outln("\033[31;1mAssertion failed\033[0m");
+            }
+        }
         return JS::js_undefined();
     }
 };

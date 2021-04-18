@@ -124,4 +124,25 @@ JS::Value BrowserConsoleClient::count_reset()
     return JS::js_undefined();
 }
 
+JS::Value BrowserConsoleClient::assert_()
+{
+    auto& vm = this->vm();
+    if (!vm.argument(0).to_boolean()) {
+        StringBuilder html;
+        if (vm.argument_count() > 1) {
+            html.append("<span class=\"error\">");
+            html.append("Assertion failed:");
+            html.append("</span>");
+            html.append(" ");
+            html.append(escape_html_entities(vm.join_arguments(1)));
+        } else {
+            html.append("<span class=\"error\">");
+            html.append("Assertion failed");
+            html.append("</span>");
+        }
+        m_console_widget.print_html(html.string_view());
+    }
+    return JS::js_undefined();
+}
+
 }

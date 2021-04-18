@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Emanuele Torre <torreemanuele6@gmail.com>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -115,6 +115,13 @@ Value Console::count_reset()
 {
     if (m_client)
         return m_client->count_reset();
+    return js_undefined();
+}
+
+Value Console::assert_()
+{
+    if (m_client)
+        return m_client->assert_();
     return js_undefined();
 }
 

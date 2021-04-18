@@ -321,10 +321,10 @@ void VM::throw_exception(Exception& exception)
     unwind(ScopeType::Try);
 }
 
-String VM::join_arguments() const
+String VM::join_arguments(size_t start_index) const
 {
     StringBuilder joined_arguments;
-    for (size_t i = 0; i < argument_count(); ++i) {
+    for (size_t i = start_index; i < argument_count(); ++i) {
         joined_arguments.append(argument(i).to_string_without_side_effects().characters());
         if (i != argument_count() - 1)
             joined_arguments.append(' ');
