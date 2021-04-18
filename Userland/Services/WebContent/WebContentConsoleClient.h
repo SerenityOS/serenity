@@ -56,6 +56,7 @@ private:
     virtual JS::Value trace() override;
     virtual JS::Value count() override;
     virtual JS::Value count_reset() override;
+    virtual JS::Value assert_() override;
 
     ClientConnection& m_client;
     WeakPtr<JS::Interpreter> m_interpreter;

@@ -53,6 +53,7 @@ private:
     virtual JS::Value trace() override;
     virtual JS::Value count() override;
     virtual JS::Value count_reset() override;
+    virtual JS::Value assert_() override;
 
     ConsoleWidget& m_console_widget;
 };

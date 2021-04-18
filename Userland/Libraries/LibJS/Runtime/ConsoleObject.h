@@ -48,6 +48,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(count);
     JS_DECLARE_NATIVE_FUNCTION(count_reset);
     JS_DECLARE_NATIVE_FUNCTION(clear);
+    JS_DECLARE_NATIVE_FUNCTION(assert_);
 };
 
 }

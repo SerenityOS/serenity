@@ -222,7 +222,7 @@ public:
 
     Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject&);
 
-    String join_arguments() const;
+    String join_arguments(size_t start_index = 0) const;
 
     Value resolve_this_binding(GlobalObject&) const;
     const ScopeObject* find_this_scope() const;
