@@ -29,6 +29,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/Authentication/GHash.h>
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
@@ -431,11 +432,16 @@ auto main(int argc, char** argv) -> int
             return 1;
         }
         auto config = Core::ConfigFile::open(ca_certs_file);
+        auto now = Core::DateTime::now();
+        auto last_year = Core::DateTime::create(now.year() - 1);
+        auto next_year = Core::DateTime::create(now.year() + 1);
         for (auto& entity : config->groups()) {
             Certificate cert;
-            cert.subject = entity;
-            cert.issuer_subject = config->read_entry(entity, "issuer_subject", entity);
-            cert.country = config->read_entry(entity, "country");
+            cert.subject.subject = entity;
+            cert.issuer.subject = config->read_entry(entity, "issuer_subject", entity);
+            cert.subject.country = config->read_entry(entity, "country");
+            cert.not_before = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_before", "")).value_or(last_year);
+            cert.not_after = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_after", "")).value_or(next_year);
             s_root_ca_certificates.append(move(cert));
         }
         if (run_tests)
@@ -474,11 +480,16 @@ auto main(int argc, char** argv) -> int
                 return 1;
             }
             auto config = Core::ConfigFile::open(ca_certs_file);
+            auto now = Core::DateTime::now();
+            auto last_year = Core::DateTime::create(now.year() - 1);
+            auto next_year = Core::DateTime::create(now.year() + 1);
             for (auto& entity : config->groups()) {
                 Certificate cert;
-                cert.subject = entity;
-                cert.issuer_subject = config->read_entry(entity, "issuer_subject", entity);
-                cert.country = config->read_entry(entity, "country");
+                cert.subject.subject = entity;
+                cert.issuer.subject = config->read_entry(entity, "issuer_subject", entity);
+                cert.subject.country = config->read_entry(entity, "country");
+                cert.not_before = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_before", "")).value_or(last_year);
+                cert.not_after = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_after", "")).value_or(next_year);
                 s_root_ca_certificates.append(move(cert));
             }
             tls_tests();
