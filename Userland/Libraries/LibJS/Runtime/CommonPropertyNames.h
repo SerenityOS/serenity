@@ -71,6 +71,7 @@ namespace JS {
     P(asUintN)                               \
     P(asin)                                  \
     P(asinh)                                 \
+    P(assert)                                \
     P(at)                                    \
     P(atan)                                  \
     P(atan2)                                 \
