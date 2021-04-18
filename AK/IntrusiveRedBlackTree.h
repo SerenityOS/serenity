@@ -37,7 +37,7 @@ template<Integral K, typename V, IntrusiveRedBlackTreeNode<K> V::*member>
 class IntrusiveRedBlackTree : public BaseRedBlackTree<K> {
 public:
     IntrusiveRedBlackTree() = default;
-    virtual ~IntrusiveRedBlackTree() override
+    ~IntrusiveRedBlackTree()
     {
         clear();
     }
@@ -132,8 +132,8 @@ public:
 
         BaseTree::remove(node);
 
-        node->right_child = nullptr;
-        node->left_child = nullptr;
+        node->right_child() = nullptr;
+        node->left_child() = nullptr;
         node->m_in_tree = false;
 
         return true;
@@ -152,10 +152,10 @@ private:
     {
         if (!node)
             return;
-        clear_nodes(static_cast<TreeNode*>(node->right_child));
-        node->right_child = nullptr;
-        clear_nodes(static_cast<TreeNode*>(node->left_child));
-        node->left_child = nullptr;
+        clear_nodes(static_cast<TreeNode*>(node->right_child()));
+        node->right_child() = nullptr;
+        clear_nodes(static_cast<TreeNode*>(node->left_child()));
+        node->left_child() = nullptr;
         node->m_in_tree = false;
     }
 
