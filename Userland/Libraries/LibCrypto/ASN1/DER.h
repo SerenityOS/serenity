@@ -216,6 +216,8 @@ private:
     Optional<Tag> m_current_tag;
 };
 
+void pretty_print(Decoder&, OutputStream&, int indent = 0);
+
 }
 
 template<>
