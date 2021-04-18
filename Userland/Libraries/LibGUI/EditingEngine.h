@@ -29,6 +29,12 @@ public:
     void attach(TextEditor& editor);
     void detach();
 
+    TextEditor& editor()
+    {
+        VERIFY(!m_editor.is_null());
+        return *m_editor.unsafe_ptr();
+    }
+
     virtual bool on_key(const KeyEvent& event);
 
 protected:
