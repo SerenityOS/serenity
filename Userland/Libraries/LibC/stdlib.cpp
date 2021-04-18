@@ -249,8 +249,12 @@ void abort()
     // For starters, send ourselves a SIGABRT.
     raise(SIGABRT);
     // If that didn't kill us, try harder.
-    raise(SIGKILL);
-    _exit(127);
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGABRT);
+    sigprocmask(SIG_UNBLOCK, &set, nullptr);
+    raise(SIGABRT);
+    _abort();
 }
 
 static HashTable<const char*> s_malloced_environment_variables;
