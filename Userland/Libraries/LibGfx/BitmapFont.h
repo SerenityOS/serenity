@@ -42,6 +42,7 @@ enum FontTypes {
     Default = 0,
     LatinExtendedA,
     Cyrillic,
+    Hebrew,
     __Count
 };
 
