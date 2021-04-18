@@ -34,6 +34,11 @@
                 @GUI::SpinBox {
                     name: "glyph_editor_width_spinbox"
                 }
+
+                @GUI::CheckBox {
+                    name: "glyph_editor_present_checkbox"
+                    text: "Glyph Present"
+                }
             }
 
             @GUI::Widget {
