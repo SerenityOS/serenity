@@ -134,7 +134,7 @@ public:
 
     virtual u8 glyph_spacing() const = 0;
 
-    virtual int glyph_count() const = 0;
+    virtual size_t glyph_count() const = 0;
 
     virtual String family() const = 0;
     virtual String variant() const = 0;
