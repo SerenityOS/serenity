@@ -243,13 +243,13 @@ public:
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr bool operator==(const Complex<U>& a)
+    constexpr bool operator==(const Complex<U>& a) const
     {
         return (this->real() == a.real()) && (this->imag() == a.imag());
     }
 
     template<AK::Concepts::Arithmetic U>
-    constexpr bool operator!=(const Complex<U>& a)
+    constexpr bool operator!=(const Complex<U>& a) const
     {
         return !(*this == a);
     }
