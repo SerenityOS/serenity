@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
  * Copyright (c) 2020, Emanuele Torre <torreemanuele6@gmail.com>
  * All rights reserved.
  *
@@ -50,6 +50,7 @@ void ConsoleObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.count, count);
     define_native_function(vm.names.countReset, count_reset);
     define_native_function(vm.names.clear, clear);
+    define_native_function(vm.names.assert, assert_);
 }
 
 ConsoleObject::~ConsoleObject()
@@ -99,6 +100,11 @@ JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::count_reset)
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::clear)
 {
     return global_object.console().clear();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::assert_)
+{
+    return global_object.console().assert_();
 }
 
 }
