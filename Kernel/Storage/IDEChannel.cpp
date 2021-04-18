@@ -357,7 +357,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
 
         volatile ATAIdentifyBlock& identify_block = (volatile ATAIdentifyBlock&)(*wbuf.data());
 
-        u16 capabilities = identify_block.capabilites[0];
+        u16 capabilities = identify_block.capabilities[0];
 
         // If the drive is so old that it doesn't support LBA, ignore it.
         if (!(capabilities & ATA_CAP_LBA))

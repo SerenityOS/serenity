@@ -7,7 +7,7 @@ tests run on the Serenity machine, either emulated or bare metal.
 ### Running Host Tests
 
 There are two ways to build host tests: from a full build, or from a Lagom-only build. The only difference is the CMake
-command used to initailize the build directory.
+command used to initialize the build directory.
 
 For a full build, pass `-DBUILD_LAGOM=ON` to the CMake command.
 
@@ -73,7 +73,7 @@ BootModes=self-test
 ```
 
 `/dev/ttyS0` is used as stdio because that serial port is connected when qemu is run with `-display none` and
-`-nographic`, and output to it will show up in the stdout of the qemu window. Seperately, the CI run script redirects
+`-nographic`, and output to it will show up in the stdout of the qemu window. Separately, the CI run script redirects
 the serial debug output to `./debug.log` so that both stdout of the tests and the dbgln from the kernel/tests can be
 captured.
 

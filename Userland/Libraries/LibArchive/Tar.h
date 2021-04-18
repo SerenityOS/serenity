@@ -85,8 +85,8 @@ public:
     void set_timestamp(time_t timestamp) { VERIFY(String::formatted("{:o}", timestamp).copy_characters_to_buffer(m_timestamp, sizeof(m_timestamp))); }
     void set_type_flag(TarFileType type) { m_type_flag = static_cast<char>(type); }
     void set_link_name(const String& link_name) { VERIFY(link_name.copy_characters_to_buffer(m_link_name, sizeof(m_link_name))); }
-    void set_magic(const char* magic) { memcpy(m_magic, magic, sizeof(m_magic)); }           // magic doesnt necessarily include a null byte
-    void set_version(const char* version) { memcpy(m_version, version, sizeof(m_version)); } // version doesnt necessarily include a null byte
+    void set_magic(const char* magic) { memcpy(m_magic, magic, sizeof(m_magic)); }           // magic doesn't necessarily include a null byte
+    void set_version(const char* version) { memcpy(m_version, version, sizeof(m_version)); } // version doesn't necessarily include a null byte
     void set_owner_name(const String& owner_name) { VERIFY(owner_name.copy_characters_to_buffer(m_owner_name, sizeof(m_owner_name))); }
     void set_group_name(const String& group_name) { VERIFY(group_name.copy_characters_to_buffer(m_group_name, sizeof(m_group_name))); }
     void set_major(int major) { VERIFY(String::formatted("{:o}", major).copy_characters_to_buffer(m_major, sizeof(m_major))); }

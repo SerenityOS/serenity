@@ -897,7 +897,7 @@ public:
         if (imported_address.has_value())
             rules.append(CSS::CSSImportRule::create(m_context.complete_url(imported_address.value())));
 
-        // FIXME: We ignore possilbe media query list
+        // FIXME: We ignore possible media query list
         while (peek() && peek() != ';')
             consume_one();
 

@@ -65,7 +65,7 @@ int main()
         }
     }
     {
-        printf("Testing partial unmaping\n");
+        printf("Testing partial unmapping\n");
         auto* map1 = mmap(nullptr, 2 * PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, 0, 0);
         if (map1 == MAP_FAILED) {
             perror("mmap 1");

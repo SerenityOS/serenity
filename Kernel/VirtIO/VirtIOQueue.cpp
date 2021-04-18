@@ -82,7 +82,7 @@ bool VirtIOQueue::supply_buffer(Badge<VirtIODevice>, const ScatterGatherList& sc
         last_index = descriptor_index;
         descriptor_index = m_descriptors[descriptor_index].next; // ensure we place the buffer in chain order
     });
-    m_descriptors[last_index].flags &= ~(VIRTQ_DESC_F_NEXT); // last descriptor in chain doesnt have a next descriptor
+    m_descriptors[last_index].flags &= ~(VIRTQ_DESC_F_NEXT); // last descriptor in chain doesn't have a next descriptor
 
     m_driver->rings[m_driver_index_shadow % m_queue_size] = m_free_head; // m_driver_index_shadow is used to prevent accesses to index before the rings are updated
     m_tokens[m_free_head] = token;
@@ -139,7 +139,7 @@ void VirtIOQueue::pop_buffer(u16 descriptor_index)
         m_free_buffers++;
         i = m_descriptors[i].next;
     }
-    m_free_buffers++; // the last descriptor in the chain doesnt have the NEXT flag
+    m_free_buffers++; // the last descriptor in the chain doesn't have the NEXT flag
 
     m_descriptors[i].next = m_free_head; // empend the popped descriptors to the free chain
     m_free_head = descriptor_index;
