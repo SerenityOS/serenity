@@ -504,35 +504,4 @@ private:
     RefPtr<Core::Timer> m_handshake_timeout_timer;
 };
 
-namespace Constants {
-constexpr static const u32 version_id[] { 1, 1, 1, 0 };
-constexpr static const u32 pk_id[] { 1, 1, 7, 0 };
-constexpr static const u32 serial_id[] { 1, 1, 2, 1, 0 };
-constexpr static const u32 issurer_id[] { 1, 1, 4, 0 };
-constexpr static const u32 owner_id[] { 1, 1, 6, 0 };
-constexpr static const u32 validity_id[] { 1, 1, 5, 0 };
-constexpr static const u32 algorithm_id[] { 1, 1, 3, 0 };
-constexpr static const u32 sign_id[] { 1, 3, 2, 1, 0 };
-constexpr static const u32 priv_id[] { 1, 4, 0 };
-constexpr static const u32 priv_der_id[] { 1, 3, 1, 0 };
-constexpr static const u32 ecc_priv_id[] { 1, 2, 0 };
-
-constexpr static const u8 country_oid[] { 0x55, 0x04, 0x06, 0x00 };
-constexpr static const u8 state_oid[] { 0x55, 0x04, 0x08, 0x00 };
-constexpr static const u8 location_oid[] { 0x55, 0x04, 0x07, 0x00 };
-constexpr static const u8 entity_oid[] { 0x55, 0x04, 0x0A, 0x00 };
-constexpr static const u8 subject_oid[] { 0x55, 0x04, 0x03, 0x00 };
-constexpr static const u8 unit_oid[] { 0x55, 0x04, 0x0B, 0x00 };
-constexpr static const u8 san_oid[] { 0x55, 0x1D, 0x11, 0x00 };
-constexpr static const u8 ocsp_oid[] { 0x2B, 0x06, 0x01, 0x05, 0x05, 0x07, 0x30, 0x01, 0x00 };
-
-static constexpr const u8 RSA_SIGN_RSA_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01, 0x00 };
-static constexpr const u8 RSA_SIGN_MD5_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x04, 0x00 };
-static constexpr const u8 RSA_SIGN_SHA1_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x05, 0x00 };
-static constexpr const u8 RSA_SIGN_SHA256_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b, 0x00 };
-static constexpr const u8 RSA_SIGN_SHA384_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0c, 0x00 };
-static constexpr const u8 RSA_SIGN_SHA512_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0d, 0x00 };
-
-}
-
 }
