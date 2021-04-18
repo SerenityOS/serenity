@@ -105,6 +105,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     m_glyph_editor_container = *find_descendant_of_type_named<GUI::Widget>("glyph_editor_container");
     m_left_column_container = *find_descendant_of_type_named<GUI::Widget>("left_column_container");
     m_glyph_editor_width_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("glyph_editor_width_spinbox");
+    m_glyph_editor_present_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("glyph_editor_present_checkbox");
     m_name_textbox = *find_descendant_of_type_named<GUI::TextBox>("name_textbox");
     m_family_textbox = *find_descendant_of_type_named<GUI::TextBox>("family_textbox");
     m_presentation_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("presentation_spinbox");
@@ -206,7 +207,9 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), m_edited_font->max_glyph_width());
         m_glyph_editor_widget->delete_glyph();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
-        m_glyph_editor_width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
+        auto glyph_width = m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph());
+        m_glyph_editor_width_spinbox->set_value(glyph_width);
+        m_glyph_editor_present_checkbox->set_checked(glyph_width > 0);
     });
     m_open_preview_action = GUI::Action::create("Preview Font", Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
         if (!m_font_preview_window)
@@ -242,7 +245,9 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
 
     m_glyph_map_widget->on_glyph_selected = [&](int glyph) {
         m_glyph_editor_widget->set_glyph(glyph);
-        m_glyph_editor_width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
+        auto glyph_width = m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph());
+        m_glyph_editor_width_spinbox->set_value(glyph_width);
+        m_glyph_editor_present_checkbox->set_checked(glyph_width > 0);
         StringBuilder builder;
         builder.appendff("{:#02x} (", glyph);
         if (glyph < 128) {
@@ -255,7 +260,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
             builder.append(128 | (glyph % 64));
         }
         builder.append(") ");
-        builder.appendff("[{}x{}]", m_edited_font->glyph_width(glyph), m_edited_font->glyph_height());
+        builder.appendff("[{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
         statusbar.set_text(builder.to_string());
     };
 
@@ -269,14 +274,24 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
 
     m_fixed_width_checkbox->on_checked = [&, update_demo](bool checked) {
         m_edited_font->set_fixed_width(checked);
-        m_glyph_editor_width_spinbox->set_enabled(!m_edited_font->is_fixed_width());
-        m_glyph_editor_width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
+        auto glyph_width = m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph());
+        m_glyph_editor_width_spinbox->set_visible(!checked);
+        m_glyph_editor_width_spinbox->set_value(glyph_width);
+        m_glyph_editor_present_checkbox->set_visible(checked);
+        m_glyph_editor_present_checkbox->set_checked(glyph_width > 0);
         m_glyph_editor_widget->update();
         update_demo();
     };
 
     m_glyph_editor_width_spinbox->on_change = [this, update_demo](int value) {
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), value);
+        m_glyph_editor_widget->update();
+        m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
+        update_demo();
+    };
+
+    m_glyph_editor_present_checkbox->on_checked = [this, update_demo](bool checked) {
+        m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), checked ? m_edited_font->glyph_fixed_width() : 0);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
         update_demo();
@@ -332,8 +347,9 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
 
     m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
     m_left_column_container->set_fixed_width(m_glyph_editor_widget->preferred_width());
-    m_glyph_editor_width_spinbox->set_enabled(!m_edited_font->is_fixed_width());
+    m_glyph_editor_width_spinbox->set_visible(!m_edited_font->is_fixed_width());
     m_glyph_editor_width_spinbox->set_max(m_edited_font->max_glyph_width());
+    m_glyph_editor_present_checkbox->set_visible(m_edited_font->is_fixed_width());
 
     m_name_textbox->set_text(m_edited_font->name());
     m_family_textbox->set_text(m_edited_font->family());
