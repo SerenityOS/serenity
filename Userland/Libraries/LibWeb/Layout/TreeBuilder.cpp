@@ -210,7 +210,10 @@ static bool is_table_track(CSS::Display display)
 
 static bool is_table_track_group(CSS::Display display)
 {
-    return display == CSS::Display::TableRowGroup || display == CSS::Display::TableColumnGroup;
+    // Unless explicitly mentioned otherwise, mentions of table-row-groups in this spec also encompass the specialized
+    // table-header-groups and table-footer-groups.
+    return display == CSS::Display::TableRowGroup || display == CSS::Display::TableHeaderGroup || display == CSS::Display::TableFooterGroup
+        || display == CSS::Display::TableColumnGroup;
 }
 
 static bool is_not_proper_table_child(const Node& node)
@@ -286,6 +289,18 @@ void TreeBuilder::generate_missing_child_wrappers(NodeWithStyle& root)
 
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-row-group box which are not table-row boxes.
     for_each_in_tree_with_display<CSS::Display::TableRowGroup>(root, [&](auto& parent) {
+        for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
+            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+        });
+    });
+    // Unless explicitly mentioned otherwise, mentions of table-row-groups in this spec also encompass the specialized
+    // table-header-groups and table-footer-groups.
+    for_each_in_tree_with_display<CSS::Display::TableHeaderGroup>(root, [&](auto& parent) {
+        for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
+            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+        });
+    });
+    for_each_in_tree_with_display<CSS::Display::TableFooterGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
             wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
         });
