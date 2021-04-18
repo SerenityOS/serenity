@@ -63,7 +63,7 @@ public:
     void set_weight(u16 weight) { m_weight = weight; }
 
     Glyph glyph(u32 code_point) const;
-    bool contains_glyph(u32 code_point) const { return code_point < (u32)glyph_count(); }
+    bool contains_glyph(u32 code_point) const { return code_point < (u32)glyph_count() && m_glyph_widths[code_point] > 0; }
 
     u8 glyph_width(size_t ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[ch]; }
     int glyph_or_emoji_width(u32 code_point) const;
