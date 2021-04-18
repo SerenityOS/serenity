@@ -648,6 +648,11 @@ int pthread_equal(pthread_t t1, pthread_t t2)
     return t1 == t2;
 }
 
+int pthread_cancel(pthread_t)
+{
+    TODO();
+}
+
 // FIXME: Use the fancy futex mechanism above to write an rw lock.
 //        For the time being, let's just use a less-than-good lock to get things working.
 int pthread_rwlock_destroy(pthread_rwlock_t* rl)
