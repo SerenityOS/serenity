@@ -80,11 +80,7 @@ GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
 buildstep() {
     NAME=$1
     shift
-    if [ "$SYSTEM_NAME" = "Darwin" ]; then
-        "$@" 2>&1 | sed 's|^|['"${NAME}"'] |'
-    else
-        "$@" 2>&1 | sed 's|^|\x1b[34m['"${NAME}"']\x1b[39m |'
-    fi
+    "$@" 2>&1 | sed $'s|^|\x1b[34m['"${NAME}"$']\x1b[39m |'
 }
 
 # === CHECK CACHE AND REUSE ===
