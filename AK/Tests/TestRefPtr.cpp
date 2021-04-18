@@ -119,7 +119,14 @@ TEST_CASE(assign_moved_self)
 {
     RefPtr<Object> object = adopt(*new Object);
     EXPECT_EQ(object->ref_count(), 1u);
+#ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wself-move"
+#endif
     object = move(object);
+#ifdef __clang__
+#    pragma clang diagnostic pop
+#endif
     EXPECT_EQ(object->ref_count(), 1u);
 }
 
