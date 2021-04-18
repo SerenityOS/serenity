@@ -45,6 +45,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Write your commit messages in proper English, with care and punctuation.
 * Squash your commits when making revisions after a patch review.
 * Add your personal copyright line to files when making substantive changes. (Optional but encouraged!)
+* Check the spelling of your code, comments and commit messages.
 
 **Don't:**
 
