@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Panagiotis Vasilopoulos <hello@alwayslivid.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +31,18 @@
 #include <sys/socket.h>
 
 __BEGIN_DECLS
+
+/* Inteface flag definitions - Work in progress */
+#define IFF_UP		0x1
+#define IFF_BROADCAST		0x2
+#define IFF_DEBUG		0x4
+#define IFF_LOOPBACK		0x8
+#define IFF_POINTOPOINT	0x10
+#define IFF_NOTRAILERS	0x20
+#define IFF_RUNNING		0x40
+#define IFF_NOARP		0x80
+#define IFF_PROMISC		0x100
+#define IFF_ALLMULTI		0x200
 
 struct ifreq {
 #define IFNAMSIZ 16
