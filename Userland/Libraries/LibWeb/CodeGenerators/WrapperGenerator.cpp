@@ -739,7 +739,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     }
 )~~~");
     } else {
-        dbgln("Unimplemented JS-to-C++ conversion: {}", parameter.type->name);
+        warnln("Unimplemented JS-to-C++ conversion: {}", parameter.type->name);
         VERIFY_NOT_REACHED();
     }
 }
@@ -828,8 +828,19 @@ static void generate_return_statement(SourceGenerator& generator, const IDL::Typ
     } else if (return_type.name == "sequence") {
         scoped_generator.append(R"~~~(
     auto* new_array = JS::Array::create(global_object);
-    for (auto& element : retval)
+    for (auto& element : retval) {
+)~~~");
+        if (return_type.generic_parameter->is_string()) {
+            scoped_generator.append(R"~~~(
+        new_array->indexed_properties().append(JS::js_string(vm, element));
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
         new_array->indexed_properties().append(wrap(global_object, element));
+)~~~");
+        }
+        scoped_generator.append(R"~~~(
+    }
 
     return new_array;
 )~~~");
