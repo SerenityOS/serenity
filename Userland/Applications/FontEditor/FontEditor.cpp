@@ -288,6 +288,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
 
     m_type_combobox->on_change = [this](auto&, const auto& index) {
         m_edited_font->set_type(static_cast<Gfx::FontTypes>(index.row()));
+        m_glyph_map_widget->reprobe_font();
     };
 
     m_presentation_spinbox->on_change = [this, update_demo](int value) {
