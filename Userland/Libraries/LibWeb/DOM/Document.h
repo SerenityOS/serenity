@@ -41,6 +41,7 @@
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/Cookie/Cookie.h>
+#include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/DOMImplementation.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
@@ -174,6 +175,9 @@ public:
     NonnullRefPtr<Comment> create_comment(const String& data);
     NonnullRefPtr<Range> create_range();
     NonnullRefPtr<Event> create_event(const String& interface);
+
+    NonnullRefPtr<Attr> create_attribute(const FlyString& local_name);
+    NonnullRefPtr<Attr> create_attribute_ns(const FlyString& namespace_, const FlyString& qualified_name);
 
     void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
     HTML::HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }

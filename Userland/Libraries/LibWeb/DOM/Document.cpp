@@ -686,6 +686,20 @@ NonnullRefPtr<Event> Document::create_event(const String& interface)
     return event.release_nonnull();
 }
 
+NonnullRefPtr<Attr> Document::create_attribute(const FlyString& local_name)
+{
+    return adopt(*new Attr(*this, local_name, {}));
+}
+
+NonnullRefPtr<Attr> Document::create_attribute_ns(const FlyString& namespace_, const FlyString& qualified_name)
+{
+    auto extracted = QualifiedName::validate_and_extract(namespace_, qualified_name);
+    auto attribute = adopt(*new Attr(*this, extracted.local_name(), {}));
+    attribute->set_namespace_uri(extracted.namespace_());
+    attribute->set_prefix(extracted.prefix());
+    return attribute;
+}
+
 void Document::set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement* script)
 {
     m_pending_parsing_blocking_script = script;

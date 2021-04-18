@@ -29,6 +29,9 @@ interface Document : Node {
 
     [CEReactions, ImplementedAs=adopt_node_binding] Node adoptNode(Node node);
 
+    Attr createAttribute(DOMString localName);
+    Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName);
+
     [ImplementedAs=style_sheets_for_bindings] readonly attribute StyleSheetList styleSheets;
 
     readonly attribute DOMString compatMode;
