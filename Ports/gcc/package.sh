@@ -2,10 +2,11 @@
 port=gcc
 version=10.3.0
 useconfigure=true
-configopts="--target=${SERENITY_ARCH}-pc-serenity --with-sysroot=/ --with-build-sysroot=${SERENITY_INSTALL_ROOT} --with-newlib --enable-languages=c,c++ --disable-lto --disable-nls --enable-shared --enable-default-pie --enable-host-shared"
+configopts="--target=${SERENITY_ARCH}-pc-serenity --with-sysroot=/ --with-build-sysroot=${SERENITY_INSTALL_ROOT} --with-newlib --enable-languages=c,c++ --disable-lto --disable-nls --enable-shared --enable-default-pie --enable-host-shared --enable-threads=posix"
 files="https://ftpmirror.gnu.org/gnu/gcc/gcc-${version}/gcc-${version}.tar.xz gcc-${version}.tar.xz
 https://ftpmirror.gnu.org/gnu/gcc/gcc-${version}/gcc-${version}.tar.xz.sig gcc-${version}.tar.xz.sig
 https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
+configopts="--target=${SERENITY_ARCH}-pc-serenity --with-sysroot=/ --with-build-sysroot=${SERENITY_BUILD_DIR}/Root --with-newlib --enable-languages=c,c++ --disable-lto --disable-nls --enable-shared --enable-default-pie --enable-host-shared --enable-threads=posix"
 makeopts="all-gcc all-target-libgcc all-target-libstdc++-v3 -j $(nproc)"
 installopts="DESTDIR=${SERENITY_INSTALL_ROOT} install-gcc install-target-libgcc install-target-libstdc++-v3"
 depends="binutils"
