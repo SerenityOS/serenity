@@ -31,7 +31,7 @@
 __BEGIN_DECLS
 
 #ifdef DEBUG
-__attribute__((noreturn)) void __assertion_failed(const char* msg);
+[[noreturn]] void __assertion_failed(const char* msg);
 #    define __stringify_helper(x) #    x
 #    define __stringify(x) __stringify_helper(x)
 #    define assert(expr)                                                           \
@@ -42,12 +42,11 @@ __attribute__((noreturn)) void __assertion_failed(const char* msg);
 #    define VERIFY_NOT_REACHED() assert(false)
 #else
 #    define assert(expr) ((void)(0))
-#    define VERIFY_NOT_REACHED() CRASH()
+#    define VERIFY_NOT_REACHED() _abort()
 #endif
 
-__attribute__((noreturn)) void __crash();
+[[noreturn]] void _abort();
 
-#define CRASH() __crash()
 #define VERIFY assert
 #define TODO VERIFY_NOT_REACHED
 

@@ -48,13 +48,12 @@ void __assertion_failed(const char* msg)
         { msg, strlen(msg) },
     };
     syscall(SC_set_coredump_metadata, &params);
-    syscall(SC_abort);
-    for (;;) { }
+    abort();
 }
 #endif
 }
 
-void __crash()
+void _abort()
 {
     asm volatile("ud2");
     __builtin_unreachable();

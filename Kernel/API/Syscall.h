@@ -189,7 +189,6 @@ namespace Kernel {
     S(prctl)                  \
     S(mremap)                 \
     S(set_coredump_metadata)  \
-    S(abort)                  \
     S(anon_create)            \
     S(msyscall)               \
     S(readv)                  \
