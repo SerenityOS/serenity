@@ -75,6 +75,12 @@ GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.gz"
 GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
 
+buildstep() {
+    NAME=$1
+    shift
+    "$@" 2>&1 | sed 's|^|\x1b[34m['"${NAME}"']\x1b[39m |'
+}
+
 # === CHECK CACHE AND REUSE ===
 
 pushd "$DIR"
@@ -205,7 +211,7 @@ pushd "$DIR/Build/$ARCH"
 
     pushd binutils
         echo "XXX configure binutils"
-        "$DIR"/Tarballs/$BINUTILS_NAME/configure --prefix="$PREFIX" \
+        buildstep "binutils/configure" "$DIR"/Tarballs/$BINUTILS_NAME/configure --prefix="$PREFIX" \
                                                  --target="$TARGET" \
                                                  --with-sysroot="$SYSROOT" \
                                                  --enable-shared \
@@ -221,8 +227,8 @@ pushd "$DIR/Build/$ARCH"
             popd
         fi
         echo "XXX build binutils"
-        "$MAKE" -j "$MAKEJOBS" || exit 1
-        "$MAKE" install || exit 1
+        buildstep "binutils/build" "$MAKE" -j "$MAKEJOBS" || exit 1
+        buildstep "binutils/install" "$MAKE" install || exit 1
     popd
 
     echo "XXX serenity libc and libm headers"
@@ -233,7 +239,7 @@ pushd "$DIR/Build/$ARCH"
         FILES=$(find "$SRC_ROOT"/Userland/Libraries/LibC "$SRC_ROOT"/Userland/Libraries/LibM -name '*.h' -print)
         for header in $FILES; do
             target=$(echo "$header" | sed -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Userland/Libraries/LibM@@")
-            $INSTALL -D "$header" "Root/usr/include/$target"
+            buildstep "system_headers" $INSTALL -D "$header" "Root/usr/include/$target"
         done
         unset SRC_ROOT
     popd
@@ -266,7 +272,7 @@ pushd "$DIR/Build/$ARCH"
                 sed -i 's@-fno-exceptions @@' $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h
             fi
 
-            "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
+            buildstep "gcc/configure/${STAGE,,}" "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
                                                 --target="$TARGET" \
                                                 --with-sysroot="$SYSROOT" \
                                                 --disable-nls \
@@ -279,19 +285,19 @@ pushd "$DIR/Build/$ARCH"
 
             if [ "$STAGE" = "Userland" ]; then
                 echo "XXX build gcc and libgcc"
-                "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
+                buildstep "gcc/build" "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
                 if [ "$(uname -s)" = "OpenBSD" ]; then
                     ln -sf liblto_plugin.so.0.0 gcc/liblto_plugin.so
                 fi
-                "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
+                buildstep "libgcc/build" "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
                 echo "XXX install gcc and libgcc"
-                "$MAKE" DESTDIR=$TEMPTARGET install-gcc install-target-libgcc || exit 1
+                buildstep "gcc+libgcc/install" "$MAKE" DESTDIR=$TEMPTARGET install-gcc install-target-libgcc || exit 1
             fi
 
             echo "XXX build libstdc++"
-            "$MAKE" -j "$MAKEJOBS" all-target-libstdc++-v3 || exit 1
+            buildstep "libstdc++/build/${STAGE,,}" "$MAKE" -j "$MAKEJOBS" all-target-libstdc++-v3 || exit 1
             echo "XXX install libstdc++"
-            "$MAKE" DESTDIR=$TEMPTARGET install-target-libstdc++-v3 || exit 1
+            buildstep "libstdc++/install/${STAGE,,}" "$MAKE" DESTDIR=$TEMPTARGET install-target-libstdc++-v3 || exit 1
 
             mkdir -p "$REALTARGET"
             cp -a $TEMPTARGET/$PREFIX/* "$REALTARGET/"
