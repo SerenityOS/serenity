@@ -42,12 +42,12 @@ Optional<ByteBuffer> decode_hex(const StringView& input)
 
     auto output = ByteBuffer::create_zeroed(input.length() / 2);
 
-    for (long unsigned int i = 0; i < input.length() / 2; i++) {
-        auto c1 = decode_hex_digit(input[i * 2]);
+    for (size_t i = 0; i < input.length() / 2; ++i) {
+        const auto c1 = decode_hex_digit(input[i * 2]);
         if (c1 >= 16)
             return {};
 
-        auto c2 = decode_hex_digit(input[i * 2 + 1]);
+        const auto c2 = decode_hex_digit(input[i * 2 + 1]);
         if (c2 >= 16)
             return {};
 
@@ -57,7 +57,7 @@ Optional<ByteBuffer> decode_hex(const StringView& input)
     return output;
 }
 
-String encode_hex(ReadonlyBytes input)
+String encode_hex(const ReadonlyBytes input)
 {
     StringBuilder output(input.size() * 2);
 
