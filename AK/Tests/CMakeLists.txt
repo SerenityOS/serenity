@@ -1,5 +1,3 @@
-
-
 set(AK_TEST_SOURCES
     TestAllOf.cpp
     TestAnyOf.cpp
@@ -26,6 +24,7 @@ set(AK_TEST_SOURCES
     TestHashFunctions.cpp
     TestHashMap.cpp
     TestHashTable.cpp
+    TestHex.cpp
     TestIPv4Address.cpp
     TestIndexSequence.cpp
     TestIntrusiveRedBlackTree.cpp
