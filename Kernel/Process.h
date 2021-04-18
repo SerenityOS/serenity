@@ -408,7 +408,6 @@ public:
     KResultOr<FlatPtr> sys$allocate_tls(size_t);
     KResultOr<int> sys$prctl(int option, FlatPtr arg1, FlatPtr arg2);
     KResultOr<int> sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*>);
-    [[noreturn]] void sys$abort();
     KResultOr<int> sys$anon_create(size_t, int options);
 
     template<bool sockname, typename Params>
