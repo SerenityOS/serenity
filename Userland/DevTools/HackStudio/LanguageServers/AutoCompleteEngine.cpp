@@ -42,7 +42,7 @@ void AutoCompleteEngine::set_declarations_of_document(const String& filename, Ve
 {
     VERIFY(set_declarations_of_document_callback);
 
-    // Optimization - Only notify callback if declerations have changed
+    // Optimization - Only notify callback if declarations have changed
     if (auto previous_declarations = m_all_declarations.get(filename); previous_declarations.has_value()) {
         if (previous_declarations.value() == declarations)
             return;

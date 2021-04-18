@@ -132,7 +132,7 @@ void __ubsan_handle_shift_out_of_bounds(const ShiftOutOfBoundsData& data, ValueH
 void __ubsan_handle_divrem_overflow(const OverflowData&, ValueHandle lhs, ValueHandle rhs);
 void __ubsan_handle_divrem_overflow(const OverflowData& data, ValueHandle, ValueHandle)
 {
-    dbgln("KUBSAN: divrem overlow, {} ({}-bit)", data.type.name(), data.type.bit_width());
+    dbgln("KUBSAN: divrem overflow, {} ({}-bit)", data.type.name(), data.type.bit_width());
     print_location(data.location);
 }
 
@@ -189,7 +189,7 @@ void __ubsan_handle_alignment_assumption(const AlignmentAssumptionData& data, Va
               "of type {} failed",
             alignment, pointer, data.type.name());
     }
-    // dbgln("KUBSAN: Assumption of pointer allignment failed");
+    // dbgln("KUBSAN: Assumption of pointer alignment failed");
     print_location(data.location);
 }
 
