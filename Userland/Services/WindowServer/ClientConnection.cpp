@@ -392,7 +392,7 @@ OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> ClientConnection::ha
         window.set_default_icon();
     }
 
-    window.frame().invalidate_title_bar();
+    window.frame().invalidate_titlebar();
     WindowManager::the().tell_wms_window_icon_changed(window);
     return make<Messages::WindowServer::SetWindowIconBitmapResponse>();
 }
