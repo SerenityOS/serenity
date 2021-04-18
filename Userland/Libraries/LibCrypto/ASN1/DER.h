@@ -64,8 +64,42 @@ public:
         ValueType value;
     };
 
+    Optional<DecodeError> drop()
+    {
+        if (m_stack.is_empty())
+            return DecodeError::NoInput;
+
+        if (eof())
+            return DecodeError::EndOfStream;
+
+        auto previous_position = m_stack;
+
+        auto tag_or_error = peek();
+        if (tag_or_error.is_error()) {
+            m_stack = move(previous_position);
+            return tag_or_error.error();
+        }
+
+        auto length_or_error = read_length();
+        if (length_or_error.is_error()) {
+            m_stack = move(previous_position);
+            return length_or_error.error();
+        }
+
+        auto length = length_or_error.value();
+
+        auto bytes_result = read_bytes(length);
+        if (bytes_result.is_error()) {
+            m_stack = move(previous_position);
+            return bytes_result.error();
+        }
+
+        m_current_tag.clear();
+        return {};
+    }
+
     template<typename ValueType>
-    Result<ValueType, DecodeError> read()
+    Result<ValueType, DecodeError> read(Optional<Class> class_override = {}, Optional<Kind> kind_override = {})
     {
         if (m_stack.is_empty())
             return DecodeError::NoInput;
@@ -90,7 +124,7 @@ public:
         auto tag = tag_or_error.value();
         auto length = length_or_error.value();
 
-        auto value_or_error = read_value<ValueType>(tag.class_, tag.kind, length);
+        auto value_or_error = read_value<ValueType>(class_override.value_or(tag.class_), kind_override.value_or(tag.kind), length);
         if (value_or_error.is_error()) {
             m_stack = move(previous_position);
             return value_or_error.error();
