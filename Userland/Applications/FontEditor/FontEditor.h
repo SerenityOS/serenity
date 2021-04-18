@@ -79,6 +79,7 @@ private:
     RefPtr<GUI::SpinBox> m_mean_line_spinbox;
     RefPtr<GUI::SpinBox> m_presentation_spinbox;
     RefPtr<GUI::SpinBox> m_glyph_editor_width_spinbox;
+    RefPtr<GUI::CheckBox> m_glyph_editor_present_checkbox;
     RefPtr<GUI::TextBox> m_name_textbox;
     RefPtr<GUI::TextBox> m_family_textbox;
     RefPtr<GUI::CheckBox> m_fixed_width_checkbox;

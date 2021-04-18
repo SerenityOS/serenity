@@ -107,7 +107,7 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     painter.set_font(font());
-    painter.fill_rect(widget_inner_rect(), palette().base());
+    painter.fill_rect(widget_inner_rect(), palette().inactive_window_title());
 
     for (int glyph = 0; glyph < m_glyph_count; ++glyph) {
         Gfx::IntRect outer_rect = get_outer_rect(glyph);
@@ -119,7 +119,8 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
         if (glyph == m_selected_glyph) {
             painter.fill_rect(outer_rect, is_focused() ? palette().selection() : palette().inactive_selection());
             painter.draw_glyph(inner_rect.location(), glyph, is_focused() ? palette().selection_text() : palette().inactive_selection_text());
-        } else {
+        } else if (m_font->contains_glyph(glyph)) {
+            painter.fill_rect(outer_rect, palette().base());
             painter.draw_glyph(inner_rect.location(), glyph, palette().base_text());
         }
     }
