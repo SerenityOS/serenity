@@ -154,9 +154,13 @@ private:
         if (value_or_error.is_error())
             return value_or_error.error();
 
-        auto&& value = value_or_error.value();
-        if constexpr (requires { ValueType { value }; })
-            return ValueType { value };
+        if constexpr (IsSame<ValueType, bool> && !IsSame<DecodedType, bool>) {
+            return DecodeError::NonConformingType;
+        } else {
+            auto&& value = value_or_error.value();
+            if constexpr (requires { ValueType { value }; })
+                return ValueType { value };
+        }
 
         return DecodeError::NonConformingType;
     }
