@@ -192,6 +192,12 @@ protected:
         return m_queues[queue_index];
     }
 
+    const VirtIOQueue& get_queue(u16 queue_index) const
+    {
+        VERIFY(queue_index < m_queue_count);
+        return m_queues[queue_index];
+    }
+
     template<typename F>
     bool negotiate_features(F f)
     {
