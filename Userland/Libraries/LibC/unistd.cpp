@@ -157,7 +157,7 @@ int execvp(const char* filename, char* const argv[])
 {
     int rc = execvpe(filename, argv, environ);
     int saved_errno = errno;
-    dbgln("execvp() about to return {} with errno={}", rc, saved_errno);
+    dbgln("execvp({}, ...) about to return {} with errno={}", filename, rc, saved_errno);
     errno = saved_errno;
     return rc;
 }
