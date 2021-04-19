@@ -41,7 +41,6 @@ done < <(git ls-files -- \
     '*.h' \
     ':!:Base' \
     ':!:Kernel/FileSystem/ext2_fs.h' \
-    ':!:Userland/Libraries/LibELF/exec_elf.h' \
 )
 
 exit_status=0

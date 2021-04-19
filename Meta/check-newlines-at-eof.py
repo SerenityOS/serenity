@@ -22,8 +22,7 @@ def run():
             "CMake*.txt",
             "**/CMake*.txt",
             ":!:AK/Tests/*.json",
-            ":!:Kernel/FileSystem/ext2_fs.h",
-            ":!:Userland/Libraries/LibELF/exec_elf.h"
+            ":!:Kernel/FileSystem/ext2_fs.h"
         ],
         check=True,
         capture_output=True
