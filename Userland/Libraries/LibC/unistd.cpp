@@ -781,8 +781,50 @@ ssize_t pread(int fd, void* buf, size_t count, off_t offset)
 
 char* getpass(const char* prompt)
 {
-    dbgln("FIXME: getpass('{}')", prompt);
-    TODO();
+    FILE *in, *out;
+    bool tty_changed = false;
+    struct termios s, t;
+    static char* buf;
+    static size_t bufsize;
+    ssize_t nread;
+
+    if ((in = fopen("/dev/tty", "w+e")) == NULL) {
+        in = stdin;
+        out = stderr;
+    } else {
+        out = in;
+    }
+
+    if (tcgetattr(fileno(in), &t) != -1) {
+        s = t;
+        t.c_lflag &= ~(ECHO | ISIG);
+        if (tcsetattr(fileno(in), TCSAFLUSH, &t) == 0)
+            tty_changed = true;
+    }
+
+    fprintf(out, "%s", prompt);
+    fflush(out);
+
+    nread = getline(&buf, &bufsize, in);
+    if (buf != NULL) {
+        if (nread < 0) {
+            buf[0] = '\0';
+        } else if (buf[nread - 1] == '\n') {
+            buf[nread - 1] = '\0';
+            if (tty_changed) {
+                // Write the newline that was not echoed.
+                fprintf(out, "\n");
+            }
+        }
+    }
+
+    if (tty_changed)
+        (void)tcsetattr(fileno(in), TCSAFLUSH, &s);
+
+    if (in != stdin)
+        fclose(in);
+
+    return buf;
 }
 
 long sysconf(int name)
