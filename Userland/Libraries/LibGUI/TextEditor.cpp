@@ -872,13 +872,34 @@ void TextEditor::keydown_event(KeyEvent& event)
             if (event.modifiers() == Mod_Ctrl) {
                 auto word_break_pos = document().first_word_break_before(m_cursor, true);
                 erase_count = m_cursor.column() - word_break_pos.column();
-            } else if (current_line().first_non_whitespace_column() >= m_cursor.column() && m_expand_tabs) {
+            } else if (current_line().first_non_whitespace_column() >= m_cursor.column()) {
                 int new_column;
-                if (m_cursor.column() % m_soft_tab_width == 0)
-                    new_column = m_cursor.column() - m_soft_tab_width;
+                if (cursor_column_with_tabs() % m_soft_tab_width == 0)
+                    new_column = cursor_column_with_tabs() - m_soft_tab_width;
                 else
-                    new_column = (m_cursor.column() / m_soft_tab_width) * m_soft_tab_width;
-                erase_count = m_cursor.column() - new_column;
+                    new_column = (cursor_column_with_tabs() / m_soft_tab_width) * m_soft_tab_width;
+                bool all_spaces = true;
+                for (int display_col = cursor_column_with_tabs() - 1; display_col >= new_column; display_col--) {
+                    // Indentation needs to be calculated with display columns. To delete characters,
+                    // we need to convert it back into the index of the actual code point
+                    auto cursor_line = line(m_cursor.line());
+                    int code_point_index = 0;
+                    for (; display_col > 0; code_point_index++) {
+                        if (cursor_line.code_points()[code_point_index] == '\t') {
+                            display_col -= hard_tab_width();
+                        } else {
+                            display_col--;
+                        }
+                    }
+                    auto code_point = cursor_line.code_points()[code_point_index - 1];
+                    if (code_point == '\t') {
+                        all_spaces = false;
+                        break;
+                    }
+                }
+                if (all_spaces) {
+                    erase_count = cursor_column_with_tabs() - new_column;
+                }
             }
 
             // Backspace within line
