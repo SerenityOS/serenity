@@ -960,6 +960,7 @@ static void generate_implementation_includes(SourceGenerator& generator)
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>
+#include <LibWeb/Bindings/NamedNodeMapWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceTimingWrapper.h>
 #include <LibWeb/Bindings/RangeWrapper.h>

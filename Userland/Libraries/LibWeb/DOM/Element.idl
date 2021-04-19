@@ -3,6 +3,7 @@ interface Element : Node {
     readonly attribute DOMString tagName;
 
     boolean hasAttributes();
+    readonly attribute NamedNodeMap attributes;
     sequence<DOMString> getAttributeNames();
     DOMString? getAttribute(DOMString qualifiedName);
     DOMString? getAttributeNS(DOMString? namespace, DOMString localName);

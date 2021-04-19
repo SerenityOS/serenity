@@ -1,0 +1,8 @@
+interface NamedNodeMap {
+    readonly attribute unsigned long length;
+    getter Attr? item(unsigned long index);
+    getter Attr? getNamedItem(DOMString qualifiedName);
+    Attr? setNamedItem(Attr attr);
+    Attr removeNamedItem(DOMString qualifiedName);
+    Attr removeNamedItemNS(DOMString? namespace, DOMString localName);
+};

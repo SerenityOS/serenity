@@ -29,6 +29,7 @@
 #include <AK/FlyString.h>
 #include <AK/String.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/HTML/AttributeNames.h>
@@ -62,6 +63,7 @@ public:
 
     // DOM spec's IDL exposed attribute-related functions
     bool has_attributes() const { return !m_attributes.is_empty(); }
+    NonnullRefPtr<NamedNodeMap> attributes() { return m_named_node_map; }
     Vector<FlyString> get_attribute_names() const;
     String get_attribute(const FlyString& qualified_name) const;
     String get_attribute_ns(const FlyString& namespace_, const FlyString& local_name) const;
@@ -149,6 +151,7 @@ private:
     QualifiedName m_qualified_name;
 
     NonnullRefPtrVector<Attr> m_attributes;
+    NonnullRefPtr<NamedNodeMap> m_named_node_map { adopt(*new NamedNodeMap(*this)) };
 
     RefPtr<CSS::CSSStyleDeclaration> m_inline_style;
 
