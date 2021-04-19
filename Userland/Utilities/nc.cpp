@@ -24,7 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ByteBuffer.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/UDPSocket.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netinet/in.h>
@@ -37,11 +40,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+// NOTE: `warnln` is used instead of `outln` because we want to redirect all
+// output to stderr to allow for commands like:
+//
+// nc -l someport > out.file
+
 int main(int argc, char** argv)
 {
     bool should_listen = false;
     bool verbose = false;
     bool should_close = false;
+    bool udp_mode = false;
     const char* addr = nullptr;
     int port = 0;
 
@@ -49,10 +58,39 @@ int main(int argc, char** argv)
     args_parser.set_general_help("Network cat: Connect to network sockets as if it were a file.");
     args_parser.add_option(should_listen, "Listen instead of connecting", "listen", 'l');
     args_parser.add_option(verbose, "Log everything that's happening", "verbose", 'v');
+    args_parser.add_option(udp_mode, "UDP mode", "udp", 'u');
     args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N');
     args_parser.add_positional_argument(addr, "Address to connect to or listen on", "address");
     args_parser.add_positional_argument(port, "Port to connect to or listen on", "port");
     args_parser.parse(argc, argv);
+
+    if (udp_mode) {
+        if (should_listen) {
+            warnln("listening on UDP not yet supported");
+            return 1;
+        }
+
+        Core::EventLoop loop;
+        auto socket = Core::UDPSocket::construct();
+
+        socket->on_connected = [&]() {
+            if (verbose)
+                warnln("connected to {}:{}", addr, port);
+        };
+        socket->connect(addr, port);
+
+        for (;;) {
+            char buf[1024];
+            int nread = read(STDIN_FILENO, buf, sizeof(buf));
+            if (nread < 0) {
+                perror("read");
+                return 1;
+            }
+
+            auto bytes = AK::ByteBuffer::copy(buf, nread);
+            socket->send(bytes.span());
+        }
+    }
 
     int fd;
 
@@ -96,7 +134,7 @@ int main(int argc, char** argv)
             return 1;
         }
         if (verbose)
-            fprintf(stderr, "waiting for a connection on %s:%d\n", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(sin.sin_port));
+            warnln("waiting for a connection on {}:{}", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(sin.sin_port));
 
         len = sizeof(sin);
         fd = accept(listen_fd, (struct sockaddr*)&sin, &len);
@@ -106,7 +144,7 @@ int main(int argc, char** argv)
         }
 
         if (verbose)
-            fprintf(stderr, "got connection from %s:%d\n", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(sin.sin_port));
+            warnln("got connection from {}:{}", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(sin.sin_port));
 
         if (close(listen_fd) == -1) {
             perror("close");
@@ -143,13 +181,13 @@ int main(int argc, char** argv)
         }
 
         if (verbose)
-            fprintf(stderr, "connecting to %s:%d\n", inet_ntop(dst_addr.sin_family, &dst_addr.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(dst_addr.sin_port));
+            warnln("connecting to {}:{}", inet_ntop(dst_addr.sin_family, &dst_addr.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(dst_addr.sin_port));
         if (connect(fd, (struct sockaddr*)&dst_addr, sizeof(dst_addr)) < 0) {
             perror("connect");
             return 1;
         }
         if (verbose)
-            fprintf(stderr, "connected!\n");
+            warnln("connected!");
     }
 
     bool stdin_closed = false;
@@ -196,7 +234,7 @@ int main(int argc, char** argv)
             if (nread == 0) {
                 stdin_closed = true;
                 if (verbose)
-                    fprintf(stderr, "stdin closed\n");
+                    warnln("stdin closed");
                 if (should_close) {
                     close(fd);
                     fd_closed = true;
@@ -221,7 +259,7 @@ int main(int argc, char** argv)
                 stdin_closed = true;
                 fd_closed = true;
                 if (verbose)
-                    fprintf(stderr, "remote closed\n");
+                    warnln("remote closed");
             } else if (write(STDOUT_FILENO, buf, nread) < 0) {
                 perror("write(STDOUT_FILENO)");
                 return 1;
