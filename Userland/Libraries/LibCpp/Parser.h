@@ -69,6 +69,7 @@ private:
         Enum,
         Struct,
         Namespace,
+        Class,
     };
 
     Optional<DeclarationType> match_declaration_in_translation_unit();
@@ -80,6 +81,7 @@ private:
     bool match_expression();
     bool match_secondary_expression();
     bool match_enum_declaration();
+    bool match_class_declaration();
     bool match_struct_declaration();
     bool match_literal();
     bool match_unary_expression();
