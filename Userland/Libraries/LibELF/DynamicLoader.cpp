@@ -498,8 +498,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         u32 symbol_value = res.value().value;
         auto* dynamic_object_of_symbol = res.value().dynamic_object;
         VERIFY(dynamic_object_of_symbol);
-        size_t offset_of_tls_end = dynamic_object_of_symbol->tls_offset().value() + dynamic_object_of_symbol->tls_size().value();
-        *patch_ptr = (offset_of_tls_end - total_tls_size - symbol_value - sizeof(Elf32_Addr));
+        *patch_ptr = dynamic_object_of_symbol->tls_offset().value() + symbol_value - total_tls_size;
         break;
     }
     case R_386_JMP_SLOT: {
