@@ -136,6 +136,11 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
         return false;
     }
 
+    if (!m_frame.is_frame_nesting_allowed(request.url())) {
+        dbgln("No further recursion is allowed for the frame, abort load!");
+        return false;
+    }
+
     auto& url = request.url();
 
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));

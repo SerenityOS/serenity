@@ -81,6 +81,12 @@ public:
 
     void did_edit(Badge<EditEventHandler>);
 
+    void register_frame_nesting(URL const&);
+    bool is_frame_nesting_allowed(URL const&) const;
+
+    void set_frame_nesting_levels(const HashMap<URL, size_t> frame_nesting_levels) { m_frame_nesting_levels = move(frame_nesting_levels); };
+    HashMap<URL, size_t> const& frame_nesting_levels() const { return m_frame_nesting_levels; }
+
 private:
     explicit Frame(DOM::Element& host_element, Frame& main_frame);
     explicit Frame(Page&);
@@ -105,6 +111,8 @@ private:
     bool m_cursor_blink_state { false };
 
     HashTable<ViewportClient*> m_viewport_clients;
+
+    HashMap<URL, size_t> m_frame_nesting_levels;
 };
 
 }

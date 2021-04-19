@@ -286,4 +286,14 @@ void Frame::unregister_viewport_client(ViewportClient& client)
     VERIFY(was_removed);
 }
 
+void Frame::register_frame_nesting(URL const& url)
+{
+    m_frame_nesting_levels.ensure(url)++;
+}
+
+bool Frame::is_frame_nesting_allowed(URL const& url) const
+{
+    return m_frame_nesting_levels.get(url).value_or(0) < 3;
+}
+
 }
