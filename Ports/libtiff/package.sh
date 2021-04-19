@@ -7,10 +7,11 @@ http://download.osgeo.org/libtiff/tiff-${version}.tar.gz.sig tiff-${version}.tar
 auth_type="sig"
 auth_import_key="EBDFDB21B020EE8FD151A88DE301047DE1198975"
 auth_opts="tiff-${version}.tar.gz.sig tiff-${version}.tar.gz"
+depends=zstd
 
 install() {
     run make DESTDIR=$DESTDIR $installopts install
-    ${CC} -shared -o $DESTDIR/usr/local/lib/libtiff.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libtiff.a -Wl,--no-whole-archive
-    ${CC} -shared -o $DESTDIR/usr/local/lib/libtiffxx.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libtiffxx.a -Wl,--no-whole-archive
+    ${CC} -shared -o $DESTDIR/usr/local/lib/libtiff.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libtiff.a -Wl,--no-whole-archive -lzstd
+    ${CC} -shared -o $DESTDIR/usr/local/lib/libtiffxx.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libtiffxx.a -Wl,--no-whole-archive -lzstd
     rm -f $DESTDIR/usr/local/lib/libtiff.la $DESTDIR/usr/local/lib/libtiffxx.la
 }
