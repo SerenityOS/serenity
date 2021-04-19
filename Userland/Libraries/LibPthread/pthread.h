@@ -81,6 +81,9 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
 #define PTHREAD_MUTEX_DEFAULT PTHREAD_MUTEX_NORMAL
 #define PTHREAD_MUTEX_INITIALIZER __PTHREAD_MUTEX_INITIALIZER
 
+#define PTHREAD_PROCESS_PRIVATE 1
+#define PTHREAD_PROCESS_SHARED 2
+
 #define PTHREAD_COND_INITIALIZER     \
     {                                \
         0, 0, CLOCK_MONOTONIC_COARSE \
