@@ -472,8 +472,49 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
 
     view_menu.add_separator();
 
+    m_expand_tabs = GUI::Action::create_checkable("Expand tabs", [&](auto& action) {
+        m_editor->set_expand_tabs(action.is_checked());
+    });
+
+    m_expand_tabs->set_checked(true);
+    m_editor->set_expand_tabs(true);
+    view_menu.add_action(*m_expand_tabs);
+
+    m_hard_tab_width_actions.set_exclusive(true);
+    auto& hard_tab_width_menu = view_menu.add_submenu("&Hard tab width");
+    m_hard_tab_1_width_action = GUI::Action::create_checkable("1", [&](auto&) {
+        m_editor->set_hard_tab_width(1);
+    });
+    m_hard_tab_2_width_action = GUI::Action::create_checkable("2", [&](auto&) {
+        m_editor->set_hard_tab_width(2);
+    });
+    m_hard_tab_4_width_action = GUI::Action::create_checkable("4", [&](auto&) {
+        m_editor->set_hard_tab_width(4);
+    });
+    m_hard_tab_8_width_action = GUI::Action::create_checkable("8", [&](auto&) {
+        m_editor->set_hard_tab_width(8);
+    });
+    m_hard_tab_16_width_action = GUI::Action::create_checkable("16", [&](auto&) {
+        m_editor->set_hard_tab_width(16);
+    });
+
+    m_hard_tab_width_actions.add_action(*m_hard_tab_1_width_action);
+    m_hard_tab_width_actions.add_action(*m_hard_tab_2_width_action);
+    m_hard_tab_width_actions.add_action(*m_hard_tab_4_width_action);
+    m_hard_tab_width_actions.add_action(*m_hard_tab_8_width_action);
+    m_hard_tab_width_actions.add_action(*m_hard_tab_16_width_action);
+
+    hard_tab_width_menu.add_action(*m_hard_tab_1_width_action);
+    hard_tab_width_menu.add_action(*m_hard_tab_2_width_action);
+    hard_tab_width_menu.add_action(*m_hard_tab_4_width_action);
+    hard_tab_width_menu.add_action(*m_hard_tab_8_width_action);
+    hard_tab_width_menu.add_action(*m_hard_tab_16_width_action);
+
+    m_hard_tab_4_width_action->set_checked(true);
+    m_hard_tab_width_actions.set_exclusive(true);
+
     m_soft_tab_width_actions.set_exclusive(true);
-    auto& soft_tab_width_menu = view_menu.add_submenu("&Tab Width");
+    auto& soft_tab_width_menu = view_menu.add_submenu("&Soft Tab Width");
     m_soft_tab_1_width_action = GUI::Action::create_checkable("1", [&](auto&) {
         m_editor->set_soft_tab_width(1);
     });

@@ -100,12 +100,21 @@ private:
     RefPtr<GUI::Action> m_visualize_trailing_whitespace_action;
     RefPtr<GUI::Action> m_visualize_leading_whitespace_action;
 
+    RefPtr<GUI::Action> m_expand_tabs;
+
     GUI::ActionGroup m_soft_tab_width_actions;
     RefPtr<GUI::Action> m_soft_tab_1_width_action;
     RefPtr<GUI::Action> m_soft_tab_2_width_action;
     RefPtr<GUI::Action> m_soft_tab_4_width_action;
     RefPtr<GUI::Action> m_soft_tab_8_width_action;
     RefPtr<GUI::Action> m_soft_tab_16_width_action;
+
+    GUI::ActionGroup m_hard_tab_width_actions;
+    RefPtr<GUI::Action> m_hard_tab_1_width_action;
+    RefPtr<GUI::Action> m_hard_tab_2_width_action;
+    RefPtr<GUI::Action> m_hard_tab_4_width_action;
+    RefPtr<GUI::Action> m_hard_tab_8_width_action;
+    RefPtr<GUI::Action> m_hard_tab_16_width_action;
 
     GUI::ActionGroup syntax_actions;
     RefPtr<GUI::Action> m_plain_text_highlight;

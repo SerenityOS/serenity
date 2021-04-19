@@ -51,6 +51,8 @@ public:
 
         virtual bool is_automatic_indentation_enabled() const = 0;
         virtual int soft_tab_width() const = 0;
+        virtual bool expand_tabs() const = 0;
+        virtual int hard_tab_width() const = 0;
     };
 
     static NonnullRefPtr<TextDocument> create(Client* client = nullptr);

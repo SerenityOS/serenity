@@ -107,6 +107,8 @@ public:
 
     virtual bool is_automatic_indentation_enabled() const override { return false; }
     virtual int soft_tab_width() const override { return 4; }
+    virtual bool expand_tabs() const override { return true; }
+    virtual int hard_tab_width() const override { return 4; };
 };
 static DefaultDocumentClient s_default_document_client;
 

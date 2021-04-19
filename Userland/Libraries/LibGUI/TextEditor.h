@@ -70,6 +70,12 @@ public:
     virtual int soft_tab_width() const final { return m_soft_tab_width; }
     void set_soft_tab_width(int width) { m_soft_tab_width = width; };
 
+    virtual int hard_tab_width() const final { return m_hard_tab_width; }
+    void set_hard_tab_width(int width) { m_hard_tab_width = width; };
+
+    virtual bool expand_tabs() const final { return m_expand_tabs; }
+    void set_expand_tabs(bool expand_tabs) { m_expand_tabs = expand_tabs; };
+
     WrappingMode wrapping_mode() const { return m_wrapping_mode; }
     bool is_wrapping_enabled() const { return m_wrapping_mode != WrappingMode::NoWrap; }
     void set_wrapping_mode(WrappingMode);
@@ -307,6 +313,8 @@ private:
     bool m_visualize_leading_whitespace { false };
     int m_line_spacing { 4 };
     size_t m_soft_tab_width { 4 };
+    size_t m_hard_tab_width { 4 };
+    bool m_expand_tabs { true };
     int m_horizontal_content_padding { 3 };
     TextRange m_selection;
     RefPtr<Menu> m_context_menu;
