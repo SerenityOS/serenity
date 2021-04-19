@@ -26,8 +26,11 @@ void FrameHostElement::inserted()
     HTMLElement::inserted();
     if (!is_connected())
         return;
-    if (auto* frame = document().frame())
+    if (auto* frame = document().frame()) {
         m_content_frame = Frame::create_subframe(*this, frame->main_frame());
+        m_content_frame->set_frame_nesting_levels(frame->frame_nesting_levels());
+        m_content_frame->register_frame_nesting(document().url());
+    }
 }
 
 Origin FrameHostElement::content_origin() const
