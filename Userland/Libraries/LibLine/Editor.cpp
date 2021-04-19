@@ -576,6 +576,20 @@ void Editor::interrupted()
     });
 }
 
+void Editor::resized()
+{
+    m_was_resized = true;
+    m_previous_num_columns = m_num_columns;
+    get_terminal_size();
+
+    reposition_cursor(true);
+    m_suggestion_display->redisplay(m_suggestion_manager, m_num_lines, m_num_columns);
+    reposition_cursor();
+
+    if (m_is_searching)
+        m_search_editor->resized();
+}
+
 void Editor::really_quit_event_loop()
 {
     m_finish = false;

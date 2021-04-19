@@ -44,6 +44,17 @@ public:
     virtual void finish() = 0;
     virtual void set_initial_prompt_lines(size_t) = 0;
 
+    void redisplay(const SuggestionManager& manager, size_t lines, size_t columns)
+    {
+        if (m_is_showing_suggestions) {
+            cleanup();
+            set_vt_size(lines, columns);
+            display(manager);
+        } else {
+            set_vt_size(lines, columns);
+        }
+    }
+
     virtual void set_vt_size(size_t lines, size_t columns) = 0;
 
     size_t origin_row() const { return m_origin_row; }
@@ -56,8 +67,12 @@ public:
     }
 
 protected:
+    void did_display() { m_is_showing_suggestions = true; }
+    void did_cleanup() { m_is_showing_suggestions = false; }
+
     int m_origin_row { 0 };
     int m_origin_column { 0 };
+    bool m_is_showing_suggestions { false };
 };
 
 class XtermSuggestionDisplay : public SuggestionDisplay {
