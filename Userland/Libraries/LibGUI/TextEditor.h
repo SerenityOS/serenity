@@ -115,6 +115,16 @@ public:
     int line_spacing() const { return m_line_spacing; }
     int line_height() const;
     TextPosition cursor() const { return m_cursor; }
+    unsigned long cursor_column_with_tabs() const
+    {
+        auto& cursor_line = line(m_cursor.line());
+        auto num_tabs = 0;
+        for (size_t i = 0; i < m_cursor.column(); i++) {
+            if (cursor_line.code_points()[i] == '\t')
+                num_tabs += 1;
+        }
+        return m_cursor.column() - num_tabs + num_tabs * hard_tab_width();
+    }
     TextRange normalized_selection() const { return m_selection.normalized(); }
 
     void insert_at_cursor_or_replace_selection(const StringView&);
