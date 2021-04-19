@@ -93,7 +93,6 @@ const DynamicObject& DynamicLoader::dynamic_object() const
             if (program_header.type() == PT_DYNAMIC) {
                 dynamic_section_address = VirtualAddress(program_header.raw_data());
             }
-            return IterationDecision::Continue;
         });
         VERIFY(!dynamic_section_address.is_null());
 
@@ -109,7 +108,6 @@ size_t DynamicLoader::calculate_tls_size() const
         if (program_header.type() == PT_TLS) {
             tls_size = program_header.size_in_memory();
         }
-        return IterationDecision::Continue;
     });
     return tls_size;
 }
@@ -194,7 +192,6 @@ void DynamicLoader::do_main_relocations()
         case RelocationResult::Success:
             break;
         }
-        return IterationDecision::Continue;
     };
     m_dynamic_object->relocation_section().for_each_relocation(do_single_relocation);
     m_dynamic_object->plt_relocation_section().for_each_relocation(do_single_relocation);
@@ -273,7 +270,6 @@ void DynamicLoader::load_program_headers()
             VERIFY(!relro_region.has_value());
             relro_region = region;
         }
-        return IterationDecision::Continue;
     });
 
     VERIFY(!text_regions.is_empty() || !data_regions.is_empty());

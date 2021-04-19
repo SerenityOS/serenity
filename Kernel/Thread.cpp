@@ -404,7 +404,6 @@ void Thread::finalize_dying_threads()
         for_each_in_state(Thread::State::Dying, [&](Thread& thread) {
             if (thread.is_finalizable())
                 dying_threads.append(&thread);
-            return IterationDecision::Continue;
         });
     }
     for (auto* thread : dying_threads) {
@@ -740,7 +739,6 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
             process.set_dump_core(true);
             process.for_each_thread([](auto& thread) {
                 thread.set_dump_backtrace_on_finalization();
-                return IterationDecision::Continue;
             });
             [[fallthrough]];
         case DefaultSignalAction::Terminate:
@@ -891,11 +889,12 @@ void Thread::set_state(State new_state, u8 stop_signal)
         auto& process = this->process();
         if (process.set_stopped(false) == true) {
             process.for_each_thread([&](auto& thread) {
-                if (&thread == this || !thread.is_stopped())
-                    return IterationDecision::Continue;
+                if (&thread == this)
+                    return;
+                if (!thread.is_stopped())
+                    return;
                 dbgln_if(THREAD_DEBUG, "Resuming peer thread {}", thread);
                 thread.resume_from_stopped();
-                return IterationDecision::Continue;
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Continued);
             // Tell the parent process (if any) about this change.
@@ -914,11 +913,12 @@ void Thread::set_state(State new_state, u8 stop_signal)
         auto& process = this->process();
         if (process.set_stopped(true) == false) {
             process.for_each_thread([&](auto& thread) {
-                if (&thread == this || thread.is_stopped())
-                    return IterationDecision::Continue;
+                if (&thread == this)
+                    return;
+                if (thread.is_stopped())
+                    return;
                 dbgln_if(THREAD_DEBUG, "Stopping peer thread {}", thread);
                 thread.set_state(Stopped, stop_signal);
-                return IterationDecision::Continue;
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Stopped, stop_signal);
             // Tell the parent process (if any) about this change.

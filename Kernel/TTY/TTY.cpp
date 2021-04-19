@@ -286,7 +286,6 @@ void TTY::generate_signal(int signal)
         dbgln_if(TTY_DEBUG, "{}: Send signal {} to {}", tty_name(), signal, process);
         // FIXME: Should this error be propagated somehow?
         [[maybe_unused]] auto rc = process.send_signal(signal, nullptr);
-        return IterationDecision::Continue;
     });
 }
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
@@ -157,13 +158,20 @@ public:
     unsigned super_physical_pages() const { return m_super_physical_pages; }
     unsigned super_physical_pages_used() const { return m_super_physical_pages_used; }
 
-    template<typename Callback>
+    template<IteratorFunction<VMObject&> Callback>
     static void for_each_vmobject(Callback callback)
     {
         for (auto& vmobject : MM.m_vmobjects) {
             if (callback(vmobject) == IterationDecision::Break)
                 break;
         }
+    }
+
+    template<VoidFunction<VMObject&> Callback>
+    static void for_each_vmobject(Callback callback)
+    {
+        for (auto& vmobject : MM.m_vmobjects)
+            callback(vmobject);
     }
 
     static Region* find_region_from_vaddr(Space&, VirtualAddress);

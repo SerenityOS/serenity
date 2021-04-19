@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/EnumBits.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
@@ -1044,9 +1045,14 @@ public:
 
     RefPtr<Thread> clone(Process&);
 
-    template<typename Callback>
+    template<IteratorFunction<Thread&> Callback>
     static IterationDecision for_each_in_state(State, Callback);
-    template<typename Callback>
+    template<IteratorFunction<Thread&> Callback>
+    static IterationDecision for_each(Callback);
+
+    template<VoidFunction<Thread&> Callback>
+    static IterationDecision for_each_in_state(State, Callback);
+    template<VoidFunction<Thread&> Callback>
     static IterationDecision for_each(Callback);
 
     static constexpr u32 default_kernel_stack_size = 65536;
@@ -1260,7 +1266,7 @@ private:
 
 AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);
 
-template<typename Callback>
+template<IteratorFunction<Thread&> Callback>
 inline IterationDecision Thread::for_each(Callback callback)
 {
     ScopedSpinLock lock(g_tid_map_lock);
@@ -1272,7 +1278,7 @@ inline IterationDecision Thread::for_each(Callback callback)
     return IterationDecision::Continue;
 }
 
-template<typename Callback>
+template<IteratorFunction<Thread&> Callback>
 inline IterationDecision Thread::for_each_in_state(State state, Callback callback)
 {
     ScopedSpinLock lock(g_tid_map_lock);
@@ -1285,6 +1291,24 @@ inline IterationDecision Thread::for_each_in_state(State state, Callback callbac
             return decision;
     }
     return IterationDecision::Continue;
+}
+
+template<VoidFunction<Thread&> Callback>
+inline IterationDecision Thread::for_each(Callback callback)
+{
+    ScopedSpinLock lock(g_tid_map_lock);
+    for (auto& it : *g_tid_map)
+        callback(*it.value);
+    return IterationDecision::Continue;
+}
+
+template<VoidFunction<Thread&> Callback>
+inline IterationDecision Thread::for_each_in_state(State state, Callback callback)
+{
+    return for_each_in_state(state, [&](auto& thread) {
+        callback(thread);
+        return IterationDecision::Continue;
+    });
 }
 
 }
