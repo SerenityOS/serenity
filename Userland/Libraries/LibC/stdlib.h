@@ -20,6 +20,8 @@ __BEGIN_DECLS
 
 __attribute__((malloc)) __attribute__((alloc_size(1))) void* malloc(size_t);
 __attribute__((malloc)) __attribute__((alloc_size(1, 2))) void* calloc(size_t nmemb, size_t);
+__attribute__((malloc)) __attribute__((alloc_size(2))) __attribute__((alloc_align(1))) void* aligned_alloc(size_t alignment, size_t size);
+int posix_memalign(void** memptr, size_t alignment, size_t size);
 size_t malloc_size(void*);
 void serenity_dump_malloc_stats(void);
 void free(void*);

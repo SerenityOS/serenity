@@ -1,16 +1,19 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mițca Dumitru <dumitru0mitca@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
 #include <AK/InlineLinkedList.h>
+#include <AK/Result.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibThread/Lock.h>
 #include <assert.h>
+#include <malloc.h>
 #include <mallocdefs.h>
 #include <serenity.h>
 #include <stdio.h>
@@ -61,6 +64,7 @@ ALWAYS_INLINE static void ue_notify_realloc(const void* ptr, size_t size)
 
 struct MallocStats {
     size_t number_of_malloc_calls;
+    size_t number_of_aligned_alloc_calls;
 
     size_t number_of_big_allocator_hits;
     size_t number_of_big_allocator_purge_hits;
@@ -155,18 +159,23 @@ enum class CallerWillInitializeMemory {
     Yes,
 };
 
-static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_initialize_memory)
+static Result<void*, int> malloc_impl(size_t size, CallerWillInitializeMemory caller_will_initialize_memory, size_t alignment = alignof(max_align_t))
 {
     LOCKER(malloc_lock());
 
     if (s_log_malloc)
-        dbgln("LibC: malloc({})", size);
+        dbgln("LibC: malloc(size={}, alignment={})", size, alignment);
 
     if (!size) {
         // Legally we could just return a null pointer here, but this is more
         // compatible with existing software.
         size = 1;
     }
+
+    const bool alignment_is_power_of_2 = (alignment & (alignment - 1)) == 0;
+    const bool alignment_is_multiple_of_sizeof_voidstar = (alignment % sizeof(void*)) == 0;
+    if (!(alignment_is_power_of_2 || alignment_is_multiple_of_sizeof_voidstar))
+        return EINVAL;
 
     g_malloc_stats.number_of_malloc_calls++;
 
@@ -195,26 +204,51 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
                     new (block) BigAllocationBlock(real_size);
                 }
 
-                ue_notify_malloc(&block->m_slot[0], size);
-                return &block->m_slot[0];
+                if ((reinterpret_cast<uintptr_t>(&block->m_slot[0]) & (alignment - 1)) == 0) {
+                    ue_notify_malloc(&block->m_slot[0], size);
+                    return &block->m_slot[0];
+                }
+
+                // Return the block to the allocator
+                allocator->blocks.append(block);
             }
         }
 #endif
         g_malloc_stats.number_of_big_allocs++;
         auto* block = (BigAllocationBlock*)os_alloc(real_size, "malloc: BigAllocationBlock");
         new (block) BigAllocationBlock(real_size);
-        ue_notify_malloc(&block->m_slot[0], size);
-        return &block->m_slot[0];
+        if ((reinterpret_cast<uintptr_t>(&block->m_slot[0]) & (alignment - 1)) == 0) {
+            ue_notify_malloc(&block->m_slot[0], size);
+            return &block->m_slot[0];
+        }
+
+        // FIXME: Have a pool for big allocators that can be expanded?
+        os_free(block, real_size);
+
+        return ENOMEM;
     }
 
+    auto find_aligned_entry = [&](ChunkedBlock& block) -> FreelistEntry* {
+        FreelistEntry* maybe_aligned_entry = nullptr;
+        for (maybe_aligned_entry = block.m_freelist; maybe_aligned_entry; maybe_aligned_entry = maybe_aligned_entry->next) {
+            if ((reinterpret_cast<uintptr_t>(maybe_aligned_entry) & (alignment - 1)) == 0)
+                return maybe_aligned_entry;
+        }
+        return nullptr;
+    };
+
     ChunkedBlock* block = nullptr;
+    void* ptr = nullptr;
 
     for (block = allocator->usable_blocks.head(); block; block = block->next()) {
         if (block->free_chunks())
-            break;
+            if (auto* aligned_entry = find_aligned_entry(*block)) {
+                ptr = aligned_entry;
+                break;
+            }
     }
 
-    if (!block && allocator->empty_block_count) {
+    if (!block && !ptr && allocator->empty_block_count) {
         g_malloc_stats.number_of_empty_block_hits++;
         block = allocator->empty_blocks[--allocator->empty_block_count];
         int rc = madvise(block, ChunkedBlock::block_size, MADV_SET_NONVOLATILE);
@@ -235,7 +269,7 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
         allocator->usable_blocks.append(block);
     }
 
-    if (!block) {
+    if (!block && !ptr) {
         g_malloc_stats.number_of_block_allocs++;
         char buffer[64];
         snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu)", good_size);
@@ -246,13 +280,19 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
     }
 
     --block->m_free_chunks;
-    void* ptr = block->m_freelist;
+    if (!ptr)
+        ptr = find_aligned_entry(*block);
+
     if (ptr) {
         block->m_freelist = block->m_freelist->next;
     } else {
-        ptr = block->m_slot + block->m_next_lazy_freelist_index * block->m_size;
-        block->m_next_lazy_freelist_index++;
+        void* candidate_ptr = block->m_slot + block->m_next_lazy_freelist_index * block->m_size;
+        if ((reinterpret_cast<uintptr_t>(candidate_ptr) & (alignment - 1)) == 0) {
+            ptr = candidate_ptr;
+            block->m_next_lazy_freelist_index++;
+        }
     }
+
     VERIFY(ptr);
     if (block->is_full()) {
         g_malloc_stats.number_of_blocks_full++;
@@ -260,7 +300,7 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
         allocator->usable_blocks.remove(block);
         allocator->full_blocks.append(block);
     }
-    dbgln_if(MALLOC_DEBUG, "LibC: allocated {:p} (chunk in block {:p}, size {})", ptr, block, block->bytes_per_chunk());
+    dbgln_if(MALLOC_DEBUG, "LibC: allocated {:p} (chunk in block {:p}, size {}, alignment {})", ptr, block, block->bytes_per_chunk(), alignment);
 
     if (s_scrub_malloc && caller_will_initialize_memory == CallerWillInitializeMemory::No)
         memset(ptr, MALLOC_SCRUB_BYTE, block->m_size);
@@ -353,10 +393,43 @@ static void free_impl(void* ptr)
 
 [[gnu::flatten]] void* malloc(size_t size)
 {
-    void* ptr = malloc_impl(size, CallerWillInitializeMemory::No);
-    if (s_profiling)
-        perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<FlatPtr>(ptr));
+    auto result = malloc_impl(size, CallerWillInitializeMemory::No);
+    if (s_profiling && !result.is_error())
+        perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<FlatPtr>(result.value()));
+    if (result.is_error())
+        return nullptr;
+    return result.value();
+}
+
+[[gnu::flatten]] void* aligned_alloc(size_t alignment, size_t size)
+{
+    auto result = malloc_impl(size, CallerWillInitializeMemory::No, alignment);
+    if (s_profiling && !result.is_error())
+        perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<FlatPtr>(result.value()));
+    if (result.is_error())
+        return nullptr;
+    return result.value();
+}
+
+[[gnu::flatten]] void* memalign(size_t alignment, size_t size)
+{
+    void* ptr = nullptr;
+    int result = posix_memalign(&ptr, alignment, size);
+    if (result != 0)
+        return nullptr;
     return ptr;
+}
+
+[[gnu::flatten]] int posix_memalign(void** memptr, size_t alignment, size_t size)
+{
+    VERIFY(memptr);
+    auto result = malloc_impl(size, CallerWillInitializeMemory::No, alignment);
+    if (s_profiling && !result.is_error())
+        perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<FlatPtr>(result.value()));
+    if (result.is_error())
+        return result.error();
+    *memptr = result.value();
+    return 0;
 }
 
 [[gnu::flatten]] void free(void* ptr)
@@ -370,10 +443,10 @@ static void free_impl(void* ptr)
 void* calloc(size_t count, size_t size)
 {
     size_t new_size = count * size;
-    auto* ptr = malloc_impl(new_size, CallerWillInitializeMemory::Yes);
-    if (ptr)
-        memset(ptr, 0, new_size);
-    return ptr;
+    auto result = malloc_impl(new_size, CallerWillInitializeMemory::Yes);
+    if (!result.is_error() && result.value())
+        memset(result.value(), 0, new_size);
+    return result.value_or(nullptr);
 }
 
 size_t malloc_size(void* ptr)
@@ -445,6 +518,7 @@ void __malloc_init()
 void serenity_dump_malloc_stats()
 {
     dbgln("# malloc() calls: {}", g_malloc_stats.number_of_malloc_calls);
+    dbgln("# aligned_alloc()/posix_memalign() calls: {}", g_malloc_stats.number_of_aligned_alloc_calls);
     dbgln();
     dbgln("big alloc hits: {}", g_malloc_stats.number_of_big_allocator_hits);
     dbgln("big alloc hits that were purged: {}", g_malloc_stats.number_of_big_allocator_purge_hits);
