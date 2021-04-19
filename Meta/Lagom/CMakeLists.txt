@@ -73,10 +73,12 @@ file(GLOB LIBTEXTCODEC_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTe
 file(GLOB SHELL_SOURCES CONFIGURE_DEPENDS "../../Userland/Shell/*.cpp")
 file(GLOB SHELL_TESTS CONFIGURE_DEPENDS "../../Userland/Shell/Tests/*.sh")
 list(FILTER SHELL_SOURCES EXCLUDE REGEX ".*main.cpp$")
+file(GLOB LIBSQL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/*.cpp")
+file(GLOB LIBSQL_TEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/Tests/*.cpp")
 
 set(LAGOM_REGEX_SOURCES ${LIBREGEX_LIBC_SOURCES} ${LIBREGEX_SOURCES})
 set(LAGOM_CORE_SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES})
-set(LAGOM_MORE_SOURCES ${LIBARCHIVE_SOURCES} ${LIBAUDIO_SOURCES} ${LIBELF_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCOMPRESS_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBTLS_SOURCES} ${LIBTTF_SOURCES} ${LIBTEXTCODEC_SOURCES} ${LIBMARKDOWN_SOURCES} ${LIBGEMINI_SOURCES} ${LIBGFX_SOURCES} ${LIBGUI_GML_SOURCES} ${LIBHTTP_SOURCES} ${LAGOM_REGEX_SOURCES} ${SHELL_SOURCES})
+set(LAGOM_MORE_SOURCES ${LIBARCHIVE_SOURCES} ${LIBAUDIO_SOURCES} ${LIBELF_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCOMPRESS_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBTLS_SOURCES} ${LIBTTF_SOURCES} ${LIBTEXTCODEC_SOURCES} ${LIBMARKDOWN_SOURCES} ${LIBGEMINI_SOURCES} ${LIBGFX_SOURCES} ${LIBGUI_GML_SOURCES} ${LIBHTTP_SOURCES} ${LAGOM_REGEX_SOURCES} ${SHELL_SOURCES} ${LIBSQL_SOURCES})
 
 # FIXME: This is a hack, because the lagom stuff can be build individually or
 #        in combination with the system, we generate two Debug.h files. One in
@@ -164,6 +166,11 @@ if (BUILD_LAGOM)
         target_link_libraries(gml-format_lagom Lagom)
         target_link_libraries(gml-format_lagom stdc++)
 
+        add_executable(sql_lagom ../../Userland/Utilities/sql.cpp)
+        set_target_properties(sql_lagom PROPERTIES OUTPUT_NAME sql)
+        target_link_libraries(sql_lagom Lagom)
+        target_link_libraries(sql_lagom stdc++)
+
         foreach(TEST_PATH ${SHELL_TESTS})
             get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
             add_test(
@@ -193,6 +200,17 @@ if (BUILD_LAGOM)
         foreach(source ${LIBREGEX_TESTS})
             get_filename_component(name ${source} NAME_WE)
             add_executable(${name}_lagom ${source} ${LAGOM_REGEX_SOURCES})
+            target_link_libraries(${name}_lagom LagomCore)
+            add_test(
+                NAME ${name}_lagom
+                COMMAND ${name}_lagom
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+        endforeach()
+
+        foreach(source ${LIBSQL_TEST_SOURCES})
+            get_filename_component(name ${source} NAME_WE)
+            add_executable(${name}_lagom ${source} ${LIBSQL_SOURCES})
             target_link_libraries(${name}_lagom LagomCore)
             add_test(
                 NAME ${name}_lagom
