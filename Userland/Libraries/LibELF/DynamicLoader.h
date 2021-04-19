@@ -54,6 +54,11 @@ private:
     size_t m_size;
 };
 
+enum class ShouldInitializeWeak {
+    Yes,
+    No
+};
+
 class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
     static RefPtr<DynamicLoader> try_create(int fd, String filename);
@@ -145,7 +150,7 @@ private:
         Success = 1,
         ResolveLater = 2,
     };
-    RelocationResult do_relocation(size_t total_tls_size, const DynamicObject::Relocation&);
+    RelocationResult do_relocation(size_t total_tls_size, const DynamicObject::Relocation&, ShouldInitializeWeak should_initialize_weak);
     size_t calculate_tls_size() const;
 
     String m_filename;

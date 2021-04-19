@@ -211,7 +211,7 @@ bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
 void DynamicLoader::do_main_relocations(size_t total_tls_size)
 {
     auto do_single_relocation = [&](const ELF::DynamicObject::Relocation& relocation) {
-        switch (do_relocation(total_tls_size, relocation)) {
+        switch (do_relocation(total_tls_size, relocation, ShouldInitializeWeak::No)) {
         case RelocationResult::Failed:
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
             VERIFY_NOT_REACHED();
@@ -267,7 +267,7 @@ void DynamicLoader::load_stage_4()
 void DynamicLoader::do_lazy_relocations(size_t total_tls_size)
 {
     for (const auto& relocation : m_unresolved_relocations) {
-        if (auto res = do_relocation(total_tls_size, relocation); res != RelocationResult::Success) {
+        if (auto res = do_relocation(total_tls_size, relocation, ShouldInitializeWeak::Yes); res != RelocationResult::Success) {
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
             VERIFY_NOT_REACHED();
         }
@@ -424,7 +424,7 @@ void DynamicLoader::load_program_headers()
     // FIXME: Initialize the values in the TLS section. Currently, it is zeroed.
 }
 
-DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_size, const ELF::DynamicObject::Relocation& relocation)
+DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_size, const ELF::DynamicObject::Relocation& relocation, ShouldInitializeWeak should_initialize_weak)
 {
     FlatPtr* patch_ptr = nullptr;
     if (is_dynamic())
@@ -462,14 +462,19 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
     case R_386_GLOB_DAT: {
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
+        VirtualAddress symbol_location;
         if (!res.has_value()) {
-            if (symbol.bind() == STB_WEAK)
-                return RelocationResult::ResolveLater;
+            if (symbol.bind() == STB_WEAK) {
+                if (should_initialize_weak == ShouldInitializeWeak::No)
+                    return RelocationResult::ResolveLater;
+            } else {
+                // Symbol not found
+                return RelocationResult::Failed;
+            }
 
-            // Symbol not found
-            return RelocationResult::Failed;
-        }
-        auto symbol_location = res.value().address;
+            symbol_location = VirtualAddress { (FlatPtr)0 };
+        } else
+            symbol_location = res.value().address;
         VERIFY(symbol_location != m_dynamic_object->base_address());
         *patch_ptr = symbol_location.get();
         break;
