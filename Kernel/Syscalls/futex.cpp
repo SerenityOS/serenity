@@ -104,8 +104,6 @@ void Process::clear_futex_queues_on_exec()
 
 KResultOr<int> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
 {
-    REQUIRE_PROMISE(thread);
-
     Syscall::SC_futex_params params;
     if (!copy_from_user(&params, user_params))
         return EFAULT;
