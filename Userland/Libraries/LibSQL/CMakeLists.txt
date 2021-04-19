@@ -6,3 +6,5 @@ set(SOURCES
 
 serenity_lib(LibSQL sql)
 target_link_libraries(LibSQL LibCore)
+
+add_subdirectory(Tests)
