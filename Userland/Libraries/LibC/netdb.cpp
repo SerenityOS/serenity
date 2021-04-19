@@ -667,6 +667,13 @@ int getaddrinfo(const char* __restrict node, const char* __restrict service, con
     if (hints && hints->ai_family != AF_INET && hints->ai_family != AF_UNSPEC)
         return EAI_FAMILY;
 
+    if (!node) {
+        if (hints && hints->ai_flags & AI_PASSIVE)
+            node = "0.0.0.0";
+        else
+            node = "127.0.0.1";
+    }
+
     auto host_ent = gethostbyname(node);
     if (!host_ent)
         return EAI_FAIL;
