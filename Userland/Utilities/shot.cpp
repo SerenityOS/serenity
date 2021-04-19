@@ -67,8 +67,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    Gfx::PNGWriter writer;
-    auto encoded_bitmap = writer.write(bitmap);
+    auto encoded_bitmap = Gfx::PNGWriter::encode(*bitmap);
     if (encoded_bitmap.is_empty()) {
         warnln("Failed to encode PNG");
         return 1;
