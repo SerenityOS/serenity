@@ -76,6 +76,9 @@ public:
     virtual bool expand_tabs() const final { return m_expand_tabs; }
     void set_expand_tabs(bool expand_tabs) { m_expand_tabs = expand_tabs; };
 
+    virtual bool show_icon_for_tab() const final { return m_show_icon_for_tab; }
+    void set_show_icon_for_tab(bool show_icon_for_tab) { m_show_icon_for_tab = show_icon_for_tab; };
+
     WrappingMode wrapping_mode() const { return m_wrapping_mode; }
     bool is_wrapping_enabled() const { return m_wrapping_mode != WrappingMode::NoWrap; }
     void set_wrapping_mode(WrappingMode);
@@ -327,6 +330,7 @@ private:
     size_t m_soft_tab_width { 4 };
     size_t m_hard_tab_width { 4 };
     bool m_expand_tabs { true };
+    bool m_show_icon_for_tab { true };
     int m_horizontal_content_padding { 3 };
     TextRange m_selection;
     RefPtr<Menu> m_context_menu;

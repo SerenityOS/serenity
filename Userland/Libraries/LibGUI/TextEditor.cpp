@@ -384,7 +384,7 @@ void TextEditor::draw_text_with_tabs_helper(const Utf32View& visual_line_text, D
         if (length != 0)
             draw(start_offset, length);
 
-        if (draw_tab_symbol) {
+        if (m_show_icon_for_tab && draw_tab_symbol) {
             auto point = move_rect.location().translated(0, 3);
             auto* emoji = Gfx::Emoji::emoji_for_code_point(0x21E5);
             painter.blit_filtered(point, *emoji, emoji->rect(), [&](Color input) {

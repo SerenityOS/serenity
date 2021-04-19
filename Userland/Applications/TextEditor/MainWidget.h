@@ -101,6 +101,7 @@ private:
     RefPtr<GUI::Action> m_visualize_leading_whitespace_action;
 
     RefPtr<GUI::Action> m_expand_tabs;
+    RefPtr<GUI::Action> show_icon_for_tab;
 
     GUI::ActionGroup m_soft_tab_width_actions;
     RefPtr<GUI::Action> m_soft_tab_1_width_action;

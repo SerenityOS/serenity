@@ -472,7 +472,15 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
 
     view_menu.add_separator();
 
-    m_expand_tabs = GUI::Action::create_checkable("Expand tabs", [&](auto& action) {
+    show_icon_for_tab = GUI::Action::create_checkable("Show &Icon for Hard Tabs", [&](auto& action) {
+        m_editor->set_show_icon_for_tab(action.is_checked());
+    });
+
+    show_icon_for_tab->set_checked(true);
+    m_editor->set_show_icon_for_tab(true);
+    view_menu.add_action(*show_icon_for_tab);
+
+    m_expand_tabs = GUI::Action::create_checkable("Expand &Tabs", [&](auto& action) {
         m_editor->set_expand_tabs(action.is_checked());
     });
 
@@ -481,7 +489,7 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
     view_menu.add_action(*m_expand_tabs);
 
     m_hard_tab_width_actions.set_exclusive(true);
-    auto& hard_tab_width_menu = view_menu.add_submenu("&Hard tab width");
+    auto& hard_tab_width_menu = view_menu.add_submenu("&Hard Tab Width");
     m_hard_tab_1_width_action = GUI::Action::create_checkable("1", [&](auto&) {
         m_editor->set_hard_tab_width(1);
     });
@@ -514,7 +522,7 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
     m_hard_tab_width_actions.set_exclusive(true);
 
     m_soft_tab_width_actions.set_exclusive(true);
-    auto& soft_tab_width_menu = view_menu.add_submenu("&Soft Tab Width");
+    auto& soft_tab_width_menu = view_menu.add_submenu("S&oft Tab Width");
     m_soft_tab_1_width_action = GUI::Action::create_checkable("1", [&](auto&) {
         m_editor->set_soft_tab_width(1);
     });
