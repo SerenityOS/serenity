@@ -81,6 +81,8 @@ def check_package_files(ports):
             data = fp.read()
             for p in properties:
                 if not re.findall(f"^{p}=", data, re.M):
+                    if p == 'auth_type' and re.findall('^files="?https://github.com/SerenityOS/', data, re.M):
+                        continue
                     print(f"Ports/{package} is missing '{p}'")
                     all_good = False
 
