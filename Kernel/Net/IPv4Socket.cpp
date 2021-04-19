@@ -112,7 +112,7 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
 
     auto requested_local_port = ntohs(address.sin_port);
     if (!Process::current()->is_superuser()) {
-        if (requested_local_port < 1024) {
+        if (requested_local_port > 0 && requested_local_port < 1024) {
             dbgln("UID {} attempted to bind {} to port {}", Process::current()->uid(), class_name(), requested_local_port);
             return EACCES;
         }
