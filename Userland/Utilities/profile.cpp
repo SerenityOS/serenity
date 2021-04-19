@@ -37,6 +37,7 @@ int main(int argc, char** argv)
     const char* pid_argument = nullptr;
     const char* cmd_argument = nullptr;
     bool wait = false;
+    bool free = false;
     bool enable = false;
     bool disable = false;
     bool all_processes = false;
@@ -45,6 +46,7 @@ int main(int argc, char** argv)
     args_parser.add_option(all_processes, "Profile all processes (super-user only)", nullptr, 'a');
     args_parser.add_option(enable, "Enable", nullptr, 'e');
     args_parser.add_option(disable, "Disable", nullptr, 'd');
+    args_parser.add_option(free, "Free the profiling buffer for the associated process(es).", nullptr, 'f');
     args_parser.add_option(wait, "Enable profiling and wait for user input to disable.", nullptr, 'w');
     args_parser.add_option(cmd_argument, "Command", nullptr, 'c', "command");
 
@@ -56,8 +58,8 @@ int main(int argc, char** argv)
     }
 
     if (pid_argument || all_processes) {
-        if (!(enable ^ disable ^ wait)) {
-            fprintf(stderr, "-p <PID> requires -e xor -d xor -w.\n");
+        if (!(enable ^ disable ^ wait ^ free)) {
+            fprintf(stderr, "-p <PID> requires -e xor -d xor -w xor -f.\n");
             return 1;
         }
 
@@ -78,11 +80,18 @@ int main(int argc, char** argv)
             (void)getchar();
         }
 
-        if (profiling_disable(pid) < 0) {
+        if (wait || disable) {
+            if (profiling_disable(pid) < 0) {
+                perror("profiling_disable");
+                return 1;
+            }
+            outln("Profiling disabled.");
+        }
+
+        if (free && profiling_free_buffer(pid) < 0) {
             perror("profiling_disable");
             return 1;
         }
-        outln("Profiling disabled.");
 
         return 0;
     }
