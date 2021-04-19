@@ -817,7 +817,7 @@ void TextEditor::keydown_event(KeyEvent& event)
             if (event.modifiers() == Mod_Ctrl) {
                 auto word_break_pos = document().first_word_break_before(m_cursor, true);
                 erase_count = m_cursor.column() - word_break_pos.column();
-            } else if (current_line().first_non_whitespace_column() >= m_cursor.column()) {
+            } else if (current_line().first_non_whitespace_column() >= m_cursor.column() && m_expand_tabs) {
                 int new_column;
                 if (m_cursor.column() % m_soft_tab_width == 0)
                     new_column = m_cursor.column() - m_soft_tab_width;

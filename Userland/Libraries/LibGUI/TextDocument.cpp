@@ -736,6 +736,7 @@ bool InsertTextCommand::merge_with(GUI::Command const& other)
 void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
 {
     const size_t tab_width = client.soft_tab_width();
+    const size_t hard_tab_width = client.hard_tab_width();
     const auto& dest_line = m_document.line(m_range.start().line());
     const bool should_auto_indent = client.is_automatic_indentation_enabled();
 
@@ -743,6 +744,7 @@ void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
     size_t column = m_range.start().column();
     size_t line_indentation = dest_line.leading_spaces();
     bool at_start_of_line = line_indentation == column;
+    bool expand_tabs = client.expand_tabs();
 
     for (auto input_char : m_text) {
         if (input_char == '\n') {
@@ -755,12 +757,17 @@ void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
             }
             at_start_of_line = true;
         } else if (input_char == '\t') {
-            size_t next_soft_tab_stop = ((column + tab_width) / tab_width) * tab_width;
-            size_t spaces_to_insert = next_soft_tab_stop - column;
-            for (size_t i = 0; i < spaces_to_insert; ++i) {
-                builder.append(' ');
+            if (expand_tabs) {
+                size_t next_soft_tab_stop = ((column + tab_width) / tab_width) * tab_width;
+                size_t spaces_to_insert = next_soft_tab_stop - column;
+                for (size_t i = 0; i < spaces_to_insert; ++i) {
+                    builder.append(' ');
+                }
+                column = next_soft_tab_stop;
+            } else {
+                column += hard_tab_width;
+                builder.append('\t');
             }
-            column = next_soft_tab_stop;
             if (at_start_of_line) {
                 line_indentation = column;
             }
