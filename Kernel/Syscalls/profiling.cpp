@@ -67,6 +67,8 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
 
 KResultOr<int> Process::sys$profiling_disable(pid_t pid)
 {
+    REQUIRE_NO_PROMISES;
+
     if (pid == -1) {
         if (!is_superuser())
             return EPERM;
@@ -87,4 +89,35 @@ KResultOr<int> Process::sys$profiling_disable(pid_t pid)
     return 0;
 }
 
+KResultOr<int> Process::sys$profiling_free_buffer(pid_t pid)
+{
+    REQUIRE_NO_PROMISES;
+
+    if (pid == -1) {
+        if (!is_superuser())
+            return EPERM;
+
+        OwnPtr<PerformanceEventBuffer> perf_events;
+
+        {
+            ScopedCritical critical;
+
+            perf_events = g_global_perf_events;
+            g_global_perf_events = nullptr;
+        }
+
+        return 0;
+    }
+
+    ScopedSpinLock lock(g_processes_lock);
+    auto process = Process::from_pid(pid);
+    if (!process)
+        return ESRCH;
+    if (!is_superuser() && process->uid() != euid())
+        return EPERM;
+    if (process->is_profiling())
+        return EINVAL;
+    process->delete_perf_events_buffer();
+    return 0;
+}
 }
