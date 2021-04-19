@@ -444,7 +444,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
             if (symbol.bind() == STB_WEAK)
                 return RelocationResult::ResolveLater;
             dbgln("ERROR: symbol not found: {}.", symbol.name());
-            VERIFY_NOT_REACHED();
+            return RelocationResult::Failed;
         }
         auto symbol_address = res.value().address;
         *patch_ptr += symbol_address.get();
@@ -453,7 +453,8 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
     case R_386_PC32: {
         auto symbol = relocation.symbol();
         auto result = lookup_symbol(symbol);
-        VERIFY(result.has_value());
+        if (!result.has_value())
+            return RelocationResult::Failed;
         auto relative_offset = result.value().address - m_dynamic_object->base_address().offset(relocation.offset());
         *patch_ptr += relative_offset.get();
         break;
