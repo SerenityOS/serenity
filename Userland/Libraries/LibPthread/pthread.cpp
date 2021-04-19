@@ -580,6 +580,31 @@ int pthread_setcanceltype([[maybe_unused]] int type, [[maybe_unused]] int* oldty
     TODO();
 }
 
+int pthread_spin_destroy([[maybe_unused]] pthread_spinlock_t* lock)
+{
+    TODO();
+}
+
+int pthread_spin_init([[maybe_unused]] pthread_spinlock_t* lock, [[maybe_unused]] int shared)
+{
+    TODO();
+}
+
+int pthread_spin_lock([[maybe_unused]] pthread_spinlock_t* lock)
+{
+    TODO();
+}
+
+int pthread_spin_trylock([[maybe_unused]] pthread_spinlock_t* lock)
+{
+    TODO();
+}
+
+int pthread_spin_unlock([[maybe_unused]] pthread_spinlock_t* lock)
+{
+    TODO();
+}
+
 int pthread_equal(pthread_t t1, pthread_t t2)
 {
     return t1 == t2;
