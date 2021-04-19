@@ -189,15 +189,7 @@ public:
 #undef __ENUMERATE_EDITOR_INTERNAL_FUNCTION
 
     void interrupted();
-    void resized()
-    {
-        m_was_resized = true;
-        m_previous_num_columns = m_num_columns;
-        get_terminal_size();
-        m_suggestion_display->set_vt_size(m_num_lines, m_num_columns);
-        if (m_is_searching)
-            m_search_editor->resized();
-    }
+    void resized();
 
     size_t cursor() const { return m_cursor; }
     void set_cursor(size_t cursor)

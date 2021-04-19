@@ -35,6 +35,8 @@ namespace Line {
 
 void XtermSuggestionDisplay::display(const SuggestionManager& manager)
 {
+    did_display();
+
     size_t longest_suggestion_length = 0;
     size_t longest_suggestion_byte_length = 0;
 
@@ -172,6 +174,8 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
 
 bool XtermSuggestionDisplay::cleanup()
 {
+    did_cleanup();
+
     if (m_lines_used_for_last_suggestions) {
         VT::clear_lines(0, m_lines_used_for_last_suggestions);
         m_lines_used_for_last_suggestions = 0;
