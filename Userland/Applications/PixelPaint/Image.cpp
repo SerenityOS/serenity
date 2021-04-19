@@ -155,11 +155,11 @@ void Image::export_bmp(const String& file_path)
 void Image::export_png(const String& file_path)
 {
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, m_size);
+    VERIFY(bitmap);
     GUI::Painter painter(*bitmap);
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
 
-    Gfx::PNGWriter png_writer;
-    auto png = png_writer.write(bitmap);
+    auto png = Gfx::PNGWriter::encode(*bitmap);
     auto file = fopen(file_path.characters(), "wb");
     fwrite(png.data(), sizeof(u8), png.size(), file);
     fclose(file);
