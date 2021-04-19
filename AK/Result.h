@@ -43,6 +43,11 @@ public:
         return m_result.value();
     }
 
+    ValueType value_or(const ValueType& fallback) const
+    {
+        return m_result.value_or(fallback);
+    }
+
     ErrorType& error()
     {
         return m_error.value();
