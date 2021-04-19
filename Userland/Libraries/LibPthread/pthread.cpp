@@ -143,6 +143,16 @@ void pthread_exit(void* value_ptr)
     exit_thread(value_ptr);
 }
 
+void pthread_cleanup_push([[maybe_unused]] void (*routine)(void*), [[maybe_unused]] void* arg)
+{
+    TODO();
+}
+
+void pthread_cleanup_pop([[maybe_unused]] int execute)
+{
+    TODO();
+}
+
 int pthread_join(pthread_t thread, void** exit_value_ptr)
 {
     int rc = syscall(SC_join_thread, thread, exit_value_ptr);
