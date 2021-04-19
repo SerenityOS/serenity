@@ -39,6 +39,7 @@ int module_unload(const char* name, size_t name_length);
 
 int profiling_enable(pid_t);
 int profiling_disable(pid_t);
+int profiling_free_buffer(pid_t);
 
 #define THREAD_PRIORITY_MIN 1
 #define THREAD_PRIORITY_LOW 10
