@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
+ * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +30,7 @@ private:
     virtual void mousemove_event(GUI::MouseEvent& event) override;
     virtual void mouseup_event(GUI::MouseEvent& event) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
+    bool viewport_changed() const;
 
     TrackManager& m_track_manager;
     const KeysWidget* m_keys_widget;
@@ -41,4 +43,9 @@ private:
     Optional<Gfx::IntPoint> m_note_drag_start;
     Optional<RollNote> m_note_drag_location;
     int m_drag_note;
+
+    RefPtr<Gfx::Bitmap> m_background;
+    int m_prev_zoom_level { m_zoom_level };
+    int m_prev_scroll_x { horizontal_scrollbar().value() };
+    int m_prev_scroll_y { vertical_scrollbar().value() };
 };
