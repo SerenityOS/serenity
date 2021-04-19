@@ -306,8 +306,7 @@ void DynamicLoader::load_program_headers()
         return IterationDecision::Continue;
     });
 
-    VERIFY(!text_regions.is_empty());
-    VERIFY(!data_regions.is_empty());
+    VERIFY(!text_regions.is_empty() || !data_regions.is_empty());
 
     auto compare_load_address = [](ProgramHeaderRegion& a, ProgramHeaderRegion& b) {
         return a.desired_load_address().as_ptr() < b.desired_load_address().as_ptr();
