@@ -600,7 +600,9 @@ void Editor::really_quit_event_loop()
     m_buffer.clear();
     m_chars_touched_in_the_middle = buffer().size();
     m_is_editing = false;
-    restore();
+
+    if (m_initialized)
+        restore();
 
     m_returned_line = string;
 
