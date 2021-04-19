@@ -176,7 +176,7 @@ public:
     bool ends_in_whitespace() const;
     bool can_select() const;
     bool is_empty() const { return length() == 0; }
-    size_t leading_spaces() const;
+    size_t leading_whitespace_chars(size_t hard_tab_width) const;
 
 private:
     // NOTE: This vector is null terminated.

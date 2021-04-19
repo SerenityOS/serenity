@@ -104,7 +104,7 @@ size_t TextDocumentLine::first_non_whitespace_column() const
 {
     for (size_t i = 0; i < length(); ++i) {
         auto code_point = code_points()[i];
-        if (!isspace(code_point))
+        if (!isblank(code_point))
             return i;
     }
     return length();
@@ -114,7 +114,7 @@ Optional<size_t> TextDocumentLine::last_non_whitespace_column() const
 {
     for (ssize_t i = length() - 1; i >= 0; --i) {
         auto code_point = code_points()[i];
-        if (!isspace(code_point))
+        if (!isblank(code_point))
             return i;
     }
     return {};
@@ -124,7 +124,7 @@ bool TextDocumentLine::ends_in_whitespace() const
 {
     if (!length())
         return false;
-    return isspace(code_points()[length() - 1]);
+    return isblank(code_points()[length() - 1]);
 }
 
 bool TextDocumentLine::can_select() const
@@ -139,13 +139,13 @@ bool TextDocumentLine::can_select() const
     return false;
 }
 
-size_t TextDocumentLine::leading_spaces() const
+size_t TextDocumentLine::leading_whitespace_chars(size_t hard_tab_width) const
 {
     size_t count = 0;
-    for (; count < m_text.size(); ++count) {
-        if (m_text[count] != ' ') {
+    for (auto code_point : m_text) {
+        if (!isblank(code_point))
             break;
-        }
+        count += code_point == '\t' ? hard_tab_width - (count % hard_tab_width) : 1;
     }
     return count;
 }
@@ -742,7 +742,7 @@ void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
 
     StringBuilder builder;
     size_t column = m_range.start().column();
-    size_t line_indentation = dest_line.leading_spaces();
+    size_t line_indentation = dest_line.leading_whitespace_chars(hard_tab_width);
     bool at_start_of_line = line_indentation == column;
     bool expand_tabs = client.expand_tabs();
 
@@ -751,8 +751,14 @@ void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
             builder.append('\n');
             column = 0;
             if (should_auto_indent) {
-                for (; column < line_indentation; ++column) {
-                    builder.append(' ');
+                while (column < line_indentation) {
+                    if (!expand_tabs && line_indentation - column >= hard_tab_width) {
+                        builder.append('\t');
+                        column += hard_tab_width;
+                    } else {
+                        builder.append(' ');
+                        column++;
+                    }
                 }
             }
             at_start_of_line = true;
@@ -765,7 +771,8 @@ void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
                 }
                 column = next_soft_tab_stop;
             } else {
-                column += hard_tab_width;
+                size_t chars_to_next_tab_stop = hard_tab_width - (column % hard_tab_width);
+                column += chars_to_next_tab_stop;
                 builder.append('\t');
             }
             if (at_start_of_line) {

@@ -659,8 +659,8 @@ void TextEditor::paint_event(PaintEvent& event)
                 }
             }
 
-            if (m_visualize_leading_whitespace && line.leading_spaces() > 0) {
-                size_t physical_column = line.leading_spaces();
+            if (m_visualize_leading_whitespace && line.leading_whitespace_chars(hard_tab_width()) > 0) {
+                size_t physical_column = line.leading_whitespace_chars(1);
                 size_t end_of_leading_whitespace = (start_of_visual_line + physical_column);
                 size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
                 if (end_of_leading_whitespace < end_of_visual_line) {
@@ -1589,15 +1589,22 @@ void TextEditor::recompute_visual_lines(size_t line_index)
 }
 
 // Width of a Utf32View, adjusted with the appropriate tab size
-int TextEditor::width_of_view(Utf32View visual_line_view) const
+int TextEditor::width_of_view(Utf32View view) const
 {
-    auto num_tabs = 0;
-    for (auto code_point : visual_line_view) {
-        if (code_point == '\t')
-            num_tabs++;
+    int width = 0;
+    int column = 0;
+    for (auto code_point : view) {
+        if (code_point == '\t') {
+            auto chars_to_next_tab_stop = hard_tab_width() - (column % hard_tab_width());
+            width += chars_to_next_tab_stop * font().glyph_width(' ');
+            column += chars_to_next_tab_stop;
+        } else {
+            width += font().glyph_width(code_point) + font().glyph_spacing();
+            column++;
+        }
     }
 
-    return font().width(visual_line_view) - num_tabs * font().glyph_width('\t') + font().glyph_spacing() + num_tabs * font().glyph_width(' ') * hard_tab_width();
+    return width;
 }
 
 template<typename Callback>
