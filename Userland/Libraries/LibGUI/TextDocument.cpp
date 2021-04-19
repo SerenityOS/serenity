@@ -735,7 +735,7 @@ bool InsertTextCommand::merge_with(GUI::Command const& other)
 
 void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
 {
-    const size_t tab_width = client.soft_tab_width();
+    const size_t soft_tab_width = client.soft_tab_width();
     const size_t hard_tab_width = client.hard_tab_width();
     const auto& dest_line = m_document.line(m_range.start().line());
     const bool should_auto_indent = client.is_automatic_indentation_enabled();
@@ -758,7 +758,7 @@ void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
             at_start_of_line = true;
         } else if (input_char == '\t') {
             if (expand_tabs) {
-                size_t next_soft_tab_stop = ((column + tab_width) / tab_width) * tab_width;
+                size_t next_soft_tab_stop = ((column + soft_tab_width) / soft_tab_width) * soft_tab_width;
                 size_t spaces_to_insert = next_soft_tab_stop - column;
                 for (size_t i = 0; i < spaces_to_insert; ++i) {
                     builder.append(' ');

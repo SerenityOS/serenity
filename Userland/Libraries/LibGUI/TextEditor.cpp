@@ -168,7 +168,7 @@ TextPosition TextEditor::text_position_at_content_position(const Gfx::IntPoint& 
                 int glyph_x = 0;
                 size_t i = 0;
                 for (; i < view.length(); ++i) {
-                    int advance = font().glyph_width(view.code_points()[i]) + font().glyph_spacing();
+                    int advance = width_of_view(view.substring_view(i, 1));
                     if ((glyph_x + (advance / 2)) >= position.x())
                         break;
                     glyph_x += advance;
@@ -370,6 +370,27 @@ Gfx::IntRect TextEditor::visible_text_rect_in_inner_coordinates() const
     };
 }
 
+template<typename DrawCallback, typename MoveCallback>
+void draw_text_with_tabs_helper(const Utf32View& visual_line_text, DrawCallback draw, MoveCallback move)
+{
+    size_t length = 0;
+    size_t start_offset = 0;
+    for (auto code_point : visual_line_text) {
+        if (code_point != '\t') {
+            length += 1;
+            continue;
+        } else {
+            if (length != 0)
+                draw(start_offset, length);
+            start_offset += length + 1;
+            length = 0;
+            move();
+        }
+    }
+    if (length != 0)
+        draw(start_offset, length);
+}
+
 void TextEditor::paint_event(PaintEvent& event)
 {
     Color widget_background_color = palette().color(is_enabled() ? background_role() : Gfx::ColorRole::Window);
@@ -483,10 +504,20 @@ void TextEditor::paint_event(PaintEvent& event)
                 painter.draw_text(line_rect, placeholder(), m_text_alignment, palette().color(Gfx::ColorRole::PlaceholderText));
             } else if (!document().has_spans()) {
                 // Fast-path for plain text
+                auto line_rect = Gfx::IntRect { visual_line_rect.location(), { visual_line_rect.width(), line_height() } };
                 auto color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
                 if (is_displayonly() && is_focused())
                     color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
-                painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, color);
+
+                draw_text_with_tabs_helper(
+                    visual_line_text,
+                    [&](size_t start_offset, size_t length) {
+                        painter.draw_text(line_rect, visual_line_text.substring_view(start_offset, length), m_text_alignment, color);
+                        line_rect.move_by(font().width(visual_line_text.substring_view(start_offset, length)), 0);
+                    },
+                    [&] {
+                        line_rect.move_by(font().glyph_width(' ') * hard_tab_width(), 0);
+                    });
             } else {
                 auto unspanned_color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
                 if (is_displayonly() && is_focused())
@@ -497,17 +528,23 @@ void TextEditor::paint_event(PaintEvent& event)
                 Gfx::IntRect span_rect = { visual_line_rect.location(), { 0, line_height() } };
 
                 auto draw_text_helper = [&](size_t start, size_t end, RefPtr<Gfx::Font>& font, Color& color, Optional<Color> background_color = {}, bool underline = false) {
-                    size_t length = end - start + 1;
-                    auto text = visual_line_text.substring_view(start, length);
-                    span_rect.set_width(font->width(text));
-                    if (background_color.has_value()) {
-                        painter.fill_rect(span_rect, background_color.value());
-                    }
-                    painter.draw_text(span_rect, text, *font, m_text_alignment, color);
-                    if (underline) {
-                        painter.draw_line(span_rect.bottom_left().translated(0, 1), span_rect.bottom_right().translated(0, 1), color);
-                    }
-                    span_rect.translate_by(span_rect.width(), 0);
+                    draw_text_with_tabs_helper(
+                        visual_line_text.substring_view(start, end - start + 1),
+                        [&](size_t start_offset, size_t length) {
+                            auto text = visual_line_text.substring_view(start + start_offset, length);
+                            span_rect.set_width(font->width(text));
+                            if (background_color.has_value()) {
+                                painter.fill_rect(span_rect, background_color.value());
+                            }
+                            painter.draw_text(span_rect, text, *font, m_text_alignment, color);
+                            if (underline) {
+                                painter.draw_line(span_rect.bottom_left().translated(0, 1), span_rect.bottom_right().translated(0, 1), color);
+                            }
+                            span_rect.move_by(width_of_view(text), 0);
+                        },
+                        [&] {
+                            span_rect.move_by(font->glyph_width(' ') * hard_tab_width(), 0);
+                        });
                 };
                 for (;;) {
                     if (span_index >= document().spans().size()) {
@@ -615,7 +652,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     Gfx::IntRect whitespace_rect {
                         content_x_for_position({ line_index, visual_column }),
                         visual_line_rect.y(),
-                        font().width(visual_line_text.substring_view(visual_column, visual_line_text.length() - visual_column)),
+                        width_of_view(visual_line_text.substring_view(visual_column, visual_line_text.length() - visual_column)),
                         visual_line_rect.height()
                     };
                     painter.fill_rect_with_dither_pattern(whitespace_rect, Color(), Color(255, 192, 192));
@@ -630,7 +667,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     Gfx::IntRect whitespace_rect {
                         content_x_for_position({ line_index, start_of_visual_line }),
                         visual_line_rect.y(),
-                        font().width(visual_line_text.substring_view(0, end_of_leading_whitespace)),
+                        width_of_view(visual_line_text.substring_view(0, end_of_leading_whitespace)),
                         visual_line_rect.height()
                     };
                     painter.fill_rect_with_dither_pattern(whitespace_rect, Color(), Color(192, 255, 192));
@@ -674,7 +711,15 @@ void TextEditor::paint_event(PaintEvent& event)
                             end_of_selection_within_visual_line - start_of_selection_within_visual_line
                         };
 
-                        painter.draw_text(selection_rect, visual_selected_text, Gfx::TextAlignment::CenterLeft, text_color);
+                        draw_text_with_tabs_helper(
+                            visual_selected_text,
+                            [&](size_t start_offset, size_t length) {
+                                painter.draw_text(selection_rect, visual_selected_text.substring_view(start_offset, length), Gfx::TextAlignment::CenterLeft, text_color);
+                                selection_rect.move_by(font().width(visual_selected_text.substring_view(start_offset, length)), 0);
+                            },
+                            [&] {
+                                selection_rect.move_by(font().glyph_width(' ') * hard_tab_width(), 0);
+                            });
                     }
                 }
             }
@@ -954,7 +999,7 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
                 if (offset_in_visual_line == 0) {
                     x_offset = 0;
                 } else {
-                    x_offset = font().width(visual_line_view.substring_view(0, offset_in_visual_line));
+                    x_offset = width_of_view(visual_line_view.substring_view(0, offset_in_visual_line));
                     x_offset += font().glyph_spacing();
                 }
                 return IterationDecision::Break;
@@ -1041,7 +1086,7 @@ Gfx::IntRect TextEditor::line_content_rect(size_t line_index) const
 {
     auto& line = this->line(line_index);
     if (is_single_line()) {
-        Gfx::IntRect line_rect = { content_x_for_position({ line_index, 0 }), 0, font().width(line.view()), font().glyph_height() + 4 };
+        Gfx::IntRect line_rect = { content_x_for_position({ line_index, 0 }), 0, width_of_view(line.view()), font().glyph_height() + 4 };
         line_rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return line_rect;
     }
@@ -1050,7 +1095,7 @@ Gfx::IntRect TextEditor::line_content_rect(size_t line_index) const
     return {
         content_x_for_position({ line_index, 0 }),
         (int)line_index * line_height(),
-        font().width(line.view()),
+        width_of_view(line.view()),
         line_height()
     };
 }
@@ -1516,7 +1561,7 @@ void TextEditor::recompute_visual_lines(size_t line_index)
                 last_whitespace_index = i;
                 line_width_since_last_whitespace = 0;
             }
-            auto glyph_width = font().glyph_or_emoji_width(code_point);
+            auto glyph_width = width_of_view(Utf32View(&code_point, 1));
             line_width_since_last_whitespace += glyph_width + glyph_spacing;
             if ((line_width_so_far + glyph_width + glyph_spacing) > available_width) {
                 if (m_wrapping_mode == WrappingMode::WrapAtWords && last_whitespace_index != 0) {
@@ -1540,7 +1585,19 @@ void TextEditor::recompute_visual_lines(size_t line_index)
     if (is_wrapping_enabled())
         visual_data.visual_rect = { m_horizontal_content_padding, 0, available_width, static_cast<int>(visual_data.visual_line_breaks.size()) * line_height() };
     else
-        visual_data.visual_rect = { m_horizontal_content_padding, 0, font().width(line.view()), line_height() };
+        visual_data.visual_rect = { m_horizontal_content_padding, 0, width_of_view(line.view()), line_height() };
+}
+
+// Width of a Utf32View, adjusted with the appropriate tab size
+int TextEditor::width_of_view(Utf32View visual_line_view) const
+{
+    auto num_tabs = 0;
+    for (auto code_point : visual_line_view) {
+        if (code_point == '\t')
+            num_tabs++;
+    }
+
+    return font().width(visual_line_view) - num_tabs * font().glyph_width('\t') + font().glyph_spacing() + num_tabs * font().glyph_width(' ') * hard_tab_width();
 }
 
 template<typename Callback>
@@ -1558,7 +1615,7 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
         Gfx::IntRect visual_line_rect {
             visual_data.visual_rect.x(),
             visual_data.visual_rect.y() + ((int)visual_line_index * line_height()),
-            font().width(visual_line_view) + font().glyph_spacing(),
+            width_of_view(visual_line_view),
             line_height()
         };
         if (is_right_text_alignment(text_alignment()))

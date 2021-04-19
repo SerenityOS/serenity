@@ -255,6 +255,8 @@ private:
     int icon_size() const { return 16; }
     int icon_padding() const { return 2; }
 
+    int width_of_view(Utf32View) const;
+
     class ReflowDeferrer {
     public:
         ReflowDeferrer(TextEditor& editor)
