@@ -26,7 +26,6 @@ done < <(
         '*.h' \
         '*.in' \
         ':!:Kernel/FileSystem/ext2_fs.h' \
-        ':!:Userland/Libraries/LibELF/exec_elf.h' \
     | xargs grep -P '(_DEBUG|DEBUG_)' \
     | sed -re 's,^.*[^a-zA-Z0-9_]([a-zA-Z0-9_]*DEBUG[a-zA-Z0-9_]*).*$,\1,' \
     | sort \
