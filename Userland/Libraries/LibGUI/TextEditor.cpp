@@ -21,6 +21,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Emoji.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
@@ -370,8 +371,8 @@ Gfx::IntRect TextEditor::visible_text_rect_in_inner_coordinates() const
     };
 }
 
-template<typename DrawCallback, typename MoveCallback>
-void draw_text_with_tabs_helper(const Utf32View& visual_line_text, DrawCallback draw, MoveCallback move)
+template<typename DrawCallback>
+void TextEditor::draw_text_with_tabs_helper(const Utf32View& visual_line_text, DrawCallback draw, Gfx::IntRect& move_rect, Painter& painter, bool draw_tab_symbol)
 {
     size_t length = 0;
     size_t start_offset = 0;
@@ -379,13 +380,22 @@ void draw_text_with_tabs_helper(const Utf32View& visual_line_text, DrawCallback 
         if (code_point != '\t') {
             length += 1;
             continue;
-        } else {
-            if (length != 0)
-                draw(start_offset, length);
-            start_offset += length + 1;
-            length = 0;
-            move();
         }
+        if (length != 0)
+            draw(start_offset, length);
+
+        if (draw_tab_symbol) {
+            auto point = move_rect.location().translated(0, 3);
+            auto* emoji = Gfx::Emoji::emoji_for_code_point(0x21E5);
+            painter.blit_filtered(point, *emoji, emoji->rect(), [&](Color input) {
+                return input.blend(Color(200, 200, 200));
+            });
+        }
+        auto chars_to_next_tab_stop = hard_tab_width() - (length % hard_tab_width());
+        move_rect.move_by(font().glyph_width(' ') * chars_to_next_tab_stop, 0);
+
+        start_offset += length + 1;
+        length = 0;
     }
     if (length != 0)
         draw(start_offset, length);
@@ -498,6 +508,41 @@ void TextEditor::paint_event(PaintEvent& event)
             if constexpr (TEXTEDITOR_DEBUG)
                 painter.draw_rect(visual_line_rect, Color::Cyan);
 
+            if (m_visualize_trailing_whitespace && line.ends_in_whitespace()) {
+                size_t physical_column;
+                auto last_non_whitespace_column = line.last_non_whitespace_column();
+                if (last_non_whitespace_column.has_value())
+                    physical_column = last_non_whitespace_column.value() + 1;
+                else
+                    physical_column = 0;
+                size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
+                if (physical_column < end_of_visual_line) {
+                    size_t visual_column = physical_column > start_of_visual_line ? (physical_column - start_of_visual_line) : 0;
+                    Gfx::IntRect whitespace_rect {
+                        content_x_for_position({ line_index, visual_column }),
+                        visual_line_rect.y(),
+                        width_of_view(visual_line_text.substring_view(visual_column, visual_line_text.length() - visual_column)),
+                        visual_line_rect.height()
+                    };
+                    painter.fill_rect_with_dither_pattern(whitespace_rect, Color(), Color(255, 192, 192));
+                }
+            }
+
+            if (m_visualize_leading_whitespace && line.leading_whitespace_chars(hard_tab_width()) > 0) {
+                size_t physical_column = line.leading_whitespace_chars(1);
+                size_t end_of_leading_whitespace = (start_of_visual_line + physical_column);
+                size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
+                if (end_of_leading_whitespace < end_of_visual_line) {
+                    Gfx::IntRect whitespace_rect {
+                        content_x_for_position({ line_index, start_of_visual_line }),
+                        visual_line_rect.y(),
+                        width_of_view(visual_line_text.substring_view(0, end_of_leading_whitespace)),
+                        visual_line_rect.height()
+                    };
+                    painter.fill_rect_with_dither_pattern(whitespace_rect, Color(), Color(192, 255, 192));
+                }
+            }
+
             if (!placeholder().is_empty() && document().is_empty() && !is_focused() && line_index == 0) {
                 auto line_rect = visual_line_rect;
                 line_rect.set_width(font().width(placeholder()));
@@ -515,9 +560,9 @@ void TextEditor::paint_event(PaintEvent& event)
                         painter.draw_text(line_rect, visual_line_text.substring_view(start_offset, length), m_text_alignment, color);
                         line_rect.move_by(font().width(visual_line_text.substring_view(start_offset, length)), 0);
                     },
-                    [&] {
-                        line_rect.move_by(font().glyph_width(' ') * hard_tab_width(), 0);
-                    });
+                    line_rect,
+                    painter,
+                    true);
             } else {
                 auto unspanned_color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
                 if (is_displayonly() && is_focused())
@@ -542,9 +587,9 @@ void TextEditor::paint_event(PaintEvent& event)
                             }
                             span_rect.move_by(width_of_view(text), 0);
                         },
-                        [&] {
-                            span_rect.move_by(font->glyph_width(' ') * hard_tab_width(), 0);
-                        });
+                        span_rect,
+                        painter,
+                        true);
                 };
                 for (;;) {
                     if (span_index >= document().spans().size()) {
@@ -639,41 +684,6 @@ void TextEditor::paint_event(PaintEvent& event)
                 }
             }
 
-            if (m_visualize_trailing_whitespace && line.ends_in_whitespace()) {
-                size_t physical_column;
-                auto last_non_whitespace_column = line.last_non_whitespace_column();
-                if (last_non_whitespace_column.has_value())
-                    physical_column = last_non_whitespace_column.value() + 1;
-                else
-                    physical_column = 0;
-                size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
-                if (physical_column < end_of_visual_line) {
-                    size_t visual_column = physical_column > start_of_visual_line ? (physical_column - start_of_visual_line) : 0;
-                    Gfx::IntRect whitespace_rect {
-                        content_x_for_position({ line_index, visual_column }),
-                        visual_line_rect.y(),
-                        width_of_view(visual_line_text.substring_view(visual_column, visual_line_text.length() - visual_column)),
-                        visual_line_rect.height()
-                    };
-                    painter.fill_rect_with_dither_pattern(whitespace_rect, Color(), Color(255, 192, 192));
-                }
-            }
-
-            if (m_visualize_leading_whitespace && line.leading_whitespace_chars(hard_tab_width()) > 0) {
-                size_t physical_column = line.leading_whitespace_chars(1);
-                size_t end_of_leading_whitespace = (start_of_visual_line + physical_column);
-                size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
-                if (end_of_leading_whitespace < end_of_visual_line) {
-                    Gfx::IntRect whitespace_rect {
-                        content_x_for_position({ line_index, start_of_visual_line }),
-                        visual_line_rect.y(),
-                        width_of_view(visual_line_text.substring_view(0, end_of_leading_whitespace)),
-                        visual_line_rect.height()
-                    };
-                    painter.fill_rect_with_dither_pattern(whitespace_rect, Color(), Color(192, 255, 192));
-                }
-            }
-
             if (physical_line_has_selection) {
                 size_t start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
                 size_t end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
@@ -717,9 +727,9 @@ void TextEditor::paint_event(PaintEvent& event)
                                 painter.draw_text(selection_rect, visual_selected_text.substring_view(start_offset, length), Gfx::TextAlignment::CenterLeft, text_color);
                                 selection_rect.move_by(font().width(visual_selected_text.substring_view(start_offset, length)), 0);
                             },
-                            [&] {
-                                selection_rect.move_by(font().glyph_width(' ') * hard_tab_width(), 0);
-                            });
+                            selection_rect,
+                            painter,
+                            false);
                     }
                 }
             }

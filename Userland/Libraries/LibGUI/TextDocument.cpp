@@ -939,10 +939,8 @@ const TextDocumentSpan* TextDocument::span_at(const TextPosition& position) cons
     }
     return nullptr;
 }
-
 void TextDocument::set_unmodified()
 {
     m_undo_stack.set_current_unmodified();
 }
-
 }

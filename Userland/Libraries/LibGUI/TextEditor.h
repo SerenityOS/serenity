@@ -374,6 +374,9 @@ private:
     Gfx::IntPoint m_last_mousemove_position;
 
     RefPtr<Gfx::Bitmap> m_icon;
+
+    template<typename DrawCallback>
+    void draw_text_with_tabs_helper(const Utf32View& visual_line_text, DrawCallback draw, Gfx::IntRect& move_rect, Painter& painter, bool draw_tab_symbol);
 };
 
 }
