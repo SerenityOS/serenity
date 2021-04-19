@@ -48,6 +48,8 @@ public:
     unsigned width() const;
     unsigned height() const;
 
+    String to_data_url(const String& type, Optional<double> quality) const;
+
 private:
     virtual RefPtr<Layout::Node> create_layout_node() override;
 
