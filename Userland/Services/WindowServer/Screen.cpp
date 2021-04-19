@@ -75,7 +75,7 @@ bool Screen::set_resolution(int width, int height, int new_scale_factor)
     int new_physical_width = width * new_scale_factor;
     int new_physical_height = height * new_scale_factor;
     if (physical_width() == new_physical_width && physical_height() == new_physical_height) {
-        assert(scale_factor() != new_scale_factor);
+        VERIFY(scale_factor() != new_scale_factor);
         on_change_resolution(m_pitch, physical_width(), physical_height(), new_scale_factor);
         return true;
     }
