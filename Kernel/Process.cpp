@@ -700,6 +700,12 @@ bool Process::create_perf_events_buffer_if_needed()
     return !!m_perf_event_buffer;
 }
 
+void Process::delete_perf_events_buffer()
+{
+    if (m_perf_event_buffer)
+        m_perf_event_buffer = nullptr;
+}
+
 bool Process::remove_thread(Thread& thread)
 {
     ProtectedDataMutationScope scope { *this };
