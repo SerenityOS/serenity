@@ -777,6 +777,8 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
     VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
 
     size_t nread = stream->read(reinterpret_cast<u8*>(ptr), size * nmemb);
+    if (!nread)
+        return 0;
     return nread / size;
 }
 
@@ -786,6 +788,8 @@ size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
     VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
 
     size_t nwritten = stream->write(reinterpret_cast<const u8*>(ptr), size * nmemb);
+    if (!nwritten)
+        return 0;
     return nwritten / size;
 }
 
