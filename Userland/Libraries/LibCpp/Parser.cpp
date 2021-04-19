@@ -128,6 +128,8 @@ NonnullRefPtr<Declaration> Parser::parse_declaration(ASTNode& parent, Declaratio
         return parse_variable_declaration(parent);
     case DeclarationType::Enum:
         return parse_enum_declaration(parent);
+    case DeclarationType::Class:
+        return parse_struct_or_class_declaration(parent, StructOrClassDeclaration::Type::Class);
     case DeclarationType::Struct:
         return parse_struct_or_class_declaration(parent, StructOrClassDeclaration::Type::Struct);
     case DeclarationType::Namespace:
@@ -640,6 +642,8 @@ Optional<Parser::DeclarationType> Parser::match_declaration_in_translation_unit(
         return DeclarationType::Function;
     if (match_enum_declaration())
         return DeclarationType::Enum;
+    if (match_class_declaration())
+        return DeclarationType::Class;
     if (match_struct_declaration())
         return DeclarationType::Struct;
     if (match_namespace_declaration())
@@ -652,6 +656,11 @@ Optional<Parser::DeclarationType> Parser::match_declaration_in_translation_unit(
 bool Parser::match_enum_declaration()
 {
     return match_keyword("enum");
+}
+
+bool Parser::match_class_declaration()
+{
+    return match_keyword("class");
 }
 
 bool Parser::match_struct_declaration()
