@@ -1,0 +1,14 @@
+diff -Naur SDLPoP-86988c668eeaa10f218e1d4938fc5b4e42314d68/src/types.h SDLPoP-86988c668eeaa10f218e1d4938fc5b4e42314d68.serenity/src/types.h
+--- SDLPoP-86988c668eeaa10f218e1d4938fc5b4e42314d68/src/types.h	2021-04-18 10:45:52.000000000 +0200
++++ SDLPoP-86988c668eeaa10f218e1d4938fc5b4e42314d68.serenity/src/types.h	2021-04-19 16:09:34.732779363 +0200
+@@ -31,8 +31,8 @@
+ // These headers for SDL seem to be the pkgconfig/meson standard as per the
+ // latest versions. If the old ones should be used, the ifdef must be used
+ // to compare versions. 
+-# include <SDL.h>
+-# include <SDL_image.h>
++# include <SDL2/SDL.h>
++# include <SDL2/SDL_image.h>
+ //#endif
+ 
+ #if SDL_BYTEORDER != SDL_LIL_ENDIAN

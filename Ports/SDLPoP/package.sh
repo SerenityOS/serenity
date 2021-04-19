@@ -3,17 +3,17 @@ port=PrinceOfPersia
 useconfigure=true
 version=git
 depends="SDL2 SDL2_image"
-workdir=SDLPoP-master
+workdir=SDLPoP-86988c668eeaa10f218e1d4938fc5b4e42314d68
 configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMake/CMakeToolchain.txt"
-files="https://github.com/NagyD/SDLPoP/archive/refs/heads/master.zip PoP.zip c75184eb2a7e8c9ed008ffae371ec178"
-auth_type=md5
+files="https://github.com/NagyD/SDLPoP/archive/86988c668eeaa10f218e1d4938fc5b4e42314d68.zip PoP.zip d18cae8541fb8cbcc374fd998316993d561429a83f92061bc0754337ada774c5"
+auth_type=sha256
 install_location="Root/opt/PrinceOfPersia"
 
 configure() {
-    run cmake $configopts src/.
+    run cmake $configopts ./src
 }
 
 install() {
-    run mkdir -p "${SERENITY_BUILD_DIR}/${install_location}"
+    mkdir -p "${SERENITY_BUILD_DIR}/${install_location}"
     run cp -r prince data SDLPoP.ini "${SERENITY_BUILD_DIR}/${install_location}" 
 }
