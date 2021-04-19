@@ -394,6 +394,7 @@ public:
     KResultOr<int> sys$module_unload(Userspace<const char*> name, size_t name_length);
     KResultOr<int> sys$profiling_enable(pid_t);
     KResultOr<int> sys$profiling_disable(pid_t);
+    KResultOr<int> sys$profiling_free_buffer(pid_t);
     KResultOr<int> sys$futex(Userspace<const Syscall::SC_futex_params*>);
     KResultOr<int> sys$chroot(Userspace<const char*> path, size_t path_length, int mount_flags);
     KResultOr<int> sys$pledge(Userspace<const Syscall::SC_pledge_params*>);
@@ -520,6 +521,7 @@ private:
     bool dump_core();
     bool dump_perfcore();
     bool create_perf_events_buffer_if_needed();
+    void delete_perf_events_buffer();
 
     KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header);
     KResultOr<ssize_t> do_write(FileDescription&, const UserOrKernelBuffer&, size_t);

@@ -171,6 +171,7 @@ namespace Kernel {
     S(purge)                  \
     S(profiling_enable)       \
     S(profiling_disable)      \
+    S(profiling_free_buffer)  \
     S(futex)                  \
     S(chroot)                 \
     S(pledge)                 \
