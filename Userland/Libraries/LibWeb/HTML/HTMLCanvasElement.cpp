@@ -24,8 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Base64.h>
 #include <AK/Checked.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/PNGWriter.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
@@ -100,6 +102,16 @@ bool HTMLCanvasElement::create_bitmap()
     if (!m_bitmap || m_bitmap->size() != size)
         m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size);
     return m_bitmap;
+}
+
+String HTMLCanvasElement::to_data_url(const String& type, [[maybe_unused]] Optional<double> quality) const
+{
+    if (!m_bitmap)
+        return {};
+    if (type != "image/png")
+        return {};
+    auto encoded_bitmap = Gfx::PNGWriter::encode(*m_bitmap);
+    return URL::create_with_data(type, encode_base64(encoded_bitmap), true).to_string();
 }
 
 }
