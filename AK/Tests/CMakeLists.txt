@@ -63,3 +63,7 @@ foreach(source ${AK_TEST_SOURCES})
     target_link_libraries(${name} LibCore)
     install(TARGETS ${name} RUNTIME DESTINATION usr/Tests/AK)
 endforeach()
+
+get_filename_component(TEST_FRM_RESOLVED ./test.frm REALPATH)
+install(FILES ./4chan_catalog.json DESTINATION usr/Tests/AK)
+install(FILES ${TEST_FRM_RESOLVED} DESTINATION usr/Tests/AK)
