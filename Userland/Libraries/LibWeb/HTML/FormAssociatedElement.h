@@ -39,7 +39,10 @@ public:
     void set_form(HTMLFormElement*);
 
 protected:
-    FormAssociatedElement() { }
+    FormAssociatedElement() = default;
+    virtual ~FormAssociatedElement() = default;
+
+    virtual HTMLElement& form_associated_element_to_html_element() = 0;
 
 private:
     WeakPtr<HTMLFormElement> m_form;

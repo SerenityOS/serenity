@@ -57,8 +57,12 @@ public:
     void did_click_button(Badge<Layout::ButtonBox>);
 
 private:
+    // ^DOM::Node
     virtual void inserted() override;
     virtual void removed_from(Node*) override;
+
+    // ^HTML::FormAssociatedElement
+    virtual HTMLElement& form_associated_element_to_html_element() override { return *this; }
 
     void create_shadow_tree_if_needed();
 
