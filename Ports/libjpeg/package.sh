@@ -7,7 +7,7 @@ auth_type="md5"
 workdir="jpeg-$version"
 
 install() {
-    run make DESTDIR=$DESTDIR $installopts install
-    ${CC} -shared -o $DESTDIR/usr/local/lib/libjpeg.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libjpeg.a -Wl,--no-whole-archive
-    rm -f $DESTDIR/usr/local/lib/libjpeg.la
+    run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
+    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libjpeg.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libjpeg.a -Wl,--no-whole-archive
+    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libjpeg.la
 }

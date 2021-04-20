@@ -10,8 +10,8 @@ auth_opts="tiff-${version}.tar.gz.sig tiff-${version}.tar.gz"
 depends="zstd xz"
 
 install() {
-    run make DESTDIR=$DESTDIR $installopts install
-    ${CC} -shared -o $DESTDIR/usr/local/lib/libtiff.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libtiff.a -Wl,--no-whole-archive -lzstd -llzma
-    ${CC} -shared -o $DESTDIR/usr/local/lib/libtiffxx.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libtiffxx.a -Wl,--no-whole-archive -lzstd -llzma
-    rm -f $DESTDIR/usr/local/lib/libtiff.la $DESTDIR/usr/local/lib/libtiffxx.la
+    run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
+    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libtiff.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libtiff.a -Wl,--no-whole-archive -lzstd -llzma
+    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libtiffxx.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libtiffxx.a -Wl,--no-whole-archive -lzstd -llzma
+    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libtiff.la ${SERENITY_INSTALL_ROOT}/usr/local/lib/libtiffxx.la
 }

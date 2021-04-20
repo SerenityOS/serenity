@@ -8,7 +8,7 @@ useconfigure=true
 configopts="--prefix=/usr/local --with-pkg-config-dir=/usr/local/lib/pkgconfig"
 
 post_install() {
-    run mkdir -p "${SERENITY_BUILD_DIR}/Root/bin"
+    run mkdir -p "${SERENITY_INSTALL_ROOT}/bin"
     # FIXME: Same here, what is this about?!
-    run ln -sf /usr/local/bin/pkgconf "${SERENITY_BUILD_DIR}/Root/usr/local/bin/pkg-config"
+    run ln -sf /usr/local/bin/pkgconf "${SERENITY_INSTALL_ROOT}/usr/local/bin/pkg-config"
 }
