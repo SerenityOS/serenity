@@ -232,3 +232,7 @@ input[type=text] {
 option {
     display: none;
 }
+
+fieldset {
+    border: 1px solid #888888;
+}
