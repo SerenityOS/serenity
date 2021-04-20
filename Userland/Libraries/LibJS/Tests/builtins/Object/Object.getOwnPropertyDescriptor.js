@@ -43,6 +43,24 @@ test("setter property", () => {
     expect(o).toHaveSetterProperty("foo");
 });
 
+test("indexed property", () => {
+    let o = { 0: "foo" };
+
+    expect(o).toHaveConfigurableProperty(0);
+    expect(o).toHaveEnumerableProperty(0);
+    expect(o).toHaveWritableProperty(0);
+    expect(o).toHaveValueProperty(0, "foo");
+    expect(o).not.toHaveGetterProperty(0);
+    expect(o).not.toHaveSetterProperty(0);
+
+    expect(o).toHaveConfigurableProperty("0");
+    expect(o).toHaveEnumerableProperty("0");
+    expect(o).toHaveWritableProperty("0");
+    expect(o).toHaveValueProperty("0", "foo");
+    expect(o).not.toHaveGetterProperty("0");
+    expect(o).not.toHaveSetterProperty("0");
+});
+
 test("defined property", () => {
     let o = {};
 
