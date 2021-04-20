@@ -164,8 +164,7 @@ bool Object::prevent_extensions()
 bool Object::set_integrity_level(IntegrityLevel level)
 {
     // FIXME: This feels clunky and should get nicer abstractions.
-    auto update_property = [this](auto& key, auto attributes) {
-        auto property_name = PropertyName::from_value(global_object(), key);
+    auto update_property = [this](auto& property_name, auto attributes) {
         auto metadata = shape().lookup(property_name.to_string_or_symbol());
         VERIFY(metadata.has_value());
         auto value = get_direct(metadata->offset);
@@ -184,7 +183,8 @@ bool Object::set_integrity_level(IntegrityLevel level)
     switch (level) {
     case IntegrityLevel::Sealed:
         for (auto& key : keys) {
-            update_property(key, ~Attribute::Configurable);
+            auto property_name = PropertyName::from_value(global_object(), key);
+            update_property(property_name, ~Attribute::Configurable);
             if (vm.exception())
                 return {};
         }
@@ -197,7 +197,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
             u8 attributes = property_descriptor->is_accessor_descriptor()
                 ? ~Attribute::Configurable
                 : ~Attribute::Configurable & ~Attribute::Writable;
-            update_property(key, attributes);
+            update_property(property_name, attributes);
             if (vm.exception())
                 return {};
         }
