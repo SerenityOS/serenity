@@ -8,6 +8,8 @@ file(GLOB AK_SOURCES "../../AK/*.cpp")
 file(GLOB ELF_SOURCES "../Libraries/LibELF/*.cpp")
 file(GLOB LIBC_SOURCES1 "../Libraries/LibC/*.cpp")
 file(GLOB LIBC_SOURCES2 "../Libraries/LibC/*/*.cpp")
+file(GLOB LIBC_TEST_SOURCES "../Libraries/LibC/Tests/*.cpp")
+list(REMOVE_ITEM LIBC_SOURCES2 ${LIBC_TEST_SOURCES})
 
 if ("${SERENITY_ARCH}" STREQUAL "i686")
     file(GLOB LIBC_SOURCES3 "../Libraries/LibC/arch/i386/*.S")
