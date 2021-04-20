@@ -118,12 +118,12 @@ public:
     }
 
     template<typename RequestType, typename... Args>
-    OwnPtr<typename RequestType::ResponseType> send_sync(Args&&... args)
+    NonnullOwnPtr<typename RequestType::ResponseType> send_sync(Args&&... args)
     {
         post_message(RequestType(forward<Args>(args)...));
         auto response = wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
         VERIFY(response);
-        return response;
+        return response.release_nonnull();
     }
 
     template<typename RequestType, typename... Args>
