@@ -5,14 +5,14 @@ files="https://github.com/ninja-build/ninja/archive/v${version}.tar.gz ninja-v${
 auth_type=md5
 
 build() {
-    CXXFLAGS="--sysroot=${SERENITY_BUILD_DIR}/Root" \
-    LDFLAGS="--sysroot=${SERENITY_BUILD_DIR}/Root" \
+    CXXFLAGS="--sysroot=${SERENITY_INSTALL_ROOT}" \
+    LDFLAGS="--sysroot=${SERENITY_INSTALL_ROOT}" \
     # platform=linux is close enough.
     run ./configure.py --bootstrap --platform=linux
     run strip ninja
 }
 
 install() {
-    run mkdir -p "${SERENITY_BUILD_DIR}/Root/usr/local/bin"
-    run cp ninja "${SERENITY_BUILD_DIR}/Root/usr/local/bin/ninja"
+    run mkdir -p "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp ninja "${SERENITY_INSTALL_ROOT}/usr/local/bin/ninja"
 }

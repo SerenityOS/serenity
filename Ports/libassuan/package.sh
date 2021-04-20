@@ -2,7 +2,7 @@
 port=libassuan
 version=2.5.5
 useconfigure=true
-#configopts="--with-libgpg-error-prefix=${SERENITY_BUILD_DIR}/Root/usr/local"
+#configopts="--with-libgpg-error-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
 files="https://gnupg.org/ftp/gcrypt/libassuan/libassuan-${version}.tar.bz2 libassuan-${version}.tar.bz2 7194453152bb67e3d45da698762b5d6f"
 auth_type=md5
 

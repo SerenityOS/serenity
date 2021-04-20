@@ -13,5 +13,5 @@ configure() {
 }
 
 install() {
-    run cp cmatrix "${SERENITY_BUILD_DIR}/Root/bin"
+    run cp cmatrix "${SERENITY_INSTALL_ROOT}/bin"
 }

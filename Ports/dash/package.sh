@@ -28,5 +28,5 @@ build() {
 }
 
 install() {
-    run sh -c "cd target-build && make DESTDIR="${SERENITY_BUILD_DIR}/Root" $installopts install"
+    run sh -c "cd target-build && make DESTDIR="${SERENITY_INSTALL_ROOT}" $installopts install"
 }
