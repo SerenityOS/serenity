@@ -26,7 +26,8 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
+#include <AK/IntrusiveList.h>
+#include <AK/NonnullRefPtr.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UserOrKernelBuffer.h>
@@ -160,8 +161,12 @@ private:
 
     AsyncDeviceRequest* m_parent_request { nullptr };
     RequestResult m_result { Pending };
-    NonnullRefPtrVector<AsyncDeviceRequest> m_sub_requests_pending;
-    NonnullRefPtrVector<AsyncDeviceRequest> m_sub_requests_complete;
+    IntrusiveListNode<AsyncDeviceRequest, RefPtr<AsyncDeviceRequest>> m_list_node;
+
+    typedef IntrusiveList<AsyncDeviceRequest, RefPtr<AsyncDeviceRequest>, &AsyncDeviceRequest::m_list_node> AsyncDeviceSubRequestList;
+
+    AsyncDeviceSubRequestList m_sub_requests_pending;
+    AsyncDeviceSubRequestList m_sub_requests_complete;
     WaitQueue m_queue;
     NonnullRefPtr<Process> m_process;
     void* m_private { nullptr };
