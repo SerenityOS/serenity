@@ -47,4 +47,29 @@ describe("normal behavior", () => {
         o.foo = "baz";
         expect(o.foo).toBe("baz");
     });
+
+    // #6469
+    test("works with indexed properties", () => {
+        const a = ["foo"];
+        expect(a[0]).toBe("foo");
+        Object.seal(a);
+        a[0] = "bar";
+        a[1] = "baz";
+        expect(a[0]).toBe("bar");
+        expect(a[1]).toBeUndefined();
+    });
+
+    test("works with properties that are already non-configurable", () => {
+        const o = {};
+        Object.defineProperty(o, "foo", {
+            value: "bar",
+            configurable: false,
+            writable: true,
+            enumerable: true,
+        });
+        expect(o.foo).toBe("bar");
+        Object.seal(o);
+        o.foo = "baz";
+        expect(o.foo).toBe("baz");
+    });
 });
