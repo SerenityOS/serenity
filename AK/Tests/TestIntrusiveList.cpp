@@ -24,19 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/TestSuite.h>
-
 #include <AK/IntrusiveList.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/Random.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/RefPtr.h>
+#include <AK/TestSuite.h>
 
 class IntrusiveTestItem {
 public:
     IntrusiveTestItem() = default;
-
     IntrusiveListNode<IntrusiveTestItem> m_list_node;
 };
-
 using IntrusiveTestList = IntrusiveList<IntrusiveTestItem, RawPtr<IntrusiveTestItem>, &IntrusiveTestItem::m_list_node>;
 
 TEST_CASE(construct)
@@ -65,6 +62,7 @@ TEST_CASE(enumeration)
 
     size_t actual_size = 0;
     for (auto& elem : list) {
+        (void)elem;
         actual_size++;
     }
     EXPECT_EQ(expected_size, actual_size);
@@ -72,5 +70,79 @@ TEST_CASE(enumeration)
         delete elem;
     }
 }
+
+class IntrusiveRefPtrItem : public RefCounted<IntrusiveRefPtrItem> {
+public:
+    IntrusiveRefPtrItem() = default;
+    IntrusiveListNode<IntrusiveRefPtrItem, RefPtr<IntrusiveRefPtrItem>> m_list_node;
+};
+using IntrusiveRefPtrList = IntrusiveList<IntrusiveRefPtrItem, RefPtr<IntrusiveRefPtrItem>, &IntrusiveRefPtrItem::m_list_node>;
+
+TEST_CASE(intrusive_ref_ptr_no_ref_leaks)
+{
+    auto item = adopt(*new IntrusiveRefPtrItem());
+    EXPECT_EQ(1u, item->ref_count());
+    IntrusiveRefPtrList ref_list;
+
+    ref_list.append(*item);
+    EXPECT_EQ(2u, item->ref_count());
+
+    ref_list.remove(*item);
+    EXPECT_EQ(1u, item->ref_count());
+}
+
+TEST_CASE(intrusive_ref_ptr_clear)
+{
+    auto item = adopt(*new IntrusiveRefPtrItem());
+    EXPECT_EQ(1u, item->ref_count());
+    IntrusiveRefPtrList ref_list;
+
+    ref_list.append(*item);
+    EXPECT_EQ(2u, item->ref_count());
+
+    ref_list.clear();
+    EXPECT_EQ(1u, item->ref_count());
+}
+
+TEST_CASE(intrusive_ref_ptr_destructor)
+{
+    auto item = adopt(*new IntrusiveRefPtrItem());
+    EXPECT_EQ(1u, item->ref_count());
+
+    {
+        IntrusiveRefPtrList ref_list;
+        ref_list.append(*item);
+        EXPECT_EQ(2u, item->ref_count());
+    }
+
+    EXPECT_EQ(1u, item->ref_count());
+}
+
+// There is currently a bug in the NonnullRefPtr specialization of IntrusiveList,
+// so this test fails to compile at the moment. Including it for future use.
+#if 0
+class IntrusiveNonnullRefPtrItem : public RefCounted<IntrusiveNonnullRefPtrItem> {
+public:
+    IntrusiveNonnullRefPtrItem() = default;
+    IntrusiveListNode<IntrusiveNonnullRefPtrItem, NonnullRefPtr<IntrusiveNonnullRefPtrItem>> m_list_node;
+};
+using IntrusiveNonnullRefPtrList = IntrusiveList<IntrusiveNonnullRefPtrItem, NonnullRefPtr<IntrusiveNonnullRefPtrItem>, &IntrusiveNonnullRefPtrItem::m_list_node>;
+
+TEST_CASE(intrusive_nonnull_ref_ptr_intrusive)
+{
+    auto item = adopt(*new IntrusiveNonnullRefPtrItem());
+    EXPECT_EQ(1u, item->ref_count());
+    IntrusiveNonnullRefPtrList nonnull_ref_list;
+
+    nonnull_ref_list.append(*item);
+    EXPECT_EQ(2u, item->ref_count());
+    EXPECT(!nonnull_ref_list.is_empty());
+
+    nonnull_ref_list.remove(*item);
+    EXPECT_EQ(1u, item->ref_count());
+
+    EXPECT(nonnull_ref_list.is_empty());
+}
+#endif
 
 TEST_MAIN(IntrusiveList)
