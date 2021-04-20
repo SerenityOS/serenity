@@ -35,11 +35,7 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     }
 
     if (phase == PaintPhase::Border) {
-        auto bordered_rect = this->bordered_rect();
-        Painting::paint_border(context, Painting::BorderEdge::Left, bordered_rect, computed_values());
-        Painting::paint_border(context, Painting::BorderEdge::Right, bordered_rect, computed_values());
-        Painting::paint_border(context, Painting::BorderEdge::Top, bordered_rect, computed_values());
-        Painting::paint_border(context, Painting::BorderEdge::Bottom, bordered_rect, computed_values());
+        paint_border(context);
     }
 
     if (phase == PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
@@ -60,6 +56,15 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     if (phase == PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && downcast<DOM::Element>(*dom_node()).is_focused()) {
         context.painter().draw_rect(enclosing_int_rect(absolute_rect()), context.palette().focus_outline());
     }
+}
+
+void Box::paint_border(PaintContext& context)
+{
+    auto bordered_rect = this->bordered_rect();
+    Painting::paint_border(context, Painting::BorderEdge::Left, bordered_rect, computed_values());
+    Painting::paint_border(context, Painting::BorderEdge::Right, bordered_rect, computed_values());
+    Painting::paint_border(context, Painting::BorderEdge::Top, bordered_rect, computed_values());
+    Painting::paint_border(context, Painting::BorderEdge::Bottom, bordered_rect, computed_values());
 }
 
 void Box::paint_background_image(
