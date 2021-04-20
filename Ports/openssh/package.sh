@@ -9,10 +9,10 @@ useconfigure=true
 configopts="--prefix=/usr/local --disable-utmp --sysconfdir=/etc/ssh --with-ssl-dir=${SERENITY_INSTALL_ROOT}/usr/local/lib"
 
 pre_configure() {
-	run autoreconf
+    run autoreconf
 }
 
 install() {
-	# Can't make keys outside of Serenity since ssh-keygen is built for Serenity.
-	run make DESTDIR="${SERENITY_INSTALL_ROOT}" $installopts install-nokeys
+    # Can't make keys outside of Serenity since ssh-keygen is built for Serenity.
+    run make DESTDIR="${SERENITY_INSTALL_ROOT}" $installopts install-nokeys
 }
