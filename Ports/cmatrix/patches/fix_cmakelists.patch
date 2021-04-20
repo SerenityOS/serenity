@@ -6,8 +6,8 @@ index a808a98..7b8753a 100644
  project(CMatrix LANGUAGES C)
  set(VERSION "2.0")
  
-+set(CMAKE_INCLUDE_PATH "${SERENITY_BUILD_DIR}/Root/usr/local/include/ncurses")
-+set(CURSES_NCURSES_LIBRARY "${SERENITY_BUILD_DIR}/Root/usr/local/lib/libncurses.a")
++set(CMAKE_INCLUDE_PATH "${SERENITY_INSTALL_ROOT}/usr/local/include/ncurses")
++set(CURSES_NCURSES_LIBRARY "${SERENITY_INSTALL_ROOT}/usr/local/lib/libncurses.a")
 +
  # These are relative to CMAKE_INSTALL_PREFIX
  # which by default is "/usr/local"
