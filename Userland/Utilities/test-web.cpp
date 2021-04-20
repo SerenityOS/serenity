@@ -676,12 +676,12 @@ int main(int argc, char** argv)
 #ifdef __serenity__
     TestRunner("/home/anon/web-tests", "/home/anon/js-tests", view, print_times).run();
 #else
-    char* serenity_root = getenv("SERENITY_ROOT");
-    if (!serenity_root) {
-        printf("test-web requires the SERENITY_ROOT environment variable to be set");
+    char* serenity_source_dir = getenv("SERENITY_SOURCE_DIR");
+    if (!serenity_source_dir) {
+        printf("test-web requires the SERENITY_SOURCE_DIR environment variable to be set");
         return 1;
     }
-    TestRunner(String::format("%s/Userland/Libraries/LibWeb/Tests", serenity_root), String::format("%s/Userland/Libraries/LibJS/Tests", serenity_root), view, print_times).run();
+    TestRunner(String::format("%s/Userland/Libraries/LibWeb/Tests", serenity_source_dir), String::format("%s/Userland/Libraries/LibJS/Tests", serenity_source_dir), view, print_times).run();
 #endif
     return 0;
 }
