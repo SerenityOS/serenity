@@ -93,7 +93,16 @@ void Statusbar::set_text(size_t index, String text)
 void Statusbar::update_label(size_t index)
 {
     auto& segment = m_segments.at(index);
-    segment.label->set_text(segment.override_text.is_null() ? segment.text : segment.override_text);
+
+    if (segment.override_text.is_null()) {
+        segment.label->set_frame_shadow(Gfx::FrameShadow::Sunken);
+        segment.label->set_frame_shape(Gfx::FrameShape::Panel);
+        segment.label->set_text(segment.text);
+    } else {
+        segment.label->set_frame_shadow(Gfx::FrameShadow::Plain);
+        segment.label->set_frame_shape(Gfx::FrameShape::NoFrame);
+        segment.label->set_text(segment.override_text);
+    }
 }
 
 String Statusbar::text(size_t index) const
