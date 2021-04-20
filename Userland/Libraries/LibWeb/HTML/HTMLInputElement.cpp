@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -136,6 +136,16 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     element->append_child(*m_text_node);
     shadow_root->append_child(move(element));
     set_shadow_root(move(shadow_root));
+}
+
+void HTMLInputElement::inserted()
+{
+    set_form(first_ancestor_of_type<HTMLFormElement>());
+}
+
+void HTMLInputElement::removed_from(DOM::Node*)
+{
+    set_form(nullptr);
 }
 
 }
