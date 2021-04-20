@@ -201,7 +201,8 @@ run_gdb() {
         if [ -n "$KERNEL_CMD_LINE" ]; then
             export SERENITY_KERNEL_CMDLINE="$KERNEL_CMD_LINE"
         fi
-        gdb "$BUILD_DIR/Kernel/Kernel" -ex 'target remote :1234' "${GDB_ARGS[@]}" -ex cont
+        sleep 1
+        "$(get_top_dir)/Meta/debug-kernel.sh" "${GDB_ARGS[@]}" -ex cont
     fi
 }
 
