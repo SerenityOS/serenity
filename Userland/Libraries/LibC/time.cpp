@@ -193,7 +193,11 @@ char* asctime_r(const struct tm* tm, char* buffer)
 {
     // Spec states buffer must be at least 26 bytes.
     constexpr size_t assumed_len = 26;
-    strftime(buffer, assumed_len, "%a %b %e %T %Y", tm);
+    size_t filled_size = strftime(buffer, assumed_len, "%a %b %e %T %Y\n", tm);
+
+    // Verify that the buffer was large enough.
+    VERIFY(filled_size != 0);
+
     return buffer;
 }
 
