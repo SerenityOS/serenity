@@ -6,3 +6,6 @@ files="https://github.com/SerenityOS/SerenityDOOM/archive/master.tar.gz doom-git
 auth_type=md5
 makeopts="-C doomgeneric/"
 installopts="-C doomgeneric/"
+launcher_name=Doom
+launcher_category=Games
+launcher_command=doom
