@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -146,6 +146,16 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
 void HTMLFormElement::submit()
 {
     submit_form(this, true);
+}
+
+void HTMLFormElement::add_associated_element(Badge<FormAssociatedElement>, HTMLElement& element)
+{
+    m_associated_elements.append(element);
+}
+
+void HTMLFormElement::remove_associated_element(Badge<FormAssociatedElement>, HTMLElement& element)
+{
+    m_associated_elements.remove_first_matching([&](auto& entry) { return entry.ptr() == &element; });
 }
 
 }

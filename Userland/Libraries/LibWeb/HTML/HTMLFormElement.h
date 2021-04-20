@@ -46,8 +46,13 @@ public:
     // NOTE: This is for the JS bindings. Use submit_form instead.
     void submit();
 
+    void add_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
+    void remove_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
+
 private:
     bool m_firing_submission_events { false };
+
+    Vector<WeakPtr<HTMLElement>> m_associated_elements;
 };
 
 }
