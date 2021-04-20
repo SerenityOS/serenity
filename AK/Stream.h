@@ -158,3 +158,7 @@ OutputStream& operator<<(OutputStream& stream, FloatingPoint value) requires IsF
 #endif
 
 }
+
+using AK::DuplexStream;
+using AK::InputStream;
+using AK::OutputStream;
