@@ -246,7 +246,7 @@ inline Container IntrusiveList<T, Container, member>::first() const
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
 inline Container IntrusiveList<T, Container, member>::take_first()
 {
-    if (auto* ptr = first()) {
+    if (Container ptr = first()) {
         remove(*ptr);
         return ptr;
     }
@@ -256,7 +256,7 @@ inline Container IntrusiveList<T, Container, member>::take_first()
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
 inline Container IntrusiveList<T, Container, member>::take_last()
 {
-    if (auto* ptr = last()) {
+    if (Container ptr = last()) {
         remove(*ptr);
         return ptr;
     }
