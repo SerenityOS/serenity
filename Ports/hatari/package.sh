@@ -10,7 +10,7 @@ files="https://github.com/hatari/hatari/archive/${commit}.tar.gz ${commit}.tar.g
 auth_type=md5
 
 configure() {
-	run cmake $configopts
+    run cmake $configopts
 }
 
 install() {

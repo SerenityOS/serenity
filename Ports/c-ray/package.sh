@@ -13,6 +13,6 @@ configure() {
 }
 
 install() {
-	mkdir -p "${SERENITY_INSTALL_ROOT}/home/anon/c-ray"
-	cp -r "${port}-${version}"/* "${SERENITY_INSTALL_ROOT}/home/anon/c-ray"
+    mkdir -p "${SERENITY_INSTALL_ROOT}/home/anon/c-ray"
+    cp -r "${port}-${version}"/* "${SERENITY_INSTALL_ROOT}/home/anon/c-ray"
 }
