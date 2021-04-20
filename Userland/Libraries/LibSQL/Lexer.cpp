@@ -75,6 +75,18 @@ Token Lexer::next()
 
     if (is_eof()) {
         token_type = found_invalid_comment ? TokenType::Invalid : TokenType::Eof;
+    } else if (is_numeric_literal_start()) {
+        token_type = TokenType::NumericLiteral;
+        if (!consume_numeric_literal())
+            token_type = TokenType::Invalid;
+    } else if (is_string_literal_start()) {
+        token_type = TokenType::StringLiteral;
+        if (!consume_string_literal())
+            token_type = TokenType::Invalid;
+    } else if (is_blob_literal_start()) {
+        token_type = TokenType::BlobLiteral;
+        if (!consume_blob_literal())
+            token_type = TokenType::Invalid;
     } else if (is_identifier_start()) {
         do {
             consume();
@@ -85,10 +97,6 @@ Token Lexer::next()
         } else {
             token_type = TokenType::Identifier;
         }
-    } else if (is_numeric_literal_start()) {
-        token_type = TokenType::NumericLiteral;
-        if (!consume_numeric_literal())
-            token_type = TokenType::Invalid;
     } else {
         bool found_two_char_token = false;
         if (m_position < m_source.length()) {
@@ -190,7 +198,7 @@ bool Lexer::consume_whitespace_and_comments()
 
 bool Lexer::consume_numeric_literal()
 {
-    // https://www.sqlite.org/draft/syntax/numeric-literal.html
+    // https://sqlite.org/syntax/numeric-literal.html
     bool is_valid_numeric_literal = true;
 
     if (m_current_char == '0') {
@@ -227,6 +235,29 @@ bool Lexer::consume_numeric_literal()
     return is_valid_numeric_literal;
 }
 
+bool Lexer::consume_string_literal()
+{
+    // https://sqlite.org/lang_expr.html - See "3. Literal Values (Constants)"
+    bool is_valid_string_literal = true;
+    consume();
+
+    while (!is_eof() && !is_string_literal_end())
+        consume();
+
+    if (is_eof())
+        is_valid_string_literal = false;
+    consume();
+
+    return is_valid_string_literal;
+}
+
+bool Lexer::consume_blob_literal()
+{
+    // https://sqlite.org/lang_expr.html - See "3. Literal Values (Constants)"
+    consume();
+    return consume_string_literal();
+}
+
 bool Lexer::consume_exponent()
 {
     consume();
@@ -259,8 +290,7 @@ bool Lexer::match(char a, char b) const
     if (m_position >= m_source.length())
         return false;
 
-    return m_current_char == a
-        && m_source[m_position] == b;
+    return m_current_char == a && m_source[m_position] == b;
 }
 
 bool Lexer::is_identifier_start() const
@@ -276,6 +306,21 @@ bool Lexer::is_identifier_middle() const
 bool Lexer::is_numeric_literal_start() const
 {
     return isdigit(m_current_char) || (m_current_char == '.' && m_position < m_source.length() && isdigit(m_source[m_position]));
+}
+
+bool Lexer::is_string_literal_start() const
+{
+    return m_current_char == '\'';
+}
+
+bool Lexer::is_string_literal_end() const
+{
+    return m_current_char == '\'' && !(m_position < m_source.length() && m_source[m_position] == '\'');
+}
+
+bool Lexer::is_blob_literal_start() const
+{
+    return match('x', '\'') || match('X', '\'');
 }
 
 bool Lexer::is_line_comment_start() const
