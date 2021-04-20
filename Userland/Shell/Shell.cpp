@@ -1304,7 +1304,8 @@ Vector<Line::CompletionSuggestion> Shell::complete()
     return ast->complete_for_editor(*this, line.length());
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, const String& part, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base,
+    const String& part, size_t offset, ExecutableOnly executable_only)
 {
     auto token = offset ? part.substring_view(0, offset) : "";
     String path;
@@ -1358,7 +1359,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, cons
             struct stat program_status;
             String file_path = String::format("%s/%s", path.characters(), file.characters());
             int stat_error = stat(file_path.characters(), &program_status);
-            if (!stat_error) {
+            if (!stat_error && (executable_only == ExecutableOnly::No || access(file_path.characters(), X_OK) == 0)) {
                 if (S_ISDIR(program_status.st_mode)) {
                     suggestions.append({ escape_token(file), "/" });
                 } else {
@@ -1381,7 +1382,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& na
         [](auto& name, auto& program) { return strncmp(name.characters(), program.characters(), name.length()); });
 
     if (!match)
-        return complete_path("", name, offset);
+        return complete_path("", name, offset, ExecutableOnly::Yes);
 
     String completion = *match;
     auto token_length = escape_token(name).length();
