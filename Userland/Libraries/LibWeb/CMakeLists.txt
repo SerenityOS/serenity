@@ -67,6 +67,7 @@ set(SOURCES
     HTML/AttributeNames.cpp
     HTML/CanvasRenderingContext2D.cpp
     HTML/EventNames.cpp
+    HTML/FormAssociatedElement.cpp
     HTML/FrameHostElement.cpp
     HTML/GlobalEventHandlers.cpp
     HTML/HTMLAnchorElement.cpp

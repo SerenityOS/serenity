@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,14 @@
 
 #pragma once
 
+#include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
 
-class HTMLInputElement final : public HTMLElement {
+class HTMLInputElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLInputElementWrapper;
 
@@ -54,6 +57,9 @@ public:
     void did_click_button(Badge<Layout::ButtonBox>);
 
 private:
+    virtual void inserted() override;
+    virtual void removed_from(Node*) override;
+
     void create_shadow_tree_if_needed();
 
     RefPtr<DOM::Text> m_text_node;

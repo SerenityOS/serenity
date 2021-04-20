@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,23 @@
 
 #pragma once
 
-#include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/HTML/HTMLInputElement.h>
+#include <AK/WeakPtr.h>
+#include <LibWeb/Forward.h>
 
 namespace Web::HTML {
 
-class HTMLFormElement final : public HTMLElement {
+class FormAssociatedElement {
 public:
-    using WrapperType = Bindings::HTMLFormElementWrapper;
+    HTMLFormElement* form() { return m_form; }
+    HTMLFormElement const* form() const { return m_form; }
 
-    HTMLFormElement(DOM::Document&, QualifiedName);
-    virtual ~HTMLFormElement() override;
+    void set_form(HTMLFormElement*);
 
-    String action() const { return attribute(HTML::AttributeNames::action); }
-    String method() const { return attribute(HTML::AttributeNames::method); }
-
-    void submit_form(RefPtr<HTMLElement> submitter, bool from_submit_binding = false);
-
-    // NOTE: This is for the JS bindings. Use submit_form instead.
-    void submit();
+protected:
+    FormAssociatedElement() { }
 
 private:
-    bool m_firing_submission_events { false };
+    WeakPtr<HTMLFormElement> m_form;
 };
 
 }
