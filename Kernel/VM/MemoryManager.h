@@ -188,6 +188,7 @@ public:
     }
 
     static Region* find_region_from_vaddr(Space&, VirtualAddress);
+    static Region* find_user_region_from_vaddr(Space&, VirtualAddress);
 
     void dump_kernel_regions();
 
@@ -215,7 +216,6 @@ private:
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);
     static void flush_tlb(const PageDirectory*, VirtualAddress, size_t page_count = 1);
 
-    static Region* user_region_from_vaddr(Space&, VirtualAddress);
     static Region* kernel_region_from_vaddr(VirtualAddress);
 
     static Region* find_region_from_vaddr(VirtualAddress);
