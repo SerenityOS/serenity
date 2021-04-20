@@ -233,7 +233,7 @@ public:
     }
 
     template<typename U>
-    Point<U> to_type() const
+    [[nodiscard]] ALWAYS_INLINE Point<U> to_type() const
     {
         return Point<U>(*this);
     }
