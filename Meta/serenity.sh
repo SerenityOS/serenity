@@ -39,6 +39,7 @@ Usage: $NAME COMMAND [TARGET] [ARGS...]
                     Resolves the ADDRESS in BINARY_FILE to a file:line. It will
                     attempt to find the BINARY_FILE in the appropriate build directory
     rebuild-toolchain: Deletes and re-builds the TARGET's toolchain
+    rebuild-world:     Deletes and re-builds the toolchain and build environment for TARGET.
 
   Examples:
     $NAME run i686 smp=on
@@ -307,6 +308,14 @@ elif [ "$CMD" = "rebuild-toolchain" ]; then
     lagom_unsupported "The lagom target uses the host toolchain"
     delete_toolchain
     ensure_toolchain
+elif [ "$CMD" = "rebuild-world" ]; then
+    cmd_with_target
+    lagom_unsupported "The lagom target uses the host toolchain"
+    delete_toolchain
+    delete_target
+    ensure_toolchain
+    ensure_target
+    build_target
 elif [ "$CMD" = "__tmux_cmd" ]; then
     trap kill_tmux_session EXIT
     cmd_with_target
