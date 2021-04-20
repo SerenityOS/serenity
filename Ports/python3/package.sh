@@ -27,7 +27,7 @@ pre_configure() {
 }
 
 post_configure() {
-    run cp "${SERENITY_ROOT}/Ports/${port}/Setup.local" "Modules/Setup.local"
+    run cp "${SERENITY_SOURCE_DIR}/Ports/${port}/Setup.local" "Modules/Setup.local"
 }
 
 if [ -x "$(command -v python3)" ]; then

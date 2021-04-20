@@ -91,9 +91,9 @@ cd -P -- "$SERENITY_BUILD" || die "Could not cd to \"$SERENITY_BUILD\""
 if [ "$SERENITY_RUN" = "b" ]; then
     # Meta/run.sh b: bochs
     [ -z "$SERENITY_BOCHSRC" ] && {
-        # Make sure that SERENITY_ROOT is set and not empty
-        [ -z "$SERENITY_ROOT" ] && die 'SERENITY_ROOT not set or empty'
-        SERENITY_BOCHSRC="$SERENITY_ROOT/Meta/bochsrc"
+        # Make sure that SERENITY_SOURCE_DIR is set and not empty
+        [ -z "$SERENITY_SOURCE_DIR" ] && die 'SERENITY_SOURCE_DIR not set or empty'
+        SERENITY_BOCHSRC="$SERENITY_SOURCE_DIR/Meta/bochsrc"
     }
     "$SERENITY_BOCHS_BIN" -q -f "$SERENITY_BOCHSRC"
 elif [ "$SERENITY_RUN" = "qn" ]; then

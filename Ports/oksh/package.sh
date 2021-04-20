@@ -8,7 +8,7 @@ files="https://github.com/ibara/oksh/releases/download/oksh-${version}/oksh-${ve
 auth_type=md5
 
 configure() {
-    export CC=${SERENITY_ROOT}/Toolchain/Local/${SERENITY_ARCH}/bin/${SERENITY_ARCH}-pc-serenity-gcc 
+    export CC=${SERENITY_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin/${SERENITY_ARCH}-pc-serenity-gcc 
     export CFLAGS="" 
     export LDFLAGS="-lncurses" 
     run ./configure --no-thanks

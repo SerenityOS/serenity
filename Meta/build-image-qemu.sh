@@ -23,7 +23,7 @@ disk_usage() {
     expr "$(du -sk "$1" | cut -f1)" / 1024
 }
 
-DISK_SIZE=$(($(disk_usage "$SERENITY_ROOT/Base") + $(disk_usage Root) + 100))
+DISK_SIZE=$(($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + 100))
 
 echo "setting up disk image..."
 qemu-img create _disk_image "${DISK_SIZE:-600}"m || die "could not create disk image"

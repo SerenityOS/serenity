@@ -5,6 +5,6 @@ files="https://github.com/dmsc/emu2/archive/${version}.zip emu2-${version}.zip 2
 auth_type=md5
 
 build() {
-    export CC="${SERENITY_ROOT}/Toolchain/Local/${SERENITY_ARCH}/bin/${SERENITY_ARCH}-pc-serenity-gcc"
+    export CC="${SERENITY_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin/${SERENITY_ARCH}-pc-serenity-gcc"
     run make DESTDIR="${SERENITY_BUILD_DIR}/Root" CC="${CC}" $installopts
 }

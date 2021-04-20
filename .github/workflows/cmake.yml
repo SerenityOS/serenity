@@ -6,7 +6,7 @@ env:
   # Don't mix these up!
   # runner.workspace = /home/runner/work/serenity
   # github.workspace = /home/runner/work/serenity/serenity
-  SERENITY_ROOT: ${{ github.workspace }}
+  SERENITY_SOURCE_DIR: ${{ github.workspace }}
 
 jobs:
   build_and_test_serenity:
