@@ -125,4 +125,23 @@ private:
     bool m_is_error_if_table_exists;
 };
 
+class DropTable : public Statement {
+public:
+    DropTable(String schema_name, String table_name, bool is_error_if_table_does_not_exist)
+        : m_schema_name(move(schema_name))
+        , m_table_name(move(table_name))
+        , m_is_error_if_table_does_not_exist(is_error_if_table_does_not_exist)
+    {
+    }
+
+    const String& schema_name() const { return m_schema_name; }
+    const String& table_name() const { return m_table_name; }
+    bool is_error_if_table_does_not_exist() const { return m_is_error_if_table_does_not_exist; }
+
+private:
+    String m_schema_name;
+    String m_table_name;
+    bool m_is_error_if_table_does_not_exist;
+};
+
 }

@@ -67,8 +67,9 @@ private:
         Vector<Error> m_errors;
     };
 
-    NonnullRefPtr<ColumnDefinition> parse_column_definition();
     NonnullRefPtr<CreateTable> parse_create_table_statement();
+    NonnullRefPtr<DropTable> parse_drop_table_statement();
+    NonnullRefPtr<ColumnDefinition> parse_column_definition();
     NonnullRefPtr<TypeName> parse_type_name();
     NonnullRefPtr<SignedNumber> parse_signed_number();
 

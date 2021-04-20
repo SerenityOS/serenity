@@ -132,4 +132,29 @@ TEST_CASE(create_table)
     validate("CREATE TABLE test ( column1 varchar(1e3) );", {}, "test", { { "column1", "varchar", { 1000 } } });
 }
 
+TEST_CASE(drop_table)
+{
+    EXPECT(parse("DROP").is_error());
+    EXPECT(parse("DROP TABLE").is_error());
+    EXPECT(parse("DROP TABLE test").is_error());
+    EXPECT(parse("DROP TABLE IF test;").is_error());
+
+    auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, bool expected_is_error_if_table_does_not_exist = true) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto statement = result.release_value();
+        EXPECT(is<SQL::DropTable>(*statement));
+
+        const auto& table = static_cast<const SQL::DropTable&>(*statement);
+        EXPECT_EQ(table.schema_name(), expected_schema);
+        EXPECT_EQ(table.table_name(), expected_table);
+        EXPECT_EQ(table.is_error_if_table_does_not_exist(), expected_is_error_if_table_does_not_exist);
+    };
+
+    validate("DROP TABLE test;", {}, "test");
+    validate("DROP TABLE schema.test;", "schema", "test");
+    validate("DROP TABLE IF EXISTS test;", {}, "test", false);
+}
+
 TEST_MAIN(SqlParser)
