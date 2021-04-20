@@ -10,5 +10,5 @@ useconfigure=true
 depends=pcre2
 
 configure() {
-	run ./"$configscript"
+    run ./"$configscript"
 }
