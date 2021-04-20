@@ -6,9 +6,9 @@ files="https://downloads.sourceforge.net/project/sdl2gfx/SDL2_gfx-${version}.tar
 auth_type=md5
 depends="SDL2"
 useconfigure=true
-configopts="--with-sdl-prefix=${SERENITY_BUILD_DIR}/Root/usr/local"
+configopts="--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
 
 install() {
-    run make install DESTDIR=$DESTDIR $installopts
-    run ${CC} -shared -o $DESTDIR/usr/local/lib/libSDL2_gfx.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libSDL2_gfx.a -Wl,--no-whole-archive
+    run make install DESTDIR=${SERENITY_INSTALL_ROOT} $installopts
+    run ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_gfx.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_gfx.a -Wl,--no-whole-archive
 }

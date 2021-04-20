@@ -6,5 +6,5 @@ auth_type=md5
 
 build() {
     export CC="${SERENITY_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin/${SERENITY_ARCH}-pc-serenity-gcc"
-    run make DESTDIR="${SERENITY_BUILD_DIR}/Root" CC="${CC}" $installopts
+    run make DESTDIR="${SERENITY_INSTALL_ROOT}" CC="${CC}" $installopts
 }
