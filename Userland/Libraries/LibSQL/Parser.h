@@ -58,6 +58,9 @@ public:
     bool has_errors() const { return m_parser_state.m_errors.size(); }
     const Vector<Error>& errors() const { return m_parser_state.m_errors; }
 
+protected:
+    NonnullRefPtr<Expression> parse_expression(); // Protected for unit testing.
+
 private:
     struct ParserState {
         explicit ParserState(Lexer);
@@ -69,6 +72,24 @@ private:
 
     NonnullRefPtr<CreateTable> parse_create_table_statement();
     NonnullRefPtr<DropTable> parse_drop_table_statement();
+
+    NonnullRefPtr<Expression> parse_primary_expression();
+    NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression> primary);
+    bool match_secondary_expression() const;
+    Optional<NonnullRefPtr<Expression>> parse_literal_value_expression();
+    Optional<NonnullRefPtr<Expression>> parse_column_name_expression();
+    Optional<NonnullRefPtr<Expression>> parse_unary_operator_expression();
+    Optional<NonnullRefPtr<Expression>> parse_binary_operator_expression(NonnullRefPtr<Expression> lhs);
+    Optional<NonnullRefPtr<Expression>> parse_chained_expression();
+    Optional<NonnullRefPtr<Expression>> parse_cast_expression();
+    Optional<NonnullRefPtr<Expression>> parse_case_expression();
+    Optional<NonnullRefPtr<Expression>> parse_collate_expression(NonnullRefPtr<Expression> expression);
+    Optional<NonnullRefPtr<Expression>> parse_is_expression(NonnullRefPtr<Expression> expression);
+    Optional<NonnullRefPtr<Expression>> parse_match_expression(NonnullRefPtr<Expression> lhs, bool invert_expression);
+    Optional<NonnullRefPtr<Expression>> parse_null_expression(NonnullRefPtr<Expression> expression, bool invert_expression);
+    Optional<NonnullRefPtr<Expression>> parse_between_expression(NonnullRefPtr<Expression> expression, bool invert_expression);
+    Optional<NonnullRefPtr<Expression>> parse_in_expression(NonnullRefPtr<Expression> expression, bool invert_expression);
+
     NonnullRefPtr<ColumnDefinition> parse_column_definition();
     NonnullRefPtr<TypeName> parse_type_name();
     NonnullRefPtr<SignedNumber> parse_signed_number();
