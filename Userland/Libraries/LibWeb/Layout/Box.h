@@ -110,6 +110,7 @@ public:
     StackingContext* enclosing_stacking_context();
 
     virtual void paint(PaintContext&, PaintPhase) override;
+    virtual void paint_border(PaintContext& context);
 
     Vector<LineBox>& line_boxes() { return m_line_boxes; }
     const Vector<LineBox>& line_boxes() const { return m_line_boxes; }
