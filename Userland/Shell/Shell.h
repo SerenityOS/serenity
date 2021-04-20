@@ -178,9 +178,14 @@ public:
     static bool is_glob(const StringView&);
     static Vector<StringView> split_path(const StringView&);
 
+    enum class ExecutableOnly {
+        Yes,
+        No
+    };
+
     void highlight(Line::Editor&) const;
     Vector<Line::CompletionSuggestion> complete();
-    Vector<Line::CompletionSuggestion> complete_path(const String& base, const String&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_path(const String& base, const String&, size_t offset, ExecutableOnly executable_only);
     Vector<Line::CompletionSuggestion> complete_program_name(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_variable(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_user(const String&, size_t offset);
