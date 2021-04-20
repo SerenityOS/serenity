@@ -174,6 +174,12 @@ int main()
             case SQL::TokenCategory::Number:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Magenta) });
                 break;
+            case SQL::TokenCategory::String:
+                editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Green), Line::Style::Bold });
+                break;
+            case SQL::TokenCategory::Blob:
+                editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Magenta), Line::Style::Bold });
+                break;
             case SQL::TokenCategory::Keyword:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Blue), Line::Style::Bold });
                 break;
