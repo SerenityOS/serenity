@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,30 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/FormAssociatedElement.h>
+#include <LibWeb/HTML/HTMLFormElement.h>
 
 namespace Web::HTML {
 
-class HTMLFormElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLFormElementWrapper;
-
-    HTMLFormElement(DOM::Document&, QualifiedName);
-    virtual ~HTMLFormElement() override;
-
-    String action() const { return attribute(HTML::AttributeNames::action); }
-    String method() const { return attribute(HTML::AttributeNames::method); }
-
-    void submit_form(RefPtr<HTMLElement> submitter, bool from_submit_binding = false);
-
-    // NOTE: This is for the JS bindings. Use submit_form instead.
-    void submit();
-
-private:
-    bool m_firing_submission_events { false };
-};
+void FormAssociatedElement::set_form(HTMLFormElement* form)
+{
+    m_form = form;
+}
 
 }

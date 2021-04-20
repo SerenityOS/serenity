@@ -1,5 +1,7 @@
 interface HTMLInputElement : HTMLElement {
 
+    readonly attribute HTMLFormElement? form;
+
     [Reflect] attribute DOMString accept;
     [Reflect] attribute DOMString alt;
     [Reflect] attribute DOMString max;
