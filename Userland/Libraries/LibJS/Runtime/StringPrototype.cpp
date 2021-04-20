@@ -180,7 +180,17 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
     if (string.is_null())
         return {};
 
-    auto search_string = vm.argument(0).to_string(global_object);
+    auto search_string_value = vm.argument(0);
+
+    bool search_is_regexp = search_string_value.is_regexp(global_object);
+    if (vm.exception())
+        return {};
+    if (search_is_regexp) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::IsNotA, "searchString", "string, but a regular expression");
+        return {};
+    }
+
+    auto search_string = search_string_value.to_string(global_object);
     if (vm.exception())
         return {};
 
