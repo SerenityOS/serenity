@@ -8,11 +8,10 @@ workdir="${port}-${commit}"
 configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_SOURCE_DIR/Toolchain/CMake/CMakeToolchain.txt"
 files="https://github.com/hatari/hatari/archive/${commit}.tar.gz ${commit}.tar.gz 614d8c20a06deea6df464a5de32cc795"
 auth_type=md5
+launcher_name=Hatari
+launcher_category=Games
+launcher_command=hatari
 
 configure() {
     run cmake $configopts
-}
-
-install() {
-    run make install
 }
