@@ -83,6 +83,7 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
 
     if (value.is_object()) {
         auto& object = value.as_object();
+        output_html.append(wrap_string_in_style(object.class_name(), StyleType::ObjectType));
         if (object.is_function())
             return function_to_html(object, output_html, seen_objects);
         if (is<Date>(object))
@@ -198,6 +199,8 @@ String MarkupGenerator::style_from_style_type(StyleType type)
         return "color: -libweb-palette-syntax-control-keyword;";
     case StyleType::Identifier:
         return "color: -libweb-palette-syntax-identifier;";
+    case StyleType::ObjectType:
+        return "padding: 2px; background-color: #ddf; color: black; font-weight: bold;";
     default:
         VERIFY_NOT_REACHED();
     }
