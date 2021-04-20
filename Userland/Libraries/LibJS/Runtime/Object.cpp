@@ -388,6 +388,11 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
         value = existing_value.value().value;
         attributes = existing_value.value().attributes;
     } else {
+        if (property_name.is_string()) {
+            i32 property_index = property_name.as_string().to_int().value_or(-1);
+            if (property_index >= 0)
+                return get_own_property_descriptor(property_index);
+        }
         auto metadata = shape().lookup(property_name.to_string_or_symbol());
         if (!metadata.has_value())
             return {};
