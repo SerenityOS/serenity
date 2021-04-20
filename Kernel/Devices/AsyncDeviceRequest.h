@@ -45,7 +45,7 @@ class AsyncDeviceRequest : public RefCounted<AsyncDeviceRequest> {
     AK_MAKE_NONMOVABLE(AsyncDeviceRequest);
 
 public:
-    enum RequestResult {
+    enum [[nodiscard]] RequestResult {
         Pending = 0,
         Started,
         Success,
@@ -145,14 +145,14 @@ private:
     void sub_request_finished(AsyncDeviceRequest&);
     void request_finished();
 
-    bool in_target_context(const UserOrKernelBuffer& buffer) const
+    [[nodiscard]] bool in_target_context(const UserOrKernelBuffer& buffer) const
     {
         if (buffer.is_kernel_buffer())
             return true;
         return m_process == Process::current();
     }
 
-    static bool is_completed_result(RequestResult result)
+    [[nodiscard]] static bool is_completed_result(RequestResult result)
     {
         return result > Started;
     }
