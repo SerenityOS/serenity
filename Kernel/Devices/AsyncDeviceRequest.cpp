@@ -49,10 +49,13 @@ AsyncDeviceRequest::~AsyncDeviceRequest()
     // sub-requests should be completed (either succeeded, failed, or cancelled).
     // Which means there should be no more pending sub-requests and the
     // entire AsyncDeviceRequest hierarchy should be immutable.
-    for (auto& sub_request : m_sub_requests_complete) {
-        VERIFY(is_completed_result(sub_request.m_result)); // Shouldn't need any locking anymore
-        VERIFY(sub_request.m_parent_request == this);
-        sub_request.m_parent_request = nullptr;
+    while (!m_sub_requests_complete.is_empty()) {
+        // Note: sub_request is ref-counted, and we use this specific pattern
+        // to allow make sure the refcount is dropped properly.
+        auto sub_request = m_sub_requests_complete.take_first();
+        VERIFY(is_completed_result(sub_request->m_result)); // Shouldn't need any locking anymore
+        VERIFY(sub_request->m_parent_request == this);
+        sub_request->m_parent_request = nullptr;
     }
 }
 
@@ -104,24 +107,19 @@ void AsyncDeviceRequest::sub_request_finished(AsyncDeviceRequest& sub_request)
     {
         ScopedSpinLock lock(m_lock);
         VERIFY(m_result == Started);
-        size_t index;
-        for (index = 0; index < m_sub_requests_pending.size(); index++) {
-            if (&m_sub_requests_pending[index] == &sub_request) {
-                NonnullRefPtr<AsyncDeviceRequest> request(m_sub_requests_pending[index]);
-                m_sub_requests_pending.remove(index);
-                m_sub_requests_complete.append(move(request));
-                break;
-            }
+
+        if (m_sub_requests_pending.contains(sub_request)) {
+            // Note: append handles removing from any previous intrusive list internally.
+            m_sub_requests_complete.append(sub_request);
         }
-        VERIFY(index < m_sub_requests_pending.size());
+
         all_completed = m_sub_requests_pending.is_empty();
         if (all_completed) {
             // Aggregate any errors
             bool any_failures = false;
             bool any_memory_faults = false;
-            for (index = 0; index < m_sub_requests_complete.size(); index++) {
-                auto& sub_request = m_sub_requests_complete[index];
-                auto sub_result = sub_request.get_request_result();
+            for (auto& com_sub_request : m_sub_requests_complete) {
+                auto sub_result = com_sub_request.get_request_result();
                 VERIFY(is_completed_result(sub_result));
                 switch (sub_result) {
                 case Failure:
