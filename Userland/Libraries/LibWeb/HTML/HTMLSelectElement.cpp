@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, The SerenityOS developers.
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
 
 namespace Web::HTML {
@@ -35,6 +37,16 @@ HTMLSelectElement::HTMLSelectElement(DOM::Document& document, QualifiedName qual
 
 HTMLSelectElement::~HTMLSelectElement()
 {
+}
+
+void HTMLSelectElement::inserted()
+{
+    set_form(first_ancestor_of_type<HTMLFormElement>());
+}
+
+void HTMLSelectElement::removed_from(DOM::Node*)
+{
+    set_form(nullptr);
 }
 
 }
