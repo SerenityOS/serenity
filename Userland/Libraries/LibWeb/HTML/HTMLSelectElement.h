@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, The SerenityOS developers.
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,16 +27,23 @@
 
 #pragma once
 
+#include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
 
-class HTMLSelectElement final : public HTMLElement {
+class HTMLSelectElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLSelectElementWrapper;
 
     HTMLSelectElement(DOM::Document&, QualifiedName);
     virtual ~HTMLSelectElement() override;
+
+private:
+    virtual void inserted() override;
+    virtual void removed_from(DOM::Node*) override;
 };
 
 }
