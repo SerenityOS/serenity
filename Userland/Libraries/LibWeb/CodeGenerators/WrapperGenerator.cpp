@@ -776,7 +776,7 @@ static void generate_header(const IDL::Interface& interface)
 namespace Web::Bindings {
 
 class @wrapper_class@ : public @wrapper_base_class@ {
-    JS_OBJECT(@wrapper_class@, @wrapper_base_class@);
+    JS_OBJECT(@name@, @wrapper_base_class@);
 public:
     static @wrapper_class@* create(JS::GlobalObject&, @fully_qualified_name@&);
 
