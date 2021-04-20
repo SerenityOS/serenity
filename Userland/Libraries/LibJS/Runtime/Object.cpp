@@ -164,11 +164,20 @@ bool Object::prevent_extensions()
 bool Object::set_integrity_level(IntegrityLevel level)
 {
     // FIXME: This feels clunky and should get nicer abstractions.
-    auto update_property = [this](auto& property_name, auto attributes) {
-        auto metadata = shape().lookup(property_name.to_string_or_symbol());
-        VERIFY(metadata.has_value());
-        auto value = get_direct(metadata->offset);
-        define_property(property_name, value, metadata->attributes.bits() & attributes);
+    auto update_property = [this](auto& property_name, auto new_attributes) {
+        if (property_name.is_number()) {
+            auto value_and_attributes = m_indexed_properties.get(nullptr, property_name.as_number(), false).value();
+            auto value = value_and_attributes.value;
+            auto attributes = value_and_attributes.attributes.bits() & new_attributes;
+            m_indexed_properties.put(nullptr, property_name.as_number(), value, attributes, false);
+        } else {
+            auto metadata = shape().lookup(property_name.to_string_or_symbol()).value();
+            auto attributes = metadata.attributes.bits() & new_attributes;
+            if (m_shape->is_unique())
+                m_shape->reconfigure_property_in_unique_shape(property_name.to_string_or_symbol(), attributes);
+            else
+                set_shape(*m_shape->create_configure_transition(property_name.to_string_or_symbol(), attributes));
+        }
     };
 
     auto& vm = this->vm();
@@ -184,6 +193,11 @@ bool Object::set_integrity_level(IntegrityLevel level)
     case IntegrityLevel::Sealed:
         for (auto& key : keys) {
             auto property_name = PropertyName::from_value(global_object(), key);
+            if (property_name.is_string()) {
+                i32 property_index = property_name.as_string().to_int().value_or(-1);
+                if (property_index >= 0)
+                    property_name = property_index;
+            }
             update_property(property_name, ~Attribute::Configurable);
             if (vm.exception())
                 return {};
@@ -192,6 +206,11 @@ bool Object::set_integrity_level(IntegrityLevel level)
     case IntegrityLevel::Frozen:
         for (auto& key : keys) {
             auto property_name = PropertyName::from_value(global_object(), key);
+            if (property_name.is_string()) {
+                i32 property_index = property_name.as_string().to_int().value_or(-1);
+                if (property_index >= 0)
+                    property_name = property_index;
+            }
             auto property_descriptor = get_own_property_descriptor(property_name);
             VERIFY(property_descriptor.has_value());
             u8 attributes = property_descriptor->is_accessor_descriptor()
