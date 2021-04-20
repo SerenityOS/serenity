@@ -193,11 +193,6 @@ bool Object::set_integrity_level(IntegrityLevel level)
     case IntegrityLevel::Sealed:
         for (auto& key : keys) {
             auto property_name = PropertyName::from_value(global_object(), key);
-            if (property_name.is_string()) {
-                i32 property_index = property_name.as_string().to_int().value_or(-1);
-                if (property_index >= 0)
-                    property_name = property_index;
-            }
             update_property(property_name, ~Attribute::Configurable);
             if (vm.exception())
                 return {};
@@ -206,11 +201,6 @@ bool Object::set_integrity_level(IntegrityLevel level)
     case IntegrityLevel::Frozen:
         for (auto& key : keys) {
             auto property_name = PropertyName::from_value(global_object(), key);
-            if (property_name.is_string()) {
-                i32 property_index = property_name.as_string().to_int().value_or(-1);
-                if (property_index >= 0)
-                    property_name = property_index;
-            }
             auto property_descriptor = get_own_property_descriptor(property_name);
             VERIFY(property_descriptor.has_value());
             u8 attributes = property_descriptor->is_accessor_descriptor()
@@ -544,12 +534,6 @@ bool Object::define_property(const PropertyName& property_name, Value value, Pro
 
     if (property_name.is_number())
         return put_own_property_by_index(property_name.as_number(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
-
-    if (property_name.is_string()) {
-        i32 property_index = property_name.as_string().to_int().value_or(-1);
-        if (property_index >= 0)
-            return put_own_property_by_index(property_index, value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
-    }
     return put_own_property(property_name.to_string_or_symbol(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 }
 
@@ -721,12 +705,6 @@ bool Object::delete_property(const PropertyName& property_name)
     if (property_name.is_number())
         return m_indexed_properties.remove(property_name.as_number());
 
-    if (property_name.is_string()) {
-        i32 property_index = property_name.as_string().to_int().value_or(-1);
-        if (property_index >= 0)
-            return m_indexed_properties.remove(property_index);
-    }
-
     auto metadata = shape().lookup(property_name.to_string_or_symbol());
     if (!metadata.has_value())
         return true;
@@ -778,13 +756,6 @@ Value Object::get(const PropertyName& property_name, Value receiver, bool withou
 
     if (property_name.is_number())
         return get_by_index(property_name.as_number());
-
-    if (property_name.is_string()) {
-        auto property_string = property_name.to_string();
-        i32 property_index = property_string.to_int().value_or(-1);
-        if (property_index >= 0)
-            return get_by_index(property_index);
-    }
 
     if (receiver.is_empty())
         receiver = Value(this);
@@ -840,18 +811,10 @@ bool Object::put_by_index(u32 property_index, Value value)
 bool Object::put(const PropertyName& property_name, Value value, Value receiver)
 {
     VERIFY(property_name.is_valid());
+    VERIFY(!value.is_empty());
 
     if (property_name.is_number())
         return put_by_index(property_name.as_number(), value);
-
-    VERIFY(!value.is_empty());
-
-    if (property_name.is_string()) {
-        auto& property_string = property_name.as_string();
-        i32 property_index = property_string.to_int().value_or(-1);
-        if (property_index >= 0)
-            return put_by_index(property_index, value);
-    }
 
     auto string_or_symbol = property_name.to_string_or_symbol();
 
@@ -986,12 +949,6 @@ bool Object::has_own_property(const PropertyName& property_name) const
 
     if (property_name.is_number())
         return has_indexed_property(property_name.as_number());
-
-    if (property_name.is_string()) {
-        i32 property_index = property_name.as_string().to_int().value_or(-1);
-        if (property_index >= 0)
-            return has_indexed_property(property_index);
-    }
 
     return shape().lookup(property_name.to_string_or_symbol()).has_value();
 }

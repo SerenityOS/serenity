@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,23 +65,25 @@ public:
     }
 
     PropertyName(const char* chars)
-        : m_type(Type::String)
-        , m_string(FlyString(chars))
+        : PropertyName(FlyString(chars))
     {
     }
 
     PropertyName(const String& string)
-        : m_type(Type::String)
-        , m_string(FlyString(string))
+        : PropertyName(FlyString(string))
     {
-        VERIFY(!string.is_null());
     }
 
     PropertyName(const FlyString& string)
-        : m_type(Type::String)
-        , m_string(string)
     {
         VERIFY(!string.is_null());
+        if (i32 index = string.to_int().value_or(-1); index >= 0) {
+            m_number = index;
+            m_type = Type::Number;
+        } else {
+            m_string = string;
+            m_type = Type::String;
+        }
     }
 
     PropertyName(Symbol* symbol)
@@ -92,12 +95,20 @@ public:
 
     PropertyName(const StringOrSymbol& string_or_symbol)
     {
-        if (string_or_symbol.is_string()) {
-            m_string = string_or_symbol.as_string();
-            m_type = Type::String;
-        } else if (string_or_symbol.is_symbol()) {
+        if (!string_or_symbol.is_valid())
+            return;
+        if (string_or_symbol.is_symbol()) {
             m_symbol = const_cast<Symbol*>(string_or_symbol.as_symbol());
             m_type = Type::Symbol;
+            return;
+        }
+        auto string = string_or_symbol.as_string();
+        if (i32 index = string.to_int().value_or(-1); index >= 0) {
+            m_number = index;
+            m_type = Type::Number;
+        } else {
+            m_string = string_or_symbol.as_string();
+            m_type = Type::String;
         }
     }
 
@@ -136,9 +147,8 @@ public:
     StringOrSymbol to_string_or_symbol() const
     {
         VERIFY(is_valid());
-        VERIFY(!is_number());
-        if (is_string())
-            return StringOrSymbol(as_string());
+        if (is_string() || is_number())
+            return StringOrSymbol(to_string());
         return StringOrSymbol(as_symbol());
     }
 
