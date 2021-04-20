@@ -91,6 +91,7 @@ void AbstractView::model_did_update(unsigned int flags)
             m_drop_candidate_index = {};
         selection().remove_matching([this](auto& index) { return !model()->is_valid(index); });
     }
+    m_selection_start_index = {};
 }
 
 void AbstractView::clear_selection()
