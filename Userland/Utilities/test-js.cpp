@@ -744,12 +744,12 @@ int main(int argc, char** argv)
 #ifdef __serenity__
         test_root = "/home/anon/js-tests";
 #else
-        char* serenity_root = getenv("SERENITY_ROOT");
-        if (!serenity_root) {
-            warnln("No test root given, test-js requires the SERENITY_ROOT environment variable to be set");
+        char* serenity_source_dir = getenv("SERENITY_SOURCE_DIR");
+        if (!serenity_source_dir) {
+            warnln("No test root given, test-js requires the SERENITY_SOURCE_DIR environment variable to be set");
             return 1;
         }
-        test_root = String::formatted("{}/Userland/Libraries/LibJS/Tests", serenity_root);
+        test_root = String::formatted("{}/Userland/Libraries/LibJS/Tests", serenity_source_dir);
 #endif
     }
     if (!Core::File::is_directory(test_root)) {
