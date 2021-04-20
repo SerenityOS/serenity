@@ -42,8 +42,12 @@ public:
     virtual ~HTMLSelectElement() override;
 
 private:
+    // ^DOM::Node
     virtual void inserted() override;
     virtual void removed_from(DOM::Node*) override;
+
+    // ^HTML::FormAssociatedElement
+    virtual HTMLElement& form_associated_element_to_html_element() override { return *this; }
 };
 
 }
