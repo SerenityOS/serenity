@@ -431,7 +431,7 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
     return nullptr;
 }
 
-Region* MemoryManager::user_region_from_vaddr(Space& space, VirtualAddress vaddr)
+Region* MemoryManager::find_user_region_from_vaddr(Space& space, VirtualAddress vaddr)
 {
     ScopedSpinLock lock(space.get_lock());
     return space.find_region_containing({ vaddr, 1 });
@@ -440,7 +440,7 @@ Region* MemoryManager::user_region_from_vaddr(Space& space, VirtualAddress vaddr
 Region* MemoryManager::find_region_from_vaddr(Space& space, VirtualAddress vaddr)
 {
     ScopedSpinLock lock(s_mm_lock);
-    if (auto* region = user_region_from_vaddr(space, vaddr))
+    if (auto* region = find_user_region_from_vaddr(space, vaddr))
         return region;
     return kernel_region_from_vaddr(vaddr);
 }
@@ -454,7 +454,7 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
     if (!page_directory)
         return nullptr;
     VERIFY(page_directory->space());
-    return user_region_from_vaddr(*page_directory->space(), vaddr);
+    return find_user_region_from_vaddr(*page_directory->space(), vaddr);
 }
 
 PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
@@ -855,7 +855,7 @@ bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress v
     if (!is_user_address(vaddr))
         return false;
     ScopedSpinLock lock(s_mm_lock);
-    auto* region = user_region_from_vaddr(const_cast<Process&>(process).space(), vaddr);
+    auto* region = find_user_region_from_vaddr(const_cast<Process&>(process).space(), vaddr);
     return region && region->is_user() && region->is_stack();
 }
 

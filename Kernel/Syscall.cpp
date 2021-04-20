@@ -190,7 +190,7 @@ void syscall_handler(TrapFrame* trap)
         handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
     }
 
-    auto* calling_region = MM.find_region_from_vaddr(process.space(), VirtualAddress(regs.eip));
+    auto* calling_region = MM.find_user_region_from_vaddr(process.space(), VirtualAddress(regs.eip));
     if (!calling_region) {
         dbgln("Syscall from {:p} which has no associated region", regs.eip);
         handle_crash(regs, "Syscall from unknown region", SIGSEGV);
