@@ -48,7 +48,8 @@ private:
         Operator,
         Keyword,
         ControlKeyword,
-        Identifier
+        Identifier,
+        ObjectType,
     };
 
     static void value_to_html(Value, StringBuilder& output_html, HashTable<Object*> seen_objects = {});
