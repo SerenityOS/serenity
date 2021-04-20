@@ -38,8 +38,10 @@ NonnullRefPtr<Statement> Parser::next_statement()
     switch (m_parser_state.m_token.type()) {
     case TokenType::Create:
         return parse_create_table_statement();
+    case TokenType::Drop:
+        return parse_drop_table_statement();
     default:
-        expected("CREATE");
+        expected("CREATE or DROP");
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -96,6 +98,36 @@ NonnullRefPtr<CreateTable> Parser::parse_create_table_statement()
     consume(TokenType::SemiColon);
 
     return create_ast_node<CreateTable>(move(schema_name), move(table_name), move(column_definitions), is_temporary, is_error_if_table_exists);
+}
+
+NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
+{
+    // https://sqlite.org/lang_droptable.html
+    consume(TokenType::Drop);
+    consume(TokenType::Table);
+
+    bool is_error_if_table_does_not_exist = true;
+    if (match(TokenType::If)) {
+        consume(TokenType::If);
+        consume(TokenType::Exists);
+        is_error_if_table_does_not_exist = false;
+    }
+
+    String schema_or_table_name = consume(TokenType::Identifier).value();
+    String schema_name;
+    String table_name;
+
+    if (match(TokenType::Period)) {
+        consume();
+        schema_name = move(schema_or_table_name);
+        table_name = consume(TokenType::Identifier).value();
+    } else {
+        table_name = move(schema_or_table_name);
+    }
+
+    consume(TokenType::SemiColon);
+
+    return create_ast_node<DropTable>(move(schema_name), move(table_name), is_error_if_table_does_not_exist);
 }
 
 NonnullRefPtr<ColumnDefinition> Parser::parse_column_definition()
