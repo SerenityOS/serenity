@@ -44,6 +44,8 @@ private:
 
     bool consume_whitespace_and_comments();
     bool consume_numeric_literal();
+    bool consume_string_literal();
+    bool consume_blob_literal();
     bool consume_exponent();
     bool consume_hexadecimal_number();
 
@@ -51,6 +53,9 @@ private:
     bool is_identifier_start() const;
     bool is_identifier_middle() const;
     bool is_numeric_literal_start() const;
+    bool is_string_literal_start() const;
+    bool is_string_literal_end() const;
+    bool is_blob_literal_start() const;
     bool is_line_comment_start() const;
     bool is_block_comment_start() const;
     bool is_block_comment_end() const;

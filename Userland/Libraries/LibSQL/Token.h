@@ -182,6 +182,8 @@ namespace SQL {
     __ENUMERATE_SQL_TOKEN("WITHOUT", Without, Keyword)                    \
     __ENUMERATE_SQL_TOKEN("_identifier_", Identifier, Identifier)         \
     __ENUMERATE_SQL_TOKEN("_numeric_", NumericLiteral, Number)            \
+    __ENUMERATE_SQL_TOKEN("_string_", StringLiteral, String)              \
+    __ENUMERATE_SQL_TOKEN("_blob_", BlobLiteral, Blob)                    \
     __ENUMERATE_SQL_TOKEN("_eof_", Eof, Invalid)                          \
     __ENUMERATE_SQL_TOKEN("_invalid_", Invalid, Invalid)                  \
     __ENUMERATE_SQL_TOKEN("&", Ampersand, Operator)                       \
@@ -221,6 +223,8 @@ enum class TokenCategory {
     Keyword,
     Identifier,
     Number,
+    String,
+    Blob,
     Operator,
     Punctuation,
 };
