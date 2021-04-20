@@ -86,7 +86,13 @@ function(serenity_app target_name)
     if (EXISTS "${medium_icon}")
         embed_resource("${target_name}" serenity_icon_m "${medium_icon}")
     else()
-        message(WARNING "Missing medium app icon: ${medium_icon}")
+        # These icons are designed small only for use in applets, and thus are exempt.
+        list(APPEND allowed_missing_medium_icons "audio-volume-high")
+        list(APPEND allowed_missing_medium_icons "edit-copy")
+
+        if (NOT ${SERENITY_APP_ICON} IN_LIST allowed_missing_medium_icons)
+            message(WARNING "Missing medium app icon: ${medium_icon}")
+        endif()
     endif()
 endfunction()
 
