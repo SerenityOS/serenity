@@ -67,7 +67,7 @@
     E(onmousedown, UIEvents::EventNames::mousedown)           \
     E(onmouseenter, UIEvents::EventNames::mouseenter)         \
     E(onmouseleave, UIEvents::EventNames::mouseleave)         \
-    E(onmousemove, UIEvents::EventNames::mousedown)           \
+    E(onmousemove, UIEvents::EventNames::mousemove)           \
     E(onmouseout, UIEvents::EventNames::mouseout)             \
     E(onmouseover, UIEvents::EventNames::mouseover)           \
     E(onmouseup, UIEvents::EventNames::mouseup)               \
