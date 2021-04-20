@@ -111,6 +111,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (pid == getpid()) {
+        GUI::MessageBox::show(window, "Cannot inspect Inspector itself!", "Error", GUI::MessageBox::Type::Error);
+        return 1;
+    }
+
     auto all_processes = Core::ProcessStatisticsReader::get_all();
     for (auto& it : all_processes.value()) {
         if (it.value.pid != pid)
