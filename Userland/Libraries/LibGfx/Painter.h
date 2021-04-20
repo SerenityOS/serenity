@@ -37,7 +37,7 @@ public:
     void fill_rect_with_gradient(Orientation, const IntRect&, Color gradient_start, Color gradient_end);
     void fill_rect_with_gradient(const IntRect&, Color gradient_start, Color gradient_end);
     void fill_ellipse(const IntRect&, Color);
-    void draw_rect(const IntRect&, Color, bool rough = false);
+    void draw_rect(const IntRect&, Color, bool without_corners = false);
     void draw_focus_rect(const IntRect&, Color);
     void draw_bitmap(const IntPoint&, const CharacterBitmap&, Color = Color());
     void draw_bitmap(const IntPoint&, const GlyphBitmap&, Color = Color());
@@ -99,8 +99,19 @@ public:
     void add_clip_rect(const IntRect& rect);
     void clear_clip_rect();
 
-    void translate(int dx, int dy) { translate({ dx, dy }); }
-    void translate(const IntPoint& delta) { state().translation.translate_by(delta); }
+    IntPoint translation() const { return transform().translation().to_type<int>(); }
+    template<typename T>
+    void translate(T dx, T dy) { transform().translate(static_cast<float>(dx), static_cast<float>(dy)); }
+    template<typename T>
+    void translate(const Point<T>& delta) { transform().translate(delta.template to_type<float>()); }
+
+    FloatPoint float_scale() const { return transform().scale(); }
+
+    int scale() const;
+    template<typename T>
+    void scale(T dx, T dy) { transform().scale(static_cast<float>(dx), static_cast<float>(dy)); }
+    template<typename T>
+    void scale(const Point<T>& delta) { transform().scale(delta.template to_type<float>()); }
 
     Gfx::Bitmap* target() { return m_target.ptr(); }
 
@@ -114,28 +125,48 @@ public:
     IntRect clip_rect() const { return state().clip_rect; }
 
 protected:
-    IntPoint translation() const { return state().translation; }
-    IntRect to_physical(const IntRect& r) const { return r.translated(translation()) * scale(); }
-    IntPoint to_physical(const IntPoint& p) const { return p.translated(translation()) * scale(); }
-    int scale() const { return state().scale; }
+    AffineTransform& transform() { return state().transform; }
+    const AffineTransform& transform() const { return state().transform; }
+
+    IntSize scaled(const IntSize& size) const
+    {
+        return IntSize {
+            static_cast<float>(size.width()) * float_scale().x(),
+            static_cast<float>(size.height()) * float_scale().y(),
+        };
+    }
+
+    IntRect scaled(const IntRect& rect) const
+    {
+        return IntRect {
+            static_cast<float>(rect.x()) * float_scale().x(),
+            static_cast<float>(rect.y()) * float_scale().y(),
+            static_cast<float>(rect.width()) * float_scale().x(),
+            static_cast<float>(rect.height()) * float_scale().y(),
+        };
+    }
+
+    IntRect to_physical(const IntRect& rect) { return rect.transformed(transform()).intersected(clip_rect()); }
+    IntPoint to_physical(const IntPoint& point) { return point.transformed(transform()).constrained(clip_rect()); }
+
     void set_physical_pixel_with_draw_op(u32& pixel, const Color&);
     void fill_physical_scanline_with_draw_op(int y, int x, int width, const Color& color);
     void fill_rect_with_draw_op(const IntRect&, Color);
     void blit_with_opacity(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity, bool apply_alpha = true);
-    void draw_physical_pixel(const IntPoint&, Color, int thickness = 1);
+    void draw_physical_pixel(const IntPoint&, Color, IntSize thickness = { 1, 1 });
+    void fill_physical_rect(const IntRect&, Color);
+
+    ALWAYS_INLINE bool has_integer_scale() const { return float_scale().x() == float_scale().y() && float_scale().x() == floorf(float_scale().x()); }
 
     struct State {
         const Font* font;
-        IntPoint translation;
-        int scale = 1;
+        AffineTransform transform;
         IntRect clip_rect;
         DrawOp draw_op;
     };
 
     State& state() { return m_state_stack.last(); }
     const State& state() const { return m_state_stack.last(); }
-
-    void fill_physical_rect(const IntRect&, Color);
 
     IntRect m_clip_origin;
     NonnullRefPtr<Gfx::Bitmap> m_target;
