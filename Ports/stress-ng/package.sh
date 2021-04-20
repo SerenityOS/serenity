@@ -6,7 +6,7 @@ auth_type=md5
 depends=zlib
 
 pre_configure() {
-    export CFLAGS="-I${SERENITY_BUILD_DIR}/Root/usr/local/include"
-    export LDFLAGS="-L${SERENITY_BUILD_DIR}/Root/usr/local/lib -lzlib"
+    export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include"
+    export LDFLAGS="-L${SERENITY_INSTALL_ROOT}/usr/local/lib -lzlib"
 
 }

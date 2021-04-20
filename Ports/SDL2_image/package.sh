@@ -9,7 +9,7 @@ auth_type=md5
 configure() {
     run ./configure \
         --host="${SERENITY_ARCH}-pc-serenity" \
-        --with-sdl-prefix="${SERENITY_BUILD_DIR}/Root/usr/local" \
+        --with-sdl-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
         --enable-webp=false --enable-webp-shared=false     \
         LDFLAGS="-lgui -lgfx -lipc -lcore -lm"
 }
@@ -19,7 +19,7 @@ build() {
 }
 
 install() {
-    run make -k DESTDIR="${SERENITY_BUILD_DIR}/Root" install
-    ${CC} -shared -o $DESTDIR/usr/local/lib/libSDL2_image.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libSDL2_image.a -Wl,--no-whole-archive -lpng -ljpeg -ltiff
-    rm -f $DESTDIR/usr/local/lib/libSDL2_image.la
+    run make -k DESTDIR="${SERENITY_INSTALL_ROOT}" install
+    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_image.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_image.a -Wl,--no-whole-archive -lpng -ljpeg -ltiff
+    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_image.la
 }

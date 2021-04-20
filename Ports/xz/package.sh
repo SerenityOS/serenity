@@ -7,7 +7,7 @@ auth_type=sha256
 depends="zlib libiconv"
 
 install() {
-    run make DESTDIR=$DESTDIR $installopts install
-    ${CC} -shared -o $DESTDIR/usr/local/lib/liblzma.so -Wl,--whole-archive $DESTDIR/usr/local/lib/liblzma.a -Wl,--no-whole-archive -lz -liconv
-    rm -f $DESTDIR/usr/local/lib/liblzma.la
+    run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
+    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/liblzma.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/liblzma.a -Wl,--no-whole-archive -lz -liconv
+    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/liblzma.la
 }

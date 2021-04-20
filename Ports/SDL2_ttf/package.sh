@@ -9,13 +9,13 @@ depends="SDL2 freetype"
 configure() {
     run ./configure \
         --host="${SERENITY_ARCH}-pc-serenity" \
-        --with-sdl-prefix="${SERENITY_BUILD_DIR}/Root/usr/local" \
+        --with-sdl-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
         --with-x=no \
-        FT2_CFLAGS="-I${SERENITY_BUILD_DIR}/Root/usr/local/include/freetype2" \
+        FT2_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/freetype2" \
         LIBS="-lgui -lgfx -lipc -lcore -lcompress"
 }
 
 install() {
-    run make install DESTDIR=$DESTDIR $installopts
-    run ${CC} -shared -o $DESTDIR/usr/local/lib/libSDL2_ttf.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libSDL2_ttf.a -Wl,--no-whole-archive
+    run make install DESTDIR=${SERENITY_INSTALL_ROOT} $installopts
+    run ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_ttf.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_ttf.a -Wl,--no-whole-archive
 }

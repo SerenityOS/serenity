@@ -7,11 +7,11 @@ auth_type=md5
 depends=libogg
 
 install() {
-    run make DESTDIR=$DESTDIR $installopts install
-    ${CC} -shared -o $DESTDIR/usr/local/lib/libvorbis.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libvorbis.a -Wl,--no-whole-archive -logg
-    rm -f $DESTDIR/usr/local/lib/libvorbis.la
-    ${CC} -shared -o $DESTDIR/usr/local/lib/libvorbisenc.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libvorbisenc.a -Wl,--no-whole-archive -lvorbis
-    rm -f $DESTDIR/usr/local/lib/libvorbisenc.la
-    ${CC} -shared -o $DESTDIR/usr/local/lib/libvorbisfile.so -Wl,--whole-archive $DESTDIR/usr/local/lib/libvorbisfile.a -Wl,--no-whole-archive -lvorbis
-    rm -f $DESTDIR/usr/local/lib/libvorbisfile.la
+    run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
+    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libvorbis.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libvorbis.a -Wl,--no-whole-archive -logg
+    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libvorbis.la
+    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libvorbisenc.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libvorbisenc.a -Wl,--no-whole-archive -lvorbis
+    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libvorbisenc.la
+    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libvorbisfile.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libvorbisfile.a -Wl,--no-whole-archive -lvorbis
+    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libvorbisfile.la
 }

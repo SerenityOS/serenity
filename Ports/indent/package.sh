@@ -9,7 +9,7 @@ auth_type="sig"
 auth_opts="--keyring ./gnu-keyring.gpg indent-${version}.tar.gz.sig"
 
 post_install() {
-    man_dir="${SERENITY_BUILD_DIR}/Root/usr/local/share/man/man1/"
+    man_dir="${SERENITY_INSTALL_ROOT}/usr/local/share/man/man1/"
     run mkdir -p "${man_dir}"
     run cp man/indent.1 "${man_dir}"
 }

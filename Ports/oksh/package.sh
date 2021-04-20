@@ -15,5 +15,5 @@ configure() {
 }
 
 install() {
-    run cp oksh "${SERENITY_BUILD_DIR}/Root/bin"
+    run cp oksh "${SERENITY_INSTALL_ROOT}/bin"
 }
