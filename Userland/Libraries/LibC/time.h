@@ -57,8 +57,10 @@ time_t mktime(struct tm*);
 time_t timegm(struct tm*);
 time_t time(time_t*);
 char* ctime(const time_t*);
+char* ctime_r(const time_t* tm, char* buf);
 void tzset();
 char* asctime(const struct tm*);
+char* asctime_r(const struct tm*, char* buf);
 
 #define CLOCKS_PER_SEC 1000
 clock_t clock();
