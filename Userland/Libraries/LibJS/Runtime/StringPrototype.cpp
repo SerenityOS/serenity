@@ -179,11 +179,11 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
     auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    if (!vm.argument_count())
-        return Value(false);
+
     auto search_string = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
+
     auto string_length = string.length();
     auto search_string_length = search_string.length();
     size_t start = 0;
