@@ -6,6 +6,9 @@ depends="SDL2 libpng zlib xz"
 files="https://cdn.openttd.org/openttd-releases/${version}/openttd-${version}-source.tar.xz openttd-${version}.tar.xz 5e65184e07368ba1afa62dbb3e35abaee6c4da6730ff4bc9eb4447d53363c7a8"
 useconfigure=true
 configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMake/CMakeToolchain.txt"
+launcher_name=OpenTTD
+launcher_category=Games
+launcher_command=/usr/local/games/openttd
 
 configure() {
     host_env
@@ -44,4 +47,6 @@ install() {
     )
 
     ln -sf /usr/local/games/openttd $DESTDIR/usr/local/bin/openttd
+
+    install_launcher
 }
