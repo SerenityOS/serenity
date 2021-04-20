@@ -336,7 +336,7 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
 
             // If the literal isn't an option, treat it as a path.
             if (!(text.starts_with("-") || text == "--" || text == "-"))
-                return shell.complete_path("", text, corrected_offset);
+                return shell.complete_path("", text, corrected_offset, Shell::ExecutableOnly::No);
 
             // If the literal is an option, we have to know the program name
             // should we have no way to get that, bail early.
@@ -2349,7 +2349,7 @@ Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shel
     if (corrected_offset > node->text().length())
         return {};
 
-    return shell.complete_path("", node->text(), corrected_offset);
+    return shell.complete_path("", node->text(), corrected_offset, Shell::ExecutableOnly::No);
 }
 
 PathRedirectionNode::~PathRedirectionNode()
@@ -2895,7 +2895,7 @@ Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& she
 
         auto text = node->text().substring(1, node->text().length() - 1);
 
-        return shell.complete_path(tilde_value, text, corrected_offset - 1);
+        return shell.complete_path(tilde_value, text, corrected_offset - 1, Shell::ExecutableOnly::No);
     }
 
     return Node::complete_for_editor(shell, offset, hit_test_result);
