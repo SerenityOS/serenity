@@ -183,11 +183,6 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
             return;
         }
         download->on_buffered_download_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), download](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
-            if (status_code.has_value() && status_code.value() >= 400 && status_code.value() <= 499) {
-                if (error_callback)
-                    error_callback(String::formatted("HTTP error ({})", status_code.value()), status_code);
-                return;
-            }
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
