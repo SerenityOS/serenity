@@ -84,6 +84,12 @@ char* ctime(const time_t* t)
     return asctime(localtime(t));
 }
 
+char* ctime_r(const time_t* t, char* buf)
+{
+    struct tm tm_buf;
+    return asctime_r(localtime_r(t, &tm_buf), buf);
+}
+
 static const int __seconds_per_day = 60 * 60 * 24;
 
 static void time_to_tm(struct tm* tm, time_t t)
@@ -180,7 +186,14 @@ struct tm* gmtime_r(const time_t* t, struct tm* tm)
 char* asctime(const struct tm* tm)
 {
     static char buffer[69];
-    strftime(buffer, sizeof buffer, "%a %b %e %T %Y", tm);
+    return asctime_r(tm, buffer);
+}
+
+char* asctime_r(const struct tm* tm, char* buffer)
+{
+    // Spec states buffer must be at least 26 bytes.
+    constexpr size_t assumed_len = 26;
+    strftime(buffer, assumed_len, "%a %b %e %T %Y", tm);
     return buffer;
 }
 
