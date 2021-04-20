@@ -387,7 +387,6 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
             return {};
         value = existing_value.value().value;
         attributes = existing_value.value().attributes;
-        attributes = default_attributes;
     } else {
         auto metadata = shape().lookup(property_name.to_string_or_symbol());
         if (!metadata.has_value())
