@@ -27,6 +27,7 @@ set(AK_TEST_SOURCES
     TestHex.cpp
     TestIPv4Address.cpp
     TestIndexSequence.cpp
+    TestIntrusiveList.cpp
     TestIntrusiveRedBlackTree.cpp
     TestJSON.cpp
     TestLexicalPath.cpp
