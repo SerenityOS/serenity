@@ -262,7 +262,7 @@ const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
 
     String path;
     if (name.contains(".so"))
-        path = String::format("/usr/lib/%s", name.characters());
+        path = String::formatted("/usr/lib/{}", name);
     else {
         path = name;
     }
