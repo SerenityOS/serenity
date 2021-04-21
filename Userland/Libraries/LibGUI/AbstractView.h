@@ -136,6 +136,7 @@ public:
     virtual void scroll_into_view(const ModelIndex&, [[maybe_unused]] bool scroll_horizontally = true, [[maybe_unused]] bool scroll_vertically = true) { }
 
     const ModelIndex& cursor_index() const { return m_cursor_index; }
+    const ModelIndex& selection_start_index() const { return m_selection_start_index; }
     void set_cursor(ModelIndex, SelectionUpdate, bool scroll_cursor_into_view = true);
 
     bool is_tab_key_navigation_enabled() const { return m_tab_key_navigation_enabled; }
@@ -163,6 +164,7 @@ protected:
 
     virtual void clear_selection();
     virtual void set_selection(const ModelIndex&);
+    virtual void set_selection_start_index(const ModelIndex&);
     virtual void add_selection(const ModelIndex&);
     virtual void remove_selection(const ModelIndex&);
     virtual void toggle_selection(const ModelIndex&);
@@ -206,6 +208,7 @@ protected:
 private:
     RefPtr<Model> m_model;
     ModelSelection m_selection;
+    ModelIndex m_selection_start_index;
     String m_searching;
     RefPtr<Core::Timer> m_searching_timer;
     ModelIndex m_cursor_index;
