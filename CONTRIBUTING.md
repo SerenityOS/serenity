@@ -55,3 +55,4 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Use weasel-words like "refactor" or "fix" to avoid explaining what's being changed.
 * Include commented-out code.
 * Write in C.
+* Attempt large architectural changes until you are familiar with the system and have worked on it for a while.
