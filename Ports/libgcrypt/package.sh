@@ -3,6 +3,7 @@ port=libgcrypt
 version=1.9.2
 useconfigure=true
 configopts="--with-libgpg-error-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
+depends=libgpg-error
 files="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${version}.tar.bz2 libgcrypt-${version}.tar.bz2 00121b05e1ff4cc85a4a6503e0a7d9fb"
 auth_type=md5
 
