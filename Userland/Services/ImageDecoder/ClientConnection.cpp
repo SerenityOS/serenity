@@ -24,12 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Badge.h>
+#include <AK/Debug.h>
 #include <ImageDecoder/ClientConnection.h>
 #include <ImageDecoder/ImageDecoderClientEndpoint.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
-#include <LibGfx/SystemTheme.h>
 
 namespace ImageDecoder {
 
@@ -60,18 +59,14 @@ OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::hand
 {
     auto encoded_buffer = message.data();
     if (!encoded_buffer.is_valid()) {
-#if IMAGE_DECODER_DEBUG
-        dbgln("Encoded data is invalid");
-#endif
+        dbgln_if(IMAGE_DECODER_DEBUG, "Encoded data is invalid");
         return {};
     }
 
     auto decoder = Gfx::ImageDecoder::create(encoded_buffer.data<u8>(), encoded_buffer.size());
 
     if (!decoder->frame_count()) {
-#if IMAGE_DECODER_DEBUG
-        dbgln("Could not decode image from encoded data");
-#endif
+        dbgln_if(IMAGE_DECODER_DEBUG, "Could not decode image from encoded data");
         return make<Messages::ImageDecoderServer::DecodeImageResponse>(false, 0, Vector<Gfx::ShareableBitmap> {}, Vector<u32> {});
     }
 
