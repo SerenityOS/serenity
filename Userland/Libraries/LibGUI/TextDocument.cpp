@@ -147,7 +147,7 @@ bool TextDocumentLine::can_select() const
         return false;
     for (size_t i = 0; i < length(); ++i) {
         auto code_point = code_points()[i];
-        if (isblank(code_point) || !isspace(code_point))
+        if (code_point != '\n' && code_point != '\r' && code_point != '\f' && code_point != '\v')
             return true;
     }
     return false;
