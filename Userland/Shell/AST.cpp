@@ -842,7 +842,7 @@ CastToList::~CastToList()
 void CloseFdRedirection::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::format("%d -> Close", m_fd), level);
+    print_indented(String::formatted("{} -> Close", m_fd), level);
 }
 
 RefPtr<Value> CloseFdRedirection::run(RefPtr<Shell>)
@@ -1036,7 +1036,7 @@ DynamicEvaluate::~DynamicEvaluate()
 void Fd2FdRedirection::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::format("%d -> %d", m_old_fd, m_new_fd), level);
+    print_indented(String::formatted("{} -> {}", m_old_fd, m_new_fd), level);
 }
 
 RefPtr<Value> Fd2FdRedirection::run(RefPtr<Shell>)
@@ -1066,10 +1066,10 @@ Fd2FdRedirection::~Fd2FdRedirection()
 void FunctionDeclaration::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::format("(name: %s)\n", m_name.name.characters()), level + 1);
-    print_indented("(argument namess)", level + 1);
+    print_indented(String::formatted("(name: {})\n", m_name.name), level + 1);
+    print_indented("(argument names)", level + 1);
     for (auto& arg : m_arguments)
-        print_indented(String::format("(name: %s)\n", arg.name.characters()), level + 2);
+        print_indented(String::formatted("(name: {})\n", arg.name), level + 2);
 
     print_indented("(body)", level + 1);
     if (m_block)
@@ -2319,7 +2319,7 @@ void PathRedirectionNode::highlight_in_editor(Line::Editor& editor, Shell& shell
         auto& position = m_path->position();
         auto& path = path_text[0];
         if (!path.starts_with('/'))
-            path = String::format("%s/%s", shell.cwd.characters(), path.characters());
+            path = String::formatted("{}/{}", shell.cwd, path);
         auto url = URL::create_with_file_protocol(path);
         url.set_host(shell.hostname);
         editor.stylize({ position.start_offset, position.end_offset }, { Line::Style::Hyperlink(url.to_string()) });
@@ -2478,7 +2478,7 @@ void ReadRedirection::dump(int level) const
 {
     Node::dump(level);
     m_path->dump(level + 1);
-    print_indented(String::format("To %d", m_fd), level + 1);
+    print_indented(String::formatted("To {}", m_fd), level + 1);
 }
 
 RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
@@ -2505,7 +2505,7 @@ void ReadWriteRedirection::dump(int level) const
 {
     Node::dump(level);
     m_path->dump(level + 1);
-    print_indented(String::format("To/From %d", m_fd), level + 1);
+    print_indented(String::formatted("To/From {}", m_fd), level + 1);
 }
 
 RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
@@ -3135,7 +3135,7 @@ void WriteAppendRedirection::dump(int level) const
 {
     Node::dump(level);
     m_path->dump(level + 1);
-    print_indented(String::format("From %d", m_fd), level + 1);
+    print_indented(String::formatted("From {}", m_fd), level + 1);
 }
 
 RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
@@ -3162,7 +3162,7 @@ void WriteRedirection::dump(int level) const
 {
     Node::dump(level);
     m_path->dump(level + 1);
-    print_indented(String::format("From %d", m_fd), level + 1);
+    print_indented(String::formatted("From {}", m_fd), level + 1);
 }
 
 RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
