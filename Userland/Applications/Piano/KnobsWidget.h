@@ -26,6 +26,7 @@ private:
     MainWidget& m_main_widget;
 
     RefPtr<GUI::Widget> m_labels_container;
+    RefPtr<GUI::Label> m_volume_label;
     RefPtr<GUI::Label> m_octave_label;
     RefPtr<GUI::Label> m_wave_label;
     RefPtr<GUI::Label> m_attack_label;
@@ -35,6 +36,7 @@ private:
     RefPtr<GUI::Label> m_delay_label;
 
     RefPtr<GUI::Widget> m_values_container;
+    RefPtr<GUI::Label> m_volume_value;
     RefPtr<GUI::Label> m_octave_value;
     RefPtr<GUI::Label> m_wave_value;
     RefPtr<GUI::Label> m_attack_value;
@@ -44,6 +46,7 @@ private:
     RefPtr<GUI::Label> m_delay_value;
 
     RefPtr<GUI::Widget> m_knobs_container;
+    RefPtr<GUI::Slider> m_volume_knob;
     RefPtr<GUI::Slider> m_octave_knob;
     RefPtr<GUI::Slider> m_wave_knob;
     RefPtr<GUI::Slider> m_attack_knob;
