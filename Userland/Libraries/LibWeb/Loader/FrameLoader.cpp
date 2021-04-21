@@ -26,6 +26,7 @@
 
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
+#include <AK/SourceGenerator.h>
 #include <LibGemini/Document.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibMarkdown/Document.h>
@@ -226,13 +227,12 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
         error_page_url,
         [this, failed_url, error](auto data, auto&, auto) {
             VERIFY(!data.is_null());
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-            auto html = String::formatted(
-                data,
-                escape_html_entities(failed_url.to_string()),
-                escape_html_entities(error));
-#pragma GCC diagnostic pop
-            auto document = HTML::parse_html_document(html, failed_url, "utf-8");
+            StringBuilder builder;
+            SourceGenerator generator { builder };
+            generator.set("failed_url", failed_url.to_string());
+            generator.set("error", error);
+            generator.append(data);
+            auto document = HTML::parse_html_document(generator.as_string_view(), failed_url, "utf-8");
             VERIFY(document);
             frame().set_document(document);
         },
