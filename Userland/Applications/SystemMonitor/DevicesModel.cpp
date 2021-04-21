@@ -171,8 +171,7 @@ void DevicesModel::update()
     auto fill_in_paths_from_dir = [this](const String& dir) {
         Core::DirIterator dir_iter { dir, Core::DirIterator::Flags::SkipDots };
         while (dir_iter.has_next()) {
-            auto name = dir_iter.next_path();
-            auto path = String::formatted("{}/{}", dir, name);
+            auto path = dir_iter.next_full_path();
             struct stat statbuf;
             if (lstat(path.characters(), &statbuf) != 0) {
                 VERIFY_NOT_REACHED();

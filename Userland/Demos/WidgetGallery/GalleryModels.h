@@ -78,16 +78,13 @@ public:
         Core::DirIterator iterator("/res/cursors", Core::DirIterator::Flags::SkipDots);
 
         while (iterator.has_next()) {
-            auto path = iterator.next_path();
+            auto path = iterator.next_full_path();
             if (path.contains("2x"))
                 continue;
             Cursor cursor;
-            StringBuilder full_path;
-            full_path.append("/res/cursors/");
-            full_path.append(path);
-            cursor.path = full_path.to_string();
+            cursor.path = move(path);
             cursor.bitmap = Gfx::Bitmap::load_from_file(cursor.path);
-            auto filename_split = path.split('.');
+            auto filename_split = cursor.path.split('.');
             cursor.name = filename_split[0];
             m_cursors.append(move(cursor));
         }
@@ -161,14 +158,11 @@ public:
         Core::DirIterator big_iterator("/res/icons/32x32", Core::DirIterator::Flags::SkipDots);
 
         while (big_iterator.has_next()) {
-            auto path = big_iterator.next_path();
+            auto path = big_iterator.next_full_path();
             if (!path.contains("filetype-") && !path.contains("app-"))
                 continue;
             IconSet icon_set;
-            StringBuilder full_path;
-            full_path.append("/res/icons/32x32/");
-            full_path.append(path);
-            icon_set.big_icon = Gfx::Bitmap::load_from_file(full_path.to_string());
+            icon_set.big_icon = Gfx::Bitmap::load_from_file(path);
             auto filename_split = path.split('.');
             icon_set.name = filename_split[0];
             m_icon_sets.append(move(icon_set));
@@ -179,14 +173,11 @@ public:
         Core::DirIterator little_iterator("/res/icons/16x16", Core::DirIterator::Flags::SkipDots);
 
         while (little_iterator.has_next()) {
-            auto path = little_iterator.next_path();
+            auto path = little_iterator.next_full_path();
             if (!path.contains("filetype-") && !path.contains("app-"))
                 continue;
             IconSet icon_set;
-            StringBuilder full_path;
-            full_path.append("/res/icons/16x16/");
-            full_path.append(path);
-            icon_set.little_icon = Gfx::Bitmap::load_from_file(full_path.to_string());
+            icon_set.little_icon = Gfx::Bitmap::load_from_file(path);
             auto filename_split = path.split('.');
             icon_set.name = filename_split[0];
             for (size_t i = 0; i < big_icons_found; i++) {
