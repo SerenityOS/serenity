@@ -289,10 +289,30 @@ ssize_t read(int fd, void* buf, size_t count)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+ssize_t pread(int fd, void* buf, size_t count, off_t offset)
+{
+    // FIXME: This is not thread safe and should be implemented in the kernel instead.
+    off_t old_offset = lseek(fd, 0, SEEK_CUR);
+    lseek(fd, offset, SEEK_SET);
+    ssize_t nread = read(fd, buf, count);
+    lseek(fd, old_offset, SEEK_SET);
+    return nread;
+}
+
 ssize_t write(int fd, const void* buf, size_t count)
 {
     int rc = syscall(SC_write, fd, buf, count);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+ssize_t pwrite(int fd, const void* buf, size_t count, off_t offset)
+{
+    // FIXME: This is not thread safe and should be implemented in the kernel instead.
+    off_t old_offset = lseek(fd, 0, SEEK_CUR);
+    lseek(fd, offset, SEEK_SET);
+    ssize_t nwritten = write(fd, buf, count);
+    lseek(fd, old_offset, SEEK_SET);
+    return nwritten;
 }
 
 int ttyname_r(int fd, char* buffer, size_t size)
@@ -767,16 +787,6 @@ int unveil(const char* path, const char* permissions)
     };
     int rc = syscall(SC_unveil, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-ssize_t pread(int fd, void* buf, size_t count, off_t offset)
-{
-    // FIXME: This is not thread safe and should be implemented in the kernel instead.
-    off_t old_offset = lseek(fd, 0, SEEK_CUR);
-    lseek(fd, offset, SEEK_SET);
-    ssize_t nread = read(fd, buf, count);
-    lseek(fd, old_offset, SEEK_SET);
-    return nread;
 }
 
 char* getpass(const char* prompt)
