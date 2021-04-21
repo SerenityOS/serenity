@@ -32,7 +32,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/SyscallUtils.h>
 #include <LibCore/Timer.h>
 #include <LibIPC/Message.h>
 #include <stdint.h>
@@ -167,12 +166,19 @@ protected:
             fd_set rfds;
             FD_ZERO(&rfds);
             FD_SET(m_socket->fd(), &rfds);
-            int rc = Core::safe_syscall(select, m_socket->fd() + 1, &rfds, nullptr, nullptr, nullptr);
-            if (rc < 0) {
-                perror("select");
+            for (;;) {
+                if (auto rc = select(m_socket->fd() + 1, &rfds, nullptr, nullptr, nullptr); rc < 0) {
+                    if (errno == EINTR)
+                        continue;
+                    perror("wait_for_specific_endpoint_message: select");
+                    VERIFY_NOT_REACHED();
+                } else {
+                    VERIFY(rc > 0);
+                    VERIFY(FD_ISSET(m_socket->fd(), &rfds));
+                    break;
+                }
             }
-            VERIFY(rc > 0);
-            VERIFY(FD_ISSET(m_socket->fd(), &rfds));
+
             if (!drain_messages_from_peer())
                 break;
         }

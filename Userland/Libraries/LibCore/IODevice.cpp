@@ -27,7 +27,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/PrintfImplementation.h>
 #include <LibCore/IODevice.h>
-#include <LibCore/SyscallUtils.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -106,17 +105,21 @@ ByteBuffer IODevice::read(size_t max_size)
 bool IODevice::can_read_from_fd() const
 {
     // FIXME: Can we somehow remove this once Core::Socket is implemented using non-blocking sockets?
-    fd_set rfds;
+    fd_set rfds {};
     FD_ZERO(&rfds);
     FD_SET(m_fd, &rfds);
     struct timeval timeout {
         0, 0
     };
-    int rc = Core::safe_syscall(select, m_fd + 1, &rfds, nullptr, nullptr, &timeout);
-    if (rc < 0) {
-        // NOTE: We don't set m_error here.
-        perror("IODevice::can_read: select");
-        return false;
+
+    for (;;) {
+        if (select(m_fd + 1, &rfds, nullptr, nullptr, &timeout) < 0) {
+            if (errno == EINTR)
+                continue;
+            perror("IODevice::can_read_from_fd: select");
+            return false;
+        }
+        break;
     }
     return FD_ISSET(m_fd, &rfds);
 }
@@ -332,5 +335,4 @@ LineIterator& LineIterator::operator++()
     m_buffer = m_device->read_line();
     return *this;
 }
-
 }
