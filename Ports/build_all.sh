@@ -30,7 +30,7 @@ some_failed=false
 for file in *; do
     if [ -d $file ]; then
         pushd $file > /dev/null
-            dirname=$(basename $file)
+            port=$(basename $file)
             if [ "$clean" == true ]; then
                 if [ "$verbose" == true ]; then
                     ./package.sh clean_all
@@ -40,16 +40,16 @@ for file in *; do
             fi
             if [ "$verbose" == true ]; then
                 if ./package.sh; then
-                    echo "Built ${dirname}."
+                    echo "Built ${port}."
                 else
-                    echo "ERROR: Build of ${dirname} was not successful!"
+                    echo "ERROR: Build of ${port} was not successful!"
                     some_failed=true
                 fi
             else
                 if ./package.sh > /dev/null 2>&1; then
-                    echo "Built ${dirname}."
+                    echo "Built ${port}."
                 else
-                    echo "ERROR: Build of ${dirname} was not successful!"
+                    echo "ERROR: Build of ${port} was not successful!"
                     some_failed=true
                 fi
             fi
