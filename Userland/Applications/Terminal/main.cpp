@@ -401,7 +401,7 @@ int main(int argc, char** argv)
     auto new_scrollback_size = config->read_num_entry("Terminal", "MaxHistorySize", terminal.max_history_size());
     terminal.set_max_history_size(new_scrollback_size);
 
-    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png"),
+    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"),
         [&](const GUI::Action&) {
             if (!settings_window)
                 settings_window = create_settings_window(terminal);
