@@ -123,17 +123,17 @@ public:
         return *this;
     }
 
-    static ByteBuffer create_uninitialized(size_t size) { return ByteBuffer(ByteBufferImpl::create_uninitialized(size)); }
-    static ByteBuffer create_zeroed(size_t size) { return ByteBuffer(ByteBufferImpl::create_zeroed(size)); }
-    static ByteBuffer copy(const void* data, size_t size) { return ByteBuffer(ByteBufferImpl::copy(data, size)); }
-    static ByteBuffer copy(ReadonlyBytes bytes) { return ByteBuffer(ByteBufferImpl::copy(bytes.data(), bytes.size())); }
+    [[nodiscard]] static ByteBuffer create_uninitialized(size_t size) { return ByteBuffer(ByteBufferImpl::create_uninitialized(size)); }
+    [[nodiscard]] static ByteBuffer create_zeroed(size_t size) { return ByteBuffer(ByteBufferImpl::create_zeroed(size)); }
+    [[nodiscard]] static ByteBuffer copy(const void* data, size_t size) { return ByteBuffer(ByteBufferImpl::copy(data, size)); }
+    [[nodiscard]] static ByteBuffer copy(ReadonlyBytes bytes) { return ByteBuffer(ByteBufferImpl::copy(bytes.data(), bytes.size())); }
 
     ~ByteBuffer() { clear(); }
     void clear() { m_impl = nullptr; }
 
     operator bool() const { return !is_null(); }
     bool operator!() const { return is_null(); }
-    bool is_null() const { return m_impl == nullptr; }
+    [[nodiscard]] bool is_null() const { return m_impl == nullptr; }
 
     // Disable default implementations that would use surprising integer promotion.
     bool operator==(const ByteBuffer& other) const;
@@ -143,30 +143,30 @@ public:
     bool operator<(const ByteBuffer& other) const = delete;
     bool operator>(const ByteBuffer& other) const = delete;
 
-    u8& operator[](size_t i)
+    [[nodiscard]] u8& operator[](size_t i)
     {
         VERIFY(m_impl);
         return (*m_impl)[i];
     }
-    u8 operator[](size_t i) const
+    [[nodiscard]] u8 operator[](size_t i) const
     {
         VERIFY(m_impl);
         return (*m_impl)[i];
     }
-    bool is_empty() const { return !m_impl || m_impl->is_empty(); }
-    size_t size() const { return m_impl ? m_impl->size() : 0; }
+    [[nodiscard]] bool is_empty() const { return !m_impl || m_impl->is_empty(); }
+    [[nodiscard]] size_t size() const { return m_impl ? m_impl->size() : 0; }
 
-    u8* data() { return m_impl ? m_impl->data() : nullptr; }
-    const u8* data() const { return m_impl ? m_impl->data() : nullptr; }
+    [[nodiscard]] u8* data() { return m_impl ? m_impl->data() : nullptr; }
+    [[nodiscard]] const u8* data() const { return m_impl ? m_impl->data() : nullptr; }
 
-    Bytes bytes()
+    [[nodiscard]] Bytes bytes()
     {
         if (m_impl) {
             return m_impl->bytes();
         }
         return {};
     }
-    ReadonlyBytes bytes() const
+    [[nodiscard]] ReadonlyBytes bytes() const
     {
         if (m_impl) {
             return m_impl->bytes();
@@ -174,14 +174,14 @@ public:
         return {};
     }
 
-    Span<u8> span()
+    [[nodiscard]] Span<u8> span()
     {
         if (m_impl) {
             return m_impl->span();
         }
         return {};
     }
-    Span<const u8> span() const
+    [[nodiscard]] Span<const u8> span() const
     {
         if (m_impl) {
             return m_impl->span();
@@ -189,13 +189,13 @@ public:
         return {};
     }
 
-    u8* offset_pointer(int offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
-    const u8* offset_pointer(int offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
+    [[nodiscard]] u8* offset_pointer(int offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
+    [[nodiscard]] const u8* offset_pointer(int offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
 
-    void* end_pointer() { return m_impl ? m_impl->end_pointer() : nullptr; }
-    const void* end_pointer() const { return m_impl ? m_impl->end_pointer() : nullptr; }
+    [[nodiscard]] void* end_pointer() { return m_impl ? m_impl->end_pointer() : nullptr; }
+    [[nodiscard]] const void* end_pointer() const { return m_impl ? m_impl->end_pointer() : nullptr; }
 
-    ByteBuffer isolated_copy() const
+    [[nodiscard]] ByteBuffer isolated_copy() const
     {
         if (!m_impl)
             return {};
@@ -209,7 +209,7 @@ public:
             m_impl->trim(size);
     }
 
-    ByteBuffer slice(size_t offset, size_t size) const
+    [[nodiscard]] ByteBuffer slice(size_t offset, size_t size) const
     {
         if (is_null())
             return {};
