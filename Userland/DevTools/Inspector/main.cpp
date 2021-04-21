@@ -33,6 +33,7 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
@@ -172,6 +173,25 @@ int main(int argc, char** argv)
         auto* remote_object = static_cast<RemoteObject*>(index.internal_data());
         properties_tree_view.set_model(remote_object->property_model());
         remote_process.set_inspected_object(remote_object->address);
+    };
+
+    auto properties_tree_view_context_menu = GUI::Menu::construct("Properties Tree View");
+
+    auto copy_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png");
+    auto copy_property_name_action = GUI::Action::create("Copy Property Name", copy_bitmap, [&](auto&) {
+        GUI::Clipboard::the().set_plain_text(properties_tree_view.selection().first().data().to_string());
+    });
+    auto copy_property_value_action = GUI::Action::create("Copy Property Value", copy_bitmap, [&](auto&) {
+        GUI::Clipboard::the().set_plain_text(properties_tree_view.selection().first().sibling_at_column(1).data().to_string());
+    });
+
+    properties_tree_view_context_menu->add_action(copy_property_name_action);
+    properties_tree_view_context_menu->add_action(copy_property_value_action);
+
+    properties_tree_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+        if (index.is_valid()) {
+            properties_tree_view_context_menu->popup(event.screen_position());
+        }
     };
 
     window->set_menubar(move(menubar));
