@@ -50,9 +50,12 @@ private:
         Vector<Error> m_errors;
     };
 
+    NonnullRefPtr<Statement> parse_statement();
+    NonnullRefPtr<Statement> parse_statement_with_expression_list(RefPtr<CommonTableExpressionList>);
     NonnullRefPtr<CreateTable> parse_create_table_statement();
     NonnullRefPtr<DropTable> parse_drop_table_statement();
-    NonnullRefPtr<Delete> parse_delete_statement();
+    NonnullRefPtr<Delete> parse_delete_statement(RefPtr<CommonTableExpressionList>);
+    NonnullRefPtr<CommonTableExpressionList> parse_common_table_expression_list();
 
     NonnullRefPtr<Expression> parse_primary_expression();
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression> primary);
