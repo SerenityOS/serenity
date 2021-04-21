@@ -511,7 +511,7 @@ Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const
     if (purgeable == Purgeable::Yes)
         map_flags |= MAP_NORESERVE;
 #ifdef __serenity__
-    void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", size.width(), size.height()).characters());
+    void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, String::formatted("GraphicsBitmap [{}]", size).characters());
 #else
     void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0);
 #endif

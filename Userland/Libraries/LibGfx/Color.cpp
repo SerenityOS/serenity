@@ -40,12 +40,12 @@ namespace Gfx {
 
 String Color::to_string() const
 {
-    return String::format("#%02x%02x%02x%02x", red(), green(), blue(), alpha());
+    return String::formatted("#{:02x}{:02x}{:02x}{:02x}", red(), green(), blue(), alpha());
 }
 
 String Color::to_string_without_alpha() const
 {
-    return String::format("#%02x%02x%02x", red(), green(), blue());
+    return String::formatted("#{:02x}{:02x}{:02x}", red(), green(), blue());
 }
 
 static Optional<Color> parse_rgb_color(const StringView& string)
