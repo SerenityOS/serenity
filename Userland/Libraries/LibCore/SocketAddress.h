@@ -74,7 +74,7 @@ public:
     {
         switch (m_type) {
         case Type::IPv4:
-            return String::format("%s:%d", m_ipv4_address.to_string().characters(), m_port);
+            return String::formatted("{}:{}", m_ipv4_address, m_port);
         case Type::Local:
             return m_local_address;
         default:
