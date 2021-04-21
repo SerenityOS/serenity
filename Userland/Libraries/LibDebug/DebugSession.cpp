@@ -411,7 +411,7 @@ Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::ins
 
 void DebugSession::update_loaded_libs()
 {
-    auto file = Core::File::construct(String::format("/proc/%u/vm", m_debuggee_pid));
+    auto file = Core::File::construct(String::formatted("/proc/{}/vm", m_debuggee_pid));
     bool rc = file->open(Core::IODevice::ReadOnly);
     VERIFY(rc);
 
@@ -432,7 +432,7 @@ void DebugSession::update_loaded_libs()
         auto lib_name = result.capture_group_matches.at(0).at(0).view.u8view().to_string();
         if (lib_name.starts_with("/"))
             return lib_name;
-        return String::format("/usr/lib/%s", lib_name.characters());
+        return String::formatted("/usr/lib/{}", lib_name);
     };
 
     vm_entries.for_each([&](auto& entry) {
