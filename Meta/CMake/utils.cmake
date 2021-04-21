@@ -1,3 +1,5 @@
+include(${CMAKE_SOURCE_DIR}/Meta/CMake/precompile-headers.cmake)
+
 function(serenity_install_headers target_name)
     file(GLOB_RECURSE headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.h")
     foreach(header ${headers})
@@ -31,6 +33,7 @@ function(serenity_lib target_name fs_name)
     add_library(${target_name} SHARED ${SOURCES} ${GENERATED_SOURCES})
     install(TARGETS ${target_name} DESTINATION usr/lib)
     set_target_properties(${target_name} PROPERTIES OUTPUT_NAME ${fs_name})
+    serenity_add_ak_precompiled_headers_to_target(${target_name})
     serenity_generated_sources(${target_name})
 endfunction()
 
@@ -67,6 +70,7 @@ endfunction()
 function(serenity_bin target_name)
     add_executable(${target_name} ${SOURCES})
     install(TARGETS ${target_name} RUNTIME DESTINATION bin)
+    serenity_add_ak_precompiled_headers_to_target(${target_name})
     serenity_generated_sources(${target_name})
 endfunction()
 
