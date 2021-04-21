@@ -59,7 +59,7 @@ struct Command {
             builder.append("DONT");
             break;
         default:
-            builder.append(String::format("UNKNOWN<%02x>", command));
+            builder.append(String::formatted("UNKNOWN<{:02x}>", command));
             break;
         }
 
@@ -73,7 +73,7 @@ struct Command {
             builder.append("SUPPRESS_GO_AHEAD");
             break;
         default:
-            builder.append(String::format("UNKNOWN<%02x>", subcommand));
+            builder.append(String::formatted("UNKNOWN<{:02x}>", subcommand));
             break;
         }
 
