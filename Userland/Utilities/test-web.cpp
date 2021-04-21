@@ -282,7 +282,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     auto& old_interpreter = m_page_view->document()->interpreter();
 
     if (!m_js_test_common) {
-        auto result = parse_file(String::format("%s/test-common.js", m_js_test_root.characters()));
+        auto result = parse_file(String::formatted("{}/test-common.js", m_js_test_root));
         if (result.is_error()) {
             printf("Unable to parse %s/test-common.js\n", m_js_test_root.characters());
             printf("%s\n", result.error().error.to_string().characters());
@@ -293,7 +293,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     }
 
     if (!m_web_test_common) {
-        auto result = parse_file(String::format("%s/test-common.js", m_web_test_root.characters()));
+        auto result = parse_file(String::formatted("{}/test-common.js", m_web_test_root));
         if (result.is_error()) {
             printf("Unable to parse %s/test-common.js\n", m_web_test_root.characters());
             printf("%s\n", result.error().error.to_string().characters());
@@ -681,7 +681,7 @@ int main(int argc, char** argv)
         printf("test-web requires the SERENITY_SOURCE_DIR environment variable to be set");
         return 1;
     }
-    TestRunner(String::format("%s/Userland/Libraries/LibWeb/Tests", serenity_source_dir), String::format("%s/Userland/Libraries/LibJS/Tests", serenity_source_dir), view, print_times).run();
+    TestRunner(String::formatted("{}/Userland/Libraries/LibWeb/Tests", serenity_source_dir), String::formatted("{}/Userland/Libraries/LibJS/Tests", serenity_source_dir), view, print_times).run();
 #endif
     return 0;
 }
