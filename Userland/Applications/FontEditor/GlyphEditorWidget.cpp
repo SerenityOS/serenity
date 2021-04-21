@@ -89,8 +89,8 @@ void GlyphEditorWidget::copy_glyph()
 
     HashMap<String, String> metadata;
     metadata.set("char", glyph_builder.to_string());
-    metadata.set("width", String::format("%d", bitmap.width()));
-    metadata.set("height", String::format("%d", bitmap.height()));
+    metadata.set("width", String::number(bitmap.width()));
+    metadata.set("height", String::number(bitmap.height()));
 
     auto data = ByteBuffer::copy(&bits[0], bitmap.width() * bitmap.height());
     GUI::Clipboard::the().set_data(data, "glyph/x-fonteditor", metadata);
