@@ -162,6 +162,7 @@ int main(int argc, char** argv)
     tree_view.set_fixed_width(286);
 
     auto& properties_tree_view = splitter.add<GUI::TreeView>();
+    properties_tree_view.set_should_fill_selected_rows(true);
     properties_tree_view.set_editable(true);
     properties_tree_view.aid_create_editing_delegate = [](auto&) {
         return make<GUI::StringModelEditingDelegate>();
