@@ -398,7 +398,7 @@ String Image::symbolicate(u32 address, u32* out_offset) const
                 *out_offset = address - symbol.address;
                 return demangled_name;
             }
-            return String::format("%s +0x%x", demangled_name.characters(), address - symbol.address);
+            return String::formatted("{} +{:#x}", demangled_name, address - symbol.address);
         }
     }
     if (out_offset)
