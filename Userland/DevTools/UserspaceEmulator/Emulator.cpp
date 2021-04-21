@@ -294,7 +294,7 @@ const MmapRegion* Emulator::find_text_region(FlatPtr address)
 
 String Emulator::create_backtrace_line(FlatPtr address)
 {
-    String minimal = String::format("=={%d}==    %p", getpid(), (void*)address);
+    auto minimal = String::formatted("=={{{}}}==    {:p}", getpid(), (void*)address);
     const auto* region = find_text_region(address);
     if (!region)
         return minimal;
@@ -320,11 +320,11 @@ String Emulator::create_backtrace_line(FlatPtr address)
     auto& elf = it->value.debug_info->elf();
     String symbol = elf.symbolicate(address - region->base());
 
-    auto line_without_source_info = String::format("=={%d}==    %p  [%s]: %s", getpid(), (void*)address, lib_name.characters(), symbol.characters());
+    auto line_without_source_info = String::formatted("=={{{}}}==    {:p}  [{}]: {}", getpid(), (void*)address, lib_name, symbol);
 
     auto source_position = it->value.debug_info->get_source_position(address - region->base());
     if (source_position.has_value())
-        return String::format("=={%d}==    %p  [%s]: %s (\033[34;1m%s\033[0m:%zu)", getpid(), (void*)address, lib_name.characters(), symbol.characters(), LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
+        return String::formatted("=={{{}}}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), (void*)address, lib_name, symbol, LexicalPath(source_position.value().file_path).basename(), source_position.value().line_number);
 
     return line_without_source_info;
 }
