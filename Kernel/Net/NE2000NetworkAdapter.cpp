@@ -210,7 +210,7 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::~NE2000NetworkAdapter()
 void NE2000NetworkAdapter::handle_irq(const RegisterState&)
 {
     u8 status = in8(REG_RW_INTERRUPTSTATUS);
-    dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Got interrupt, status=0x{}", String::format("%02x", status));
+    dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Got interrupt, status={:#02x}", status);
 
     if (status & BIT_INTERRUPTMASK_PRX) {
         dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Interrupt for packet received");

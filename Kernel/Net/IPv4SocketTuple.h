@@ -53,11 +53,11 @@ public:
 
     String to_string() const
     {
-        return String::format(
-            "%s:%d -> %s:%d",
-            m_local_address.to_string().characters(),
+        return String::formatted(
+            "{}:{} -> {}:{}",
+            m_local_address,
             m_local_port,
-            m_peer_address.to_string().characters(),
+            m_peer_address,
             m_peer_port);
     }
 
