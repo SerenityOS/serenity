@@ -30,7 +30,7 @@
 #include "LibRegex/RegexMatcher.h"
 #include <AK/Debug.h>
 
-#if REGEX_DEBUG
+#if !REGEX_DEBUG
 
 namespace regex {
 
@@ -87,7 +87,7 @@ public:
             recursion,
             opcode.to_string().characters(),
             opcode.arguments_string().characters(),
-            String::format("ip: %3lu,   sp: %3lu", state.instruction_position, state.string_position).characters(),
+            String::formatted("ip: {:3},   sp: {:3}", state.instruction_position, state.string_position).characters(),
             newline ? "\n" : "");
 
         if (newline && is<OpCode_Compare>(opcode)) {

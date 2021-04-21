@@ -692,7 +692,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_range(const MatchInput& inp
 
 const String OpCode_Compare::arguments_string() const
 {
-    return String::format("argc=%lu, args=%lu ", arguments_count(), arguments_size());
+    return String::formatted("argc={}, args={} ", arguments_count(), arguments_size());
 }
 
 const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<MatchInput> input) const
