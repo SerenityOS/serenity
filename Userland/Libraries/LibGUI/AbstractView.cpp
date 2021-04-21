@@ -91,6 +91,7 @@ void AbstractView::model_did_update(unsigned int flags)
             m_drop_candidate_index = {};
         selection().remove_matching([this](auto& index) { return !model()->is_valid(index); });
     }
+    m_selection_start_index = {};
 }
 
 void AbstractView::clear_selection()
@@ -101,6 +102,11 @@ void AbstractView::clear_selection()
 void AbstractView::set_selection(const ModelIndex& new_index)
 {
     m_selection.set(new_index);
+}
+
+void AbstractView::set_selection_start_index(const ModelIndex& new_index)
+{
+    m_selection_start_index = new_index;
 }
 
 void AbstractView::add_selection(const ModelIndex& new_index)
@@ -341,9 +347,10 @@ void AbstractView::mouseup_event(MouseEvent& event)
         // in mousedown_event(), because we could be seeing a start of a drag.
         // Since we're here, it was not that; so fix up the selection now.
         auto index = index_at_event_position(event.position());
-        if (index.is_valid())
+        if (index.is_valid()) {
             set_selection(index);
-        else
+            set_selection_start_index(index);
+        } else
             clear_selection();
         m_might_drag = false;
         update();
@@ -450,20 +457,21 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
         selection_update = SelectionUpdate::Set;
 
     if (model()->is_valid(index)) {
-        if (selection_update == SelectionUpdate::Set)
+        if (selection_update == SelectionUpdate::Set) {
             set_selection(index);
-        else if (selection_update == SelectionUpdate::Ctrl)
+            set_selection_start_index(index);
+        } else if (selection_update == SelectionUpdate::Ctrl) {
             toggle_selection(index);
-        else if (selection_update == SelectionUpdate::ClearIfNotSelected) {
+        } else if (selection_update == SelectionUpdate::ClearIfNotSelected) {
             if (!m_selection.contains(index))
                 clear_selection();
         } else if (selection_update == SelectionUpdate::Shift) {
-            // Toggle all from cursor to new index.
-            auto min_row = min(cursor_index().row(), index.row());
-            auto max_row = max(cursor_index().row(), index.row());
-            auto min_column = min(cursor_index().column(), index.column());
-            auto max_column = max(cursor_index().column(), index.column());
+            auto min_row = min(selection_start_index().row(), index.row());
+            auto max_row = max(selection_start_index().row(), index.row());
+            auto min_column = min(selection_start_index().column(), index.column());
+            auto max_column = max(selection_start_index().column(), index.column());
 
+            clear_selection();
             for (auto row = min_row; row <= max_row; ++row) {
                 for (auto column = min_column; column <= max_column; ++column) {
                     auto new_index = model()->index(row, column);
@@ -471,9 +479,6 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
                         toggle_selection(new_index);
                 }
             }
-
-            // Finally toggle the cursor index again to make it go back to its current state.
-            toggle_selection(cursor_index());
         }
 
         // FIXME: Support the other SelectionUpdate types
