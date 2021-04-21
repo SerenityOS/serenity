@@ -578,7 +578,7 @@ void Terminal::execute_xterm_command()
         } else {
             m_current_attribute.href = params[2];
             // FIXME: Respect the provided ID
-            m_current_attribute.href_id = String::format("%u", m_next_href_id++);
+            m_current_attribute.href_id = String::number(m_next_href_id++);
         }
         break;
     case 9:
@@ -787,7 +787,7 @@ void Terminal::DSR(const ParamVector& params)
         emit_string("\033[0n"); // Terminal status OK!
     } else if (params.size() == 1 && params[0] == 6) {
         // Cursor position query
-        emit_string(String::format("\033[%d;%dR", m_cursor_row + 1, m_cursor_column + 1));
+        emit_string(String::formatted("\e[{};{}R", m_cursor_row + 1, m_cursor_column + 1));
     } else {
         dbgln("Unknown DSR");
     }
@@ -1024,15 +1024,15 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 
     auto emit_final_with_modifier = [this, modifier_mask](char final) {
         if (modifier_mask)
-            emit_string(String::format("\e[1;%d%c", modifier_mask + 1, final));
+            emit_string(String::formatted("\e[1;{}{:c}", modifier_mask + 1, final));
         else
-            emit_string(String::format("\e[%c", final));
+            emit_string(String::formatted("\e[{:c}", final));
     };
     auto emit_tilde_with_modifier = [this, modifier_mask](unsigned num) {
         if (modifier_mask)
-            emit_string(String::format("\e[%d;%d~", num, modifier_mask + 1));
+            emit_string(String::formatted("\e[{};{}~", num, modifier_mask + 1));
         else
-            emit_string(String::format("\e[%d~", num));
+            emit_string(String::formatted("\e[{}~", num));
     };
 
     switch (key) {
