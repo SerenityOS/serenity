@@ -111,64 +111,64 @@ public:
 
     String(const FlyString&);
 
-    static String repeated(char, size_t count);
+    [[nodiscard]] static String repeated(char, size_t count);
 
     template<class SeparatorType, class CollectionType>
-    static String join(const SeparatorType& separator, const CollectionType& collection)
+    [[nodiscard]] static String join(const SeparatorType& separator, const CollectionType& collection)
     {
         StringBuilder builder;
         builder.join(separator, collection);
         return builder.build();
     }
 
-    bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
-    bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    [[nodiscard]] bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    [[nodiscard]] bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
     template<typename T = int>
-    Optional<T> to_int() const;
+    [[nodiscard]] Optional<T> to_int() const;
     template<typename T = unsigned>
-    Optional<T> to_uint() const;
+    [[nodiscard]] Optional<T> to_uint() const;
 
-    String to_lowercase() const;
-    String to_uppercase() const;
-    String to_snakecase() const;
+    [[nodiscard]] String to_lowercase() const;
+    [[nodiscard]] String to_uppercase() const;
+    [[nodiscard]] String to_snakecase() const;
 
-    bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
+    [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
 #ifndef KERNEL
-    String trim_whitespace(TrimMode mode = TrimMode::Both) const
+    [[nodiscard]] String trim_whitespace(TrimMode mode = TrimMode::Both) const
     {
         return StringUtils::trim_whitespace(StringView { characters(), length() }, mode);
     }
 #endif
 
-    bool equals_ignoring_case(const StringView&) const;
+    [[nodiscard]] bool equals_ignoring_case(const StringView&) const;
 
-    bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    Optional<size_t> index_of(const String&, size_t start = 0) const;
+    [[nodiscard]] bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] Optional<size_t> index_of(const String&, size_t start = 0) const;
 
-    Vector<String> split_limit(char separator, size_t limit, bool keep_empty = false) const;
-    Vector<String> split(char separator, bool keep_empty = false) const;
+    [[nodiscard]] Vector<String> split_limit(char separator, size_t limit, bool keep_empty = false) const;
+    [[nodiscard]] Vector<String> split(char separator, bool keep_empty = false) const;
 
-    Optional<size_t> find(char) const;
-    Optional<size_t> find(const StringView&) const;
+    [[nodiscard]] Optional<size_t> find(char) const;
+    [[nodiscard]] Optional<size_t> find(const StringView&) const;
 
-    String substring(size_t start) const;
-    String substring(size_t start, size_t length) const;
+    [[nodiscard]] String substring(size_t start) const;
+    [[nodiscard]] String substring(size_t start, size_t length) const;
 
-    Vector<StringView> split_view(char separator, bool keep_empty = false) const;
-    StringView substring_view(size_t start, size_t length) const;
-    StringView substring_view(size_t start) const;
+    [[nodiscard]] Vector<StringView> split_view(char separator, bool keep_empty = false) const;
+    [[nodiscard]] StringView substring_view(size_t start, size_t length) const;
+    [[nodiscard]] StringView substring_view(size_t start) const;
 
-    bool is_null() const { return !m_impl; }
-    ALWAYS_INLINE bool is_empty() const { return length() == 0; }
-    ALWAYS_INLINE size_t length() const { return m_impl ? m_impl->length() : 0; }
+    [[nodiscard]] bool is_null() const { return !m_impl; }
+    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return length() == 0; }
+    [[nodiscard]] ALWAYS_INLINE size_t length() const { return m_impl ? m_impl->length() : 0; }
     // Includes NUL-terminator, if non-nullptr.
-    ALWAYS_INLINE const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
+    [[nodiscard]] ALWAYS_INLINE const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
 
     [[nodiscard]] bool copy_characters_to_buffer(char* buffer, size_t buffer_size) const;
 
-    ALWAYS_INLINE ReadonlyBytes bytes() const
+    [[nodiscard]] ALWAYS_INLINE ReadonlyBytes bytes() const
     {
         if (m_impl) {
             return m_impl->bytes();
@@ -176,20 +176,20 @@ public:
         return {};
     }
 
-    ALWAYS_INLINE const char& operator[](size_t i) const
+    [[nodiscard]] ALWAYS_INLINE const char& operator[](size_t i) const
     {
         return (*m_impl)[i];
     }
 
     using ConstIterator = SimpleIterator<const String, const char>;
 
-    constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
-    constexpr ConstIterator end() const { return ConstIterator::end(*this); }
+    [[nodiscard]] constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
+    [[nodiscard]] constexpr ConstIterator end() const { return ConstIterator::end(*this); }
 
-    bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    bool starts_with(char) const;
-    bool ends_with(char) const;
+    [[nodiscard]] bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool starts_with(char) const;
+    [[nodiscard]] bool ends_with(char) const;
 
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
@@ -213,12 +213,12 @@ public:
     bool operator==(const char* cstring) const;
     bool operator!=(const char* cstring) const { return !(*this == cstring); }
 
-    String isolated_copy() const;
+    [[nodiscard]] String isolated_copy() const;
 
-    static String empty();
+    [[nodiscard]] static String empty();
 
-    StringImpl* impl() { return m_impl.ptr(); }
-    const StringImpl* impl() const { return m_impl.ptr(); }
+    [[nodiscard]] StringImpl* impl() { return m_impl.ptr(); }
+    [[nodiscard]] const StringImpl* impl() const { return m_impl.ptr(); }
 
     String& operator=(String&& other)
     {
@@ -246,17 +246,17 @@ public:
         return *this;
     }
 
-    u32 hash() const
+    [[nodiscard]] u32 hash() const
     {
         if (!m_impl)
             return 0;
         return m_impl->hash();
     }
 
-    ByteBuffer to_byte_buffer() const;
+    [[nodiscard]] ByteBuffer to_byte_buffer() const;
 
     template<typename BufferType>
-    static String copy(const BufferType& buffer, ShouldChomp should_chomp = NoChomp)
+    [[nodiscard]] static String copy(const BufferType& buffer, ShouldChomp should_chomp = NoChomp)
     {
         if (buffer.is_null())
             return {};
@@ -265,29 +265,29 @@ public:
         return String((const char*)buffer.data(), buffer.size(), should_chomp);
     }
 
-    static String format(const char*, ...) __attribute__((format(printf, 1, 2)));
+    [[nodiscard]] static String format(const char*, ...) __attribute__((format(printf, 1, 2)));
 
-    static String vformatted(StringView fmtstr, TypeErasedFormatParams);
+    [[nodiscard]] static String vformatted(StringView fmtstr, TypeErasedFormatParams);
 
     template<typename... Parameters>
-    static String formatted(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+    [[nodiscard]] static String formatted(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
     {
         return vformatted(fmtstr.view(), VariadicFormatParams { parameters... });
     }
 
     template<typename T>
-    static String number(T value) requires IsArithmetic<T>
+    [[nodiscard]] static String number(T value) requires IsArithmetic<T>
     {
         return formatted("{}", value);
     }
 
-    StringView view() const;
+    [[nodiscard]] StringView view() const;
 
     int replace(const String& needle, const String& replacement, bool all_occurrences = false);
-    String reverse() const;
+    [[nodiscard]] String reverse() const;
 
     template<typename T, typename... Rest>
-    bool is_one_of(const T& string, Rest... rest) const
+    [[nodiscard]] bool is_one_of(const T& string, Rest... rest) const
     {
         if (*this == string)
             return true;
@@ -295,7 +295,7 @@ public:
     }
 
 private:
-    bool is_one_of() const { return false; }
+    [[nodiscard]] bool is_one_of() const { return false; }
 
     RefPtr<StringImpl> m_impl;
 };
