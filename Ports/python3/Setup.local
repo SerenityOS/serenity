@@ -27,7 +27,7 @@ _codecs_jp cjkcodecs/_codecs_jp.c
 _codecs_kr cjkcodecs/_codecs_kr.c
 _codecs_tw cjkcodecs/_codecs_tw.c
 _contextvars _contextvarsmodule.c
-_crypt _cryptmodule.c
+_crypt _cryptmodule.c -lcrypt -lcore
 _csv _csv.c
 _ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/cfield.c _ctypes/malloc_closure.c _ctypes/stgdict.c -I$(SERENITY_BUILD_DIR)/Root/usr/local/include $(SERENITY_BUILD_DIR)/Root/usr/local/lib/libffi.a
 _datetime _datetimemodule.c
