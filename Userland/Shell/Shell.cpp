@@ -171,9 +171,9 @@ String Shell::expand_tilde(const String& expression)
         if (!home) {
             auto passwd = getpwuid(getuid());
             VERIFY(passwd && passwd->pw_dir);
-            return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
+            return String::formatted("{}/{}", passwd->pw_dir, path.to_string());
         }
-        return String::format("%s/%s", home, path.to_string().characters());
+        return String::formatted("{}/{}", home, path.to_string());
     }
 
     auto passwd = getpwnam(login_name.to_string().characters());
@@ -181,7 +181,7 @@ String Shell::expand_tilde(const String& expression)
         return expression;
     VERIFY(passwd->pw_dir);
 
-    return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
+    return String::formatted("{}/{}", passwd->pw_dir, path.to_string());
 }
 
 bool Shell::is_glob(const StringView& s)
@@ -347,7 +347,7 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
 String Shell::resolve_path(String path) const
 {
     if (!path.starts_with('/'))
-        path = String::format("%s/%s", cwd.characters(), path.characters());
+        path = String::formatted("{}/{}", cwd, path);
 
     return Core::File::real_path_for(path);
 }
@@ -1249,7 +1249,7 @@ void Shell::cache_path()
             Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
             while (programs.has_next()) {
                 auto program = programs.next_path();
-                String program_path = String::format("%s/%s", directory.characters(), program.characters());
+                auto program_path = String::formatted("{}/{}", directory, program);
                 auto escaped_name = escape_token(program);
                 if (cached_path.contains_slow(escaped_name))
                     continue;
@@ -1357,7 +1357,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base,
         auto file = files.next_path();
         if (file.starts_with(token)) {
             struct stat program_status;
-            String file_path = String::format("%s/%s", path.characters(), file.characters());
+            auto file_path = String::formatted("{}/{}", path, file);
             int stat_error = stat(file_path.characters(), &program_status);
             if (!stat_error && (executable_only == ExecutableOnly::No || access(file_path.characters(), X_OK) == 0)) {
                 if (S_ISDIR(program_status.st_mode)) {
