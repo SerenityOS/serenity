@@ -107,21 +107,22 @@ int main(int argc, char** argv)
 
     String home;
     if (!home_path)
-        home = String::format("/home/%s", username);
+        home = String::formatted("/home/{}", username);
     else
         home = home_path;
 
     if (create_home_dir) {
         if (mkdir(home.characters(), 0700) < 0) {
-            perror(String::format("failed to create directory %s", home.characters()).characters());
+            auto saved_errno = errno;
+            warnln("Failed to create directory {}: {}", home, strerror(saved_errno));
             return 12;
         }
 
         if (chown(home.characters(), static_cast<uid_t>(uid), static_cast<gid_t>(gid)) < 0) {
-            perror(String::format("failed to chown %s to %u:%u", home.characters(), uid, gid).characters());
+            warnln("Failed to change owner of {} to {}:{}: {}", home, uid, gid, strerror(errno));
 
             if (rmdir(home.characters()) < 0) {
-                perror(String::format("failed to rmdir %s", home.characters()).characters());
+                warnln("Failed to remove directory {}: {}", home, strerror(errno));
                 return 12;
             }
             return 12;
