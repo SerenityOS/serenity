@@ -157,4 +157,86 @@ TEST_CASE(drop_table)
     validate("DROP TABLE IF EXISTS test;", {}, "test", false);
 }
 
+TEST_CASE(delete_)
+{
+    EXPECT(parse("DELETE").is_error());
+    EXPECT(parse("DELETE FROM").is_error());
+    EXPECT(parse("DELETE FROM table").is_error());
+    EXPECT(parse("DELETE FROM table WHERE").is_error());
+    EXPECT(parse("DELETE FROM table WHERE 15").is_error());
+    EXPECT(parse("DELETE FROM table WHERE 15 RETURNING").is_error());
+    EXPECT(parse("DELETE FROM table WHERE 15 RETURNING *").is_error());
+    EXPECT(parse("DELETE FROM table WHERE (');").is_error());
+    EXPECT(parse("WITH DELETE FROM table;").is_error());
+    EXPECT(parse("WITH table DELETE FROM table;").is_error());
+    EXPECT(parse("WITH table AS DELETE FROM table;").is_error());
+    EXPECT(parse("WITH RECURSIVE table DELETE FROM table;").is_error());
+    EXPECT(parse("WITH RECURSIVE table AS DELETE FROM table;").is_error());
+
+    struct SelectedTable {
+        bool recursive { false };
+        StringView table_name {};
+        Vector<StringView> column_names {};
+    };
+
+    auto validate = [](StringView sql, SelectedTable expected_selected_table, StringView expected_schema, StringView expected_table, StringView expected_alias, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto statement = result.release_value();
+        EXPECT(is<SQL::Delete>(*statement));
+
+        const auto& delete_ = static_cast<const SQL::Delete&>(*statement);
+        EXPECT_EQ(delete_.recursive(), expected_selected_table.recursive);
+
+        const auto& common_table_expression = delete_.common_table_expression();
+        EXPECT_EQ(common_table_expression.is_null(), expected_selected_table.table_name.is_empty());
+        if (common_table_expression) {
+            EXPECT_EQ(common_table_expression->table_name(), expected_selected_table.table_name);
+            EXPECT_EQ(common_table_expression->column_names().size(), expected_selected_table.column_names.size());
+            for (size_t i = 0; i < common_table_expression->column_names().size(); ++i)
+                EXPECT_EQ(common_table_expression->column_names()[i], expected_selected_table.column_names[i]);
+        }
+
+        const auto& qualified_table_name = delete_.qualified_table_name();
+        EXPECT_EQ(qualified_table_name->schema_name(), expected_schema);
+        EXPECT_EQ(qualified_table_name->table_name(), expected_table);
+        EXPECT_EQ(qualified_table_name->alias(), expected_alias);
+
+        const auto& where_clause = delete_.where_clause();
+        EXPECT_EQ(where_clause.is_null(), !expect_where_clause);
+        if (where_clause)
+            EXPECT(!is<SQL::ErrorExpression>(*where_clause));
+
+        const auto& returning_clause = delete_.returning_clause();
+        EXPECT_EQ(returning_clause.is_null(), !expect_returning_clause);
+        if (returning_clause) {
+            EXPECT_EQ(returning_clause->columns().size(), expected_returned_column_aliases.size());
+
+            for (size_t i = 0; i < returning_clause->columns().size(); ++i) {
+                const auto& column = returning_clause->columns()[i];
+                const auto& expected_column_alias = expected_returned_column_aliases[i];
+
+                EXPECT(!is<SQL::ErrorExpression>(*column.expression));
+                EXPECT_EQ(column.column_alias, expected_column_alias);
+            }
+        }
+    };
+
+    validate("DELETE FROM table;", {}, {}, "table", {}, false, false, {});
+    validate("DELETE FROM schema.table;", {}, "schema", "table", {}, false, false, {});
+    validate("DELETE FROM schema.table AS alias;", {}, "schema", "table", "alias", false, false, {});
+    validate("DELETE FROM table WHERE (1 == 1);", {}, {}, "table", {}, true, false, {});
+    validate("DELETE FROM table RETURNING *;", {}, {}, "table", {}, false, true, {});
+    validate("DELETE FROM table RETURNING column;", {}, {}, "table", {}, false, true, { {} });
+    validate("DELETE FROM table RETURNING column AS alias;", {}, {}, "table", {}, false, true, { "alias" });
+    validate("DELETE FROM table RETURNING column1 AS alias1, column2 AS alias2;", {}, {}, "table", {}, false, true, { "alias1", "alias2" });
+
+    // FIXME: When parsing of SELECT statements are supported, the common-table-expressions below will become invalid due to the empty "AS ()" clause.
+    validate("WITH table AS () DELETE FROM table;", { false, "table", {} }, {}, "table", {}, false, false, {});
+    validate("WITH table (column) AS () DELETE FROM table;", { false, "table", { "column" } }, {}, "table", {}, false, false, {});
+    validate("WITH table (column1, column2) AS () DELETE FROM table;", { false, "table", { "column1", "column2" } }, {}, "table", {}, false, false, {});
+    validate("WITH RECURSIVE table AS () DELETE FROM table;", { true, "table", {} }, {}, "table", {}, false, false, {});
+}
+
 TEST_MAIN(SqlParser)
