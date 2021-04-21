@@ -436,6 +436,16 @@ int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
     return 0;
 }
 
+int pthread_attr_getscope([[maybe_unused]] const pthread_attr_t* attributes, [[maybe_unused]] int* contention_scope)
+{
+    return 0;
+}
+
+int pthread_attr_setscope([[maybe_unused]] pthread_attr_t* attributes, [[maybe_unused]] int contention_scope)
+{
+    return 0;
+}
+
 int pthread_getschedparam([[maybe_unused]] pthread_t thread, [[maybe_unused]] int* policy, [[maybe_unused]] struct sched_param* param)
 {
     return 0;
