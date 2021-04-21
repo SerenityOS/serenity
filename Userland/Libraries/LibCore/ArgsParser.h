@@ -53,8 +53,8 @@ public:
         String name_for_display() const
         {
             if (long_name)
-                return String::format("--%s", long_name);
-            return String::format("-%c", short_name);
+                return String::formatted("--{}", long_name);
+            return String::formatted("-{:c}", short_name);
         }
     };
 
