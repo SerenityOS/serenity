@@ -141,6 +141,18 @@ bool TextDocumentLine::ends_in_whitespace() const
     return isspace(code_points()[length() - 1]);
 }
 
+bool TextDocumentLine::can_select() const
+{
+    if (is_empty())
+        return false;
+    for (size_t i = 0; i < length(); ++i) {
+        auto code_point = code_points()[i];
+        if (code_point != '\n' && code_point != '\r' && code_point != '\f' && code_point != '\v')
+            return true;
+    }
+    return false;
+}
+
 size_t TextDocumentLine::leading_spaces() const
 {
     size_t count = 0;
