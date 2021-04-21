@@ -155,7 +155,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
     if (m_pages.size() > 1) {
         auto left_arrow = page_index > 0 ? '<' : ' ';
         auto right_arrow = page_index < m_pages.size() - 1 ? '>' : ' ';
-        auto string = String::format("%c page %zu of %zu %c", left_arrow, page_index + 1, m_pages.size(), right_arrow);
+        auto string = String::formatted("{:c} page {} of {} {:c}", left_arrow, page_index + 1, m_pages.size(), right_arrow);
 
         if (string.length() > m_num_columns - 1) {
             // This would overflow into the next line, so just don't print an indicator.
