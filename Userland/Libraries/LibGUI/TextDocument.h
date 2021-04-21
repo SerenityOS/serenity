@@ -190,6 +190,7 @@ public:
     size_t first_non_whitespace_column() const;
     Optional<size_t> last_non_whitespace_column() const;
     bool ends_in_whitespace() const;
+    bool can_select() const;
     bool is_empty() const { return length() == 0; }
     size_t leading_spaces() const;
 
