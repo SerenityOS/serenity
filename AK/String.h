@@ -50,7 +50,7 @@ namespace AK {
 //
 //     s = String("some literal");
 //
-//     s = String::format("%d little piggies", m_piggies);
+//     s = String::formatted("{} little piggies", m_piggies);
 //
 //     StringBuilder builder;
 //     builder.append("abc");
@@ -264,8 +264,6 @@ public:
             return empty();
         return String((const char*)buffer.data(), buffer.size(), should_chomp);
     }
-
-    [[nodiscard]] static String format(const char*, ...) __attribute__((format(printf, 1, 2)));
 
     [[nodiscard]] static String vformatted(StringView fmtstr, TypeErasedFormatParams);
 
