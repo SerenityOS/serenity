@@ -30,7 +30,6 @@
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
@@ -231,16 +230,6 @@ template Optional<u8> String::to_uint() const;
 template Optional<u16> String::to_uint() const;
 template Optional<u32> String::to_uint() const;
 template Optional<u64> String::to_uint() const;
-
-String String::format(const char* fmt, ...)
-{
-    StringBuilder builder;
-    va_list ap;
-    va_start(ap, fmt);
-    builder.appendvf(fmt, ap);
-    va_end(ap);
-    return builder.to_string();
-}
 
 bool String::starts_with(const StringView& str, CaseSensitivity case_sensitivity) const
 {
