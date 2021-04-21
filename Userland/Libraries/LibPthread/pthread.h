@@ -68,6 +68,12 @@ int pthread_attr_setstack(pthread_attr_t* attr, void*, size_t);
 int pthread_attr_getstacksize(const pthread_attr_t*, size_t*);
 int pthread_attr_setstacksize(pthread_attr_t*, size_t);
 
+#define PTHREAD_SCOPE_SYSTEM 0
+#define PTHREAD_SCOPE_PROCESS 1
+
+int pthread_attr_getscope(const pthread_attr_t*, int*);
+int pthread_attr_setscope(pthread_attr_t*, int);
+
 int pthread_once(pthread_once_t*, void (*)(void));
 #define PTHREAD_ONCE_INIT 0
 void* pthread_getspecific(pthread_key_t key);
