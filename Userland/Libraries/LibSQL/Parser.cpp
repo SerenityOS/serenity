@@ -112,11 +112,20 @@ NonnullRefPtr<Delete> Parser::parse_delete_statement()
 {
     // https://sqlite.org/lang_delete.html
 
-    bool recursive = false;
-    RefPtr<CommonTableExpression> common_table_expression;
+    RefPtr<CommonTableExpressionList> common_table_expression_list;
     if (consume_if(TokenType::With)) {
-        recursive = consume_if(TokenType::Recursive);
-        common_table_expression = parse_common_table_expression();
+        NonnullRefPtrVector<CommonTableExpression> common_table_expression;
+        bool recursive = consume_if(TokenType::Recursive);
+
+        do {
+            common_table_expression.append(parse_common_table_expression());
+            if (!match(TokenType::Comma))
+                break;
+
+            consume(TokenType::Comma);
+        } while (!match(TokenType::Eof));
+
+        common_table_expression_list = create_ast_node<CommonTableExpressionList>(recursive, move(common_table_expression));
     }
 
     consume(TokenType::Delete);
@@ -133,7 +142,7 @@ NonnullRefPtr<Delete> Parser::parse_delete_statement()
 
     consume(TokenType::SemiColon);
 
-    return create_ast_node<Delete>(recursive, move(common_table_expression), move(qualified_table_name), move(where_clause), move(returning_clause));
+    return create_ast_node<Delete>(move(common_table_expression_list), move(qualified_table_name), move(where_clause), move(returning_clause));
 }
 
 NonnullRefPtr<Expression> Parser::parse_expression()
