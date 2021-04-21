@@ -32,6 +32,7 @@
 #include "Menubar.h"
 #include "Screen.h"
 #include "Window.h"
+#include <AK/Debug.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibGUI/WindowManagerServerConnection.h>
@@ -557,9 +558,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
         if (m_move_window->is_resizable()) {
             process_event_for_doubleclick(*m_move_window, event);
             if (event.type() == Event::MouseDoubleClick) {
-#if defined(DOUBLECLICK_DEBUG)
-                dbgln("[WM] Click up became doubleclick!");
-#endif
+                dbgln_if(DOUBLECLICK_DEBUG, "[WM] Click up became doubleclick!");
                 m_move_window->set_maximized(!m_move_window->is_maximized());
             }
         }
