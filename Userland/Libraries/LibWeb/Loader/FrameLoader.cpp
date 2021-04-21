@@ -227,10 +227,10 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
         [this, failed_url, error](auto data, auto&, auto) {
             VERIFY(!data.is_null());
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
-            auto html = String::format(
-                String::copy(data).characters(),
-                escape_html_entities(failed_url.to_string()).characters(),
-                escape_html_entities(error).characters());
+            auto html = String::formatted(
+                data,
+                escape_html_entities(failed_url.to_string()),
+                escape_html_entities(error));
 #pragma GCC diagnostic pop
             auto document = HTML::parse_html_document(html, failed_url, "utf-8");
             VERIFY(document);
