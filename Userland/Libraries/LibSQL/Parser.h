@@ -75,6 +75,7 @@ private:
 
     Token consume();
     Token consume(TokenType type);
+    bool consume_if(TokenType type);
     bool match(TokenType type) const;
 
     void expected(StringView what);

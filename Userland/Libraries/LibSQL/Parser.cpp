@@ -52,16 +52,13 @@ NonnullRefPtr<CreateTable> Parser::parse_create_table_statement()
     consume(TokenType::Create);
 
     bool is_temporary = false;
-    if (match(TokenType::Temp) || match(TokenType::Temporary)) {
-        consume();
+    if (consume_if(TokenType::Temp) || consume_if(TokenType::Temporary))
         is_temporary = true;
-    }
 
     consume(TokenType::Table);
 
     bool is_error_if_table_exists = true;
-    if (match(TokenType::If)) {
-        consume(TokenType::If);
+    if (consume_if(TokenType::If)) {
         consume(TokenType::Not);
         consume(TokenType::Exists);
         is_error_if_table_exists = false;
@@ -71,8 +68,7 @@ NonnullRefPtr<CreateTable> Parser::parse_create_table_statement()
     String schema_name;
     String table_name;
 
-    if (match(TokenType::Period)) {
-        consume();
+    if (consume_if(TokenType::Period)) {
         schema_name = move(schema_or_table_name);
         table_name = consume(TokenType::Identifier).value();
     } else {
@@ -107,8 +103,7 @@ NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
     consume(TokenType::Table);
 
     bool is_error_if_table_does_not_exist = true;
-    if (match(TokenType::If)) {
-        consume(TokenType::If);
+    if (consume_if(TokenType::If)) {
         consume(TokenType::Exists);
         is_error_if_table_does_not_exist = false;
     }
@@ -117,8 +112,7 @@ NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
     String schema_name;
     String table_name;
 
-    if (match(TokenType::Period)) {
-        consume();
+    if (consume_if(TokenType::Period)) {
         schema_name = move(schema_or_table_name);
         table_name = consume(TokenType::Identifier).value();
     } else {
@@ -151,14 +145,11 @@ NonnullRefPtr<TypeName> Parser::parse_type_name()
     auto name = consume(TokenType::Identifier).value();
     NonnullRefPtrVector<SignedNumber> signed_numbers;
 
-    if (match(TokenType::ParenOpen)) {
-        consume();
+    if (consume_if(TokenType::ParenOpen)) {
         signed_numbers.append(parse_signed_number());
 
-        if (match(TokenType::Comma)) {
-            consume();
+        if (consume_if(TokenType::Comma))
             signed_numbers.append(parse_signed_number());
-        }
 
         consume(TokenType::ParenClose);
     }
@@ -171,12 +162,10 @@ NonnullRefPtr<SignedNumber> Parser::parse_signed_number()
     // https://sqlite.org/syntax/signed-number.html
     bool is_positive = true;
 
-    if (match(TokenType::Plus)) {
-        consume();
-    } else if (match(TokenType::Minus)) {
+    if (consume_if(TokenType::Plus))
+        is_positive = true;
+    else if (consume_if(TokenType::Minus))
         is_positive = false;
-        consume();
-    }
 
     if (match(TokenType::NumericLiteral)) {
         auto number = consume(TokenType::NumericLiteral).double_value();
@@ -200,6 +189,15 @@ Token Parser::consume(TokenType expected_type)
         expected(Token::name(expected_type));
     }
     return consume();
+}
+
+bool Parser::consume_if(TokenType expected_type)
+{
+    if (!match(expected_type))
+        return false;
+
+    consume();
+    return true;
 }
 
 bool Parser::match(TokenType type) const
