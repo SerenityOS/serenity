@@ -55,10 +55,10 @@ static String get_child_path_from_inode_index(const String& path, unsigned child
     }
 
     while (iterator.has_next()) {
-        auto child_full_path = String::formatted("{}/{}", path, iterator.next_path());
-        struct stat st;
+        auto child_full_path = iterator.next_full_path();
 
-        if (lstat(child_full_path.characters(), &st)) {
+        struct stat st = {};
+        if (lstat(child_full_path.characters(), &st) < 0) {
             return {};
         }
 
