@@ -319,7 +319,7 @@ private:
     RGBA32 m_value { 0 };
 };
 
-inline constexpr Color::Color(NamedColor named)
+constexpr Color::Color(NamedColor named)
 {
     if (named == Transparent) {
         m_value = 0;

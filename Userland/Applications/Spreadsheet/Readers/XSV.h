@@ -72,7 +72,7 @@ enum class ReadError {
 #undef E
 };
 
-inline constexpr ParserBehaviour default_behaviours()
+constexpr ParserBehaviour default_behaviours()
 {
     return ParserBehaviour::QuoteOnlyInFieldStart;
 }
