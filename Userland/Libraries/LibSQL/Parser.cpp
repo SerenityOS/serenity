@@ -41,8 +41,11 @@ NonnullRefPtr<Statement> Parser::next_statement()
         return parse_create_table_statement();
     case TokenType::Drop:
         return parse_drop_table_statement();
+    case TokenType::Delete:
+    case TokenType::With:
+        return parse_delete_statement();
     default:
-        expected("CREATE or DROP");
+        expected("CREATE, DROP, or DELETE");
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -123,6 +126,34 @@ NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
     consume(TokenType::SemiColon);
 
     return create_ast_node<DropTable>(move(schema_name), move(table_name), is_error_if_table_does_not_exist);
+}
+
+NonnullRefPtr<Delete> Parser::parse_delete_statement()
+{
+    // https://sqlite.org/lang_delete.html
+
+    bool recursive = false;
+    RefPtr<CommonTableExpression> common_table_expression;
+    if (consume_if(TokenType::With)) {
+        recursive = consume_if(TokenType::Recursive);
+        common_table_expression = parse_common_table_expression();
+    }
+
+    consume(TokenType::Delete);
+    consume(TokenType::From);
+    auto qualified_table_name = parse_qualified_table_name();
+
+    RefPtr<Expression> where_clause;
+    if (consume_if(TokenType::Where))
+        where_clause = parse_expression();
+
+    RefPtr<ReturningClause> returning_clause;
+    if (match(TokenType::Returning))
+        returning_clause = parse_returning_clause();
+
+    consume(TokenType::SemiColon);
+
+    return create_ast_node<Delete>(recursive, move(common_table_expression), move(qualified_table_name), move(where_clause), move(returning_clause));
 }
 
 NonnullRefPtr<Expression> Parser::parse_expression()
@@ -618,6 +649,87 @@ NonnullRefPtr<SignedNumber> Parser::parse_signed_number()
 
     expected("NumericLiteral");
     return create_ast_node<SignedNumber>(0);
+}
+
+NonnullRefPtr<CommonTableExpression> Parser::parse_common_table_expression()
+{
+    // https://sqlite.org/syntax/common-table-expression.html
+    auto table_name = consume(TokenType::Identifier).value();
+
+    Vector<String> column_names;
+    if (consume_if(TokenType::ParenOpen)) {
+        do {
+            column_names.append(consume(TokenType::Identifier).value());
+            if (match(TokenType::ParenClose))
+                break;
+
+            consume(TokenType::Comma);
+        } while (!match(TokenType::Eof));
+
+        consume(TokenType::ParenClose);
+    }
+
+    consume(TokenType::As);
+    consume(TokenType::ParenOpen);
+    // FIXME: Parse "select-stmt".
+    consume(TokenType::ParenClose);
+
+    return create_ast_node<CommonTableExpression>(move(table_name), move(column_names));
+}
+
+NonnullRefPtr<QualifiedTableName> Parser::parse_qualified_table_name()
+{
+    // https://sqlite.org/syntax/qualified-table-name.html
+    String schema_or_table_name = consume(TokenType::Identifier).value();
+    String schema_name;
+    String table_name;
+
+    if (consume_if(TokenType::Period)) {
+        schema_name = move(schema_or_table_name);
+        table_name = consume(TokenType::Identifier).value();
+    } else {
+        table_name = move(schema_or_table_name);
+    }
+
+    String alias;
+    if (consume_if(TokenType::As))
+        alias = consume(TokenType::Identifier).value();
+
+    // Note: The qualified-table-name spec may include an "INDEXED BY index-name" or "NOT INDEXED" clause. This is a SQLite extension
+    // "designed to help detect undesirable query plan changes during regression testing", and "application developers are admonished
+    // to omit all use of INDEXED BY during application design, implementation, testing, and tuning". Our implementation purposefully
+    // omits parsing INDEXED BY for now until there is good reason to add support.
+
+    return create_ast_node<QualifiedTableName>(move(schema_name), move(table_name), move(alias));
+}
+
+NonnullRefPtr<ReturningClause> Parser::parse_returning_clause()
+{
+    // https://sqlite.org/syntax/returning-clause.html
+    consume(TokenType::Returning);
+
+    if (consume_if(TokenType::Asterisk))
+        return create_ast_node<ReturningClause>();
+
+    Vector<ReturningClause::ColumnClause> columns;
+
+    do {
+        auto expression = parse_expression();
+
+        consume_if(TokenType::As); // 'AS' is optional.
+
+        String column_alias;
+        if (match(TokenType::Identifier))
+            column_alias = consume().value();
+
+        columns.append({ move(expression), move(column_alias) });
+        if (!match(TokenType::Comma))
+            break;
+
+        consume(TokenType::Comma);
+    } while (!match(TokenType::Eof));
+
+    return create_ast_node<ReturningClause>(move(columns));
 }
 
 Token Parser::consume()
