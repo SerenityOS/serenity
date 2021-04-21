@@ -97,6 +97,23 @@ private:
     Vector<String> m_column_names;
 };
 
+class CommonTableExpressionList : public ASTNode {
+public:
+    CommonTableExpressionList(bool recursive, NonnullRefPtrVector<CommonTableExpression> common_table_expressions)
+        : m_recursive(recursive)
+        , m_common_table_expressions(move(common_table_expressions))
+    {
+        VERIFY(!m_common_table_expressions.is_empty());
+    }
+
+    bool recursive() const { return m_recursive; }
+    const NonnullRefPtrVector<CommonTableExpression>& common_table_expressions() const { return m_common_table_expressions; }
+
+private:
+    bool m_recursive;
+    NonnullRefPtrVector<CommonTableExpression> m_common_table_expressions;
+};
+
 class QualifiedTableName : public ASTNode {
 public:
     QualifiedTableName(String schema_name, String table_name, String alias)
@@ -533,24 +550,21 @@ private:
 
 class Delete : public Statement {
 public:
-    Delete(bool recursive, RefPtr<CommonTableExpression> common_table_expression, NonnullRefPtr<QualifiedTableName> qualified_table_name, RefPtr<Expression> where_clause, RefPtr<ReturningClause> returning_clause)
-        : m_recursive(recursive)
-        , m_common_table_expression(move(common_table_expression))
+    Delete(RefPtr<CommonTableExpressionList> common_table_expression_list, NonnullRefPtr<QualifiedTableName> qualified_table_name, RefPtr<Expression> where_clause, RefPtr<ReturningClause> returning_clause)
+        : m_common_table_expression_list(move(common_table_expression_list))
         , m_qualified_table_name(move(qualified_table_name))
         , m_where_clause(move(where_clause))
         , m_returning_clause(move(returning_clause))
     {
     }
 
-    bool recursive() const { return m_recursive; }
-    const RefPtr<CommonTableExpression>& common_table_expression() const { return m_common_table_expression; }
+    const RefPtr<CommonTableExpressionList>& common_table_expression_list() const { return m_common_table_expression_list; }
     const NonnullRefPtr<QualifiedTableName>& qualified_table_name() const { return m_qualified_table_name; }
     const RefPtr<Expression>& where_clause() const { return m_where_clause; }
     const RefPtr<ReturningClause>& returning_clause() const { return m_returning_clause; }
 
 private:
-    bool m_recursive;
-    RefPtr<CommonTableExpression> m_common_table_expression;
+    RefPtr<CommonTableExpressionList> m_common_table_expression_list;
     NonnullRefPtr<QualifiedTableName> m_qualified_table_name;
     RefPtr<Expression> m_where_clause;
     RefPtr<ReturningClause> m_returning_clause;
