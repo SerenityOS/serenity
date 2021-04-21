@@ -163,7 +163,7 @@ KResultOr<size_t> FIFO::write(FileDescription&, u64, const UserOrKernelBuffer& b
 
 String FIFO::absolute_path(const FileDescription&) const
 {
-    return String::format("fifo:%u", m_fifo_id);
+    return String::formatted("fifo:{}", m_fifo_id);
 }
 
 KResult FIFO::stat(::stat& st) const
