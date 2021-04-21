@@ -197,7 +197,7 @@ static void iterate_directory_recursively(const String& directory_path, Callback
     Core::DirIterator directory_iterator(directory_path, Core::DirIterator::Flags::SkipDots);
 
     while (directory_iterator.has_next()) {
-        auto file_path = String::formatted("{}/{}", directory_path, directory_iterator.next_path());
+        auto file_path = directory_iterator.next_full_path();
         if (Core::File::is_directory(file_path)) {
             iterate_directory_recursively(file_path, callback);
         } else {

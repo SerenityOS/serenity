@@ -142,7 +142,7 @@ static HashMap<String, String>& man_paths()
         // FIXME: This should also search man3, possibly other places..
         Core::DirIterator it("/usr/share/man/man2", Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
-            auto path = String::formatted("/usr/share/man/man2/{}", it.next_path());
+            auto path = it.next_full_path();
             auto title = LexicalPath(path).title();
             paths.set(title, path);
         }
