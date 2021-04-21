@@ -228,6 +228,9 @@ void TextEditor::doubleclick_event(MouseEvent& event)
     if (is_displayonly())
         return;
 
+    if (!current_line().can_select())
+        return;
+
     // NOTE: This ensures that spans are updated before we look at them.
     flush_pending_change_notification_if_needed();
 
