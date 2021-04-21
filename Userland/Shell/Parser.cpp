@@ -1782,7 +1782,7 @@ RefPtr<AST::Node> Parser::parse_glob()
             } else {
                 // FIXME: Allow composition of tilde+bareword with globs: '~/foo/bar/baz*'
                 restore_to(saved_offset.offset, saved_offset.line);
-                bareword_part->set_is_syntax_error(*create<AST::SyntaxError>(String::format("Unexpected %s inside a glob", bareword_part->class_name().characters())));
+                bareword_part->set_is_syntax_error(*create<AST::SyntaxError>(String::formatted("Unexpected {} inside a glob", bareword_part->class_name())));
                 return bareword_part;
             }
             textbuilder.append(text);
