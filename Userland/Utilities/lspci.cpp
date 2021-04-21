@@ -111,11 +111,11 @@ int main(int argc, char** argv)
         }
 
         if (vendor_name.is_empty())
-            vendor_name = String::format("%04x", vendor_id);
+            vendor_name = String::formatted("{:04x}", vendor_id);
         if (device_name.is_empty())
-            device_name = String::format("%04x", device_id);
+            device_name = String::formatted("{:04x}", device_id);
         if (class_name.is_empty())
-            class_name = String::format("%02x%02x", class_id, subclass_id);
+            class_name = String::formatted("{:02x}{:02x}", class_id, subclass_id);
 
         outln(format, seg, bus, device, function, class_name, vendor_name, device_name, revision_id);
     });
