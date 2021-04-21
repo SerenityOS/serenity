@@ -1467,9 +1467,9 @@ String Style::Background::to_vt_escape() const
         return "";
 
     if (m_is_rgb) {
-        return String::format("\033[48;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
+        return String::formatted("\e[48;2;{};{};{}m", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
     } else {
-        return String::format("\033[%dm", (u8)m_xterm_color + 40);
+        return String::formatted("\e[{}m", (u8)m_xterm_color + 40);
     }
 }
 
@@ -1479,9 +1479,9 @@ String Style::Foreground::to_vt_escape() const
         return "";
 
     if (m_is_rgb) {
-        return String::format("\033[38;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
+        return String::formatted("\e[38;2;{};{};{}m", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
     } else {
-        return String::format("\033[%dm", (u8)m_xterm_color + 30);
+        return String::formatted("\e[{}m", (u8)m_xterm_color + 30);
     }
 }
 
@@ -1490,7 +1490,7 @@ String Style::Hyperlink::to_vt_escape(bool starting) const
     if (is_empty())
         return "";
 
-    return String::format("\033]8;;%s\033\\", starting ? m_link.characters() : "");
+    return String::formatted("\e]8;;{}\e\\", starting ? m_link : String::empty());
 }
 
 void Style::unify_with(const Style& other, bool prefer_other)
