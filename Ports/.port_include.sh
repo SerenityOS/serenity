@@ -346,6 +346,9 @@ do_uninstall() {
     echo "Uninstalling $port!"
     uninstall
 }
+do_showdepends() {
+    echo -n $depends
+}
 do_all() {
     do_installdepends
     do_fetch
@@ -361,7 +364,7 @@ parse_arguments() {
         do_all
     else
         case "$1" in
-            fetch|patch|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall)
+            fetch|patch|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall|showdepends)
                 do_$1
                 ;;
             --auto)
@@ -373,7 +376,7 @@ parse_arguments() {
                 parse_arguments $@
                 ;;
             *)
-                >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, clean, clean_dist, clean_all, uninstall."
+                >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, clean, clean_dist, clean_all, uninstall, showdepends."
                 exit 1
                 ;;
         esac
