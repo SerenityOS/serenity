@@ -432,10 +432,10 @@ void dmesgln(CheckedFormatString<Parameters...>&& fmt, const Parameters&... para
 #endif
 
 template<typename T, typename = void>
-inline constexpr bool HasFormatter = true;
+constexpr bool HasFormatter = true;
 
 template<typename T>
-inline constexpr bool HasFormatter<T, typename Formatter<T>::__no_formatter_defined> = false;
+constexpr bool HasFormatter<T, typename Formatter<T>::__no_formatter_defined> = false;
 
 template<typename T>
 class FormatIfSupported {

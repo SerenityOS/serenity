@@ -74,7 +74,7 @@ enum class WriteError {
 #undef E
 };
 
-inline constexpr WriterBehaviour default_behaviours()
+constexpr WriterBehaviour default_behaviours()
 {
     return WriterBehaviour::None;
 }

@@ -31,7 +31,7 @@
 namespace Crypto {
 namespace Hash {
 
-inline static constexpr auto ROTATE_LEFT(u32 value, size_t bits)
+static constexpr auto ROTATE_LEFT(u32 value, size_t bits)
 {
     return (value << bits) | (value >> (32 - bits));
 }
