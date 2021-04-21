@@ -56,3 +56,11 @@ private:
 OutputStream& operator<<(OutputStream& stream, const DNSName&);
 
 }
+
+template<>
+struct AK::Formatter<LookupServer::DNSName> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const LookupServer::DNSName& value)
+    {
+        return Formatter<StringView>::format(builder, value.as_string());
+    }
+};
