@@ -64,6 +64,19 @@ function(serenity_libc_static target_name fs_name)
     serenity_generated_sources(${target_name})
 endfunction()
 
+function(serenity_libberkeley target_name fs_name)
+    serenity_install_headers("")
+    #[[serenity_install_sources("Userland/Libraries/LibBerkeley")]]
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -fpic")
+    #[[
+    add_library(${target_name} SHARED ${SOURCES})
+    install(TARGETS ${target_name} DESTINATION usr/lib)
+    set_target_properties(${target_name} PROPERTIES OUTPUT_NAME ${fs_name})
+    target_link_directories(LibBerkeley PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+    serenity_generated_sources(${target_name})
+    ]]
+endfunction()
+
 function(serenity_bin target_name)
     add_executable(${target_name} ${SOURCES})
     install(TARGETS ${target_name} RUNTIME DESTINATION bin)
