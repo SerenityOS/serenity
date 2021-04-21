@@ -46,16 +46,16 @@ namespace AK {
 
 namespace {
 
-constexpr size_t use_next_index = NumericLimits<size_t>::max();
+static constexpr size_t use_next_index = NumericLimits<size_t>::max();
 
 // The worst case is that we have the largest 64-bit value formatted as binary number, this would take
 // 65 bytes. Choosing a larger power of two won't hurt and is a bit of mitigation against out-of-bounds accesses.
-inline size_t convert_unsigned_to_string(u64 value, Array<u8, 128>& buffer, u8 base, bool upper_case)
+static constexpr size_t convert_unsigned_to_string(u64 value, Array<u8, 128>& buffer, u8 base, bool upper_case)
 {
     VERIFY(base >= 2 && base <= 16);
 
-    static constexpr const char* lowercase_lookup = "0123456789abcdef";
-    static constexpr const char* uppercase_lookup = "0123456789ABCDEF";
+    constexpr const char* lowercase_lookup = "0123456789abcdef";
+    constexpr const char* uppercase_lookup = "0123456789ABCDEF";
 
     if (value == 0) {
         buffer[0] = '0';
@@ -101,34 +101,6 @@ void vformat_impl(TypeErasedFormatParams& params, FormatBuilder& builder, Format
 }
 
 } // namespace AK::{anonymous}
-
-size_t TypeErasedParameter::to_size() const
-{
-    i64 svalue;
-
-    if (type == TypeErasedParameter::Type::UInt8)
-        svalue = *reinterpret_cast<const u8*>(value);
-    else if (type == TypeErasedParameter::Type::UInt16)
-        svalue = *reinterpret_cast<const u16*>(value);
-    else if (type == TypeErasedParameter::Type::UInt32)
-        svalue = *reinterpret_cast<const u32*>(value);
-    else if (type == TypeErasedParameter::Type::UInt64)
-        svalue = *reinterpret_cast<const u64*>(value);
-    else if (type == TypeErasedParameter::Type::Int8)
-        svalue = *reinterpret_cast<const i8*>(value);
-    else if (type == TypeErasedParameter::Type::Int16)
-        svalue = *reinterpret_cast<const i16*>(value);
-    else if (type == TypeErasedParameter::Type::Int32)
-        svalue = *reinterpret_cast<const i32*>(value);
-    else if (type == TypeErasedParameter::Type::Int64)
-        svalue = *reinterpret_cast<const i64*>(value);
-    else
-        VERIFY_NOT_REACHED();
-
-    VERIFY(svalue >= 0);
-
-    return static_cast<size_t>(svalue);
-}
 
 FormatParser::FormatParser(StringView input)
     : GenericLexer(input)
