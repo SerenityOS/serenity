@@ -154,7 +154,7 @@ void Rect<T>::set_size_around(const Size<T>& new_size, const Point<T>& fixed_poi
 template<>
 String IntRect::to_string() const
 {
-    return String::format("[%d,%d %dx%d]", x(), y(), width(), height());
+    return String::formatted("[{},{} {}x{}]", x(), y(), width(), height());
 }
 
 template<>
