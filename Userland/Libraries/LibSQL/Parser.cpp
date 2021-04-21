@@ -16,16 +16,36 @@ Parser::Parser(Lexer lexer)
 
 NonnullRefPtr<Statement> Parser::next_statement()
 {
+    if (match(TokenType::With)) {
+        auto common_table_expression_list = parse_common_table_expression_list();
+        return parse_statement_with_expression_list(move(common_table_expression_list));
+    }
+
+    return parse_statement();
+}
+
+NonnullRefPtr<Statement> Parser::parse_statement()
+{
     switch (m_parser_state.m_token.type()) {
     case TokenType::Create:
         return parse_create_table_statement();
     case TokenType::Drop:
         return parse_drop_table_statement();
     case TokenType::Delete:
-    case TokenType::With:
-        return parse_delete_statement();
+        return parse_delete_statement({});
     default:
         expected("CREATE, DROP, or DELETE");
+        return create_ast_node<ErrorStatement>();
+    }
+}
+
+NonnullRefPtr<Statement> Parser::parse_statement_with_expression_list(RefPtr<CommonTableExpressionList> common_table_expression_list)
+{
+    switch (m_parser_state.m_token.type()) {
+    case TokenType::Delete:
+        return parse_delete_statement(move(common_table_expression_list));
+    default:
+        expected("DELETE");
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -108,26 +128,9 @@ NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
     return create_ast_node<DropTable>(move(schema_name), move(table_name), is_error_if_table_does_not_exist);
 }
 
-NonnullRefPtr<Delete> Parser::parse_delete_statement()
+NonnullRefPtr<Delete> Parser::parse_delete_statement(RefPtr<CommonTableExpressionList> common_table_expression_list)
 {
     // https://sqlite.org/lang_delete.html
-
-    RefPtr<CommonTableExpressionList> common_table_expression_list;
-    if (consume_if(TokenType::With)) {
-        NonnullRefPtrVector<CommonTableExpression> common_table_expression;
-        bool recursive = consume_if(TokenType::Recursive);
-
-        do {
-            common_table_expression.append(parse_common_table_expression());
-            if (!match(TokenType::Comma))
-                break;
-
-            consume(TokenType::Comma);
-        } while (!match(TokenType::Eof));
-
-        common_table_expression_list = create_ast_node<CommonTableExpressionList>(recursive, move(common_table_expression));
-    }
-
     consume(TokenType::Delete);
     consume(TokenType::From);
     auto qualified_table_name = parse_qualified_table_name();
@@ -143,6 +146,23 @@ NonnullRefPtr<Delete> Parser::parse_delete_statement()
     consume(TokenType::SemiColon);
 
     return create_ast_node<Delete>(move(common_table_expression_list), move(qualified_table_name), move(where_clause), move(returning_clause));
+}
+
+NonnullRefPtr<CommonTableExpressionList> Parser::parse_common_table_expression_list()
+{
+    consume(TokenType::With);
+    bool recursive = consume_if(TokenType::Recursive);
+
+    NonnullRefPtrVector<CommonTableExpression> common_table_expression;
+    do {
+        common_table_expression.append(parse_common_table_expression());
+        if (!match(TokenType::Comma))
+            break;
+
+        consume(TokenType::Comma);
+    } while (!match(TokenType::Eof));
+
+    return create_ast_node<CommonTableExpressionList>(recursive, move(common_table_expression));
 }
 
 NonnullRefPtr<Expression> Parser::parse_expression()

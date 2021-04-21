@@ -54,6 +54,7 @@ TEST_CASE(create_table)
     EXPECT(parse("CREATE TABLE test ( column1 varchar(.abc) )").is_error());
     EXPECT(parse("CREATE TABLE test ( column1 varchar(0x) )").is_error());
     EXPECT(parse("CREATE TABLE test ( column1 varchar(0xzzz) )").is_error());
+    EXPECT(parse("WITH table AS () CREATE TABLE test ( column1 );").is_error());
 
     struct Column {
         StringView name;
@@ -118,6 +119,7 @@ TEST_CASE(drop_table)
     EXPECT(parse("DROP TABLE").is_error());
     EXPECT(parse("DROP TABLE test").is_error());
     EXPECT(parse("DROP TABLE IF test;").is_error());
+    EXPECT(parse("WITH table AS () DROP TABLE test;").is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, bool expected_is_error_if_table_does_not_exist = true) {
         auto result = parse(sql);
