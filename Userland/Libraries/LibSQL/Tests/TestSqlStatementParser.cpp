@@ -239,4 +239,4 @@ TEST_CASE(delete_)
     validate("WITH RECURSIVE table AS () DELETE FROM table;", { true, "table", {} }, {}, "table", {}, false, false, {});
 }
 
-TEST_MAIN(SqlParser)
+TEST_MAIN(SqlStatementParser)
