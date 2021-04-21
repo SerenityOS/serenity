@@ -424,7 +424,7 @@ String Variant::to_string() const
     case Type::UnsignedInt:
         return String::number(as_uint());
     case Type::Float:
-        return String::format("%.2f", (double)as_float());
+        return String::formatted("{}", as_float());
     case Type::String:
         return as_string();
     case Type::Bitmap:
