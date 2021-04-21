@@ -29,7 +29,7 @@ constexpr int buffer_size = sample_count * sizeof(Sample);
 
 constexpr double sample_rate = 44100;
 
-constexpr double volume = 1800;
+constexpr double volume_factor = 1800;
 
 enum Switch {
     Off,
@@ -182,6 +182,14 @@ constexpr int white_keys_per_octave = 7;
 constexpr int black_keys_per_octave = 5;
 constexpr int octave_min = 1;
 constexpr int octave_max = 7;
+
+// These values represent the user-side bounds, the application may use a different scale.
+constexpr int attack_max = 1000;
+constexpr int decay_max = 1000;
+constexpr int sustain_max = 1000;
+constexpr int release_max = 1000;
+constexpr int volume_max = 1000;
+constexpr int delay_max = 8;
 
 constexpr double beats_per_minute = 60;
 constexpr int beats_per_bar = 4;
