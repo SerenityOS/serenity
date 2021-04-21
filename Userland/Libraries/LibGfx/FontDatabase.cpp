@@ -31,7 +31,6 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Typeface.h>
 #include <LibTTF/Font.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 namespace Gfx {
@@ -93,22 +92,21 @@ struct FontDatabase::Private {
 FontDatabase::FontDatabase()
     : m_private(make<Private>())
 {
-    Core::DirIterator di("/res/fonts", Core::DirIterator::SkipDots);
-    if (di.has_error()) {
-        fprintf(stderr, "DirIterator: %s\n", di.error_string());
+    Core::DirIterator dir_iterator("/res/fonts", Core::DirIterator::SkipDots);
+    if (dir_iterator.has_error()) {
+        warnln("DirIterator: {}", dir_iterator.error_string());
         exit(1);
     }
-    while (di.has_next()) {
-        String name = di.next_path();
+    while (dir_iterator.has_next()) {
+        auto path = dir_iterator.next_full_path();
 
-        auto path = String::format("/res/fonts/%s", name.characters());
-        if (name.ends_with(".font")) {
+        if (path.ends_with(".font"sv)) {
             if (auto font = Gfx::BitmapFont::load_from_file(path)) {
                 m_private->full_name_to_font_map.set(font->qualified_name(), font);
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->add_bitmap_font(font);
             }
-        } else if (name.ends_with(".ttf")) {
+        } else if (path.ends_with(".ttf"sv)) {
             // FIXME: What about .otf and .woff
             if (auto font = TTF::Font::load_from_file(path)) {
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
