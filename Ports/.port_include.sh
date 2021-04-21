@@ -13,7 +13,7 @@ HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
 HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
 HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
 
-DESTDIR="/"
+SERENITY_INSTALL_ROOT="/"
 
 maybe_source() {
     if [ -f "$1" ]; then
@@ -46,7 +46,7 @@ host_env() {
     enable_ccache
 }
 
-packagesdb="${DESTDIR}/usr/Ports/packages.db"
+packagesdb="${SERENITY_INSTALL_ROOT}/usr/Ports/packages.db"
 
 MD5SUM=md5sum
 
@@ -218,7 +218,7 @@ func_defined build || build() {
     run make $makeopts
 }
 func_defined install || install() {
-    run make DESTDIR=$DESTDIR $installopts install
+    run make DESTDIR=${SERENITY_SOURCE_DIR} $installopts install
 }
 func_defined post_install || post_install() {
     echo
@@ -248,7 +248,7 @@ func_defined clean_all || clean_all() {
 addtodb() {
     if [ ! -f "$packagesdb" ]; then
         echo "Note: $packagesdb does not exist. Creating."
-        mkdir -p "${DESTDIR}/usr/Ports/"
+        mkdir -p "${SERENITY_INSTALL_ROOT}/usr/Ports/"
         touch "$packagesdb"
     fi
     if ! grep -E "^(auto|manual) $port $version" "$packagesdb" > /dev/null; then
@@ -281,10 +281,10 @@ uninstall() {
             for f in `cat plist`; do
                 case $f in
                     */)
-                        run rmdir "${DESTDIR}/$f" || true
+                        run rmdir "${SERENITY_INSTALL_ROOT}/$f" || true
                         ;;
                     *)
-                        run rm -rf "${DESTDIR}/$f"
+                        run rm -rf "${SERENITY_INSTALL_ROOT}/$f"
                         ;;
                 esac
             done
