@@ -101,6 +101,62 @@ private:
     NonnullRefPtr<TypeName> m_type_name;
 };
 
+class CommonTableExpression : public ASTNode {
+public:
+    CommonTableExpression(String table_name, Vector<String> column_names)
+        : m_table_name(move(table_name))
+        , m_column_names(move(column_names))
+    {
+    }
+
+    const String& table_name() const { return m_table_name; }
+    const Vector<String>& column_names() const { return m_column_names; }
+
+private:
+    String m_table_name;
+    Vector<String> m_column_names;
+};
+
+class QualifiedTableName : public ASTNode {
+public:
+    QualifiedTableName(String schema_name, String table_name, String alias)
+        : m_schema_name(move(schema_name))
+        , m_table_name(move(table_name))
+        , m_alias(move(alias))
+    {
+    }
+
+    const String& schema_name() const { return m_schema_name; }
+    const String& table_name() const { return m_table_name; }
+    const String& alias() const { return m_alias; }
+
+private:
+    String m_schema_name;
+    String m_table_name;
+    String m_alias;
+};
+
+class ReturningClause : public ASTNode {
+public:
+    struct ColumnClause {
+        NonnullRefPtr<Expression> expression;
+        String column_alias;
+    };
+
+    ReturningClause() = default;
+
+    explicit ReturningClause(Vector<ColumnClause> columns)
+        : m_columns(move(columns))
+    {
+    }
+
+    bool return_all_columns() const { return m_columns.is_empty(); };
+    const Vector<ColumnClause>& columns() const { return m_columns; }
+
+private:
+    Vector<ColumnClause> m_columns;
+};
+
 //==================================================================================================
 // Expressions
 //==================================================================================================
@@ -493,6 +549,31 @@ private:
     String m_schema_name;
     String m_table_name;
     bool m_is_error_if_table_does_not_exist;
+};
+
+class Delete : public Statement {
+public:
+    Delete(bool recursive, RefPtr<CommonTableExpression> common_table_expression, NonnullRefPtr<QualifiedTableName> qualified_table_name, RefPtr<Expression> where_clause, RefPtr<ReturningClause> returning_clause)
+        : m_recursive(recursive)
+        , m_common_table_expression(move(common_table_expression))
+        , m_qualified_table_name(move(qualified_table_name))
+        , m_where_clause(move(where_clause))
+        , m_returning_clause(move(returning_clause))
+    {
+    }
+
+    bool recursive() const { return m_recursive; }
+    const RefPtr<CommonTableExpression>& common_table_expression() const { return m_common_table_expression; }
+    const NonnullRefPtr<QualifiedTableName>& qualified_table_name() const { return m_qualified_table_name; }
+    const RefPtr<Expression>& where_clause() const { return m_where_clause; }
+    const RefPtr<ReturningClause>& returning_clause() const { return m_returning_clause; }
+
+private:
+    bool m_recursive;
+    RefPtr<CommonTableExpression> m_common_table_expression;
+    NonnullRefPtr<QualifiedTableName> m_qualified_table_name;
+    RefPtr<Expression> m_where_clause;
+    RefPtr<ReturningClause> m_returning_clause;
 };
 
 }
