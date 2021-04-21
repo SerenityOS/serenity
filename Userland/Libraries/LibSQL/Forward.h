@@ -18,6 +18,7 @@ class CollateExpression;
 class ColumnDefinition;
 class ColumnNameExpression;
 class CommonTableExpression;
+class CommonTableExpressionList;
 class CreateTable;
 class Delete;
 class DropTable;
