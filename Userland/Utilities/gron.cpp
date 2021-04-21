@@ -104,16 +104,16 @@ static void print(const String& name, const JsonValue& value, Vector<String>& tr
 
     if (value.is_object()) {
         printf("%s{}%s;\n", color_brace, color_off);
-        trail.append(String::format("%s%s%s.", color_name, name.characters(), color_off));
+        trail.append(String::formatted("{}{}{}.", color_name, name, color_off));
         value.as_object().for_each_member([&](auto& on, auto& ov) { print(on, ov, trail); });
         trail.take_last();
         return;
     }
     if (value.is_array()) {
         printf("%s[]%s;\n", color_brace, color_off);
-        trail.append(String::format("%s%s%s", color_name, name.characters(), color_off));
+        trail.append(String::formatted("{}{}{}", color_name, name, color_off));
         for (int i = 0; i < value.as_array().size(); ++i) {
-            auto element_name = String::format("%s%s[%s%s%d%s%s]%s", color_off, color_brace, color_off, color_index, i, color_off, color_brace, color_off);
+            auto element_name = String::formatted("{}{}[{}{}{}{}{}]{}", color_off, color_brace, color_off, color_index, i, color_off, color_brace, color_off);
             print(element_name, value.as_array()[i], trail);
         }
         trail.take_last();
