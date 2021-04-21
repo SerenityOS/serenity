@@ -118,9 +118,6 @@ TEST_CASE(intrusive_ref_ptr_destructor)
     EXPECT_EQ(1u, item->ref_count());
 }
 
-// There is currently a bug in the NonnullRefPtr specialization of IntrusiveList,
-// so this test fails to compile at the moment. Including it for future use.
-#if 0
 class IntrusiveNonnullRefPtrItem : public RefCounted<IntrusiveNonnullRefPtrItem> {
 public:
     IntrusiveNonnullRefPtrItem() = default;
@@ -143,6 +140,5 @@ TEST_CASE(intrusive_nonnull_ref_ptr_intrusive)
 
     EXPECT(nonnull_ref_list.is_empty());
 }
-#endif
 
 TEST_MAIN(IntrusiveList)
