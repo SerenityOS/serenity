@@ -72,6 +72,7 @@ private:
 
     NonnullRefPtr<CreateTable> parse_create_table_statement();
     NonnullRefPtr<DropTable> parse_drop_table_statement();
+    NonnullRefPtr<Delete> parse_delete_statement();
 
     NonnullRefPtr<Expression> parse_primary_expression();
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression> primary);
@@ -93,6 +94,9 @@ private:
     NonnullRefPtr<ColumnDefinition> parse_column_definition();
     NonnullRefPtr<TypeName> parse_type_name();
     NonnullRefPtr<SignedNumber> parse_signed_number();
+    NonnullRefPtr<CommonTableExpression> parse_common_table_expression();
+    NonnullRefPtr<QualifiedTableName> parse_qualified_table_name();
+    NonnullRefPtr<ReturningClause> parse_returning_clause();
 
     Token consume();
     Token consume(TokenType type);
