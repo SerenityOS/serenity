@@ -390,8 +390,34 @@ float PathDataParser::parse_fractional_constant()
 float PathDataParser::parse_number()
 {
     auto number = parse_fractional_constant();
-    if (match('e') || match('E'))
-        TODO();
+
+    if (!match('e') && !match('E'))
+        return number;
+    consume();
+
+    auto exponent_sign = parse_sign();
+
+    StringBuilder exponent_builder;
+    while (!done() && isdigit(ch()))
+        exponent_builder.append(consume());
+    VERIFY(exponent_builder.length() > 0);
+
+    auto exponent = exponent_builder.to_string().to_int().value();
+
+    // Fast path: If the number is 0, there's no point in computing the exponentiation.
+    if (number == 0)
+        return number;
+
+    if (exponent_sign < 0) {
+        for (int i = 0; i < exponent; ++i) {
+            number /= 10;
+        }
+    } else if (exponent_sign > 0) {
+        for (int i = 0; i < exponent; ++i) {
+            number *= 10;
+        }
+    }
+
     return number;
 }
 
