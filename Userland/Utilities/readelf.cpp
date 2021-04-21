@@ -492,9 +492,8 @@ int main(int argc, char** argv)
     if (display_elf_header) {
         printf("ELF header:\n");
 
-        String magic = String::format("%s", header.e_ident);
         printf("  Magic:                             ");
-        for (char i : magic) {
+        for (char i : StringView { header.e_ident, sizeof(header.e_ident) }) {
             if (isprint(i)) {
                 printf("%c ", i);
             } else {
