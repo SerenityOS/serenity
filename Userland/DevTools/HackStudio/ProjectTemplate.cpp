@@ -250,9 +250,9 @@ bool copy_directory(String src_path, String dst_path, bool link)
     }
 
     String src_rp = Core::File::real_path_for(src_path);
-    src_rp = String::format("%s/", src_rp.characters());
+    src_rp = String::formatted("{}/", src_rp);
     String dst_rp = Core::File::real_path_for(dst_path);
-    dst_rp = String::format("%s/", dst_rp.characters());
+    dst_rp = String::formatted("{}/", dst_rp);
 
     if (!dst_rp.is_empty() && dst_rp.starts_with(src_rp)) {
         fprintf(stderr, "cp: Cannot copy %s into itself (%s)\n",
@@ -268,8 +268,8 @@ bool copy_directory(String src_path, String dst_path, bool link)
     while (di.has_next()) {
         String filename = di.next_path();
         bool is_copied = copy_file_or_directory(
-            String::format("%s/%s", src_path.characters(), filename.characters()),
-            String::format("%s/%s", dst_path.characters(), filename.characters()),
+            String::formatted("{}/{}", src_path, filename),
+            String::formatted("{}/{}", dst_path, filename),
             true, link);
         if (!is_copied) {
             return false;
