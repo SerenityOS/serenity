@@ -537,7 +537,7 @@ public:
 
     const String to_string() const
     {
-        return String::format("[0x%02X] %s", (int)opcode_id(), name(opcode_id()));
+        return String::formatted("[0x{:02X}] {}", (int)opcode_id(), name(opcode_id()));
     }
 
     virtual const String arguments_string() const = 0;
@@ -623,7 +623,7 @@ public:
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
     const String arguments_string() const override
     {
-        return String::format("offset=%zd [&%zu]", offset(), state().instruction_position + size() + offset());
+        return String::formatted("offset={} [&{}]", offset(), state().instruction_position + size() + offset());
     }
 };
 
@@ -639,7 +639,7 @@ public:
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
     const String arguments_string() const override
     {
-        return String::format("offset=%zd [&%zu], sp: %zu", offset(), state().instruction_position + size() + offset(), state().string_position);
+        return String::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
     }
 };
 
@@ -655,7 +655,7 @@ public:
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
     const String arguments_string() const override
     {
-        return String::format("offset=%zd [&%zu], sp: %zu", offset(), state().instruction_position + size() + offset(), state().string_position);
+        return String::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
     }
 };
 
@@ -694,7 +694,7 @@ public:
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t arguments_count() const { return 1; }
     ALWAYS_INLINE BoundaryCheckType type() const { return static_cast<BoundaryCheckType>(argument(0)); }
-    const String arguments_string() const override { return String::format("kind=%lu (%s)", (long unsigned int)argument(0), boundary_check_type_name(type())); }
+    const String arguments_string() const override { return String::formatted("kind={} ({})", (long unsigned int)argument(0), boundary_check_type_name(type())); }
 };
 
 class OpCode_SaveLeftCaptureGroup final : public OpCode {
@@ -707,7 +707,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveLeftCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    const String arguments_string() const override { return String::format("id=%lu", id()); }
+    const String arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
 class OpCode_SaveRightCaptureGroup final : public OpCode {
@@ -720,7 +720,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveRightCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    const String arguments_string() const override { return String::format("id=%lu", id()); }
+    const String arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
 class OpCode_SaveLeftNamedCaptureGroup final : public OpCode {
@@ -736,7 +736,7 @@ public:
     ALWAYS_INLINE size_t length() const { return argument(1); }
     const String arguments_string() const override
     {
-        return String::format("name=%s, length=%lu", name().to_string().characters(), length());
+        return String::formatted("name={}, length={}", name(), length());
     }
 };
 
@@ -753,7 +753,7 @@ public:
     ALWAYS_INLINE size_t length() const { return argument(1); }
     const String arguments_string() const override
     {
-        return String::format("name=%s, length=%zu", name().to_string().characters(), length());
+        return String::formatted("name={}, length={}", name(), length());
     }
 };
 
