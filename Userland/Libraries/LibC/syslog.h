@@ -101,6 +101,8 @@ struct syslog_data {
 #define LOG_NDELAY (1 << 3)
 /* Log to stderr as well. */
 #define LOG_PERROR (1 << 4)
+/* Don't wait for child processes created while logging the message. */
+#define LOG_NOWAIT (1 << 5)
 
 /* This is useful to have, but has to be stored weirdly for compatibility. */
 #ifdef SYSLOG_NAMES
