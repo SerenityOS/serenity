@@ -160,6 +160,8 @@ enum class ListStyleType {
     Square,
     Decimal,
     DecimalLeadingZero,
+    LowerAlpha,
+    LowerLatin,
 };
 
 enum class Overflow : u8 {

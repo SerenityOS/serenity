@@ -5,10 +5,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 
 namespace Web::Layout {
+
+constexpr auto lower_alpha = "abcdefghijklmnopqrstuvwxyz";
 
 ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType style_type, size_t index)
     : Box(document, nullptr, CSS::StyleProperties::create())
@@ -73,6 +76,10 @@ void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
             enclosing,
             m_index < 10 ? String::formatted("0{}.", m_index) : String::formatted("{}.", m_index),
             Gfx::TextAlignment::Center);
+        break;
+    case CSS::ListStyleType::LowerAlpha:
+    case CSS::ListStyleType::LowerLatin:
+        context.painter().draw_text(enclosing, number_to_alphabet(m_index, lower_alpha), Gfx::TextAlignment::Center);
         break;
     case CSS::ListStyleType::None:
         return;
