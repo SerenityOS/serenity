@@ -63,7 +63,7 @@ void SpinBox::set_value(int value)
         on_change(value);
 }
 
-void SpinBox::set_range(int min, int max)
+void SpinBox::set_range(int min, int max, bool change)
 {
     VERIFY(min <= max);
     if (m_min == min && m_max == max)
@@ -76,7 +76,7 @@ void SpinBox::set_range(int min, int max)
     m_value = clamp(m_value, m_min, m_max);
     if (m_value != old_value) {
         m_editor->set_text(String::number(m_value));
-        if (on_change)
+        if (change && on_change)
             on_change(m_value);
     }
 
