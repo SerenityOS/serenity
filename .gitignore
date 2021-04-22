@@ -4,6 +4,7 @@
 !Makefile
 !LICENSE
 !Base/**
+!Meta/ShellCompletions/**
 
 *.o
 *.ao
