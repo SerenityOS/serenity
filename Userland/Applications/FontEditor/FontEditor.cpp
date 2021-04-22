@@ -261,6 +261,33 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     toolbar.add_separator();
     toolbar.add_action(*m_open_preview_action);
 
+    m_scale_five_action = GUI::Action::create_checkable("500%", { Mod_Ctrl, Key_1 }, [&](auto&) {
+        m_glyph_editor_widget->set_scale(5);
+        m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
+        m_left_column_container->set_fixed_width(m_glyph_editor_widget->preferred_width());
+    });
+    m_scale_five_action->set_checked(false);
+    m_scale_five_action->set_status_tip("Scale the editor in proportion to the current font");
+    m_scale_ten_action = GUI::Action::create_checkable("1000%", { Mod_Ctrl, Key_2 }, [&](auto&) {
+        m_glyph_editor_widget->set_scale(10);
+        m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
+        m_left_column_container->set_fixed_width(m_glyph_editor_widget->preferred_width());
+    });
+    m_scale_ten_action->set_checked(true);
+    m_scale_ten_action->set_status_tip("Scale the editor in proportion to the current font");
+    m_scale_fifteen_action = GUI::Action::create_checkable("1500%", { Mod_Ctrl, Key_3 }, [&](auto&) {
+        m_glyph_editor_widget->set_scale(15);
+        m_glyph_editor_container->set_fixed_size(m_glyph_editor_widget->preferred_width(), m_glyph_editor_widget->preferred_height());
+        m_left_column_container->set_fixed_width(m_glyph_editor_widget->preferred_width());
+    });
+    m_scale_fifteen_action->set_checked(false);
+    m_scale_fifteen_action->set_status_tip("Scale the editor in proportion to the current font");
+
+    m_glyph_editor_scale_actions.add_action(*m_scale_five_action);
+    m_glyph_editor_scale_actions.add_action(*m_scale_ten_action);
+    m_glyph_editor_scale_actions.add_action(*m_scale_fifteen_action);
+    m_glyph_editor_scale_actions.set_exclusive(true);
+
     GUI::Clipboard::the().on_change = [&](const String& data_type) {
         m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");
     };
@@ -446,6 +473,11 @@ void FontEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     view_menu.add_action(*m_open_preview_action);
     view_menu.add_separator();
     view_menu.add_action(*m_show_metadata_action);
+    view_menu.add_separator();
+    auto& scale_menu = view_menu.add_submenu("&Scale");
+    scale_menu.add_action(*m_scale_five_action);
+    scale_menu.add_action(*m_scale_ten_action);
+    scale_menu.add_action(*m_scale_fifteen_action);
 
     auto& help_menu = menubar.add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
