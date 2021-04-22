@@ -19,6 +19,7 @@ interface Document : Node {
     HTMLCollection getElementsByClassName(DOMString className);
 
     readonly attribute HTMLCollection applets;
+    readonly attribute HTMLCollection anchors;
 
     Element createElement(DOMString tagName);
     Element createElementNS(DOMString? namespace, DOMString qualifiedName);
