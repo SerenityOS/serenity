@@ -27,7 +27,6 @@
                 @GUI::SpinBox {
                     name: "height_spinbox"
                     min: 0
-                    max: 34
                 }
             }
 
@@ -44,7 +43,6 @@
                 @GUI::SpinBox {
                     name: "width_spinbox"
                     min: 0
-                    max: 34
                 }
             }
 
@@ -61,7 +59,6 @@
                 @GUI::SpinBox {
                     name: "mean_line_spinbox"
                     min: 0
-                    max: 32
                 }
             }
 
@@ -78,7 +75,6 @@
                 @GUI::SpinBox {
                     name: "baseline_spinbox"
                     min: 0
-                    max: 32
                 }
             }
 

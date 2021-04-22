@@ -23,6 +23,9 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
+static constexpr int s_max_width = 32;
+static constexpr int s_max_height = 36;
+
 namespace GUI {
 
 class GlyphPreviewWidget final : public Frame {
@@ -33,10 +36,13 @@ public:
         m_width = width;
         m_height = height;
         m_glyph_width = width;
-        if (m_width > 25 || m_height > 20)
-            set_scale(6);
-        if (m_width <= 25 && m_height <= 20)
-            set_scale(10);
+        for (int i = 10; i > 0; i--) {
+            if ((frame_thickness() * 2 + (m_width * i) - 1) <= 250
+                && (frame_thickness() * 2 + (m_height * i) - 1) <= 205) {
+                set_scale(i);
+                break;
+            }
+        }
         set_fixed_width(frame_thickness() * 2 + (m_width * m_scale) - 1);
         set_fixed_height(frame_thickness() * 2 + (m_height * m_scale) - 1);
     }
@@ -114,7 +120,7 @@ private:
     int m_glyph_width { 20 };
     int m_mean_line { 2 };
     int m_baseline { 16 };
-    u8 m_bits[34][34] {};
+    u8 m_bits[s_max_width][s_max_height] {};
 };
 
 }
@@ -176,8 +182,12 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
 
     m_glyph_height_spinbox->set_value(20);
     m_glyph_width_spinbox->set_value(20);
-    m_mean_line_spinbox->set_value(3);
+    m_glyph_height_spinbox->set_max(s_max_height);
+    m_glyph_width_spinbox->set_max(s_max_width);
+    m_mean_line_spinbox->set_value(2);
     m_baseline_spinbox->set_value(16);
+    m_mean_line_spinbox->set_max(max(m_glyph_height_spinbox->value() - 2, 0));
+    m_baseline_spinbox->set_max(max(m_glyph_height_spinbox->value() - 2, 0));
     m_spacing_spinbox->set_value(1);
     m_fixed_width_checkbox->set_checked(false);
 
@@ -193,6 +203,8 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
     };
     m_glyph_height_spinbox->on_change = [&](int value) {
         preview_editor.set_preview_size(m_glyph_width_spinbox->value(), value);
+        m_mean_line_spinbox->set_max(max(value - 2, 0));
+        m_baseline_spinbox->set_max(max(value - 2, 0));
         deferred_invoke([&] {
             m_glyph_editor_container->set_fixed_height(1 + preview_editor.height() + preview_editor.frame_thickness() * 2);
         });
