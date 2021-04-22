@@ -652,9 +652,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         auto size_parts = parts[0].split_view('/');
         if (size_parts.size() == 2) {
             auto size = parse_css_value(context, size_parts[0]);
-            if (!size)
+            auto line_height = parse_css_value(context, size_parts[1]);
+            if (!size || !line_height)
                 return;
             style.set_property(CSS::PropertyID::FontSize, size.release_nonnull());
+            style.set_property(CSS::PropertyID::LineHeight, line_height.release_nonnull());
         } else if (size_parts.size() == 1) {
             auto size = parse_css_value(context, parts[0]);
             if (!size)
