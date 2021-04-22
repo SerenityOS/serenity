@@ -82,8 +82,8 @@ public:
     bool is_focused() const;
     virtual bool is_focusable() const { return false; }
 
-    NonnullRefPtrVector<Element> get_elements_by_tag_name(const FlyString&) const;
-    NonnullRefPtrVector<Element> get_elements_by_class_name(const FlyString&) const;
+    NonnullRefPtr<HTMLCollection> get_elements_by_tag_name(FlyString const&);
+    NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
 
     ShadowRoot* shadow_root() { return m_shadow_root; }
     const ShadowRoot* shadow_root() const { return m_shadow_root; }
