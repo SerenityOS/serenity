@@ -26,8 +26,6 @@ private:
 
     void save_metadata();
 
-    RefPtr<Gfx::BitmapFont> m_font_clone;
-
     struct NewFontMetadata {
         u8 glyph_width;
         u8 glyph_height;
