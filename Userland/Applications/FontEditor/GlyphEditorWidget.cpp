@@ -68,7 +68,10 @@ void GlyphEditorWidget::copy_glyph()
 
     StringBuilder glyph_builder;
     if (m_glyph < 128) {
-        glyph_builder.append(m_glyph);
+        if (m_glyph == 10)
+            glyph_builder.append("LF");
+        else
+            glyph_builder.append(m_glyph);
     } else {
         glyph_builder.append(128 | 64 | (m_glyph / 64));
         glyph_builder.append(128 | (m_glyph % 64));
