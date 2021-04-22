@@ -12,6 +12,7 @@
 namespace Web::Layout {
 
 constexpr auto lower_alpha = "abcdefghijklmnopqrstuvwxyz";
+constexpr auto upper_alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType style_type, size_t index)
     : Box(document, nullptr, CSS::StyleProperties::create())
@@ -80,6 +81,10 @@ void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
     case CSS::ListStyleType::LowerAlpha:
     case CSS::ListStyleType::LowerLatin:
         context.painter().draw_text(enclosing, number_to_alphabet(m_index, lower_alpha), Gfx::TextAlignment::Center);
+        break;
+    case CSS::ListStyleType::UpperAlpha:
+    case CSS::ListStyleType::UpperLatin:
+        context.painter().draw_text(enclosing, number_to_alphabet(m_index, upper_alpha), Gfx::TextAlignment::Center);
         break;
     case CSS::ListStyleType::None:
         return;
