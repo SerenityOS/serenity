@@ -241,8 +241,12 @@ Glyph BitmapFont::glyph(u32 code_point) const
 
 int BitmapFont::glyph_or_emoji_width(u32 code_point) const
 {
-    if (code_point < m_glyph_count)
-        return glyph_width(code_point);
+    if (code_point < m_glyph_count) {
+        if (m_glyph_widths[code_point] > 0)
+            return glyph_width(code_point);
+        else
+            return glyph_width('?');
+    }
 
     if (m_fixed_width)
         return m_glyph_width;
