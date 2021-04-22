@@ -578,6 +578,10 @@ Optional<CSS::ListStyleType> StyleProperties::list_style_type() const
         return CSS::ListStyleType::Decimal;
     case CSS::ValueID::DecimalLeadingZero:
         return CSS::ListStyleType::DecimalLeadingZero;
+    case CSS::ValueID::LowerAlpha:
+        return CSS::ListStyleType::LowerAlpha;
+    case CSS::ValueID::LowerLatin:
+        return CSS::ListStyleType::LowerLatin;
     default:
         return {};
     }
