@@ -276,7 +276,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Column::PurgeableNonvolatile:
             return pretty_byte_size(thread.current_state.amount_purgeable_nonvolatile);
         case Column::CPU:
-            return thread.current_state.cpu_percent;
+            return String::formatted("{:.2}", thread.current_state.cpu_percent);
         case Column::Processor:
             return thread.current_state.cpu;
         case Column::Name:
