@@ -142,7 +142,10 @@ void Label::wrap_text()
         case '\t':
         case ' ': {
             if (start.has_value())
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                 words.append(m_text.substring(start.value(), i - start.value()));
+#pragma GCC diagnostic pop
             start.clear();
             continue;
         }
