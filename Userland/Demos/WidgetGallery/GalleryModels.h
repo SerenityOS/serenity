@@ -106,7 +106,7 @@ private:
 
 class FileIconsModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<MouseCursorModel> create() { return adopt(*new FileIconsModel); }
+    static NonnullRefPtr<FileIconsModel> create() { return adopt(*new FileIconsModel); }
     virtual ~FileIconsModel() override { }
 
     enum Column {
