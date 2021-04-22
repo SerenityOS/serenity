@@ -160,7 +160,7 @@ static Gfx::FloatSize solve_replaced_size_constraint(float w, float h, const Rep
     return { w, h };
 }
 
-float FormattingContext::compute_auto_height_for_block_level_element(const Box& box)
+static float compute_auto_height_for_block_level_element(const Box& box)
 {
     Optional<float> top;
     Optional<float> bottom;
