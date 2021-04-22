@@ -104,6 +104,8 @@
   "line-through",
   "list-item",
   "lowercase",
+  "lower-alpha",
+  "lower-latin",
   "medium",
   "move",
   "ne-resize",
