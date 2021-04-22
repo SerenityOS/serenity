@@ -82,9 +82,21 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
     input.regex_options = m_regex_options | regex_options.value_or({}).value();
     input.start_offset = m_pattern.start_offset;
     output.operations = 0;
+    size_t lines_to_skip = 0;
 
-    if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
-        VERIFY(views.size() == 1);
+    if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
+        if (views.size() > 1 && input.start_offset > views.first().length()) {
+            dbgln("Started with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
+            for (auto& view : views) {
+                if (input.start_offset < view.length() + 1)
+                    break;
+                ++lines_to_skip;
+                input.start_offset -= view.length() + 1;
+                input.global_offset += view.length() + 1;
+            }
+            dbgln("Ended with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
+        }
+    }
 
     if (c_match_preallocation_count) {
         output.matches.ensure_capacity(c_match_preallocation_count);
@@ -127,6 +139,11 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
         continue_search = false;
 
     for (auto& view : views) {
+        if (lines_to_skip != 0) {
+            ++input.line;
+            --lines_to_skip;
+            continue;
+        }
         input.view = view;
         dbgln_if(REGEX_DEBUG, "[match] Starting match with view ({}): _{}_", view.length(), view);
 
