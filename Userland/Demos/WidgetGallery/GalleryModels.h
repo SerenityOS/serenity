@@ -64,8 +64,8 @@ public:
             Cursor cursor;
             cursor.path = move(path);
             cursor.bitmap = Gfx::Bitmap::load_from_file(cursor.path);
-            auto filename_split = cursor.path.split('.');
-            cursor.name = filename_split[0];
+            auto filename_split = cursor.path.split('/');
+            cursor.name = filename_split[2];
             m_cursors.append(move(cursor));
         }
 
@@ -143,8 +143,8 @@ public:
                 continue;
             IconSet icon_set;
             icon_set.big_icon = Gfx::Bitmap::load_from_file(path);
-            auto filename_split = path.split('.');
-            icon_set.name = filename_split[0];
+            auto filename_split = path.split('/');
+            icon_set.name = filename_split[3];
             m_icon_sets.append(move(icon_set));
         }
 
@@ -158,8 +158,8 @@ public:
                 continue;
             IconSet icon_set;
             icon_set.little_icon = Gfx::Bitmap::load_from_file(path);
-            auto filename_split = path.split('.');
-            icon_set.name = filename_split[0];
+            auto filename_split = path.split('/');
+            icon_set.name = filename_split[3];
             for (size_t i = 0; i < big_icons_found; i++) {
                 if (icon_set.name == m_icon_sets[i].name) {
                     m_icon_sets[i].little_icon = icon_set.little_icon;
