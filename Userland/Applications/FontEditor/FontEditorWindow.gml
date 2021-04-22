@@ -31,13 +31,24 @@
                 layout: @GUI::VerticalBoxLayout {
                 }
 
-                @GUI::SpinBox {
-                    name: "glyph_editor_width_spinbox"
-                }
+                @GUI::Widget {
+                    layout: @GUI::HorizontalBoxLayout {
+                    }
 
-                @GUI::CheckBox {
-                    name: "glyph_editor_present_checkbox"
-                    text: "Glyph Present"
+                    @GUI::SpinBox {
+                        name: "glyph_editor_width_spinbox"
+                    }
+
+                    @GUI::CheckBox {
+                        name: "glyph_editor_present_checkbox"
+                        text: "Show"
+                    }
+
+                    @GUI::Button {
+                        name: "move_glyph_button"
+                        fixed_width: 22
+                        button_style: "Coolbar"
+                    }
                 }
             }
 
