@@ -133,6 +133,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
         auto view_length = view.length();
         size_t view_index = m_pattern.start_offset;
         state.string_position = view_index;
+        bool succeeded = false;
 
         if (view_index == view_length && m_pattern.parser_result.match_length_minimum == 0) {
             // Run the code until it tries to consume something.
@@ -182,6 +183,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                 return { false, 0, {}, {}, {}, output.operations };
 
             if (success.value()) {
+                succeeded = true;
 
                 if (input.regex_options.has_flag_set(AllFlags::MatchNotEndOfLine) && state.string_position == input.view.length()) {
                     if (!continue_search)
@@ -229,6 +231,9 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 
         if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
             m_pattern.start_offset = state.string_position;
+
+        if (succeeded && !continue_search)
+            break;
     }
 
     MatchOutput output_copy;
