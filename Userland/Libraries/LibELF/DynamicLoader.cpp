@@ -125,7 +125,7 @@ bool DynamicLoader::validate()
 
 void* DynamicLoader::symbol_for_name(const StringView& name)
 {
-    auto result = m_dynamic_object->hash_section().lookup_symbol(name, compute_gnu_hash(name), compute_sysv_hash(name));
+    auto result = m_dynamic_object->hash_section().lookup_symbol(name);
     if (!result.has_value())
         return nullptr;
     auto symbol = result.value();

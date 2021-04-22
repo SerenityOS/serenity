@@ -428,18 +428,18 @@ static const char* name_for_dtag(Elf32_Sword d_tag)
 
 auto DynamicObject::lookup_symbol(const StringView& name) const -> Optional<SymbolLookupResult>
 {
-    return lookup_symbol(name, compute_gnu_hash(name), compute_sysv_hash(name));
+    return lookup_symbol(HashSymbol { name });
 }
 
-auto DynamicObject::lookup_symbol(const StringView& name, u32 gnu_hash, u32 sysv_hash) const -> Optional<SymbolLookupResult>
+auto DynamicObject::lookup_symbol(const HashSymbol& symbol) const -> Optional<SymbolLookupResult>
 {
-    auto result = hash_section().lookup_symbol(name, gnu_hash, sysv_hash);
+    auto result = hash_section().lookup_symbol(symbol);
     if (!result.has_value())
         return {};
-    auto symbol = result.value();
-    if (symbol.is_undefined())
+    auto symbol_result = result.value();
+    if (symbol_result.is_undefined())
         return {};
-    return SymbolLookupResult { symbol.value(), symbol.address(), symbol.bind(), this };
+    return SymbolLookupResult { symbol_result.value(), symbol_result.address(), symbol_result.bind(), this };
 }
 
 NonnullRefPtr<DynamicObject> DynamicObject::create(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address)
@@ -469,4 +469,17 @@ VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
     return symbol_location;
 }
 
+u32 DynamicObject::HashSymbol::gnu_hash() const
+{
+    if (!m_gnu_hash.has_value())
+        m_gnu_hash = compute_gnu_hash(m_name);
+    return m_gnu_hash.value();
+}
+
+u32 DynamicObject::HashSymbol::sysv_hash() const
+{
+    if (!m_sysv_hash.has_value())
+        m_sysv_hash = compute_sysv_hash(m_name);
+    return m_sysv_hash.value();
+}
 } // end namespace ELF
