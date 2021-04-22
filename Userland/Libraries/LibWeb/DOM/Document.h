@@ -140,6 +140,8 @@ public:
     NonnullRefPtr<HTMLCollection> get_elements_by_tag_name(FlyString const&);
     NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
 
+    NonnullRefPtr<HTMLCollection> applets();
+
     const String& source() const { return m_source; }
     void set_source(const String& source) { m_source = source; }
 
