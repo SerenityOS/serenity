@@ -49,6 +49,11 @@ private:
     RefPtr<GUI::Action> m_open_preview_action;
     RefPtr<GUI::Action> m_show_metadata_action;
 
+    GUI::ActionGroup m_glyph_editor_scale_actions;
+    RefPtr<GUI::Action> m_scale_five_action;
+    RefPtr<GUI::Action> m_scale_ten_action;
+    RefPtr<GUI::Action> m_scale_fifteen_action;
+
     RefPtr<GUI::Window> m_font_preview_window;
     RefPtr<GUI::Widget> m_left_column_container;
     RefPtr<GUI::Widget> m_glyph_editor_container;

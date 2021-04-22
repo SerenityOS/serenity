@@ -183,3 +183,11 @@ int GlyphEditorWidget::preferred_height() const
 {
     return frame_thickness() * 2 + font().glyph_height() * m_scale - 1;
 }
+
+void GlyphEditorWidget::set_scale(int scale)
+{
+    if (m_scale == scale)
+        return;
+    m_scale = clamp(scale, 1, 15);
+    update();
+}

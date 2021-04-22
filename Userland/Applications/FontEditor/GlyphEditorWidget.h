@@ -31,6 +31,9 @@ public:
     Gfx::BitmapFont& font() { return *m_font; }
     const Gfx::BitmapFont& font() const { return *m_font; }
 
+    int scale() const { return m_scale; }
+    void set_scale(int scale);
+
     Function<void(int)> on_glyph_altered;
 
 private:
