@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Petróczi Zoltán <petroczizoltan@tutanota.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
