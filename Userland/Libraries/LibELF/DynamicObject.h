@@ -162,6 +162,23 @@ public:
         GNU
     };
 
+    class HashSymbol {
+    public:
+        HashSymbol(const StringView& name)
+            : m_name(name)
+        {
+        }
+
+        StringView name() const { return m_name; }
+        u32 gnu_hash() const;
+        u32 sysv_hash() const;
+
+    private:
+        StringView m_name;
+        mutable Optional<u32> m_gnu_hash;
+        mutable Optional<u32> m_sysv_hash;
+    };
+
     class HashSection : public Section {
     public:
         HashSection(const Section& section, HashType hash_type)
@@ -170,11 +187,11 @@ public:
         {
         }
 
-        Optional<Symbol> lookup_symbol(const StringView& name, u32 gnu_hash, u32 sysv_hash) const
+        Optional<Symbol> lookup_symbol(const HashSymbol& symbol) const
         {
             if (m_hash_type == HashType::SYSV)
-                return lookup_sysv_symbol(name, sysv_hash);
-            return lookup_gnu_symbol(name, gnu_hash);
+                return lookup_sysv_symbol(symbol.name(), symbol.sysv_hash());
+            return lookup_gnu_symbol(symbol.name(), symbol.gnu_hash());
         }
 
     private:
@@ -253,7 +270,7 @@ public:
     };
 
     Optional<SymbolLookupResult> lookup_symbol(const StringView& name) const;
-    Optional<SymbolLookupResult> lookup_symbol(const StringView& name, u32 gnu_hash, u32 sysv_hash) const;
+    Optional<SymbolLookupResult> lookup_symbol(const HashSymbol& symbol) const;
 
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
     VirtualAddress patch_plt_entry(u32 relocation_offset);
