@@ -770,6 +770,11 @@ public:
     virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}, bool without_side_effects = false) const override;
 )~~~");
     }
+    if (interface.extended_attributes.contains("CustomGetByIndex")) {
+        generator.append(R"~~~(
+    virtual JS::Value get_by_index(u32 property_index) const override;
+)~~~");
+    }
     if (interface.extended_attributes.contains("CustomPut")) {
         generator.append(R"~~~(
     virtual bool put(const JS::PropertyName&, JS::Value, JS::Value receiver = {}) override;
