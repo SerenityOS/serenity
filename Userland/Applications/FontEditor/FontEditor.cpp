@@ -35,6 +35,17 @@
 #include <LibGfx/Palette.h>
 #include <stdlib.h>
 
+static constexpr int s_pangram_count = 7;
+static const char* pangrams[s_pangram_count] = {
+    "quick fox jumps nightly above wizard",
+    "five quacking zephyrs jolt my wax bed",
+    "pack my box with five dozen liquor jugs",
+    "quick brown fox jumps over the lazy dog",
+    "waxy and quivering jocks fumble the pizza",
+    "~#:[@_1%]*{$2.3}/4^(5'6\")-&|7+8!=<9,0\\>?;",
+    "byxfjärmat föl gick på duvshowen"
+};
+
 static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
 {
     auto window = GUI::Window::construct();
@@ -61,8 +72,12 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
         preview_label.set_font(editor.edited_font());
     };
 
-    auto& preview_textbox = main_widget.add<GUI::TextBox>();
-    preview_textbox.set_text("waxy and quivering jocks fumble the pizza");
+    auto& textbox_button_container = main_widget.add<GUI::Widget>();
+    textbox_button_container.set_layout<GUI::HorizontalBoxLayout>();
+    textbox_button_container.set_fixed_height(22);
+
+    auto& preview_textbox = textbox_button_container.add<GUI::TextBox>();
+    preview_textbox.set_text(pangrams[0]);
     preview_textbox.set_placeholder("Preview text");
 
     preview_textbox.on_change = [&] {
@@ -70,6 +85,17 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
             preview_textbox.text(),
             preview_textbox.text().to_uppercase());
         preview_label.set_text(preview);
+    };
+
+    auto& reload_button = textbox_button_container.add<GUI::Button>();
+    reload_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"));
+    reload_button.set_fixed_width(22);
+    reload_button.on_click = [&] {
+        static int i = 1;
+        if (i >= s_pangram_count)
+            i = 0;
+        preview_textbox.set_text(pangrams[i]);
+        i++;
     };
 
     return window;
