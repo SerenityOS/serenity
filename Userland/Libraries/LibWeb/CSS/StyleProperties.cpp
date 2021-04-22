@@ -92,10 +92,15 @@ void StyleProperties::load_font() const
     auto family_parts = family_value.split(',');
     auto family = family_parts[0];
 
-    if (family.is_one_of("monospace", "ui-monospace"))
+    auto monospace = false;
+    auto bold = false;
+
+    if (family.is_one_of("monospace", "ui-monospace")) {
+        monospace = true;
         family = "Csilla";
-    else if (family.is_one_of("serif", "sans-serif", "cursive", "fantasy", "ui-serif", "ui-sans-serif", "ui-rounded"))
+    } else if (family.is_one_of("serif", "sans-serif", "cursive", "fantasy", "ui-serif", "ui-sans-serif", "ui-rounded")) {
         family = "Katica";
+    }
 
     int weight = 400;
     if (font_weight->is_identifier()) {
@@ -126,6 +131,8 @@ void StyleProperties::load_font() const
             weight = 700;
         weight = 900;
     }
+
+    bold = weight > 400;
 
     int size = 10;
     if (font_size->is_identifier()) {
@@ -177,11 +184,25 @@ void StyleProperties::load_font() const
 
     if (!found_font) {
         dbgln("Font not found: '{}' {} {}", family, size, weight);
-        found_font = Gfx::FontDatabase::default_font();
+        found_font = font_fallback(monospace, bold);
     }
 
     m_font = found_font;
     FontCache::the().set(font_selector, *m_font);
+}
+
+RefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bold) const
+{
+    if (monospace && bold)
+        return Gfx::FontDatabase::default_bold_fixed_width_font();
+
+    if (monospace)
+        return Gfx::FontDatabase::default_fixed_width_font();
+
+    if (bold)
+        return Gfx::FontDatabase::default_bold_font();
+
+    return Gfx::FontDatabase::default_font();
 }
 
 float StyleProperties::line_height(const Layout::Node& layout_node) const

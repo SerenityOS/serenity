@@ -76,6 +76,7 @@ private:
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
 
     void load_font() const;
+    RefPtr<Gfx::Font> font_fallback(bool monospace, bool bold) const;
 
     mutable RefPtr<Gfx::Font> m_font;
 };
