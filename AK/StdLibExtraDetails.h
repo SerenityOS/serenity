@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Ali Mohammad Pur <ali.mpfard@gmail.com>
+ * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
