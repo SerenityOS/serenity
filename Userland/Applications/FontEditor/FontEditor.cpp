@@ -442,6 +442,9 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
 
     m_presentation_spinbox->set_value(m_edited_font->presentation_size());
     m_spacing_spinbox->set_value(m_edited_font->glyph_spacing());
+
+    m_mean_line_spinbox->set_range(0, max(m_edited_font->glyph_height() - 2, 0), false);
+    m_baseline_spinbox->set_range(0, max(m_edited_font->glyph_height() - 2, 0), false);
     m_mean_line_spinbox->set_value(m_edited_font->mean_line());
     m_baseline_spinbox->set_value(m_edited_font->baseline());
 

@@ -175,7 +175,6 @@
                     @GUI::SpinBox {
                         name: "mean_line_spinbox"
                         min: 0
-                        max: 32
                     }
                 }
 
@@ -193,7 +192,6 @@
                     @GUI::SpinBox {
                         name: "baseline_spinbox"
                         min: 0
-                        max: 32
                     }
                 }
 
