@@ -35,6 +35,7 @@ public:
     void set_scale(int scale);
 
     Function<void(int)> on_glyph_altered;
+    Function<void(bool finalize)> on_undo_event;
 
 private:
     GlyphEditorWidget() {};
