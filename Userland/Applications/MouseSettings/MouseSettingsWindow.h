@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Idan Horowitz <idan.horowitz@gmail.com>
+ * Copyright (c) 2020, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers
  *
  * SPDX-License-Identifier: BSD-2-Clause
