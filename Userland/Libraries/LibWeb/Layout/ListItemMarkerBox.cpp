@@ -21,6 +21,21 @@ ListItemMarkerBox::~ListItemMarkerBox()
 {
 }
 
+static const String number_to_alphabet(unsigned int number, const String alphabet)
+{
+    auto base = alphabet.length();
+    StringBuilder output_string;
+    while (number > base) {
+        number--;
+        auto remainder = number % base;
+        number -= remainder;
+        output_string.append(alphabet[remainder]);
+        number /= base;
+    };
+    output_string.append(alphabet[number - 1]);
+    return output_string.to_string().reverse();
+}
+
 void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
 {
     if (phase != PaintPhase::Foreground)
