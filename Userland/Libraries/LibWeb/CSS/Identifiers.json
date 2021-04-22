@@ -160,6 +160,8 @@
   "text",
   "underline",
   "uppercase",
+  "upper-alpha",
+  "upper-latin",
   "visible",
   "vertical-text",
   "wait",
