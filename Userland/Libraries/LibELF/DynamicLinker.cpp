@@ -45,15 +45,14 @@ bool g_allowed_to_check_environment_variables { false };
 bool g_do_breakpoint_trap_before_entry { false };
 }
 
-Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(const StringView& symbol)
+Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(const StringView& name)
 {
     Optional<DynamicObject::SymbolLookupResult> weak_result;
 
-    auto gnu_hash = compute_gnu_hash(symbol);
-    auto sysv_hash = compute_sysv_hash(symbol);
+    auto symbol = DynamicObject::HashSymbol { name };
 
     for (auto& lib : g_global_objects) {
-        auto res = lib->lookup_symbol(symbol, gnu_hash, sysv_hash);
+        auto res = lib->lookup_symbol(symbol);
         if (!res.has_value())
             continue;
         if (res.value().bind == STB_GLOBAL)
