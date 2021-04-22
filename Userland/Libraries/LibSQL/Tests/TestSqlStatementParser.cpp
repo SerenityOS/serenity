@@ -234,4 +234,168 @@ TEST_CASE(delete_)
     validate("WITH RECURSIVE table AS () DELETE FROM table;", { true, { { "table", {} } } }, {}, "table", {}, false, false, {});
 }
 
+TEST_CASE(select)
+{
+    EXPECT(parse("SELECT").is_error());
+    EXPECT(parse("SELECT;").is_error());
+    EXPECT(parse("SELECT DISTINCT;").is_error());
+    EXPECT(parse("SELECT ALL;").is_error());
+    EXPECT(parse("SELECT *").is_error());
+    EXPECT(parse("SELECT * FROM;").is_error());
+    EXPECT(parse("SELECT table. FROM table;").is_error());
+    EXPECT(parse("SELECT * FROM (").is_error());
+    EXPECT(parse("SELECT * FROM ()").is_error());
+    EXPECT(parse("SELECT * FROM ();").is_error());
+    EXPECT(parse("SELECT * FROM (table1)").is_error());
+    EXPECT(parse("SELECT * FROM (table1, )").is_error());
+    EXPECT(parse("SELECT * FROM (table1, table2)").is_error());
+    EXPECT(parse("SELECT * FROM table").is_error());
+    EXPECT(parse("SELECT * FROM table WHERE;").is_error());
+    EXPECT(parse("SELECT * FROM table WHERE 1 ==1").is_error());
+    EXPECT(parse("SELECT * FROM table GROUP;").is_error());
+    EXPECT(parse("SELECT * FROM table GROUP BY;").is_error());
+    EXPECT(parse("SELECT * FROM table GROUP BY column").is_error());
+    EXPECT(parse("SELECT * FROM table ORDER:").is_error());
+    EXPECT(parse("SELECT * FROM table ORDER BY column").is_error());
+    EXPECT(parse("SELECT * FROM table ORDER BY column COLLATE:").is_error());
+    EXPECT(parse("SELECT * FROM table ORDER BY column COLLATE collation").is_error());
+    EXPECT(parse("SELECT * FROM table ORDER BY column NULLS;").is_error());
+    EXPECT(parse("SELECT * FROM table ORDER BY column NULLS SECOND;").is_error());
+    EXPECT(parse("SELECT * FROM table LIMIT;").is_error());
+    EXPECT(parse("SELECT * FROM table LIMIT 12").is_error());
+    EXPECT(parse("SELECT * FROM table LIMIT 12 OFFSET;").is_error());
+    EXPECT(parse("SELECT * FROM table LIMIT 12 OFFSET 15").is_error());
+
+    struct Type {
+        SQL::ResultType type;
+        StringView table_name_or_column_alias {};
+    };
+
+    struct From {
+        StringView schema_name;
+        StringView table_name;
+        StringView table_alias;
+    };
+
+    struct Ordering {
+        String collation_name;
+        SQL::Order order;
+        SQL::Nulls nulls;
+    };
+
+    auto validate = [](StringView sql, Vector<Type> expected_columns, Vector<From> expected_from_list, bool expect_where_clause, size_t expected_group_by_size, bool expect_having_clause, Vector<Ordering> expected_ordering, bool expect_limit_clause, bool expect_offset_clause) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto statement = result.release_value();
+        EXPECT(is<SQL::Select>(*statement));
+
+        const auto& select = static_cast<const SQL::Select&>(*statement);
+
+        const auto& result_column_list = select.result_column_list();
+        EXPECT_EQ(result_column_list.size(), expected_columns.size());
+        for (size_t i = 0; i < result_column_list.size(); ++i) {
+            const auto& result_column = result_column_list[i];
+            const auto& expected_column = expected_columns[i];
+            EXPECT_EQ(result_column.type(), expected_column.type);
+
+            switch (result_column.type()) {
+            case SQL::ResultType::All:
+                EXPECT(expected_column.table_name_or_column_alias.is_null());
+                break;
+            case SQL::ResultType::Table:
+                EXPECT_EQ(result_column.table_name(), expected_column.table_name_or_column_alias);
+                break;
+            case SQL::ResultType::Expression:
+                EXPECT_EQ(result_column.column_alias(), expected_column.table_name_or_column_alias);
+                break;
+            }
+        }
+
+        const auto& table_or_subquery_list = select.table_or_subquery_list();
+        EXPECT_EQ(table_or_subquery_list.size(), expected_from_list.size());
+        for (size_t i = 0; i < table_or_subquery_list.size(); ++i) {
+            const auto& result_from = table_or_subquery_list[i];
+            const auto& expected_from = expected_from_list[i];
+            EXPECT_EQ(result_from.schema_name(), expected_from.schema_name);
+            EXPECT_EQ(result_from.table_name(), expected_from.table_name);
+            EXPECT_EQ(result_from.table_alias(), expected_from.table_alias);
+        }
+
+        const auto& where_clause = select.where_clause();
+        EXPECT_EQ(where_clause.is_null(), !expect_where_clause);
+        if (where_clause)
+            EXPECT(!is<SQL::ErrorExpression>(*where_clause));
+
+        const auto& group_by_clause = select.group_by_clause();
+        EXPECT_EQ(group_by_clause.is_null(), (expected_group_by_size == 0));
+        if (group_by_clause) {
+            const auto& group_by_list = group_by_clause->group_by_list();
+            EXPECT_EQ(group_by_list.size(), expected_group_by_size);
+            for (size_t i = 0; i < group_by_list.size(); ++i)
+                EXPECT(!is<SQL::ErrorExpression>(group_by_list[i]));
+
+            const auto& having_clause = group_by_clause->having_clause();
+            EXPECT_EQ(having_clause.is_null(), !expect_having_clause);
+            if (having_clause)
+                EXPECT(!is<SQL::ErrorExpression>(*having_clause));
+        }
+
+        const auto& ordering_term_list = select.ordering_term_list();
+        EXPECT_EQ(ordering_term_list.size(), expected_ordering.size());
+        for (size_t i = 0; i < ordering_term_list.size(); ++i) {
+            const auto& result_order = ordering_term_list[i];
+            const auto& expected_order = expected_ordering[i];
+            EXPECT(!is<SQL::ErrorExpression>(*result_order.expression()));
+            EXPECT_EQ(result_order.collation_name(), expected_order.collation_name);
+            EXPECT_EQ(result_order.order(), expected_order.order);
+            EXPECT_EQ(result_order.nulls(), expected_order.nulls);
+        }
+
+        const auto& limit_clause = select.limit_clause();
+        EXPECT_EQ(limit_clause.is_null(), !expect_limit_clause);
+        if (limit_clause) {
+            const auto& limit_expression = limit_clause->limit_expression();
+            EXPECT(!is<SQL::ErrorExpression>(*limit_expression));
+
+            const auto& offset_expression = limit_clause->offset_expression();
+            EXPECT_EQ(offset_expression.is_null(), !expect_offset_clause);
+            if (offset_expression)
+                EXPECT(!is<SQL::ErrorExpression>(*offset_expression));
+        }
+    };
+
+    Vector<Type> all { { SQL::ResultType::All } };
+    Vector<From> from { { {}, "table", {} } };
+
+    validate("SELECT * FROM table;", { { SQL::ResultType::All } }, from, false, 0, false, {}, false, false);
+    validate("SELECT table.* FROM table;", { { SQL::ResultType::Table, "table" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT column AS alias FROM table;", { { SQL::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT table.column AS alias FROM table;", { { SQL::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT schema.table.column AS alias FROM table;", { { SQL::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT column AS alias, *, table.* FROM table;", { { SQL::ResultType::Expression, "alias" }, { SQL::ResultType::All }, { SQL::ResultType::Table, "table" } }, from, false, 0, false, {}, false, false);
+
+    validate("SELECT * FROM table;", all, { { {}, "table", {} } }, false, 0, false, {}, false, false);
+    validate("SELECT * FROM schema.table;", all, { { "schema", "table", {} } }, false, 0, false, {}, false, false);
+    validate("SELECT * FROM schema.table AS alias;", all, { { "schema", "table", "alias" } }, false, 0, false, {}, false, false);
+    validate("SELECT * FROM schema.table AS alias, table2, table3 AS table4;", all, { { "schema", "table", "alias" }, { {}, "table2", {} }, { {}, "table3", "table4" } }, false, 0, false, {}, false, false);
+
+    validate("SELECT * FROM table WHERE column IS NOT NULL;", all, from, true, 0, false, {}, false, false);
+
+    validate("SELECT * FROM table GROUP BY column;", all, from, false, 1, false, {}, false, false);
+    validate("SELECT * FROM table GROUP BY column1, column2, column3;", all, from, false, 3, false, {}, false, false);
+    validate("SELECT * FROM table GROUP BY column HAVING 'abc';", all, from, false, 1, true, {}, false, false);
+
+    validate("SELECT * FROM table ORDER BY column;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::First } }, false, false);
+    validate("SELECT * FROM table ORDER BY column COLLATE collation;", all, from, false, 0, false, { { "collation", SQL::Order::Ascending, SQL::Nulls::First } }, false, false);
+    validate("SELECT * FROM table ORDER BY column ASC;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::First } }, false, false);
+    validate("SELECT * FROM table ORDER BY column DESC;", all, from, false, 0, false, { { {}, SQL::Order::Descending, SQL::Nulls::Last } }, false, false);
+    validate("SELECT * FROM table ORDER BY column ASC NULLS LAST;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::Last } }, false, false);
+    validate("SELECT * FROM table ORDER BY column DESC NULLS FIRST;", all, from, false, 0, false, { { {}, SQL::Order::Descending, SQL::Nulls::First } }, false, false);
+    validate("SELECT * FROM table ORDER BY column1, column2 DESC, column3 NULLS LAST;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::First }, { {}, SQL::Order::Descending, SQL::Nulls::Last }, { {}, SQL::Order::Ascending, SQL::Nulls::Last } }, false, false);
+
+    validate("SELECT * FROM table LIMIT 15;", all, from, false, 0, false, {}, true, false);
+    validate("SELECT * FROM table LIMIT 15 OFFSET 16;", all, from, false, 0, false, {}, true, true);
+}
+
 TEST_MAIN(SqlStatementParser)

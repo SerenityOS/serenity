@@ -33,8 +33,10 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_drop_table_statement();
     case TokenType::Delete:
         return parse_delete_statement({});
+    case TokenType::Select:
+        return parse_select_statement({});
     default:
-        expected("CREATE, DROP, or DELETE");
+        expected("CREATE, DROP, DELETE, or SELECT");
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -44,8 +46,10 @@ NonnullRefPtr<Statement> Parser::parse_statement_with_expression_list(RefPtr<Com
     switch (m_parser_state.m_token.type()) {
     case TokenType::Delete:
         return parse_delete_statement(move(common_table_expression_list));
+    case TokenType::Select:
+        return parse_select_statement(move(common_table_expression_list));
     default:
-        expected("DELETE");
+        expected("DELETE or SELECT");
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -146,6 +150,94 @@ NonnullRefPtr<Delete> Parser::parse_delete_statement(RefPtr<CommonTableExpressio
     consume(TokenType::SemiColon);
 
     return create_ast_node<Delete>(move(common_table_expression_list), move(qualified_table_name), move(where_clause), move(returning_clause));
+}
+
+NonnullRefPtr<Select> Parser::parse_select_statement(RefPtr<CommonTableExpressionList> common_table_expression_list)
+{
+    // https://sqlite.org/lang_select.html
+    consume(TokenType::Select);
+
+    bool select_all = !consume_if(TokenType::Distinct);
+    consume_if(TokenType::All); // ALL is the default, so ignore it if specified.
+
+    NonnullRefPtrVector<ResultColumn> result_column_list;
+    do {
+        result_column_list.append(parse_result_column());
+        if (!match(TokenType::Comma))
+            break;
+        consume(TokenType::Comma);
+    } while (!match(TokenType::Eof));
+
+    NonnullRefPtrVector<TableOrSubquery> table_or_subquery_list;
+    if (consume_if(TokenType::From)) {
+        // FIXME: Parse join-clause.
+
+        do {
+            table_or_subquery_list.append(parse_table_or_subquery());
+            if (!match(TokenType::Comma))
+                break;
+            consume(TokenType::Comma);
+        } while (!match(TokenType::Eof));
+    }
+
+    RefPtr<Expression> where_clause;
+    if (consume_if(TokenType::Where))
+        where_clause = parse_expression();
+
+    RefPtr<GroupByClause> group_by_clause;
+    if (consume_if(TokenType::Group)) {
+        consume(TokenType::By);
+
+        NonnullRefPtrVector<Expression> group_by_list;
+        do {
+            group_by_list.append(parse_expression());
+            if (!match(TokenType::Comma))
+                break;
+            consume(TokenType::Comma);
+        } while (!match(TokenType::Eof));
+
+        RefPtr<Expression> having_clause;
+        if (consume_if(TokenType::Having))
+            having_clause = parse_expression();
+
+        group_by_clause = create_ast_node<GroupByClause>(move(group_by_list), move(having_clause));
+    }
+
+    // FIXME: Parse 'WINDOW window-name AS window-defn'.
+    // FIXME: Parse 'compound-operator'.
+
+    NonnullRefPtrVector<OrderingTerm> ordering_term_list;
+    if (consume_if(TokenType::Order)) {
+        consume(TokenType::By);
+
+        do {
+            ordering_term_list.append(parse_ordering_term());
+            if (!match(TokenType::Comma))
+                break;
+            consume(TokenType::Comma);
+        } while (!match(TokenType::Eof));
+    }
+
+    RefPtr<LimitClause> limit_clause;
+    if (consume_if(TokenType::Limit)) {
+        auto limit_expression = parse_expression();
+
+        RefPtr<Expression> offset_expression;
+        if (consume_if(TokenType::Offset)) {
+            offset_expression = parse_expression();
+        } else {
+            // Note: The limit clause may instead be definied as "offset-expression, limit-expression", effectively reversing the
+            // order of the expressions. SQLite notes "this is counter-intuitive" and "to avoid confusion, programmers are strongly
+            // encouraged to ... avoid using a LIMIT clause with a comma-separated offset."
+            VERIFY(!consume_if(TokenType::Comma));
+        }
+
+        limit_clause = create_ast_node<LimitClause>(move(limit_expression), move(offset_expression));
+    }
+
+    consume(TokenType::SemiColon);
+
+    return create_ast_node<Select>(move(common_table_expression_list), select_all, move(result_column_list), move(table_or_subquery_list), move(where_clause), move(group_by_clause), move(ordering_term_list), move(limit_clause));
 }
 
 NonnullRefPtr<CommonTableExpressionList> Parser::parse_common_table_expression_list()
@@ -297,17 +389,22 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_literal_value_expression()
     return {};
 }
 
-Optional<NonnullRefPtr<Expression>> Parser::parse_column_name_expression()
+Optional<NonnullRefPtr<Expression>> Parser::parse_column_name_expression(String with_parsed_identifier, bool with_parsed_period)
 {
-    if (!match(TokenType::Identifier))
+    if (with_parsed_identifier.is_null() && !match(TokenType::Identifier))
         return {};
 
-    String first_identifier = consume(TokenType::Identifier).value();
+    String first_identifier;
+    if (with_parsed_identifier.is_null())
+        first_identifier = consume(TokenType::Identifier).value();
+    else
+        first_identifier = move(with_parsed_identifier);
+
     String schema_name;
     String table_name;
     String column_name;
 
-    if (consume_if(TokenType::Period)) {
+    if (with_parsed_period || consume_if(TokenType::Period)) {
         String second_identifier = consume(TokenType::Identifier).value();
 
         if (consume_if(TokenType::Period)) {
@@ -739,6 +836,107 @@ NonnullRefPtr<ReturningClause> Parser::parse_returning_clause()
     } while (!match(TokenType::Eof));
 
     return create_ast_node<ReturningClause>(move(columns));
+}
+
+NonnullRefPtr<ResultColumn> Parser::parse_result_column()
+{
+    // https://sqlite.org/syntax/result-column.html
+    if (consume_if(TokenType::Asterisk))
+        return create_ast_node<ResultColumn>();
+
+    // If we match an identifier now, we don't know whether it is a table-name of the form "table-name.*", or if it is the start of a
+    // column-name-expression, until we try to parse the asterisk. So if we consume an indentifier and a period, but don't find an
+    // asterisk, hold onto that information to form a column-name-expression later.
+    String table_name;
+    bool parsed_period = false;
+
+    if (match(TokenType::Identifier)) {
+        table_name = consume().value();
+        parsed_period = consume_if(TokenType::Period);
+        if (parsed_period && consume_if(TokenType::Asterisk))
+            return create_ast_node<ResultColumn>(move(table_name));
+    }
+
+    auto expression = table_name.is_null()
+        ? parse_expression()
+        : static_cast<NonnullRefPtr<Expression>>(*parse_column_name_expression(move(table_name), parsed_period));
+    consume_if(TokenType::As); // 'AS' is optional.
+
+    String column_alias;
+    if (match(TokenType::Identifier))
+        column_alias = consume().value();
+
+    return create_ast_node<ResultColumn>(move(expression), move(column_alias));
+}
+
+NonnullRefPtr<TableOrSubquery> Parser::parse_table_or_subquery()
+{
+    // https://sqlite.org/syntax/table-or-subquery.html
+    if (match(TokenType::Identifier)) {
+        String schema_or_table_name = consume().value();
+        String schema_name;
+        String table_name;
+
+        if (consume_if(TokenType::Period)) {
+            schema_name = move(schema_or_table_name);
+            table_name = consume(TokenType::Identifier).value();
+        } else {
+            table_name = move(schema_or_table_name);
+        }
+
+        consume_if(TokenType::As); // 'AS' is optional.
+
+        String table_alias;
+        if (match(TokenType::Identifier))
+            table_alias = consume().value();
+
+        return create_ast_node<TableOrSubquery>(move(schema_name), move(table_name), move(table_alias));
+    }
+
+    consume(TokenType::ParenOpen);
+    // FIXME: Parse join-clause.
+
+    NonnullRefPtrVector<TableOrSubquery> subqueries;
+    while (!has_errors() && !match(TokenType::Eof)) {
+        subqueries.append(parse_table_or_subquery());
+        if (!match(TokenType::Comma))
+            break;
+        consume(TokenType::Comma);
+    }
+
+    consume(TokenType::ParenClose);
+
+    return create_ast_node<TableOrSubquery>(move(subqueries));
+}
+
+NonnullRefPtr<OrderingTerm> Parser::parse_ordering_term()
+{
+    // https://sqlite.org/syntax/ordering-term.html
+    auto expression = parse_expression();
+
+    String collation_name;
+    if (is<CollateExpression>(*expression)) {
+        const auto& collate = static_cast<const CollateExpression&>(*expression);
+        collation_name = collate.collation_name();
+        expression = collate.expression();
+    } else if (consume_if(TokenType::Collate)) {
+        collation_name = consume(TokenType::Identifier).value();
+    }
+
+    Order order = consume_if(TokenType::Desc) ? Order::Descending : Order::Ascending;
+    consume_if(TokenType::Asc); // ASC is the default, so ignore it if specified.
+
+    Nulls nulls = order == Order::Ascending ? Nulls::First : Nulls::Last;
+    if (consume_if(TokenType::Nulls)) {
+        if (consume_if(TokenType::First))
+            nulls = Nulls::First;
+        else if (consume_if(TokenType::Last))
+            nulls = Nulls::Last;
+        else
+            expected("FIRST or LAST");
+    }
+
+    return create_ast_node<OrderingTerm>(move(expression), move(collation_name), order, nulls);
 }
 
 Token Parser::consume()

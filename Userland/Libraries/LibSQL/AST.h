@@ -154,6 +154,148 @@ private:
     Vector<ColumnClause> m_columns;
 };
 
+enum class ResultType {
+    All,
+    Table,
+    Expression,
+};
+
+class ResultColumn : public ASTNode {
+public:
+    ResultColumn() = default;
+
+    explicit ResultColumn(String table_name)
+        : m_type(ResultType::Table)
+        , m_table_name(move(table_name))
+    {
+    }
+
+    ResultColumn(NonnullRefPtr<Expression> expression, String column_alias)
+        : m_type(ResultType::Expression)
+        , m_expression(move(expression))
+        , m_column_alias(move(column_alias))
+    {
+    }
+
+    ResultType type() const { return m_type; }
+
+    bool select_from_table() const { return !m_table_name.is_null(); }
+    const String& table_name() const { return m_table_name; }
+
+    bool select_from_expression() const { return !m_expression.is_null(); }
+    const RefPtr<Expression>& expression() const { return m_expression; }
+    const String& column_alias() const { return m_column_alias; }
+
+private:
+    ResultType m_type { ResultType::All };
+
+    String m_table_name {};
+
+    RefPtr<Expression> m_expression {};
+    String m_column_alias {};
+};
+
+class GroupByClause : public ASTNode {
+public:
+    GroupByClause(NonnullRefPtrVector<Expression> group_by_list, RefPtr<Expression> having_clause)
+        : m_group_by_list(move(group_by_list))
+        , m_having_clause(move(having_clause))
+    {
+        VERIFY(!m_group_by_list.is_empty());
+    }
+
+    const NonnullRefPtrVector<Expression>& group_by_list() const { return m_group_by_list; }
+    const RefPtr<Expression>& having_clause() const { return m_having_clause; }
+
+private:
+    NonnullRefPtrVector<Expression> m_group_by_list;
+    RefPtr<Expression> m_having_clause;
+};
+
+class TableOrSubquery : public ASTNode {
+public:
+    TableOrSubquery() = default;
+
+    TableOrSubquery(String schema_name, String table_name, String table_alias)
+        : m_is_table(true)
+        , m_schema_name(move(schema_name))
+        , m_table_name(move(table_name))
+        , m_table_alias(move(table_alias))
+    {
+    }
+
+    explicit TableOrSubquery(NonnullRefPtrVector<TableOrSubquery> subqueries)
+        : m_is_subquery(!subqueries.is_empty())
+        , m_subqueries(move(subqueries))
+    {
+    }
+
+    bool is_table() const { return m_is_table; }
+    const String& schema_name() const { return m_schema_name; }
+    const String& table_name() const { return m_table_name; }
+    const String& table_alias() const { return m_table_alias; }
+
+    bool is_subquery() const { return m_is_subquery; }
+    const NonnullRefPtrVector<TableOrSubquery>& subqueries() const { return m_subqueries; }
+
+private:
+    bool m_is_table { false };
+    String m_schema_name {};
+    String m_table_name {};
+    String m_table_alias {};
+
+    bool m_is_subquery { false };
+    NonnullRefPtrVector<TableOrSubquery> m_subqueries {};
+};
+
+enum class Order {
+    Ascending,
+    Descending,
+};
+
+enum class Nulls {
+    First,
+    Last,
+};
+
+class OrderingTerm : public ASTNode {
+public:
+    OrderingTerm(NonnullRefPtr<Expression> expression, String collation_name, Order order, Nulls nulls)
+        : m_expression(move(expression))
+        , m_collation_name(move(collation_name))
+        , m_order(order)
+        , m_nulls(nulls)
+    {
+    }
+
+    const NonnullRefPtr<Expression>& expression() const { return m_expression; }
+    const String& collation_name() const { return m_collation_name; }
+    Order order() const { return m_order; }
+    Nulls nulls() const { return m_nulls; }
+
+private:
+    NonnullRefPtr<Expression> m_expression;
+    String m_collation_name;
+    Order m_order;
+    Nulls m_nulls;
+};
+
+class LimitClause : public ASTNode {
+public:
+    LimitClause(NonnullRefPtr<Expression> limit_expression, RefPtr<Expression> offset_expression)
+        : m_limit_expression(move(limit_expression))
+        , m_offset_expression(move(offset_expression))
+    {
+    }
+
+    const NonnullRefPtr<Expression>& limit_expression() const { return m_limit_expression; }
+    const RefPtr<Expression>& offset_expression() const { return m_offset_expression; }
+
+private:
+    NonnullRefPtr<Expression> m_limit_expression;
+    RefPtr<Expression> m_offset_expression;
+};
+
 //==================================================================================================
 // Expressions
 //==================================================================================================
@@ -568,6 +710,40 @@ private:
     NonnullRefPtr<QualifiedTableName> m_qualified_table_name;
     RefPtr<Expression> m_where_clause;
     RefPtr<ReturningClause> m_returning_clause;
+};
+
+class Select : public Statement {
+public:
+    Select(RefPtr<CommonTableExpressionList> common_table_expression_list, bool select_all, NonnullRefPtrVector<ResultColumn> result_column_list, NonnullRefPtrVector<TableOrSubquery> table_or_subquery_list, RefPtr<Expression> where_clause, RefPtr<GroupByClause> group_by_clause, NonnullRefPtrVector<OrderingTerm> ordering_term_list, RefPtr<LimitClause> limit_clause)
+        : m_common_table_expression_list(move(common_table_expression_list))
+        , m_select_all(move(select_all))
+        , m_result_column_list(move(result_column_list))
+        , m_table_or_subquery_list(move(table_or_subquery_list))
+        , m_where_clause(move(where_clause))
+        , m_group_by_clause(move(group_by_clause))
+        , m_ordering_term_list(move(ordering_term_list))
+        , m_limit_clause(move(limit_clause))
+    {
+    }
+
+    const RefPtr<CommonTableExpressionList>& common_table_expression_list() const { return m_common_table_expression_list; }
+    bool select_all() const { return m_select_all; }
+    const NonnullRefPtrVector<ResultColumn>& result_column_list() const { return m_result_column_list; }
+    const NonnullRefPtrVector<TableOrSubquery>& table_or_subquery_list() const { return m_table_or_subquery_list; }
+    const RefPtr<Expression>& where_clause() const { return m_where_clause; }
+    const RefPtr<GroupByClause>& group_by_clause() const { return m_group_by_clause; }
+    const NonnullRefPtrVector<OrderingTerm>& ordering_term_list() const { return m_ordering_term_list; }
+    const RefPtr<LimitClause>& limit_clause() const { return m_limit_clause; }
+
+private:
+    RefPtr<CommonTableExpressionList> m_common_table_expression_list;
+    bool m_select_all;
+    NonnullRefPtrVector<ResultColumn> m_result_column_list;
+    NonnullRefPtrVector<TableOrSubquery> m_table_or_subquery_list;
+    RefPtr<Expression> m_where_clause;
+    RefPtr<GroupByClause> m_group_by_clause;
+    NonnullRefPtrVector<OrderingTerm> m_ordering_term_list;
+    RefPtr<LimitClause> m_limit_clause;
 };
 
 }
