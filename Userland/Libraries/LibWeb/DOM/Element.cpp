@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +14,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
@@ -325,31 +326,22 @@ bool Element::is_focused() const
     return document().focused_element() == this;
 }
 
-NonnullRefPtrVector<Element> Element::get_elements_by_tag_name(const FlyString& tag_name) const
+NonnullRefPtr<HTMLCollection> Element::get_elements_by_tag_name(FlyString const& tag_name)
 {
     // FIXME: Support "*" for tag_name
     // https://dom.spec.whatwg.org/#concept-getelementsbytagname
-    NonnullRefPtrVector<Element> elements;
-    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (element.namespace_() == Namespace::HTML
-                ? element.local_name().to_lowercase() == tag_name.to_lowercase()
-                : element.local_name() == tag_name) {
-            elements.append(element);
-        }
-        return IterationDecision::Continue;
+    return HTMLCollection::create(*this, [tag_name](Element const& element) {
+        if (element.namespace_() == Namespace::HTML)
+            return element.local_name().to_lowercase() == tag_name.to_lowercase();
+        return element.local_name() == tag_name;
     });
-    return elements;
 }
 
-NonnullRefPtrVector<Element> Element::get_elements_by_class_name(const FlyString& class_name) const
+NonnullRefPtr<HTMLCollection> Element::get_elements_by_class_name(FlyString const& class_name)
 {
-    NonnullRefPtrVector<Element> elements;
-    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (element.has_class(class_name, m_document->in_quirks_mode() ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
-            elements.append(element);
-        return IterationDecision::Continue;
+    return HTMLCollection::create(*this, [class_name, quirks_mode = document().in_quirks_mode()](Element const& element) {
+        return element.has_class(class_name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive);
     });
-    return elements;
 }
 
 void Element::set_shadow_root(RefPtr<ShadowRoot> shadow_root)
