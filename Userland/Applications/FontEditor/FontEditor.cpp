@@ -126,12 +126,30 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     m_glyph_editor_widget = m_glyph_editor_container->add<GlyphEditorWidget>();
     m_glyph_map_widget = glyph_map_container.add<GlyphMapWidget>();
 
+    auto update_statusbar = [&] {
+        auto glyph = m_glyph_map_widget->selected_glyph();
+        StringBuilder builder;
+        builder.appendff("{:#02x} (", glyph);
+        if (glyph < 128) {
+            if (glyph == 10)
+                builder.append("LF");
+            else
+                builder.append(glyph);
+        } else {
+            builder.append(128 | 64 | (glyph / 64));
+            builder.append(128 | (glyph % 64));
+        }
+        builder.append(") ");
+        builder.appendff("[{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
+        statusbar.set_text(builder.to_string());
+    };
+
     auto update_demo = [&] {
         if (m_font_preview_window)
             m_font_preview_window->update();
     };
 
-    m_new_action = GUI::Action::create("New Font...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-font.png"), [&](auto&) {
+    m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-font.png"), [&](auto&) {
         auto new_font_wizard = NewFontDialog::construct(window());
         if (new_font_wizard->exec() == GUI::Dialog::ExecOK) {
             auto metadata = new_font_wizard->new_font_metadata();
@@ -166,6 +184,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
             initialize(path, move(new_font));
         }
     });
+    m_new_action->set_status_tip("Create a new font");
     m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/");
         if (!open_path.has_value())
@@ -217,17 +236,19 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         m_glyph_editor_width_spinbox->set_value(glyph_width);
         m_glyph_editor_present_checkbox->set_checked(glyph_width > 0);
     });
-    m_open_preview_action = GUI::Action::create("Preview Font", Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
+    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
         if (!m_font_preview_window)
             m_font_preview_window = create_font_preview_window(*this);
         m_font_preview_window->show();
         m_font_preview_window->move_to_front();
     });
     m_open_preview_action->set_checked(false);
-    m_show_metadata_action = GUI::Action::create_checkable("Font Metadata", { Mod_Ctrl, Key_M }, [&](auto& action) {
+    m_open_preview_action->set_status_tip("Preview the current font");
+    m_show_metadata_action = GUI::Action::create_checkable("Font &Metadata", { Mod_Ctrl, Key_M }, [&](auto& action) {
         set_show_font_metadata(action.is_checked());
     });
     m_show_metadata_action->set_checked(true);
+    m_show_metadata_action->set_status_tip("Show or hide metadata about the current font");
 
     toolbar.add_action(*m_new_action);
     toolbar.add_action(*m_open_action);
@@ -254,20 +275,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         auto glyph_width = m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph());
         m_glyph_editor_width_spinbox->set_value(glyph_width);
         m_glyph_editor_present_checkbox->set_checked(glyph_width > 0);
-        StringBuilder builder;
-        builder.appendff("{:#02x} (", glyph);
-        if (glyph < 128) {
-            if (glyph == 10)
-                builder.append("LF");
-            else
-                builder.append(glyph);
-        } else {
-            builder.append(128 | 64 | (glyph / 64));
-            builder.append(128 | (glyph % 64));
-        }
-        builder.append(") ");
-        builder.appendff("[{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
-        statusbar.set_text(builder.to_string());
+        update_statusbar();
     };
 
     m_name_textbox->on_change = [&] {
@@ -289,18 +297,22 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         update_demo();
     };
 
-    m_glyph_editor_width_spinbox->on_change = [this, update_demo](int value) {
+    m_glyph_editor_width_spinbox->on_change = [this, update_demo, update_statusbar](int value) {
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), value);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
         update_demo();
+        update_statusbar();
     };
 
-    m_glyph_editor_present_checkbox->on_checked = [this, update_demo](bool checked) {
+    m_glyph_editor_present_checkbox->on_checked = [this, update_demo, update_statusbar](bool checked) {
+        if (!m_edited_font->is_fixed_width())
+            return;
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), checked ? m_edited_font->glyph_fixed_width() : 0);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
         update_demo();
+        update_statusbar();
     };
 
     m_weight_combobox->on_change = [this]() {
@@ -332,6 +344,17 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         m_edited_font->set_mean_line(value);
         m_glyph_editor_widget->update();
         update_demo();
+    };
+
+    GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
+        auto text = action.status_tip();
+        if (text.is_empty())
+            text = Gfx::parse_ampersand_string(action.text());
+        statusbar.set_override_text(move(text));
+    };
+
+    GUI::Application::the()->on_action_leave = [&statusbar](GUI::Action&) {
+        statusbar.set_override_text({});
     };
 
     initialize(path, move(edited_font));
