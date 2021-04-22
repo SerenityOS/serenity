@@ -229,8 +229,8 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
             VERIFY(!data.is_null());
             StringBuilder builder;
             SourceGenerator generator { builder };
-            generator.set("failed_url", failed_url.to_string());
-            generator.set("error", error);
+            generator.set("failed_url", escape_html_entities(failed_url.to_string()));
+            generator.set("error", escape_html_entities(error));
             generator.append(data);
             auto document = HTML::parse_html_document(generator.as_string_view(), failed_url, "utf-8");
             VERIFY(document);
