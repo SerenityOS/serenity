@@ -12,6 +12,7 @@ set(SOURCES
     NewFontDialog.cpp
     NewFontDialogPage1GML.h
     NewFontDialogPage2GML.h
+    UndoGlyph.h
 )
 
 serenity_app(FontEditor ICON app-font-editor)

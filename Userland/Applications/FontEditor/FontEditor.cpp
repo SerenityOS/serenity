@@ -236,6 +236,14 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         m_glyph_editor_width_spinbox->set_value(glyph_width);
         m_glyph_editor_present_checkbox->set_checked(glyph_width > 0);
     });
+    m_undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
+        undo();
+    });
+    m_undo_action->set_enabled(false);
+    m_redo_action = GUI::CommonActions::make_redo_action([&](auto&) {
+        redo();
+    });
+    m_redo_action->set_enabled(false);
     m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
         if (!m_font_preview_window)
             m_font_preview_window = create_font_preview_window(*this);
@@ -258,6 +266,9 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     toolbar.add_action(*m_copy_action);
     toolbar.add_action(*m_paste_action);
     toolbar.add_action(*m_delete_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_undo_action);
+    toolbar.add_action(*m_redo_action);
     toolbar.add_separator();
     toolbar.add_action(*m_open_preview_action);
 
@@ -297,7 +308,16 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         update_demo();
     };
 
-    m_glyph_map_widget->on_glyph_selected = [&](int glyph) {
+    m_glyph_editor_widget->on_undo_event = [this](bool finalize) {
+        m_undo_stack->push(make<GlyphUndoCommand>(*m_undo_glyph));
+        if (finalize)
+            m_undo_stack->finalize_current_combo();
+        did_change_undo_stack();
+    };
+
+    m_glyph_map_widget->on_glyph_selected = [&, update_statusbar](int glyph) {
+        if (m_undo_glyph)
+            m_undo_glyph->set_code_point(glyph);
         m_glyph_editor_widget->set_glyph(glyph);
         auto glyph_width = m_edited_font->raw_glyph_width(m_glyph_map_widget->selected_glyph());
         m_glyph_editor_width_spinbox->set_value(glyph_width);
@@ -447,6 +467,10 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
         m_glyph_map_widget->scroll_to_glyph(m_glyph_map_widget->selected_glyph());
     });
 
+    m_undo_stack = make<GUI::UndoStack>();
+    m_undo_glyph = adopt(*new UndoGlyph(m_glyph_map_widget->selected_glyph(), *m_edited_font));
+    did_change_undo_stack();
+
     if (on_initialize)
         on_initialize();
 }
@@ -464,6 +488,9 @@ void FontEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     }));
 
     auto& edit_menu = menubar.add_menu("&Edit");
+    edit_menu.add_action(*m_undo_action);
+    edit_menu.add_action(*m_redo_action);
+    edit_menu.add_separator();
     edit_menu.add_action(*m_cut_action);
     edit_menu.add_action(*m_copy_action);
     edit_menu.add_action(*m_paste_action);
@@ -503,4 +530,36 @@ void FontEditorWidget::set_show_font_metadata(bool show)
         return;
     m_font_metadata = show;
     m_font_metadata_groupbox->set_visible(m_font_metadata);
+}
+
+void FontEditorWidget::undo()
+{
+    if (!m_undo_stack->can_undo())
+        return;
+    m_undo_stack->undo();
+    did_change_undo_stack();
+
+    m_glyph_editor_widget->update();
+    m_glyph_map_widget->update();
+    if (m_font_preview_window)
+        m_font_preview_window->update();
+}
+
+void FontEditorWidget::redo()
+{
+    if (!m_undo_stack->can_redo())
+        return;
+    m_undo_stack->redo();
+    did_change_undo_stack();
+
+    m_glyph_editor_widget->update();
+    m_glyph_map_widget->update();
+    if (m_font_preview_window)
+        m_font_preview_window->update();
+}
+
+void FontEditorWidget::did_change_undo_stack()
+{
+    m_undo_action->set_enabled(m_undo_stack->can_undo());
+    m_redo_action->set_enabled(m_undo_stack->can_redo());
 }
