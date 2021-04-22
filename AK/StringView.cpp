@@ -172,17 +172,6 @@ bool StringView::equals_ignoring_case(const StringView& other) const
     return StringUtils::equals_ignoring_case(*this, other);
 }
 
-StringView StringView::substring_view(size_t start, size_t length) const
-{
-    VERIFY(start + length <= m_length);
-    return { m_characters + start, length };
-}
-StringView StringView::substring_view(size_t start) const
-{
-    VERIFY(start <= m_length);
-    return { m_characters + start, length() - start };
-}
-
 StringView StringView::substring_view_starting_from_substring(const StringView& substring) const
 {
     const char* remaining_characters = substring.characters_without_null_termination();

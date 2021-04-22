@@ -46,15 +46,15 @@ public:
     StringView(const String&);
     StringView(const FlyString&);
 
-    [[nodiscard]] bool is_null() const { return !m_characters; }
-    [[nodiscard]] bool is_empty() const { return m_length == 0; }
+    [[nodiscard]] constexpr bool is_null() const { return !m_characters; }
+    [[nodiscard]] constexpr bool is_empty() const { return m_length == 0; }
 
     [[nodiscard]] const char* characters_without_null_termination() const { return m_characters; }
-    [[nodiscard]] size_t length() const { return m_length; }
+    [[nodiscard]] constexpr size_t length() const { return m_length; }
 
     [[nodiscard]] ReadonlyBytes bytes() const { return { m_characters, m_length }; }
 
-    const char& operator[](size_t index) const { return m_characters[index]; }
+    constexpr const char& operator[](size_t index) const { return m_characters[index]; }
 
     using ConstIterator = SimpleIterator<const StringView, const char>;
 
@@ -84,8 +84,17 @@ public:
     Optional<size_t> find(const StringView&) const;
     Optional<size_t> find(char c) const;
 
-    [[nodiscard]] StringView substring_view(size_t start, size_t length) const;
-    [[nodiscard]] StringView substring_view(size_t start) const;
+    [[nodiscard]] constexpr StringView substring_view(size_t start, size_t length) const
+    {
+        VERIFY(start + length <= m_length);
+        return { m_characters + start, length };
+    }
+
+    [[nodiscard]] constexpr StringView substring_view(size_t start) const
+    {
+        return substring_view(start, length() - start);
+    }
+
     [[nodiscard]] Vector<StringView> split_view(char, bool keep_empty = false) const;
     [[nodiscard]] Vector<StringView> split_view(const StringView&, bool keep_empty = false) const;
 
@@ -166,7 +175,7 @@ public:
 
     bool operator==(const String&) const;
 
-    bool operator==(const StringView& other) const
+    constexpr bool operator==(const StringView& other) const
     {
         if (is_null())
             return other.is_null();
@@ -177,7 +186,7 @@ public:
         return !__builtin_memcmp(m_characters, other.m_characters, m_length);
     }
 
-    bool operator!=(const StringView& other) const
+    constexpr bool operator!=(const StringView& other) const
     {
         return !(*this == other);
     }
