@@ -108,6 +108,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     auto& statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     auto& glyph_map_container = *find_descendant_of_type_named<GUI::Widget>("glyph_map_container");
+    auto& move_glyph_button = *find_descendant_of_type_named<GUI::Button>("move_glyph_button");
     m_glyph_editor_container = *find_descendant_of_type_named<GUI::Widget>("glyph_editor_container");
     m_left_column_container = *find_descendant_of_type_named<GUI::Widget>("left_column_container");
     m_glyph_editor_width_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("glyph_editor_width_spinbox");
@@ -298,6 +299,15 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     m_glyph_editor_scale_actions.add_action(*m_scale_ten_action);
     m_glyph_editor_scale_actions.add_action(*m_scale_fifteen_action);
     m_glyph_editor_scale_actions.set_exclusive(true);
+
+    move_glyph_button.on_click = [&] {
+        if (move_glyph_button.is_checked())
+            m_glyph_editor_widget->set_mode(GlyphEditorWidget::Move);
+        else
+            m_glyph_editor_widget->set_mode(GlyphEditorWidget::Paint);
+    };
+    move_glyph_button.set_checkable(true);
+    move_glyph_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/selection-move.png"));
 
     GUI::Clipboard::the().on_change = [&](const String& data_type) {
         m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");
