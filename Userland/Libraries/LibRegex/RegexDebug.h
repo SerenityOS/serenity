@@ -30,7 +30,7 @@
 #include "LibRegex/RegexMatcher.h"
 #include <AK/Debug.h>
 
-#if !REGEX_DEBUG
+#if REGEX_DEBUG
 
 namespace regex {
 
