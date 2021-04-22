@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include "UndoGlyph.h"
+#include <LibGUI/ActionGroup.h>
+#include <LibGUI/UndoStack.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/BitmapFont.h>
 
@@ -31,6 +34,11 @@ public:
 
 private:
     FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&);
+
+    void undo();
+    void redo();
+    void did_change_undo_stack();
+
     RefPtr<Gfx::BitmapFont> m_edited_font;
 
     RefPtr<GlyphMapWidget> m_glyph_map_widget;
@@ -45,6 +53,11 @@ private:
     RefPtr<GUI::Action> m_copy_action;
     RefPtr<GUI::Action> m_paste_action;
     RefPtr<GUI::Action> m_delete_action;
+
+    RefPtr<GUI::Action> m_undo_action;
+    RefPtr<GUI::Action> m_redo_action;
+    RefPtr<UndoGlyph> m_undo_glyph;
+    OwnPtr<GUI::UndoStack> m_undo_stack;
 
     RefPtr<GUI::Action> m_open_preview_action;
     RefPtr<GUI::Action> m_show_metadata_action;

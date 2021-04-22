@@ -34,10 +34,14 @@ void GlyphEditorWidget::set_glyph(int glyph)
 
 void GlyphEditorWidget::delete_glyph()
 {
+    if (on_undo_event)
+        on_undo_event(false);
     auto bitmap = font().glyph(m_glyph).glyph_bitmap();
     for (int x = 0; x < bitmap.width(); x++)
         for (int y = 0; y < bitmap.height(); y++)
             bitmap.set_bit_at(x, y, false);
+    if (on_undo_event)
+        on_undo_event(true);
     if (on_glyph_altered)
         on_glyph_altered(m_glyph);
     update();
@@ -82,6 +86,9 @@ void GlyphEditorWidget::paste_glyph()
     if (!mime_type.starts_with("glyph/"))
         return;
 
+    if (on_undo_event)
+        on_undo_event(false);
+
     auto byte_buffer = GUI::Clipboard::the().data();
     auto buffer_height = GUI::Clipboard::the().data_and_type().metadata.get("height").value().to_int();
     auto buffer_width = GUI::Clipboard::the().data_and_type().metadata.get("width").value().to_int();
@@ -102,6 +109,8 @@ void GlyphEditorWidget::paste_glyph()
                 bitmap.set_bit_at(x, y, bits[x][y]);
         }
     }
+    if (on_undo_event)
+        on_undo_event(true);
     if (on_glyph_altered)
         on_glyph_altered(m_glyph);
     update();
