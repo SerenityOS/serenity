@@ -22,7 +22,7 @@ public:
     int max() const { return m_max; }
     void set_min(int min) { set_range(min, max()); }
     void set_max(int max) { set_range(min(), max); }
-    void set_range(int min, int max);
+    void set_range(int min, int max, bool change = true);
 
     Function<void(int value)> on_change;
 
