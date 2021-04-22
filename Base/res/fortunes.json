@@ -78,5 +78,11 @@
     "utc_time": 1615228585,
     "url": "https://freenode.logbot.info/serenityos/20210308#c7177736",
     "context": "Overflow-correct code is deviously hard. https://github.com/SerenityOS/serenity/commit/183b2e71ba8d85293db493cab27b8adb4af54981"
+  },
+  {
+    "quote": "clang-format formatted your JSON file? Call Brian at bgianf@serenityos.org today! *Terms and conditions apply",
+    "author": "Andrew Kaster",
+    "utc_time": 1619133730,
+    "url": "https://discord.com/channels/830522505605283862/830739873119207426/834932114125488149"
   }
 ]
