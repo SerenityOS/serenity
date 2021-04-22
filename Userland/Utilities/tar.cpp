@@ -175,7 +175,7 @@ int main(int argc, char** argv)
             }
         };
 
-        for (const String& path : paths) {
+        for (const String path : paths) {
             if (Core::File::is_directory(path)) {
                 add_directory(path, add_directory);
             } else {

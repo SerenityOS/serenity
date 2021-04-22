@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     if (write_to_stdout)
         keep_input_files = true;
 
-    for (const String& input_filename : filenames) {
+    for (const String input_filename : filenames) {
         auto output_filename = String::formatted("{}.gz", input_filename);
 
         // We map the whole file instead of streaming to reduce size overhead (gzip header) and increase the deflate block size (better compression)
