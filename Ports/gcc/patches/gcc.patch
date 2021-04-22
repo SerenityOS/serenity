@@ -1,27 +1,27 @@
-diff -ruN a/config.sub b/config.sub
---- a/config.sub	2020-07-23 09:35:16.912379792 +0300
-+++ b/config.sub	2020-12-12 10:43:35.280270540 +0200
+diff -Naur gcc-11.1.0-RC-20210420/config.sub gcc-11.1.0-RC-20210420.serenity/config.sub
+--- gcc-11.1.0-RC-20210420/config.sub	2021-04-20 16:53:32.000000000 +0200
++++ gcc-11.1.0-RC-20210420.serenity/config.sub	2021-04-22 15:22:17.925049835 +0200
 @@ -2,7 +2,7 @@
  # Configuration validation subroutine script.
- #   Copyright 1992-2019 Free Software Foundation, Inc.
+ #   Copyright 1992-2021 Free Software Foundation, Inc.
  
--timestamp='2019-06-30'
-+timestamp='2021-04-20'
+-timestamp='2021-01-08'
++timestamp='2021-04-22'
  
  # This file is free software; you can redistribute it and/or modify it
  # under the terms of the GNU General Public License as published by
-@@ -1366,7 +1366,7 @@
+@@ -1725,7 +1725,7 @@
  	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
  	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
  	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
--	     | nsk* | powerunix)
-+	     | nsk* | powerunix | serenity*)
- 	# Remember, each alternative MUST END IN *, to match a version number.
+-	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx*)
++	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* | serenity*)
  		;;
- 	qnx*)
-diff -ruN a/fixincludes/mkfixinc.sh b/fixincludes/mkfixinc.sh
---- a/fixincludes/mkfixinc.sh	2020-07-23 09:35:16.932380013 +0300
-+++ b/fixincludes/mkfixinc.sh	2020-12-12 10:43:35.280270540 +0200
+ 	# This one is extra strict with allowed versions
+ 	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)
+diff -Naur gcc-11.1.0-RC-20210420/fixincludes/mkfixinc.sh gcc-11.1.0-RC-20210420.serenity/fixincludes/mkfixinc.sh
+--- gcc-11.1.0-RC-20210420/fixincludes/mkfixinc.sh	2021-04-20 16:53:32.000000000 +0200
++++ gcc-11.1.0-RC-20210420.serenity/fixincludes/mkfixinc.sh	2021-04-22 15:21:33.700763279 +0200
 @@ -11,6 +11,7 @@
  
  # Check for special fix rules for particular targets
@@ -30,9 +30,9 @@ diff -ruN a/fixincludes/mkfixinc.sh b/fixincludes/mkfixinc.sh
      i?86-*-cygwin* | \
      i?86-*-mingw32* | \
      x86_64-*-mingw32* | \
-diff -ruN a/gcc/config/arm/serenity-elf.h b/gcc/config/arm/serenity-elf.h
---- a/gcc/config/arm/serenity-elf.h	1970-01-01 02:00:00.000000000 +0200
-+++ b/gcc/config/arm/serenity-elf.h	2020-12-12 10:43:35.280270540 +0200
+diff -Naur gcc-11.1.0-RC-20210420/gcc/config/arm/serenity-elf.h gcc-11.1.0-RC-20210420.serenity/gcc/config/arm/serenity-elf.h
+--- gcc-11.1.0-RC-20210420/gcc/config/arm/serenity-elf.h	1970-01-01 01:00:00.000000000 +0100
++++ gcc-11.1.0-RC-20210420.serenity/gcc/config/arm/serenity-elf.h	2021-04-22 15:21:33.700763279 +0200
 @@ -0,0 +1,65 @@
 +/* Definitions of target machine for GNU compiler, NetBSD/arm ELF version.
 +   Copyright (C) 2002-2018 Free Software Foundation, Inc.
@@ -99,9 +99,9 @@ diff -ruN a/gcc/config/arm/serenity-elf.h b/gcc/config/arm/serenity-elf.h
 +
 +#undef PTRDIFF_TYPE
 +#define PTRDIFF_TYPE "long int"
-diff -ruN a/gcc/config/serenity.h b/gcc/config/serenity.h
---- a/gcc/config/serenity.h	1970-01-01 02:00:00.000000000 +0200
-+++ b/gcc/config/serenity.h	2020-12-12 10:43:35.280270540 +0200
+diff -Naur gcc-11.1.0-RC-20210420/gcc/config/serenity.h gcc-11.1.0-RC-20210420.serenity/gcc/config/serenity.h
+--- gcc-11.1.0-RC-20210420/gcc/config/serenity.h	1970-01-01 01:00:00.000000000 +0100
++++ gcc-11.1.0-RC-20210420.serenity/gcc/config/serenity.h	2021-04-22 15:21:33.700763279 +0200
 @@ -0,0 +1,44 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
@@ -147,9 +147,9 @@ diff -ruN a/gcc/config/serenity.h b/gcc/config/serenity.h
 +    builtin_assert ("system=unix");   \
 +    builtin_assert ("system=posix");   \
 +  } while(0);
-diff -ruN a/gcc/config/serenity.opt b/gcc/config/serenity.opt
---- a/gcc/config/serenity.opt	1970-01-01 01:00:00.000000000 +0100
-+++ b/gcc/config/serenity.opt	2021-04-18 11:59:44.933484216 +0200
+diff -Naur gcc-11.1.0-RC-20210420/gcc/config/serenity.opt gcc-11.1.0-RC-20210420.serenity/gcc/config/serenity.opt
+--- gcc-11.1.0-RC-20210420/gcc/config/serenity.opt	1970-01-01 01:00:00.000000000 +0100
++++ gcc-11.1.0-RC-20210420.serenity/gcc/config/serenity.opt	2021-04-22 15:21:33.700763279 +0200
 @@ -0,0 +1,32 @@
 +; SerenityOS options.
 +
@@ -183,10 +183,10 @@ diff -ruN a/gcc/config/serenity.opt b/gcc/config/serenity.opt
 +Driver
 +
 +; This comment is to ensure we retain the blank line above.
-diff -ruN a/gcc/config.gcc b/gcc/config.gcc
---- a/gcc/config.gcc	2020-07-23 09:35:17.316384243 +0300
-+++ b/gcc/config.gcc	2020-12-12 10:43:35.280270540 +0200
-@@ -675,6 +675,12 @@
+diff -Naur gcc-11.1.0-RC-20210420/gcc/config.gcc gcc-11.1.0-RC-20210420.serenity/gcc/config.gcc
+--- gcc-11.1.0-RC-20210420/gcc/config.gcc	2021-04-20 16:53:32.000000000 +0200
++++ gcc-11.1.0-RC-20210420.serenity/gcc/config.gcc	2021-04-22 15:21:33.700763279 +0200
+@@ -686,6 +686,12 @@
  
  # Common parts for widely ported systems.
  case ${target} in
@@ -199,7 +199,7 @@ diff -ruN a/gcc/config.gcc b/gcc/config.gcc
  *-*-darwin*)
    tmake_file="t-darwin "
    tm_file="${tm_file} darwin.h"
-@@ -1063,6 +1069,15 @@
+@@ -1084,6 +1090,15 @@
  esac
  
  case ${target} in
@@ -215,9 +215,22 @@ diff -ruN a/gcc/config.gcc b/gcc/config.gcc
  aarch64*-*-elf | aarch64*-*-fuchsia* | aarch64*-*-rtems*)
  	tm_file="${tm_file} dbxelf.h elfos.h newlib-stdint.h"
  	tm_file="${tm_file} aarch64/aarch64-elf.h aarch64/aarch64-errata.h aarch64/aarch64-elf-raw.h"
-diff -ruN a/libgcc/config/t-slibgcc b/libgcc/config/t-slibgcc
---- a/libgcc/config/t-slibgcc	2020-07-23 09:35:18.796400548 +0300
-+++ b/libgcc/config/t-slibgcc	2020-12-12 10:56:01.439116155 +0200
+diff -Naur gcc-11.1.0-RC-20210420/gcc/configure gcc-11.1.0-RC-20210420.serenity/gcc/configure
+--- gcc-11.1.0-RC-20210420/gcc/configure	2021-04-20 16:53:37.000000000 +0200
++++ gcc-11.1.0-RC-20210420.serenity/gcc/configure	2021-04-22 15:21:33.710763496 +0200
+@@ -30982,6 +30982,9 @@
+   *-linux-musl*)
+     gcc_cv_target_dl_iterate_phdr=yes
+     ;;
++  *-serenity*)
++    gcc_cv_target_dl_iterate_phdr=yes
++    ;;
+ esac
+ 
+ if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
+diff -Naur gcc-11.1.0-RC-20210420/libgcc/config/t-slibgcc gcc-11.1.0-RC-20210420.serenity/libgcc/config/t-slibgcc
+--- gcc-11.1.0-RC-20210420/libgcc/config/t-slibgcc	2021-04-20 16:53:34.000000000 +0200
++++ gcc-11.1.0-RC-20210420.serenity/libgcc/config/t-slibgcc	2021-04-22 15:21:33.700763279 +0200
 @@ -26,7 +26,6 @@
  SHLIB_OBJS = @shlib_objs@
  SHLIB_DIR = @multilib_dir@
@@ -235,10 +248,10 @@ diff -ruN a/libgcc/config/t-slibgcc b/libgcc/config/t-slibgcc
  	rm -f $(SHLIB_DIR)/$(SHLIB_SOLINK) && \
  	if [ -f $(SHLIB_DIR)/$(SHLIB_SONAME) ]; then \
  	  mv -f $(SHLIB_DIR)/$(SHLIB_SONAME) \
-diff -ruN a/libgcc/config.host b/libgcc/config.host
---- a/libgcc/config.host	2020-07-23 09:35:18.752400064 +0300
-+++ b/libgcc/config.host	2020-12-12 10:43:35.280270540 +0200
-@@ -1491,6 +1491,22 @@
+diff -Naur gcc-11.1.0-RC-20210420/libgcc/config.host gcc-11.1.0-RC-20210420.serenity/libgcc/config.host
+--- gcc-11.1.0-RC-20210420/libgcc/config.host	2021-04-20 16:53:34.000000000 +0200
++++ gcc-11.1.0-RC-20210420.serenity/libgcc/config.host	2021-04-22 15:21:33.700763279 +0200
+@@ -1500,6 +1500,22 @@
  	tmake_file="$tmake_file nvptx/t-nvptx"
  	extra_parts="crt0.o"
  	;;
@@ -261,10 +274,26 @@ diff -ruN a/libgcc/config.host b/libgcc/config.host
  *)
  	echo "*** Configuration ${host} not supported" 1>&2
  	exit 1
-diff -ruN a/libstdc++-v3/configure b/libstdc++-v3/configure
---- a/libstdc++-v3/configure	2020-07-23 09:35:19.188404867 +0300
-+++ b/libstdc++-v3/configure	2020-12-12 10:43:35.288270409 +0200
-@@ -29217,6 +29217,5986 @@
+diff -Naur gcc-11.1.0-RC-20210420/libgcc/unwind-dw2-fde-dip.c gcc-11.1.0-RC-20210420.serenity/libgcc/unwind-dw2-fde-dip.c
+--- gcc-11.1.0-RC-20210420/libgcc/unwind-dw2-fde-dip.c	2021-04-20 16:53:34.000000000 +0200
++++ gcc-11.1.0-RC-20210420.serenity/libgcc/unwind-dw2-fde-dip.c	2021-04-22 15:21:33.707430091 +0200
+@@ -59,6 +59,12 @@
+ 
+ #if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
+     && defined(TARGET_DL_ITERATE_PHDR) \
++    && defined(__serenity__)
++# define USE_PT_GNU_EH_FRAME
++#endif
++
++#if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
++    && defined(TARGET_DL_ITERATE_PHDR) \
+     && defined(__linux__)
+ # define USE_PT_GNU_EH_FRAME
+ #endif
+diff -Naur gcc-11.1.0-RC-20210420/libstdc++-v3/configure gcc-11.1.0-RC-20210420.serenity/libstdc++-v3/configure
+--- gcc-11.1.0-RC-20210420/libstdc++-v3/configure	2021-04-20 16:53:35.000000000 +0200
++++ gcc-11.1.0-RC-20210420.serenity/libstdc++-v3/configure	2021-04-22 15:21:33.707430091 +0200
+@@ -29270,6 +29270,5986 @@
  
  # Base decisions on target environment.
  case "${host}" in
@@ -6251,9 +6280,9 @@ diff -ruN a/libstdc++-v3/configure b/libstdc++-v3/configure
    arm*-*-symbianelf*)
      # This is a freestanding configuration; there is nothing to do here.
      ;;
-diff -ruN a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
---- a/libstdc++-v3/crossconfig.m4	2020-07-23 09:35:19.188404867 +0300
-+++ b/libstdc++-v3/crossconfig.m4	2020-12-12 10:43:35.288270409 +0200
+diff -Naur gcc-11.1.0-RC-20210420/libstdc++-v3/crossconfig.m4 gcc-11.1.0-RC-20210420.serenity/libstdc++-v3/crossconfig.m4
+--- gcc-11.1.0-RC-20210420/libstdc++-v3/crossconfig.m4	2021-04-20 16:53:35.000000000 +0200
++++ gcc-11.1.0-RC-20210420.serenity/libstdc++-v3/crossconfig.m4	2021-04-22 15:21:33.707430091 +0200
 @@ -5,6 +5,13 @@
  AC_DEFUN([GLIBCXX_CROSSCONFIG],[
  # Base decisions on target environment.
@@ -6268,32 +6297,3 @@ diff -ruN a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
    arm*-*-symbianelf*)
      # This is a freestanding configuration; there is nothing to do here.
      ;;
-diff -Naur gcc-10.3.0/libgcc/unwind-dw2-fde-dip.c gcc-10.3.0.serenity/libgcc/unwind-dw2-fde-dip.c
---- gcc-10.3.0/libgcc/unwind-dw2-fde-dip.c	2021-04-16 22:25:49.268958198 +0200
-+++ gcc-10.3.0.serenity/libgcc/unwind-dw2-fde-dip.c	2021-04-16 22:26:09.732716890 +0200
-@@ -59,6 +59,12 @@
- 
- #if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
-     && defined(TARGET_DL_ITERATE_PHDR) \
-+    && defined(__serenity__)
-+# define USE_PT_GNU_EH_FRAME
-+#endif
-+
-+#if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
-+    && defined(TARGET_DL_ITERATE_PHDR) \
-     && defined(__linux__)
- # define USE_PT_GNU_EH_FRAME
- #endif
-diff -Naur gcc-10.3.0/gcc/configure gcc-10.3.0.serenity/gcc/configure
---- gcc-10.3.0/gcc/configure	2021-04-08 13:57:03.698170877 +0200
-+++ gcc-10.3.0.serenity/gcc/configure	2021-04-16 22:40:03.969286691 +0200
-@@ -29982,6 +29982,9 @@
-   *-linux-musl*)
-     gcc_cv_target_dl_iterate_phdr=yes
-     ;;
-+  *-serenity*)
-+    gcc_cv_target_dl_iterate_phdr=yes
-+    ;;
- esac
- 
- if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
