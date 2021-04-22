@@ -32,6 +32,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
@@ -515,6 +516,15 @@ NonnullRefPtr<HTMLCollection> Document::applets()
     // FIXME: This should return the same HTMLCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.
     return HTMLCollection::create(*this, [] { return false; });
+}
+
+NonnullRefPtr<HTMLCollection> Document::anchors()
+{
+    // FIXME: This should return the same HTMLCollection object every time,
+    //        but that would cause a reference cycle since HTMLCollection refs the root.
+    return HTMLCollection::create(*this, [](Element const& element) {
+        return is<HTML::HTMLAnchorElement>(element) && element.has_attribute(HTML::AttributeNames::name);
+    });
 }
 
 Color Document::link_color() const
