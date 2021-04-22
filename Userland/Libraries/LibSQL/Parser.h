@@ -55,13 +55,14 @@ private:
     NonnullRefPtr<CreateTable> parse_create_table_statement();
     NonnullRefPtr<DropTable> parse_drop_table_statement();
     NonnullRefPtr<Delete> parse_delete_statement(RefPtr<CommonTableExpressionList>);
+    NonnullRefPtr<Select> parse_select_statement(RefPtr<CommonTableExpressionList>);
     NonnullRefPtr<CommonTableExpressionList> parse_common_table_expression_list();
 
     NonnullRefPtr<Expression> parse_primary_expression();
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression> primary);
     bool match_secondary_expression() const;
     Optional<NonnullRefPtr<Expression>> parse_literal_value_expression();
-    Optional<NonnullRefPtr<Expression>> parse_column_name_expression();
+    Optional<NonnullRefPtr<Expression>> parse_column_name_expression(String with_parsed_identifier = {}, bool with_parsed_period = false);
     Optional<NonnullRefPtr<Expression>> parse_unary_operator_expression();
     Optional<NonnullRefPtr<Expression>> parse_binary_operator_expression(NonnullRefPtr<Expression> lhs);
     Optional<NonnullRefPtr<Expression>> parse_chained_expression();
@@ -80,6 +81,9 @@ private:
     NonnullRefPtr<CommonTableExpression> parse_common_table_expression();
     NonnullRefPtr<QualifiedTableName> parse_qualified_table_name();
     NonnullRefPtr<ReturningClause> parse_returning_clause();
+    NonnullRefPtr<ResultColumn> parse_result_column();
+    NonnullRefPtr<TableOrSubquery> parse_table_or_subquery();
+    NonnullRefPtr<OrderingTerm> parse_ordering_term();
 
     Token consume();
     Token consume(TokenType type);
