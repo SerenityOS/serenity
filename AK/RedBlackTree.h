@@ -33,12 +33,10 @@ public:
             : key(key)
         {
         }
-        virtual ~Node() {};
     };
 
 protected:
     BaseRedBlackTree() = default; // These are protected to ensure no one instantiates the leaky base red black tree directly
-    virtual ~BaseRedBlackTree() {};
 
     void rotate_left(Node* subtree_root)
     {
@@ -418,7 +416,7 @@ template<Integral K, typename V>
 class RedBlackTree : public BaseRedBlackTree<K> {
 public:
     RedBlackTree() = default;
-    virtual ~RedBlackTree() override
+    ~RedBlackTree()
     {
         clear();
     }
