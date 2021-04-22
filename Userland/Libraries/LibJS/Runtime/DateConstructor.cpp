@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2020, Nico Weber <thakis@chromium.org>
  * Copyright (c) 2021, Petróczi Zoltán <petroczizoltan@tutanota.com>
  *
