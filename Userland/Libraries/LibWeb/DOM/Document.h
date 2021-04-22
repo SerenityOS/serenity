@@ -136,9 +136,9 @@ public:
     void schedule_style_update();
     void schedule_forced_layout();
 
-    NonnullRefPtrVector<Element> get_elements_by_name(const String&) const;
-    NonnullRefPtrVector<Element> get_elements_by_tag_name(const FlyString&) const;
-    NonnullRefPtrVector<Element> get_elements_by_class_name(const FlyString&) const;
+    NonnullRefPtr<HTMLCollection> get_elements_by_name(String const&);
+    NonnullRefPtr<HTMLCollection> get_elements_by_tag_name(FlyString const&);
+    NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
 
     const String& source() const { return m_source; }
     void set_source(const String& source) { m_source = source; }

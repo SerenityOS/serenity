@@ -6,6 +6,7 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/InProcessWebView.h>
@@ -161,9 +162,9 @@ void Frame::scroll_to_anchor(const String& fragment)
     auto element = document()->get_element_by_id(fragment);
     if (!element) {
         auto candidates = document()->get_elements_by_name(fragment);
-        for (auto& candidate : candidates) {
-            if (is<HTML::HTMLAnchorElement>(candidate)) {
-                element = downcast<HTML::HTMLAnchorElement>(candidate);
+        for (auto& candidate : candidates->collect_matching_elements()) {
+            if (is<HTML::HTMLAnchorElement>(*candidate)) {
+                element = downcast<HTML::HTMLAnchorElement>(*candidate);
                 break;
             }
         }

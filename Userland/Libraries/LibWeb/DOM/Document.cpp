@@ -24,6 +24,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
@@ -484,42 +485,29 @@ void Document::set_hovered_node(Node* node)
     invalidate_style();
 }
 
-NonnullRefPtrVector<Element> Document::get_elements_by_name(const String& name) const
+NonnullRefPtr<HTMLCollection> Document::get_elements_by_name(String const& name)
 {
-    NonnullRefPtrVector<Element> elements;
-    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (element.attribute(HTML::AttributeNames::name) == name)
-            elements.append(element);
-        return IterationDecision::Continue;
+    return HTMLCollection::create(*this, [name](Element const& element) {
+        return element.name() == name;
     });
-    return elements;
 }
 
-NonnullRefPtrVector<Element> Document::get_elements_by_tag_name(const FlyString& tag_name) const
+NonnullRefPtr<HTMLCollection> Document::get_elements_by_tag_name(FlyString const& tag_name)
 {
     // FIXME: Support "*" for tag_name
     // https://dom.spec.whatwg.org/#concept-getelementsbytagname
-    NonnullRefPtrVector<Element> elements;
-    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (element.namespace_() == Namespace::HTML
-                ? element.local_name().to_lowercase() == tag_name.to_lowercase()
-                : element.local_name() == tag_name) {
-            elements.append(element);
-        }
-        return IterationDecision::Continue;
+    return HTMLCollection::create(*this, [tag_name](Element const& element) {
+        if (element.namespace_() == Namespace::HTML)
+            return element.local_name().to_lowercase() == tag_name.to_lowercase();
+        return element.local_name() == tag_name;
     });
-    return elements;
 }
 
-NonnullRefPtrVector<Element> Document::get_elements_by_class_name(const FlyString& class_name) const
+NonnullRefPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString const& class_name)
 {
-    NonnullRefPtrVector<Element> elements;
-    for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (element.has_class(class_name, in_quirks_mode() ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
-            elements.append(element);
-        return IterationDecision::Continue;
+    return HTMLCollection::create(*this, [class_name, quirks_mode = document().in_quirks_mode()](Element const& element) {
+        return element.has_class(class_name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive);
     });
-    return elements;
 }
 
 Color Document::link_color() const

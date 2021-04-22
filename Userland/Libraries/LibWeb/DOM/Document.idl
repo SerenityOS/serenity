@@ -14,9 +14,9 @@ interface Document : Node {
     attribute DOMString cookie;
 
     Element? getElementById(DOMString id);
-    ArrayFromVector getElementsByName(DOMString name);
-    ArrayFromVector getElementsByTagName(DOMString tagName);
-    ArrayFromVector getElementsByClassName(DOMString className);
+    HTMLCollection getElementsByName(DOMString name);
+    HTMLCollection getElementsByTagName(DOMString tagName);
+    HTMLCollection getElementsByClassName(DOMString className);
 
     Element createElement(DOMString tagName);
     Element createElementNS(DOMString? namespace, DOMString qualifiedName);

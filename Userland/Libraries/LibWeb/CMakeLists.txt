@@ -3,6 +3,7 @@ set(SOURCES
     Bindings/EventListenerWrapper.cpp
     Bindings/EventWrapperFactory.cpp
     Bindings/EventTargetWrapperFactory.cpp
+    Bindings/HTMLCollectionWrapperCustom.cpp
     Bindings/ImageConstructor.cpp
     Bindings/LocationObject.cpp
     Bindings/MainThreadVM.cpp
@@ -48,6 +49,7 @@ set(SOURCES
     DOM/Element.cpp
     DOM/ElementFactory.cpp
     DOM/Event.cpp
+    DOM/HTMLCollection.cpp
     DOM/Range.cpp
     DOM/EventDispatcher.cpp
     DOM/EventListener.cpp
@@ -309,6 +311,7 @@ libweb_js_wrapper(DOM/DOMImplementation)
 libweb_js_wrapper(DOM/Element)
 libweb_js_wrapper(DOM/Event)
 libweb_js_wrapper(DOM/EventTarget)
+libweb_js_wrapper(DOM/HTMLCollection)
 libweb_js_wrapper(DOM/ProcessingInstruction)
 libweb_js_wrapper(DOM/ShadowRoot)
 libweb_js_wrapper(DOM/Node)
