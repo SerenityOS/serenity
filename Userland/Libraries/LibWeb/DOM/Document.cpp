@@ -510,6 +510,13 @@ NonnullRefPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString con
     });
 }
 
+NonnullRefPtr<HTMLCollection> Document::applets()
+{
+    // FIXME: This should return the same HTMLCollection object every time,
+    //        but that would cause a reference cycle since HTMLCollection refs the root.
+    return HTMLCollection::create(*this, [] { return false; });
+}
+
 Color Document::link_color() const
 {
     if (m_link_color.has_value())

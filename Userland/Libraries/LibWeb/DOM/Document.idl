@@ -18,6 +18,8 @@ interface Document : Node {
     HTMLCollection getElementsByTagName(DOMString tagName);
     HTMLCollection getElementsByClassName(DOMString className);
 
+    readonly attribute HTMLCollection applets;
+
     Element createElement(DOMString tagName);
     Element createElementNS(DOMString? namespace, DOMString qualifiedName);
     DocumentFragment createDocumentFragment();
