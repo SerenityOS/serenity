@@ -576,6 +576,8 @@ Optional<CSS::ListStyleType> StyleProperties::list_style_type() const
         return CSS::ListStyleType::Square;
     case CSS::ValueID::Decimal:
         return CSS::ListStyleType::Decimal;
+    case CSS::ValueID::DecimalLeadingZero:
+        return CSS::ListStyleType::DecimalLeadingZero;
     default:
         return {};
     }

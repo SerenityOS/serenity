@@ -159,6 +159,7 @@ enum class ListStyleType {
     Circle,
     Square,
     Decimal,
+    DecimalLeadingZero,
 };
 
 enum class Overflow : u8 {

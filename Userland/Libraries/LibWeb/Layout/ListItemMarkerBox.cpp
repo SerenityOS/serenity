@@ -52,6 +52,13 @@ void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
     case CSS::ListStyleType::Disc:
         context.painter().fill_ellipse(marker_rect, color);
         break;
+    case CSS::ListStyleType::DecimalLeadingZero:
+        // This is weird, but in accordance to spec.
+        context.painter().draw_text(
+            enclosing,
+            m_index < 10 ? String::formatted("0{}.", m_index) : String::formatted("{}.", m_index),
+            Gfx::TextAlignment::Center);
+        break;
     case CSS::ListStyleType::None:
         return;
 
