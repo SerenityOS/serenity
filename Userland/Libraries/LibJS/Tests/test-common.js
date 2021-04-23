@@ -20,8 +20,8 @@ console.log = (...args) => {
 };
 
 class ExpectationError extends Error {
-    constructor(message, fileName, lineNumber) {
-        super(message, fileName, lineNumber);
+    constructor(message) {
+        super(message);
         this.name = "ExpectationError";
     }
 }
