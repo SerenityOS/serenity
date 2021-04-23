@@ -85,6 +85,25 @@ private:
     NonnullRefPtr<TableOrSubquery> parse_table_or_subquery();
     NonnullRefPtr<OrderingTerm> parse_ordering_term();
 
+    template<typename ParseCallback>
+    void parse_comma_separated_list(bool surrounded_by_parentheses, ParseCallback&& parse_callback)
+    {
+        if (surrounded_by_parentheses)
+            consume(TokenType::ParenOpen);
+
+        while (!has_errors() && !match(TokenType::Eof)) {
+            parse_callback();
+
+            if (!match(TokenType::Comma))
+                break;
+
+            consume(TokenType::Comma);
+        };
+
+        if (surrounded_by_parentheses)
+            consume(TokenType::ParenClose);
+    }
+
     Token consume();
     Token consume(TokenType type);
     bool consume_if(TokenType type);
