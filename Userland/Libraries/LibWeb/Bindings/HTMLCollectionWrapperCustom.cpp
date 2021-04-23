@@ -14,6 +14,8 @@ namespace Web::Bindings {
 
 JS::Value HTMLCollectionWrapper::get(JS::PropertyName const& name, JS::Value receiver, bool without_side_effects) const
 {
+    if (!name.is_string())
+        return Base::get(name, receiver, without_side_effects);
     auto* item = const_cast<DOM::HTMLCollection&>(impl()).named_item(name.to_string());
     if (!item)
         return Base::get(name, receiver, without_side_effects);
