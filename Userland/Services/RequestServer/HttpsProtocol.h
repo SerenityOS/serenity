@@ -12,22 +12,22 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <LibHTTP/HttpsJob.h>
-#include <ProtocolServer/ClientConnection.h>
-#include <ProtocolServer/Download.h>
-#include <ProtocolServer/HttpsDownload.h>
-#include <ProtocolServer/Protocol.h>
+#include <RequestServer/ClientConnection.h>
+#include <RequestServer/HttpsRequest.h>
+#include <RequestServer/Protocol.h>
+#include <RequestServer/Request.h>
 
-namespace ProtocolServer {
+namespace RequestServer {
 
 class HttpsProtocol final : public Protocol {
 public:
     using JobType = HTTP::HttpsJob;
-    using DownloadType = HttpsDownload;
+    using RequestType = HttpsRequest;
 
     HttpsProtocol();
     ~HttpsProtocol() override = default;
 
-    virtual OwnPtr<Download> start_download(ClientConnection&, const String& method, const URL&, const HashMap<String, String>& headers, ReadonlyBytes body) override;
+    virtual OwnPtr<Request> start_request(ClientConnection&, const String& method, const URL&, const HashMap<String, String>& headers, ReadonlyBytes body) override;
 };
 
 }
