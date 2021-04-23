@@ -286,7 +286,7 @@ void Service::did_exit(int exit_code)
     s_service_map.remove(m_pid);
     m_pid = -1;
 
-    if (!m_keep_alive || m_explicitly_stopped)
+    if (!m_keep_alive || !is_enabled() || m_explicitly_stopped)
         return;
 
     int run_time_in_msec = m_run_timer.elapsed();
