@@ -14,6 +14,7 @@
 #include <LibCore/File.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -69,9 +70,31 @@ int Shell::builtin_alias(int argc, const char** argv)
 int Shell::builtin_bg(int argc, const char** argv)
 {
     int job_id = -1;
+    bool is_pid = false;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(job_id, "Job ID to run in background", "job-id", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "Job ID or Jobspec to run in background",
+        .name = "job-id",
+        .min_values = 0,
+        .max_values = 1,
+        .accept_value = [&](const String& value) -> bool {
+            // Check if it's a pid (i.e. literal integer)
+            if (auto number = value.to_uint(); number.has_value()) {
+                job_id = number.value();
+                is_pid = true;
+                return true;
+            }
+
+            // Check if it's a jobspec
+            if (auto id = resolve_job_spec(value); id.has_value()) {
+                job_id = id.value();
+                is_pid = false;
+                return true;
+            }
+
+            return false;
+        } });
 
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
@@ -79,13 +102,13 @@ int Shell::builtin_bg(int argc, const char** argv)
     if (job_id == -1 && !jobs.is_empty())
         job_id = find_last_job_id();
 
-    auto* job = const_cast<Job*>(find_job(job_id));
+    auto* job = const_cast<Job*>(find_job(job_id, is_pid));
 
     if (!job) {
         if (job_id == -1) {
-            fprintf(stderr, "bg: no current job\n");
+            warnln("bg: No current job");
         } else {
-            fprintf(stderr, "bg: job with id %d not found\n", job_id);
+            warnln("bg: Job with id/pid {} not found", job_id);
         }
         return 1;
     }
@@ -419,9 +442,31 @@ int Shell::builtin_glob(int argc, const char** argv)
 int Shell::builtin_fg(int argc, const char** argv)
 {
     int job_id = -1;
+    bool is_pid = false;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(job_id, "Job ID to bring to foreground", "job-id", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "Job ID or Jobspec to bring to foreground",
+        .name = "job-id",
+        .min_values = 0,
+        .max_values = 1,
+        .accept_value = [&](const String& value) -> bool {
+            // Check if it's a pid (i.e. literal integer)
+            if (auto number = value.to_uint(); number.has_value()) {
+                job_id = number.value();
+                is_pid = true;
+                return true;
+            }
+
+            // Check if it's a jobspec
+            if (auto id = resolve_job_spec(value); id.has_value()) {
+                job_id = id.value();
+                is_pid = false;
+                return true;
+            }
+
+            return false;
+        } });
 
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
@@ -429,13 +474,13 @@ int Shell::builtin_fg(int argc, const char** argv)
     if (job_id == -1 && !jobs.is_empty())
         job_id = find_last_job_id();
 
-    RefPtr<Job> job = find_job(job_id);
+    RefPtr<Job> job = find_job(job_id, is_pid);
 
     if (!job) {
         if (job_id == -1) {
-            fprintf(stderr, "fg: no current job\n");
+            warnln("fg: No current job");
         } else {
-            fprintf(stderr, "fg: job with id %d not found\n", job_id);
+            warnln("fg: Job with id/pid {} not found", job_id);
         }
         return 1;
     }
@@ -467,39 +512,56 @@ int Shell::builtin_fg(int argc, const char** argv)
 
 int Shell::builtin_disown(int argc, const char** argv)
 {
-    Vector<const char*> str_job_ids;
+    Vector<int> job_ids;
+    Vector<bool> id_is_pid;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(str_job_ids, "Id of the jobs to disown (omit for current job)", "job_ids", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "Job IDs or Jobspecs to disown",
+        .name = "job-id",
+        .min_values = 0,
+        .max_values = INT_MAX,
+        .accept_value = [&](const String& value) -> bool {
+            // Check if it's a pid (i.e. literal integer)
+            if (auto number = value.to_uint(); number.has_value()) {
+                job_ids.append(number.value());
+                id_is_pid.append(true);
+                return true;
+            }
+
+            // Check if it's a jobspec
+            if (auto id = resolve_job_spec(value); id.has_value()) {
+                job_ids.append(id.value());
+                id_is_pid.append(false);
+                return true;
+            }
+
+            return false;
+        } });
 
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
 
-    Vector<size_t> job_ids;
-    for (auto& job_id : str_job_ids) {
-        auto id = StringView(job_id).to_uint();
-        if (id.has_value())
-            job_ids.append(id.value());
-        else
-            fprintf(stderr, "disown: Invalid job id %s\n", job_id);
-    }
-
-    if (job_ids.is_empty())
+    if (job_ids.is_empty()) {
         job_ids.append(find_last_job_id());
+        id_is_pid.append(false);
+    }
 
     Vector<const Job*> jobs_to_disown;
 
-    for (auto id : job_ids) {
-        auto job = find_job(id);
+    for (size_t i = 0; i < job_ids.size(); ++i) {
+        auto id = job_ids[i];
+        auto is_pid = id_is_pid[i];
+        auto job = find_job(id, is_pid);
         if (!job)
-            fprintf(stderr, "disown: job with id %zu not found\n", id);
+            warnln("disown: Job with id/pid {} not found", id);
         else
             jobs_to_disown.append(job);
     }
 
     if (jobs_to_disown.is_empty()) {
-        if (str_job_ids.is_empty())
-            fprintf(stderr, "disown: no current job\n");
+        if (job_ids.is_empty())
+            warnln("disown: No current job");
         // An error message has already been printed about the nonexistence of each listed job.
         return 1;
     }
@@ -508,7 +570,7 @@ int Shell::builtin_disown(int argc, const char** argv)
         job->deactivate();
 
         if (!job->is_running_in_background())
-            fprintf(stderr, "disown warning: job %" PRIu64 " is currently not running, 'kill -%d %d' to make it continue\n", job->job_id(), SIGCONT, job->pid());
+            warnln("disown warning: Job {} is currently not running, 'kill -{} {}' to make it continue", job->job_id(), SIGCONT, job->pid());
 
         jobs.remove(job->pid());
     }
@@ -869,32 +931,51 @@ int Shell::builtin_umask(int argc, const char** argv)
 
 int Shell::builtin_wait(int argc, const char** argv)
 {
-    Vector<const char*> job_ids;
+    Vector<int> job_ids;
+    Vector<bool> id_is_pid;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(job_ids, "Job IDs to wait for, defaults to all jobs if missing", "jobs", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "Job IDs or Jobspecs to wait for",
+        .name = "job-id",
+        .min_values = 0,
+        .max_values = INT_MAX,
+        .accept_value = [&](const String& value) -> bool {
+            // Check if it's a pid (i.e. literal integer)
+            if (auto number = value.to_uint(); number.has_value()) {
+                job_ids.append(number.value());
+                id_is_pid.append(true);
+                return true;
+            }
+
+            // Check if it's a jobspec
+            if (auto id = resolve_job_spec(value); id.has_value()) {
+                job_ids.append(id.value());
+                id_is_pid.append(false);
+                return true;
+            }
+
+            return false;
+        } });
 
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
 
     Vector<NonnullRefPtr<Job>> jobs_to_wait_for;
 
-    if (job_ids.is_empty()) {
-        for (auto it : jobs)
-            jobs_to_wait_for.append(it.value);
-    } else {
-        for (String id_s : job_ids) {
-            auto id_opt = id_s.to_uint();
-            if (id_opt.has_value()) {
-                if (auto job = find_job(id_opt.value())) {
-                    jobs_to_wait_for.append(*job);
-                    continue;
-                }
-            }
+    for (size_t i = 0; i < job_ids.size(); ++i) {
+        auto id = job_ids[i];
+        auto is_pid = id_is_pid[i];
+        auto job = find_job(id, is_pid);
+        if (!job)
+            warnln("wait: Job with id/pid {} not found", id);
+        else
+            jobs_to_wait_for.append(*job);
+    }
 
-            warnln("wait: invalid or nonexistent job id {}", id_s);
-            return 1;
-        }
+    if (job_ids.is_empty()) {
+        for (const auto& it : jobs)
+            jobs_to_wait_for.append(it.value);
     }
 
     for (auto& job : jobs_to_wait_for) {
