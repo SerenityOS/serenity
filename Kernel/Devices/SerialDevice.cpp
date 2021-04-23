@@ -56,9 +56,22 @@ KResultOr<size_t> SerialDevice::write(FileDescription&, u64, const UserOrKernelB
 
     return buffer.read_buffered<128>(size, [&](u8 const* data, size_t data_size) {
         for (size_t i = 0; i < data_size; i++)
-            IO::out8(m_base_addr, data[i]);
+            put_char(data[i]);
         return data_size;
     });
+}
+
+void SerialDevice::put_char(char ch)
+{
+    while ((get_line_status() & EmptyTransmitterHoldingRegister) == 0)
+        ;
+
+    if (ch == '\n' && !m_last_put_char_was_carriage_return)
+        IO::out8(m_base_addr, '\r');
+
+    IO::out8(m_base_addr, ch);
+
+    m_last_put_char_was_carriage_return = (ch == '\r');
 }
 
 String SerialDevice::device_name() const
