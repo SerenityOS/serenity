@@ -619,7 +619,7 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(size_t size)
     if (!range.has_value())
         return ENOMEM;
 
-    auto region_or_error = space().allocate_region(range.value(), String(), PROT_READ | PROT_WRITE);
+    auto region_or_error = space().allocate_region(range.value(), String("Master TLS"), PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
         return region_or_error.error().error();
 
