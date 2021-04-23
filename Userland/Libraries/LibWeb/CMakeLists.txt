@@ -182,6 +182,7 @@ set(SOURCES
     Layout/SVGBox.cpp
     Layout/SVGGraphicsBox.cpp
     Layout/SVGPathBox.cpp
+    Layout/SVGRectBox.cpp
     Layout/SVGSVGBox.cpp
     Layout/TableBox.cpp
     Layout/TableCellBox.cpp
@@ -212,6 +213,7 @@ set(SOURCES
     SVG/SVGGeometryElement.cpp
     SVG/SVGGraphicsElement.cpp
     SVG/SVGPathElement.cpp
+    SVG/SVGRectElement.cpp
     SVG/SVGSVGElement.cpp
     SVG/TagNames.cpp
     StylePropertiesModel.cpp
