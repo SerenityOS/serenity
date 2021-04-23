@@ -9,13 +9,14 @@
 
 #include "GL/gl.h"
 #include <AK/OwnPtr.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
 
 namespace GL {
 
 class GLContext {
 public:
-    virtual ~GLContext() { }
+    virtual ~GLContext();
 
     virtual void gl_begin(GLenum mode) = 0;
     virtual void gl_clear(GLbitfield mask) = 0;
@@ -40,9 +41,11 @@ public:
     virtual void gl_disable(GLenum) = 0;
     virtual void gl_front_face(GLenum) = 0;
     virtual void gl_cull_face(GLenum) = 0;
+
+    virtual void present() = 0;
 };
 
-OwnPtr<GLContext> create_context();
+OwnPtr<GLContext> create_context(Gfx::Bitmap&);
 void make_context_current(GLContext*);
 
 }
