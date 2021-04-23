@@ -822,11 +822,9 @@ NonnullRefPtr<ReturningClause> Parser::parse_returning_clause()
     do {
         auto expression = parse_expression();
 
-        consume_if(TokenType::As); // 'AS' is optional.
-
         String column_alias;
-        if (match(TokenType::Identifier))
-            column_alias = consume().value();
+        if (consume_if(TokenType::As) || match(TokenType::Identifier))
+            column_alias = consume(TokenType::Identifier).value();
 
         columns.append({ move(expression), move(column_alias) });
         if (!match(TokenType::Comma))
@@ -860,11 +858,10 @@ NonnullRefPtr<ResultColumn> Parser::parse_result_column()
     auto expression = table_name.is_null()
         ? parse_expression()
         : static_cast<NonnullRefPtr<Expression>>(*parse_column_name_expression(move(table_name), parsed_period));
-    consume_if(TokenType::As); // 'AS' is optional.
 
     String column_alias;
-    if (match(TokenType::Identifier))
-        column_alias = consume().value();
+    if (consume_if(TokenType::As) || match(TokenType::Identifier))
+        column_alias = consume(TokenType::Identifier).value();
 
     return create_ast_node<ResultColumn>(move(expression), move(column_alias));
 }
@@ -884,11 +881,9 @@ NonnullRefPtr<TableOrSubquery> Parser::parse_table_or_subquery()
             table_name = move(schema_or_table_name);
         }
 
-        consume_if(TokenType::As); // 'AS' is optional.
-
         String table_alias;
-        if (match(TokenType::Identifier))
-            table_alias = consume().value();
+        if (consume_if(TokenType::As) || match(TokenType::Identifier))
+            table_alias = consume(TokenType::Identifier).value();
 
         return create_ast_node<TableOrSubquery>(move(schema_name), move(table_name), move(table_alias));
     }
