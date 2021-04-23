@@ -22,12 +22,12 @@ class PageDirectory : public RefCounted<PageDirectory> {
 public:
     static RefPtr<PageDirectory> create_for_userspace(const RangeAllocator* parent_range_allocator = nullptr)
     {
-        auto page_directory = adopt(*new PageDirectory(parent_range_allocator));
+        auto page_directory = adopt_ref(*new PageDirectory(parent_range_allocator));
         if (!page_directory->is_valid())
             return {};
         return page_directory;
     }
-    static NonnullRefPtr<PageDirectory> create_kernel_page_directory() { return adopt(*new PageDirectory); }
+    static NonnullRefPtr<PageDirectory> create_kernel_page_directory() { return adopt_ref(*new PageDirectory); }
     static RefPtr<PageDirectory> find_by_cr3(u32);
 
     ~PageDirectory();

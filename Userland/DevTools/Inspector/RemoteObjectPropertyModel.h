@@ -20,7 +20,7 @@ public:
     virtual ~RemoteObjectPropertyModel() override { }
     static NonnullRefPtr<RemoteObjectPropertyModel> create(RemoteObject& object)
     {
-        return adopt(*new RemoteObjectPropertyModel(object));
+        return adopt_ref(*new RemoteObjectPropertyModel(object));
     }
 
     enum Column {

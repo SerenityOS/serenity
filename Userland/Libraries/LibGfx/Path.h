@@ -197,7 +197,7 @@ private:
     template<typename T, typename... Args>
     void append_segment(Args&&... args)
     {
-        m_segments.append(adopt(*new T(forward<Args>(args)...)));
+        m_segments.append(adopt_ref(*new T(forward<Args>(args)...)));
     }
 
     NonnullRefPtrVector<Segment> m_segments {};

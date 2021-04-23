@@ -20,7 +20,7 @@ GitRepo::CreateResult GitRepo::try_to_create(const LexicalPath& repository_root)
         return { CreateResult::Type::NoGitRepo, nullptr };
     }
 
-    return { CreateResult::Type::Success, adopt(*new GitRepo(repository_root)) };
+    return { CreateResult::Type::Success, adopt_ref(*new GitRepo(repository_root)) };
 }
 
 RefPtr<GitRepo> GitRepo::initialize_repository(const LexicalPath& repository_root)
@@ -30,7 +30,7 @@ RefPtr<GitRepo> GitRepo::initialize_repository(const LexicalPath& repository_roo
         return {};
 
     VERIFY(git_repo_exists(repository_root));
-    return adopt(*new GitRepo(repository_root));
+    return adopt_ref(*new GitRepo(repository_root));
 }
 
 Vector<LexicalPath> GitRepo::unstaged_files() const

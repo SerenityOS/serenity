@@ -114,7 +114,7 @@ UNMAP_AFTER_INIT void RTL8139NetworkAdapter::detect()
         if (id != rtl8139_id)
             return;
         u8 irq = PCI::get_interrupt_line(address);
-        [[maybe_unused]] auto& unused = adopt(*new RTL8139NetworkAdapter(address, irq)).leak_ref();
+        [[maybe_unused]] auto& unused = adopt_ref(*new RTL8139NetworkAdapter(address, irq)).leak_ref();
     });
 }
 

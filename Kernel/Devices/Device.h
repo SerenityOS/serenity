@@ -51,7 +51,7 @@ public:
     template<typename AsyncRequestType, typename... Args>
     NonnullRefPtr<AsyncRequestType> make_request(Args&&... args)
     {
-        auto request = adopt(*new AsyncRequestType(*this, forward<Args>(args)...));
+        auto request = adopt_ref(*new AsyncRequestType(*this, forward<Args>(args)...));
         ScopedSpinLock lock(m_requests_lock);
         bool was_empty = m_requests.is_empty();
         m_requests.append(request);

@@ -22,7 +22,7 @@ public:
         __Count
     };
 
-    static NonnullRefPtr<StylePropertiesModel> create(const CSS::StyleProperties& properties) { return adopt(*new StylePropertiesModel(properties)); }
+    static NonnullRefPtr<StylePropertiesModel> create(const CSS::StyleProperties& properties) { return adopt_ref(*new StylePropertiesModel(properties)); }
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }

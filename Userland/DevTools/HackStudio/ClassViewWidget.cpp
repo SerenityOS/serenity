@@ -33,7 +33,7 @@ ClassViewWidget::ClassViewWidget()
 
 RefPtr<ClassViewModel> ClassViewModel::create()
 {
-    return adopt(*new ClassViewModel());
+    return adopt_ref(*new ClassViewModel());
 }
 
 int ClassViewModel::row_count(const GUI::ModelIndex& index) const

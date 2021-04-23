@@ -82,7 +82,7 @@ static bool build_image_document(DOM::Document& document, const ByteBuffer& data
     head_element->append_child(title_element);
 
     auto basename = LexicalPath(document.url().path()).basename();
-    auto title_text = adopt(*new DOM::Text(document, String::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())));
+    auto title_text = adopt_ref(*new DOM::Text(document, String::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())));
     title_element->append_child(title_text);
 
     auto body_element = document.create_element("body");

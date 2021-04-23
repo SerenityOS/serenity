@@ -30,7 +30,7 @@ public:
 
     static NonnullRefPtr<Download> create_from_id(Badge<Client>, Client& client, i32 download_id)
     {
-        return adopt(*new Download(client, download_id));
+        return adopt_ref(*new Download(client, download_id));
     }
 
     int id() const { return m_download_id; }

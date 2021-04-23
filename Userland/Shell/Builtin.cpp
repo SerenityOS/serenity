@@ -767,7 +767,7 @@ int Shell::builtin_shift(int argc, const char** argv)
     }
 
     if (!argv_->is_list())
-        argv_ = adopt(*new AST::ListValue({ argv_.release_nonnull() }));
+        argv_ = adopt_ref(*new AST::ListValue({ argv_.release_nonnull() }));
 
     auto& values = static_cast<AST::ListValue*>(argv_.ptr())->values();
     if ((size_t)count > values.size()) {

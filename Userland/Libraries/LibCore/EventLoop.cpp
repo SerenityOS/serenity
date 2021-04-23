@@ -525,7 +525,7 @@ int EventLoop::register_signal(int signo, Function<void(int)> handler)
     auto& info = *signals_info();
     auto handlers = info.signal_handlers.find(signo);
     if (handlers == info.signal_handlers.end()) {
-        auto signal_handlers = adopt(*new SignalHandlers(signo, EventLoop::handle_signal));
+        auto signal_handlers = adopt_ref(*new SignalHandlers(signo, EventLoop::handle_signal));
         auto handler_id = signal_handlers->add(move(handler));
         info.signal_handlers.set(signo, move(signal_handlers));
         return handler_id;

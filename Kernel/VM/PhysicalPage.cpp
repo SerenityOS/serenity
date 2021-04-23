@@ -12,7 +12,7 @@ namespace Kernel {
 
 NonnullRefPtr<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
 {
-    return adopt(*new PhysicalPage(paddr, supervisor, may_return_to_freelist));
+    return adopt_ref(*new PhysicalPage(paddr, supervisor, may_return_to_freelist));
 }
 
 PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)

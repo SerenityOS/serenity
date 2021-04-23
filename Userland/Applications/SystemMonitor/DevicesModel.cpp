@@ -14,7 +14,7 @@
 
 NonnullRefPtr<DevicesModel> DevicesModel::create()
 {
-    return adopt(*new DevicesModel);
+    return adopt_ref(*new DevicesModel);
 }
 
 DevicesModel::DevicesModel()

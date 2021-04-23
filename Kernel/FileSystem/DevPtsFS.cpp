@@ -15,7 +15,7 @@ namespace Kernel {
 
 NonnullRefPtr<DevPtsFS> DevPtsFS::create()
 {
-    return adopt(*new DevPtsFS);
+    return adopt_ref(*new DevPtsFS);
 }
 
 DevPtsFS::DevPtsFS()
@@ -30,7 +30,7 @@ static AK::Singleton<HashTable<unsigned>> s_ptys;
 
 bool DevPtsFS::initialize()
 {
-    m_root_inode = adopt(*new DevPtsFSInode(*this, 1, nullptr));
+    m_root_inode = adopt_ref(*new DevPtsFSInode(*this, 1, nullptr));
     m_root_inode->m_metadata.inode = { fsid(), 1 };
     m_root_inode->m_metadata.mode = 0040555;
     m_root_inode->m_metadata.uid = 0;
@@ -66,7 +66,7 @@ RefPtr<Inode> DevPtsFS::get_inode(InodeIdentifier inode_id) const
     auto* device = Device::get_device(201, pty_index);
     VERIFY(device);
 
-    auto inode = adopt(*new DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), static_cast<SlavePTY*>(device)));
+    auto inode = adopt_ref(*new DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), static_cast<SlavePTY*>(device)));
     inode->m_metadata.inode = inode_id;
     inode->m_metadata.size = 0;
     inode->m_metadata.uid = device->uid();

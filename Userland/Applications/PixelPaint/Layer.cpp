@@ -18,7 +18,7 @@ RefPtr<Layer> Layer::create_with_size(Image& image, const Gfx::IntSize& size, co
     if (size.width() > 16384 || size.height() > 16384)
         return nullptr;
 
-    return adopt(*new Layer(image, size, name));
+    return adopt_ref(*new Layer(image, size, name));
 }
 
 RefPtr<Layer> Layer::create_with_bitmap(Image& image, const Gfx::Bitmap& bitmap, const String& name)
@@ -29,7 +29,7 @@ RefPtr<Layer> Layer::create_with_bitmap(Image& image, const Gfx::Bitmap& bitmap,
     if (bitmap.size().width() > 16384 || bitmap.size().height() > 16384)
         return nullptr;
 
-    return adopt(*new Layer(image, bitmap, name));
+    return adopt_ref(*new Layer(image, bitmap, name));
 }
 
 RefPtr<Layer> Layer::create_snapshot(Image& image, const Layer& layer)

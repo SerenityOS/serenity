@@ -20,7 +20,7 @@ HTMLBRElement::~HTMLBRElement()
 
 RefPtr<Layout::Node> HTMLBRElement::create_layout_node()
 {
-    return adopt(*new Layout::BreakNode(document(), *this));
+    return adopt_ref(*new Layout::BreakNode(document(), *this));
 }
 
 }

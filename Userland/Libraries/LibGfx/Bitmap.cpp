@@ -73,7 +73,7 @@ RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const IntSize& size, int scal
     auto backing_store = Bitmap::allocate_backing_store(format, size, scale_factor, Purgeable::No);
     if (!backing_store.has_value())
         return nullptr;
-    return adopt(*new Bitmap(format, size, scale_factor, Purgeable::No, backing_store.value()));
+    return adopt_ref(*new Bitmap(format, size, scale_factor, Purgeable::No, backing_store.value()));
 }
 
 RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const IntSize& size, int scale_factor)
@@ -81,7 +81,7 @@ RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const IntSize& size
     auto backing_store = Bitmap::allocate_backing_store(format, size, scale_factor, Purgeable::Yes);
     if (!backing_store.has_value())
         return nullptr;
-    return adopt(*new Bitmap(format, size, scale_factor, Purgeable::Yes, backing_store.value()));
+    return adopt_ref(*new Bitmap(format, size, scale_factor, Purgeable::Yes, backing_store.value()));
 }
 
 #ifdef __serenity__
@@ -120,7 +120,7 @@ RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const IntSize& size, 
 {
     if (size_would_overflow(format, size, scale_factor))
         return nullptr;
-    return adopt(*new Bitmap(format, size, scale_factor, pitch, data));
+    return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
 RefPtr<Bitmap> Bitmap::load_from_file(String const& path, int scale_factor)
@@ -219,7 +219,7 @@ RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, con
         }
     }
 
-    return adopt(*new Bitmap(format, anon_fd, size, scale_factor, data, palette));
+    return adopt_ref(*new Bitmap(format, anon_fd, size, scale_factor, data, palette));
 }
 
 /// Read a bitmap as described by:

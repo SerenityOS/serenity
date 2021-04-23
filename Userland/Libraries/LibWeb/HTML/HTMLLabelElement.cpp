@@ -25,7 +25,7 @@ RefPtr<Layout::Node> HTMLLabelElement::create_layout_node()
     if (style->display() == CSS::Display::None)
         return nullptr;
 
-    auto layout_node = adopt(*new Layout::Label(document(), this, move(style)));
+    auto layout_node = adopt_ref(*new Layout::Label(document(), this, move(style)));
     layout_node->set_inline(true);
     return layout_node;
 }
