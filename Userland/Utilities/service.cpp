@@ -29,6 +29,7 @@
 #include <AK/JsonParser.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/ConfigFile.h>
 #include <LibIPC/ServerConnection.h>
 #include <SystemServer/ClientConnection.h>
 #include <SystemServer/ServiceManagementClientEndpoint.h>
@@ -63,6 +64,12 @@ void Client::handle(const Messages::ServiceManagementClient::Dummy&)
 {
 }
 
+static void save_boot_modes(const char* service_name, const Vector<String>& boot_modes)
+{
+    auto config = Core::ConfigFile::get_for_system("SystemServer");
+    config->write_entry(service_name, "BootModes", String::join(',', boot_modes));
+}
+
 int main(int argc, char** argv)
 {
     const char* service_name = nullptr;
@@ -81,10 +88,13 @@ int main(int argc, char** argv)
 
     if (print_all) {
         auto all_services = connection->send_sync<Messages::ServiceManagementServer::ServiceList>();
+        JsonArray all_services_json = JsonParser(all_services->json()).parse().value().as_array();
 
-        for (auto& service : all_services->services()) {
-            outln(" [ {} ] {}", service[0], service.substring(1));
-        }
+        all_services_json.for_each([](auto& service) {
+            auto service_object = service.as_object();
+            outln(" [ {} ] {}", service_object.get("running").to_bool() ? '+' : '-', service_object.get("name").to_string());
+        });
+
         return 0;
 
     } else if (!service_name || !command) {
@@ -121,16 +131,18 @@ int main(int argc, char** argv)
         outln(" - Accepts socket connection: {}", accept_socket_connections ? "yes" : "no");
         return 0;
     } else if (command_string == "enable"sv) {
-        connection->send_sync<Messages::ServiceManagementServer::ServiceSetEnabled>(service_name, true);
+        auto response = connection->send_sync<Messages::ServiceManagementServer::ServiceSetEnabled>(service_name, true);
+        save_boot_modes(service_name, response->boot_modes());
         return 0;
     } else if (command_string == "disable"sv) {
-        connection->send_sync<Messages::ServiceManagementServer::ServiceSetEnabled>(service_name, false);
+        auto response = connection->send_sync<Messages::ServiceManagementServer::ServiceSetEnabled>(service_name, false);
+        save_boot_modes(service_name, response->boot_modes());
         return 0;
     } else if (command_string == "start"sv) {
-        connection->send_sync<Messages::ServiceManagementServer::ServiceStart>(service_name);
+        connection->send_sync<Messages::ServiceManagementServer::ServiceSetRunning>(service_name, true);
         return 0;
     } else if (command_string == "stop"sv) {
-        connection->send_sync<Messages::ServiceManagementServer::ServiceStop>(service_name);
+        connection->send_sync<Messages::ServiceManagementServer::ServiceSetRunning>(service_name, false);
         return 0;
     }
 
