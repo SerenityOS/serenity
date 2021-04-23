@@ -12,3 +12,6 @@ configopts="
     --opengl-mode=none
     --with-sdl-prefix=${SERENITY_BUILD_DIR}/Root/usr/local
 "
+launcher_name=ScummVM
+launcher_category=Games
+launcher_command=/usr/local/bin/scummvm
