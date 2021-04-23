@@ -36,12 +36,14 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_create_table_statement();
     case TokenType::Drop:
         return parse_drop_table_statement();
+    case TokenType::Insert:
+        return parse_insert_statement({});
     case TokenType::Delete:
         return parse_delete_statement({});
     case TokenType::Select:
         return parse_select_statement({});
     default:
-        expected("CREATE, DROP, DELETE, or SELECT");
+        expected("CREATE, DROP, INSERT, DELETE, or SELECT");
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -49,12 +51,14 @@ NonnullRefPtr<Statement> Parser::parse_statement()
 NonnullRefPtr<Statement> Parser::parse_statement_with_expression_list(RefPtr<CommonTableExpressionList> common_table_expression_list)
 {
     switch (m_parser_state.m_token.type()) {
+    case TokenType::Insert:
+        return parse_insert_statement(move(common_table_expression_list));
     case TokenType::Delete:
         return parse_delete_statement(move(common_table_expression_list));
     case TokenType::Select:
         return parse_select_statement(move(common_table_expression_list));
     default:
-        expected("DELETE or SELECT");
+        expected("INSERT, DELETE or SELECT");
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -111,6 +115,73 @@ NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
     parse_schema_and_table_name(schema_name, table_name);
 
     return create_ast_node<DropTable>(move(schema_name), move(table_name), is_error_if_table_does_not_exist);
+}
+
+NonnullRefPtr<Delete> Parser::parse_insert_statement(RefPtr<CommonTableExpressionList> common_table_expression_list)
+{
+    // https://sqlite.org/lang_insert.html
+    consume(TokenType::Insert);
+
+    auto conflict_resolution = ConflictResolution::Abort;
+    if (consume_if(TokenType::Or)) {
+        // https://sqlite.org/lang_conflict.html
+        if (consume_if(TokenType::Abort))
+            conflict_resolution = ConflictResolution::Abort;
+        else if (consume_if(TokenType::Fail))
+            conflict_resolution = ConflictResolution::Fail;
+        else if (consume_if(TokenType::Ignore))
+            conflict_resolution = ConflictResolution::Ignore;
+        else if (consume_if(TokenType::Replace))
+            conflict_resolution = ConflictResolution::Replace;
+        else if (consume_if(TokenType::Rollback))
+            conflict_resolution = ConflictResolution::Rollback;
+        else
+            expected("ABORT, FAIL, IGNORE, REPLACE, or ROLLBACK");
+    }
+
+    consume(TokenType::Into);
+
+    String schema_name;
+    String table_name;
+    parse_schema_and_table_name(schema_name, table_name);
+
+    String alias;
+    if (consume_if(TokenType::As))
+        alias = consume(TokenType::Identifier).value();
+
+    Vector<String> column_names;
+    if (match(TokenType::ParenOpen))
+        parse_comma_separated_list(true, [&]() { column_names.append(consume(TokenType::Identifier).value()); });
+
+    NonnullRefPtrVector<ChainedExpression> chained_expressions;
+    RefPtr<Select> select_statement;
+
+    if (consume_if(TokenType::Values)) {
+        parse_comma_separated_list(false, [&]() {
+            if (auto chained_expression = parse_chained_expression(); chained_expression.has_value())
+                chained_expressions.append(move(chained_expression.value()));
+            else
+                expected("Chained expression");
+        });
+    } else if (match(TokenType::Select)) {
+        select_statement = parse_select_statement({});
+    } else {
+        consume(TokenType::Default);
+        consume(TokenType::Values);
+    }
+
+    RefPtr<ReturningClause> returning_clause;
+    if (match(TokenType::Returning))
+        returning_clause = parse_returning_clause();
+
+    // FIXME: Parse 'upsert-clause'.
+
+    if (!chained_expressions.is_empty())
+        return create_ast_node<Insert>(move(common_table_expression_list), conflict_resolution, move(schema_name), move(table_name), move(alias), move(column_names), move(chained_expressions));
+    if (!select_statement.is_null())
+        return create_ast_node<Insert>(move(common_table_expression_list), conflict_resolution, move(schema_name), move(table_name), move(alias), move(column_names), move(select_statement));
+
+    return create_ast_node<Insert>(move(common_table_expression_list), conflict_resolution, move(schema_name), move(table_name), move(alias), move(column_names));
 }
 
 NonnullRefPtr<Delete> Parser::parse_delete_statement(RefPtr<CommonTableExpressionList> common_table_expression_list)
