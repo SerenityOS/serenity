@@ -46,7 +46,8 @@
     __ENUMERATE_SHELL_BUILTIN(fg)      \
     __ENUMERATE_SHELL_BUILTIN(bg)      \
     __ENUMERATE_SHELL_BUILTIN(wait)    \
-    __ENUMERATE_SHELL_BUILTIN(dump)
+    __ENUMERATE_SHELL_BUILTIN(dump)    \
+    __ENUMERATE_SHELL_BUILTIN(kill)
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
@@ -102,6 +103,8 @@ public:
     Vector<AST::Command> expand_aliases(Vector<AST::Command>);
     String resolve_path(String) const;
     String resolve_alias(const String&) const;
+
+    static String find_in_path(const StringView& program_name);
 
     static bool has_history_event(StringView);
 

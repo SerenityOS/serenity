@@ -1031,6 +1031,43 @@ int Shell::builtin_not(int argc, const char** argv)
     return exit_code == 0 ? 1 : 0;
 }
 
+int Shell::builtin_kill(int argc, const char** argv)
+{
+    // Simply translate the arguments and pass them to `kill'
+    Vector<String> replaced_values;
+    auto kill_path = find_in_path("kill");
+    if (kill_path.is_empty()) {
+        warnln("kill: `kill' not found in PATH");
+        return 126;
+    }
+    replaced_values.append(kill_path);
+    for (auto i = 1; i < argc; ++i) {
+        if (auto job_id = resolve_job_spec(argv[i]); job_id.has_value()) {
+            auto job = find_job(job_id.value());
+            if (job) {
+                replaced_values.append(String::number(job->pid()));
+            } else {
+                warnln("kill: Job with pid {} not found", job_id.value());
+                return 1;
+            }
+        } else {
+            replaced_values.append(argv[i]);
+        }
+    }
+
+    // Now just run `kill'
+    AST::Command command;
+    command.argv = move(replaced_values);
+    command.position = m_source_position.has_value() ? m_source_position->position : Optional<AST::Position> {};
+
+    auto exit_code = 1;
+    if (auto job = run_command(command)) {
+        block_on_job(job);
+        exit_code = job->exit_code();
+    }
+    return exit_code;
+}
+
 bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings, int& retval)
 {
     if (command.argv.is_empty())
