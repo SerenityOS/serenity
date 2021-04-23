@@ -591,6 +591,8 @@ int mknod(const char* pathname, mode_t mode, dev_t dev)
 long fpathconf([[maybe_unused]] int fd, [[maybe_unused]] int name)
 {
     switch (name) {
+    case _PC_NAME_MAX:
+        return NAME_MAX;
     case _PC_PATH_MAX:
         return PATH_MAX;
     case _PC_VDISABLE:
@@ -603,6 +605,8 @@ long fpathconf([[maybe_unused]] int fd, [[maybe_unused]] int name)
 long pathconf([[maybe_unused]] const char* path, int name)
 {
     switch (name) {
+    case _PC_NAME_MAX:
+        return NAME_MAX;
     case _PC_PATH_MAX:
         return PATH_MAX;
     case _PC_PIPE_BUF:
