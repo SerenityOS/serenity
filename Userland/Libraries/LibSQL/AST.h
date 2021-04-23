@@ -58,7 +58,7 @@ public:
     }
 
     const String& name() const { return m_name; }
-    const NonnullRefPtrVector<SignedNumber> signed_numbers() const { return m_signed_numbers; }
+    const NonnullRefPtrVector<SignedNumber>& signed_numbers() const { return m_signed_numbers; }
 
 private:
     String m_name;
@@ -706,7 +706,7 @@ public:
     const RefPtr<Select>& select_statement() const { return m_select_statement; }
 
     bool has_columns() const { return !m_columns.is_empty(); }
-    const NonnullRefPtrVector<ColumnDefinition> columns() const { return m_columns; }
+    const NonnullRefPtrVector<ColumnDefinition>& columns() const { return m_columns; }
 
     bool is_temporary() const { return m_is_temporary; }
     bool is_error_if_table_exists() const { return m_is_error_if_table_exists; }
@@ -737,6 +737,74 @@ private:
     String m_schema_name;
     String m_table_name;
     bool m_is_error_if_table_does_not_exist;
+};
+
+enum class ConflictResolution {
+    Abort,
+    Fail,
+    Ignore,
+    Replace,
+    Rollback,
+};
+
+class Insert : public Statement {
+public:
+    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, String schema_name, String table_name, String alias, Vector<String> column_names, NonnullRefPtrVector<ChainedExpression> chained_expressions)
+        : m_common_table_expression_list(move(common_table_expression_list))
+        , m_conflict_resolution(conflict_resolution)
+        , m_schema_name(move(schema_name))
+        , m_table_name(move(table_name))
+        , m_alias(move(alias))
+        , m_column_names(move(column_names))
+        , m_chained_expressions(move(chained_expressions))
+    {
+    }
+
+    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, String schema_name, String table_name, String alias, Vector<String> column_names, RefPtr<Select> select_statement)
+        : m_common_table_expression_list(move(common_table_expression_list))
+        , m_conflict_resolution(conflict_resolution)
+        , m_schema_name(move(schema_name))
+        , m_table_name(move(table_name))
+        , m_alias(move(alias))
+        , m_column_names(move(column_names))
+        , m_select_statement(move(select_statement))
+    {
+    }
+
+    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, String schema_name, String table_name, String alias, Vector<String> column_names)
+        : m_common_table_expression_list(move(common_table_expression_list))
+        , m_conflict_resolution(conflict_resolution)
+        , m_schema_name(move(schema_name))
+        , m_table_name(move(table_name))
+        , m_alias(move(alias))
+        , m_column_names(move(column_names))
+    {
+    }
+
+    const RefPtr<CommonTableExpressionList>& common_table_expression_list() const { return m_common_table_expression_list; }
+    ConflictResolution conflict_resolution() const { return m_conflict_resolution; }
+    const String& schema_name() const { return m_schema_name; }
+    const String& table_name() const { return m_table_name; }
+    const String& alias() const { return m_alias; }
+    const Vector<String>& column_names() const { return m_column_names; }
+
+    bool default_values() const { return !has_expressions() && !has_selection(); };
+
+    bool has_expressions() const { return !m_chained_expressions.is_empty(); }
+    const NonnullRefPtrVector<ChainedExpression>& chained_expressions() const { return m_chained_expressions; }
+
+    bool has_selection() const { return !m_select_statement.is_null(); }
+    const RefPtr<Select>& select_statement() const { return m_select_statement; }
+
+private:
+    RefPtr<CommonTableExpressionList> m_common_table_expression_list;
+    ConflictResolution m_conflict_resolution;
+    String m_schema_name;
+    String m_table_name;
+    String m_alias;
+    Vector<String> m_column_names;
+    NonnullRefPtrVector<ChainedExpression> m_chained_expressions;
+    RefPtr<Select> m_select_statement;
 };
 
 class Delete : public Statement {
