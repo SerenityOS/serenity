@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -38,13 +18,20 @@ class Service final : public Core::Object {
 
 public:
     bool is_enabled() const;
+    bool is_running() const { return !m_multi_instance && m_pid != -1; }
     void activate();
+    void deactivate();
+
+    // FIXME: Find out a way to gracefully shutdown services
     void did_exit(int exit_code);
+    void set_enabled_for_current_boot_mode(bool enabled);
 
     static Service* find_by_pid(pid_t);
 
     // FIXME: Port to Core::Property
     void save_to(JsonObject&);
+
+    Vector<String> boot_modes() const { return m_boot_modes; }
 
 private:
     Service(const Core::ConfigFile&, const StringView& name);
@@ -71,6 +58,8 @@ private:
     int m_priority { 1 };
     // Whether we should re-launch it if it exits.
     bool m_keep_alive { false };
+    // Whether it has been explicitly stopped, such as by `service XXX stop`.
+    bool m_explicitly_stopped { false };
     // Whether we should accept connections on the socket and pass the accepted
     // (and not listening) socket to the service. This requires a multi-instance
     // service.

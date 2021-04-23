@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Service.h"
@@ -38,6 +18,7 @@
 #include <libgen.h>
 #include <pwd.h>
 #include <sched.h>
+#include <signal.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -50,6 +31,18 @@ Service* Service::find_by_pid(pid_t pid)
     if (it == s_service_map.end())
         return nullptr;
     return (*it).value;
+}
+
+void Service::set_enabled_for_current_boot_mode(bool enabled)
+{
+    extern String g_boot_mode;
+
+    if (!is_enabled() && enabled) {
+        m_boot_modes.append(g_boot_mode);
+    } else {
+        m_boot_modes.remove_first_matching([&](auto& mode) { return mode == g_boot_mode; });
+    }
+    dbgln("Service::set_enabled_for_current_boot_mode({}) {}: {}", enabled, g_boot_mode, m_boot_modes.size());
 }
 
 void Service::setup_socket(SocketDescriptor& socket)
@@ -144,12 +137,32 @@ void Service::handle_socket_connection()
 
 void Service::activate()
 {
-    VERIFY(m_pid < 0);
+    if (m_pid >= 0)
+        return; // It's already running.
+
+    m_explicitly_stopped = false;
 
     if (m_lazy)
         setup_notifier();
     else
         spawn();
+}
+
+void Service::deactivate()
+{
+    if (m_pid <= 0)
+        return; // It's already stopped.
+
+    // It makes that the service won't restart automatically.
+    m_explicitly_stopped = true;
+
+    if (m_lazy)
+        m_socket_notifier = nullptr;
+    else {
+        // FIXME: Maybe add some configuration option for it ('AllowDeactivate')
+        // FIXME: Check for errors
+        kill(m_pid, SIGKILL);
+    }
 }
 
 void Service::spawn(int socket_fd)
@@ -273,7 +286,7 @@ void Service::did_exit(int exit_code)
     s_service_map.remove(m_pid);
     m_pid = -1;
 
-    if (!m_keep_alive)
+    if (!m_keep_alive || m_explicitly_stopped)
         return;
 
     int run_time_in_msec = m_run_timer.elapsed();
@@ -403,6 +416,7 @@ void Service::save_to(JsonObject& json)
     json.set("sockets", sockets);
     */
 
+    json.set("enabled", is_enabled());
     json.set("stdio_file_path", m_stdio_file_path);
     json.set("priority", m_priority);
     json.set("keep_alive", m_keep_alive);

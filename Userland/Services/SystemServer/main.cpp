@@ -28,10 +28,10 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
-#include <LibCore/ConfigFile.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <SystemServer/ServiceManagement.h>
 #include <errno.h>
 #include <grp.h>
 #include <signal.h>
@@ -217,20 +217,7 @@ int main(int, char**)
 
     event_loop.register_signal(SIGCHLD, sigchld_handler);
 
-    // Read our config and instantiate services.
-    // This takes care of setting up sockets.
-    NonnullRefPtrVector<Service> services;
-    auto config = Core::ConfigFile::get_for_system("SystemServer");
-    for (auto name : config->groups()) {
-        auto service = Service::construct(*config, name);
-        if (service->is_enabled())
-            services.append(service);
-    }
-
-    // After we've set them all up, activate them!
-    dbgln("Activating {} services...", services.size());
-    for (auto& service : services)
-        service.activate();
+    SystemServer::ServiceManagement::the().initialize();
 
     return event_loop.exec();
 }

@@ -1,0 +1,9 @@
+endpoint ServiceManagementServer = 4151813
+{
+    Greet() => ()
+
+    ServiceList() => (String json)
+    ServiceStatus(String service_name) => (String status)
+    ServiceSetEnabled(String service_name, bool enabled) => (Vector<String> boot_modes)
+    ServiceSetRunning(String service_name, bool running) => ()
+}

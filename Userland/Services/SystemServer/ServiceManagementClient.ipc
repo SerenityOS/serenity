@@ -1,0 +1,4 @@
+endpoint ServiceManagementClient = 4151812
+{
+    Dummy() =|
+}
