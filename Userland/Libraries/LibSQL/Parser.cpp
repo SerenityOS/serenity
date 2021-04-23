@@ -72,16 +72,9 @@ NonnullRefPtr<CreateTable> Parser::parse_create_table_statement()
         is_error_if_table_exists = false;
     }
 
-    String schema_or_table_name = consume(TokenType::Identifier).value();
     String schema_name;
     String table_name;
-
-    if (consume_if(TokenType::Period)) {
-        schema_name = move(schema_or_table_name);
-        table_name = consume(TokenType::Identifier).value();
-    } else {
-        table_name = move(schema_or_table_name);
-    }
+    parse_schema_and_table_name(schema_name, table_name);
 
     // FIXME: Parse "AS select-stmt".
 
@@ -107,16 +100,9 @@ NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
         is_error_if_table_does_not_exist = false;
     }
 
-    String schema_or_table_name = consume(TokenType::Identifier).value();
     String schema_name;
     String table_name;
-
-    if (consume_if(TokenType::Period)) {
-        schema_name = move(schema_or_table_name);
-        table_name = consume(TokenType::Identifier).value();
-    } else {
-        table_name = move(schema_or_table_name);
-    }
+    parse_schema_and_table_name(schema_name, table_name);
 
     consume(TokenType::SemiColon);
 
@@ -633,16 +619,9 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_in_expression(NonnullRefPtr<Ex
         return create_ast_node<InChainedExpression>(move(expression), move(chain), invert_expression);
     }
 
-    String schema_or_table_name = consume(TokenType::Identifier).value();
     String schema_name;
     String table_name;
-
-    if (consume_if(TokenType::Period)) {
-        schema_name = move(schema_or_table_name);
-        table_name = consume(TokenType::Identifier).value();
-    } else {
-        table_name = move(schema_or_table_name);
-    }
+    parse_schema_and_table_name(schema_name, table_name);
 
     if (match(TokenType::ParenOpen)) {
         // FIXME: Parse "table-function".
@@ -724,16 +703,9 @@ NonnullRefPtr<CommonTableExpression> Parser::parse_common_table_expression()
 NonnullRefPtr<QualifiedTableName> Parser::parse_qualified_table_name()
 {
     // https://sqlite.org/syntax/qualified-table-name.html
-    String schema_or_table_name = consume(TokenType::Identifier).value();
     String schema_name;
     String table_name;
-
-    if (consume_if(TokenType::Period)) {
-        schema_name = move(schema_or_table_name);
-        table_name = consume(TokenType::Identifier).value();
-    } else {
-        table_name = move(schema_or_table_name);
-    }
+    parse_schema_and_table_name(schema_name, table_name);
 
     String alias;
     if (consume_if(TokenType::As))
@@ -803,16 +775,9 @@ NonnullRefPtr<TableOrSubquery> Parser::parse_table_or_subquery()
 {
     // https://sqlite.org/syntax/table-or-subquery.html
     if (match(TokenType::Identifier)) {
-        String schema_or_table_name = consume().value();
         String schema_name;
         String table_name;
-
-        if (consume_if(TokenType::Period)) {
-            schema_name = move(schema_or_table_name);
-            table_name = consume(TokenType::Identifier).value();
-        } else {
-            table_name = move(schema_or_table_name);
-        }
+        parse_schema_and_table_name(schema_name, table_name);
 
         String table_alias;
         if (consume_if(TokenType::As) || match(TokenType::Identifier))
@@ -857,6 +822,18 @@ NonnullRefPtr<OrderingTerm> Parser::parse_ordering_term()
     }
 
     return create_ast_node<OrderingTerm>(move(expression), move(collation_name), order, nulls);
+}
+
+void Parser::parse_schema_and_table_name(String& schema_name, String& table_name)
+{
+    String schema_or_table_name = consume(TokenType::Identifier).value();
+
+    if (consume_if(TokenType::Period)) {
+        schema_name = move(schema_or_table_name);
+        table_name = consume(TokenType::Identifier).value();
+    } else {
+        table_name = move(schema_or_table_name);
+    }
 }
 
 Token Parser::consume()
