@@ -228,7 +228,7 @@ void RollWidget::mousemove_event(GUI::MouseEvent& event)
     u32 on_sample = roll_length * (static_cast<double>(min(x0, x1)) / m_num_notes);
     u32 off_sample = (roll_length * (static_cast<double>(max(x0, x1) + 1) / m_num_notes)) - 1;
     m_track_manager.current_track().set_roll_note(m_drag_note, on_sample, off_sample);
-    m_note_drag_location = RollNote({ on_sample, off_sample });
+    m_note_drag_location = RollNote { on_sample, off_sample, (u8)m_drag_note, 0 };
 
     update();
 }

@@ -8,6 +8,8 @@
 
 #include "MainWidget.h"
 #include "TrackManager.h"
+#include "DSP/Processor.h"
+#include "DSP/Music.h"
 #include <AK/Array.h>
 #include <AK/Queue.h>
 #include <LibAudio/Buffer.h>
