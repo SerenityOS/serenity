@@ -204,6 +204,7 @@ private:
 };
 
 ID get_id(PCI::Address);
+bool is_io_space_enabled(Address);
 void enumerate(Function<void(Address, ID)> callback);
 void enable_interrupt_line(Address);
 void disable_interrupt_line(Address);

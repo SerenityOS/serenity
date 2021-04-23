@@ -204,6 +204,10 @@ void disable_memory_space(Address address)
 {
     write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) & ~(1 << 1));
 }
+bool is_io_space_enabled(Address address)
+{
+    return (read16(address, PCI_COMMAND) & 1) != 0;
+}
 
 void enable_interrupt_line(Address address)
 {
