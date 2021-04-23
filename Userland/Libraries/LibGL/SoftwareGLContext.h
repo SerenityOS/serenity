@@ -52,6 +52,7 @@ private:
     Vector<GLTriangle> processed_triangles;
 
     GLenum m_error = GL_NO_ERROR;
+    bool m_in_draw_state = false;
 };
 
 }
