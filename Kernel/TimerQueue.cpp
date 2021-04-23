@@ -67,7 +67,7 @@ RefPtr<Timer> TimerQueue::add_timer_without_id(clockid_t clock_id, const Time& d
     // *must* be a RefPtr<Timer>. Otherwise calling cancel_timer() could
     // inadvertently cancel another timer that has been created between
     // returning from the timer handler and a call to cancel_timer().
-    auto timer = adopt(*new Timer(clock_id, deadline, move(callback)));
+    auto timer = adopt_ref(*new Timer(clock_id, deadline, move(callback)));
 
     ScopedSpinLock lock(g_timerqueue_lock);
     timer->m_id = 0; // Don't generate a timer id
@@ -119,7 +119,7 @@ TimerId TimerQueue::add_timer(clockid_t clock_id, const Time& deadline, Function
 {
     auto expires = TimeManagement::the().current_time(clock_id).value();
     expires = expires + deadline;
-    return add_timer(adopt(*new Timer(clock_id, expires, move(callback))));
+    return add_timer(adopt_ref(*new Timer(clock_id, expires, move(callback))));
 }
 
 bool TimerQueue::cancel_timer(TimerId id)

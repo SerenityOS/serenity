@@ -32,7 +32,7 @@ private:
             __Count,
         };
 
-        static NonnullRefPtr<MonthListModel> create() { return adopt(*new MonthListModel); }
+        static NonnullRefPtr<MonthListModel> create() { return adopt_ref(*new MonthListModel); }
         virtual ~MonthListModel() override;
 
         virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;

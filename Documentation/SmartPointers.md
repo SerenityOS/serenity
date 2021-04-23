@@ -42,14 +42,14 @@ Objects can only be held by `RefPtr` if they meet certain criteria. Specifically
 
 To make a class `T` reference-counted, you can simply make it inherit from `RefCounted<T>`. This will add all the necessary pieces to `T`.
 
-**Note:** When constructing an object that derives from `RefCounted`, the reference count starts out at 1 (since 0 would mean that the object has no owners and should be deleted.) The object must therefore be "adopted" by someone who takes responsibility of that 1. This is done through the global `adopt()` function:
+**Note:** When constructing an object that derives from `RefCounted`, the reference count starts out at 1 (since 0 would mean that the object has no owners and should be deleted.) The object must therefore be "adopted" by someone who takes responsibility of that 1. This is done through the global `adopt_ref()` function:
 
 ```cpp
 class Bar : public RefCounted<Bar> {
     ...
 };
 
-RefPtr<Bar> our_object = adopt(*new Bar);
+RefPtr<Bar> our_object = adopt_ref(*new Bar);
 RefPtr<Bar> another_owner = our_object;
 ```
 

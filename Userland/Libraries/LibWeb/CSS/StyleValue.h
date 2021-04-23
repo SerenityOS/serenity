@@ -232,7 +232,7 @@ class StringStyleValue : public StyleValue {
 public:
     static NonnullRefPtr<StringStyleValue> create(const String& string)
     {
-        return adopt(*new StringStyleValue(string));
+        return adopt_ref(*new StringStyleValue(string));
     }
     virtual ~StringStyleValue() override { }
 
@@ -252,7 +252,7 @@ class LengthStyleValue : public StyleValue {
 public:
     static NonnullRefPtr<LengthStyleValue> create(const Length& length)
     {
-        return adopt(*new LengthStyleValue(length));
+        return adopt_ref(*new LengthStyleValue(length));
     }
     virtual ~LengthStyleValue() override { }
 
@@ -282,7 +282,7 @@ private:
 
 class InitialStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<InitialStyleValue> create() { return adopt(*new InitialStyleValue); }
+    static NonnullRefPtr<InitialStyleValue> create() { return adopt_ref(*new InitialStyleValue); }
     virtual ~InitialStyleValue() override { }
 
     String to_string() const override { return "initial"; }
@@ -296,7 +296,7 @@ private:
 
 class InheritStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<InheritStyleValue> create() { return adopt(*new InheritStyleValue); }
+    static NonnullRefPtr<InheritStyleValue> create() { return adopt_ref(*new InheritStyleValue); }
     virtual ~InheritStyleValue() override { }
 
     String to_string() const override { return "inherit"; }
@@ -312,7 +312,7 @@ class ColorStyleValue : public StyleValue {
 public:
     static NonnullRefPtr<ColorStyleValue> create(Color color)
     {
-        return adopt(*new ColorStyleValue(color));
+        return adopt_ref(*new ColorStyleValue(color));
     }
     virtual ~ColorStyleValue() override { }
 
@@ -341,7 +341,7 @@ class IdentifierStyleValue final : public StyleValue {
 public:
     static NonnullRefPtr<IdentifierStyleValue> create(CSS::ValueID id)
     {
-        return adopt(*new IdentifierStyleValue(id));
+        return adopt_ref(*new IdentifierStyleValue(id));
     }
     virtual ~IdentifierStyleValue() override { }
 
@@ -371,7 +371,7 @@ class ImageStyleValue final
     : public StyleValue
     , public ImageResourceClient {
 public:
-    static NonnullRefPtr<ImageStyleValue> create(const URL& url, DOM::Document& document) { return adopt(*new ImageStyleValue(url, document)); }
+    static NonnullRefPtr<ImageStyleValue> create(const URL& url, DOM::Document& document) { return adopt_ref(*new ImageStyleValue(url, document)); }
     virtual ~ImageStyleValue() override { }
 
     String to_string() const override { return String::formatted("Image({})", m_url.to_string()); }

@@ -22,12 +22,12 @@ class RegistersModel final : public GUI::Model {
 public:
     static RefPtr<RegistersModel> create(const PtraceRegisters& regs)
     {
-        return adopt(*new RegistersModel(regs));
+        return adopt_ref(*new RegistersModel(regs));
     }
 
     static RefPtr<RegistersModel> create(const PtraceRegisters& current_regs, const PtraceRegisters& previous_regs)
     {
-        return adopt(*new RegistersModel(current_regs, previous_regs));
+        return adopt_ref(*new RegistersModel(current_regs, previous_regs));
     }
 
     enum Column {

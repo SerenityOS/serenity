@@ -37,7 +37,7 @@ Result<NonnullRefPtr<MappedFile>, OSError> MappedFile::map(const String& path)
     if (ptr == MAP_FAILED)
         return OSError(errno);
 
-    return adopt(*new MappedFile(ptr, size));
+    return adopt_ref(*new MappedFile(ptr, size));
 }
 
 MappedFile::MappedFile(void* ptr, size_t size)

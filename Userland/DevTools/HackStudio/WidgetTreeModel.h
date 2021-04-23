@@ -13,7 +13,7 @@ namespace HackStudio {
 
 class WidgetTreeModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<WidgetTreeModel> create(GUI::Widget& root) { return adopt(*new WidgetTreeModel(root)); }
+    static NonnullRefPtr<WidgetTreeModel> create(GUI::Widget& root) { return adopt_ref(*new WidgetTreeModel(root)); }
     virtual ~WidgetTreeModel() override;
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;

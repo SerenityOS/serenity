@@ -158,7 +158,7 @@ UNMAP_AFTER_INIT void NE2000NetworkAdapter::detect()
         if (!ne2k_ids.span().contains_slow(id))
             return;
         u8 irq = PCI::get_interrupt_line(address);
-        [[maybe_unused]] auto& unused = adopt(*new NE2000NetworkAdapter(address, irq)).leak_ref();
+        [[maybe_unused]] auto& unused = adopt_ref(*new NE2000NetworkAdapter(address, irq)).leak_ref();
     });
 }
 

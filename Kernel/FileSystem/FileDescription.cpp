@@ -25,7 +25,7 @@ namespace Kernel {
 
 KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(Custody& custody)
 {
-    auto description = adopt(*new FileDescription(InodeFile::create(custody.inode())));
+    auto description = adopt_ref(*new FileDescription(InodeFile::create(custody.inode())));
     description->m_custody = custody;
     auto result = description->attach();
     if (result.is_error()) {
@@ -37,7 +37,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(Custody& custo
 
 KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(File& file)
 {
-    auto description = adopt(*new FileDescription(file));
+    auto description = adopt_ref(*new FileDescription(file));
     auto result = description->attach();
     if (result.is_error()) {
         dbgln_if(FILEDESCRIPTION_DEBUG, "Failed to create file description for file: {}", result);

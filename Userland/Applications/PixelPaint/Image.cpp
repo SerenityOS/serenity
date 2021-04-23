@@ -27,7 +27,7 @@ RefPtr<Image> Image::create_with_size(const Gfx::IntSize& size)
     if (size.width() > 16384 || size.height() > 16384)
         return nullptr;
 
-    return adopt(*new Image(size));
+    return adopt_ref(*new Image(size));
 }
 
 Image::Image(const Gfx::IntSize& size)

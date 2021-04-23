@@ -169,7 +169,7 @@ RefPtr<VariablesModel> VariablesModel::create(const PtraceRegisters& regs)
     if (!lib)
         return nullptr;
     auto variables = lib->debug_info->get_variables_in_current_scope(regs);
-    return adopt(*new VariablesModel(move(variables), regs));
+    return adopt_ref(*new VariablesModel(move(variables), regs));
 }
 
 }

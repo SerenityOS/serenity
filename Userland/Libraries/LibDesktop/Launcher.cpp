@@ -16,7 +16,7 @@ namespace Desktop {
 
 auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRefPtr<Details>
 {
-    auto details = adopt(*new Details);
+    auto details = adopt_ref(*new Details);
     auto json = JsonValue::from_string(details_str);
     VERIFY(json.has_value());
     auto obj = json.value().as_object();

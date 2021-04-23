@@ -16,7 +16,7 @@ public:
     enum Column {
         Name
     };
-    static NonnullRefPtr<IRCChannelMemberListModel> create(IRCChannel& channel) { return adopt(*new IRCChannelMemberListModel(channel)); }
+    static NonnullRefPtr<IRCChannelMemberListModel> create(IRCChannel& channel) { return adopt_ref(*new IRCChannelMemberListModel(channel)); }
     virtual ~IRCChannelMemberListModel() override;
 
     virtual int row_count(const GUI::ModelIndex&) const override;

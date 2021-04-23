@@ -14,11 +14,11 @@ namespace Kernel {
 
 NonnullRefPtr<DevFS> DevFS::create()
 {
-    return adopt(*new DevFS);
+    return adopt_ref(*new DevFS);
 }
 
 DevFS::DevFS()
-    : m_root_inode(adopt(*new DevFSRootDirectoryInode(*this)))
+    : m_root_inode(adopt_ref(*new DevFSRootDirectoryInode(*this)))
 {
     LOCKER(m_lock);
     Device::for_each([&](Device& device) {
@@ -32,7 +32,7 @@ DevFS::DevFS()
 void DevFS::notify_new_device(Device& device)
 {
     LOCKER(m_lock);
-    auto new_device_inode = adopt(*new DevFSDeviceInode(*this, device));
+    auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device));
     m_nodes.append(new_device_inode);
     m_root_inode->m_devices.append(new_device_inode);
 }
@@ -274,7 +274,7 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const Stri
         }
         if (name != "pts")
             return EROFS;
-        auto new_directory_inode = adopt(*new DevFSPtsDirectoryInode(m_parent_fs));
+        auto new_directory_inode = adopt_ref(*new DevFSPtsDirectoryInode(m_parent_fs));
         m_subfolders.append(new_directory_inode);
         m_parent_fs.m_nodes.append(new_directory_inode);
         return KResult(KSuccess);
@@ -284,7 +284,7 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const Stri
             if (link.name() == name)
                 return EEXIST;
         }
-        auto new_link_inode = adopt(*new DevFSLinkInode(m_parent_fs, name));
+        auto new_link_inode = adopt_ref(*new DevFSLinkInode(m_parent_fs, name));
         m_links.append(new_link_inode);
         m_parent_fs.m_nodes.append(new_link_inode);
         return new_link_inode;

@@ -30,7 +30,7 @@ class DisassemblyModel final : public GUI::Model {
 public:
     static NonnullRefPtr<DisassemblyModel> create(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
     {
-        return adopt(*new DisassemblyModel(debug_session, regs));
+        return adopt_ref(*new DisassemblyModel(debug_session, regs));
     }
 
     enum Column {

@@ -12,7 +12,7 @@ namespace GUI {
 
 NonnullRefPtr<RunningProcessesModel> RunningProcessesModel::create()
 {
-    return adopt(*new RunningProcessesModel);
+    return adopt_ref(*new RunningProcessesModel);
 }
 
 RunningProcessesModel::RunningProcessesModel()

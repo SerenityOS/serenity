@@ -22,11 +22,11 @@ void VirtIO::detect()
             return;
         switch (id.device_id) {
         case VIRTIO_CONSOLE_PCI_DEVICE_ID: {
-            [[maybe_unused]] auto& unused = adopt(*new VirtIOConsole(address)).leak_ref();
+            [[maybe_unused]] auto& unused = adopt_ref(*new VirtIOConsole(address)).leak_ref();
             break;
         }
         case VIRTIO_ENTROPY_PCI_DEVICE_ID: {
-            [[maybe_unused]] auto& unused = adopt(*new VirtIORNG(address)).leak_ref();
+            [[maybe_unused]] auto& unused = adopt_ref(*new VirtIORNG(address)).leak_ref();
             break;
         }
         default:

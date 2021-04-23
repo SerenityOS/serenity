@@ -39,8 +39,8 @@ public:
 
 class Loader : public RefCounted<Loader> {
 public:
-    static NonnullRefPtr<Loader> create(const StringView& path) { return adopt(*new Loader(path)); }
-    static NonnullRefPtr<Loader> create(const ByteBuffer& buffer) { return adopt(*new Loader(buffer)); }
+    static NonnullRefPtr<Loader> create(const StringView& path) { return adopt_ref(*new Loader(path)); }
+    static NonnullRefPtr<Loader> create(const ByteBuffer& buffer) { return adopt_ref(*new Loader(buffer)); }
 
     bool has_error() const { return m_plugin ? m_plugin->has_error() : true; }
     const char* error_string() const { return m_plugin ? m_plugin->error_string() : "No loader plugin available"; }

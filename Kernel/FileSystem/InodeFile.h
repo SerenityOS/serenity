@@ -16,7 +16,7 @@ class InodeFile final : public File {
 public:
     static NonnullRefPtr<InodeFile> create(NonnullRefPtr<Inode>&& inode)
     {
-        return adopt(*new InodeFile(move(inode)));
+        return adopt_ref(*new InodeFile(move(inode)));
     }
 
     virtual ~InodeFile() override;

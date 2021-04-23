@@ -21,7 +21,7 @@ class Custody : public RefCounted<Custody> {
 public:
     static NonnullRefPtr<Custody> create(Custody* parent, const StringView& name, Inode& inode, int mount_flags)
     {
-        return adopt(*new Custody(parent, name, inode, mount_flags));
+        return adopt_ref(*new Custody(parent, name, inode, mount_flags));
     }
 
     ~Custody();

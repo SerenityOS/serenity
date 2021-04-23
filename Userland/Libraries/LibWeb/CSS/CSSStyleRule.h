@@ -21,7 +21,7 @@ class CSSStyleRule : public CSSRule {
 public:
     static NonnullRefPtr<CSSStyleRule> create(Vector<Selector>&& selectors, NonnullRefPtr<CSSStyleDeclaration>&& declaration)
     {
-        return adopt(*new CSSStyleRule(move(selectors), move(declaration)));
+        return adopt_ref(*new CSSStyleRule(move(selectors), move(declaration)));
     }
 
     ~CSSStyleRule();

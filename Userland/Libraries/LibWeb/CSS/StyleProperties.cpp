@@ -28,7 +28,7 @@ StyleProperties::StyleProperties(const StyleProperties& other)
 
 NonnullRefPtr<StyleProperties> StyleProperties::clone() const
 {
-    return adopt(*new StyleProperties(*this));
+    return adopt_ref(*new StyleProperties(*this));
 }
 
 void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue> value)

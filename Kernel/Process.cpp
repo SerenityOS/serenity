@@ -143,7 +143,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     if (!cwd)
         cwd = VFS::the().root_custody();
 
-    auto process = adopt(*new Process(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty));
+    auto process = adopt_ref(*new Process(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty));
     if (!first_thread)
         return {};
     process->m_fds.resize(m_max_open_file_descriptors);
@@ -171,7 +171,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
 
 RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity)
 {
-    auto process = adopt(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true));
+    auto process = adopt_ref(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true));
     if (!first_thread)
         return {};
     first_thread->tss().eip = (FlatPtr)entry;

@@ -25,7 +25,7 @@ RefPtr<Layout::Node> SVGSVGElement::create_layout_node()
     auto style = document().style_resolver().resolve_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
-    return adopt(*new Layout::SVGSVGBox(document(), *this, move(style)));
+    return adopt_ref(*new Layout::SVGSVGBox(document(), *this, move(style)));
 }
 
 unsigned SVGSVGElement::width() const

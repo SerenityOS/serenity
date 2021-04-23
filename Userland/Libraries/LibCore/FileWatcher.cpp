@@ -103,7 +103,7 @@ Result<NonnullRefPtr<FileWatcher>, String> FileWatcher::watch(const String& path
 
     dbgln_if(FILE_WATCHER_DEBUG, "Started watcher for file '{}'", path.characters());
     auto notifier = Notifier::construct(watch_fd, Notifier::Event::Read);
-    return adopt(*new FileWatcher(move(notifier), move(path)));
+    return adopt_ref(*new FileWatcher(move(notifier), move(path)));
 }
 
 FileWatcher::FileWatcher(NonnullRefPtr<Notifier> notifier, const String& path)

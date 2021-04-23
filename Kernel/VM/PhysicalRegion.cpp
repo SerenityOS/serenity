@@ -17,7 +17,7 @@ namespace Kernel {
 
 NonnullRefPtr<PhysicalRegion> PhysicalRegion::create(PhysicalAddress lower, PhysicalAddress upper)
 {
-    return adopt(*new PhysicalRegion(lower, upper));
+    return adopt_ref(*new PhysicalRegion(lower, upper));
 }
 
 PhysicalRegion::PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper)

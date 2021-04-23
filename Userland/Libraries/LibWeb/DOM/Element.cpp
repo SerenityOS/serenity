@@ -115,35 +115,35 @@ RefPtr<Layout::Node> Element::create_layout_node()
         VERIFY_NOT_REACHED();
         break;
     case CSS::Display::Block:
-        return adopt(*new Layout::BlockBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
     case CSS::Display::Inline:
         if (style->float_().value_or(CSS::Float::None) != CSS::Float::None)
-            return adopt(*new Layout::BlockBox(document(), this, move(style)));
-        return adopt(*new Layout::InlineNode(document(), *this, move(style)));
+            return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::InlineNode(document(), *this, move(style)));
     case CSS::Display::ListItem:
-        return adopt(*new Layout::ListItemBox(document(), *this, move(style)));
+        return adopt_ref(*new Layout::ListItemBox(document(), *this, move(style)));
     case CSS::Display::Table:
-        return adopt(*new Layout::TableBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::TableBox(document(), this, move(style)));
     case CSS::Display::TableRow:
-        return adopt(*new Layout::TableRowBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::TableRowBox(document(), this, move(style)));
     case CSS::Display::TableCell:
-        return adopt(*new Layout::TableCellBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::TableCellBox(document(), this, move(style)));
     case CSS::Display::TableRowGroup:
     case CSS::Display::TableHeaderGroup:
     case CSS::Display::TableFooterGroup:
-        return adopt(*new Layout::TableRowGroupBox(document(), *this, move(style)));
+        return adopt_ref(*new Layout::TableRowGroupBox(document(), *this, move(style)));
     case CSS::Display::InlineBlock: {
-        auto inline_block = adopt(*new Layout::BlockBox(document(), this, move(style)));
+        auto inline_block = adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
         inline_block->set_inline(true);
         return inline_block;
     }
     case CSS::Display::Flex:
-        return adopt(*new Layout::BlockBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
     case CSS::Display::TableColumn:
     case CSS::Display::TableColumnGroup:
     case CSS::Display::TableCaption:
         // FIXME: This is just an incorrect placeholder until we improve table layout support.
-        return adopt(*new Layout::BlockBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
     }
     VERIFY_NOT_REACHED();
 }

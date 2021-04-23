@@ -17,7 +17,7 @@ public:
 
     static NonnullRefPtr<MouseEvent> create(const FlyString& event_name, i32 offset_x, i32 offset_y, i32 client_x, i32 client_y)
     {
-        return adopt(*new MouseEvent(event_name, offset_x, offset_y, client_x, client_y));
+        return adopt_ref(*new MouseEvent(event_name, offset_x, offset_y, client_x, client_y));
     }
 
     virtual ~MouseEvent() override;

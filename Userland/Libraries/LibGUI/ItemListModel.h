@@ -27,11 +27,11 @@ public:
 
     static NonnullRefPtr<ItemListModel> create(const Container& data, const ColumnNamesT& column_names, const Optional<size_t>& row_count = {}) requires(IsTwoDimensional)
     {
-        return adopt(*new ItemListModel<T, Container, ColumnNameListType>(data, column_names, row_count));
+        return adopt_ref(*new ItemListModel<T, Container, ColumnNameListType>(data, column_names, row_count));
     }
     static NonnullRefPtr<ItemListModel> create(const Container& data, const Optional<size_t>& row_count = {}) requires(!IsTwoDimensional)
     {
-        return adopt(*new ItemListModel<T, Container>(data, row_count));
+        return adopt_ref(*new ItemListModel<T, Container>(data, row_count));
     }
 
     virtual ~ItemListModel() override { }

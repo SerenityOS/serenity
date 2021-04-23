@@ -22,7 +22,7 @@ public:
 
     static NonnullRefPtr<DOMImplementation> create(Document& document)
     {
-        return adopt(*new DOMImplementation(document));
+        return adopt_ref(*new DOMImplementation(document));
     }
 
     const NonnullRefPtr<Document> create_html_document(const String& title) const;

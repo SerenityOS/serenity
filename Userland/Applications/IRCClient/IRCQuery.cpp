@@ -23,7 +23,7 @@ IRCQuery::~IRCQuery()
 
 NonnullRefPtr<IRCQuery> IRCQuery::create(IRCClient& client, const String& name)
 {
-    return adopt(*new IRCQuery(client, name));
+    return adopt_ref(*new IRCQuery(client, name));
 }
 
 void IRCQuery::add_message(char prefix, const String& name, const String& text, Color color)

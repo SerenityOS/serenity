@@ -15,19 +15,19 @@
 
 NonnullRefPtr<IRCLogBuffer> IRCLogBuffer::create()
 {
-    return adopt(*new IRCLogBuffer);
+    return adopt_ref(*new IRCLogBuffer);
 }
 
 IRCLogBuffer::IRCLogBuffer()
 {
     m_document = Web::DOM::Document::create();
-    m_document->append_child(adopt(*new Web::DOM::DocumentType(document())));
+    m_document->append_child(adopt_ref(*new Web::DOM::DocumentType(document())));
     auto html_element = m_document->create_element("html");
     m_document->append_child(html_element);
     auto head_element = m_document->create_element("head");
     html_element->append_child(head_element);
     auto style_element = m_document->create_element("style");
-    style_element->append_child(adopt(*new Web::DOM::Text(document(), "div { font-family: Csilla; font-weight: lighter; }")));
+    style_element->append_child(adopt_ref(*new Web::DOM::Text(document(), "div { font-family: Csilla; font-weight: lighter; }")));
     head_element->append_child(style_element);
     auto body_element = m_document->create_element("body");
     html_element->append_child(body_element);

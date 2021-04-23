@@ -10,7 +10,7 @@
 
 NonnullRefPtr<ClipboardHistoryModel> ClipboardHistoryModel::create()
 {
-    return adopt(*new ClipboardHistoryModel());
+    return adopt_ref(*new ClipboardHistoryModel());
 }
 
 ClipboardHistoryModel::~ClipboardHistoryModel()

@@ -71,7 +71,7 @@ NonnullRefPtr<StringImpl> StringImpl::create_uninitialized(size_t length, char*&
     VERIFY(length);
     void* slot = kmalloc(allocation_size_for_stringimpl(length));
     VERIFY(slot);
-    auto new_stringimpl = adopt(*new (slot) StringImpl(ConstructWithInlineBuffer, length));
+    auto new_stringimpl = adopt_ref(*new (slot) StringImpl(ConstructWithInlineBuffer, length));
     buffer = const_cast<char*>(new_stringimpl->characters());
     buffer[length] = '\0';
     return new_stringimpl;

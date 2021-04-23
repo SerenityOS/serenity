@@ -163,7 +163,7 @@ int main(int argc, char** argv)
         Vector<String> args;
         for (auto* arg : script_args)
             args.empend(arg);
-        shell->set_local_variable("ARGV", adopt(*new Shell::AST::ListValue(move(args))));
+        shell->set_local_variable("ARGV", adopt_ref(*new Shell::AST::ListValue(move(args))));
     }
 
     if (command_to_run) {

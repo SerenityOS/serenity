@@ -18,7 +18,7 @@ namespace Kernel {
 
 NonnullRefPtr<AHCIPort::ScatterList> AHCIPort::ScatterList::create(AsyncBlockDeviceRequest& request, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size)
 {
-    return adopt(*new ScatterList(request, allocated_pages, device_block_size));
+    return adopt_ref(*new ScatterList(request, allocated_pages, device_block_size));
 }
 
 AHCIPort::ScatterList::ScatterList(AsyncBlockDeviceRequest& request, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size)
@@ -29,7 +29,7 @@ AHCIPort::ScatterList::ScatterList(AsyncBlockDeviceRequest& request, NonnullRefP
 
 NonnullRefPtr<AHCIPort> AHCIPort::create(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
-    return adopt(*new AHCIPort(handler, registers, port_index));
+    return adopt_ref(*new AHCIPort(handler, registers, port_index));
 }
 
 AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)

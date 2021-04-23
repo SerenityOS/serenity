@@ -198,7 +198,7 @@ inline WeakPtr<U> Weakable<T>::make_weak_ptr() const
         // There is a small chance that we create a new WeakLink and throw
         // it away because another thread beat us to it. But the window is
         // pretty small and the overhead isn't terrible.
-        m_link.assign_if_null(adopt(*new WeakLink(const_cast<T&>(static_cast<const T&>(*this)))));
+        m_link.assign_if_null(adopt_ref(*new WeakLink(const_cast<T&>(static_cast<const T&>(*this)))));
     }
 
     WeakPtr<U> weak_ptr(m_link);

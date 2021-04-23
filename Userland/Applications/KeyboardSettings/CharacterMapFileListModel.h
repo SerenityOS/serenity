@@ -13,7 +13,7 @@ class CharacterMapFileListModel final : public GUI::Model {
 public:
     static NonnullRefPtr<CharacterMapFileListModel> create(Vector<String>& file_names)
     {
-        return adopt(*new CharacterMapFileListModel(file_names));
+        return adopt_ref(*new CharacterMapFileListModel(file_names));
     }
 
     virtual ~CharacterMapFileListModel() override { }

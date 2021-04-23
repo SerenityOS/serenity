@@ -35,7 +35,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     set_layout<GUI::VerticalBoxLayout>();
     m_splitter = add<GUI::HorizontalSplitter>();
     m_player_view = m_splitter->add<GUI::Widget>();
-    m_playlist_model = adopt(*new PlaylistModel());
+    m_playlist_model = adopt_ref(*new PlaylistModel());
 
     m_player_view->set_layout<GUI::VerticalBoxLayout>();
 

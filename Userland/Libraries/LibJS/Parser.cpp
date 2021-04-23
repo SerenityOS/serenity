@@ -228,7 +228,7 @@ NonnullRefPtr<Program> Parser::parse_program()
 {
     auto rule_start = push_start();
     ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Let | ScopePusher::Function);
-    auto program = adopt(*new Program({ m_filename, rule_start.position(), position() }));
+    auto program = adopt_ref(*new Program({ m_filename, rule_start.position(), position() }));
 
     bool first = true;
     while (!done()) {

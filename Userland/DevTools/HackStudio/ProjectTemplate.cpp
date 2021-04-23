@@ -62,7 +62,7 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(const String& manife
         icon = GUI::Icon(move(bitmap32));
     }
 
-    return adopt(*new ProjectTemplate(id, name, description, icon, priority));
+    return adopt_ref(*new ProjectTemplate(id, name, description, icon, priority));
 }
 
 Result<void, String> ProjectTemplate::create_project(const String& name, const String& path)

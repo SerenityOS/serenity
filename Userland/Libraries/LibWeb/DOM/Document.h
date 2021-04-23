@@ -45,7 +45,7 @@ public:
 
     static NonnullRefPtr<Document> create(const URL& url = "about:blank")
     {
-        return adopt(*new Document(url));
+        return adopt_ref(*new Document(url));
     }
     static NonnullRefPtr<Document> create_with_global_object(Bindings::WindowObject&)
     {

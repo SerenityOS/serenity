@@ -20,7 +20,7 @@ CharacterBitmap::~CharacterBitmap()
 
 NonnullRefPtr<CharacterBitmap> CharacterBitmap::create_from_ascii(const char* asciiData, unsigned width, unsigned height)
 {
-    return adopt(*new CharacterBitmap(asciiData, width, height));
+    return adopt_ref(*new CharacterBitmap(asciiData, width, height));
 }
 
 }

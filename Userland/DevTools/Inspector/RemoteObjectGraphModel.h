@@ -20,7 +20,7 @@ class RemoteObjectGraphModel final : public GUI::Model {
 public:
     static NonnullRefPtr<RemoteObjectGraphModel> create(RemoteProcess& process)
     {
-        return adopt(*new RemoteObjectGraphModel(process));
+        return adopt_ref(*new RemoteObjectGraphModel(process));
     }
 
     virtual ~RemoteObjectGraphModel() override;

@@ -33,7 +33,7 @@ void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
 
 KResultOr<NonnullRefPtr<Socket>> LocalSocket::create(int type)
 {
-    return adopt(*new LocalSocket(type));
+    return adopt_ref(*new LocalSocket(type));
 }
 
 LocalSocket::LocalSocket(int type)

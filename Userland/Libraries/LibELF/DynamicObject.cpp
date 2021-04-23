@@ -444,7 +444,7 @@ auto DynamicObject::lookup_symbol(const StringView& name, u32 gnu_hash, u32 sysv
 
 NonnullRefPtr<DynamicObject> DynamicObject::create(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address)
 {
-    return adopt(*new DynamicObject(filename, base_address, dynamic_section_address));
+    return adopt_ref(*new DynamicObject(filename, base_address, dynamic_section_address));
 }
 
 // offset is in PLT relocation table

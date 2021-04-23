@@ -17,7 +17,7 @@ public:
     virtual ~HttpResponse() override;
     static NonnullRefPtr<HttpResponse> create(int code, HashMap<String, String, CaseInsensitiveStringTraits>&& headers)
     {
-        return adopt(*new HttpResponse(code, move(headers)));
+        return adopt_ref(*new HttpResponse(code, move(headers)));
     }
 
     int code() const { return m_code; }

@@ -14,7 +14,7 @@ class AnonymousFile final : public File {
 public:
     static NonnullRefPtr<AnonymousFile> create(NonnullRefPtr<AnonymousVMObject> vmobject)
     {
-        return adopt(*new AnonymousFile(move(vmobject)));
+        return adopt_ref(*new AnonymousFile(move(vmobject)));
     }
 
     virtual ~AnonymousFile() override;

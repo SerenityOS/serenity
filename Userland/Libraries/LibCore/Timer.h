@@ -17,13 +17,13 @@ class Timer final : public Object {
 public:
     static NonnullRefPtr<Timer> create_repeating(int interval, Function<void()>&& timeout_handler, Object* parent = nullptr)
     {
-        auto timer = adopt(*new Timer(interval, move(timeout_handler), parent));
+        auto timer = adopt_ref(*new Timer(interval, move(timeout_handler), parent));
         timer->stop();
         return timer;
     }
     static NonnullRefPtr<Timer> create_single_shot(int interval, Function<void()>&& timeout_handler, Object* parent = nullptr)
     {
-        auto timer = adopt(*new Timer(interval, move(timeout_handler), parent));
+        auto timer = adopt_ref(*new Timer(interval, move(timeout_handler), parent));
         timer->set_single_shot(true);
         timer->stop();
         return timer;

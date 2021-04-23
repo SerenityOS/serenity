@@ -12,7 +12,7 @@ class Client : public RefCounted<Client> {
 public:
     static NonnullRefPtr<Client> create(int id, RefPtr<Core::TCPSocket> socket)
     {
-        return adopt(*new Client(id, move(socket)));
+        return adopt_ref(*new Client(id, move(socket)));
     }
 
     Function<void()> on_exit;

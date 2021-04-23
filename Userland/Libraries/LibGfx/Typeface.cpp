@@ -46,7 +46,7 @@ RefPtr<Font> Typeface::get_font(unsigned size)
     }
 
     if (m_ttf_font)
-        return adopt(*new TTF::ScaledFont(*m_ttf_font, size, size));
+        return adopt_ref(*new TTF::ScaledFont(*m_ttf_font, size, size));
 
     return {};
 }

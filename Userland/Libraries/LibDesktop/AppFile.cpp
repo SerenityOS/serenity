@@ -20,7 +20,7 @@ NonnullRefPtr<AppFile> AppFile::get_for_app(const StringView& app_name)
 
 NonnullRefPtr<AppFile> AppFile::open(const StringView& path)
 {
-    return adopt(*new AppFile(path));
+    return adopt_ref(*new AppFile(path));
 }
 
 void AppFile::for_each(Function<void(NonnullRefPtr<AppFile>)> callback, const StringView& directory)

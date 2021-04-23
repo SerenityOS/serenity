@@ -237,7 +237,7 @@ struct ProcFSInodeData : public FileDescriptionData {
 
 NonnullRefPtr<ProcFS> ProcFS::create()
 {
-    return adopt(*new ProcFS);
+    return adopt_ref(*new ProcFS);
 }
 
 ProcFS::~ProcFS()
@@ -1018,10 +1018,10 @@ RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
         // and if that fails we cannot return this instance anymore and just
         // create a new one.
         if (it->value->try_ref())
-            return adopt(*it->value);
+            return adopt_ref(*it->value);
         // We couldn't ref it, so just create a new one and replace the entry
     }
-    auto inode = adopt(*new ProcFSInode(const_cast<ProcFS&>(*this), inode_id.index()));
+    auto inode = adopt_ref(*new ProcFSInode(const_cast<ProcFS&>(*this), inode_id.index()));
     auto result = m_inodes.set(inode_id.index().value(), inode.ptr());
     VERIFY(result == ((it == m_inodes.end()) ? AK::HashSetResult::InsertedNewEntry : AK::HashSetResult::ReplacedExistingEntry));
     return inode;
@@ -1677,7 +1677,7 @@ KResult ProcFSInode::chmod(mode_t)
 
 ProcFS::ProcFS()
 {
-    m_root_inode = adopt(*new ProcFSInode(*this, 1));
+    m_root_inode = adopt_ref(*new ProcFSInode(*this, 1));
     m_entries.resize(FI_MaxStaticFileIndex);
     m_entries[FI_Root_df] = { "df", FI_Root_df, false, procfs$df };
     m_entries[FI_Root_all] = { "all", FI_Root_all, false, procfs$all };

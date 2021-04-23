@@ -829,7 +829,7 @@ RefPtr<Value> CloseFdRedirection::run(RefPtr<Shell>)
 {
     Command command;
     command.position = position();
-    command.redirections.append(adopt(*new CloseRedirection(m_fd)));
+    command.redirections.append(adopt_ref(*new CloseRedirection(m_fd)));
     return create<CommandValue>(move(command));
 }
 
@@ -3249,7 +3249,7 @@ ListValue::ListValue(Vector<String> values)
         return;
     m_contained_values.ensure_capacity(values.size());
     for (auto& str : values)
-        m_contained_values.append(adopt(*new StringValue(move(str))));
+        m_contained_values.append(adopt_ref(*new StringValue(move(str))));
 }
 
 NonnullRefPtr<Value> Value::with_slices(NonnullRefPtr<Slice> slice) const&
@@ -3447,7 +3447,7 @@ Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
 
 Result<NonnullRefPtr<Rewiring>, String> CloseRedirection::apply() const
 {
-    return adopt(*new Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseNew));
+    return adopt_ref(*new Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseNew));
 }
 
 CloseRedirection::~CloseRedirection()
@@ -3462,7 +3462,7 @@ Result<NonnullRefPtr<Rewiring>, String> PathRedirection::apply() const
             dbgln("open() failed for '{}' with {}", path, error);
             return error;
         }
-        return adopt(*new Rewiring(fd, my_fd, Rewiring::Close::Old));
+        return adopt_ref(*new Rewiring(fd, my_fd, Rewiring::Close::Old));
     };
     switch (direction) {
     case AST::PathRedirection::WriteAppend:

@@ -54,7 +54,7 @@ RefPtr<DynamicLoader> DynamicLoader::try_create(int fd, String filename)
         return {};
     }
 
-    return adopt(*new DynamicLoader(fd, move(filename), data, size));
+    return adopt_ref(*new DynamicLoader(fd, move(filename), data, size));
 }
 
 DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size)

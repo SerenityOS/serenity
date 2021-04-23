@@ -12,7 +12,7 @@ namespace Web::HTML {
 HTMLTemplateElement::HTMLTemplateElement(DOM::Document& document, QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    m_content = adopt(*new DOM::DocumentFragment(appropriate_template_contents_owner_document(document)));
+    m_content = adopt_ref(*new DOM::DocumentFragment(appropriate_template_contents_owner_document(document)));
     m_content->set_host(*this);
 }
 

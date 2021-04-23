@@ -481,7 +481,7 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
     });
 
     m_undo_stack = make<GUI::UndoStack>();
-    m_undo_glyph = adopt(*new UndoGlyph(m_glyph_map_widget->selected_glyph(), *m_edited_font));
+    m_undo_glyph = adopt_ref(*new UndoGlyph(m_glyph_map_widget->selected_glyph(), *m_edited_font));
     did_change_undo_stack();
 
     if (on_initialize)

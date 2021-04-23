@@ -15,7 +15,7 @@ namespace GUI {
 
 class IconImpl : public RefCounted<IconImpl> {
 public:
-    static NonnullRefPtr<IconImpl> create() { return adopt(*new IconImpl); }
+    static NonnullRefPtr<IconImpl> create() { return adopt_ref(*new IconImpl); }
     ~IconImpl() { }
 
     const Gfx::Bitmap* bitmap_for_size(int) const;
