@@ -26,7 +26,6 @@ public:
     FlowDirection flow_direction() const { return m_flow_direction; }
     void set_flow_direction(FlowDirection);
 
-    int content_width() const;
     int horizontal_padding() const { return m_horizontal_padding; }
 
     virtual void scroll_into_view(const ModelIndex&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
@@ -117,7 +116,7 @@ private:
     void scroll_out_of_view_timer_fired();
     int items_per_page() const;
 
-    void reinit_item_cache() const;
+    void rebuild_item_cache() const;
     int model_index_to_item_index(const ModelIndex& model_index) const
     {
         VERIFY(model_index.row() < item_count());
@@ -148,7 +147,6 @@ private:
     bool m_always_wrap_item_labels { false };
 
     bool m_rubber_banding { false };
-    bool m_rubber_banding_store_selection { false };
     RefPtr<Core::Timer> m_out_of_view_timer;
     Gfx::IntPoint m_out_of_view_position;
     Gfx::IntPoint m_rubber_band_origin;
