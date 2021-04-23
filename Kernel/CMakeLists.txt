@@ -33,6 +33,7 @@ set(KERNEL_SOURCES
     Devices/FullDevice.cpp
     Devices/MemoryDevice.cpp
     Devices/NullDevice.cpp
+    Devices/PCISerialDevice.cpp
     Devices/PCSpeaker.cpp
     Devices/RandomDevice.cpp
     Devices/SB16.cpp

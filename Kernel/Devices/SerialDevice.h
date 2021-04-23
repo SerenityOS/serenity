@@ -111,6 +111,8 @@ public:
     virtual String device_name() const override;
 
 private:
+    friend class PCISerialDevice;
+
     // ^CharacterDevice
     virtual const char* class_name() const override { return "SerialDevice"; }
 
