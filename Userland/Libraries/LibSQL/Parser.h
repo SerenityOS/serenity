@@ -68,6 +68,7 @@ private:
     Optional<NonnullRefPtr<Expression>> parse_chained_expression();
     Optional<NonnullRefPtr<Expression>> parse_cast_expression();
     Optional<NonnullRefPtr<Expression>> parse_case_expression();
+    Optional<NonnullRefPtr<Expression>> parse_exists_expression(bool invert_expression, TokenType opening_token = TokenType::Exists);
     Optional<NonnullRefPtr<Expression>> parse_collate_expression(NonnullRefPtr<Expression> expression);
     Optional<NonnullRefPtr<Expression>> parse_is_expression(NonnullRefPtr<Expression> expression);
     Optional<NonnullRefPtr<Expression>> parse_match_expression(NonnullRefPtr<Expression> lhs, bool invert_expression);
