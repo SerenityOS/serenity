@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1219,7 +1220,11 @@ void SoftCPU::CLD(const X86::Instruction&)
 
 void SoftCPU::CLI(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::CLTS(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::CMC(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::CMC(const X86::Instruction&)
+{
+    set_cf(!cf());
+}
 
 void SoftCPU::CMOVcc_reg16_RM16(const X86::Instruction& insn)
 {
@@ -1543,7 +1548,9 @@ void SoftCPU::FST_RM32(const X86::Instruction& insn)
     insn.modrm().write32(*this, insn, shadow_wrap_as_initialized(bit_cast<u32>(f32)));
 }
 
-void SoftCPU::FNOP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FNOP(const X86::Instruction&)
+{
+}
 
 void SoftCPU::FSTP_RM32(const X86::Instruction& insn)
 {
@@ -1663,14 +1670,24 @@ void SoftCPU::FNSTCW(const X86::Instruction& insn)
     insn.modrm().write16(*this, insn, m_fpu_cw);
 }
 
-void SoftCPU::FPREM(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FPREM(const X86::Instruction&)
+{
+    fpu_set(0,
+        fmodl(fpu_get(0), fpu_get(1)));
+}
 
 void SoftCPU::FSQRT(const X86::Instruction&)
 {
     fpu_set(0, sqrt(fpu_get(0)));
 }
 
-void SoftCPU::FSINCOS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FSINCOS(const X86::Instruction&)
+{
+    long double sin = sinl(fpu_get(0));
+    long double cos = cosl(fpu_get(0));
+    fpu_set(0, sin);
+    fpu_push(cos);
+}
 
 void SoftCPU::FRNDINT(const X86::Instruction&)
 {
@@ -1702,7 +1719,12 @@ void SoftCPU::FIADD_RM32(const X86::Instruction& insn)
     fpu_set(0, fpu_get(0) + (long double)m32int);
 }
 
-void SoftCPU::FCMOVB(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCMOVB(const X86::Instruction& insn)
+{
+    VERIFY(insn.modrm().is_register());
+    if (cf())
+        fpu_set(0, fpu_get(insn.rm() & 7));
+}
 
 void SoftCPU::FIMUL_RM32(const X86::Instruction& insn)
 {
@@ -1712,7 +1734,13 @@ void SoftCPU::FIMUL_RM32(const X86::Instruction& insn)
     fpu_set(0, fpu_get(0) * (long double)m32int);
 }
 
-void SoftCPU::FCMOVE(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCMOVE(const X86::Instruction& insn)
+{
+    VERIFY(insn.modrm().is_register());
+    if (zf())
+        fpu_set(0, fpu_get(insn.rm() & 7));
+}
+
 void SoftCPU::FICOM_RM32(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::FCMOVBE(const X86::Instruction& insn)
@@ -1722,7 +1750,13 @@ void SoftCPU::FCMOVBE(const X86::Instruction& insn)
 }
 
 void SoftCPU::FICOMP_RM32(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FCMOVU(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FCMOVU(const X86::Instruction& insn)
+{
+    VERIFY(insn.modrm().is_register());
+    if (pf())
+        fpu_set(0, fpu_get((insn.modrm().reg_fpu())));
+}
 
 void SoftCPU::FISUB_RM32(const X86::Instruction& insn)
 {
@@ -1766,18 +1800,35 @@ void SoftCPU::FILD_RM32(const X86::Instruction& insn)
     fpu_push((long double)m32int);
 }
 
-void SoftCPU::FCMOVNB(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FISTTP_RM32(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FCMOVNE(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCMOVNB(const X86::Instruction& insn)
+{
+    VERIFY(insn.modrm().is_register());
+    if (!cf())
+        fpu_set(0, fpu_get((insn.modrm().reg_fpu())));
+}
+
+void SoftCPU::FISTTP_RM32(const X86::Instruction& insn)
+{
+    VERIFY(!insn.modrm().is_register());
+    i32 value = static_cast<i32>(fpu_pop());
+    insn.modrm().write32(*this, insn, shadow_wrap_as_initialized(bit_cast<u32>(value)));
+}
+
+void SoftCPU::FCMOVNE(const X86::Instruction& insn)
+{
+    VERIFY(insn.modrm().is_register());
+    if (!zf())
+        fpu_set(0, fpu_get((insn.modrm().reg_fpu())));
+}
 
 void SoftCPU::FIST_RM32(const X86::Instruction& insn)
 {
     VERIFY(!insn.modrm().is_register());
     auto f = fpu_get(0);
     // FIXME: Respect rounding mode in m_fpu_cw.
-    auto i32 = static_cast<int32_t>(f);
+    auto value = static_cast<i32>(f);
     // FIXME: Respect shadow values
-    insn.modrm().write32(*this, insn, shadow_wrap_as_initialized(bit_cast<u32>(i32)));
+    insn.modrm().write32(*this, insn, shadow_wrap_as_initialized(bit_cast<u32>(value)));
 }
 
 void SoftCPU::FCMOVNBE(const X86::Instruction& insn)
@@ -1792,7 +1843,13 @@ void SoftCPU::FISTP_RM32(const X86::Instruction& insn)
     fpu_pop();
 }
 
-void SoftCPU::FCMOVNU(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCMOVNU(const X86::Instruction& insn)
+{
+    VERIFY(insn.modrm().is_register());
+    if (!pf())
+        fpu_set(0, fpu_get((insn.modrm().reg_fpu())));
+}
+
 void SoftCPU::FNENI(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FNDISI(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FNCLEX(const X86::Instruction&) { TODO_INSN(); }
@@ -1955,7 +2012,14 @@ void SoftCPU::FLD_RM64(const X86::Instruction& insn)
 }
 
 void SoftCPU::FFREE(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FISTTP_RM64(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FISTTP_RM64(const X86::Instruction& insn)
+{
+    // is this allowed to be a register?
+    VERIFY(!insn.modrm().is_register());
+    i64 value = static_cast<i64>(fpu_pop());
+    insn.modrm().write64(*this, insn, shadow_wrap_as_initialized(bit_cast<u64>(value)));
+}
 
 void SoftCPU::FST_RM64(const X86::Instruction& insn)
 {
@@ -2088,16 +2152,23 @@ void SoftCPU::FILD_RM16(const X86::Instruction& insn)
 }
 
 void SoftCPU::FFREEP(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FISTTP_RM16(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FISTTP_RM16(const X86::Instruction& insn)
+{
+    // is this allowed to be a register?
+    VERIFY(!insn.modrm().is_register());
+    i16 value = static_cast<i16>(fpu_pop());
+    insn.modrm().write16(*this, insn, shadow_wrap_as_initialized(bit_cast<u16>(value)));
+}
 
 void SoftCPU::FIST_RM16(const X86::Instruction& insn)
 {
     VERIFY(!insn.modrm().is_register());
     auto f = fpu_get(0);
     // FIXME: Respect rounding mode in m_fpu_cw.
-    auto i16 = static_cast<int16_t>(f);
+    auto value = static_cast<i16>(f);
     // FIXME: Respect shadow values
-    insn.modrm().write16(*this, insn, shadow_wrap_as_initialized(bit_cast<u16>(i16)));
+    insn.modrm().write16(*this, insn, shadow_wrap_as_initialized(bit_cast<u16>(value)));
 }
 
 void SoftCPU::FISTP_RM16(const X86::Instruction& insn)
@@ -2136,9 +2207,9 @@ void SoftCPU::FISTP_RM64(const X86::Instruction& insn)
     VERIFY(!insn.modrm().is_register());
     auto f = fpu_pop();
     // FIXME: Respect rounding mode in m_fpu_cw.
-    auto i64 = static_cast<int64_t>(f);
+    auto value = static_cast<i64>(f);
     // FIXME: Respect shadow values
-    insn.modrm().write64(*this, insn, shadow_wrap_as_initialized(bit_cast<u64>(i64)));
+    insn.modrm().write64(*this, insn, shadow_wrap_as_initialized(bit_cast<u64>(value)));
 }
 void SoftCPU::HLT(const X86::Instruction&) { TODO_INSN(); }
 
@@ -2747,9 +2818,42 @@ void SoftCPU::OUT_imm8_EAX(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::PADDB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::PADDW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::PADDD_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::POPA(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::POPAD(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::POPF(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::POPA(const X86::Instruction&)
+{
+    set_di(pop16());
+    set_si(pop16());
+    set_bp(pop16());
+
+    pop16();
+
+    set_bx(pop16());
+    set_dx(pop16());
+    set_cx(pop16());
+    set_ax(pop16());
+}
+
+void SoftCPU::POPAD(const X86::Instruction&)
+{
+    set_edi(pop32());
+    set_esi(pop32());
+    set_ebp(pop32());
+
+    pop32();
+
+    set_ebx(pop32());
+    set_edx(pop32());
+    set_ecx(pop32());
+    set_eax(pop32());
+}
+
+void SoftCPU::POPF(const X86::Instruction&)
+{
+    auto popped_value = pop16();
+    m_eflags &= ~0xffff;
+    m_eflags |= popped_value.value();
+    taint_flags_from(popped_value);
+}
 
 void SoftCPU::POPFD(const X86::Instruction&)
 {
@@ -2786,9 +2890,43 @@ void SoftCPU::POP_reg32(const X86::Instruction& insn)
     gpr32(insn.reg32()) = pop32();
 }
 
-void SoftCPU::PUSHA(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::PUSHAD(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::PUSHF(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PUSHA(const X86::Instruction&)
+{
+    auto temp = sp();
+
+    push16(ax());
+    push16(cx());
+    push16(dx());
+    push16(bx());
+
+    push16(temp);
+
+    push16(bp());
+    push16(si());
+    push16(di());
+}
+
+void SoftCPU::PUSHAD(const X86::Instruction&)
+{
+    auto temp = esp();
+
+    push32(eax());
+    push32(ecx());
+    push32(edx());
+    push32(ebx());
+
+    push32(temp);
+
+    push32(ebp());
+    push32(esi());
+    push32(edi());
+}
+
+void SoftCPU::PUSHF(const X86::Instruction&)
+{
+    // FIXME: Respect shadow flags when they exist!
+    push16(shadow_wrap_as_initialized<u16>(m_eflags & 0xffff));
+}
 
 void SoftCPU::PUSHFD(const X86::Instruction&)
 {
@@ -2801,7 +2939,11 @@ void SoftCPU::PUSH_DS(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::PUSH_ES(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::PUSH_FS(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::PUSH_GS(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::PUSH_RM16(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::PUSH_RM16(const X86::Instruction& insn)
+{
+    push16(insn.modrm().read16(*this, insn));
+}
 
 void SoftCPU::PUSH_RM32(const X86::Instruction& insn)
 {
@@ -3024,7 +3166,11 @@ ALWAYS_INLINE static T op_ror(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 
 DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(ROR, op_ror)
 
-void SoftCPU::SAHF(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::SAHF(const X86::Instruction&)
+{
+    // FIXME: Respect shadow flags once they exists!
+    set_al(shadow_wrap_as_initialized<u8>(eflags() & 0xff));
+}
 
 void SoftCPU::SALC(const X86::Instruction&)
 {
