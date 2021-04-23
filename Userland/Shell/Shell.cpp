@@ -297,9 +297,9 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
                         subcommand_ast = ast->command();
                     }
                     auto subcommand_nonnull = subcommand_ast.release_nonnull();
-                    NonnullRefPtr<AST::Node> substitute = adopt(*new AST::Join(subcommand_nonnull->position(),
+                    NonnullRefPtr<AST::Node> substitute = adopt_ref(*new AST::Join(subcommand_nonnull->position(),
                         subcommand_nonnull,
-                        adopt(*new AST::CommandLiteral(subcommand_nonnull->position(), command))));
+                        adopt_ref(*new AST::CommandLiteral(subcommand_nonnull->position(), command))));
                     auto res = substitute->run(*this);
                     for (auto& subst_command : res->resolve_as_commands(*this)) {
                         if (!subst_command.argv.is_empty() && subst_command.argv.first() == argv0) // Disallow an alias resolving to itself.
@@ -356,7 +356,7 @@ RefPtr<AST::Value> Shell::lookup_local_variable(const String& name)
 RefPtr<AST::Value> Shell::get_argument(size_t index)
 {
     if (index == 0)
-        return adopt(*new AST::StringValue(current_script));
+        return adopt_ref(*new AST::StringValue(current_script));
 
     --index;
     if (auto argv = lookup_local_variable("ARGV")) {
@@ -452,12 +452,12 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     size_t index = 0;
     for (auto& arg : function.arguments) {
         ++index;
-        set_local_variable(arg, adopt(*new AST::StringValue(command.argv[index])), true);
+        set_local_variable(arg, adopt_ref(*new AST::StringValue(command.argv[index])), true);
     }
 
     auto argv = command.argv;
     argv.take_first();
-    set_local_variable("ARGV", adopt(*new AST::ListValue(move(argv))), true);
+    set_local_variable("ARGV", adopt_ref(*new AST::ListValue(move(argv))), true);
 
     Core::EventLoop loop;
     setup_signals();
@@ -910,8 +910,8 @@ void Shell::run_tail(const AST::Command& invoking_command, const AST::NodeWithAc
         }
         auto node = next_in_chain.node;
         if (!invoking_command.should_wait)
-            node = adopt(static_cast<AST::Node&>(*new AST::Background(next_in_chain.node->position(), move(node))));
-        adopt(static_cast<AST::Node&>(*new AST::Execute(next_in_chain.node->position(), move(node))))->run(*this);
+            node = adopt_ref(static_cast<AST::Node&>(*new AST::Background(next_in_chain.node->position(), move(node))));
+        adopt_ref(static_cast<AST::Node&>(*new AST::Execute(next_in_chain.node->position(), move(node))))->run(*this);
     };
     switch (next_in_chain.action) {
     case AST::NodeWithAction::And:

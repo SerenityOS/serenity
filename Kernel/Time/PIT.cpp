@@ -17,7 +17,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<PIT> PIT::initialize(Function<void(const RegisterState&)> callback)
 {
-    return adopt(*new PIT(move(callback)));
+    return adopt_ref(*new PIT(move(callback)));
 }
 
 inline static void reset_countdown(u16 timer_reload)

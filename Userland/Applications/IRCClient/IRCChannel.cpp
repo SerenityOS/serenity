@@ -25,7 +25,7 @@ IRCChannel::~IRCChannel()
 
 NonnullRefPtr<IRCChannel> IRCChannel::create(IRCClient& client, const String& name)
 {
-    return adopt(*new IRCChannel(client, name));
+    return adopt_ref(*new IRCChannel(client, name));
 }
 
 void IRCChannel::add_member(const String& name, char prefix)

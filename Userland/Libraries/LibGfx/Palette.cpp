@@ -12,7 +12,7 @@ namespace Gfx {
 
 NonnullRefPtr<PaletteImpl> PaletteImpl::create_with_anonymous_buffer(Core::AnonymousBuffer buffer)
 {
-    return adopt(*new PaletteImpl(move(buffer)));
+    return adopt_ref(*new PaletteImpl(move(buffer)));
 }
 
 PaletteImpl::PaletteImpl(Core::AnonymousBuffer buffer)
@@ -45,7 +45,7 @@ NonnullRefPtr<PaletteImpl> PaletteImpl::clone() const
 {
     auto new_theme_buffer = Core::AnonymousBuffer::create_with_size(m_theme_buffer.size());
     memcpy(new_theme_buffer.data<SystemTheme>(), &theme(), m_theme_buffer.size());
-    return adopt(*new PaletteImpl(move(new_theme_buffer)));
+    return adopt_ref(*new PaletteImpl(move(new_theme_buffer)));
 }
 
 void Palette::set_color(ColorRole role, Color color)

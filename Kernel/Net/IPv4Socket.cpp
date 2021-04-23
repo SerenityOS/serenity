@@ -41,7 +41,7 @@ KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
     if (type == SOCK_DGRAM)
         return UDPSocket::create(protocol);
     if (type == SOCK_RAW)
-        return adopt(*new IPv4Socket(type, protocol));
+        return adopt_ref(*new IPv4Socket(type, protocol));
     return EINVAL;
 }
 

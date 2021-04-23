@@ -39,7 +39,7 @@ void GlobalEventHandlers::set_event_handler_attribute(const FlyString& name, HTM
 
     RefPtr<DOM::EventListener> listener;
     if (!value.callback.is_null()) {
-        listener = adopt(*new DOM::EventListener(move(value.callback)));
+        listener = adopt_ref(*new DOM::EventListener(move(value.callback)));
     } else {
         StringBuilder builder;
         builder.appendff("function {}(event) {{\n{}\n}}", name, value.string);
@@ -51,7 +51,7 @@ void GlobalEventHandlers::set_event_handler_attribute(const FlyString& name, HTM
         }
         auto* function = JS::ScriptFunction::create(self.script_execution_context()->interpreter().global_object(), name, program->body(), program->parameters(), program->function_length(), nullptr, false, false);
         VERIFY(function);
-        listener = adopt(*new DOM::EventListener(JS::make_handle(static_cast<JS::Function*>(function))));
+        listener = adopt_ref(*new DOM::EventListener(JS::make_handle(static_cast<JS::Function*>(function))));
     }
     if (listener) {
         for (auto& registered_listener : self.listeners()) {

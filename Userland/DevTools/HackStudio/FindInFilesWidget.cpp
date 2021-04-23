@@ -110,7 +110,7 @@ static RefPtr<SearchResultsModel> find_in_files(const StringView& text)
         }
     });
 
-    return adopt(*new SearchResultsModel(move(matches)));
+    return adopt_ref(*new SearchResultsModel(move(matches)));
 }
 
 FindInFilesWidget::FindInFilesWidget()

@@ -39,7 +39,7 @@ public:
 
     static Handle create(T* cell)
     {
-        return Handle(adopt(*new HandleImpl(cell)));
+        return Handle(adopt_ref(*new HandleImpl(cell)));
     }
 
     T* cell() { return static_cast<T*>(m_impl->cell()); }

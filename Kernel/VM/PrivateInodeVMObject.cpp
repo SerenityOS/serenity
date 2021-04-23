@@ -11,12 +11,12 @@ namespace Kernel {
 
 NonnullRefPtr<PrivateInodeVMObject> PrivateInodeVMObject::create_with_inode(Inode& inode)
 {
-    return adopt(*new PrivateInodeVMObject(inode, inode.size()));
+    return adopt_ref(*new PrivateInodeVMObject(inode, inode.size()));
 }
 
 RefPtr<VMObject> PrivateInodeVMObject::clone()
 {
-    return adopt(*new PrivateInodeVMObject(*this));
+    return adopt_ref(*new PrivateInodeVMObject(*this));
 }
 
 PrivateInodeVMObject::PrivateInodeVMObject(Inode& inode, size_t size)

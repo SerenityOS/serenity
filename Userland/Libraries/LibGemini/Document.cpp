@@ -30,7 +30,7 @@ String Document::render_to_html() const
 
 NonnullRefPtr<Document> Document::parse(const StringView& lines, const URL& url)
 {
-    auto document = adopt(*new Document(url));
+    auto document = adopt_ref(*new Document(url));
     document->read_lines(lines);
     return document;
 }

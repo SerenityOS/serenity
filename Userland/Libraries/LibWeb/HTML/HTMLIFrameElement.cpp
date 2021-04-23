@@ -24,7 +24,7 @@ HTMLIFrameElement::~HTMLIFrameElement()
 RefPtr<Layout::Node> HTMLIFrameElement::create_layout_node()
 {
     auto style = document().style_resolver().resolve_style(*this);
-    return adopt(*new Layout::FrameBox(document(), *this, move(style)));
+    return adopt_ref(*new Layout::FrameBox(document(), *this, move(style)));
 }
 
 void HTMLIFrameElement::parse_attribute(const FlyString& name, const String& value)

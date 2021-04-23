@@ -19,7 +19,7 @@ class ProjectTemplatesModel final : public GUI::Model {
 public:
     static NonnullRefPtr<ProjectTemplatesModel> create()
     {
-        return adopt(*new ProjectTemplatesModel());
+        return adopt_ref(*new ProjectTemplatesModel());
     }
 
     enum Column {

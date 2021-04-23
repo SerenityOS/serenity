@@ -31,7 +31,7 @@ void ListItemBox::layout_marker()
 
     if (!m_marker) {
         int child_index = parent()->index_of_child<ListItemBox>(*this).value();
-        m_marker = adopt(*new ListItemMarkerBox(document(), computed_values().list_style_type(), child_index + 1));
+        m_marker = adopt_ref(*new ListItemMarkerBox(document(), computed_values().list_style_type(), child_index + 1));
         if (first_child())
             m_marker->set_inline(first_child()->is_inline());
         append_child(*m_marker);

@@ -15,7 +15,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(const IDEController& controller, IDEChannel& channel, DriveType type, InterfaceType interface_type, u16 capabilities, u64 max_addressable_block)
 {
-    return adopt(*new PATADiskDevice(controller, channel, type, interface_type, capabilities, max_addressable_block));
+    return adopt_ref(*new PATADiskDevice(controller, channel, type, interface_type, capabilities, max_addressable_block));
 }
 
 UNMAP_AFTER_INIT PATADiskDevice::PATADiskDevice(const IDEController& controller, IDEChannel& channel, DriveType type, InterfaceType interface_type, u16 capabilities, u64 max_addressable_block)

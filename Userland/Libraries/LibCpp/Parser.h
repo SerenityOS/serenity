@@ -139,7 +139,7 @@ private:
     NonnullRefPtr<T>
     create_ast_node(ASTNode& parent, const Position& start, Optional<Position> end, Args&&... args)
     {
-        auto node = adopt(*new T(&parent, start, end, m_filename, forward<Args>(args)...));
+        auto node = adopt_ref(*new T(&parent, start, end, m_filename, forward<Args>(args)...));
         if (!parent.is_dummy_node()) {
             m_state.nodes.append(node);
         }
@@ -149,7 +149,7 @@ private:
     NonnullRefPtr<TranslationUnit>
     create_root_ast_node(const Position& start, Position end)
     {
-        auto node = adopt(*new TranslationUnit(nullptr, start, end, m_filename));
+        auto node = adopt_ref(*new TranslationUnit(nullptr, start, end, m_filename));
         m_state.nodes.append(node);
         m_root_node = node;
         return node;
@@ -157,7 +157,7 @@ private:
 
     DummyAstNode& get_dummy_node()
     {
-        static NonnullRefPtr<DummyAstNode> dummy = adopt(*new DummyAstNode(nullptr, {}, {}, {}));
+        static NonnullRefPtr<DummyAstNode> dummy = adopt_ref(*new DummyAstNode(nullptr, {}, {}, {}));
         return dummy;
     }
 

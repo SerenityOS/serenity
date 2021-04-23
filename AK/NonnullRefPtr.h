@@ -314,7 +314,7 @@ private:
 };
 
 template<typename T>
-inline NonnullRefPtr<T> adopt(T& object)
+inline NonnullRefPtr<T> adopt_ref(T& object)
 {
     return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, object);
 }
@@ -335,5 +335,5 @@ inline void swap(NonnullRefPtr<T>& a, NonnullRefPtr<U>& b)
 
 }
 
-using AK::adopt;
+using AK::adopt_ref;
 using AK::NonnullRefPtr;

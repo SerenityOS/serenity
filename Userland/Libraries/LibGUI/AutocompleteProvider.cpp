@@ -98,7 +98,7 @@ void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& s
         auto& model = *static_cast<AutocompleteSuggestionModel*>(m_suggestion_view->model());
         model.set_suggestions(move(suggestions));
     } else {
-        m_suggestion_view->set_model(adopt(*new AutocompleteSuggestionModel(move(suggestions))));
+        m_suggestion_view->set_model(adopt_ref(*new AutocompleteSuggestionModel(move(suggestions))));
         m_suggestion_view->update();
         if (has_suggestions)
             m_suggestion_view->set_cursor(m_suggestion_view->model()->index(0), GUI::AbstractView::SelectionUpdate::Set);

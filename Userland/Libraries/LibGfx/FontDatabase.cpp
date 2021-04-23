@@ -158,7 +158,7 @@ RefPtr<Typeface> FontDatabase::get_or_create_typeface(const String& family, cons
         if (typeface->family() == family && typeface->variant() == variant)
             return typeface;
     }
-    auto typeface = adopt(*new Typeface(family, variant));
+    auto typeface = adopt_ref(*new Typeface(family, variant));
     m_private->typefaces.append(typeface);
     return typeface;
 }

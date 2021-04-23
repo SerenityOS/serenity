@@ -84,7 +84,7 @@ bool Parser::expect(const StringView& expected)
 template<typename A, typename... Args>
 NonnullRefPtr<A> Parser::create(Args... args)
 {
-    return adopt(*new A(AST::Position { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() }, args...));
+    return adopt_ref(*new A(AST::Position { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() }, args...));
 }
 
 [[nodiscard]] OwnPtr<Parser::ScopedOffset> Parser::push_start()

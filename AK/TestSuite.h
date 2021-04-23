@@ -239,25 +239,25 @@ using AK::TestSuite;
 #define __TESTCASE_FUNC(x) __test_##x
 #define __TESTCASE_TYPE(x) __TestCase_##x
 
-#define TEST_CASE(x)                                                                           \
-    static void __TESTCASE_FUNC(x)();                                                          \
-    struct __TESTCASE_TYPE(x) {                                                                \
-        __TESTCASE_TYPE(x)                                                                     \
-        () { TestSuite::the().add_case(adopt(*new TestCase(#x, __TESTCASE_FUNC(x), false))); } \
-    };                                                                                         \
-    static struct __TESTCASE_TYPE(x) __TESTCASE_TYPE(x);                                       \
+#define TEST_CASE(x)                                                                               \
+    static void __TESTCASE_FUNC(x)();                                                              \
+    struct __TESTCASE_TYPE(x) {                                                                    \
+        __TESTCASE_TYPE(x)                                                                         \
+        () { TestSuite::the().add_case(adopt_ref(*new TestCase(#x, __TESTCASE_FUNC(x), false))); } \
+    };                                                                                             \
+    static struct __TESTCASE_TYPE(x) __TESTCASE_TYPE(x);                                           \
     static void __TESTCASE_FUNC(x)()
 
 #define __BENCHMARK_FUNC(x) __benchmark_##x
 #define __BENCHMARK_TYPE(x) __BenchmarkCase_##x
 
-#define BENCHMARK_CASE(x)                                                                      \
-    static void __BENCHMARK_FUNC(x)();                                                         \
-    struct __BENCHMARK_TYPE(x) {                                                               \
-        __BENCHMARK_TYPE(x)                                                                    \
-        () { TestSuite::the().add_case(adopt(*new TestCase(#x, __BENCHMARK_FUNC(x), true))); } \
-    };                                                                                         \
-    static struct __BENCHMARK_TYPE(x) __BENCHMARK_TYPE(x);                                     \
+#define BENCHMARK_CASE(x)                                                                          \
+    static void __BENCHMARK_FUNC(x)();                                                             \
+    struct __BENCHMARK_TYPE(x) {                                                                   \
+        __BENCHMARK_TYPE(x)                                                                        \
+        () { TestSuite::the().add_case(adopt_ref(*new TestCase(#x, __BENCHMARK_FUNC(x), true))); } \
+    };                                                                                             \
+    static struct __BENCHMARK_TYPE(x) __BENCHMARK_TYPE(x);                                         \
     static void __BENCHMARK_FUNC(x)()
 
 #define TEST_MAIN(x)                                                \

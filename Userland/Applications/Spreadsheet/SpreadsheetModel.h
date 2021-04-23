@@ -13,7 +13,7 @@ namespace Spreadsheet {
 
 class SheetModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<SheetModel> create(Sheet& sheet) { return adopt(*new SheetModel(sheet)); }
+    static NonnullRefPtr<SheetModel> create(Sheet& sheet) { return adopt_ref(*new SheetModel(sheet)); }
     virtual ~SheetModel() override;
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_sheet->row_count(); }

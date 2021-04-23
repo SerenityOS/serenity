@@ -27,7 +27,7 @@ size_t SelfAwareObject::num_destroyed = 0;
 
 TEST_CASE(basics)
 {
-    RefPtr<Object> object = adopt(*new Object);
+    RefPtr<Object> object = adopt_ref(*new Object);
     EXPECT(object.ptr() != nullptr);
     EXPECT_EQ(object->ref_count(), 1u);
     object->ref();
@@ -45,7 +45,7 @@ TEST_CASE(basics)
 
 TEST_CASE(assign_reference)
 {
-    RefPtr<Object> object = adopt(*new Object);
+    RefPtr<Object> object = adopt_ref(*new Object);
     EXPECT_EQ(object->ref_count(), 1u);
     object = *object;
     EXPECT_EQ(object->ref_count(), 1u);
@@ -53,7 +53,7 @@ TEST_CASE(assign_reference)
 
 TEST_CASE(assign_ptr)
 {
-    RefPtr<Object> object = adopt(*new Object);
+    RefPtr<Object> object = adopt_ref(*new Object);
     EXPECT_EQ(object->ref_count(), 1u);
     object = object.ptr();
     EXPECT_EQ(object->ref_count(), 1u);
@@ -61,7 +61,7 @@ TEST_CASE(assign_ptr)
 
 TEST_CASE(copy_move_ref)
 {
-    RefPtr<Object2> object = adopt(*new Object2);
+    RefPtr<Object2> object = adopt_ref(*new Object2);
     EXPECT_EQ(object->ref_count(), 1u);
     {
         auto object2 = object;
@@ -84,8 +84,8 @@ TEST_CASE(copy_move_ref)
 
 TEST_CASE(swap)
 {
-    RefPtr<Object> object_a = adopt(*new Object);
-    RefPtr<Object> object_b = adopt(*new Object);
+    RefPtr<Object> object_a = adopt_ref(*new Object);
+    RefPtr<Object> object_b = adopt_ref(*new Object);
     auto* ptr_a = object_a.ptr();
     auto* ptr_b = object_b.ptr();
     swap(object_a, object_b);
@@ -97,7 +97,7 @@ TEST_CASE(swap)
 
 TEST_CASE(assign_moved_self)
 {
-    RefPtr<Object> object = adopt(*new Object);
+    RefPtr<Object> object = adopt_ref(*new Object);
     EXPECT_EQ(object->ref_count(), 1u);
 #ifdef __clang__
 #    pragma clang diagnostic push
@@ -112,7 +112,7 @@ TEST_CASE(assign_moved_self)
 
 TEST_CASE(assign_copy_self)
 {
-    RefPtr<Object> object = adopt(*new Object);
+    RefPtr<Object> object = adopt_ref(*new Object);
     EXPECT_EQ(object->ref_count(), 1u);
 
 #ifdef __clang__
@@ -129,7 +129,7 @@ TEST_CASE(assign_copy_self)
 
 TEST_CASE(self_observers)
 {
-    RefPtr<SelfAwareObject> object = adopt(*new SelfAwareObject);
+    RefPtr<SelfAwareObject> object = adopt_ref(*new SelfAwareObject);
     EXPECT_EQ(object->ref_count(), 1u);
     EXPECT_EQ(object->m_has_one_ref_left, false);
     EXPECT_EQ(SelfAwareObject::num_destroyed, 0u);

@@ -30,7 +30,7 @@ ConsoleWidget::ConsoleWidget()
     set_fill_with_background_color(true);
 
     auto base_document = Web::DOM::Document::create();
-    base_document->append_child(adopt(*new Web::DOM::DocumentType(base_document)));
+    base_document->append_child(adopt_ref(*new Web::DOM::DocumentType(base_document)));
     auto html_element = base_document->create_element("html");
     base_document->append_child(html_element);
     auto head_element = base_document->create_element("head");

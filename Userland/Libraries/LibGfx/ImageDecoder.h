@@ -48,8 +48,8 @@ protected:
 
 class ImageDecoder : public RefCounted<ImageDecoder> {
 public:
-    static NonnullRefPtr<ImageDecoder> create(const u8* data, size_t size) { return adopt(*new ImageDecoder(data, size)); }
-    static NonnullRefPtr<ImageDecoder> create(const ByteBuffer& data) { return adopt(*new ImageDecoder(data.data(), data.size())); }
+    static NonnullRefPtr<ImageDecoder> create(const u8* data, size_t size) { return adopt_ref(*new ImageDecoder(data, size)); }
+    static NonnullRefPtr<ImageDecoder> create(const ByteBuffer& data) { return adopt_ref(*new ImageDecoder(data.data(), data.size())); }
     ~ImageDecoder();
 
     bool is_valid() const { return m_plugin; }

@@ -211,7 +211,7 @@ void Locator::update_suggestions()
 
     bool has_suggestions = !suggestions.is_empty();
 
-    m_suggestion_view->set_model(adopt(*new LocatorSuggestionModel(move(suggestions))));
+    m_suggestion_view->set_model(adopt_ref(*new LocatorSuggestionModel(move(suggestions))));
 
     if (!has_suggestions)
         m_suggestion_view->selection().clear();

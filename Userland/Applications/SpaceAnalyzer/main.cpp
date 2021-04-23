@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
 {
     auto app = GUI::Application::construct(argc, argv);
 
-    RefPtr<Tree> tree = adopt(*new Tree(""));
+    RefPtr<Tree> tree = adopt_ref(*new Tree(""));
 
     // Configure application window.
     auto app_icon = GUI::Icon::default_icon("app-space-analyzer");

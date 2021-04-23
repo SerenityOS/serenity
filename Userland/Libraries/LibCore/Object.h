@@ -32,7 +32,7 @@ public:                                                                \
     template<class... Args>                                            \
     static inline NonnullRefPtr<klass> construct(Args&&... args)       \
     {                                                                  \
-        return adopt(*new klass(forward<Args>(args)...));              \
+        return adopt_ref(*new klass(forward<Args>(args)...));          \
     }
 
 #define C_OBJECT_ABSTRACT(klass) \

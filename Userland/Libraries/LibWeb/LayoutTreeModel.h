@@ -15,7 +15,7 @@ class LayoutTreeModel final : public GUI::Model {
 public:
     static NonnullRefPtr<LayoutTreeModel> create(DOM::Document& document)
     {
-        return adopt(*new LayoutTreeModel(document));
+        return adopt_ref(*new LayoutTreeModel(document));
     }
 
     virtual ~LayoutTreeModel() override;

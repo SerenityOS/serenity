@@ -10,7 +10,7 @@ namespace HackStudio {
 
 NonnullRefPtr<GitFilesModel> GitFilesModel::create(Vector<LexicalPath>&& files)
 {
-    return adopt(*new GitFilesModel(move(files)));
+    return adopt_ref(*new GitFilesModel(move(files)));
 }
 
 GitFilesModel::GitFilesModel(Vector<LexicalPath>&& files)

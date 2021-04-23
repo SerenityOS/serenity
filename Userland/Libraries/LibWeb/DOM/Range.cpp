@@ -18,12 +18,12 @@ NonnullRefPtr<Range> Range::create(Window& window)
 
 NonnullRefPtr<Range> Range::create(Document& document)
 {
-    return adopt(*new Range(document));
+    return adopt_ref(*new Range(document));
 }
 
 NonnullRefPtr<Range> Range::create(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset)
 {
-    return adopt(*new Range(start_container, start_offset, end_container, end_offset));
+    return adopt_ref(*new Range(start_container, start_offset, end_container, end_offset));
 }
 NonnullRefPtr<Range> Range::create_with_global_object(Bindings::WindowObject& window)
 {
@@ -45,12 +45,12 @@ Range::Range(Node& start_container, size_t start_offset, Node& end_container, si
 
 NonnullRefPtr<Range> Range::clone_range() const
 {
-    return adopt(*new Range(const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset));
+    return adopt_ref(*new Range(const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset));
 }
 
 NonnullRefPtr<Range> Range::inverted() const
 {
-    return adopt(*new Range(const_cast<Node&>(*m_end_container), m_end_offset, const_cast<Node&>(*m_start_container), m_start_offset));
+    return adopt_ref(*new Range(const_cast<Node&>(*m_end_container), m_end_offset, const_cast<Node&>(*m_start_container), m_start_offset));
 }
 
 NonnullRefPtr<Range> Range::normalized() const

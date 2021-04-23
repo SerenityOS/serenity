@@ -15,7 +15,7 @@ class DOMTreeModel final : public GUI::Model {
 public:
     static NonnullRefPtr<DOMTreeModel> create(DOM::Document& document)
     {
-        return adopt(*new DOMTreeModel(document));
+        return adopt_ref(*new DOMTreeModel(document));
     }
 
     virtual ~DOMTreeModel() override;

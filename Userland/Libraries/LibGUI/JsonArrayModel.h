@@ -41,7 +41,7 @@ public:
 
     static NonnullRefPtr<JsonArrayModel> create(const String& json_path, Vector<FieldSpec>&& fields)
     {
-        return adopt(*new JsonArrayModel(json_path, move(fields)));
+        return adopt_ref(*new JsonArrayModel(json_path, move(fields)));
     }
 
     virtual ~JsonArrayModel() override { }

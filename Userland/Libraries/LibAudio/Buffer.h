@@ -93,11 +93,11 @@ public:
     static RefPtr<Buffer> from_pcm_stream(InputMemoryStream& stream, ResampleHelper& resampler, int num_channels, int bits_per_sample, int num_samples);
     static NonnullRefPtr<Buffer> create_with_samples(Vector<Frame>&& samples)
     {
-        return adopt(*new Buffer(move(samples)));
+        return adopt_ref(*new Buffer(move(samples)));
     }
     static NonnullRefPtr<Buffer> create_with_anonymous_buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count)
     {
-        return adopt(*new Buffer(move(buffer), buffer_id, sample_count));
+        return adopt_ref(*new Buffer(move(buffer), buffer_id, sample_count));
     }
 
     const Frame* samples() const { return (const Frame*)data(); }

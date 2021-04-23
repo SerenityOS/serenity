@@ -88,7 +88,7 @@ ProcessStateWidget::ProcessStateWidget(pid_t pid)
     m_table_view = add<GUI::TableView>();
     m_table_view->column_header().set_visible(false);
     m_table_view->column_header().set_section_size(0, 90);
-    m_table_view->set_model(adopt(*new ProcessStateModel(ProcessModel::the(), pid)));
+    m_table_view->set_model(adopt_ref(*new ProcessStateModel(ProcessModel::the(), pid)));
 }
 
 ProcessStateWidget::~ProcessStateWidget()

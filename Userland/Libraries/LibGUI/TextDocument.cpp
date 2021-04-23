@@ -18,7 +18,7 @@ namespace GUI {
 
 NonnullRefPtr<TextDocument> TextDocument::create(Client* client)
 {
-    return adopt(*new TextDocument(client));
+    return adopt_ref(*new TextDocument(client));
 }
 
 TextDocument::TextDocument(Client* client)

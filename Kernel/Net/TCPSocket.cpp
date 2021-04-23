@@ -139,7 +139,7 @@ TCPSocket::~TCPSocket()
 
 NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
 {
-    return adopt(*new TCPSocket(protocol));
+    return adopt_ref(*new TCPSocket(protocol));
 }
 
 KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
