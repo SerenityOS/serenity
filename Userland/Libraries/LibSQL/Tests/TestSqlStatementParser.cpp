@@ -148,6 +148,8 @@ TEST_CASE(delete_)
     EXPECT(parse("DELETE FROM table WHERE 15").is_error());
     EXPECT(parse("DELETE FROM table WHERE 15 RETURNING").is_error());
     EXPECT(parse("DELETE FROM table WHERE 15 RETURNING *").is_error());
+    EXPECT(parse("DELETE FROM table WHERE 15 RETURNING column").is_error());
+    EXPECT(parse("DELETE FROM table WHERE 15 RETURNING column AS;").is_error());
     EXPECT(parse("DELETE FROM table WHERE (');").is_error());
     EXPECT(parse("WITH DELETE FROM table;").is_error());
     EXPECT(parse("WITH table DELETE FROM table;").is_error());
@@ -243,6 +245,7 @@ TEST_CASE(select)
     EXPECT(parse("SELECT *").is_error());
     EXPECT(parse("SELECT * FROM;").is_error());
     EXPECT(parse("SELECT table. FROM table;").is_error());
+    EXPECT(parse("SELECT column AS FROM table;").is_error());
     EXPECT(parse("SELECT * FROM (").is_error());
     EXPECT(parse("SELECT * FROM ()").is_error());
     EXPECT(parse("SELECT * FROM ();").is_error());
@@ -250,6 +253,7 @@ TEST_CASE(select)
     EXPECT(parse("SELECT * FROM (table1, )").is_error());
     EXPECT(parse("SELECT * FROM (table1, table2)").is_error());
     EXPECT(parse("SELECT * FROM table").is_error());
+    EXPECT(parse("SELECT * FROM table AS;").is_error());
     EXPECT(parse("SELECT * FROM table WHERE;").is_error());
     EXPECT(parse("SELECT * FROM table WHERE 1 ==1").is_error());
     EXPECT(parse("SELECT * FROM table GROUP;").is_error());
