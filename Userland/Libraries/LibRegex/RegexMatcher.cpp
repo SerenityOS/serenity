@@ -86,7 +86,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 
     if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
         if (views.size() > 1 && input.start_offset > views.first().length()) {
-            dbgln("Started with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
+            dbgln_if(REGEX_DEBUG, "Started with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
             for (auto& view : views) {
                 if (input.start_offset < view.length() + 1)
                     break;
@@ -94,7 +94,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                 input.start_offset -= view.length() + 1;
                 input.global_offset += view.length() + 1;
             }
-            dbgln("Ended with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
+            dbgln_if(REGEX_DEBUG, "Ended with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
         }
     }
 
@@ -213,10 +213,8 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                     continue;
                 }
 
-                if constexpr (REGEX_DEBUG) {
-                    dbgln("state.string_position={}, view_index={}", state.string_position, view_index);
-                    dbgln("[match] Found a match (length={}): '{}'", state.string_position - view_index, input.view.substring_view(view_index, state.string_position - view_index));
-                }
+                dbgln_if(REGEX_DEBUG, "state.string_position={}, view_index={}", state.string_position, view_index);
+                dbgln_if(REGEX_DEBUG, "[match] Found a match (length={}): '{}'", state.string_position - view_index, input.view.substring_view(view_index, state.string_position - view_index));
 
                 ++match_count;
 
