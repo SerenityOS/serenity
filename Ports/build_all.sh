@@ -49,7 +49,7 @@ for file in *; do
                 popd > /dev/null
                 continue
             fi
-            built_ports="$built_ports $port $(./package.sh showdepends) "
+            built_ports="$built_ports $port $(./package.sh showproperty depends) "
 
             if [ "$clean" == true ]; then
                 if [ "$verbose" == true ]; then

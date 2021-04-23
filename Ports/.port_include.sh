@@ -65,7 +65,7 @@ shift
 : "${useconfigure:=false}"
 : "${depends:=}"
 : "${patchlevel:=1}"
-: "${auth_type:=md5}"
+: "${auth_type:=}"
 : "${auth_import_key:=}"
 : "${auth_opts:=}"
 : "${launcher_name:=}"
@@ -375,8 +375,12 @@ do_uninstall() {
     echo "Uninstalling $port!"
     uninstall
 }
-do_showdepends() {
-    echo -n $depends
+do_showproperty() {
+    if [ -z ${!1+x} ]; then
+        echo "Property '$1' is not set." >&2
+        exit 1
+    fi
+    echo ${!1}
 }
 do_all() {
     do_installdepends
@@ -393,8 +397,8 @@ parse_arguments() {
         do_all
     else
         case "$1" in
-            fetch|patch|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall|showdepends)
-                do_$1
+            fetch|patch|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall|showproperty)
+                do_$1 $2
                 ;;
             --auto)
                 do_all $1
@@ -405,7 +409,7 @@ parse_arguments() {
                 parse_arguments $@
                 ;;
             *)
-                >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, clean, clean_dist, clean_all, uninstall, showdepends."
+                >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, clean, clean_dist, clean_all, uninstall, showproperty."
                 exit 1
                 ;;
         esac
