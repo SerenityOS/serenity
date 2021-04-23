@@ -37,6 +37,14 @@ extern "C" {
 #define GL_RENDERER 0x1F01
 #define GL_VERSION 0x1F02
 
+// Error codes
+#define GL_NO_ERROR 0
+#define GL_INVALID_ENUM 0x500
+#define GL_INVALID_VALUE 0x501
+#define GL_INVALID_OPERATION 0x502
+#define GL_INVALID_FRAMEBUFFER_OPERATION 0x503
+#define GL_OUT_OF_MEMORY 0x504
+
 //
 // OpenGL typedefs
 //
@@ -66,6 +74,7 @@ GLAPI void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf al
 GLAPI void glColor3f(GLfloat r, GLfloat g, GLfloat b);
 GLAPI void glEnd();
 GLAPI void glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble nearVal, GLdouble farVal);
+GLAPI GLenum glGetError();
 GLAPI GLubyte* glGetString(GLenum name);
 GLAPI void glLoadIdentity();
 GLAPI void glMatrixMode(GLenum mode);

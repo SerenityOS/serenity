@@ -22,6 +22,7 @@ public:
     virtual void gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a) = 0;
     virtual void gl_end() = 0;
     virtual void gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) = 0;
+    virtual GLenum gl_get_error() = 0;
     virtual GLubyte* gl_get_string(GLenum name) = 0;
     virtual void gl_load_identity() = 0;
     virtual void gl_matrix_mode(GLenum mode) = 0;
