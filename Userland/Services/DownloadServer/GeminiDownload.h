@@ -7,11 +7,11 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <DownloadServer/Download.h>
 #include <LibCore/Forward.h>
 #include <LibGemini/Forward.h>
-#include <ProtocolServer/Download.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 class GeminiDownload final : public Download {
 public:

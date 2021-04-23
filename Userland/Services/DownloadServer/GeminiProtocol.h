@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <ProtocolServer/Protocol.h>
+#include <DownloadServer/Protocol.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 class GeminiProtocol final : public Protocol {
 public:

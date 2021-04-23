@@ -1,11 +1,11 @@
 set(SOURCES
-    Client.cpp
     Download.cpp
+    DownloadClient.cpp
 )
 
 set(GENERATED_SOURCES
-    ../../Services/ProtocolServer/ProtocolClientEndpoint.h
-    ../../Services/ProtocolServer/ProtocolServerEndpoint.h
+    ../../Services/DownloadServer/DownloadClientEndpoint.h
+    ../../Services/DownloadServer/DownloadServerEndpoint.h
 )
 
 serenity_lib(LibProtocol protocol)

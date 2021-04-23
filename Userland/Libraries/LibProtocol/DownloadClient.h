@@ -7,18 +7,18 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <DownloadServer/DownloadClientEndpoint.h>
+#include <DownloadServer/DownloadServerEndpoint.h>
 #include <LibIPC/ServerConnection.h>
-#include <ProtocolServer/ProtocolClientEndpoint.h>
-#include <ProtocolServer/ProtocolServerEndpoint.h>
 
 namespace Protocol {
 
 class Download;
 
-class Client
-    : public IPC::ServerConnection<ProtocolClientEndpoint, ProtocolServerEndpoint>
-    , public ProtocolClientEndpoint {
-    C_OBJECT(Client);
+class DownloadClient
+    : public IPC::ServerConnection<DownloadClientEndpoint, DownloadServerEndpoint>
+    , public DownloadClientEndpoint {
+    C_OBJECT(DownloadClient);
 
 public:
     virtual void handshake() override;
@@ -31,12 +31,12 @@ public:
     bool set_certificate(Badge<Download>, Download&, String, String);
 
 private:
-    Client();
+    DownloadClient();
 
-    virtual void handle(const Messages::ProtocolClient::DownloadProgress&) override;
-    virtual void handle(const Messages::ProtocolClient::DownloadFinished&) override;
-    virtual OwnPtr<Messages::ProtocolClient::CertificateRequestedResponse> handle(const Messages::ProtocolClient::CertificateRequested&) override;
-    virtual void handle(const Messages::ProtocolClient::HeadersBecameAvailable&) override;
+    virtual void handle(const Messages::DownloadClient::DownloadProgress&) override;
+    virtual void handle(const Messages::DownloadClient::DownloadFinished&) override;
+    virtual OwnPtr<Messages::DownloadClient::CertificateRequestedResponse> handle(const Messages::DownloadClient::CertificateRequested&) override;
+    virtual void handle(const Messages::DownloadClient::HeadersBecameAvailable&) override;
 
     HashMap<i32, RefPtr<Download>> m_downloads;
 };

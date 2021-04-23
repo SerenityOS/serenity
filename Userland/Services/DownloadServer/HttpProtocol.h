@@ -11,13 +11,13 @@
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/URL.h>
+#include <DownloadServer/ClientConnection.h>
+#include <DownloadServer/Download.h>
+#include <DownloadServer/HttpDownload.h>
+#include <DownloadServer/Protocol.h>
 #include <LibHTTP/HttpJob.h>
-#include <ProtocolServer/ClientConnection.h>
-#include <ProtocolServer/Download.h>
-#include <ProtocolServer/HttpDownload.h>
-#include <ProtocolServer/Protocol.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 class HttpProtocol final : public Protocol {
 public:

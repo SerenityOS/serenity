@@ -8,11 +8,11 @@
 
 #include <AK/Badge.h>
 #include <AK/NonnullOwnPtr.h>
+#include <DownloadServer/Download.h>
 #include <LibCore/Forward.h>
 #include <LibHTTP/Forward.h>
-#include <ProtocolServer/Download.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 class HttpDownload final : public Download {
 public:

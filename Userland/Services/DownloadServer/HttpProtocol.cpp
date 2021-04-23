@@ -10,14 +10,14 @@
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/URL.h>
+#include <DownloadServer/ClientConnection.h>
+#include <DownloadServer/Download.h>
+#include <DownloadServer/HttpCommon.h>
+#include <DownloadServer/HttpDownload.h>
+#include <DownloadServer/HttpProtocol.h>
 #include <LibHTTP/HttpJob.h>
-#include <ProtocolServer/ClientConnection.h>
-#include <ProtocolServer/Download.h>
-#include <ProtocolServer/HttpCommon.h>
-#include <ProtocolServer/HttpDownload.h>
-#include <ProtocolServer/HttpProtocol.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 HttpProtocol::HttpProtocol()
     : Protocol("http")

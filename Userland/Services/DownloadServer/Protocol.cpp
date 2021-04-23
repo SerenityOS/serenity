@@ -5,13 +5,13 @@
  */
 
 #include <AK/HashMap.h>
-#include <ProtocolServer/Protocol.h>
+#include <DownloadServer/Protocol.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 static HashMap<String, Protocol*>& all_protocols()
 {

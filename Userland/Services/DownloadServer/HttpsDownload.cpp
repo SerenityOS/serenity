@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <DownloadServer/HttpCommon.h>
+#include <DownloadServer/HttpsDownload.h>
+#include <DownloadServer/HttpsProtocol.h>
 #include <LibHTTP/HttpsJob.h>
-#include <ProtocolServer/HttpCommon.h>
-#include <ProtocolServer/HttpsDownload.h>
-#include <ProtocolServer/HttpsProtocol.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 HttpsDownload::HttpsDownload(ClientConnection& client, NonnullRefPtr<HTTP::HttpsJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
     : Download(client, move(output_stream))

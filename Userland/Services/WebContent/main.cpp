@@ -20,7 +20,7 @@ int main(int, char**)
         perror("unveil");
         return 1;
     }
-    if (unveil("/tmp/portal/protocol", "rw") < 0) {
+    if (unveil("/tmp/portal/download", "rw") < 0) {
         perror("unveil");
         return 1;
     }

@@ -13,11 +13,11 @@
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <DownloadServer/ClientConnection.h>
+#include <DownloadServer/Download.h>
 #include <LibHTTP/HttpRequest.h>
-#include <ProtocolServer/ClientConnection.h>
-#include <ProtocolServer/Download.h>
 
-namespace ProtocolServer::Detail {
+namespace DownloadServer::Detail {
 
 template<typename TSelf, typename TJob>
 void init(TSelf* self, TJob job)

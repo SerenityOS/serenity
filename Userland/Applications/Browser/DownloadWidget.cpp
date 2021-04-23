@@ -18,7 +18,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Window.h>
-#include <LibProtocol/Client.h>
+#include <LibProtocol/DownloadClient.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <math.h>
 

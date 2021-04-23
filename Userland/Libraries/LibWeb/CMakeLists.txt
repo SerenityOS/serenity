@@ -224,8 +224,8 @@ set(SOURCES
 )
 
 set(GENERATED_SOURCES
-    ../../Services/ProtocolServer/ProtocolClientEndpoint.h
-    ../../Services/ProtocolServer/ProtocolServerEndpoint.h
+    ../../Services/DownloadServer/DownloadClientEndpoint.h
+    ../../Services/DownloadServer/DownloadServerEndpoint.h
     ../../Services/WebContent/WebContentClientEndpoint.h
     ../../Services/WebContent/WebContentServerEndpoint.h
 )

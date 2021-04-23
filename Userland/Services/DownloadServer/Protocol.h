@@ -9,9 +9,9 @@
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
 #include <AK/URL.h>
-#include <ProtocolServer/Forward.h>
+#include <DownloadServer/Forward.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 class Protocol {
 public:

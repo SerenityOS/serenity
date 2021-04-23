@@ -19,7 +19,7 @@
 
 namespace Protocol {
 
-class Client;
+class DownloadClient;
 
 class Download : public RefCounted<Download> {
 public:
@@ -28,7 +28,7 @@ public:
         String key;
     };
 
-    static NonnullRefPtr<Download> create_from_id(Badge<Client>, Client& client, i32 download_id)
+    static NonnullRefPtr<Download> create_from_id(Badge<DownloadClient>, DownloadClient& client, i32 download_id)
     {
         return adopt_ref(*new Download(client, download_id));
     }
@@ -50,17 +50,17 @@ public:
     Function<void(const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)> on_headers_received;
     Function<CertificateAndKey()> on_certificate_requested;
 
-    void did_finish(Badge<Client>, bool success, u32 total_size);
-    void did_progress(Badge<Client>, Optional<u32> total_size, u32 downloaded_size);
-    void did_receive_headers(Badge<Client>, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code);
-    void did_request_certificates(Badge<Client>);
+    void did_finish(Badge<DownloadClient>, bool success, u32 total_size);
+    void did_progress(Badge<DownloadClient>, Optional<u32> total_size, u32 downloaded_size);
+    void did_receive_headers(Badge<DownloadClient>, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code);
+    void did_request_certificates(Badge<DownloadClient>);
 
-    RefPtr<Core::Notifier>& write_notifier(Badge<Client>) { return m_write_notifier; }
-    void set_download_fd(Badge<Client>, int fd) { m_fd = fd; }
+    RefPtr<Core::Notifier>& write_notifier(Badge<DownloadClient>) { return m_write_notifier; }
+    void set_download_fd(Badge<DownloadClient>, int fd) { m_fd = fd; }
 
 private:
-    explicit Download(Client&, i32 download_id);
-    WeakPtr<Client> m_client;
+    explicit Download(DownloadClient&, i32 download_id);
+    WeakPtr<DownloadClient> m_client;
     int m_download_id { -1 };
     RefPtr<Core::Notifier> m_write_notifier;
     int m_fd { -1 };

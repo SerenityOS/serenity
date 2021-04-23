@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
+#include <LibProtocol/DownloadClient.h>
 
 namespace Protocol {
 
-Download::Download(Client& client, i32 download_id)
+Download::Download(DownloadClient& client, i32 download_id)
     : m_client(client)
     , m_download_id(download_id)
 {
@@ -89,7 +89,7 @@ void Download::set_should_buffer_all_input(bool value)
     stream_into(m_internal_buffered_data->payload_stream);
 }
 
-void Download::did_finish(Badge<Client>, bool success, u32 total_size)
+void Download::did_finish(Badge<DownloadClient>, bool success, u32 total_size)
 {
     if (!on_finish)
         return;
@@ -97,19 +97,19 @@ void Download::did_finish(Badge<Client>, bool success, u32 total_size)
     on_finish(success, total_size);
 }
 
-void Download::did_progress(Badge<Client>, Optional<u32> total_size, u32 downloaded_size)
+void Download::did_progress(Badge<DownloadClient>, Optional<u32> total_size, u32 downloaded_size)
 {
     if (on_progress)
         on_progress(total_size, downloaded_size);
 }
 
-void Download::did_receive_headers(Badge<Client>, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)
+void Download::did_receive_headers(Badge<DownloadClient>, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)
 {
     if (on_headers_received)
         on_headers_received(response_headers, response_code);
 }
 
-void Download::did_request_certificates(Badge<Client>)
+void Download::did_request_certificates(Badge<DownloadClient>)
 {
     if (on_certificate_requested) {
         auto result = on_certificate_requested();

@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    // Connect to the ProtocolServer immediately so we can drop the "unix" pledge.
+    // Connect to the DownloadServer immediately so we can drop the "unix" pledge.
     Web::ResourceLoader::the();
 
     // Connect to LaunchServer immediately and let it know that we won't ask for anything other than opening

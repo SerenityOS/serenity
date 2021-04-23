@@ -9,8 +9,8 @@
 #include <AK/JsonObject.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
+#include <LibProtocol/DownloadClient.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/Resource.h>
@@ -27,7 +27,7 @@ ResourceLoader& ResourceLoader::the()
 }
 
 ResourceLoader::ResourceLoader()
-    : m_protocol_client(Protocol::Client::construct())
+    : m_protocol_client(Protocol::DownloadClient::construct())
     , m_user_agent(default_user_agent)
 {
 }

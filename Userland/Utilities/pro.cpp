@@ -12,8 +12,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
+#include <LibProtocol/DownloadClient.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -151,7 +151,7 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
-        "Download a file from an arbitrary URL. This command uses ProtocolServer, "
+        "Download a file from an arbitrary URL. This command uses DownloadServer, "
         "and thus supports at least http, https, and gemini.");
     args_parser.add_option(save_at_provided_name, "Write to a file named as the remote file", nullptr, 'O');
     args_parser.add_option(data, "(HTTP only) Send the provided data via an HTTP POST request", "data", 'd', "data");
@@ -184,7 +184,7 @@ int main(int argc, char** argv)
     }
 
     Core::EventLoop loop;
-    auto protocol_client = Protocol::Client::construct();
+    auto protocol_client = Protocol::DownloadClient::construct();
 
     auto download = protocol_client->start_download(method, url.to_string(), request_headers, data ? StringView { data }.bytes() : ReadonlyBytes {});
     if (!download) {

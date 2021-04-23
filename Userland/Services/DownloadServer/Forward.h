@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 class ClientConnection;
 class Download;

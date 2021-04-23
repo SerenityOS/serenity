@@ -5,17 +5,17 @@
  */
 
 #include <AK/Badge.h>
-#include <ProtocolServer/ClientConnection.h>
-#include <ProtocolServer/Download.h>
-#include <ProtocolServer/Protocol.h>
-#include <ProtocolServer/ProtocolClientEndpoint.h>
+#include <DownloadServer/ClientConnection.h>
+#include <DownloadServer/Download.h>
+#include <DownloadServer/DownloadClientEndpoint.h>
+#include <DownloadServer/Protocol.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 static HashMap<int, RefPtr<ClientConnection>> s_connections;
 
 ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
-    : IPC::ClientConnection<ProtocolClientEndpoint, ProtocolServerEndpoint>(*this, move(socket), client_id)
+    : IPC::ClientConnection<DownloadClientEndpoint, DownloadServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);
 }
@@ -31,36 +31,36 @@ void ClientConnection::die()
         Core::EventLoop::current().quit(0);
 }
 
-OwnPtr<Messages::ProtocolServer::IsSupportedProtocolResponse> ClientConnection::handle(const Messages::ProtocolServer::IsSupportedProtocol& message)
+OwnPtr<Messages::DownloadServer::IsSupportedProtocolResponse> ClientConnection::handle(const Messages::DownloadServer::IsSupportedProtocol& message)
 {
     bool supported = Protocol::find_by_name(message.protocol().to_lowercase());
-    return make<Messages::ProtocolServer::IsSupportedProtocolResponse>(supported);
+    return make<Messages::DownloadServer::IsSupportedProtocolResponse>(supported);
 }
 
-OwnPtr<Messages::ProtocolServer::StartDownloadResponse> ClientConnection::handle(const Messages::ProtocolServer::StartDownload& message)
+OwnPtr<Messages::DownloadServer::StartDownloadResponse> ClientConnection::handle(const Messages::DownloadServer::StartDownload& message)
 {
     const auto& url = message.url();
     if (!url.is_valid()) {
         dbgln("StartDownload: Invalid URL requested: '{}'", url);
-        return make<Messages::ProtocolServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
+        return make<Messages::DownloadServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
     }
     auto* protocol = Protocol::find_by_name(url.protocol());
     if (!protocol) {
         dbgln("StartDownload: No protocol handler for URL: '{}'", url);
-        return make<Messages::ProtocolServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
+        return make<Messages::DownloadServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
     }
     auto download = protocol->start_download(*this, message.method(), url, message.request_headers().entries(), message.request_body());
     if (!download) {
         dbgln("StartDownload: Protocol handler failed to start download: '{}'", url);
-        return make<Messages::ProtocolServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
+        return make<Messages::DownloadServer::StartDownloadResponse>(-1, Optional<IPC::File> {});
     }
     auto id = download->id();
     auto fd = download->download_fd();
     m_downloads.set(id, move(download));
-    return make<Messages::ProtocolServer::StartDownloadResponse>(id, IPC::File(fd, IPC::File::CloseAfterSending));
+    return make<Messages::DownloadServer::StartDownloadResponse>(id, IPC::File(fd, IPC::File::CloseAfterSending));
 }
 
-OwnPtr<Messages::ProtocolServer::StopDownloadResponse> ClientConnection::handle(const Messages::ProtocolServer::StopDownload& message)
+OwnPtr<Messages::DownloadServer::StopDownloadResponse> ClientConnection::handle(const Messages::DownloadServer::StopDownload& message)
 {
     auto* download = const_cast<Download*>(m_downloads.get(message.download_id()).value_or(nullptr));
     bool success = false;
@@ -69,7 +69,7 @@ OwnPtr<Messages::ProtocolServer::StopDownloadResponse> ClientConnection::handle(
         m_downloads.remove(message.download_id());
         success = true;
     }
-    return make<Messages::ProtocolServer::StopDownloadResponse>(success);
+    return make<Messages::DownloadServer::StopDownloadResponse>(success);
 }
 
 void ClientConnection::did_receive_headers(Badge<Download>, Download& download)
@@ -78,34 +78,34 @@ void ClientConnection::did_receive_headers(Badge<Download>, Download& download)
     for (auto& it : download.response_headers())
         response_headers.add(it.key, it.value);
 
-    post_message(Messages::ProtocolClient::HeadersBecameAvailable(download.id(), move(response_headers), download.status_code()));
+    post_message(Messages::DownloadClient::HeadersBecameAvailable(download.id(), move(response_headers), download.status_code()));
 }
 
 void ClientConnection::did_finish_download(Badge<Download>, Download& download, bool success)
 {
     VERIFY(download.total_size().has_value());
 
-    post_message(Messages::ProtocolClient::DownloadFinished(download.id(), success, download.total_size().value()));
+    post_message(Messages::DownloadClient::DownloadFinished(download.id(), success, download.total_size().value()));
 
     m_downloads.remove(download.id());
 }
 
 void ClientConnection::did_progress_download(Badge<Download>, Download& download)
 {
-    post_message(Messages::ProtocolClient::DownloadProgress(download.id(), download.total_size(), download.downloaded_size()));
+    post_message(Messages::DownloadClient::DownloadProgress(download.id(), download.total_size(), download.downloaded_size()));
 }
 
 void ClientConnection::did_request_certificates(Badge<Download>, Download& download)
 {
-    post_message(Messages::ProtocolClient::CertificateRequested(download.id()));
+    post_message(Messages::DownloadClient::CertificateRequested(download.id()));
 }
 
-OwnPtr<Messages::ProtocolServer::GreetResponse> ClientConnection::handle(const Messages::ProtocolServer::Greet&)
+OwnPtr<Messages::DownloadServer::GreetResponse> ClientConnection::handle(const Messages::DownloadServer::Greet&)
 {
-    return make<Messages::ProtocolServer::GreetResponse>();
+    return make<Messages::DownloadServer::GreetResponse>();
 }
 
-OwnPtr<Messages::ProtocolServer::SetCertificateResponse> ClientConnection::handle(const Messages::ProtocolServer::SetCertificate& message)
+OwnPtr<Messages::DownloadServer::SetCertificateResponse> ClientConnection::handle(const Messages::DownloadServer::SetCertificate& message)
 {
     auto* download = const_cast<Download*>(m_downloads.get(message.download_id()).value_or(nullptr));
     bool success = false;
@@ -113,7 +113,7 @@ OwnPtr<Messages::ProtocolServer::SetCertificateResponse> ClientConnection::handl
         download->set_certificate(message.certificate(), message.key());
         success = true;
     }
-    return make<Messages::ProtocolServer::SetCertificateResponse>(success);
+    return make<Messages::DownloadServer::SetCertificateResponse>(success);
 }
 
 }

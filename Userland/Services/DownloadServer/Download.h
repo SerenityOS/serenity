@@ -12,9 +12,9 @@
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
-#include <ProtocolServer/Forward.h>
+#include <DownloadServer/Forward.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 class Download {
 public:

@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <DownloadServer/GeminiDownload.h>
 #include <LibGemini/GeminiJob.h>
 #include <LibGemini/GeminiResponse.h>
-#include <ProtocolServer/GeminiDownload.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 GeminiDownload::GeminiDownload(ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
     : Download(client, move(output_stream))

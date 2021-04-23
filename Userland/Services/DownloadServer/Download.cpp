@@ -5,10 +5,10 @@
  */
 
 #include <AK/Badge.h>
-#include <ProtocolServer/ClientConnection.h>
-#include <ProtocolServer/Download.h>
+#include <DownloadServer/ClientConnection.h>
+#include <DownloadServer/Download.h>
 
-namespace ProtocolServer {
+namespace DownloadServer {
 
 // FIXME: What about rollover?
 static i32 s_next_id = 1;
