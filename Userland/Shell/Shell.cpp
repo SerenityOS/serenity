@@ -1194,6 +1194,27 @@ String Shell::unescape_token(const String& token)
     return builder.build();
 }
 
+String Shell::find_in_path(const StringView& program_name)
+{
+    String path = getenv("PATH");
+    if (!path.is_empty()) {
+        auto directories = path.split(':');
+        for (const auto& directory : directories) {
+            Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
+            while (programs.has_next()) {
+                auto program = programs.next_path();
+                auto program_path = String::formatted("{}/{}", directory, program);
+                if (access(program_path.characters(), X_OK) != 0)
+                    continue;
+                if (program == program_name)
+                    return program_path;
+            }
+        }
+    }
+
+    return {};
+}
+
 void Shell::cache_path()
 {
     if (!m_is_interactive)
