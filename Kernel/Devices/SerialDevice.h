@@ -27,6 +27,8 @@ public:
     virtual bool can_write(const FileDescription&, size_t) const override;
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
 
+    void put_char(char);
+
     enum InterruptEnable {
         LowPowerMode = 0x01 << 5,
         SleepMode = 0x01 << 4,
@@ -129,6 +131,7 @@ private:
     WordLength m_word_length { EightBits };
     bool m_break_enable { false };
     u8 m_modem_control { 0 };
+    bool m_last_put_char_was_carriage_return { false };
 };
 
 }
