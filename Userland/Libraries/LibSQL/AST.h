@@ -83,18 +83,21 @@ private:
 
 class CommonTableExpression : public ASTNode {
 public:
-    CommonTableExpression(String table_name, Vector<String> column_names)
+    CommonTableExpression(String table_name, Vector<String> column_names, NonnullRefPtr<Select> select_statement)
         : m_table_name(move(table_name))
         , m_column_names(move(column_names))
+        , m_select_statement(move(select_statement))
     {
     }
 
     const String& table_name() const { return m_table_name; }
     const Vector<String>& column_names() const { return m_column_names; }
+    const NonnullRefPtr<Select>& select_statement() const { return m_select_statement; }
 
 private:
     String m_table_name;
     Vector<String> m_column_names;
+    NonnullRefPtr<Select> m_select_statement;
 };
 
 class CommonTableExpressionList : public ASTNode {

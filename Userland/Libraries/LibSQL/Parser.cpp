@@ -719,10 +719,10 @@ NonnullRefPtr<CommonTableExpression> Parser::parse_common_table_expression()
 
     consume(TokenType::As);
     consume(TokenType::ParenOpen);
-    // FIXME: Parse "select-stmt".
+    auto select_statement = parse_select_statement({});
     consume(TokenType::ParenClose);
 
-    return create_ast_node<CommonTableExpression>(move(table_name), move(column_names));
+    return create_ast_node<CommonTableExpression>(move(table_name), move(column_names), move(select_statement));
 }
 
 NonnullRefPtr<QualifiedTableName> Parser::parse_qualified_table_name()
