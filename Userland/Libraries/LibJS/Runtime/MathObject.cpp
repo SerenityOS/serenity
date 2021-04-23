@@ -157,7 +157,8 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::max)
         auto cur = vm.argument(i).to_number(global_object);
         if (vm.exception())
             return {};
-        max = Value(cur.as_double() > max.as_double() ? cur : max);
+        if ((max.is_negative_zero() && cur.is_positive_zero()) || cur.as_double() > max.as_double())
+            max = cur;
     }
     return max;
 }
@@ -174,7 +175,8 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::min)
         auto cur = vm.argument(i).to_number(global_object);
         if (vm.exception())
             return {};
-        min = Value(cur.as_double() < min.as_double() ? cur : min);
+        if ((min.is_positive_zero() && cur.is_negative_zero()) || cur.as_double() < min.as_double())
+            min = cur;
     }
     return min;
 }
