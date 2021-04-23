@@ -628,8 +628,8 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_in_expression(NonnullRefPtr<Ex
 
     if (consume_if(TokenType::ParenOpen)) {
         if (match(TokenType::Select)) {
-            // FIXME: Parse "select-stmt".
-            return {};
+            auto select_statement = parse_select_statement({});
+            return create_ast_node<InSelectionExpression>(move(expression), move(select_statement), invert_expression);
         }
 
         // FIXME: Consolidate this with parse_chained_expression(). That method consumes the opening paren as

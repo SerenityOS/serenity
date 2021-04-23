@@ -624,6 +624,20 @@ private:
     NonnullRefPtr<Expression> m_expression;
 };
 
+class InSelectionExpression : public InvertibleNestedExpression {
+public:
+    InSelectionExpression(NonnullRefPtr<Expression> expression, NonnullRefPtr<Select> select_statement, bool invert_expression)
+        : InvertibleNestedExpression(move(expression), invert_expression)
+        , m_select_statement(move(select_statement))
+    {
+    }
+
+    const NonnullRefPtr<Select>& select_statement() const { return m_select_statement; }
+
+private:
+    NonnullRefPtr<Select> m_select_statement;
+};
+
 class InChainedExpression : public InvertibleNestedExpression {
 public:
     InChainedExpression(NonnullRefPtr<Expression> expression, NonnullRefPtr<ChainedExpression> expression_chain, bool invert_expression)
