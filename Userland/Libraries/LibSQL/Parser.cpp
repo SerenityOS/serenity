@@ -81,7 +81,10 @@ NonnullRefPtr<CreateTable> Parser::parse_create_table_statement()
     String table_name;
     parse_schema_and_table_name(schema_name, table_name);
 
-    // FIXME: Parse "AS select-stmt".
+    if (consume_if(TokenType::As)) {
+        auto select_statement = parse_select_statement({});
+        return create_ast_node<CreateTable>(move(schema_name), move(table_name), move(select_statement), is_temporary, is_error_if_table_exists);
+    }
 
     NonnullRefPtrVector<ColumnDefinition> column_definitions;
     parse_comma_separated_list(true, [&]() { column_definitions.append(parse_column_definition()); });

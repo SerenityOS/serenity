@@ -45,6 +45,8 @@ TEST_CASE(create_table)
     EXPECT(parse("CREATE TABLE test ( column1 )").is_error());
     EXPECT(parse("CREATE TABLE IF test ( column1 );").is_error());
     EXPECT(parse("CREATE TABLE IF NOT test ( column1 );").is_error());
+    EXPECT(parse("CREATE TABLE AS;").is_error());
+    EXPECT(parse("CREATE TABLE AS SELECT;").is_error());
     EXPECT(parse("CREATE TABLE test ( column1 varchar()").is_error());
     EXPECT(parse("CREATE TABLE test ( column1 varchar(abc)").is_error());
     EXPECT(parse("CREATE TABLE test ( column1 varchar(123 )").is_error());
@@ -55,6 +57,8 @@ TEST_CASE(create_table)
     EXPECT(parse("CREATE TABLE test ( column1 varchar(0x) )").is_error());
     EXPECT(parse("CREATE TABLE test ( column1 varchar(0xzzz) )").is_error());
     EXPECT(parse("WITH table AS () CREATE TABLE test ( column1 );").is_error());
+    EXPECT(parse("CREATE TABLE test ( column1 int ) AS SELECT * FROM table;").is_error());
+    EXPECT(parse("CREATE TABLE test AS SELECT * FROM table ( column1 int ) ;").is_error());
 
     struct Column {
         StringView name;
@@ -74,6 +78,13 @@ TEST_CASE(create_table)
         EXPECT_EQ(table.table_name(), expected_table);
         EXPECT_EQ(table.is_temporary(), expected_is_temporary);
         EXPECT_EQ(table.is_error_if_table_exists(), expected_is_error_if_table_exists);
+
+        bool expect_select_statement = expected_columns.is_empty();
+        EXPECT_EQ(table.has_selection(), expect_select_statement);
+        EXPECT_EQ(table.has_columns(), !expect_select_statement);
+
+        const auto& select_statement = table.select_statement();
+        EXPECT_EQ(select_statement.is_null(), !expect_select_statement);
 
         const auto& columns = table.columns();
         EXPECT_EQ(columns.size(), expected_columns.size());
@@ -102,6 +113,8 @@ TEST_CASE(create_table)
     validate("CREATE TEMP TABLE test ( column1 );", {}, "test", { { "column1", "BLOB" } }, true, true);
     validate("CREATE TEMPORARY TABLE test ( column1 );", {}, "test", { { "column1", "BLOB" } }, true, true);
     validate("CREATE TABLE IF NOT EXISTS test ( column1 );", {}, "test", { { "column1", "BLOB" } }, false, false);
+
+    validate("CREATE TABLE test AS SELECT * FROM table;", {}, "test", {});
 
     validate("CREATE TABLE test ( column1 int );", {}, "test", { { "column1", "int" } });
     validate("CREATE TABLE test ( column1 varchar );", {}, "test", { { "column1", "varchar" } });
