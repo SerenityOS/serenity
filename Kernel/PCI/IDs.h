@@ -11,6 +11,7 @@ namespace Kernel {
 enum class PCIVendorID {
     VirtIO = 0x1af4,
     Intel = 0x8086,
+    WCH = 0x1c00,
 };
 
 enum class PCIDeviceID {
