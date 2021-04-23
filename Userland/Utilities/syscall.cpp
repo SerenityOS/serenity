@@ -24,6 +24,14 @@ using ArgIter = Arguments::Iterator;
 
 static FlatPtr parse_from(ArgIter&);
 
+template<>
+struct AK::Formatter<Syscall::Function> : Formatter<StringView> {
+    void format(FormatBuilder& builder, Syscall::Function function)
+    {
+        return Formatter<StringView>::format(builder, to_string(function));
+    }
+};
+
 int main(int argc, char** argv)
 {
     bool output_buffer = false;
@@ -42,10 +50,23 @@ int main(int argc, char** argv)
         " - Arguments that cannot be interpreted are treated as string arguments, for example 'Hello, friends!'.\n"
         "\n"
         "Full example: syscall -o realpath [ /usr/share/man/man2/getgid.md 1024 buf 1024 ]");
+    args_parser.add_option(list_syscalls, "List all existing syscalls, and exit", "list-syscalls", 'l');
     args_parser.add_option(output_buffer, "Output the contents of the buffer (beware of stray zero bytes!)", "output-buffer", 'o');
-    args_parser.add_option(list_syscalls, "List all existing syscalls", "list-syscalls", 'l');
-    args_parser.add_positional_argument(arguments, "Syscall arguments; see general help.", "syscall-arguments");
+    args_parser.add_positional_argument(arguments, "Syscall arguments; see general help.", "syscall-arguments", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
+
+    if (list_syscalls) {
+        outln("syscall list:");
+        for (int sc = 0; sc < Syscall::Function::__Count; ++sc) {
+            outln("  \033[33;1m{}\033[0m - {}", sc, static_cast<Syscall::Function>(sc));
+        }
+        exit(0);
+    }
+
+    if (arguments.is_empty()) {
+        args_parser.print_usage(stderr, argv[0]);
+        exit(1);
+    }
 
     ArgIter iter = arguments.begin();
     for (size_t i = 0; i < SC_NARG && !iter.is_end(); i++) {
