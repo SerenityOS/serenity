@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=SDL2
-version=serenity-git
+version=git
 workdir=SDL-main-serenity
 useconfigure=true
 files="https://github.com/SerenityOS/SDL/archive/main-serenity.tar.gz SDL2-git.tar.gz"
