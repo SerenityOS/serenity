@@ -140,16 +140,29 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
 
 void TLSv12::read_from_socket()
 {
-    if (m_context.application_buffer.size() > 0) {
-        deferred_invoke([&](auto&) { read_from_socket(); });
-        if (on_tls_ready_to_read)
-            on_tls_ready_to_read(*this);
-    }
+    auto did_schedule_read = false;
+    auto notify_client_for_app_data = [&] {
+        if (m_context.application_buffer.size() > 0) {
+            if (!did_schedule_read) {
+                deferred_invoke([&](auto&) { read_from_socket(); });
+                did_schedule_read = true;
+            }
+            if (on_tls_ready_to_read)
+                on_tls_ready_to_read(*this);
+        }
+    };
+
+    // If there's anything before we consume stuff, let the client know
+    // since we won't be consuming things if the connection is terminated.
+    notify_client_for_app_data();
 
     if (!check_connection_state(true))
         return;
 
     consume(Core::Socket::read(4096));
+
+    // If anything new shows up, tell the client about the event.
+    notify_client_for_app_data();
 }
 
 void TLSv12::write_into_socket()
