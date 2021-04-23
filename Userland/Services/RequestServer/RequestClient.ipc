@@ -1,0 +1,9 @@
+endpoint RequestClient
+{
+    RequestProgress(i32 request_id, Optional<u32> total_size, u32 downloaded_size) =|
+    RequestFinished(i32 request_id, bool success, u32 total_size) =|
+    HeadersBecameAvailable(i32 request_id, IPC::Dictionary response_headers, Optional<u32> status_code) =|
+
+    // Certificate requests
+    CertificateRequested(i32 request_id) => ()
+}

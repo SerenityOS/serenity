@@ -11,7 +11,7 @@
 #include <LibCore/FileStream.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Widget.h>
-#include <LibProtocol/Download.h>
+#include <LibProtocol/Request.h>
 
 namespace Browser {
 
@@ -29,7 +29,7 @@ private:
 
     URL m_url;
     String m_destination_path;
-    RefPtr<Protocol::Download> m_download;
+    RefPtr<Protocol::Request> m_download;
     RefPtr<GUI::Progressbar> m_progressbar;
     RefPtr<GUI::Label> m_progress_label;
     RefPtr<GUI::Button> m_cancel_button;

@@ -12,8 +12,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibProtocol/Client.h>
-#include <LibProtocol/Download.h>
+#include <LibProtocol/Request.h>
+#include <LibProtocol/RequestClient.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -151,7 +151,7 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
-        "Download a file from an arbitrary URL. This command uses ProtocolServer, "
+        "Request a file from an arbitrary URL. This command uses RequestServer, "
         "and thus supports at least http, https, and gemini.");
     args_parser.add_option(save_at_provided_name, "Write to a file named as the remote file", nullptr, 'O');
     args_parser.add_option(data, "(HTTP only) Send the provided data via an HTTP POST request", "data", 'd', "data");
@@ -184,11 +184,11 @@ int main(int argc, char** argv)
     }
 
     Core::EventLoop loop;
-    auto protocol_client = Protocol::Client::construct();
+    auto protocol_client = Protocol::RequestClient::construct();
 
-    auto download = protocol_client->start_download(method, url.to_string(), request_headers, data ? StringView { data }.bytes() : ReadonlyBytes {});
-    if (!download) {
-        fprintf(stderr, "Failed to start download for '%s'\n", url_str);
+    auto request = protocol_client->start_request(method, url.to_string(), request_headers, data ? StringView { data }.bytes() : ReadonlyBytes {});
+    if (!request) {
+        fprintf(stderr, "Failed to start request for '%s'\n", url_str);
         return 1;
     }
 
@@ -200,7 +200,7 @@ int main(int argc, char** argv)
 
     bool received_actual_headers = false;
 
-    download->on_progress = [&](Optional<u32> maybe_total_size, u32 downloaded_size) {
+    request->on_progress = [&](Optional<u32> maybe_total_size, u32 downloaded_size) {
         fprintf(stderr, "\r\033[2K");
         if (maybe_total_size.has_value()) {
             fprintf(stderr, "\033]9;%d;%d;\033\\", downloaded_size, maybe_total_size.value());
@@ -227,7 +227,7 @@ int main(int argc, char** argv)
     };
 
     if (save_at_provided_name) {
-        download->on_headers_received = [&](auto& response_headers, auto status_code) {
+        request->on_headers_received = [&](auto& response_headers, auto status_code) {
             if (received_actual_headers)
                 return;
             dbgln("Received headers! response code = {}", status_code.value_or(0));
@@ -263,18 +263,18 @@ int main(int argc, char** argv)
             }
         };
     }
-    download->on_finish = [&](bool success, auto) {
+    request->on_finish = [&](bool success, auto) {
         fprintf(stderr, "\033]9;-1;\033\\");
         fprintf(stderr, "\n");
         if (!success)
-            fprintf(stderr, "Download failed :(\n");
+            fprintf(stderr, "Request failed :(\n");
         loop.quit(0);
     };
 
     auto output_stream = ConditionalOutputFileStream { [&] { return save_at_provided_name ? received_actual_headers : true; }, stdout };
-    download->stream_into(output_stream);
+    request->stream_into(output_stream);
 
-    dbgln("started download with id {}", download->id());
+    dbgln("started request with id {}", request->id());
 
     auto rc = loop.exec();
     // FIXME: This shouldn't be needed.

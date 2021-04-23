@@ -9,8 +9,8 @@
 #include <AK/JsonObject.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibProtocol/Client.h>
-#include <LibProtocol/Download.h>
+#include <LibProtocol/Request.h>
+#include <LibProtocol/RequestClient.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/Resource.h>
@@ -27,7 +27,7 @@ ResourceLoader& ResourceLoader::the()
 }
 
 ResourceLoader::ResourceLoader()
-    : m_protocol_client(Protocol::Client::construct())
+    : m_protocol_client(Protocol::RequestClient::construct())
     , m_user_agent(default_user_agent)
 {
 }
@@ -156,13 +156,13 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
             headers.set(it.key, it.value);
         }
 
-        auto download = protocol_client().start_download(request.method(), url.to_string_encoded(), headers, request.body());
-        if (!download) {
+        auto protocol_request = protocol_client().start_request(request.method(), url.to_string_encoded(), headers, request.body());
+        if (!protocol_request) {
             if (error_callback)
                 error_callback("Failed to initiate load", {});
             return;
         }
-        download->on_buffered_download_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), download](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
+        protocol_request->on_buffered_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), protocol_request](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
@@ -171,14 +171,14 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
                     error_callback("HTTP load failed", {});
                 return;
             }
-            deferred_invoke([download](auto&) {
-                // Clear circular reference of `download` captured by copy
-                const_cast<Protocol::Download&>(*download).on_buffered_download_finish = nullptr;
+            deferred_invoke([protocol_request](auto&) {
+                // Clear circular reference of `protocol_request` captured by copy
+                const_cast<Protocol::Request&>(*protocol_request).on_buffered_request_finish = nullptr;
             });
             success_callback(payload, response_headers, status_code);
         };
-        download->set_should_buffer_all_input(true);
-        download->on_certificate_requested = []() -> Protocol::Download::CertificateAndKey {
+        protocol_request->set_should_buffer_all_input(true);
+        protocol_request->on_certificate_requested = []() -> Protocol::Request::CertificateAndKey {
             return {};
         };
         ++m_pending_loads;

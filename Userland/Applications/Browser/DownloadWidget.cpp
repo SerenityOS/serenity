@@ -18,7 +18,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Window.h>
-#include <LibProtocol/Client.h>
+#include <LibProtocol/RequestClient.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <math.h>
 
@@ -36,7 +36,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     }
 
     m_elapsed_timer.start();
-    m_download = Web::ResourceLoader::the().protocol_client().start_download("GET", url.to_string());
+    m_download = Web::ResourceLoader::the().protocol_client().start_request("GET", url.to_string());
     VERIFY(m_download);
     m_download->on_progress = [this](Optional<u32> total_size, u32 downloaded_size) {
         did_progress(total_size.value(), downloaded_size);

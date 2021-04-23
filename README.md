@@ -42,7 +42,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * Compositing window server (WindowServer)
 * Text console manager (TTYServer)
 * DNS client (LookupServer)
-* Network protocols server (ProtocolServer)
+* Network protocols server (RequestServer and WebSocket)
 * Software-mixing sound daemon (AudioServer)
 * Desktop notifications (NotificationServer)
 * HTTP server (WebServer)

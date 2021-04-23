@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    // Connect to the ProtocolServer and the WebSocket service immediately so we can drop the "unix" pledge.
+    // Connect to the RequestServer and the WebSocket service immediately so we can drop the "unix" pledge.
     Web::ResourceLoader::the();
     Web::HTML::WebSocketClientManager::the();
 

@@ -5,13 +5,13 @@
  */
 
 #include <AK/HashMap.h>
-#include <ProtocolServer/Protocol.h>
+#include <RequestServer/Protocol.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
 
-namespace ProtocolServer {
+namespace RequestServer {
 
 static HashMap<String, Protocol*>& all_protocols()
 {
@@ -34,7 +34,7 @@ Protocol::~Protocol()
     VERIFY_NOT_REACHED();
 }
 
-Result<Protocol::Pipe, String> Protocol::get_pipe_for_download()
+Result<Protocol::Pipe, String> Protocol::get_pipe_for_request()
 {
     int fd_pair[2] { 0 };
     if (pipe(fd_pair) != 0) {

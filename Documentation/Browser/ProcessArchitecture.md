@@ -10,19 +10,19 @@ The SerenityOS web browser (**"Browser"**) uses a multi-process architecture to 
 
 Every instance of the **Browser** application can have one or more tabs open. Each tab has a unique **WebContent** service process spawned on its behalf.
 
-Two important aspects of web browsing are further separated from the **WebContent** process: *network protocols* and *image decoding*, segregated to the **ProtocolServer** and **ImageDecoder** processes respectively.
+Two important aspects of web browsing are further separated from the **WebContent** process: *network requests* and *image decoding*, segregated to the **RequestServer** and **ImageDecoder** processes respectively.
 
 All processes and are aggressively sandboxed using the `pledge()` and `unveil()` mechanisms. Furthermore, all processes except **Browser** run as an unprivileged user, separate from the primary logged-in desktop user.
 
 ### Process: WebContent
 
-This process hosts the main HTML/CSS engine (**LibWeb**.) It also runs JavaScript (**LibJS**.) It gets input events from **Browser** and paints the web content into shared bitmaps. It can only communicate with the outside world via **ProtocolServer**.
+This process hosts the main HTML/CSS engine (**LibWeb**.) It also runs JavaScript (**LibJS**.) It gets input events from **Browser** and paints the web content into shared bitmaps. It can only communicate with the outside world via **RequestServer**.
 
-### Process: ProtocolServer
+### Process: RequestServer
 
-This process can speak networking protocols (like HTTP, HTTPS, and Gemini) to the outside world. Each **WebContent** process gets its own **ProtocolServer** to do networking on its behalf.
+This process can use networking protocols (like HTTP, HTTPS, and Gemini) to request files from the outside world. Each **WebContent** process gets its own **RequestServer** to do uploading or downloading on its behalf.
 
-For DNS lookups, **ProtocolServer** asks for help from the system's global **LookupServer** service, which handles all outgoing DNS requests.
+For DNS lookups, **RequestServer** asks for help from the system's global **LookupServer** service, which handles all outgoing DNS requests.
 
 ### Process: ImageDecoder
 
@@ -32,7 +32,7 @@ This process can decode images (PNG, JPEG, BMP, ICO, PBM, etc.) into bitmaps. Ea
 
 To get a fresh **WebContent** process, anyone with the suitable file system permissions can spawn one by connecting to the socket at `/tmp/portal/webcontent`. This socket is managed by **SystemServer** and will spawn a new instance of **WebContent** for every connection.
 
-The same basic concept applies to **ProtocolServer** and **ImageDecoder** as well, except that those services are spawned by **WebContent** as needed, not by **Browser**.
+The same basic concept applies to **RequestServer** and **ImageDecoder** as well, except that those services are spawned by **WebContent** as needed, not by **Browser**.
 
 ## Class overview
 
