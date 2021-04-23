@@ -1,9 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=frotz
-version=git
-workdir=frotz-master
-files="https://gitlab.com/DavidGriffith/frotz/-/archive/master/frotz-master.zip frotz-master.zip eeaad3d51354491b07c7f30384c0cede"
-auth_type=md5
+version=2.53
+files="https://gitlab.com/DavidGriffith/frotz/-/archive/${version}/frotz-${version}.tar.bz2 frotz-${version}.tar.bz2 8da558828dd74d6d6ee30483bb32276ef918b8b72b7f6e89b4f7cb27e7abf58b"
+auth_type=sha256
 depends="ncurses"
 
 build() {
