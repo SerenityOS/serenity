@@ -580,4 +580,27 @@ TEST_CASE(in_chained_expression)
     validate("15 NOT IN (15, 16)", 2, true);
 }
 
+TEST_CASE(in_selection_expression)
+{
+    EXPECT(parse("IN (SELECT)").is_error());
+    EXPECT(parse("IN (SELECT * FROM table, SELECT * FROM table);").is_error());
+    EXPECT(parse("NOT IN (SELECT)").is_error());
+    EXPECT(parse("NOT IN (SELECT * FROM table, SELECT * FROM table);").is_error());
+
+    auto validate = [](StringView sql, bool expected_invert_expression) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto expression = result.release_value();
+        EXPECT(is<SQL::InSelectionExpression>(*expression));
+
+        const auto& in = static_cast<const SQL::InSelectionExpression&>(*expression);
+        EXPECT(!is<SQL::ErrorExpression>(*in.expression()));
+        EXPECT_EQ(in.invert_expression(), expected_invert_expression);
+    };
+
+    validate("15 IN (SELECT * FROM table)", false);
+    validate("15 NOT IN (SELECT * FROM table)", true);
+}
+
 TEST_MAIN(SqlExpressionParser)
