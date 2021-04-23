@@ -1,0 +1,11 @@
+endpoint WebSocketClient
+{
+    // Connection API
+    Connected(i32 connection_id) =|
+    Received(i32 connection_id, bool is_text, ByteBuffer data) =|
+    Errored(i32 connection_id, i32 message) =|
+    Closed(i32 connection_id, u16 code, String reason, bool clean) =|
+
+    // Certificate requests
+    CertificateRequested(i32 connection_id) =|
+}
