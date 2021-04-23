@@ -7,11 +7,14 @@
 
 #include "SoftwareGLContext.h"
 #include "GLStruct.h"
+#include "SoftwareRasterizer.h"
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
 #include <math.h>
 
@@ -130,6 +133,12 @@ static void clip_triangle_against_frustum(Vector<FloatVector4>& in_vec)
     }
 }
 
+SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
+    : m_frontbuffer(frontbuffer)
+    , m_rasterizer(frontbuffer.size())
+{
+}
+
 void SoftwareGLContext::gl_begin(GLenum mode)
 {
     if (m_in_draw_state) {
@@ -155,12 +164,7 @@ void SoftwareGLContext::gl_clear(GLbitfield mask)
     }
 
     if (mask & GL_COLOR_BUFFER_BIT) {
-        uint8_t r = static_cast<uint8_t>(floor(m_clear_color.x() * 255.0f));
-        uint8_t g = static_cast<uint8_t>(floor(m_clear_color.y() * 255.0f));
-        uint8_t b = static_cast<uint8_t>(floor(m_clear_color.z() * 255.0f));
-
-        uint64_t color = r << 16 | g << 8 | b;
-        (void)(color);
+        m_rasterizer.clear_color(m_clear_color);
         m_error = GL_NO_ERROR;
     } else {
         m_error = GL_INVALID_ENUM;
@@ -196,9 +200,8 @@ void SoftwareGLContext::gl_end()
     // 5.   The vertices are sorted (for the rasteriser, how are we doing this? 3Dfx did this top to bottom in terms of vertex y co-ordinates)
     // 6.   The vertices are then sent off to the rasteriser and drawn to the screen
 
-    // FIXME: Don't assume screen dimensions
-    float scr_width = 640.0f;
-    float scr_height = 480.0f;
+    float scr_width = m_frontbuffer->width();
+    float scr_height = m_frontbuffer->height();
 
     // Make sure we had a `glBegin` before this call...
     if (!m_in_draw_state) {
@@ -365,21 +368,7 @@ void SoftwareGLContext::gl_end()
     }
 
     for (size_t i = 0; i < processed_triangles.size(); i++) {
-        Vector<GLVertex> sort_vert_list;
         GLTriangle& triangle = processed_triangles.at(i);
-
-        // Now we sort the vertices by their y values. A is the vertex that has the least y value,
-        // B is the middle and C is the bottom.
-        // These are sorted in groups of 3
-        sort_vert_list.append(triangle.vertices[0]);
-        sort_vert_list.append(triangle.vertices[1]);
-        sort_vert_list.append(triangle.vertices[2]);
-
-        AK::quick_sort(sort_vert_list.begin(), sort_vert_list.end(), [](auto& a, auto& b) { return a.y < b.y; });
-
-        triangle.vertices[0] = sort_vert_list.at(0);
-        triangle.vertices[1] = sort_vert_list.at(1);
-        triangle.vertices[2] = sort_vert_list.at(2);
 
         // Let's calculate the (signed) area of the triangle
         // https://cp-algorithms.com/geometry/oriented-triangle-area.html
@@ -392,19 +381,6 @@ void SoftwareGLContext::gl_end()
         if (area == 0.0f)
             continue;
 
-        int32_t vertexAx = triangle.vertices[0].x;
-        int32_t vertexAy = triangle.vertices[0].y;
-        int32_t vertexBx = triangle.vertices[1].x;
-        int32_t vertexBy = triangle.vertices[1].y;
-        int32_t vertexCx = triangle.vertices[2].x;
-        int32_t vertexCy = triangle.vertices[2].y;
-        (void)(vertexAx);
-        (void)(vertexAy);
-        (void)(vertexBx);
-        (void)(vertexBy);
-        (void)(vertexCx);
-        (void)(vertexCy);
-        
         if (m_cull_faces) {
             bool is_front = (m_front_face == GL_CCW ? area > 0 : area < 0);
 
@@ -414,6 +390,8 @@ void SoftwareGLContext::gl_end()
             if (!is_front && (m_culled_sides == GL_BACK || m_culled_sides == GL_FRONT_AND_BACK))
                 continue;
         }
+
+        m_rasterizer.submit_triangle(triangle);
     }
 
     triangle_list.clear();
@@ -776,6 +754,11 @@ void SoftwareGLContext::gl_cull_face(GLenum cull_mode)
     }
 
     m_culled_sides = cull_mode;
+}
+
+void SoftwareGLContext::present()
+{
+    m_rasterizer.blit_to(*m_frontbuffer);
 }
 
 }
