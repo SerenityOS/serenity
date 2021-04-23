@@ -29,6 +29,7 @@ class Expression;
 class GroupByClause;
 class InChainedExpression;
 class InSelectionExpression;
+class Insert;
 class InTableExpression;
 class InvertibleNestedDoubleExpression;
 class InvertibleNestedExpression;

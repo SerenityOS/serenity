@@ -150,6 +150,79 @@ TEST_CASE(drop_table)
     validate("DROP TABLE IF EXISTS test;", {}, "test", false);
 }
 
+TEST_CASE(insert)
+{
+    EXPECT(parse("INSERT").is_error());
+    EXPECT(parse("INSERT INTO").is_error());
+    EXPECT(parse("INSERT INTO table").is_error());
+    EXPECT(parse("INSERT INTO table (column)").is_error());
+    EXPECT(parse("INSERT INTO table (column, ) DEFAULT VALUES;").is_error());
+    EXPECT(parse("INSERT INTO table VALUES").is_error());
+    EXPECT(parse("INSERT INTO table VALUES ();").is_error());
+    EXPECT(parse("INSERT INTO table VALUES (1)").is_error());
+    EXPECT(parse("INSERT INTO table SELECT").is_error());
+    EXPECT(parse("INSERT INTO table SELECT * from table").is_error());
+    EXPECT(parse("INSERT OR INTO table DEFAULT VALUES;").is_error());
+    EXPECT(parse("INSERT OR foo INTO table DEFAULT VALUES;").is_error());
+
+    auto validate = [](StringView sql, SQL::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<StringView> expected_column_names, Vector<size_t> expected_chain_sizes, bool expect_select_statement) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto statement = result.release_value();
+        EXPECT(is<SQL::Insert>(*statement));
+
+        const auto& insert = static_cast<const SQL::Insert&>(*statement);
+        EXPECT_EQ(insert.conflict_resolution(), expected_conflict_resolution);
+        EXPECT_EQ(insert.schema_name(), expected_schema);
+        EXPECT_EQ(insert.table_name(), expected_table);
+        EXPECT_EQ(insert.alias(), expected_alias);
+
+        const auto& column_names = insert.column_names();
+        EXPECT_EQ(column_names.size(), expected_column_names.size());
+        for (size_t i = 0; i < column_names.size(); ++i)
+            EXPECT_EQ(column_names[i], expected_column_names[i]);
+
+        EXPECT_EQ(insert.has_expressions(), !expected_chain_sizes.is_empty());
+        if (insert.has_expressions()) {
+            const auto& chained_expressions = insert.chained_expressions();
+            EXPECT_EQ(chained_expressions.size(), expected_chain_sizes.size());
+
+            for (size_t i = 0; i < chained_expressions.size(); ++i) {
+                const auto& chained_expression = chained_expressions[i];
+                const auto& expressions = chained_expression.expressions();
+                EXPECT_EQ(expressions.size(), expected_chain_sizes[i]);
+
+                for (const auto& expression : expressions)
+                    EXPECT(!is<SQL::ErrorExpression>(expression));
+            }
+        }
+
+        EXPECT_EQ(insert.has_selection(), expect_select_statement);
+        EXPECT_EQ(insert.default_values(), expected_chain_sizes.is_empty() && !expect_select_statement);
+    };
+
+    validate("INSERT OR ABORT INTO table DEFAULT VALUES;", SQL::ConflictResolution::Abort, {}, "table", {}, {}, {}, false);
+    validate("INSERT OR FAIL INTO table DEFAULT VALUES;", SQL::ConflictResolution::Fail, {}, "table", {}, {}, {}, false);
+    validate("INSERT OR IGNORE INTO table DEFAULT VALUES;", SQL::ConflictResolution::Ignore, {}, "table", {}, {}, {}, false);
+    validate("INSERT OR REPLACE INTO table DEFAULT VALUES;", SQL::ConflictResolution::Replace, {}, "table", {}, {}, {}, false);
+    validate("INSERT OR ROLLBACK INTO table DEFAULT VALUES;", SQL::ConflictResolution::Rollback, {}, "table", {}, {}, {}, false);
+
+    auto resolution = SQL::ConflictResolution::Abort;
+    validate("INSERT INTO table DEFAULT VALUES;", resolution, {}, "table", {}, {}, {}, false);
+    validate("INSERT INTO schema.table DEFAULT VALUES;", resolution, "schema", "table", {}, {}, {}, false);
+    validate("INSERT INTO table AS foo DEFAULT VALUES;", resolution, {}, "table", "foo", {}, {}, false);
+
+    validate("INSERT INTO table (column) DEFAULT VALUES;", resolution, {}, "table", {}, { "column" }, {}, false);
+    validate("INSERT INTO table (column1, column2) DEFAULT VALUES;", resolution, {}, "table", {}, { "column1", "column2" }, {}, false);
+
+    validate("INSERT INTO table VALUES (1);", resolution, {}, "table", {}, {}, { 1 }, false);
+    validate("INSERT INTO table VALUES (1, 2);", resolution, {}, "table", {}, {}, { 2 }, false);
+    validate("INSERT INTO table VALUES (1, 2), (3, 4, 5);", resolution, {}, "table", {}, {}, { 2, 3 }, false);
+
+    validate("INSERT INTO table SELECT * FROM table;", resolution, {}, "table", {}, {}, {}, true);
+}
+
 TEST_CASE(delete_)
 {
     EXPECT(parse("DELETE").is_error());
