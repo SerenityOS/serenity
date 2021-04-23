@@ -8,10 +8,10 @@
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
 #include <LibTLS/Certificate.h>
-#include <ProtocolServer/ClientConnection.h>
-#include <ProtocolServer/GeminiProtocol.h>
-#include <ProtocolServer/HttpProtocol.h>
-#include <ProtocolServer/HttpsProtocol.h>
+#include <RequestServer/ClientConnection.h>
+#include <RequestServer/GeminiProtocol.h>
+#include <RequestServer/HttpProtocol.h>
+#include <RequestServer/HttpsProtocol.h>
 
 int main(int, char**)
 {
@@ -38,12 +38,12 @@ int main(int, char**)
         return 1;
     }
 
-    [[maybe_unused]] auto gemini = new ProtocolServer::GeminiProtocol;
-    [[maybe_unused]] auto http = new ProtocolServer::HttpProtocol;
-    [[maybe_unused]] auto https = new ProtocolServer::HttpsProtocol;
+    [[maybe_unused]] auto gemini = new RequestServer::GeminiProtocol;
+    [[maybe_unused]] auto http = new RequestServer::HttpProtocol;
+    [[maybe_unused]] auto https = new RequestServer::HttpsProtocol;
 
     auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
     VERIFY(socket);
-    IPC::new_client_connection<ProtocolServer::ClientConnection>(socket.release_nonnull(), 1);
+    IPC::new_client_connection<RequestServer::ClientConnection>(socket.release_nonnull(), 1);
     return event_loop.exec();
 }
