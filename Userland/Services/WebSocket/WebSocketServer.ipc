@@ -1,0 +1,13 @@
+endpoint WebSocketServer
+{
+    // Basic protocol
+    Greet() => ()
+
+    // Connection API
+    Connect(URL url, String origin, Vector<String> protocols, Vector<String> extensions, IPC::Dictionary additional_request_headers) => (i32 connection_id)
+    ReadyState(i32 connection_id) => (u32 ready_state)
+    Send(i32 connection_id, bool is_text, ByteBuffer data) =|
+    Close(i32 connection_id, u16 code, String reason) =|
+
+    SetCertificate(i32 connection_id, String certificate, String key) => (bool success)
+}
