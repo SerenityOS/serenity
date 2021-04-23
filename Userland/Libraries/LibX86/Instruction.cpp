@@ -592,7 +592,7 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     // FIXME: DE/7 F9 (...but isn't this what DE/7 does naturally, with F9 just being normal R/M?)
 
     build_slash(0xDF, 0, "FILD", OP_FPU_RM32, &Interpreter::FILD_RM16);
-    build_slash_reg(0xDF, 0, "FFREEP", OP_FPU_reg, &Interpreter::FFREEP);
+    build_slash_reg(0xDF, 0, "FFREEP", OP_FPU_reg, &Interpreter::FFREEP); // undocumented
     build_slash(0xDF, 1, "FISTTP", OP_FPU_RM32, &Interpreter::FISTTP_RM16);
     build_slash_reg(0xDF, 1, "FXCH7", OP_FPU_reg, &Interpreter::FXCH);
     build_slash(0xDF, 2, "FIST", OP_FPU_RM32, &Interpreter::FIST_RM16);

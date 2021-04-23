@@ -8,6 +8,7 @@ set(SOURCES
     Region.cpp
     SimpleRegion.cpp
     SoftCPU.cpp
+    SoftFPU.cpp
     SoftMMU.cpp
     main.cpp
 )
