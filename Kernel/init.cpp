@@ -16,6 +16,7 @@
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/MemoryDevice.h>
 #include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/SerialDevice.h>
@@ -146,6 +147,7 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
     PCI::initialize();
+    PCISerialDevice::detect();
 
     VFS::initialize();
 

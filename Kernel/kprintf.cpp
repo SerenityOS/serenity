@@ -7,6 +7,7 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/Types.h>
 #include <Kernel/ConsoleDevice.h>
+#include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
@@ -34,6 +35,9 @@ int get_serial_debug()
 
 static void serial_putch(char ch)
 {
+    if (PCISerialDevice::is_available())
+        return PCISerialDevice::the().put_char(ch);
+
     static bool serial_ready = false;
     static bool was_cr = false;
 
