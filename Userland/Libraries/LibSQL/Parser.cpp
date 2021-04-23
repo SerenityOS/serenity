@@ -16,12 +16,17 @@ Parser::Parser(Lexer lexer)
 
 NonnullRefPtr<Statement> Parser::next_statement()
 {
+    auto terminate_statement = [this](auto statement) {
+        consume(TokenType::SemiColon);
+        return statement;
+    };
+
     if (match(TokenType::With)) {
         auto common_table_expression_list = parse_common_table_expression_list();
-        return parse_statement_with_expression_list(move(common_table_expression_list));
+        return terminate_statement(parse_statement_with_expression_list(move(common_table_expression_list)));
     }
 
-    return parse_statement();
+    return terminate_statement(parse_statement());
 }
 
 NonnullRefPtr<Statement> Parser::parse_statement()
@@ -83,8 +88,6 @@ NonnullRefPtr<CreateTable> Parser::parse_create_table_statement()
 
     // FIXME: Parse "table-constraint".
 
-    consume(TokenType::SemiColon);
-
     return create_ast_node<CreateTable>(move(schema_name), move(table_name), move(column_definitions), is_temporary, is_error_if_table_exists);
 }
 
@@ -104,8 +107,6 @@ NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
     String table_name;
     parse_schema_and_table_name(schema_name, table_name);
 
-    consume(TokenType::SemiColon);
-
     return create_ast_node<DropTable>(move(schema_name), move(table_name), is_error_if_table_does_not_exist);
 }
 
@@ -123,8 +124,6 @@ NonnullRefPtr<Delete> Parser::parse_delete_statement(RefPtr<CommonTableExpressio
     RefPtr<ReturningClause> returning_clause;
     if (match(TokenType::Returning))
         returning_clause = parse_returning_clause();
-
-    consume(TokenType::SemiColon);
 
     return create_ast_node<Delete>(move(common_table_expression_list), move(qualified_table_name), move(where_clause), move(returning_clause));
 }
@@ -191,8 +190,6 @@ NonnullRefPtr<Select> Parser::parse_select_statement(RefPtr<CommonTableExpressio
 
         limit_clause = create_ast_node<LimitClause>(move(limit_expression), move(offset_expression));
     }
-
-    consume(TokenType::SemiColon);
 
     return create_ast_node<Select>(move(common_table_expression_list), select_all, move(result_column_list), move(table_or_subquery_list), move(where_clause), move(group_by_clause), move(ordering_term_list), move(limit_clause));
 }
