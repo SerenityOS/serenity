@@ -6,12 +6,12 @@
 
 #include <LibGemini/GeminiJob.h>
 #include <LibGemini/GeminiResponse.h>
-#include <ProtocolServer/GeminiDownload.h>
+#include <RequestServer/GeminiRequest.h>
 
-namespace ProtocolServer {
+namespace RequestServer {
 
-GeminiDownload::GeminiDownload(ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
-    : Download(client, move(output_stream))
+GeminiRequest::GeminiRequest(ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
+    : Request(client, move(output_stream))
     , m_job(job)
 {
     m_job->on_finish = [this](bool success) {
@@ -30,7 +30,7 @@ GeminiDownload::GeminiDownload(ClientConnection& client, NonnullRefPtr<Gemini::G
             }
         }
 
-        // signal 100% download progress so any listeners can react
+        // signal 100% request progress so any listeners can react
         // appropriately
         did_progress(downloaded_size(), downloaded_size());
 
@@ -44,21 +44,21 @@ GeminiDownload::GeminiDownload(ClientConnection& client, NonnullRefPtr<Gemini::G
     };
 }
 
-void GeminiDownload::set_certificate(String certificate, String key)
+void GeminiRequest::set_certificate(String certificate, String key)
 {
     m_job->set_certificate(move(certificate), move(key));
 }
 
-GeminiDownload::~GeminiDownload()
+GeminiRequest::~GeminiRequest()
 {
     m_job->on_finish = nullptr;
     m_job->on_progress = nullptr;
     m_job->shutdown();
 }
 
-NonnullOwnPtr<GeminiDownload> GeminiDownload::create_with_job(Badge<GeminiProtocol>, ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
+NonnullOwnPtr<GeminiRequest> GeminiRequest::create_with_job(Badge<GeminiProtocol>, ClientConnection& client, NonnullRefPtr<Gemini::GeminiJob> job, NonnullOwnPtr<OutputFileStream>&& output_stream)
 {
-    return adopt_own(*new GeminiDownload(client, move(job), move(output_stream)));
+    return adopt_own(*new GeminiRequest(client, move(job), move(output_stream)));
 }
 
 }

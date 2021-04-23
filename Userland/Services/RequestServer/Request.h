@@ -12,13 +12,13 @@
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
-#include <ProtocolServer/Forward.h>
+#include <RequestServer/Forward.h>
 
-namespace ProtocolServer {
+namespace RequestServer {
 
-class Download {
+class Request {
 public:
-    virtual ~Download();
+    virtual ~Request();
 
     i32 id() const { return m_id; }
     URL url() const { return m_url; }
@@ -32,8 +32,8 @@ public:
     virtual void set_certificate(String, String);
 
     // FIXME: Want Badge<Protocol>, but can't make one from HttpProtocol, etc.
-    void set_download_fd(int fd) { m_download_fd = fd; }
-    int download_fd() const { return m_download_fd; }
+    void set_request_fd(int fd) { m_request_fd = fd; }
+    int request_fd() const { return m_request_fd; }
 
     void did_finish(bool success);
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
@@ -44,12 +44,12 @@ public:
     const OutputFileStream& output_stream() const { return *m_output_stream; }
 
 protected:
-    explicit Download(ClientConnection&, NonnullOwnPtr<OutputFileStream>&&);
+    explicit Request(ClientConnection&, NonnullOwnPtr<OutputFileStream>&&);
 
 private:
     ClientConnection& m_client;
     i32 m_id { 0 };
-    int m_download_fd { -1 }; // Passed to client.
+    int m_request_fd { -1 }; // Passed to client.
     URL m_url;
     Optional<u32> m_status_code;
     Optional<u32> m_total_size {};
