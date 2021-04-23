@@ -343,18 +343,19 @@ int main(int argc, char** argv)
     GUI::ActionGroup frequency_action_group;
     frequency_action_group.set_exclusive(true);
 
-    auto make_frequency_action = [&](auto& title, int interval, bool checked = false) {
-        auto action = GUI::Action::create_checkable(title, [&refresh_timer, interval](auto&) {
-            refresh_timer.restart(interval);
+    auto make_frequency_action = [&](int seconds, bool checked = false) {
+        auto action = GUI::Action::create_checkable(String::formatted("&{} Sec", seconds), [&refresh_timer, seconds](auto&) {
+            refresh_timer.restart(seconds * 1000);
         });
+        action->set_status_tip(String::formatted("Refresh every {} seconds", seconds));
         action->set_checked(checked);
         frequency_action_group.add_action(*action);
         frequency_menu.add_action(*action);
     };
 
-    make_frequency_action("&1 Sec", 1000);
-    make_frequency_action("&3 Sec", 3000, true);
-    make_frequency_action("&5 Sec", 5000);
+    make_frequency_action(1);
+    make_frequency_action(3, true);
+    make_frequency_action(5);
 
     auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window));
@@ -363,6 +364,13 @@ int main(int argc, char** argv)
 
     process_table_view.on_activation = [&](auto&) {
         process_properties_action->activate();
+    };
+
+    app->on_action_enter = [](GUI::Action const& action) {
+        statusbar->set_override_text(action.status_tip());
+    };
+    app->on_action_leave = [](GUI::Action const&) {
+        statusbar->set_override_text({});
     };
 
     window->show();
