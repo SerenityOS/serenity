@@ -84,6 +84,7 @@ private:
     NonnullRefPtr<ResultColumn> parse_result_column();
     NonnullRefPtr<TableOrSubquery> parse_table_or_subquery();
     NonnullRefPtr<OrderingTerm> parse_ordering_term();
+    void parse_schema_and_table_name(String& schema_name, String& table_name);
 
     template<typename ParseCallback>
     void parse_comma_separated_list(bool surrounded_by_parentheses, ParseCallback&& parse_callback)
