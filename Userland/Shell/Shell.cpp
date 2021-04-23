@@ -1806,11 +1806,16 @@ u64 Shell::find_last_job_id() const
     return job_id;
 }
 
-const Job* Shell::find_job(u64 id)
+const Job* Shell::find_job(u64 id, bool is_pid)
 {
     for (auto& entry : jobs) {
-        if (entry.value->job_id() == id)
-            return entry.value;
+        if (is_pid) {
+            if (entry.value->pid() == static_cast<int>(id))
+                return entry.value;
+        } else {
+            if (entry.value->job_id() == id)
+                return entry.value;
+        }
     }
     return nullptr;
 }
@@ -1939,6 +1944,29 @@ void Shell::possibly_print_error() const
         }
     }
     warnln();
+}
+
+Optional<int> Shell::resolve_job_spec(const String& str)
+{
+    if (!str.starts_with('%'))
+        return {};
+
+    // %number -> job id <number>
+    if (auto number = str.substring_view(1).to_uint(); number.has_value())
+        return number.value();
+
+    // '%?str' -> iterate jobs and pick one with `str' in its command
+    // Note: must be quoted, since '?' will turn it into a glob - pretty ugly...
+    GenericLexer lexer { str.substring_view(1) };
+    if (!lexer.consume_specific('?'))
+        return {};
+    auto search_term = lexer.remaining();
+    for (auto& it : jobs) {
+        if (it.value->cmd().contains(search_term))
+            return it.key;
+    }
+
+    return {};
 }
 
 void FileDescriptionCollector::collect()
