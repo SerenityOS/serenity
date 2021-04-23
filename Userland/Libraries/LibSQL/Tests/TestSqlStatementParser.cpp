@@ -56,7 +56,6 @@ TEST_CASE(create_table)
     EXPECT(parse("CREATE TABLE test ( column1 varchar(.abc) )").is_error());
     EXPECT(parse("CREATE TABLE test ( column1 varchar(0x) )").is_error());
     EXPECT(parse("CREATE TABLE test ( column1 varchar(0xzzz) )").is_error());
-    EXPECT(parse("WITH table AS () CREATE TABLE test ( column1 );").is_error());
     EXPECT(parse("CREATE TABLE test ( column1 int ) AS SELECT * FROM table;").is_error());
     EXPECT(parse("CREATE TABLE test AS SELECT * FROM table ( column1 int ) ;").is_error());
 
@@ -132,7 +131,6 @@ TEST_CASE(drop_table)
     EXPECT(parse("DROP TABLE").is_error());
     EXPECT(parse("DROP TABLE test").is_error());
     EXPECT(parse("DROP TABLE IF test;").is_error());
-    EXPECT(parse("WITH table AS () DROP TABLE test;").is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, bool expected_is_error_if_table_does_not_exist = true) {
         auto result = parse(sql);
@@ -164,23 +162,8 @@ TEST_CASE(delete_)
     EXPECT(parse("DELETE FROM table WHERE 15 RETURNING column").is_error());
     EXPECT(parse("DELETE FROM table WHERE 15 RETURNING column AS;").is_error());
     EXPECT(parse("DELETE FROM table WHERE (');").is_error());
-    EXPECT(parse("WITH DELETE FROM table;").is_error());
-    EXPECT(parse("WITH table DELETE FROM table;").is_error());
-    EXPECT(parse("WITH table AS DELETE FROM table;").is_error());
-    EXPECT(parse("WITH RECURSIVE table DELETE FROM table;").is_error());
-    EXPECT(parse("WITH RECURSIVE table AS DELETE FROM table;").is_error());
 
-    struct SelectedTableList {
-        struct SelectedTable {
-            StringView table_name {};
-            Vector<StringView> column_names {};
-        };
-
-        bool recursive { false };
-        Vector<SelectedTable> selected_tables {};
-    };
-
-    auto validate = [](StringView sql, SelectedTableList expected_selected_tables, StringView expected_schema, StringView expected_table, StringView expected_alias, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
+    auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_alias, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
         auto result = parse(sql);
         EXPECT(!result.is_error());
 
@@ -188,25 +171,6 @@ TEST_CASE(delete_)
         EXPECT(is<SQL::Delete>(*statement));
 
         const auto& delete_ = static_cast<const SQL::Delete&>(*statement);
-
-        const auto& common_table_expression_list = delete_.common_table_expression_list();
-        EXPECT_EQ(common_table_expression_list.is_null(), expected_selected_tables.selected_tables.is_empty());
-        if (common_table_expression_list) {
-            EXPECT_EQ(common_table_expression_list->recursive(), expected_selected_tables.recursive);
-
-            const auto& common_table_expressions = common_table_expression_list->common_table_expressions();
-            EXPECT_EQ(common_table_expressions.size(), expected_selected_tables.selected_tables.size());
-
-            for (size_t i = 0; i < common_table_expressions.size(); ++i) {
-                const auto& common_table_expression = common_table_expressions[i];
-                const auto& expected_common_table_expression = expected_selected_tables.selected_tables[i];
-                EXPECT_EQ(common_table_expression.table_name(), expected_common_table_expression.table_name);
-                EXPECT_EQ(common_table_expression.column_names().size(), expected_common_table_expression.column_names.size());
-
-                for (size_t j = 0; j < common_table_expression.column_names().size(); ++j)
-                    EXPECT_EQ(common_table_expression.column_names()[j], expected_common_table_expression.column_names[j]);
-            }
-        }
 
         const auto& qualified_table_name = delete_.qualified_table_name();
         EXPECT_EQ(qualified_table_name->schema_name(), expected_schema);
@@ -233,20 +197,14 @@ TEST_CASE(delete_)
         }
     };
 
-    validate("DELETE FROM table;", {}, {}, "table", {}, false, false, {});
-    validate("DELETE FROM schema.table;", {}, "schema", "table", {}, false, false, {});
-    validate("DELETE FROM schema.table AS alias;", {}, "schema", "table", "alias", false, false, {});
-    validate("DELETE FROM table WHERE (1 == 1);", {}, {}, "table", {}, true, false, {});
-    validate("DELETE FROM table RETURNING *;", {}, {}, "table", {}, false, true, {});
-    validate("DELETE FROM table RETURNING column;", {}, {}, "table", {}, false, true, { {} });
-    validate("DELETE FROM table RETURNING column AS alias;", {}, {}, "table", {}, false, true, { "alias" });
-    validate("DELETE FROM table RETURNING column1 AS alias1, column2 AS alias2;", {}, {}, "table", {}, false, true, { "alias1", "alias2" });
-
-    // FIXME: When parsing of SELECT statements are supported, the common-table-expressions below will become invalid due to the empty "AS ()" clause.
-    validate("WITH table AS () DELETE FROM table;", { false, { { "table" } } }, {}, "table", {}, false, false, {});
-    validate("WITH table (column) AS () DELETE FROM table;", { false, { { "table", { "column" } } } }, {}, "table", {}, false, false, {});
-    validate("WITH table (column1, column2) AS () DELETE FROM table;", { false, { { "table", { "column1", "column2" } } } }, {}, "table", {}, false, false, {});
-    validate("WITH RECURSIVE table AS () DELETE FROM table;", { true, { { "table", {} } } }, {}, "table", {}, false, false, {});
+    validate("DELETE FROM table;", {}, "table", {}, false, false, {});
+    validate("DELETE FROM schema.table;", "schema", "table", {}, false, false, {});
+    validate("DELETE FROM schema.table AS alias;", "schema", "table", "alias", false, false, {});
+    validate("DELETE FROM table WHERE (1 == 1);", {}, "table", {}, true, false, {});
+    validate("DELETE FROM table RETURNING *;", {}, "table", {}, false, true, {});
+    validate("DELETE FROM table RETURNING column;", {}, "table", {}, false, true, { {} });
+    validate("DELETE FROM table RETURNING column AS alias;", {}, "table", {}, false, true, { "alias" });
+    validate("DELETE FROM table RETURNING column1 AS alias1, column2 AS alias2;", {}, "table", {}, false, true, { "alias1", "alias2" });
 }
 
 TEST_CASE(select)
@@ -413,6 +371,62 @@ TEST_CASE(select)
 
     validate("SELECT * FROM table LIMIT 15;", all, from, false, 0, false, {}, true, false);
     validate("SELECT * FROM table LIMIT 15 OFFSET 16;", all, from, false, 0, false, {}, true, true);
+}
+
+TEST_CASE(common_table_expression)
+{
+    EXPECT(parse("WITH DELETE FROM table;").is_error());
+    EXPECT(parse("WITH table DELETE FROM table;").is_error());
+    EXPECT(parse("WITH table AS DELETE FROM table;").is_error());
+    EXPECT(parse("WITH RECURSIVE table DELETE FROM table;").is_error());
+    EXPECT(parse("WITH RECURSIVE table AS DELETE FROM table;").is_error());
+
+    // Below are otherwise valid common-table-expressions, but attached to statements which do not allow them.
+    EXPECT(parse("WITH table AS (SELECT * AS TABLE) CREATE TABLE test ( column1 );").is_error());
+    EXPECT(parse("WITH table AS (SELECT * FROM table) DROP TABLE test;").is_error());
+
+    struct SelectedTableList {
+        struct SelectedTable {
+            StringView table_name {};
+            Vector<StringView> column_names {};
+        };
+
+        bool recursive { false };
+        Vector<SelectedTable> selected_tables {};
+    };
+
+    auto validate = [](StringView sql, SelectedTableList expected_selected_tables) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto statement = result.release_value();
+        EXPECT(is<SQL::Delete>(*statement));
+
+        const auto& delete_ = static_cast<const SQL::Delete&>(*statement);
+
+        const auto& common_table_expression_list = delete_.common_table_expression_list();
+        EXPECT(!common_table_expression_list.is_null());
+
+        EXPECT_EQ(common_table_expression_list->recursive(), expected_selected_tables.recursive);
+
+        const auto& common_table_expressions = common_table_expression_list->common_table_expressions();
+        EXPECT_EQ(common_table_expressions.size(), expected_selected_tables.selected_tables.size());
+
+        for (size_t i = 0; i < common_table_expressions.size(); ++i) {
+            const auto& common_table_expression = common_table_expressions[i];
+            const auto& expected_common_table_expression = expected_selected_tables.selected_tables[i];
+            EXPECT_EQ(common_table_expression.table_name(), expected_common_table_expression.table_name);
+            EXPECT_EQ(common_table_expression.column_names().size(), expected_common_table_expression.column_names.size());
+
+            for (size_t j = 0; j < common_table_expression.column_names().size(); ++j)
+                EXPECT_EQ(common_table_expression.column_names()[j], expected_common_table_expression.column_names[j]);
+        }
+    };
+
+    validate("WITH table AS (SELECT * FROM table) DELETE FROM table;", { false, { { "table" } } });
+    validate("WITH table (column) AS (SELECT * FROM table) DELETE FROM table;", { false, { { "table", { "column" } } } });
+    validate("WITH table (column1, column2) AS (SELECT * FROM table) DELETE FROM table;", { false, { { "table", { "column1", "column2" } } } });
+    validate("WITH RECURSIVE table AS (SELECT * FROM table) DELETE FROM table;", { true, { { "table", {} } } });
 }
 
 TEST_MAIN(SqlStatementParser)
