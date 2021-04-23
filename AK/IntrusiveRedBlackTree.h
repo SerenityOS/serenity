@@ -17,7 +17,7 @@ template<Integral K, typename V, IntrusiveRedBlackTreeNode<K> V::*member>
 class IntrusiveRedBlackTree : public BaseRedBlackTree<K> {
 public:
     IntrusiveRedBlackTree() = default;
-    ~IntrusiveRedBlackTree()
+    virtual ~IntrusiveRedBlackTree() override
     {
         clear();
     }
