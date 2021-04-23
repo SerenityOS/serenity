@@ -664,6 +664,15 @@ class ErrorStatement final : public Statement {
 
 class CreateTable : public Statement {
 public:
+    CreateTable(String schema_name, String table_name, RefPtr<Select> select_statement, bool is_temporary, bool is_error_if_table_exists)
+        : m_schema_name(move(schema_name))
+        , m_table_name(move(table_name))
+        , m_select_statement(move(select_statement))
+        , m_is_temporary(is_temporary)
+        , m_is_error_if_table_exists(is_error_if_table_exists)
+    {
+    }
+
     CreateTable(String schema_name, String table_name, NonnullRefPtrVector<ColumnDefinition> columns, bool is_temporary, bool is_error_if_table_exists)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
@@ -675,13 +684,20 @@ public:
 
     const String& schema_name() const { return m_schema_name; }
     const String& table_name() const { return m_table_name; }
+
+    bool has_selection() const { return !m_select_statement.is_null(); }
+    const RefPtr<Select>& select_statement() const { return m_select_statement; }
+
+    bool has_columns() const { return !m_columns.is_empty(); }
     const NonnullRefPtrVector<ColumnDefinition> columns() const { return m_columns; }
+
     bool is_temporary() const { return m_is_temporary; }
     bool is_error_if_table_exists() const { return m_is_error_if_table_exists; }
 
 private:
     String m_schema_name;
     String m_table_name;
+    RefPtr<Select> m_select_statement;
     NonnullRefPtrVector<ColumnDefinition> m_columns;
     bool m_is_temporary;
     bool m_is_error_if_table_exists;
