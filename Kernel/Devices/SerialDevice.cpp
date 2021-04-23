@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,7 +10,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT SerialDevice::SerialDevice(int base_addr, unsigned minor)
+UNMAP_AFTER_INIT SerialDevice::SerialDevice(u32 base_addr, unsigned minor)
     : CharacterDevice(4, minor)
     , m_base_addr(base_addr)
 {
@@ -67,14 +68,14 @@ String SerialDevice::device_name() const
 
 UNMAP_AFTER_INIT void SerialDevice::initialize()
 {
-    set_interrupts(0);
+    set_interrupts(false);
     set_baud(Baud38400);
     set_line_control(None, One, EightBits);
     set_fifo_control(EnableFIFO | ClearReceiveFIFO | ClearTransmitFIFO | TriggerLevel4);
     set_modem_control(RequestToSend | DataTerminalReady);
 }
 
-UNMAP_AFTER_INIT void SerialDevice::set_interrupts(char interrupt_enable)
+UNMAP_AFTER_INIT void SerialDevice::set_interrupts(bool interrupt_enable)
 {
     m_interrupt_enable = interrupt_enable;
 
@@ -86,12 +87,12 @@ void SerialDevice::set_baud(Baud baud)
     m_baud = baud;
 
     IO::out8(m_base_addr + 3, IO::in8(m_base_addr + 3) | 0x80); // turn on DLAB
-    IO::out8(m_base_addr + 0, ((char)(baud)) >> 2);             // lower half of divisor
-    IO::out8(m_base_addr + 1, ((char)(baud)) & 0xff);           // upper half of divisor
+    IO::out8(m_base_addr + 0, ((u8)(baud)) >> 2);               // lower half of divisor
+    IO::out8(m_base_addr + 1, ((u8)(baud)) & 0xff);             // upper half of divisor
     IO::out8(m_base_addr + 3, IO::in8(m_base_addr + 3) & 0x7f); // turn off DLAB
 }
 
-void SerialDevice::set_fifo_control(char fifo_control)
+void SerialDevice::set_fifo_control(u8 fifo_control)
 {
     m_fifo_control = fifo_control;
 
@@ -114,14 +115,14 @@ void SerialDevice::set_break_enable(bool break_enable)
     IO::out8(m_base_addr + 3, IO::in8(m_base_addr + 3) & (break_enable ? 0xff : 0xbf));
 }
 
-void SerialDevice::set_modem_control(char modem_control)
+void SerialDevice::set_modem_control(u8 modem_control)
 {
     m_modem_control = modem_control;
 
     IO::out8(m_base_addr + 4, modem_control);
 }
 
-char SerialDevice::get_line_status() const
+u8 SerialDevice::get_line_status() const
 {
     return IO::in8(m_base_addr + 5);
 }

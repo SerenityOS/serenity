@@ -18,7 +18,7 @@ namespace Kernel {
 class SerialDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
-    SerialDevice(int base_addr, unsigned minor);
+    SerialDevice(u32 base_addr, unsigned minor);
     virtual ~SerialDevice() override;
 
     // ^CharacterDevice
@@ -112,25 +112,23 @@ private:
     virtual const char* class_name() const override { return "SerialDevice"; }
 
     void initialize();
-    void set_interrupts(char interrupt_enable);
+    void set_interrupts(bool interrupt_enable);
     void set_baud(Baud);
-    void set_fifo_control(char fifo_control);
+    void set_fifo_control(u8 fifo_control);
     void set_line_control(ParitySelect, StopBits, WordLength);
     void set_break_enable(bool break_enable);
-    void set_modem_control(char modem_control);
-    char get_line_status() const;
-    bool rx_ready();
-    bool tx_ready();
+    void set_modem_control(u8 modem_control);
+    u8 get_line_status() const;
 
-    int m_base_addr;
-    char m_interrupt_enable;
-    char m_fifo_control;
-    Baud m_baud;
-    ParitySelect m_parity_select;
-    StopBits m_stop_bits;
-    WordLength m_word_length;
-    bool m_break_enable;
-    char m_modem_control;
+    u32 m_base_addr { 0 };
+    bool m_interrupt_enable { false };
+    u8 m_fifo_control { 0 };
+    Baud m_baud { Baud38400 };
+    ParitySelect m_parity_select { None };
+    StopBits m_stop_bits { One };
+    WordLength m_word_length { EightBits };
+    bool m_break_enable { false };
+    u8 m_modem_control { 0 };
 };
 
 }
