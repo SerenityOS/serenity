@@ -12,9 +12,8 @@
 #include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <LibLine/Editor.h>
-#include <LibWebSocket/ConnectionInfo.h>
-#include <LibWebSocket/Message.h>
-#include <LibWebSocket/WebSocket.h>
+#include <LibProtocol/WebSocket.h>
+#include <LibProtocol/WebSocketClient.h>
 
 int main(int argc, char** argv)
 {
@@ -43,6 +42,33 @@ int main(int argc, char** argv)
     Core::EventLoop loop;
     RefPtr<Line::Editor> editor = Line::Editor::construct();
     bool should_quit = false;
+    auto websocket_client = Protocol::WebSocketClient::construct();
+    auto socket = websocket_client->connect(url, origin);
+    if (!socket) {
+        warnln("Failed to start socket for '{}'\n", url);
+        return 1;
+    }
+    socket->on_open = [&]() {
+        outln("[WebSocket opened]"sv);
+    };
+    socket->on_error = [&](auto error) {
+        outln("[WebSocket Error : {}]", (unsigned)error);
+    };
+    socket->on_message = [&](auto message) {
+        if (!message.is_text) {
+            outln("[Received binary data : {} bytes]", message.data.size());
+            return;
+        }
+        outln("[Received utf8 text] {}", String(ReadonlyBytes(message.data)));
+    };
+    socket->on_close = [&](auto code, auto message, bool was_clean) {
+        outln("[Server {} closed connection : '{}' (code {})]",
+            was_clean ? "cleanly" : "dirtily",
+            message,
+            code);
+        should_quit = true;
+        Core::EventLoop::current().quit(0);
+    };
 
     if (pledge("stdio unix inet accept rpath wpath tty sigaction", nullptr) < 0) {
         perror("pledge");
@@ -53,33 +79,6 @@ int main(int argc, char** argv)
         perror("unveil");
         return 1;
     }
-
-    WebSocket::ConnectionInfo connection_info(url);
-    connection_info.set_origin(origin);
-
-    auto socket = WebSocket::WebSocket::create(connection_info);
-    socket->on_open = [&]() {
-        outln("[WebSocket opened]"sv);
-    };
-    socket->on_error = [&](auto error) {
-        outln("[WebSocket Error : {}]", (unsigned)error);
-    };
-    socket->on_message = [&](auto message) {
-        if (!message.is_text()) {
-            outln("[Received binary data : {} bytes]", message.data().size());
-            return;
-        }
-        outln("[Received utf8 text] {}", String(ReadonlyBytes(message.data())));
-    };
-    socket->on_close = [&](auto code, auto message, bool was_clean) {
-        outln("[Server {} closed connection : '{}' (code {})]",
-            was_clean ? "cleanly" : "dirtily",
-            message,
-            code);
-        should_quit = true;
-        Core::EventLoop::current().quit(0);
-    };
-    socket->start();
 
     outln("Started server. Commands :");
     outln("- '<text>' send the text as message");
@@ -99,27 +98,27 @@ int main(int argc, char** argv)
         if (line.starts_with(".")) {
             if (line.starts_with(".text ")) {
                 editor->add_to_history(line);
-                if (socket->ready_state() != WebSocket::ReadyState::Open) {
+                if (socket->ready_state() != Protocol::WebSocket::ReadyState::Open) {
                     outln("Could not send message : socket is not open.");
                     continue;
                 }
-                socket->send(WebSocket::Message(line.substring(6)));
+                socket->send(line.substring(6));
                 continue;
             }
             if (line.starts_with(".base64 ")) {
                 editor->add_to_history(line);
-                if (socket->ready_state() != WebSocket::ReadyState::Open) {
+                if (socket->ready_state() != Protocol::WebSocket::ReadyState::Open) {
                     outln("Could not send message : socket is not open.");
                     continue;
                 }
                 auto base64_data = line.substring(8);
                 auto buffer = decode_base64(base64_data);
-                socket->send(WebSocket::Message(buffer, false));
+                socket->send(buffer, false);
                 continue;
             }
             if (line == ".exit") {
                 editor->add_to_history(line);
-                if (socket->ready_state() != WebSocket::ReadyState::Open) {
+                if (socket->ready_state() != Protocol::WebSocket::ReadyState::Open) {
                     outln("Socket is not open. Exiting.");
                     should_quit = true;
                     continue;
@@ -129,7 +128,7 @@ int main(int argc, char** argv)
             }
             if (line == ".forceexit") {
                 editor->add_to_history(line);
-                if (socket->ready_state() == WebSocket::ReadyState::Open)
+                if (socket->ready_state() == Protocol::WebSocket::ReadyState::Open)
                     socket->close();
                 return 1;
             }
@@ -137,11 +136,11 @@ int main(int argc, char** argv)
             continue;
         }
         editor->add_to_history(line);
-        if (socket->ready_state() != WebSocket::ReadyState::Open) {
+        if (socket->ready_state() != Protocol::WebSocket::ReadyState::Open) {
             outln("Could not send message : socket is not open.");
             continue;
         }
-        socket->send(WebSocket::Message(line));
+        socket->send(line);
     }
 
     return 0;
