@@ -32,9 +32,15 @@ fi
 umask 0022
 
 printf "installing base system... "
-$CP -PdR "$SERENITY_SOURCE_DIR"/Base/* mnt/
+if command -v rsync >/dev/null; then
+    rsync -aH --inplace "$SERENITY_SOURCE_DIR"/Base/ mnt/
+    rsync -aH --inplace Root/ mnt/
+else
+    echo "Please install rsync to speed up image creation times, falling back to cp for now"
+    $CP -PdR "$SERENITY_SOURCE_DIR"/Base/* mnt/
+    $CP -PdR Root/* mnt/
+fi
 $CP "$SERENITY_SOURCE_DIR"/Toolchain/Local/i686/i686-pc-serenity/lib/libgcc_s.so mnt/usr/lib/
-$CP -PdR Root/* mnt/
 # If umask was 027 or similar when the repo was cloned,
 # file permissions in Base/ are too restrictive. Restore
 # the permissions needed in the image.
@@ -108,22 +114,22 @@ chown -R 200:200 mnt/home/nona
 echo "done"
 
 printf "adding some desktop icons..."
-ln -s /bin/Browser mnt/home/anon/Desktop/
-ln -s /bin/TextEditor mnt/home/anon/Desktop/
-ln -s /bin/Help mnt/home/anon/Desktop/
-ln -s /home/anon mnt/home/anon/Desktop/Home
+ln -sf /bin/Browser mnt/home/anon/Desktop/
+ln -sf /bin/TextEditor mnt/home/anon/Desktop/
+ln -sf /bin/Help mnt/home/anon/Desktop/
+ln -sf /home/anon mnt/home/anon/Desktop/Home
 echo "done"
 
 printf "installing shortcuts... "
-ln -s Shell mnt/bin/sh
-ln -s test mnt/bin/[
+ln -sf Shell mnt/bin/sh
+ln -sf test mnt/bin/[
 echo "done"
 
 printf "installing 'checksum' variants... "
-ln -s checksum mnt/bin/md5sum
-ln -s checksum mnt/bin/sha1sum
-ln -s checksum mnt/bin/sha256sum
-ln -s checksum mnt/bin/sha512sum
+ln -sf checksum mnt/bin/md5sum
+ln -sf checksum mnt/bin/sha1sum
+ln -sf checksum mnt/bin/sha256sum
+ln -sf checksum mnt/bin/sha512sum
 echo "done"
 
 # Run local sync script, if it exists
