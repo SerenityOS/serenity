@@ -6,6 +6,7 @@
  */
 
 #include "SoftwareGLContext.h"
+#include <LibGfx/Bitmap.h>
 
 __attribute__((visibility("hidden"))) GL::GLContext* g_gl_context;
 
@@ -17,9 +18,9 @@ GLContext::~GLContext()
         make_context_current(nullptr);
 }
 
-OwnPtr<GLContext> create_context()
+OwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap)
 {
-    auto context = adopt_own(*new GL::SoftwareGLContext());
+    auto context = adopt_own(*new SoftwareGLContext(bitmap));
 
     if (!g_gl_context)
         g_gl_context = context;

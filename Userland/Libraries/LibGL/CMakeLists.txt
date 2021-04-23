@@ -1,10 +1,12 @@
 set(SOURCES
     GLColor.cpp
     GLMat.cpp
+    GLContext.cpp
     GLUtils.cpp
     GLVert.cpp
     SoftwareGLContext.cpp
+    SoftwareRasterizer.cpp
 )
 
 serenity_lib(LibGL gl)
-target_link_libraries(LibGL LibM LibCore)
+target_link_libraries(LibGL LibM LibCore LibGfx)

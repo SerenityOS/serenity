@@ -22,12 +22,12 @@ void glDisable(GLenum cap)
 
 void glFrontFace(GLenum mode)
 {
-    g_gl_context->gl_front_face(mode);    
+    g_gl_context->gl_front_face(mode);
 }
 
 void glCullFace(GLenum mode)
 {
-    g_gl_context->gl_cull_face(mode);    
+    g_gl_context->gl_cull_face(mode);
 }
 
 void glClear(GLbitfield mask)
