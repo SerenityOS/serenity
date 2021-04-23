@@ -40,7 +40,7 @@ for file in *; do
                 fi
             done
             if [ $port_built -eq 1 ]; then
-                echo "Already built $port as a dependency."
+                echo "Built $port."
                 popd > /dev/null
                 continue
             fi
