@@ -175,7 +175,7 @@ public:
     void restore_ios();
 
     u64 find_last_job_id() const;
-    const Job* find_job(u64 id);
+    const Job* find_job(u64 id, bool is_pid = false);
     const Job* current_job() const { return m_current_job; }
     void kill_job(const Job*, int sig);
 
@@ -271,6 +271,7 @@ private:
     void save_to(JsonObject&);
     void bring_cursor_to_beginning_of_a_line() const;
 
+    Optional<int> resolve_job_spec(const String&);
     void cache_path();
     void add_entry_to_cache(const String&);
     void stop_all_jobs();
