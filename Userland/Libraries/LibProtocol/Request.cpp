@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibProtocol/Client.h>
-#include <LibProtocol/Download.h>
+#include <LibProtocol/Request.h>
+#include <LibProtocol/RequestClient.h>
 
 namespace Protocol {
 
-Download::Download(Client& client, i32 download_id)
+Request::Request(RequestClient& client, i32 request_id)
     : m_client(client)
-    , m_download_id(download_id)
+    , m_request_id(request_id)
 {
 }
 
-bool Download::stop()
+bool Request::stop()
 {
-    return m_client->stop_download({}, *this);
+    return m_client->stop_request({}, *this);
 }
 
-void Download::stream_into(OutputStream& stream)
+void Request::stream_into(OutputStream& stream)
 {
     VERIFY(!m_internal_stream_data);
 
@@ -33,7 +33,7 @@ void Download::stream_into(OutputStream& stream)
     on_finish = [this](auto success, auto total_size) {
         m_internal_stream_data->success = success;
         m_internal_stream_data->total_size = total_size;
-        m_internal_stream_data->download_done = true;
+        m_internal_stream_data->request_done = true;
     };
 
     notifier->on_ready_to_read = [this, &stream, user_on_finish = move(user_on_finish)] {
@@ -45,7 +45,7 @@ void Download::stream_into(OutputStream& stream)
             TODO();
         }
 
-        if (m_internal_stream_data->read_stream.eof() && m_internal_stream_data->download_done) {
+        if (m_internal_stream_data->read_stream.eof() && m_internal_stream_data->request_done) {
             m_internal_stream_data->read_notifier->close();
             user_on_finish(m_internal_stream_data->success, m_internal_stream_data->total_size);
         } else {
@@ -54,7 +54,7 @@ void Download::stream_into(OutputStream& stream)
     };
 }
 
-void Download::set_should_buffer_all_input(bool value)
+void Request::set_should_buffer_all_input(bool value)
 {
     if (m_should_buffer_all_input == value)
         return;
@@ -67,7 +67,7 @@ void Download::set_should_buffer_all_input(bool value)
 
     VERIFY(!m_internal_stream_data);
     VERIFY(!m_internal_buffered_data);
-    VERIFY(on_buffered_download_finish); // Not having this set makes no sense.
+    VERIFY(on_buffered_request_finish); // Not having this set makes no sense.
     m_internal_buffered_data = make<InternalBufferedData>(fd());
     m_should_buffer_all_input = true;
 
@@ -78,7 +78,7 @@ void Download::set_should_buffer_all_input(bool value)
 
     on_finish = [this](auto success, u32 total_size) {
         auto output_buffer = m_internal_buffered_data->payload_stream.copy_into_contiguous_buffer();
-        on_buffered_download_finish(
+        on_buffered_request_finish(
             success,
             total_size,
             m_internal_buffered_data->response_headers,
@@ -89,7 +89,7 @@ void Download::set_should_buffer_all_input(bool value)
     stream_into(m_internal_buffered_data->payload_stream);
 }
 
-void Download::did_finish(Badge<Client>, bool success, u32 total_size)
+void Request::did_finish(Badge<RequestClient>, bool success, u32 total_size)
 {
     if (!on_finish)
         return;
@@ -97,24 +97,24 @@ void Download::did_finish(Badge<Client>, bool success, u32 total_size)
     on_finish(success, total_size);
 }
 
-void Download::did_progress(Badge<Client>, Optional<u32> total_size, u32 downloaded_size)
+void Request::did_progress(Badge<RequestClient>, Optional<u32> total_size, u32 downloaded_size)
 {
     if (on_progress)
         on_progress(total_size, downloaded_size);
 }
 
-void Download::did_receive_headers(Badge<Client>, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)
+void Request::did_receive_headers(Badge<RequestClient>, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)
 {
     if (on_headers_received)
         on_headers_received(response_headers, response_code);
 }
 
-void Download::did_request_certificates(Badge<Client>)
+void Request::did_request_certificates(Badge<RequestClient>)
 {
     if (on_certificate_requested) {
         auto result = on_certificate_requested();
         if (!m_client->set_certificate({}, *this, result.certificate, result.key)) {
-            dbgln("Download: set_certificate failed");
+            dbgln("Request: set_certificate failed");
         }
     }
 }

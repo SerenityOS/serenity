@@ -6,14 +6,14 @@
 
 #pragma once
 
-namespace ProtocolServer {
+namespace RequestServer {
 
 class ClientConnection;
-class Download;
+class Request;
 class GeminiProtocol;
-class HttpDownload;
+class HttpRequest;
 class HttpProtocol;
-class HttpsDownload;
+class HttpsRequest;
 class HttpsProtocol;
 class Protocol;
 

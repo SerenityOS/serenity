@@ -1,13 +1,13 @@
 set(SOURCES
-    Client.cpp
-    Download.cpp
+    Request.cpp
+    RequestClient.cpp
     WebSocket.cpp
     WebSocketClient.cpp
 )
 
 set(GENERATED_SOURCES
-    ../../Services/ProtocolServer/ProtocolClientEndpoint.h
-    ../../Services/ProtocolServer/ProtocolServerEndpoint.h
+    ../../Services/RequestServer/RequestClientEndpoint.h
+    ../../Services/RequestServer/RequestServerEndpoint.h
     ../../Services/WebSocket/WebSocketClientEndpoint.h
     ../../Services/WebSocket/WebSocketServerEndpoint.h
 )

@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include <ProtocolServer/Protocol.h>
+#include <RequestServer/Protocol.h>
 
-namespace ProtocolServer {
+namespace RequestServer {
 
 class GeminiProtocol final : public Protocol {
 public:
     GeminiProtocol();
     virtual ~GeminiProtocol() override;
 
-    virtual OwnPtr<Download> start_download(ClientConnection&, const String& method, const URL&, const HashMap<String, String>&, ReadonlyBytes body) override;
+    virtual OwnPtr<Request> start_request(ClientConnection&, const String& method, const URL&, const HashMap<String, String>&, ReadonlyBytes body) override;
 };
 
 }

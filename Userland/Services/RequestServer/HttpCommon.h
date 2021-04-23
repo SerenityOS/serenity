@@ -14,10 +14,10 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibHTTP/HttpRequest.h>
-#include <ProtocolServer/ClientConnection.h>
-#include <ProtocolServer/Download.h>
+#include <RequestServer/ClientConnection.h>
+#include <RequestServer/Request.h>
 
-namespace ProtocolServer::Detail {
+namespace RequestServer::Detail {
 
 template<typename TSelf, typename TJob>
 void init(TSelf* self, TJob job)
@@ -35,7 +35,7 @@ void init(TSelf* self, TJob job)
             self->set_downloaded_size(self->output_stream().size());
         }
 
-        // if we didn't know the total size, pretend that the download finished successfully
+        // if we didn't know the total size, pretend that the request finished successfully
         // and set the total size to the downloaded size
         if (!self->total_size().has_value())
             self->did_progress(self->downloaded_size(), self->downloaded_size());
@@ -53,10 +53,10 @@ void init(TSelf* self, TJob job)
 }
 
 template<typename TBadgedProtocol, typename TPipeResult>
-OwnPtr<Download> start_download(TBadgedProtocol&& protocol, ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body, TPipeResult&& pipe_result)
+OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body, TPipeResult&& pipe_result)
 {
     using TJob = TBadgedProtocol::Type::JobType;
-    using TDownload = TBadgedProtocol::Type::DownloadType;
+    using TRequest = TBadgedProtocol::Type::RequestType;
 
     if (pipe_result.is_error()) {
         return {};
@@ -74,10 +74,10 @@ OwnPtr<Download> start_download(TBadgedProtocol&& protocol, ClientConnection& cl
     auto output_stream = make<OutputFileStream>(pipe_result.value().write_fd);
     output_stream->make_unbuffered();
     auto job = TJob::construct(request, *output_stream);
-    auto download = TDownload::create_with_job(forward<TBadgedProtocol>(protocol), client, (TJob&)*job, move(output_stream));
-    download->set_download_fd(pipe_result.value().read_fd);
+    auto protocol_request = TRequest::create_with_job(forward<TBadgedProtocol>(protocol), client, (TJob&)*job, move(output_stream));
+    protocol_request->set_request_fd(pipe_result.value().read_fd);
     job->start();
-    return download;
+    return protocol_request;
 }
 
 }
