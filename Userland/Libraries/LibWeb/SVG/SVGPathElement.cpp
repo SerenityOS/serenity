@@ -447,7 +447,7 @@ RefPtr<Layout::Node> SVGPathElement::create_layout_node()
     auto style = document().style_resolver().resolve_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
-    return adopt(*new Layout::SVGPathBox(document(), *this, move(style)));
+    return adopt_ref(*new Layout::SVGPathBox(document(), *this, move(style)));
 }
 
 void SVGPathElement::parse_attribute(const FlyString& name, const String& value)

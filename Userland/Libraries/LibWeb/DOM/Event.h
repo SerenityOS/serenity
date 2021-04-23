@@ -43,7 +43,7 @@ public:
 
     static NonnullRefPtr<Event> create(const FlyString& event_name)
     {
-        return adopt(*new Event(event_name));
+        return adopt_ref(*new Event(event_name));
     }
     static NonnullRefPtr<Event> create_with_global_object(Bindings::WindowObject&, const FlyString& event_name)
     {

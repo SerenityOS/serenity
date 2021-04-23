@@ -292,12 +292,12 @@ inline void ByteBufferImpl::zero_fill()
 
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_uninitialized(size_t size)
 {
-    return ::adopt(*new ByteBufferImpl(size));
+    return ::adopt_ref(*new ByteBufferImpl(size));
 }
 
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_zeroed(size_t size)
 {
-    auto buffer = ::adopt(*new ByteBufferImpl(size));
+    auto buffer = ::adopt_ref(*new ByteBufferImpl(size));
     if (size != 0)
         __builtin_memset(buffer->data(), 0, size);
     return buffer;
@@ -305,7 +305,7 @@ inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_zeroed(size_t size)
 
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::copy(const void* data, size_t size)
 {
-    return ::adopt(*new ByteBufferImpl(data, size));
+    return ::adopt_ref(*new ByteBufferImpl(data, size));
 }
 
 }

@@ -21,7 +21,7 @@ public:
 
     static NonnullRefPtr<CSSStyleSheet> create(NonnullRefPtrVector<CSSRule> rules)
     {
-        return adopt(*new CSSStyleSheet(move(rules)));
+        return adopt_ref(*new CSSStyleSheet(move(rules)));
     }
 
     virtual ~CSSStyleSheet() override;

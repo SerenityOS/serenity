@@ -19,7 +19,7 @@ public:
 
     static NonnullRefPtr<ProgressEvent> create(const FlyString& event_name, u32 transmitted, u32 length)
     {
-        return adopt(*new ProgressEvent(event_name, transmitted, length));
+        return adopt_ref(*new ProgressEvent(event_name, transmitted, length));
     }
 
     virtual ~ProgressEvent() override { }

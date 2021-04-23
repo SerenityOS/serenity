@@ -35,7 +35,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     m_family_list_view->horizontal_scrollbar().set_visible(false);
 
     m_weight_list_view = *widget.find_descendant_of_type_named<ListView>("weight_list_view");
-    m_weight_list_view->set_model(adopt(*new FontWeightListModel(m_weights)));
+    m_weight_list_view->set_model(adopt_ref(*new FontWeightListModel(m_weights)));
     m_weight_list_view->horizontal_scrollbar().set_visible(false);
 
     m_size_spin_box = *widget.find_descendant_of_type_named<SpinBox>("size_spin_box");

@@ -42,7 +42,7 @@ public:
         Function<Result()> action,
         Function<void(Result)> on_complete = nullptr)
     {
-        return adopt(*new BackgroundAction(move(action), move(on_complete)));
+        return adopt_ref(*new BackgroundAction(move(action), move(on_complete)));
     }
 
     virtual ~BackgroundAction() { }

@@ -98,13 +98,13 @@ public:
 
     static NonnullRefPtr<DOMException> create(const FlyString& name, const FlyString& message)
     {
-        return adopt(*new DOMException(name, message));
+        return adopt_ref(*new DOMException(name, message));
     }
 
     // JS constructor has message first, name second
     static NonnullRefPtr<DOMException> create_with_global_object(Bindings::WindowObject&, const FlyString& message, const FlyString& name)
     {
-        return adopt(*new DOMException(name, message));
+        return adopt_ref(*new DOMException(name, message));
     }
 
     const FlyString& name() const { return m_name; }

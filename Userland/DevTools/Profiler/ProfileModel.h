@@ -14,7 +14,7 @@ class ProfileModel final : public GUI::Model {
 public:
     static NonnullRefPtr<ProfileModel> create(Profile& profile)
     {
-        return adopt(*new ProfileModel(profile));
+        return adopt_ref(*new ProfileModel(profile));
     }
 
     enum Column {

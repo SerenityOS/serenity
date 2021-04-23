@@ -27,7 +27,7 @@ static int s_next_fifo_id = 1;
 
 NonnullRefPtr<FIFO> FIFO::create(uid_t uid)
 {
-    return adopt(*new FIFO(uid));
+    return adopt_ref(*new FIFO(uid));
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction(FIFO::Direction direction)

@@ -24,7 +24,7 @@ namespace JS {
 
 NonnullRefPtr<VM> VM::create()
 {
-    return adopt(*new VM);
+    return adopt_ref(*new VM);
 }
 
 VM::VM()

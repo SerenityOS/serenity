@@ -36,7 +36,7 @@ public:
 
     static NonnullRefPtr<HTMLCollection> create(ParentNode& root, Function<bool(Element const&)> filter)
     {
-        return adopt(*new HTMLCollection(root, move(filter)));
+        return adopt_ref(*new HTMLCollection(root, move(filter)));
     }
 
     ~HTMLCollection();

@@ -117,13 +117,13 @@ Cursor::~Cursor()
 NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap)
 {
     auto hotspot = bitmap->rect().center();
-    return adopt(*new Cursor(move(bitmap), CursorParams(hotspot)));
+    return adopt_ref(*new Cursor(move(bitmap), CursorParams(hotspot)));
 }
 
 NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const StringView& filename)
 {
     auto default_hotspot = bitmap->rect().center();
-    return adopt(*new Cursor(move(bitmap), CursorParams::parse_from_file_name(filename, default_hotspot)));
+    return adopt_ref(*new Cursor(move(bitmap), CursorParams::parse_from_file_name(filename, default_hotspot)));
 }
 
 RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)

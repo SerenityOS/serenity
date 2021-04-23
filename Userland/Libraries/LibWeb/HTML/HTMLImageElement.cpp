@@ -69,7 +69,7 @@ RefPtr<Layout::Node> HTMLImageElement::create_layout_node()
     auto style = document().style_resolver().resolve_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
-    return adopt(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
+    return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
 }
 
 const Gfx::Bitmap* HTMLImageElement::bitmap() const

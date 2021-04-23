@@ -16,7 +16,7 @@ public:
     virtual ~GeminiResponse() override;
     static NonnullRefPtr<GeminiResponse> create(int status, String meta)
     {
-        return adopt(*new GeminiResponse(status, meta));
+        return adopt_ref(*new GeminiResponse(status, meta));
     }
 
     int status() const { return m_status; }

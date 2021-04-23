@@ -18,7 +18,7 @@ public:
         Name,
     };
 
-    static NonnullRefPtr<IRCWindowListModel> create(IRCClient& client) { return adopt(*new IRCWindowListModel(client)); }
+    static NonnullRefPtr<IRCWindowListModel> create(IRCClient& client) { return adopt_ref(*new IRCWindowListModel(client)); }
     virtual ~IRCWindowListModel() override;
 
     virtual int row_count(const GUI::ModelIndex&) const override;

@@ -27,7 +27,7 @@ public:
 
     static NonnullRefPtr<CSSStyleDeclaration> create(Vector<StyleProperty>&& properties)
     {
-        return adopt(*new CSSStyleDeclaration(move(properties)));
+        return adopt_ref(*new CSSStyleDeclaration(move(properties)));
     }
 
     virtual ~CSSStyleDeclaration();
@@ -48,7 +48,7 @@ private:
 
 class ElementInlineCSSStyleDeclaration final : public CSSStyleDeclaration {
 public:
-    static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element& element) { return adopt(*new ElementInlineCSSStyleDeclaration(element)); }
+    static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element& element) { return adopt_ref(*new ElementInlineCSSStyleDeclaration(element)); }
     virtual ~ElementInlineCSSStyleDeclaration() override;
 
     DOM::Element* element() { return m_element.ptr(); }

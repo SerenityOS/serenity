@@ -18,7 +18,7 @@ class ProjectFile : public RefCounted<ProjectFile> {
 public:
     static NonnullRefPtr<ProjectFile> construct_with_name(const String& name)
     {
-        return adopt(*new ProjectFile(name));
+        return adopt_ref(*new ProjectFile(name));
     }
 
     const String& name() const { return m_name; }

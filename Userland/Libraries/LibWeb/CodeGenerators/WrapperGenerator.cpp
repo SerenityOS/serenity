@@ -553,7 +553,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
             @return_statement@
         }
-        @cpp_name@ = adopt(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
+        @cpp_name@ = adopt_ref(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
     }
 )~~~");
         } else {
@@ -562,7 +562,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
         @return_statement@
     }
-    auto @cpp_name@ = adopt(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
+    auto @cpp_name@ = adopt_ref(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
 )~~~");
         }
     } else if (is_wrappable_type(parameter.type)) {

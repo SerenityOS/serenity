@@ -165,7 +165,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::detect()
         if (!is_valid_device_id(id.device_id))
             return;
         u8 irq = PCI::get_interrupt_line(address);
-        [[maybe_unused]] auto& unused = adopt(*new E1000NetworkAdapter(address, irq)).leak_ref();
+        [[maybe_unused]] auto& unused = adopt_ref(*new E1000NetworkAdapter(address, irq)).leak_ref();
     });
 }
 

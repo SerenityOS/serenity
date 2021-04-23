@@ -132,7 +132,7 @@ private:
     ProcFSProxyInode(ProcFS&, FileDescription&);
     static NonnullRefPtr<ProcFSProxyInode> create(ProcFS& fs, FileDescription& fd)
     {
-        return adopt(*new ProcFSProxyInode(fs, fd));
+        return adopt_ref(*new ProcFSProxyInode(fs, fd));
     }
 
     NonnullRefPtr<FileDescription> m_fd;

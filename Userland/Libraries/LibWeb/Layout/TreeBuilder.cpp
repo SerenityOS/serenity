@@ -60,7 +60,7 @@ static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent
         layout_parent.remove_child(*child);
         children.append(child.release_nonnull());
     }
-    layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, layout_parent.computed_values().clone_inherited_values())));
+    layout_parent.append_child(adopt_ref(*new BlockBox(layout_node.document(), nullptr, layout_parent.computed_values().clone_inherited_values())));
     layout_parent.set_children_are_inline(false);
     for (auto& child : children) {
         layout_parent.last_child()->append_child(child);
@@ -247,7 +247,7 @@ static void wrap_in_anonymous(NonnullRefPtrVector<Node>& sequence, Node* nearest
     auto& parent = *sequence.first().parent();
     auto computed_values = parent.computed_values().clone_inherited_values();
     static_cast<CSS::MutableComputedValues&>(computed_values).set_display(WrapperBoxType::static_display());
-    auto wrapper = adopt(*new WrapperBoxType(parent.document(), nullptr, move(computed_values)));
+    auto wrapper = adopt_ref(*new WrapperBoxType(parent.document(), nullptr, move(computed_values)));
     for (auto& child : sequence) {
         parent.remove_child(child);
         wrapper->append_child(child);

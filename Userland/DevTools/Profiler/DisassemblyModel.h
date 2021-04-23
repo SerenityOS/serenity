@@ -25,7 +25,7 @@ class DisassemblyModel final : public GUI::Model {
 public:
     static NonnullRefPtr<DisassemblyModel> create(Profile& profile, ProfileNode& node)
     {
-        return adopt(*new DisassemblyModel(profile, node));
+        return adopt_ref(*new DisassemblyModel(profile, node));
     }
 
     enum Column {

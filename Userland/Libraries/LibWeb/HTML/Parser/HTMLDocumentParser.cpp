@@ -313,13 +313,13 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
     }
 
     if (token.is_comment()) {
-        auto comment = adopt(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
+        auto comment = adopt_ref(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
         document().append_child(move(comment));
         return;
     }
 
     if (token.is_doctype()) {
-        auto doctype = adopt(*new DOM::DocumentType(document()));
+        auto doctype = adopt_ref(*new DOM::DocumentType(document()));
         doctype->set_name(token.m_doctype.name.to_string());
         doctype->set_public_id(token.m_doctype.public_identifier.to_string());
         doctype->set_system_id(token.m_doctype.system_identifier.to_string());
@@ -343,7 +343,7 @@ void HTMLDocumentParser::handle_before_html(HTMLToken& token)
     }
 
     if (token.is_comment()) {
-        auto comment = adopt(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
+        auto comment = adopt_ref(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
         document().append_child(move(comment));
         return;
     }
@@ -518,7 +518,7 @@ void HTMLDocumentParser::insert_comment(HTMLToken& token)
 {
     auto data = token.m_comment_or_character.data.to_string();
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-    adjusted_insertion_location.parent->insert_before(adopt(*new DOM::Comment(document(), data)), adjusted_insertion_location.insert_before_sibling);
+    adjusted_insertion_location.parent->insert_before(adopt_ref(*new DOM::Comment(document(), data)), adjusted_insertion_location.insert_before_sibling);
 }
 
 void HTMLDocumentParser::handle_in_head(HTMLToken& token)
@@ -703,7 +703,7 @@ DOM::Text* HTMLDocumentParser::find_character_insertion_node()
         return nullptr;
     if (adjusted_insertion_location.parent->last_child() && adjusted_insertion_location.parent->last_child()->is_text())
         return downcast<DOM::Text>(adjusted_insertion_location.parent->last_child());
-    auto new_text_node = adopt(*new DOM::Text(document(), ""));
+    auto new_text_node = adopt_ref(*new DOM::Text(document(), ""));
     adjusted_insertion_location.parent->append_child(new_text_node);
     return new_text_node;
 }
@@ -830,7 +830,7 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
     if (token.is_comment()) {
         auto data = token.m_comment_or_character.data.to_string();
         auto& insertion_location = m_stack_of_open_elements.first();
-        insertion_location.append_child(adopt(*new DOM::Comment(document(), data)));
+        insertion_location.append_child(adopt_ref(*new DOM::Comment(document(), data)));
         return;
     }
 
@@ -866,7 +866,7 @@ void HTMLDocumentParser::handle_after_body(HTMLToken& token)
 void HTMLDocumentParser::handle_after_after_body(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = adopt(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
+        auto comment = adopt_ref(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
         document().append_child(move(comment));
         return;
     }
@@ -2748,7 +2748,7 @@ void HTMLDocumentParser::handle_after_frameset(HTMLToken& token)
 void HTMLDocumentParser::handle_after_after_frameset(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = adopt(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
+        auto comment = adopt_ref(*new DOM::Comment(document(), token.m_comment_or_character.data.to_string()));
         document().append_child(move(comment));
         return;
     }

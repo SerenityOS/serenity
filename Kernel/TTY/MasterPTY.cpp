@@ -17,7 +17,7 @@ namespace Kernel {
 
 MasterPTY::MasterPTY(unsigned index)
     : CharacterDevice(200, index)
-    , m_slave(adopt(*new SlavePTY(*this, index)))
+    , m_slave(adopt_ref(*new SlavePTY(*this, index)))
     , m_index(index)
 {
     m_pts_name = String::formatted("/dev/pts/{}", m_index);

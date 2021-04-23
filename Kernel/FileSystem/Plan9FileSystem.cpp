@@ -11,7 +11,7 @@ namespace Kernel {
 
 NonnullRefPtr<Plan9FS> Plan9FS::create(FileDescription& file_description)
 {
-    return adopt(*new Plan9FS(file_description));
+    return adopt_ref(*new Plan9FS(file_description));
 }
 
 Plan9FS::Plan9FS(FileDescription& file_description)
@@ -597,7 +597,7 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
 {
     auto request_type = message.type();
     auto tag = message.tag();
-    auto completion = adopt(*new ReceiveCompletion(tag));
+    auto completion = adopt_ref(*new ReceiveCompletion(tag));
     auto result = post_message(message, completion);
     if (result.is_error())
         return result;
@@ -680,7 +680,7 @@ Plan9FSInode::Plan9FSInode(Plan9FS& fs, u32 fid)
 
 NonnullRefPtr<Plan9FSInode> Plan9FSInode::create(Plan9FS& fs, u32 fid)
 {
-    return adopt(*new Plan9FSInode(fs, fid));
+    return adopt_ref(*new Plan9FSInode(fs, fid));
 }
 
 Plan9FSInode::~Plan9FSInode()

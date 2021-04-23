@@ -35,7 +35,7 @@ public:
 
     static NonnullRefPtr<XMLHttpRequest> create(DOM::Window& window)
     {
-        return adopt(*new XMLHttpRequest(window));
+        return adopt_ref(*new XMLHttpRequest(window));
     }
     static NonnullRefPtr<XMLHttpRequest> create_with_global_object(Bindings::WindowObject& window)
     {

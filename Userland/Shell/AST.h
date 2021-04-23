@@ -24,13 +24,13 @@ namespace Shell::AST {
 template<typename T, typename... Args>
 static inline NonnullRefPtr<T> create(Args... args)
 {
-    return adopt(*new T(args...));
+    return adopt_ref(*new T(args...));
 }
 
 template<typename T>
 static inline NonnullRefPtr<T> create(std::initializer_list<NonnullRefPtr<Value>> arg)
 {
-    return adopt(*new T(arg));
+    return adopt_ref(*new T(arg));
 }
 
 struct HighlightMetadata {
@@ -122,7 +122,7 @@ struct PathRedirection : public Redirection {
 
     static NonnullRefPtr<PathRedirection> create(String path, int fd, decltype(direction) direction)
     {
-        return adopt(*new PathRedirection(move(path), fd, direction));
+        return adopt_ref(*new PathRedirection(move(path), fd, direction));
     }
 
     virtual Result<NonnullRefPtr<Rewiring>, String> apply() const override;
@@ -143,19 +143,19 @@ struct FdRedirection : public Redirection {
 public:
     static NonnullRefPtr<FdRedirection> create(int old_fd, int new_fd, Rewiring::Close close)
     {
-        return adopt(*new FdRedirection(old_fd, new_fd, close));
+        return adopt_ref(*new FdRedirection(old_fd, new_fd, close));
     }
 
     static NonnullRefPtr<FdRedirection> create(int old_fd, int new_fd, FdRedirection* pipe_end, Rewiring::Close close)
     {
-        return adopt(*new FdRedirection(old_fd, new_fd, pipe_end, close));
+        return adopt_ref(*new FdRedirection(old_fd, new_fd, pipe_end, close));
     }
 
     virtual ~FdRedirection();
 
     virtual Result<NonnullRefPtr<Rewiring>, String> apply() const override
     {
-        return adopt(*new Rewiring(old_fd, new_fd, other_pipe_end, action));
+        return adopt_ref(*new Rewiring(old_fd, new_fd, other_pipe_end, action));
     }
 
     int old_fd { -1 };

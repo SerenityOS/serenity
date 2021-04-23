@@ -118,7 +118,7 @@ NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(const UR
 {
     NonnullRefPtrVector<LauncherHandler> handlers;
     for (auto& h : Desktop::Launcher::get_handlers_with_details_for_url(url)) {
-        handlers.append(adopt(*new LauncherHandler(h)));
+        handlers.append(adopt_ref(*new LauncherHandler(h)));
     }
     return handlers;
 }

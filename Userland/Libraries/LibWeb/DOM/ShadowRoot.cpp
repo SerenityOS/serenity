@@ -29,7 +29,7 @@ EventTarget* ShadowRoot::get_parent(const Event& event)
 
 RefPtr<Layout::Node> ShadowRoot::create_layout_node()
 {
-    return adopt(*new Layout::BlockBox(document(), this, CSS::ComputedValues {}));
+    return adopt_ref(*new Layout::BlockBox(document(), this, CSS::ComputedValues {}));
 }
 
 }

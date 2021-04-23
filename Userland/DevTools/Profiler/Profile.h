@@ -71,7 +71,7 @@ class ProfileNode : public RefCounted<ProfileNode> {
 public:
     static NonnullRefPtr<ProfileNode> create(FlyString object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t pid)
     {
-        return adopt(*new ProfileNode(move(object_name), move(symbol), address, offset, timestamp, pid));
+        return adopt_ref(*new ProfileNode(move(object_name), move(symbol), address, offset, timestamp, pid));
     }
 
     // These functions are only relevant for root nodes

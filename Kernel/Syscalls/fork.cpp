@@ -16,7 +16,7 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
 {
     REQUIRE_PROMISE(proc);
     RefPtr<Thread> child_first_thread;
-    auto child = adopt(*new Process(child_first_thread, m_name, uid(), gid(), pid(), m_is_kernel_process, m_cwd, m_executable, m_tty, this));
+    auto child = adopt_ref(*new Process(child_first_thread, m_name, uid(), gid(), pid(), m_is_kernel_process, m_cwd, m_executable, m_tty, this));
     if (!child_first_thread)
         return ENOMEM;
     child->m_root_directory = m_root_directory;

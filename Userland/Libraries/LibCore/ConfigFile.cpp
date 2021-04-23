@@ -20,25 +20,25 @@ NonnullRefPtr<ConfigFile> ConfigFile::get_for_lib(const String& lib_name)
     String directory = StandardPaths::config_directory();
     auto path = String::formatted("{}/lib/{}.ini", directory, lib_name);
 
-    return adopt(*new ConfigFile(path));
+    return adopt_ref(*new ConfigFile(path));
 }
 
 NonnullRefPtr<ConfigFile> ConfigFile::get_for_app(const String& app_name)
 {
     String directory = StandardPaths::config_directory();
     auto path = String::formatted("{}/{}.ini", directory, app_name);
-    return adopt(*new ConfigFile(path));
+    return adopt_ref(*new ConfigFile(path));
 }
 
 NonnullRefPtr<ConfigFile> ConfigFile::get_for_system(const String& app_name)
 {
     auto path = String::formatted("/etc/{}.ini", app_name);
-    return adopt(*new ConfigFile(path));
+    return adopt_ref(*new ConfigFile(path));
 }
 
 NonnullRefPtr<ConfigFile> ConfigFile::open(const String& path)
 {
-    return adopt(*new ConfigFile(path));
+    return adopt_ref(*new ConfigFile(path));
 }
 
 ConfigFile::ConfigFile(const String& file_name)

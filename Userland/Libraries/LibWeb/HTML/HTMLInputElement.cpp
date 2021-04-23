@@ -53,16 +53,16 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node()
         return nullptr;
 
     if (type().equals_ignoring_case("submit") || type().equals_ignoring_case("button"))
-        return adopt(*new Layout::ButtonBox(document(), *this, move(style)));
+        return adopt_ref(*new Layout::ButtonBox(document(), *this, move(style)));
 
     if (type() == "checkbox")
-        return adopt(*new Layout::CheckBox(document(), *this, move(style)));
+        return adopt_ref(*new Layout::CheckBox(document(), *this, move(style)));
 
     if (type() == "radio")
-        return adopt(*new Layout::RadioButton(document(), *this, move(style)));
+        return adopt_ref(*new Layout::RadioButton(document(), *this, move(style)));
 
     create_shadow_tree_if_needed();
-    auto layout_node = adopt(*new Layout::BlockBox(document(), this, move(style)));
+    auto layout_node = adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
     layout_node->set_inline(true);
     return layout_node;
 }
@@ -105,13 +105,13 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         return;
 
     // FIXME: This assumes that we want a text box. Is that always true?
-    auto shadow_root = adopt(*new DOM::ShadowRoot(document(), *this));
+    auto shadow_root = adopt_ref(*new DOM::ShadowRoot(document(), *this));
     auto initial_value = attribute(HTML::AttributeNames::value);
     if (initial_value.is_null())
         initial_value = String::empty();
     auto element = document().create_element(HTML::TagNames::div);
     element->set_attribute(HTML::AttributeNames::style, "white-space: pre");
-    m_text_node = adopt(*new DOM::Text(document(), initial_value));
+    m_text_node = adopt_ref(*new DOM::Text(document(), initial_value));
     m_text_node->set_always_editable(true);
     element->append_child(*m_text_node);
     shadow_root->append_child(move(element));

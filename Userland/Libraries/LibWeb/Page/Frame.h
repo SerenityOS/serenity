@@ -23,8 +23,8 @@ namespace Web {
 
 class Frame : public TreeNode<Frame> {
 public:
-    static NonnullRefPtr<Frame> create_subframe(DOM::Element& host_element, Frame& main_frame) { return adopt(*new Frame(host_element, main_frame)); }
-    static NonnullRefPtr<Frame> create(Page& page) { return adopt(*new Frame(page)); }
+    static NonnullRefPtr<Frame> create_subframe(DOM::Element& host_element, Frame& main_frame) { return adopt_ref(*new Frame(host_element, main_frame)); }
+    static NonnullRefPtr<Frame> create(Page& page) { return adopt_ref(*new Frame(page)); }
     ~Frame();
 
     class ViewportClient {

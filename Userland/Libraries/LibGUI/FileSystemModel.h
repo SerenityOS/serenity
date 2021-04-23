@@ -100,7 +100,7 @@ public:
 
     static NonnullRefPtr<FileSystemModel> create(String root_path = "/", Mode mode = Mode::FilesAndDirectories)
     {
-        return adopt(*new FileSystemModel(root_path, mode));
+        return adopt_ref(*new FileSystemModel(root_path, mode));
     }
     virtual ~FileSystemModel() override;
 

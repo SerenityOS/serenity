@@ -20,7 +20,7 @@ namespace Web::DOM {
 
 NonnullRefPtr<Window> Window::create_with_document(Document& document)
 {
-    return adopt(*new Window(document));
+    return adopt_ref(*new Window(document));
 }
 
 Window::Window(Document& document)

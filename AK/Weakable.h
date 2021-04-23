@@ -43,7 +43,7 @@ public:
             if (!(m_consumers.fetch_add(1u << 1, AK::MemoryOrder::memory_order_acquire) & 1u)) {
                 T* ptr = (T*)m_ptr.load(AK::MemoryOrder::memory_order_acquire);
                 if (ptr && ptr->try_ref())
-                    ref = adopt(*ptr);
+                    ref = adopt_ref(*ptr);
             }
             m_consumers.fetch_sub(1u << 1, AK::MemoryOrder::memory_order_release);
         }

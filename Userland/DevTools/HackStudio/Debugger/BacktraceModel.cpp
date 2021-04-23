@@ -12,7 +12,7 @@ namespace HackStudio {
 
 NonnullRefPtr<BacktraceModel> BacktraceModel::create(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
 {
-    return adopt(*new BacktraceModel(create_backtrace(debug_session, regs)));
+    return adopt_ref(*new BacktraceModel(create_backtrace(debug_session, regs)));
 }
 
 GUI::Variant BacktraceModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const

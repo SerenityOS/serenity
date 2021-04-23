@@ -21,7 +21,7 @@ public:
 
     explicit StyleProperties(const StyleProperties&);
 
-    static NonnullRefPtr<StyleProperties> create() { return adopt(*new StyleProperties); }
+    static NonnullRefPtr<StyleProperties> create() { return adopt_ref(*new StyleProperties); }
 
     NonnullRefPtr<StyleProperties> clone() const;
 

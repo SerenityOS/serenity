@@ -12,7 +12,7 @@ namespace Kernel {
 
 NonnullRefPtr<ContiguousVMObject> ContiguousVMObject::create_with_size(size_t size, size_t physical_alignment)
 {
-    return adopt(*new ContiguousVMObject(size, physical_alignment));
+    return adopt_ref(*new ContiguousVMObject(size, physical_alignment));
 }
 
 ContiguousVMObject::ContiguousVMObject(size_t size, size_t physical_alignment)

@@ -23,7 +23,7 @@ public:
         if (s_the)
             return *s_the;
 
-        return *(s_the = adopt(*new HelpWindow(window)));
+        return *(s_the = adopt_ref(*new HelpWindow(window)));
     }
 
     virtual ~HelpWindow() override;

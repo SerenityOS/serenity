@@ -50,7 +50,7 @@ RefPtr<Layout::Node> HTMLObjectElement::create_layout_node()
     if (style->display() == CSS::Display::None)
         return nullptr;
     if (m_image_loader.has_image())
-        return adopt(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
+        return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
     return nullptr;
 }
 

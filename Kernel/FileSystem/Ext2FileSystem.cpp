@@ -55,7 +55,7 @@ static unsigned divide_rounded_up(unsigned a, unsigned b)
 
 NonnullRefPtr<Ext2FS> Ext2FS::create(FileDescription& file_description)
 {
-    return adopt(*new Ext2FS(file_description));
+    return adopt_ref(*new Ext2FS(file_description));
 }
 
 Ext2FS::Ext2FS(FileDescription& file_description)
@@ -797,7 +797,7 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     if (!find_block_containing_inode(inode.index(), block_index, offset))
         return {};
 
-    auto new_inode = adopt(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index()));
+    auto new_inode = adopt_ref(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index()));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&new_inode->m_raw_inode));
     if (auto result = read_block(block_index, &buffer, sizeof(ext2_inode), offset); result.is_error()) {
         // FIXME: Propagate the actual error.

@@ -12,7 +12,7 @@ namespace Kernel {
 
 NonnullRefPtr<InodeWatcher> InodeWatcher::create(Inode& inode)
 {
-    return adopt(*new InodeWatcher(inode));
+    return adopt_ref(*new InodeWatcher(inode));
 }
 
 InodeWatcher::InodeWatcher(Inode& inode)

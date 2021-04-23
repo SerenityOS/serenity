@@ -27,7 +27,7 @@ class CanvasRenderingContext2D
 public:
     using WrapperType = Bindings::CanvasRenderingContext2DWrapper;
 
-    static NonnullRefPtr<CanvasRenderingContext2D> create(HTMLCanvasElement& element) { return adopt(*new CanvasRenderingContext2D(element)); }
+    static NonnullRefPtr<CanvasRenderingContext2D> create(HTMLCanvasElement& element) { return adopt_ref(*new CanvasRenderingContext2D(element)); }
     ~CanvasRenderingContext2D();
 
     void set_fill_style(String);

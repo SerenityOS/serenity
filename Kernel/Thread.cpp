@@ -41,7 +41,7 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
     if (!kernel_stack_region)
         return ENOMEM;
     kernel_stack_region->set_stack(true);
-    return adopt(*new Thread(move(process), kernel_stack_region.release_nonnull()));
+    return adopt_ref(*new Thread(move(process), kernel_stack_region.release_nonnull()));
 }
 
 Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stack_region)

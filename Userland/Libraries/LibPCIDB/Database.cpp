@@ -17,7 +17,7 @@ RefPtr<Database> Database::open(const String& file_name)
     auto file_or_error = MappedFile::map(file_name);
     if (file_or_error.is_error())
         return nullptr;
-    auto res = adopt(*new Database(file_or_error.release_value()));
+    auto res = adopt_ref(*new Database(file_or_error.release_value()));
     if (res->init() != 0)
         return nullptr;
     return res;

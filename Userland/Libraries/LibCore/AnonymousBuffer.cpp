@@ -61,7 +61,7 @@ RefPtr<AnonymousBufferImpl> AnonymousBufferImpl::create(int fd, size_t size)
         perror("mmap");
         return {};
     }
-    return adopt(*new AnonymousBufferImpl(fd, size, data));
+    return adopt_ref(*new AnonymousBufferImpl(fd, size, data));
 }
 
 AnonymousBufferImpl::~AnonymousBufferImpl()

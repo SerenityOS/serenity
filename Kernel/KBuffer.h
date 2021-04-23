@@ -32,7 +32,7 @@ public:
         auto region = MM.allocate_kernel_region(page_round_up(size), name, access, strategy);
         if (!region)
             return nullptr;
-        return adopt(*new KBufferImpl(region.release_nonnull(), size, strategy));
+        return adopt_ref(*new KBufferImpl(region.release_nonnull(), size, strategy));
     }
 
     static RefPtr<KBufferImpl> try_create_with_bytes(ReadonlyBytes bytes, Region::Access access, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
@@ -41,7 +41,7 @@ public:
         if (!region)
             return nullptr;
         memcpy(region->vaddr().as_ptr(), bytes.data(), bytes.size());
-        return adopt(*new KBufferImpl(region.release_nonnull(), bytes.size(), strategy));
+        return adopt_ref(*new KBufferImpl(region.release_nonnull(), bytes.size(), strategy));
     }
 
     static RefPtr<KBufferImpl> create_with_size(size_t size, Region::Access access, const char* name, AllocationStrategy strategy = AllocationStrategy::Reserve)

@@ -22,7 +22,7 @@ public:
 
     static NonnullRefPtr<StyleSheetList> create(DOM::Document& document)
     {
-        return adopt(*new StyleSheetList(document));
+        return adopt_ref(*new StyleSheetList(document));
     }
 
     void add_sheet(NonnullRefPtr<CSSStyleSheet>);

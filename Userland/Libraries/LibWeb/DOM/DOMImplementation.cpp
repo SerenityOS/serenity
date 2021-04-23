@@ -26,7 +26,7 @@ const NonnullRefPtr<Document> DOMImplementation::create_html_document(const Stri
     html_document->set_content_type("text/html");
     html_document->set_ready_for_post_load_tasks(true);
 
-    auto doctype = adopt(*new DocumentType(html_document));
+    auto doctype = adopt_ref(*new DocumentType(html_document));
     doctype->set_name("html");
     html_document->append_child(doctype);
 
@@ -40,7 +40,7 @@ const NonnullRefPtr<Document> DOMImplementation::create_html_document(const Stri
         auto title_element = create_element(html_document, HTML::TagNames::title, Namespace::HTML);
         head_element->append_child(title_element);
 
-        auto text_node = adopt(*new Text(html_document, title));
+        auto text_node = adopt_ref(*new Text(html_document, title));
         title_element->append_child(text_node);
     }
 

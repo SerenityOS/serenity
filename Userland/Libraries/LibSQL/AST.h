@@ -20,7 +20,7 @@ template<class T, class... Args>
 static inline NonnullRefPtr<T>
 create_ast_node(Args&&... args)
 {
-    return adopt(*new T(forward<Args>(args)...));
+    return adopt_ref(*new T(forward<Args>(args)...));
 }
 
 class ASTNode : public RefCounted<ASTNode> {

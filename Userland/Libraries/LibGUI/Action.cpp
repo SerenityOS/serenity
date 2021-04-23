@@ -158,42 +158,42 @@ NonnullRefPtr<Action> make_properties_action(Function<void(Action&)> callback, C
 
 NonnullRefPtr<Action> Action::create(String text, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), move(callback), parent));
+    return adopt_ref(*new Action(move(text), move(callback), parent));
 }
 
 NonnullRefPtr<Action> Action::create(String text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), move(icon), move(callback), parent));
+    return adopt_ref(*new Action(move(text), move(icon), move(callback), parent));
 }
 
 NonnullRefPtr<Action> Action::create(String text, const Shortcut& shortcut, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), shortcut, move(callback), parent));
+    return adopt_ref(*new Action(move(text), shortcut, move(callback), parent));
 }
 
 NonnullRefPtr<Action> Action::create(String text, const Shortcut& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), shortcut, move(icon), move(callback), parent));
+    return adopt_ref(*new Action(move(text), shortcut, move(icon), move(callback), parent));
 }
 
 NonnullRefPtr<Action> Action::create_checkable(String text, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), move(callback), parent, true));
+    return adopt_ref(*new Action(move(text), move(callback), parent, true));
 }
 
 NonnullRefPtr<Action> Action::create_checkable(String text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), move(icon), move(callback), parent, true));
+    return adopt_ref(*new Action(move(text), move(icon), move(callback), parent, true));
 }
 
 NonnullRefPtr<Action> Action::create_checkable(String text, const Shortcut& shortcut, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), shortcut, move(callback), parent, true));
+    return adopt_ref(*new Action(move(text), shortcut, move(callback), parent, true));
 }
 
 NonnullRefPtr<Action> Action::create_checkable(String text, const Shortcut& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), shortcut, move(icon), move(callback), parent, true));
+    return adopt_ref(*new Action(move(text), shortcut, move(icon), move(callback), parent, true));
 }
 
 Action::Action(String text, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)

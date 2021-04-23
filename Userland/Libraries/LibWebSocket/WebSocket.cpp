@@ -21,7 +21,7 @@ namespace WebSocket {
 
 NonnullRefPtr<WebSocket> WebSocket::create(ConnectionInfo connection)
 {
-    return adopt(*new WebSocket(connection));
+    return adopt_ref(*new WebSocket(connection));
 }
 
 WebSocket::WebSocket(ConnectionInfo connection)

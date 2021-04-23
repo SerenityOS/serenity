@@ -359,7 +359,7 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
 
 RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
 {
-    auto sheet = adopt(*new Sheet(workbook));
+    auto sheet = adopt_ref(*new Sheet(workbook));
     auto rows = object.get("rows").to_u32(default_row_count);
     auto columns = object.get("columns");
     auto name = object.get("name").as_string_or("Sheet");
@@ -617,7 +617,7 @@ RefPtr<Sheet> Sheet::from_xsv(const Reader::XSV& xsv, Workbook& workbook)
     auto cols = xsv.headers();
     auto rows = xsv.size();
 
-    auto sheet = adopt(*new Sheet(workbook));
+    auto sheet = adopt_ref(*new Sheet(workbook));
     if (xsv.has_explicit_headers()) {
         sheet->m_columns = cols;
     } else {

@@ -42,7 +42,7 @@ RefPtr<Layout::Node> HTMLCanvasElement::create_layout_node()
     auto style = document().style_resolver().resolve_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
-    return adopt(*new Layout::CanvasBox(document(), *this, move(style)));
+    return adopt_ref(*new Layout::CanvasBox(document(), *this, move(style)));
 }
 
 CanvasRenderingContext2D* HTMLCanvasElement::get_context(String type)

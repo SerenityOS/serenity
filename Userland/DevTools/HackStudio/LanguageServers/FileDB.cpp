@@ -26,7 +26,7 @@ RefPtr<GUI::TextDocument> FileDB::get(const String& file_name)
     auto document = reinterpret_cast<const FileDB*>(this)->get(file_name);
     if (document.is_null())
         return nullptr;
-    return adopt(*const_cast<GUI::TextDocument*>(document.leak_ref()));
+    return adopt_ref(*const_cast<GUI::TextDocument*>(document.leak_ref()));
 }
 
 RefPtr<const GUI::TextDocument> FileDB::get_or_create_from_filesystem(const String& file_name) const
@@ -43,7 +43,7 @@ RefPtr<GUI::TextDocument> FileDB::get_or_create_from_filesystem(const String& fi
     auto document = reinterpret_cast<const FileDB*>(this)->get_or_create_from_filesystem(file_name);
     if (document.is_null())
         return nullptr;
-    return adopt(*const_cast<GUI::TextDocument*>(document.leak_ref()));
+    return adopt_ref(*const_cast<GUI::TextDocument*>(document.leak_ref()));
 }
 
 bool FileDB::is_open(const String& file_name) const

@@ -53,7 +53,7 @@ public:
 
     static ProcessModel& the();
 
-    static NonnullRefPtr<ProcessModel> create() { return adopt(*new ProcessModel); }
+    static NonnullRefPtr<ProcessModel> create() { return adopt_ref(*new ProcessModel); }
     virtual ~ProcessModel() override;
 
     virtual int row_count(const GUI::ModelIndex&) const override;

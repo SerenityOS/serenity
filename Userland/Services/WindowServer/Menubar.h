@@ -17,7 +17,7 @@ class Menubar
     : public RefCounted<Menubar>
     , public Weakable<Menubar> {
 public:
-    static NonnullRefPtr<Menubar> create(ClientConnection& client, int menubar_id) { return adopt(*new Menubar(client, menubar_id)); }
+    static NonnullRefPtr<Menubar> create(ClientConnection& client, int menubar_id) { return adopt_ref(*new Menubar(client, menubar_id)); }
     ~Menubar();
 
     ClientConnection& client() { return m_client; }

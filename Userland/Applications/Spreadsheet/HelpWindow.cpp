@@ -21,7 +21,7 @@ namespace Spreadsheet {
 
 class HelpListModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<HelpListModel> create() { return adopt(*new HelpListModel); }
+    static NonnullRefPtr<HelpListModel> create() { return adopt_ref(*new HelpListModel); }
 
     virtual ~HelpListModel() override { }
 

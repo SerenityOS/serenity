@@ -18,7 +18,7 @@ class CSSImportRule : public CSSRule {
 public:
     static NonnullRefPtr<CSSImportRule> create(URL url)
     {
-        return adopt(*new CSSImportRule(move(url)));
+        return adopt_ref(*new CSSImportRule(move(url)));
     }
 
     ~CSSImportRule();

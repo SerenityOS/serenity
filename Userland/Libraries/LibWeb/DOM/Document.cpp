@@ -269,7 +269,7 @@ void Document::set_title(const String& title)
     }
 
     title_element->remove_all_children(true);
-    title_element->append_child(adopt(*new Text(*this, title)));
+    title_element->append_child(adopt_ref(*new Text(*this, title)));
 
     if (auto* page = this->page()) {
         if (frame() == &page->main_frame())
@@ -433,7 +433,7 @@ void Document::update_style()
 
 RefPtr<Layout::Node> Document::create_layout_node()
 {
-    return adopt(*new Layout::InitialContainingBlockBox(*this, CSS::StyleProperties::create()));
+    return adopt_ref(*new Layout::InitialContainingBlockBox(*this, CSS::StyleProperties::create()));
 }
 
 void Document::set_link_color(Color color)
@@ -598,17 +598,17 @@ NonnullRefPtr<Element> Document::create_element_ns(const String& namespace_, con
 
 NonnullRefPtr<DocumentFragment> Document::create_document_fragment()
 {
-    return adopt(*new DocumentFragment(*this));
+    return adopt_ref(*new DocumentFragment(*this));
 }
 
 NonnullRefPtr<Text> Document::create_text_node(const String& data)
 {
-    return adopt(*new Text(*this, data));
+    return adopt_ref(*new Text(*this, data));
 }
 
 NonnullRefPtr<Comment> Document::create_comment(const String& data)
 {
-    return adopt(*new Comment(*this, data));
+    return adopt_ref(*new Comment(*this, data));
 }
 
 NonnullRefPtr<Range> Document::create_range()
@@ -732,10 +732,10 @@ void Document::adopt_node(Node& node)
 ExceptionOr<NonnullRefPtr<Node>> Document::adopt_node_binding(NonnullRefPtr<Node> node)
 {
     if (is<Document>(*node))
-        return DOM ::NotSupportedError::create("Cannot adopt a document into a document");
+        return DOM ::NotSupportedError::create("Cannot adopt_ref a document into a document");
 
     if (is<ShadowRoot>(*node))
-        return DOM::HierarchyRequestError::create("Cannot adopt a shadow root into a document");
+        return DOM::HierarchyRequestError::create("Cannot adopt_ref a shadow root into a document");
 
     if (is<DocumentFragment>(*node) && downcast<DocumentFragment>(*node).host())
         return node;

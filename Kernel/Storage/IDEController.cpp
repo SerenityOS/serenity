@@ -16,7 +16,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<IDEController> IDEController::initialize(PCI::Address address, bool force_pio)
 {
-    return adopt(*new IDEController(address, force_pio));
+    return adopt_ref(*new IDEController(address, force_pio));
 }
 
 bool IDEController::reset()

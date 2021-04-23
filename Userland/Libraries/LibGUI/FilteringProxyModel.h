@@ -18,7 +18,7 @@ class FilteringProxyModel final : public Model {
 public:
     static NonnullRefPtr<FilteringProxyModel> construct(Model& model)
     {
-        return adopt(*new FilteringProxyModel(model));
+        return adopt_ref(*new FilteringProxyModel(model));
     }
 
     virtual ~FilteringProxyModel() override {};

@@ -21,7 +21,7 @@ public:
 
     static NonnullRefPtr<Screen> create(DOM::Window& window)
     {
-        return adopt(*new Screen(window));
+        return adopt_ref(*new Screen(window));
     }
 
     i32 width() const { return screen_rect().width(); }

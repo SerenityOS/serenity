@@ -46,7 +46,7 @@ i32 DisplayLink::register_callback(Function<void(i32)> callback)
         WindowServerConnection::the().post_message(Messages::WindowServer::EnableDisplayLink());
 
     i32 callback_id = s_next_callback_id++;
-    callbacks().set(callback_id, adopt(*new DisplayLinkCallback(callback_id, move(callback))));
+    callbacks().set(callback_id, adopt_ref(*new DisplayLinkCallback(callback_id, move(callback))));
 
     return callback_id;
 }
