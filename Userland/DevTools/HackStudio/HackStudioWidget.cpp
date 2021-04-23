@@ -908,7 +908,7 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
         on_action_tab_change();
 
         static bool first_time = true;
-        if (!first_time)
+        if (first_time)
             m_action_tab_widget->set_fixed_height(200);
         first_time = false;
     };
