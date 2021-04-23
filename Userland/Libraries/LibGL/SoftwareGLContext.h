@@ -22,6 +22,7 @@ public:
     virtual void gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a) override;
     virtual void gl_end() override;
     virtual void gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) override;
+    virtual GLenum gl_get_error() override;
     virtual GLubyte* gl_get_string(GLenum name) override;
     virtual void gl_load_identity() override;
     virtual void gl_matrix_mode(GLenum mode) override;
@@ -49,6 +50,8 @@ private:
     Vector<GLVertex> vertex_list;
     Vector<GLTriangle> triangle_list;
     Vector<GLTriangle> processed_triangles;
+
+    GLenum m_error = GL_NO_ERROR;
 };
 
 }
