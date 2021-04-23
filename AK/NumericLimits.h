@@ -103,6 +103,7 @@ template<>
 struct NumericLimits<float> {
     static constexpr float min() { return __FLT_MIN__; }
     static constexpr float max() { return __FLT_MAX__; }
+    static constexpr float epsilon() { return __FLT_EPSILON__; }
     static constexpr bool is_signed() { return true; }
 };
 
@@ -110,6 +111,7 @@ template<>
 struct NumericLimits<double> {
     static constexpr double min() { return __DBL_MIN__; }
     static constexpr double max() { return __DBL_MAX__; }
+    static constexpr double epsilon() { return __DBL_EPSILON__; }
     static constexpr bool is_signed() { return true; }
 };
 
@@ -117,6 +119,7 @@ template<>
 struct NumericLimits<long double> {
     static constexpr long double min() { return __LDBL_MIN__; }
     static constexpr long double max() { return __LDBL_MAX__; }
+    static constexpr long double epsilon() { return __LDBL_EPSILON__; }
     static constexpr bool is_signed() { return true; }
 };
 #endif
