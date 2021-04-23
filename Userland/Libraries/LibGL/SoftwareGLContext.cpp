@@ -48,6 +48,9 @@ enum ClippingPlane {
     FAR = 5
 };
 
+// FIXME: We should set this up when we create the context!
+static constexpr size_t MATRIX_STACK_LIMIT = 1024;
+
 // FIXME: Change this to accept a vertex!
 // Determines whether or not a vertex is inside the frustum for a given plane
 static bool vert_inside_plane(const FloatVector4& vec, ClippingPlane plane)
@@ -518,9 +521,17 @@ void SoftwareGLContext::gl_push_matrix()
 
     switch (m_current_matrix_mode) {
     case GL_PROJECTION:
+        if (m_projection_matrix_stack.size() >= MATRIX_STACK_LIMIT) {
+            m_error = GL_STACK_OVERFLOW;
+            return;
+        }
         m_projection_matrix_stack.append(m_projection_matrix);
         break;
     case GL_MODELVIEW:
+        if (m_model_view_matrix_stack.size() >= MATRIX_STACK_LIMIT) {
+            m_error = GL_STACK_OVERFLOW;
+            return;
+        }
         m_model_view_matrix_stack.append(m_model_view_matrix);
         break;
     default:
@@ -543,9 +554,17 @@ void SoftwareGLContext::gl_pop_matrix()
     // FIXME: Make sure stack::top() doesn't cause any  nasty issues if it's empty (that could result in a lockup/hang)
     switch (m_current_matrix_mode) {
     case GL_PROJECTION:
+        if (m_projection_matrix_stack.size() == 0) {
+            m_error = GL_STACK_UNDERFLOW;
+            return;
+        }
         m_projection_matrix = m_projection_matrix_stack.take_last();
         break;
     case GL_MODELVIEW:
+        if (m_model_view_matrix_stack.size() == 0) {
+            m_error = GL_STACK_UNDERFLOW;
+            return;
+        }
         m_model_view_matrix = m_model_view_matrix_stack.take_last();
         break;
     default:
