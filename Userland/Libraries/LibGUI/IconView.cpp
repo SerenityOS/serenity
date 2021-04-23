@@ -4,10 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibCore/Timer.h>
-#include <LibGUI/DragOperation.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
@@ -60,7 +58,7 @@ void IconView::resize_event(ResizeEvent& event)
     }
 }
 
-void IconView::reinit_item_cache() const
+void IconView::rebuild_item_cache() const
 {
     auto prev_item_count = m_item_data_cache.size();
     size_t new_item_count = item_count();
@@ -94,7 +92,7 @@ void IconView::reinit_item_cache() const
 auto IconView::get_item_data(int item_index) const -> ItemData&
 {
     if (!m_item_data_cache_valid)
-        reinit_item_cache();
+        rebuild_item_cache();
 
     auto& item_data = m_item_data_cache[item_index];
     if (item_data.is_valid())
@@ -164,7 +162,7 @@ void IconView::update_content_size()
     set_content_size({ content_width, content_height });
 
     if (!m_item_data_cache_valid)
-        reinit_item_cache();
+        rebuild_item_cache();
 
     for (int item_index = 0; item_index < item_count(); item_index++) {
         auto& item_data = m_item_data_cache[item_index];
@@ -221,11 +219,8 @@ void IconView::mousedown_event(MouseEvent& event)
         return AbstractView::mousedown_event(event);
     }
 
-    if (event.modifiers() & Mod_Ctrl) {
-        m_rubber_banding_store_selection = true;
-    } else {
+    if (!(event.modifiers() & Mod_Ctrl)) {
         clear_selection();
-        m_rubber_banding_store_selection = false;
     }
 
     auto adjusted_position = to_content_position(event.position());
