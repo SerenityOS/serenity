@@ -198,14 +198,8 @@ int Shell::builtin_cd(int argc, const char** argv)
             if (oldpwd == nullptr)
                 return 1;
             new_path = oldpwd;
-        } else if (arg_path[0] == '/') {
-            new_path = argv[1];
         } else {
-            StringBuilder builder;
-            builder.append(cwd);
-            builder.append('/');
-            builder.append(arg_path);
-            new_path = builder.to_string();
+            new_path = arg_path;
         }
     }
 
