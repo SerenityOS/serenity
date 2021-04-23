@@ -537,6 +537,22 @@ private:
     RefPtr<Expression> m_else_expression;
 };
 
+class ExistsExpression : public Expression {
+public:
+    ExistsExpression(NonnullRefPtr<Select> select_statement, bool invert_expression)
+        : m_select_statement(move(select_statement))
+        , m_invert_expression(invert_expression)
+    {
+    }
+
+    const NonnullRefPtr<Select>& select_statement() const { return m_select_statement; }
+    bool invert_expression() const { return m_invert_expression; }
+
+private:
+    NonnullRefPtr<Select> m_select_statement;
+    bool m_invert_expression;
+};
+
 class CollateExpression : public NestedExpression {
 public:
     CollateExpression(NonnullRefPtr<Expression> expression, String collation_name)

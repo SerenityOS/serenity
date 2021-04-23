@@ -215,7 +215,6 @@ NonnullRefPtr<Expression> Parser::parse_expression()
 
     // FIXME: Parse 'bind-parameter'.
     // FIXME: Parse 'function-name'.
-    // FIXME: Parse 'exists'.
     // FIXME: Parse 'raise-function'.
 
     return expression;
@@ -239,6 +238,9 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         return move(expression.value());
 
     if (auto expression = parse_case_expression(); expression.has_value())
+        return move(expression.value());
+
+    if (auto expression = parse_exists_expression(false); expression.has_value())
         return move(expression.value());
 
     expected("Primary Expression");
@@ -381,8 +383,12 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_unary_operator_expression()
     if (consume_if(TokenType::Tilde))
         return create_ast_node<UnaryOperatorExpression>(UnaryOperator::BitwiseNot, parse_expression());
 
-    if (consume_if(TokenType::Not))
-        return create_ast_node<UnaryOperatorExpression>(UnaryOperator::Not, parse_expression());
+    if (consume_if(TokenType::Not)) {
+        if (match(TokenType::Exists))
+            return parse_exists_expression(true);
+        else
+            return create_ast_node<UnaryOperatorExpression>(UnaryOperator::Not, parse_expression());
+    }
 
     return {};
 }
@@ -448,11 +454,15 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_binary_operator_expression(Non
 
 Optional<NonnullRefPtr<Expression>> Parser::parse_chained_expression()
 {
-    if (!match(TokenType::ParenOpen))
+    if (!consume_if(TokenType::ParenOpen))
         return {};
 
+    if (match(TokenType::Select))
+        return parse_exists_expression(false, TokenType::Select);
+
     NonnullRefPtrVector<Expression> expressions;
-    parse_comma_separated_list(true, [&]() { expressions.append(parse_expression()); });
+    parse_comma_separated_list(false, [&]() { expressions.append(parse_expression()); });
+    consume(TokenType::ParenClose);
 
     return create_ast_node<ChainedExpression>(move(expressions));
 }
@@ -504,6 +514,21 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_case_expression()
 
     consume(TokenType::End);
     return create_ast_node<CaseExpression>(move(case_expression), move(when_then_clauses), move(else_expression));
+}
+
+Optional<NonnullRefPtr<Expression>> Parser::parse_exists_expression(bool invert_expression, TokenType opening_token)
+{
+    VERIFY((opening_token == TokenType::Exists) || (opening_token == TokenType::Select));
+
+    if ((opening_token == TokenType::Exists) && !consume_if(TokenType::Exists))
+        return {};
+
+    if (opening_token == TokenType::Exists)
+        consume(TokenType::ParenOpen);
+    auto select_statement = parse_select_statement({});
+    consume(TokenType::ParenClose);
+
+    return create_ast_node<ExistsExpression>(move(select_statement), invert_expression);
 }
 
 Optional<NonnullRefPtr<Expression>> Parser::parse_collate_expression(NonnullRefPtr<Expression> expression)
