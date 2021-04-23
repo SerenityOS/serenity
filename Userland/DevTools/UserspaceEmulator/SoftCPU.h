@@ -56,15 +56,15 @@ public:
 
     struct Flags {
         enum Flag {
-            CF = 0x0001,
-            PF = 0x0004,
-            AF = 0x0010,
-            ZF = 0x0040,
-            SF = 0x0080,
-            TF = 0x0100,
-            IF = 0x0200,
-            DF = 0x0400,
-            OF = 0x0800,
+            CF = 0x0001, // 0b0000'0000'0000'0001
+            PF = 0x0004, // 0b0000'0000'0000'0100
+            AF = 0x0010, // 0b0000'0000'0001'0000
+            ZF = 0x0040, // 0b0000'0000'0100'0000
+            SF = 0x0080, // 0b0000'0000'1000'0000
+            TF = 0x0100, // 0b0000'0001'0000'0000
+            IF = 0x0200, // 0b0000'0010'0000'0000
+            DF = 0x0400, // 0b0000'0100'0000'0000
+            OF = 0x0800, // 0b0000'1000'0000'0000
         };
     };
 
@@ -1147,6 +1147,13 @@ private:
 
     // FIXME: Or just something like m_flags_tainted?
     ValueWithShadow<u16> m_fpu_cw { 0, 0 };
+
+    // FIXME: Make FPU/MMX memory its own struct
+    // FIXME: FPU Status word
+    // FIXME: FPU Tag Word
+    // FIXME: FPU Data Pointer
+    // FIXME: FPU Instruction Pointer ?
+    // FIXME: FPU Last OP Code ?
 
     Region* m_cached_code_region { nullptr };
     u8* m_cached_code_base_ptr { nullptr };
