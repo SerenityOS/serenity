@@ -29,3 +29,8 @@ void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     g_gl_context->gl_viewport(x, y, width, height);
 }
+
+GLenum glGetError()
+{
+    return g_gl_context->gl_get_error();
+}
