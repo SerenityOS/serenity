@@ -86,19 +86,10 @@ NonnullRefPtr<CreateTable> Parser::parse_create_table_statement()
     // FIXME: Parse "AS select-stmt".
 
     NonnullRefPtrVector<ColumnDefinition> column_definitions;
-    consume(TokenType::ParenOpen);
-    do {
-        column_definitions.append(parse_column_definition());
-
-        if (match(TokenType::ParenClose))
-            break;
-
-        consume(TokenType::Comma);
-    } while (!match(TokenType::Eof));
+    parse_comma_separated_list(true, [&]() { column_definitions.append(parse_column_definition()); });
 
     // FIXME: Parse "table-constraint".
 
-    consume(TokenType::ParenClose);
     consume(TokenType::SemiColon);
 
     return create_ast_node<CreateTable>(move(schema_name), move(table_name), move(column_definitions), is_temporary, is_error_if_table_exists);
@@ -161,23 +152,12 @@ NonnullRefPtr<Select> Parser::parse_select_statement(RefPtr<CommonTableExpressio
     consume_if(TokenType::All); // ALL is the default, so ignore it if specified.
 
     NonnullRefPtrVector<ResultColumn> result_column_list;
-    do {
-        result_column_list.append(parse_result_column());
-        if (!match(TokenType::Comma))
-            break;
-        consume(TokenType::Comma);
-    } while (!match(TokenType::Eof));
+    parse_comma_separated_list(false, [&]() { result_column_list.append(parse_result_column()); });
 
     NonnullRefPtrVector<TableOrSubquery> table_or_subquery_list;
     if (consume_if(TokenType::From)) {
         // FIXME: Parse join-clause.
-
-        do {
-            table_or_subquery_list.append(parse_table_or_subquery());
-            if (!match(TokenType::Comma))
-                break;
-            consume(TokenType::Comma);
-        } while (!match(TokenType::Eof));
+        parse_comma_separated_list(false, [&]() { table_or_subquery_list.append(parse_table_or_subquery()); });
     }
 
     RefPtr<Expression> where_clause;
@@ -189,18 +169,15 @@ NonnullRefPtr<Select> Parser::parse_select_statement(RefPtr<CommonTableExpressio
         consume(TokenType::By);
 
         NonnullRefPtrVector<Expression> group_by_list;
-        do {
-            group_by_list.append(parse_expression());
-            if (!match(TokenType::Comma))
-                break;
-            consume(TokenType::Comma);
-        } while (!match(TokenType::Eof));
+        parse_comma_separated_list(false, [&]() { group_by_list.append(parse_expression()); });
 
-        RefPtr<Expression> having_clause;
-        if (consume_if(TokenType::Having))
-            having_clause = parse_expression();
+        if (!group_by_list.is_empty()) {
+            RefPtr<Expression> having_clause;
+            if (consume_if(TokenType::Having))
+                having_clause = parse_expression();
 
-        group_by_clause = create_ast_node<GroupByClause>(move(group_by_list), move(having_clause));
+            group_by_clause = create_ast_node<GroupByClause>(move(group_by_list), move(having_clause));
+        }
     }
 
     // FIXME: Parse 'WINDOW window-name AS window-defn'.
@@ -209,13 +186,7 @@ NonnullRefPtr<Select> Parser::parse_select_statement(RefPtr<CommonTableExpressio
     NonnullRefPtrVector<OrderingTerm> ordering_term_list;
     if (consume_if(TokenType::Order)) {
         consume(TokenType::By);
-
-        do {
-            ordering_term_list.append(parse_ordering_term());
-            if (!match(TokenType::Comma))
-                break;
-            consume(TokenType::Comma);
-        } while (!match(TokenType::Eof));
+        parse_comma_separated_list(false, [&]() { ordering_term_list.append(parse_ordering_term()); });
     }
 
     RefPtr<LimitClause> limit_clause;
@@ -246,13 +217,7 @@ NonnullRefPtr<CommonTableExpressionList> Parser::parse_common_table_expression_l
     bool recursive = consume_if(TokenType::Recursive);
 
     NonnullRefPtrVector<CommonTableExpression> common_table_expression;
-    do {
-        common_table_expression.append(parse_common_table_expression());
-        if (!match(TokenType::Comma))
-            break;
-
-        consume(TokenType::Comma);
-    } while (!match(TokenType::Eof));
+    parse_comma_separated_list(false, [&]() { common_table_expression.append(parse_common_table_expression()); });
 
     return create_ast_node<CommonTableExpressionList>(recursive, move(common_table_expression));
 }
@@ -504,17 +469,7 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_chained_expression()
         return {};
 
     NonnullRefPtrVector<Expression> expressions;
-    consume(TokenType::ParenOpen);
-
-    do {
-        expressions.append(parse_expression());
-        if (match(TokenType::ParenClose))
-            break;
-
-        consume(TokenType::Comma);
-    } while (!match(TokenType::Eof));
-
-    consume(TokenType::ParenClose);
+    parse_comma_separated_list(true, [&]() { expressions.append(parse_expression()); });
 
     return create_ast_node<ChainedExpression>(move(expressions));
 }
@@ -669,16 +624,8 @@ Optional<NonnullRefPtr<Expression>> Parser::parse_in_expression(NonnullRefPtr<Ex
         // FIXME: Consolidate this with parse_chained_expression(). That method consumes the opening paren as
         //        well, and also requires at least one expression (whereas this allows for an empty chain).
         NonnullRefPtrVector<Expression> expressions;
-
-        if (!match(TokenType::ParenClose)) {
-            do {
-                expressions.append(parse_expression());
-                if (match(TokenType::ParenClose))
-                    break;
-
-                consume(TokenType::Comma);
-            } while (!match(TokenType::Eof));
-        }
+        if (!match(TokenType::ParenClose))
+            parse_comma_separated_list(false, [&]() { expressions.append(parse_expression()); });
 
         consume(TokenType::ParenClose);
 
@@ -763,17 +710,8 @@ NonnullRefPtr<CommonTableExpression> Parser::parse_common_table_expression()
     auto table_name = consume(TokenType::Identifier).value();
 
     Vector<String> column_names;
-    if (consume_if(TokenType::ParenOpen)) {
-        do {
-            column_names.append(consume(TokenType::Identifier).value());
-            if (match(TokenType::ParenClose))
-                break;
-
-            consume(TokenType::Comma);
-        } while (!match(TokenType::Eof));
-
-        consume(TokenType::ParenClose);
-    }
+    if (match(TokenType::ParenOpen))
+        parse_comma_separated_list(true, [&]() { column_names.append(consume(TokenType::Identifier).value()); });
 
     consume(TokenType::As);
     consume(TokenType::ParenOpen);
@@ -818,8 +756,7 @@ NonnullRefPtr<ReturningClause> Parser::parse_returning_clause()
         return create_ast_node<ReturningClause>();
 
     Vector<ReturningClause::ColumnClause> columns;
-
-    do {
+    parse_comma_separated_list(false, [&]() {
         auto expression = parse_expression();
 
         String column_alias;
@@ -827,11 +764,7 @@ NonnullRefPtr<ReturningClause> Parser::parse_returning_clause()
             column_alias = consume(TokenType::Identifier).value();
 
         columns.append({ move(expression), move(column_alias) });
-        if (!match(TokenType::Comma))
-            break;
-
-        consume(TokenType::Comma);
-    } while (!match(TokenType::Eof));
+    });
 
     return create_ast_node<ReturningClause>(move(columns));
 }
@@ -888,18 +821,10 @@ NonnullRefPtr<TableOrSubquery> Parser::parse_table_or_subquery()
         return create_ast_node<TableOrSubquery>(move(schema_name), move(table_name), move(table_alias));
     }
 
-    consume(TokenType::ParenOpen);
     // FIXME: Parse join-clause.
 
     NonnullRefPtrVector<TableOrSubquery> subqueries;
-    while (!has_errors() && !match(TokenType::Eof)) {
-        subqueries.append(parse_table_or_subquery());
-        if (!match(TokenType::Comma))
-            break;
-        consume(TokenType::Comma);
-    }
-
-    consume(TokenType::ParenClose);
+    parse_comma_separated_list(true, [&]() { subqueries.append(parse_table_or_subquery()); });
 
     return create_ast_node<TableOrSubquery>(move(subqueries));
 }
