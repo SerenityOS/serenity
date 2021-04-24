@@ -6,7 +6,7 @@
 
 #include <AK/PrintfImplementation.h>
 #include <AK/Types.h>
-#include <Kernel/Console.h>
+#include <Kernel/ConsoleDevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/Process.h>
 #include <Kernel/SpinLock.h>
@@ -65,10 +65,10 @@ static void console_out(char ch)
     if (serial_debug)
         serial_putch(ch);
 
-    // It would be bad to reach the assert in Console()::the() and do a stack overflow
+    // It would be bad to reach the assert in ConsoleDevice()::the() and do a stack overflow
 
-    if (Console::is_initialized()) {
-        Console::the().put_char(ch);
+    if (ConsoleDevice::is_initialized()) {
+        ConsoleDevice::the().put_char(ch);
     } else {
         IO::out8(0xe9, ch);
     }

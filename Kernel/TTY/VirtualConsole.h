@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Console.h>
+#include <Kernel/ConsoleDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/TTY/TTY.h>
 #include <LibVT/Terminal.h>

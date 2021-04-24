@@ -10,15 +10,17 @@
 #include <AK/Vector.h>
 #include <Kernel/Devices/CharacterDevice.h>
 
-class Console final : public Kernel::CharacterDevice {
+namespace Kernel {
+
+class ConsoleDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
-    static Console& the();
+    static ConsoleDevice& the();
     static void initialize();
     static bool is_initialized();
 
-    Console();
-    virtual ~Console() override;
+    ConsoleDevice();
+    virtual ~ConsoleDevice() override;
 
     // ^CharacterDevice
     virtual bool can_read(const Kernel::FileDescription&, size_t) const override;
@@ -38,3 +40,5 @@ public:
 private:
     CircularQueue<char, 16384> m_logbuffer;
 };
+
+}
