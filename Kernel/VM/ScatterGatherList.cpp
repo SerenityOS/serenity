@@ -44,15 +44,24 @@ ScatterGatherRefList ScatterGatherRefList::create_from_physical(PhysicalAddress 
     return new_list;
 }
 
-void ScatterGatherRefList::add_entry(FlatPtr addr, size_t offset, size_t size)
+bool ScatterGatherRefList::add_entry(FlatPtr addr, size_t offset, size_t size)
 {
+    // TODO: make this use Vector::try_append() when that is implemented
     m_entries.append({ addr + offset, size });
+    return true;
 }
 
 void ScatterGatherRefList::for_each_entry(Function<void(const FlatPtr, const size_t)> callback) const
 {
     for (auto& entry : m_entries)
         callback(entry.position, entry.length);
+}
+
+bool ScatterGatherRefList::try_reserve(size_t expected_size)
+{
+    // TODO: make this use Vector::try_grow_capacity() when that is implemented
+    m_entries.grow_capacity(expected_size);
+    return true;
 }
 
 }

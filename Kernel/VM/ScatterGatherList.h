@@ -41,7 +41,8 @@ public:
     static ScatterGatherRefList create_from_buffer(const u8* buffer, size_t);
     static ScatterGatherRefList create_from_physical(PhysicalAddress, size_t);
 
-    void add_entry(FlatPtr, size_t offset, size_t size);
+    bool add_entry(FlatPtr, size_t offset, size_t size);
+    bool try_reserve(size_t expected_size);
     [[nodiscard]] size_t length() const { return m_entries.size(); }
 
     void for_each_entry(Function<void(const FlatPtr, const size_t)> callback) const;
