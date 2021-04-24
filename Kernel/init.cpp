@@ -143,7 +143,7 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     ACPI::initialize();
 
     VFS::initialize();
-    Console::initialize();
+    ConsoleDevice::initialize();
 
     dmesgln("Starting SerenityOS...");
 
