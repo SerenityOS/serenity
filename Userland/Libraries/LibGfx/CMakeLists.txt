@@ -29,6 +29,7 @@ set(SOURCES
     Size.cpp
     StylePainter.cpp
     SystemTheme.cpp
+    TextDirection.cpp
     Triangle.cpp
     Typeface.cpp
     WindowTheme.cpp
