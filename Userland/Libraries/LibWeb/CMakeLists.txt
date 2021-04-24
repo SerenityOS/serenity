@@ -153,6 +153,7 @@ set(SOURCES
     HTML/Parser/StackOfOpenElements.cpp
     HTML/SubmitEvent.cpp
     HTML/TagNames.cpp
+    HTML/WebSocket.cpp
     HighResolutionTime/Performance.cpp
     InProcessWebView.cpp
     Layout/BlockBox.cpp
@@ -318,6 +319,7 @@ libweb_js_wrapper(DOM/Node)
 libweb_js_wrapper(DOM/Range)
 libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(HTML/CanvasRenderingContext2D)
+libweb_js_wrapper(HTML/CloseEvent)
 libweb_js_wrapper(HTML/HTMLAnchorElement)
 libweb_js_wrapper(HTML/HTMLAreaElement)
 libweb_js_wrapper(HTML/HTMLAudioElement)
@@ -390,7 +392,9 @@ libweb_js_wrapper(HTML/HTMLUListElement)
 libweb_js_wrapper(HTML/HTMLUnknownElement)
 libweb_js_wrapper(HTML/HTMLVideoElement)
 libweb_js_wrapper(HTML/ImageData)
+libweb_js_wrapper(HTML/MessageEvent)
 libweb_js_wrapper(HTML/SubmitEvent)
+libweb_js_wrapper(HTML/WebSocket)
 libweb_js_wrapper(HighResolutionTime/Performance)
 libweb_js_wrapper(NavigationTiming/PerformanceTiming)
 libweb_js_wrapper(SVG/SVGElement)
