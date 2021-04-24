@@ -26,10 +26,6 @@ pre_configure() {
     configopts="${configopts} --build=${build}"
 }
 
-post_configure() {
-    run cp "${SERENITY_SOURCE_DIR}/Ports/${port}/Setup.local" "Modules/Setup.local"
-}
-
 # Note: The showproperty command is used when linting ports, we don't actually need python at this time.
 if [ "$1" != "showproperty" ]; then
     if [ -x "$(command -v python3)" ]; then

@@ -16,16 +16,6 @@ Disables check for `RLIMIT_CORE` and subsequent `setrlimit()` call. Would be ena
 
 As usual, make the `configure` script recognize Serenity.
 
-## `fix-hidden-symbol-referenced-by-dso.patch`
-
-Fix a weird build issue of `python` and other provided binaries by marking the `main()` functions `Py_EXPORTED_SYMBOL`.
-
-```text
-hidden symbol `main' in Programs/python.o is referenced by DSO
-```
-
-Not sure what the proper fix for this is, but it works fine.
-
 ## `remove-setlocale-from-preconfig.patch`
 
 Our stub implementation of `setlocale()` always returns `nullptr`, which the interpreter considers critical enough to exit right away.
@@ -33,7 +23,3 @@ Our stub implementation of `setlocale()` always returns `nullptr`, which the int
 ## `tweak-unsupported-printf-format-specifiers.patch`
 
 Replace uses of `%.Ns` with `%s` as the former is not supported by our `printf` implementation yet and would result in empty strings. It uses `snprintf` already, so this is safe.
-
-## `use-rtld-lazy-for-dlopenflags.patch`
-
-We have `RTLD_NOW` defined but don't actually support it, so use the provided `RTLD_LAZY` fallback. Doesn't help the dynamic library module import assertion though.
