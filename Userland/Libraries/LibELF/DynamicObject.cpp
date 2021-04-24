@@ -36,6 +36,7 @@ DynamicObject::DynamicObject(const String& filename, VirtualAddress base_address
 
 DynamicObject::~DynamicObject()
 {
+    // TODO: unmap the object
 }
 
 void DynamicObject::dump() const
@@ -481,5 +482,16 @@ u32 DynamicObject::HashSymbol::sysv_hash() const
     if (!m_sysv_hash.has_value())
         m_sysv_hash = compute_sysv_hash(m_name);
     return m_sysv_hash.value();
+}
+
+void* DynamicObject::symbol_for_name(const StringView& name)
+{
+    auto result = hash_section().lookup_symbol(name);
+    if (!result.has_value())
+        return nullptr;
+    auto symbol = result.value();
+    if (symbol.is_undefined())
+        return nullptr;
+    return base_address().offset(symbol.value()).as_ptr();
 }
 } // end namespace ELF
