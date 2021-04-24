@@ -55,4 +55,5 @@ class TableOrSubquery;
 class Token;
 class TypeName;
 class UnaryOperatorExpression;
+class Update;
 }
