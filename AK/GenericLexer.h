@@ -22,18 +22,22 @@ public:
 
     StringView remaining() const { return m_input.substring_view(m_index); }
 
+    // Tells whether the parser's index has reached input's end
     constexpr bool is_eof() const { return m_index >= m_input.length(); }
 
+    // Returns the current character at the parser index, plus `offset` if specified
     constexpr char peek(size_t offset = 0) const
     {
         return (m_index + offset < m_input.length()) ? m_input[m_index + offset] : '\0';
     }
 
+    // Tests the next character in the input
     constexpr bool next_is(char expected) const
     {
         return peek() == expected;
     }
 
+    // Tests if the `expected` StringView comes next in the input
     constexpr bool next_is(StringView expected) const
     {
         for (size_t i = 0; i < expected.length(); ++i)
@@ -42,6 +46,7 @@ public:
         return true;
     }
 
+    // Tests if the `expected` c-string comes next in the input
     constexpr bool next_is(const char* expected) const
     {
         for (size_t i = 0; expected[i] != '\0'; ++i)
@@ -50,18 +55,21 @@ public:
         return true;
     }
 
+    // Go back to the previous character
     constexpr void retreat()
     {
         VERIFY(m_index > 0);
         --m_index;
     }
 
+    // Consume a character and advance the parser index
     constexpr char consume()
     {
         VERIFY(!is_eof());
         return m_input[m_index++];
     }
 
+    // Consume the given character if it is next in the input
     template<typename T>
     constexpr bool consume_specific(const T& next)
     {
@@ -76,11 +84,13 @@ public:
         return true;
     }
 
+    // Consume the given String if it is next in the input
     bool consume_specific(const String& next)
     {
         return consume_specific(StringView { next });
     }
 
+    // Consume the given c-string if it is next in the input
     constexpr bool consume_specific(const char* next)
     {
         return consume_specific(StringView { next });
@@ -109,12 +119,15 @@ public:
     StringView consume_quoted_string(char escape_char = 0);
     String consume_and_unescape_string(char escape_char = '\\');
 
+    // Ignore a number of characters (1 by default)
     constexpr void ignore(size_t count = 1)
     {
         count = min(count, m_input.length() - m_index);
         m_index += count;
     }
 
+    // Ignore characters until `stop` is peek'd
+    // The `stop` character is ignored as it is user-defined
     constexpr void ignore_until(char stop)
     {
         while (!is_eof() && peek() != stop) {
@@ -123,6 +136,8 @@ public:
         ignore();
     }
 
+    // Ignore characters until the string `stop` is found
+    // The `stop` string is ignored, as it is user-defined
     constexpr void ignore_until(const char* stop)
     {
         while (!is_eof() && !next_is(stop)) {
@@ -132,7 +147,7 @@ public:
     }
 
     /*
-     * Conditions are used to match arbitrary characters. You can use lambdas,
+     * Predicates are used to match arbitrary characters. You can use lambdas,
      * ctype functions, or is_any_of() and its derivatives (see below).
      * A few examples:
      *   - `if (lexer.next_is(isdigit))`
