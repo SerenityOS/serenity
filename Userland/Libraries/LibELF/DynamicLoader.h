@@ -130,6 +130,7 @@ private:
     };
     RelocationResult do_relocation(size_t total_tls_size, const DynamicObject::Relocation&, ShouldInitializeWeak should_initialize_weak);
     size_t calculate_tls_size() const;
+    ssize_t negative_offset_from_tls_block_end(size_t value_of_symbol, size_t tls_offset, size_t total_tls_size) const;
 
     String m_filename;
     String m_program_interpreter;
@@ -150,7 +151,7 @@ private:
     VirtualAddress m_dynamic_section_address;
 
     size_t m_tls_offset { 0 };
-    size_t m_tls_size { 0 };
+    size_t m_tls_size { 0 }; // TLS size of the current object
 
     Vector<DynamicObject::Relocation> m_unresolved_relocations;
 

@@ -460,10 +460,9 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         auto res = lookup_symbol(symbol);
         if (!res.has_value())
             break;
-        u32 symbol_value = res.value().value;
         auto* dynamic_object_of_symbol = res.value().dynamic_object;
         VERIFY(dynamic_object_of_symbol);
-        *patch_ptr = dynamic_object_of_symbol->tls_offset().value() + symbol_value - total_tls_size;
+        *patch_ptr = negative_offset_from_tls_block_end(res.value().value, dynamic_object_of_symbol->tls_offset().value(), total_tls_size);
         break;
     }
     case R_386_JMP_SLOT: {
@@ -486,6 +485,14 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
         VERIFY_NOT_REACHED();
     }
     return RelocationResult::Success;
+}
+
+ssize_t DynamicLoader::negative_offset_from_tls_block_end(size_t value_of_symbol, size_t tls_offset, size_t total_tls_size) const
+{
+    auto negative_offset = static_cast<ssize_t>(tls_offset + value_of_symbol - total_tls_size);
+    // Offset has to be strictly negative. Otherwise we'd collide with the thread's ThreadSpecificData structure.
+    VERIFY(negative_offset < 0);
+    return negative_offset;
 }
 
 // Defined in <arch>/plt_trampoline.S
