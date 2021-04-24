@@ -560,6 +560,10 @@ JS::Interpreter& Document::interpreter()
         auto& vm = Bindings::main_thread_vm();
         // TODO: Hook up vm.on_promise_unhandled_rejection and vm.on_promise_rejection_handled
         // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises#promise_rejection_events
+        vm.on_call_stack_emptied = [this] {
+            auto& vm = m_interpreter->vm();
+            vm.run_queued_promise_jobs();
+        };
         m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(vm, *m_window);
     }
     return *m_interpreter;
