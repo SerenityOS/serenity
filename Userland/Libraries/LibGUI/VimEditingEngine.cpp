@@ -446,7 +446,7 @@ void VimEditingEngine::switch_to_visual_mode()
     m_editor->reset_cursor_blink();
     m_previous_key = {};
     m_selection_start_position = m_editor->cursor();
-    m_editor->selection()->set(m_editor->cursor(), { m_editor->cursor().line(), m_editor->cursor().column() + 1 });
+    m_editor->selection()->set(m_editor->cursor(), get_next_valid_position(m_editor->cursor()));
     m_editor->did_update_selection();
 }
 
@@ -455,7 +455,7 @@ void VimEditingEngine::update_selection_on_cursor_move()
     auto cursor = m_editor->cursor();
     auto start = m_selection_start_position < cursor ? m_selection_start_position : cursor;
     auto end = m_selection_start_position < cursor ? cursor : m_selection_start_position;
-    end.set_column(end.column() + 1);
+    end = get_next_valid_position(end);
     m_editor->selection()->set(start, end);
     m_editor->did_update_selection();
 }
