@@ -14,6 +14,8 @@
 #include <LibWeb/Bindings/CanvasRenderingContext2DPrototype.h>
 #include <LibWeb/Bindings/CharacterDataConstructor.h>
 #include <LibWeb/Bindings/CharacterDataPrototype.h>
+#include <LibWeb/Bindings/CloseEventConstructor.h>
+#include <LibWeb/Bindings/CloseEventPrototype.h>
 #include <LibWeb/Bindings/CommentConstructor.h>
 #include <LibWeb/Bindings/CommentPrototype.h>
 #include <LibWeb/Bindings/DOMExceptionConstructor.h>
@@ -177,6 +179,8 @@
 #include <LibWeb/Bindings/ImageConstructor.h>
 #include <LibWeb/Bindings/ImageDataConstructor.h>
 #include <LibWeb/Bindings/ImageDataPrototype.h>
+#include <LibWeb/Bindings/MessageEventConstructor.h>
+#include <LibWeb/Bindings/MessageEventPrototype.h>
 #include <LibWeb/Bindings/MouseEventConstructor.h>
 #include <LibWeb/Bindings/MouseEventPrototype.h>
 #include <LibWeb/Bindings/NodeConstructor.h>
@@ -213,6 +217,8 @@
 #include <LibWeb/Bindings/TextPrototype.h>
 #include <LibWeb/Bindings/UIEventConstructor.h>
 #include <LibWeb/Bindings/UIEventPrototype.h>
+#include <LibWeb/Bindings/WebSocketConstructor.h>
+#include <LibWeb/Bindings/WebSocketPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestEventTargetConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestEventTargetPrototype.h>
@@ -233,6 +239,7 @@
     auto& vm = this->vm();                                 \
     ADD_WINDOW_OBJECT_INTERFACE(CanvasRenderingContext2D)  \
     ADD_WINDOW_OBJECT_INTERFACE(CharacterData)             \
+    ADD_WINDOW_OBJECT_INTERFACE(CloseEvent)                \
     ADD_WINDOW_OBJECT_INTERFACE(Comment)                   \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleSheet)             \
     ADD_WINDOW_OBJECT_INTERFACE(DocumentFragment)          \
@@ -315,6 +322,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(HTMLUnknownElement)        \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLVideoElement)          \
     ADD_WINDOW_OBJECT_INTERFACE(ImageData)                 \
+    ADD_WINDOW_OBJECT_INTERFACE(MessageEvent)              \
     ADD_WINDOW_OBJECT_INTERFACE(MouseEvent)                \
     ADD_WINDOW_OBJECT_INTERFACE(Node)                      \
     ADD_WINDOW_OBJECT_INTERFACE(Performance)               \
@@ -333,6 +341,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)             \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                      \
     ADD_WINDOW_OBJECT_INTERFACE(UIEvent)                   \
+    ADD_WINDOW_OBJECT_INTERFACE(WebSocket)                 \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)            \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequestEventTarget) \
     ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Image, ImageConstructor, HTMLImageElementPrototype)

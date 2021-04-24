@@ -58,6 +58,7 @@ enum class QuirksMode;
 
 namespace Web::HTML {
 class CanvasRenderingContext2D;
+class CloseEvent;
 class EventHandler;
 class HTMLAnchorElement;
 class HTMLAreaElement;
@@ -133,6 +134,8 @@ class HTMLUListElement;
 class HTMLUnknownElement;
 class HTMLVideoElement;
 class ImageData;
+class MessageEvent;
+class WebSocket;
 }
 
 namespace Web::HighResolutionTime {
@@ -201,6 +204,7 @@ class CSSStyleDeclarationWrapper;
 class CSSStyleSheetWrapper;
 class CanvasRenderingContext2DWrapper;
 class CharacterDataWrapper;
+class CloseEventWrapper;
 class CommentWrapper;
 class DocumentFragmentWrapper;
 class DocumentTypeWrapper;
@@ -285,6 +289,7 @@ class HTMLUnknownElementWrapper;
 class HTMLVideoElementWrapper;
 class ImageDataWrapper;
 class LocationObject;
+class MessageEventWrapper;
 class MouseEventWrapper;
 class NodeWrapper;
 class PerformanceTimingWrapper;
@@ -303,6 +308,7 @@ class StyleSheetWrapper;
 class StyleSheetListWrapper;
 class TextWrapper;
 class UIEventWrapper;
+class WebSocketWrapper;
 class WindowObject;
 class Wrappable;
 class Wrapper;
