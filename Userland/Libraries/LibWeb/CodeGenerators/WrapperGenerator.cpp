@@ -977,6 +977,7 @@ void generate_constructor_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #if __has_include(<LibWeb/CSS/@name@.h>)
 #    include <LibWeb/CSS/@name@.h>
@@ -1050,15 +1051,17 @@ JS::Value @constructor_class@::construct(Function&)
             generator.set(".constructor_arguments", arguments_builder.string_view());
 
             generator.append(R"~~~(
-    auto impl = @fully_qualified_name@::create_with_global_object(window, @.constructor_arguments@);
+    auto impl = throw_dom_exception_if_needed(vm, global_object, [&] { return @fully_qualified_name@::create_with_global_object(window, @.constructor_arguments@); });
 )~~~");
         } else {
             generator.append(R"~~~(
-    auto impl = @fully_qualified_name@::create_with_global_object(window);
+    auto impl = throw_dom_exception_if_needed(vm, global_object, [&] { return @fully_qualified_name@::create_with_global_object(window); });
 )~~~");
         }
         generator.append(R"~~~(
-    return @wrapper_class@::create(global_object, impl);
+    if (should_return_empty(impl))
+        return JS::Value();
+    return @wrapper_class@::create(global_object, impl.release_value());
 )~~~");
     } else {
         // Multiple constructor overloads - can't do that yet.
