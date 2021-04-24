@@ -5,7 +5,7 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/Console.h>
+#include <Kernel/ConsoleDevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/kstdio.h>
@@ -13,46 +13,46 @@
 // Bytes output to 0xE9 end up on the Bochs console. It's very handy.
 #define CONSOLE_OUT_TO_E9
 
-static AK::Singleton<Console> s_the;
+static AK::Singleton<ConsoleDevice> s_the;
 static Kernel::SpinLock g_console_lock;
 
-UNMAP_AFTER_INIT void Console::initialize()
+UNMAP_AFTER_INIT void ConsoleDevice::initialize()
 {
     s_the.ensure_instance();
 }
 
-Console& Console::the()
+ConsoleDevice& ConsoleDevice::the()
 {
     return *s_the;
 }
 
-bool Console::is_initialized()
+bool ConsoleDevice::is_initialized()
 {
     return s_the.is_initialized();
 }
 
-UNMAP_AFTER_INIT Console::Console()
+UNMAP_AFTER_INIT ConsoleDevice::ConsoleDevice()
     : CharacterDevice(5, 1)
 {
 }
 
-UNMAP_AFTER_INIT Console::~Console()
+UNMAP_AFTER_INIT ConsoleDevice::~ConsoleDevice()
 {
 }
 
-bool Console::can_read(const Kernel::FileDescription&, size_t) const
+bool ConsoleDevice::can_read(const Kernel::FileDescription&, size_t) const
 {
     return false;
 }
 
-Kernel::KResultOr<size_t> Console::read(FileDescription&, u64, Kernel::UserOrKernelBuffer&, size_t)
+Kernel::KResultOr<size_t> ConsoleDevice::read(FileDescription&, u64, Kernel::UserOrKernelBuffer&, size_t)
 {
     // FIXME: Implement reading from the console.
     //        Maybe we could use a ring buffer for this device?
     return 0;
 }
 
-Kernel::KResultOr<size_t> Console::write(FileDescription&, u64, const Kernel::UserOrKernelBuffer& data, size_t size)
+Kernel::KResultOr<size_t> ConsoleDevice::write(FileDescription&, u64, const Kernel::UserOrKernelBuffer& data, size_t size)
 {
     if (!size)
         return 0;
@@ -64,7 +64,7 @@ Kernel::KResultOr<size_t> Console::write(FileDescription&, u64, const Kernel::Us
     });
 }
 
-void Console::put_char(char ch)
+void ConsoleDevice::put_char(char ch)
 {
     Kernel::ScopedSpinLock lock(g_console_lock);
 #ifdef CONSOLE_OUT_TO_E9

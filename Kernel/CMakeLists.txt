@@ -23,7 +23,7 @@ set(KERNEL_SOURCES
     Arch/x86/SmapDisabler.h
     CMOS.cpp
     CommandLine.cpp
-    Console.cpp
+    ConsoleDevice.cpp
     CoreDump.cpp
     DMI.cpp
     Devices/AsyncDeviceRequest.cpp
