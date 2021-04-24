@@ -34,6 +34,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     switch (m_parser_state.m_token.type()) {
     case TokenType::Create:
         return parse_create_table_statement();
+    case TokenType::Alter:
+        return parse_alter_table_statement();
     case TokenType::Drop:
         return parse_drop_table_statement();
     case TokenType::Insert:
@@ -45,7 +47,7 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     case TokenType::Select:
         return parse_select_statement({});
     default:
-        expected("CREATE, DROP, INSERT, UPDATE, DELETE, or SELECT");
+        expected("CREATE, ALTER, DROP, INSERT, UPDATE, DELETE, or SELECT");
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -100,6 +102,42 @@ NonnullRefPtr<CreateTable> Parser::parse_create_table_statement()
     // FIXME: Parse "table-constraint".
 
     return create_ast_node<CreateTable>(move(schema_name), move(table_name), move(column_definitions), is_temporary, is_error_if_table_exists);
+}
+
+NonnullRefPtr<CreateTable> Parser::parse_alter_table_statement()
+{
+    // https://sqlite.org/lang_altertable.html
+    consume(TokenType::Alter);
+    consume(TokenType::Table);
+
+    String schema_name;
+    String table_name;
+    parse_schema_and_table_name(schema_name, table_name);
+
+    if (consume_if(TokenType::Add)) {
+        consume_if(TokenType::Column); // COLUMN is optional.
+        auto column = parse_column_definition();
+        return create_ast_node<AddColumn>(move(schema_name), move(table_name), move(column));
+    }
+
+    if (consume_if(TokenType::Drop)) {
+        consume_if(TokenType::Column); // COLUMN is optional.
+        auto column = consume(TokenType::Identifier).value();
+        return create_ast_node<DropColumn>(move(schema_name), move(table_name), move(column));
+    }
+
+    consume(TokenType::Rename);
+
+    if (consume_if(TokenType::To)) {
+        auto new_table_name = consume(TokenType::Identifier).value();
+        return create_ast_node<RenameTable>(move(schema_name), move(table_name), move(new_table_name));
+    }
+
+    consume_if(TokenType::Column); // COLUMN is optional.
+    auto column_name = consume(TokenType::Identifier).value();
+    consume(TokenType::To);
+    auto new_column_name = consume(TokenType::Identifier).value();
+    return create_ast_node<RenameColumn>(move(schema_name), move(table_name), move(column_name), move(new_column_name));
 }
 
 NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
