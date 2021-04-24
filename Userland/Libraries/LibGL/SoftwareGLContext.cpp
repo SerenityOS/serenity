@@ -445,6 +445,41 @@ void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble botto
     m_error = GL_NO_ERROR;
 }
 
+void SoftwareGLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    if (left == right || bottom == top || near_val == far_val) {
+        m_error = GL_INVALID_VALUE;
+        return;
+    }
+
+    auto rl = right - left;
+    auto tb = top - bottom;
+    auto fn = far_val - near_val;
+    auto tx = -(right + left) / rl;
+    auto ty = -(top + bottom) / tb;
+    auto tz = -(far_val + near_val) / fn;
+
+    FloatMatrix4x4 projection {
+        static_cast<float>(2 / rl), 0, 0, static_cast<float>(tx),
+        0, static_cast<float>(2 / tb), 0, static_cast<float>(ty),
+        0, 0, static_cast<float>(-2 / fn), static_cast<float>(tz),
+        0, 0, 0, 1
+    };
+
+    if (m_current_matrix_mode == GL_PROJECTION) {
+        m_projection_matrix = m_projection_matrix * projection;
+    } else if (m_current_matrix_mode == GL_MODELVIEW) {
+        m_projection_matrix = m_model_view_matrix * projection;
+    }
+
+    m_error = GL_NO_ERROR;
+}
+
 GLenum SoftwareGLContext::gl_get_error()
 {
     if (m_in_draw_state) {

@@ -81,6 +81,7 @@ GLAPI GLubyte* glGetString(GLenum name);
 GLAPI void glLoadIdentity();
 GLAPI void glLoadMatrixf(const GLfloat* matrix);
 GLAPI void glMatrixMode(GLenum mode);
+GLAPI void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble nearVal, GLdouble farVal);
 GLAPI void glPushMatrix();
 GLAPI void glPopMatrix();
 GLAPI void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
