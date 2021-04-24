@@ -398,7 +398,9 @@ parse_arguments() {
     else
         case "$1" in
             fetch|patch|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall|showproperty)
-                do_$1 $2
+                method=$1
+                shift
+                do_${method} "$@"
                 ;;
             --auto)
                 do_all $1
