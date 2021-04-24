@@ -140,7 +140,7 @@ int TestSuite::main(const String& suite_name, int argc, char** argv)
 
     Core::ArgsParser args_parser;
 
-    bool do_tests_only = false;
+    bool do_tests_only = getenv("TESTS_ONLY") != nullptr;
     bool do_benchmarks_only = false;
     bool do_list_cases = false;
     const char* search_string = "*";
