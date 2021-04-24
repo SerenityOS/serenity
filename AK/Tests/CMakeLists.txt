@@ -45,6 +45,7 @@ set(AK_TEST_SOURCES
     TestRefPtr.cpp
     TestSinglyLinkedList.cpp
     TestSourceGenerator.cpp
+    TestSourceLocation.cpp
     TestSpan.cpp
     TestString.cpp
     TestStringUtils.cpp
