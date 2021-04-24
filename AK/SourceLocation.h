@@ -24,6 +24,8 @@ public:
         return SourceLocation(file, line, function);
     }
 
+    constexpr SourceLocation() = default;
+
 private:
     constexpr SourceLocation(const char* const file, u32 line, const char* const function)
         : m_function(function)
