@@ -20,6 +20,16 @@ void glEnd()
     g_gl_context->gl_end();
 }
 
+void glVertex2f(GLfloat x, GLfloat y)
+{
+    g_gl_context->gl_vertex(x, y, 0.0, 1.0);
+}
+
+void glVertex2fv(const GLfloat* v)
+{
+    g_gl_context->gl_vertex(v[0], v[1], 0.0, 1.0);
+}
+
 void glVertex3f(GLfloat x, GLfloat y, GLfloat z)
 {
     g_gl_context->gl_vertex(x, y, z, 1.0);
