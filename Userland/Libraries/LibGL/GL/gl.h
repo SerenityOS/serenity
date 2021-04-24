@@ -79,6 +79,7 @@ GLAPI void glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble to
 GLAPI GLenum glGetError();
 GLAPI GLubyte* glGetString(GLenum name);
 GLAPI void glLoadIdentity();
+GLAPI void glLoadMatrixf(const GLfloat* matrix);
 GLAPI void glMatrixMode(GLenum mode);
 GLAPI void glPushMatrix();
 GLAPI void glPopMatrix();
