@@ -10,12 +10,14 @@
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <LibDl/dlfcn.h>
+#include <LibDl/dlfcn_integration.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/Hashes.h>
 #include <LibELF/Validation.h>
 #include <assert.h>
-#include <dlfcn.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,24 +36,22 @@ static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int 
 
 namespace ELF {
 
-RefPtr<DynamicLoader> DynamicLoader::try_create(int fd, String filename)
+Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(int fd, String filename)
 {
     struct stat stat;
     if (fstat(fd, &stat) < 0) {
-        perror("DynamicLoader::try_create fstat");
-        return {};
+        return DlErrorMessage { "DynamicLoader::try_create fstat" };
     }
 
     VERIFY(stat.st_size >= 0);
     auto size = static_cast<size_t>(stat.st_size);
     if (size < sizeof(Elf32_Ehdr))
-        return {};
+        return DlErrorMessage { String::formatted("File {} has invalid ELF header", filename) };
 
     String file_mmap_name = String::formatted("ELF_DYN: {}", filename);
     auto* data = mmap_with_name(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0, file_mmap_name.characters());
     if (data == MAP_FAILED) {
-        perror("DynamicLoader::try_create mmap");
-        return {};
+        return DlErrorMessage { "DynamicLoader::try_create mmap" };
     }
 
     return adopt_ref(*new DynamicLoader(fd, move(filename), data, size));
@@ -121,17 +121,6 @@ bool DynamicLoader::validate()
     if (!validate_program_headers(*elf_header, m_file_size, (u8*)m_file_data, m_file_size, &m_program_interpreter))
         return false;
     return true;
-}
-
-void* DynamicLoader::symbol_for_name(const StringView& name)
-{
-    auto result = m_dynamic_object->hash_section().lookup_symbol(name);
-    if (!result.has_value())
-        return nullptr;
-    auto symbol = result.value();
-    if (symbol.is_undefined())
-        return nullptr;
-    return m_dynamic_object->base_address().offset(symbol.value()).as_ptr();
 }
 
 RefPtr<DynamicObject> DynamicLoader::map()
@@ -207,7 +196,7 @@ void DynamicLoader::do_main_relocations(size_t total_tls_size)
     m_dynamic_object->plt_relocation_section().for_each_relocation(do_single_relocation);
 }
 
-RefPtr<DynamicObject> DynamicLoader::load_stage_3(unsigned flags, size_t total_tls_size)
+Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3(unsigned flags, size_t total_tls_size)
 {
     do_lazy_relocations(total_tls_size);
     if (flags & RTLD_LAZY) {
@@ -217,26 +206,23 @@ RefPtr<DynamicObject> DynamicLoader::load_stage_3(unsigned flags, size_t total_t
 
     for (auto& text_segment : m_text_segments) {
         if (mprotect(text_segment.address().as_ptr(), text_segment.size(), PROT_READ | PROT_EXEC) < 0) {
-            perror("mprotect .text: PROT_READ | PROT_EXEC"); // FIXME: dlerror?
-            return nullptr;
+            return DlErrorMessage { String::formatted("mprotect .text: PROT_READ | PROT_EXEC: {}", strerror(errno)) };
         }
     }
 
     if (m_relro_segment_size) {
         if (mprotect(m_relro_segment_address.as_ptr(), m_relro_segment_size, PROT_READ) < 0) {
-            perror("mprotect .relro: PROT_READ");
-            return nullptr;
+            return DlErrorMessage { String::formatted("mprotect .text: PROT_READ: {}", strerror(errno)) };
         }
 
 #if __serenity__
         if (set_mmap_name(m_relro_segment_address.as_ptr(), m_relro_segment_size, String::formatted("{}: .relro", m_filename).characters()) < 0) {
-            perror("set_mmap_name .relro");
-            return nullptr;
+            return DlErrorMessage { String::formatted("set_mmap_name .relro: {}", strerror(errno)) };
         }
 #endif
     }
 
-    return m_dynamic_object;
+    return NonnullRefPtr<DynamicObject> { *m_dynamic_object };
 }
 
 void DynamicLoader::load_stage_4()

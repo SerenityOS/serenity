@@ -452,19 +452,24 @@ int main(int argc, char** argv)
 
         int fd = open(path, O_RDONLY);
         if (fd < 0) {
-            outln(String::formatted("Unable to open file {}", path).characters());
+            outln("Unable to open file {}", path);
             return 1;
         }
 
-        auto loader = ELF::DynamicLoader::try_create(fd, path);
-        if (!loader || !loader->is_valid()) {
-            outln(String::formatted("{} is not a valid ELF dynamic shared object!", path));
+        auto result = ELF::DynamicLoader::try_create(fd, path);
+        if (result.is_error()) {
+            outln("{}", result.error().text);
+            return 1;
+        }
+        auto& loader = result.value();
+        if (!loader->is_valid()) {
+            outln("{} is not a valid ELF dynamic shared object!", path);
             return 1;
         }
 
         object = loader->map();
         if (!object) {
-            outln(String::formatted("Failed to map dynamic ELF object {}", path));
+            outln("Failed to map dynamic ELF object {}", path);
             return 1;
         }
     }
