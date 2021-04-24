@@ -55,10 +55,6 @@ KResultOr<int> Process::sys$sigaction(int signum, Userspace<const sigaction*> us
     if (signum < 1 || signum >= 32 || signum == SIGKILL || signum == SIGSTOP)
         return EINVAL;
 
-    sigaction act {};
-    if (!copy_from_user(&act, user_act))
-        return EFAULT;
-
     InterruptDisabler disabler; // FIXME: This should use a narrower lock. Maybe a way to ignore signals temporarily?
     auto& action = Thread::current()->m_signal_action_data[signum];
     if (user_old_act) {
@@ -68,8 +64,13 @@ KResultOr<int> Process::sys$sigaction(int signum, Userspace<const sigaction*> us
         if (!copy_to_user(user_old_act, &old_act))
             return EFAULT;
     }
-    action.flags = act.sa_flags;
-    action.handler_or_sigaction = VirtualAddress { reinterpret_cast<void*>(act.sa_sigaction) };
+    if (user_act) {
+        sigaction act {};
+        if (!copy_from_user(&act, user_act))
+            return EFAULT;
+        action.flags = act.sa_flags;
+        action.handler_or_sigaction = VirtualAddress { reinterpret_cast<void*>(act.sa_sigaction) };
+    }
     return 0;
 }
 
