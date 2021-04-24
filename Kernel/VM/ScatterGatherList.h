@@ -29,26 +29,4 @@ private:
     OwnPtr<Region> m_dma_region;
 };
 
-/// A Scatter-Gather List type that doesn't own its buffers
-
-class ScatterGatherRefList {
-    struct ScatterGatherRef {
-        FlatPtr page_base;
-        size_t offset;
-        size_t length;
-    };
-
-public:
-    static ScatterGatherRefList create_from_buffer(const u8* buffer, size_t);
-    static ScatterGatherRefList create_from_physical(PhysicalAddress, size_t);
-
-    void add_entry(FlatPtr, size_t offset, size_t size);
-    [[nodiscard]] size_t length() const { return m_entries.size(); }
-
-    void for_each_entry(Function<void(const FlatPtr, const size_t)> callback) const;
-
-private:
-    Vector<ScatterGatherRef> m_entries;
-};
-
 }

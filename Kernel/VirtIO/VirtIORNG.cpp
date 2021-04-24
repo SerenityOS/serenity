@@ -23,7 +23,7 @@ VirtIORNG::VirtIORNG(PCI::Address address)
         m_entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIORNG", Region::Access::Read | Region::Access::Write);
         if (m_entropy_buffer) {
             memset(m_entropy_buffer->vaddr().as_ptr(), 0, m_entropy_buffer->size());
-            supply_buffer_and_notify(REQUESTQ, ScatterGatherRefList::create_from_physical(m_entropy_buffer->physical_page(0)->paddr(), m_entropy_buffer->size()), BufferType::DeviceWritable, m_entropy_buffer->vaddr().as_ptr());
+            request_entropy_from_host();
         }
     }
 }
@@ -40,14 +40,33 @@ bool VirtIORNG::handle_device_config_change()
 void VirtIORNG::handle_queue_update(u16 queue_index)
 {
     VERIFY(queue_index == REQUESTQ);
-    size_t available_entropy = 0;
-    if (!get_queue(REQUESTQ).get_buffer(&available_entropy))
-        return;
+    size_t available_entropy = 0, used;
+    auto& queue = get_queue(REQUESTQ);
+    {
+        ScopedSpinLock lock(queue.lock());
+        auto chain = queue.pop_used_buffer_chain(used);
+        if (chain.is_empty())
+            return;
+        VERIFY(chain.length() == 1);
+        chain.for_each([&available_entropy](PhysicalAddress, size_t length) {
+            available_entropy = length;
+        });
+        chain.release_buffer_slots_to_queue();
+    }
     dbgln_if(VIRTIO_DEBUG, "VirtIORNG: received {} bytes of entropy!", available_entropy);
     for (auto i = 0u; i < available_entropy; i++) {
         m_entropy_source.add_random_event(m_entropy_buffer->vaddr().as_ptr()[i]);
     }
-    // TODO: when should we ask for more entropy from the host?
+    // TODO: When should we get some more entropy?
+}
+
+void VirtIORNG::request_entropy_from_host()
+{
+    auto& queue = get_queue(REQUESTQ);
+    ScopedSpinLock lock(queue.lock());
+    VirtIOQueueChain chain(queue);
+    chain.add_buffer_to_chain(m_entropy_buffer->physical_page(0)->paddr(), PAGE_SIZE, BufferType::DeviceWritable);
+    supply_chain_and_notify(REQUESTQ, chain);
 }
 
 }
