@@ -12,7 +12,6 @@
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Device.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/ScatterGatherList.h>
 #include <Kernel/VirtIO/VirtIOQueue.h>
 
 namespace Kernel {
@@ -196,7 +195,7 @@ protected:
         return is_feature_set(m_accepted_features, feature);
     }
 
-    void supply_buffer_and_notify(u16 queue_index, const ScatterGatherRefList&, BufferType, void* token);
+    void supply_chain_and_notify(u16 queue_index, VirtIOQueueChain& chain);
 
     virtual bool handle_device_config_change() = 0;
     virtual void handle_queue_update(u16 queue_index) = 0;

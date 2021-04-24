@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/VM/RingBuffer.h>
 #include <Kernel/VirtIO/VirtIO.h>
 
 namespace Kernel {
@@ -25,6 +26,7 @@ public:
     virtual ~VirtIOConsole() override;
 
 private:
+    constexpr static size_t RINGBUFFER_SIZE = 2 * PAGE_SIZE;
     virtual const char* class_name() const override { return m_class_name.characters(); }
 
     virtual bool can_read(const FileDescription&, size_t) const override;
@@ -38,8 +40,8 @@ private:
     virtual String device_name() const override { return String::formatted("hvc{}", minor()); }
     virtual void handle_queue_update(u16 queue_index) override;
 
-    OwnPtr<Region> m_receive_region;
-    OwnPtr<Region> m_transmit_region;
+    OwnPtr<RingBuffer> m_receive_buffer;
+    OwnPtr<RingBuffer> m_transmit_buffer;
 
     static unsigned next_device_id;
 };
