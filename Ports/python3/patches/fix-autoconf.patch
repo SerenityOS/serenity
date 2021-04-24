@@ -16,7 +16,7 @@
         # in the case statement below.
  	case "$host" in
 +	*-*-serenity*)
-+		ac_sys_system=Serenity
++		ac_sys_system=SerenityOS
 +		;;
  	*-*-linux-android*)
  		ac_sys_system=Linux-android
@@ -38,7 +38,7 @@
         # in the case statement below.
  	case "$host" in
 +	*-*-serenity*)
-+		ac_sys_system=Serenity
++		ac_sys_system=SerenityOS
 +		;;
  	*-*-linux-android*)
  		ac_sys_system=Linux-android
@@ -53,3 +53,14 @@
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
+diff -Naur Python-3.9.4/configure Python-3.9.4.serenity/configure
+--- Python-3.9.4/configure	2021-04-24 14:50:59.083484421 +0200
++++ Python-3.9.4.serenity/configure	2021-04-24 15:50:26.821359967 +0200
+@@ -9647,6 +9647,7 @@
+ #	    LINKFORSHARED="-Wl,-E -Wl,+s -Wl,+b\$(BINLIBDEST)/lib-dynload";;
+ 	Linux-android*) LINKFORSHARED="-pie -Xlinker -export-dynamic";;
+ 	Linux*|GNU*) LINKFORSHARED="-Xlinker -export-dynamic";;
++	SerenityOS*) LINKFORSHARED="-Xlinker -export-dynamic";;
+ 	# -u libsys_s pulls in all symbols in libsys
+ 	Darwin/*)
+ 		LINKFORSHARED="$extra_undefs -framework CoreFoundation"

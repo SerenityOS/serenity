@@ -20,3 +20,21 @@
                    DATE, TIME);
      return buildinfo;
  }
+diff -Naur Python-3.9.4/Python/dynload_shlib.c Python-3.9.4.serenity/Python/dynload_shlib.c
+--- Python-3.9.4/Python/dynload_shlib.c	2021-04-04 14:56:53.000000000 +0200
++++ Python-3.9.4.serenity/Python/dynload_shlib.c	2021-04-24 15:57:27.419824682 +0200
+@@ -69,12 +69,12 @@
+ 
+     if (strchr(pathname, '/') == NULL) {
+         /* Prefix bare filename with "./" */
+-        PyOS_snprintf(pathbuf, sizeof(pathbuf), "./%-.255s", pathname);
++        PyOS_snprintf(pathbuf, sizeof(pathbuf), "./%s", pathname);
+         pathname = pathbuf;
+     }
+ 
+     PyOS_snprintf(funcname, sizeof(funcname),
+-                  LEAD_UNDERSCORE "%.20s_%.200s", prefix, shortname);
++                  LEAD_UNDERSCORE "%s_%s", prefix, shortname);
+ 
+     if (fp != NULL) {
+         int i;
