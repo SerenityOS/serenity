@@ -20,6 +20,7 @@
 #include <Kernel/Storage/StorageDevice.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/PhysicalPage.h>
+#include <Kernel/VM/ScatterGatherList.h>
 #include <Kernel/WaitQueue.h>
 
 namespace Kernel {
@@ -31,20 +32,6 @@ class SATADiskDevice;
 class AHCIPort : public RefCounted<AHCIPort> {
     friend class AHCIPortHandler;
     friend class SATADiskDevice;
-
-private:
-    class ScatterList : public RefCounted<ScatterList> {
-    public:
-        static NonnullRefPtr<ScatterList> create(AsyncBlockDeviceRequest&, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size);
-        const VMObject& vmobject() const { return m_vm_object; }
-        VirtualAddress dma_region() const { return m_dma_region->vaddr(); }
-        size_t scatters_count() const { return m_vm_object->physical_pages().size(); }
-
-    private:
-        ScatterList(AsyncBlockDeviceRequest&, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size);
-        NonnullRefPtr<AnonymousVMObject> m_vm_object;
-        OwnPtr<Region> m_dma_region;
-    };
 
 public:
     UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPort> create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
@@ -132,7 +119,7 @@ private:
     AHCI::PortInterruptStatusBitField m_interrupt_status;
     AHCI::PortInterruptEnableBitField m_interrupt_enable;
 
-    RefPtr<AHCIPort::ScatterList> m_current_scatter_list;
+    RefPtr<ScatterGatherList> m_current_scatter_list;
     bool m_disabled_by_firmware { false };
 };
 }

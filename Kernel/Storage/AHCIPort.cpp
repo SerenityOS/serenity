@@ -11,21 +11,11 @@
 #include <Kernel/Storage/SATADiskDevice.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/ScatterGatherList.h>
 #include <Kernel/VM/TypedMapping.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {
-
-NonnullRefPtr<AHCIPort::ScatterList> AHCIPort::ScatterList::create(AsyncBlockDeviceRequest& request, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size)
-{
-    return adopt_ref(*new ScatterList(request, allocated_pages, device_block_size));
-}
-
-AHCIPort::ScatterList::ScatterList(AsyncBlockDeviceRequest& request, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size)
-    : m_vm_object(AnonymousVMObject::create_with_physical_pages(allocated_pages))
-{
-    m_dma_region = MM.allocate_kernel_region_with_vmobject(m_vm_object, page_round_up((request.block_count() * device_block_size)), "AHCI Scattered DMA", Region::Access::Read | Region::Access::Write, Region::Cacheable::Yes);
-}
 
 NonnullRefPtr<AHCIPort> AHCIPort::create(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
@@ -443,7 +433,7 @@ Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_li
         allocated_dma_regions.append(m_dma_buffers.at(index));
     }
 
-    m_current_scatter_list = ScatterList::create(request, allocated_dma_regions, m_connected_device->block_size());
+    m_current_scatter_list = ScatterGatherList::create(request, allocated_dma_regions, m_connected_device->block_size());
     if (request.request_type() == AsyncBlockDeviceRequest::Write) {
         if (!request.read_from_buffer(request.buffer(), m_current_scatter_list->dma_region().as_ptr(), m_connected_device->block_size() * request.block_count())) {
             return AsyncDeviceRequest::MemoryFault;

@@ -38,7 +38,7 @@ public:
     PhysicalAddress driver_area() const { return to_physical(m_driver.ptr()); }
     PhysicalAddress device_area() const { return to_physical(m_device.ptr()); }
 
-    bool supply_buffer(Badge<VirtIODevice>, const ScatterGatherList&, BufferType, void* token);
+    bool supply_buffer(Badge<VirtIODevice>, const ScatterGatherRefList&, BufferType, void* token);
     bool new_data_available() const;
     bool can_write() const;
     void* get_buffer(size_t*);
