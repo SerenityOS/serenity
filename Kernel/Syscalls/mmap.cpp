@@ -6,6 +6,7 @@
  */
 
 #include <AK/WeakPtr.h>
+#include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
@@ -595,11 +596,11 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
     return ENOTIMPL;
 }
 
-KResultOr<FlatPtr> Process::sys$allocate_tls(size_t size)
+KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data, size_t size)
 {
     REQUIRE_PROMISE(stdio);
 
-    if (!size)
+    if (!size || size % PAGE_SIZE != 0)
         return EINVAL;
 
     if (!m_master_tls_region.is_null())
@@ -626,6 +627,13 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(size_t size)
     m_master_tls_region = region_or_error.value()->make_weak_ptr();
     m_master_tls_size = size;
     m_master_tls_alignment = PAGE_SIZE;
+
+    {
+        Kernel::SmapDisabler disabler;
+        void* fault_at;
+        if (!Kernel::safe_memcpy((char*)m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), (char*)initial_data.ptr(), size, fault_at))
+            return EFAULT;
+    }
 
     auto tsr_result = main_thread->make_thread_specific_region({});
     if (tsr_result.is_error())

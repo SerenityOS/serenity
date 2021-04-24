@@ -495,6 +495,36 @@ ssize_t DynamicLoader::negative_offset_from_tls_block_end(size_t value_of_symbol
     return negative_offset;
 }
 
+void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer, size_t total_tls_size) const
+{
+    const u8* tls_data = nullptr;
+    size_t tls_size_in_image = 0;
+
+    m_elf_image.for_each_program_header([this, &tls_data, &tls_size_in_image](ELF::Image::ProgramHeader program_header) {
+        if (program_header.type() != PT_TLS)
+            return IterationDecision::Continue;
+
+        tls_data = (const u8*)m_file_data + program_header.offset();
+        tls_size_in_image = program_header.size_in_image();
+        return IterationDecision::Break;
+    });
+
+    if (!tls_data || !tls_size_in_image)
+        return;
+
+    m_elf_image.for_each_symbol([this, &buffer, total_tls_size, tls_data](ELF::Image::Symbol symbol) {
+        if (symbol.type() != STT_TLS)
+            return IterationDecision::Continue;
+
+        ssize_t negative_offset = negative_offset_from_tls_block_end(symbol.value(), m_tls_offset, total_tls_size);
+        VERIFY(symbol.size() != 0);
+        VERIFY(buffer.size() + negative_offset + symbol.size() <= buffer.size());
+        memcpy(buffer.data() + buffer.size() + negative_offset, tls_data + symbol.value(), symbol.size());
+
+        return IterationDecision::Continue;
+    });
+}
+
 // Defined in <arch>/plt_trampoline.S
 extern "C" void _plt_trampoline(void) __attribute__((visibility("hidden")));
 
