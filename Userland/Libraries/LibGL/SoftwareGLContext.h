@@ -27,6 +27,7 @@ public:
     virtual void gl_load_identity() override;
     virtual void gl_load_matrix(const FloatMatrix4x4& matrix) override;
     virtual void gl_matrix_mode(GLenum mode) override;
+    virtual void gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) override;
     virtual void gl_push_matrix() override;
     virtual void gl_pop_matrix() override;
     virtual void gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdouble z) override;
