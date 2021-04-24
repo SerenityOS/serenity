@@ -53,7 +53,9 @@ void Lock::lock(Mode mode)
             VERIFY(m_times_locked == 0);
             m_times_locked++;
 #if LOCK_DEBUG
-            current_thread->holding_lock(*this, 1, file, line);
+            if (current_thread) {
+                current_thread->holding_lock(*this, 1, file, line);
+            }
 #endif
             m_queue.should_block(true);
             m_lock.store(false, AK::memory_order_release);
@@ -165,7 +167,9 @@ void Lock::unlock()
             }
 
 #if LOCK_DEBUG
-            current_thread->holding_lock(*this, -1);
+            if (current_thread) {
+                current_thread->holding_lock(*this, -1);
+            }
 #endif
 
             m_lock.store(false, AK::memory_order_release);
@@ -201,7 +205,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
 
                 dbgln_if(LOCK_RESTORE_DEBUG, "Lock::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}", this, m_times_locked);
 #if LOCK_DEBUG
-                m_holder->holding_lock(*this, -(int)lock_count_to_restore);
+                m_holder->holding_lock(*this, -(int)m_times_locked);
 #endif
                 m_holder = nullptr;
                 VERIFY(m_times_locked > 0);
