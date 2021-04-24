@@ -1694,7 +1694,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 void MemberExpression::dump(int indent) const
 {
     print_indent(indent);
-    outln("%{}(computed={})", class_name(), is_computed());
+    outln("{}(computed={})", class_name(), is_computed());
     m_object->dump(indent + 1);
     m_property->dump(indent + 1);
 }
