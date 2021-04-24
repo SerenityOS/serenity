@@ -720,6 +720,82 @@ private:
     bool m_is_error_if_table_exists;
 };
 
+class AlterTable : public Statement {
+public:
+    const String& schema_name() const { return m_schema_name; }
+    const String& table_name() const { return m_table_name; }
+
+protected:
+    AlterTable(String schema_name, String table_name)
+        : m_schema_name(move(schema_name))
+        , m_table_name(move(table_name))
+    {
+    }
+
+private:
+    String m_schema_name;
+    String m_table_name;
+};
+
+class RenameTable : public AlterTable {
+public:
+    RenameTable(String schema_name, String table_name, String new_table_name)
+        : AlterTable(move(schema_name), move(table_name))
+        , m_new_table_name(move(new_table_name))
+    {
+    }
+
+    const String& new_table_name() const { return m_new_table_name; }
+
+private:
+    String m_new_table_name;
+};
+
+class RenameColumn : public AlterTable {
+public:
+    RenameColumn(String schema_name, String table_name, String column_name, String new_column_name)
+        : AlterTable(move(schema_name), move(table_name))
+        , m_column_name(move(column_name))
+        , m_new_column_name(move(new_column_name))
+    {
+    }
+
+    const String& column_name() const { return m_column_name; }
+    const String& new_column_name() const { return m_new_column_name; }
+
+private:
+    String m_column_name;
+    String m_new_column_name;
+};
+
+class AddColumn : public AlterTable {
+public:
+    AddColumn(String schema_name, String table_name, NonnullRefPtr<ColumnDefinition> column)
+        : AlterTable(move(schema_name), move(table_name))
+        , m_column(move(column))
+    {
+    }
+
+    const NonnullRefPtr<ColumnDefinition>& column() const { return m_column; }
+
+private:
+    NonnullRefPtr<ColumnDefinition> m_column;
+};
+
+class DropColumn : public AlterTable {
+public:
+    DropColumn(String schema_name, String table_name, String column_name)
+        : AlterTable(move(schema_name), move(table_name))
+        , m_column_name(move(column_name))
+    {
+    }
+
+    const String& column_name() const { return m_column_name; }
+
+private:
+    String m_column_name;
+};
+
 class DropTable : public Statement {
 public:
     DropTable(String schema_name, String table_name, bool is_error_if_table_does_not_exist)

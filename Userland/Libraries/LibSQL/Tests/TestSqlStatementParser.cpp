@@ -125,6 +125,147 @@ TEST_CASE(create_table)
     validate("CREATE TABLE test ( column1 varchar(1e3) );", {}, "test", { { "column1", "varchar", { 1000 } } });
 }
 
+TEST_CASE(alter_table)
+{
+    // This test case only contains common error cases of the AlterTable subclasses.
+    EXPECT(parse("ALTER").is_error());
+    EXPECT(parse("ALTER TABLE").is_error());
+    EXPECT(parse("ALTER TABLE table").is_error());
+    EXPECT(parse("ALTER TABLE table;").is_error());
+}
+
+TEST_CASE(alter_table_rename_table)
+{
+    EXPECT(parse("ALTER TABLE table RENAME").is_error());
+    EXPECT(parse("ALTER TABLE table RENAME TO").is_error());
+    EXPECT(parse("ALTER TABLE table RENAME TO new_table").is_error());
+
+    auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_new_table) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto statement = result.release_value();
+        EXPECT(is<SQL::RenameTable>(*statement));
+
+        const auto& alter = static_cast<const SQL::RenameTable&>(*statement);
+        EXPECT_EQ(alter.schema_name(), expected_schema);
+        EXPECT_EQ(alter.table_name(), expected_table);
+        EXPECT_EQ(alter.new_table_name(), expected_new_table);
+    };
+
+    validate("ALTER TABLE table RENAME TO new_table;", {}, "table", "new_table");
+    validate("ALTER TABLE schema.table RENAME TO new_table;", "schema", "table", "new_table");
+}
+
+TEST_CASE(alter_table_rename_column)
+{
+    EXPECT(parse("ALTER TABLE table RENAME").is_error());
+    EXPECT(parse("ALTER TABLE table RENAME COLUMN").is_error());
+    EXPECT(parse("ALTER TABLE table RENAME COLUMN column").is_error());
+    EXPECT(parse("ALTER TABLE table RENAME COLUMN column TO").is_error());
+    EXPECT(parse("ALTER TABLE table RENAME COLUMN column TO new_column").is_error());
+    EXPECT(parse("ALTER TABLE table RENAME column").is_error());
+    EXPECT(parse("ALTER TABLE table RENAME column TO").is_error());
+    EXPECT(parse("ALTER TABLE table RENAME column TO new_column").is_error());
+
+    auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_column, StringView expected_new_column) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto statement = result.release_value();
+        EXPECT(is<SQL::RenameColumn>(*statement));
+
+        const auto& alter = static_cast<const SQL::RenameColumn&>(*statement);
+        EXPECT_EQ(alter.schema_name(), expected_schema);
+        EXPECT_EQ(alter.table_name(), expected_table);
+        EXPECT_EQ(alter.column_name(), expected_column);
+        EXPECT_EQ(alter.new_column_name(), expected_new_column);
+    };
+
+    validate("ALTER TABLE table RENAME column TO new_column;", {}, "table", "column", "new_column");
+    validate("ALTER TABLE table RENAME COLUMN column TO new_column;", {}, "table", "column", "new_column");
+    validate("ALTER TABLE schema.table RENAME column TO new_column;", "schema", "table", "column", "new_column");
+    validate("ALTER TABLE schema.table RENAME COLUMN column TO new_column;", "schema", "table", "column", "new_column");
+}
+
+TEST_CASE(alter_table_add_column)
+{
+    EXPECT(parse("ALTER TABLE table ADD").is_error());
+    EXPECT(parse("ALTER TABLE table ADD COLUMN").is_error());
+    EXPECT(parse("ALTER TABLE table ADD COLUMN column").is_error());
+
+    struct Column {
+        StringView name;
+        StringView type;
+        Vector<double> signed_numbers {};
+    };
+
+    auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, Column expected_column) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto statement = result.release_value();
+        EXPECT(is<SQL::AddColumn>(*statement));
+
+        const auto& alter = static_cast<const SQL::AddColumn&>(*statement);
+        EXPECT_EQ(alter.schema_name(), expected_schema);
+        EXPECT_EQ(alter.table_name(), expected_table);
+
+        const auto& column = alter.column();
+        EXPECT_EQ(column->name(), expected_column.name);
+
+        const auto& type_name = column->type_name();
+        EXPECT_EQ(type_name->name(), expected_column.type);
+
+        const auto& signed_numbers = type_name->signed_numbers();
+        EXPECT_EQ(signed_numbers.size(), expected_column.signed_numbers.size());
+
+        for (size_t j = 0; j < signed_numbers.size(); ++j) {
+            double signed_number = signed_numbers[j].value();
+            double expected_signed_number = expected_column.signed_numbers[j];
+            EXPECT_EQ(signed_number, expected_signed_number);
+        }
+    };
+
+    validate("ALTER TABLE test ADD column1;", {}, "test", { "column1", "BLOB" });
+    validate("ALTER TABLE test ADD column1 int;", {}, "test", { "column1", "int" });
+    validate("ALTER TABLE test ADD column1 varchar;", {}, "test", { "column1", "varchar" });
+    validate("ALTER TABLE test ADD column1 varchar(255);", {}, "test", { "column1", "varchar", { 255 } });
+    validate("ALTER TABLE test ADD column1 varchar(255, 123);", {}, "test", { "column1", "varchar", { 255, 123 } });
+
+    validate("ALTER TABLE schema.test ADD COLUMN column1;", "schema", "test", { "column1", "BLOB" });
+    validate("ALTER TABLE schema.test ADD COLUMN column1 int;", "schema", "test", { "column1", "int" });
+    validate("ALTER TABLE schema.test ADD COLUMN column1 varchar;", "schema", "test", { "column1", "varchar" });
+    validate("ALTER TABLE schema.test ADD COLUMN column1 varchar(255);", "schema", "test", { "column1", "varchar", { 255 } });
+    validate("ALTER TABLE schema.test ADD COLUMN column1 varchar(255, 123);", "schema", "test", { "column1", "varchar", { 255, 123 } });
+}
+
+TEST_CASE(alter_table_drop_column)
+{
+    EXPECT(parse("ALTER TABLE table DROP").is_error());
+    EXPECT(parse("ALTER TABLE table DROP COLUMN").is_error());
+    EXPECT(parse("ALTER TABLE table DROP column").is_error());
+    EXPECT(parse("ALTER TABLE table DROP COLUMN column").is_error());
+
+    auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_column) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto statement = result.release_value();
+        EXPECT(is<SQL::DropColumn>(*statement));
+
+        const auto& alter = static_cast<const SQL::DropColumn&>(*statement);
+        EXPECT_EQ(alter.schema_name(), expected_schema);
+        EXPECT_EQ(alter.table_name(), expected_table);
+        EXPECT_EQ(alter.column_name(), expected_column);
+    };
+
+    validate("ALTER TABLE table DROP column;", {}, "table", "column");
+    validate("ALTER TABLE table DROP COLUMN column;", {}, "table", "column");
+    validate("ALTER TABLE schema.table DROP column;", "schema", "table", "column");
+    validate("ALTER TABLE schema.table DROP COLUMN column;", "schema", "table", "column");
+}
+
 TEST_CASE(drop_table)
 {
     EXPECT(parse("DROP").is_error());

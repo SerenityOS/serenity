@@ -7,6 +7,8 @@
 #pragma once
 
 namespace SQL {
+class AddColumn;
+class AlterTable;
 class ASTNode;
 class BetweenExpression;
 class BinaryOperatorExpression;
@@ -21,6 +23,7 @@ class CommonTableExpression;
 class CommonTableExpressionList;
 class CreateTable;
 class Delete;
+class DropColumn;
 class DropTable;
 class ErrorExpression;
 class ErrorStatement;
@@ -45,6 +48,8 @@ class NumericLiteral;
 class OrderingTerm;
 class Parser;
 class QualifiedTableName;
+class RenameColumn;
+class RenameTable;
 class ResultColumn;
 class ReturningClause;
 class Select;
