@@ -1,8 +1,8 @@
-#include <stdio.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/Window.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Window.h>
+#include <stdio.h>
 
 int main(int argc, char** argv)
 {
