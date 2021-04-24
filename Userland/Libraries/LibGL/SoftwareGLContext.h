@@ -35,6 +35,10 @@ public:
     virtual void gl_translate(GLdouble x, GLdouble y, GLdouble z) override;
     virtual void gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w) override;
     virtual void gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height) override;
+    virtual void gl_enable(GLenum) override;
+    virtual void gl_disable(GLenum) override;
+    virtual void gl_front_face(GLenum) override;
+    virtual void gl_cull_face(GLenum) override;
 
 private:
     GLenum m_current_draw_mode;
@@ -56,6 +60,10 @@ private:
 
     GLenum m_error = GL_NO_ERROR;
     bool m_in_draw_state = false;
+
+    bool m_cull_faces = false;
+    GLenum m_front_face = GL_CCW;
+    GLenum m_culled_sides = GL_BACK;
 };
 
 }

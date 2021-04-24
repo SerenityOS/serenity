@@ -404,6 +404,16 @@ void SoftwareGLContext::gl_end()
         (void)(vertexBy);
         (void)(vertexCx);
         (void)(vertexCy);
+        
+        if (m_cull_faces) {
+            bool is_front = (m_front_face == GL_CCW ? area > 0 : area < 0);
+
+            if (is_front && (m_culled_sides == GL_FRONT || m_culled_sides == GL_FRONT_AND_BACK))
+                continue;
+
+            if (!is_front && (m_culled_sides == GL_BACK || m_culled_sides == GL_FRONT_AND_BACK))
+                continue;
+        }
     }
 
     triangle_list.clear();
@@ -712,6 +722,60 @@ void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei hei
     (void)(width);
     (void)(height);
     m_error = GL_NO_ERROR;
+}
+
+void SoftwareGLContext::gl_enable(GLenum capability)
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    switch (capability) {
+    case GL_CULL_FACE:
+        m_cull_faces = true;
+        break;
+    default:
+        m_error = GL_INVALID_ENUM;
+        break;
+    }
+}
+
+void SoftwareGLContext::gl_disable(GLenum capability)
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    switch (capability) {
+    case GL_CULL_FACE:
+        m_cull_faces = false;
+        break;
+    default:
+        m_error = GL_INVALID_ENUM;
+        break;
+    }
+}
+
+void SoftwareGLContext::gl_front_face(GLenum face)
+{
+    if (face < GL_CW || face > GL_CCW) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    m_front_face = face;
+}
+
+void SoftwareGLContext::gl_cull_face(GLenum cull_mode)
+{
+    if (cull_mode < GL_FRONT || cull_mode > GL_FRONT_AND_BACK) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    m_culled_sides = cull_mode;
 }
 
 }

@@ -32,10 +32,18 @@ extern "C" {
 // Buffer bits
 #define GL_COLOR_BUFFER_BIT 0x0200
 
+// Enable capabilities
+#define GL_CULL_FACE 0x0B44
+
 // Utility
 #define GL_VENDOR 0x1F00
 #define GL_RENDERER 0x1F01
 #define GL_VERSION 0x1F02
+
+// Culled face side
+#define GL_FRONT 0x0404
+#define GL_BACK 0x0405
+#define GL_FRONT_AND_BACK 0x0408
 
 // Error codes
 #define GL_NO_ERROR 0
@@ -46,6 +54,10 @@ extern "C" {
 #define GL_STACK_UNDERFLOW 0x0504
 #define GL_OUT_OF_MEMORY 0x505
 #define GL_INVALID_FRAMEBUFFER_OPERATION 0x506
+
+// Triangle winding order
+#define GL_CW 0x0900
+#define GL_CCW 0x0901
 
 //
 // OpenGL typedefs
@@ -96,6 +108,10 @@ GLAPI void glVertex2fv(const GLfloat* v);
 GLAPI void glVertex3f(GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glVertex3fv(const GLfloat* v);
 GLAPI void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+GLAPI void glEnable(GLenum cap);
+GLAPI void glDisable(GLenum cap);
+GLAPI void glCullFace(GLenum mode);
+GLAPI void glFrontFace(GLenum mode);
 
 #ifdef __cplusplus
 }

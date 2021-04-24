@@ -36,6 +36,10 @@ public:
     virtual void gl_translate(GLdouble x, GLdouble y, GLdouble z) = 0;
     virtual void gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w) = 0;
     virtual void gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height) = 0;
+    virtual void gl_enable(GLenum) = 0;
+    virtual void gl_disable(GLenum) = 0;
+    virtual void gl_front_face(GLenum) = 0;
+    virtual void gl_cull_face(GLenum) = 0;
 };
 
 OwnPtr<GLContext> create_context();
