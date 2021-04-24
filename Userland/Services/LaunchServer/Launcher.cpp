@@ -283,9 +283,9 @@ bool Launcher::open_file_url(const URL& url)
         if (url.fragment().is_empty()) {
             fm_arguments.append(url.path());
         } else {
-            fm_arguments.append(String::formatted("{}/{}", url.path(), url.fragment()));
             fm_arguments.append("-s");
             fm_arguments.append("-r");
+            fm_arguments.append(String::formatted("{}/{}", url.path(), url.fragment()));
         }
         return spawn("/bin/FileManager", fm_arguments);
     }
