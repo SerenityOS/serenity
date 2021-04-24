@@ -12,6 +12,11 @@ namespace AK {
 
 class GenericLexer {
 public:
+    struct Position {
+        size_t line { 1 };
+        size_t column { 1 };
+    };
+
     constexpr explicit GenericLexer(const StringView& input)
         : m_input(input)
     {
@@ -19,6 +24,7 @@ public:
 
     constexpr size_t tell() const { return m_index; }
     constexpr size_t tell_remaining() const { return m_input.length() - m_index; }
+    constexpr const Position& position() const { return m_position; }
 
     StringView remaining() const { return m_input.substring_view(m_index); }
 
@@ -58,15 +64,17 @@ public:
     // Go back to the previous character
     constexpr void retreat()
     {
-        VERIFY(m_index > 0);
-        --m_index;
+        VERIFY(tell() > 0);
+        advance(1, false);
     }
 
     // Consume a character and advance the parser index
     constexpr char consume()
     {
         VERIFY(!is_eof());
-        return m_input[m_index++];
+        auto consumed = peek();
+        advance(1);
+        return consumed;
     }
 
     // Consume the given character if it is next in the input
@@ -122,8 +130,8 @@ public:
     // Ignore a number of characters (1 by default)
     constexpr void ignore(size_t count = 1)
     {
-        count = min(count, m_input.length() - m_index);
-        m_index += count;
+        count = min(count, tell_remaining());
+        advance(count);
     }
 
     // Ignore characters until `stop` is peek'd
@@ -131,19 +139,25 @@ public:
     constexpr void ignore_until(char stop)
     {
         while (!is_eof() && peek() != stop) {
-            ++m_index;
+            advance(1);
         }
         ignore();
     }
 
-    // Ignore characters until the string `stop` is found
+    // Ignore characters until the c-string `stop` is found
     // The `stop` string is ignored, as it is user-defined
     constexpr void ignore_until(const char* stop)
     {
         while (!is_eof() && !next_is(stop)) {
-            ++m_index;
+            advance(1);
         }
         ignore(__builtin_strlen(stop));
+    }
+
+    // Ignore a whole line
+    constexpr void ignore_line()
+    {
+        ignore_until('\n');
     }
 
     /*
@@ -166,10 +180,10 @@ public:
     template<typename TPredicate>
     StringView consume_while(TPredicate pred)
     {
-        size_t start = m_index;
+        size_t start = tell();
         while (!is_eof() && pred(peek()))
-            ++m_index;
-        size_t length = m_index - start;
+            advance(1);
+        size_t length = tell() - start;
 
         if (length == 0)
             return {};
@@ -180,10 +194,10 @@ public:
     template<typename TPredicate>
     StringView consume_until(TPredicate pred)
     {
-        size_t start = m_index;
+        size_t start = tell();
         while (!is_eof() && !pred(peek()))
-            ++m_index;
-        size_t length = m_index - start;
+            advance(1);
+        size_t length = tell() - start;
 
         if (length == 0)
             return {};
@@ -195,7 +209,7 @@ public:
     constexpr void ignore_while(TPredicate pred)
     {
         while (!is_eof() && pred(peek()))
-            ++m_index;
+            advance(1);
     }
 
     // Ignore characters until `pred` return true
@@ -204,12 +218,48 @@ public:
     constexpr void ignore_until(TPredicate pred)
     {
         while (!is_eof() && !pred(peek()))
-            ++m_index;
+            advance(1);
+    }
+
+private:
+    // Go forward or backwards in the source string while keeping track of the
+    // line and column number
+    constexpr void advance(size_t count, bool forward = true)
+    {
+        if (count == 0)
+            return;
+
+        if (forward)
+            VERIFY(count <= tell_remaining());
+        else
+            VERIFY(count <= m_index);
+
+        while (count--) {
+            if (forward) {
+                if (m_input[m_index++] == '\n') {
+                    m_position.line++;
+                    m_position.column = 1;
+                } else {
+                    m_position.column++;
+                }
+            } else {
+                if (m_input[--m_index] == '\n') {
+                    m_position.line--;
+                    m_position.column = 1;
+                    // Iterate backwards to the beginning of the line
+                    for (size_t i = 0; i < m_index && m_input[m_index - i - 1] != '\n'; ++i)
+                        m_position.column++;
+                } else {
+                    m_position.column--;
+                }
+            }
+        }
     }
 
 protected:
     StringView m_input;
     size_t m_index { 0 };
+    Position m_position;
 };
 
 constexpr auto is_any_of(const StringView& values)

@@ -33,6 +33,21 @@ TEST_CASE(should_constexpr_tell_remaining)
     static_assert(sut.tell_remaining() == 6);
 }
 
+TEST_CASE(should_tell_position)
+{
+    GenericLexer sut(StringView { "abc\ndef" });
+    EXPECT_EQ(sut.position().line, 1u);
+    EXPECT_EQ(sut.position().column, 1u);
+
+    EXPECT_EQ(sut.consume(3), "abc");
+    EXPECT_EQ(sut.position().line, 1u);
+    EXPECT_EQ(sut.position().column, 4u);
+
+    EXPECT_EQ(sut.consume(2), "\nd");
+    EXPECT_EQ(sut.position().line, 2u);
+    EXPECT_EQ(sut.position().column, 2u);
+}
+
 TEST_CASE(should_constexpr_peek)
 {
     constexpr GenericLexer sut(StringView { "abcdef" });
@@ -155,4 +170,14 @@ TEST_CASE(should_constexpr_ignore_until_pred)
         return sut;
     }();
     static_assert(sut.peek() == 'c');
+}
+
+TEST_CASE(should_constexpr_ignore_line)
+{
+    constexpr auto sut = [] {
+        GenericLexer sut(StringView { "abc\ndef" });
+        sut.ignore_line();
+        return sut;
+    }();
+    static_assert(sut.next_is('d'));
 }

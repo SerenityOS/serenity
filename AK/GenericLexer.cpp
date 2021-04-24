@@ -17,9 +17,9 @@ StringView GenericLexer::consume(size_t count)
     if (count == 0)
         return {};
 
-    size_t start = m_index;
-    size_t length = min(count, m_input.length() - m_index);
-    m_index += length;
+    size_t start = tell();
+    size_t length = min(count, tell_remaining());
+    advance(length);
 
     return m_input.substring_view(start, length);
 }
@@ -30,18 +30,18 @@ StringView GenericLexer::consume_all()
     if (is_eof())
         return {};
 
-    auto rest = m_input.substring_view(m_index, m_input.length() - m_index);
-    m_index = m_input.length();
+    auto rest = m_input.substring_view(m_index, tell_remaining());
+    advance(tell_remaining());
     return rest;
 }
 
 // Consume until a new line is found
 StringView GenericLexer::consume_line()
 {
-    size_t start = m_index;
+    size_t start = tell();
     while (!is_eof() && peek() != '\r' && peek() != '\n')
-        m_index++;
-    size_t length = m_index - start;
+        advance(1);
+    size_t length = tell() - start;
 
     consume_specific('\r');
     consume_specific('\n');
@@ -55,10 +55,10 @@ StringView GenericLexer::consume_line()
 // The `stop` character is ignored, as it is user-defined
 StringView GenericLexer::consume_until(char stop)
 {
-    size_t start = m_index;
+    size_t start = tell();
     while (!is_eof() && peek() != stop)
-        m_index++;
-    size_t length = m_index - start;
+        advance(1);
+    size_t length = tell() - start;
 
     ignore();
 
@@ -71,10 +71,10 @@ StringView GenericLexer::consume_until(char stop)
 // The `stop` string is ignored, as it is user-defined
 StringView GenericLexer::consume_until(const char* stop)
 {
-    size_t start = m_index;
+    size_t start = tell();
     while (!is_eof() && !next_is(stop))
-        m_index++;
-    size_t length = m_index - start;
+        advance(1);
+    size_t length = tell() - start;
 
     ignore(__builtin_strlen(stop));
 
@@ -94,27 +94,30 @@ StringView GenericLexer::consume_quoted_string(char escape_char)
     if (!next_is(is_quote))
         return {};
 
+    auto start_position = position();
     char quote_char = consume();
-    size_t start = m_index;
+    size_t start_index = tell();
+
     while (!is_eof()) {
         if (next_is(escape_char))
-            m_index++;
+            advance(1);
         else if (next_is(quote_char))
             break;
-        m_index++;
+        advance(1);
     }
-    size_t length = m_index - start;
+    size_t length = tell() - start_index;
 
     if (peek() != quote_char) {
         // Restore the index in case the string is unterminated
-        m_index = start - 1;
+        m_index = start_index - 1;
+        m_position = start_position;
         return {};
     }
 
     // Ignore closing quote
     ignore();
 
-    return m_input.substring_view(start, length);
+    return m_input.substring_view(start_index, length);
 }
 
 String GenericLexer::consume_and_unescape_string(char escape_char)
