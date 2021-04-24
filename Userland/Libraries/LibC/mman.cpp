@@ -73,9 +73,9 @@ int madvise(void* address, size_t size, int advice)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-void* allocate_tls(size_t size)
+void* allocate_tls(const char* initial_data, size_t size)
 {
-    ptrdiff_t rc = syscall(SC_allocate_tls, size);
+    ptrdiff_t rc = syscall(SC_allocate_tls, initial_data, size);
     if (rc < 0 && -rc < EMAXERRNO) {
         errno = -rc;
         return MAP_FAILED;
