@@ -161,7 +161,7 @@ AnonymousVMObject::~AnonymousVMObject()
 
 int AnonymousVMObject::purge()
 {
-    LOCKER(m_paging_lock);
+    Locker locker(m_paging_lock);
     return purge_impl();
 }
 

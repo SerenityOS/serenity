@@ -127,8 +127,6 @@ private:
     bool m_locked { true };
 };
 
-#define LOCKER(...) Locker locker(__VA_ARGS__)
-
 template<typename T>
 class Lockable {
 public:
@@ -142,7 +140,7 @@ public:
 
     [[nodiscard]] T lock_and_copy()
     {
-        LOCKER(m_lock);
+        Locker locker(m_lock);
         return m_resource;
     }
 

@@ -53,13 +53,13 @@ IPv4Socket::IPv4Socket(int type, int protocol)
     if (m_buffer_mode == BufferMode::Bytes) {
         m_scratch_buffer = KBuffer::create_with_size(65536);
     }
-    LOCKER(all_sockets().lock());
+    Locker locker(all_sockets().lock());
     all_sockets().resource().set(this);
 }
 
 IPv4Socket::~IPv4Socket()
 {
-    LOCKER(all_sockets().lock());
+    Locker locker(all_sockets().lock());
     all_sockets().resource().remove(this);
 }
 
@@ -108,7 +108,7 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
 
 KResult IPv4Socket::listen(size_t backlog)
 {
-    LOCKER(lock());
+    Locker locker(lock());
     int rc = allocate_local_port_if_needed();
     if (rc < 0)
         return EADDRINUSE;
@@ -172,7 +172,7 @@ int IPv4Socket::allocate_local_port_if_needed()
 
 KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer& data, size_t data_length, [[maybe_unused]] int flags, Userspace<const sockaddr*> addr, socklen_t addr_length)
 {
-    LOCKER(lock());
+    Locker locker(lock());
 
     if (addr && addr_length != sizeof(sockaddr_in))
         return EINVAL;
@@ -357,7 +357,7 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKerne
 
 bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet, const Time& packet_timestamp)
 {
-    LOCKER(lock());
+    Locker locker(lock());
 
     if (is_shut_down_for_reading())
         return false;
