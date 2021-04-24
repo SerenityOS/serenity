@@ -12,7 +12,7 @@
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/Console.h>
+#include <Kernel/ConsoleDevice.h>
 #include <Kernel/DMI.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
@@ -653,7 +653,7 @@ static bool procfs$self(InodeIdentifier, KBufferBuilder& builder)
 static bool procfs$dmesg(InodeIdentifier, KBufferBuilder& builder)
 {
     InterruptDisabler disabler;
-    for (char ch : Console::the().logbuffer())
+    for (char ch : ConsoleDevice::the().logbuffer())
         builder.append(ch);
     return true;
 }
