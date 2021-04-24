@@ -30,6 +30,11 @@ void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
     g_gl_context->gl_rotate(angle, x, y, z);
 }
 
+void glScalef(GLfloat x, GLfloat y, GLfloat z)
+{
+    g_gl_context->gl_scale(x, y, z);
+}
+
 void glTranslatef(GLfloat x, GLfloat y, GLfloat z)
 {
     g_gl_context->gl_translate(x, y, z);
