@@ -66,7 +66,7 @@ public:
     void load_stage_4();
 
     void set_tls_offset(size_t offset) { m_tls_offset = offset; };
-    size_t tls_size() const { return m_tls_size; }
+    size_t tls_size_of_current_object() const { return m_tls_size_of_current_object; }
     size_t tls_offset() const { return m_tls_offset; }
     const ELF::Image& image() const { return m_elf_image; }
 
@@ -151,7 +151,7 @@ private:
     VirtualAddress m_dynamic_section_address;
 
     size_t m_tls_offset { 0 };
-    size_t m_tls_size { 0 }; // TLS size of the current object
+    size_t m_tls_size_of_current_object { 0 };
 
     Vector<DynamicObject::Relocation> m_unresolved_relocations;
 
