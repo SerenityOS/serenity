@@ -259,12 +259,14 @@ public:
     }
 
     template<typename U = T>
-    void insert(size_t index, U&& value)
+    [[nodiscard]] bool try_insert(size_t index, U&& value)
     {
-        VERIFY(index <= size());
+        if (index > size())
+            return false;
         if (index == size())
-            return append(forward<U>(value));
-        grow_capacity(size() + 1);
+            return try_append(forward<U>(value));
+        if (!try_grow_capacity(size() + 1))
+            return false;
         ++m_size;
         if constexpr (Traits<T>::is_trivial()) {
             TypedTransfer<T>::move(slot(index + 1), slot(index), m_size - index - 1);
@@ -275,22 +277,40 @@ public:
             }
         }
         new (slot(index)) T(forward<U>(value));
+        return true;
+    }
+
+    template<typename U = T>
+    void insert(size_t index, U&& value)
+    {
+        auto did_allocate = try_insert<U>(index, forward<U>(value));
+        VERIFY(did_allocate);
+    }
+
+    template<typename C, typename U = T>
+    [[nodiscard]] bool try_insert_before_matching(U&& value, C callback, size_t first_index = 0, size_t* inserted_index = nullptr)
+    {
+        for (size_t i = first_index; i < size(); ++i) {
+            if (callback(at(i))) {
+                if (!try_insert(i, forward<U>(value)))
+                    return false;
+                if (inserted_index)
+                    *inserted_index = i;
+                return true;
+            }
+        }
+        if (!try_append(forward<U>(value)))
+            return false;
+        if (inserted_index)
+            *inserted_index = size() - 1;
+        return true;
     }
 
     template<typename C, typename U = T>
     void insert_before_matching(U&& value, C callback, size_t first_index = 0, size_t* inserted_index = nullptr)
     {
-        for (size_t i = first_index; i < size(); ++i) {
-            if (callback(at(i))) {
-                insert(i, forward<U>(value));
-                if (inserted_index)
-                    *inserted_index = i;
-                return;
-            }
-        }
-        append(forward<U>(value));
-        if (inserted_index)
-            *inserted_index = size() - 1;
+        auto did_allocate = try_insert_before_matching(forward<U>(value), callback, first_index, inserted_index);
+        VERIFY(did_allocate);
     }
 
     Vector& operator=(const Vector& other)
@@ -314,24 +334,40 @@ public:
         return *this;
     }
 
-    void append(Vector&& other)
+    [[nodiscard]] bool try_append(Vector&& other)
     {
         if (is_empty()) {
             *this = move(other);
-            return;
+            return true;
         }
         auto other_size = other.size();
         Vector tmp = move(other);
-        grow_capacity(size() + other_size);
+        if (!try_grow_capacity(size() + other_size))
+            return false;
         TypedTransfer<T>::move(data() + m_size, tmp.data(), other_size);
         m_size += other_size;
+        return true;
+    }
+
+    void append(Vector&& other)
+    {
+        auto did_allocate = try_append(move(other));
+        VERIFY(did_allocate);
+    }
+
+    [[nodiscard]] bool try_append(const Vector& other)
+    {
+        if (!try_grow_capacity(size() + other.size()))
+            return false;
+        TypedTransfer<T>::copy(data() + m_size, other.data(), other.size());
+        m_size += other.m_size;
+        return true;
     }
 
     void append(const Vector& other)
     {
-        grow_capacity(size() + other.size());
-        TypedTransfer<T>::copy(data() + m_size, other.data(), other.size());
-        m_size += other.m_size;
+        auto did_allocate = try_append(other);
+        VERIFY(did_allocate);
     }
 
     template<typename Callback>
@@ -389,43 +425,74 @@ public:
     }
 
     template<class... Args>
-    void empend(Args&&... args)
+    [[nodiscard]] bool try_empend(Args&&... args)
     {
-        grow_capacity(m_size + 1);
+        if (!try_grow_capacity(m_size + 1))
+            return false;
         new (slot(m_size)) T { forward<Args>(args)... };
         ++m_size;
+        return true;
+    }
+
+    template<class... Args>
+    void empend(Args&&... args)
+    {
+        auto did_allocate = try_empend(forward<Args>(args)...);
+        VERIFY(did_allocate);
+    }
+
+    [[nodiscard]] ALWAYS_INLINE bool try_append(T&& value)
+    {
+        if (!try_grow_capacity(size() + 1))
+            return false;
+        new (slot(m_size)) T(move(value));
+        ++m_size;
+        return true;
     }
 
     ALWAYS_INLINE void append(T&& value)
     {
-        grow_capacity(size() + 1);
-        new (slot(m_size)) T(move(value));
-        ++m_size;
+        auto did_allocate = try_append(move(value));
+        VERIFY(did_allocate);
+    }
+
+    [[nodiscard]] ALWAYS_INLINE bool try_append(const T& value)
+    {
+        return try_append(T(value));
     }
 
     ALWAYS_INLINE void append(const T& value)
     {
-        append(T(value));
+        auto did_allocate = try_append(T(value));
+        VERIFY(did_allocate);
+    }
+
+    template<typename U = T>
+    [[nodiscard]] bool try_prepend(U&& value)
+    {
+        return try_insert(0, forward<U>(value));
     }
 
     template<typename U = T>
     void prepend(U&& value)
     {
-        insert(0, forward<U>(value));
+        auto did_allocate = try_insert(0, forward<U>(value));
+        VERIFY(did_allocate);
     }
 
-    void prepend(Vector&& other)
+    [[nodiscard]] bool try_prepend(Vector&& other)
     {
         if (other.is_empty())
-            return;
+            return true;
 
         if (is_empty()) {
             *this = move(other);
-            return;
+            return true;
         }
 
         auto other_size = other.size();
-        grow_capacity(size() + other_size);
+        if (!try_grow_capacity(size() + other_size))
+            return false;
 
         for (size_t i = size() + other_size - 1; i >= other.size(); --i) {
             new (slot(i)) T(move(at(i - other_size)));
@@ -435,40 +502,71 @@ public:
         Vector tmp = move(other);
         TypedTransfer<T>::move(slot(0), tmp.data(), tmp.size());
         m_size += other_size;
+        return true;
+    }
+
+    void prepend(Vector&& other)
+    {
+        auto did_allocate = try_prepend(move(other));
+        VERIFY(did_allocate);
+    }
+
+    [[nodiscard]] bool try_prepend(const T* values, size_t count)
+    {
+        if (!count)
+            return true;
+        if (!try_grow_capacity(size() + count))
+            return false;
+        TypedTransfer<T>::move(slot(count), slot(0), m_size);
+        TypedTransfer<T>::copy(slot(0), values, count);
+        m_size += count;
+        return true;
     }
 
     void prepend(const T* values, size_t count)
     {
+        auto did_allocate = try_prepend(values, count);
+        VERIFY(did_allocate);
+    }
+
+    [[nodiscard]] bool try_append(const T* values, size_t count)
+    {
         if (!count)
-            return;
-        grow_capacity(size() + count);
-        TypedTransfer<T>::move(slot(count), slot(0), m_size);
-        TypedTransfer<T>::copy(slot(0), values, count);
+            return true;
+        if (!try_grow_capacity(size() + count))
+            return false;
+        TypedTransfer<T>::copy(slot(m_size), values, count);
         m_size += count;
+        return true;
     }
 
     void append(const T* values, size_t count)
     {
-        if (!count)
-            return;
-        grow_capacity(size() + count);
-        TypedTransfer<T>::copy(slot(m_size), values, count);
-        m_size += count;
+        auto did_allocate = try_append(values, count);
+        VERIFY(did_allocate);
+    }
+
+    [[nodiscard]] bool try_grow_capacity(size_t needed_capacity)
+    {
+        if (m_capacity >= needed_capacity)
+            return true;
+        return try_ensure_capacity(padded_capacity(needed_capacity));
     }
 
     void grow_capacity(size_t needed_capacity)
     {
-        if (m_capacity >= needed_capacity)
-            return;
-        ensure_capacity(padded_capacity(needed_capacity));
+        auto did_allocate = try_grow_capacity(needed_capacity);
+        VERIFY(did_allocate);
     }
 
-    void ensure_capacity(size_t needed_capacity)
+    [[nodiscard]] bool try_ensure_capacity(size_t needed_capacity)
     {
         if (m_capacity >= needed_capacity)
-            return;
+            return true;
         size_t new_capacity = needed_capacity;
         auto* new_buffer = (T*)kmalloc(new_capacity * sizeof(T));
+        if (new_buffer == nullptr)
+            return false;
 
         if constexpr (Traits<T>::is_trivial()) {
             TypedTransfer<T>::copy(new_buffer, data(), m_size);
@@ -482,6 +580,13 @@ public:
             kfree(m_outline_buffer);
         m_outline_buffer = new_buffer;
         m_capacity = new_capacity;
+        return true;
+    }
+
+    void ensure_capacity(size_t needed_capacity)
+    {
+        auto did_allocate = try_ensure_capacity(needed_capacity);
+        VERIFY(did_allocate);
     }
 
     void shrink(size_t new_size, bool keep_capacity = false)
@@ -503,20 +608,37 @@ public:
         m_size = new_size;
     }
 
-    void resize(size_t new_size, bool keep_capacity = false)
+    [[nodiscard]] bool try_resize(size_t new_size, bool keep_capacity = false)
     {
-        if (new_size <= size())
-            return shrink(new_size, keep_capacity);
+        if (new_size <= size()) {
+            shrink(new_size, keep_capacity);
+            return true;
+        }
 
-        ensure_capacity(new_size);
+        if (!try_ensure_capacity(new_size))
+            return false;
+
         for (size_t i = size(); i < new_size; ++i)
             new (slot(i)) T;
         m_size = new_size;
+        return true;
+    }
+
+    void resize(size_t new_size, bool keep_capacity = false)
+    {
+        auto did_allocate = try_resize(new_size, keep_capacity);
+        VERIFY(did_allocate);
+    }
+
+    [[nodiscard]] bool try_resize_and_keep_capacity(size_t new_size)
+    {
+        return try_resize(new_size, true);
     }
 
     void resize_and_keep_capacity(size_t new_size)
     {
-        return resize(new_size, true);
+        auto did_allocate = try_resize_and_keep_capacity(new_size);
+        VERIFY(did_allocate);
     }
 
     using ConstIterator = SimpleIterator<const Vector, const T>;
