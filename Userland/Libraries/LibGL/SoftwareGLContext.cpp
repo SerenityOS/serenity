@@ -494,6 +494,23 @@ void SoftwareGLContext::gl_load_identity()
     m_error = GL_NO_ERROR;
 }
 
+void SoftwareGLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    if (m_current_matrix_mode == GL_PROJECTION)
+        m_projection_matrix = matrix;
+    else if (m_current_matrix_mode == GL_MODELVIEW)
+        m_model_view_matrix = matrix;
+    else
+        VERIFY_NOT_REACHED();
+
+    m_error = GL_NO_ERROR;
+}
+
 void SoftwareGLContext::gl_matrix_mode(GLenum mode)
 {
     if (m_in_draw_state) {

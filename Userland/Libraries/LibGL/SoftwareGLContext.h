@@ -25,6 +25,7 @@ public:
     virtual GLenum gl_get_error() override;
     virtual GLubyte* gl_get_string(GLenum name) override;
     virtual void gl_load_identity() override;
+    virtual void gl_load_matrix(const FloatMatrix4x4& matrix) override;
     virtual void gl_matrix_mode(GLenum mode) override;
     virtual void gl_push_matrix() override;
     virtual void gl_pop_matrix() override;
