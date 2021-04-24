@@ -78,6 +78,7 @@ public:
     bool is_dynamic() const { return m_elf_image.is_dynamic(); }
 
     static Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&);
+    void copy_initial_tls_data_into(ByteBuffer& buffer, size_t total_tls_size) const;
 
 private:
     DynamicLoader(int fd, String filename, void* file_data, size_t file_size);

@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
@@ -25,6 +26,7 @@
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Hashes.h>
 #include <fcntl.h>
+#include <string.h>
 #include <sys/types.h>
 #include <syscall.h>
 
@@ -154,16 +156,26 @@ static Result<void, DlErrorMessage> map_dependencies(const String& name)
 
 static void allocate_tls()
 {
-    size_t total_tls_size = 0;
+    s_total_tls_size = 0;
     for (const auto& data : s_loaders) {
         dbgln_if(DYNAMIC_LOAD_DEBUG, "{}: TLS Size: {}", data.key, data.value->tls_size_of_current_object());
-        total_tls_size += data.value->tls_size_of_current_object();
+        s_total_tls_size += data.value->tls_size_of_current_object();
     }
-    if (total_tls_size) {
-        [[maybe_unused]] void* tls_address = ::allocate_tls(total_tls_size);
-        dbgln_if(DYNAMIC_LOAD_DEBUG, "from userspace, tls_address: {:p}", tls_address);
+
+    if (!s_total_tls_size)
+        return;
+
+    auto page_aligned_size = align_up_to(s_total_tls_size, PAGE_SIZE);
+    ByteBuffer initial_tls_data = ByteBuffer::create_zeroed(page_aligned_size);
+
+    // Initialize TLS data
+    for (const auto& entry : s_loaders) {
+        entry.value->copy_initial_tls_data_into(initial_tls_data, s_total_tls_size);
     }
-    s_total_tls_size = total_tls_size;
+
+    void* master_tls = ::allocate_tls((char*)initial_tls_data.data(), initial_tls_data.size());
+    VERIFY(master_tls != (void*)-1);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "from userspace, master_tls: {:p}", master_tls);
 }
 
 static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
