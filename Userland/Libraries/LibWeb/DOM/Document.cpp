@@ -563,6 +563,31 @@ JS::Interpreter& Document::interpreter()
         vm.on_call_stack_emptied = [this] {
             auto& vm = m_interpreter->vm();
             vm.run_queued_promise_jobs();
+            // Note: This is not an exception check for the promise jobs, they will just leave any
+            // exception that already exists intact and never throw a new one (without cleaning it
+            // up, that is). Taking care of any previous unhandled exception just happens to be the
+            // very last thing we want to do, even after running promise jobs.
+            if (auto* exception = vm.exception()) {
+                auto value = exception->value();
+                if (value.is_object()) {
+                    auto& object = value.as_object();
+                    auto name = object.get_without_side_effects(vm.names.name).value_or(JS::js_undefined());
+                    auto message = object.get_without_side_effects(vm.names.message).value_or(JS::js_undefined());
+                    if (name.is_accessor() || name.is_native_property() || message.is_accessor() || message.is_native_property()) {
+                        // The result is not going to be useful, let's just print the value. This affects DOMExceptions, for example.
+                        dbgln("Unhandled JavaScript exception: {}", value);
+                    } else {
+                        dbgln("Unhandled JavaScript exception: [{}] {}", name, message);
+                    }
+                } else {
+                    dbgln("Unhandled JavaScript exception: {}", value);
+                }
+                for (auto& traceback_frame : exception->traceback()) {
+                    auto& function_name = traceback_frame.function_name;
+                    auto& source_range = traceback_frame.source_range;
+                    dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
+                }
+            }
         };
         m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(vm, *m_window);
     }
