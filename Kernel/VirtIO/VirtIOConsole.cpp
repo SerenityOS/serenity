@@ -43,7 +43,7 @@ VirtIOConsole::VirtIOConsole(PCI::Address address)
             finish_init();
             m_receive_region = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIOConsole Receive", Region::Access::Read | Region::Access::Write);
             if (m_receive_region) {
-                supply_buffer_and_notify(RECEIVEQ, ScatterGatherList::create_from_physical(m_receive_region->physical_page(0)->paddr(), m_receive_region->size()), BufferType::DeviceWritable, m_receive_region->vaddr().as_ptr());
+                supply_buffer_and_notify(RECEIVEQ, ScatterGatherRefList::create_from_physical(m_receive_region->physical_page(0)->paddr(), m_receive_region->size()), BufferType::DeviceWritable, m_receive_region->vaddr().as_ptr());
             }
             m_transmit_region = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIOConsole Transmit", Region::Access::Read | Region::Access::Write);
         }
@@ -98,7 +98,7 @@ KResultOr<size_t> VirtIOConsole::write(FileDescription&, u64, const UserOrKernel
     if (!size)
         return 0;
 
-    auto scatter_list = ScatterGatherList::create_from_buffer(static_cast<const u8*>(data.user_or_kernel_ptr()), size);
+    auto scatter_list = ScatterGatherRefList::create_from_buffer(static_cast<const u8*>(data.user_or_kernel_ptr()), size);
     supply_buffer_and_notify(TRANSMITQ, scatter_list, BufferType::DeviceReadable, const_cast<void*>(data.user_or_kernel_ptr()));
 
     return size;
