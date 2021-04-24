@@ -272,31 +272,6 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
 
 void VM::throw_exception(Exception& exception)
 {
-    if (should_log_exceptions()) {
-        auto value = exception.value();
-        if (value.is_object()) {
-            auto& object = value.as_object();
-            auto name = object.get_without_side_effects(names.name).value_or(js_undefined());
-            auto message = object.get_without_side_effects(names.message).value_or(js_undefined());
-            if (name.is_accessor() || name.is_native_property() || message.is_accessor() || message.is_native_property()) {
-                // The result is not going to be useful, let's just print the value. This affects DOMExceptions, for example.
-                dbgln("Throwing JavaScript exception: {}", value);
-            } else {
-                dbgln("Throwing JavaScript exception: [{}] {}", name, message);
-            }
-        } else {
-            dbgln("Throwing JavaScript exception: {}", value);
-        }
-
-        for (ssize_t i = m_call_stack.size() - 1; i >= 0; --i) {
-            const auto& source_range = m_call_stack[i]->current_node->source_range();
-            auto function_name = m_call_stack[i]->function_name;
-            if (function_name.is_empty())
-                function_name = "<anonymous>";
-            dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
-        }
-    }
-
     set_exception(exception);
     unwind(ScopeType::Try);
 }

@@ -54,9 +54,6 @@ public:
     static NonnullRefPtr<VM> create();
     ~VM();
 
-    bool should_log_exceptions() const { return m_should_log_exceptions; }
-    void set_should_log_exceptions(bool b) { m_should_log_exceptions = b; }
-
     Heap& heap() { return m_heap; }
     const Heap& heap() const { return m_heap; }
 
@@ -271,7 +268,6 @@ private:
     Shape* m_scope_object_shape { nullptr };
 
     bool m_underscore_is_last_value { false };
-    bool m_should_log_exceptions { false };
 };
 
 template<>
