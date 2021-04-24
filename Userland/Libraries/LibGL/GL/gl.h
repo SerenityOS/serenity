@@ -83,6 +83,7 @@ GLAPI void glMatrixMode(GLenum mode);
 GLAPI void glPushMatrix();
 GLAPI void glPopMatrix();
 GLAPI void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
+GLAPI void glScalef(GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glTranslatef(GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glVertex3f(GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
