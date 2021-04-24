@@ -196,7 +196,7 @@ protected:
         return is_feature_set(m_accepted_features, feature);
     }
 
-    void supply_buffer_and_notify(u16 queue_index, const ScatterGatherList&, BufferType, void* token);
+    void supply_buffer_and_notify(u16 queue_index, const ScatterGatherRefList&, BufferType, void* token);
 
     virtual bool handle_device_config_change() = 0;
     virtual void handle_queue_update(u16 queue_index) = 0;

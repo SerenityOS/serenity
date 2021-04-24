@@ -48,7 +48,7 @@ void VirtIOQueue::disable_interrupts()
     m_driver->flags = 1;
 }
 
-bool VirtIOQueue::supply_buffer(Badge<VirtIODevice>, const ScatterGatherList& scatter_list, BufferType buffer_type, void* token)
+bool VirtIOQueue::supply_buffer(Badge<VirtIODevice>, const ScatterGatherRefList& scatter_list, BufferType buffer_type, void* token)
 {
     VERIFY(scatter_list.length() && scatter_list.length() <= m_free_buffers);
     m_free_buffers -= scatter_list.length();
