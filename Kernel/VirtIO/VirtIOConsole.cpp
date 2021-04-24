@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/VM/ScatterGatherList.h>
 #include <Kernel/VirtIO/VirtIOConsole.h>
 
 namespace Kernel {
@@ -41,11 +40,8 @@ VirtIOConsole::VirtIOConsole(PCI::Address address)
         }
         if (success) {
             finish_init();
-            m_receive_region = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIOConsole Receive", Region::Access::Read | Region::Access::Write);
-            if (m_receive_region) {
-                supply_buffer_and_notify(RECEIVEQ, ScatterGatherRefList::create_from_physical(m_receive_region->physical_page(0)->paddr(), m_receive_region->size()), BufferType::DeviceWritable, m_receive_region->vaddr().as_ptr());
-            }
-            m_transmit_region = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIOConsole Transmit", Region::Access::Read | Region::Access::Write);
+            m_receive_buffer = make<RingBuffer>("VirtIOConsole Receive", RINGBUFFER_SIZE);
+            m_transmit_buffer = make<RingBuffer>("VirtIOConsole Transmit", RINGBUFFER_SIZE);
         }
     }
 }
@@ -62,14 +58,31 @@ bool VirtIOConsole::handle_device_config_change()
 
 void VirtIOConsole::handle_queue_update(u16 queue_index)
 {
+    dbgln_if(VIRTIO_DEBUG, "VirtIOConsole: Handle queue update");
     VERIFY(queue_index <= TRANSMITQ);
     switch (queue_index) {
-    case RECEIVEQ:
+    case RECEIVEQ: {
+        ScopedSpinLock lock(get_queue(RECEIVEQ).lock());
         get_queue(RECEIVEQ).discard_used_buffers(); // TODO: do something with incoming data (users writing into qemu console) instead of just clearing
         break;
-    case TRANSMITQ:
-        get_queue(TRANSMITQ).discard_used_buffers(); // clear outgoing buffers that the device finished with
+    }
+    case TRANSMITQ: {
+        ScopedSpinLock ringbuffer_lock(m_transmit_buffer->lock());
+        auto& queue = get_queue(TRANSMITQ);
+        ScopedSpinLock queue_lock(queue.lock());
+        size_t used;
+        VirtIOQueueChain popped_chain = queue.pop_used_buffer_chain(used);
+        do {
+            popped_chain.for_each([this](PhysicalAddress address, size_t length) {
+                m_transmit_buffer->reclaim_space(address, length);
+            });
+            popped_chain.release_buffer_slots_to_queue();
+            popped_chain = queue.pop_used_buffer_chain(used);
+        } while (!popped_chain.is_empty());
+        // Unblock any IO tasks that were blocked because can_write() returned false
+        evaluate_block_conditions();
         break;
+    }
     default:
         VERIFY_NOT_REACHED();
     }
@@ -77,31 +90,50 @@ void VirtIOConsole::handle_queue_update(u16 queue_index)
 
 bool VirtIOConsole::can_read(const FileDescription&, size_t) const
 {
-    return false;
+    return true;
 }
 
-KResultOr<size_t> VirtIOConsole::read(FileDescription&, u64, [[maybe_unused]] UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> VirtIOConsole::read(FileDescription&, u64, [[maybe_unused]] UserOrKernelBuffer& data, size_t)
 {
-    if (!size)
-        return 0;
-
-    return 1;
+    return ENOTSUP;
 }
 
 bool VirtIOConsole::can_write(const FileDescription&, size_t) const
 {
-    return get_queue(TRANSMITQ).can_write();
+    return get_queue(TRANSMITQ).has_free_slots() && m_transmit_buffer->has_space();
 }
 
-KResultOr<size_t> VirtIOConsole::write(FileDescription&, u64, const UserOrKernelBuffer& data, size_t size)
+KResultOr<size_t> VirtIOConsole::write(FileDescription& desc, u64, const UserOrKernelBuffer& data, size_t size)
 {
     if (!size)
         return 0;
 
-    auto scatter_list = ScatterGatherRefList::create_from_buffer(static_cast<const u8*>(data.user_or_kernel_ptr()), size);
-    supply_buffer_and_notify(TRANSMITQ, scatter_list, BufferType::DeviceReadable, const_cast<void*>(data.user_or_kernel_ptr()));
+    if (!can_write(desc, size))
+        return EAGAIN;
 
-    return size;
+    ScopedSpinLock ringbuffer_lock(m_transmit_buffer->lock());
+    auto& queue = get_queue(TRANSMITQ);
+    ScopedSpinLock queue_lock(queue.lock());
+    VirtIOQueueChain chain(queue);
+
+    size_t total_bytes_copied = 0;
+    do {
+        PhysicalAddress start_of_chunk;
+        size_t length_of_chunk;
+
+        if (!m_transmit_buffer->copy_data_in(data, total_bytes_copied, size - total_bytes_copied, start_of_chunk, length_of_chunk)) {
+            chain.release_buffer_slots_to_queue();
+            return EINVAL;
+        }
+
+        bool did_add_buffer = chain.add_buffer_to_chain(start_of_chunk, length_of_chunk, BufferType::DeviceReadable);
+        VERIFY(did_add_buffer);
+        total_bytes_copied += length_of_chunk;
+    } while (total_bytes_copied < size && can_write(desc, size - total_bytes_copied));
+
+    supply_chain_and_notify(TRANSMITQ, chain);
+
+    return total_bytes_copied;
 }
 
 }

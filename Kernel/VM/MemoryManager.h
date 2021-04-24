@@ -104,7 +104,6 @@ class MemoryManager {
     friend class PhysicalRegion;
     friend class AnonymousVMObject;
     friend class Region;
-    friend class ScatterGatherRefList;
     friend class VMObject;
 
 public:
