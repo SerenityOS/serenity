@@ -55,6 +55,7 @@ private:
     NonnullRefPtr<CreateTable> parse_create_table_statement();
     NonnullRefPtr<DropTable> parse_drop_table_statement();
     NonnullRefPtr<Delete> parse_insert_statement(RefPtr<CommonTableExpressionList>);
+    NonnullRefPtr<Delete> parse_update_statement(RefPtr<CommonTableExpressionList>);
     NonnullRefPtr<Delete> parse_delete_statement(RefPtr<CommonTableExpressionList>);
     NonnullRefPtr<Select> parse_select_statement(RefPtr<CommonTableExpressionList>);
     NonnullRefPtr<CommonTableExpressionList> parse_common_table_expression_list();
@@ -87,6 +88,7 @@ private:
     NonnullRefPtr<TableOrSubquery> parse_table_or_subquery();
     NonnullRefPtr<OrderingTerm> parse_ordering_term();
     void parse_schema_and_table_name(String& schema_name, String& table_name);
+    ConflictResolution parse_conflict_resolution();
 
     template<typename ParseCallback>
     void parse_comma_separated_list(bool surrounded_by_parentheses, ParseCallback&& parse_callback)

@@ -38,12 +38,14 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_drop_table_statement();
     case TokenType::Insert:
         return parse_insert_statement({});
+    case TokenType::Update:
+        return parse_update_statement({});
     case TokenType::Delete:
         return parse_delete_statement({});
     case TokenType::Select:
         return parse_select_statement({});
     default:
-        expected("CREATE, DROP, INSERT, DELETE, or SELECT");
+        expected("CREATE, DROP, INSERT, UPDATE, DELETE, or SELECT");
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -53,12 +55,14 @@ NonnullRefPtr<Statement> Parser::parse_statement_with_expression_list(RefPtr<Com
     switch (m_parser_state.m_token.type()) {
     case TokenType::Insert:
         return parse_insert_statement(move(common_table_expression_list));
+    case TokenType::Update:
+        return parse_update_statement(move(common_table_expression_list));
     case TokenType::Delete:
         return parse_delete_statement(move(common_table_expression_list));
     case TokenType::Select:
         return parse_select_statement(move(common_table_expression_list));
     default:
-        expected("INSERT, DELETE or SELECT");
+        expected("INSERT, UPDATE, DELETE or SELECT");
         return create_ast_node<ErrorStatement>();
     }
 }
@@ -121,24 +125,7 @@ NonnullRefPtr<Delete> Parser::parse_insert_statement(RefPtr<CommonTableExpressio
 {
     // https://sqlite.org/lang_insert.html
     consume(TokenType::Insert);
-
-    auto conflict_resolution = ConflictResolution::Abort;
-    if (consume_if(TokenType::Or)) {
-        // https://sqlite.org/lang_conflict.html
-        if (consume_if(TokenType::Abort))
-            conflict_resolution = ConflictResolution::Abort;
-        else if (consume_if(TokenType::Fail))
-            conflict_resolution = ConflictResolution::Fail;
-        else if (consume_if(TokenType::Ignore))
-            conflict_resolution = ConflictResolution::Ignore;
-        else if (consume_if(TokenType::Replace))
-            conflict_resolution = ConflictResolution::Replace;
-        else if (consume_if(TokenType::Rollback))
-            conflict_resolution = ConflictResolution::Rollback;
-        else
-            expected("ABORT, FAIL, IGNORE, REPLACE, or ROLLBACK");
-    }
-
+    auto conflict_resolution = parse_conflict_resolution();
     consume(TokenType::Into);
 
     String schema_name;
@@ -182,6 +169,44 @@ NonnullRefPtr<Delete> Parser::parse_insert_statement(RefPtr<CommonTableExpressio
         return create_ast_node<Insert>(move(common_table_expression_list), conflict_resolution, move(schema_name), move(table_name), move(alias), move(column_names), move(select_statement));
 
     return create_ast_node<Insert>(move(common_table_expression_list), conflict_resolution, move(schema_name), move(table_name), move(alias), move(column_names));
+}
+
+NonnullRefPtr<Delete> Parser::parse_update_statement(RefPtr<CommonTableExpressionList> common_table_expression_list)
+{
+    // https://sqlite.org/lang_update.html
+    consume(TokenType::Update);
+    auto conflict_resolution = parse_conflict_resolution();
+    auto qualified_table_name = parse_qualified_table_name();
+    consume(TokenType::Set);
+
+    Vector<Update::UpdateColumns> update_columns;
+    parse_comma_separated_list(false, [&]() {
+        Vector<String> column_names;
+        if (match(TokenType::ParenOpen)) {
+            parse_comma_separated_list(true, [&]() { column_names.append(consume(TokenType::Identifier).value()); });
+        } else {
+            column_names.append(consume(TokenType::Identifier).value());
+        }
+
+        consume(TokenType::Equals);
+        update_columns.append({ move(column_names), parse_expression() });
+    });
+
+    NonnullRefPtrVector<TableOrSubquery> table_or_subquery_list;
+    if (consume_if(TokenType::From)) {
+        // FIXME: Parse join-clause.
+        parse_comma_separated_list(false, [&]() { table_or_subquery_list.append(parse_table_or_subquery()); });
+    }
+
+    RefPtr<Expression> where_clause;
+    if (consume_if(TokenType::Where))
+        where_clause = parse_expression();
+
+    RefPtr<ReturningClause> returning_clause;
+    if (match(TokenType::Returning))
+        returning_clause = parse_returning_clause();
+
+    return create_ast_node<Update>(move(common_table_expression_list), conflict_resolution, move(qualified_table_name), move(update_columns), move(table_or_subquery_list), move(where_clause), move(returning_clause));
 }
 
 NonnullRefPtr<Delete> Parser::parse_delete_statement(RefPtr<CommonTableExpressionList> common_table_expression_list)
@@ -930,6 +955,27 @@ void Parser::parse_schema_and_table_name(String& schema_name, String& table_name
     } else {
         table_name = move(schema_or_table_name);
     }
+}
+
+ConflictResolution Parser::parse_conflict_resolution()
+{
+    // https://sqlite.org/lang_conflict.html
+    if (consume_if(TokenType::Or)) {
+        if (consume_if(TokenType::Abort))
+            return ConflictResolution::Abort;
+        if (consume_if(TokenType::Fail))
+            return ConflictResolution::Fail;
+        if (consume_if(TokenType::Ignore))
+            return ConflictResolution::Ignore;
+        if (consume_if(TokenType::Replace))
+            return ConflictResolution::Replace;
+        if (consume_if(TokenType::Rollback))
+            return ConflictResolution::Rollback;
+
+        expected("ABORT, FAIL, IGNORE, REPLACE, or ROLLBACK");
+    }
+
+    return ConflictResolution::Abort;
 }
 
 Token Parser::consume()

@@ -807,6 +807,42 @@ private:
     RefPtr<Select> m_select_statement;
 };
 
+class Update : public Statement {
+public:
+    struct UpdateColumns {
+        Vector<String> column_names;
+        NonnullRefPtr<Expression> expression;
+    };
+
+    Update(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, NonnullRefPtr<QualifiedTableName> qualified_table_name, Vector<UpdateColumns> update_columns, NonnullRefPtrVector<TableOrSubquery> table_or_subquery_list, RefPtr<Expression> where_clause, RefPtr<ReturningClause> returning_clause)
+        : m_common_table_expression_list(move(common_table_expression_list))
+        , m_conflict_resolution(conflict_resolution)
+        , m_qualified_table_name(move(qualified_table_name))
+        , m_update_columns(move(update_columns))
+        , m_table_or_subquery_list(move(table_or_subquery_list))
+        , m_where_clause(move(where_clause))
+        , m_returning_clause(move(returning_clause))
+    {
+    }
+
+    const RefPtr<CommonTableExpressionList>& common_table_expression_list() const { return m_common_table_expression_list; }
+    ConflictResolution conflict_resolution() const { return m_conflict_resolution; }
+    const NonnullRefPtr<QualifiedTableName>& qualified_table_name() const { return m_qualified_table_name; }
+    const Vector<UpdateColumns>& update_columns() const { return m_update_columns; }
+    const NonnullRefPtrVector<TableOrSubquery>& table_or_subquery_list() const { return m_table_or_subquery_list; }
+    const RefPtr<Expression>& where_clause() const { return m_where_clause; }
+    const RefPtr<ReturningClause>& returning_clause() const { return m_returning_clause; }
+
+private:
+    RefPtr<CommonTableExpressionList> m_common_table_expression_list;
+    ConflictResolution m_conflict_resolution;
+    NonnullRefPtr<QualifiedTableName> m_qualified_table_name;
+    Vector<UpdateColumns> m_update_columns;
+    NonnullRefPtrVector<TableOrSubquery> m_table_or_subquery_list;
+    RefPtr<Expression> m_where_clause;
+    RefPtr<ReturningClause> m_returning_clause;
+};
+
 class Delete : public Statement {
 public:
     Delete(RefPtr<CommonTableExpressionList> common_table_expression_list, NonnullRefPtr<QualifiedTableName> qualified_table_name, RefPtr<Expression> where_clause, RefPtr<ReturningClause> returning_clause)
