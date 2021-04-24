@@ -389,7 +389,7 @@ public:
     KResultOr<int> sys$recvfd(int sockfd, int options);
     KResultOr<long> sys$sysconf(int name);
     KResultOr<int> sys$disown(ProcessID);
-    KResultOr<FlatPtr> sys$allocate_tls(size_t);
+    KResultOr<FlatPtr> sys$allocate_tls(Userspace<const char*> initial_data, size_t);
     KResultOr<int> sys$prctl(int option, FlatPtr arg1, FlatPtr arg2);
     KResultOr<int> sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*>);
     KResultOr<int> sys$anon_create(size_t, int options);
