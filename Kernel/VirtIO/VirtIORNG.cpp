@@ -23,7 +23,7 @@ VirtIORNG::VirtIORNG(PCI::Address address)
         m_entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIORNG", Region::Access::Read | Region::Access::Write);
         if (m_entropy_buffer) {
             memset(m_entropy_buffer->vaddr().as_ptr(), 0, m_entropy_buffer->size());
-            supply_buffer_and_notify(REQUESTQ, ScatterGatherList::create_from_physical(m_entropy_buffer->physical_page(0)->paddr(), m_entropy_buffer->size()), BufferType::DeviceWritable, m_entropy_buffer->vaddr().as_ptr());
+            supply_buffer_and_notify(REQUESTQ, ScatterGatherRefList::create_from_physical(m_entropy_buffer->physical_page(0)->paddr(), m_entropy_buffer->size()), BufferType::DeviceWritable, m_entropy_buffer->vaddr().as_ptr());
         }
     }
 }

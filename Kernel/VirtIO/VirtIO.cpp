@@ -335,7 +335,7 @@ void VirtIODevice::finish_init()
     dbgln_if(VIRTIO_DEBUG, "{}: Finished initialization", m_class_name);
 }
 
-void VirtIODevice::supply_buffer_and_notify(u16 queue_index, const ScatterGatherList& scatter_list, BufferType buffer_type, void* token)
+void VirtIODevice::supply_buffer_and_notify(u16 queue_index, const ScatterGatherRefList& scatter_list, BufferType buffer_type, void* token)
 {
     VERIFY(queue_index < m_queue_count);
     if (get_queue(queue_index).supply_buffer({}, scatter_list, buffer_type, token))
