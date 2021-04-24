@@ -151,6 +151,20 @@ bool EditingEngine::on_key(const KeyEvent& event)
     return false;
 }
 
+TextPosition EditingEngine::get_next_valid_position(const TextPosition& position)
+{
+    size_t new_line = position.line();
+    size_t new_column = position.column();
+    if (position.column() < m_editor->line(position.line()).length()) {
+        new_line = position.line();
+        new_column = position.column() + 1;
+    } else if (position.line() != m_editor->line_count() - 1) {
+        new_line = position.line() + 1;
+        new_column = 0;
+    }
+    return { new_line, new_column };
+}
+
 void EditingEngine::move_one_left(const KeyEvent& event)
 {
     if (m_editor->cursor().column() > 0) {
@@ -167,17 +181,9 @@ void EditingEngine::move_one_left(const KeyEvent& event)
 
 void EditingEngine::move_one_right(const KeyEvent& event)
 {
-    int new_line = m_editor->cursor().line();
-    int new_column = m_editor->cursor().column();
-    if (m_editor->cursor().column() < m_editor->current_line().length()) {
-        new_line = m_editor->cursor().line();
-        new_column = m_editor->cursor().column() + 1;
-    } else if (m_editor->cursor().line() != m_editor->line_count() - 1) {
-        new_line = m_editor->cursor().line() + 1;
-        new_column = 0;
-    }
     m_editor->toggle_selection_if_needed_for_event(event.shift());
-    m_editor->set_cursor(new_line, new_column);
+    auto next_position = get_next_valid_position(m_editor->cursor());
+    m_editor->set_cursor(next_position);
 }
 
 void EditingEngine::move_to_previous_span(const KeyEvent& event)

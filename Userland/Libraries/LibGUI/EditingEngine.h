@@ -36,6 +36,7 @@ protected:
 
     WeakPtr<TextEditor> m_editor;
 
+    TextPosition get_next_valid_position(const TextPosition& position);
     void move_one_left(const KeyEvent& event);
     void move_one_right(const KeyEvent& event);
     void move_one_up(const KeyEvent& event);
