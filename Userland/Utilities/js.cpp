@@ -489,24 +489,27 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
         vm->clear_exception();
         out("Uncaught exception: ");
         print(exception->value());
-        auto& trace = exception->trace();
-        if (trace.size() > 1) {
+        auto& traceback = exception->traceback();
+        if (traceback.size() > 1) {
             unsigned repetitions = 0;
-            for (size_t i = 0; i < trace.size(); ++i) {
-                auto& function_name = trace[i];
-                if (i + 1 < trace.size() && trace[i + 1] == function_name) {
-                    repetitions++;
-                    continue;
+            for (size_t i = 0; i < traceback.size(); ++i) {
+                auto& traceback_frame = traceback[i];
+                if (i + 1 < traceback.size()) {
+                    auto& next_traceback_frame = traceback[i + 1];
+                    if (next_traceback_frame.function_name == traceback_frame.function_name) {
+                        repetitions++;
+                        continue;
+                    }
                 }
                 if (repetitions > 4) {
                     // If more than 5 (1 + >4) consecutive function calls with the same name, print
                     // the name only once and show the number of repetitions instead. This prevents
                     // printing ridiculously large call stacks of recursive functions.
-                    outln(" -> {}", function_name);
+                    outln(" -> {}", traceback_frame.function_name);
                     outln(" {} more calls", repetitions);
                 } else {
                     for (size_t j = 0; j < repetitions + 1; ++j)
-                        outln(" -> {}", function_name);
+                        outln(" -> {}", traceback_frame.function_name);
                 }
                 repetitions = 0;
             }
