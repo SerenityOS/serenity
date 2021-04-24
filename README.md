@@ -130,6 +130,7 @@ Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
 * **thankyouverycool** - [thankyouverycool](https://github.com/thankyouverycool)
 * **Idan Horowitz** - [IdanHo](https://github.com/IdanHo)
 * **Gunnar Beutner** - [gunnarbeutner](https://github.com/gunnarbeutner)
+* **Tim Flynn** - [trflynn89](https://github.com/trflynn89)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
