@@ -55,10 +55,13 @@ Sheet::Sheet(Workbook& workbook)
             parser.print_errors();
         } else {
             interpreter().run(global_object(), parser.parse_program());
-            if (auto exc = interpreter().exception()) {
-                warnln("Spreadsheet: Failed to run runtime code: ");
-                for (auto& t : exc->trace())
-                    warnln("{}", t);
+            if (auto* exception = interpreter().exception()) {
+                warnln("Spreadsheet: Failed to run runtime code:");
+                for (auto& traceback_frame : exception->traceback()) {
+                    auto& function_name = traceback_frame.function_name;
+                    auto& source_range = traceback_frame.source_range;
+                    dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
+                }
                 interpreter().vm().clear_exception();
             }
         }

@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/Vector.h>
 #include <LibJS/Runtime/Cell.h>
 #include <LibJS/Runtime/Value.h>
@@ -13,22 +15,25 @@
 
 namespace JS {
 
+struct TracebackFrame {
+    FlyString function_name;
+    SourceRange source_range;
+};
+
 class Exception : public Cell {
 public:
     explicit Exception(Value);
-    virtual ~Exception() override;
+    virtual ~Exception() override = default;
 
     Value value() const { return m_value; }
-    const Vector<String>& trace() const { return m_trace; }
-    const Vector<SourceRange>& source_ranges() const { return m_source_ranges; }
+    const Vector<TracebackFrame>& traceback() const { return m_traceback; }
 
 private:
     virtual const char* class_name() const override { return "Exception"; }
     virtual void visit_edges(Visitor&) override;
 
     Value m_value;
-    Vector<String> m_trace;
-    Vector<SourceRange> m_source_ranges;
+    Vector<TracebackFrame> m_traceback;
 };
 
 }
