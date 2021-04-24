@@ -35,7 +35,8 @@ void CellSyntaxHighlighter::rehighlight(const Palette& palette)
         false);
 
     if (m_cell && m_cell->exception()) {
-        auto range = m_cell->exception()->source_ranges().first();
+        auto& traceback = m_cell->exception()->traceback();
+        auto& range = traceback.first().source_range;
         GUI::TextRange text_range { { range.start.line - 1, range.start.column }, { range.end.line - 1, range.end.column - 1 } };
         m_client->spans().prepend(
             GUI::TextDocumentSpan {
