@@ -17,7 +17,7 @@ namespace Kernel {
 
 void UDPSocket::for_each(Function<void(const UDPSocket&)> callback)
 {
-    LOCKER(sockets_by_port().lock(), Lock::Mode::Shared);
+    Locker locker(sockets_by_port().lock(), Lock::Mode::Shared);
     for (auto it : sockets_by_port().resource())
         callback(*it.value);
 }
@@ -33,7 +33,7 @@ SocketHandle<UDPSocket> UDPSocket::from_port(u16 port)
 {
     RefPtr<UDPSocket> socket;
     {
-        LOCKER(sockets_by_port().lock(), Lock::Mode::Shared);
+        Locker locker(sockets_by_port().lock(), Lock::Mode::Shared);
         auto it = sockets_by_port().resource().find(port);
         if (it == sockets_by_port().resource().end())
             return {};
@@ -50,7 +50,7 @@ UDPSocket::UDPSocket(int protocol)
 
 UDPSocket::~UDPSocket()
 {
-    LOCKER(sockets_by_port().lock());
+    Locker locker(sockets_by_port().lock());
     sockets_by_port().resource().remove(local_port());
 }
 
@@ -104,7 +104,7 @@ int UDPSocket::protocol_allocate_local_port()
     static const u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
     u16 first_scan_port = first_ephemeral_port + get_good_random<u16>() % ephemeral_port_range_size;
 
-    LOCKER(sockets_by_port().lock());
+    Locker locker(sockets_by_port().lock());
     for (u16 port = first_scan_port;;) {
         auto it = sockets_by_port().resource().find(port);
         if (it == sockets_by_port().resource().end()) {
@@ -123,7 +123,7 @@ int UDPSocket::protocol_allocate_local_port()
 
 KResult UDPSocket::protocol_bind()
 {
-    LOCKER(sockets_by_port().lock());
+    Locker locker(sockets_by_port().lock());
     if (sockets_by_port().resource().contains(local_port()))
         return EADDRINUSE;
     sockets_by_port().resource().set(local_port(), this);
