@@ -28,6 +28,7 @@ public:
     virtual void gl_load_identity() = 0;
     virtual void gl_load_matrix(const FloatMatrix4x4& matrix) = 0;
     virtual void gl_matrix_mode(GLenum mode) = 0;
+    virtual void gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) = 0;
     virtual void gl_push_matrix() = 0;
     virtual void gl_pop_matrix() = 0;
     virtual void gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdouble z) = 0;
