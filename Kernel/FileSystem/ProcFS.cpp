@@ -503,7 +503,7 @@ static bool procfs$net_adapters(InodeIdentifier, KBufferBuilder& builder)
 static bool procfs$net_arp(InodeIdentifier, KBufferBuilder& builder)
 {
     JsonArraySerializer array { builder };
-    LOCKER(arp_table().lock(), Lock::Mode::Shared);
+    Locker locker(arp_table().lock(), Lock::Mode::Shared);
     for (auto& it : arp_table().resource()) {
         auto obj = array.add_object();
         obj.add("mac_address", it.value.to_string());
@@ -884,7 +884,7 @@ static bool read_sys_bool(InodeIdentifier inode_id, KBufferBuilder& builder)
     u8 buffer[2];
     auto* lockable_bool = reinterpret_cast<Lockable<bool>*>(variable.address);
     {
-        LOCKER(lockable_bool->lock(), Lock::Mode::Shared);
+        Locker locker(lockable_bool->lock(), Lock::Mode::Shared);
         buffer[0] = lockable_bool->resource() ? '1' : '0';
     }
     buffer[1] = '\n';
@@ -914,7 +914,7 @@ static ssize_t write_sys_bool(InodeIdentifier inode_id, const UserOrKernelBuffer
 
     auto* lockable_bool = reinterpret_cast<Lockable<bool>*>(variable.address);
     {
-        LOCKER(lockable_bool->lock());
+        Locker locker(lockable_bool->lock());
         lockable_bool->resource() = value == '1';
     }
     variable.notify();
@@ -927,7 +927,7 @@ static bool read_sys_string(InodeIdentifier inode_id, KBufferBuilder& builder)
     VERIFY(variable.type == SysVariable::Type::String);
 
     auto* lockable_string = reinterpret_cast<Lockable<String>*>(variable.address);
-    LOCKER(lockable_string->lock(), Lock::Mode::Shared);
+    Locker locker(lockable_string->lock(), Lock::Mode::Shared);
     builder.append_bytes(lockable_string->resource().bytes());
     return true;
 }
@@ -943,7 +943,7 @@ static ssize_t write_sys_string(InodeIdentifier inode_id, const UserOrKernelBuff
 
     {
         auto* lockable_string = reinterpret_cast<Lockable<String>*>(variable.address);
-        LOCKER(lockable_string->lock());
+        Locker locker(lockable_string->lock());
         lockable_string->resource() = move(string_copy);
     }
     variable.notify();
@@ -1012,7 +1012,7 @@ RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
     if (inode_id == root_inode()->identifier())
         return m_root_inode;
 
-    LOCKER(m_inodes_lock);
+    Locker locker(m_inodes_lock);
     auto it = m_inodes.find(inode_id.index().value());
     if (it != m_inodes.end()) {
         // It's possible that the ProcFSInode ref count was dropped to 0 or
@@ -1037,7 +1037,7 @@ ProcFSInode::ProcFSInode(ProcFS& fs, InodeIndex index)
 
 ProcFSInode::~ProcFSInode()
 {
-    LOCKER(fs().m_inodes_lock);
+    Locker locker(fs().m_inodes_lock);
     auto it = fs().m_inodes.find(index().value());
     if (it != fs().m_inodes.end() && it->value == this)
         fs().m_inodes.remove(it);

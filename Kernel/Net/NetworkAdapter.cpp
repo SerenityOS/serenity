@@ -28,14 +28,14 @@ static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 
 void NetworkAdapter::for_each(Function<void(NetworkAdapter&)> callback)
 {
-    LOCKER(all_adapters().lock());
+    Locker locker(all_adapters().lock());
     for (auto& it : all_adapters().resource())
         callback(*it);
 }
 
 RefPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& address)
 {
-    LOCKER(all_adapters().lock());
+    Locker locker(all_adapters().lock());
     for (auto* adapter : all_adapters().resource()) {
         if (adapter->ipv4_address() == address)
             return adapter;

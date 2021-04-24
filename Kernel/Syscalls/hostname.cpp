@@ -16,7 +16,7 @@ KResultOr<int> Process::sys$gethostname(Userspace<char*> buffer, ssize_t size)
     REQUIRE_PROMISE(stdio);
     if (size < 0)
         return EINVAL;
-    LOCKER(*g_hostname_lock, Lock::Mode::Shared);
+    Locker locker(*g_hostname_lock, Lock::Mode::Shared);
     if ((size_t)size < (g_hostname->length() + 1))
         return ENAMETOOLONG;
     if (!copy_to_user(buffer, g_hostname->characters(), g_hostname->length() + 1))
@@ -31,7 +31,7 @@ KResultOr<int> Process::sys$sethostname(Userspace<const char*> hostname, ssize_t
         return EPERM;
     if (length < 0)
         return EINVAL;
-    LOCKER(*g_hostname_lock, Lock::Mode::Exclusive);
+    Locker locker(*g_hostname_lock, Lock::Mode::Exclusive);
     if (length > 64)
         return ENAMETOOLONG;
     auto copied_hostname = copy_string_from_user(hostname, length);

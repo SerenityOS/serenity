@@ -451,7 +451,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(vmobject().is_anonymous());
 
-    LOCKER(vmobject().m_paging_lock);
+    Locker locker(vmobject().m_paging_lock);
 
     auto& page_slot = physical_page_slot(page_index_in_region);
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
@@ -514,7 +514,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, Scoped
     VERIFY(!s_mm_lock.own_lock());
     VERIFY(!g_scheduler_lock.own_lock());
 
-    LOCKER(vmobject().m_paging_lock);
+    Locker locker(vmobject().m_paging_lock);
 
     mm_lock.lock();
 

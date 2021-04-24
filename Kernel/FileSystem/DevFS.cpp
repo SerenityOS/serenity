@@ -20,7 +20,7 @@ NonnullRefPtr<DevFS> DevFS::create()
 DevFS::DevFS()
     : m_root_inode(adopt_ref(*new DevFSRootDirectoryInode(*this)))
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     Device::for_each([&](Device& device) {
         // FIXME: Find a better way to not add MasterPTYs or SlavePTYs!
         if (device.is_master_pty() || (device.is_character_device() && device.major() == 201))
@@ -31,7 +31,7 @@ DevFS::DevFS()
 
 void DevFS::notify_new_device(Device& device)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device));
     m_nodes.append(new_device_inode);
     m_root_inode->m_devices.append(new_device_inode);
@@ -39,7 +39,7 @@ void DevFS::notify_new_device(Device& device)
 
 size_t DevFS::allocate_inode_index()
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     m_next_inode_index = m_next_inode_index.value() + 1;
     VERIFY(m_next_inode_index > 0);
     return 1 + m_next_inode_index.value();
@@ -66,7 +66,7 @@ NonnullRefPtr<Inode> DevFS::root_inode() const
 
 RefPtr<Inode> DevFS::get_inode(InodeIdentifier inode_id) const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     if (inode_id.index() == 1)
         return m_root_inode;
     for (auto& node : m_nodes) {
@@ -153,7 +153,7 @@ DevFSLinkInode::DevFSLinkInode(DevFS& fs, String name)
 }
 ssize_t DevFSLinkInode::read_bytes(off_t offset, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     VERIFY(offset == 0);
     VERIFY(!m_link.is_null());
     if (!buffer.write(((const u8*)m_link.substring_view(0).characters_without_null_termination()) + offset, m_link.length()))
@@ -162,7 +162,7 @@ ssize_t DevFSLinkInode::read_bytes(off_t offset, ssize_t, UserOrKernelBuffer& bu
 }
 InodeMetadata DevFSLinkInode::metadata() const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), index() };
     metadata.mode = S_IFLNK | 0555;
@@ -174,7 +174,7 @@ InodeMetadata DevFSLinkInode::metadata() const
 }
 ssize_t DevFSLinkInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& buffer, FileDescription*)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     VERIFY(offset == 0);
     VERIFY(buffer.is_kernel_buffer());
     m_link = buffer.copy_into_string(count);
@@ -190,7 +190,7 @@ DevFSDirectoryInode::~DevFSDirectoryInode()
 }
 InodeMetadata DevFSDirectoryInode::metadata() const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), 1 };
     metadata.mode = 0040555;
@@ -202,17 +202,17 @@ InodeMetadata DevFSDirectoryInode::metadata() const
 }
 KResult DevFSDirectoryInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     return EINVAL;
 }
 RefPtr<Inode> DevFSDirectoryInode::lookup(StringView)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     return nullptr;
 }
 KResultOr<size_t> DevFSDirectoryInode::directory_entry_count() const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     return m_devices.size();
 }
 
@@ -223,7 +223,7 @@ DevFSRootDirectoryInode::DevFSRootDirectoryInode(DevFS& fs)
 }
 KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
-    LOCKER(m_parent_fs.m_lock);
+    Locker locker(m_parent_fs.m_lock);
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
 
@@ -244,7 +244,7 @@ KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(const FS::D
 }
 RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
 {
-    LOCKER(m_parent_fs.m_lock);
+    Locker locker(m_parent_fs.m_lock);
     for (auto& subfolder : m_subfolders) {
         if (subfolder.name() == name)
             return subfolder;
@@ -263,7 +263,7 @@ RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
 }
 KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const String& name, mode_t mode, dev_t, uid_t, gid_t)
 {
-    LOCKER(m_parent_fs.m_lock);
+    Locker locker(m_parent_fs.m_lock);
 
     InodeMetadata metadata;
     metadata.mode = mode;
@@ -297,7 +297,7 @@ DevFSRootDirectoryInode::~DevFSRootDirectoryInode()
 }
 InodeMetadata DevFSRootDirectoryInode::metadata() const
 {
-    LOCKER(m_parent_fs.m_lock);
+    Locker locker(m_parent_fs.m_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), 1 };
     metadata.mode = 0040555;
@@ -309,7 +309,7 @@ InodeMetadata DevFSRootDirectoryInode::metadata() const
 }
 KResultOr<size_t> DevFSRootDirectoryInode::directory_entry_count() const
 {
-    LOCKER(m_parent_fs.m_lock);
+    Locker locker(m_parent_fs.m_lock);
     return m_devices.size() + DevFSDirectoryInode::directory_entry_count().value();
 }
 
@@ -323,7 +323,7 @@ DevFSDeviceInode::~DevFSDeviceInode()
 }
 KResult DevFSDeviceInode::chown(uid_t uid, gid_t gid)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     m_uid = uid;
     m_gid = gid;
     return KSuccess;
@@ -331,7 +331,7 @@ KResult DevFSDeviceInode::chown(uid_t uid, gid_t gid)
 
 String DevFSDeviceInode::name() const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     if (m_cached_name.is_null() || m_cached_name.is_empty())
         const_cast<DevFSDeviceInode&>(*this).m_cached_name = m_attached_device->device_name();
     return m_cached_name;
@@ -339,7 +339,7 @@ String DevFSDeviceInode::name() const
 
 ssize_t DevFSDeviceInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     VERIFY(!!description);
     if (!m_attached_device->can_read(*description, offset))
         return 0;
@@ -351,7 +351,7 @@ ssize_t DevFSDeviceInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBu
 
 InodeMetadata DevFSDeviceInode::metadata() const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), index() };
     metadata.mode = (m_attached_device->is_block_device() ? S_IFBLK : S_IFCHR) | m_attached_device->required_mode();
@@ -365,7 +365,7 @@ InodeMetadata DevFSDeviceInode::metadata() const
 }
 ssize_t DevFSDeviceInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& buffer, FileDescription* description)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     VERIFY(!!description);
     if (!m_attached_device->can_write(*description, offset))
         return 0;
@@ -381,7 +381,7 @@ DevFSPtsDirectoryInode::DevFSPtsDirectoryInode(DevFS& fs)
 }
 KResult DevFSPtsDirectoryInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
     return KSuccess;
@@ -395,7 +395,7 @@ DevFSPtsDirectoryInode::~DevFSPtsDirectoryInode()
 }
 InodeMetadata DevFSPtsDirectoryInode::metadata() const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), index() };
     metadata.mode = 0040555;

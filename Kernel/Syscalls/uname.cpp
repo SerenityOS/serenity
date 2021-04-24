@@ -15,7 +15,7 @@ KResultOr<int> Process::sys$uname(Userspace<utsname*> user_buf)
 
     REQUIRE_PROMISE(stdio);
 
-    LOCKER(*g_hostname_lock, Lock::Mode::Shared);
+    Locker locker(*g_hostname_lock, Lock::Mode::Shared);
     if (g_hostname->length() + 1 > sizeof(utsname::nodename))
         return ENAMETOOLONG;
 

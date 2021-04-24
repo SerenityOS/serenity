@@ -50,7 +50,7 @@ InodeIdentifier VFS::root_inode_id() const
 
 KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
 
     auto& inode = mount_point.inode();
     dbgln("VFS: Mounting {} at {} (inode: {}) with flags {}",
@@ -66,7 +66,7 @@ KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
 
 KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
 
     dbgln("VFS: Bind-mounting {} at {}", source.absolute_path(), mount_point.absolute_path());
     // FIXME: check that this is not already a mount point
@@ -77,7 +77,7 @@ KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
 
 KResult VFS::remount(Custody& mount_point, int new_flags)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
 
     dbgln("VFS: Remounting {}", mount_point.absolute_path());
 
@@ -91,7 +91,7 @@ KResult VFS::remount(Custody& mount_point, int new_flags)
 
 KResult VFS::unmount(Inode& guest_inode)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     dbgln("VFS: unmount called with inode {}", guest_inode.identifier());
 
     for (size_t i = 0; i < m_mounts.size(); ++i) {
