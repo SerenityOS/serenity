@@ -33,8 +33,7 @@ private:
 
 class ScatterGatherRefList {
     struct ScatterGatherRef {
-        FlatPtr page_base;
-        size_t offset;
+        FlatPtr position;
         size_t length;
     };
 

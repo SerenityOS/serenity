@@ -46,13 +46,13 @@ ScatterGatherRefList ScatterGatherRefList::create_from_physical(PhysicalAddress 
 
 void ScatterGatherRefList::add_entry(FlatPtr addr, size_t offset, size_t size)
 {
-    m_entries.append({ addr, offset, size });
+    m_entries.append({ addr + offset, size });
 }
 
 void ScatterGatherRefList::for_each_entry(Function<void(const FlatPtr, const size_t)> callback) const
 {
     for (auto& entry : m_entries)
-        callback(entry.page_base + entry.offset, entry.length);
+        callback(entry.position, entry.length);
 }
 
 }
