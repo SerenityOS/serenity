@@ -39,7 +39,7 @@ bool InodeWatcher::can_write(const FileDescription&, size_t) const
 
 KResultOr<size_t> InodeWatcher::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t buffer_size)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     VERIFY(!m_queue.is_empty() || !m_inode);
 
     if (!m_inode)
@@ -76,21 +76,21 @@ String InodeWatcher::absolute_path(const FileDescription&) const
 
 void InodeWatcher::notify_inode_event(Badge<Inode>, InodeWatcherEvent::Type event_type)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     m_queue.enqueue({ event_type });
     evaluate_block_conditions();
 }
 
 void InodeWatcher::notify_child_added(Badge<Inode>, const InodeIdentifier& child_id)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     m_queue.enqueue({ InodeWatcherEvent::Type::ChildAdded, child_id.index().value() });
     evaluate_block_conditions();
 }
 
 void InodeWatcher::notify_child_removed(Badge<Inode>, const InodeIdentifier& child_id)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     m_queue.enqueue({ InodeWatcherEvent::Type::ChildRemoved, child_id.index().value() });
     evaluate_block_conditions();
 }
