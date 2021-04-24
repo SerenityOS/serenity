@@ -12,6 +12,7 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <LibC/elf.h>
+#include <LibDl/dlfcn_integration.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
 #include <sys/mman.h>
@@ -41,7 +42,7 @@ enum class ShouldInitializeWeak {
 
 class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
-    static RefPtr<DynamicLoader> try_create(int fd, String filename);
+    static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, String filename);
     ~DynamicLoader();
 
     const String& filename() const { return m_filename; }
@@ -59,13 +60,10 @@ public:
     bool load_stage_2(unsigned flags, size_t total_tls_size);
 
     // Stage 3 of loading: lazy relocations
-    RefPtr<DynamicObject> load_stage_3(unsigned flags, size_t total_tls_size);
+    Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> load_stage_3(unsigned flags, size_t total_tls_size);
 
     // Stage 4 of loading: initializers
     void load_stage_4();
-
-    // Intended for use by dlsym or other internal methods
-    void* symbol_for_name(const StringView&);
 
     void set_tls_offset(size_t offset) { m_tls_offset = offset; };
     size_t tls_size() const { return m_tls_size; }

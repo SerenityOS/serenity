@@ -277,6 +277,8 @@ public:
 
     bool elf_is_dynamic() const { return m_is_elf_dynamic; }
 
+    void* symbol_for_name(const StringView& name);
+
 private:
     explicit DynamicObject(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
