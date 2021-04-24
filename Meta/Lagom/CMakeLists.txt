@@ -8,7 +8,8 @@ else()
 endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overloaded-virtual -Wno-user-defined-literals")
+    # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overloaded-virtual -Wno-user-defined-literals -fconstexpr-steps=16777216")
 
     if (ENABLE_ADDRESS_SANITIZER)
         add_definitions(-fsanitize=address -fno-omit-frame-pointer)
