@@ -12,6 +12,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
+#include <AK/SourceLocation.h>
 #include <AK/String.h>
 #include <AK/Time.h>
 #include <AK/Vector.h>
@@ -1066,7 +1067,7 @@ public:
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
 #if LOCK_DEBUG
-    void holding_lock(Lock& lock, int refs_delta, const char* file = nullptr, int line = 0)
+    void holding_lock(Lock& lock, int refs_delta, const SourceLocation& location)
     {
         VERIFY(refs_delta != 0);
         m_holding_locks.fetch_add(refs_delta, AK::MemoryOrder::memory_order_relaxed);
@@ -1082,7 +1083,7 @@ public:
                 }
             }
             if (!have_existing)
-                m_holding_locks_list.append({ &lock, file ? file : "unknown", line, 1 });
+                m_holding_locks_list.append({ &lock, location, 1 });
         } else {
             VERIFY(refs_delta < 0);
             bool found = false;
@@ -1208,8 +1209,7 @@ private:
 #if LOCK_DEBUG
     struct HoldingLockInfo {
         Lock* lock;
-        const char* file;
-        int line;
+        SourceLocation source_location;
         unsigned count;
     };
     Atomic<u32> m_holding_locks { 0 };
