@@ -30,14 +30,16 @@ public:
     }
     ~Lock() = default;
 
-    void lock(Mode = Mode::Exclusive);
 #if LOCK_DEBUG
-    void lock(const char* file, int line, Mode mode = Mode::Exclusive);
-    void restore_lock(const char* file, int line, Mode, u32);
+    void lock(Mode mode = Mode::Exclusive, const SourceLocation& location = SourceLocation::current());
+    void restore_lock(Mode, u32, const SourceLocation& location = SourceLocation::current());
+#else
+    void lock(Mode = Mode::Exclusive);
+    void restore_lock(Mode, u32);
 #endif
+
     void unlock();
     [[nodiscard]] Mode force_unlock_if_locked(u32&);
-    void restore_lock(Mode, u32);
     [[nodiscard]] bool is_locked() const { return m_mode != Mode::Unlocked; }
     void clear_waiters();
 
@@ -79,17 +81,19 @@ private:
 class Locker {
 public:
 #if LOCK_DEBUG
-    ALWAYS_INLINE explicit Locker(const char* file, int line, Lock& l, Lock::Mode mode = Lock::Mode::Exclusive)
-        : m_lock(l)
-    {
-        m_lock.lock(file, line, mode);
-    }
-#endif
+    ALWAYS_INLINE explicit Locker(Lock& l, Lock::Mode mode = Lock::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
+#else
     ALWAYS_INLINE explicit Locker(Lock& l, Lock::Mode mode = Lock::Mode::Exclusive)
+#endif
         : m_lock(l)
     {
+#if LOCK_DEBUG
+        m_lock.lock(mode, location);
+#else
         m_lock.lock(mode);
+#endif
     }
+
     ALWAYS_INLINE ~Locker()
     {
         if (m_locked)
@@ -101,11 +105,21 @@ public:
         m_locked = false;
         m_lock.unlock();
     }
+
+#if LOCK_DEBUG
+    ALWAYS_INLINE void lock(Lock::Mode mode = Lock::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
+#else
     ALWAYS_INLINE void lock(Lock::Mode mode = Lock::Mode::Exclusive)
+#endif
     {
         VERIFY(!m_locked);
         m_locked = true;
+
+#if LOCK_DEBUG
+        m_lock.lock(mode, location);
+#else
         m_lock.lock(mode);
+#endif
     }
 
 private:
@@ -113,13 +127,8 @@ private:
     bool m_locked { true };
 };
 
-#if LOCK_DEBUG
-#    define LOCKER(...) Locker locker(__FILE__, __LINE__, __VA_ARGS__)
-#    define RESTORE_LOCK(lock, ...) (lock).restore_lock(__FILE__, __LINE__, __VA_ARGS__)
-#else
-#    define LOCKER(...) Locker locker(__VA_ARGS__)
-#    define RESTORE_LOCK(lock, ...) (lock).restore_lock(__VA_ARGS__)
-#endif
+#define LOCKER(...) Locker locker(__VA_ARGS__)
+#define RESTORE_LOCK(lock, ...) (lock).restore_lock(__VA_ARGS__)
 
 template<typename T>
 class Lockable {

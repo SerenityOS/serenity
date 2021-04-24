@@ -360,8 +360,10 @@ void Thread::finalize()
     if (lock_count() > 0) {
         dbgln("Thread {} leaking {} Locks!", *this, lock_count());
         ScopedSpinLock list_lock(m_holding_locks_lock);
-        for (auto& info : m_holding_locks_list)
-            dbgln(" - {} @ {} locked at {}:{} count: {}", info.lock->name(), info.lock, info.file, info.line, info.count);
+        for (auto& info : m_holding_locks_list) {
+            const auto& location = info.source_location;
+            dbgln(" - Lock: \"{}\" @ {} locked in function \"{}\" at \"{}:{}\" with a count of: {}", info.lock->name(), info.lock, location.function_name(), location.file_name(), location.line_number(), info.count);
+        }
         VERIFY_NOT_REACHED();
     }
 #endif
