@@ -54,11 +54,17 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     vm.push_call_frame(global_call_frame, global_object);
     VERIFY(!vm.exception());
     program.execute(*this, global_object);
+
+    // Whatever the promise jobs or on_call_stack_emptied do should not affect the effective
+    // 'last value'.
+    auto last_value = vm.last_value();
+
     vm.pop_call_frame();
 
-    // Whatever the promise jobs do should not affect the effective 'last value'.
-    auto last_value = vm.last_value();
+    // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
+    // in which case this is a no-op.
     vm.run_queued_promise_jobs();
+
     vm.set_last_value({}, last_value.value_or(js_undefined()));
 }
 
