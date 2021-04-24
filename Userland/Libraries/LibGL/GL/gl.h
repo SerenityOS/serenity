@@ -87,6 +87,8 @@ GLAPI void glPopMatrix();
 GLAPI void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glScalef(GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glTranslatef(GLfloat x, GLfloat y, GLfloat z);
+GLAPI void glVertex2f(GLfloat x, GLfloat y);
+GLAPI void glVertex2fv(const GLfloat* v);
 GLAPI void glVertex3f(GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glVertex3fv(const GLfloat* v);
 GLAPI void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
