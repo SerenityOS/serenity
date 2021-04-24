@@ -223,6 +223,99 @@ TEST_CASE(insert)
     validate("INSERT INTO table SELECT * FROM table;", resolution, {}, "table", {}, {}, {}, true);
 }
 
+TEST_CASE(update)
+{
+    EXPECT(parse("UPDATE").is_error());
+    EXPECT(parse("UPDATE table").is_error());
+    EXPECT(parse("UPDATE table SET").is_error());
+    EXPECT(parse("UPDATE table SET column").is_error());
+    EXPECT(parse("UPDATE table SET column=4").is_error());
+    EXPECT(parse("UPDATE table SET column=4, ;").is_error());
+    EXPECT(parse("UPDATE table SET (column)=4").is_error());
+    EXPECT(parse("UPDATE table SET (column)=4, ;").is_error());
+    EXPECT(parse("UPDATE table SET (column, )=4;").is_error());
+    EXPECT(parse("UPDATE table SET column=4 FROM").is_error());
+    EXPECT(parse("UPDATE table SET column=4 FROM table").is_error());
+    EXPECT(parse("UPDATE table SET column=4 WHERE").is_error());
+    EXPECT(parse("UPDATE table SET column=4 WHERE 1==1").is_error());
+    EXPECT(parse("UPDATE table SET column=4 RETURNING").is_error());
+    EXPECT(parse("UPDATE table SET column=4 RETURNING *").is_error());
+    EXPECT(parse("UPDATE table SET column=4 RETURNING column").is_error());
+    EXPECT(parse("UPDATE table SET column=4 RETURNING column AS").is_error());
+    EXPECT(parse("UPDATE OR table SET column=4;").is_error());
+    EXPECT(parse("UPDATE OR foo table SET column=4;").is_error());
+
+    auto validate = [](StringView sql, SQL::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<Vector<String>> expected_update_columns, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
+        auto result = parse(sql);
+        EXPECT(!result.is_error());
+
+        auto statement = result.release_value();
+        EXPECT(is<SQL::Update>(*statement));
+
+        const auto& update = static_cast<const SQL::Update&>(*statement);
+        EXPECT_EQ(update.conflict_resolution(), expected_conflict_resolution);
+
+        const auto& qualified_table_name = update.qualified_table_name();
+        EXPECT_EQ(qualified_table_name->schema_name(), expected_schema);
+        EXPECT_EQ(qualified_table_name->table_name(), expected_table);
+        EXPECT_EQ(qualified_table_name->alias(), expected_alias);
+
+        const auto& update_columns = update.update_columns();
+        EXPECT_EQ(update_columns.size(), expected_update_columns.size());
+        for (size_t i = 0; i < update_columns.size(); ++i) {
+            const auto& update_column = update_columns[i];
+            const auto& expected_update_column = expected_update_columns[i];
+            EXPECT_EQ(update_column.column_names.size(), expected_update_column.size());
+            EXPECT(!is<SQL::ErrorExpression>(*update_column.expression));
+
+            for (size_t j = 0; j < update_column.column_names.size(); ++j)
+                EXPECT_EQ(update_column.column_names[j], expected_update_column[j]);
+        }
+
+        const auto& where_clause = update.where_clause();
+        EXPECT_EQ(where_clause.is_null(), !expect_where_clause);
+        if (where_clause)
+            EXPECT(!is<SQL::ErrorExpression>(*where_clause));
+
+        const auto& returning_clause = update.returning_clause();
+        EXPECT_EQ(returning_clause.is_null(), !expect_returning_clause);
+        if (returning_clause) {
+            EXPECT_EQ(returning_clause->columns().size(), expected_returned_column_aliases.size());
+
+            for (size_t i = 0; i < returning_clause->columns().size(); ++i) {
+                const auto& column = returning_clause->columns()[i];
+                const auto& expected_column_alias = expected_returned_column_aliases[i];
+
+                EXPECT(!is<SQL::ErrorExpression>(*column.expression));
+                EXPECT_EQ(column.column_alias, expected_column_alias);
+            }
+        }
+    };
+
+    Vector<Vector<String>> update_columns { { "column" } };
+    validate("UPDATE OR ABORT table SET column=1;", SQL::ConflictResolution::Abort, {}, "table", {}, update_columns, false, false, {});
+    validate("UPDATE OR FAIL table SET column=1;", SQL::ConflictResolution::Fail, {}, "table", {}, update_columns, false, false, {});
+    validate("UPDATE OR IGNORE table SET column=1;", SQL::ConflictResolution::Ignore, {}, "table", {}, update_columns, false, false, {});
+    validate("UPDATE OR REPLACE table SET column=1;", SQL::ConflictResolution::Replace, {}, "table", {}, update_columns, false, false, {});
+    validate("UPDATE OR ROLLBACK table SET column=1;", SQL::ConflictResolution::Rollback, {}, "table", {}, update_columns, false, false, {});
+
+    auto resolution = SQL::ConflictResolution::Abort;
+    validate("UPDATE table SET column=1;", resolution, {}, "table", {}, update_columns, false, false, {});
+    validate("UPDATE schema.table SET column=1;", resolution, "schema", "table", {}, update_columns, false, false, {});
+    validate("UPDATE table AS foo SET column=1;", resolution, {}, "table", "foo", update_columns, false, false, {});
+
+    validate("UPDATE table SET column=1;", resolution, {}, "table", {}, { { "column" } }, false, false, {});
+    validate("UPDATE table SET column1=1, column2=2;", resolution, {}, "table", {}, { { "column1" }, { "column2" } }, false, false, {});
+    validate("UPDATE table SET (column1, column2)=1, column3=2;", resolution, {}, "table", {}, { { "column1", "column2" }, { "column3" } }, false, false, {});
+
+    validate("UPDATE table SET column=1 WHERE 1==1;", resolution, {}, "table", {}, update_columns, true, false, {});
+
+    validate("UPDATE table SET column=1 RETURNING *;", resolution, {}, "table", {}, update_columns, false, true, {});
+    validate("UPDATE table SET column=1 RETURNING column;", resolution, {}, "table", {}, update_columns, false, true, { {} });
+    validate("UPDATE table SET column=1 RETURNING column AS alias;", resolution, {}, "table", {}, update_columns, false, true, { "alias" });
+    validate("UPDATE table SET column=1 RETURNING column1 AS alias1, column2 AS alias2;", resolution, {}, "table", {}, update_columns, false, true, { "alias1", "alias2" });
+}
+
 TEST_CASE(delete_)
 {
     EXPECT(parse("DELETE").is_error());
