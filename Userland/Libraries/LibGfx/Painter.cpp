@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,6 +24,7 @@
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
+#include <LibGfx/TextDirection.h>
 #include <math.h>
 #include <stdio.h>
 
@@ -1017,12 +1019,12 @@ struct ElidedText<Utf32View> {
 };
 
 template<typename TextType, typename DrawGlyphFunction>
-void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& font, TextAlignment alignment, TextElision elision, DrawGlyphFunction draw_glyph)
+void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& font, TextAlignment alignment, TextElision elision, TextDirection direction, DrawGlyphFunction draw_glyph)
 {
     auto rect = a_rect;
     TextType final_text(text);
     typename ElidedText<TextType>::Type elided_text;
-    if (elision == TextElision::Right) {
+    if (elision == TextElision::Right) { // FIXME: This needs to be specialized for bidirectional text
         int text_width = font.width(final_text);
         if (font.width(final_text) > rect.width()) {
             int glyph_spacing = font.glyph_spacing();
@@ -1074,14 +1076,22 @@ void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& fon
     auto point = rect.location();
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
 
+    if (direction == TextDirection::RTL) {
+        point.move_by(rect.width(), 0); // Start drawing from the end
+        space_width = -space_width;     // Draw spaces backwards
+    }
+
     for (u32 code_point : final_text) {
         if (code_point == ' ') {
             point.move_by(space_width, 0);
             continue;
         }
         IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.glyph_height());
+        if (direction == TextDirection::RTL)
+            point.move_by(-glyph_size.width(), 0); // If we are drawing right to left, we have to move backwards before drawing the glyph
         draw_glyph({ point, glyph_size }, code_point);
-        point.move_by(glyph_size.width(), 0);
+        if (direction == TextDirection::LTR)
+            point.move_by(glyph_size.width(), 0);
     }
 }
 
@@ -1105,9 +1115,170 @@ static inline size_t draw_text_get_length(const Utf32View& text)
     return text.length();
 }
 
+template<typename TextType>
+Vector<DirectionalRun> split_text_into_directional_runs(const TextType& text, TextDirection initial_direction)
+{
+    // FIXME: This is a *very* simplified version of the UNICODE BIDIRECTIONAL ALGORITHM (https://www.unicode.org/reports/tr9/), that can render most bidirectional text
+    //  but also produces awkward results in a large amount of edge cases. This should probably be replaced with a fully spec compliant implementation at some point.
+
+    // FIXME: Support HTML "dir" attribute (how?)
+    u8 paragraph_embedding_level = initial_direction == TextDirection::LTR ? 0 : 1;
+    Vector<u8> embedding_levels;
+    embedding_levels.ensure_capacity(text.length());
+    for (size_t i = 0; i < text.length(); i++)
+        embedding_levels.unchecked_append(paragraph_embedding_level);
+
+    // FIXME: Support Explicit Directional Formatting Characters
+
+    Vector<BidirectionalClass> character_classes;
+    character_classes.ensure_capacity(text.length());
+    for (u32 code_point : text)
+        character_classes.unchecked_append(get_char_bidi_class(code_point));
+
+    // resolving weak types
+    BidirectionalClass paragraph_class = initial_direction == TextDirection::LTR ? BidirectionalClass::STRONG_LTR : BidirectionalClass::STRONG_RTL;
+    for (size_t i = 0; i < character_classes.size(); i++) {
+        if (character_classes[i] != BidirectionalClass::WEAK_SEPARATORS)
+            continue;
+        for (ssize_t j = i - 1; j >= 0; j--) {
+            auto character_class = character_classes[j];
+            if (character_class != BidirectionalClass::STRONG_RTL && character_class != BidirectionalClass::STRONG_LTR)
+                continue;
+            character_classes[i] = character_class;
+            break;
+        }
+        if (character_classes[i] == BidirectionalClass::WEAK_SEPARATORS)
+            character_classes[i] = paragraph_class;
+    }
+
+    // resolving neutral types
+    auto left_side = BidirectionalClass::NEUTRAL;
+    auto sequence_length = 0;
+    for (size_t i = 0; i < character_classes.size(); i++) {
+        auto character_class = character_classes[i];
+        if (left_side == BidirectionalClass::NEUTRAL) {
+            if (character_class != BidirectionalClass::NEUTRAL)
+                left_side = character_class;
+            else
+                character_classes[i] = paragraph_class;
+            continue;
+        }
+        if (character_class != BidirectionalClass::NEUTRAL) {
+            BidirectionalClass sequence_class;
+            if (bidi_class_to_direction(left_side) == bidi_class_to_direction(character_class)) {
+                sequence_class = left_side == BidirectionalClass::STRONG_RTL ? BidirectionalClass::STRONG_RTL : BidirectionalClass::STRONG_LTR;
+            } else {
+                sequence_class = paragraph_class;
+            }
+            for (auto j = 0; j < sequence_length; j++) {
+                character_classes[i - j - 1] = sequence_class;
+            }
+            sequence_length = 0;
+            left_side = character_class;
+        } else {
+            sequence_length++;
+        }
+    }
+    for (auto i = 0; i < sequence_length; i++)
+        character_classes[character_classes.size() - i - 1] = paragraph_class;
+
+    // resolving implicit levels
+    for (size_t i = 0; i < character_classes.size(); i++) {
+        auto character_class = character_classes[i];
+        if ((embedding_levels[i] % 2) == 0) {
+            if (character_class == BidirectionalClass::STRONG_RTL)
+                embedding_levels[i] += 1;
+            else if (character_class == BidirectionalClass::WEAK_NUMBERS || character_class == BidirectionalClass::WEAK_SEPARATORS)
+                embedding_levels[i] += 2;
+        } else {
+            if (character_class == BidirectionalClass::STRONG_LTR || character_class == BidirectionalClass::WEAK_NUMBERS || character_class == BidirectionalClass::WEAK_SEPARATORS)
+                embedding_levels[i] += 1;
+        }
+    }
+
+    // splitting into runs
+    auto run_code_points_start = text.begin();
+    auto next_code_points_slice = [&](auto length) {
+        Vector<u32> run_code_points;
+        run_code_points.ensure_capacity(length);
+        for (size_t j = 0; j < length; ++j, ++run_code_points_start)
+            run_code_points.unchecked_append(*run_code_points_start);
+        return run_code_points;
+    };
+    Vector<DirectionalRun> runs;
+    size_t start = 0;
+    u8 level = embedding_levels[0];
+    for (size_t i = 1; i < embedding_levels.size(); ++i) {
+        if (embedding_levels[i] == level)
+            continue;
+        auto code_points_slice = next_code_points_slice(i - start);
+        runs.append({ move(code_points_slice), level });
+        start = i;
+        level = embedding_levels[i];
+    }
+    auto code_points_slice = next_code_points_slice(embedding_levels.size() - start);
+    runs.append({ move(code_points_slice), level });
+
+    // reordering resolved levels
+    // FIXME: missing special cases for trailing whitespace characters
+    u8 minimum_level = 128;
+    u8 maximum_level = 0;
+    for (auto& run : runs) {
+        minimum_level = min(minimum_level, run.embedding_level());
+        maximum_level = max(minimum_level, run.embedding_level());
+    }
+    if ((minimum_level % 2) == 0)
+        minimum_level++;
+    auto runs_count = runs.size() - 1;
+    while (maximum_level <= minimum_level) {
+        size_t run_index = 0;
+        while (run_index < runs_count) {
+            while (run_index < runs_count && runs[run_index].embedding_level() < maximum_level)
+                run_index++;
+            auto reverse_start = run_index;
+            while (run_index <= runs_count && runs[run_index].embedding_level() >= maximum_level)
+                run_index++;
+            auto reverse_end = run_index - 1;
+            while (reverse_start < reverse_end) {
+                swap(runs[reverse_start], runs[reverse_end]);
+                reverse_start++;
+                reverse_end--;
+            }
+        }
+        maximum_level--;
+    }
+
+    // mirroring RTL mirror characters
+    for (auto& run : runs) {
+        if (run.direction() == TextDirection::LTR)
+            continue;
+        for (auto& code_point : run.code_points()) {
+            code_point = get_mirror_char(code_point);
+        }
+    }
+
+    return runs;
+}
+
+template<typename TextType>
+bool text_contains_bidirectional_text(const TextType& text, TextDirection initial_direction)
+{
+    for (u32 code_point : text) {
+        auto char_class = get_char_bidi_class(code_point);
+        if (char_class == BidirectionalClass::NEUTRAL)
+            continue;
+        if (bidi_class_to_direction(char_class) != initial_direction)
+            return true;
+    }
+    return false;
+}
+
 template<typename TextType, typename DrawGlyphFunction>
 void do_draw_text(const IntRect& rect, const TextType& text, const Font& font, TextAlignment alignment, TextElision elision, DrawGlyphFunction draw_glyph)
 {
+    if (draw_text_get_length(text) == 0)
+        return;
+
     Vector<TextType, 32> lines;
 
     size_t start_of_current_line = 0;
@@ -1161,9 +1332,27 @@ void do_draw_text(const IntRect& rect, const TextType& text, const Font& font, T
 
     for (size_t i = 0; i < lines.size(); ++i) {
         auto& line = lines[i];
+
         IntRect line_rect { bounding_rect.x(), bounding_rect.y() + static_cast<int>(i) * line_height, bounding_rect.width(), line_height };
         line_rect.intersect(rect);
-        draw_text_line(line_rect, line, font, alignment, elision, draw_glyph);
+
+        TextDirection line_direction = get_text_direction(line);
+        if (text_contains_bidirectional_text(line, line_direction)) { // Slow Path: The line contains mixed BiDi classes
+            auto directional_runs = split_text_into_directional_runs(line, line_direction);
+            auto current_dx = line_direction == TextDirection::LTR ? 0 : line_rect.width();
+            for (auto& directional_run : directional_runs) {
+                auto run_width = font.width(directional_run.text());
+                if (line_direction == TextDirection::RTL)
+                    current_dx -= run_width;
+                auto run_rect = line_rect.translated(current_dx, 0);
+                run_rect.set_width(run_width);
+                draw_text_line(run_rect, directional_run.text(), font, alignment, elision, directional_run.direction(), draw_glyph);
+                if (line_direction == TextDirection::LTR)
+                    current_dx += run_width;
+            }
+        } else {
+            draw_text_line(line_rect, line, font, alignment, elision, line_direction, draw_glyph);
+        }
     }
 }
 
