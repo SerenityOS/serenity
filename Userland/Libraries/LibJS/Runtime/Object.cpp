@@ -19,6 +19,7 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/TemporaryClearException.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -789,6 +790,7 @@ Value Object::get(const PropertyName& property_name, Value receiver, bool withou
 
 Value Object::get_without_side_effects(const PropertyName& property_name) const
 {
+    TemporaryClearException clear_exception(vm());
     return get(property_name, {}, true);
 }
 
