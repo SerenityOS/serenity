@@ -60,23 +60,23 @@ int main(int argc, char** argv)
     Vector<Endpoint> endpoints;
 
     auto assert_specific = [&](char ch) {
-        if (lexer.peek() != ch)
+        if (!lexer.next_is(ch))
             warnln("assert_specific: wanted '{}', but got '{}' at index {}", ch, lexer.peek(), lexer.tell());
         bool saw_expected = lexer.consume_specific(ch);
         VERIFY(saw_expected);
     };
 
     auto consume_whitespace = [&] {
-        lexer.ignore_while([](char ch) { return isspace(ch); });
-        if (lexer.peek() == '/' && lexer.peek(1) == '/')
-            lexer.ignore_until([](char ch) { return ch == '\n'; });
+        lexer.ignore_while(isspace);
+        if (lexer.next_is("//"))
+            lexer.ignore_line();
     };
 
     auto parse_parameter = [&](Vector<Parameter>& storage) {
         for (;;) {
             Parameter parameter;
             consume_whitespace();
-            if (lexer.peek() == ')')
+            if (lexer.next_is(')'))
                 break;
             if (lexer.consume_specific('[')) {
                 for (;;) {
@@ -87,19 +87,19 @@ int main(int argc, char** argv)
                     if (lexer.consume_specific(',')) {
                         consume_whitespace();
                     }
-                    auto attribute = lexer.consume_until([](char ch) { return ch == ']' || ch == ','; });
+                    auto attribute = lexer.consume_until(is_any_of("],"));
                     parameter.attributes.append(attribute);
                     consume_whitespace();
                 }
             }
-            parameter.type = lexer.consume_until([](char ch) { return isspace(ch); });
+            parameter.type = lexer.consume_until(isspace);
             consume_whitespace();
             parameter.name = lexer.consume_until([](char ch) { return isspace(ch) || ch == ',' || ch == ')'; });
             consume_whitespace();
             storage.append(move(parameter));
             if (lexer.consume_specific(','))
                 continue;
-            if (lexer.peek() == ')')
+            if (lexer.next_is(')'))
                 break;
         }
     };
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
             consume_whitespace();
             if (lexer.consume_specific(','))
                 continue;
-            if (lexer.peek() == ')')
+            if (lexer.next_is(')'))
                 break;
         }
     };
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
             consume_whitespace();
             parse_message();
             consume_whitespace();
-            if (lexer.peek() == '}')
+            if (lexer.next_is('}'))
                 break;
         }
     };
@@ -163,7 +163,7 @@ int main(int argc, char** argv)
         consume_whitespace();
         lexer.consume_specific("endpoint");
         consume_whitespace();
-        endpoints.last().name = lexer.consume_while([](char ch) { return !isspace(ch); });
+        endpoints.last().name = lexer.consume_until(isspace);
         endpoints.last().magic = Traits<String>::hash(endpoints.last().name);
         consume_whitespace();
         assert_specific('{');
@@ -172,7 +172,7 @@ int main(int argc, char** argv)
         consume_whitespace();
     };
 
-    while (lexer.tell() < file_contents.size())
+    while (!lexer.is_eof())
         parse_endpoint();
 
     StringBuilder builder;

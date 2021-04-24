@@ -413,7 +413,7 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
         // Parse width specification
         [[maybe_unused]] int width_specifier = 0;
         if (format_lexer.next_is(isdigit)) {
-            auto width_digits = format_lexer.consume_while([](char c) { return isdigit(c); });
+            auto width_digits = format_lexer.consume_while(isdigit);
             width_specifier = width_digits.to_int().value();
             // FIXME: Actually use width specifier
         }

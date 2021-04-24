@@ -26,12 +26,12 @@ ByteBuffer decode_pem(ReadonlyBytes data)
         case PreStartData:
             if (lexer.consume_specific("-----BEGIN"))
                 state = Started;
-            lexer.consume_line();
+            lexer.ignore_line();
             break;
         case Started: {
             if (lexer.consume_specific("-----END")) {
                 state = Ended;
-                lexer.consume_line();
+                lexer.ignore_line();
                 break;
             }
             auto b64decoded = decode_base64(lexer.consume_line().trim_whitespace(TrimMode::Right));
@@ -39,7 +39,7 @@ ByteBuffer decode_pem(ReadonlyBytes data)
             break;
         }
         case Ended:
-            lexer.consume_all();
+            lexer.ignore(lexer.tell_remaining());
             break;
         default:
             VERIFY_NOT_REACHED();

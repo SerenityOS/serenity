@@ -159,10 +159,10 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
     auto consume_whitespace = [&] {
         bool consumed = true;
         while (consumed) {
-            consumed = lexer.consume_while([](char ch) { return isspace(ch); }).length() > 0;
+            consumed = lexer.consume_while(isspace).length() > 0;
 
             if (lexer.consume_specific("//")) {
-                lexer.consume_until('\n');
+                lexer.ignore_line();
                 consumed = true;
             }
         }
@@ -179,9 +179,9 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
             consume_whitespace();
             if (lexer.consume_specific(']'))
                 break;
-            auto name = lexer.consume_until([](auto ch) { return ch == ']' || ch == '=' || ch == ','; });
+            auto name = lexer.consume_until(is_any_of("]=,"));
             if (lexer.consume_specific('=')) {
-                auto value = lexer.consume_until([](auto ch) { return ch == ']' || ch == ','; });
+                auto value = lexer.consume_until(is_any_of("],"));
                 extended_attributes.set(name, value);
             } else {
                 extended_attributes.set(name, {});
@@ -197,11 +197,11 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
 
     assert_string("interface");
     consume_whitespace();
-    interface->name = lexer.consume_until([](auto ch) { return isspace(ch); });
+    interface->name = lexer.consume_until(isspace);
     consume_whitespace();
     if (lexer.consume_specific(':')) {
         consume_whitespace();
-        interface->parent_name = lexer.consume_until([](auto ch) { return isspace(ch); });
+        interface->parent_name = lexer.consume_until(isspace);
         consume_whitespace();
     }
     assert_specific('{');
@@ -254,7 +254,7 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         consume_whitespace();
         lexer.consume_specific('=');
         consume_whitespace();
-        constant.value = lexer.consume_while([](auto ch) { return !isspace(ch) && ch != ';'; });
+        constant.value = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
         consume_whitespace();
         assert_specific(';');
 

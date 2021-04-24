@@ -39,15 +39,15 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
     GenericLexer lexer(line);
 
     auto consume_whitespace = [&] {
-        lexer.ignore_while([](char ch) { return isspace(ch); });
-        if (lexer.peek() == '/' && lexer.peek(1) == '/')
-            lexer.ignore_until([](char ch) { return ch == '\n'; });
+        lexer.ignore_while(isspace);
+        if (lexer.next_is("//"))
+            lexer.ignore_line();
     };
 
     consume_whitespace();
     lexer.consume_specific('#');
     consume_whitespace();
-    auto keyword = lexer.consume_until(' ');
+    auto keyword = lexer.consume_until(isspace);
     if (keyword.is_empty() || keyword.is_null() || keyword.is_whitespace())
         return;
 
@@ -84,7 +84,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
 
     if (keyword == "define") {
         if (m_state == State::Normal) {
-            auto key = lexer.consume_until(' ');
+            auto key = lexer.consume_until(isspace);
             consume_whitespace();
 
             DefinedValue value;
@@ -101,7 +101,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
     }
     if (keyword == "undef") {
         if (m_state == State::Normal) {
-            auto key = lexer.consume_until(' ');
+            auto key = lexer.consume_until(isspace);
             lexer.consume_all();
             m_definitions.remove(key);
         }
@@ -110,7 +110,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
     if (keyword == "ifdef") {
         ++m_current_depth;
         if (m_state == State::Normal) {
-            auto key = lexer.consume_until(' ');
+            auto key = lexer.consume_until(isspace);
             if (m_definitions.contains(key)) {
                 m_depths_of_taken_branches.append(m_current_depth - 1);
                 return;
@@ -125,7 +125,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
     if (keyword == "ifndef") {
         ++m_current_depth;
         if (m_state == State::Normal) {
-            auto key = lexer.consume_until(' ');
+            auto key = lexer.consume_until(isspace);
             if (!m_definitions.contains(key)) {
                 m_depths_of_taken_branches.append(m_current_depth - 1);
                 return;

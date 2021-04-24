@@ -78,20 +78,20 @@ Configuration Configuration::from_config(const StringView& libname)
                 key = key_lexer.consume_escaped_character();
                 escape = false;
             } else {
-                if (key_lexer.next_is("alt+")) {
-                    alt = key_lexer.consume_specific("alt+");
+                if (key_lexer.consume_specific("alt+")) {
+                    alt = true;
                     continue;
                 }
-                if (key_lexer.next_is("^[")) {
-                    alt = key_lexer.consume_specific("^[");
+                if (key_lexer.consume_specific("^[")) {
+                    alt = true;
                     continue;
                 }
-                if (key_lexer.next_is("^")) {
-                    has_ctrl = key_lexer.consume_specific("^");
+                if (key_lexer.consume_specific("^")) {
+                    has_ctrl = true;
                     continue;
                 }
-                if (key_lexer.next_is("ctrl+")) {
-                    has_ctrl = key_lexer.consume_specific("ctrl+");
+                if (key_lexer.consume_specific("ctrl+")) {
+                    has_ctrl = true;
                     continue;
                 }
                 if (key_lexer.next_is("\\")) {
