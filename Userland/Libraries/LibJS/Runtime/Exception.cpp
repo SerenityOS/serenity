@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,23 +17,16 @@ Exception::Exception(Value value)
     : m_value(value)
 {
     auto& vm = this->vm();
-    auto& call_stack = vm.call_stack();
-    for (ssize_t i = call_stack.size() - 1; i >= 0; --i) {
-        String function_name = call_stack[i]->function_name;
+    m_traceback.ensure_capacity(vm.call_stack().size());
+    for (auto* call_frame : vm.call_stack()) {
+        auto function_name = call_frame->function_name;
         if (function_name.is_empty())
             function_name = "<anonymous>";
-        m_trace.append(function_name);
+        m_traceback.prepend({
+            .function_name = move(function_name),
+            .source_range = call_frame->current_node->source_range(),
+        });
     }
-
-    if (auto* interpreter = vm.interpreter_if_exists()) {
-        for (auto* node_chain = interpreter->executing_ast_node_chain(); node_chain; node_chain = node_chain->previous) {
-            m_source_ranges.append(node_chain->node.source_range());
-        }
-    }
-}
-
-Exception::~Exception()
-{
 }
 
 void Exception::visit_edges(Visitor& visitor)
