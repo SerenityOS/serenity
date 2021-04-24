@@ -125,6 +125,24 @@ int __pthread_mutex_unlock(pthread_mutex_t* mutex)
 
 int pthread_mutex_unlock(pthread_mutex_t*) __attribute__((weak, alias("__pthread_mutex_unlock")));
 
+int __pthread_mutex_trylock(pthread_mutex_t* mutex)
+{
+    auto& atomic = reinterpret_cast<Atomic<u32>&>(mutex->lock);
+    u32 expected = false;
+    if (!atomic.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
+        if (mutex->type == __PTHREAD_MUTEX_RECURSIVE && mutex->owner == pthread_self()) {
+            mutex->level++;
+            return 0;
+        }
+        return EBUSY;
+    }
+    mutex->owner = pthread_self();
+    mutex->level = 0;
+    return 0;
+}
+
+int pthread_mutex_trylock(pthread_mutex_t* mutex) __attribute__((weak, alias("__pthread_mutex_trylock")));
+
 int __pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
 {
     mutex->lock = 0;
