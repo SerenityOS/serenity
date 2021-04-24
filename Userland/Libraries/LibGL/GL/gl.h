@@ -88,6 +88,7 @@ GLAPI void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glScalef(GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glTranslatef(GLfloat x, GLfloat y, GLfloat z);
 GLAPI void glVertex3f(GLfloat x, GLfloat y, GLfloat z);
+GLAPI void glVertex3fv(const GLfloat* v);
 GLAPI void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
 #ifdef __cplusplus

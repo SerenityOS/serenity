@@ -25,6 +25,11 @@ void glVertex3f(GLfloat x, GLfloat y, GLfloat z)
     g_gl_context->gl_vertex(x, y, z, 1.0);
 }
 
+void glVertex3fv(const GLfloat* v)
+{
+    g_gl_context->gl_vertex(v[0], v[1], v[2], 1.0);
+}
+
 void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
     g_gl_context->gl_rotate(angle, x, y, z);
