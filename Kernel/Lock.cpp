@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SourceLocation.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/Debug.h>
 #include <Kernel/KSyms.h>
@@ -13,12 +14,7 @@
 namespace Kernel {
 
 #if LOCK_DEBUG
-void Lock::lock(Mode mode)
-{
-    lock("unknown", 0, mode);
-}
-
-void Lock::lock(const char* file, int line, Mode mode)
+void Lock::lock(Mode mode, const SourceLocation& location)
 #else
 void Lock::lock(Mode mode)
 #endif
@@ -52,9 +48,10 @@ void Lock::lock(Mode mode)
             }
             VERIFY(m_times_locked == 0);
             m_times_locked++;
+
 #if LOCK_DEBUG
             if (current_thread) {
-                current_thread->holding_lock(*this, 1, file, line);
+                current_thread->holding_lock(*this, 1, location);
             }
 #endif
             m_queue.should_block(true);
@@ -77,8 +74,9 @@ void Lock::lock(Mode mode)
             VERIFY(mode == Mode::Exclusive || mode == Mode::Shared);
             VERIFY(m_times_locked > 0);
             m_times_locked++;
+
 #if LOCK_DEBUG
-            current_thread->holding_lock(*this, 1, file, line);
+            current_thread->holding_lock(*this, 1, location);
 #endif
             m_lock.store(false, AK::memory_order_release);
             return;
@@ -98,8 +96,9 @@ void Lock::lock(Mode mode)
                 it->value++;
             else
                 m_shared_holders.set(current_thread, 1);
+
 #if LOCK_DEBUG
-            current_thread->holding_lock(*this, 1, file, line);
+            current_thread->holding_lock(*this, 1, location);
 #endif
             m_lock.store(false, AK::memory_order_release);
             return;
@@ -168,10 +167,9 @@ void Lock::unlock()
 
 #if LOCK_DEBUG
             if (current_thread) {
-                current_thread->holding_lock(*this, -1);
+                current_thread->holding_lock(*this, -1, {});
             }
 #endif
-
             m_lock.store(false, AK::memory_order_release);
             if (unlocked_last) {
                 u32 did_wake = m_queue.wake_one();
@@ -205,7 +203,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
 
                 dbgln_if(LOCK_RESTORE_DEBUG, "Lock::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}", this, m_times_locked);
 #if LOCK_DEBUG
-                m_holder->holding_lock(*this, -(int)m_times_locked);
+                m_holder->holding_lock(*this, -(int)m_times_locked, {});
 #endif
                 m_holder = nullptr;
                 VERIFY(m_times_locked > 0);
@@ -233,7 +231,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
                 lock_count_to_restore = it->value;
                 VERIFY(lock_count_to_restore > 0);
 #if LOCK_DEBUG
-                m_holder->holding_lock(*this, -(int)lock_count_to_restore);
+                m_holder->holding_lock(*this, -(int)lock_count_to_restore, {});
 #endif
                 m_shared_holders.remove(it);
                 VERIFY(m_times_locked >= lock_count_to_restore);
@@ -264,12 +262,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
 }
 
 #if LOCK_DEBUG
-void Lock::restore_lock(Mode mode, u32 lock_count)
-{
-    return restore_lock("unknown", 0, mode, lock_count);
-}
-
-void Lock::restore_lock(const char* file, int line, Mode mode, u32 lock_count)
+void Lock::restore_lock(Mode mode, u32 lock_count, const SourceLocation& location)
 #else
 void Lock::restore_lock(Mode mode, u32 lock_count)
 #endif
@@ -296,8 +289,9 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
                 m_holder = current_thread;
                 m_queue.should_block(true);
                 m_lock.store(false, AK::memory_order_release);
+
 #if LOCK_DEBUG
-                m_holder->holding_lock(*this, (int)lock_count, file, line);
+                m_holder->holding_lock(*this, (int)lock_count, location);
 #endif
                 return;
             }
@@ -318,8 +312,9 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
                 VERIFY(set_result == AK::HashSetResult::InsertedNewEntry);
                 m_queue.should_block(true);
                 m_lock.store(false, AK::memory_order_release);
+
 #if LOCK_DEBUG
-                m_holder->holding_lock(*this, (int)lock_count, file, line);
+                m_holder->holding_lock(*this, (int)lock_count, location);
 #endif
                 return;
             }
