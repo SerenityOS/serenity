@@ -801,6 +801,9 @@ static bool procfs$all(InodeIdentifier, KBufferBuilder& builder)
         auto thread_array = process_object.add_array("threads");
         process.for_each_thread([&](const Thread& thread) {
             auto thread_object = thread_array.add_object();
+#if LOCK_DEBUG
+            thread_object.add("lock_count", thread.lock_count());
+#endif
             thread_object.add("tid", thread.tid().value());
             thread_object.add("name", thread.name());
             thread_object.add("times_scheduled", thread.times_scheduled());
