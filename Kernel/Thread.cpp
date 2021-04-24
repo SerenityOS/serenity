@@ -310,7 +310,7 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 
     if (previous_locked != LockMode::Unlocked) {
         // We've unblocked, relock the process if needed and carry on.
-        RESTORE_LOCK(process().big_lock(), previous_locked, lock_count_to_restore);
+        process().big_lock().restore_lock(previous_locked, lock_count_to_restore);
     }
 }
 

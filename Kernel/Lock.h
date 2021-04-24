@@ -128,7 +128,6 @@ private:
 };
 
 #define LOCKER(...) Locker locker(__VA_ARGS__)
-#define RESTORE_LOCK(lock, ...) (lock).restore_lock(__VA_ARGS__)
 
 template<typename T>
 class Lockable {
