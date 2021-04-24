@@ -30,15 +30,18 @@ post_configure() {
     run cp "${SERENITY_SOURCE_DIR}/Ports/${port}/Setup.local" "Modules/Setup.local"
 }
 
-if [ -x "$(command -v python3)" ]; then
-    # Check if major and minor version of python3 are matching
-    if ! python3 -c "import sys; major, minor, _ = map(int, '${PYTHON_VERSION}'.split('.')); sys.exit(not (sys.version_info.major == major and sys.version_info.minor == minor))"; then
-        echo "Error: python3 version does not match needed version to build ${PYTHON_VERSION}" >&2
+# Note: The showproperty command is used when linting ports, we don't actually need python at this time.
+if [ "$1" != "showproperty" ]; then
+    if [ -x "$(command -v python3)" ]; then
+        # Check if major and minor version of python3 are matching
+        if ! python3 -c "import sys; major, minor, _ = map(int, '${PYTHON_VERSION}'.split('.')); sys.exit(not (sys.version_info.major == major and sys.version_info.minor == minor))"; then
+            echo "Error: python3 version does not match needed version to build ${PYTHON_VERSION}" >&2
+            echo "Build this Python version on your host using Toolchain/BuildPython.sh or install it otherwise and try again." >&2
+            exit 1
+        fi
+    else
+        echo "Error: python3 is not installed but is required to build ${PYTHON_VERSION}" >&2
         echo "Build this Python version on your host using Toolchain/BuildPython.sh or install it otherwise and try again." >&2
         exit 1
     fi
-else
-    echo "Error: python3 is not installed but is required to build ${PYTHON_VERSION}" >&2
-    echo "Build this Python version on your host using Toolchain/BuildPython.sh or install it otherwise and try again." >&2
-    exit 1
 fi
