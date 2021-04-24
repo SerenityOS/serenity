@@ -594,6 +594,22 @@ void SoftwareGLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdoub
     m_error = GL_NO_ERROR;
 }
 
+void SoftwareGLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    if (m_current_matrix_mode == GL_MODELVIEW) {
+        m_model_view_matrix = m_model_view_matrix * FloatMatrix4x4::scale({ static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
+    } else if (m_current_matrix_mode == GL_PROJECTION) {
+        m_projection_matrix = m_projection_matrix * FloatMatrix4x4::scale({ static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
+    }
+
+    m_error = GL_NO_ERROR;
+}
+
 void SoftwareGLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
 {
     if (m_in_draw_state) {
