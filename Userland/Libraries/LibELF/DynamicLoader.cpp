@@ -64,7 +64,7 @@ DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size)
     , m_file_data(data)
     , m_elf_image((u8*)m_file_data, m_file_size)
 {
-    m_tls_size = calculate_tls_size();
+    m_tls_size_of_current_object = calculate_tls_size();
     m_valid = validate();
 }
 
@@ -141,7 +141,7 @@ RefPtr<DynamicObject> DynamicLoader::map()
 
     m_dynamic_object = DynamicObject::create(m_filename, m_base_address, m_dynamic_section_address);
     m_dynamic_object->set_tls_offset(m_tls_offset);
-    m_dynamic_object->set_tls_size(m_tls_size);
+    m_dynamic_object->set_tls_size(m_tls_size_of_current_object);
 
     return m_dynamic_object;
 }

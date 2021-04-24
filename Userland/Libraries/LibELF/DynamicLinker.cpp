@@ -88,7 +88,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const St
     s_loaders.set(get_library_name(filename), *loader);
 
     loader->set_tls_offset(s_current_tls_offset);
-    s_current_tls_offset += loader->tls_size();
+    s_current_tls_offset += loader->tls_size_of_current_object();
 
     return loader;
 }
@@ -156,8 +156,8 @@ static void allocate_tls()
 {
     size_t total_tls_size = 0;
     for (const auto& data : s_loaders) {
-        dbgln_if(DYNAMIC_LOAD_DEBUG, "{}: TLS Size: {}", data.key, data.value->tls_size());
-        total_tls_size += data.value->tls_size();
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "{}: TLS Size: {}", data.key, data.value->tls_size_of_current_object());
+        total_tls_size += data.value->tls_size_of_current_object();
     }
     if (total_tls_size) {
         [[maybe_unused]] void* tls_address = ::allocate_tls(total_tls_size);
@@ -420,7 +420,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "loaded all dependencies");
     for ([[maybe_unused]] auto& lib : s_loaders) {
-        dbgln_if(DYNAMIC_LOAD_DEBUG, "{} - tls size: {}, tls offset: {}", lib.key, lib.value->tls_size(), lib.value->tls_offset());
+        dbgln_if(DYNAMIC_LOAD_DEBUG, "{} - tls size: {}, tls offset: {}", lib.key, lib.value->tls_size_of_current_object(), lib.value->tls_offset());
     }
 
     allocate_tls();
