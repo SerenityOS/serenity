@@ -8,7 +8,6 @@
 #include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
-#include <AK/TemporaryChange.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
@@ -18,6 +17,7 @@
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Symbol.h>
+#include <LibJS/Runtime/TemporaryClearException.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
@@ -376,7 +376,7 @@ void VM::run_queued_promise_jobs()
     dbgln_if(PROMISE_DEBUG, "Running queued promise jobs");
     // Temporarily get rid of the exception, if any - job functions must be called
     // either way, and that can't happen if we already have an exception stored.
-    TemporaryChange change(m_exception, static_cast<Exception*>(nullptr));
+    TemporaryClearException clear_exception(*this);
     while (!m_promise_jobs.is_empty()) {
         auto* job = m_promise_jobs.take_first();
         dbgln_if(PROMISE_DEBUG, "Calling promise job function @ {}", job);
