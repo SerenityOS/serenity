@@ -9,6 +9,7 @@
 
 #include "GL/gl.h"
 #include <AK/OwnPtr.h>
+#include <LibGfx/Matrix4x4.h>
 
 namespace GL {
 
@@ -25,6 +26,7 @@ public:
     virtual GLenum gl_get_error() = 0;
     virtual GLubyte* gl_get_string(GLenum name) = 0;
     virtual void gl_load_identity() = 0;
+    virtual void gl_load_matrix(const FloatMatrix4x4& matrix) = 0;
     virtual void gl_matrix_mode(GLenum mode) = 0;
     virtual void gl_push_matrix() = 0;
     virtual void gl_pop_matrix() = 0;
