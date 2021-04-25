@@ -86,7 +86,7 @@ public:
     bool is_string() const { return m_type == Type::String; }
     bool is_symbol() const { return m_type == Type::Symbol; }
 
-    i32 as_number() const
+    u32 as_number() const
     {
         VERIFY(is_number());
         return m_number;
