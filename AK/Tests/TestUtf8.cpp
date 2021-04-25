@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Utf8View.h>
 
@@ -67,5 +67,3 @@ TEST_CASE(validate_invalid_ut8)
     EXPECT(!utf8_4.validate(valid_bytes));
     EXPECT(valid_bytes == 0);
 }
-
-TEST_MAIN(UTF8)

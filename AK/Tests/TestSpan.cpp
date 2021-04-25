@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Checked.h>
 #include <AK/Span.h>
@@ -123,5 +123,3 @@ TEST_CASE(span_from_c_string)
     const char* str = "Serenity";
     [[maybe_unused]] ReadonlyBytes bytes { str, strlen(str) };
 }
-
-TEST_MAIN(Span)

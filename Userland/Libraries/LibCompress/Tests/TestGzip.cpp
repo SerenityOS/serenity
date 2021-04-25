@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
 #include <AK/Random.h>
@@ -95,5 +95,3 @@ TEST_CASE(gzip_round_trip)
     EXPECT(uncompressed.has_value());
     EXPECT(uncompressed.value() == original);
 }
-
-TEST_MAIN(Gzip)

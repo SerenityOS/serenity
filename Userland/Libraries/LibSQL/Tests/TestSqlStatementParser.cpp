@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Optional.h>
 #include <AK/Result.h>
@@ -735,5 +735,3 @@ TEST_CASE(common_table_expression)
     validate("WITH table (column1, column2) AS (SELECT * FROM table) DELETE FROM table;", { false, { { "table", { "column1", "column2" } } } });
     validate("WITH RECURSIVE table AS (SELECT * FROM table) DELETE FROM table;", { true, { { "table", {} } } });
 }
-
-TEST_MAIN(SqlStatementParser)

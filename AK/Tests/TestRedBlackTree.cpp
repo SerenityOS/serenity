@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Random.h>
 #include <AK/RedBlackTree.h>
@@ -86,5 +86,3 @@ TEST_CASE(clear)
     test.clear();
     EXPECT_EQ(test.size(), 0u);
 }
-
-TEST_MAIN(RedBlackTree)

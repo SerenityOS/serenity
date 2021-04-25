@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/SinglyLinkedList.h>
 
@@ -59,5 +59,3 @@ TEST_CASE(should_find_const_with_predicate)
 
     EXPECT_EQ(sut.end(), sut.find_if([](const auto v) { return v == 42; }));
 }
-
-TEST_MAIN(SinglyLinkedList)

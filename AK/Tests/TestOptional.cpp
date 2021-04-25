@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Optional.h>
 #include <AK/String.h>
@@ -53,5 +53,3 @@ TEST_CASE(short_notation)
     EXPECT_EQ(value->length(), 3u);
     EXPECT_EQ(*value, "foo");
 }
-
-TEST_MAIN(Optional)

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
@@ -64,5 +64,3 @@ TEST_CASE(weakptr_move)
 
     EXPECT_EQ(weak2.is_null(), true);
 }
-
-TEST_MAIN(WeakPtr)

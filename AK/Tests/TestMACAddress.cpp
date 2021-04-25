@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/MACAddress.h>
 #include <AK/Types.h>
@@ -82,5 +82,3 @@ TEST_CASE(should_string_format)
     MACAddress sut(1, 2, 3, 4, 5, 6);
     EXPECT_EQ("01:02:03:04:05:06", sut.to_string());
 }
-
-TEST_MAIN(MACAddress)
