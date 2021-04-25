@@ -5,6 +5,7 @@
  */
 
 #include <AK/HashMap.h>
+#include <AK/SourceLocation.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
@@ -22,10 +23,10 @@
         VERIFY_NOT_REACHED();                               \
     }
 
-#define PARSE_ERROR()             \
-    do {                          \
-        dbgln("CSS parse error"); \
-    } while (0)
+static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
+{
+    dbgln("CSS Parse error! {}", location);
+}
 
 namespace Web {
 
@@ -325,11 +326,11 @@ public:
             dbgln("CSSParser: Peeked '{:c}' wanted specific '{:c}'", peek(), ch);
         }
         if (!peek()) {
-            PARSE_ERROR();
+            log_parse_error();
             return false;
         }
         if (peek() != ch) {
-            PARSE_ERROR();
+            log_parse_error();
             ++index;
             return false;
         }
@@ -795,12 +796,12 @@ public:
     {
         parse_selector_list();
         if (!consume_specific('{')) {
-            PARSE_ERROR();
+            log_parse_error();
             return;
         }
         parse_declaration();
         if (!consume_specific('}')) {
-            PARSE_ERROR();
+            log_parse_error();
             return;
         }
 
@@ -810,7 +811,7 @@ public:
     Optional<String> parse_string()
     {
         if (!is_valid_string_quotes_char(peek())) {
-            PARSE_ERROR();
+            log_parse_error();
             return {};
         }
 
@@ -870,7 +871,7 @@ public:
             if (!consume_specific(')'))
                 return;
         } else {
-            PARSE_ERROR();
+            log_parse_error();
             return;
         }
 
