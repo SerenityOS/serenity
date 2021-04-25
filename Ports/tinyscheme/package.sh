@@ -6,7 +6,7 @@ auth_type=md5
 useconfigure=false
 
 build() {
-    run make scheme CC="${CC} -fpic -pedantic" SYS_LIBS= FEATURES='-DUSE_NO_FEATURES=1 -DInitFile=\"/usr/local/include/tinyscheme/init.scm\"'
+    run make scheme CC="${CC} -fpic -pedantic" SYS_LIBS='-ldl' FEATURES='-DUSE_NO_FEATURES=1 -DInitFile=\"/usr/local/include/tinyscheme/init.scm\"'
 }
 
 install() {
