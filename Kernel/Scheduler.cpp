@@ -22,9 +22,6 @@
 
 namespace Kernel {
 
-extern bool g_profiling_all_threads;
-extern PerformanceEventBuffer* g_global_perf_events;
-
 class SchedulerPerProcessorData {
     AK_MAKE_NONCOPYABLE(SchedulerPerProcessorData);
     AK_MAKE_NONMOVABLE(SchedulerPerProcessorData);
@@ -513,12 +510,6 @@ void Scheduler::timer_tick(const RegisterState& regs)
         //        That will be an interesting mode to add in the future. :^)
         if (current_thread != Processor::current().idle_thread()) {
             perf_events = g_global_perf_events;
-            if (current_thread->process().space().enforces_syscall_regions()) {
-                // FIXME: This is very nasty! We dump the current process's address
-                //        space layout *every time* it's sampled. We should figure out
-                //        a way to do this less often.
-                perf_events->add_process(current_thread->process());
-            }
         }
     } else if (current_thread->process().is_profiling()) {
         VERIFY(current_thread->process().perf_events());
@@ -526,7 +517,9 @@ void Scheduler::timer_tick(const RegisterState& regs)
     }
 
     if (perf_events) {
-        [[maybe_unused]] auto rc = perf_events->append_with_eip_and_ebp(regs.eip, regs.ebp, PERF_EVENT_SAMPLE, 0, 0);
+        [[maybe_unused]] auto rc = perf_events->append_with_eip_and_ebp(
+            current_thread->pid(), current_thread->tid(),
+            regs.eip, regs.ebp, PERF_EVENT_SAMPLE, 0, 0, nullptr);
     }
 
     if (current_thread->tick())
