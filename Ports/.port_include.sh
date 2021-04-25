@@ -118,44 +118,98 @@ fetch() {
         gpg --list-keys $auth_import_key || gpg --keyserver hkps://keyserver.ubuntu.com --recv-key $auth_import_key
     fi
 
+    tried_download_again=0
+
+    while true; do
+        OLDIFS=$IFS
+        IFS=$'\n'
+        for f in $files; do
+            IFS=$OLDIFS
+            read url filename auth_sum<<< $(echo "$f")
+            echo "Downloading URL: ${url}"
+
+            # FIXME: Serenity's curl port does not support https, even with openssl installed.
+            if which curl >/dev/null 2>&1 && ! curl https://example.com -so /dev/null; then
+                url=$(echo "$url" | sed "s/^https:\/\//http:\/\//")
+            fi
+
+            # download files
+            if [ -f "$filename" ]; then
+                echo "$filename already exists"
+            else
+                if which curl; then
+                    run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
+                else
+                    run_nocd pro "$url" > "$filename"
+                fi
+            fi
+        done
+
+        verification_failed=0
+
+        OLDIFS=$IFS
+        IFS=$'\n'
+        for f in $files; do
+            IFS=$OLDIFS
+            read url filename auth_sum<<< $(echo "$f")
+
+            # check sha256sum if given
+            if [ "$auth_type" = "sha256" ]; then
+                echo "Expecting ${auth_type}sum: $auth_sum"
+                calc_sum="$(sha256sum $filename | cut -f1 -d' ')"
+                echo "${auth_type}sum($filename) = '$calc_sum'"
+                if [ "$calc_sum" != "$auth_sum" ]; then
+                    # remove downloaded file to re-download on next run
+                    rm -f $filename
+                    echo "${auth_type}sums mismatching, removed erronous download."
+                    if [ $tried_download_again -eq 1 ]; then
+                        echo "Please run script again."
+                        exit 1
+                    fi
+                    echo "Trying to download the files again."
+                    tried_download_again=1
+                    verification_failed=1
+                fi
+            fi
+        done
+
+        # check signature
+        if [ "$auth_type" = "sig" ]; then
+            if $NO_GPG; then
+                echo "WARNING: gpg signature check was disabled by --no-gpg-verification"
+            else
+                if $(gpg --verify $auth_opts); then
+                    echo "- Signature check OK."
+                else
+                    echo "- Signature check NOT OK"
+                    for f in $files; do
+                        rm -f $f
+                    done
+                    rm -rf "$workdir"
+                    echo "  Signature mismatching, removed erronous download."
+                    if [ $tried_download_again -eq 1 ]; then
+                        echo "Please run script again."
+                        exit 1
+                    fi
+                    echo "Trying to download the files again."
+                    tried_download_again=1
+                    verification_failed=1
+                fi
+            fi
+        fi
+
+        if [ $verification_failed -ne 1 ]; then
+            break
+        fi
+    done
+
+    # extract
     OLDIFS=$IFS
     IFS=$'\n'
     for f in $files; do
         IFS=$OLDIFS
         read url filename auth_sum<<< $(echo "$f")
-        echo "URL: ${url}"
 
-        # FIXME: Serenity's curl port does not support https, even with openssl installed.
-        if which curl && ! curl https://example.com -so /dev/null; then
-            url=$(echo "$url" | sed "s/^https:\/\//http:\/\//")
-        fi
-
-
-        # download files
-        if [ -f "$filename" ]; then
-            echo "$filename already exists"
-        else
-            if which curl; then
-                run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
-            else
-                run_nocd pro "$url" > "$filename"
-            fi
-        fi
-
-        # check sha256sum if given
-        if [ "$auth_type" = "sha256" ]; then
-            echo "Expecting ${auth_type}sum: $auth_sum"
-            calc_sum="$(sha256sum $filename | cut -f1 -d' ')"
-            echo "${auth_type}sum($filename) = '$calc_sum'"
-            if [ "$calc_sum" != "$auth_sum" ]; then
-                # remove downloaded file to re-download on next run
-                rm -f $filename
-                echo "${auth_type}sums mismatching, removed erronous download. Please run script again."
-                exit 1
-            fi
-        fi
-
-        # extract
         if [ ! -f "$workdir"/.${filename}_extracted ]; then
             case "$filename" in
                 *.tar.gz|*.tgz)
@@ -183,25 +237,6 @@ fetch() {
             esac
         fi
     done
-
-    # check signature
-    if [ "$auth_type" = "sig" ]; then
-        if $NO_GPG; then
-            echo "WARNING: gpg signature check was disabled by --no-gpg-verification"
-        else
-            if $(gpg --verify $auth_opts); then
-                echo "- Signature check OK."
-            else
-                echo "- Signature check NOT OK"
-                for f in $files; do
-                    rm -f $f
-                done
-                rm -rf "$workdir"
-                echo "  Signature mismatching, removed erronous download. Please run script again."
-                exit 1
-            fi
-        fi
-    fi
 
     post_fetch
 }
