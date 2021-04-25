@@ -24,7 +24,11 @@ Exception::Exception(Value value)
             function_name = "<anonymous>";
         m_traceback.prepend({
             .function_name = move(function_name),
-            .source_range = call_frame->current_node->source_range(),
+            // We might not have an AST node associated with the call frame, e.g. in promise
+            // reaction jobs (which aren't called anywhere from the source code).
+            // They're not going to generate any _unhandled_ exceptions though, so a meaningless
+            // source range is fine.
+            .source_range = call_frame->current_node ? call_frame->current_node->source_range() : SourceRange {},
         });
     }
 }
