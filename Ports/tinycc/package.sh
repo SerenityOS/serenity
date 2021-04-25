@@ -13,5 +13,3 @@ configure() {
         --triplet="${SERENITY_ARCH}-pc-serenity" \
         --crtprefix=/usr/lib
 }
-
-export CONFIG_ldl=no
