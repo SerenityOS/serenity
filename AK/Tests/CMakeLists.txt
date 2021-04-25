@@ -56,6 +56,7 @@ set(AK_TEST_SOURCES
     TestTypedTransfer.cpp
     TestURL.cpp
     TestUtf8.cpp
+    TestVariant.cpp
     TestVector.cpp
     TestWeakPtr.cpp
 )
