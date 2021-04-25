@@ -2,8 +2,8 @@
 
 port=SDL2_gfx
 version=1.0.4
-files="https://downloads.sourceforge.net/project/sdl2gfx/SDL2_gfx-${version}.tar.gz SDL2_gfx-${version}.tar.gz 15f9866c6464ca298f28f62fe5b36d9f"
-auth_type=md5
+files="https://downloads.sourceforge.net/project/sdl2gfx/SDL2_gfx-${version}.tar.gz SDL2_gfx-${version}.tar.gz 63e0e01addedc9df2f85b93a248f06e8a04affa014a835c2ea34bfe34e576262"
+auth_type=sha256
 depends="SDL2"
 useconfigure=true
 configopts="--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"

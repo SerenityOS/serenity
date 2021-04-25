@@ -2,5 +2,5 @@
 port=links
 version=2.22
 useconfigure=true
-files="http://links.twibright.com/download/links-${version}.tar.bz2 links-${version}.tar.bz2 55f745dea500aac52cede98bab8d96e2"
-auth_type=md5
+files="http://links.twibright.com/download/links-${version}.tar.bz2 links-${version}.tar.bz2 0364986b3a7f1e8e3171bea362b53f71e1dd3360a8842d66fdc65580ebc2084d"
+auth_type=sha256

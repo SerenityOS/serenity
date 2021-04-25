@@ -2,8 +2,8 @@
 port=sl
 version=git
 workdir=sl-master
-files="https://github.com/mtoyoda/sl/archive/master.tar.gz sl-git.tar.gz 230347a534644a46e635877a6b0dfb77"
-auth_type=md5
+files="https://github.com/mtoyoda/sl/archive/master.tar.gz sl-git.tar.gz 3270434e28c4f4e15b8e98de60ea98508a7486485f52356a61f36ac5430fbc80"
+auth_type=sha256
 depends="ncurses"
 
 build() {

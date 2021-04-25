@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=tinyscheme
 version=1.42
-files="https://downloads.sourceforge.net/project/tinyscheme/tinyscheme/tinyscheme-${version}/tinyscheme-${version}.tar.gz tinyscheme-${version}.tar.gz 273ac5ffe5305986b329e9045f2aea89"
-auth_type=md5
+files="https://downloads.sourceforge.net/project/tinyscheme/tinyscheme/tinyscheme-${version}/tinyscheme-${version}.tar.gz tinyscheme-${version}.tar.gz 17b0b1bffd22f3d49d5833e22a120b339039d2cfda0b46d6fc51dd2f01b407ad"
+auth_type=sha256
 useconfigure=false
 
 build() {
