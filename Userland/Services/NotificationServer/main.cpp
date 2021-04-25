@@ -12,10 +12,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio recvfd sendfd accept rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     auto app = GUI::Application::construct(argc, argv);
     auto server = Core::LocalServer::construct();
@@ -33,6 +35,7 @@ int main(int argc, char** argv)
         IPC::new_client_connection<NotificationServer::ClientConnection>(client_socket.release_nonnull(), client_id);
     };
 
+#ifdef __serenity__
     if (unveil("/res", "r") < 0) {
         perror("unveil");
         return 1;
@@ -44,6 +47,7 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
+#endif
 
     return app->exec();
 }

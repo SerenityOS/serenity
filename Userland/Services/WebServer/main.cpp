@@ -37,10 +37,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+#ifdef __serenity__
     if (pledge("stdio accept rpath inet unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Core::EventLoop loop;
 
@@ -60,6 +62,7 @@ int main(int argc, char** argv)
 
     outln("Listening on 0.0.0.0:{}", port);
 
+#ifdef __serenity__
     if (unveil("/res/icons", "r") < 0) {
         perror("unveil");
         return 1;
@@ -76,6 +79,7 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
+#endif
 
     return loop.exec();
 }

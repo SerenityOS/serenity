@@ -180,10 +180,12 @@ int main(int, char**)
 {
     prepare_devfs();
 
+#ifdef __serenity__
     if (pledge("stdio proc exec tty accept unix rpath wpath cpath chown fattr id sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     mount_all_filesystems();
     create_tmp_coredump_directory();

@@ -12,14 +12,17 @@
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio accept unix inet rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Core::EventLoop event_loop;
     auto server = LookupServer::LookupServer::construct();
 
+#ifdef __serenity__
     if (pledge("stdio accept inet rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -34,6 +37,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         perror("unveil");
         return 1;
     }
+#endif
 
     return event_loop.exec();
 }

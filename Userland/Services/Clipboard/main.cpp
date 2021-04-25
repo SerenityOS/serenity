@@ -12,24 +12,32 @@
 
 int main(int, char**)
 {
+#ifdef __serenity__
     if (pledge("stdio recvfd sendfd accept unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
+
     Core::EventLoop event_loop;
+
+#ifdef __serenity__
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
         return 1;
     }
+#endif
 
     auto server = Core::LocalServer::construct();
     bool ok = server->take_over_from_system_server();
     VERIFY(ok);
 
+#ifdef __serenity__
     if (pledge("stdio recvfd sendfd accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();

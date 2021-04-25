@@ -22,10 +22,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     launcher.load_handlers();
     launcher.load_config(Core::ConfigFile::get_for_app("LaunchServer"));
 
+#ifdef __serenity__
     if (pledge("stdio accept rpath proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     bool ok = server->take_over_from_system_server();
     VERIFY(ok);

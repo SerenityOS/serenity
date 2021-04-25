@@ -15,10 +15,12 @@ int main(int, char**)
     Core::EventLoop event_loop;
     auto server = Core::LocalServer::construct();
 
+#ifdef __serenity__
     if (pledge("stdio unix accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     bool ok = server->take_over_from_system_server("/tmp/portal/inspector");
     VERIFY(ok);

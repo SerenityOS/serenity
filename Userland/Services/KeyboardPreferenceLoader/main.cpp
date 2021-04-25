@@ -12,6 +12,7 @@
 
 int main()
 {
+#ifdef __serenity__
     if (pledge("stdio proc exec rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -31,6 +32,7 @@ int main()
         perror("unveil");
         return 1;
     }
+#endif
 
     auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini"));
     auto keymap = mapper_config->read_entry("Mapping", "Keymap", "");

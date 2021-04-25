@@ -16,6 +16,7 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio unix inet id accept", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -25,6 +26,7 @@ int main(int argc, char** argv)
         perror("unveil");
         return 1;
     }
+#endif
 
     int port = 7;
 

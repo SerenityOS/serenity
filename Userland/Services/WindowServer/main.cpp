@@ -19,6 +19,7 @@
 
 int main(int, char**)
 {
+#ifdef __serenity__
     if (pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -43,6 +44,7 @@ int main(int, char**)
         perror("unveil /dev rw");
         return 1;
     }
+#endif
 
     struct sigaction act;
     memset(&act, 0, sizeof(act));
@@ -70,10 +72,12 @@ int main(int, char**)
 
     WindowServer::EventLoop loop;
 
+#ifdef __serenity__
     if (pledge("stdio video thread sendfd recvfd accept rpath wpath cpath proc", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     int scale = wm_config->read_num_entry("Screen", "ScaleFactor", 1);
     WindowServer::Screen screen(wm_config->read_num_entry("Screen", "Width", 1024 / scale), wm_config->read_num_entry("Screen", "Height", 768 / scale), scale);
@@ -84,6 +88,7 @@ int main(int, char**)
     auto am = WindowServer::AppletManager::construct();
     auto mm = WindowServer::MenuManager::construct();
 
+#ifdef __serenity__
     if (unveil("/tmp", "") < 0) {
         perror("unveil /tmp");
         return 1;
@@ -98,6 +103,7 @@ int main(int, char**)
         perror("unveil");
         return 1;
     }
+#endif
 
     dbgln("Entering WindowServer main loop");
     loop.exec();

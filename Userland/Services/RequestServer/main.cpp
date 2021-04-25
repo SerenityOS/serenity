@@ -15,15 +15,19 @@
 
 int main(int, char**)
 {
+#ifdef __serenity__
     if (pledge("stdio inet accept unix rpath sendfd recvfd", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     // Ensure the certificates are read out here.
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
 
     Core::EventLoop event_loop;
+
+#ifdef __serenity__
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
     if (pledge("stdio inet accept unix sendfd recvfd", nullptr) < 0) {
         perror("pledge");
@@ -37,6 +41,7 @@ int main(int, char**)
         perror("unveil");
         return 1;
     }
+#endif
 
     [[maybe_unused]] auto gemini = new RequestServer::GeminiProtocol;
     [[maybe_unused]] auto http = new RequestServer::HttpProtocol;

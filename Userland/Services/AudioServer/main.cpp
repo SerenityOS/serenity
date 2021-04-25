@@ -10,10 +10,12 @@
 
 int main(int, char**)
 {
+#ifdef __serenity__
     if (pledge("stdio recvfd thread accept cpath rpath wpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Core::EventLoop event_loop;
     AudioServer::Mixer mixer;
@@ -32,12 +34,14 @@ int main(int, char**)
         IPC::new_client_connection<AudioServer::ClientConnection>(client_socket.release_nonnull(), client_id, mixer);
     };
 
+#ifdef __serenity__
     if (pledge("stdio recvfd thread accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     return event_loop.exec();
 }
