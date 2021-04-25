@@ -288,7 +288,6 @@ void AESCipher::encrypt_block(const AESCipherBlock& in, AESCipherBlock& out)
 
 void AESCipher::decrypt_block(const AESCipherBlock& in, AESCipherBlock& out)
 {
-
     u32 s0, s1, s2, s3, t0, t1, t2, t3;
     size_t r { 0 };
 

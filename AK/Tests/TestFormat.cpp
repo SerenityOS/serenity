@@ -167,7 +167,6 @@ TEST_CASE(pointers)
 // This is a bit scary, thus this test. At least this test should fail in this case.
 TEST_CASE(ensure_that_format_works)
 {
-
     if (String::formatted("FAIL") != "FAIL") {
         fprintf(stderr, "FAIL\n");
         exit(1);

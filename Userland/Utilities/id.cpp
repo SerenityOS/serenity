@@ -109,7 +109,6 @@ static bool print_gid_list()
 
 static bool print_full_id_list()
 {
-
     uid_t uid = getuid();
     gid_t gid = getgid();
     struct passwd* pw = getpwuid(uid);
