@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, The SerenityOS developers.
+ * Copyright (c) 2021, Dex♪ <dexes.ttp@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
