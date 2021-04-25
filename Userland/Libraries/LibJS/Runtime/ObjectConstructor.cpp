@@ -71,16 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
-    auto* result = Array::create(global_object);
-    for (auto& entry : object->indexed_properties())
-        result->indexed_properties().append(js_string(vm, String::number(entry.index())));
-    for (auto& it : object->shape().property_table_ordered()) {
-        if (!it.key.is_string())
-            continue;
-        result->indexed_properties().append(js_string(vm, it.key.as_string()));
-    }
-
-    return result;
+    return Array::create_from(global_object, object->get_own_properties(PropertyKind::Key, false, GetOwnPropertyReturnType::StringOnly));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
