@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/FlyString.h>
 #include <AK/String.h>
@@ -235,5 +235,3 @@ TEST_CASE(sprintf)
     EXPECT_EQ(String(buf1), String("+12"));
     EXPECT_EQ(String(buf2), String("-12"));
 }
-
-TEST_MAIN(String)

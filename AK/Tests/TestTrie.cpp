@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Trie.h>
 
@@ -66,5 +66,3 @@ TEST_CASE(iterate)
         ++i;
     }
 }
-
-TEST_MAIN(Trie)

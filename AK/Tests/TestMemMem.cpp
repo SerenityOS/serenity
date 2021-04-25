@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/MemMem.h>
 
@@ -66,5 +66,3 @@ TEST_CASE(kmp_two_chunks)
     EXPECT_EQ(result_2.value_or(9), 4u);
     EXPECT(!result_3.has_value());
 }
-
-TEST_MAIN(MemMem)

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/DoublyLinkedList.h>
 
@@ -41,5 +41,3 @@ TEST_CASE(should_find_const)
 
     EXPECT_EQ(sut.end(), sut.find(42));
 }
-
-TEST_MAIN(DoublyLinkedList)

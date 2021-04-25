@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Hex.h>
 
@@ -59,5 +59,3 @@ TEST_CASE(should_constexpr_decode_hex_digit)
     static_assert(14u == decode_hex_digit('E'));
     static_assert(15u == decode_hex_digit('F'));
 }
-
-TEST_MAIN(Hex)

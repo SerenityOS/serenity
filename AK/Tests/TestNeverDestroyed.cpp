@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/NeverDestroyed.h>
 #include <AK/StdLibExtras.h>
@@ -71,5 +71,3 @@ TEST_CASE(should_provide_basic_getter)
     AK::NeverDestroyed<Counter> n {};
     EXPECT_EQ(0, n.get().num_destroys);
 }
-
-TEST_MAIN(NeverDestroyed)

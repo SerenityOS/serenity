@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/DistinctNumeric.h>
 
@@ -283,5 +283,3 @@ TEST_CASE(negative_incompatible)
     //        |                                  DistinctNumeric<[...],true,true,true,true,true,[...],[...],64>
 }
 #endif /* COMPILE_NEGATIVE_TESTS */
-
-TEST_MAIN(DistinctNumeric)

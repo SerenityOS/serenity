@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/SourceGenerator.h>
 
@@ -69,5 +69,3 @@ TEST_CASE(scoped)
 
     EXPECT_EQ(global_generator.as_string_view(), "\nfoo-0 bar-0\nfoo-0 bar-0\nfoo-0 bar-0\nfoo-2 bar-0\nfoo-2 bar-3\nfoo-0 bar-0\nfoo-2 bar-0\n");
 }
-
-TEST_MAIN(SourceGenerator)

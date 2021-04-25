@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/BinaryHeap.h>
 #include <AK/String.h>
@@ -65,5 +65,3 @@ TEST_CASE(large_populate_reverse)
         EXPECT_EQ(ints.pop_min(), i);
     }
 }
-
-TEST_MAIN(BinaryHeap)
