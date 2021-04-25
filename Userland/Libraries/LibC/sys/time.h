@@ -111,6 +111,6 @@ static inline void TIMESPEC_TO_TIMEVAL(struct timeval* tv, const struct timespec
 #define timespecclear timespecclear
 #define timespecisset timespecisset
 #define timespeccmp(ts, us, cmp) \
-    (((ts)->tv_sec == (us)->tv_sec) ? ((ts)->vf_nsec cmp(us)->tv_nsec) : ((ts)->tv_sec cmp(us)->tv_sec))
+    (((ts)->tv_sec == (us)->tv_sec) ? ((ts)->tv_nsec cmp(us)->tv_nsec) : ((ts)->tv_sec cmp(us)->tv_sec))
 
 __END_DECLS
