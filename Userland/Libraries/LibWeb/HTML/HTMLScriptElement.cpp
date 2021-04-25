@@ -207,7 +207,7 @@ void HTMLScriptElement::prepare_script()
             auto request = LoadRequest::create_for_url_on_page(url, document().page());
 
             // FIXME: This load should be made asynchronous and the parser should spin an event loop etc.
-            m_script_filename = url.basename();
+            m_script_filename = url.to_string();
             ResourceLoader::the().load_sync(
                 request,
                 [this, url](auto data, auto&, auto) {
