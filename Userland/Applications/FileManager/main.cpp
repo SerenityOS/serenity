@@ -49,6 +49,7 @@
 #include <spawn.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 using namespace FileManager;
@@ -58,6 +59,7 @@ static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_locatio
 static void do_copy(const Vector<String>& selected_file_paths, FileUtils::FileOperation file_operation);
 static void do_paste(const String& target_directory, GUI::Window* window);
 static void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* window);
+static void do_unzip_archive(const Vector<String>& selected_file_paths, GUI::Window* window);
 static void show_properties(const String& container_dir_path, const String& path, const Vector<String>& selected, GUI::Window* window);
 static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, const DirectoryView& directory_view, const String& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers);
 
@@ -192,6 +194,32 @@ void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* wind
     }
 }
 
+void do_unzip_archive(const Vector<String>& selected_file_paths, GUI::Window* window)
+{
+    String archive_file_path = selected_file_paths.first();
+    String output_directory_path = archive_file_path.substring(0, archive_file_path.length() - 4);
+
+    pid_t unzip_pid = fork();
+    if (unzip_pid < 0) {
+        perror("fork");
+        VERIFY_NOT_REACHED();
+    }
+
+    if (!unzip_pid) {
+        int rc = execlp("/bin/unzip", "/bin/unzip", "-o", output_directory_path.characters(), archive_file_path.characters(), nullptr);
+        if (rc < 0) {
+            perror("execlp");
+            _exit(1);
+        }
+    } else {
+        // FIXME: this could probably be tied in with the new file operation progress tracking
+        int status;
+        int rc = waitpid(unzip_pid, &status, 0);
+        if (rc < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0)
+            GUI::MessageBox::show(window, "Could not extract archive", "Extract Archive Error", GUI::MessageBox::Type::Error);
+    }
+}
+
 void show_properties(const String& container_dir_path, const String& path, const Vector<String>& selected, GUI::Window* window)
 {
     RefPtr<PropertiesWindow> properties;
@@ -285,6 +313,18 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
         window);
     cut_action->set_enabled(false);
 
+    auto unzip_archive_action
+        = GUI::Action::create(
+            "E&xtract Here",
+            [&](const GUI::Action&) {
+                auto paths = directory_view.selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_unzip_archive(paths, directory_view.window());
+            },
+            window);
+
     directory_view.on_selection_change = [&](const GUI::AbstractView& view) {
         copy_action->set_enabled(!view.selection().is_empty());
         cut_action->set_enabled(!view.selection().is_empty());
@@ -353,6 +393,11 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view.delete_action());
                 file_context_menu->add_separator();
+
+                if (node.full_path().ends_with(".zip", AK::CaseSensitivity::CaseInsensitive)) {
+                    file_context_menu->add_action(unzip_archive_action);
+                    file_context_menu->add_separator();
+                }
 
                 bool added_open_menu_items = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
                 if (added_open_menu_items)
@@ -645,6 +690,19 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                     return;
                 }
                 do_create_link(paths, directory_view.window());
+            },
+            window);
+
+    auto unzip_archive_action
+        = GUI::Action::create(
+            "E&xtract Here",
+            [&](const GUI::Action&) {
+                auto paths = directory_view.selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_unzip_archive(paths, directory_view.window());
+                refresh_tree_view();
             },
             window);
 
@@ -964,6 +1022,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 file_context_menu->add_action(directory_view.delete_action());
                 file_context_menu->add_action(shortcut_action);
                 file_context_menu->add_separator();
+
+                if (node.full_path().ends_with(".zip", AK::CaseSensitivity::CaseInsensitive)) {
+                    file_context_menu->add_action(unzip_archive_action);
+                    file_context_menu->add_separator();
+                }
 
                 bool added_launch_file_handlers = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
                 if (added_launch_file_handlers)
