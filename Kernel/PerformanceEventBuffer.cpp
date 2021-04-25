@@ -45,6 +45,8 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
         FlatPtr retaddr;
         if (!safe_memcpy(&retaddr, (void*)(stack_ptr + sizeof(FlatPtr)), sizeof(FlatPtr), fault_at))
             break;
+        if (retaddr == 0)
+            break;
         backtrace.append(retaddr);
         if (backtrace.size() == PerformanceEvent::max_stack_frame_count)
             break;
