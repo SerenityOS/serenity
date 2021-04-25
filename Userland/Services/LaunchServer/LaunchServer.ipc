@@ -1,4 +1,4 @@
-endpoint LaunchServer = 101
+endpoint LaunchServer
 {
     Greet() => ()
     OpenURL(URL url, String handler_name) => (bool response)
