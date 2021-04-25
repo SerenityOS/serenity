@@ -1,6 +1,6 @@
 ## Name
 
-test - checks files and compare values
+test - check files and compare values
 
 ## Synopsis
 
