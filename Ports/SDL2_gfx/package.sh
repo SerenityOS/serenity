@@ -10,5 +10,5 @@ configopts="--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
 
 install() {
     run make install DESTDIR=${SERENITY_INSTALL_ROOT} $installopts
-    run ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_gfx.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_gfx.a -Wl,--no-whole-archive
+    run ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_gfx.so -Wl,-soname,libSDL2_gfx.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libSDL2_gfx.a -Wl,--no-whole-archive
 }
