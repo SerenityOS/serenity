@@ -210,7 +210,6 @@ ALWAYS_INLINE ExecutionResult OpCode_FailForks::execute(const MatchInput& input,
 
 ALWAYS_INLINE ExecutionResult OpCode_Jump::execute(const MatchInput&, MatchState& state, MatchOutput&) const
 {
-
     state.instruction_position += offset();
     return ExecutionResult::Continue;
 }

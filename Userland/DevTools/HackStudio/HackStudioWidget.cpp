@@ -376,7 +376,6 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_selected_action()
 {
-
     auto open_selected_action = GUI::Action::create("Open", [this](const GUI::Action&) {
         auto files = selected_file_paths();
         for (auto& file : files)
@@ -678,7 +677,6 @@ String HackStudioWidget::get_full_path_of_serenity_source(const String& file)
 
 RefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(const String& file_name)
 {
-
     String file_path = file_name;
 
     // TODO: We can probably do a more specific condition here, something like

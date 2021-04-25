@@ -45,7 +45,6 @@ inline void vmware_out(VMWareCommand& command)
 
 inline void vmware_high_bandwidth_send(VMWareCommand& command)
 {
-
     command.magic = VMWARE_MAGIC;
     command.port = VMWARE_PORT_HIGHBANDWIDTH;
 

@@ -124,7 +124,6 @@ void VimCursor::move_backwards()
 
 void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift, [[maybe_unused]] bool alt)
 {
-
     if (is_complete())
         return;
 

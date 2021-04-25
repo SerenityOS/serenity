@@ -504,7 +504,6 @@ TextPosition EditingEngine::find_end_of_next_word()
 
 void EditingEngine::move_to_end_of_next_word()
 {
-
     m_editor->set_cursor(find_end_of_next_word());
 }
 

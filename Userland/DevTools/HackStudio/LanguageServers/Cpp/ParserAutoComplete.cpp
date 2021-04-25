@@ -300,7 +300,6 @@ NonnullRefPtrVector<Declaration> ParserAutoComplete::get_global_declarations(con
 
 String ParserAutoComplete::document_path_from_include_path(const StringView& include_path) const
 {
-
     static Regex<PosixExtended> library_include("<(.+)>");
     static Regex<PosixExtended> user_defined_include("\"(.+)\"");
 
