@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/HashFunctions.h>
 #include <AK/Types.h>
@@ -59,5 +59,3 @@ TEST_CASE(constexpr_ptr_hash)
     // "ptr_hash" test binds the result.
     static_assert(ptr_hash(FlatPtr(42)));
 }
-
-TEST_MAIN(HashFunctions)

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <float.h>
 #include <math.h>
@@ -250,5 +250,3 @@ TEST_CASE(fmax_and_fmin)
     EXPECT(fmin(0, NAN) == 0);
     EXPECT(isnan(fmin(NAN, NAN)));
 }
-
-TEST_MAIN(Math)

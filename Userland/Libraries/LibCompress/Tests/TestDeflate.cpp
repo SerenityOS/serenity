@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
 #include <AK/MemoryStream.h>
@@ -155,5 +155,3 @@ TEST_CASE(deflate_compress_literals)
     auto compressed = Compress::DeflateCompressor::compress_all(test, Compress::DeflateCompressor::CompressionLevel::GOOD);
     EXPECT(compressed.has_value());
 }
-
-TEST_MAIN(Deflate)

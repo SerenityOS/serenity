@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Atomic.h>
 
@@ -340,5 +340,3 @@ TEST_CASE(fetch_xor)
     a_u8 = 0xe2;
     EXPECT((a_u8 ^= 0xef) == 0x0d);
 }
-
-TEST_MAIN(Atomic)
