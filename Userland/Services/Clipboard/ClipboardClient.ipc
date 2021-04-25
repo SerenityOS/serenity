@@ -1,4 +1,4 @@
-endpoint ClipboardClient
+endpoint ClipboardClient = 804
 {
     ClipboardDataChanged([UTF8] String mime_type) =|
 }

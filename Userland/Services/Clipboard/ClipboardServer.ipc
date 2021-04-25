@@ -1,4 +1,4 @@
-endpoint ClipboardServer
+endpoint ClipboardServer = 802
 {
     Greet() => ()
 
