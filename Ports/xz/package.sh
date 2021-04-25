@@ -8,6 +8,6 @@ depends="zlib libiconv"
 
 install() {
     run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
-    ${CC} -pthread -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/liblzma.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/liblzma.a -Wl,--no-whole-archive -lz -liconv
+    ${CC} -pthread -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/liblzma.so -Wl,-soname,liblzma.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/liblzma.a -Wl,--no-whole-archive -lz -liconv
     rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/liblzma.la
 }

@@ -7,6 +7,6 @@ auth_type=md5
 
 install() {
     run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
-    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libogg.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libogg.a -Wl,--no-whole-archive
+    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libogg.so -Wl,-soname,libogg.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libogg.a -Wl,--no-whole-archive
     rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libogg.la
 }
