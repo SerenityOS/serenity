@@ -66,6 +66,26 @@ struct Array {
         return Size;
     }
 
+    constexpr T max() requires(requires(T x, T y) { x < y; })
+    {
+        static_assert(Size > 0, "No values to max() over");
+
+        T value = __data[0];
+        for (size_t i = 1; i < Size; ++i)
+            value = AK::max(__data[i], value);
+        return value;
+    }
+
+    constexpr T min() requires(requires(T x, T y) { x > y; })
+    {
+        static_assert(Size > 0, "No values to min() over");
+
+        T value = __data[0];
+        for (size_t i = 1; i < Size; ++i)
+            value = AK::min(__data[i], value);
+        return value;
+    }
+
     T __data[Size];
 };
 
