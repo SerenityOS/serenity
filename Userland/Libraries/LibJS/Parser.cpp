@@ -346,7 +346,6 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     auto rule_start = push_start();
 
     ArmedScopeGuard state_rollback_guard = [&] {
-        m_parser_state.m_var_scopes.take_last();
         load_state();
     };
 
