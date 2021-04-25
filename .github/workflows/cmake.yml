@@ -242,6 +242,14 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Check linebreaks
+      if: ${{ success() || failure() }}
+      uses: tim-actions/commit-message-checker-with-regex@v0.3.1
+      with:
+        commits: ${{ steps.get-pr-commits.outputs.commits }}
+        pattern: '^[^\r]*$'
+        error: 'Commit message contains CRLF line breaks (only unix-style LF linebreaks are allowed)'
+
     - name: Check Line Length
       uses: tim-actions/commit-message-checker-with-regex@v0.3.1
       with:
