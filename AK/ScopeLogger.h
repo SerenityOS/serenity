@@ -6,21 +6,21 @@
 
 #pragma once
 
+#include <AK/SourceLocation.h>
 #include <AK/StringBuilder.h>
-
-#ifdef DEBUG_SPAM
 
 namespace AK {
 class ScopeLogger {
 public:
-    ScopeLogger(StringView&& fun)
-        : m_fun(fun)
+#ifdef DEBUG_SPAM
+    ScopeLogger(const SourceLocation& location = SourceLocation::current())
+        : m_location(location)
     {
         StringBuilder sb;
 
         for (auto indent = m_depth++; indent > 0; indent--)
             sb.append(' ');
-        dbgln("\033[1;{}m{}entering {}\033[0m", m_depth % 8 + 30, sb.to_string(), m_fun);
+        dbgln("\033[1;{}m{}entering {}\033[0m", m_depth % 8 + 30, sb.to_string(), m_location);
     }
     ~ScopeLogger()
     {
@@ -28,18 +28,16 @@ public:
 
         for (auto indent = --m_depth; indent > 0; indent--)
             sb.append(' ');
-        dbgln("\033[1;{}m{}leaving {}\033[0m", (m_depth + 1) % 8 + 30, sb.to_string(), m_fun);
+        dbgln("\033[1;{}m{}leaving {}\033[0m", (m_depth + 1) % 8 + 30, sb.to_string(), m_location);
     }
 
 private:
     static inline size_t m_depth = 0;
-    StringView m_fun;
+    SourceLocation m_location;
+#else
+    ScopeLogger() = default;
+#endif
 };
 }
 
 using AK::ScopeLogger;
-#    define SCOPE_LOGGER() auto tmp##__COUNTER__ = ScopeLogger(__PRETTY_FUNCTION__);
-
-#else
-#    define SCOPE_LOGGER()
-#endif
