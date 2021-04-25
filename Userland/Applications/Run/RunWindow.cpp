@@ -19,7 +19,6 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Widget.h>
-#include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <sys/wait.h>
