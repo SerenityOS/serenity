@@ -51,8 +51,8 @@ public:
     int size() const { return m_values.size(); }
     bool is_empty() const { return m_values.is_empty(); }
 
-    const JsonValue& at(int index) const { return m_values.at(index); }
-    const JsonValue& operator[](int index) const { return at(index); }
+    const JsonValue& at(size_t index) const { return m_values.at(index); }
+    const JsonValue& operator[](size_t index) const { return at(index); }
 
     void clear() { m_values.clear(); }
     void append(JsonValue value) { m_values.append(move(value)); }
