@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
@@ -37,5 +38,13 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<AK::SourceLocation> : AK::Formatter<FormatString> {
+    void format(FormatBuilder& builder, AK::SourceLocation location)
+    {
+        return AK::Formatter<FormatString>::format(builder, "[{} @ {}:{}]", location.function_name(), location.file_name(), location.line_number());
+    }
+};
 
 using AK::SourceLocation;
