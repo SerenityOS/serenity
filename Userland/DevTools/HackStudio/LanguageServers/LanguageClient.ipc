@@ -1,4 +1,4 @@
-endpoint LanguageClient = 8002
+endpoint LanguageClient
 {
     AutoCompleteSuggestions(Vector<GUI::AutocompleteProvider::Entry> suggestions) =|
     DeclarationLocation(GUI::AutocompleteProvider::ProjectLocation location) =|

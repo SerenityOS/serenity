@@ -21,7 +21,7 @@ class Endpoint {
 public:
     virtual ~Endpoint();
 
-    virtual int magic() const = 0;
+    virtual u32 magic() const = 0;
     virtual String name() const = 0;
     virtual OwnPtr<Message> handle(const Message&) = 0;
 
