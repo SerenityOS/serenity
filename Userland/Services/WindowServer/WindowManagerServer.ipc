@@ -1,4 +1,4 @@
-endpoint WindowManagerServer = 1871
+endpoint WindowManagerServer
 {
     SetEventMask(u32 event_mask) => ()
     SetManagerWindow(i32 window_id) => ()
