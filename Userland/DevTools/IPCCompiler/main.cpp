@@ -164,11 +164,7 @@ int main(int argc, char** argv)
         lexer.consume_specific("endpoint");
         consume_whitespace();
         endpoints.last().name = lexer.consume_while([](char ch) { return !isspace(ch); });
-        consume_whitespace();
-        assert_specific('=');
-        consume_whitespace();
-        auto magic_string = lexer.consume_while([](char ch) { return !isspace(ch) && ch != '{'; });
-        endpoints.last().magic = magic_string.to_int().value();
+        endpoints.last().magic = Traits<String>::hash(endpoints.last().name);
         consume_whitespace();
         assert_specific('{');
         parse_messages();
