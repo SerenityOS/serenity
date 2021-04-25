@@ -22,7 +22,7 @@ SamplesModel::~SamplesModel()
 
 int SamplesModel::row_count(const GUI::ModelIndex&) const
 {
-    return m_profile.filtered_event_count();
+    return m_profile.filtered_event_indices().size();
 }
 
 int SamplesModel::column_count(const GUI::ModelIndex&) const
@@ -37,6 +37,8 @@ String SamplesModel::column_name(int column) const
         return "#";
     case Column::Timestamp:
         return "Timestamp";
+    case Column::ProcessID:
+        return "PID";
     case Column::ThreadID:
         return "TID";
     case Column::ExecutableName:
@@ -50,7 +52,7 @@ String SamplesModel::column_name(int column) const
 
 GUI::Variant SamplesModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    u32 event_index = m_profile.first_filtered_event_index() + index.row();
+    u32 event_index = m_profile.filtered_event_indices()[index.row()];
     auto& event = m_profile.events().at(event_index);
 
     if (role == GUI::ModelRole::Custom) {
@@ -61,12 +63,14 @@ GUI::Variant SamplesModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         if (index.column() == Column::SampleIndex)
             return event_index;
 
+        if (index.column() == Column::ProcessID)
+            return event.pid;
+
         if (index.column() == Column::ThreadID)
             return event.tid;
 
         if (index.column() == Column::ExecutableName) {
-            // FIXME: More abuse of the PID/TID relationship:
-            if (auto* process = m_profile.find_process(event.tid))
+            if (auto* process = m_profile.find_process(event.pid, event.timestamp))
                 return process->executable;
             return "";
         }

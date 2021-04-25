@@ -75,9 +75,18 @@ int futex(uint32_t* userspace_address, int futex_op, uint32_t value, const struc
 
 int purge(int mode);
 
-#define PERF_EVENT_SAMPLE 0
-#define PERF_EVENT_MALLOC 1
-#define PERF_EVENT_FREE 2
+enum {
+    PERF_EVENT_SAMPLE,
+    PERF_EVENT_MALLOC,
+    PERF_EVENT_FREE,
+    PERF_EVENT_MMAP,
+    PERF_EVENT_MUNMAP,
+    PERF_EVENT_PROCESS_CREATE,
+    PERF_EVENT_PROCESS_EXEC,
+    PERF_EVENT_PROCESS_EXIT,
+    PERF_EVENT_THREAD_CREATE,
+    PERF_EVENT_THREAD_EXIT
+};
 
 int perf_event(int type, uintptr_t arg1, uintptr_t arg2);
 

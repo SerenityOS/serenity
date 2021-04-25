@@ -108,12 +108,12 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::SampleCount) {
             if (m_profile.show_percentages())
-                return ((float)node->event_count() / (float)m_profile.filtered_event_count()) * 100.0f;
+                return ((float)node->event_count() / (float)m_profile.filtered_event_indices().size()) * 100.0f;
             return node->event_count();
         }
         if (index.column() == Column::SelfCount) {
             if (m_profile.show_percentages())
-                return ((float)node->self_count() / (float)m_profile.filtered_event_count()) * 100.0f;
+                return ((float)node->self_count() / (float)m_profile.filtered_event_indices().size()) * 100.0f;
             return node->self_count();
         }
         if (index.column() == Column::ObjectName)

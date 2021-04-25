@@ -5,6 +5,7 @@
  */
 
 #include "IndividualSampleModel.h"
+#include "ProcessPickerWidget.h"
 #include "Profile.h"
 #include "ProfileTimelineWidget.h"
 #include <LibCore/ArgsParser.h>
@@ -86,6 +87,7 @@ int main(int argc, char** argv)
     main_widget.set_layout<GUI::VerticalBoxLayout>();
 
     main_widget.add<ProfileTimelineWidget>(*profile);
+    main_widget.add<ProcessPickerWidget>(*profile);
 
     auto& tab_widget = main_widget.add<GUI::TabWidget>();
 
