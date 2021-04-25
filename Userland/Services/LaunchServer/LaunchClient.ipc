@@ -1,4 +1,4 @@
-endpoint LaunchClient = 102
+endpoint LaunchClient
 {
     Dummy() =|
 }
