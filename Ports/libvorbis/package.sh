@@ -2,8 +2,8 @@
 port=libvorbis
 version=1.3.7
 useconfigure=true
-files="https://github.com/xiph/vorbis/releases/download/v${version}/libvorbis-${version}.tar.gz libvorbis-${version}.tar.gz 9b8034da6edc1a17d18b9bc4542015c7"
-auth_type=md5
+files="https://github.com/xiph/vorbis/releases/download/v${version}/libvorbis-${version}.tar.gz libvorbis-${version}.tar.gz 0e982409a9c3fc82ee06e08205b1355e5c6aa4c36bca58146ef399621b0ce5ab"
+auth_type=sha256
 depends=libogg
 
 install() {
