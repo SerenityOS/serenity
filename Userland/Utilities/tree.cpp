@@ -12,6 +12,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
