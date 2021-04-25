@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/Vector.h>
-#include <LibWeb/CSS/CSSStyleRule.h>
+#include <AK/SourceLocation.h>
 #include <LibWeb/CSS/Parser/AtStyleRule.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
@@ -18,10 +16,10 @@
 
 #define CSS_PARSER_TRACE 1
 
-#define PARSE_ERROR()                                                                           \
-    do {                                                                                        \
-        dbgln_if(CSS_PARSER_TRACE, "Parse error (CSS) {} @ {}", __PRETTY_FUNCTION__, __LINE__); \
-    } while (0)
+static void log_parse_error(const SourceLocation& location = SourceLocation::current())
+{
+    dbgln_if(CSS_PARSER_TRACE, "Parse error (CSS) {}", location);
+}
 
 namespace Web::CSS {
 
@@ -161,7 +159,7 @@ AtStyleRule Parser::consume_an_at_rule()
         }
 
         if (token.is_eof()) {
-            PARSE_ERROR();
+            log_parse_error();
             return rule;
         }
 
@@ -191,7 +189,7 @@ Optional<QualifiedStyleRule> Parser::consume_a_qualified_rule()
         auto token = next_token();
 
         if (token.is_eof()) {
-            PARSE_ERROR();
+            log_parse_error();
             return {};
         }
 
@@ -251,7 +249,7 @@ StyleBlockRule Parser::consume_a_simple_block()
         }
 
         if (token.is_eof()) {
-            PARSE_ERROR();
+            log_parse_error();
             return block;
         }
 
@@ -278,7 +276,7 @@ StyleFunctionRule Parser::consume_a_function()
         }
 
         if (token.is_eof()) {
-            PARSE_ERROR();
+            log_parse_error();
             return function;
         }
 
@@ -316,7 +314,7 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration()
     auto colon = next_token();
 
     if (!colon.is_colon()) {
-        PARSE_ERROR();
+        log_parse_error();
         return {};
     }
 
@@ -402,7 +400,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations()
             }
         }
 
-        PARSE_ERROR();
+        log_parse_error();
         reconsume_current_input_token();
         auto peek = peek_token();
         if (!(peek.is_semicolon() || peek.is_eof())) {
