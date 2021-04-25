@@ -15,7 +15,7 @@ depends="libiconv libgpg-error libgcrypt libksba libassuan npth ntbtls"
 pre_configure() {
     export GPGRT_CONFIG="${SERENITY_INSTALL_ROOT}/usr/local/bin/gpgrt-config"
     export CFLAGS="-L${SERENITY_INSTALL_ROOT}/usr/local/include"
-    export LDFLAGS="-L${SERENITY_INSTALL_ROOT}/usr/local/lib -lm -liconv"
+    export LDFLAGS="-L${SERENITY_INSTALL_ROOT}/usr/local/lib -lm -liconv -ldl"
 }
 
 configure() {
