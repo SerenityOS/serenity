@@ -1,4 +1,4 @@
-endpoint NotificationServer
+endpoint NotificationServer = 95
 {
     // Basic protocol
     Greet() => ()
