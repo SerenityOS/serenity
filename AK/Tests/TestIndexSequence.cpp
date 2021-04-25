@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibTest/TestCase.h>
+
 #include <AK/StdLibExtras.h>
-#include <AK/TestSuite.h>
 #include <AK/TypeList.h>
 
 template<typename F, typename... Args>
@@ -46,5 +47,3 @@ TEST_CASE(TypeList)
     static_assert(IsSame<MyTypes::Type<1>, bool>, "");
     static_assert(IsSame<MyTypes::Type<2>, char>, "");
 }
-
-TEST_MAIN(IndexSequence);

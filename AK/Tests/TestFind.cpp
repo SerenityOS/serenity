@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
 #include <AK/Find.h>
@@ -52,5 +52,3 @@ TEST_CASE(should_return_index_to_first_predicate_matching_value_in_container)
 
     EXPECT(4 == AK::find_index(a.begin(), a.end(), 0));
 }
-
-TEST_MAIN(Find)

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/CircularQueue.h>
 #include <AK/String.h>
@@ -66,5 +66,3 @@ TEST_CASE(should_not_call_value_type_constructor_when_created)
     CircularQueue<ConstructorCounter, 10> queue;
     EXPECT_EQ(0u, ConstructorCounter::s_num_constructor_calls);
 }
-
-TEST_MAIN(CircularQueue)

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
@@ -399,5 +399,3 @@ TEST_CASE(should_find_index)
     EXPECT_EQ(4u, v.find_first_index(0).value());
     EXPECT(!v.find_first_index(42).has_value());
 }
-
-TEST_MAIN(Vector)

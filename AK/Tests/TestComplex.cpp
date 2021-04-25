@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibTest/TestCase.h>
+
 #include <AK/Complex.h>
-#include <AK/TestSuite.h>
 
 TEST_CASE(Complex)
 {
@@ -41,5 +42,3 @@ TEST_CASE(Complex)
     EXPECT_APPROXIMATE(cexp(Complex<double>(0., 1.) * M_PI).real(), -1.);
 #endif
 }
-
-TEST_MAIN(Complex)

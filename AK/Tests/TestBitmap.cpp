@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Bitmap.h>
 
@@ -248,5 +248,3 @@ TEST_CASE(count_in_range)
     test_with_value(true);
     test_with_value(false);
 }
-
-TEST_MAIN(Bitmap)

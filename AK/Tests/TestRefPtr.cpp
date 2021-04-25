@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/String.h>
@@ -147,5 +147,3 @@ TEST_CASE(self_observers)
     object->unref();
     EXPECT_EQ(SelfAwareObject::num_destroyed, 1u);
 }
-
-TEST_MAIN(RefPtr)

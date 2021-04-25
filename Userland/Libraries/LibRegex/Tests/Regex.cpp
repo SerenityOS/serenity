@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h> // import first, to prevent warning of VERIFY* redefinition
+#include <LibTest/TestCase.h> // import first, to prevent warning of VERIFY* redefinition
 
 #include <AK/StringBuilder.h>
 #include <LibRegex/Regex.h>
@@ -595,5 +595,3 @@ TEST_CASE(replace)
         EXPECT_EQ(re.replace(test.subject, test.replacement), test.expected);
     }
 }
-
-TEST_MAIN(Regex)

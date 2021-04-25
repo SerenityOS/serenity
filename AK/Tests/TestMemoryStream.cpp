@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
 #include <AK/MemoryStream.h>
@@ -220,5 +220,3 @@ TEST_CASE(offset_calculation_error_regression)
 
     EXPECT_EQ(input, output);
 }
-
-TEST_MAIN(MemoryStream)

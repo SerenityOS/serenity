@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include "../CSV.h"
 #include "../XSV.h"
@@ -86,5 +86,3 @@ BENCHMARK_CASE(fairly_big_data)
     EXPECT(!csv.has_error());
     EXPECT_EQ(csv.size(), 100000u);
 }
-
-TEST_MAIN(XSV)

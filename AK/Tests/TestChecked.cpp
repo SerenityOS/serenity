@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Checked.h>
 #include <AK/NumericLimits.h>
@@ -386,5 +386,3 @@ TEST_CASE(should_constexpr_make_via_factory)
 {
     [[maybe_unused]] constexpr auto value = make_checked(42);
 }
-
-TEST_MAIN(Checked)

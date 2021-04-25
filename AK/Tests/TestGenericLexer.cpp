@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/GenericLexer.h>
 #include <AK/StringView.h>
@@ -156,5 +156,3 @@ TEST_CASE(should_constexpr_ignore_until_pred)
     }();
     static_assert(sut.peek() == 'c');
 }
-
-TEST_MAIN(GenericLexer)

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
 
@@ -28,5 +28,3 @@ TEST_CASE(compile_time_iterable)
     constexpr Array<int, 8> array = { 0, 1, 2, 3, 4, 5, 6, 7 };
     static_assert(constexpr_sum(array) == 28);
 }
-
-TEST_MAIN(Array)

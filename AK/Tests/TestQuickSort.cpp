@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Checked.h>
 #include <AK/Noncopyable.h>
@@ -98,5 +98,3 @@ TEST_CASE(maximum_stack_depth)
 
     delete[] data;
 }
-
-TEST_MAIN(QuickSort)

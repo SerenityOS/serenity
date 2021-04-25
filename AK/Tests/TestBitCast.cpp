@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/BitCast.h>
 
@@ -21,5 +21,3 @@ TEST_CASE(double_int_conversion)
     check_cast_both_ways(static_cast<u64>(1) << 63, -0.0);
     check_cast_both_ways(static_cast<u64>(0x4172f58bc0000000), 19880124.0);
 }
-
-TEST_MAIN(BitCast)

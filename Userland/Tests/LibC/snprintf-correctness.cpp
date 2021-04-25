@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/ByteBuffer.h>
 #include <AK/Random.h>
@@ -141,5 +141,3 @@ TEST_CASE(special_cases)
     EXPECT(test_single({ LITERAL("x"), "whf", POISON, 3, LITERAL("\0") }));
     EXPECT(test_single({ LITERAL("xx"), "whf", POISON, 3, LITERAL("w\0") }));
 }
-
-TEST_MAIN(Sprintf)

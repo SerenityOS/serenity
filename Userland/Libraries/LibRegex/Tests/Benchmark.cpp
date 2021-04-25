@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h> // import first, to prevent warning of VERIFY* redefinition
+#include <LibTest/TestCase.h> // import first, to prevent warning of VERIFY* redefinition
 
 #include <LibRegex/Regex.h>
 #include <stdio.h>
@@ -967,5 +967,3 @@ BENCHMARK_CASE(simple_notbol_noteol_benchmark_reference_stdcpp)
 #    endif
 
 #endif
-
-TEST_MAIN(Regex)

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Base64.h>
 #include <AK/ByteBuffer.h>
@@ -44,5 +44,3 @@ TEST_CASE(test_encode)
     encode_equal("fooba", "Zm9vYmE=");
     encode_equal("foobar", "Zm9vYmFy");
 }
-
-TEST_MAIN(Base64)

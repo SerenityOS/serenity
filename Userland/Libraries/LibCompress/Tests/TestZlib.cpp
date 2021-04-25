@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
 #include <LibCompress/Zlib.h>
@@ -23,5 +23,3 @@ TEST_CASE(zlib_decompress_simple)
     const auto decompressed = Compress::Zlib::decompress_all(compressed);
     EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
 }
-
-TEST_MAIN(Zlib)

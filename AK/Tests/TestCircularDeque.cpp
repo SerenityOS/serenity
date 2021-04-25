@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/CircularDeque.h>
 #include <AK/StdLibExtras.h>
@@ -61,5 +61,3 @@ TEST_CASE(deque_end)
     EXPECT_EQ(ints.dequeue_end(), 0);
     EXPECT(ints.is_empty());
 }
-
-TEST_MAIN(CircularDeque)

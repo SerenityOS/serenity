@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/StringUtils.h>
 
@@ -304,5 +304,3 @@ TEST_CASE(to_snakecase)
     EXPECT_EQ(AK::StringUtils::to_snakecase("FBar"), "f_bar");
     EXPECT_EQ(AK::StringUtils::to_snakecase("FooB"), "foo_b");
 }
-
-TEST_MAIN(StringUtils)

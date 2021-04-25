@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/HashMap.h>
 #include <AK/Result.h>
@@ -602,5 +602,3 @@ TEST_CASE(in_selection_expression)
     validate("15 IN (SELECT * FROM table)", false);
     validate("15 NOT IN (SELECT * FROM table)", true);
 }
-
-TEST_MAIN(SqlExpressionParser)
