@@ -117,6 +117,11 @@ def check_package_files(ports):
             continue
 
         props = get_port_properties(port)
+
+        if not props['auth_type'] in ('sha256', 'sig', ''):
+            print(f"Ports/{port} uses invalid signature algorithm '{props['auth_type']}' for 'auth_type'")
+            all_good = False
+
         for prop in PORT_PROPERTIES:
             if prop == 'auth_type' and re.match('^https://github.com/SerenityOS/', props["files"]):
                 continue
