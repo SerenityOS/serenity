@@ -628,7 +628,11 @@ TextPosition TextDocument::first_word_break_before(const TextPosition& position,
 
     auto target = position;
     auto line = this->line(target.line());
-    auto is_start_alphanumeric = isalnum(line.code_points()[target.column() - (start_at_column_before ? 1 : 0)]);
+    auto modifier = start_at_column_before ? 1 : 0;
+    if (target.column() == line.length())
+        modifier = 1;
+
+    auto is_start_alphanumeric = isalnum(line.code_points()[target.column() - modifier]);
 
     while (target.column() > 0) {
         auto prev_code_point = line.code_points()[target.column() - 1];
