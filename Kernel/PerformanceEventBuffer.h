@@ -32,7 +32,7 @@ struct [[gnu::packed]] PerformanceEvent {
         MallocPerformanceEvent malloc;
         FreePerformanceEvent free;
     } data;
-    static constexpr size_t max_stack_frame_count = 32;
+    static constexpr size_t max_stack_frame_count = 64;
     FlatPtr stack[max_stack_frame_count];
 };
 
