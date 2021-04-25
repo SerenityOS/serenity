@@ -1,4 +1,4 @@
-endpoint WindowServer = 2
+endpoint WindowServer
 {
     Greet() => (Gfx::IntRect screen_rect, Core::AnonymousBuffer theme_buffer)
 

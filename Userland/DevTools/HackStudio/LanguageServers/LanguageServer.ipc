@@ -1,4 +1,4 @@
-endpoint LanguageServer = 8001
+endpoint LanguageServer
 {
     Greet(String project_root) => ()
 

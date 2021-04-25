@@ -37,7 +37,7 @@ struct Message {
 
 struct Endpoint {
     String name;
-    int magic;
+    u32 magic;
     Vector<Message> messages;
 };
 
@@ -164,12 +164,32 @@ int main(int argc, char** argv)
         lexer.consume_specific("endpoint");
         consume_whitespace();
         endpoints.last().name = lexer.consume_while([](char ch) { return !isspace(ch); });
+        endpoints.last().magic = Traits<String>::hash(endpoints.last().name);
         consume_whitespace();
-        assert_specific('=');
-        consume_whitespace();
-        auto magic_string = lexer.consume_while([](char ch) { return !isspace(ch) && ch != '{'; });
-        endpoints.last().magic = magic_string.to_int().value();
-        consume_whitespace();
+        if (lexer.peek() == '[') {
+            // This only supports a single parameter for now, and adding multiple
+            // endpoint parameter support is left as an exercise for the reader. :^)
+
+            lexer.consume_specific('[');
+            consume_whitespace();
+
+            auto parameter = lexer.consume_while([](char ch) { return !isspace(ch) && ch != '='; });
+            consume_whitespace();
+            assert_specific('=');
+            consume_whitespace();
+
+            if (parameter == "magic") {
+                // "magic" overwrites the default magic with a hardcoded one.
+                auto magic_string = lexer.consume_while([](char ch) { return !isspace(ch) && ch != ']'; });
+                endpoints.last().magic = magic_string.to_uint().value();
+            } else {
+                warnln("parse_endpoint: unknown parameter '{}' passed", parameter);
+                VERIFY_NOT_REACHED();
+            }
+
+            assert_specific(']');
+            consume_whitespace();
+        }
         assert_specific('{');
         parse_messages();
         assert_specific('}');
@@ -292,7 +312,7 @@ public:
     @message.constructor@
     virtual ~@message.name@() override {}
 
-    virtual i32 endpoint_magic() const override { return @endpoint.magic@; }
+    virtual u32 endpoint_magic() const override { return @endpoint.magic@; }
     virtual i32 message_id() const override { return (int)MessageID::@message.name@; }
     static i32 static_message_id() { return (int)MessageID::@message.name@; }
     virtual const char* message_name() const override { return "@endpoint.name@::@message.name@"; }
@@ -412,15 +432,15 @@ public:
     @endpoint.name@Endpoint() { }
     virtual ~@endpoint.name@Endpoint() override { }
 
-    static int static_magic() { return @endpoint.magic@; }
-    virtual int magic() const override { return @endpoint.magic@; }
+    static u32 static_magic() { return @endpoint.magic@; }
+    virtual u32 magic() const override { return @endpoint.magic@; }
     static String static_name() { return "@endpoint.name@"; }
     virtual String name() const override { return "@endpoint.name@"; }
 
     static OwnPtr<IPC::Message> decode_message(ReadonlyBytes buffer, int sockfd)
     {
         InputMemoryStream stream { buffer };
-        i32 message_endpoint_magic = 0;
+        u32 message_endpoint_magic = 0;
         stream >> message_endpoint_magic;
         if (stream.handle_any_error()) {
 )~~~");
@@ -437,7 +457,7 @@ public:
 )~~~");
 #if GENERATE_DEBUG_CODE
         endpoint_generator.append(R"~~~(
-            dbgln("Endpoint magic number message_endpoint_magic != @endpoint.magic@");
+            dbgln("@endpoint.name@: Endpoint magic number message_endpoint_magic != @endpoint.magic@, not my message! (the other endpoint may have handled it)");
 )~~~");
 #endif
         endpoint_generator.append(R"~~~(

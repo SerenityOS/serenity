@@ -1,4 +1,4 @@
-endpoint WebContentClient = 90
+endpoint WebContentClient
 {
     DidStartLoading(URL url) =|
     DidFinishLoading(URL url) =|

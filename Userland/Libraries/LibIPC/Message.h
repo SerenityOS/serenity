@@ -20,7 +20,7 @@ class Message {
 public:
     virtual ~Message();
 
-    virtual int endpoint_magic() const = 0;
+    virtual u32 endpoint_magic() const = 0;
     virtual int message_id() const = 0;
     virtual const char* message_name() const = 0;
     virtual MessageBuffer encode() const = 0;
