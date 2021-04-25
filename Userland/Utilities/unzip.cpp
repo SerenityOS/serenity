@@ -11,6 +11,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 static bool unpack_zip_member(Archive::ZipMember zip_member)
 {
@@ -71,9 +72,11 @@ int main(int argc, char** argv)
 {
     const char* path;
     int map_size_limit = 32 * MiB;
+    String output_directory_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(map_size_limit, "Maximum chunk size to map", "map-size-limit", 0, "size");
+    args_parser.add_option(output_directory_path, "Directory to receive the archive content", "output-directory", 'o', "path");
     args_parser.add_positional_argument(path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
@@ -109,6 +112,20 @@ int main(int argc, char** argv)
     if (!zip_file.has_value()) {
         warnln("Invalid zip file {}", zip_file_path);
         return 1;
+    }
+
+    if (!output_directory_path.is_null()) {
+        rc = mkdir(output_directory_path.characters(), 0755);
+        if (rc < 0 && errno != EEXIST) {
+            perror("mkdir");
+            return 1;
+        }
+
+        rc = chdir(output_directory_path.characters());
+        if (rc < 0) {
+            perror("chdir");
+            return 1;
+        }
     }
 
     auto success = zip_file->for_each_member([&](auto zip_member) {
