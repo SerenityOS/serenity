@@ -4,8 +4,8 @@ version=69.1
 useconfigure=true
 workdir=icu/source
 configopts=--with-cross-build=$(pwd)/${workdir}/../host-build
-files="https://github.com/unicode-org/icu/releases/download/release-${version//./-}/icu4c-${version//./_}-src.tgz icu4c-${version//./_}-src.tgz 9403db682507369d0f60a25ea67014c4"
-auth_type=md5
+files="https://github.com/unicode-org/icu/releases/download/release-${version//./-}/icu4c-${version//./_}-src.tgz icu4c-${version//./_}-src.tgz 4cba7b7acd1d3c42c44bb0c14be6637098c7faf2b330ce876bc5f3b915d09745"
+auth_type=sha256
 
 configure() {
     host_env

@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=bzip2
 version=1.0.8
-files="https://sourceware.org/pub/bzip2/bzip2-${version}.tar.gz bzip2-${version}.tar.gz 67e051268d0c475ea773822f7500d0e5"
-auth_type=md5
+files="https://sourceware.org/pub/bzip2/bzip2-${version}.tar.gz bzip2-${version}.tar.gz ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269"
+auth_type=sha256
 makeopts=bzip2
 installopts="PREFIX=${SERENITY_INSTALL_ROOT}/usr/local"
 

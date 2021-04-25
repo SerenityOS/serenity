@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=stress-ng
 version=0.11.23
-files="https://github.com/ColinIanKing/stress-ng/archive/V${version}.tar.gz stress-ng-${version}.tar.gz 49fa5547c8cfd7871b9d6261cce6ace3"
-auth_type=md5
+files="https://github.com/ColinIanKing/stress-ng/archive/V${version}.tar.gz stress-ng-${version}.tar.gz ffa1c516e3098a1d7ae6a4fd48c6fb41b8dfaabda22aaeebb569d24875870216"
+auth_type=sha256
 depends=zlib
 
 pre_configure() {

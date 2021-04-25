@@ -2,8 +2,8 @@
 port=nethack
 version=3.6.6
 workdir=NetHack-NetHack-${version}_Released
-files="https://www.nethack.org/download/${version}/nethack-${version//.}-src.tgz nethack-${version//.}-src.tgz 6c9a75f556d24c66801d74d8727a602e"
-auth_type=md5
+files="https://www.nethack.org/download/${version}/nethack-${version//.}-src.tgz nethack-${version//.}-src.tgz cfde0c3ab6dd7c22ae82e1e5a59ab80152304eb23fb06e3129439271e5643ed2"
+auth_type=sha256
 depends="ncurses bash"
 
 build() {
