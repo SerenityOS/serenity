@@ -19,7 +19,7 @@ class ProcessorParameter : public Core::Object {
 class ProcessorBooleanParameter final : public ProcessorParameter {
 public:
     ProcessorBooleanParameter(bool initial_value)
-    : m_value(initial_value)
+        : m_value(initial_value)
     {
     }
     ~ProcessorBooleanParameter();
@@ -37,7 +37,10 @@ private:
 class ProcessorRangeParameter final : public ProcessorParameter {
 public:
     ProcessorRangeParameter(double min_value, double max_value, double initial_value)
-    : m_min_value(min_value), m_max_value(max_value), m_value(initial_value)
+        : m_min_value(min_value)
+        , m_max_value(max_value)
+        , m_default_value(initial_value)
+        , m_value(initial_value)
     {
         VERIFY(initial_value <= max_value && initial_value >= min_value);
     }
@@ -45,6 +48,7 @@ public:
 
     double min_value() const { return m_min_value; }
     double max_value() const { return m_max_value; }
+    double default_value() const { return m_default_value; }
     double value() const { return m_value; }
     void set_value(double value)
     {
@@ -55,6 +59,7 @@ public:
 private:
     const double m_min_value;
     const double m_max_value;
+    const double m_default_value;
     double m_value;
 };
 

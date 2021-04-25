@@ -36,7 +36,8 @@ namespace LibDSP {
 class Transport final : public Core::Object {
 public:
     Transport(u16 beats_per_minute, u8 beats_per_measure)
-    : m_beats_per_minute(beats_per_minute), m_beats_per_measure(beats_per_measure)
+        : m_beats_per_minute(beats_per_minute)
+        , m_beats_per_measure(beats_per_measure)
     {
     }
 

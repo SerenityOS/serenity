@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Music.h"
 #include "Clip.h"
+#include "Music.h"
 #include "Processor.h"
 #include <LibCore/Object.h>
 
@@ -18,15 +18,18 @@ class Track : public Core::Object {
     C_OBJECT_ABSTRACT(Track)
 public:
     Track(NonnullRefPtr<Transport> transport)
-    : m_transport(transport)
+        : m_transport(transport)
     {
     }
     virtual ~Track()
     {
     }
-    
+
     virtual bool check_processor_chain_valid() const = 0;
     bool add_processor(NonnullRefPtr<Processor> new_processor);
+
+    // Creates the current signal of the track by processing current note or audio data through the processing chain
+    Sample current_signal();
 
     NonnullRefPtrVector<Processor> processor_chain() const { return m_processor_chain; }
     const NonnullRefPtr<Transport> transport() const { return m_transport; }
@@ -34,7 +37,10 @@ public:
 protected:
     bool check_processor_chain_valid_with_initial_type(SignalType initial_type) const;
 
-    NonnullRefPtrVector<Processor> m_processor_chain { };
+    // Subclasses override to provide the base signal to the processing chain
+    virtual Signal current_clips_signal() = 0;
+
+    NonnullRefPtrVector<Processor> m_processor_chain {};
     const NonnullRefPtr<Transport> m_transport;
 };
 
@@ -46,8 +52,12 @@ public:
 
     bool check_processor_chain_valid() const override;
     NonnullRefPtrVector<NoteClip> clips() const { return m_clips; }
+
+protected:
+    virtual Signal current_clips_signal() override;
+
 private:
-    NonnullRefPtrVector<NoteClip> m_clips { };
+    NonnullRefPtrVector<NoteClip> m_clips {};
 };
 
 class AudioTrack final : public Track {
@@ -58,8 +68,12 @@ public:
 
     bool check_processor_chain_valid() const override;
     NonnullRefPtrVector<AudioClip> clips() const { return m_clips; }
+
+protected:
+    virtual Signal current_clips_signal() override;
+
 private:
-    NonnullRefPtrVector<AudioClip> m_clips { };
+    NonnullRefPtrVector<AudioClip> m_clips {};
 };
 
 }

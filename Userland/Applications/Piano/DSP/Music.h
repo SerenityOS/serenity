@@ -15,6 +15,8 @@ namespace LibDSP {
 // FIXME: Audio::Frame is 64-bit float, which is quite large for long clips.
 typedef Audio::Frame Sample;
 
+Sample const SAMPLE_OFF = { 0.0, 0.0 };
+
 struct RollNote {
     u32 length() const { return (off_sample - on_sample) + 1; }
 
@@ -37,6 +39,16 @@ struct Signal {
     SignalType type;
 
     Signal();
+    Signal(const Sample sample)
+    {
+        audio = sample;
+        type = SignalType::Sample;
+    }
+    Signal(const Vector<RollNote> notes)
+    {
+        note = notes;
+        type = SignalType::Note;
+    }
     ~Signal()
     {
         if (type == SignalType::Note) {
@@ -60,6 +72,10 @@ struct Signal {
         } else {
             audio = move(to_copy.audio);
         }
+    }
+    Signal operator=(const Signal& other)
+    {
+        return other;
     }
 };
 
