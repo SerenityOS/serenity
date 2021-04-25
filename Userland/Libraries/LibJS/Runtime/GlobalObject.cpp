@@ -323,7 +323,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
     vm.interpreter().execute_statement(global_object, program);
     if (vm.exception())
         return {};
-    return vm.last_value();
+    return vm.last_value().value_or(js_undefined());
 }
 
 // 19.2.6.1.1 Encode ( string, unescapedSet )
