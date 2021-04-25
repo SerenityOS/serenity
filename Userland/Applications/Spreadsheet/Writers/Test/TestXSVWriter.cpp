@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include "../CSV.h"
 #include "../XSV.h"
@@ -72,5 +72,3 @@ We"ll,"Hello,",   Friends
 
     EXPECT_EQ(StringView { stream.bytes() }, expected_output);
 }
-
-TEST_MAIN(XSV)

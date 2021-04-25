@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/URL.h>
 
@@ -200,5 +200,3 @@ TEST_CASE(port_int_overflow_wrap)
     EXPECT_EQ(url.port(), expected_port);
     EXPECT_EQ(url.is_valid(), true);
 }
-
-TEST_MAIN(URL)

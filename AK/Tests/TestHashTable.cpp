@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/HashTable.h>
 #include <AK/String.h>
@@ -173,5 +173,3 @@ TEST_CASE(basic_contains)
     EXPECT_EQ(table.remove(1), true);
     EXPECT_EQ(table.contains(1), false);
 }
-
-TEST_MAIN(HashTable)

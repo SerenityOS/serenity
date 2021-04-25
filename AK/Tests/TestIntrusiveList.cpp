@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibTest/TestCase.h>
+
 #include <AK/IntrusiveList.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefPtr.h>
-#include <AK/TestSuite.h>
 
 class IntrusiveTestItem {
 public:
@@ -120,5 +121,3 @@ TEST_CASE(intrusive_nonnull_ref_ptr_intrusive)
 
     EXPECT(nonnull_ref_list.is_empty());
 }
-
-TEST_MAIN(IntrusiveList)

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/StringBuilder.h>
 #include <LibC/regex.h>
@@ -1116,5 +1116,3 @@ TEST_CASE(simple_notbol_noteol)
 
     regfree(&regex);
 }
-
-TEST_MAIN(Regex)

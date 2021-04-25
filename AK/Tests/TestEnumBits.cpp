@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibTest/TestCase.h>
+
 #include <AK/EnumBits.h>
-#include <AK/TestSuite.h>
 
 enum class VideoIntro : u8 {
     None = 0x0,
@@ -66,5 +67,3 @@ TEST_CASE(has_flag)
     EXPECT(has_flag(intro, VideoIntro::Friends));
     EXPECT(!has_flag(intro, VideoIntro::Well));
 }
-
-TEST_MAIN(EnumBits)

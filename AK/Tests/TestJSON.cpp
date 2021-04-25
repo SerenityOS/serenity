@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
@@ -121,5 +121,3 @@ TEST_CASE(json_duplicate_keys)
     json.set("test", "baz");
     EXPECT_EQ(json.to_string(), "{\"test\":\"baz\"}");
 }
-
-TEST_MAIN(JSON)

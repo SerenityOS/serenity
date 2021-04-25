@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/IntrusiveRedBlackTree.h>
 #include <AK/NonnullOwnPtrVector.h>
@@ -114,5 +114,3 @@ TEST_CASE(clear)
     test.clear();
     EXPECT_EQ(test.size(), 0u);
 }
-
-TEST_MAIN(RedBlackTree)

@@ -61,10 +61,7 @@ set(AK_TEST_SOURCES
 )
 
 foreach(source ${AK_TEST_SOURCES})
-    get_filename_component(name ${source} NAME_WE)
-    add_executable(${name} ${source})
-    target_link_libraries(${name} LibCore)
-    install(TARGETS ${name} RUNTIME DESTINATION usr/Tests/AK)
+    serenity_test(${source} AK)
 endforeach()
 
 get_filename_component(TEST_FRM_RESOLVED ./test.frm REALPATH)

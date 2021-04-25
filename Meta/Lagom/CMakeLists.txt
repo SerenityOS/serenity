@@ -77,9 +77,14 @@ list(FILTER SHELL_SOURCES EXCLUDE REGEX ".*main.cpp$")
 file(GLOB LIBSQL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/*.cpp")
 file(GLOB LIBSQL_TEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/Tests/*.cpp")
 
+file(GLOB LIBTEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/*.cpp")
+list(FILTER LIBTEST_SOURCES EXCLUDE REGEX ".*Main.cpp$")
+file(GLOB LIBTEST_MAIN CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/TestMain.cpp")
+
 set(LAGOM_REGEX_SOURCES ${LIBREGEX_LIBC_SOURCES} ${LIBREGEX_SOURCES})
 set(LAGOM_CORE_SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES})
 set(LAGOM_MORE_SOURCES ${LIBARCHIVE_SOURCES} ${LIBAUDIO_SOURCES} ${LIBELF_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCOMPRESS_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBTLS_SOURCES} ${LIBTTF_SOURCES} ${LIBTEXTCODEC_SOURCES} ${LIBMARKDOWN_SOURCES} ${LIBGEMINI_SOURCES} ${LIBGFX_SOURCES} ${LIBGUI_GML_SOURCES} ${LIBHTTP_SOURCES} ${LAGOM_REGEX_SOURCES} ${SHELL_SOURCES} ${LIBSQL_SOURCES})
+set(LAGOM_TEST_SOURCES ${LIBTEST_SOURCES})
 
 # FIXME: This is a hack, because the lagom stuff can be build individually or
 #        in combination with the system, we generate two Debug.h files. One in
@@ -98,6 +103,7 @@ if (BUILD_LAGOM)
 
     if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
         enable_testing()
+        add_library(LagomTest $<TARGET_OBJECTS:LagomCore> ${LAGOM_TEST_SOURCES})
         add_executable(TestApp TestApp.cpp)
         target_link_libraries(TestApp Lagom)
         target_link_libraries(TestApp stdc++)
@@ -178,8 +184,8 @@ if (BUILD_LAGOM)
 
         foreach(source ${AK_TEST_SOURCES})
             get_filename_component(name ${source} NAME_WE)
-            add_executable(${name}_lagom ${source})
-            target_link_libraries(${name}_lagom LagomCore)
+            add_executable(${name}_lagom ${source} ${LIBTEST_MAIN})
+            target_link_libraries(${name}_lagom LagomTest)
             add_test(
                 NAME ${name}_lagom
                 COMMAND ${name}_lagom
@@ -190,8 +196,8 @@ if (BUILD_LAGOM)
 
         foreach(source ${LIBREGEX_TESTS})
             get_filename_component(name ${source} NAME_WE)
-            add_executable(${name}_lagom ${source} ${LAGOM_REGEX_SOURCES})
-            target_link_libraries(${name}_lagom LagomCore)
+            add_executable(${name}_lagom ${source} ${LAGOM_REGEX_SOURCES} ${LIBTEST_MAIN})
+            target_link_libraries(${name}_lagom LagomTest)
             add_test(
                 NAME ${name}_lagom
                 COMMAND ${name}_lagom
@@ -201,8 +207,8 @@ if (BUILD_LAGOM)
 
         foreach(source ${LIBCOMPRESS_TESTS})
             get_filename_component(name ${source} NAME_WE)
-            add_executable(${name}_lagom ${source} ${LIBCOMPRESS_SOURCES})
-            target_link_libraries(${name}_lagom Lagom)
+            add_executable(${name}_lagom ${source} ${LIBCOMPRESS_SOURCES} ${LIBTEST_MAIN})
+            target_link_libraries(${name}_lagom Lagom LagomTest)
             add_test(
                     NAME ${name}_lagom
                     COMMAND ${name}_lagom
@@ -212,8 +218,8 @@ if (BUILD_LAGOM)
 
         foreach(source ${LIBSQL_TEST_SOURCES})
             get_filename_component(name ${source} NAME_WE)
-            add_executable(${name}_lagom ${source} ${LIBSQL_SOURCES})
-            target_link_libraries(${name}_lagom LagomCore)
+            add_executable(${name}_lagom ${source} ${LIBSQL_SOURCES} ${LIBTEST_MAIN})
+            target_link_libraries(${name}_lagom LagomTest)
             add_test(
                 NAME ${name}_lagom
                 COMMAND ${name}_lagom

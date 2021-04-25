@@ -5,9 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibTest/TestCase.h>
+
 #include <AK/SourceLocation.h>
 #include <AK/StringView.h>
-#include <AK/TestSuite.h>
 
 TEST_CASE(basic_scenario)
 {
@@ -29,5 +30,3 @@ TEST_CASE(default_arg_scenario)
 
     EXPECT_EQ(expected_calling_function, actual_calling_function);
 }
-
-TEST_MAIN(SourceLocation)

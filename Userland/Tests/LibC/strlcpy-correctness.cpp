@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/ByteBuffer.h>
 #include <AK/Random.h>
@@ -162,5 +162,3 @@ TEST_CASE(to_nullptr)
     EXPECT(test_single({ LITERAL("Hello World!\0\0\0"), LITERAL("Hello Friend!"), LITERAL("Hello Friend!\0\0") }));
     EXPECT(test_single({ LITERAL("aaaaaaaaaa"), LITERAL("whf"), LITERAL("whf\0aaaaaa") }));
 }
-
-TEST_MAIN(Sprintf)

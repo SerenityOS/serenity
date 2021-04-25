@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/String.h>
@@ -59,5 +59,3 @@ TEST_CASE(swap_with_self)
     swap(object, object);
     EXPECT_EQ(object->ref_count(), 1u);
 }
-
-TEST_MAIN(NonnullRefPtr)

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/ByteBuffer.h>
 
@@ -49,5 +49,3 @@ TEST_CASE(negative_operator_lt)
     // error: error: use of deleted function ‘bool AK::ByteBuffer::operator<(const AK::ByteBuffer&) const’
 }
 #endif /* COMPILE_NEGATIVE_TESTS */
-
-TEST_MAIN(ByteBuffer)

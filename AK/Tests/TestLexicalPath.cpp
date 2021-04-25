@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
@@ -74,5 +74,3 @@ TEST_CASE(relative_path)
     EXPECT_EQ(LexicalPath::relative_path("/tmp/foo.txt", "tmp"), String {});
     EXPECT_EQ(LexicalPath::relative_path("tmp/foo.txt", "/tmp"), String {});
 }
-
-TEST_MAIN(LexicalPath)

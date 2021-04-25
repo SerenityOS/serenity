@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/NumberFormat.h>
 
@@ -125,5 +125,3 @@ TEST_CASE(extremes_8byte)
         warnln("(Skipping 8-byte-size_t test on 32-bit platform)");
     }
 }
-
-TEST_MAIN(NumberFormat)

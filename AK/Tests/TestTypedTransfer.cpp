@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
 #include <AK/TypedTransfer.h>
@@ -39,5 +39,3 @@ TEST_CASE(overlapping_source_and_destination_2)
     for (size_t i = 0; i < 6; ++i)
         EXPECT_EQ(actual[i].m_value, expected[i].m_value);
 }
-
-TEST_MAIN(TypedTransfer)

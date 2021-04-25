@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/BinarySearch.h>
 #include <AK/Span.h>
@@ -116,5 +116,3 @@ TEST_CASE(unsigned_to_signed_regression)
     EXPECT_EQ(binary_search(input, 1u, &nearby_index), &input[1]);
     EXPECT_EQ(nearby_index, 1u);
 }
-
-TEST_MAIN(BinarySearch)

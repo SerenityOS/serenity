@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibTest/TestCase.h>
+
 #include <AK/StdLibExtras.h>
-#include <AK/TestSuite.h>
 #include <AK/TypeList.h>
 
 #define STATIC_EXPECT_EQ(lhs, rhs) \
@@ -104,5 +105,3 @@ TEST_CASE(UnderlyingType)
 
     STATIC_EXPECT_EQ(Type, u8);
 }
-
-TEST_MAIN(TypeTraits)

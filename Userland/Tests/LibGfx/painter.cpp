@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
@@ -51,5 +51,3 @@ BENCHMARK_CASE(fill_with_gradient)
         painter.fill_rect_with_gradient(bitmap->rect(), Color::Blue, Color::Red);
     }
 }
-
-TEST_MAIN(Painter)

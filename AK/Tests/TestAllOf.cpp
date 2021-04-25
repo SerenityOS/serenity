@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/AllOf.h>
 #include <AK/Array.h>
@@ -19,5 +19,3 @@ TEST_CASE(should_determine_if_predicate_applies_to_all_elements_in_container)
     EXPECT(all_of(a.begin(), a.end(), [](auto elem) { return elem == 0; }));
     EXPECT(!all_of(a.begin(), a.end(), [](auto elem) { return elem == 1; }));
 }
-
-TEST_MAIN(AllOf)

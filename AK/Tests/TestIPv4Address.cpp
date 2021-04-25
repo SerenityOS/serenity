@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/Endian.h>
 #include <AK/IPv4Address.h>
@@ -151,5 +151,3 @@ TEST_CASE(should_compare)
     EXPECT(addr_a != addr_b);
     EXPECT(addr_a == addr_a);
 }
-
-TEST_MAIN(IPv4Address)
