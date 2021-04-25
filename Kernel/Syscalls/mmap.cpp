@@ -246,6 +246,12 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
 
     if (!region)
         return ENOMEM;
+
+    if (auto* event_buffer = current_perf_events_buffer()) {
+        [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MMAP, region->vaddr().get(),
+            region->size(), name.is_null() ? region->name().characters() : name.characters());
+    }
+
     region->set_mmap(true);
     if (map_shared)
         region->set_shared(true);
@@ -430,6 +436,9 @@ KResultOr<int> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_n
         return EINVAL;
     if (!region->is_mmap())
         return EPERM;
+    if (auto* event_buffer = current_perf_events_buffer()) {
+        [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MMAP, region->vaddr().get(), region->size(), name.characters());
+    }
     region->set_name(move(name));
     return 0;
 }
@@ -453,8 +462,13 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
     if (auto* whole_region = space().find_region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
             return EPERM;
+        auto base = whole_region->vaddr();
+        auto size = whole_region->size();
         bool success = space().deallocate_region(*whole_region);
         VERIFY(success);
+        if (auto* event_buffer = current_perf_events_buffer()) {
+            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MUNMAP, base.get(), size, nullptr);
+        }
         return 0;
     }
 
@@ -479,6 +493,11 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
         for (auto* new_region : new_regions) {
             new_region->map(space().page_directory());
         }
+
+        if (auto* event_buffer = current_perf_events_buffer()) {
+            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MUNMAP, range_to_unmap.base().get(), range_to_unmap.size(), nullptr);
+        }
+
         return 0;
     }
 
@@ -519,6 +538,10 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
     // And finally we map the new region(s) using our page directory (they were just allocated and don't have one).
     for (auto* new_region : new_regions) {
         new_region->map(space().page_directory());
+    }
+
+    if (auto* event_buffer = current_perf_events_buffer()) {
+        [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MUNMAP, range_to_unmap.base().get(), range_to_unmap.size(), nullptr);
     }
 
     return 0;

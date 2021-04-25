@@ -20,6 +20,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
 #include <Kernel/Lock.h>
+#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
@@ -527,6 +528,11 @@ private:
     bool has_tracee_thread(ProcessID tracer_pid);
 
     void clear_futex_queues_on_exec();
+
+    inline PerformanceEventBuffer* current_perf_events_buffer()
+    {
+        return g_profiling_all_threads ? g_global_perf_events : m_perf_event_buffer.ptr();
+    }
 
     Process* m_prev { nullptr };
     Process* m_next { nullptr };
