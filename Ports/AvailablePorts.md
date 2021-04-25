@@ -106,6 +106,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`sqlite`](sqlite/)                    | SQLite                                                     | 3350300                  | https://www.sqlite.org/                                                        |
 | [`stress-ng`](stress-ng/)              | stress-ng                                                  | 0.11.23                  | https://github.com/ColinIanKing/stress-ng                                      |
 | [`Super-Mario`](Super-Mario/)          | Super-Mario Clone                                          |                          | https://github.com/Bennyhwanggggg/Super-Mario-Clone-Cpp                        |
+| [`tcl`](tcl/)                          | Tcl                                                        | 8.6.11                   | https://www.tcl-lang.org/                                                      |
 | [`termcap`](termcap/)                  | GNU termcap                                                | 1.3.1                    | https://www.gnu.org/software/termutils/                                        |
 | [`tinycc`](tinycc/)                    | Tiny C Compiler (TinyCC)                                   | dev                      | https://github.com/TinyCC/tinycc                                               |
 | [`tinyscheme`](tinyscheme/)            | TinyScheme Interpreter                                     | 1.42                     | https://sourceforge.net/projects/tinyscheme/                                   |
