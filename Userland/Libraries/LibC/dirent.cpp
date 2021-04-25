@@ -35,13 +35,21 @@ int closedir(DIR* dirp)
 {
     if (!dirp || dirp->fd == -1)
         return -EBADF;
-    if (dirp->buffer)
-        free(dirp->buffer);
+    free(dirp->buffer);
     int rc = close(dirp->fd);
     if (rc == 0)
         dirp->fd = -1;
     free(dirp);
     return rc;
+}
+
+void rewinddir(DIR* dirp)
+{
+    free(dirp->buffer);
+    dirp->buffer = nullptr;
+    dirp->buffer_size = 0;
+    dirp->nextptr = nullptr;
+    lseek(dirp->fd, 0, SEEK_SET);
 }
 
 struct [[gnu::packed]] sys_dirent {

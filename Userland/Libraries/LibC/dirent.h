@@ -50,6 +50,7 @@ typedef struct __DIR DIR;
 
 DIR* opendir(const char* name);
 int closedir(DIR*);
+void rewinddir(DIR*);
 struct dirent* readdir(DIR*);
 int readdir_r(DIR*, struct dirent*, struct dirent**);
 int dirfd(DIR*);
