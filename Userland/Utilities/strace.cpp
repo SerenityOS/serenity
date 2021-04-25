@@ -32,10 +32,12 @@ static void handle_sigint(int)
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio wpath cpath proc exec ptrace sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<const char*> child_argv;
 
@@ -60,10 +62,12 @@ int main(int argc, char** argv)
         trace_file = open_result.value();
     }
 
+#ifdef __serenity__
     if (pledge("stdio proc exec ptrace sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     int status;
     if (g_pid == -1) {

@@ -13,6 +13,7 @@
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -24,6 +25,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     auto f = Core::File::construct("/proc/dmesg");
     if (!f->open(Core::OpenMode::ReadOnly)) {

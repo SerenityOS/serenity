@@ -14,10 +14,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     const char* name_or_ip = nullptr;
     Core::ArgsParser args_parser;

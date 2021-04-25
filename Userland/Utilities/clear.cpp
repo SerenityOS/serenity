@@ -9,10 +9,13 @@
 
 int main(int, char**)
 {
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
+
     printf("\033[3J\033[H\033[2J");
     fflush(stdout);
     return 0;

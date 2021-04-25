@@ -22,20 +22,24 @@ static void wait_for_key()
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath tty", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     key_fd = STDOUT_FILENO;
 
     struct winsize ws;
     ioctl(1, TIOCGWINSZ, &ws);
 
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     unsigned lines_printed = 0;
     while (!feof(stdin)) {

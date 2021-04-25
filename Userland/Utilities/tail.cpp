@@ -77,10 +77,12 @@ static off_t find_seek_pos(Core::File& file, int wanted_lines)
 
 int main(int argc, char* argv[])
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     bool follow = false;
     int line_count = DEFAULT_LINE_COUNT;
@@ -99,10 +101,12 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     auto pos = find_seek_pos(*f, line_count);
     return tail_from_pos(*f, pos, follow);

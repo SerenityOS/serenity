@@ -21,10 +21,12 @@ constexpr const char* DEFAULT_SHELL = "/bin/Shell";
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio wpath rpath cpath chown", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     const char* home_path = nullptr;
     int uid = 0;

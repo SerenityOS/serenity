@@ -14,13 +14,16 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath tty", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     String this_tty = ttyname(STDIN_FILENO);
 
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -37,6 +40,7 @@ int main(int argc, char** argv)
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     enum class Alignment {
         Left,

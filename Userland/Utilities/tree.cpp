@@ -101,10 +101,12 @@ static void print_directory_tree(const String& root_path, int depth, const Strin
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath tty", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<const char*> directories;
 

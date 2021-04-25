@@ -11,10 +11,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __sereneity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     bool no_newline = false;
     Vector<const char*> paths;

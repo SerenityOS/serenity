@@ -25,6 +25,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
+#ifdef __serenity__
     if (pledge("stdio wpath rpath cpath fattr tty", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -36,6 +37,7 @@ int main(int argc, char** argv)
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     bool del = false;
     bool lock = false;
@@ -64,10 +66,12 @@ int main(int argc, char** argv)
 
     setpwent();
 
+#ifdef __serenity__
     if (pledge("stdio wpath rpath cpath fattr tty", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     // target_account is the account we are changing the password of.
     auto& target_account = account_or_error.value();
@@ -93,10 +97,12 @@ int main(int argc, char** argv)
         target_account.set_password(new_password.value().characters());
     }
 
+#ifdef __serenity__
     if (pledge("stdio wpath rpath cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     if (!target_account.sync()) {
         perror("Core::Account::Sync");

@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
     if (view_width == 0)
         view_width = 80;
 
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -37,6 +38,7 @@ int main(int argc, char* argv[])
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     const char* section = nullptr;
     const char* name = nullptr;
@@ -83,10 +85,12 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     dbgln("Loading man page from {}", file->filename());
     auto buffer = file->read_all();

@@ -15,6 +15,7 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -26,6 +27,7 @@ int main(int argc, char** argv)
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     pid_t pid = 0;
     bool flag_create = false;

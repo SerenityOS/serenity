@@ -57,10 +57,12 @@ static char* make_temp(const char* pattern, bool directory, bool dry_run)
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath wpath cpath", nullptr)) {
         perror("pledge");
         return 1;
     }
+#endif
 
     const char* file_template = nullptr;
     bool create_directory = false;

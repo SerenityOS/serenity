@@ -14,10 +14,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio cpath rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     bool create_parents = false;
     Vector<const char*> directories;

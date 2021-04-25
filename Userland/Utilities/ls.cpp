@@ -62,10 +62,12 @@ static bool is_a_tty = false;
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath tty", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     struct winsize ws;
     int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
@@ -82,10 +84,12 @@ int main(int argc, char** argv)
         flag_colorize = true;
     }
 
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<const char*> paths;
 

@@ -22,10 +22,12 @@ static int usage()
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio dpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     // FIXME: Add some kind of option for specifying the file permissions.
     if (argc < 3)

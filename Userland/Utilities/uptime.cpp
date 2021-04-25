@@ -9,10 +9,12 @@
 
 int main(int, char**)
 {
+#ifdef __serenityos__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     FILE* fp = fopen("/proc/uptime", "r");
     if (!fp) {
@@ -20,10 +22,12 @@ int main(int, char**)
         return 1;
     }
 
+#ifdef __serenityos__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     char buffer[BUFSIZ];
     auto* p = fgets(buffer, sizeof(buffer), fp);

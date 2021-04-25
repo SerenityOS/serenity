@@ -24,10 +24,12 @@ static void print_indent(int indent, int spaces_per_indent)
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     const char* path = nullptr;
     int spaces_in_indent = 4;
@@ -46,10 +48,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);

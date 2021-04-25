@@ -11,10 +11,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     auto program_name = StringView { argv[0] };
     auto hash_kind = Crypto::Hash::HashKind::None;

@@ -31,10 +31,12 @@ static bool file_exists(const char* path)
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath cpath fattr", nullptr)) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<const char*> paths;
 

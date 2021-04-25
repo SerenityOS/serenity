@@ -11,10 +11,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio dpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     mode_t mode = 0666;
     Vector<const char*> paths;

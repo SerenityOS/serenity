@@ -38,10 +38,12 @@ static FILE* get_stream(const char* filepath, const char* perms)
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath wpath cpath", nullptr) > 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     const char* inpath = nullptr;
     const char* outpath = nullptr;

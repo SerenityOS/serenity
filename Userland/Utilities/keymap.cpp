@@ -13,6 +13,7 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio setkeymap getkeymap rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -27,12 +28,14 @@ int main(int argc, char** argv)
         perror("unveil /etc/Keyboard.ini");
         return 1;
     }
+#endif
 
     const char* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "The mapping file to be used", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
+#ifdef __serenity__
     if (path && path[0] == '/') {
         if (unveil(path, "r") < 0) {
             perror("unveil path");
@@ -44,6 +47,7 @@ int main(int argc, char** argv)
         perror("unveil");
         return 1;
     }
+#endif
 
     if (!path) {
         auto keymap = Keyboard::CharacterMap::fetch_system_map();

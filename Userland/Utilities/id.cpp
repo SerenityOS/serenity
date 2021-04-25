@@ -20,6 +20,7 @@ static bool flag_print_gid_all = false;
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (unveil("/etc/passwd", "r") < 0) {
         perror("unveil");
         return 1;
@@ -39,6 +40,7 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
+#endif
 
     Core::ArgsParser args_parser;
     args_parser.add_option(flag_print_uid, "Print UID", nullptr, 'u');

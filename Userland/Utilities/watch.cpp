@@ -96,10 +96,13 @@ static int run_command(const Vector<const char*>& command)
 int main(int argc, char** argv)
 {
     signal(SIGINT, handle_signal);
+
+#ifdef __serenity__
     if (pledge("stdio proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<const char*> command;
     Core::ArgsParser args_parser;

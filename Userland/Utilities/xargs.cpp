@@ -39,10 +39,12 @@ private:
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     const char* placeholder = nullptr;
     bool split_with_nulls = false;

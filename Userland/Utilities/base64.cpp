@@ -15,10 +15,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     bool decode = false;
     const char* filepath = nullptr;
@@ -44,10 +46,12 @@ int main(int argc, char** argv)
         buffer = file->read_all();
     }
 
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     if (decode) {
         auto decoded = decode_base64(StringView(buffer));

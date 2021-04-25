@@ -567,6 +567,7 @@ NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence 
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -576,6 +577,7 @@ int main(int argc, char** argv)
         perror("unveil");
         return 1;
     }
+#endif
 
     if ((argc == 2 && StringView { "--help" } == argv[1]) || argc == 1)
         print_help_and_exit();

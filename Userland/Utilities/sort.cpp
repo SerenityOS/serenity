@@ -15,10 +15,12 @@
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio", nullptr) > 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<String> lines;
 

@@ -13,10 +13,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     bool recursive = false;
     bool force = false;

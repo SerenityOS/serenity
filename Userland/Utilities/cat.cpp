@@ -15,10 +15,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<String> paths;
 
@@ -43,10 +45,12 @@ int main(int argc, char** argv)
         fds.append(0);
     }
 
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     for (auto& fd : fds) {
         for (;;) {

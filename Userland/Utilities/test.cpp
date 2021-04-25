@@ -493,10 +493,12 @@ static OwnPtr<Condition> parse_complex_expression(char* argv[])
 
 int main(int argc, char* argv[])
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 126;
     }
+#endif
 
     if (LexicalPath { argv[0] }.basename() == "[") {
         --argc;

@@ -15,10 +15,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath chown", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     if (argc < 3) {
         printf("usage: chown <uid[:gid]> <path>\n");

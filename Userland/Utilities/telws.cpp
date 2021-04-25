@@ -17,10 +17,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio unix inet accept rpath wpath cpath fattr tty sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Core::ArgsParser args_parser;
 
@@ -70,6 +72,7 @@ int main(int argc, char** argv)
         Core::EventLoop::current().quit(0);
     };
 
+#ifdef __serenity__
     if (pledge("stdio unix inet accept rpath wpath tty sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -79,6 +82,7 @@ int main(int argc, char** argv)
         perror("unveil");
         return 1;
     }
+#endif
 
     outln("Started server. Commands :");
     outln("- '<text>' send the text as message");

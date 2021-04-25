@@ -116,6 +116,7 @@ static struct winsize g_window_size;
 
 int main(int, char**)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath tty sigaction ", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -132,15 +133,18 @@ int main(int, char**)
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     signal(SIGWINCH, [](int) {
         g_window_size_changed = true;
     });
 
+#ifdef __serenity__
     if (pledge("stdio rpath tty", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<ThreadData*> threads;
     auto prev = get_snapshot();

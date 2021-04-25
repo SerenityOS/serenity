@@ -14,10 +14,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath wpath cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     // NOTE: The "force" option is a dummy for now, it's just here to silence scripts that use "mv -f"
     //       In the future, it might be used to cancel out an "-i" interactive option.

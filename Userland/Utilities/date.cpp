@@ -14,10 +14,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio settime", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     bool print_unix_date = false;
     bool print_iso_8601 = false;

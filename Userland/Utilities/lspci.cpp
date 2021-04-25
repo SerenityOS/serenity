@@ -21,6 +21,7 @@ static const char* format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -37,6 +38,7 @@ int main(int argc, char** argv)
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("List PCI devices.");
@@ -60,10 +62,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     auto file_contents = proc_pci->read_all();
     auto json = JsonValue::from_string(file_contents);

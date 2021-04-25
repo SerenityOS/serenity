@@ -16,6 +16,7 @@ extern "C" int main(int, char**);
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity
     if (pledge("stdio rpath tty exec id", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -25,6 +26,7 @@ int main(int argc, char** argv)
         warnln("{}: standard in is not a terminal", argv[0]);
         return 1;
     }
+#endif
 
     const char* user = nullptr;
 
@@ -45,10 +47,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+#ifdef __serenity__
     if (pledge("stdio tty exec id", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     const auto& account = account_or_error.value();
 
@@ -65,20 +69,24 @@ int main(int argc, char** argv)
         }
     }
 
+#ifdef __serenity__
     if (pledge("stdio exec id", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     if (!account.login()) {
         perror("Core::Account::login");
         return 1;
     }
 
+#ifdef __serenity__
     if (pledge("stdio exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     execl(account.shell().characters(), account.shell().characters(), nullptr);
     perror("execl");

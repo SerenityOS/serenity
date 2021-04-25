@@ -14,6 +14,7 @@
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -25,6 +26,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     auto proc_interrupts = Core::File::construct("/proc/interrupts");
     if (!proc_interrupts->open(Core::OpenMode::ReadOnly)) {
@@ -32,10 +34,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         return 1;
     }
 
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     printf("%4s  %-10s\n", " ", "CPU0");
     auto file_contents = proc_interrupts->read_all();

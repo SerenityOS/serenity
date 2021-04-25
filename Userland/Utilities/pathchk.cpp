@@ -17,10 +17,12 @@ int main(int argc, char** argv)
     static bool flag_portability = false;
     static bool flag_empty_name_and_leading_dash = false;
 
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<const char*> paths;
 

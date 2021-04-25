@@ -100,6 +100,7 @@ static void display_entry(const OpenFile& file, const Core::ProcessStatistics& s
 
 int main(int argc, char* argv[])
 {
+#ifdef __serenity__
     if (pledge("stdio rpath proc", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -117,6 +118,7 @@ int main(int argc, char* argv[])
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     bool arg_all_processes { false };
     int arg_fd { -1 };

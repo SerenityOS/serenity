@@ -9,6 +9,7 @@
 
 int main(int, char**)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -20,6 +21,7 @@ int main(int, char**)
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     puts(getlogin());
     return 0;

@@ -12,10 +12,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<String> paths;
     Core::ArgsParser args_parser;
@@ -39,10 +41,12 @@ int main(int argc, char** argv)
         }
     }
 
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     for (auto& file : files) {
         while (file->can_read_line()) {

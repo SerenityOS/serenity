@@ -28,6 +28,7 @@ static void print_account_gids(const Core::Account& account)
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (unveil("/etc/passwd", "r") < 0) {
         perror("unveil");
         return 1;
@@ -52,6 +53,7 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<const char*> usernames;
 

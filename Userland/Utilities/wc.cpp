@@ -87,10 +87,12 @@ static Count get_total_count(const Vector<Count>& counts)
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<const char*> file_specifiers;
 
@@ -108,10 +110,12 @@ int main(int argc, char** argv)
     for (const auto& file_specifier : file_specifiers)
         counts.append(get_count(file_specifier));
 
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     if (file_specifiers.is_empty())
         counts.append(get_count("-"));

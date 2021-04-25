@@ -95,10 +95,12 @@ static int stat(const char* file, bool should_follow_links)
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     bool should_follow_links = false;
     Vector<const char*> files;

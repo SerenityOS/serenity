@@ -97,10 +97,12 @@ static Optional<String> get_description_from_mime_type(const String& mime, const
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     Vector<const char*> paths;
     bool flag_mime_only = false;

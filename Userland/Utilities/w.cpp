@@ -18,6 +18,7 @@
 
 int main()
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -44,6 +45,7 @@ int main()
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     auto file_or_error = Core::File::open("/var/run/utmp", Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {

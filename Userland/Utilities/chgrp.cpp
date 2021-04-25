@@ -16,10 +16,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath chown", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     const char* gid_arg = nullptr;
     const char* path = nullptr;

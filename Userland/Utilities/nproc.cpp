@@ -12,10 +12,12 @@
 
 int main()
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     auto file = Core::File::construct("/proc/cpuinfo");
     if (!file->open(Core::OpenMode::ReadOnly)) {

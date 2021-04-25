@@ -14,10 +14,12 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenityos__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     bool flag_system = false;
     bool flag_node = false;

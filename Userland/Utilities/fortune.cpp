@@ -72,10 +72,12 @@ static Vector<Quote> parse_all(const JsonArray& array)
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     const char* path = "/res/fortunes.json";
 
@@ -90,6 +92,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -98,6 +101,7 @@ int main(int argc, char** argv)
         perror("unveil");
         return 1;
     }
+#endif
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);

@@ -21,10 +21,12 @@ static void print_usage_and_exit()
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio proc", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     if (argc == 2 && !strcmp(argv[1], "-l")) {
         for (size_t i = 0; i < NSIG; ++i) {

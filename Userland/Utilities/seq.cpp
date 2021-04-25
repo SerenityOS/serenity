@@ -41,6 +41,7 @@ static double get_double(const char* name, const char* d_string, int* number_of_
 
 int main(int argc, const char* argv[])
 {
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -49,6 +50,7 @@ int main(int argc, const char* argv[])
         perror("unveil");
         return 1;
     }
+#endif
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {

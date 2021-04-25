@@ -41,7 +41,9 @@ int main(int argc, char** argv)
     bool do_trigger_user_mode_instruction_prevention = false;
     bool do_use_io_instruction = false;
     bool do_read_cpu_counter = false;
+#ifdef __serenity__
     bool do_pledge_violation = false;
+#endif
     bool do_failing_assertion = false;
 
     auto args_parser = Core::ArgsParser();
@@ -65,7 +67,9 @@ int main(int argc, char** argv)
     args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault", nullptr, 'U');
     args_parser.add_option(do_use_io_instruction, "Use an x86 I/O instruction in userspace", nullptr, 'I');
     args_parser.add_option(do_read_cpu_counter, "Read the x86 TSC (Time Stamp Counter) directly", nullptr, 'c');
+#ifdef __serenity__
     args_parser.add_option(do_pledge_violation, "Violate pledge()'d promises", nullptr, 'p');
+#endif
     args_parser.add_option(do_failing_assertion, "Perform a failing assertion", nullptr, 'n');
 
     if (argc != 2) {
@@ -261,6 +265,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
+#ifdef __serenity__
     if (do_pledge_violation || do_all_crash_types) {
         Crash("Violate pledge()'d promises", [] {
             if (pledge("", nullptr) < 0) {
@@ -271,6 +276,7 @@ int main(int argc, char** argv)
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
+#endif
 
     if (do_failing_assertion || do_all_crash_types) {
         Crash("Perform a failing assertion", [] {

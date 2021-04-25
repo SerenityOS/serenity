@@ -23,6 +23,7 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio wpath rpath cpath fattr proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -39,6 +40,7 @@ int main(int argc, char** argv)
     }
 
     unveil(nullptr, nullptr);
+#endif
 
     const char* username = nullptr;
     bool remove_home = false;
@@ -48,12 +50,14 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(username, "Login user identity (username)", "login");
     args_parser.parse(argc, argv);
 
+#ifdef __serenity__
     if (!remove_home) {
         if (pledge("stdio wpath rpath cpath fattr", nullptr) < 0) {
             perror("pledge");
             return 1;
         }
     }
+#endif
 
     char temp_filename[] = "/etc/passwd.XXXXXX";
     auto fd = mkstemp(temp_filename);

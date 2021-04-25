@@ -13,10 +13,13 @@
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
+
     char hostname[256];
     if (gethostname(hostname, sizeof(hostname)) < 0) {
         perror("gethostname");

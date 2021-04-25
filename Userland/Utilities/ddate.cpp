@@ -101,10 +101,12 @@ private:
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     auto date = Core::DateTime::from_timestamp(time(nullptr));
     printf("Today is %s\n", DiscordianDate(date).to_string().characters());

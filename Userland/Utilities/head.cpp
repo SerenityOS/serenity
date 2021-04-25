@@ -17,10 +17,12 @@ int head(const String& filename, bool print_filename, ssize_t line_count, ssize_
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     int line_count = -1;
     int byte_count = -1;

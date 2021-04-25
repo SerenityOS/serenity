@@ -31,10 +31,12 @@ int main(int argc, char** argv)
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
+#ifdef __serenity__
     if (pledge("stdio sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     double whole_seconds = static_cast<time_t>(secs);
     double fraction = secs - whole_seconds;
