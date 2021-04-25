@@ -48,12 +48,6 @@ host_env() {
 
 packagesdb="${DESTDIR}/usr/Ports/packages.db"
 
-MD5SUM=md5sum
-
-if [ `uname -s` = "OpenBSD" ]; then
-    MD5SUM="md5 -q"
-fi
-
 . "$@"
 shift
 
@@ -117,7 +111,7 @@ func_defined post_fetch || post_fetch() {
     :
 }
 fetch() {
-    if [ "$auth_type" == "sig" ] && [ ! -z "${auth_import_key}" ]; then
+    if [ "$auth_type" = "sig" ] && [ ! -z "${auth_import_key}" ]; then
         # import gpg key if not existing locally
         # The default keyserver keys.openpgp.org prints "new key but contains no user ID - skipped"
         # and fails. Use a different key server.
@@ -148,24 +142,16 @@ fetch() {
             fi
         fi
 
-        # check md5sum if given
-        if [ ! -z "$auth_sum" ]; then
-            if [ "$auth_type" == "md5" ] || [ "$auth_type" == "sha256" ] || [ "$auth_type" == "sha1" ]; then
-                echo "Expecting ${auth_type}sum: $auth_sum"
-                if [ "$auth_type" == "md5" ]; then
-                    calc_sum="$($MD5SUM $filename | cut -f1 -d' ')"
-                elif [ "$auth_type" == "sha256" ]; then
-                    calc_sum="$(sha256sum $filename | cut -f1 -d' ')"
-                elif [ "$auth_type" == "sha1" ]; then
-                    calc_sum="$(sha1sum $filename | cut -f1 -d' ')"
-                fi
-                echo "${auth_type}sum($filename) = '$calc_sum'"
-                if [ "$calc_sum" != "$auth_sum" ]; then
-                    # remove downloaded file to re-download on next run
-                    rm -f $filename
-                    echo "${auth_type}sum's mismatching, removed erronous download. Please run script again."
-                    exit 1
-                fi
+        # check sha256sum if given
+        if [ "$auth_type" = "sha256" ]; then
+            echo "Expecting ${auth_type}sum: $auth_sum"
+            calc_sum="$(sha256sum $filename | cut -f1 -d' ')"
+            echo "${auth_type}sum($filename) = '$calc_sum'"
+            if [ "$calc_sum" != "$auth_sum" ]; then
+                # remove downloaded file to re-download on next run
+                rm -f $filename
+                echo "${auth_type}sums mismatching, removed erronous download. Please run script again."
+                exit 1
             fi
         fi
 
@@ -199,7 +185,7 @@ fetch() {
     done
 
     # check signature
-    if [ "$auth_type" == "sig" ]; then
+    if [ "$auth_type" = "sig" ]; then
         if $NO_GPG; then
             echo "WARNING: gpg signature check was disabled by --no-gpg-verification"
         else
