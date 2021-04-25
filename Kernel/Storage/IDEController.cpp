@@ -53,6 +53,8 @@ UNMAP_AFTER_INIT IDEController::IDEController(PCI::Address address, bool force_p
     : StorageController()
     , PCI::DeviceController(address)
 {
+    PCI::enable_io_space(address);
+    PCI::enable_memory_space(address);
     initialize(force_pio);
 }
 
