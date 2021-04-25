@@ -6,7 +6,7 @@ files="https://github.com/openssh/openssh-portable/archive/9ca7e9c861775dd6c6312
 auth_type=md5
 depends="zlib openssl"
 useconfigure=true
-configopts="--prefix=/usr/local --disable-utmp --sysconfdir=/etc/ssh --with-ssl-dir=${SERENITY_INSTALL_ROOT}/usr/local/lib"
+configopts="--prefix=/usr/local --disable-utmp --disable-strip --sysconfdir=/etc/ssh --with-ssl-dir=${SERENITY_INSTALL_ROOT}/usr/local/lib"
 
 pre_configure() {
     run autoreconf
