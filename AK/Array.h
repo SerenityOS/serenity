@@ -111,3 +111,4 @@ constexpr static auto iota_array(const T offset = {})
 
 using AK::Array;
 using AK::iota_array;
+using AK::Detail::integer_sequence_generate_array;
