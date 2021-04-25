@@ -94,6 +94,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`pt2-clone`](pt2-clone/)              | ProTracker 2 clone                                         | 1.28                     | https://github.com/8bitbubsy/pt2-clone                                         |
 | [`python3`](python3/)                  | Python                                                     | 3.9.4                    | https://www.python.org/                                                        |
 | [`quake`](quake/)                      | Quake                                                      | 0.65                     | https://github.com/SerenityOS/SerenityQuake                                    |
+| [`readline`](readline/)                | GNU Readline Library                                       | 8.1                      | https://tiswww.case.edu/php/chet/readline/rltop.html                           |
 | [`rsync`](rsync/)                      | rsync                                                      | 3.1.3                    | https://rsync.samba.org/                                                       |
 | [`scummvm`](scummvm/)                  | ScummVM                                                    | 2.2.0                    | https://www.scummvm.org/                                                       |
 | [`SDL2`](SDL2/)                        | Simple DirectMedia Layer (SDL2)                            |                          | https://github.com/SerenityOS/SDL                                              |
