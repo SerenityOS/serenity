@@ -18,7 +18,6 @@ M3UParser::M3UParser()
 
 NonnullOwnPtr<M3UParser> M3UParser::from_file(const String path)
 {
-
     auto parser = make<M3UParser>();
     VERIFY(!path.is_null() && !path.is_empty() && !path.is_whitespace());
     parser->m_use_utf8 = path.ends_with(".m3u8", AK::CaseSensitivity::CaseInsensitive);

@@ -47,7 +47,6 @@ private:
 
 int main(int argc, char** argv)
 {
-
     if (pledge("stdio recvfd sendfd thread rpath accept cpath wpath unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;

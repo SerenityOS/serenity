@@ -325,7 +325,6 @@ Result<void, File::CopyError> File::copy_file_or_directory(const String& dst_pat
 
 Result<void, File::CopyError> File::copy_file(const String& dst_path, const struct stat& src_stat, File& source)
 {
-
     int dst_fd = creat(dst_path.characters(), 0666);
     if (dst_fd < 0) {
         if (errno != EISDIR)

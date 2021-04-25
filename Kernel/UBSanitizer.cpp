@@ -89,7 +89,6 @@ void __ubsan_handle_sub_overflow(const OverflowData& data, ValueHandle, ValueHan
 void __ubsan_handle_negate_overflow(const OverflowData&, ValueHandle);
 void __ubsan_handle_negate_overflow(const OverflowData& data, ValueHandle)
 {
-
     dbgln("KUBSAN: negation overflow, {} ({}-bit)", data.type.name(), data.type.bit_width());
 
     print_location(data.location);

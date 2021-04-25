@@ -84,7 +84,6 @@ void DateTime::set_time(unsigned year, unsigned month, unsigned day, unsigned ho
 
 String DateTime::to_string(const String& format) const
 {
-
     const char wday_short_names[7][4] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
     };

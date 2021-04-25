@@ -103,7 +103,6 @@ enum class IDTEntryType {
 // clang-format off
 struct [[gnu::packed]] IDTEntry
 {
-
     u16 offset_1; // offset bits 0..15
     u16 selector; // a code segment selector in GDT or LDT
 
