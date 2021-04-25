@@ -86,7 +86,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 
 Man pages are browsable outside of SerenityOS under [Base/usr/share/man](https://github.com/SerenityOS/serenity/tree/master/Base/usr/share/man).
 
-When running SerenityOS you can use `man` for the terminal interface, or `help` for the GUI interface.
+When running SerenityOS you can use `man` for the terminal interface, or `help` for the GUI.
 
 ## How do I build and run this?
 
