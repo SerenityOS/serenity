@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/SourceLocation.h>
 #include <AK/Vector.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
@@ -11,13 +12,13 @@
 
 #define CSS_TOKENIZER_TRACE 0
 
-#define PARSE_ERROR()                                                                                           \
-    do {                                                                                                        \
-        dbgln_if(CSS_TOKENIZER_TRACE, "Parse error (css tokenization) {} @ {}", __PRETTY_FUNCTION__, __LINE__); \
-    } while (0)
-
 //U+FFFD REPLACEMENT CHARACTER (�)
 #define REPLACEMENT_CHARACTER 0xFFFD
+
+static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
+{
+    dbgln_if(CSS_TOKENIZER_TRACE, "Parse error (css tokenization) {} ", location);
+}
 
 static inline bool is_surrogate(u32 codepoint)
 {
@@ -296,7 +297,7 @@ u32 Tokenizer::consume_escaped_codepoint()
     auto codepoint = next_codepoint();
 
     if (!codepoint.has_value()) {
-        PARSE_ERROR();
+        log_parse_error();
         return REPLACEMENT_CHARACTER;
     }
 
@@ -324,7 +325,7 @@ u32 Tokenizer::consume_escaped_codepoint()
     }
 
     if (!input) {
-        PARSE_ERROR();
+        log_parse_error();
         return REPLACEMENT_CHARACTER;
     }
 
@@ -465,7 +466,7 @@ Token Tokenizer::consume_a_url_token()
 
         auto codepoint = peek_codepoint();
         if (!codepoint.has_value()) {
-            PARSE_ERROR();
+            log_parse_error();
             return token;
         }
 
@@ -486,7 +487,7 @@ Token Tokenizer::consume_a_url_token()
             }
 
             if (!codepoint.has_value()) {
-                PARSE_ERROR();
+                log_parse_error();
                 return token;
             }
 
@@ -501,7 +502,7 @@ Token Tokenizer::consume_a_url_token()
         }
 
         if (is_quotation_mark(input) || is_apostrophe(input) || is_left_paren(input) || is_non_printable(input)) {
-            PARSE_ERROR();
+            log_parse_error();
             (void)next_codepoint();
             consume_the_remnants_of_a_bad_url();
             return create_new_token(Token::TokenType::BadUrl);
@@ -511,7 +512,7 @@ Token Tokenizer::consume_a_url_token()
             if (is_valid_escape_sequence()) {
                 token.m_value.append_code_point(consume_escaped_codepoint());
             } else {
-                PARSE_ERROR();
+                log_parse_error();
                 (void)next_codepoint();
                 consume_the_remnants_of_a_bad_url();
                 return create_new_token(Token::TokenType::BadUrl);
@@ -657,7 +658,7 @@ Token Tokenizer::consume_string_token(u32 ending_codepoint)
         auto codepoint = next_codepoint();
 
         if (!codepoint.has_value()) {
-            PARSE_ERROR();
+            log_parse_error();
             return token;
         }
 
@@ -694,7 +695,7 @@ void Tokenizer::consume_comments()
 start:
     auto peek = peek_twin();
     if (!peek.has_value()) {
-        PARSE_ERROR();
+        log_parse_error();
         return;
     }
 
@@ -708,7 +709,7 @@ start:
     for (;;) {
         auto peek_inner = peek_twin();
         if (!peek_inner.has_value()) {
-            PARSE_ERROR();
+            log_parse_error();
             return;
         }
 
@@ -882,7 +883,7 @@ Token Tokenizer::consume_a_token()
             return consume_an_ident_like_token();
         }
 
-        PARSE_ERROR();
+        log_parse_error();
         return create_value_token(Token::TokenType::Delim, input);
     }
 
