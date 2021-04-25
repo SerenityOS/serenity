@@ -191,7 +191,6 @@ static String gethostbyaddr_name_buffer;
 
 hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 {
-
     if (type != AF_INET) {
         errno = EAFNOSUPPORT;
         return nullptr;
