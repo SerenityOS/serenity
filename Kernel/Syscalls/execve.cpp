@@ -628,9 +628,9 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     tss.cr3 = space().page_directory().cr3();
     tss.ss2 = pid().value();
 
-    // Throw away any recorded performance events in this process.
-    if (m_perf_event_buffer)
-        m_perf_event_buffer->clear();
+    if (auto* event_buffer = current_perf_events_buffer()) {
+        event_buffer->add_process(*this, ProcessEventType::Exec);
+    }
 
     {
         ScopedSpinLock lock(g_scheduler_lock);

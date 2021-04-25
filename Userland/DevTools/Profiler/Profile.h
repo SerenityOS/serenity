@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Process.h"
 #include <AK/Bitmap.h>
 #include <AK/FlyString.h>
 #include <AK/JsonArray.h>
@@ -23,49 +24,6 @@ class DisassemblyModel;
 class Profile;
 class ProfileModel;
 class SamplesModel;
-
-struct MappedObject {
-    NonnullRefPtr<MappedFile> file;
-    ELF::Image elf;
-};
-
-extern HashMap<String, OwnPtr<MappedObject>> g_mapped_object_cache;
-
-class LibraryMetadata {
-public:
-    explicit LibraryMetadata(JsonArray regions);
-
-    struct Library {
-        FlatPtr base;
-        size_t size;
-        String name;
-        FlatPtr text_base;
-        MappedObject* object { nullptr };
-
-        String symbolicate(FlatPtr, u32* offset) const;
-    };
-
-    const Library* library_containing(FlatPtr) const;
-
-private:
-    mutable HashMap<String, OwnPtr<Library>> m_libraries;
-    JsonArray m_regions;
-};
-
-struct Process {
-    pid_t pid {};
-    String executable;
-    HashTable<int> threads;
-
-    struct Region {
-        String name;
-        FlatPtr base {};
-        size_t size {};
-    };
-    Vector<Region> regions;
-
-    NonnullOwnPtr<LibraryMetadata> library_metadata;
-};
 
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
@@ -137,7 +95,7 @@ public:
 
     pid_t pid() const { return m_pid; }
 
-    const Process* process(Profile&) const;
+    const Process* process(Profile&, u64 timestamp) const;
 
 private:
     explicit ProfileNode(const String& object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t);
@@ -165,10 +123,10 @@ public:
     GUI::Model& samples_model();
     GUI::Model* disassembly_model();
 
-    const Process* find_process(pid_t pid) const
+    const Process* find_process(pid_t pid, u64 timestamp) const
     {
         auto it = m_processes.find_if([&](auto& entry) {
-            return entry.pid == pid;
+            return entry.pid == pid && entry.valid_at(timestamp);
         });
         return it.is_end() ? nullptr : &(*it);
     }
@@ -189,15 +147,18 @@ public:
         String type;
         FlatPtr ptr { 0 };
         size_t size { 0 };
+        String name;
+        int parent_pid { 0 };
+        int parent_tid { 0 };
+        String executable;
+        int pid { 0 };
         int tid { 0 };
         bool in_kernel { false };
         Vector<Frame> frames;
     };
 
-    u32 first_filtered_event_index() const { return m_first_filtered_event_index; }
-    u32 filtered_event_count() const { return m_filtered_event_count; }
-
     const Vector<Event>& events() const { return m_events; }
+    const Vector<size_t>& filtered_event_indices() const { return m_filtered_event_indices; }
 
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
     u64 first_timestamp() const { return m_first_timestamp; }
@@ -208,6 +169,10 @@ public:
     void clear_timestamp_filter_range();
     bool has_timestamp_filter_range() const { return m_has_timestamp_filter_range; }
 
+    void set_process_filter(pid_t pid, u64 start_valid, u64 end_valid);
+    void clear_process_filter();
+    bool has_process_filter() const { return m_has_process_filter; }
+
     bool is_inverted() const { return m_inverted; }
     void set_inverted(bool);
 
@@ -215,6 +180,8 @@ public:
 
     bool show_percentages() const { return m_show_percentages; }
     void set_show_percentages(bool);
+
+    const Vector<Process>& processes() const { return m_processes; }
 
     template<typename Callback>
     void for_each_event_in_filter_range(Callback callback)
@@ -241,8 +208,7 @@ private:
     GUI::ModelIndex m_disassembly_index;
 
     Vector<NonnullRefPtr<ProfileNode>> m_roots;
-    u32 m_filtered_event_count { 0 };
-    size_t m_first_filtered_event_index { 0 };
+    Vector<size_t> m_filtered_event_indices;
     u64 m_first_timestamp { 0 };
     u64 m_last_timestamp { 0 };
 
@@ -252,6 +218,11 @@ private:
     bool m_has_timestamp_filter_range { false };
     u64 m_timestamp_filter_range_start { 0 };
     u64 m_timestamp_filter_range_end { 0 };
+
+    bool m_has_process_filter { false };
+    pid_t m_process_filter_pid { 0 };
+    u64 m_process_filter_start_valid { 0 };
+    u64 m_process_filter_end_valid { 0 };
 
     u32 m_deepest_stack_depth { 0 };
     bool m_inverted { false };

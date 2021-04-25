@@ -20,6 +20,7 @@ public:
     enum Column {
         SampleIndex,
         Timestamp,
+        ProcessID,
         ThreadID,
         ExecutableName,
         InnermostStackFrame,

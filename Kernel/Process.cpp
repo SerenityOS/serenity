@@ -242,8 +242,14 @@ Process::~Process()
     VERIFY(thread_count() == 0); // all threads should have been finalized
     VERIFY(!m_alarm_timer);
 
+    if (g_profiling_all_threads) {
+        VERIFY(g_global_perf_events);
+        [[maybe_unused]] auto rc = g_global_perf_events->append_with_eip_and_ebp(
+            pid(), 0, 0, 0, PERF_EVENT_PROCESS_EXIT, 0, 0, nullptr);
+    }
+
     {
-        ScopedSpinLock processses_lock(g_processes_lock);
+        ScopedSpinLock processes_lock(g_processes_lock);
         if (prev() || next())
             g_processes->remove(this);
     }
@@ -675,7 +681,7 @@ bool Process::create_perf_events_buffer_if_needed()
 {
     if (!m_perf_event_buffer) {
         m_perf_event_buffer = PerformanceEventBuffer::try_create_with_size(4 * MiB);
-        m_perf_event_buffer->add_process(*this);
+        m_perf_event_buffer->add_process(*this, ProcessEventType::Create);
     }
     return !!m_perf_event_buffer;
 }

@@ -8,6 +8,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
@@ -69,6 +70,10 @@ KResultOr<int> Process::sys$create_thread(void* (*entry)(void*), Userspace<const
     if (tsr_result.is_error())
         return tsr_result.error();
 
+    if (m_perf_event_buffer) {
+        [[maybe_unused]] auto rc = m_perf_event_buffer->append(PERF_EVENT_THREAD_CREATE, thread->tid().value(), 0, nullptr);
+    }
+
     ScopedSpinLock lock(g_scheduler_lock);
     thread->set_priority(requested_thread_priority);
     thread->set_state(Thread::State::Runnable);
@@ -82,6 +87,10 @@ void Process::sys$exit_thread(Userspace<void*> exit_value)
     if (this->thread_count() == 1) {
         // If this is the last thread, instead kill the process.
         this->sys$exit(0);
+    }
+
+    if (m_perf_event_buffer) {
+        [[maybe_unused]] auto rc = m_perf_event_buffer->append(PERF_EVENT_THREAD_EXIT, Thread::current()->tid().value(), 0, nullptr);
     }
 
     Thread::current()->exit(reinterpret_cast<void*>(exit_value.ptr()));

@@ -20,20 +20,20 @@ PerformanceEventBuffer::PerformanceEventBuffer(NonnullOwnPtr<KBuffer> buffer)
 {
 }
 
-KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2)
+NEVER_INLINE KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3)
 {
     FlatPtr ebp;
     asm volatile("movl %%ebp, %%eax"
                  : "=a"(ebp));
     auto current_thread = Thread::current();
-    auto eip = current_thread->get_register_dump_from_stack().eip;
-    return append_with_eip_and_ebp(eip, ebp, type, arg1, arg2);
+    return append_with_eip_and_ebp(current_thread->pid(), current_thread->tid(), 0, ebp, type, arg1, arg2, arg3);
 }
 
 static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(FlatPtr ebp, FlatPtr eip)
 {
     Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> backtrace;
-    backtrace.append(eip);
+    if (eip != 0)
+        backtrace.append(eip);
     FlatPtr stack_ptr_copy;
     FlatPtr stack_ptr = (FlatPtr)ebp;
     // FIXME: Figure out how to remove this SmapDisabler without breaking profile stacks.
@@ -55,7 +55,8 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
     return backtrace;
 }
 
-KResult PerformanceEventBuffer::append_with_eip_and_ebp(u32 eip, u32 ebp, int type, FlatPtr arg1, FlatPtr arg2)
+KResult PerformanceEventBuffer::append_with_eip_and_ebp(ProcessID pid, ThreadID tid,
+    u32 eip, u32 ebp, int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3)
 {
     if (count() >= capacity())
         return ENOBUFS;
@@ -73,6 +74,39 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(u32 eip, u32 ebp, int ty
     case PERF_EVENT_FREE:
         event.data.free.ptr = arg1;
         break;
+    case PERF_EVENT_MMAP:
+        event.data.mmap.ptr = arg1;
+        event.data.mmap.size = arg2;
+        memset(event.data.mmap.name, 0, sizeof(event.data.mmap.name));
+        if (!arg3.is_empty())
+            memcpy(event.data.mmap.name, arg3.characters_without_null_termination(), min(arg3.length(), sizeof(event.data.mmap.name) - 1));
+        break;
+    case PERF_EVENT_MUNMAP:
+        event.data.mmap.ptr = arg1;
+        event.data.mmap.size = arg2;
+        break;
+    case PERF_EVENT_PROCESS_CREATE:
+        event.data.process_create.parent_pid = arg1;
+        memset(event.data.process_create.executable, 0, sizeof(event.data.process_create.executable));
+        if (!arg3.is_empty()) {
+            memcpy(event.data.process_create.executable, arg3.characters_without_null_termination(),
+                min(arg3.length(), sizeof(event.data.process_create.executable) - 1));
+        }
+        break;
+    case PERF_EVENT_PROCESS_EXEC:
+        memset(event.data.process_exec.executable, 0, sizeof(event.data.process_exec.executable));
+        if (!arg3.is_empty()) {
+            memcpy(event.data.process_exec.executable, arg3.characters_without_null_termination(),
+                min(arg3.length(), sizeof(event.data.process_exec.executable) - 1));
+        }
+        break;
+    case PERF_EVENT_PROCESS_EXIT:
+        break;
+    case PERF_EVENT_THREAD_CREATE:
+        event.data.thread_create.parent_tid = arg1;
+        break;
+    case PERF_EVENT_THREAD_EXIT:
+        break;
     default:
         return EINVAL;
     }
@@ -81,7 +115,8 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(u32 eip, u32 ebp, int ty
     event.stack_size = min(sizeof(event.stack) / sizeof(FlatPtr), static_cast<size_t>(backtrace.size()));
     memcpy(event.stack, backtrace.data(), event.stack_size * sizeof(FlatPtr));
 
-    event.tid = Thread::current()->tid().value();
+    event.pid = pid.value();
+    event.tid = tid.value();
     event.timestamp = TimeManagement::the().uptime_ms();
     at(m_count++) = event;
     return KSuccess;
@@ -114,7 +149,38 @@ bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
             event_object.add("type", "free");
             event_object.add("ptr", static_cast<u64>(event.data.free.ptr));
             break;
+        case PERF_EVENT_MMAP:
+            event_object.add("type", "mmap");
+            event_object.add("ptr", static_cast<u64>(event.data.mmap.ptr));
+            event_object.add("size", static_cast<u64>(event.data.mmap.size));
+            event_object.add("name", event.data.mmap.name);
+            break;
+        case PERF_EVENT_MUNMAP:
+            event_object.add("type", "munmap");
+            event_object.add("ptr", static_cast<u64>(event.data.munmap.ptr));
+            event_object.add("size", static_cast<u64>(event.data.munmap.size));
+            break;
+        case PERF_EVENT_PROCESS_CREATE:
+            event_object.add("type", "process_create");
+            event_object.add("parent_pid", static_cast<u64>(event.data.process_create.parent_pid));
+            event_object.add("executable", event.data.process_create.executable);
+            break;
+        case PERF_EVENT_PROCESS_EXEC:
+            event_object.add("type", "process_exec");
+            event_object.add("executable", event.data.process_exec.executable);
+            break;
+        case PERF_EVENT_PROCESS_EXIT:
+            event_object.add("type", "process_exit");
+            break;
+        case PERF_EVENT_THREAD_CREATE:
+            event_object.add("type", "thread_create");
+            event_object.add("parent_tid", static_cast<u64>(event.data.thread_create.parent_tid));
+            break;
+        case PERF_EVENT_THREAD_EXIT:
+            event_object.add("type", "thread_exit");
+            break;
         }
+        event_object.add("pid", event.pid);
         event_object.add("tid", event.tid);
         event_object.add("timestamp", event.timestamp);
         auto stack_array = event_object.add_array("stack");
@@ -132,25 +198,6 @@ bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
 bool PerformanceEventBuffer::to_json(KBufferBuilder& builder) const
 {
     JsonObjectSerializer object(builder);
-
-    auto processes_array = object.add_array("processes");
-    for (auto& it : m_processes) {
-        auto& process = *it.value;
-        auto process_object = processes_array.add_object();
-        process_object.add("pid", process.pid.value());
-        process_object.add("executable", process.executable);
-
-        auto regions_array = process_object.add_array("regions");
-        for (auto& region : process.regions) {
-            auto region_object = regions_array.add_object();
-            region_object.add("name", region.name);
-            region_object.add("base", region.range.base().get());
-            region_object.add("size", region.range.size());
-        }
-    }
-
-    processes_array.finish();
-
     return to_json_impl(object);
 }
 
@@ -162,35 +209,30 @@ OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size
     return adopt_own(*new PerformanceEventBuffer(buffer.release_nonnull()));
 }
 
-void PerformanceEventBuffer::add_process(const Process& process)
+void PerformanceEventBuffer::add_process(const Process& process, ProcessEventType event_type)
 {
-    // FIXME: What about threads that have died?
-
     ScopedSpinLock locker(process.space().get_lock());
 
     String executable;
     if (process.executable())
         executable = process.executable()->absolute_path();
+    else
+        executable = String::formatted("<{}>", process.name());
 
-    auto sampled_process = adopt_own(*new SampledProcess {
-        .pid = process.pid().value(),
-        .executable = executable,
-        .threads = {},
-        .regions = {},
-    });
+    [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), 0, 0, 0,
+        event_type == ProcessEventType::Create ? PERF_EVENT_PROCESS_CREATE : PERF_EVENT_PROCESS_EXEC,
+        process.pid().value(), 0, executable.characters());
+
     process.for_each_thread([&](auto& thread) {
-        sampled_process->threads.set(thread.tid());
+        [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), thread.tid().value(),
+            0, 0, PERF_EVENT_THREAD_CREATE, 0, 0, nullptr);
         return IterationDecision::Continue;
     });
 
     for (auto& region : process.space().regions()) {
-        sampled_process->regions.append(SampledProcess::Region {
-            .name = region->name(),
-            .range = region->range(),
-        });
+        [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), 0,
+            0, 0, PERF_EVENT_MMAP, region->range().base().get(), region->range().size(), region->name().characters());
     }
-
-    m_processes.set(process.pid(), move(sampled_process));
 }
 
 }
