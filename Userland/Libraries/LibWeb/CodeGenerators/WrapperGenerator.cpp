@@ -658,6 +658,12 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (vm.exception())
         @return_statement@
 )~~~");
+    } else if (parameter.type.name == "long") {
+        scoped_generator.append(R"~~~(
+    auto @cpp_name@ = @js_name@@js_suffix@.to_i32(global_object);
+    if (vm.exception())
+        @return_statement@
+)~~~");
     } else if (parameter.type.name == "EventHandler") {
         // x.onfoo = function() { ... }
         scoped_generator.append(R"~~~(
