@@ -35,7 +35,7 @@ public:
     const Library* library_containing(FlatPtr) const;
 
 private:
-    mutable HashMap<String, OwnPtr<Library>> m_libraries;
+    mutable HashMap<String, NonnullOwnPtr<Library>> m_libraries;
 };
 
 struct Thread {
