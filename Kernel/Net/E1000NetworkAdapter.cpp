@@ -206,7 +206,6 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, 
     initialize_rx_descriptors();
     initialize_tx_descriptors();
 
-    out32(REG_INTERRUPT_MASK_SET, 0x1f6dc);
     out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
     in32(REG_INTERRUPT_CAUSE_READ);
 
@@ -219,8 +218,6 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter()
 
 void E1000NetworkAdapter::handle_irq(const RegisterState&)
 {
-    out32(REG_INTERRUPT_MASK_CLEAR, 0xffffffff);
-
     u32 status = in32(REG_INTERRUPT_CAUSE_READ);
 
     m_entropy_source.add_random_event(status);
@@ -241,7 +238,7 @@ void E1000NetworkAdapter::handle_irq(const RegisterState&)
 
     m_wait_queue.wake_all();
 
-    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
+    out32(REG_INTERRUPT_CAUSE_READ, 0xffffffff);
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_eeprom()
