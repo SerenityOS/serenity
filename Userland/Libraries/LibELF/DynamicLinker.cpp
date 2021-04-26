@@ -12,6 +12,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/ScopeGuard.h>
+#include <AK/Vector.h>
 #include <LibC/bits/pthread_integration.h>
 #include <LibC/link.h>
 #include <LibC/mman.h>
@@ -75,7 +76,7 @@ static String get_library_name(String path)
     return LexicalPath(move(path)).basename();
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const String& filename, int fd, bool is_program)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const String& filename, int fd)
 {
     auto result = ELF::DynamicLoader::try_create(fd, filename);
     if (result.is_error()) {
@@ -86,21 +87,19 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const St
 
     s_loaders.set(get_library_name(filename), *loader);
 
-    if (is_program) {
-        loader->set_tls_offset(s_current_tls_offset);
-        s_current_tls_offset += loader->tls_size();
-    }
+    loader->set_tls_offset(s_current_tls_offset);
+    s_current_tls_offset += loader->tls_size();
 
     return loader;
 }
 
-static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const String& name, bool is_program)
+static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const String& name)
 {
     if (name.contains("/")) {
         int fd = open(name.characters(), O_RDONLY);
         if (fd < 0)
             return DlErrorMessage { String::formatted("Could not open shared library: {}", name) };
-        return map_library(name, fd, is_program);
+        return map_library(name, fd);
     }
 
     // TODO: Do we want to also look for libs in other paths too?
@@ -110,7 +109,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const St
         int fd = open(path.characters(), O_RDONLY);
         if (fd < 0)
             continue;
-        return map_library(name, fd, is_program);
+        return map_library(name, fd);
     }
 
     return DlErrorMessage { String::formatted("Could not find required shared library: {}", name) };
@@ -139,7 +138,7 @@ static Result<void, DlErrorMessage> map_dependencies(const String& name)
         String library_name = get_library_name(needed_name);
 
         if (!s_loaders.contains(library_name) && !s_global_objects.contains(library_name)) {
-            auto result1 = map_library(needed_name, false);
+            auto result1 = map_library(needed_name);
             if (result1.is_error()) {
                 return result1.error();
             }
@@ -339,7 +338,7 @@ static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
 
     VERIFY(!library_name.is_empty());
 
-    auto result1 = map_library(filename, false);
+    auto result1 = map_library(filename);
     if (result1.is_error()) {
         return result1.error();
     }
@@ -404,7 +403,7 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
 
     // NOTE: We always map the main library first, since it may require
     //       placement at a specific address.
-    auto result1 = map_library(main_program_name, main_program_fd, true);
+    auto result1 = map_library(main_program_name, main_program_fd);
     if (result1.is_error()) {
         warnln("{}", result1.error().text);
         fflush(stderr);
