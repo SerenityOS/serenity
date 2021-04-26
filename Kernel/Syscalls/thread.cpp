@@ -89,8 +89,8 @@ void Process::sys$exit_thread(Userspace<void*> exit_value)
         this->sys$exit(0);
     }
 
-    if (m_perf_event_buffer) {
-        [[maybe_unused]] auto rc = m_perf_event_buffer->append(PERF_EVENT_THREAD_EXIT, Thread::current()->tid().value(), 0, nullptr);
+    if (auto* event_buffer = current_perf_events_buffer()) {
+        [[maybe_unused]] auto rc = event_buffer->append(PERF_EVENT_THREAD_EXIT, Thread::current()->tid().value(), 0, nullptr);
     }
 
     Thread::current()->exit(reinterpret_cast<void*>(exit_value.ptr()));
