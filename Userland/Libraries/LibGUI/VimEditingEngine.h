@@ -101,7 +101,7 @@ public:
 
     void add_key_code(KeyCode key, bool ctrl, bool shift, bool alt);
     Optional<TextRange> get_range(class VimEditingEngine& engine, bool normalize_for_position = false);
-    Optional<TextPosition> get_position(VimEditingEngine& engine);
+    Optional<TextPosition> get_position(VimEditingEngine& engine, bool in_visual_mode = false);
     void reset();
 
     /// Returns whether the motion should consume the next character no matter what.
@@ -168,7 +168,9 @@ private:
     void yank(TextRange);
     void put();
 
+    TextPosition m_selection_start_position = {};
     void update_selection_on_cursor_move();
+    void clamp_cursor_position();
     void clear_visual_mode_data();
 
     KeyCode m_previous_key {};
