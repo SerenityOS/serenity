@@ -17,15 +17,15 @@ Thread::BlockTimeout::BlockTimeout(bool is_absolute, const Time* time, const Tim
     : m_clock_id(clock_id)
     , m_infinite(!time)
 {
-    if (!m_infinite) {
-        if (*time > Time::zero()) {
-            m_time = *time;
-            m_should_block = true;
-        }
-        m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id).value();
-        if (!is_absolute)
-            m_time = m_time + m_start_time;
+    if (m_infinite)
+        return;
+    if (*time > Time::zero()) {
+        m_time = *time;
+        m_should_block = true;
     }
+    m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id).value();
+    if (!is_absolute)
+        m_time += m_start_time;
 }
 
 bool Thread::Blocker::set_block_condition(Thread::BlockCondition& block_condition, void* data)
