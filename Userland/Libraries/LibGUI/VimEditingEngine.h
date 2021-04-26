@@ -166,7 +166,7 @@ private:
     String m_yank_buffer {};
     void yank(YankType);
     void yank(TextRange);
-    void put(const GUI::KeyEvent&);
+    void put();
 
     void update_selection_on_cursor_move();
     void clear_visual_mode_data();
@@ -175,8 +175,8 @@ private:
     void switch_to_normal_mode();
     void switch_to_insert_mode();
     void switch_to_visual_mode();
-    void move_half_page_up(const KeyEvent& event);
-    void move_half_page_down(const KeyEvent& event);
+    void move_half_page_up();
+    void move_half_page_down();
     void move_to_previous_empty_lines_block();
     void move_to_next_empty_lines_block();
 
