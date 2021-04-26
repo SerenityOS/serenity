@@ -109,8 +109,6 @@ String LibraryMetadata::Library::symbolicate(FlatPtr ptr, u32* offset) const
 const LibraryMetadata::Library* LibraryMetadata::library_containing(FlatPtr ptr) const
 {
     for (auto& it : m_libraries) {
-        if (!it.value)
-            continue;
         auto& library = *it.value;
         if (ptr >= library.base && ptr < (library.base + library.size))
             return &library;
