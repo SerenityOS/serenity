@@ -105,7 +105,8 @@ elif [ "$SERENITY_RUN" = "qn" ]; then
         -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$SERENITY_RUN" = "qtap" ]; then
     # Meta/run.sh qtap: qemu with tap
-    sudo "$SERENITY_QEMU_BIN" \
+    sudo ip tuntap add dev tap0 mode tap user "$(id -u)"
+    "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
@@ -113,6 +114,7 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
         -device e1000,netdev=br0 \
         -kernel Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
+    sudo ip tuntap del dev tap0 mode tap
 elif [ "$SERENITY_RUN" = "qgrub" ]; then
     # Meta/run.sh qgrub: qemu with grub
     "$SERENITY_QEMU_BIN" \
