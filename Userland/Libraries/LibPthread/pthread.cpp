@@ -442,7 +442,7 @@ static int futex_wait(uint32_t& futex_addr, uint32_t value, const struct timespe
 {
     int saved_errno = errno;
     // NOTE: FUTEX_WAIT takes a relative timeout, so use FUTEX_WAIT_BITSET instead!
-    int rc = futex(&futex_addr, FUTEX_WAIT_BITSET, value, abstime, nullptr, FUTEX_BITSET_MATCH_ANY);
+    int rc = futex(&futex_addr, FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME, value, abstime, nullptr, FUTEX_BITSET_MATCH_ANY);
     if (rc < 0 && errno == EAGAIN) {
         // If we didn't wait, that's not an error
         errno = saved_errno;
