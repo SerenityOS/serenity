@@ -20,6 +20,7 @@ set(SOURCES
     ColorInput.cpp
     ColorPicker.cpp
     ColumnsView.cpp
+    CommonLocationsProvider.cpp
     ComboBox.cpp
     Command.cpp
     Desktop.cpp
