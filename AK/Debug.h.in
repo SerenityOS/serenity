@@ -390,6 +390,10 @@
 #cmakedefine01 UPDATE_COALESCING_DEBUG
 #endif
 
+#ifndef WASM_BINPARSER_DEBUG
+#cmakedefine01 WASM_BINPARSER_DEBUG
+#endif
+
 #ifndef WINDOWMANAGER_DEBUG
 #cmakedefine01 WINDOWMANAGER_DEBUG
 #endif
@@ -405,3 +409,4 @@
 #ifndef WSSCREEN_DEBUG
 #cmakedefine01 WSSCREEN_DEBUG
 #endif
+
