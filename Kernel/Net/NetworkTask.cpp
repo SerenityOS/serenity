@@ -99,7 +99,7 @@ void NetworkTask_main(void*)
             // ignore
             break;
         default:
-            dbgln("NetworkTask: Unknown ethernet type {:#04x}", eth.ether_type());
+            dbgln_if(ETHERNET_DEBUG, "NetworkTask: Unknown ethernet type {:#04x}", eth.ether_type());
         }
     }
 }
@@ -183,7 +183,7 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const Time& 
     case IPv4Protocol::TCP:
         return handle_tcp(packet, packet_timestamp);
     default:
-        dbgln("handle_ipv4: Unhandled protocol {:#02x}", packet.protocol());
+        dbgln_if(IPV4_DEBUG, "handle_ipv4: Unhandled protocol {:#02x}", packet.protocol());
         break;
     }
 }
@@ -243,7 +243,7 @@ void handle_udp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 
     auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
     if (!adapter && ipv4_packet.destination() != IPv4Address(255, 255, 255, 255)) {
-        dbgln("handle_udp: this packet is not for me, it's for {}", ipv4_packet.destination());
+        dbgln_if(UDP_DEBUG, "handle_udp: this packet is not for me, it's for {}", ipv4_packet.destination());
         return;
     }
 
@@ -255,7 +255,7 @@ void handle_udp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 
     auto socket = UDPSocket::from_port(udp_packet.destination_port());
     if (!socket) {
-        dbgln("handle_udp: No local UDP socket for {}:{}", ipv4_packet.destination(), udp_packet.destination_port());
+        dbgln_if(UDP_DEBUG, "handle_udp: No local UDP socket for {}:{}", ipv4_packet.destination(), udp_packet.destination_port());
         return;
     }
 

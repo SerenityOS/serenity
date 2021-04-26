@@ -108,9 +108,11 @@ void update_arp_table(const IPv4Address& ip_addr, const MACAddress& addr)
     arp_table().resource().set(ip_addr, addr);
     s_arp_table_block_condition->unblock(ip_addr, addr);
 
-    dmesgln("ARP table ({} entries):", arp_table().resource().size());
-    for (auto& it : arp_table().resource()) {
-        dmesgln("{} :: {}", it.value.to_string(), it.key.to_string());
+    if constexpr (ROUTING_DEBUG) {
+        dmesgln("ARP table ({} entries):", arp_table().resource().size());
+        for (auto& it : arp_table().resource()) {
+            dmesgln("{} :: {}", it.value.to_string(), it.key.to_string());
+        }
     }
 }
 
