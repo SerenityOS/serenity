@@ -157,11 +157,23 @@ void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
     }
 }
 
+bool GlyphEditorWidget::is_glyph_empty()
+{
+    auto bitmap = font().glyph(m_glyph).glyph_bitmap();
+    for (int x = 0; x < bitmap.width(); x++)
+        for (int y = 0; y < bitmap.height(); y++)
+            if (bitmap.bit_at(x, y))
+                return false;
+    return true;
+}
+
 void GlyphEditorWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (!(font().raw_glyph_width(m_glyph) > 0))
+    if ((event.x() - 1) / m_scale + 1 > font().raw_glyph_width(m_glyph))
         return;
-
+    if (mode() == Move && is_glyph_empty())
+        return;
+    m_is_clicking_valid_cell = true;
     if (on_undo_event)
         on_undo_event(false);
     if (mode() == Paint) {
@@ -180,13 +192,16 @@ void GlyphEditorWidget::mousedown_event(GUI::MouseEvent& event)
 
 void GlyphEditorWidget::mouseup_event(GUI::MouseEvent&)
 {
+    if (!m_is_clicking_valid_cell)
+        return;
+    m_is_clicking_valid_cell = false;
     if (on_undo_event)
         on_undo_event(true);
 }
 
 void GlyphEditorWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    if (!(font().raw_glyph_width(m_glyph) > 0))
+    if (!m_is_clicking_valid_cell)
         return;
     if (!(event.buttons() & (GUI::MouseButton::Left | GUI::MouseButton::Right)))
         return;
