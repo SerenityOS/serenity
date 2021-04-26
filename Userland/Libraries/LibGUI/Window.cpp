@@ -119,7 +119,6 @@ void Window::show()
 
     auto* parent_window = find_parent_window();
 
-    m_cursor = Gfx::StandardCursor::None;
     auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateWindow>(
         m_rect_when_windowless,
         !m_moved_by_client,
