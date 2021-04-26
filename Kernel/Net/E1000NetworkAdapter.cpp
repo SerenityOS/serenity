@@ -425,10 +425,8 @@ void E1000NetworkAdapter::receive()
 {
     auto* rx_descriptors = (e1000_tx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
     u32 rx_current;
-    for (;;) {
+    for (u32 i = 0; i < number_of_rx_descriptors; i++) {
         rx_current = in32(REG_RXDESCTAIL) % number_of_rx_descriptors;
-        if (rx_current == (in32(REG_RXDESCHEAD) % number_of_rx_descriptors))
-            return;
         rx_current = (rx_current + 1) % number_of_rx_descriptors;
         if (!(rx_descriptors[rx_current].status & 1))
             break;
