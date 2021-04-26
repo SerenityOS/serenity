@@ -117,6 +117,8 @@ namespace Kernel {
 #define INTERRUPT_TXD_LOW (1 << 15)
 #define INTERRUPT_SRPD (1 << 16)
 
+#define PCI_VENDOR_INTEL 0x8086
+
 // https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf Section 5.2
 static bool is_valid_device_id(u16 device_id)
 {
@@ -160,7 +162,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::detect()
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
             return;
-        if (id.vendor_id != 0x8086)
+        if (id.vendor_id != PCI_VENDOR_INTEL)
             return;
         if (!is_valid_device_id(id.device_id))
             return;
@@ -223,15 +225,15 @@ void E1000NetworkAdapter::handle_irq(const RegisterState&)
 
     m_entropy_source.add_random_event(status);
 
-    if (status & 4) {
+    if (status & INTERRUPT_LSC) {
         u32 flags = in32(REG_CTRL);
         out32(REG_CTRL, flags | ECTRL_SLU);
     }
-    if (status & 0x80) {
-        receive();
-    }
-    if (status & 0x10) {
+    if (status & INTERRUPT_RXDMT0) {
         // Threshold OK?
+    }
+    if (status & INTERRUPT_RXT0) {
+        receive();
     }
 
     m_wait_queue.wake_all();
