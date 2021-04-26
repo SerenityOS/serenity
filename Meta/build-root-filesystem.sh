@@ -52,6 +52,8 @@ echo "/bin/sh" > mnt/etc/shells
 
 chown 0:$wheel_gid mnt/bin/su
 chown 0:$wheel_gid mnt/bin/passwd
+chown 0:$wheel_gid mnt/bin/ping
+chown 0:$wheel_gid mnt/bin/traceroute
 chown 0:$phys_gid mnt/bin/keymap
 chown 0:$phys_gid mnt/bin/shutdown
 chown 0:$phys_gid mnt/bin/reboot
