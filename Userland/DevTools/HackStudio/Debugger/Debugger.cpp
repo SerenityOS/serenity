@@ -84,7 +84,7 @@ Debug::DebugInfo::SourcePosition Debugger::create_source_position(const String& 
     return { LexicalPath::canonicalized_path(String::formatted("{}/{}", m_source_root, file)), line + 1 };
 }
 
-int Debugger::start_static()
+intptr_t Debugger::start_static()
 {
     Debugger::the().start();
     return 0;

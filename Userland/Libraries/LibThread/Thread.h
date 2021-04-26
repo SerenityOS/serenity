@@ -15,7 +15,7 @@
 
 namespace LibThread {
 
-TYPEDEF_DISTINCT_ORDERED_ID(int, ThreadError);
+TYPEDEF_DISTINCT_ORDERED_ID(intptr_t, ThreadError);
 
 class Thread final : public Core::Object {
     C_OBJECT(Thread);
@@ -32,8 +32,8 @@ public:
     pthread_t tid() const { return m_tid; }
 
 private:
-    explicit Thread(Function<int()> action, StringView thread_name = nullptr);
-    Function<int()> m_action;
+    explicit Thread(Function<intptr_t()> action, StringView thread_name = nullptr);
+    Function<intptr_t()> m_action;
     pthread_t m_tid { 0 };
     String m_thread_name;
 };

@@ -43,7 +43,7 @@ public:
     void stop();
 
     // Thread entry point
-    static int start_static();
+    static intptr_t start_static();
 
     pthread_mutex_t* continue_mutex() { return &m_ui_action_mutex; }
     pthread_cond_t* continue_cond() { return &m_ui_action_cond; }
