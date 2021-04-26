@@ -753,7 +753,7 @@ bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Escape || (event.ctrl() && event.key() == KeyCode::Key_LeftBracket) || (event.ctrl() && event.key() == KeyCode::Key_C)) {
         if (m_editor->cursor().column() > 0)
-            move_one_left(event);
+            move_one_left();
         switch_to_normal_mode();
         return true;
     }
@@ -824,10 +824,10 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             delete_line();
             if (was_second_last_line || (m_editor->cursor().line() != 0 && m_editor->cursor().line() != m_editor->line_count() - 1)) {
                 move_one_up(event);
-                move_to_line_end(event);
+                move_to_line_end();
                 m_editor->add_code_point(0x0A);
             } else if (m_editor->cursor().line() == 0) {
-                move_to_line_beginning(event);
+                move_to_line_beginning();
                 m_editor->add_code_point(0x0A);
                 move_one_up(event);
             } else if (m_editor->cursor().line() == m_editor->line_count() - 1) {
@@ -886,15 +886,15 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
         if (event.shift() && !event.ctrl() && !event.alt()) {
             switch (event.key()) {
             case (KeyCode::Key_A):
-                move_to_line_end(event);
+                move_to_line_end();
                 switch_to_insert_mode();
                 return true;
             case (KeyCode::Key_I):
-                move_to_line_beginning(event);
+                move_to_line_beginning();
                 switch_to_insert_mode();
                 return true;
             case (KeyCode::Key_O):
-                move_to_line_beginning(event);
+                move_to_line_beginning();
                 m_editor->add_code_point(0x0A);
                 move_one_up(event);
                 switch_to_insert_mode();
@@ -915,13 +915,13 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
         if (event.ctrl() && !event.shift() && !event.alt()) {
             switch (event.key()) {
             case (KeyCode::Key_D):
-                move_half_page_down(event);
+                move_half_page_down();
                 return true;
             case (KeyCode::Key_R):
                 m_editor->redo();
                 return true;
             case (KeyCode::Key_U):
-                move_half_page_up(event);
+                move_half_page_up();
                 return true;
             default:
                 break;
@@ -935,7 +935,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
         if (!event.ctrl() && !event.shift() && !event.alt()) {
             switch (event.key()) {
             case (KeyCode::Key_A):
-                move_one_right(event);
+                move_one_right();
                 switch_to_insert_mode();
                 return true;
             case (KeyCode::Key_C):
@@ -948,7 +948,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 switch_to_insert_mode();
                 return true;
             case (KeyCode::Key_O):
-                move_to_line_end(event);
+                move_to_line_end();
                 m_editor->add_code_point(0x0A);
                 switch_to_insert_mode();
                 return true;
@@ -966,7 +966,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 m_previous_key = event.key();
                 return true;
             case (KeyCode::Key_P):
-                put(event);
+                put();
                 return true;
             default:
                 break;
@@ -1027,11 +1027,11 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
     if (event.shift() && !event.ctrl() && !event.alt()) {
         switch (event.key()) {
         case (KeyCode::Key_A):
-            move_to_line_end(event);
+            move_to_line_end();
             switch_to_insert_mode();
             return true;
         case (KeyCode::Key_I):
-            move_to_line_beginning(event);
+            move_to_line_beginning();
             switch_to_insert_mode();
             return true;
         default:
@@ -1043,11 +1043,11 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
     if (event.ctrl() && !event.shift() && !event.alt()) {
         switch (event.key()) {
         case (KeyCode::Key_D):
-            move_half_page_down(event);
+            move_half_page_down();
             update_selection_on_cursor_move();
             return true;
         case (KeyCode::Key_U):
-            move_half_page_up(event);
+            move_half_page_up();
             update_selection_on_cursor_move();
             return true;
         default:
@@ -1151,14 +1151,14 @@ void VimEditingEngine::clear_visual_mode_data()
     }
 }
 
-void VimEditingEngine::move_half_page_up(const KeyEvent& event)
+void VimEditingEngine::move_half_page_up()
 {
-    move_up(event, 0.5);
+    move_up(0.5);
 };
 
-void VimEditingEngine::move_half_page_down(const KeyEvent& event)
+void VimEditingEngine::move_half_page_down()
 {
-    move_down(event, 0.5);
+    move_down(0.5);
 };
 
 void VimEditingEngine::yank(YankType type)
@@ -1183,10 +1183,10 @@ void VimEditingEngine::yank(TextRange range)
     m_yank_buffer = m_editor->document().text_in_range(range);
 }
 
-void VimEditingEngine::put(const GUI::KeyEvent& event)
+void VimEditingEngine::put()
 {
     if (m_yank_type == YankType::Line) {
-        move_to_line_end(event);
+        move_to_line_end();
         StringBuilder sb = StringBuilder(m_yank_buffer.length() + 1);
         sb.append_code_point(0x0A);
         sb.append(m_yank_buffer);
@@ -1195,9 +1195,9 @@ void VimEditingEngine::put(const GUI::KeyEvent& event)
     } else {
         // FIXME: If attempting to put on the last column a line,
         // the buffer will bne placed on the next line due to the move_one_left/right behaviour.
-        move_one_right(event);
+        move_one_right();
         m_editor->insert_at_cursor_or_replace_selection(m_yank_buffer);
-        move_one_left(event);
+        move_one_left();
     }
 }
 
