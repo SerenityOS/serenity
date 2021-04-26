@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Maciej Zygmanowski <sppmacd@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,8 +39,14 @@
 
 namespace Browser {
 
+static String s_search_engine_format = {};
+
 URL url_from_user_input(const String& input)
 {
+    if (input.starts_with("?") && !s_search_engine_format.is_null()) {
+        return URL(String::formatted(s_search_engine_format, urlencode(input.substring(1))));
+    }
+
     auto url = URL(input);
     if (url.is_valid())
         return url;
@@ -396,6 +403,37 @@ Tab::Tab(Type type)
         this);
     js_console_action->set_status_tip("Open JavaScript console for this page");
     inspect_menu.add_action(js_console_action);
+
+    auto& settings_menu = m_menubar->add_menu("&Settings");
+
+    m_search_engine_actions.set_exclusive(true);
+    auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");
+
+    auto add_search_engine = [&](auto& name, auto& url_format) {
+        auto action = GUI::Action::create_checkable(
+            name, [&](auto&) {
+                dbgln("Setting search engine to {}", url_format);
+                s_search_engine_format = url_format;
+            },
+            this);
+        search_engine_menu.add_action(action);
+        m_search_engine_actions.add_action(action);
+    };
+
+    auto disable_search_engine_action = GUI::Action::create_checkable(
+        "Disable", [this](auto&) {
+            dbgln("Disabling search engine");
+            s_search_engine_format = {};
+        },
+        this);
+    search_engine_menu.add_action(disable_search_engine_action);
+    m_search_engine_actions.add_action(disable_search_engine_action);
+    disable_search_engine_action->set_checked(true);
+
+    // FIXME: Support adding custom search engines
+    add_search_engine("Bing", "https://www.bing.com/search?q={}");
+    add_search_engine("DuckDuckGo", "https://duckduckgo.com/?q={}");
+    add_search_engine("Google", "https://google.com/search?q={}");
 
     auto& debug_menu = m_menubar->add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
