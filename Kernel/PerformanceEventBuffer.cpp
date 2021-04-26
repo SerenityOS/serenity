@@ -82,8 +82,8 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(ProcessID pid, ThreadID 
             memcpy(event.data.mmap.name, arg3.characters_without_null_termination(), min(arg3.length(), sizeof(event.data.mmap.name) - 1));
         break;
     case PERF_EVENT_MUNMAP:
-        event.data.mmap.ptr = arg1;
-        event.data.mmap.size = arg2;
+        event.data.munmap.ptr = arg1;
+        event.data.munmap.size = arg2;
         break;
     case PERF_EVENT_PROCESS_CREATE:
         event.data.process_create.parent_pid = arg1;
