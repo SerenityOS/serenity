@@ -32,6 +32,7 @@ public:
     void copy_glyph();
     void paste_glyph();
     void delete_glyph();
+    bool is_glyph_empty();
 
     int preferred_width() const;
     int preferred_height() const;
@@ -64,4 +65,5 @@ private:
     int m_scale { 10 };
     u8 m_movable_bits[s_max_width * 3][s_max_height * 3] = {};
     Mode m_mode { Paint };
+    bool m_is_clicking_valid_cell { false };
 };
