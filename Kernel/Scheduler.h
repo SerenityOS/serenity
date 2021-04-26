@@ -32,6 +32,7 @@ public:
     static Thread* create_ap_idle_thread(u32 cpu);
     static void set_idle_thread(Thread* idle_thread);
     static void timer_tick(const RegisterState&);
+    static u32 tickless_update_ticks_left();
     [[noreturn]] static void start();
     static bool pick_next();
     static bool yield();

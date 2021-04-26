@@ -49,8 +49,35 @@ bool TimeManagement::is_valid_clock_id(clockid_t clock_id)
     };
 }
 
+clockid_t TimeManagement::convert_clock_id(clockid_t clock_id, TimePrecision precision)
+{
+    // TODO: use a special CLOCK_MONOTONIC_RAW_COARSE like mechanism
+    if (precision == TimePrecision::Coarse) {
+        switch (clock_id) {
+        case CLOCK_MONOTONIC:
+            return CLOCK_MONOTONIC_COARSE;
+        case CLOCK_REALTIME:
+            return CLOCK_REALTIME_COARSE;
+        default:
+            return clock_id;
+        }
+    } else {
+        switch (clock_id) {
+        case CLOCK_MONOTONIC_COARSE:
+            return CLOCK_MONOTONIC;
+        case CLOCK_REALTIME_COARSE:
+            return CLOCK_REALTIME;
+        default:
+            return clock_id;
+        }
+    }
+}
+
 KResultOr<Time> TimeManagement::current_time(clockid_t clock_id) const
 {
+    if (m_tickless)
+        clock_id = convert_clock_id(clock_id, TimePrecision::Precise);
+
     switch (clock_id) {
     case CLOCK_MONOTONIC:
         return monotonic_time(TimePrecision::Precise);
@@ -78,6 +105,31 @@ void TimeManagement::set_epoch_time(Time ts)
     // FIXME: Should use AK::Time internally
     m_epoch_time = ts.to_timespec();
     m_remaining_epoch_time_adjustment = { 0, 0 };
+}
+
+Time TimeManagement::monotonic_to_epoch_diff()
+{
+    // This is the time when last updated by an interrupt.
+    // We don't need to query the precise time as we only want the delta to epoch time
+    u64 seconds;
+    u32 ticks;
+    timespec epoch_time_ts;
+
+    u32 update_iteration;
+    do {
+        update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
+        seconds = m_seconds_since_boot;
+        ticks = m_ticks_this_second;
+        epoch_time_ts = m_epoch_time;
+    } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
+
+    VERIFY(m_time_ticks_per_second > 0);
+    VERIFY(ticks < m_time_ticks_per_second);
+    u64 ns = ((u64)ticks * 1000000000ull) / m_time_ticks_per_second;
+    VERIFY(ns < 1000000000ull);
+    auto monotonic_time = Time::from_timespec({ (i64)seconds, (i32)ns });
+    auto epoch_time = Time::from_timespec(epoch_time_ts);
+    return epoch_time - monotonic_time;
 }
 
 Time TimeManagement::monotonic_time(TimePrecision precision) const
@@ -147,13 +199,121 @@ UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
             dmesgln("Time: Using APIC timer as system timer");
             s_the->set_system_timer(*apic_timer);
         }
-    } else {
-        VERIFY(s_the.is_initialized());
-        if (auto* apic_timer = APIC::the().get_timer()) {
-            dmesgln("Time: Enable APIC timer on CPU #{}", cpu);
-            apic_timer->enable_local_timer();
+    }
+
+    // TODO: more elegant solution?
+    s_the->m_tickless_due_per_cpu.resize(cpu + 1);
+
+    bool enabled_tickless = false;
+    if (kernel_command_line().tickless()) {
+        // If we use the Local APIC timer we need to do this
+        // on each core!
+        if (s_the->supports_tickless()) {
+            if (cpu == 0)
+                dmesgln("Time: Enabling tickless mode");
+            s_the->enable_tickless(cpu);
+            enabled_tickless = true;
+        } else if (cpu == 0) {
+            dmesgln("Time: Tickless mode not supported!");
         }
     }
+
+    VERIFY(s_the.is_initialized());
+    if (!enabled_tickless) {
+        if (auto* apic_timer = APIC::the().get_timer()) {
+            dmesgln("Time: Enable periodic APIC timer on CPU #{}", cpu);
+            apic_timer->enable_local_timer_periodic();
+        }
+    }
+}
+
+bool TimeManagement::supports_tickless() const
+{
+    switch (m_system_timer->timer_type()) {
+    case HardwareTimerType::LocalAPICTimer:
+        return m_time_keeper_timer->timer_type() == HardwareTimerType::HighPrecisionEventTimer;
+    case HardwareTimerType::HighPrecisionEventTimer:
+        return true;
+    default:
+        return false;
+    }
+}
+
+Time TimeManagement::ticks_to_time(u32 ticks) const
+{
+    return Time::from_nanoseconds((u64)ticks * (1000000000ull / m_system_timer->ticks_per_second()));
+}
+
+u32 TimeManagement::time_to_ticks(const Time& time) const
+{
+    u64 ns_per_tick = 1000000000ull / m_system_timer->ticks_per_second();
+    return (time.to_nanoseconds() + ns_per_tick - 1) / ns_per_tick;
+}
+
+void TimeManagement::enable_tickless(u32 cpu)
+{
+    VERIFY(supports_tickless());
+    m_tickless = true;
+    if (cpu == 0 || m_system_timer->timer_type() == HardwareTimerType::LocalAPICTimer) {
+        // Only do this on the main cpu unless it's the local apic timer
+        m_system_timer->set_non_periodic();
+    }
+}
+
+void TimeManagement::tickless_cancel_system_timer()
+{
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(m_tickless);
+    dbgln_if(TICKLESS_DEBUG, "Tickless: disable timer");
+    auto& local_deadline = m_tickless_due_per_cpu[Processor::id()];
+    local_deadline = {};
+    m_system_timer->disable();
+}
+
+auto TimeManagement::tickless_start_system_timer_from_now(Time relative_time, bool force) -> TicklessTimerResult
+{
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(m_tickless);
+    auto now = monotonic_time(TimePrecision::Precise);
+    return tickless_start_system_timer(now + relative_time, force);
+}
+
+auto TimeManagement::tickless_start_system_timer(Time deadline, bool force) -> TicklessTimerResult
+{
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(m_tickless);
+    auto current_thread_due = Processor::current_thread_due();
+    if (current_thread_due.is_zero()) {
+        dbgln_if(1, "Tickless: current thread {} has no due time, new deadline: {}", *Thread::current(), deadline);
+    } else {
+        if (current_thread_due < deadline) {
+            dbgln_if(1, "Tickless: current thread {} due at {}, new deadline: {}", *Thread::current(), current_thread_due, deadline);
+            deadline = current_thread_due;
+        }
+    }
+    auto now = monotonic_time(TimePrecision::Precise);
+    if (deadline <= now) {
+        dbgln_if(1, "Tickless: timer due at {} (now: {}), already passed, force: {}", deadline, now, force);
+        if (force) {
+            dbgln_if(TICKLESS_DEBUG, "Tickless: hack to start timers!");
+            // TODO: remove this somehow
+            m_system_timer->start_non_periodic(1);
+            return TicklessTimerResult::Started;
+        }
+        return TicklessTimerResult::InPast;
+    }
+
+    auto& local_deadline = m_tickless_due_per_cpu[Processor::id()];
+    if (local_deadline.is_zero() || deadline < local_deadline) {
+        local_deadline = deadline;
+        auto ns_per_tick = 1'000'000'000ull / m_system_timer->ticks_per_second();
+        u64 ticks = ((deadline - now).to_nanoseconds() + ns_per_tick - 1) / ns_per_tick;
+        dbgln_if(1, "Tickless: Scheduling timer for {} (now: {}), ticks: {} for {}ns ns_per_tick={}ns tps={}", deadline, now, ticks, (deadline - now).to_nanoseconds(), ns_per_tick, m_system_timer->ticks_per_second());
+        m_system_timer->start_non_periodic(ticks);
+        return TicklessTimerResult::Started;
+    }
+    dbgln_if(TICKLESS_DEBUG, "Tickless: NOT Scheduling timer for {} (now: {}), for {}ns, already have timer due at {}", deadline, now, (deadline - now).to_nanoseconds(), local_deadline);
+    return TicklessTimerResult::AlreadyStarted;
 }
 
 void TimeManagement::set_system_timer(HardwareTimerBase& timer)
@@ -376,11 +536,23 @@ void TimeManagement::increment_time_since_boot()
 
 void TimeManagement::system_timer_tick(const RegisterState& regs)
 {
-    if (Processor::current().in_irq() <= 1) {
-        // Don't expire timers while handling IRQs
-        TimerQueue::the().fire();
+    dbgln("system_timer_tick -->");
+    TimerQueue::the().fire(true);
+
+    auto& tm = TimeManagement::the();
+    if (tm.is_tickless()) {
+        TimeManagement::the().m_tickless_due_per_cpu[Processor::id()] = {};
+        if (auto thread_due = Processor::current_thread_due(); !thread_due.is_zero() && thread_due < tm.monotonic_time(TimePrecision::Coarse)) {
+            Processor::clear_current_thread_due();
+            dbgln("<-- system_timer_tick");
+            Scheduler::timer_tick(regs);
+        } else {
+            dbgln("<-- system_timer_tick");
+        }
+    } else {
+        dbgln("<-- system_timer_tick");
+        Scheduler::timer_tick(regs);
     }
-    Scheduler::timer_tick(regs);
 }
 
 }

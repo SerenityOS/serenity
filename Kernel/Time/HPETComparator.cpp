@@ -49,6 +49,12 @@ void HPETComparator::set_non_periodic()
     m_enabled = true;
     HPET::the().disable_periodic_interrupt(*this);
 }
+void HPETComparator::start_non_periodic(u64 ticks)
+{
+    VERIFY(is_periodic());
+    m_oneshot_ticks = ticks;
+    set_new_countdown();
+}
 
 void HPETComparator::handle_irq(const RegisterState& regs)
 {

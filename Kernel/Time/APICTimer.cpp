@@ -84,7 +84,7 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
         // TODO: How should we handle this?
         PANIC("APICTimer: Timer fired during calibration!");
     });
-    apic.setup_local_timer(0xffffffff, APIC::TimerMode::Periodic, true);
+    apic.setup_local_timer(0xffffffff, APIC::TimerMode::Periodic);
 
     sti();
     // Loop for about 100 ms
@@ -125,18 +125,35 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
     }
 #endif
 
-    enable_local_timer();
     return true;
 }
 
-void APICTimer::enable_local_timer()
+void APICTimer::enable_local_timer_periodic()
 {
-    APIC::the().setup_local_timer(m_timer_period, m_timer_mode, true);
+    ScopedSpinLock lock(m_lock);
+    VERIFY(is_periodic());
+    dbgln("!!!!!!!!!!! PERIODIC");
+    APIC::the().setup_local_timer(m_timer_period, APIC::TimerMode::Periodic);
+}
+
+void APICTimer::enable_local_timer_oneshot(u64 ticks)
+{
+    ScopedSpinLock lock(m_lock);
+    u64 ticks_raw = ticks * m_timer_period;
+    dbgln("!!!!!!!!!!! ONESHOT ticks: {} raw ticks: {} one tick has {}", ticks, ticks_raw, m_timer_period);
+    // TODO: If ticks overflow we'll just schedule a rare spurious timer interrupt...
+    APIC::the().setup_local_timer(ticks_raw & 0xffffffff, APIC::TimerMode::OneShot);
 }
 
 void APICTimer::disable_local_timer()
 {
-    APIC::the().setup_local_timer(0, APIC::TimerMode::OneShot, false);
+    ScopedSpinLock lock(m_lock);
+    APIC::the().setup_local_timer(0, APIC::TimerMode::Disabled);
+}
+
+void APICTimer::disable()
+{
+    disable_local_timer();
 }
 
 size_t APICTimer::ticks_per_second() const
@@ -146,13 +163,21 @@ size_t APICTimer::ticks_per_second() const
 
 void APICTimer::set_periodic()
 {
-    // FIXME: Implement it...
-    VERIFY_NOT_REACHED();
+    // NOTE: We assume time is not enabled
+    m_timer_mode = APIC::TimerMode::Periodic;
 }
 void APICTimer::set_non_periodic()
 {
-    // FIXME: Implement it...
-    VERIFY_NOT_REACHED();
+    // NOTE: We assume time is not enabled
+    m_timer_mode = APIC::TimerMode::OneShot;
+    disable_local_timer();
+}
+
+void APICTimer::start_non_periodic(u64 ticks)
+{
+    VERIFY(!is_periodic());
+    dbgln("APIC: Start non periodic timer, ticks: {}", ticks);
+    enable_local_timer_oneshot(ticks);
 }
 
 void APICTimer::reset_to_default_ticks_per_second()

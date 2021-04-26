@@ -34,7 +34,7 @@ public:
     void enable(const HPETComparator&);
 
     void update_periodic_comparator_value();
-    void update_non_periodic_comparator_value(const HPETComparator& comparator);
+    void update_non_periodic_comparator_value(HPETComparator& comparator);
 
     void set_comparator_irq_vector(u8 comparator_number, u8 irq_vector);
 

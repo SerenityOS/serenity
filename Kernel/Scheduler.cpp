@@ -105,6 +105,7 @@ Thread& Scheduler::pull_next_runnable_thread()
         }
         priority_mask &= ~(1u << priority);
     }
+    dbgln_if(TICKLESS_DEBUG, "pulled runnable, nothing (return idle thread)");
     return *Processor::idle_thread();
 }
 
@@ -145,8 +146,12 @@ void Scheduler::queue_runnable_thread(Thread& thread)
     auto& ready_queue = g_ready_queues[priority];
     bool was_empty = ready_queue.thread_list.is_empty();
     ready_queue.thread_list.append(thread);
-    if (was_empty)
+    if (was_empty) {
+        bool is_first = g_ready_queues_mask == 0;
         g_ready_queues_mask |= (1u << priority);
+        if (is_first && TimeManagement::the().is_tickless())
+            Processor::current().invoke_scheduler_async();
+    }
 }
 
 UNMAP_AFTER_INIT void Scheduler::start()
@@ -247,7 +252,16 @@ bool Scheduler::pick_next()
     // but since we're still holding the scheduler lock we're still in a critical section
     critical.leave();
 
-    thread_to_schedule.set_ticks_left(time_slice_for(thread_to_schedule));
+    auto& tm = TimeManagement::the();
+    if (tm.is_tickless()) {
+        if (thread_to_schedule.is_idle_thread())
+            thread_to_schedule.set_ticks_left(1);
+        else
+            thread_to_schedule.set_ticks_left(time_slice_for(thread_to_schedule));
+        dbgln_if(TICKLESS_DEBUG, "pick_next: current thread {}, scheduling {} with {} ticks", *current_thread, thread_to_schedule, thread_to_schedule.ticks_left());
+    } else {
+        thread_to_schedule.set_ticks_left(time_slice_for(thread_to_schedule));
+    }
     return context_switch(&thread_to_schedule);
 }
 
@@ -287,14 +301,20 @@ bool Scheduler::donate_to_and_switch(Thread* beneficiary, [[maybe_unused]] const
     auto& proc = Processor::current();
     VERIFY(proc.in_critical() == 1);
 
-    unsigned ticks_left = Thread::current()->ticks_left();
-    if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
+    if (!beneficiary || beneficiary->state() != Thread::Runnable)
+        return Scheduler::yield();
+
+    u32 ticks_left;
+    if (TimeManagement::the().is_tickless())
+        ticks_left = tickless_update_ticks_left();
+    else
+        ticks_left = Thread::current()->ticks_left();
+    if (ticks_left <= 1)
         return Scheduler::yield();
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
     dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Donating {} ticks to {}, reason={}", proc.get_id(), ticks_to_donate, *beneficiary, reason);
     beneficiary->set_ticks_left(ticks_to_donate);
-
     return Scheduler::context_switch(beneficiary);
 }
 
@@ -343,6 +363,33 @@ bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
 bool Scheduler::context_switch(Thread* thread)
 {
     thread->did_schedule();
+
+    auto& tm = TimeManagement::the();
+    if (tm.is_tickless()) {
+        if (thread->is_idle_thread()) {
+            Processor::clear_current_thread_due();
+
+            dbgln_if(TICKLESS_DEBUG, "Scheduler: scheduling idle thread");
+            // If we're scheduling the idle thread and we are in tickless mode
+            // stop the timer unless we are on the main core and we have a timer queued
+            if (Processor::id() == 0)
+                TimerQueue::the().tickless_update_system_timer();
+            else
+                TimeManagement::the().tickless_cancel_system_timer();
+        } else {
+            // Schedule a timer for when the timeslice ends (unless we're on the
+            // main core and a timer is scheduled to expire before that
+            auto now = tm.monotonic_time(TimePrecision::Precise);
+            auto duration = tm.ticks_to_time(thread->ticks_left()); // ticks should have been set before calling this function!
+            auto due = now + duration;
+            Processor::set_current_thread_due(now, due);
+            if (Processor::id() == 0)
+                TimerQueue::the().tickless_update_system_timer();
+            else
+                TimeManagement::the().tickless_start_system_timer(due, true);
+            dbgln_if(TICKLESS_DEBUG, "Scheduler: Thread {} timeslice begins at {} end: {} for {}ns", *thread, now, due, duration.to_nanoseconds());
+        }
+    }
 
     auto from_thread = Thread::current();
     if (from_thread == thread)
@@ -455,7 +502,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     g_ready_queues = new ThreadReadyQueue[g_ready_queue_buckets];
 
     g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
-    s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop, nullptr, 1).leak_ref();
+    s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop, nullptr, 1, true).leak_ref();
     VERIFY(s_colonel_process);
     VERIFY(idle_thread);
     idle_thread->set_priority(THREAD_PRIORITY_MIN);
@@ -466,7 +513,6 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
 
 UNMAP_AFTER_INIT void Scheduler::set_idle_thread(Thread* idle_thread)
 {
-    idle_thread->set_idle_thread();   
     Processor::current().set_idle_thread(*idle_thread);
     Processor::current().set_current_thread(*idle_thread);
 }
@@ -478,9 +524,29 @@ UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
     VERIFY(Processor::id() == 0);
 
     VERIFY(s_colonel_process);
-    Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, String::formatted("idle thread #{}", cpu), 1 << cpu, false);
+    Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, String::formatted("idle thread #{}", cpu), 1 << cpu, false, true );
     VERIFY(idle_thread);
     return idle_thread;
+}
+
+u32 Scheduler::tickless_update_ticks_left()
+{
+    auto& current_thread = *Processor::current_thread();
+    auto& tm = TimeManagement::the();
+    VERIFY(tm.is_tickless());
+    auto timeslice_end = Processor::current_thread_due();
+    auto now = tm.monotonic_time(TimePrecision::Coarse);
+    if (now < timeslice_end) {
+        u32 ticks_left = tm.time_to_ticks(timeslice_end - now);
+        dbgln_if(TICKLESS_DEBUG, "current_thread {} has {} ticks left, now: {} timeslice ends: {}", current_thread, ticks_left, now, timeslice_end);
+        VERIFY(ticks_left > 0);
+        current_thread.set_ticks_left(ticks_left);
+        return ticks_left;
+    }
+
+    dbgln_if(TICKLESS_DEBUG, "current_thread {} has no ticks left, now: {} timeslice ends: {}", current_thread, now, timeslice_end);
+    current_thread.set_ticks_left(0);
+    return 0;
 }
 
 void Scheduler::timer_tick(const RegisterState& regs)
@@ -522,8 +588,17 @@ void Scheduler::timer_tick(const RegisterState& regs)
             regs.eip, regs.ebp, PERF_EVENT_SAMPLE, 0, 0, nullptr);
     }
 
-    if (current_thread->tick())
-        return;
+    auto& tm = TimeManagement::the();
+    if (tm.is_tickless()) {
+        if (tickless_update_ticks_left()) {
+            // TODO: reschedule timer?
+            dbgln("!!!! Thread {} still has {} ticks left!", *current_thread, current_thread->ticks_left());
+            return;
+        }
+    } else {
+        if (current_thread->tick())
+            return;
+    }
 
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(Processor::current().in_irq());
@@ -570,18 +645,21 @@ void Scheduler::idle_loop(void*)
     dbgln("Scheduler[{}]: idle loop running", proc.get_id());
     VERIFY(are_interrupts_enabled());
 
+    bool is_tickless = TimeManagement::the().is_tickless();
     for (;;) {
-        proc.idle_begin();
-        asm("hlt");
-
-        proc.idle_end();
         VERIFY_INTERRUPTS_ENABLED();
 #if SCHEDULE_ON_ALL_PROCESSORS
         yield();
 #else
-        if (Processor::current().id() == 0)
-            yield();
+        if (Processor::current().id() == 0) {
+            if (yield() && is_tickless)
+                continue;
+        }
 #endif
+
+        proc.idle_begin();
+        asm("hlt");
+        proc.idle_end();
     }
 }
 

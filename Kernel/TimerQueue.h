@@ -82,16 +82,24 @@ public:
     {
         return cancel_timer(*move(timer));
     }
-    void fire();
+    bool fire(bool from_interrupt);
+
+    void tickless_update_system_timer_locked();
+    void tickless_update_system_timer();
 
 private:
     struct Queue {
         InlineLinkedList<Timer> list;
-        Time next_timer_due {};
+        Timer* next_timer_due { nullptr };
     };
     void remove_timer_locked(Queue&, Timer&);
-    void update_next_timer_due(Queue&);
+    void update_next_timer_due_locked(Queue&);
     void add_timer_locked(NonnullRefPtr<Timer>);
+    void next_timer_was_updated_locked()
+    {
+        if (TimeManagement::the().is_tickless())
+            tickless_update_system_timer_locked();
+    }
 
     Queue& queue_for_timer(Timer& timer)
     {

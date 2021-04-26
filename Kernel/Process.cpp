@@ -172,7 +172,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     return process;
 }
 
-RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity)
+RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity, bool is_idle_thread)
 {
     auto process = adopt_ref(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true));
     if (!first_thread)
@@ -188,6 +188,8 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
 
     ScopedSpinLock lock(g_scheduler_lock);
     first_thread->set_affinity(affinity);
+    if (is_idle_thread)
+        first_thread->set_idle_thread();
     first_thread->set_state(Thread::State::Runnable);
     return process;
 }
@@ -601,7 +603,7 @@ KResult Process::send_signal(u8 signal, Process* sender)
     return ESRCH;
 }
 
-RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, const String& name, u32 affinity, bool joinable)
+RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, const String& name, u32 affinity, bool joinable, bool is_idle_thread)
 {
     VERIFY((priority >= THREAD_PRIORITY_MIN) && (priority <= THREAD_PRIORITY_MAX));
 
@@ -615,6 +617,8 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
     thread->set_name(name);
     thread->set_affinity(affinity);
     thread->set_priority(priority);
+    if (is_idle_thread)
+        thread->set_idle_thread();
     if (!joinable)
         thread->detach();
 

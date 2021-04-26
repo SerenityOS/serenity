@@ -214,14 +214,20 @@ void HPET::update_periodic_comparator_value()
     global_enable();
 }
 
-void HPET::update_non_periodic_comparator_value(const HPETComparator& comparator)
+void HPET::update_non_periodic_comparator_value(HPETComparator& comparator)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(!comparator.is_periodic());
     VERIFY(comparator.comparator_number() <= m_comparators.size());
     auto& regs = registers();
     auto& timer = regs.timers[comparator.comparator_number()];
-    u64 value = frequency() / comparator.ticks_per_second();
+    u64 value;
+    if (comparator.is_periodic()) {
+        value = frequency() / comparator.ticks_per_second();
+    } else {
+        auto oneshot_ticks = comparator.take_oneshot_ticks();
+        value = oneshot_ticks.has_value() ? oneshot_ticks.value() : frequency() / comparator.ticks_per_second();
+    }
     // NOTE: If the main counter passes this new value before we finish writing it, we will never receive an interrupt!
     u64 new_counter_value = read_main_counter() + value;
     timer.comparator_value.high = (u32)(new_counter_value >> 32);

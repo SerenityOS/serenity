@@ -262,6 +262,10 @@
 #cmakedefine01 TCP_SOCKET_DEBUG
 #endif
 
+#ifndef TICKLESS_DEBUG
+#cmakedefine01 TICKLESS_DEBUG
+#endif
+
 #ifndef THREAD_DEBUG
 #cmakedefine01 THREAD_DEBUG
 #endif

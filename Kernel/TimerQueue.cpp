@@ -29,21 +29,9 @@ Time Timer::now(bool is_firing) const
     // We already have a quite precise time stamp because we just updated the time in the
     // interrupt handler. In those cases, just use coarse timestamps.
     auto clock_id = m_clock_id;
-    if (is_firing) {
-        switch (clock_id) {
-        case CLOCK_MONOTONIC:
-            clock_id = CLOCK_MONOTONIC_COARSE;
-            break;
-        case CLOCK_MONOTONIC_RAW:
-            // TODO: use a special CLOCK_MONOTONIC_RAW_COARSE like mechanism here
-            break;
-        case CLOCK_REALTIME:
-            clock_id = CLOCK_REALTIME_COARSE;
-            break;
-        default:
-            break;
-        }
-    }
+    if (is_firing)
+        clock_id = TimeManagement::convert_clock_id(clock_id, TimePrecision::Coarse);
+
     return TimeManagement::the().current_time(clock_id).value();
 }
 
@@ -91,10 +79,13 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 
     VERIFY(!timer->is_queued());
 
+    auto* timer_ptr = timer.ptr();
+    dbgln("add timer {:p} expires at {}", timer_ptr, timer->m_expires);
     auto& queue = queue_for_timer(*timer);
     if (queue.list.is_empty()) {
         queue.list.append(&timer.leak_ref());
-        queue.next_timer_due = timer_expiration;
+        queue.next_timer_due = timer_ptr;
+        next_timer_was_updated_locked();
     } else {
         Timer* following_timer = nullptr;
         queue.list.for_each([&](Timer& t) {
@@ -107,8 +98,10 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
         if (following_timer) {
             bool next_timer_needs_update = queue.list.head() == following_timer;
             queue.list.insert_before(following_timer, &timer.leak_ref());
-            if (next_timer_needs_update)
-                queue.next_timer_due = timer_expiration;
+            if (next_timer_needs_update) {
+                queue.next_timer_due = timer_ptr;
+                next_timer_was_updated_locked();
+            }
         } else {
             queue.list.append(&timer.leak_ref());
         }
@@ -228,31 +221,39 @@ void TimerQueue::remove_timer_locked(Queue& queue, Timer& timer)
         timer.m_remaining = timer.m_expires - now;
 
     if (was_next_timer)
-        update_next_timer_due(queue);
+        update_next_timer_due_locked(queue);
     // Whenever we remove a timer that was still queued (but hasn't been
     // fired) we added a reference to it. So, when removing it from the
     // queue we need to drop that reference.
     timer.unref();
 }
 
-void TimerQueue::fire()
+bool TimerQueue::fire(bool from_interrupt)
 {
+    bool expired_any = false;
+    bool had_any_timers = false;
+    bool still_have_timers = false;
     ScopedSpinLock lock(g_timerqueue_lock);
 
     auto fire_timers = [&](Queue& queue) {
         auto* timer = queue.list.head();
         VERIFY(timer);
-        VERIFY(queue.next_timer_due == timer->m_expires);
+        VERIFY(queue.next_timer_due == timer);
 
+        auto current_time = timer->now(true);
+        dbgln("check if we can fire timers, now: {} timer {:p} > expires at {} -> comparison: {}", current_time, timer, timer->m_expires, current_time > timer->m_expires);
         while (timer && timer->now(true) > timer->m_expires) {
             queue.list.remove(timer);
             timer->set_queued(false);
 
             m_timers_executing.append(timer);
 
-            update_next_timer_due(queue);
+            update_next_timer_due_locked(queue);
 
             lock.unlock();
+
+            expired_any |= true;
+            dbgln("Firing timer {:p}", timer);
 
             // Defer executing the timer outside of the irq handler
             Processor::deferred_call_queue([this, timer]() {
@@ -273,20 +274,98 @@ void TimerQueue::fire()
         }
     };
 
-    if (!m_timer_queue_monotonic.list.is_empty())
+    if (!m_timer_queue_monotonic.list.is_empty()) {
+        had_any_timers = true;
         fire_timers(m_timer_queue_monotonic);
-    if (!m_timer_queue_realtime.list.is_empty())
+        still_have_timers = true;
+    }
+    if (!m_timer_queue_realtime.list.is_empty()) {
+        had_any_timers = true;
         fire_timers(m_timer_queue_realtime);
+        still_have_timers = true;
+    }
+    if (still_have_timers || (!expired_any && from_interrupt && had_any_timers)) {
+        // In tickless mode we may have triggered an interrupt too early,
+        // especially with non-monotonic clocks. Check if we need to
+        // schedule another timer
+        next_timer_was_updated_locked();
+    }
+    return expired_any;
 }
 
-void TimerQueue::update_next_timer_due(Queue& queue)
+void TimerQueue::update_next_timer_due_locked(Queue& queue)
 {
     VERIFY(g_timerqueue_lock.is_locked());
 
     if (auto* next_timer = queue.list.head())
-        queue.next_timer_due = next_timer->m_expires;
+        queue.next_timer_due = next_timer;
     else
-        queue.next_timer_due = {};
+        queue.next_timer_due = nullptr;
+    next_timer_was_updated_locked();
+}
+
+void TimerQueue::tickless_update_system_timer()
+{
+    ScopedSpinLock lock(g_timerqueue_lock);
+    tickless_update_system_timer_locked();
+}
+
+void TimerQueue::tickless_update_system_timer_locked()
+{
+    // If we're tickless mode we need to figure out when to fire the
+    // next time. For realtime this will only be approximate, which
+    // means that depending on how far out the expiration time is
+    // we may end up scheduling too early (which would require us
+    // to schedule another timer) or too late.
+    Optional<Time> next_expiration;
+    auto check_queue = [&]<bool is_monotonic>(Queue& queue) {
+        auto* timer = queue.next_timer_due;
+        if (!timer)
+            return;
+        Time deadline_monotonic;
+        if constexpr (is_monotonic) {
+            deadline_monotonic = timer->m_expires;
+        } else {
+            // TODO: For realtime expiration time far in the future we should
+            // probably impose a max time to minimize overshoot. This would
+            // trigger some "useless" timer interrupts periodically, but
+            // we can then adjust for time changes (e.g. due to ntp)
+            auto diff = TimeManagement::the().monotonic_to_epoch_diff();
+            dbgln_if(TICKLESS_DEBUG, "diff to monotonic: {}", diff);
+            deadline_monotonic = timer->m_expires - diff;
+        }
+        if (!next_expiration.has_value() || deadline_monotonic < next_expiration.value()) {
+            next_expiration = deadline_monotonic;
+            dbgln_if(TICKLESS_DEBUG, "Timer next up: {:p} ({})", timer, deadline_monotonic);
+        }
+    };
+    check_queue.template operator()<true>(m_timer_queue_monotonic);
+    check_queue.template operator()<false>(m_timer_queue_realtime);
+
+    auto check_update_timer = [&] {
+        if (next_expiration.has_value()) {
+            auto result = TimeManagement::the().tickless_start_system_timer(next_expiration.value());
+            if (result == TimeManagement::TicklessTimerResult::InPast) {
+                // Timer wasn't scheduled, deadline was in the past
+                dbgln("Next expiration {} in the past, fire as soon as possible", next_expiration.value());
+                Processor::current().deferred_call_queue([] {
+                    dbgln("Timer in the past, fire now");
+                    if (!TimerQueue::the().fire(false))
+                        dbgln_if(TICKLESS_DEBUG, "Timer in the past, no timers were expired!");
+                });
+            }
+        } else {
+            dbgln_if(TICKLESS_DEBUG, "Timer not pending");
+            TimeManagement::the().tickless_cancel_system_timer();
+        }
+    };
+    if (Processor::id() == 0)
+        check_update_timer();
+    else {
+        Processor::smp_unicast(0, [&] {
+            check_update_timer();
+        }, true);
+    }
 }
 
 }

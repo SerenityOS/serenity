@@ -493,10 +493,13 @@ UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(HardwareTimerBase& calibrati
     return m_apic_timer;
 }
 
-void APIC::setup_local_timer(u32 ticks, TimerMode timer_mode, bool enable)
+void APIC::setup_local_timer(u32 ticks, TimerMode timer_mode)
 {
     u32 flags = 0;
     switch (timer_mode) {
+    case TimerMode::Disabled:
+        flags |= APIC_LVT_MASKED;
+        break;
     case TimerMode::OneShot:
         flags |= APIC_LVT_TIMER_ONESHOT;
         break;
@@ -507,8 +510,6 @@ void APIC::setup_local_timer(u32 ticks, TimerMode timer_mode, bool enable)
         flags |= APIC_LVT_TIMER_TSCDEADLINE;
         break;
     }
-    if (!enable)
-        flags |= APIC_LVT_MASKED;
     write_register(APIC_REG_LVT_TIMER, APIC_LVT(IRQ_APIC_TIMER + IRQ_VECTOR_BASE, 0) | flags);
 
     u32 config = read_register(APIC_REG_TIMER_CONFIGURATION);
@@ -541,9 +542,13 @@ void APIC::setup_local_timer(u32 ticks, TimerMode timer_mode, bool enable)
         VERIFY_NOT_REACHED();
     }
     write_register(APIC_REG_TIMER_CONFIGURATION, config);
-
-    if (timer_mode == TimerMode::Periodic)
-        write_register(APIC_REG_TIMER_INITIAL_COUNT, ticks / get_timer_divisor());
+    auto divisor = get_timer_divisor();
+    ticks = ((u64)ticks + divisor - 1) / divisor;
+    if (ticks == 0) {
+        // ticks == 0 would disable the timer
+        ticks = 1;
+    }
+    write_register(APIC_REG_TIMER_INITIAL_COUNT, ticks);
 }
 
 u32 APIC::get_timer_current_count()

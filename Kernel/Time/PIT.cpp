@@ -54,6 +54,12 @@ void PIT::set_non_periodic()
     VERIFY_NOT_REACHED();
 }
 
+void PIT::start_non_periodic(u64)
+{
+    // FIXME: Implement it...
+    VERIFY_NOT_REACHED();
+}
+
 void PIT::reset_to_default_ticks_per_second()
 {
     InterruptDisabler disabler;

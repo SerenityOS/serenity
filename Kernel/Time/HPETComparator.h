@@ -30,6 +30,7 @@ public:
     virtual bool is_periodic_capable() const override { return m_periodic_capable; }
     virtual void set_periodic() override;
     virtual void set_non_periodic() override;
+    virtual void start_non_periodic(u64) override;
     virtual void disable() override;
     virtual bool can_query_raw() const override { return true; }
     virtual u64 current_raw() const override;
@@ -40,10 +41,13 @@ public:
     virtual bool is_capable_of_frequency(size_t frequency) const override;
     virtual size_t calculate_nearest_possible_frequency(size_t frequency) const override;
 
+    Optional<u64> take_oneshot_ticks() { return move(m_oneshot_ticks); }
+
 private:
     void set_new_countdown();
     virtual void handle_irq(const RegisterState&) override;
     HPETComparator(u8 number, u8 irq, bool periodic_capable);
+    Optional<u64> m_oneshot_ticks;
     bool m_periodic : 1;
     bool m_periodic_capable : 1;
     bool m_enabled : 1;

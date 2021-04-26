@@ -135,6 +135,11 @@ UNMAP_AFTER_INIT HPETMode CommandLine::hpet_mode() const
     PANIC("Unknown HPETMode: {}", hpet_mode);
 }
 
+UNMAP_AFTER_INIT bool CommandLine::tickless() const
+{
+    return contains("tickless");
+}
+
 UNMAP_AFTER_INIT bool CommandLine::disable_ps2_controller() const
 {
     return contains("disable_ps2_controller");

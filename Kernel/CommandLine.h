@@ -64,6 +64,7 @@ public:
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] BootMode boot_mode() const;
     [[nodiscard]] HPETMode hpet_mode() const;
+    [[nodiscard]] bool tickless() const;
     [[nodiscard]] bool disable_physical_storage() const;
     [[nodiscard]] bool disable_ps2_controller() const;
     [[nodiscard]] bool disable_uhci_controller() const;

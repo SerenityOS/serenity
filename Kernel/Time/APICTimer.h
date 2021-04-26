@@ -24,7 +24,8 @@ public:
     virtual bool is_periodic_capable() const override { return true; }
     virtual void set_periodic() override;
     virtual void set_non_periodic() override;
-    virtual void disable() override { }
+    virtual void start_non_periodic(u64) override;
+    virtual void disable() override;
 
     virtual void reset_to_default_ticks_per_second() override;
     virtual bool try_to_set_frequency(size_t frequency) override;
@@ -32,7 +33,8 @@ public:
     virtual size_t calculate_nearest_possible_frequency(size_t frequency) const override;
 
     void will_be_destroyed() { HardwareTimer<GenericInterruptHandler>::will_be_destroyed(); }
-    void enable_local_timer();
+    void enable_local_timer_periodic();
+    void enable_local_timer_oneshot(u64 ticks);
     void disable_local_timer();
 
 private:
@@ -42,6 +44,7 @@ private:
 
     u32 m_timer_period { 0 };
     APIC::TimerMode m_timer_mode { APIC::TimerMode::Periodic };
+    SpinLock<u8> m_lock;
 };
 
 }

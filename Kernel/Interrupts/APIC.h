@@ -38,11 +38,12 @@ public:
     APICTimer* initialize_timers(HardwareTimerBase&);
     APICTimer* get_timer() const { return m_apic_timer; }
     enum class TimerMode {
+        Disabled,
         OneShot,
         Periodic,
         TSCDeadline
     };
-    void setup_local_timer(u32, TimerMode, bool);
+    void setup_local_timer(u32, TimerMode);
     u32 get_timer_current_count();
     u32 get_timer_divisor();
 

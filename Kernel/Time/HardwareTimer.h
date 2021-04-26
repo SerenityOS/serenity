@@ -43,6 +43,7 @@ public:
     virtual bool is_periodic_capable() const = 0;
     virtual void set_periodic() = 0;
     virtual void set_non_periodic() = 0;
+    virtual void start_non_periodic(u64) = 0;
     virtual void disable() = 0;
     virtual u32 frequency() const = 0;
     virtual bool can_query_raw() const { return false; }

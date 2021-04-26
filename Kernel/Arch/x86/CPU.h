@@ -9,6 +9,7 @@
 #include <AK/Atomic.h>
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
+#include <AK/Time.h>
 #include <AK/Vector.h>
 
 #include <Kernel/Arch/x86/DescriptorTable.h>
@@ -649,6 +650,8 @@ class Processor {
     MemoryManagerData* m_mm_data;
     SchedulerPerProcessorData* m_scheduler_data;
     Thread* m_current_thread;
+    Time m_current_thread_scheduled;
+    Time m_current_thread_due;
     Thread* m_idle_thread;
 
     volatile ProcessorMessageEntry* m_message_queue; // atomic, LIFO
@@ -799,6 +802,34 @@ public:
     {
         // See comment in Processor::current_thread
         write_fs_u32(__builtin_offsetof(Processor, m_current_thread), FlatPtr(&current_thread));
+    }
+
+    ALWAYS_INLINE static void set_current_thread_due(Time time_scheduled, Time time_due)
+    {
+        InterruptDisabler disable;
+        auto& proc = Processor::current();
+        proc.m_current_thread_scheduled = time_scheduled;
+        proc.m_current_thread_due = time_due;
+    }
+
+    ALWAYS_INLINE static void clear_current_thread_due()
+    {
+        InterruptDisabler disable;
+        auto& proc = Processor::current();
+        proc.m_current_thread_scheduled = {};
+        proc.m_current_thread_due = {};
+    }
+
+    ALWAYS_INLINE static Time current_thread_due()
+    {
+        InterruptDisabler disable;
+        return Processor::current().m_current_thread_due;
+    }
+
+    ALWAYS_INLINE static Time current_thread_scheduled()
+    {
+        InterruptDisabler disable;
+        return Processor::current().m_current_thread_scheduled;
     }
 
     ALWAYS_INLINE static Thread* idle_thread()

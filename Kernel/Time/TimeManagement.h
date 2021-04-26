@@ -34,6 +34,7 @@ public:
     static TimeManagement& the();
 
     static bool is_valid_clock_id(clockid_t);
+    static clockid_t convert_clock_id(clockid_t, TimePrecision);
     KResultOr<Time> current_time(clockid_t) const;
     Time monotonic_time(TimePrecision = TimePrecision::Coarse) const;
     Time monotonic_time_raw() const
@@ -43,8 +44,25 @@ public:
     }
     Time epoch_time(TimePrecision = TimePrecision::Precise) const;
     void set_epoch_time(Time);
+    Time monotonic_to_epoch_diff();
     time_t ticks_per_second() const;
     time_t boot_time() const;
+
+    bool supports_tickless() const;
+    void enable_tickless(u32);
+    ALWAYS_INLINE bool is_tickless() const { return m_tickless; }
+
+    Time ticks_to_time(u32) const;
+    u32 time_to_ticks(const Time& time) const;
+
+    enum class TicklessTimerResult {
+        Started,
+        AlreadyStarted,
+        InPast
+    };
+    void tickless_cancel_system_timer();
+    TicklessTimerResult tickless_start_system_timer_from_now(Time, bool force = false);
+    TicklessTimerResult tickless_start_system_timer(Time, bool force = false);
 
     bool is_system_timer(const HardwareTimerBase&) const;
 
@@ -87,6 +105,8 @@ private:
 
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
     bool m_can_query_precise_time { false };
+    bool m_tickless { false };
+    Vector<Time, 8> m_tickless_due_per_cpu;
 
     RefPtr<HardwareTimerBase> m_system_timer;
     RefPtr<HardwareTimerBase> m_time_keeper_timer;
