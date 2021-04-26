@@ -15,8 +15,10 @@ RUN apt-get update -y \
         e2fsprogs \
         ninja-build \
         qemu-utils \
+        rsync \
         sudo \
         tzdata \
+        unzip \
         wget
 
 WORKDIR /serenity
