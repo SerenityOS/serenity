@@ -175,6 +175,7 @@ set(RSA_PARSE_DEBUG ON)
 set(LINE_EDITOR_DEBUG ON)
 set(LANGUAGE_SERVER_DEBUG ON)
 set(GL_DEBUG ON)
+set(WASM_BINPARSER_DEBUG ON)
 
 # False positive: DEBUG is a flag but it works differently.
 # set(DEBUG ON)
