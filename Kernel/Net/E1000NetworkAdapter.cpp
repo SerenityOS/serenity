@@ -207,7 +207,7 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, 
     initialize_tx_descriptors();
 
     out32(REG_INTERRUPT_MASK_SET, 0x1f6dc);
-    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0);
+    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
     in32(REG_INTERRUPT_CAUSE_READ);
 
     enable_irq();
@@ -231,6 +231,9 @@ void E1000NetworkAdapter::handle_irq(const RegisterState&)
     }
     if (status & INTERRUPT_RXDMT0) {
         // Threshold OK?
+    }
+    if (status & INTERRUPT_RXO) {
+        dbgln_if(E1000_DEBUG, "E1000: RX buffer overrun");
     }
     if (status & INTERRUPT_RXT0) {
         receive();
