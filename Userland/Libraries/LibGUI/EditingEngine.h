@@ -42,16 +42,16 @@ protected:
 
     WeakPtr<TextEditor> m_editor;
 
-    void move_one_left(const KeyEvent& event);
-    void move_one_right(const KeyEvent& event);
+    void move_one_left();
+    void move_one_right();
     void move_one_up(const KeyEvent& event);
     void move_one_down(const KeyEvent& event);
-    void move_to_previous_span(const KeyEvent& event);
+    void move_to_previous_span();
     void move_to_next_span(const KeyEvent& event);
-    void move_to_line_beginning(const KeyEvent& event);
-    void move_to_line_end(const KeyEvent& event);
-    void move_page_up(const KeyEvent& event);
-    void move_page_down(const KeyEvent& event);
+    void move_to_line_beginning();
+    void move_to_line_end();
+    void move_page_up();
+    void move_page_down();
     void move_to_first_line();
     void move_to_last_line();
     TextPosition find_beginning_of_next_word();
@@ -63,8 +63,8 @@ protected:
     TextPosition find_beginning_of_previous_word();
     void move_to_beginning_of_previous_word();
 
-    void move_up(const KeyEvent& event, double page_height_factor);
-    void move_down(const KeyEvent& event, double page_height_factor);
+    void move_up(double page_height_factor);
+    void move_down(double page_height_factor);
 
     void get_selection_line_boundaries(size_t& first_line, size_t& last_line);
 

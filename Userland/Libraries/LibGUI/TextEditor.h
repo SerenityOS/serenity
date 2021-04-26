@@ -178,7 +178,7 @@ public:
 
     void add_code_point(u32 code_point);
     void reset_cursor_blink();
-    void toggle_selection_if_needed_for_event(bool is_selecting);
+    void update_selection(bool is_selecting);
 
     int number_of_visible_lines() const;
     Gfx::IntRect cursor_content_rect() const;
