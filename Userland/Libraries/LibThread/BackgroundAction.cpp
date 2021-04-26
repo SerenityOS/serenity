@@ -12,7 +12,7 @@
 static LibThread::Lockable<Queue<Function<void()>>>* s_all_actions;
 static LibThread::Thread* s_background_thread;
 
-static int background_thread_func()
+static intptr_t background_thread_func()
 {
     while (true) {
         Function<void()> work_item;

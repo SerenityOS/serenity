@@ -9,7 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 
-LibThread::Thread::Thread(Function<int()> action, StringView thread_name)
+LibThread::Thread::Thread(Function<intptr_t()> action, StringView thread_name)
     : Core::Object(nullptr)
     , m_action(move(action))
     , m_thread_name(thread_name.is_null() ? "" : thread_name)
@@ -33,9 +33,9 @@ void LibThread::Thread::start()
         nullptr,
         [](void* arg) -> void* {
             Thread* self = static_cast<Thread*>(arg);
-            int exit_code = self->m_action();
+            auto exit_code = self->m_action();
             self->m_tid = 0;
-            return (void*)exit_code;
+            return reinterpret_cast<void*>(exit_code);
         },
         static_cast<void*>(this));
 
