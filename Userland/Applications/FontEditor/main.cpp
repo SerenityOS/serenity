@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 
     RefPtr<Gfx::BitmapFont> edited_font;
     if (path == nullptr) {
-        path = "/tmp/saved.font";
+        path = "Untitled.font";
         edited_font = static_ptr_cast<Gfx::BitmapFont>(Gfx::FontDatabase::default_font().clone());
     } else {
         auto bitmap_font = Gfx::BitmapFont::load_from_file(path);
@@ -74,13 +74,19 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(440, 470);
-    window->set_title(String::formatted("{} - Font Editor", path));
 
     auto& font_editor = window->set_main_widget<FontEditorWidget>(path, move(edited_font));
+    font_editor.update_title();
 
     auto menubar = GUI::Menubar::construct();
     font_editor.initialize_menubar(menubar);
     window->set_menubar(move(menubar));
+
+    window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+        if (font_editor.request_close())
+            return GUI::Window::CloseRequestDecision::Close;
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
 
     window->show();
 
