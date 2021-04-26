@@ -55,13 +55,19 @@ KResultOr<int> Process::sys$module_load(Userspace<const char*> user_path, size_t
     });
 
     bool missing_symbols = false;
-
+    bool misaligned_symbols = false;
     elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
         if (!section.size())
             return IterationDecision::Continue;
         auto* section_storage = section_storage_by_name.get(section.name()).value_or(nullptr);
         VERIFY(section_storage);
         section.relocations().for_each_relocation([&](const ELF::Image::Relocation& relocation) {
+            if((ptrdiff_t)(section_storage + relocation.offset()) % sizeof(ptrdiff_t)) {
+                misaligned_symbols = true;
+                dbgln("Misaligned symbols in module: {}", relocation.symbol().name());
+                dbgln("   Symbol offset: {}, address: {}", relocation.offset(), address_for_kernel_symbol(relocation.symbol().name()));
+                return IterationDecision::Break;   
+            }
             auto& patch_ptr = *reinterpret_cast<ptrdiff_t*>(section_storage + relocation.offset());
             switch (relocation.type()) {
             case R_386_PC32: {
@@ -103,7 +109,7 @@ KResultOr<int> Process::sys$module_load(Userspace<const char*> user_path, size_t
         return IterationDecision::Continue;
     });
 
-    if (missing_symbols)
+    if (missing_symbols || misaligned_symbols)
         return EINVAL;
 
     auto* text_base = section_storage_by_name.get(".text").value_or(nullptr);
