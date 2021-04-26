@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/MemoryStream.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/AnonymousBuffer.h>
@@ -69,6 +71,19 @@ struct Frame {
     double right;
 };
 
+// Supported PCM sample formats.
+enum PcmSampleFormat : u8 {
+    Uint8,
+    Int16,
+    Int24,
+    Float32,
+    Float64,
+};
+
+// Most of the read code only cares about how many bits to read or write
+u16 pcm_bits_per_sample(PcmSampleFormat format);
+String sample_format_name(PcmSampleFormat format);
+
 // Small helper to resample from one playback rate to another
 // This isn't really "smart", in that we just insert (or drop) samples.
 // Should do better...
@@ -89,8 +104,8 @@ private:
 // A buffer of audio samples, normalized to 44100hz.
 class Buffer : public RefCounted<Buffer> {
 public:
-    static RefPtr<Buffer> from_pcm_data(ReadonlyBytes data, ResampleHelper& resampler, int num_channels, int bits_per_sample);
-    static RefPtr<Buffer> from_pcm_stream(InputMemoryStream& stream, ResampleHelper& resampler, int num_channels, int bits_per_sample, int num_samples);
+    static RefPtr<Buffer> from_pcm_data(ReadonlyBytes data, ResampleHelper& resampler, int num_channels, PcmSampleFormat sample_format);
+    static RefPtr<Buffer> from_pcm_stream(InputMemoryStream& stream, ResampleHelper& resampler, int num_channels, PcmSampleFormat sample_format, int num_samples);
     static NonnullRefPtr<Buffer> create_with_samples(Vector<Frame>&& samples)
     {
         return adopt_ref(*new Buffer(move(samples)));
