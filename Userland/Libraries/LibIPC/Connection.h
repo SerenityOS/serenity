@@ -14,6 +14,7 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/Timer.h>
 #include <LibIPC/Message.h>
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
