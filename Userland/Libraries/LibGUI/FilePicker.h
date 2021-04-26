@@ -59,12 +59,18 @@ private:
         }
     }
 
+    struct CommonLocationButton {
+        String path;
+        Button& button;
+    };
+
     RefPtr<MultiView> m_view;
     NonnullRefPtr<FileSystemModel> m_model;
     LexicalPath m_selected_file;
 
     RefPtr<TextBox> m_filename_textbox;
     RefPtr<TextBox> m_location_textbox;
+    Vector<CommonLocationButton> m_common_location_buttons;
     RefPtr<Menu> m_context_menu;
     Mode m_mode { Mode::Open };
 };
