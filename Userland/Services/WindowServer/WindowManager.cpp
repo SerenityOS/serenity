@@ -414,6 +414,7 @@ void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_
         AppletManager::the().relayout();
 
     MenuManager::the().refresh();
+    reevaluate_hovered_window(&window);
 }
 
 void WindowManager::notify_opacity_changed(Window&)
