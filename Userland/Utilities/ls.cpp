@@ -125,49 +125,31 @@ int main(int argc, char** argv)
         return do_file_system_object_short(path);
     };
 
-    int status = 0;
     if (paths.is_empty()) {
-        status = do_file_system_object(".");
-    } else if (paths.size() == 1) {
-        status = do_file_system_object(paths[0]);
-    } else {
-        Vector<const char*> directories;
-        Vector<String> names;
-        size_t longest_name = 0;
-        for (auto& path : paths) {
-            if (Core::File::exists(path)) {
-                if (Core::File::is_directory(path)) {
-                    directories.append(path);
-                } else {
-                    names.append(path);
-                    if (names.last().length() > longest_name)
-                        longest_name = names.last().length();
-                }
-            } else {
-                status = do_file_system_object(path);
-            }
-        }
+        paths.append(".");
+    }
 
-        quick_sort(names);
-        if (print_names(".", longest_name, names)) {
-            printf("\n");
-        }
+    quick_sort(paths, [](const String& a, const String& b) {
+        return a < b;
+    });
 
-        if (names.size() > 0) {
-            printf("\n");
-        }
+    int status = 0;
 
-        quick_sort(directories, [](String a, String b) { return a < b; });
-        for (size_t i = 0; i < directories.size(); ++i) {
-            auto path = directories.at(i);
+    for (size_t i = 0; i < paths.size(); i++) {
+        auto path = paths[i];
+
+        bool show_dir_separator = paths.size() > 1 && Core::File::is_directory(path) && !flag_list_directories_only;
+        if (show_dir_separator) {
             printf("%s:\n", path);
-            status = do_file_system_object(path);
-
-            if (i < directories.size() - 1) {
-                printf("\n");
-            }
+        }
+        auto rc = do_file_system_object(path);
+        if (rc != 0)
+            status = rc;
+        if (show_dir_separator && i != paths.size() - 1) {
+            puts("");
         }
     }
+
     return status;
 }
 
