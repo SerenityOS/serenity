@@ -920,7 +920,7 @@ void TextEditor::reset_cursor_blink()
     start_timer(500);
 }
 
-void TextEditor::toggle_selection_if_needed_for_event(bool is_selecting)
+void TextEditor::update_selection(bool is_selecting)
 {
     if (is_selecting && !selection()->is_valid()) {
         selection()->set(cursor(), {});
