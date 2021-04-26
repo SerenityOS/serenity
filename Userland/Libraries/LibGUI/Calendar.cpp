@@ -35,8 +35,8 @@ static const char* short_month_names[] = {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-static const auto extra_large_font = Gfx::BitmapFont::load_from_file("/res/fonts/LizaRegular36.font");
-static const auto large_font = Gfx::BitmapFont::load_from_file("/res/fonts/LizaRegular24.font");
+static const auto extra_large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular36.font");
+static const auto large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular24.font");
 static const auto medium_font = Gfx::BitmapFont::load_from_file("/res/fonts/PebbletonRegular14.font");
 static const auto small_font = Gfx::BitmapFont::load_from_file("/res/fonts/KaticaRegular10.font");
 
@@ -477,7 +477,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                 auto text_rect = Gfx::IntRect(
                     x_offset,
                     y_offset + 4,
-                    m_tiles[0][i].width,
+                    m_tiles[0][i].width - 4,
                     font().glyph_height() + 4);
 
                 if (width > 150 && height > 150) {
@@ -486,10 +486,8 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                     set_font(large_font);
                 } else if (width > 50 && height > 50) {
                     set_font(medium_font);
-                    text_rect.set_width(m_tiles[0][i].width - 4);
                 } else if (width >= 30 && height >= 30) {
                     set_font(small_font);
-                    text_rect.set_width(m_tiles[0][i].width - 4);
                 } else {
                     set_font(small_font);
                     text_alignment = Gfx::TextAlignment::Center;
