@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/LEB128.h>
 #include <AK/MemMem.h>
 #include <AK/Stream.h>
 #include <AK/Vector.h>
@@ -73,58 +74,9 @@ public:
         return m_bytes[m_offset];
     }
 
-    bool read_LEB128_unsigned(size_t& result)
-    {
-        const auto backup = m_offset;
+    bool read_LEB128_unsigned(size_t& result) { return LEB128::read_unsigned(*this, result); }
 
-        result = 0;
-        size_t num_bytes = 0;
-        while (true) {
-            if (eof()) {
-                m_offset = backup;
-                set_recoverable_error();
-                return false;
-            }
-
-            const u8 byte = m_bytes[m_offset];
-            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
-            ++m_offset;
-            if (!(byte & (1 << 7)))
-                break;
-            ++num_bytes;
-        }
-
-        return true;
-    }
-
-    bool read_LEB128_signed(ssize_t& result)
-    {
-        const auto backup = m_offset;
-
-        result = 0;
-        size_t num_bytes = 0;
-        u8 byte = 0;
-
-        do {
-            if (eof()) {
-                m_offset = backup;
-                set_recoverable_error();
-                return false;
-            }
-
-            byte = m_bytes[m_offset];
-            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
-            ++m_offset;
-            ++num_bytes;
-        } while (byte & (1 << 7));
-
-        if (num_bytes * 7 < sizeof(size_t) * 4 && (byte & 0x40)) {
-            // sign extend
-            result |= ((size_t)(-1) << (num_bytes * 7));
-        }
-
-        return true;
-    }
+    bool read_LEB128_signed(ssize_t& result) { return LEB128::read_signed(*this, result); }
 
     ReadonlyBytes bytes() const { return m_bytes; }
     size_t offset() const { return m_offset; }
