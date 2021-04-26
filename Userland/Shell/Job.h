@@ -8,6 +8,7 @@
 
 #include "Execution.h"
 #include "Forward.h"
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
@@ -15,11 +16,6 @@
 #include <AK/String.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Object.h>
-
-#define JOB_TIME_INFO
-#ifndef __serenity__
-#    undef JOB_TIME_INFO
-#endif
 
 namespace Shell {
 
@@ -31,13 +27,13 @@ public:
 
     ~Job()
     {
-#ifdef JOB_TIME_INFO
-        if (m_active) {
-            auto elapsed = m_command_timer.elapsed();
-            // Don't mistake this for the command!
-            dbgln("Job entry '{}' deleted in {} ms", m_cmd, elapsed);
+        if constexpr (SHELL_JOB_DEBUG) {
+            if (m_active) {
+                auto elapsed = m_command_timer.elapsed();
+                // Don't mistake this for the command!
+                dbgln("Job entry '{}' deleted in {} ms", m_cmd, elapsed);
+            }
         }
-#endif
     }
 
     Function<void(RefPtr<Job>)> on_exit;
