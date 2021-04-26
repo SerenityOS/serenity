@@ -168,6 +168,13 @@ void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift
 
 #undef DIGIT
 
+    // Home means to the beginning of the line.
+    case KeyCode::Key_Home:
+        m_unit = Unit::Character;
+        m_amount = START_OF_LINE;
+        m_is_complete = true;
+        break;
+
     // If 0 appears while amount is 0, then it means beginning of line.
     // Otherwise, it adds 0 to the amount.
     case KeyCode::Key_0:
@@ -180,8 +187,9 @@ void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift
         }
         break;
 
-    // $ means end of line.
+    // End or $ means end of line.
     // TODO: d2$ in vim deletes to the end of the line and then the next line.
+    case KeyCode::Key_End:
     case KeyCode::Key_Dollar:
         m_unit = Unit::Character;
         m_amount = END_OF_LINE;
@@ -196,9 +204,9 @@ void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift
         m_is_complete = true;
         break;
 
-    // j, up or + operates on this line and amount line(s) after.
+    // j, down or + operates on this line and amount line(s) after.
     case KeyCode::Key_J:
-    case KeyCode::Key_Up:
+    case KeyCode::Key_Down:
     case KeyCode::Key_Plus:
         m_unit = Unit::Line;
 
@@ -208,9 +216,9 @@ void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift
         m_is_complete = true;
         break;
 
-    // k, down or - operates on this line and amount line(s) before.
+    // k, up or - operates on this line and amount line(s) before.
     case KeyCode::Key_K:
-    case KeyCode::Key_Down:
+    case KeyCode::Key_Up:
     case KeyCode::Key_Minus:
         m_unit = Unit::Line;
 
@@ -732,9 +740,6 @@ CursorWidth VimEditingEngine::cursor_width() const
 
 bool VimEditingEngine::on_key(const KeyEvent& event)
 {
-    if (EditingEngine::on_key(event))
-        return true;
-
     switch (m_vim_mode) {
     case (VimMode::Insert):
         return on_key_in_insert_mode(event);
@@ -751,6 +756,9 @@ bool VimEditingEngine::on_key(const KeyEvent& event)
 
 bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
 {
+    if (EditingEngine::on_key(event))
+        return true;
+
     if (event.key() == KeyCode::Key_Escape || (event.ctrl() && event.key() == KeyCode::Key_LeftBracket) || (event.ctrl() && event.key() == KeyCode::Key_C)) {
         if (m_editor->cursor().column() > 0)
             move_one_left();
@@ -968,6 +976,12 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             case (KeyCode::Key_P):
                 put();
                 return true;
+            case (KeyCode::Key_PageUp):
+                move_page_up();
+                return true;
+            case (KeyCode::Key_PageDown):
+                move_page_down();
+                return true;
             default:
                 break;
             }
@@ -1082,6 +1096,14 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
         case (KeyCode::Key_Y):
             yank(Selection);
             switch_to_normal_mode();
+            return true;
+        case (KeyCode::Key_PageUp):
+            move_page_up();
+            update_selection_on_cursor_move();
+            return true;
+        case (KeyCode::Key_PageDown):
+            move_page_down();
+            update_selection_on_cursor_move();
             return true;
         default:
             break;
