@@ -25,7 +25,7 @@ __BEGIN_DECLS
 #define HUGE_VALF __builtin_huge_valf()
 #define HUGE_VAL __builtin_huge_val()
 #define HUGE_VALL __builtin_huge_vall()
-#define INFINITY __builtin_huge_val()
+#define INFINITY __builtin_huge_valf()
 #define NAN __builtin_nan("")
 #define MAXFLOAT FLT_MAX
 

@@ -81,7 +81,7 @@ static String double_to_string(double d)
         builder.append(double_to_string(-d));
         return builder.to_string();
     }
-    if (d == INFINITY)
+    if (d == static_cast<double>(INFINITY))
         return "Infinity";
 
     StringBuilder number_string_builder;
