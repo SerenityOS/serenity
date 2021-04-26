@@ -36,6 +36,7 @@ public:
     MACAddress mac_address() { return m_mac_address; }
     IPv4Address ipv4_address() const { return m_ipv4_address; }
     IPv4Address ipv4_netmask() const { return m_ipv4_netmask; }
+    IPv4Address ipv4_broadcast() const { return IPv4Address { (m_ipv4_address.to_u32() & m_ipv4_netmask.to_u32()) | ~m_ipv4_netmask.to_u32() }; }
     IPv4Address ipv4_gateway() const { return m_ipv4_gateway; }
     virtual bool link_up() { return false; }
 
