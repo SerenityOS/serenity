@@ -37,7 +37,7 @@ RefPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& addr
 {
     Locker locker(all_adapters().lock());
     for (auto* adapter : all_adapters().resource()) {
-        if (adapter->ipv4_address() == address)
+        if (adapter->ipv4_address() == address || adapter->ipv4_broadcast() == address)
             return adapter;
     }
     if (address[0] == 127)
