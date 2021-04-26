@@ -90,6 +90,12 @@ KResultOr<int> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> use
 
     Thread::BlockTimeout timeout;
     u32 cmd = params.futex_op & FUTEX_CMD_MASK;
+
+    bool use_realtime_clock = (params.futex_op & FUTEX_CLOCK_REALTIME) != 0;
+    if (use_realtime_clock && cmd != FUTEX_WAIT && cmd != FUTEX_WAIT_BITSET) {
+        return ENOSYS;
+    }
+
     switch (cmd) {
     case FUTEX_WAIT:
     case FUTEX_WAIT_BITSET:
@@ -99,8 +105,8 @@ KResultOr<int> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> use
             auto timeout_time = copy_time_from_user(params.timeout);
             if (!timeout_time.has_value())
                 return EFAULT;
-            clockid_t clock_id = (params.futex_op & FUTEX_CLOCK_REALTIME) ? CLOCK_REALTIME_COARSE : CLOCK_MONOTONIC_COARSE;
             bool is_absolute = cmd != FUTEX_WAIT;
+            clockid_t clock_id = use_realtime_clock ? CLOCK_REALTIME_COARSE : CLOCK_MONOTONIC_COARSE;
             timeout = Thread::BlockTimeout(is_absolute, &timeout_time.value(), nullptr, clock_id);
         }
         if (cmd == FUTEX_WAIT_BITSET && params.val3 == FUTEX_BITSET_MATCH_ANY)
