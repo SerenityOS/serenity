@@ -221,7 +221,7 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
 
     [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), 0, 0, 0,
         event_type == ProcessEventType::Create ? PERF_EVENT_PROCESS_CREATE : PERF_EVENT_PROCESS_EXEC,
-        process.pid().value(), 0, executable.characters());
+        process.pid().value(), 0, executable);
 
     process.for_each_thread([&](auto& thread) {
         [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), thread.tid().value(),
@@ -231,7 +231,7 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
 
     for (auto& region : process.space().regions()) {
         [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), 0,
-            0, 0, PERF_EVENT_MMAP, region->range().base().get(), region->range().size(), region->name().characters());
+            0, 0, PERF_EVENT_MMAP, region->range().base().get(), region->range().size(), region->name());
     }
 }
 

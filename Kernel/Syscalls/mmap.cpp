@@ -249,7 +249,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
 
     if (auto* event_buffer = current_perf_events_buffer()) {
         [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MMAP, region->vaddr().get(),
-            region->size(), name.is_null() ? region->name().characters() : name.characters());
+            region->size(), name.is_null() ? region->name() : name);
     }
 
     region->set_mmap(true);
