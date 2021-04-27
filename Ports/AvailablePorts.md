@@ -68,6 +68,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`mandoc`](mandoc/)                    | mandoc                                                     | 1.14.5                   | https://mandoc.bsd.lv/                                                         |
 | [`mawk`](mawk/)                        | mawk                                                       | 1.3.4-20200120           | https://invisible-island.net/mawk/                                             |
 | [`mbedtls`](mbedtls/)                  | Mbed TLS                                                   | 2.16.2                   | https://tls.mbed.org/                                                          |
+| [`milkytracker`](milkytracker/)        | milkytracker                                               | 1.03.00                  | https://github.com/milkytracker/MilkyTracker                                   |
 | [`mrsh`](mrsh/)                        | mrsh                                                       | d9763a3                  | https://mrsh.sh/                                                               |
 | [`nano`](nano/)                        | GNU nano                                                   | 4.5                      | https://www.nano-editor.org/                                                   |
 | [`nasm`](nasm/)                        | Netwide Assembler (NASM)                                   | 2.15.05                  | https://www.nasm.us/                                                           |
