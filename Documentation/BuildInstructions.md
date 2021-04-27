@@ -114,7 +114,7 @@ Make sure you have all the dependencies installed:
 # core
 brew install coreutils qemu bash gcc@10 ninja cmake
 
-# Fuse + ex2
+# Fuse + ext2
 brew install osxfuse e2fsprogs m4 autoconf automake libtool
 brew install --cask osxfuse
 Toolchain/BuildFuseExt2.sh
