@@ -280,27 +280,32 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         return with_eof_check(stream, ParseError::ExpectedKindTag);
     OpCode opcode { byte };
 
-    if (opcode == Instructions::block || opcode == Instructions::loop || opcode == Instructions::if_) {
+    switch (opcode.value()) {
+    case Instructions::block.value():
+    case Instructions::loop.value():
+    case Instructions::if_.value(): {
         auto block_type = BlockType::parse(stream);
         if (block_type.is_error())
             return block_type.error();
-        auto result = parse_until_any_of<Instruction>(stream, 0x0b, 0x05);
-        if (result.is_error())
-            return result.error();
-
-        if (result.value().terminator == 0x0b) {
-            // block/loop/if without else
-            NonnullOwnPtrVector<Instruction> instructions;
-            for (auto& entry : result.value().values)
-                instructions.append(make<Instruction>(move(entry)));
-
-            return Instruction { opcode, BlockAndInstructionSet { block_type.release_value(), move(instructions) } };
-        }
-
-        VERIFY(result.value().terminator == 0x05);
         NonnullOwnPtrVector<Instruction> left_instructions, right_instructions;
-        for (auto& entry : result.value().values)
-            left_instructions.append(make<Instruction>(move(entry)));
+        {
+            auto result = parse_until_any_of<Instruction>(stream, 0x0b, 0x05);
+            if (result.is_error())
+                return result.error();
+
+            if (result.value().terminator == 0x0b) {
+                // block/loop/if without else
+                NonnullOwnPtrVector<Instruction> instructions;
+                for (auto& entry : result.value().values)
+                    instructions.append(make<Instruction>(move(entry)));
+
+                return Instruction { opcode, BlockAndInstructionSet { block_type.release_value(), move(instructions) } };
+            }
+
+            VERIFY(result.value().terminator == 0x05);
+            for (auto& entry : result.value().values)
+                left_instructions.append(make<Instruction>(move(entry)));
+        }
         // if with else
         {
             auto result = parse_until_any_of<Instruction>(stream, 0x0b);
@@ -309,13 +314,401 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
 
             for (auto& entry : result.value().values)
                 right_instructions.append(make<Instruction>(move(entry)));
+        }
 
-            return Instruction { opcode, BlockAndTwoInstructionSets { block_type.release_value(), move(left_instructions), move(right_instructions) } };
+        return Instruction { opcode, BlockAndTwoInstructionSets { block_type.release_value(), move(left_instructions), move(right_instructions) } };
+    }
+    case Instructions::br.value():
+    case Instructions::br_if.value(): {
+        // branches with a single label immediate
+        auto index = GenericIndexParser<LabelIndex>::parse(stream);
+        if (index.is_error())
+            return index.error();
+
+        return Instruction { opcode, index.release_value() };
+    }
+    case Instructions::br_table.value(): {
+        // br_table label* label
+        auto labels = parse_vector<GenericIndexParser<LabelIndex>>(stream);
+        if (labels.is_error())
+            return labels.error();
+
+        auto default_label = GenericIndexParser<LabelIndex>::parse(stream);
+        if (default_label.is_error())
+            return default_label.error();
+
+        return Instruction { opcode, TableBranchArgs { labels.release_value(), default_label.release_value() } };
+    }
+    case Instructions::call.value(): {
+        // call function
+        auto function_index = GenericIndexParser<FunctionIndex>::parse(stream);
+        if (function_index.is_error())
+            return function_index.error();
+
+        return Instruction { opcode, function_index.release_value() };
+    }
+    case Instructions::call_indirect.value(): {
+        // call_indirect type table
+        auto type_index = GenericIndexParser<TypeIndex>::parse(stream);
+        if (type_index.is_error())
+            return type_index.error();
+
+        auto table_index = GenericIndexParser<TableIndex>::parse(stream);
+        if (table_index.is_error())
+            return table_index.error();
+
+        return Instruction { opcode, IndirectCallArgs { type_index.release_value(), table_index.release_value() } };
+    }
+    case Instructions::i32_load.value():
+    case Instructions::i64_load.value():
+    case Instructions::f32_load.value():
+    case Instructions::f64_load.value():
+    case Instructions::i32_load8_s.value():
+    case Instructions::i32_load8_u.value():
+    case Instructions::i32_load16_s.value():
+    case Instructions::i32_load16_u.value():
+    case Instructions::i64_load8_s.value():
+    case Instructions::i64_load8_u.value():
+    case Instructions::i64_load16_s.value():
+    case Instructions::i64_load16_u.value():
+    case Instructions::i64_load32_s.value():
+    case Instructions::i64_load32_u.value():
+    case Instructions::i32_store.value():
+    case Instructions::i64_store.value():
+    case Instructions::f32_store.value():
+    case Instructions::f64_store.value():
+    case Instructions::i32_store8.value():
+    case Instructions::i32_store16.value():
+    case Instructions::i64_store8.value():
+    case Instructions::i64_store16.value():
+    case Instructions::i64_store32.value(): {
+        // op (align offset)
+        size_t align, offset;
+        if (!LEB128::read_unsigned(stream, align))
+            return with_eof_check(stream, ParseError::InvalidInput);
+        if (!LEB128::read_unsigned(stream, offset))
+            return with_eof_check(stream, ParseError::InvalidInput);
+
+        return Instruction { opcode, MemoryArgument { static_cast<u32>(align), static_cast<u32>(offset) } };
+    }
+    case Instructions::local_get.value():
+    case Instructions::local_set.value():
+    case Instructions::local_tee.value(): {
+        auto index = GenericIndexParser<LocalIndex>::parse(stream);
+        if (index.is_error())
+            return index.error();
+
+        return Instruction { opcode, index.release_value() };
+    }
+    case Instructions::global_get.value():
+    case Instructions::global_set.value(): {
+        auto index = GenericIndexParser<GlobalIndex>::parse(stream);
+        if (index.is_error())
+            return index.error();
+
+        return Instruction { opcode, index.release_value() };
+    }
+    case Instructions::memory_size.value():
+    case Instructions::memory_grow.value(): {
+        // op 0x0
+        // The zero is currently unused.
+        u8 unused;
+        stream >> unused;
+        if (stream.has_any_error())
+            return with_eof_check(stream, ParseError::ExpectedKindTag);
+        if (unused != 0x00)
+            return with_eof_check(stream, ParseError::InvalidTag);
+
+        return Instruction { opcode };
+    }
+    case Instructions::i32_const.value(): {
+        i32 value;
+        if (!LEB128::read_signed(stream, value))
+            return with_eof_check(stream, ParseError::ExpectedSignedImmediate);
+
+        return Instruction { opcode, value };
+    }
+    case Instructions::i64_const.value(): {
+        // op literal
+        i64 value;
+        if (!LEB128::read_signed(stream, value))
+            return with_eof_check(stream, ParseError::ExpectedSignedImmediate);
+
+        return Instruction { opcode, value };
+    }
+    case Instructions::f32_const.value(): {
+        // op literal
+        LittleEndian<u32> value;
+        stream >> value;
+        if (stream.has_any_error())
+            return with_eof_check(stream, ParseError::ExpectedFloatingImmediate);
+
+        auto floating = bit_cast<float>(static_cast<u32>(value));
+        return Instruction { opcode, floating };
+    }
+    case Instructions::f64_const.value(): {
+        // op literal
+        LittleEndian<u64> value;
+        stream >> value;
+        if (stream.has_any_error())
+            return with_eof_check(stream, ParseError::ExpectedFloatingImmediate);
+
+        auto floating = bit_cast<double>(static_cast<u64>(value));
+        return Instruction { opcode, floating };
+    }
+    case Instructions::table_get.value():
+    case Instructions::table_set.value(): {
+        auto index = GenericIndexParser<TableIndex>::parse(stream);
+        if (index.is_error())
+            return index.error();
+
+        return Instruction { opcode, index.release_value() };
+    }
+    case Instructions::select_typed.value(): {
+        auto types = parse_vector<ValueType>(stream);
+        if (types.is_error())
+            return types.error();
+
+        return Instruction { opcode, types.release_value() };
+    }
+    case Instructions::ref_null.value(): {
+        auto type = ValueType::parse(stream);
+        if (type.is_error())
+            return type.error();
+        if (!type.value().is_reference())
+            return ParseError::InvalidType;
+
+        return Instruction { opcode, type.release_value() };
+    }
+    case Instructions::ref_func.value(): {
+        auto index = GenericIndexParser<FunctionIndex>::parse(stream);
+        if (index.is_error())
+            return index.error();
+
+        return Instruction { opcode, index.release_value() };
+    }
+    case Instructions::ref_is_null.value():
+    case Instructions::unreachable.value():
+    case Instructions::nop.value():
+    case Instructions::return_.value():
+    case Instructions::drop.value():
+    case Instructions::select.value():
+    case Instructions::i32_eqz.value():
+    case Instructions::i32_eq.value():
+    case Instructions::i32_ne.value():
+    case Instructions::i32_lts.value():
+    case Instructions::i32_ltu.value():
+    case Instructions::i32_gts.value():
+    case Instructions::i32_gtu.value():
+    case Instructions::i32_les.value():
+    case Instructions::i32_leu.value():
+    case Instructions::i32_ges.value():
+    case Instructions::i32_geu.value():
+    case Instructions::i64_eqz.value():
+    case Instructions::i64_eq.value():
+    case Instructions::i64_ne.value():
+    case Instructions::i64_lts.value():
+    case Instructions::i64_ltu.value():
+    case Instructions::i64_gts.value():
+    case Instructions::i64_gtu.value():
+    case Instructions::i64_les.value():
+    case Instructions::i64_leu.value():
+    case Instructions::i64_ges.value():
+    case Instructions::i64_geu.value():
+    case Instructions::f32_eq.value():
+    case Instructions::f32_ne.value():
+    case Instructions::f32_lt.value():
+    case Instructions::f32_gt.value():
+    case Instructions::f32_le.value():
+    case Instructions::f32_ge.value():
+    case Instructions::f64_eq.value():
+    case Instructions::f64_ne.value():
+    case Instructions::f64_lt.value():
+    case Instructions::f64_gt.value():
+    case Instructions::f64_le.value():
+    case Instructions::f64_ge.value():
+    case Instructions::i32_clz.value():
+    case Instructions::i32_ctz.value():
+    case Instructions::i32_popcnt.value():
+    case Instructions::i32_add.value():
+    case Instructions::i32_sub.value():
+    case Instructions::i32_mul.value():
+    case Instructions::i32_divs.value():
+    case Instructions::i32_divu.value():
+    case Instructions::i32_rems.value():
+    case Instructions::i32_remu.value():
+    case Instructions::i32_and.value():
+    case Instructions::i32_or.value():
+    case Instructions::i32_xor.value():
+    case Instructions::i32_shl.value():
+    case Instructions::i32_shrs.value():
+    case Instructions::i32_shru.value():
+    case Instructions::i32_rotl.value():
+    case Instructions::i32_rotr.value():
+    case Instructions::i64_clz.value():
+    case Instructions::i64_ctz.value():
+    case Instructions::i64_popcnt.value():
+    case Instructions::i64_add.value():
+    case Instructions::i64_sub.value():
+    case Instructions::i64_mul.value():
+    case Instructions::i64_divs.value():
+    case Instructions::i64_divu.value():
+    case Instructions::i64_rems.value():
+    case Instructions::i64_remu.value():
+    case Instructions::i64_and.value():
+    case Instructions::i64_or.value():
+    case Instructions::i64_xor.value():
+    case Instructions::i64_shl.value():
+    case Instructions::i64_shrs.value():
+    case Instructions::i64_shru.value():
+    case Instructions::i64_rotl.value():
+    case Instructions::i64_rotr.value():
+    case Instructions::f32_abs.value():
+    case Instructions::f32_neg.value():
+    case Instructions::f32_ceil.value():
+    case Instructions::f32_floor.value():
+    case Instructions::f32_trunc.value():
+    case Instructions::f32_nearest.value():
+    case Instructions::f32_sqrt.value():
+    case Instructions::f32_add.value():
+    case Instructions::f32_sub.value():
+    case Instructions::f32_mul.value():
+    case Instructions::f32_div.value():
+    case Instructions::f32_min.value():
+    case Instructions::f32_max.value():
+    case Instructions::f32_copysign.value():
+    case Instructions::f64_abs.value():
+    case Instructions::f64_neg.value():
+    case Instructions::f64_ceil.value():
+    case Instructions::f64_floor.value():
+    case Instructions::f64_trunc.value():
+    case Instructions::f64_nearest.value():
+    case Instructions::f64_sqrt.value():
+    case Instructions::f64_add.value():
+    case Instructions::f64_sub.value():
+    case Instructions::f64_mul.value():
+    case Instructions::f64_div.value():
+    case Instructions::f64_min.value():
+    case Instructions::f64_max.value():
+    case Instructions::f64_copysign.value():
+    case Instructions::i32_wrap_i64.value():
+    case Instructions::i32_trunc_sf32.value():
+    case Instructions::i32_trunc_uf32.value():
+    case Instructions::i32_trunc_sf64.value():
+    case Instructions::i32_trunc_uf64.value():
+    case Instructions::i64_extend_si32.value():
+    case Instructions::i64_extend_ui32.value():
+    case Instructions::i64_trunc_sf32.value():
+    case Instructions::i64_trunc_uf32.value():
+    case Instructions::i64_trunc_sf64.value():
+    case Instructions::i64_trunc_uf64.value():
+    case Instructions::f32_convert_si32.value():
+    case Instructions::f32_convert_ui32.value():
+    case Instructions::f32_convert_si64.value():
+    case Instructions::f32_convert_ui64.value():
+    case Instructions::f32_demote_f64.value():
+    case Instructions::f64_convert_si32.value():
+    case Instructions::f64_convert_ui32.value():
+    case Instructions::f64_convert_si64.value():
+    case Instructions::f64_convert_ui64.value():
+    case Instructions::f64_promote_f32.value():
+    case Instructions::i32_reinterpret_f32.value():
+    case Instructions::i64_reinterpret_f64.value():
+    case Instructions::f32_reinterpret_i32.value():
+    case Instructions::f64_reinterpret_i64.value():
+        return Instruction { opcode };
+    case 0xfc: {
+        // These are multibyte instructions.
+        u32 selector;
+        if (!LEB128::read_unsigned(stream, selector))
+            return with_eof_check(stream, ParseError::InvalidInput);
+        switch (selector) {
+        case Instructions::i32_trunc_sat_f32_s_second:
+        case Instructions::i32_trunc_sat_f32_u_second:
+        case Instructions::i32_trunc_sat_f64_s_second:
+        case Instructions::i32_trunc_sat_f64_u_second:
+        case Instructions::i64_trunc_sat_f32_s_second:
+        case Instructions::i64_trunc_sat_f32_u_second:
+        case Instructions::i64_trunc_sat_f64_s_second:
+        case Instructions::i64_trunc_sat_f64_u_second:
+            return Instruction { OpCode { 0xfc00 | selector } };
+        case Instructions::memory_init_second: {
+            auto index = GenericIndexParser<DataIndex>::parse(stream);
+            if (index.is_error())
+                return index.error();
+            u8 unused;
+            stream >> unused;
+            if (stream.has_any_error())
+                return with_eof_check(stream, ParseError::InvalidInput);
+            if (unused != 0x00)
+                return ParseError::InvalidImmediate;
+            return Instruction { OpCode { 0xfc00 | selector }, index.release_value() };
+        }
+        case Instructions::data_drop_second: {
+            auto index = GenericIndexParser<DataIndex>::parse(stream);
+            if (index.is_error())
+                return index.error();
+            return Instruction { OpCode { 0xfc00 | selector }, index.release_value() };
+        }
+        case Instructions::memory_copy_second: {
+            for (size_t i = 0; i < 2; ++i) {
+                u8 unused;
+                stream >> unused;
+                if (stream.has_any_error())
+                    return with_eof_check(stream, ParseError::InvalidInput);
+                if (unused != 0x00)
+                    return ParseError::InvalidImmediate;
+            }
+            return Instruction { OpCode { 0xfc00 | selector } };
+        }
+        case Instructions::memory_fill_second: {
+            u8 unused;
+            stream >> unused;
+            if (stream.has_any_error())
+                return with_eof_check(stream, ParseError::InvalidInput);
+            if (unused != 0x00)
+                return ParseError::InvalidImmediate;
+            return Instruction { OpCode { 0xfc00 | selector } };
+        }
+        case Instructions::table_init_second: {
+            auto element_index = GenericIndexParser<ElementIndex>::parse(stream);
+            if (element_index.is_error())
+                return element_index.error();
+            auto table_index = GenericIndexParser<TableIndex>::parse(stream);
+            if (table_index.is_error())
+                return table_index.error();
+            return Instruction { OpCode { 0xfc00 | selector }, TableElementArgs { element_index.release_value(), table_index.release_value() } };
+        }
+        case Instructions::elem_drop_second: {
+            auto element_index = GenericIndexParser<ElementIndex>::parse(stream);
+            if (element_index.is_error())
+                return element_index.error();
+            return Instruction { OpCode { 0xfc00 | selector }, element_index.release_value() };
+        }
+        case Instructions::table_copy_second: {
+            auto lhs = GenericIndexParser<TableIndex>::parse(stream);
+            if (lhs.is_error())
+                return lhs.error();
+            auto rhs = GenericIndexParser<TableIndex>::parse(stream);
+            if (rhs.is_error())
+                return rhs.error();
+            return Instruction { OpCode { 0xfc00 | selector }, TableTableArgs { lhs.release_value(), rhs.release_value() } };
+        }
+        case Instructions::table_grow_second:
+        case Instructions::table_size_second:
+        case Instructions::table_fill_second: {
+            auto index = GenericIndexParser<TableIndex>::parse(stream);
+            if (index.is_error())
+                return index.error();
+            return Instruction { OpCode { 0xfc00 | selector }, index.release_value() };
+        }
+        default:
+            return ParseError::UnknownInstruction;
         }
     }
+    }
 
-    // FIXME: Parse all the other instructions
-    TODO();
+    return ParseError::UnknownInstruction;
 }
 
 ParseResult<CustomSection> CustomSection::parse(InputStream& stream)
@@ -836,6 +1229,14 @@ String parse_error_to_string(ParseError error)
         return "The parser encountered an unimplemented feature";
     case ParseError::HugeAllocationRequested:
         return "Parsing caused an attempt to allocate a very big chunk of memory, likely malformed data";
+    case ParseError::ExpectedFloatingImmediate:
+        return "Expected a floating point immediate";
+    case ParseError::ExpectedSignedImmediate:
+        return "Expected a signed integer immediate";
+    case ParseError::InvalidImmediate:
+        return "A parsed instruction immediate was invalid for the instruction it was used for";
+    case ParseError::UnknownInstruction:
+        return "A parsed instruction was not known to this parser";
     }
     return "Unknown error";
 }

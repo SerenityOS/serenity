@@ -20,10 +20,14 @@ namespace Wasm {
 
 enum class ParseError {
     UnexpectedEof,
+    UnknownInstruction,
+    ExpectedFloatingImmediate,
     ExpectedIndex,
     ExpectedKindTag,
+    ExpectedSignedImmediate,
     ExpectedSize,
     ExpectedValueOrTerminator,
+    InvalidImmediate,
     InvalidIndex,
     InvalidInput,
     InvalidModuleMagic,
@@ -44,6 +48,7 @@ using ParseResult = Result<T, ParseError>;
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, TypeIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, FunctionIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, TableIndex);
+TYPEDEF_DISTINCT_ORDERED_ID(size_t, ElementIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, MemoryIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, LocalIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, GlobalIndex);
@@ -375,8 +380,8 @@ public:
     }
 
     struct TableElementArgs {
-        TableIndex index;
-        ValueType element_type;
+        ElementIndex element_index;
+        TableIndex table_index;
     };
 
     struct TableTableArgs {
@@ -426,9 +431,12 @@ private:
         BlockAndInstructionSet,
         BlockAndTwoInstructionSets,
         DataIndex,
+        ElementIndex,
         FunctionIndex,
+        GlobalIndex,
         IndirectCallArgs,
         LabelIndex,
+        LocalIndex,
         MemoryArgument,
         TableBranchArgs,
         TableElementArgs,

@@ -10,7 +10,7 @@
 
 namespace Wasm {
 
-TYPEDEF_DISTINCT_ORDERED_ID(u8, OpCode);
+TYPEDEF_DISTINCT_ORDERED_ID(u32, OpCode);
 
 namespace Instructions {
 
@@ -187,16 +187,49 @@ static constexpr OpCode unreachable = 0x00,
                         i64_reinterpret_f64 = 0xbd,
                         f32_reinterpret_i32 = 0xbe,
                         f64_reinterpret_i64 = 0xbf,
-                        table_init = 0xfc,
-                        table_drop = 0xfc,
-                        table_copy = 0xfc,
-                        table_grow = 0xfc,
-                        table_size = 0xfc,
-                        table_fill = 0xfc,
-                        memory_init = 0xfc,
-                        data_drop = 0xfc,
-                        memory_copy = 0xfc,
-                        memory_fill = 0xfc;
+                        ref_null = 0xd0,
+                        ref_is_null = 0xd1,
+                        ref_func = 0xd2;
+
+// These are synthetic opcodes, they are _not_ seen in wasm with these values.
+static constexpr OpCode i32_trunc_sat_f32_s = 0xfc00,
+                        i32_trunc_sat_f32_u = 0xfc01,
+                        i32_trunc_sat_f64_s = 0xfc02,
+                        i32_trunc_sat_f64_u = 0xfc03,
+                        i64_trunc_sat_f32_s = 0xfc04,
+                        i64_trunc_sat_f32_u = 0xfc05,
+                        i64_trunc_sat_f64_s = 0xfc06,
+                        i64_trunc_sat_f64_u = 0xfc07,
+                        memory_init = 0xfc08,
+                        data_drop = 0xfc09,
+                        memory_copy = 0xfc0a,
+                        memory_fill = 0x0fc0b,
+                        table_init = 0xfc0c,
+                        elem_drop = 0xfc0d,
+                        table_copy = 0xfc0e,
+                        table_grow = 0xfc0f,
+                        table_size = 0xfc10,
+                        table_fill = 0xfc11;
+
+static constexpr u32 i32_trunc_sat_f32_s_second = 0,
+                     i32_trunc_sat_f32_u_second = 1,
+                     i32_trunc_sat_f64_s_second = 2,
+                     i32_trunc_sat_f64_u_second = 3,
+                     i64_trunc_sat_f32_s_second = 4,
+                     i64_trunc_sat_f32_u_second = 5,
+                     i64_trunc_sat_f64_s_second = 6,
+                     i64_trunc_sat_f64_u_second = 7,
+                     memory_init_second = 8,
+                     data_drop_second = 9,
+                     memory_copy_second = 10,
+                     memory_fill_second = 11,
+                     table_init_second = 12,
+                     elem_drop_second = 13,
+                     table_copy_second = 14,
+                     table_grow_second = 15,
+                     table_size_second = 16,
+                     table_fill_second = 17;
+
 }
 
 }
