@@ -5,6 +5,7 @@
  */
 
 #include <AK/LEB128.h>
+#include <AK/ScopeGuard.h>
 #include <LibWasm/Types.h>
 
 #if WASM_BINPARSER_DEBUG
@@ -14,42 +15,61 @@
 
 namespace Wasm {
 
+ParseError with_eof_check(const InputStream& stream, ParseError error_if_not_eof)
+{
+    if (stream.unreliable_eof())
+        return ParseError::UnexpectedEof;
+    return error_if_not_eof;
+}
+
 template<typename T>
-static ParseResult<Vector<T>> parse_vector(InputStream& stream)
+static auto parse_vector(InputStream& stream)
 {
 #if WASM_BINPARSER_DEBUG
     ScopeLogger logger;
 #endif
-    size_t count;
-    if (!LEB128::read_unsigned(stream, count))
-        return ParseError::InvalidInput;
+    if constexpr (requires { T::parse(stream); }) {
+        using ResultT = typename decltype(T::parse(stream))::ValueType;
+        size_t count;
+        if (!LEB128::read_unsigned(stream, count))
+            return ParseResult<Vector<ResultT>> { with_eof_check(stream, ParseError::ExpectedSize) };
 
-    Vector<T> entries;
-    for (size_t i = 0; i < count; ++i) {
-        if constexpr (IsSame<T, size_t>) {
-            size_t value;
-            if (!LEB128::read_unsigned(stream, value))
-                return ParseError::InvalidInput;
-            entries.append(value);
-        } else if constexpr (IsSame<T, ssize_t>) {
-            ssize_t value;
-            if (!LEB128::read_signed(stream, value))
-                return ParseError::InvalidInput;
-            entries.append(value);
-        } else if constexpr (IsSame<T, u8>) {
-            entries.resize(count);
-            if (!stream.read_or_error({ entries.data(), entries.size() }))
-                return ParseError::InvalidInput;
-            break; // Note: We read this all in one go!
-        } else {
+        Vector<ResultT> entries;
+        for (size_t i = 0; i < count; ++i) {
             auto result = T::parse(stream);
             if (result.is_error())
-                return result.error();
+                return ParseResult<Vector<ResultT>> { result.error() };
             entries.append(result.release_value());
         }
-    }
+        return ParseResult<Vector<ResultT>> { move(entries) };
+    } else {
+        size_t count;
+        if (!LEB128::read_unsigned(stream, count))
+            return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::ExpectedSize) };
 
-    return entries;
+        Vector<T> entries;
+        for (size_t i = 0; i < count; ++i) {
+            if constexpr (IsSame<T, size_t>) {
+                size_t value;
+                if (!LEB128::read_unsigned(stream, value))
+                    return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::ExpectedSize) };
+                entries.append(value);
+            } else if constexpr (IsSame<T, ssize_t>) {
+                ssize_t value;
+                if (!LEB128::read_signed(stream, value))
+                    return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::ExpectedSize) };
+                entries.append(value);
+            } else if constexpr (IsSame<T, u8>) {
+                if (count > 64 * KiB)
+                    return ParseResult<Vector<T>> { ParseError::HugeAllocationRequested };
+                entries.resize(count);
+                if (!stream.read_or_error({ entries.data(), entries.size() }))
+                    return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::InvalidInput) };
+                break; // Note: We read this all in one go!
+            }
+        }
+        return ParseResult<Vector<T>> { move(entries) };
+    }
 }
 
 static ParseResult<String> parse_name(InputStream& stream)
@@ -76,12 +96,18 @@ static ParseResult<ParseUntilAnyOfResult<T>> parse_until_any_of(InputStream& str
     ScopeLogger logger;
 #endif
     ReconsumableStream new_stream { stream };
+    ScopeGuard drain_errors {
+        [&] {
+            new_stream.handle_any_error();
+        }
+    };
+
     ParseUntilAnyOfResult<T> result;
     for (;;) {
         u8 byte;
         new_stream >> byte;
         if (new_stream.has_any_error())
-            return ParseError::InvalidInput;
+            return with_eof_check(stream, ParseError::ExpectedValueOrTerminator);
 
         if ((... || (byte == terminators))) {
             result.terminator = byte;
@@ -105,7 +131,7 @@ ParseResult<ValueType> ValueType::parse(InputStream& stream)
     u8 tag;
     stream >> tag;
     if (stream.has_any_error())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedKindTag);
     switch (tag) {
     case Constants::i32_tag:
         return ValueType(I32);
@@ -120,7 +146,7 @@ ParseResult<ValueType> ValueType::parse(InputStream& stream)
     case Constants::extern_reference_tag:
         return ValueType(ExternReference);
     default:
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidTag);
     }
 }
 
@@ -143,11 +169,11 @@ ParseResult<FunctionType> FunctionType::parse(InputStream& stream)
     u8 tag;
     stream >> tag;
     if (stream.has_any_error())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedKindTag);
 
     if (tag != Constants::function_signature_tag) {
         dbgln("Expected 0x60, but found 0x{:x}", tag);
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidTag);
     }
 
     auto parameters_result = parse_vector<ValueType>(stream);
@@ -168,20 +194,20 @@ ParseResult<Limits> Limits::parse(InputStream& stream)
     u8 flag;
     stream >> flag;
     if (stream.has_any_error())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedKindTag);
 
     if (flag > 1)
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidTag);
 
     size_t min;
     if (!LEB128::read_unsigned(stream, min))
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedSize);
 
     Optional<u32> max;
     if (flag) {
         size_t value;
         if (LEB128::read_unsigned(stream, value))
-            return ParseError::InvalidInput;
+            return with_eof_check(stream, ParseError::ExpectedSize);
         max = value;
     }
 
@@ -208,7 +234,7 @@ ParseResult<TableType> TableType::parse(InputStream& stream)
     if (type_result.is_error())
         return type_result.error();
     if (!type_result.value().is_reference())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidType);
     auto limits_result = Limits::parse(stream);
     if (limits_result.is_error())
         return limits_result.error();
@@ -227,10 +253,10 @@ ParseResult<GlobalType> GlobalType::parse(InputStream& stream)
     stream >> mutable_;
 
     if (stream.has_any_error())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedKindTag);
 
     if (mutable_ > 1)
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidTag);
 
     return GlobalType { type_result.release_value(), mutable_ == 0x01 };
 }
@@ -243,7 +269,7 @@ ParseResult<BlockType> BlockType::parse(InputStream& stream)
     u8 kind;
     stream >> kind;
     if (stream.has_any_error())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedKindTag);
     if (kind == Constants::empty_block_tag)
         return BlockType {};
 
@@ -255,13 +281,18 @@ ParseResult<BlockType> BlockType::parse(InputStream& stream)
 
     ReconsumableStream new_stream { stream };
     new_stream.unread({ &kind, 1 });
+    ScopeGuard drain_errors {
+        [&] {
+            new_stream.handle_any_error();
+        }
+    };
 
     ssize_t index_value;
     if (!LEB128::read_signed(new_stream, index_value))
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedIndex);
 
     if (index_value < 0)
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidIndex);
 
     return BlockType { TypeIndex(index_value) };
 }
@@ -274,7 +305,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
     u8 byte;
     stream >> byte;
     if (stream.has_any_error())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedKindTag);
     OpCode opcode { byte };
 
     if (opcode == Instructions::block || opcode == Instructions::loop || opcode == Instructions::if_) {
@@ -361,14 +392,14 @@ ParseResult<ImportSection::Import> ImportSection::Import::parse(InputStream& str
     u8 tag;
     stream >> tag;
     if (stream.has_any_error())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedKindTag);
 
     switch (tag) {
     case Constants::extern_function_tag: {
-        size_t index;
-        if (!LEB128::read_unsigned(stream, index))
-            return ParseError::InvalidInput;
-        return Import { module.release_value(), name.release_value(), TypeIndex { index } };
+        auto index = GenericIndexParser<TypeIndex>::parse(stream);
+        if (index.is_error())
+            return index.error();
+        return Import { module.release_value(), name.release_value(), index.release_value() };
     }
     case Constants::extern_table_tag:
         return parse_with_type<TableType>(stream, module, name);
@@ -377,7 +408,7 @@ ParseResult<ImportSection::Import> ImportSection::Import::parse(InputStream& str
     case Constants::extern_global_tag:
         return parse_with_type<GlobalType>(stream, module, name);
     default:
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidTag);
     }
 }
 
@@ -501,11 +532,11 @@ ParseResult<ExportSection::Export> ExportSection::Export::parse(InputStream& str
     u8 tag;
     stream >> tag;
     if (stream.has_any_error())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedKindTag);
 
     size_t index;
     if (!LEB128::read_unsigned(stream, index))
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedIndex);
 
     switch (tag) {
     case Constants::extern_function_tag:
@@ -517,7 +548,7 @@ ParseResult<ExportSection::Export> ExportSection::Export::parse(InputStream& str
     case Constants::extern_global_tag:
         return Export { name.release_value(), ExportDesc { GlobalIndex { index } } };
     default:
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidTag);
     }
 }
 
@@ -537,10 +568,10 @@ ParseResult<StartSection::StartFunction> StartSection::StartFunction::parse(Inpu
 #if WASM_BINPARSER_DEBUG
     ScopeLogger logger("StartFunction");
 #endif
-    size_t index;
-    if (!LEB128::read_unsigned(stream, index))
-        return ParseError::InvalidInput;
-    return StartFunction { FunctionIndex { index } };
+    auto index = GenericIndexParser<FunctionIndex>::parse(stream);
+    if (index.is_error())
+        return index.error();
+    return StartFunction { index.release_value() };
 }
 
 ParseResult<StartSection> StartSection::parse(InputStream& stream)
@@ -559,22 +590,17 @@ ParseResult<ElementSection::Element> ElementSection::Element::parse(InputStream&
 #if WASM_BINPARSER_DEBUG
     ScopeLogger logger("Element");
 #endif
-    size_t table_index;
-    if (!LEB128::read_unsigned(stream, table_index))
-        return ParseError::InvalidInput;
+    auto table_index = GenericIndexParser<TableIndex>::parse(stream);
+    if (table_index.is_error())
+        return table_index.error();
     auto offset = Expression::parse(stream);
     if (offset.is_error())
         return offset.error();
-    auto init = parse_vector<size_t>(stream);
+    auto init = parse_vector<GenericIndexParser<FunctionIndex>>(stream);
     if (init.is_error())
         return init.error();
 
-    Vector<FunctionIndex> typed_init;
-    typed_init.ensure_capacity(init.value().size());
-    for (auto entry : init.value())
-        typed_init.unchecked_append(entry);
-
-    return Element { TableIndex { table_index }, offset.release_value(), move(typed_init) };
+    return Element { table_index.release_value(), offset.release_value(), init.release_value() };
 }
 
 ParseResult<ElementSection> ElementSection::parse(InputStream& stream)
@@ -595,7 +621,7 @@ ParseResult<Locals> Locals::parse(InputStream& stream)
 #endif
     size_t count;
     if (!LEB128::read_unsigned(stream, count))
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidSize);
     // TODO: Disallow too many entries.
     auto type = ValueType::parse(stream);
     if (type.is_error())
@@ -625,9 +651,15 @@ ParseResult<CodeSection::Code> CodeSection::Code::parse(InputStream& stream)
 #endif
     size_t size;
     if (!LEB128::read_unsigned(stream, size))
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidSize);
 
     auto constrained_stream = ConstrainedStream { stream, size };
+    ScopeGuard drain_errors {
+        [&] {
+            constrained_stream.handle_any_error();
+        }
+    };
+
     auto func = Func::parse(constrained_stream);
     if (func.is_error())
         return func.error();
@@ -654,10 +686,10 @@ ParseResult<DataSection::Data> DataSection::Data::parse(InputStream& stream)
     u8 tag;
     stream >> tag;
     if (stream.has_any_error())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::ExpectedKindTag);
 
     if (tag > 0x02)
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidTag);
 
     if (tag == 0x00) {
         auto expr = Expression::parse(stream);
@@ -675,17 +707,16 @@ ParseResult<DataSection::Data> DataSection::Data::parse(InputStream& stream)
         return Data { Passive { init.release_value() } };
     }
     if (tag == 0x02) {
-        size_t index;
-        stream >> index;
-        if (stream.has_any_error())
-            return ParseError::InvalidInput;
+        auto index = GenericIndexParser<MemoryIndex>::parse(stream);
+        if (index.is_error())
+            return index.error();
         auto expr = Expression::parse(stream);
         if (expr.is_error())
             return expr.error();
         auto init = parse_vector<u8>(stream);
         if (init.is_error())
             return init.error();
-        return Data { Active { init.release_value(), { index }, expr.release_value() } };
+        return Data { Active { init.release_value(), index.release_value(), expr.release_value() } };
     }
     VERIFY_NOT_REACHED();
 }
@@ -708,7 +739,7 @@ ParseResult<DataCountSection> DataCountSection::parse([[maybe_unused]] InputStre
     ScopeLogger logger("DataCountSection");
 #endif
     // FIXME: Implement parsing optional values!
-    return ParseError::InvalidInput;
+    return with_eof_check(stream, ParseError::NotImplemented);
 }
 
 ParseResult<Module> Module::parse(InputStream& stream)
@@ -718,14 +749,14 @@ ParseResult<Module> Module::parse(InputStream& stream)
 #endif
     u8 buf[4];
     if (!stream.read_or_error({ buf, 4 }))
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidInput);
     if (Bytes { buf, 4 } != wasm_magic.span())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidModuleMagic);
 
     if (!stream.read_or_error({ buf, 4 }))
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidInput);
     if (Bytes { buf, 4 } != wasm_version.span())
-        return ParseError::InvalidInput;
+        return with_eof_check(stream, ParseError::InvalidModuleVersion);
 
     Vector<AnySection> sections;
     for (;;) {
@@ -736,13 +767,18 @@ ParseResult<Module> Module::parse(InputStream& stream)
             break;
         }
         if (stream.has_any_error())
-            return ParseError::InvalidInput;
+            return with_eof_check(stream, ParseError::ExpectedIndex);
 
         size_t section_size;
         if (!LEB128::read_unsigned(stream, section_size))
-            return ParseError::InvalidInput;
+            return with_eof_check(stream, ParseError::ExpectedSize);
 
         auto section_stream = ConstrainedStream { stream, section_size };
+        ScopeGuard drain_errors {
+            [&] {
+                section_stream.handle_any_error();
+            }
+        };
 
         switch (section_id) {
         case CustomSection::section_id: {
@@ -842,11 +878,45 @@ ParseResult<Module> Module::parse(InputStream& stream)
             }
         }
         default:
-            return ParseError::InvalidInput;
+            return with_eof_check(stream, ParseError::InvalidIndex);
         }
     }
 
     return Module { move(sections) };
 }
 
+String parse_error_to_string(ParseError error)
+{
+    switch (error) {
+    case ParseError::UnexpectedEof:
+        return "Unexpected end-of-file";
+    case ParseError::ExpectedIndex:
+        return "Expected a valid index value";
+    case ParseError::ExpectedKindTag:
+        return "Expected a valid kind tag";
+    case ParseError::ExpectedSize:
+        return "Expected a valid LEB128-encoded size";
+    case ParseError::ExpectedValueOrTerminator:
+        return "Expected either a terminator or a value";
+    case ParseError::InvalidIndex:
+        return "An index parsed was semantically invalid";
+    case ParseError::InvalidInput:
+        return "Input data contained invalid bytes";
+    case ParseError::InvalidModuleMagic:
+        return "Incorrect module magic (did not match \\0asm)";
+    case ParseError::InvalidModuleVersion:
+        return "Incorrect module version";
+    case ParseError::InvalidSize:
+        return "A parsed size did not make sense in context";
+    case ParseError::InvalidTag:
+        return "A parsed tag did not make sense in context";
+    case ParseError::InvalidType:
+        return "A parsed type did not make sense in context";
+    case ParseError::NotImplemented:
+        return "The parser encountered an unimplemented feature";
+    case ParseError::HugeAllocationRequested:
+        return "Parsing caused an attempt to allocate a very big chunk of memory, likely malformed data";
+    }
+    return "Unknown error";
+}
 }
