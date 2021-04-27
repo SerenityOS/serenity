@@ -50,6 +50,15 @@ struct Variant<F, Ts...> {
         else
             Variant<Ts...>::visit_(id, data, forward<Visitor>(visitor));
     }
+
+    template<typename Visitor>
+    static void visit_(const std::type_info& id, const void* data, Visitor&& visitor)
+    {
+        if (id == typeid(F))
+            visitor(*bit_cast<const F*>(data));
+        else
+            Variant<Ts...>::visit_(id, data, forward<Visitor>(visitor));
+    }
 };
 
 template<>
@@ -59,6 +68,8 @@ struct Variant<> {
     static void copy_(const std::type_info&, const void*, void*) { }
     template<typename Visitor>
     static void visit_(const std::type_info&, void*, Visitor&&) { }
+    template<typename Visitor>
+    static void visit_(const std::type_info&, const void*, Visitor&&) { }
 };
 
 struct VariantNoClearTag {
@@ -196,6 +207,13 @@ struct Variant
 
     template<typename... Fs>
     void visit(Fs&&... functions)
+    {
+        Visitor<Fs...> visitor { forward<Fs>(functions)... };
+        Helper::visit_(*m_type_info, m_data, visitor);
+    }
+
+    template<typename... Fs>
+    void visit(Fs&&... functions) const
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
         Helper::visit_(*m_type_info, m_data, visitor);
