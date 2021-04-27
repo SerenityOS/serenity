@@ -215,7 +215,6 @@ private:
     void handle_theme_change_event(ThemeChangeEvent&);
     void handle_screen_rect_change_event(ScreenRectChangeEvent&);
     void handle_drag_move_event(DragEvent&);
-    void handle_left_event();
 
     void server_did_destroy();
 

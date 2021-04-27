@@ -335,6 +335,12 @@ void Window::handle_drop_event(DropEvent& event)
 
 void Window::handle_mouse_event(MouseEvent& event)
 {
+    if (event.type() == Event::WindowLeft) {
+        set_hovered_widget(nullptr);
+        Application::the()->set_drag_hovered_widget({}, nullptr);
+        return;
+    }
+
     if (m_global_cursor_tracking_widget) {
         auto window_relative_rect = m_global_cursor_tracking_widget->window_relative_rect();
         Gfx::IntPoint local_point { event.x() - window_relative_rect.x(), event.y() - window_relative_rect.y() };
@@ -529,12 +535,6 @@ void Window::handle_drag_move_event(DragEvent& event)
     }
 }
 
-void Window::handle_left_event()
-{
-    set_hovered_widget(nullptr);
-    Application::the()->set_drag_hovered_widget({}, nullptr);
-}
-
 void Window::event(Core::Event& event)
 {
     ScopeGuard guard([&] {
@@ -544,7 +544,7 @@ void Window::event(Core::Event& event)
     if (event.type() == Event::Drop)
         return handle_drop_event(static_cast<DropEvent&>(event));
 
-    if (event.type() == Event::MouseUp || event.type() == Event::MouseDown || event.type() == Event::MouseDoubleClick || event.type() == Event::MouseMove || event.type() == Event::MouseWheel)
+    if (event.type() == Event::MouseUp || event.type() == Event::MouseDown || event.type() == Event::MouseDoubleClick || event.type() == Event::MouseMove || event.type() == Event::MouseWheel || event.type() == Event::WindowEntered || event.type() == Event::WindowLeft)
         return handle_mouse_event(static_cast<MouseEvent&>(event));
 
     if (event.type() == Event::MultiPaint)
@@ -561,9 +561,6 @@ void Window::event(Core::Event& event)
 
     if (event.type() == Event::WindowCloseRequest)
         return handle_close_request();
-
-    if (event.type() == Event::WindowLeft)
-        return handle_left_event();
 
     if (event.type() == Event::Resize)
         return handle_resize_event(static_cast<ResizeEvent&>(event));

@@ -44,7 +44,7 @@ public:
     }
     virtual ~Event() { }
 
-    bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseDoubleClick || type() == MouseUp || type() == MouseWheel; }
+    bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseDoubleClick || type() == MouseUp || type() == MouseWheel || type() == WindowEntered || type() == WindowLeft; }
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
 };
 

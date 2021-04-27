@@ -102,13 +102,13 @@ void WindowServerConnection::handle(const Messages::WindowClient::WindowCloseReq
 void WindowServerConnection::handle(const Messages::WindowClient::WindowEntered& message)
 {
     if (auto* window = Window::from_window_id(message.window_id()))
-        Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowEntered));
+        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::WindowEntered, message.mouse_position(), 0, MouseButton::None, 0, 0));
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::WindowLeft& message)
 {
     if (auto* window = Window::from_window_id(message.window_id()))
-        Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowLeft));
+        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::WindowLeft, message.mouse_position(), 0, MouseButton::None, 0, 0));
 }
 
 void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& message)

@@ -1112,25 +1112,9 @@ void WindowManager::reevaluate_hovered_window(Window* updated_window)
         });
     }
 
-    if (set_hovered_window(hovered_window)) {
-        if (currently_hovered && m_resize_candidate == currently_hovered)
-            clear_resize_candidate();
-
-        if (hovered_window) {
-            // Send a fake MouseMove event. This allows the new hovering window
-            // to determine which widget we're hovering, and also update the cursor
-            // accordingly. We do this because this re-evaluation of the currently
-            // hovered window wasn't triggered by a mouse move event, but rather
-            // e.g. a hit-test result change due to a transparent window repaint.
-            if (hovered_window->hit_test(cursor_location, false)) {
-                MouseEvent event(Event::MouseMove, cursor_location.translated(-hovered_window->rect().location()), 0, MouseButton::None, 0);
-                hovered_window->dispatch_event(event);
-            } else if (!hovered_window->is_frameless()) {
-                MouseEvent event(Event::MouseMove, cursor_location.translated(-hovered_window->frame().rect().location()), 0, MouseButton::None, 0);
-                hovered_window->frame().on_mouse_event(event);
-            }
-        }
-    }
+    auto was_set = set_hovered_window(hovered_window);
+    if (was_set && currently_hovered && m_resize_candidate == currently_hovered)
+        clear_resize_candidate();
 }
 
 void WindowManager::clear_resize_candidate()

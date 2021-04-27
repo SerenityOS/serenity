@@ -240,6 +240,12 @@ void Window::handle_mouse_event(const MouseEvent& event)
     case Event::MouseWheel:
         m_client->post_message(Messages::WindowClient::MouseWheel(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
+    case Event::WindowEntered:
+        m_client->post_message(Messages::WindowClient::WindowEntered(m_window_id, event.position()));
+        break;
+    case Event::WindowLeft:
+        m_client->post_message(Messages::WindowClient::WindowLeft(m_window_id, event.position()));
+        break;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -413,12 +419,6 @@ void Window::event(Core::Event& event)
         return handle_mouse_event(static_cast<const MouseEvent&>(event));
 
     switch (event.type()) {
-    case Event::WindowEntered:
-        m_client->post_message(Messages::WindowClient::WindowEntered(m_window_id));
-        break;
-    case Event::WindowLeft:
-        m_client->post_message(Messages::WindowClient::WindowLeft(m_window_id));
-        break;
     case Event::KeyDown:
         handle_keydown_event(static_cast<const KeyEvent&>(event));
         break;
