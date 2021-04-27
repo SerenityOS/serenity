@@ -85,3 +85,9 @@ void current_test_case_did_fail();
             ::Test::current_test_case_did_fail();                                                               \
         }                                                                                                       \
     } while (false)
+
+#define FAIL(message)                                                                  \
+    do {                                                                               \
+        ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: {}", __FILE__, __LINE__, message); \
+        ::Test::current_test_case_did_fail();                                          \
+    } while (false)
