@@ -1,0 +1,22 @@
+--- MilkyTracker-1.03.00/CMakeLists.txt	2021-04-27 15:17:42.529000000 +1000
++++ MilkyTracker-1.03.00/CMakeLists.txt	2021-04-27 15:17:50.388987606 +1000
+@@ -22,8 +22,8 @@
+ cmake_minimum_required(VERSION 3.10)
+ project(MilkyTracker)
+ 
+-# Set C++ standard to C++98
+-set(CMAKE_CXX_STANDARD 98)
++# Set C++ standard to C++20
++set(CMAKE_CXX_STANDARD 20)
+ set(CMAKE_CXX_EXTENSIONS OFF)
+ 
+ # Enable IDE solution folders
+@@ -220,8 +220,6 @@
+     set(CMAKE_FIND_LIBRARY_SUFFIXES ${SUFFIXES_ORIG})
+ endif()
+ 
+-add_subdirectory(docs)
+-add_subdirectory(resources/music)
+ add_subdirectory(src/compression)
+ add_subdirectory(src/fx)
+ add_subdirectory(src/milkyplay)
