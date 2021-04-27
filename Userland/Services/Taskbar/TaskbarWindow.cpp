@@ -68,7 +68,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     m_start_button->set_font(Gfx::FontDatabase::default_bold_font());
     m_start_button->set_icon_spacing(0);
     m_start_button->set_fixed_size(80, 22);
-    auto app_icon = GUI::Icon::default_icon("ladybug");
+    auto app_icon = GUI::Icon::default_icon("ladyball");
     m_start_button->set_icon(app_icon.bitmap_for_size(16));
     m_start_button->set_menu(m_start_menu);
 

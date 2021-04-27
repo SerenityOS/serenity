@@ -42,7 +42,6 @@ DiskPartitionMetadata::DiskPartitionMetadata(u64 start_block, u64 end_block, u8 
     , m_end_block(end_block)
     , m_type(partition_type)
 {
-
     VERIFY(m_type.is_valid());
 }
 
@@ -51,7 +50,6 @@ DiskPartitionMetadata::DiskPartitionMetadata(u64 start_block, u64 end_block, Arr
     , m_end_block(end_block)
     , m_type(partition_type)
 {
-
     VERIFY(m_type.is_valid());
 }
 

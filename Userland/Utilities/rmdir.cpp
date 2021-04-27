@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <errno.h>
 #include <stdio.h>
@@ -16,16 +17,19 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* path;
+    Vector<const char*> paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path, "Directory to remove", "path");
+    args_parser.add_positional_argument(paths, "Directories to remove", "paths");
     args_parser.parse(argc, argv);
 
-    int rc = rmdir(path);
-    if (rc < 0) {
-        perror("rmdir");
-        return 1;
+    int status = 0;
+    for (auto path : paths) {
+        int rc = rmdir(path);
+        if (rc < 0) {
+            perror("rmdir");
+            status = 1;
+        }
     }
-    return 0;
+    return status;
 }

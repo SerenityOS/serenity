@@ -31,7 +31,6 @@ LocalSocket::LocalSocket(int fd, Object* parent)
 LocalSocket::LocalSocket(Object* parent)
     : Socket(Socket::Type::Local, parent)
 {
-
 #ifdef SOCK_NONBLOCK
     int fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
 #else

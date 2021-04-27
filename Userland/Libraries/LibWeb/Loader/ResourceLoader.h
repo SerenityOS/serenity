@@ -12,7 +12,7 @@
 #include <LibWeb/Loader/Resource.h>
 
 namespace Protocol {
-class Client;
+class RequestClient;
 }
 
 namespace Web {
@@ -34,7 +34,7 @@ public:
 
     int pending_loads() const { return m_pending_loads; }
 
-    Protocol::Client& protocol_client() { return *m_protocol_client; }
+    Protocol::RequestClient& protocol_client() { return *m_protocol_client; }
 
     const String& user_agent() const { return m_user_agent; }
     void set_user_agent(const String& user_agent) { m_user_agent = user_agent; }
@@ -47,7 +47,7 @@ private:
 
     int m_pending_loads { 0 };
 
-    RefPtr<Protocol::Client> m_protocol_client;
+    RefPtr<Protocol::RequestClient> m_protocol_client;
     String m_user_agent;
 };
 

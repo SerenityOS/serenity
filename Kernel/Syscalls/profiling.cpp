@@ -12,8 +12,8 @@
 
 namespace Kernel {
 
-PerformanceEventBuffer* g_global_perf_events;
 bool g_profiling_all_threads;
+PerformanceEventBuffer* g_global_perf_events;
 
 KResultOr<int> Process::sys$profiling_enable(pid_t pid)
 {
@@ -27,6 +27,11 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
             g_global_perf_events->clear();
         else
             g_global_perf_events = PerformanceEventBuffer::try_create_with_size(32 * MiB).leak_ptr();
+        ScopedSpinLock lock(g_processes_lock);
+        Process::for_each([](auto& process) {
+            g_global_perf_events->add_process(process, ProcessEventType::Create);
+            return IterationDecision::Continue;
+        });
         g_profiling_all_threads = true;
         return 0;
     }

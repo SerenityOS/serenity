@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, The SerenityOS developers.
+ * Copyright (c) 2021, Dex♪ <dexes.ttp@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -559,6 +559,9 @@ void WebSocket::discard_connection()
 {
     VERIFY(m_impl);
     m_impl->discard_connection();
+    m_impl->on_connection_error = nullptr;
+    m_impl->on_connected = nullptr;
+    m_impl->on_ready_to_read = nullptr;
     m_impl = nullptr;
 }
 

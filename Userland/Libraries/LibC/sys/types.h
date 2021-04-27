@@ -37,15 +37,19 @@ typedef __WINT_TYPE__ wint_t;
 typedef uint32_t ino_t;
 typedef int64_t off_t;
 
+typedef uint32_t blkcnt_t;
+typedef uint32_t blksize_t;
 typedef uint32_t dev_t;
 typedef uint16_t mode_t;
 typedef uint32_t nlink_t;
-typedef uint32_t blksize_t;
-typedef uint32_t blkcnt_t;
+
 typedef int64_t time_t;
 typedef uint32_t useconds_t;
 typedef int32_t suseconds_t;
 typedef uint32_t clock_t;
+
+typedef uint64_t fsblkcnt_t;
+typedef uint64_t fsfilcnt_t;
 
 #define __socklen_t_defined
 #define __socklen_t uint32_t

@@ -185,7 +185,6 @@ private:
 template<typename Callback>
 void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callback callback)
 {
-
     enum class State {
         FirstIteration,
         FreeRun,

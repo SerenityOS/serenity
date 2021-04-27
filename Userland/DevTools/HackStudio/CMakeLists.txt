@@ -5,13 +5,16 @@ compile_gml(Dialogs/NewProjectDialog.gml Dialogs/NewProjectDialogGML.h new_proje
 
 set(SOURCES
     CodeDocument.cpp
-        ClassViewWidget.cpp
+    ClassViewWidget.cpp
     CursorTool.cpp
     Debugger/BacktraceModel.cpp
     Debugger/DebugInfoWidget.cpp
     Debugger/Debugger.cpp
+    Debugger/DebuggerGlobalJSObject.cpp
+    Debugger/DebuggerVariableJSObject.cpp
     Debugger/DisassemblyModel.cpp
     Debugger/DisassemblyWidget.cpp
+    Debugger/EvaluateExpressionDialog.cpp
     Debugger/RegistersModel.cpp
     Debugger/VariablesModel.cpp
     Dialogs/NewProjectDialog.cpp

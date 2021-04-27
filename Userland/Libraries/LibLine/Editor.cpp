@@ -1088,7 +1088,6 @@ void Editor::cleanup_suggestions()
 
 bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginning)
 {
-
     int last_matching_offset = -1;
     bool found = false;
 

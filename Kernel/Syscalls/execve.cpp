@@ -628,9 +628,9 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     tss.cr3 = space().page_directory().cr3();
     tss.ss2 = pid().value();
 
-    // Throw away any recorded performance events in this process.
-    if (m_perf_event_buffer)
-        m_perf_event_buffer->clear();
+    if (auto* event_buffer = current_perf_events_buffer()) {
+        event_buffer->add_process(*this, ProcessEventType::Exec);
+    }
 
     {
         ScopedSpinLock lock(g_scheduler_lock);
@@ -717,7 +717,6 @@ static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const c
 
 KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, const Elf32_Ehdr& main_program_header, int nread, size_t file_size)
 {
-
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
     if (!ELF::validate_program_headers(main_program_header, file_size, (const u8*)&main_program_header, nread, &interpreter_path)) {

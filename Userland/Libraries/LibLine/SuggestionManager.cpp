@@ -84,7 +84,6 @@ const CompletionSuggestion& SuggestionManager::suggest()
 
 void SuggestionManager::set_current_suggestion_initiation_index(size_t index)
 {
-
     if (m_last_shown_suggestion_display_length)
         m_last_shown_suggestion.start_index = index - m_next_suggestion_static_offset - m_last_shown_suggestion_display_length;
     else

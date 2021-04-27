@@ -106,7 +106,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     const Vector<String> sorted_app_categories = discover_apps_and_categories();
     auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"); // HIGH VOLTAGE SIGN
 
-    system_menu->add_action(GUI::Action::create("About SerenityOS", Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"), [](auto&) {
+    system_menu->add_action(GUI::Action::create("About SerenityOS", Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"), [](auto&) {
         pid_t child_pid;
         const char* argv[] = { "/bin/About", nullptr };
         if ((errno = posix_spawn(&child_pid, "/bin/About", nullptr, nullptr, const_cast<char**>(argv), environ))) {

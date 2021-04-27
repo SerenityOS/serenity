@@ -133,7 +133,6 @@ int Shell::builtin_bg(int argc, const char** argv)
 
 int Shell::builtin_type(int argc, const char** argv)
 {
-
     Vector<const char*> commands;
     bool dont_show_function_source = false;
 

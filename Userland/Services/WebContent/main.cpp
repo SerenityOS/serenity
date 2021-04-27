@@ -20,11 +20,15 @@ int main(int, char**)
         perror("unveil");
         return 1;
     }
-    if (unveil("/tmp/portal/protocol", "rw") < 0) {
+    if (unveil("/tmp/portal/request", "rw") < 0) {
         perror("unveil");
         return 1;
     }
     if (unveil("/tmp/portal/image", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+    if (unveil("/tmp/portal/websocket", "rw") < 0) {
         perror("unveil");
         return 1;
     }
