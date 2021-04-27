@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Utf8View.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Layout/Node.h>
 
@@ -26,6 +27,32 @@ public:
 
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 
+    struct Chunk {
+        Utf8View view;
+        size_t start { 0 };
+        size_t length { 0 };
+        bool has_breaking_newline { false };
+        bool is_all_whitespace { false };
+    };
+
+    class ChunkIterator {
+    public:
+        ChunkIterator(StringView const& text, LayoutMode, bool wrap_lines, bool wrap_breaks);
+        Optional<Chunk> next();
+
+    private:
+        Optional<Chunk> try_commit_chunk(Utf8View::Iterator const&, bool has_breaking_newline, bool must_commit = false);
+
+        const LayoutMode m_layout_mode;
+        const bool m_wrap_lines;
+        const bool m_wrap_breaks;
+        bool m_last_was_space { false };
+        bool m_last_was_newline { false };
+        Utf8View m_utf8_view;
+        Utf8View::Iterator m_start_of_chunk;
+        Utf8View::Iterator m_iterator;
+    };
+
 private:
     virtual bool is_text_node() const final { return true; }
     virtual bool wants_mouse_events() const override;
@@ -34,9 +61,6 @@ private:
     virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
     void split_into_lines_by_rules(InlineFormattingContext&, LayoutMode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks);
     void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
-
-    template<typename Callback>
-    void for_each_chunk(Callback, LayoutMode, bool do_wrap_lines, bool do_wrap_breaks) const;
 
     String m_text_for_rendering;
 };
