@@ -420,6 +420,9 @@ public:
 
     static ParseResult<Vector<Instruction>> parse(InputStream& stream, InstructionPointer& ip);
 
+    auto& opcode() const { return m_opcode; }
+    auto& arguments() const { return m_arguments; }
+
 private:
     OpCode m_opcode { 0 };
     // clang-format off
@@ -487,7 +490,7 @@ private:
 };
 
 class ImportSection {
-private:
+public:
     class Import {
     public:
         using ImportDesc = Variant<TypeIndex, TableType, MemoryType, GlobalType>;
@@ -553,7 +556,7 @@ private:
 };
 
 class TableSection {
-private:
+public:
     class Table {
     public:
         explicit Table(TableType type)
@@ -586,7 +589,7 @@ private:
 };
 
 class MemorySection {
-private:
+public:
     class Memory {
     public:
         explicit Memory(MemoryType type)
@@ -634,7 +637,7 @@ private:
 };
 
 class GlobalSection {
-private:
+public:
     class Global {
     public:
         explicit Global(GlobalType type, Expression expression)
@@ -672,6 +675,8 @@ private:
 class ExportSection {
 private:
     using ExportDesc = Variant<FunctionIndex, TableIndex, MemoryIndex, GlobalIndex>;
+
+public:
     class Export {
     public:
         explicit Export(String name, ExportDesc description)
@@ -690,7 +695,6 @@ private:
         ExportDesc m_description;
     };
 
-public:
     static constexpr u8 section_id = 7;
 
     explicit ExportSection(Vector<Export> entries)
@@ -707,7 +711,7 @@ private:
 };
 
 class StartSection {
-private:
+public:
     class StartFunction {
     public:
         explicit StartFunction(FunctionIndex index)
@@ -723,7 +727,6 @@ private:
         FunctionIndex m_index;
     };
 
-public:
     static constexpr u8 section_id = 8;
 
     explicit StartSection(StartFunction func)
@@ -740,7 +743,7 @@ private:
 };
 
 class ElementSection {
-private:
+public:
     class Element {
     public:
         explicit Element(TableIndex table, Expression expr, Vector<FunctionIndex> init)
@@ -762,7 +765,6 @@ private:
         Vector<FunctionIndex> m_init;
     };
 
-public:
     static constexpr u8 section_id = 9;
 
     explicit ElementSection(Element func)
@@ -817,7 +819,7 @@ private:
 };
 
 class CodeSection {
-private:
+public:
     class Code {
     public:
         explicit Code(u32 size, Func func)
@@ -836,7 +838,6 @@ private:
         Func m_func;
     };
 
-public:
     static constexpr u8 section_id = 10;
 
     explicit CodeSection(Vector<Code> funcs)
@@ -853,8 +854,9 @@ private:
 };
 
 class DataSection {
-private:
+public:
     class Data {
+    public:
         struct Passive {
             Vector<u8> init;
         };
@@ -865,7 +867,6 @@ private:
         };
         using Value = Variant<Passive, Active>;
 
-    public:
         explicit Data(Value value)
             : m_value(move(value))
         {
@@ -879,7 +880,6 @@ private:
         Value m_value;
     };
 
-public:
     static constexpr u8 section_id = 11;
 
     explicit DataSection(Vector<Data> data)
@@ -913,7 +913,7 @@ private:
 };
 
 class Module {
-private:
+public:
     class Function {
     public:
         explicit Function(TypeIndex type, Vector<ValueType> local_types, Expression body)
@@ -950,11 +950,12 @@ private:
     static constexpr Array<u8, 4> wasm_magic { 0, 'a', 's', 'm' };
     static constexpr Array<u8, 4> wasm_version { 1, 0, 0, 0 };
 
-public:
     explicit Module(Vector<AnySection> sections)
         : m_sections(move(sections))
     {
     }
+
+    auto& sections() const { return m_sections; }
 
     static ParseResult<Module> parse(InputStream& stream);
 

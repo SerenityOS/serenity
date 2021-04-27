@@ -1,5 +1,6 @@
 set(SOURCES
     Parser/Parser.cpp
+    Printer/Printer.cpp
 )
 
 serenity_lib(LibWasm wasm)
