@@ -1,0 +1,20 @@
+diff -Naur gcc-11.1.0/libstdc++-v3/include/c_compatibility/fenv.h gcc-11.1.0.serenity/libstdc++-v3/include/c_compatibility/fenv.h
+--- gcc-11.1.0/libstdc++-v3/include/c_compatibility/fenv.h	2021-04-27 12:00:16.000000000 +0200
++++ gcc-11.1.0.serenity/libstdc++-v3/include/c_compatibility/fenv.h	2021-04-27 18:19:15.749373118 +0200
+@@ -26,8 +26,8 @@
+  *  This is a Standard C++ Library header.
+  */
+ 
+-#ifndef _GLIBCXX_FENV_H
+-#define _GLIBCXX_FENV_H 1
++#ifndef _GLIBCXX_PORT_FENV_H
++#define _GLIBCXX_PORT_FENV_H 1
+ 
+ #pragma GCC system_header
+ 
+@@ -78,4 +78,4 @@
+ 
+ #endif // C++11
+ 
+-#endif // _GLIBCXX_FENV_H
++#endif // _GLIBCXX_PORT_FENV_H
