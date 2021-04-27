@@ -184,11 +184,9 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
         line_boxes.last().add_fragment(*this, chunk.start, chunk.length, chunk_width, font.glyph_height());
         available_width -= chunk_width;
 
-        if (do_wrap_lines) {
-            if (available_width < 0) {
-                containing_block.add_line_box();
-                available_width = context.available_width_at_line(line_boxes.size() - 1);
-            }
+        if (do_wrap_lines && available_width < 0) {
+            containing_block.add_line_box();
+            available_width = context.available_width_at_line(line_boxes.size() - 1);
         }
 
         if (do_wrap_breaks && chunk.has_breaking_newline) {
