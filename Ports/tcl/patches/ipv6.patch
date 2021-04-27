@@ -1,6 +1,6 @@
 diff -Naur tcl8.6.11/unix/tclUnixSock.c tcl8.6.11.serenity/unix/tclUnixSock.c
---- tcl8.6.11/unix/tclUnixSock.c	2020-09-21 17:15:49.000000000 +0200
-+++ tcl8.6.11.serenity/unix/tclUnixSock.c	2021-04-25 09:39:28.224340150 +0200
+--- unix/tclUnixSock.c	2020-09-21 17:15:49.000000000 +0200
++++ unix.serenity/tclUnixSock.c	2021-04-25 09:39:28.224340150 +0200
 @@ -706,6 +706,7 @@
  IPv6AddressNeedsNumericRendering(
      struct in6_addr addr)
