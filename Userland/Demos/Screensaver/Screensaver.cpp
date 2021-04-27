@@ -23,6 +23,7 @@ public:
 private:
     Screensaver(int width = 64, int height = 48, int interval = 10000);
     RefPtr<Gfx::Bitmap> m_bitmap;
+    Gfx::IntPoint m_mouse_origin;
 
     void draw();
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -45,9 +46,14 @@ Screensaver::~Screensaver()
 {
 }
 
-void Screensaver::mousemove_event(GUI::MouseEvent&)
+void Screensaver::mousemove_event(GUI::MouseEvent& event)
 {
-    ::exit(0);
+    constexpr float max_distance_move = 10;
+    if (m_mouse_origin.is_null()) {
+        m_mouse_origin = event.position();
+    } else if (event.position().distance_from(m_mouse_origin) > max_distance_move) {
+        ::exit(0);
+    }
 }
 
 void Screensaver::mousedown_event(GUI::MouseEvent&)
