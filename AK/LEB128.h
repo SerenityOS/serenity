@@ -12,8 +12,8 @@
 namespace AK {
 
 struct LEB128 {
-    template<typename StreamT>
-    static bool read_unsigned(StreamT& stream, size_t& result)
+    template<typename StreamT, typename ValueType = size_t>
+    static bool read_unsigned(StreamT& stream, ValueType& result)
     {
         [[maybe_unused]] size_t backup_offset = 0;
         if constexpr (requires { stream.offset(); })
@@ -35,7 +35,7 @@ struct LEB128 {
             if (input_stream.has_any_error())
                 return false;
 
-            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
+            result = (result) | (static_cast<ValueType>(byte & ~(1 << 7)) << (num_bytes * 7));
             if (!(byte & (1 << 7)))
                 break;
             ++num_bytes;
@@ -44,9 +44,10 @@ struct LEB128 {
         return true;
     }
 
-    template<typename StreamT>
-    static bool read_signed(StreamT& stream, ssize_t& result)
+    template<typename StreamT, typename ValueType = ssize_t>
+    static bool read_signed(StreamT& stream, ValueType& result)
     {
+        using UValueType = MakeUnsigned<ValueType>;
         [[maybe_unused]] size_t backup_offset = 0;
         if constexpr (requires { stream.offset(); })
             backup_offset = stream.offset();
@@ -67,13 +68,13 @@ struct LEB128 {
             input_stream >> byte;
             if (input_stream.has_any_error())
                 return false;
-            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
+            result = (result) | (static_cast<UValueType>(byte & ~(1 << 7)) << (num_bytes * 7));
             ++num_bytes;
         } while (byte & (1 << 7));
 
-        if (num_bytes * 7 < sizeof(size_t) * 4 && (byte & 0x40)) {
+        if (num_bytes * 7 < sizeof(UValueType) * 4 && (byte & 0x40)) {
             // sign extend
-            result |= ((size_t)(-1) << (num_bytes * 7));
+            result |= ((UValueType)(-1) << (num_bytes * 7));
         }
 
         return true;
