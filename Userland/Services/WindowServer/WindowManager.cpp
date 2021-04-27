@@ -1116,7 +1116,7 @@ void WindowManager::reevaluate_hovered_window(Window* updated_window)
         if (currently_hovered && m_resize_candidate == currently_hovered)
             clear_resize_candidate();
 
-        if (hovered_window) {
+        if (hovered_window && !hovered_window->is_fullscreen()) {
             // Send a fake MouseMove event. This allows the new hovering window
             // to determine which widget we're hovering, and also update the cursor
             // accordingly. We do this because this re-evaluation of the currently
