@@ -1,0 +1,78 @@
+diff -ur a/src/Core.cpp b/src/Core.cpp
+--- a/src/Core.cpp	2019-08-01 10:39:15.000000000 -0300
++++ b/src/Core.cpp	2021-04-27 00:42:09.774773494 -0300
+@@ -3,7 +3,7 @@
+ #include "IMG.h"
+ #include "CFG.h"
+ #include "Text.h"
+-#include "SDL_mixer.h"
++#include "SDL2/SDL_mixer.h"
+ 
+ Map* CCore::oMap = new Map();
+ bool CCore::mouseLeftPressed = false;
+diff -ur a/src/header.h b/src/header.h
+--- a/src/header.h	2019-08-01 10:39:15.000000000 -0300
++++ b/src/header.h	2021-04-27 00:41:22.639530936 -0300
+@@ -3,8 +3,8 @@
+ #ifndef HEADER_H
+ #define HEADER_H
+ 
+-#include <SDL.h>
+-#include <SDL_image.h>
++#include <SDL2/SDL.h>
++#include <SDL2/SDL_image.h>
+ #include <string>
+ 
+ #endif
+\ No newline at end of file
+diff -ur a/src/Music.cpp b/src/Music.cpp
+--- a/src/Music.cpp	2019-08-01 10:39:15.000000000 -0300
++++ b/src/Music.cpp	2021-04-27 00:41:58.286958037 -0300
+@@ -1,6 +1,6 @@
+ #include "Music.h"
+ #include "Core.h"
+-#include "SDL_mixer.h"
++#include "SDL2/SDL_mixer.h"
+ 
+ /* ******************************************** */
+ 
+diff -ur a/src/Music.h b/src/Music.h
+--- a/src/Music.h	2019-08-01 10:39:15.000000000 -0300
++++ b/src/Music.h	2021-04-27 00:41:50.507083036 -0300
+@@ -3,7 +3,7 @@
+ #ifndef MUSIC_H
+ #define MUSIC_H
+ 
+-#include "SDL_mixer.h"
++#include "SDL2/SDL_mixer.h"
+ #include <string>
+ #include <vector>
+ 
+diff -ur a/src/MusicManager.h b/src/MusicManager.h
+--- a/src/MusicManager.h	2019-08-01 10:39:15.000000000 -0300
++++ b/src/MusicManager.h	2021-04-27 00:40:58.183924201 -0300
+@@ -3,8 +3,8 @@
+ #ifndef MUSICMANAGER_H
+ #define MUSICMANAGER_H
+ 
+-#include "SDL.h"
+-#include "SDL_mixer.h"
++#include "SDL2/SDL.h"
++#include "SDL2/SDL_mixer.h"
+ #include <string>
+ #include <vector>
+ 
+diff -ur a/src/Texture.h b/src/Texture.h
+--- a/src/Texture.h	2019-08-01 10:39:15.000000000 -0300
++++ b/src/Texture.h	2021-04-27 00:41:07.691771285 -0300
+@@ -1,8 +1,8 @@
+ #pragma once
+ 
+ #include <string>
+-#include <SDL.h>
+-#include <SDL_image.h>
++#include <SDL2/SDL.h>
++#include <SDL2/SDL_image.h>
+ 
+ class Texture
+ {
