@@ -113,8 +113,11 @@ set(CMAKE_INSTALL_DATAROOTDIR ${CMAKE_BINARY_DIR}/Root/res)
 
 if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
     message("Good job on building cmake!")
+    set(GCC_VERSION 10.2.0)
 else()
-    set(TOOLCHAIN_PATH ${CMAKE_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin)
+    set(GCC_VERSION 10.3.0)
+    set(TOOLCHAIN_ROOT ${CMAKE_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/)
+    set(TOOLCHAIN_PATH ${TOOLCHAIN_ROOT}/bin)
     set(TOOLCHAIN_PREFIX ${TOOLCHAIN_PATH}/${SERENITY_ARCH}-pc-serenity-)
 
     set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}gcc)
