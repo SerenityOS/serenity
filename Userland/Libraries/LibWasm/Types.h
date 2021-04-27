@@ -19,9 +19,24 @@
 namespace Wasm {
 
 enum class ParseError {
-    // FIXME: More descriptive errors!
+    UnexpectedEof,
+    ExpectedIndex,
+    ExpectedKindTag,
+    ExpectedSize,
+    ExpectedValueOrTerminator,
+    InvalidIndex,
     InvalidInput,
+    InvalidModuleMagic,
+    InvalidModuleVersion,
+    InvalidSize,
+    InvalidTag,
+    InvalidType,
+    HugeAllocationRequested,
+    // FIXME: This should not exist!
+    NotImplemented,
 };
+
+String parse_error_to_string(ParseError);
 
 template<typename T>
 using ParseResult = Result<T, ParseError>;
@@ -34,6 +49,19 @@ TYPEDEF_DISTINCT_ORDERED_ID(size_t, LocalIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, GlobalIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, LabelIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, DataIndex);
+
+ParseError with_eof_check(const InputStream& stream, ParseError error_if_not_eof);
+
+template<typename T>
+struct GenericIndexParser {
+    static ParseResult<T> parse(InputStream& stream)
+    {
+        size_t value;
+        if (!LEB128::read_unsigned(stream, value))
+            return with_eof_check(stream, ParseError::ExpectedIndex);
+        return T { value };
+    }
+};
 
 class ReconsumableStream : public InputStream {
 public:
