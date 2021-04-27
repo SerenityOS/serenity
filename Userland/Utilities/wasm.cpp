@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
     auto parse_result = Wasm::Module::parse(stream);
     if (parse_result.is_error()) {
         warnln("Something went wrong, either the file is invalid, or there's a bug with LibWasm!");
+        warnln("The parse error was {}", Wasm::parse_error_to_string(parse_result.error()));
         return 2;
     }
 
