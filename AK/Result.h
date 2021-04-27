@@ -11,9 +11,12 @@
 
 namespace AK {
 
-template<typename ValueType, typename ErrorType>
+template<typename ValueT, typename ErrorT>
 class [[nodiscard]] Result {
 public:
+    using ValueType = ValueT;
+    using ErrorType = ErrorT;
+
     Result(const ValueType& res)
         : m_result(res)
     {
@@ -69,9 +72,12 @@ private:
 };
 
 // Partial specialization for void value type
-template<typename ErrorType>
-class [[nodiscard]] Result<void, ErrorType> {
+template<typename ErrorT>
+class [[nodiscard]] Result<void, ErrorT> {
 public:
+    using ValueType = void;
+    using ErrorType = ErrorT;
+
     Result(const ErrorType& error)
         : m_error(error)
     {
