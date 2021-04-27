@@ -11,8 +11,6 @@
 
 namespace Kernel {
 
-#define VIRTIO_CONSOLE_PCI_DEVICE_ID 0x1003
-
 #define VIRTIO_CONSOLE_F_SIZE (1 << 0)
 #define VIRTIO_CONSOLE_F_MULTIPORT (1 << 1)
 #define VIRTIO_CONSOLE_F_EMERG_WRITE (1 << 2)

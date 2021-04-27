@@ -7,6 +7,7 @@
 #include <AK/MACAddress.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
+#include <Kernel/PCI/IDs.h>
 
 namespace Kernel {
 
@@ -117,8 +118,6 @@ namespace Kernel {
 #define INTERRUPT_TXD_LOW (1 << 15)
 #define INTERRUPT_SRPD (1 << 16)
 
-#define PCI_VENDOR_INTEL 0x8086
-
 // https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf Section 5.2
 static bool is_valid_device_id(u16 device_id)
 {
@@ -162,7 +161,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::detect()
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
             return;
-        if (id.vendor_id != PCI_VENDOR_INTEL)
+        if (id.vendor_id != (u16)PCIVendorID::Intel)
             return;
         if (!is_valid_device_id(id.device_id))
             return;
