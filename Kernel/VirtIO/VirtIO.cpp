@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/CommandLine.h>
+#include <Kernel/PCI/IDs.h>
 #include <Kernel/VirtIO/VirtIO.h>
 #include <Kernel/VirtIO/VirtIOConsole.h>
 #include <Kernel/VirtIO/VirtIORNG.h>
@@ -18,14 +19,14 @@ void VirtIO::detect()
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null() || id.is_null())
             return;
-        if (id.vendor_id != VIRTIO_PCI_VENDOR_ID)
+        if (id.vendor_id != (u16)PCIVendorID::VirtIO)
             return;
         switch (id.device_id) {
-        case VIRTIO_CONSOLE_PCI_DEVICE_ID: {
+        case (u16)PCIDeviceID::VirtIOConsole: {
             [[maybe_unused]] auto& unused = adopt_ref(*new VirtIOConsole(address)).leak_ref();
             break;
         }
-        case VIRTIO_ENTROPY_PCI_DEVICE_ID: {
+        case (u16)PCIDeviceID::VirtIOEntropy: {
             [[maybe_unused]] auto& unused = adopt_ref(*new VirtIORNG(address)).leak_ref();
             break;
         }

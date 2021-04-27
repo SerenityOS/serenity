@@ -12,8 +12,6 @@
 
 namespace Kernel {
 
-#define VIRTIO_ENTROPY_PCI_DEVICE_ID 0x1005
-
 #define REQUESTQ 0
 
 class VirtIORNG final : public CharacterDevice

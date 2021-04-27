@@ -17,8 +17,6 @@
 
 namespace Kernel {
 
-#define VIRTIO_PCI_VENDOR_ID 0x1AF4
-
 #define REG_DEVICE_FEATURES 0x0
 #define REG_GUEST_FEATURES 0x4
 #define REG_QUEUE_ADDRESS 0x8
