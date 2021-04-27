@@ -140,18 +140,13 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
         m_text_for_rendering = dom_node().data();
     }
 
-    Vector<Chunk, 128> chunks;
     ChunkIterator iterator(m_text_for_rendering, layout_mode, do_wrap_lines, do_wrap_breaks);
 
     for (;;) {
-        auto chunk = iterator.next();
-        if (!chunk.has_value())
+        auto chunk_opt = iterator.next();
+        if (!chunk_opt.has_value())
             break;
-        chunks.append(chunk.release_value());
-    }
-
-    for (size_t i = 0; i < chunks.size(); ++i) {
-        auto& chunk = chunks[i];
+        auto& chunk = chunk_opt.value();
 
         // Collapse entire fragment into non-existence if previous fragment on line ended in whitespace.
         if (do_collapse && line_boxes.last().is_empty_or_ends_in_whitespace() && chunk.is_all_whitespace)
