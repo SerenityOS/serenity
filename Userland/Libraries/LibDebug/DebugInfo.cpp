@@ -92,7 +92,7 @@ void DebugInfo::prepare_lines()
 
     Vector<Dwarf::LineProgram::LineInfo> all_lines;
     while (!stream.eof()) {
-        Dwarf::LineProgram program(stream);
+        Dwarf::LineProgram program(m_dwarf_info, stream);
         all_lines.append(program.lines());
     }
 
