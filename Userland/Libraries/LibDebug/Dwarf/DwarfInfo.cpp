@@ -49,7 +49,7 @@ void DwarfInfo::populate_compilation_units()
     }
 }
 
-AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form,
+AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
     InputMemoryStream& debug_info_stream, const CompilationUnit* unit) const
 {
     AttributeValue value;
@@ -208,6 +208,12 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form,
 
         auto strings_data = debug_line_strings_data();
         value.data.as_string = reinterpret_cast<const char*>(strings_data.data() + offset);
+        break;
+    }
+    case AttributeDataForm::ImplicitConst: {
+        /* Value is part of the abbreviation record. */
+        value.type = AttributeValue::Type::SignedNumber;
+        value.data.as_i32 = implicit_const_value;
         break;
     }
     default:

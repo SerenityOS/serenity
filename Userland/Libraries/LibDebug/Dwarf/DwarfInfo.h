@@ -54,7 +54,7 @@ public:
     template<typename Callback>
     void for_each_compilation_unit(Callback) const;
 
-    AttributeValue get_attribute_value(AttributeDataForm form,
+    AttributeValue get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
         InputMemoryStream& debug_info_stream, const CompilationUnit* unit = nullptr) const;
 
 private:

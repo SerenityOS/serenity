@@ -51,6 +51,12 @@ void AbbreviationsMap::populate_map()
             current_attribute_specification.attribute = static_cast<Attribute>(attribute_value);
             current_attribute_specification.form = static_cast<AttributeDataForm>(form_value);
 
+            if (current_attribute_specification.form == AttributeDataForm::ImplicitConst) {
+                ssize_t data_value;
+                abbreviation_stream.read_LEB128_signed(data_value);
+                current_attribute_specification.value = data_value;
+            }
+
             if (current_attribute_specification.attribute != Attribute::None) {
                 abbrevation_entry.attribute_specifications.append(current_attribute_specification);
             }

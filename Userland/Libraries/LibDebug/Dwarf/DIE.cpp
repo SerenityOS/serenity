@@ -33,7 +33,7 @@ DIE::DIE(const CompilationUnit& unit, u32 offset)
 
         // We iterate the attributes data only to calculate this DIE's size
         for (auto& attribute_spec : abbreviation_info.value().attribute_specifications) {
-            m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, stream, &m_compilation_unit);
+            m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, stream, &m_compilation_unit);
         }
     }
     m_size = stream.offset() - m_offset;
@@ -48,7 +48,7 @@ Optional<AttributeValue> DIE::get_attribute(const Attribute& attribute) const
     VERIFY(abbreviation_info.has_value());
 
     for (const auto& attribute_spec : abbreviation_info.value().attribute_specifications) {
-        auto value = m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, stream, &m_compilation_unit);
+        auto value = m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, stream, &m_compilation_unit);
         if (attribute_spec.attribute == attribute) {
             return value;
         }

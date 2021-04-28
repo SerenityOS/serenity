@@ -314,6 +314,7 @@ enum class AttributeDataForm : u8 {
 struct [[gnu::packed]] AttributeSpecification {
     Attribute attribute;
     AttributeDataForm form;
+    ssize_t value;
 };
 
 }

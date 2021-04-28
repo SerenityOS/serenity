@@ -57,7 +57,7 @@ void LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, 
         for (size_t i = 0; i < paths_count; i++) {
             PathEntry entry;
             for (auto& format_description : format_descriptions) {
-                auto value = m_dwarf_info.get_attribute_value(format_description.form, m_stream);
+                auto value = m_dwarf_info.get_attribute_value(format_description.form, 0, m_stream);
                 switch (format_description.type) {
                 case ContentType::Path:
                     entry.path = value.data.as_string;
