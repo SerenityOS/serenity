@@ -33,6 +33,7 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/FileWatcher.h>
 #include <LibDebug/DebugSession.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -69,6 +70,7 @@
 #include <fcntl.h>
 #include <spawn.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -231,6 +233,20 @@ bool HackStudioWidget::open_file(const String& full_filename)
         new_project_file = m_project->get_file(filename);
         m_open_files.set(filename, *new_project_file);
         m_open_files_vector.append(filename);
+        auto watcher_or_error = Core::FileWatcher::watch(filename);
+        if (!watcher_or_error.is_error()) {
+            auto& watcher = watcher_or_error.value();
+            watcher->on_change = [this, filename]() {
+                struct stat st;
+                if (lstat(filename.characters(), &st) < 0) {
+                    if (errno == ENOENT) {
+                        handle_external_file_deletion(filename);
+                    }
+                }
+            };
+            m_file_watchers.set(filename, watcher_or_error.release_value());
+        }
+
         m_open_files_view->model()->update();
     }
 
@@ -1072,6 +1088,36 @@ void HackStudioWidget::initialize_menubar(GUI::Menubar& menubar)
     create_build_menubar(menubar);
     create_view_menubar(menubar);
     create_help_menubar(menubar);
+}
+
+void HackStudioWidget::handle_external_file_deletion(const String& filepath)
+{
+    m_open_files.remove(filepath);
+    m_open_files_vector.remove_all_matching(
+        [&filepath](const String& element) { return element == filepath; });
+
+    for (auto& editor_wrapper : m_all_editor_wrappers) {
+        Editor& editor = editor_wrapper.editor();
+        String editor_file_path = editor.code_document().file_path();
+        String relative_editor_file_path = LexicalPath::relative_path(editor_file_path, project().root_path());
+
+        if (relative_editor_file_path == filepath) {
+            if (m_open_files_vector.is_empty()) {
+                editor.set_document(CodeDocument::create());
+                editor_wrapper.filename_label().set_text(String { "Undefined" });
+                m_currently_open_file = "";
+            } else {
+                auto& first_path = m_open_files_vector[0];
+                auto& document = m_open_files.get(first_path).value()->code_document();
+                editor.set_document(document);
+                editor_wrapper.filename_label().set_text(first_path);
+                m_currently_open_file = first_path;
+            }
+        }
+    }
+
+    m_file_watchers.remove(filepath);
+    m_open_files_view->model()->update();
 }
 
 HackStudioWidget::~HackStudioWidget()
