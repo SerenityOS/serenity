@@ -174,4 +174,12 @@ void Button::mousedown_event(MouseEvent& event)
     AbstractButton::mousedown_event(event);
 }
 
+void Button::mousemove_event(MouseEvent& event)
+{
+    if (m_menu) {
+        return;
+    }
+    AbstractButton::mousemove_event(event);
+}
+
 }
