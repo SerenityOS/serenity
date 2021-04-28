@@ -7,6 +7,7 @@
 #pragma once
 
 #include "CompilationUnit.h"
+#include "DwarfInfo.h"
 #include "DwarfTypes.h"
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
@@ -22,32 +23,6 @@ class DIE {
 public:
     DIE(const CompilationUnit&, u32 offset);
 
-    struct AttributeValue {
-        enum class Type : u8 {
-            UnsignedNumber,
-            SignedNumber,
-            LongUnsignedNumber,
-            String,
-            DieReference, // Reference to another DIE in the same compilation unit
-            Boolean,
-            DwarfExpression,
-            SecOffset,
-            RawBytes,
-        } type;
-
-        union {
-            u32 as_u32;
-            i32 as_i32;
-            u64 as_u64;
-            const char* as_string; // points to bytes in the memory mapped elf image
-            bool as_bool;
-            struct {
-                u32 length;
-                const u8* bytes; // points to bytes in the memory mapped elf image
-            } as_raw_bytes;
-        } data {};
-    };
-
     u32 offset() const { return m_offset; }
     u32 size() const { return m_size; }
     bool has_children() const { return m_has_children; }
@@ -62,9 +37,6 @@ public:
     DIE get_die_at_offset(u32 offset) const;
 
 private:
-    AttributeValue get_attribute_value(AttributeDataForm form,
-        InputMemoryStream& debug_info_stream) const;
-
     const CompilationUnit& m_compilation_unit;
     u32 m_offset { 0 };
     u32 m_data_offset { 0 };
