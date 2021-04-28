@@ -17,6 +17,16 @@
 static constexpr unsigned short size_classes[] = { 8, 16, 32, 64, 128, 256, 504, 1016, 2032, 4088, 8184, 16376, 32752, 0 };
 static constexpr size_t num_size_classes = (sizeof(size_classes) / sizeof(unsigned short)) - 1;
 
+consteval bool check_size_classes_alignment()
+{
+    for (size_t i = 0; i < num_size_classes; i++) {
+        if ((size_classes[i] % 8) != 0)
+            return false;
+    }
+    return true;
+}
+static_assert(check_size_classes_alignment());
+
 struct CommonHeader {
     size_t m_magic;
     size_t m_size;
