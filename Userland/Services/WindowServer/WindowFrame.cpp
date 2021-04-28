@@ -65,14 +65,14 @@ WindowFrame::WindowFrame(Window& window)
     : m_window(window)
 {
     auto button = make<Button>(*this, [this](auto&) {
-        m_window.request_close();
+        m_window.handle_window_menu_action(WindowMenuAction::Close);
     });
     m_close_button = button.ptr();
     m_buttons.append(move(button));
 
     if (window.is_resizable()) {
         auto button = make<Button>(*this, [this](auto&) {
-            WindowManager::the().maximize_windows(m_window, !m_window.is_maximized());
+            m_window.handle_window_menu_action(WindowMenuAction::MaximizeOrRestore);
         });
         button->on_middle_click = [&](auto&) {
             m_window.set_vertically_maximized();
@@ -83,7 +83,7 @@ WindowFrame::WindowFrame(Window& window)
 
     if (window.is_minimizable()) {
         auto button = make<Button>(*this, [this](auto&) {
-            WindowManager::the().minimize_windows(m_window, true);
+            m_window.handle_window_menu_action(WindowMenuAction::MinimizeOrUnminimize);
         });
         m_minimize_button = button.ptr();
         m_buttons.append(move(button));
