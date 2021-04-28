@@ -19,7 +19,7 @@ public:
     CompilationUnit(const DwarfInfo& dwarf_info, u32 offset, const CompilationUnitHeader&);
 
     u32 offset() const { return m_offset; }
-    u32 size() const { return m_header.length + sizeof(u32); }
+    u32 size() const { return m_header.length() + sizeof(u32); }
 
     DIE root_die() const;
 
