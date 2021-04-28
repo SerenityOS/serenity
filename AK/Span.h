@@ -195,7 +195,7 @@ public:
         return this->m_values[index];
     }
 
-    ALWAYS_INLINE constexpr T& operator[](size_t index) const
+    ALWAYS_INLINE constexpr const T& operator[](size_t index) const
     {
         return at(index);
     }
