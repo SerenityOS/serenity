@@ -93,6 +93,8 @@ private:
     void reveal_action_tab(GUI::Widget&);
     void initialize_debugger();
 
+    void handle_external_file_deletion(const String& filepath);
+
     void create_open_files_view(GUI::Widget& parent);
     void create_form_editor(GUI::Widget& parent);
     void create_toolbar(GUI::Widget& parent);
@@ -118,7 +120,8 @@ private:
     String m_currently_open_file;
 
     HashMap<String, NonnullRefPtr<ProjectFile>> m_open_files;
-    Vector<String> m_open_files_vector; // NOTE: This contains the keys from m_open_files
+    HashMap<String, NonnullRefPtr<Core::FileWatcher>> m_file_watchers;
+    Vector<String> m_open_files_vector; // NOTE: This contains the keys from m_open_files and m_file_watchers
 
     OwnPtr<Project> m_project;
 
