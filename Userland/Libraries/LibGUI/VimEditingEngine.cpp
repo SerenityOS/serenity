@@ -168,6 +168,13 @@ void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift
 
 #undef DIGIT
 
+    // Home means to the beginning of the line.
+    case KeyCode::Key_Home:
+        m_unit = Unit::Character;
+        m_amount = START_OF_LINE;
+        m_is_complete = true;
+        break;
+
     // If 0 appears while amount is 0, then it means beginning of line.
     // Otherwise, it adds 0 to the amount.
     case KeyCode::Key_0:
@@ -180,8 +187,9 @@ void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift
         }
         break;
 
-    // $ means end of line.
+    // End or $ means end of line.
     // TODO: d2$ in vim deletes to the end of the line and then the next line.
+    case KeyCode::Key_End:
     case KeyCode::Key_Dollar:
         m_unit = Unit::Character;
         m_amount = END_OF_LINE;
@@ -196,9 +204,9 @@ void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift
         m_is_complete = true;
         break;
 
-    // j, up or + operates on this line and amount line(s) after.
+    // j, down or + operates on this line and amount line(s) after.
     case KeyCode::Key_J:
-    case KeyCode::Key_Up:
+    case KeyCode::Key_Down:
     case KeyCode::Key_Plus:
         m_unit = Unit::Line;
 
@@ -208,9 +216,9 @@ void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift
         m_is_complete = true;
         break;
 
-    // k, down or - operates on this line and amount line(s) before.
+    // k, up or - operates on this line and amount line(s) before.
     case KeyCode::Key_K:
-    case KeyCode::Key_Down:
+    case KeyCode::Key_Up:
     case KeyCode::Key_Minus:
         m_unit = Unit::Line;
 
@@ -657,7 +665,7 @@ void VimMotion::calculate_find_range(VimCursor& cursor, int amount)
     m_find_mode = FindMode::None;
 }
 
-Optional<TextPosition> VimMotion::get_position(VimEditingEngine& engine)
+Optional<TextPosition> VimMotion::get_position(VimEditingEngine& engine, bool in_visual_mode)
 {
     auto range_optional = get_range(engine, true);
     if (!range_optional.has_value())
@@ -708,11 +716,13 @@ Optional<TextPosition> VimMotion::get_position(VimEditingEngine& engine)
             // above in get_range normalizes some values which shouldn't be
             // end-exclusive during normal operations.
             bool is_at_start = range.end().column() == 0;
-            size_t column = is_at_start ? 0 : range.end().column() - 1;
-            // Need to not go beyond the last character, as standard in vim.
             auto& line = editor.line(range.end().line());
 
-            return { TextPosition { range.end().line(), min(column, line.length() - 1) } };
+            size_t column = is_at_start ? 0 : range.end().column() - 1;
+            column = min(column, line.length() - (in_visual_mode ? 0 : 1));
+            // Need to not go beyond the last character, as standard in vim.
+
+            return { TextPosition { range.end().line(), column } };
         }
     }
     }
@@ -732,9 +742,6 @@ CursorWidth VimEditingEngine::cursor_width() const
 
 bool VimEditingEngine::on_key(const KeyEvent& event)
 {
-    if (EditingEngine::on_key(event))
-        return true;
-
     switch (m_vim_mode) {
     case (VimMode::Insert):
         return on_key_in_insert_mode(event);
@@ -751,6 +758,9 @@ bool VimEditingEngine::on_key(const KeyEvent& event)
 
 bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
 {
+    if (EditingEngine::on_key(event))
+        return true;
+
     if (event.key() == KeyCode::Key_Escape || (event.ctrl() && event.key() == KeyCode::Key_LeftBracket) || (event.ctrl() && event.key() == KeyCode::Key_C)) {
         if (m_editor->cursor().column() > 0)
             move_one_left();
@@ -968,6 +978,12 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             case (KeyCode::Key_P):
                 put();
                 return true;
+            case (KeyCode::Key_PageUp):
+                move_page_up();
+                return true;
+            case (KeyCode::Key_PageDown):
+                move_page_down();
+                return true;
             default:
                 break;
             }
@@ -998,7 +1014,7 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
         m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
         if (m_motion.is_complete()) {
             if (!m_motion.is_cancelled()) {
-                auto maybe_new_position = m_motion.get_position(*this);
+                auto maybe_new_position = m_motion.get_position(*this, true);
                 if (maybe_new_position.has_value()) {
                     auto new_position = maybe_new_position.value();
                     m_editor->set_cursor(new_position);
@@ -1083,6 +1099,14 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
             yank(Selection);
             switch_to_normal_mode();
             return true;
+        case (KeyCode::Key_PageUp):
+            move_page_up();
+            update_selection_on_cursor_move();
+            return true;
+        case (KeyCode::Key_PageDown):
+            move_page_down();
+            update_selection_on_cursor_move();
+            return true;
         default:
             break;
         }
@@ -1092,7 +1116,7 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
     m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
     if (m_motion.is_complete()) {
         if (!m_motion.is_cancelled()) {
-            auto maybe_new_position = m_motion.get_position(*this);
+            auto maybe_new_position = m_motion.get_position(*this, true);
             if (maybe_new_position.has_value()) {
                 auto new_position = maybe_new_position.value();
                 m_editor->set_cursor(new_position);
@@ -1129,6 +1153,7 @@ void VimEditingEngine::switch_to_visual_mode()
     m_vim_mode = VimMode::Visual;
     m_editor->reset_cursor_blink();
     m_previous_key = {};
+    m_selection_start_position = m_editor->cursor();
     m_editor->selection()->set(m_editor->cursor(), { m_editor->cursor().line(), m_editor->cursor().column() + 1 });
     m_editor->did_update_selection();
     m_motion.reset();
@@ -1137,10 +1162,27 @@ void VimEditingEngine::switch_to_visual_mode()
 void VimEditingEngine::update_selection_on_cursor_move()
 {
     auto cursor = m_editor->cursor();
-    auto& line = m_editor->current_line();
-    cursor.set_column(min(cursor.column() + 1, line.length()));
-    m_editor->selection()->set_end(cursor);
+    auto start = m_selection_start_position < cursor ? m_selection_start_position : cursor;
+    auto end = m_selection_start_position < cursor ? cursor : m_selection_start_position;
+
+    if (end.column() >= m_editor->current_line().length()) {
+        if (end.line() != m_editor->line_count() - 1)
+            end = { end.line() + 1, 0 };
+    } else {
+        end.set_column(end.column() + 1);
+    }
+
+    m_editor->selection()->set(start, end);
     m_editor->did_update_selection();
+}
+
+void VimEditingEngine::clamp_cursor_position()
+{
+    auto cursor = m_editor->cursor();
+    if (cursor.column() >= m_editor->current_line().length()) {
+        cursor.set_column(m_editor->current_line().length() - 1);
+        m_editor->set_cursor(cursor);
+    }
 }
 
 void VimEditingEngine::clear_visual_mode_data()
@@ -1148,7 +1190,9 @@ void VimEditingEngine::clear_visual_mode_data()
     if (m_editor->has_selection()) {
         m_editor->selection()->clear();
         m_editor->did_update_selection();
+        clamp_cursor_position();
     }
+    m_selection_start_position = {};
 }
 
 void VimEditingEngine::move_half_page_up()

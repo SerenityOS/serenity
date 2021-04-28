@@ -7,6 +7,7 @@
 #include <AK/MACAddress.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
+#include <Kernel/PCI/IDs.h>
 
 namespace Kernel {
 
@@ -160,7 +161,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::detect()
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
             return;
-        if (id.vendor_id != 0x8086)
+        if (id.vendor_id != (u16)PCIVendorID::Intel)
             return;
         if (!is_valid_device_id(id.device_id))
             return;
@@ -204,8 +205,7 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, 
     initialize_rx_descriptors();
     initialize_tx_descriptors();
 
-    out32(REG_INTERRUPT_MASK_SET, 0x1f6dc);
-    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0);
+    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
     in32(REG_INTERRUPT_CAUSE_READ);
 
     enable_irq();
@@ -217,26 +217,27 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter()
 
 void E1000NetworkAdapter::handle_irq(const RegisterState&)
 {
-    out32(REG_INTERRUPT_MASK_CLEAR, 0xffffffff);
-
     u32 status = in32(REG_INTERRUPT_CAUSE_READ);
 
     m_entropy_source.add_random_event(status);
 
-    if (status & 4) {
+    if (status & INTERRUPT_LSC) {
         u32 flags = in32(REG_CTRL);
         out32(REG_CTRL, flags | ECTRL_SLU);
     }
-    if (status & 0x80) {
-        receive();
-    }
-    if (status & 0x10) {
+    if (status & INTERRUPT_RXDMT0) {
         // Threshold OK?
+    }
+    if (status & INTERRUPT_RXO) {
+        dbgln_if(E1000_DEBUG, "E1000: RX buffer overrun");
+    }
+    if (status & INTERRUPT_RXT0) {
+        receive();
     }
 
     m_wait_queue.wake_all();
 
-    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
+    out32(REG_INTERRUPT_CAUSE_READ, 0xffffffff);
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_eeprom()
@@ -425,10 +426,8 @@ void E1000NetworkAdapter::receive()
 {
     auto* rx_descriptors = (e1000_tx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
     u32 rx_current;
-    for (;;) {
+    for (u32 i = 0; i < number_of_rx_descriptors; i++) {
         rx_current = in32(REG_RXDESCTAIL) % number_of_rx_descriptors;
-        if (rx_current == (in32(REG_RXDESCHEAD) % number_of_rx_descriptors))
-            return;
         rx_current = (rx_current + 1) % number_of_rx_descriptors;
         if (!(rx_descriptors[rx_current].status & 1))
             break;

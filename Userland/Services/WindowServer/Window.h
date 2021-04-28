@@ -77,6 +77,7 @@ public:
     virtual ~Window() override;
 
     void popup_window_menu(const Gfx::IntPoint&, WindowMenuDefaultAction);
+    void handle_window_menu_action(WindowMenuAction);
     void window_menu_activate_default();
     void request_close();
 

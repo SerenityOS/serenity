@@ -57,6 +57,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`libogg`](libogg/)                    | libogg                                                     | 1.3.4                    | https://github.com/xiph/ogg                                                    |
 | [`libpng`](libpng/)                    | libpng                                                     | 1.6.37                   | https://libpng.org/                                                            |
 | [`libpuffy`](libpuffy/)                | libpuffy                                                   | 1.0                      | https://github.com/ibara/libpuffy                                              |
+| [`libtheora`](libtheora/)              | libtheora                                                  | 1.1.1                    | https://www.theora.org/                                                        |
 | [`libtiff`](libtiff/)                  | libtiff                                                    | 4.2.0                    | http://www.libtiff.org/                                                        |
 | [`libtool`](libtool/)                  | libtool                                                    | 2.4                      | https://www.gnu.org/software/libtool/                                          |
 | [`libvorbis`](libvorbis/)              | libvorbis                                                  | 1.3.7                    | https://github.com/xiph/vorbis                                                 |
@@ -68,6 +69,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`mandoc`](mandoc/)                    | mandoc                                                     | 1.14.5                   | https://mandoc.bsd.lv/                                                         |
 | [`mawk`](mawk/)                        | mawk                                                       | 1.3.4-20200120           | https://invisible-island.net/mawk/                                             |
 | [`mbedtls`](mbedtls/)                  | Mbed TLS                                                   | 2.16.2                   | https://tls.mbed.org/                                                          |
+| [`milkytracker`](milkytracker/)        | milkytracker                                               | 1.03.00                  | https://github.com/milkytracker/MilkyTracker                                   |
 | [`mrsh`](mrsh/)                        | mrsh                                                       | d9763a3                  | https://mrsh.sh/                                                               |
 | [`nano`](nano/)                        | GNU nano                                                   | 4.5                      | https://www.nano-editor.org/                                                   |
 | [`nasm`](nasm/)                        | Netwide Assembler (NASM)                                   | 2.15.05                  | https://www.nasm.us/                                                           |

@@ -34,6 +34,7 @@ public:
     static bool is_initialized();
 
     void on_breakpoint_change(const String& file, size_t line, BreakpointChange change_type);
+    bool set_execution_position(const String& file, size_t line);
 
     void set_executable_path(const String& path) { m_executable_path = path; }
     void set_source_root(const String& source_root) { m_source_root = source_root; }
@@ -43,7 +44,7 @@ public:
     void stop();
 
     // Thread entry point
-    static int start_static();
+    static intptr_t start_static();
 
     pthread_mutex_t* continue_mutex() { return &m_ui_action_mutex; }
     pthread_cond_t* continue_cond() { return &m_ui_action_cond; }

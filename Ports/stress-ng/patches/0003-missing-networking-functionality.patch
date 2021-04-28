@@ -79,18 +79,3 @@ diff -ur a/stress-resources.c b/stress-resources.c
  	static const int types[] = { SOCK_STREAM, SOCK_DGRAM };
  	static stress_info_t info[MAX_LOOPS];
  #if defined(O_NOATIME)
-@@ -309,11 +309,13 @@
- 		if (!keep_stressing_flag())
- 			break;
- 
-+#if 0
- 		if (socketpair(AF_UNIX, SOCK_STREAM, 0,
- 			info[i].fd_socketpair) < 0) {
- 			info[i].fd_socketpair[0] = -1;
- 			info[i].fd_socketpair[1] = -1;
- 		}
-+#endif
- 
- #if defined(HAVE_USERFAULTFD)
- 		info[i].fd_uf = shim_userfaultfd(0);
-d

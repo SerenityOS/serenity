@@ -25,7 +25,7 @@ __BEGIN_DECLS
 #define HUGE_VALF __builtin_huge_valf()
 #define HUGE_VAL __builtin_huge_val()
 #define HUGE_VALL __builtin_huge_vall()
-#define INFINITY __builtin_huge_val()
+#define INFINITY __builtin_huge_valf()
 #define NAN __builtin_nan("")
 #define MAXFLOAT FLT_MAX
 
@@ -56,10 +56,6 @@ __BEGIN_DECLS
 #define M_2_SQRTPIf32 1.12837916709551257390f
 #define M_SQRT2f32 1.41421356237309504880f
 #define M_SQRT1_2f32 0.70710678118654752440f
-
-#define M_TAU 6.28318530717958647692
-#define M_DEG2RAD 0.01745329251994329576
-#define M_RAD2DEG 57.2957795130823208767
 
 #define FP_NAN 0
 #define FP_INFINITE 1
