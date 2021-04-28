@@ -6,16 +6,61 @@
 
 #pragma once
 
+#include <AK/Stream.h>
 #include <AK/Types.h>
 
 namespace Debug::Dwarf {
 
-struct [[gnu::packed]] CompilationUnitHeader {
+enum class CompilationUnitType {
+    Full = 1,
+    Partial = 3
+};
+
+struct [[gnu::packed]] CompilationUnitHeaderCommon {
     u32 length;
     u16 version;
+};
+
+struct [[gnu::packed]] CompilationUnitHeaderV4Ext {
     u32 abbrev_offset;
     u8 address_size;
 };
+
+struct [[gnu::packed]] CompilationUnitHeaderV5Ext {
+    u8 unit_type;
+    u8 address_size;
+    u32 abbrev_offset;
+};
+
+struct [[gnu::packed]] CompilationUnitHeader {
+    CompilationUnitHeaderCommon common;
+
+    union {
+        CompilationUnitHeaderV4Ext v4;
+        CompilationUnitHeaderV5Ext v5;
+    };
+
+    size_t header_size() const
+    {
+        return sizeof(common) + ((common.version <= 4) ? sizeof(v4) : sizeof(v5));
+    }
+
+    u32 length() const { return common.length; }
+    u16 version() const { return common.version; }
+    CompilationUnitType unit_type() const { return (common.version <= 4) ? CompilationUnitType::Full : (CompilationUnitType)v5.unit_type; }
+    u32 abbrev_offset() const { return (common.version <= 4) ? v4.abbrev_offset : v5.abbrev_offset; }
+    u8 address_size() const { return (common.version <= 4) ? v4.address_size : v5.address_size; }
+};
+
+inline InputStream& operator>>(InputStream& stream, CompilationUnitHeader& header)
+{
+    stream.read_or_error(Bytes { &header.common, sizeof(header.common) });
+    if (header.common.version <= 4)
+        stream.read_or_error(Bytes { &header.v4, sizeof(header.v4) });
+    else
+        stream.read_or_error(Bytes { &header.v5, sizeof(header.v5) });
+    return stream;
+}
 
 enum class EntryTag : u16 {
     None = 0,

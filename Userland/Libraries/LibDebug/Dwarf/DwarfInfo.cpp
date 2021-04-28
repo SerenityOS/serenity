@@ -38,11 +38,11 @@ void DwarfInfo::populate_compilation_units()
         auto unit_offset = stream.offset();
         CompilationUnitHeader compilation_unit_header {};
 
-        stream >> Bytes { &compilation_unit_header, sizeof(compilation_unit_header) };
-        VERIFY(compilation_unit_header.address_size == sizeof(u32));
-        VERIFY(compilation_unit_header.version <= 4);
+        stream >> compilation_unit_header;
+        VERIFY(compilation_unit_header.common.version <= 5);
+        VERIFY(compilation_unit_header.address_size() == sizeof(u32));
 
-        u32 length_after_header = compilation_unit_header.length - (sizeof(CompilationUnitHeader) - offsetof(CompilationUnitHeader, version));
+        u32 length_after_header = compilation_unit_header.length() - (compilation_unit_header.header_size() - offsetof(CompilationUnitHeader, common.version));
         m_compilation_units.empend(*this, unit_offset, compilation_unit_header);
         stream.discard_or_error(length_after_header);
     }
