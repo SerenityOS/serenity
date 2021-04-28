@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
-  *
+ *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
