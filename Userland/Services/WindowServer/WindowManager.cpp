@@ -1322,7 +1322,10 @@ void WindowManager::restore_active_input_window(Window* window)
     if (!window && pick_new_active_window(nullptr))
         return;
 
-    set_active_input_window(window);
+    if (window && !window->is_minimized() && window->is_visible())
+        set_active_input_window(window);
+    else
+        set_active_input_window(nullptr);
 }
 
 Window* WindowManager::set_active_input_window(Window* window)
