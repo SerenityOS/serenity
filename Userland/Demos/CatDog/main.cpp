@@ -2,7 +2,7 @@
  * Copyright (c) 2021, Richard Gráčik <r.gracik@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
-  */
+ */
 
 #include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Application.h>
