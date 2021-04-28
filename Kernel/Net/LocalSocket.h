@@ -14,12 +14,18 @@ namespace Kernel {
 
 class FileDescription;
 
+struct SocketPair {
+    NonnullRefPtr<FileDescription> description1;
+    NonnullRefPtr<FileDescription> description2;
+};
+
 class LocalSocket final : public Socket
     , public InlineLinkedListNode<LocalSocket> {
     friend class InlineLinkedListNode<LocalSocket>;
 
 public:
     static KResultOr<NonnullRefPtr<Socket>> create(int type);
+    static KResultOr<SocketPair> create_connected_pair(int type);
     virtual ~LocalSocket() override;
 
     KResult sendfd(const FileDescription& socket_description, FileDescription& passing_description);

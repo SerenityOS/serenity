@@ -125,6 +125,13 @@ int getpeername(int sockfd, struct sockaddr* addr, socklen_t* addrlen)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int socketpair(int domain, int type, int protocol, int sv[2])
+{
+    Syscall::SC_socketpair_params params { domain, type, protocol, sv };
+    int rc = syscall(SC_socketpair, &params);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int sendfd(int sockfd, int fd)
 {
     int rc = syscall(SC_sendfd, sockfd, fd);

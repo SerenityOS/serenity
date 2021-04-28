@@ -36,6 +36,31 @@ KResultOr<NonnullRefPtr<Socket>> LocalSocket::create(int type)
     return adopt_ref(*new LocalSocket(type));
 }
 
+KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
+{
+    auto socket = adopt_ref(*new LocalSocket(type));
+
+    auto description1_result = FileDescription::create(*socket);
+    if (description1_result.is_error())
+        return description1_result.error();
+
+    socket->m_address.sun_family = AF_LOCAL;
+    memcpy(socket->m_address.sun_path, "[socketpair]", 13);
+
+    auto& process = *Process::current();
+    socket->m_acceptor = { process.pid().value(), process.uid(), process.gid() };
+
+    socket->set_connected(true);
+    socket->set_connect_side_role(Role::Connected);
+    socket->m_role = Role::Accepted;
+
+    auto description2_result = FileDescription::create(*socket);
+    if (description2_result.is_error())
+        return description2_result.error();
+
+    return SocketPair { description1_result.release_value(), description2_result.release_value() };
+}
+
 LocalSocket::LocalSocket(int type)
     : Socket(AF_LOCAL, type, 0)
 {
