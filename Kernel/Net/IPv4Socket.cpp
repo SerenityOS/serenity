@@ -217,7 +217,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     return nsent_or_error;
 }
 
-KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int, Userspace<sockaddr*>, Userspace<socklen_t*>)
+KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>)
 {
     Locker locker(lock());
     if (m_receive_buffer.is_empty()) {
@@ -241,8 +241,14 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
     }
 
     VERIFY(!m_receive_buffer.is_empty());
-    int nreceived = m_receive_buffer.read(buffer, buffer_length);
-    if (nreceived > 0)
+
+    int nreceived;
+    if (flags & MSG_PEEK)
+        nreceived = m_receive_buffer.peek(buffer, buffer_length);
+    else
+        nreceived = m_receive_buffer.read(buffer, buffer_length);
+
+    if (nreceived > 0 && !(flags & MSG_PEEK))
         Thread::current()->did_ipv4_socket_read((size_t)nreceived);
 
     set_can_read(!m_receive_buffer.is_empty());
@@ -264,7 +270,11 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         }
 
         if (!m_receive_queue.is_empty()) {
-            packet = m_receive_queue.take_first();
+            if (flags & MSG_PEEK)
+                packet = m_receive_queue.first();
+            else
+                packet = m_receive_queue.take_first();
+
             set_can_read(!m_receive_queue.is_empty());
 
             dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}): recvfrom without blocking {} bytes, packets in queue: {}",
@@ -293,7 +303,12 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         }
         VERIFY(m_can_read);
         VERIFY(!m_receive_queue.is_empty());
-        packet = m_receive_queue.take_first();
+
+        if (flags & MSG_PEEK)
+            packet = m_receive_queue.first();
+        else
+            packet = m_receive_queue.take_first();
+
         set_can_read(!m_receive_queue.is_empty());
 
         dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}): recvfrom with blocking {} bytes, packets in queue: {}",
