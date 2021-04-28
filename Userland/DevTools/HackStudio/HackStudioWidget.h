@@ -65,6 +65,9 @@ private:
 
     void set_edit_mode(EditMode);
 
+    // ^GUI::Widget
+    virtual void event(Core::Event&) override;
+
     NonnullRefPtr<GUI::Menu> create_project_tree_view_context_menu();
     NonnullRefPtr<GUI::Action> create_new_file_action();
     NonnullRefPtr<GUI::Action> create_new_directory_action();
@@ -92,6 +95,8 @@ private:
     void on_action_tab_change();
     void reveal_action_tab(GUI::Widget&);
     void initialize_debugger();
+
+    void handle_external_file_deletions();
 
     void create_open_files_view(GUI::Widget& parent);
     void create_form_editor(GUI::Widget& parent);

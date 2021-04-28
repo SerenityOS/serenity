@@ -72,6 +72,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <errno.h>
+#include <sys/stat.h>
 
 namespace HackStudio {
 
@@ -1072,6 +1074,54 @@ void HackStudioWidget::initialize_menubar(GUI::Menubar& menubar)
     create_build_menubar(menubar);
     create_view_menubar(menubar);
     create_help_menubar(menubar);
+}
+
+void HackStudioWidget::event(Core::Event& event)
+{
+    if (event.type() == GUI::Event::WindowBecameActive)
+        handle_external_file_deletions();
+
+    return GUI::Widget::event(event);
+}
+
+void HackStudioWidget::handle_external_file_deletions()
+{
+    struct stat st;
+    auto file_doesnt_exist = [&st](const String& filename) -> bool {
+        if (lstat(filename.characters(), &st) < 0) {
+            if (errno == ENOENT) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (auto& filename : m_open_files_vector) {
+        if (file_doesnt_exist(filename)){
+            m_open_files.remove(filename);
+            m_open_files_vector.remove_first_matching(
+                [&filename](const String& element){ return element == filename; }
+            );
+        }
+    }
+
+    for (auto& editor_wrapper : m_all_editor_wrappers){
+        Editor& editor = editor_wrapper.editor();
+        String editor_file_path = editor.code_document().file_path();
+        if (file_doesnt_exist(editor_file_path)){
+            if (m_open_files_vector.is_empty()){
+                editor.set_document(CodeDocument::create());
+                editor_wrapper.filename_label().set_text(String{"Undefined"});
+            } else {
+                auto& first_path = m_open_files_vector[0];
+                auto& document = (*(m_open_files.get(first_path).value())).code_document();
+                editor.set_document(document);
+                editor_wrapper.filename_label().set_text(first_path);
+            }
+        }
+    }
+
+    m_open_files_view->model()->update();
 }
 
 HackStudioWidget::~HackStudioWidget()
