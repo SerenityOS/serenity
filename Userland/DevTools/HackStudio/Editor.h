@@ -104,6 +104,7 @@ private:
     bool m_hovering_clickable { false };
     bool m_autocomplete_in_focus { false };
     RefPtr<GUI::Action> m_evaluate_expression_action;
+    RefPtr<GUI::Action> m_move_execution_to_line_action;
 
     OwnPtr<LanguageClient> m_language_client;
 };

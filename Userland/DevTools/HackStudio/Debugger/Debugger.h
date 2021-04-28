@@ -34,6 +34,7 @@ public:
     static bool is_initialized();
 
     void on_breakpoint_change(const String& file, size_t line, BreakpointChange change_type);
+    bool set_execution_position(const String& file, size_t line);
 
     void set_executable_path(const String& path) { m_executable_path = path; }
     void set_source_root(const String& source_root) { m_source_root = source_root; }
