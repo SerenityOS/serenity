@@ -47,6 +47,7 @@
 
 #ifndef __serenity__
 #    include <unistd.h>
+#    undef PAGE_SIZE
 #    define PAGE_SIZE sysconf(_SC_PAGESIZE)
 #endif
 
