@@ -14,7 +14,7 @@
 #define MALLOC_SCRUB_BYTE 0xdc
 #define FREE_SCRUB_BYTE 0xed
 
-static constexpr unsigned short size_classes[] = { 8, 16, 32, 64, 128, 256, 500, 1016, 2032, 4088, 8184, 16376, 32752, 0 };
+static constexpr unsigned short size_classes[] = { 8, 16, 32, 64, 128, 256, 504, 1016, 2032, 4088, 8184, 16376, 32752, 0 };
 static constexpr size_t num_size_classes = (sizeof(size_classes) / sizeof(unsigned short)) - 1;
 
 struct CommonHeader {
