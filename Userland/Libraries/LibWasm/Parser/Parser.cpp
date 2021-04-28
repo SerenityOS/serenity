@@ -1144,8 +1144,16 @@ ParseResult<DataCountSection> DataCountSection::parse([[maybe_unused]] InputStre
 #if WASM_BINPARSER_DEBUG
     ScopeLogger logger("DataCountSection");
 #endif
-    // FIXME: Implement parsing optional values!
-    return with_eof_check(stream, ParseError::NotImplemented);
+    u32 value;
+    if (!LEB128::read_unsigned(stream, value)) {
+        if (stream.unreliable_eof()) {
+            // The section simply didn't contain anything.
+            return DataCountSection { {} };
+        }
+        return ParseError::ExpectedSize;
+    }
+
+    return DataCountSection { value };
 }
 
 ParseResult<Module> Module::parse(InputStream& stream)
@@ -1277,6 +1285,14 @@ ParseResult<Module> Module::parse(InputStream& stream)
         }
         case DataSection::section_id: {
             if (auto section = DataSection::parse(section_stream); !section.is_error()) {
+                sections.append(section.release_value());
+                continue;
+            } else {
+                return section.error();
+            }
+        }
+        case DataCountSection::section_id: {
+            if (auto section = DataCountSection::parse(section_stream); !section.is_error()) {
                 sections.append(section.release_value());
                 continue;
             } else {

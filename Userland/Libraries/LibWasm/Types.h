@@ -944,7 +944,8 @@ public:
         StartSection,
         ElementSection,
         CodeSection,
-        DataSection>;
+        DataSection,
+        DataCountSection>;
 
     static constexpr Array<u8, 4> wasm_magic { 0, 'a', 's', 'm' };
     static constexpr Array<u8, 4> wasm_version { 1, 0, 0, 0 };
