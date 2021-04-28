@@ -44,7 +44,6 @@ ssize_t DoubleBuffer::write(const UserOrKernelBuffer& data, size_t size)
 {
     if (!size || m_storage.is_null())
         return 0;
-    VERIFY(size > 0);
     Locker locker(m_lock);
     size_t bytes_to_write = min(size, m_space_for_writing);
     u8* write_ptr = m_write_buffer->data + m_write_buffer->size;
@@ -61,7 +60,6 @@ ssize_t DoubleBuffer::read(UserOrKernelBuffer& data, size_t size)
 {
     if (!size || m_storage.is_null())
         return 0;
-    VERIFY(size > 0);
     Locker locker(m_lock);
     if (m_read_buffer_index >= m_read_buffer->size && m_write_buffer->size != 0)
         flip();
@@ -71,6 +69,25 @@ ssize_t DoubleBuffer::read(UserOrKernelBuffer& data, size_t size)
     if (!data.write(m_read_buffer->data + m_read_buffer_index, nread))
         return -EFAULT;
     m_read_buffer_index += nread;
+    compute_lockfree_metadata();
+    if (m_unblock_callback && m_space_for_writing > 0)
+        m_unblock_callback();
+    return (ssize_t)nread;
+}
+
+ssize_t DoubleBuffer::peek(UserOrKernelBuffer& data, size_t size)
+{
+    if (!size || m_storage.is_null())
+        return 0;
+    Locker locker(m_lock);
+    if (m_read_buffer_index >= m_read_buffer->size && m_write_buffer->size != 0) {
+        flip();
+    }
+    if (m_read_buffer_index >= m_read_buffer->size)
+        return 0;
+    size_t nread = min(m_read_buffer->size - m_read_buffer_index, size);
+    if (!data.write(m_read_buffer->data + m_read_buffer_index, nread))
+        return -EFAULT;
     compute_lockfree_metadata();
     if (m_unblock_callback && m_space_for_writing > 0)
         m_unblock_callback();

@@ -29,6 +29,12 @@ public:
         auto buffer = UserOrKernelBuffer::for_kernel_buffer(data);
         return read(buffer, size);
     }
+    [[nodiscard]] ssize_t peek(UserOrKernelBuffer&, size_t);
+    [[nodiscard]] ssize_t peek(u8* data, size_t size)
+    {
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer(data);
+        return peek(buffer, size);
+    }
 
     bool is_empty() const { return m_empty; }
 
