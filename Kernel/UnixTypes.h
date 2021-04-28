@@ -496,6 +496,7 @@ struct pollfd {
 
 #define MSG_TRUNC 0x1
 #define MSG_CTRUNC 0x2
+#define MSG_PEEK 0x4
 #define MSG_DONTWAIT 0x40
 
 #define SOL_SOCKET 1
