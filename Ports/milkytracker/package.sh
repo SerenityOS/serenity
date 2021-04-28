@@ -14,3 +14,7 @@ launcher_command=/usr/local/bin/milkytracker
 configure() {
     run cmake $configopts
 }
+
+install() {
+    run make install
+}
