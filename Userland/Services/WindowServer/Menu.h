@@ -41,15 +41,32 @@ public:
     const MenuItem& item(int index) const { return m_items.at(index); }
     MenuItem& item(int index) { return m_items.at(index); }
 
+    MenuItem* item_by_identifier(unsigned identifier)
+    {
+        MenuItem* found_item = nullptr;
+        for_each_item([&](auto& item) {
+            if (item.identifier() == identifier) {
+                found_item = &item;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+        return found_item;
+    }
+
     void add_item(NonnullOwnPtr<MenuItem>);
 
     String name() const { return m_name; }
 
     template<typename Callback>
-    void for_each_item(Callback callback) const
+    IterationDecision for_each_item(Callback callback)
     {
-        for (auto& item : m_items)
-            callback(item);
+        for (auto& item : m_items) {
+            IterationDecision decision = callback(item);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
+        return IterationDecision::Continue;
     }
 
     Gfx::IntRect rect_in_window_menubar() const { return m_rect_in_window_menubar; }
