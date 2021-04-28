@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * Copyright (c) 2021 Glenford Williams <gw_dev@outlook.com>
+ * Copyright (c) 2021, Glenford Williams <gw_dev@outlook.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
