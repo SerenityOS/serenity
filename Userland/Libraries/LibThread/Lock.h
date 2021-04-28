@@ -6,12 +6,15 @@
 
 #pragma once
 
-#ifdef __serenity__
+#include <AK/Assertions.h>
+#include <AK/Atomic.h>
+#include <AK/Types.h>
 
-#    include <AK/Assertions.h>
-#    include <AK/Atomic.h>
-#    include <AK/Types.h>
+#ifdef __serenity__
 #    include <unistd.h>
+#else
+#    include <pthread.h>
+#endif
 
 namespace LibThread {
 
@@ -24,7 +27,22 @@ public:
     void unlock();
 
 private:
-    Atomic<pid_t> m_holder { 0 };
+#ifdef __serenity__
+    using ThreadID = int;
+
+    ALWAYS_INLINE static ThreadID self()
+    {
+        return gettid();
+    }
+#else
+    using ThreadID = pthread_t;
+
+    ALWAYS_INLINE static ThreadID self()
+    {
+        return pthread_self();
+    }
+#endif
+    Atomic<ThreadID> m_holder { 0 };
     u32 m_level { 0 };
 };
 
@@ -45,24 +63,26 @@ private:
 
 ALWAYS_INLINE void Lock::lock()
 {
-    pid_t tid = gettid();
+    ThreadID tid = self();
     if (m_holder == tid) {
         ++m_level;
         return;
     }
     for (;;) {
-        int expected = 0;
+        ThreadID expected = 0;
         if (m_holder.compare_exchange_strong(expected, tid, AK::memory_order_acq_rel)) {
             m_level = 1;
             return;
         }
+#ifdef __serenity__
         donate(expected);
+#endif
     }
 }
 
 inline void Lock::unlock()
 {
-    VERIFY(m_holder == gettid());
+    VERIFY(m_holder == self());
     VERIFY(m_level);
     if (m_level == 1)
         m_holder.store(0, AK::memory_order_release);
@@ -100,23 +120,3 @@ private:
 };
 
 }
-
-#else
-
-namespace LibThread {
-
-class Lock {
-public:
-    Lock() { }
-    ~Lock() { }
-};
-
-class Locker {
-public:
-    explicit Locker(Lock&) { }
-    ~Locker() { }
-};
-
-}
-
-#endif
