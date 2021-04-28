@@ -50,6 +50,7 @@ public:
 protected:
     explicit Button(String text = {});
     virtual void mousedown_event(MouseEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
     virtual void paint_event(PaintEvent&) override;
 
 private:
