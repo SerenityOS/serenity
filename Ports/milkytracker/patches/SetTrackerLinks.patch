@@ -4,7 +4,7 @@
      set(INSTALL_DEST ${CMAKE_INSTALL_BINDIR})
  endif()
  
-+target_link_libraries(tracker -lSDL2 -lgui -lipc -lm -lcore)
++target_link_libraries(tracker -lSDL2 -lgui -lipc -lm)
 +set(INSTALL_DEST bin)
 +
  install(TARGETS tracker DESTINATION ${INSTALL_DEST})
