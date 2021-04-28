@@ -20,6 +20,18 @@ namespace Kernel {
             REQUIRE_PROMISE(unix);                \
     } while (0)
 
+void Process::setup_socket_fd(int fd, NonnullRefPtr<FileDescription> description, int type)
+{
+    description->set_readable(true);
+    description->set_writable(true);
+    unsigned flags = 0;
+    if (type & SOCK_CLOEXEC)
+        flags |= FD_CLOEXEC;
+    if (type & SOCK_NONBLOCK)
+        description->set_blocking(false);
+    m_fds[fd].set(*description, flags);
+}
+
 KResultOr<int> Process::sys$socket(int domain, int type, int protocol)
 {
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(domain);
@@ -35,14 +47,7 @@ KResultOr<int> Process::sys$socket(int domain, int type, int protocol)
     auto description_result = FileDescription::create(*result.value());
     if (description_result.is_error())
         return description_result.error();
-    description_result.value()->set_readable(true);
-    description_result.value()->set_writable(true);
-    unsigned flags = 0;
-    if (type & SOCK_CLOEXEC)
-        flags |= FD_CLOEXEC;
-    if (type & SOCK_NONBLOCK)
-        description_result.value()->set_blocking(false);
-    m_fds[fd].set(description_result.release_value(), flags);
+    setup_socket_fd(fd, description_result.value(), type);
     return fd;
 }
 
@@ -362,4 +367,41 @@ KResultOr<int> Process::sys$setsockopt(Userspace<const Syscall::SC_setsockopt_pa
     return socket.setsockopt(params.level, params.option, user_value, params.value_size);
 }
 
+KResultOr<int> Process::sys$socketpair(Userspace<const Syscall::SC_socketpair_params*> user_params)
+{
+    Syscall::SC_socketpair_params params;
+    if (!copy_from_user(&params, user_params))
+        return EFAULT;
+
+    if (params.domain != AF_LOCAL)
+        return EINVAL;
+
+    if (params.protocol != 0 && params.protocol != PF_LOCAL)
+        return EINVAL;
+
+    auto result = LocalSocket::create_connected_pair(params.type & SOCK_TYPE_MASK);
+    if (result.is_error())
+        return result.error();
+    auto pair = result.value();
+
+    int fds[2];
+    fds[0] = alloc_fd();
+    if (fds[0] < 0)
+        return ENFILE;
+    setup_socket_fd(fds[0], pair.description1, params.type);
+
+    fds[1] = alloc_fd();
+    if (fds[1] < 0) {
+        // FIXME: This leaks fds[0]
+        return ENFILE;
+    }
+    setup_socket_fd(fds[1], pair.description2, params.type);
+
+    if (!copy_to_user(params.sv, fds, sizeof(fds))) {
+        // FIXME: This leaks both file descriptors
+        return EFAULT;
+    }
+
+    return KSuccess;
+}
 }

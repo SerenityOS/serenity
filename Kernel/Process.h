@@ -355,6 +355,7 @@ public:
     KResultOr<int> sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*>);
     KResultOr<int> sys$getsockname(Userspace<const Syscall::SC_getsockname_params*>);
     KResultOr<int> sys$getpeername(Userspace<const Syscall::SC_getpeername_params*>);
+    KResultOr<int> sys$socketpair(Userspace<const Syscall::SC_socketpair_params*>);
     KResultOr<int> sys$sched_setparam(pid_t pid, Userspace<const struct sched_param*>);
     KResultOr<int> sys$sched_getparam(pid_t pid, Userspace<struct sched_param*>);
     KResultOr<int> sys$create_thread(void* (*)(void*), Userspace<const Syscall::SC_create_thread_params*>);
@@ -528,6 +529,8 @@ private:
     bool has_tracee_thread(ProcessID tracer_pid);
 
     void clear_futex_queues_on_exec();
+
+    void setup_socket_fd(int fd, NonnullRefPtr<FileDescription> description, int type);
 
     inline PerformanceEventBuffer* current_perf_events_buffer()
     {
