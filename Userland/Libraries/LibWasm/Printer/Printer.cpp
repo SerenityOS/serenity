@@ -783,4 +783,6 @@ HashMap<Wasm::OpCode, String> Wasm::Names::instruction_names {
     { Instructions::table_grow, "table.grow" },
     { Instructions::table_size, "table.size" },
     { Instructions::table_fill, "table.fill" },
+    { Instructions::structured_else, "synthetic:else" },
+    { Instructions::structured_end, "synthetic:end" },
 };
