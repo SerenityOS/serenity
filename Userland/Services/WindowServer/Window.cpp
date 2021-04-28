@@ -656,30 +656,37 @@ void Window::ensure_window_menu()
         m_window_menu->item((int)PopupMenuItem::Maximize).set_enabled(m_resizable);
 
         m_window_menu->on_item_activation = [&](auto& item) {
-            switch (static_cast<WindowMenuAction>(item.identifier())) {
-            case WindowMenuAction::MinimizeOrUnminimize:
-                WindowManager::the().minimize_windows(*this, !m_minimized);
-                if (!m_minimized)
-                    WindowManager::the().move_to_front_and_make_active(*this);
-                break;
-            case WindowMenuAction::MaximizeOrRestore:
-                WindowManager::the().maximize_windows(*this, !m_maximized);
-                WindowManager::the().move_to_front_and_make_active(*this);
-                break;
-            case WindowMenuAction::Close:
-                request_close();
-                break;
-            case WindowMenuAction::ToggleMenubarVisibility:
-                frame().invalidate();
-                item.set_checked(!item.is_checked());
-                m_should_show_menubar = item.is_checked();
-                frame().invalidate();
-                recalculate_rect();
-                Compositor::the().invalidate_occlusions();
-                Compositor::the().invalidate_screen();
-                break;
-            }
+            handle_window_menu_action(static_cast<WindowMenuAction>(item.identifier()));
         };
+    }
+}
+
+void Window::handle_window_menu_action(WindowMenuAction action)
+{
+    switch (action) {
+    case WindowMenuAction::MinimizeOrUnminimize:
+        WindowManager::the().minimize_windows(*this, !m_minimized);
+        if (!m_minimized)
+            WindowManager::the().move_to_front_and_make_active(*this);
+        break;
+    case WindowMenuAction::MaximizeOrRestore:
+        WindowManager::the().maximize_windows(*this, !m_maximized);
+        WindowManager::the().move_to_front_and_make_active(*this);
+        break;
+    case WindowMenuAction::Close:
+        request_close();
+        break;
+    case WindowMenuAction::ToggleMenubarVisibility: {
+        auto& item = *m_window_menu->item_by_identifier((unsigned)action);
+        frame().invalidate();
+        item.set_checked(!item.is_checked());
+        m_should_show_menubar = item.is_checked();
+        frame().invalidate();
+        recalculate_rect();
+        Compositor::the().invalidate_occlusions();
+        Compositor::the().invalidate_screen();
+        break;
+    }
     }
 }
 
