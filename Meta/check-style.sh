@@ -3,11 +3,16 @@
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "$script_path/.." || exit 1
 
-# We simply check if the file starts with:
+# Ensure copyright headers match this format:
 # /*
-#  * Copyright
-LICENSE_HEADER_PATTERN=$'^([^\n]*\n)?/\*\n \* Copyright'
-MISSING_LICENSE_HEADER_ERRORS=()
+#  * Copyright (c) YYYY(-YYYY), Whatever
+#  * ... more of these ...
+#  *
+#  * SPDX-License-Identifier: BSD-2-Clause
+#  */
+GOOD_LICENSE_HEADER_PATTERN=$'^/\*\n( \* Copyright \(c\) [0-9]{4}(-[0-9]{4})?, .*\n)+ \*\n \* SPDX-License-Identifier: BSD-2-Clause\n \*/\n'
+BAD_LICENSE_HEADER_ERRORS=()
+LICENSE_HEADER_CHECK_EXCUDES=(AK/Checked.h AK/Function.h Userland/Libraries/LibC/elf.h)
 
 # We check that "#pragma once" is present
 PRAGMA_ONCE_PATTERN='#pragma once'
@@ -23,8 +28,10 @@ LIBM_MATH_H_INCLUDE_ERRORS=()
 
 while IFS= read -r f; do
     file_content="$(< "$f")"
-    if [[ ! "$file_content" =~ $LICENSE_HEADER_PATTERN ]]; then
-        MISSING_LICENSE_HEADER_ERRORS+=("$f")
+    if [[ ! "${LICENSE_HEADER_CHECK_EXCUDES[*]} " =~ $f ]]; then
+        if [[ ! "$file_content" =~ $GOOD_LICENSE_HEADER_PATTERN ]]; then
+            BAD_LICENSE_HEADER_ERRORS+=("$f")
+        fi
     fi
     if [[ "$file_content" =~ $LIBM_MATH_H_INCLUDE_PATTERN ]]; then
         LIBM_MATH_H_INCLUDE_ERRORS+=("$f")
@@ -44,8 +51,8 @@ done < <(git ls-files -- \
 )
 
 exit_status=0
-if (( ${#MISSING_LICENSE_HEADER_ERRORS[@]} )); then
-    echo "Files missing license headers: ${MISSING_LICENSE_HEADER_ERRORS[*]}"
+if (( ${#BAD_LICENSE_HEADER_ERRORS[@]} )); then
+    echo "Files with missing or incorrect license header: ${BAD_LICENSE_HEADER_ERRORS[*]}"
     exit_status=1
 fi
 if (( ${#MISSING_PRAGMA_ONCE_ERRORS[@]} )); then
