@@ -16,6 +16,7 @@ DwarfInfo::DwarfInfo(const ELF::Image& elf)
     m_debug_info_data = section_data(".debug_info");
     m_abbreviation_data = section_data(".debug_abbrev");
     m_debug_strings_data = section_data(".debug_str");
+    m_debug_line_strings_data = section_data(".debug_line_str");
 
     populate_compilation_units();
 }
@@ -104,6 +105,14 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form,
         value.data.as_i32 = data;
         break;
     }
+    case AttributeDataForm::UData: {
+        size_t data;
+        debug_info_stream.read_LEB128_unsigned(data);
+        VERIFY(!debug_info_stream.has_any_error());
+        value.type = AttributeValue::Type::UnsignedNumber;
+        value.data.as_u32 = data;
+        break;
+    }
     case AttributeDataForm::SecOffset: {
         u32 data;
         debug_info_stream >> data;
@@ -189,6 +198,16 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form,
         debug_info_stream.read_LEB128_unsigned(length);
         VERIFY(!debug_info_stream.has_any_error());
         assign_raw_bytes_value(length);
+        break;
+    }
+    case AttributeDataForm::LineStrP: {
+        u32 offset;
+        debug_info_stream >> offset;
+        VERIFY(!debug_info_stream.has_any_error());
+        value.type = AttributeValue::Type::String;
+
+        auto strings_data = debug_line_strings_data();
+        value.data.as_string = reinterpret_cast<const char*>(strings_data.data() + offset);
         break;
     }
     default:
