@@ -77,6 +77,21 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
     }
 }
 
+bool Debugger::set_execution_position(const String& file, size_t line)
+{
+    auto position = create_source_position(file, line);
+    auto session = Debugger::the().session();
+    if (!session)
+        return false;
+    auto address = session->get_address_from_source_position(position.file_path, position.line_number);
+    if (!address.has_value())
+        return false;
+    auto registers = session->get_registers();
+    registers.eip = address.value().address;
+    session->set_registers(registers);
+    return true;
+}
+
 Debug::DebugInfo::SourcePosition Debugger::create_source_position(const String& file, size_t line)
 {
     if (file.starts_with("/"))

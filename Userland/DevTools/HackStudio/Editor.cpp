@@ -52,7 +52,20 @@ Editor::Editor()
         auto dialog = EvaluateExpressionDialog::construct(window());
         dialog->exec();
     });
+    m_move_execution_to_line_action = GUI::Action::create("Set execution point to line", [this](auto&) {
+        if (!execution_position().has_value()) {
+            GUI::MessageBox::show(window(), "Program must be paused", "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+        auto success = Debugger::the().set_execution_position(currently_open_file(), cursor().line());
+        if (success) {
+            set_execution_position(cursor().line());
+        } else {
+            GUI::MessageBox::show(window(), "Failed to set execution position", "Error", GUI::MessageBox::Type::Error);
+        }
+    });
     add_custom_context_menu_action(*m_evaluate_expression_action);
+    add_custom_context_menu_action(*m_move_execution_to_line_action);
 }
 
 Editor::~Editor()
