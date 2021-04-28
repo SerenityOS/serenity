@@ -18,13 +18,24 @@ namespace AK {
 template<typename Collection, typename LessThan>
 void dual_pivot_quick_sort(Collection& col, int start, int end, LessThan less_than)
 {
-    if (start >= end) {
+    int size = end - start + 1;
+    if (size <= 1) {
         return;
     }
 
-    int left_pointer, right_pointer;
-    if (!less_than(col[start], col[end])) {
-        swap(col[start], col[end]);
+    if (size > 3) {
+        int third = size / 3;
+        if (less_than(col[start + third], col[end - third])) {
+            swap(col[start + third], col[start]);
+            swap(col[end - third], col[end]);
+        } else {
+            swap(col[start + third], col[end]);
+            swap(col[end - third], col[start]);
+        }
+    } else {
+        if (!less_than(col[start], col[end])) {
+            swap(col[start], col[end]);
+        }
     }
 
     int j = start + 1;
@@ -57,8 +68,8 @@ void dual_pivot_quick_sort(Collection& col, int start, int end, LessThan less_th
     swap(col[start], col[j]);
     swap(col[end], col[g]);
 
-    left_pointer = j;
-    right_pointer = g;
+    int left_pointer = j;
+    int right_pointer = g;
 
     dual_pivot_quick_sort(col, start, left_pointer - 1, less_than);
     dual_pivot_quick_sort(col, left_pointer + 1, right_pointer - 1, less_than);
