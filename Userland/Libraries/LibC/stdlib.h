@@ -49,6 +49,7 @@ char* ptsname(int fd);
 int ptsname_r(int fd, char* buffer, size_t);
 int abs(int);
 long labs(long);
+long long int llabs(long long int);
 double atof(const char*);
 int system(const char* command);
 char* mktemp(char*);
