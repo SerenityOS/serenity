@@ -32,8 +32,9 @@ static u8 parse_hex_digit(char nibble)
 FlatPtr address_for_kernel_symbol(const StringView& name)
 {
     for (size_t i = 0; i < s_symbol_count; ++i) {
-        if (!strncmp(name.characters_without_null_termination(), s_symbols[i].name, name.length()))
-            return s_symbols[i].address;
+        const auto& symbol = s_symbols[i];
+        if (name == symbol.name)
+            return symbol.address;
     }
     return 0;
 }
