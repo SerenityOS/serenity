@@ -12,6 +12,18 @@
 
 namespace Debug::Dwarf {
 
+struct [[gnu::packed]] LineProgramUnitHeader32 {
+    u32 length;
+    u16 version;
+    u32 header_length;
+    u8 min_instruction_length;
+    u8 default_is_stmt;
+    i8 line_base;
+    u8 line_range;
+    u8 opcode_base;
+    u8 std_opcode_lengths[12];
+};
+
 class LineProgram {
 public:
     explicit LineProgram(InputMemoryStream& stream);
@@ -36,18 +48,6 @@ private:
     void handle_extended_opcode();
     void handle_standard_opcode(u8 opcode);
     void handle_special_opcode(u8 opcode);
-
-    struct [[gnu::packed]] UnitHeader32 {
-        u32 length;
-        u16 version;
-        u32 header_length;
-        u8 min_instruction_length;
-        u8 default_is_stmt;
-        i8 line_base;
-        u8 line_range;
-        u8 opcode_base;
-        u8 std_opcode_lengths[12];
-    };
 
     enum StandardOpcodes {
         Copy = 1,
@@ -82,7 +82,7 @@ private:
     InputMemoryStream& m_stream;
 
     size_t m_unit_offset { 0 };
-    UnitHeader32 m_unit_header {};
+    LineProgramUnitHeader32 m_unit_header {};
     Vector<String> m_source_directories;
     Vector<FileEntry> m_source_files;
 
