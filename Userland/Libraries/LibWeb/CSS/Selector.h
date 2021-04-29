@@ -53,6 +53,7 @@ public:
             HasAttribute,
             ExactValueMatch,
             Contains,
+            StartsWith,
         };
 
         AttributeMatchType attribute_match_type { AttributeMatchType::None };
@@ -67,6 +68,7 @@ public:
             Descendant,
             AdjacentSibling,
             GeneralSibling,
+            Column,
         };
         Relation relation { Relation::None };
 
