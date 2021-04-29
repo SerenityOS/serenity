@@ -873,10 +873,8 @@ int fsetpos(FILE* stream, const fpos_t* pos)
 
 void rewind(FILE* stream)
 {
-    VERIFY(stream);
-    ScopedFileLock lock(stream);
-    int rc = stream->seek(0, SEEK_SET);
-    VERIFY(rc == 0);
+    fseek(stream, 0, SEEK_SET);
+    clearerr(stream);
 }
 
 ALWAYS_INLINE void stdout_putch(char*&, char ch)
