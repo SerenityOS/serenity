@@ -314,25 +314,22 @@ void BlockFormattingContext::compute_height(Box& box)
     if (is<ReplacedBox>(box)) {
         height = compute_height_for_replaced_element(downcast<ReplacedBox>(box));
     } else {
-        if (box.computed_values().height().is_undefined_or_auto()) {
+        if (box.computed_values().height().is_undefined_or_auto()
+            || (computed_values.height().is_percentage() && !containing_block.computed_values().height().is_absolute())) {
             height = compute_auto_height_for_block_level_element(box);
         } else {
-            CSS::Length specified_height;
-            if (computed_values.height().is_percentage() && !containing_block.computed_values().height().is_absolute()) {
-                specified_height = CSS::Length::make_auto();
-            } else {
-                specified_height = computed_values.height().resolved_or_auto(box, containing_block.height());
-            }
-
-            auto specified_max_height = computed_values.max_height().resolved_or_auto(box, containing_block.height());
-            if (!specified_height.is_auto()) {
-                float used_height = specified_height.to_px(box);
-                if (!specified_max_height.is_auto())
-                    used_height = min(used_height, specified_max_height.to_px(box));
-                height = used_height;
-            }
+            height = computed_values.height().resolved_or_auto(box, containing_block.height()).to_px(box);
         }
     }
+
+    auto specified_max_height = computed_values.max_height().resolved_or_auto(box, containing_block.height());
+    if (!specified_max_height.is_auto()
+        && !(computed_values.max_height().is_percentage() && !containing_block.computed_values().height().is_absolute()))
+        height = min(height, specified_max_height.to_px(box));
+    auto specified_min_height = computed_values.min_height().resolved_or_auto(box, containing_block.height());
+    if (!specified_min_height.is_auto()
+        && !(computed_values.min_height().is_percentage() && !containing_block.computed_values().height().is_absolute()))
+        height = max(height, specified_min_height.to_px(box));
 
     box.set_height(height);
 }
