@@ -62,6 +62,7 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     case OP_imm8_EAX:
     case OP_RM16_reg16_imm8:
     case OP_RM32_reg32_imm8:
+    case OP_mm1_imm8:
         d.imm1_bytes = 1;
         break;
     case OP_reg16_RM16_imm16:
@@ -142,6 +143,7 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     case OP_reg16_RM8:
     case OP_reg32_RM8:
     case OP_mm1_mm2m64:
+    case OP_mm1_mm2m32:
     case OP_mm1m64_mm2:
     case __EndFormatsWithRMByte:
     case OP_CS:
@@ -796,7 +798,34 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build_0f(0x4E, "CMOVNG", OP_reg16_RM16, &Interpreter::CMOVcc_reg16_RM16, OP_reg32_RM32, &Interpreter::CMOVcc_reg32_RM32);
     build_0f(0x4F, "CMOVG", OP_reg16_RM16, &Interpreter::CMOVcc_reg16_RM16, OP_reg32_RM32, &Interpreter::CMOVcc_reg32_RM32);
 
+    build_0f(0x60, "PUNPCKLBW", OP_mm1_mm2m32, &Interpreter::PUNPCKLBW_mm1_mm2m32);
+    build_0f(0x61, "PUNPCKLWD", OP_mm1_mm2m32, &Interpreter::PUNPCKLWD_mm1_mm2m32);
+    build_0f(0x62, "PUNPCKLDQ", OP_mm1_mm2m32, &Interpreter::PUNPCKLDQ_mm1_mm2m32);
+    build_0f(0x63, "PACKSSWB", OP_mm1_mm2m64, &Interpreter::PACKSSWB_mm1_mm2m64);
+    build_0f(0x64, "PCMPGTB", OP_mm1_mm2m64, &Interpreter::PCMPGTB_mm1_mm2m64);
+    build_0f(0x65, "PCMPGTW", OP_mm1_mm2m64, &Interpreter::PCMPGTW_mm1_mm2m64);
+    build_0f(0x66, "PCMPGTD", OP_mm1_mm2m64, &Interpreter::PCMPGTD_mm1_mm2m64);
+    build_0f(0x67, "PACKUSWB", OP_mm1_mm2m64, &Interpreter::PACKUSWB_mm1_mm2m64);
+    build_0f(0x68, "PUNPCKHBW", OP_mm1_mm2m64, &Interpreter::PUNPCKHBW_mm1_mm2m64);
+    build_0f(0x69, "PUNPCKHWD", OP_mm1_mm2m64, &Interpreter::PUNPCKHWD_mm1_mm2m64);
+    build_0f(0x6A, "PUNPCKHDQ", OP_mm1_mm2m64, &Interpreter::PUNPCKHDQ_mm1_mm2m64);
+    build_0f(0x6B, "PACKSSDW", OP_mm1_mm2m64, &Interpreter::PACKSSDW_mm1_mm2m64);
     build_0f(0x6F, "MOVQ", OP_mm1_mm2m64, &Interpreter::MOVQ_mm1_mm2m64);
+
+    build_0f_slash(0x71, 2, "PSRLW", OP_mm1_imm8, &Interpreter::PSRLW_mm1_mm2m64);
+    build_0f_slash(0x71, 4, "PSRAW", OP_mm1_imm8, &Interpreter::PSRAW_mm1_imm8);
+    build_0f_slash(0x71, 6, "PSLLW", OP_mm1_imm8, &Interpreter::PSLLD_mm1_imm8);
+
+    build_0f_slash(0x72, 2, "PSRLD", OP_mm1_imm8, &Interpreter::PSRLD_mm1_mm2m64);
+    build_0f_slash(0x72, 4, "PSRAD", OP_mm1_imm8, &Interpreter::PSRAD_mm1_imm8);
+    build_0f_slash(0x72, 6, "PSLLW", OP_mm1_imm8, &Interpreter::PSLLW_mm1_imm8);
+
+    build_0f_slash(0x73, 2, "PSRLQ", OP_mm1_imm8, &Interpreter::PSRLQ_mm1_mm2m64);
+    build_0f_slash(0x73, 6, "PSLLQ", OP_mm1_imm8, &Interpreter::PSLLQ_mm1_imm8);
+
+    build_0f(0x74, "PCMPEQB", OP_mm1_mm2m64, &Interpreter::PCMPEQB_mm1_mm2m64);
+    build_0f(0x76, "PCMPEQD", OP_mm1_mm2m64, &Interpreter::PCMPEQD_mm1_mm2m64);
+    build_0f(0x75, "PCMPEQW", OP_mm1_mm2m64, &Interpreter::PCMPEQW_mm1_mm2m64);
     build_0f(0x77, "EMMS", OP, &Interpreter::EMMS);
     build_0f(0x7F, "MOVQ", OP_mm1m64_mm2, &Interpreter::MOVQ_mm1_m64_mm2);
 
@@ -866,6 +895,34 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     for (u8 i = 0xc8; i <= 0xcf; ++i)
         build_0f(i, "BSWAP", OP_reg32, &Interpreter::BSWAP_reg32);
 
+    build_0f(0xD1, "PSRLW", OP_mm1_mm2m64, &Interpreter::PSRLW_mm1_mm2m64);
+    build_0f(0xD2, "PSRLD", OP_mm1_mm2m64, &Interpreter::PSRLD_mm1_mm2m64);
+    build_0f(0xD3, "PSRLQ", OP_mm1_mm2m64, &Interpreter::PSRLQ_mm1_mm2m64);
+    build_0f(0xD5, "PMULLW", OP_mm1_mm2m64, &Interpreter::PMULLW_mm1_mm2m64);
+    build_0f(0xDB, "PAND", OP_mm1_mm2m64, &Interpreter::PAND_mm1_mm2m64);
+    build_0f(0xD8, "PSUBUSB", OP_mm1_mm2m64, &Interpreter::PSUBUSB_mm1_mm2m64);
+    build_0f(0xD9, "PSUBUSW", OP_mm1_mm2m64, &Interpreter::PSUBUSW_mm1_mm2m64);
+    build_0f(0xDC, "PADDUSB", OP_mm1_mm2m64, &Interpreter::PADDUSB_mm1_mm2m64);
+    build_0f(0xDD, "PADDUSW", OP_mm1_mm2m64, &Interpreter::PADDUSW_mm1_mm2m64);
+    build_0f(0xDF, "PANDN", OP_mm1_mm2m64, &Interpreter::PANDN_mm1_mm2m64);
+
+    build_0f(0xE5, "PMULHW", OP_mm1_mm2m64, &Interpreter::PMULHW_mm1_mm2m64);
+    build_0f(0xEB, "POR", OP_mm1_mm2m64, &Interpreter::POR_mm1_mm2m64);
+    build_0f(0xE1, "PSRAW", OP_mm1_mm2m64, &Interpreter::PSRAW_mm1_mm2m64);
+    build_0f(0xE2, "PSRAD", OP_mm1_mm2m64, &Interpreter::PSRAD_mm1_mm2m64);
+    build_0f(0xE8, "PSUBSB", OP_mm1_mm2m64, &Interpreter::PSUBSB_mm1_mm2m64);
+    build_0f(0xE9, "PSUBSW", OP_mm1_mm2m64, &Interpreter::PSUBSW_mm1_mm2m64);
+    build_0f(0xEC, "PADDSB", OP_mm1_mm2m64, &Interpreter::PADDSB_mm1_mm2m64);
+    build_0f(0xED, "PADDSW", OP_mm1_mm2m64, &Interpreter::PADDSW_mm1_mm2m64);
+    build_0f(0xEF, "PXOR", OP_mm1_mm2m64, &Interpreter::PXOR_mm1_mm2m64);
+
+    build_0f(0xF1, "PSLLW", OP_mm1_mm2m64, &Interpreter::PSLLW_mm1_mm2m64);
+    build_0f(0xF2, "PSLLD", OP_mm1_mm2m64, &Interpreter::PSLLD_mm1_mm2m64);
+    build_0f(0xF3, "PSLLQ", OP_mm1_mm2m64, &Interpreter::PSLLQ_mm1_mm2m64);
+    build_0f(0xF5, "PMADDWD", OP_mm1_mm2m64, &Interpreter::PMADDWD_mm1_mm2m64);
+    build_0f(0xF8, "PSUBB", OP_mm1_mm2m64, &Interpreter::PSUBB_mm1_mm2m64);
+    build_0f(0xF9, "PSUBW", OP_mm1_mm2m64, &Interpreter::PSUBW_mm1_mm2m64);
+    build_0f(0xFA, "PSUBD", OP_mm1_mm2m64, &Interpreter::PSUBD_mm1_mm2m64);
     build_0f(0xFC, "PADDB", OP_mm1_mm2m64, &Interpreter::PADDB_mm1_mm2m64);
     build_0f(0xFD, "PADDW", OP_mm1_mm2m64, &Interpreter::PADDW_mm1_mm2m64);
     build_0f(0xFE, "PADDD", OP_mm1_mm2m64, &Interpreter::PADDD_mm1_mm2m64);
@@ -1776,6 +1833,18 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
         append(", ");
         append_reg32();
         append(", cl");
+        break;
+    case OP_mm1_imm8:
+        append_mnemonic_space();
+        append_mm();
+        append(", ");
+        append_imm8();
+        break;
+    case OP_mm1_mm2m32:
+        append_mnemonic_space();
+        append_mm();
+        append(", ");
+        append_rm32();
         break;
     case OP_mm1_mm2m64:
         append_mnemonic_space();
