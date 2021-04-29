@@ -553,7 +553,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
 void FormattingContext::layout_absolutely_positioned_element(Box& box)
 {
-    auto& containing_block = context_box();
+    auto& containing_block = *box.containing_block();
     auto& box_model = box.box_model();
 
     auto specified_width = box.computed_values().width().resolved_or_auto(box, containing_block.width());
