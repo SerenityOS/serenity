@@ -47,20 +47,20 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
 
 // The compiler can't see the calls to these functions inside assembly.
 // Declare them, to avoid dead code warnings.
-extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread);
-extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap);
-extern "C" u32 do_init_context(Thread* thread, u32 flags);
+extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
+extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap) __attribute__((used));
+extern "C" u32 do_init_context(Thread* thread, u32 flags) __attribute__((used));
 extern "C" void exit_kernel_thread(void);
-extern "C" void pre_init_finished(void);
-extern "C" void post_init_finished(void);
-extern "C" void handle_interrupt(TrapFrame*);
+extern "C" void pre_init_finished(void) __attribute__((used));
+extern "C" void post_init_finished(void) __attribute__((used));
+extern "C" void handle_interrupt(TrapFrame*) __attribute__((used));
 
 // clang-format off
 
 #if ARCH(I386)
 #define EH_ENTRY(ec, title)                         \
     extern "C" void title##_asm_entry();            \
-    extern "C" void title##_handler(TrapFrame*); \
+    extern "C" void title##_handler(TrapFrame*) __attribute__((used)); \
     asm(                                            \
         ".globl " #title "_asm_entry\n"             \
         "" #title "_asm_entry: \n"                  \
@@ -84,8 +84,8 @@ extern "C" void handle_interrupt(TrapFrame*);
         "    jmp common_trap_exit \n");
 
 #define EH_ENTRY_NO_CODE(ec, title)                 \
-    extern "C" void title##_handler(TrapFrame*); \
-    extern "C" void title##_asm_entry();            \
+    extern "C" void title##_asm_entry();	    \
+    extern "C" void title##_handler(TrapFrame*) __attribute__((used)); \
     asm(                                            \
         ".globl " #title "_asm_entry\n"             \
         "" #title "_asm_entry: \n"                  \

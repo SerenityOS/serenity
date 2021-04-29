@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-extern "C" void syscall_handler(TrapFrame*);
+extern "C" void syscall_handler(TrapFrame*) __attribute__((used));
 extern "C" void syscall_asm_entry();
 
 // clang-format off
@@ -129,7 +129,7 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
 
 }
 
-void syscall_handler(TrapFrame* trap)
+NEVER_INLINE void syscall_handler(TrapFrame* trap)
 {
     auto& regs = *trap->regs;
     auto current_thread = Thread::current();

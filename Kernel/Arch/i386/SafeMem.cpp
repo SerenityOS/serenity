@@ -40,7 +40,7 @@ extern "C" u8* safe_atomic_compare_exchange_relaxed_faulted;
 namespace Kernel {
 
 CODE_SECTION(".text.safemem")
-bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
+NEVER_INLINE bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
 {
     fault_at = nullptr;
     size_t dest = (size_t)dest_ptr;
@@ -86,7 +86,7 @@ bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
 }
 
 CODE_SECTION(".text.safemem")
-ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
+NEVER_INLINE ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
 {
     ssize_t count = 0;
     fault_at = nullptr;
@@ -115,7 +115,7 @@ ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
 }
 
 CODE_SECTION(".text.safemem")
-bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
+NEVER_INLINE bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
 {
     fault_at = nullptr;
     size_t dest = (size_t)dest_ptr;
@@ -163,7 +163,7 @@ bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
 }
 
 CODE_SECTION(".text.safemem.atomic")
-Optional<u32> safe_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
+NEVER_INLINE Optional<u32> safe_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
 {
     u32 result;
     bool error;
@@ -181,7 +181,7 @@ Optional<u32> safe_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
 }
 
 CODE_SECTION(".text.safemem.atomic")
-Optional<u32> safe_atomic_exchange_relaxed(volatile u32* var, u32 val)
+NEVER_INLINE Optional<u32> safe_atomic_exchange_relaxed(volatile u32* var, u32 val)
 {
     u32 result;
     bool error;
@@ -199,7 +199,7 @@ Optional<u32> safe_atomic_exchange_relaxed(volatile u32* var, u32 val)
 }
 
 CODE_SECTION(".text.safemem.atomic")
-Optional<u32> safe_atomic_load_relaxed(volatile u32* var)
+NEVER_INLINE Optional<u32> safe_atomic_load_relaxed(volatile u32* var)
 {
     u32 result;
     bool error;
@@ -217,7 +217,7 @@ Optional<u32> safe_atomic_load_relaxed(volatile u32* var)
 }
 
 CODE_SECTION(".text.safemem.atomic")
-bool safe_atomic_store_relaxed(volatile u32* var, u32 val)
+NEVER_INLINE bool safe_atomic_store_relaxed(volatile u32* var, u32 val)
 {
     bool error;
     asm volatile(
@@ -232,7 +232,7 @@ bool safe_atomic_store_relaxed(volatile u32* var, u32 val)
 }
 
 CODE_SECTION(".text.safemem.atomic")
-Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32* var, u32& expected, u32 val)
+NEVER_INLINE Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32* var, u32& expected, u32 val)
 {
     // NOTE: accessing expected is NOT protected as it should always point
     // to a valid location in kernel memory!

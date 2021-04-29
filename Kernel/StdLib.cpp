@@ -359,8 +359,8 @@ void free(void* p)
 
 // Functions that are automatically called by the C++ compiler.
 // Declare them first, to tell the silly compiler that they are indeed being used.
-[[noreturn]] void __stack_chk_fail();
-[[noreturn]] void __stack_chk_fail_local();
+[[noreturn]] void __stack_chk_fail() __attribute__((used));
+[[noreturn]] void __stack_chk_fail_local() __attribute__((used));
 extern "C" int __cxa_atexit(void (*)(void*), void*, void*);
 [[noreturn]] void __cxa_pure_virtual();
 
