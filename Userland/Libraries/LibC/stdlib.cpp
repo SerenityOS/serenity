@@ -874,15 +874,15 @@ int wctomb(char*, wchar_t)
 
 size_t wcstombs(char* dest, const wchar_t* src, size_t max)
 {
-    char* originalDest = dest;
-    while ((size_t)(dest - originalDest) < max) {
+    char* original_dest = dest;
+    while ((size_t)(dest - original_dest) < max) {
         StringView v { (const char*)src, sizeof(wchar_t) };
 
         // FIXME: dependent on locale, for now utf-8 is supported.
         Utf8View utf8 { v };
         if (*utf8.begin() == '\0') {
             *dest = '\0';
-            return (size_t)(dest - originalDest); // Exclude null character in returned size
+            return (size_t)(dest - original_dest); // Exclude null character in returned size
         }
 
         for (auto byte : utf8) {

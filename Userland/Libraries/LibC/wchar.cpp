@@ -20,18 +20,18 @@ size_t wcslen(const wchar_t* str)
 
 wchar_t* wcscpy(wchar_t* dest, const wchar_t* src)
 {
-    wchar_t* originalDest = dest;
+    wchar_t* original_dest = dest;
     while ((*dest++ = *src++) != '\0')
         ;
-    return originalDest;
+    return original_dest;
 }
 
 wchar_t* wcsncpy(wchar_t* dest, const wchar_t* src, size_t num)
 {
-    wchar_t* originalDest = dest;
-    while (((*dest++ = *src++) != '\0') && ((size_t)(dest - originalDest) < num))
+    wchar_t* original_dest = dest;
+    while (((*dest++ = *src++) != '\0') && ((size_t)(dest - original_dest) < num))
         ;
-    return originalDest;
+    return original_dest;
 }
 
 int wcscmp(const wchar_t* s1, const wchar_t* s2)
