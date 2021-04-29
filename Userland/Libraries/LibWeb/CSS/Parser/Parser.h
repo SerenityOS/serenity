@@ -68,6 +68,7 @@ private:
     Token peek_token();
     Token current_token();
     void reconsume_current_input_token();
+    bool is_combinator(String);
 
     Vector<QualifiedStyleRule> consume_a_list_of_rules(bool top_level);
     AtStyleRule consume_an_at_rule();

@@ -151,6 +151,8 @@ static bool matches(const CSS::Selector& selector, int component_list_index, con
                 return true;
         }
         return false;
+    case CSS::Selector::ComplexSelector::Relation::Column:
+        TODO();
     }
     VERIFY_NOT_REACHED();
 }
