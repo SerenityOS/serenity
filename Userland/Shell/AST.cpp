@@ -248,6 +248,25 @@ static Vector<String> resolve_slices(RefPtr<Shell> shell, Vector<String>&& value
     return move(values);
 }
 
+void Node::clear_syntax_error()
+{
+    m_syntax_error_node->clear_syntax_error();
+}
+
+void Node::set_is_syntax_error(const SyntaxError& error_node)
+{
+    if (!m_syntax_error_node) {
+        m_syntax_error_node = error_node;
+    } else {
+        m_syntax_error_node->set_is_syntax_error(error_node);
+    }
+}
+
+bool Node::is_syntax_error() const
+{
+    return m_syntax_error_node && m_syntax_error_node->is_syntax_error();
+}
+
 void Node::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback)
 {
     auto value = run(shell)->resolve_without_cast(shell);
@@ -1884,7 +1903,7 @@ ImmediateExpression::ImmediateExpression(Position position, NameWithPosition fun
     , m_function(move(function))
     , m_closing_brace_position(move(closing_brace_position))
 {
-    if (m_is_syntax_error)
+    if (is_syntax_error())
         return;
 
     for (auto& argument : m_arguments) {
@@ -3021,7 +3040,6 @@ SyntaxError::SyntaxError(Position position, String error, bool is_continuable)
     , m_syntax_error_text(move(error))
     , m_is_continuable(is_continuable)
 {
-    m_is_syntax_error = true;
 }
 
 const SyntaxError& SyntaxError::syntax_error_node() const
