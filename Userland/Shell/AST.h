@@ -474,6 +474,7 @@ public:
         ForLoop,
         FunctionDeclaration,
         Glob,
+        Heredoc,
         HistoryEvent,
         IfCond,
         ImmediateExpression,
@@ -1311,6 +1312,39 @@ private:
 
     NonnullRefPtr<Node> m_left;
     NonnullRefPtr<Node> m_right;
+};
+
+class Heredoc final : public Node {
+public:
+    Heredoc(Position, String end, bool allow_interpolation, bool deindent);
+    virtual ~Heredoc();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const String& end() const { return m_end; }
+    bool allow_interpolation() const { return m_allows_interpolation; }
+    bool deindent() const { return m_deindent; }
+    const RefPtr<AST::Node>& contents() const { return m_contents; }
+    void set_contents(RefPtr<AST::Node> contents)
+    {
+        m_contents = move(contents);
+        if (m_contents->is_syntax_error())
+            set_is_syntax_error(m_contents->syntax_error_node());
+        else
+            clear_syntax_error();
+    }
+
+private:
+    NODE(Heredoc);
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+    virtual HitTestResult hit_test_position(size_t) const override;
+    virtual RefPtr<Node> leftmost_trivial_literal() const override { return this; };
+
+    String m_end;
+    bool m_allows_interpolation { false };
+    bool m_deindent { false };
+    RefPtr<AST::Node> m_contents;
 };
 
 class StringLiteral final : public Node {
