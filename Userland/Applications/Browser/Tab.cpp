@@ -14,6 +14,7 @@
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
 #include <Applications/Browser/TabGML.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -39,12 +40,12 @@
 
 namespace Browser {
 
-static String s_search_engine_format = {};
+String g_search_engine = {};
 
 URL url_from_user_input(const String& input)
 {
-    if (input.starts_with("?") && !s_search_engine_format.is_null()) {
-        return URL(String::formatted(s_search_engine_format, urlencode(input.substring(1))));
+    if (input.starts_with("?") && !g_search_engine.is_null()) {
+        return URL(String::formatted(g_search_engine, urlencode(input.substring(1))));
     }
 
     auto url = URL(input);
@@ -412,18 +413,23 @@ Tab::Tab(Type type)
     auto add_search_engine = [&](auto& name, auto& url_format) {
         auto action = GUI::Action::create_checkable(
             name, [&](auto&) {
-                dbgln("Setting search engine to {}", url_format);
-                s_search_engine_format = url_format;
+                g_search_engine = url_format;
+                auto m_config = Core::ConfigFile::get_for_app("Browser");
+                m_config->write_entry("Preferences", "SearchEngine", g_search_engine);
             },
             this);
         search_engine_menu.add_action(action);
         m_search_engine_actions.add_action(action);
+        if (g_search_engine == url_format) {
+            action->set_checked(true);
+        }
     };
 
     auto disable_search_engine_action = GUI::Action::create_checkable(
         "Disable", [this](auto&) {
-            dbgln("Disabling search engine");
-            s_search_engine_format = {};
+            g_search_engine = {};
+            auto m_config = Core::ConfigFile::get_for_app("Browser");
+            m_config->write_entry("Preferences", "SearchEngine", g_search_engine);
         },
         this);
     search_engine_menu.add_action(disable_search_engine_action);
@@ -433,7 +439,7 @@ Tab::Tab(Type type)
     // FIXME: Support adding custom search engines
     add_search_engine("Bing", "https://www.bing.com/search?q={}");
     add_search_engine("DuckDuckGo", "https://duckduckgo.com/?q={}");
-    add_search_engine("GitHub", "https://github.com/search=?q={}");
+    add_search_engine("GitHub", "https://github.com/search?q={}");
     add_search_engine("Google", "https://google.com/search?q={}");
     add_search_engine("Yandex", "https://yandex.com/search/?text={}");
 
