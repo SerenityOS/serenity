@@ -402,9 +402,6 @@ void And::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetad
 
 HitTestResult And::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     auto result = m_left->hit_test_position(offset);
     if (result.matching_node) {
         if (!result.closest_command_node)
@@ -508,9 +505,6 @@ void ListConcatenate::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
 
 HitTestResult ListConcatenate::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     bool first = true;
     for (auto& element : m_list) {
         auto result = element->hit_test_position(offset);
@@ -570,9 +564,6 @@ void Background::highlight_in_editor(Line::Editor& editor, Shell& shell, Highlig
 
 HitTestResult Background::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     return m_command->hit_test_position(offset);
 }
 
@@ -665,9 +656,6 @@ RefPtr<Value> BraceExpansion::run(RefPtr<Shell> shell)
 
 HitTestResult BraceExpansion::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     for (auto& entry : m_entries) {
         auto result = entry.hit_test_position(offset);
         if (result.matching_node) {
@@ -730,9 +718,6 @@ void CastToCommand::highlight_in_editor(Line::Editor& editor, Shell& shell, High
 
 HitTestResult CastToCommand::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     auto result = m_inner->hit_test_position(offset);
     if (!result.closest_node_with_semantic_meaning)
         result.closest_node_with_semantic_meaning = this;
@@ -812,9 +797,6 @@ void CastToList::highlight_in_editor(Line::Editor& editor, Shell& shell, Highlig
 
 HitTestResult CastToList::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     if (!m_inner)
         return {};
 
@@ -966,9 +948,6 @@ void DoubleQuotedString::highlight_in_editor(Line::Editor& editor, Shell& shell,
 
 HitTestResult DoubleQuotedString::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     return m_inner->hit_test_position(offset);
 }
 
@@ -1014,9 +993,6 @@ void DynamicEvaluate::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
 
 HitTestResult DynamicEvaluate::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     return m_inner->hit_test_position(offset);
 }
 
@@ -1102,9 +1078,6 @@ void FunctionDeclaration::highlight_in_editor(Line::Editor& editor, Shell& shell
 
 HitTestResult FunctionDeclaration::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     if (!m_block)
         return {};
 
@@ -1275,9 +1248,6 @@ void ForLoop::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightM
 
 HitTestResult ForLoop::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     if (m_iterated_expression) {
         if (auto result = m_iterated_expression->hit_test_position(offset); result.matching_node)
             return result;
@@ -1676,9 +1646,6 @@ void Execute::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightM
 
 HitTestResult Execute::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     auto result = m_command->hit_test_position(offset);
     if (!result.closest_node_with_semantic_meaning)
         result.closest_node_with_semantic_meaning = this;
@@ -1770,9 +1737,6 @@ void IfCond::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMe
 
 HitTestResult IfCond::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     if (auto result = m_condition->hit_test_position(offset); result.matching_node)
         return result;
 
@@ -1883,9 +1847,6 @@ Vector<Line::CompletionSuggestion> ImmediateExpression::complete_for_editor(Shel
 
 HitTestResult ImmediateExpression::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     if (m_function.position.contains(offset))
         return { this, this, this };
 
@@ -1943,9 +1904,6 @@ void Join::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMeta
 
 HitTestResult Join::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     auto result = m_left->hit_test_position(offset);
     if (result.matching_node)
         return result;
@@ -2105,9 +2063,6 @@ void MatchExpr::highlight_in_editor(Line::Editor& editor, Shell& shell, Highligh
 
 HitTestResult MatchExpr::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     auto result = m_matched_expr->hit_test_position(offset);
     if (result.matching_node)
         return result;
@@ -2170,9 +2125,6 @@ void Or::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetada
 
 HitTestResult Or::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     auto result = m_left->hit_test_position(offset);
     if (result.matching_node) {
         if (!result.closest_command_node)
@@ -2268,9 +2220,6 @@ void Pipe::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMeta
 
 HitTestResult Pipe::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     auto result = m_left->hit_test_position(offset);
     if (result.matching_node) {
         if (!result.closest_command_node)
@@ -2327,9 +2276,6 @@ void PathRedirectionNode::highlight_in_editor(Line::Editor& editor, Shell& shell
 
 HitTestResult PathRedirectionNode::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     auto result = m_path->hit_test_position(offset);
     if (!result.closest_node_with_semantic_meaning)
         result.closest_node_with_semantic_meaning = this;
@@ -2442,9 +2388,6 @@ void Range::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMet
 
 HitTestResult Range::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     auto result = m_start->hit_test_position(offset);
     if (result.matching_node) {
         if (!result.closest_command_node)
@@ -2565,9 +2508,6 @@ void Sequence::highlight_in_editor(Line::Editor& editor, Shell& shell, Highlight
 
 HitTestResult Sequence::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     for (auto& entry : m_entries) {
         auto result = entry.hit_test_position(offset);
         if (result.matching_node) {
@@ -2621,9 +2561,6 @@ void Subshell::highlight_in_editor(Line::Editor& editor, Shell& shell, Highlight
 
 HitTestResult Subshell::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     if (m_block)
         return m_block->hit_test_position(offset);
 
@@ -2713,9 +2650,6 @@ void SimpleVariable::highlight_in_editor(Line::Editor& editor, Shell& shell, Hig
 
 HitTestResult SimpleVariable::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     if (m_slice && m_slice->position().contains(offset))
         return m_slice->hit_test_position(offset);
 
@@ -2783,9 +2717,6 @@ Vector<Line::CompletionSuggestion> SpecialVariable::complete_for_editor(Shell&, 
 
 HitTestResult SpecialVariable::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     if (m_slice && m_slice->position().contains(offset))
         return m_slice->hit_test_position(offset);
 
@@ -2902,9 +2833,6 @@ Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& she
 
 HitTestResult Juxtaposition::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     auto result = m_left->hit_test_position(offset);
     if (!result.closest_node_with_semantic_meaning)
         result.closest_node_with_semantic_meaning = this;
@@ -2991,9 +2919,6 @@ void StringPartCompose::highlight_in_editor(Line::Editor& editor, Shell& shell, 
 
 HitTestResult StringPartCompose::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     auto result = m_left->hit_test_position(offset);
     if (result.matching_node)
         return result;
@@ -3219,9 +3144,6 @@ void VariableDeclarations::highlight_in_editor(Line::Editor& editor, Shell& shel
 
 HitTestResult VariableDeclarations::hit_test_position(size_t offset) const
 {
-    if (!position().contains(offset))
-        return {};
-
     for (auto decl : m_variables) {
         auto result = decl.value->hit_test_position(offset);
         if (result.matching_node)
