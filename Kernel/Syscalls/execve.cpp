@@ -96,13 +96,15 @@ static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, V
     Vector<FlatPtr> argv_entries;
     for (auto& argument : arguments) {
         push_string_on_new_stack(argument);
-        argv_entries.append(new_esp);
+        if (!argv_entries.try_append(new_esp))
+            return ENOMEM;
     }
 
     Vector<FlatPtr> env_entries;
     for (auto& variable : environment) {
         push_string_on_new_stack(variable);
-        env_entries.append(new_esp);
+        if (!env_entries.try_append(new_esp))
+            return ENOMEM;
     }
 
     for (auto& value : auxiliary_values) {
@@ -912,14 +914,16 @@ KResultOr<int> Process::sys$execve(Userspace<const Syscall::SC_execve_params*> u
         if (size.has_overflow())
             return false;
         Vector<Syscall::StringArgument, 32> strings;
-        strings.resize(list.length);
+        if (!strings.try_resize(list.length))
+            return false;
         if (!copy_from_user(strings.data(), list.strings, list.length * sizeof(*list.strings)))
             return false;
         for (size_t i = 0; i < list.length; ++i) {
             auto string = copy_string_from_user(strings[i]);
             if (string.is_null())
                 return false;
-            output.append(move(string));
+            if (!output.try_append(move(string)))
+                return false;
         }
         return true;
     };
