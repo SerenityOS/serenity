@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil(config->file_name().characters(), "crw") < 0) {
+    if (unveil(config->filename().characters(), "crw") < 0) {
         perror("unveil");
         return 1;
     }

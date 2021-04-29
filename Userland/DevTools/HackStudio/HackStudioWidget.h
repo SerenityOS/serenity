@@ -86,7 +86,7 @@ private:
     NonnullRefPtr<GUI::Action> create_set_autocomplete_mode_action();
 
     void add_new_editor(GUI::Widget& parent);
-    RefPtr<EditorWrapper> get_editor_of_file(const String& file_name);
+    RefPtr<EditorWrapper> get_editor_of_file(const String& filename);
     String get_project_executable_path() const;
 
     void on_action_tab_change();

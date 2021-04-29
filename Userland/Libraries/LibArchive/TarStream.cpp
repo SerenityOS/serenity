@@ -132,7 +132,7 @@ void TarOutputStream::add_directory(const String& path, mode_t mode)
     TarFileHeader header;
     memset(&header, 0, sizeof(header));
     header.set_size(0);
-    header.set_file_name(String::formatted("{}/", path)); // Old tar implementations assume directory names end with a /
+    header.set_filename(String::formatted("{}/", path)); // Old tar implementations assume directory names end with a /
     header.set_type_flag(TarFileType::Directory);
     header.set_mode(mode);
     header.set_magic(gnu_magic);
@@ -149,7 +149,7 @@ void TarOutputStream::add_file(const String& path, mode_t mode, const ReadonlyBy
     TarFileHeader header;
     memset(&header, 0, sizeof(header));
     header.set_size(bytes.size());
-    header.set_file_name(path);
+    header.set_filename(path);
     header.set_type_flag(TarFileType::NormalFile);
     header.set_mode(mode);
     header.set_magic(gnu_magic);

@@ -21,7 +21,7 @@ public:
     ~AppFile();
 
     bool is_valid() const { return m_valid; }
-    String file_name() const { return m_config->file_name(); }
+    String filename() const { return m_config->filename(); }
 
     String name() const;
     String executable() const;

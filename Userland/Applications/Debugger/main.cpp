@@ -90,7 +90,7 @@ static bool insert_breakpoint_at_source_position(const String& file, size_t line
         warnln("Could not insert breakpoint at {}:{}", file, line);
         return false;
     }
-    outln("Breakpoint inserted [{}:{} ({}:{:p})]", result.value().file_name, result.value().line_number, result.value().library_name, result.value().address);
+    outln("Breakpoint inserted [{}:{} ({}:{:p})]", result.value().filename, result.value().line_number, result.value().library_name, result.value().address);
     return true;
 }
 

@@ -11,13 +11,13 @@
 
 namespace Keyboard {
 
-Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& file_name)
+Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& filename)
 {
-    auto path = file_name;
+    auto path = filename;
     if (!path.ends_with(".json")) {
         StringBuilder full_path;
         full_path.append("/res/keymaps/");
-        full_path.append(file_name);
+        full_path.append(filename);
         full_path.append(".json");
         path = full_path.to_string();
     }
@@ -25,7 +25,7 @@ Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& file_n
     auto file = Core::File::construct(path);
     file->open(Core::IODevice::ReadOnly);
     if (!file->is_open()) {
-        dbgln("Failed to open {}: {}", file_name, file->error_string());
+        dbgln("Failed to open {}: {}", filename, file->error_string());
         return {};
     }
 

@@ -10,7 +10,7 @@
 
 namespace WindowServer {
 
-CursorParams CursorParams::parse_from_file_name(const StringView& cursor_path, const Gfx::IntPoint& default_hotspot)
+CursorParams CursorParams::parse_from_filename(const StringView& cursor_path, const Gfx::IntPoint& default_hotspot)
 {
     LexicalPath path(cursor_path);
     if (!path.is_valid()) {
@@ -123,7 +123,7 @@ NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap)
 NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const StringView& filename)
 {
     auto default_hotspot = bitmap->rect().center();
-    return adopt_ref(*new Cursor(move(bitmap), CursorParams::parse_from_file_name(filename, default_hotspot)));
+    return adopt_ref(*new Cursor(move(bitmap), CursorParams::parse_from_filename(filename, default_hotspot)));
 }
 
 RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)

@@ -337,9 +337,9 @@ void ParserAutoComplete::file_opened([[maybe_unused]] const String& file)
     set_document_data(file, create_document_data_for(file));
 }
 
-Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_declaration_of(const String& file_name, const GUI::TextPosition& identifier_position)
+Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position)
 {
-    const auto* document_ptr = get_or_create_document_data(file_name);
+    const auto* document_ptr = get_or_create_document_data(filename);
     if (!document_ptr)
         return {};
 

@@ -123,12 +123,12 @@ void KeyboardMapperWidget::create_frame()
     bottom_widget.layout()->add_spacer();
 }
 
-void KeyboardMapperWidget::load_from_file(String file_name)
+void KeyboardMapperWidget::load_from_file(String filename)
 {
-    auto result = Keyboard::CharacterMapFile::load_from_file(file_name);
+    auto result = Keyboard::CharacterMapFile::load_from_file(filename);
     VERIFY(result.has_value());
 
-    m_file_name = file_name;
+    m_filename = filename;
     m_character_map = result.value();
     set_current_map("map");
 
@@ -145,7 +145,7 @@ void KeyboardMapperWidget::load_from_system()
     auto result = Keyboard::CharacterMap::fetch_system_map();
     VERIFY(!result.is_error());
 
-    m_file_name = String::formatted("/res/keymaps/{}.json", result.value().character_map_name());
+    m_filename = String::formatted("/res/keymaps/{}.json", result.value().character_map_name());
     m_character_map = result.value().character_map_data();
     set_current_map("map");
 
@@ -159,10 +159,10 @@ void KeyboardMapperWidget::load_from_system()
 
 void KeyboardMapperWidget::save()
 {
-    save_to_file(m_file_name);
+    save_to_file(m_filename);
 }
 
-void KeyboardMapperWidget::save_to_file(const StringView& file_name)
+void KeyboardMapperWidget::save_to_file(const StringView& filename)
 {
     JsonObject map_json;
 
@@ -188,12 +188,12 @@ void KeyboardMapperWidget::save_to_file(const StringView& file_name)
     // Write to file.
     String file_content = map_json.to_string();
 
-    auto file = Core::File::construct(file_name);
+    auto file = Core::File::construct(filename);
     file->open(Core::IODevice::WriteOnly);
     if (!file->is_open()) {
         StringBuilder sb;
         sb.append("Failed to open ");
-        sb.append(file_name);
+        sb.append(filename);
         sb.append(" for write. Error: ");
         sb.append(file->error_string());
 
@@ -213,7 +213,7 @@ void KeyboardMapperWidget::save_to_file(const StringView& file_name)
     }
 
     m_modified = false;
-    m_file_name = file_name;
+    m_filename = filename;
     update_window_title();
 }
 
@@ -274,7 +274,7 @@ void KeyboardMapperWidget::set_current_map(const String current_map)
 void KeyboardMapperWidget::update_window_title()
 {
     StringBuilder sb;
-    sb.append(m_file_name);
+    sb.append(m_filename);
     if (m_modified)
         sb.append(" (*)");
     sb.append(" - KeyboardMapper");

@@ -362,7 +362,7 @@ void Thread::finalize()
         ScopedSpinLock list_lock(m_holding_locks_lock);
         for (auto& info : m_holding_locks_list) {
             const auto& location = info.source_location;
-            dbgln(" - Lock: \"{}\" @ {} locked in function \"{}\" at \"{}:{}\" with a count of: {}", info.lock->name(), info.lock, location.function_name(), location.file_name(), location.line_number(), info.count);
+            dbgln(" - Lock: \"{}\" @ {} locked in function \"{}\" at \"{}:{}\" with a count of: {}", info.lock->name(), info.lock, location.function_name(), location.filename(), location.line_number(), info.count);
         }
         VERIFY_NOT_REACHED();
     }

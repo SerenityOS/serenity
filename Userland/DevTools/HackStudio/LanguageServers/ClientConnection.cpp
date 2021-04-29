@@ -46,28 +46,28 @@ OwnPtr<Messages::LanguageServer::GreetResponse> ClientConnection::handle(const M
 
 void ClientConnection::handle(const Messages::LanguageServer::FileOpened& message)
 {
-    if (m_filedb.is_open(message.file_name())) {
+    if (m_filedb.is_open(message.filename())) {
         return;
     }
-    m_filedb.add(message.file_name(), message.file().take_fd());
-    m_autocomplete_engine->file_opened(message.file_name());
+    m_filedb.add(message.filename(), message.file().take_fd());
+    m_autocomplete_engine->file_opened(message.filename());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText& message)
 {
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "InsertText for file: {}", message.file_name());
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "InsertText for file: {}", message.filename());
     dbgln_if(LANGUAGE_SERVER_DEBUG, "Text: {}", message.text());
     dbgln_if(LANGUAGE_SERVER_DEBUG, "[{}:{}]", message.start_line(), message.start_column());
-    m_filedb.on_file_edit_insert_text(message.file_name(), message.text(), message.start_line(), message.start_column());
-    m_autocomplete_engine->on_edit(message.file_name());
+    m_filedb.on_file_edit_insert_text(message.filename(), message.text(), message.start_line(), message.start_column());
+    m_autocomplete_engine->on_edit(message.filename());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText& message)
 {
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "RemoveText for file: {}", message.file_name());
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "RemoveText for file: {}", message.filename());
     dbgln_if(LANGUAGE_SERVER_DEBUG, "[{}:{} - {}:{}]", message.start_line(), message.start_column(), message.end_line(), message.end_column());
-    m_filedb.on_file_edit_remove_text(message.file_name(), message.start_line(), message.start_column(), message.end_line(), message.end_column());
-    m_autocomplete_engine->on_edit(message.file_name());
+    m_filedb.on_file_edit_remove_text(message.filename(), message.start_line(), message.start_column(), message.end_line(), message.end_column());
+    m_autocomplete_engine->on_edit(message.filename());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSuggestions& message)
@@ -87,17 +87,17 @@ void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSugges
 
 void ClientConnection::handle(const Messages::LanguageServer::SetFileContent& message)
 {
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "SetFileContent: {}", message.file_name());
-    auto document = m_filedb.get(message.file_name());
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "SetFileContent: {}", message.filename());
+    auto document = m_filedb.get(message.filename());
     if (!document) {
-        m_filedb.add(message.file_name(), message.content());
-        VERIFY(m_filedb.is_open(message.file_name()));
+        m_filedb.add(message.filename(), message.content());
+        VERIFY(m_filedb.is_open(message.filename()));
     } else {
         const auto& content = message.content();
         document->set_text(content.view());
     }
-    VERIFY(m_filedb.is_open(message.file_name()));
-    m_autocomplete_engine->on_edit(message.file_name());
+    VERIFY(m_filedb.is_open(message.filename()));
+    m_autocomplete_engine->on_edit(message.filename());
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FindDeclaration& message)

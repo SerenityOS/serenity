@@ -13,7 +13,7 @@ namespace WindowServer {
 
 class CursorParams {
 public:
-    static CursorParams parse_from_file_name(const StringView&, const Gfx::IntPoint&);
+    static CursorParams parse_from_filename(const StringView&, const Gfx::IntPoint&);
     CursorParams(const Gfx::IntPoint& hotspot)
         : m_hotspot(hotspot)
     {

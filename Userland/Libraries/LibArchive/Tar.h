@@ -38,7 +38,7 @@ constexpr const char* posix1_tar_version = ""; // POSIX.1-1988 format version
 
 class [[gnu::packed]] TarFileHeader {
 public:
-    const StringView file_name() const { return m_file_name; }
+    const StringView filename() const { return m_filename; }
     mode_t mode() const { return get_tar_field(m_mode); }
     uid_t uid() const { return get_tar_field(m_uid); }
     gid_t gid() const { return get_tar_field(m_gid); }
@@ -57,7 +57,7 @@ public:
     // FIXME: support ustar filename prefix
     const StringView prefix() const { return m_prefix; }
 
-    void set_file_name(const String& file_name) { VERIFY(file_name.copy_characters_to_buffer(m_file_name, sizeof(m_file_name))); }
+    void set_filename(const String& filename) { VERIFY(filename.copy_characters_to_buffer(m_filename, sizeof(m_filename))); }
     void set_mode(mode_t mode) { VERIFY(String::formatted("{:o}", mode).copy_characters_to_buffer(m_mode, sizeof(m_mode))); }
     void set_uid(uid_t uid) { VERIFY(String::formatted("{:o}", uid).copy_characters_to_buffer(m_uid, sizeof(m_uid))); }
     void set_gid(gid_t gid) { VERIFY(String::formatted("{:o}", gid).copy_characters_to_buffer(m_gid, sizeof(m_gid))); }
@@ -77,7 +77,7 @@ public:
     void calculate_checksum();
 
 private:
-    char m_file_name[100];
+    char m_filename[100];
     char m_mode[8];
     char m_uid[8];
     char m_gid[8];

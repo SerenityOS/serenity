@@ -30,7 +30,7 @@
         }
 
         @GUI::Label {
-            text: "File name:"
+            text: "Filename:"
             text_alignment: "CenterRight"
             fixed_height: 24
         }
