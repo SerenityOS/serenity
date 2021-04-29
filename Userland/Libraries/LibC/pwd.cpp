@@ -152,11 +152,11 @@ static void construct_pwd(struct passwd* pwd, char* buf, struct passwd** result)
     auto* buf_shell = &buf[s_dir.length() + 1 + s_gecos.length() + 1 + s_name.length() + 1 + s_gecos.length() + 1];
 
     bool ok = true;
-    ok = ok || s_name.copy_characters_to_buffer(buf_name, s_name.length() + 1);
-    ok = ok || s_passwd.copy_characters_to_buffer(buf_passwd, s_passwd.length() + 1);
-    ok = ok || s_gecos.copy_characters_to_buffer(buf_gecos, s_gecos.length() + 1);
-    ok = ok || s_dir.copy_characters_to_buffer(buf_dir, s_dir.length() + 1);
-    ok = ok || s_shell.copy_characters_to_buffer(buf_shell, s_shell.length() + 1);
+    ok = ok && s_name.copy_characters_to_buffer(buf_name, s_name.length() + 1);
+    ok = ok && s_passwd.copy_characters_to_buffer(buf_passwd, s_passwd.length() + 1);
+    ok = ok && s_gecos.copy_characters_to_buffer(buf_gecos, s_gecos.length() + 1);
+    ok = ok && s_dir.copy_characters_to_buffer(buf_dir, s_dir.length() + 1);
+    ok = ok && s_shell.copy_characters_to_buffer(buf_shell, s_shell.length() + 1);
 
     VERIFY(ok);
 
