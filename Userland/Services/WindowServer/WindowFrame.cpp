@@ -584,17 +584,29 @@ bool WindowFrame::hit_test(const Gfx::IntPoint& point) const
     u8 alpha = 0xff;
     auto relative_point = point.translated(-render_rect().location());
     if (point.y() < window_rect.y()) {
-        if (m_top_bottom)
-            alpha = m_top_bottom->get_pixel(relative_point * m_top_bottom->scale()).alpha();
+        if (m_top_bottom) {
+            auto scaled_relative_point = relative_point * m_top_bottom->scale();
+            if (m_top_bottom->rect().contains(scaled_relative_point))
+                alpha = m_top_bottom->get_pixel(scaled_relative_point).alpha();
+        }
     } else if (point.y() > window_rect.bottom()) {
-        if (m_top_bottom)
-            alpha = m_top_bottom->get_pixel(relative_point.x() * m_top_bottom->scale(), m_bottom_y * m_top_bottom->scale() + point.y() - window_rect.bottom() - 1).alpha();
+        if (m_top_bottom) {
+            Gfx::IntPoint scaled_relative_point { relative_point.x() * m_top_bottom->scale(), m_bottom_y * m_top_bottom->scale() + point.y() - window_rect.bottom() - 1 };
+            if (m_top_bottom->rect().contains(scaled_relative_point))
+                alpha = m_top_bottom->get_pixel(scaled_relative_point).alpha();
+        }
     } else if (point.x() < window_rect.x()) {
-        if (m_left_right)
-            alpha = m_left_right->get_pixel(relative_point.x() * m_left_right->scale(), (relative_point.y() - m_bottom_y) * m_left_right->scale()).alpha();
+        if (m_left_right) {
+            Gfx::IntPoint scaled_relative_point { relative_point.x() * m_left_right->scale(), (relative_point.y() - m_bottom_y) * m_left_right->scale() };
+            if (m_left_right->rect().contains(scaled_relative_point))
+                alpha = m_left_right->get_pixel(scaled_relative_point).alpha();
+        }
     } else if (point.x() > window_rect.right()) {
-        if (m_left_right)
-            alpha = m_left_right->get_pixel(m_right_x * m_left_right->scale() + point.x() - window_rect.right() - 1, (relative_point.y() - m_bottom_y) * m_left_right->scale()).alpha();
+        if (m_left_right) {
+            Gfx::IntPoint scaled_relative_point { m_right_x * m_left_right->scale() + point.x() - window_rect.right() - 1, (relative_point.y() - m_bottom_y) * m_left_right->scale() };
+            if (m_left_right->rect().contains(scaled_relative_point))
+                alpha = m_left_right->get_pixel(scaled_relative_point).alpha();
+        }
     } else {
         return false;
     }

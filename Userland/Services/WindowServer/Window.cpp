@@ -955,8 +955,10 @@ bool Window::hit_test(const Gfx::IntPoint& point, bool include_frame) const
     if (threshold == 0 || !m_backing_store || !m_backing_store->has_alpha_channel())
         return true;
     auto relative_point = point.translated(-rect().location()) * m_backing_store->scale();
-    auto color = m_backing_store->get_pixel(relative_point);
-    return color.alpha() >= threshold;
+    u8 alpha = 0xff;
+    if (m_backing_store->rect().contains(relative_point))
+        alpha = m_backing_store->get_pixel(relative_point).alpha();
+    return alpha >= threshold;
 }
 
 void Window::set_menubar(Menubar* menubar)
