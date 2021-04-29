@@ -285,6 +285,9 @@ void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
         case CSS::Selector::ComplexSelector::Relation::GeneralSibling:
             relation_description = "GeneralSibling";
             break;
+        case CSS::Selector::ComplexSelector::Relation::Column:
+            relation_description = "Column";
+            break;
         }
 
         if (*relation_description)
@@ -322,6 +325,9 @@ void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
                 break;
             case CSS::Selector::SimpleSelector::AttributeMatchType::Contains:
                 attribute_match_type_description = "Contains";
+                break;
+            case CSS::Selector::SimpleSelector::AttributeMatchType::StartsWith:
+                attribute_match_type_description = "StartsWith";
                 break;
             }
 
