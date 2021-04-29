@@ -46,6 +46,13 @@ private:
         ShouldReadMoreSequences decision;
     };
 
+    struct HeredocInitiationRecord {
+        String end;
+        RefPtr<AST::Heredoc> node;
+        bool interpolate { false };
+        bool deindent { false };
+    };
+
     constexpr static size_t max_allowed_nested_rule_depth = 2048;
     RefPtr<AST::Node> parse_toplevel();
     SequenceParseResult parse_sequence();
@@ -81,11 +88,19 @@ private:
     RefPtr<AST::Node> parse_brace_expansion();
     RefPtr<AST::Node> parse_brace_expansion_spec();
     RefPtr<AST::Node> parse_immediate_expression();
+    RefPtr<AST::Node> parse_heredoc_initiation_record();
+    bool parse_heredoc_entries();
 
     template<typename A, typename... Args>
     NonnullRefPtr<A> create(Args... args);
 
-    bool at_end() const { return m_input.length() <= m_offset; }
+    void set_end_condition(Function<bool()> condition) { m_end_condition = move(condition); }
+    bool at_end() const
+    {
+        if (m_end_condition && m_end_condition())
+            return true;
+        return m_input.length() <= m_offset;
+    }
     char peek();
     char consume();
     bool expect(char);
@@ -144,6 +159,8 @@ private:
     Vector<size_t> m_rule_start_offsets;
     Vector<AST::Position::Line> m_rule_start_lines;
 
+    Function<bool()> m_end_condition;
+    Vector<HeredocInitiationRecord> m_heredoc_initiations;
     Vector<char> m_extra_chars_not_allowed_in_barewords;
     bool m_is_in_brace_expansion_spec { false };
     bool m_continuation_controls_allowed { false };
@@ -169,7 +186,9 @@ and_logical_sequence :: pipe_sequence '&' '&' and_logical_sequence
                       | pipe_sequence
 
 terminator :: ';'
-            | '\n'
+            | '\n' [?!heredoc_stack.is_empty] heredoc_entries
+
+heredoc_entries :: { .*? (heredoc_entry) '\n' } [each heredoc_entries]
 
 variable_decls :: identifier '=' expression (' '+ variable_decls)? ' '*
                 | identifier '=' '(' pipe_sequence ')' (' '+ variable_decls)? ' '*
@@ -233,6 +252,12 @@ string_composite :: string string_composite?
                   | bareword string_composite?
                   | glob string_composite?
                   | brace_expansion string_composite?
+                  | heredoc_initiator string_composite?    {append to heredoc_entries}
+
+heredoc_initiator :: '<' '<' '-' bareword         {*bareword, interpolate, no deindent}
+                   | '<' '<' '-' "'" [^']* "'"    {*string, no interpolate, no deindent}
+                   | '<' '<' '~' bareword         {*bareword, interpolate, deindent}
+                   | '<' '<' '~' "'" [^']* "'"    {*bareword, no interpolate, deindent}
 
 string :: '"' dquoted_string_inner '"'
         | "'" [^']* "'"
