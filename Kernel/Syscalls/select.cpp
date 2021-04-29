@@ -78,8 +78,10 @@ KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> u
             dbgln("sys$select: Bad fd number {}", fd);
             return EBADF;
         }
-        fds_info.append({ description.release_nonnull(), block_flags });
-        fds.append(fd);
+        if (!fds_info.try_append({ description.release_nonnull(), block_flags }))
+            return ENOMEM;
+        if (!fds.try_append(fd))
+            return ENOMEM;
     }
 
     if constexpr (IO_DEBUG || POLL_SELECT_DEBUG)
