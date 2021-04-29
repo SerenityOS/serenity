@@ -54,7 +54,7 @@ public:
 
     virtual void update() override
     {
-        did_update(GUI::Model::DontInvalidateIndexes);
+        did_update(GUI::Model::DontInvalidateIndices);
     }
 
     virtual void model_did_update([[maybe_unused]] unsigned flags) override

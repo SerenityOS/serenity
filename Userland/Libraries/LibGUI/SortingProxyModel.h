@@ -46,7 +46,7 @@ public:
 private:
     explicit SortingProxyModel(NonnullRefPtr<Model> source);
 
-    // NOTE: The internal_data() of indexes points to the corresponding Mapping object for that index.
+    // NOTE: The internal_data() of indices points to the corresponding Mapping object for that index.
     struct Mapping {
         Vector<int> source_rows;
         Vector<int> proxy_rows;
@@ -63,7 +63,7 @@ private:
     Model& source() { return *m_source; }
     const Model& source() const { return *m_source; }
 
-    void invalidate(unsigned flags = Model::UpdateFlag::DontInvalidateIndexes);
+    void invalidate(unsigned flags = Model::UpdateFlag::DontInvalidateIndices);
     InternalMapIterator build_mapping(const ModelIndex& proxy_index);
 
     NonnullRefPtr<Model> m_source;

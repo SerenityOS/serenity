@@ -208,32 +208,32 @@ Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks) const
     return shape;
 }
 
-KResult Ext2FSInode::write_indirect_block(BlockBasedFS::BlockIndex block, Span<BlockBasedFS::BlockIndex> blocks_indexes)
+KResult Ext2FSInode::write_indirect_block(BlockBasedFS::BlockIndex block, Span<BlockBasedFS::BlockIndex> blocks_indices)
 {
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
-    VERIFY(blocks_indexes.size() <= entries_per_block);
+    VERIFY(blocks_indices.size() <= entries_per_block);
 
     auto block_contents = ByteBuffer::create_uninitialized(fs().block_size());
     OutputMemoryStream stream { block_contents };
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
 
-    VERIFY(blocks_indexes.size() <= EXT2_ADDR_PER_BLOCK(&fs().super_block()));
-    for (unsigned i = 0; i < blocks_indexes.size(); ++i)
-        stream << static_cast<u32>(blocks_indexes[i].value());
+    VERIFY(blocks_indices.size() <= EXT2_ADDR_PER_BLOCK(&fs().super_block()));
+    for (unsigned i = 0; i < blocks_indices.size(); ++i)
+        stream << static_cast<u32>(blocks_indices[i].value());
     stream.fill_to_end(0);
 
     return fs().write_block(block, buffer, stream.size());
 }
 
-KResult Ext2FSInode::grow_doubly_indirect_block(BlockBasedFS::BlockIndex block, size_t old_blocks_length, Span<BlockBasedFS::BlockIndex> blocks_indexes, Vector<Ext2FS::BlockIndex>& new_meta_blocks, unsigned& meta_blocks)
+KResult Ext2FSInode::grow_doubly_indirect_block(BlockBasedFS::BlockIndex block, size_t old_blocks_length, Span<BlockBasedFS::BlockIndex> blocks_indices, Vector<Ext2FS::BlockIndex>& new_meta_blocks, unsigned& meta_blocks)
 {
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
     const auto old_indirect_blocks_length = divide_rounded_up(old_blocks_length, entries_per_block);
-    const auto new_indirect_blocks_length = divide_rounded_up(blocks_indexes.size(), entries_per_block);
-    VERIFY(blocks_indexes.size() > 0);
-    VERIFY(blocks_indexes.size() > old_blocks_length);
-    VERIFY(blocks_indexes.size() <= entries_per_doubly_indirect_block);
+    const auto new_indirect_blocks_length = divide_rounded_up(blocks_indices.size(), entries_per_block);
+    VERIFY(blocks_indices.size() > 0);
+    VERIFY(blocks_indices.size() > old_blocks_length);
+    VERIFY(blocks_indices.size() <= entries_per_doubly_indirect_block);
 
     auto block_contents = ByteBuffer::create_uninitialized(fs().block_size());
     auto* block_as_pointers = (unsigned*)block_contents.data();
@@ -259,7 +259,7 @@ KResult Ext2FSInode::grow_doubly_indirect_block(BlockBasedFS::BlockIndex block, 
     // Write out the indirect blocks.
     for (unsigned i = old_blocks_length / entries_per_block; i < new_indirect_blocks_length; i++) {
         const auto offset_block = i * entries_per_block;
-        if (auto result = write_indirect_block(block_as_pointers[i], blocks_indexes.slice(offset_block, min(blocks_indexes.size() - offset_block, entries_per_block))); result.is_error())
+        if (auto result = write_indirect_block(block_as_pointers[i], blocks_indices.slice(offset_block, min(blocks_indices.size() - offset_block, entries_per_block))); result.is_error())
             return result;
     }
 
@@ -302,16 +302,16 @@ KResult Ext2FSInode::shrink_doubly_indirect_block(BlockBasedFS::BlockIndex block
     return KSuccess;
 }
 
-KResult Ext2FSInode::grow_triply_indirect_block(BlockBasedFS::BlockIndex block, size_t old_blocks_length, Span<BlockBasedFS::BlockIndex> blocks_indexes, Vector<Ext2FS::BlockIndex>& new_meta_blocks, unsigned& meta_blocks)
+KResult Ext2FSInode::grow_triply_indirect_block(BlockBasedFS::BlockIndex block, size_t old_blocks_length, Span<BlockBasedFS::BlockIndex> blocks_indices, Vector<Ext2FS::BlockIndex>& new_meta_blocks, unsigned& meta_blocks)
 {
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
     const auto entries_per_triply_indirect_block = entries_per_block * entries_per_block;
     const auto old_doubly_indirect_blocks_length = divide_rounded_up(old_blocks_length, entries_per_doubly_indirect_block);
-    const auto new_doubly_indirect_blocks_length = divide_rounded_up(blocks_indexes.size(), entries_per_doubly_indirect_block);
-    VERIFY(blocks_indexes.size() > 0);
-    VERIFY(blocks_indexes.size() > old_blocks_length);
-    VERIFY(blocks_indexes.size() <= entries_per_triply_indirect_block);
+    const auto new_doubly_indirect_blocks_length = divide_rounded_up(blocks_indices.size(), entries_per_doubly_indirect_block);
+    VERIFY(blocks_indices.size() > 0);
+    VERIFY(blocks_indices.size() > old_blocks_length);
+    VERIFY(blocks_indices.size() <= entries_per_triply_indirect_block);
 
     auto block_contents = ByteBuffer::create_uninitialized(fs().block_size());
     auto* block_as_pointers = (unsigned*)block_contents.data();
@@ -338,8 +338,8 @@ KResult Ext2FSInode::grow_triply_indirect_block(BlockBasedFS::BlockIndex block, 
     for (unsigned i = old_blocks_length / entries_per_doubly_indirect_block; i < new_doubly_indirect_blocks_length; i++) {
         const auto processed_blocks = i * entries_per_doubly_indirect_block;
         const auto old_doubly_indirect_blocks_length = min(old_blocks_length > processed_blocks ? old_blocks_length - processed_blocks : 0, entries_per_doubly_indirect_block);
-        const auto new_doubly_indirect_blocks_length = min(blocks_indexes.size() > processed_blocks ? blocks_indexes.size() - processed_blocks : 0, entries_per_doubly_indirect_block);
-        if (auto result = grow_doubly_indirect_block(block_as_pointers[i], old_doubly_indirect_blocks_length, blocks_indexes.slice(processed_blocks, new_doubly_indirect_blocks_length), new_meta_blocks, meta_blocks); result.is_error())
+        const auto new_doubly_indirect_blocks_length = min(blocks_indices.size() > processed_blocks ? blocks_indices.size() - processed_blocks : 0, entries_per_doubly_indirect_block);
+        if (auto result = grow_doubly_indirect_block(block_as_pointers[i], old_doubly_indirect_blocks_length, blocks_indices.slice(processed_blocks, new_doubly_indirect_blocks_length), new_meta_blocks, meta_blocks); result.is_error())
             return result;
     }
 

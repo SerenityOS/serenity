@@ -67,7 +67,7 @@ typedef uint32_t Elf64_Half;
 typedef uint16_t Elf64_Quarter;
 
 /*
- * e_ident[] identification indexes
+ * e_ident[] identification indices
  * See http://www.sco.com/developers/gabi/latest/ch4.eheader.html
  */
 #define EI_MAG0 0       /* file ID */
@@ -241,15 +241,15 @@ typedef struct {
     Elf64_Xword sh_entsize;   /* table entry size */
 } Elf64_Shdr;
 
-/* Special Section Indexes */
+/* Special Section Indices */
 #define SHN_UNDEF 0          /* undefined */
-#define SHN_LORESERVE 0xff00 /* lower bounds of reserved indexes */
+#define SHN_LORESERVE 0xff00 /* lower bounds of reserved indices */
 #define SHN_LOPROC 0xff00    /* reserved range for processor */
-#define SHN_HIPROC 0xff1f    /*   specific section indexes */
+#define SHN_HIPROC 0xff1f    /*   specific section indices */
 #define SHN_ABS 0xfff1       /* absolute value */
 #define SHN_COMMON 0xfff2    /* common symbol */
 #define SHN_XINDEX 0xffff    /* Escape -- index stored elsewhere. */
-#define SHN_HIRESERVE 0xffff /* upper bounds of reserved indexes */
+#define SHN_HIRESERVE 0xffff /* upper bounds of reserved indices */
 
 /* sh_type */
 #define SHT_NULL 0                  /* inactive */
@@ -269,7 +269,7 @@ typedef struct {
 #define SHT_FINI_ARRAY 15           /* pointers to termination functions */
 #define SHT_PREINIT_ARRAY 16        /* ptrs to funcs called before init */
 #define SHT_GROUP 17                /* defines a section group */
-#define SHT_SYMTAB_SHNDX 18         /* Section indexes (see SHN_XINDEX). */
+#define SHT_SYMTAB_SHNDX 18         /* Section indices (see SHN_XINDEX). */
 #define SHT_LOOS 0x60000000         /* reserved range for OS specific */
 #define SHT_SUNW_dof 0x6ffffff4     /* used by dtrace */
 #define SHT_GNU_LIBLIST 0x6ffffff7  /* libraries to be prelinked */
@@ -282,7 +282,7 @@ typedef struct {
 #define SHT_LOPROC 0x70000000       /* reserved range for processor */
 #define SHT_HIPROC 0x7fffffff       /*  specific section header types */
 #define SHT_LOUSER 0x80000000       /* reserved range for application */
-#define SHT_HIUSER 0xffffffff       /*  specific indexes */
+#define SHT_HIUSER 0xffffffff       /*  specific indices */
 
 #define SHT_GNU_HASH 0x6ffffff6 /* GNU-style hash table section */
 

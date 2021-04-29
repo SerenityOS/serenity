@@ -161,15 +161,15 @@ public:
     Vector<u8> to_vector() const
     {
         // FIXME: Add a sync mechanism!
-        Vector<u8> indexes;
+        Vector<u8> indices;
         u32 bitfield = m_bitfield & m_bit_mask;
         for (size_t index = 0; index < 32; index++) {
             if (bitfield & 1) {
-                indexes.append(index);
+                indices.append(index);
             }
             bitfield >>= 1;
         }
-        return indexes;
+        return indices;
     }
 
     u32 bit_mask() const { return m_bit_mask; };

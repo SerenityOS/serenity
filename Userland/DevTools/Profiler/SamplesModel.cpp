@@ -89,5 +89,5 @@ GUI::Variant SamplesModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 
 void SamplesModel::update()
 {
-    did_update(Model::InvalidateAllIndexes);
+    did_update(Model::InvalidateAllIndices);
 }
