@@ -175,7 +175,7 @@ void DisplaySettingsWidget::create_frame()
 
 void DisplaySettingsWidget::load_current_settings()
 {
-    auto ws_config(Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini"));
+    auto ws_config(Core::ConfigFile::open("/etc/WindowServer.ini"));
     auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
 
     /// Wallpaper path ////////////////////////////////////////////////////////////////////////////
@@ -253,7 +253,7 @@ void DisplaySettingsWidget::load_current_settings()
 void DisplaySettingsWidget::send_settings_to_window_server()
 {
     // Store the current screen resolution and scale factor in case the user wants to revert to it.
-    auto ws_config(Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini"));
+    auto ws_config(Core::ConfigFile::open("/etc/WindowServer.ini"));
     Gfx::IntSize current_resolution;
     current_resolution.set_width(ws_config->read_num_entry("Screen", "Width", 1024));
     current_resolution.set_height(ws_config->read_num_entry("Screen", "Height", 768));

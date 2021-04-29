@@ -738,7 +738,7 @@ OwnPtr<Messages::WindowServer::SetSystemThemeResponse> ClientConnection::handle(
 
 OwnPtr<Messages::WindowServer::GetSystemThemeResponse> ClientConnection::handle(const Messages::WindowServer::GetSystemTheme&)
 {
-    auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
     auto name = wm_config->read_entry("Theme", "Name");
     return make<Messages::WindowServer::GetSystemThemeResponse>(name);
 }

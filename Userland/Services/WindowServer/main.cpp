@@ -34,8 +34,8 @@ int main(int, char**)
         return 1;
     }
 
-    if (unveil("/etc/WindowServer/WindowServer.ini", "rwc") < 0) {
-        perror("unveil /etc/WindowServer/WindowServer.ini");
+    if (unveil("/etc/WindowServer.ini", "rwc") < 0) {
+        perror("unveil /etc/WindowServer.ini");
         return 1;
     }
 
@@ -54,7 +54,7 @@ int main(int, char**)
         return 1;
     }
 
-    auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
 
     auto theme = Gfx::load_system_theme(String::formatted("/res/themes/{}.ini", theme_name));
