@@ -34,7 +34,7 @@ private:
     Vector<KeyButton*> m_keys;
     RefPtr<GUI::Widget> m_map_group;
 
-    String m_file_name;
+    String m_filename;
     Keyboard::CharacterMapData m_character_map;
     String m_current_map_name;
     bool m_modified { false };

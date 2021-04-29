@@ -2,10 +2,10 @@ endpoint LanguageServer
 {
     Greet(String project_root) => ()
 
-    FileOpened(String file_name, IPC::File file) =|
-    FileEditInsertText(String file_name, String text, i32 start_line, i32 start_column) =|
-    FileEditRemoveText(String file_name, i32 start_line, i32 start_column, i32 end_line, i32 end_column) =|
-    SetFileContent(String file_name, String content) =|
+    FileOpened(String filename, IPC::File file) =|
+    FileEditInsertText(String filename, String text, i32 start_line, i32 start_column) =|
+    FileEditRemoveText(String filename, i32 start_line, i32 start_column, i32 end_line, i32 end_column) =|
+    SetFileContent(String filename, String content) =|
 
     AutoCompleteSuggestions(GUI::AutocompleteProvider::ProjectLocation location) =|
     SetAutoCompleteMode(String mode) =|

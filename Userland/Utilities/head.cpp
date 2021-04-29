@@ -30,8 +30,8 @@ int main(int argc, char** argv)
     args_parser.set_general_help("Print the beginning ('head') of a file.");
     args_parser.add_option(line_count, "Number of lines to print (default 10)", "lines", 'n', "number");
     args_parser.add_option(char_count, "Number of characters to print", "characters", 'c', "number");
-    args_parser.add_option(never_print_filenames, "Never print file names", "quiet", 'q');
-    args_parser.add_option(always_print_filenames, "Always print file names", "verbose", 'v');
+    args_parser.add_option(never_print_filenames, "Never print filenames", "quiet", 'q');
+    args_parser.add_option(always_print_filenames, "Always print filenames", "verbose", 'v');
     args_parser.add_positional_argument(files, "File to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 

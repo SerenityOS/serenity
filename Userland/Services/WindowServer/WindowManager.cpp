@@ -116,13 +116,13 @@ bool WindowManager::set_resolution(int width, int height, int scale)
     }
     if (m_config) {
         if (success) {
-            dbgln("Saving resolution: {} @ {}x to config file at {}", Gfx::IntSize(width, height), scale, m_config->file_name());
+            dbgln("Saving resolution: {} @ {}x to config file at {}", Gfx::IntSize(width, height), scale, m_config->filename());
             m_config->write_num_entry("Screen", "Width", width);
             m_config->write_num_entry("Screen", "Height", height);
             m_config->write_num_entry("Screen", "ScaleFactor", scale);
             m_config->sync();
         } else {
-            dbgln("Saving fallback resolution: {} @1x to config file at {}", resolution(), m_config->file_name());
+            dbgln("Saving fallback resolution: {} @1x to config file at {}", resolution(), m_config->filename());
             m_config->write_num_entry("Screen", "Width", resolution().width());
             m_config->write_num_entry("Screen", "Height", resolution().height());
             m_config->write_num_entry("Screen", "ScaleFactor", 1);
@@ -140,7 +140,7 @@ Gfx::IntSize WindowManager::resolution() const
 void WindowManager::set_acceleration_factor(double factor)
 {
     Screen::the().set_acceleration_factor(factor);
-    dbgln("Saving acceleration factor {} to config file at {}", factor, m_config->file_name());
+    dbgln("Saving acceleration factor {} to config file at {}", factor, m_config->filename());
     m_config->write_entry("Mouse", "AccelerationFactor", String::formatted("{}", factor));
     m_config->sync();
 }
@@ -148,7 +148,7 @@ void WindowManager::set_acceleration_factor(double factor)
 void WindowManager::set_scroll_step_size(unsigned step_size)
 {
     Screen::the().set_scroll_step_size(step_size);
-    dbgln("Saving scroll step size {} to config file at {}", step_size, m_config->file_name());
+    dbgln("Saving scroll step size {} to config file at {}", step_size, m_config->filename());
     m_config->write_entry("Mouse", "ScrollStepSize", String::number(step_size));
     m_config->sync();
 }
@@ -157,7 +157,7 @@ void WindowManager::set_double_click_speed(int speed)
 {
     VERIFY(speed >= double_click_speed_min && speed <= double_click_speed_max);
     m_double_click_speed = speed;
-    dbgln("Saving double-click speed {} to config file at {}", speed, m_config->file_name());
+    dbgln("Saving double-click speed {} to config file at {}", speed, m_config->filename());
     m_config->write_entry("Input", "DoubleClickSpeed", String::number(speed));
     m_config->sync();
 }

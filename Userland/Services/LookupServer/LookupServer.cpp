@@ -37,7 +37,7 @@ LookupServer::LookupServer()
     s_the = this;
 
     auto config = Core::ConfigFile::get_for_system("LookupServer");
-    dbgln("Using network config file at {}", config->file_name());
+    dbgln("Using network config file at {}", config->filename());
     m_nameservers = config->read_entry("DNS", "Nameservers", "1.1.1.1,1.0.0.1").split(',');
 
     load_etc_hosts();

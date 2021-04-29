@@ -47,14 +47,14 @@ public:
     void remove_group(const String& group);
     void remove_entry(const String& group, const String& key);
 
-    String file_name() const { return m_file_name; }
+    String filename() const { return m_filename; }
 
 private:
-    explicit ConfigFile(const String& file_name);
+    explicit ConfigFile(const String& filename);
 
     void reparse();
 
-    String m_file_name;
+    String m_filename;
     HashMap<String, HashMap<String, String>> m_groups;
     bool m_dirty { false };
 };

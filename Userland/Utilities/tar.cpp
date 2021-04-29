@@ -68,7 +68,7 @@ int main(int argc, char** argv)
         }
         for (; !tar_stream.finished(); tar_stream.advance()) {
             if (list || verbose)
-                outln("{}", tar_stream.header().file_name());
+                outln("{}", tar_stream.header().filename());
 
             if (extract) {
                 Archive::TarFileStream file_stream = tar_stream.file_contents();
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
                 switch (header.type_flag()) {
                 case Archive::TarFileType::NormalFile:
                 case Archive::TarFileType::AlternateNormalFile: {
-                    int fd = open(String(header.file_name()).characters(), O_CREAT | O_WRONLY, header.mode());
+                    int fd = open(String(header.filename()).characters(), O_CREAT | O_WRONLY, header.mode());
                     if (fd < 0) {
                         perror("open");
                         return 1;
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
                     break;
                 }
                 case Archive::TarFileType::Directory: {
-                    if (mkdir(String(header.file_name()).characters(), header.mode())) {
+                    if (mkdir(String(header.filename()).characters(), header.mode())) {
                         perror("mkdir");
                         return 1;
                     }

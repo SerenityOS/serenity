@@ -93,7 +93,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
         update();
     };
 
-    dbgln("Load config file from {}", m_config->file_name());
+    dbgln("Load config file from {}", m_config->filename());
     m_cursor_blink_timer->set_interval(m_config->read_num_entry("Text",
         "CursorBlinkInterval",
         500));

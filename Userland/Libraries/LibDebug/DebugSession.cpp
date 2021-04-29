@@ -372,9 +372,9 @@ Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_brea
     return result;
 }
 
-Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::insert_breakpoint(const String& file_name, size_t line_number)
+Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::insert_breakpoint(const String& filename, size_t line_number)
 {
-    auto address_and_source_position = get_address_from_source_position(file_name, line_number);
+    auto address_and_source_position = get_address_from_source_position(filename, line_number);
     if (!address_and_source_position.has_value())
         return {};
 

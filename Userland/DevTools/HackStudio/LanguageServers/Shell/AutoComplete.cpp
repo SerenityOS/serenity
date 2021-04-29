@@ -164,10 +164,10 @@ void AutoComplete::file_opened([[maybe_unused]] const String& file)
     set_document_data(file, create_document_data_for(file));
 }
 
-Optional<GUI::AutocompleteProvider::ProjectLocation> AutoComplete::find_declaration_of(const String& file_name, const GUI::TextPosition& identifier_position)
+Optional<GUI::AutocompleteProvider::ProjectLocation> AutoComplete::find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position)
 {
-    dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "find_declaration_of({}, {}:{})", file_name, identifier_position.line(), identifier_position.column());
-    const auto& document = get_or_create_document_data(file_name);
+    dbgln_if(SH_LANGUAGE_SERVER_DEBUG, "find_declaration_of({}, {}:{})", filename, identifier_position.line(), identifier_position.column());
+    const auto& document = get_or_create_document_data(filename);
     auto position = resolve(document, identifier_position);
     auto result = document.node->hit_test_position(position);
     if (!result.matching_node) {

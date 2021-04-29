@@ -42,17 +42,17 @@ int main(int argc, char** argv)
         unsigned long name_max = flag_most_posix ? _POSIX_NAME_MAX : pathconf(str_path.characters(), _PC_NAME_MAX);
 
         if (str_path.length() > path_max) {
-            warnln("{}: limit {} exceeded by length {} of file name '{}'", argv[0], path_max, str_path.length(), str_path);
+            warnln("{}: limit {} exceeded by length {} of filename '{}'", argv[0], path_max, str_path.length(), str_path);
             fail = true;
             continue;
         }
 
         if (flag_most_posix) {
-            // POSIX portable file name character set (a-z A-Z 0-9 . _ -)
+            // POSIX portable filename character set (a-z A-Z 0-9 . _ -)
             for (long unsigned i = 0; i < str_path.length(); ++i) {
                 auto c = path[i];
                 if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && !(c >= '0' && c <= '9') && c != '/' && c != '.' && c != '-' && c != '_') {
-                    warnln("{}: non-portable character '{}' in file name '{}'", argv[0], path[i], str_path);
+                    warnln("{}: non-portable character '{}' in filename '{}'", argv[0], path[i], str_path);
                     fail = true;
                     continue;
                 }
@@ -70,7 +70,7 @@ int main(int argc, char** argv)
 
         if (flag_empty_name_and_leading_dash) {
             if (str_path.is_empty()) {
-                warnln("{}: empty file name", argv[0]);
+                warnln("{}: empty filename", argv[0]);
                 fail = true;
                 continue;
             }
@@ -79,13 +79,13 @@ int main(int argc, char** argv)
         for (auto& component : str_path.split('/')) {
             if (flag_empty_name_and_leading_dash) {
                 if (component.starts_with('-')) {
-                    warnln("{}: leading '-' in a component of file name '{}'", argv[0], str_path);
+                    warnln("{}: leading '-' in a component of filename '{}'", argv[0], str_path);
                     fail = true;
                     break;
                 }
             }
             if (component.length() > name_max) {
-                warnln("{}: limit {} exceeded by length {} of file name component '{}'", argv[0], name_max, component.length(), component.characters());
+                warnln("{}: limit {} exceeded by length {} of filename component '{}'", argv[0], name_max, component.length(), component.characters());
                 fail = true;
                 break;
             }

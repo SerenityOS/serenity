@@ -128,7 +128,7 @@ static int run(Function<void(const char*, size_t)> fn)
         }
     } else {
         if (filename == nullptr) {
-            puts("must specify a file name");
+            puts("must specify a filename");
             return 1;
         }
         if (!Core::File::exists(filename)) {

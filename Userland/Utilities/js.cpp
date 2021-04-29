@@ -574,8 +574,8 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
     outln("REPL commands:");
     outln("    exit(code): exit the REPL with specified code. Defaults to 0.");
     outln("    help(): display this menu");
-    outln("    load(files): accepts file names as params to load into running session. For example load(\"js/1.js\", \"js/2.js\", \"js/3.js\")");
-    outln("    save(file): accepts a file name, writes REPL input history to a file. For example: save(\"foo.txt\")");
+    outln("    load(files): accepts filenames as params to load into running session. For example load(\"js/1.js\", \"js/2.js\", \"js/3.js\")");
+    outln("    save(file): accepts a filename, writes REPL input history to a file. For example: save(\"foo.txt\")");
     return JS::js_undefined();
 }
 
@@ -585,10 +585,10 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
         return JS::Value(false);
 
     for (auto& file : vm.call_frame().arguments) {
-        String file_name = file.as_string().string();
-        auto js_file = Core::File::construct(file_name);
+        String filename = file.as_string().string();
+        auto js_file = Core::File::construct(filename);
         if (!js_file->open(Core::IODevice::ReadOnly)) {
-            warnln("Failed to open {}: {}", file_name, js_file->error_string());
+            warnln("Failed to open {}: {}", filename, js_file->error_string());
             continue;
         }
         auto file_contents = js_file->read_all();

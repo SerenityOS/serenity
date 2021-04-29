@@ -16,7 +16,7 @@ namespace AK {
 class SourceLocation {
 public:
     [[nodiscard]] constexpr StringView function_name() const { return StringView(m_function); }
-    [[nodiscard]] constexpr StringView file_name() const { return StringView(m_file); }
+    [[nodiscard]] constexpr StringView filename() const { return StringView(m_file); }
     [[nodiscard]] constexpr u32 line_number() const { return m_line; }
 
     [[nodiscard]] static constexpr SourceLocation current(const char* const file = __builtin_FILE(), u32 line = __builtin_LINE(), const char* const function = __builtin_FUNCTION())
@@ -45,7 +45,7 @@ template<>
 struct AK::Formatter<AK::SourceLocation> : AK::Formatter<FormatString> {
     void format(FormatBuilder& builder, AK::SourceLocation location)
     {
-        return AK::Formatter<FormatString>::format(builder, "[{} @ {}:{}]", location.function_name(), location.file_name(), location.line_number());
+        return AK::Formatter<FormatString>::format(builder, "[{} @ {}:{}]", location.function_name(), location.filename(), location.line_number());
     }
 };
 

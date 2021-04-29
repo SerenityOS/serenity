@@ -62,7 +62,7 @@ Optional<String> FilePicker::get_save_filepath(Window* parent_window, const Stri
     return {};
 }
 
-FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_name, const StringView& path)
+FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filename, const StringView& path)
     : Dialog(parent_window)
     , m_model(FileSystemModel::create())
     , m_mode(mode)
@@ -148,7 +148,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& file_
     m_filename_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("filename_textbox");
     m_filename_textbox->set_focus(true);
     if (m_mode == Mode::Save) {
-        m_filename_textbox->set_text(file_name);
+        m_filename_textbox->set_text(filename);
         m_filename_textbox->select_all();
     }
     m_filename_textbox->on_return_pressed = [&] {

@@ -132,14 +132,14 @@ GUI::TextEditor& current_editor()
     return s_hack_studio_widget->current_editor();
 }
 
-void open_file(const String& file_name)
+void open_file(const String& filename)
 {
-    s_hack_studio_widget->open_file(file_name);
+    s_hack_studio_widget->open_file(filename);
 }
 
-void open_file(const String& file_name, size_t line, size_t column)
+void open_file(const String& filename, size_t line, size_t column)
 {
-    s_hack_studio_widget->open_file(file_name);
+    s_hack_studio_widget->open_file(filename);
     s_hack_studio_widget->current_editor_wrapper().editor().set_cursor({ line, column });
 }
 

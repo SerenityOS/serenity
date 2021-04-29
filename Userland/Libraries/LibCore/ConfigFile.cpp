@@ -41,8 +41,8 @@ NonnullRefPtr<ConfigFile> ConfigFile::open(const String& path)
     return adopt_ref(*new ConfigFile(path));
 }
 
-ConfigFile::ConfigFile(const String& file_name)
-    : m_file_name(file_name)
+ConfigFile::ConfigFile(const String& filename)
+    : m_filename(filename)
 {
     reparse();
 }
@@ -56,7 +56,7 @@ void ConfigFile::reparse()
 {
     m_groups.clear();
 
-    auto file = File::construct(m_file_name);
+    auto file = File::construct(m_filename);
     if (!file->open(IODevice::OpenMode::ReadOnly))
         return;
 
@@ -151,7 +151,7 @@ bool ConfigFile::sync()
     if (!m_dirty)
         return true;
 
-    FILE* fp = fopen(m_file_name.characters(), "wb");
+    FILE* fp = fopen(m_filename.characters(), "wb");
     if (!fp)
         return false;
 

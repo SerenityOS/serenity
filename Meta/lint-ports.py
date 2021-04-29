@@ -31,7 +31,7 @@ def read_port_table(filename):
     """Open a file and find all PORT_TABLE_REGEX matches.
 
     Args:
-        filename (str): file name
+        filename (str): filename
 
     Returns:
         set: all PORT_TABLE_REGEX matches

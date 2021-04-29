@@ -13,7 +13,7 @@
 TEST_CASE(basic_scenario)
 {
     auto location = SourceLocation::current();
-    EXPECT_EQ(StringView(__FILE__), location.file_name());
+    EXPECT_EQ(StringView(__FILE__), location.filename());
     EXPECT_EQ(StringView(__FUNCTION__), location.function_name());
     EXPECT_EQ(__LINE__ - 3u, location.line_number());
 }
