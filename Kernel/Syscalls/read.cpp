@@ -24,7 +24,8 @@ KResultOr<ssize_t> Process::sys$readv(int fd, Userspace<const struct iovec*> iov
 
     u64 total_length = 0;
     Vector<iovec, 32> vecs;
-    vecs.resize(iov_count);
+    if (!vecs.try_resize(iov_count))
+        return ENOMEM;
     if (!copy_n_from_user(vecs.data(), iov, iov_count))
         return EFAULT;
     for (auto& vec : vecs) {
