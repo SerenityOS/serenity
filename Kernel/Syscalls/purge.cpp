@@ -21,12 +21,22 @@ KResultOr<int> Process::sys$purge(int mode)
     if (mode & PURGE_ALL_VOLATILE) {
         NonnullRefPtrVector<AnonymousVMObject> vmobjects;
         {
+            KResult result(KSuccess);
             InterruptDisabler disabler;
             MM.for_each_vmobject([&](auto& vmobject) {
-                if (vmobject.is_anonymous())
-                    vmobjects.append(vmobject);
+                if (vmobject.is_anonymous()) {
+                    // In the event that the append fails, only attempt to continue
+                    // the purge if we have already appended something successfully.
+                    if (!vmobjects.try_append(vmobject) && vmobjects.is_empty()) {
+                        result = ENOMEM;
+                        return IterationDecision::Break;
+                    }
+                }
                 return IterationDecision::Continue;
             });
+
+            if (result.is_error())
+                return result.error();
         }
         for (auto& vmobject : vmobjects) {
             purged_page_count += vmobject.purge();
@@ -35,12 +45,22 @@ KResultOr<int> Process::sys$purge(int mode)
     if (mode & PURGE_ALL_CLEAN_INODE) {
         NonnullRefPtrVector<InodeVMObject> vmobjects;
         {
+            KResult result(KSuccess);
             InterruptDisabler disabler;
             MM.for_each_vmobject([&](auto& vmobject) {
-                if (vmobject.is_inode())
-                    vmobjects.append(static_cast<InodeVMObject&>(vmobject));
+                if (vmobject.is_inode()) {
+                    // In the event that the append fails, only attempt to continue
+                    // the purge if we have already appended something successfully.
+                    if (!vmobjects.try_append(static_cast<InodeVMObject&>(vmobject)) && vmobjects.is_empty()) {
+                        result = ENOMEM;
+                        return IterationDecision::Break;
+                    }
+                }
                 return IterationDecision::Continue;
             });
+
+            if (result.is_error())
+                return result.error();
         }
         for (auto& vmobject : vmobjects) {
             purged_page_count += vmobject.release_all_clean_pages();
