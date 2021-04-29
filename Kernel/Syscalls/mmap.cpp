@@ -505,7 +505,7 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
     // slow: without caching
     const auto& regions = space().find_regions_intersecting(range_to_unmap);
 
-    // check if any of the regions is not mmapped, to not accientally
+    // Check if any of the regions is not mmapped, to not accidentally
     // error-out with just half a region map left
     for (auto* region : regions) {
         if (!region->is_mmap())
@@ -530,8 +530,9 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
         region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
 
-        // otherwise just split the regions and collect them for future mapping
-        new_regions.append(space().split_region_around_range(*region, range_to_unmap));
+        // Otherwise just split the regions and collect them for future mapping
+        if (new_regions.try_append(space().split_region_around_range(*region, range_to_unmap)))
+            return ENOMEM;
     }
     // Instead we give back the unwanted VM manually at the end.
     space().page_directory().range_allocator().deallocate(range_to_unmap);
