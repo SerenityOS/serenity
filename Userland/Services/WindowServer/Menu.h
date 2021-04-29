@@ -154,7 +154,7 @@ private:
     int m_scroll_offset { 0 };
     int m_max_scroll_offset { 0 };
 
-    HashMap<u32, Vector<size_t>> m_alt_shortcut_character_to_item_indexes;
+    HashMap<u32, Vector<size_t>> m_alt_shortcut_character_to_item_indices;
 };
 
 u32 find_ampersand_shortcut_character(const StringView&);

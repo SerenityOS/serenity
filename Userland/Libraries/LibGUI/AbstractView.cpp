@@ -43,13 +43,13 @@ void AbstractView::set_model(RefPtr<Model> model)
     m_model = move(model);
     if (m_model)
         m_model->register_view({}, *this);
-    model_did_update(GUI::Model::InvalidateAllIndexes);
+    model_did_update(GUI::Model::InvalidateAllIndices);
     scroll_to_top();
 }
 
 void AbstractView::model_did_update(unsigned int flags)
 {
-    if (!model() || (flags & GUI::Model::InvalidateAllIndexes)) {
+    if (!model() || (flags & GUI::Model::InvalidateAllIndices)) {
         stop_editing();
         m_edit_index = {};
         m_hovered_index = {};
@@ -630,9 +630,9 @@ void AbstractView::do_search(String&& searching)
         return;
     }
 
-    auto found_indexes = model()->matches(searching, Model::MatchesFlag::FirstMatchOnly | Model::MatchesFlag::MatchAtStart | Model::MatchesFlag::CaseInsensitive, model()->parent_index(cursor_index()));
-    if (!found_indexes.is_empty() && found_indexes[0].is_valid()) {
-        auto& index = found_indexes[0];
+    auto found_indices = model()->matches(searching, Model::MatchesFlag::FirstMatchOnly | Model::MatchesFlag::MatchAtStart | Model::MatchesFlag::CaseInsensitive, model()->parent_index(cursor_index()));
+    if (!found_indices.is_empty() && found_indices[0].is_valid()) {
+        auto& index = found_indices[0];
         m_highlighted_search_index = index;
         m_searching = move(searching);
         set_selection(index);

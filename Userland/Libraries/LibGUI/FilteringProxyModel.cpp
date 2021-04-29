@@ -106,10 +106,10 @@ bool FilteringProxyModel::is_searchable() const
 
 Vector<ModelIndex, 1> FilteringProxyModel::matches(const StringView& searching, unsigned flags, const ModelIndex& index)
 {
-    auto found_indexes = m_model.matches(searching, flags, index);
-    for (size_t i = 0; i < found_indexes.size(); i++)
-        found_indexes[i] = map(found_indexes[i]);
-    return found_indexes;
+    auto found_indices = m_model.matches(searching, flags, index);
+    for (size_t i = 0; i < found_indices.size(); i++)
+        found_indices[i] = map(found_indices[i]);
+    return found_indices;
 }
 
 }

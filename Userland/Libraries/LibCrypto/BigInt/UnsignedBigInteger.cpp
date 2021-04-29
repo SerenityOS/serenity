@@ -578,7 +578,7 @@ FLATTEN void UnsignedBigInteger::shift_left_without_allocation(
  * Complexity: O(N^2) where N is the number of words in the larger number
  * Multiplication method:
  * An integer is equal to the sum of the powers of two
- * according to the indexes of its 'on' bits.
+ * according to the indices of its 'on' bits.
  * So to multiple x*y, we go over each '1' bit in x (say the i'th bit),
  * and add y<<i to the result.
  */

@@ -343,7 +343,7 @@ DirectoryView::~DirectoryView()
 
 void DirectoryView::model_did_update(unsigned flags)
 {
-    if (flags & GUI::Model::UpdateFlag::InvalidateAllIndexes) {
+    if (flags & GUI::Model::UpdateFlag::InvalidateAllIndices) {
         for_each_view_implementation([](auto& view) {
             view.selection().clear();
         });

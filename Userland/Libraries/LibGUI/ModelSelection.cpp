@@ -14,13 +14,13 @@ namespace GUI {
 void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
 {
     Vector<ModelIndex> to_remove;
-    for (auto& index : m_indexes) {
+    for (auto& index : m_indices) {
         if (filter(index))
             to_remove.append(index);
     }
     if (!to_remove.is_empty()) {
         for (auto& index : to_remove)
-            m_indexes.remove(index);
+            m_indices.remove(index);
         notify_selection_changed();
     }
 }
@@ -28,19 +28,19 @@ void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
 void ModelSelection::set(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (m_indexes.size() == 1 && m_indexes.contains(index))
+    if (m_indices.size() == 1 && m_indices.contains(index))
         return;
-    m_indexes.clear();
-    m_indexes.set(index);
+    m_indices.clear();
+    m_indices.set(index);
     notify_selection_changed();
 }
 
 void ModelSelection::add(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (m_indexes.contains(index))
+    if (m_indices.contains(index))
         return;
-    m_indexes.set(index);
+    m_indices.set(index);
     notify_selection_changed();
 }
 
@@ -59,28 +59,28 @@ void ModelSelection::add_all(const Vector<ModelIndex>& indices)
 void ModelSelection::toggle(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (m_indexes.contains(index))
-        m_indexes.remove(index);
+    if (m_indices.contains(index))
+        m_indices.remove(index);
     else
-        m_indexes.set(index);
+        m_indices.set(index);
     notify_selection_changed();
 }
 
 bool ModelSelection::remove(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (!m_indexes.contains(index))
+    if (!m_indices.contains(index))
         return false;
-    m_indexes.remove(index);
+    m_indices.remove(index);
     notify_selection_changed();
     return true;
 }
 
 void ModelSelection::clear()
 {
-    if (m_indexes.is_empty())
+    if (m_indices.is_empty())
         return;
-    m_indexes.clear();
+    m_indices.clear();
     notify_selection_changed();
 }
 

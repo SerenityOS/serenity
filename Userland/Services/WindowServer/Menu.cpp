@@ -618,15 +618,15 @@ void Menu::set_visible(bool visible)
 void Menu::add_item(NonnullOwnPtr<MenuItem> item)
 {
     if (auto alt_shortcut = find_ampersand_shortcut_character(item->text())) {
-        m_alt_shortcut_character_to_item_indexes.ensure(tolower(alt_shortcut)).append(m_items.size());
+        m_alt_shortcut_character_to_item_indices.ensure(tolower(alt_shortcut)).append(m_items.size());
     }
     m_items.append(move(item));
 }
 
 const Vector<size_t>* Menu::items_with_alt_shortcut(u32 alt_shortcut) const
 {
-    auto it = m_alt_shortcut_character_to_item_indexes.find(tolower(alt_shortcut));
-    if (it == m_alt_shortcut_character_to_item_indexes.end())
+    auto it = m_alt_shortcut_character_to_item_indices.find(tolower(alt_shortcut));
+    if (it == m_alt_shortcut_character_to_item_indices.end())
         return nullptr;
     return &it->value;
 }

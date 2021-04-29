@@ -25,12 +25,12 @@ public:
     {
     }
 
-    int size() const { return m_indexes.size(); }
-    bool is_empty() const { return m_indexes.is_empty(); }
-    bool contains(const ModelIndex& index) const { return m_indexes.contains(index); }
+    int size() const { return m_indices.size(); }
+    bool is_empty() const { return m_indices.is_empty(); }
+    bool contains(const ModelIndex& index) const { return m_indices.contains(index); }
     bool contains_row(int row) const
     {
-        for (auto& index : m_indexes) {
+        for (auto& index : m_indices) {
             if (index.row() == row)
                 return true;
         }
@@ -47,33 +47,33 @@ public:
     template<typename Callback>
     void for_each_index(Callback callback)
     {
-        for (auto& index : indexes())
+        for (auto& index : indices())
             callback(index);
     }
 
     template<typename Callback>
     void for_each_index(Callback callback) const
     {
-        for (auto& index : indexes())
+        for (auto& index : indices())
             callback(index);
     }
 
-    Vector<ModelIndex> indexes() const
+    Vector<ModelIndex> indices() const
     {
-        Vector<ModelIndex> selected_indexes;
+        Vector<ModelIndex> selected_indices;
 
-        for (auto& index : m_indexes)
-            selected_indexes.append(index);
+        for (auto& index : m_indices)
+            selected_indices.append(index);
 
-        return selected_indexes;
+        return selected_indices;
     }
 
     // FIXME: This doesn't guarantee that what you get is the lowest or "first" index selected..
     ModelIndex first() const
     {
-        if (m_indexes.is_empty())
+        if (m_indices.is_empty())
             return {};
-        return *m_indexes.begin();
+        return *m_indices.begin();
     }
 
     void remove_matching(Function<bool(const ModelIndex&)>);
@@ -94,7 +94,7 @@ private:
     void notify_selection_changed();
 
     AbstractView& m_view;
-    HashTable<ModelIndex> m_indexes;
+    HashTable<ModelIndex> m_indices;
     bool m_disable_notify { false };
     bool m_notify_pending { false };
 };

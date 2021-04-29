@@ -191,7 +191,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
 
     m_table_view->on_selection_change = [&] {
         m_sheet->selected_cells().clear();
-        for (auto& index : m_table_view->selection().indexes()) {
+        for (auto& index : m_table_view->selection().indices()) {
             Position position { (size_t)index.column(), (size_t)index.row() };
             m_sheet->selected_cells().set(position);
         }
@@ -201,7 +201,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
 
         Vector<Position> selected_positions;
         selected_positions.ensure_capacity(m_table_view->selection().size());
-        for (auto& selection : m_table_view->selection().indexes())
+        for (auto& selection : m_table_view->selection().indices())
             selected_positions.empend((size_t)selection.column(), (size_t)selection.row());
 
         if (on_selection_changed) {
@@ -222,7 +222,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_cell_range_context_menu = GUI::Menu::construct();
     m_cell_range_context_menu->add_action(GUI::Action::create("Type and Formatting...", [this](auto&) {
         Vector<Position> positions;
-        for (auto& index : m_table_view->selection().indexes()) {
+        for (auto& index : m_table_view->selection().indices()) {
             Position position { (size_t)index.column(), (size_t)index.row() };
             positions.append(move(position));
         }
@@ -295,7 +295,7 @@ void SpreadsheetView::show_event(GUI::ShowEvent&)
     if (on_selection_changed && !m_table_view->selection().is_empty()) {
         Vector<Position> selected_positions;
         selected_positions.ensure_capacity(m_table_view->selection().size());
-        for (auto& selection : m_table_view->selection().indexes())
+        for (auto& selection : m_table_view->selection().indices())
             selected_positions.empend((size_t)selection.column(), (size_t)selection.row());
 
         on_selection_changed(move(selected_positions));
