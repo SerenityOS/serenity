@@ -16,7 +16,7 @@
 int main(int argc, char** argv)
 {
     const char* zip_path;
-    Vector<const char*> source_paths;
+    Vector<String> source_paths;
     bool recurse = false;
     bool force = false;
 
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
         }
     };
 
-    for (const String source_path : source_paths) {
+    for (auto const& source_path : source_paths) {
         if (Core::File::is_directory(source_path)) {
             add_directory(source_path, add_directory);
         } else {

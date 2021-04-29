@@ -36,7 +36,7 @@ int main(int argc, char** argv)
     auto hash_name = program_name.substring_view(0, program_name.length() - 3).to_string().to_uppercase();
     auto paths_help_string = String::formatted("File(s) to print {} checksum of", hash_name);
 
-    Vector<const char*> paths;
+    Vector<String> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(paths, paths_help_string.characters(), "path", Core::ArgsParser::Required::No);
@@ -52,8 +52,8 @@ int main(int argc, char** argv)
     auto has_error = false;
     auto file = Core::File::construct();
 
-    for (auto path : paths) {
-        if (StringView { path } == "-") {
+    for (auto const& path : paths) {
+        if (path == "-") {
             success = file->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
         } else {
             file->set_filename(path);
