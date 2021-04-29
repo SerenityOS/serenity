@@ -3,6 +3,7 @@ set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/strlcpy-correctness.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCTime.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCMkTemp.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCExec.cpp
 )
 
 file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
