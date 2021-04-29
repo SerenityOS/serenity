@@ -25,7 +25,7 @@ static bool decompress_file(Buffered<Core::InputFileStream>& input_stream, Buffe
 
 int main(int argc, char** argv)
 {
-    Vector<const char*> filenames;
+    Vector<String> filenames;
     bool keep_input_files { false };
     bool write_to_stdout { false };
 
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     if (write_to_stdout)
         keep_input_files = true;
 
-    for (String filename : filenames) {
+    for (auto filename : filenames) {
         if (!filename.ends_with(".gz"))
             filename = String::formatted("{}.gz", filename);
 

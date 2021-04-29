@@ -6,13 +6,11 @@
 
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
@@ -22,7 +20,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<const char*> paths;
+    Vector<String> paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Concatenate files or pipes to stdout.");
@@ -31,12 +29,12 @@ int main(int argc, char** argv)
 
     Vector<int> fds;
     if (!paths.is_empty()) {
-        for (const char* path : paths) {
+        for (auto const& path : paths) {
             int fd;
-            if (StringView { path } == "-") {
+            if (path == "-") {
                 fd = 0;
-            } else if ((fd = open(path, O_RDONLY)) == -1) {
-                fprintf(stderr, "Failed to open %s: %s\n", path, strerror(errno));
+            } else if ((fd = open(path.characters(), O_RDONLY)) == -1) {
+                warnln("Failed to open {}: {}", path, strerror(errno));
                 continue;
             }
             fds.append(fd);
