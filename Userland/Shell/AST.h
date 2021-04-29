@@ -407,6 +407,9 @@ private:
 };
 
 class Node : public RefCounted<Node> {
+    AK_MAKE_NONCOPYABLE(Node);
+    AK_MAKE_NONMOVABLE(Node);
+
 public:
     virtual void dump(int level) const = 0;
     virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback);
@@ -431,20 +434,15 @@ public:
     virtual bool is_tilde() const { return false; }
     virtual bool is_variable_decls() const { return false; }
     virtual bool is_simple_variable() const { return false; }
-    virtual bool is_syntax_error() const { return m_is_syntax_error; }
+    virtual bool is_syntax_error() const;
 
     virtual bool is_list() const { return false; }
     virtual bool would_execute() const { return false; }
     virtual bool should_override_execution_in_current_process() const { return false; }
 
     const Position& position() const { return m_position; }
-    void set_is_syntax_error(const SyntaxError& error_node)
-    {
-        if (!m_is_syntax_error) {
-            m_is_syntax_error = true;
-            m_syntax_error_node = error_node;
-        }
-    }
+    virtual void clear_syntax_error();
+    virtual void set_is_syntax_error(const SyntaxError& error_node);
     virtual const SyntaxError& syntax_error_node() const
     {
         VERIFY(is_syntax_error());
@@ -508,8 +506,7 @@ public:
 
 protected:
     Position m_position;
-    bool m_is_syntax_error { false };
-    RefPtr<const SyntaxError> m_syntax_error_node;
+    RefPtr<SyntaxError> m_syntax_error_node;
 };
 
 #define NODE(name)                                               \
@@ -1363,17 +1360,30 @@ public:
     const String& error_text() const { return m_syntax_error_text; }
     bool is_continuable() const { return m_is_continuable; }
 
+    virtual void clear_syntax_error() override
+    {
+        m_is_cleared = true;
+    }
+    virtual void set_is_syntax_error(const SyntaxError& error) override
+    {
+        m_is_cleared = error.m_is_cleared;
+        m_is_continuable = error.m_is_continuable;
+        m_syntax_error_text = error.error_text();
+    }
+
+    virtual bool is_syntax_error() const override { return !m_is_cleared; }
+
 private:
     NODE(SyntaxError);
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override { return { nullptr, nullptr, nullptr }; }
-    virtual bool is_syntax_error() const override { return true; }
     virtual const SyntaxError& syntax_error_node() const override;
 
     String m_syntax_error_text;
     bool m_is_continuable { false };
+    bool m_is_cleared { false };
 };
 
 class SyntheticNode final : public Node {
