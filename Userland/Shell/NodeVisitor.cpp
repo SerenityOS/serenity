@@ -101,6 +101,12 @@ void NodeVisitor::visit(const AST::Glob*)
 {
 }
 
+void NodeVisitor::visit(const AST::Heredoc* node)
+{
+    if (node->contents())
+        node->contents()->visit(*this);
+}
+
 void NodeVisitor::visit(const AST::HistoryEvent*)
 {
 }

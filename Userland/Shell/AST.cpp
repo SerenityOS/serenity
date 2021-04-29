@@ -1307,6 +1307,78 @@ Glob::~Glob()
 {
 }
 
+void Heredoc::dump(int level) const
+{
+    Node::dump(level);
+    print_indented("(End Key)", level + 1);
+    print_indented(m_end, level + 2);
+    print_indented("(Allows Interpolation)", level + 1);
+    print_indented(String::formatted("{}", m_allows_interpolation), level + 2);
+    print_indented("(Contents)", level + 1);
+    if (m_contents)
+        m_contents->dump(level + 2);
+    else
+        print_indented("(null)", level + 2);
+}
+
+RefPtr<Value> Heredoc::run(RefPtr<Shell> shell)
+{
+    if (!m_deindent)
+        return m_contents->run(shell);
+
+    // To deindent, first split to lines...
+    auto value = m_contents->run(shell);
+    if (!value)
+        return value;
+    auto list = value->resolve_as_list(shell);
+    // The list better have one entry, otherwise we've put the wrong kind of node inside this heredoc
+    VERIFY(list.size() == 1);
+    auto lines = list.first().split_view('\n');
+
+    // Now just trim each line and put them back in a string
+    StringBuilder builder { list.first().length() };
+    for (auto& line : lines) {
+        builder.append(line.trim_whitespace(TrimMode::Left));
+        builder.append('\n');
+    }
+
+    return create<StringValue>(builder.to_string());
+}
+
+void Heredoc::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
+{
+    Line::Style content_style { Line::Style::Foreground(Line::Style::XtermColor::Yellow) };
+    if (metadata.is_first_in_list)
+        content_style.unify_with({ Line::Style::Bold });
+
+    if (!m_contents)
+        content_style.unify_with({ Line::Style::Foreground(Line::Style::XtermColor::Red) }, true);
+
+    editor.stylize({ m_position.start_offset, m_position.end_offset }, content_style);
+    if (m_contents)
+        m_contents->highlight_in_editor(editor, shell, metadata);
+}
+
+HitTestResult Heredoc::hit_test_position(size_t offset) const
+{
+    if (!m_contents)
+        return {};
+
+    return m_contents->hit_test_position(offset);
+}
+
+Heredoc::Heredoc(Position position, String end, bool allow_interpolation, bool deindent)
+    : Node(move(position))
+    , m_end(move(end))
+    , m_allows_interpolation(allow_interpolation)
+    , m_deindent(deindent)
+{
+}
+
+Heredoc::~Heredoc()
+{
+}
+
 void HistoryEvent::dump(int level) const
 {
     Node::dump(level);
