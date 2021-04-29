@@ -69,7 +69,7 @@ NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name)
 
 void WindowManager::reload_config()
 {
-    m_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
+    m_config = Core::ConfigFile::open("/etc/WindowServer.ini");
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
     m_hidden_cursor = get_cursor("Hidden");
@@ -1547,7 +1547,7 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
     });
     MenuManager::the().did_change_theme();
     AppletManager::the().did_change_theme();
-    auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
     wm_config->write_entry("Theme", "Name", theme_name);
     wm_config->sync();
     Compositor::the().invalidate_occlusions();

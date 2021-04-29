@@ -126,7 +126,7 @@
      unset gtk2_theme gtk3_theme theme path
  
 +    if [[ "$os" == "SerenityOS" ]]; then
-+        theme=$(ini /etc/WindowServer/WindowServer.ini Theme Name)
++        theme=$(ini /etc/WindowServer.ini Theme Name)
 +        if [ -z "$theme" ]; then
 +            theme="Default"
 +        fi

@@ -46,8 +46,8 @@ $CP "$SERENITY_SOURCE_DIR"/Toolchain/Local/i686/i686-pc-serenity/lib/libgcc_s.so
 # the permissions needed in the image.
 chmod -R g+rX,o+rX "$SERENITY_SOURCE_DIR"/Base/* mnt/
 
-chmod 660 mnt/etc/WindowServer/WindowServer.ini
-chown $window_uid:$window_gid mnt/etc/WindowServer/WindowServer.ini
+chmod 660 mnt/etc/WindowServer.ini
+chown $window_uid:$window_gid mnt/etc/WindowServer.ini
 echo "/bin/sh" > mnt/etc/shells
 
 chown 0:$wheel_gid mnt/bin/su
