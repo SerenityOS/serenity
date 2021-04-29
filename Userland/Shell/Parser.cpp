@@ -1867,9 +1867,9 @@ StringView Parser::consume_while(Function<bool(char)> condition)
 
 bool Parser::next_is(const StringView& next)
 {
-    auto start = push_start();
+    auto start = current_position();
     auto res = expect(next);
-    restore_to(*start);
+    restore_to(start.offset, start.line);
     return res;
 }
 
