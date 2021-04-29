@@ -105,6 +105,7 @@ elif [ "$SERENITY_RUN" = "qn" ]; then
         -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$SERENITY_RUN" = "qtap" ]; then
     # Meta/run.sh qtap: qemu with tap
+    sudo ip tuntap del dev tap0 mode tap || true
     sudo ip tuntap add dev tap0 mode tap user "$(id -u)"
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
