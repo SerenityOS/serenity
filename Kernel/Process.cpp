@@ -256,7 +256,7 @@ Process::~Process()
 }
 
 // Make sure the compiler doesn't "optimize away" this function:
-extern void signal_trampoline_dummy();
+extern void signal_trampoline_dummy() __attribute__((used));
 void signal_trampoline_dummy()
 {
 #if ARCH(I386)
@@ -287,7 +287,7 @@ void signal_trampoline_dummy()
 #endif
 }
 
-extern "C" void asm_signal_trampoline(void);
+extern "C" void asm_signal_trampoline(void) __attribute__((used));
 extern "C" void asm_signal_trampoline_end(void);
 
 void create_signal_trampoline()

@@ -980,7 +980,7 @@ public:
     void exit_trap(TrapFrame& trap);
 
     [[noreturn]] void initialize_context_switching(Thread& initial_thread);
-    void switch_context(Thread*& from_thread, Thread*& to_thread);
+    NEVER_INLINE void switch_context(Thread*& from_thread, Thread*& to_thread);
     [[noreturn]] static void assume_context(Thread& thread, FlatPtr flags);
     u32 init_context(Thread& thread, bool leave_crit);
     static Vector<FlatPtr> capture_stack_trace(Thread& thread, size_t max_frames = 0);
@@ -1057,9 +1057,9 @@ struct TrapFrame {
 
 static_assert(TRAP_FRAME_SIZE == sizeof(TrapFrame));
 
-extern "C" void enter_trap_no_irq(TrapFrame*);
-extern "C" void enter_trap(TrapFrame*);
-extern "C" void exit_trap(TrapFrame*);
+extern "C" void enter_trap_no_irq(TrapFrame*) __attribute__((used));
+extern "C" void enter_trap(TrapFrame*) __attribute__((used));
+extern "C" void exit_trap(TrapFrame*) __attribute__((used));
 
 class MSR {
     uint32_t m_msr;

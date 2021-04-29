@@ -71,7 +71,7 @@ extern "C" u8* end_of_safemem_text;
 extern "C" u8* start_of_safemem_atomic_text;
 extern "C" u8* end_of_safemem_atomic_text;
 
-extern "C" FlatPtr end_of_kernel_image;
+extern "C" u8* end_of_kernel_image;
 
 multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 size_t multiboot_copy_boot_modules_count;
@@ -85,7 +85,7 @@ static void setup_serial_debug();
 
 // boot.S expects these functions to exactly have the following signatures.
 // We declare them here to ensure their signatures don't accidentally change.
-extern "C" void init_finished(u32 cpu);
+extern "C" void init_finished(u32 cpu) __attribute__((used));
 extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info);
 extern "C" [[noreturn]] void init();
 
