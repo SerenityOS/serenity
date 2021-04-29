@@ -74,7 +74,7 @@ The `unveil()` system call was first introduced by OpenBSD.
 unveil("/res", "r");
 
 // Allow the process to read, write, and create the config file:
-unveil("/etc/WindowServer/WindowServer.ini", "rwc");
+unveil("/etc/WindowServer.ini", "rwc");
 
 // Allow the process to execute Calendar:
 unveil("/bin/Calendar", "x");
