@@ -1,5 +1,5 @@
 file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
-list(REMOVE_ITEM CMD_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/painter.cpp)
+list(REMOVE_ITEM CMD_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/BenchmarkGfxPainter.cpp)
 
 # FIXME These tests do not use LibTest
 foreach(CMD_SRC ${CMD_SOURCES})
@@ -9,4 +9,4 @@ foreach(CMD_SRC ${CMD_SOURCES})
     install(TARGETS ${CMD_NAME} RUNTIME DESTINATION usr/Tests/LibGfx)
 endforeach()
 
-serenity_test(painter.cpp LibGfx LIBS LibGUI)
+serenity_test(BenchmarkGfxPainter.cpp LibGfx LIBS LibGUI)
