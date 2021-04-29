@@ -154,7 +154,8 @@ KResultOr<int> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_
         nfds_checked *= params.nfds;
         if (nfds_checked.has_overflow())
             return EFAULT;
-        fds_copy.resize(params.nfds);
+        if (!fds_copy.try_resize(params.nfds))
+            return ENOMEM;
         if (!copy_from_user(fds_copy.data(), &params.fds[0], nfds_checked.value()))
             return EFAULT;
     }
@@ -174,7 +175,8 @@ KResultOr<int> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_
             block_flags |= BlockFlags::Write;
         if (pfd.events & POLLPRI)
             block_flags |= BlockFlags::ReadPriority;
-        fds_info.append({ description.release_nonnull(), block_flags });
+        if (!fds_info.try_append({ description.release_nonnull(), block_flags }))
+            return ENOMEM;
     }
 
     auto current_thread = Thread::current();
