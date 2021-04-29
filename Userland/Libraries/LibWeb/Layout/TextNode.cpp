@@ -102,6 +102,38 @@ void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragme
     context.painter().draw_rect(cursor_rect, computed_values().color());
 }
 
+void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_or_ends_in_whitespace)
+{
+    if (!collapse) {
+        m_text_for_rendering = dom_node().data();
+        return;
+    }
+
+    // Collapse whitespace into single spaces
+    auto utf8_view = Utf8View(dom_node().data());
+    StringBuilder builder(dom_node().data().length());
+    auto it = utf8_view.begin();
+    auto skip_over_whitespace = [&] {
+        auto prev = it;
+        while (it != utf8_view.end() && isspace(*it)) {
+            prev = it;
+            ++it;
+        }
+        it = prev;
+    };
+    if (previous_is_empty_or_ends_in_whitespace)
+        skip_over_whitespace();
+    for (; it != utf8_view.end(); ++it) {
+        if (!isspace(*it)) {
+            builder.append(utf8_view.as_string().characters_without_null_termination() + utf8_view.byte_offset_of(it), it.code_point_length_in_bytes());
+        } else {
+            builder.append(' ');
+            skip_over_whitespace();
+        }
+    }
+    m_text_for_rendering = builder.to_string();
+}
+
 void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, LayoutMode layout_mode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks)
 {
     auto& containing_block = context.containing_block();
@@ -112,34 +144,7 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
     containing_block.ensure_last_line_box();
     float available_width = context.available_width_at_line(line_boxes.size() - 1) - line_boxes.last().width();
 
-    // Collapse whitespace into single spaces
-    if (do_collapse) {
-        auto utf8_view = Utf8View(dom_node().data());
-        StringBuilder builder(dom_node().data().length());
-        auto it = utf8_view.begin();
-        auto skip_over_whitespace = [&] {
-            auto prev = it;
-            while (it != utf8_view.end() && isspace(*it)) {
-                prev = it;
-                ++it;
-            }
-            it = prev;
-        };
-        if (line_boxes.last().is_empty_or_ends_in_whitespace())
-            skip_over_whitespace();
-        for (; it != utf8_view.end(); ++it) {
-            if (!isspace(*it)) {
-                builder.append(utf8_view.as_string().characters_without_null_termination() + utf8_view.byte_offset_of(it), it.code_point_length_in_bytes());
-            } else {
-                builder.append(' ');
-                skip_over_whitespace();
-            }
-        }
-        m_text_for_rendering = builder.to_string();
-    } else {
-        m_text_for_rendering = dom_node().data();
-    }
-
+    compute_text_for_rendering(do_collapse, line_boxes.last().is_empty_or_ends_in_whitespace());
     ChunkIterator iterator(m_text_for_rendering, layout_mode, do_wrap_lines, do_wrap_breaks);
 
     for (;;) {
