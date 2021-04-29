@@ -675,14 +675,14 @@ String HackStudioWidget::get_full_path_of_serenity_source(const String& file)
     return String::formatted("{}/{}", serenity_sources_base, relative_path_builder.to_string());
 }
 
-RefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(const String& file_name)
+RefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(const String& filename)
 {
-    String file_path = file_name;
+    String file_path = filename;
 
     // TODO: We can probably do a more specific condition here, something like
     // "if (file.starts_with("../Libraries/") || file.starts_with("../AK/"))"
-    if (file_name.starts_with("../")) {
-        file_path = get_full_path_of_serenity_source(file_name);
+    if (filename.starts_with("../")) {
+        file_path = get_full_path_of_serenity_source(filename);
     }
 
     if (!open_file(file_path))

@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    const char* file_name = nullptr;
+    const char* filename = nullptr;
     bool html = false;
     int view_width = 0;
 
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     args_parser.set_general_help("Render Markdown to some other format.");
     args_parser.add_option(html, "Render to HTML rather than for the terminal", "html", 'H');
     args_parser.add_option(view_width, "Viewport width for the terminal (defaults to current terminal width)", "view-width", 0, "width");
-    args_parser.add_positional_argument(file_name, "Path to Markdown file", "path", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(filename, "Path to Markdown file", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     if (!html && view_width == 0) {
@@ -47,10 +47,10 @@ int main(int argc, char* argv[])
     }
     auto file = Core::File::construct();
     bool success;
-    if (file_name == nullptr) {
+    if (filename == nullptr) {
         success = file->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
     } else {
-        file->set_filename(file_name);
+        file->set_filename(filename);
         success = file->open(Core::IODevice::OpenMode::ReadOnly);
     }
     if (!success) {

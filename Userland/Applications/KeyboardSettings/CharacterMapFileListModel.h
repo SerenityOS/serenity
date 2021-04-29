@@ -11,16 +11,16 @@
 
 class CharacterMapFileListModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<CharacterMapFileListModel> create(Vector<String>& file_names)
+    static NonnullRefPtr<CharacterMapFileListModel> create(Vector<String>& filenames)
     {
-        return adopt_ref(*new CharacterMapFileListModel(file_names));
+        return adopt_ref(*new CharacterMapFileListModel(filenames));
     }
 
     virtual ~CharacterMapFileListModel() override { }
 
     virtual int row_count(const GUI::ModelIndex&) const override
     {
-        return m_file_names.size();
+        return m_filenames.size();
     }
 
     virtual int column_count(const GUI::ModelIndex&) const override
@@ -34,7 +34,7 @@ public:
         VERIFY(index.column() == 0);
 
         if (role == GUI::ModelRole::Display)
-            return m_file_names.at(index.row());
+            return m_filenames.at(index.row());
 
         return {};
     }
@@ -45,10 +45,10 @@ public:
     }
 
 private:
-    explicit CharacterMapFileListModel(Vector<String>& file_names)
-        : m_file_names(file_names)
+    explicit CharacterMapFileListModel(Vector<String>& filenames)
+        : m_filenames(filenames)
     {
     }
 
-    Vector<String>& m_file_names;
+    Vector<String>& m_filenames;
 };

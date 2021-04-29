@@ -15,7 +15,7 @@ def report(filename, problem):
     """Print a lint problem to stdout.
 
     Args:
-        filename (str): keymap file name
+        filename (str): keymap filename
         problem (str): problem message
     """
     print('{}: {}'.format(filename, problem))
@@ -25,7 +25,7 @@ def validate_single_map(filename, mapname, values):
     """Validate a key map.
 
     Args:
-        filename (str): keymap file name
+        filename (str): keymap filename
         mapname (str): map name (altgr_map, alt_map, shift_altgr_map)
         values (list): key values
 
@@ -63,7 +63,7 @@ def validate_fullmap(filename, fullmap):
     """Validate a full key map for all map names (including maps for key modifiers).
 
     Args:
-        filename (str): keymap file name
+        filename (str): keymap filename
         fullmap (dict): key mappings
 
     Returns:
@@ -126,7 +126,7 @@ def list_files_here():
     """Retrieve a list of all '.json' files in the working directory.
 
     Returns:
-        list: JSON file names
+        list: JSON filenames
     """
 
     filelist = []

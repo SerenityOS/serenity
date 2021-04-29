@@ -42,7 +42,7 @@ typedef struct
 #define AT_BASE_PLATFORM 24 /* a_ptr points to a string identifying base platform name, which might be different from platform (e.g x86_64 when in i386 compat)  */
 #define AT_RANDOM 25        /* a_ptr points to 16 securely generated random bytes */
 #define AT_HWCAP2 26        /* a_val holds extended hw feature mask. Currently 0 */
-#define AT_EXECFN 31        /* a_ptr points to file name of executed program */
+#define AT_EXECFN 31        /* a_ptr points to filename of executed program */
 #define AT_EXE_BASE 32      /* a_ptr holds base address where main program was loaded into memory */
 #define AT_EXE_SIZE 33      /* a_val holds the size of the main program in memory */
 

@@ -43,7 +43,7 @@ private:
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
 
-    FilePicker(Window* parent_window, Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = Core::StandardPaths::home_directory());
+    FilePicker(Window* parent_window, Mode type = Mode::Open, const StringView& filename = "Untitled", const StringView& path = Core::StandardPaths::home_directory());
 
     static String ok_button_name(Mode mode)
     {

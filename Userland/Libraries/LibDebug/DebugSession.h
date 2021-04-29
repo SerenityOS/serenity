@@ -57,12 +57,12 @@ public:
 
     struct InsertBreakpointAtSourcePositionResult {
         String library_name;
-        String file_name;
+        String filename;
         size_t line_number { 0 };
         FlatPtr address { 0 };
     };
 
-    Optional<InsertBreakpointAtSourcePositionResult> insert_breakpoint(const String& file_name, size_t line_number);
+    Optional<InsertBreakpointAtSourcePositionResult> insert_breakpoint(const String& filename, size_t line_number);
 
     bool insert_breakpoint(void* address);
     bool disable_breakpoint(void* address);

@@ -41,9 +41,9 @@ char* dlerror()
     return const_cast<char*>(s_dlerror_text);
 }
 
-void* dlopen(const char* file_name, int flags)
+void* dlopen(const char* filename, int flags)
 {
-    auto result = __dlopen(file_name, flags);
+    auto result = __dlopen(filename, flags);
     if (result.is_error()) {
         store_error(result.error().text);
         return nullptr;

@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
     int arg_uid_int = -1;
     int arg_pgid { -1 };
     pid_t arg_pid { -1 };
-    const char* arg_file_name { nullptr };
+    const char* arg_filename { nullptr };
 
     if (argc == 1)
         arg_all_processes = true;
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
         parser.add_option(arg_fd, "Select by file descriptor", nullptr, 'd', "fd");
         parser.add_option(arg_uid, "Select by login/UID", nullptr, 'u', "login/UID");
         parser.add_option(arg_pgid, "Select by process group ID", nullptr, 'g', "PGID");
-        parser.add_positional_argument(arg_file_name, "File name", "file name", Core::ArgsParser::Required::No);
+        parser.add_positional_argument(arg_filename, "Filename", "filename", Core::ArgsParser::Required::No);
         parser.parse(argc, argv);
     }
     {
@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
                     || (arg_uid_int != -1 && (int)process.value.uid == arg_uid_int)
                     || (arg_uid != nullptr && process.value.username == arg_uid)
                     || (arg_pgid != -1 && (int)process.value.pgid == arg_pgid)
-                    || (arg_file_name != nullptr && file.name == arg_file_name))
+                    || (arg_filename != nullptr && file.name == arg_filename))
                     display_entry(file, process.value);
             }
         }
