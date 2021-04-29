@@ -27,6 +27,7 @@ option(ENABLE_COMPILETIME_FORMAT_CHECK "Enable compiletime format string checks"
 option(ENABLE_PCI_IDS_DOWNLOAD "Enable download of the pci.ids database at build time" ON)
 option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/testing" OFF)
 option(PRECOMPILE_COMMON_HEADERS "Precompile some common headers to speedup compilation" OFF)
+option(ENABLE_KERNEL_LTO "Build the kernel with link-time optimization" OFF)
 
 add_custom_target(run
     COMMAND ${CMAKE_SOURCE_DIR}/Meta/run.sh
@@ -124,9 +125,9 @@ else()
     set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}g++)
     set(CMAKE_ASM_COMPILER ${TOOLCHAIN_PREFIX}gcc)
     set(CMAKE_LINKER ${TOOLCHAIN_PREFIX}ld)
-    set(CMAKE_RANLIB ${TOOLCHAIN_PREFIX}ranlib)
+    set(CMAKE_RANLIB ${TOOLCHAIN_PREFIX}gcc-ranlib)
     set(CMAKE_STRIP ${TOOLCHAIN_PREFIX}strip)
-    set(CMAKE_AR ${TOOLCHAIN_PREFIX}ar)
+    set(CMAKE_AR ${TOOLCHAIN_PREFIX}gcc-ar)
 endif()
 
 foreach(lang ASM C CXX OBJC OBJCXX)
