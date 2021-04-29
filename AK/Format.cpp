@@ -645,7 +645,7 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams params)
             got_process_name = TriState::False;
     }
     if (got_process_name == TriState::True)
-        builder.appendff("\033[33;1m{}({})\033[0m: ", process_name_buffer, getpid());
+        builder.appendff("\033[33;1m{}({}:{})\033[0m: ", process_name_buffer, getpid(), gettid());
 #    endif
 #endif
 
