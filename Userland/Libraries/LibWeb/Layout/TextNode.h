@@ -53,6 +53,8 @@ public:
         Utf8View::Iterator m_iterator;
     };
 
+    void compute_text_for_rendering(bool collapse, bool previous_is_empty_or_ends_in_whitespace);
+
 private:
     virtual bool is_text_node() const final { return true; }
     virtual bool wants_mouse_events() const override;
