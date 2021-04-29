@@ -116,6 +116,7 @@ int main(int argc, char** argv)
 
     auto m_config = Core::ConfigFile::get_for_app("Browser");
     Browser::g_home_url = m_config->read_entry("Preferences", "Home", "about:blank");
+    Browser::g_search_engine = m_config->read_entry("Preferences", "SearchEngine", {});
 
     auto ad_filter_list_or_error = Core::File::open(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::IODevice::ReadOnly);
     if (!ad_filter_list_or_error.is_error()) {
