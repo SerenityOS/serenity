@@ -65,6 +65,16 @@ void current_test_case_did_fail();
         }                                                                                                                                        \
     } while (false)
 
+#define EXPECT_NE(a, b)                                                                                                                                                                      \
+    do {                                                                                                                                                                                     \
+        auto lhs = (a);                                                                                                                                                                      \
+        auto rhs = (b);                                                                                                                                                                      \
+        if (lhs == rhs) {                                                                                                                                                                    \
+            ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_NE({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs }); \
+            ::Test::current_test_case_did_fail();                                                                                                                                            \
+        }                                                                                                                                                                                    \
+    } while (false)
+
 #define EXPECT(x)                                                                                    \
     do {                                                                                             \
         if (!(x)) {                                                                                  \
