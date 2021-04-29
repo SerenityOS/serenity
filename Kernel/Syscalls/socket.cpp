@@ -178,7 +178,8 @@ KResultOr<ssize_t> Process::sys$sendmsg(int sockfd, Userspace<const struct msghd
     if (msg.msg_iovlen != 1)
         return ENOTSUP; // FIXME: Support this :)
     Vector<iovec, 1> iovs;
-    iovs.resize(msg.msg_iovlen);
+    if (!iovs.try_resize(msg.msg_iovlen))
+        return ENOMEM;
     if (!copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen))
         return EFAULT;
 
@@ -213,7 +214,8 @@ KResultOr<ssize_t> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> us
     if (msg.msg_iovlen != 1)
         return ENOTSUP; // FIXME: Support this :)
     Vector<iovec, 1> iovs;
-    iovs.resize(msg.msg_iovlen);
+    if (!iovs.try_resize(msg.msg_iovlen))
+        return ENOMEM;
     if (!copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen))
         return EFAULT;
 
