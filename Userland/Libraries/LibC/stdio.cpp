@@ -30,6 +30,7 @@ public:
         : m_fd(fd)
         , m_mode(mode)
     {
+        __pthread_mutex_init(&m_mutex, nullptr);
     }
     ~FILE();
 
