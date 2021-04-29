@@ -420,9 +420,11 @@ Tab::Tab(Type type)
             this);
         search_engine_menu.add_action(action);
         m_search_engine_actions.add_action(action);
+
         if (g_search_engine == url_format) {
             action->set_checked(true);
         }
+        action->set_status_tip(url_format);
     };
 
     auto disable_search_engine_action = GUI::Action::create_checkable(
