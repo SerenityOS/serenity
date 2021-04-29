@@ -1,5 +1,3 @@
-add_subdirectory(Tests)
-
 set(LIBC_SOURCES
     arpa/inet.cpp
     assert.cpp
