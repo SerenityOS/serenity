@@ -666,6 +666,16 @@ int fgetc(FILE* stream)
     return EOF;
 }
 
+int fgetc_unlocked(FILE* stream)
+{
+    VERIFY(stream);
+    char ch;
+    size_t nread = fread_unlocked(&ch, sizeof(char), 1, stream);
+    if (nread == 1)
+        return ch;
+    return EOF;
+}
+
 int getc(FILE* stream)
 {
     return fgetc(stream);
@@ -673,8 +683,7 @@ int getc(FILE* stream)
 
 int getc_unlocked(FILE* stream)
 {
-    // FIXME: This currently locks the file
-    return fgetc(stream);
+    return fgetc_unlocked(stream);
 }
 
 int getchar()
@@ -796,16 +805,22 @@ int ferror(FILE* stream)
     return stream->error();
 }
 
-size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
+size_t fread_unlocked(void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     VERIFY(stream);
     VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
 
-    ScopedFileLock lock(stream);
     size_t nread = stream->read(reinterpret_cast<u8*>(ptr), size * nmemb);
     if (!nread)
         return 0;
     return nread / size;
+}
+
+size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
+{
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
+    return fread_unlocked(ptr, size, nmemb, stream);
 }
 
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
