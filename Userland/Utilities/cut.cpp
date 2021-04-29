@@ -37,10 +37,10 @@ static void print_usage_and_exit(int ret)
     exit(ret);
 }
 
-static void add_if_not_exists(Vector<Index>& indexes, Index data)
+static void add_if_not_exists(Vector<Index>& indices, Index data)
 {
     bool append_to_vector = true;
-    for (auto& index : indexes) {
+    for (auto& index : indices) {
         if (index.intersects(data)) {
             if (index.m_type == Index::Type::RangedIndex) {
                 index.m_from = min(index.m_from, data.m_from);
@@ -51,11 +51,11 @@ static void add_if_not_exists(Vector<Index>& indexes, Index data)
     }
 
     if (append_to_vector) {
-        indexes.append(data);
+        indices.append(data);
     }
 }
 
-static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
+static void expand_list(Vector<String>& tokens, Vector<Index>& indices)
 {
     for (auto& token : tokens) {
         if (token.length() == 0) {
@@ -81,7 +81,7 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
             }
 
             Index tmp = { 1, index.value(), Index::Type::RangedIndex };
-            add_if_not_exists(indexes, tmp);
+            add_if_not_exists(indices, tmp);
         } else if (token[token.length() - 1] == '-') {
             auto index = token.substring(0, token.length() - 1).to_int();
             if (!index.has_value()) {
@@ -94,7 +94,7 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
                 print_usage_and_exit(1);
             }
             Index tmp = { index.value(), -1, Index::Type::SliceIndex };
-            add_if_not_exists(indexes, tmp);
+            add_if_not_exists(indices, tmp);
         } else {
             auto range = token.split('-');
             if (range.size() == 2) {
@@ -119,7 +119,7 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
                 }
 
                 Index tmp = { index1.value(), index2.value(), Index::Type::RangedIndex };
-                add_if_not_exists(indexes, tmp);
+                add_if_not_exists(indices, tmp);
             } else if (range.size() == 1) {
                 auto index = range[0].to_int();
                 if (!index.has_value()) {
@@ -133,7 +133,7 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
                 }
 
                 Index tmp = { index.value(), index.value(), Index::Type::SingleIndex };
-                add_if_not_exists(indexes, tmp);
+                add_if_not_exists(indices, tmp);
             } else {
                 fprintf(stderr, "cut: invalid byte or character range\n");
                 print_usage_and_exit(1);

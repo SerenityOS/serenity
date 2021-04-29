@@ -37,8 +37,8 @@ public:
 class Model : public RefCounted<Model> {
 public:
     enum UpdateFlag {
-        DontInvalidateIndexes = 0,
-        InvalidateAllIndexes = 1 << 0,
+        DontInvalidateIndices = 0,
+        InvalidateAllIndices = 1 << 0,
     };
 
     enum MatchesFlag {
@@ -88,7 +88,7 @@ protected:
     Model();
 
     void for_each_view(Function<void(AbstractView&)>);
-    void did_update(unsigned flags = UpdateFlag::InvalidateAllIndexes);
+    void did_update(unsigned flags = UpdateFlag::InvalidateAllIndices);
 
     static bool string_matches(const StringView& str, const StringView& needle, unsigned flags)
     {

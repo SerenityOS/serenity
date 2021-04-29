@@ -79,21 +79,21 @@ describe("normal behavior", () => {
         }, 100);
         expect(result).toBe(121);
 
-        var indexes = [];
+        var indices = [];
         result = ["foo", 1, true].reduce((a, v, i) => {
-            indexes.push(i);
+            indices.push(i);
         });
         expect(result).toBeUndefined();
-        expect(indexes.length).toBe(2);
-        expect(indexes[0]).toBe(1);
-        expect(indexes[1]).toBe(2);
+        expect(indices.length).toBe(2);
+        expect(indices[0]).toBe(1);
+        expect(indices[1]).toBe(2);
 
-        indexes = [];
+        indices = [];
         result = ["foo", 1, true].reduce((a, v, i) => {
-            indexes.push(i);
+            indices.push(i);
         }, "foo");
         expect(result).toBeUndefined();
-        expect(indexes).toEqual([0, 1, 2]);
+        expect(indices).toEqual([0, 1, 2]);
 
         var mutable = { prop: 0 };
         result = ["foo", 1, true].reduce((a, v) => {

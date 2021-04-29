@@ -70,11 +70,11 @@ void MenuManager::event(Core::Event& event)
             && ((key_event.key() >= Key_A && key_event.key() <= Key_Z)
                 || (key_event.key() >= Key_0 && key_event.key() <= Key_9))) {
 
-            if (auto* shortcut_item_indexes = m_current_menu->items_with_alt_shortcut(key_event.code_point())) {
-                VERIFY(!shortcut_item_indexes->is_empty());
+            if (auto* shortcut_item_indices = m_current_menu->items_with_alt_shortcut(key_event.code_point())) {
+                VERIFY(!shortcut_item_indices->is_empty());
                 // FIXME: If there are multiple items with the same Alt shortcut, we should cycle through them
                 //        with each keypress instead of activating immediately.
-                auto index = shortcut_item_indexes->at(0);
+                auto index = shortcut_item_indices->at(0);
                 auto& item = m_current_menu->item(index);
                 m_current_menu->set_hovered_index(index);
                 if (item.is_submenu())

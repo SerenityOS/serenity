@@ -430,10 +430,10 @@ NEVER_INLINE FLATTEN static bool unfilter(PNGLoadingContext& context)
             auto pixels_per_byte = 8 / context.bit_depth;
             auto mask = (1 << context.bit_depth) - 1;
             for (int y = 0; y < context.height; ++y) {
-                auto* palette_indexes = context.scanlines[y].data.data();
+                auto* palette_indices = context.scanlines[y].data.data();
                 for (int i = 0; i < context.width; ++i) {
                     auto bit_offset = (8 - context.bit_depth) - (context.bit_depth * (i % pixels_per_byte));
-                    auto palette_index = (palette_indexes[i / pixels_per_byte] >> bit_offset) & mask;
+                    auto palette_index = (palette_indices[i / pixels_per_byte] >> bit_offset) & mask;
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
                     if ((size_t)palette_index >= context.palette_data.size())
                         return false;
