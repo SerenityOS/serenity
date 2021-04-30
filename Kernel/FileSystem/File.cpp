@@ -43,4 +43,15 @@ KResultOr<Region*> File::mmap(Process&, FileDescription&, const Range&, u64, int
     return ENODEV;
 }
 
+KResult File::attach(FileDescription&)
+{
+    m_attach_count++;
+    return KSuccess;
+}
+
+void File::detach(FileDescription&)
+{
+    m_attach_count--;
+}
+
 }
