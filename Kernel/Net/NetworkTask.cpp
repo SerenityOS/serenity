@@ -183,6 +183,15 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const Time& 
 
     dbgln_if(IPV4_DEBUG, "handle_ipv4: source={}, destination={}", packet.source(), packet.destination());
 
+    NetworkAdapter::for_each([&](auto& adapter) {
+        if (adapter.link_up()) {
+            auto my_net = adapter.ipv4_address().to_u32() & adapter.ipv4_netmask().to_u32();
+            auto their_net = packet.source().to_u32() & adapter.ipv4_netmask().to_u32();
+            if (my_net == their_net)
+                update_arp_table(packet.source(), eth.source());
+        }
+    });
+
     switch ((IPv4Protocol)packet.protocol()) {
     case IPv4Protocol::ICMP:
         return handle_icmp(eth, packet, packet_timestamp);
