@@ -43,6 +43,7 @@ using DlIteratePhdrFunction = int (*)(DlIteratePhdrCallbackFunction, void*);
 
 static size_t s_current_tls_offset = 0;
 static size_t s_total_tls_size = 0;
+static size_t s_allocated_tls_block_size = 0;
 static char** s_envp = nullptr;
 static LibCExitFunction s_libc_exit = nullptr;
 static __pthread_mutex_t s_loader_lock = __PTHREAD_MUTEX_INITIALIZER;
@@ -176,6 +177,8 @@ static void allocate_tls()
     void* master_tls = ::allocate_tls((char*)initial_tls_data.data(), initial_tls_data.size());
     VERIFY(master_tls != (void*)-1);
     dbgln_if(DYNAMIC_LOAD_DEBUG, "from userspace, master_tls: {:p}", master_tls);
+
+    s_allocated_tls_block_size = initial_tls_data.size();
 }
 
 static int __dl_iterate_phdr(DlIteratePhdrCallbackFunction callback, void* data)
@@ -326,6 +329,35 @@ static Result<void, DlErrorMessage> __dlclose(void* handle)
     return {};
 }
 
+static Optional<DlErrorMessage> verify_tls_for_dlopen(const DynamicLoader& loader)
+{
+    if (loader.tls_size_of_current_object() == 0)
+        return {};
+
+    if (s_total_tls_size + loader.tls_size_of_current_object() > s_allocated_tls_block_size)
+        return DlErrorMessage("TLS size too large");
+
+    bool tls_data_is_all_zero = true;
+    loader.image().for_each_program_header([&loader, &tls_data_is_all_zero](ELF::Image::ProgramHeader program_header) {
+        if (program_header.type() != PT_TLS)
+            return IterationDecision::Continue;
+
+        auto* tls_data = (const u8*)loader.image().base_address() + program_header.offset();
+        for (size_t i = 0; i < program_header.size_in_image(); ++i) {
+            if (tls_data[i] != 0) {
+                tls_data_is_all_zero = false;
+                break;
+            }
+        }
+        return IterationDecision::Break;
+    });
+
+    if (tls_data_is_all_zero)
+        return {};
+
+    return DlErrorMessage("Using dlopen() with libraries that have non-zeroed TLS is currently not supported");
+}
+
 static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
 {
     // FIXME: RTLD_NOW and RTLD_LOCAL are not supported
@@ -355,6 +387,9 @@ static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
         return result1.error();
     }
 
+    if (auto error = verify_tls_for_dlopen(result1.value()); error.has_value())
+        return error.value();
+
     auto result2 = map_dependencies(library_name);
     if (result2.is_error()) {
         return result2.error();
@@ -363,6 +398,8 @@ static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
     auto result = load_main_library(library_name, flags);
     if (result.is_error())
         return result.error();
+
+    s_total_tls_size += result1.value()->tls_size_of_current_object();
 
     auto object = s_global_objects.get(library_name);
     if (!object.has_value())
