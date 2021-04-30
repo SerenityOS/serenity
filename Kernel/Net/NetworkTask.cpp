@@ -29,12 +29,20 @@ static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&, const Tim
 static void handle_udp(const IPv4Packet&, const Time& packet_timestamp);
 static void handle_tcp(const IPv4Packet&, const Time& packet_timestamp);
 
+static Thread* network_task = nullptr;
+
 [[noreturn]] static void NetworkTask_main(void*);
 
 void NetworkTask::spawn()
 {
     RefPtr<Thread> thread;
     Process::create_kernel_process(thread, "NetworkTask", NetworkTask_main, nullptr);
+    network_task = thread;
+}
+
+bool NetworkTask::is_current()
+{
+    return Thread::current() == network_task;
 }
 
 void NetworkTask_main(void*)

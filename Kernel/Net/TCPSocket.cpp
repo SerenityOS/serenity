@@ -197,7 +197,8 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     }
 
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
-    VERIFY(!routing_decision.is_zero());
+    if (routing_decision.is_zero())
+        return EHOSTUNREACH;
 
     auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer.data());
     auto result = routing_decision.adapter->send_ipv4(
@@ -214,7 +215,8 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
 void TCPSocket::send_outgoing_packets()
 {
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
-    VERIFY(!routing_decision.is_zero());
+    if (routing_decision.is_zero())
+        return;
 
     auto now = kgettimeofday();
 
