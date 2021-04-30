@@ -242,7 +242,7 @@ void Printer::print(const Wasm::Expression& expression)
         print(instr);
 }
 
-void Printer::print(const Wasm::Func& func)
+void Printer::print(const Wasm::CodeSection::Func& func)
 {
     print_indent();
     print("(function\n");

@@ -11,14 +11,16 @@
 namespace Wasm {
 
 struct Printer {
-    explicit Printer(OutputStream& stream)
+    explicit Printer(OutputStream& stream, size_t initial_indent = 0)
         : m_stream(stream)
+        , m_indent(initial_indent)
     {
     }
 
     void print(const Wasm::BlockType&);
     void print(const Wasm::CodeSection&);
     void print(const Wasm::CodeSection::Code&);
+    void print(const Wasm::CodeSection::Func&);
     void print(const Wasm::ConstrainedStream&);
     void print(const Wasm::CustomSection&);
     void print(const Wasm::DataCountSection&);
@@ -29,7 +31,6 @@ struct Printer {
     void print(const Wasm::ExportSection&);
     void print(const Wasm::ExportSection::Export&);
     void print(const Wasm::Expression&);
-    void print(const Wasm::Func&);
     void print(const Wasm::FunctionSection&);
     void print(const Wasm::FunctionType&);
     void print(const Wasm::GlobalSection&);

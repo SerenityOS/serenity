@@ -799,27 +799,26 @@ private:
     ValueType m_type;
 };
 
-// https://webassembly.github.io/spec/core/bikeshed/#binary-func
-class Func {
-public:
-    explicit Func(Vector<Locals> locals, Expression body)
-        : m_locals(move(locals))
-        , m_body(move(body))
-    {
-    }
-
-    auto& locals() const { return m_locals; }
-    auto& body() const { return m_body; }
-
-    static ParseResult<Func> parse(InputStream& stream);
-
-private:
-    Vector<Locals> m_locals;
-    Expression m_body;
-};
-
 class CodeSection {
 public:
+    // https://webassembly.github.io/spec/core/bikeshed/#binary-func
+    class Func {
+    public:
+        explicit Func(Vector<Locals> locals, Expression body)
+            : m_locals(move(locals))
+            , m_body(move(body))
+        {
+        }
+
+        auto& locals() const { return m_locals; }
+        auto& body() const { return m_body; }
+
+        static ParseResult<Func> parse(InputStream& stream);
+
+    private:
+        Vector<Locals> m_locals;
+        Expression m_body;
+    };
     class Code {
     public:
         explicit Code(u32 size, Func func)
@@ -916,10 +915,10 @@ class Module {
 public:
     class Function {
     public:
-        explicit Function(TypeIndex type, Vector<ValueType> local_types, Expression body)
+        explicit Function(TypeIndex type, Vector<ValueType> local_types, const Expression& body)
             : m_type(type)
             , m_local_types(move(local_types))
-            , m_body(move(body))
+            , m_body(body)
         {
         }
 
@@ -930,7 +929,7 @@ public:
     private:
         TypeIndex m_type;
         Vector<ValueType> m_local_types;
-        Expression m_body;
+        const Expression& m_body;
     };
 
     using AnySection = Variant<
@@ -954,13 +953,35 @@ public:
     explicit Module(Vector<AnySection> sections)
         : m_sections(move(sections))
     {
+        populate_sections();
     }
 
     auto& sections() const { return m_sections; }
+    auto& functions() const { return m_functions; }
+
+    template<typename T, typename Callback>
+    void for_each_section_of_type(Callback&& callback) const
+    {
+        for (auto& section : m_sections) {
+            if (auto ptr = section.get_pointer<T>())
+                callback(*ptr);
+        }
+    }
+    template<typename T, typename Callback>
+    void for_each_section_of_type(Callback&& callback)
+    {
+        for (auto& section : m_sections) {
+            if (auto ptr = section.get_pointer<T>())
+                callback(*ptr);
+        }
+    }
 
     static ParseResult<Module> parse(InputStream& stream);
 
 private:
+    void populate_sections();
+
     Vector<AnySection> m_sections;
+    Vector<Function> m_functions;
 };
 }

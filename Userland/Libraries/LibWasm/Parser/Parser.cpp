@@ -970,7 +970,7 @@ ParseResult<Locals> Locals::parse(InputStream& stream)
     return Locals { static_cast<u32>(count), type.release_value() };
 }
 
-ParseResult<Func> Func::parse(InputStream& stream)
+ParseResult<CodeSection::Func> CodeSection::Func::parse(InputStream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Func");
     auto locals = parse_vector<Locals>(stream);
@@ -1225,6 +1225,28 @@ ParseResult<Module> Module::parse(InputStream& stream)
     }
 
     return Module { move(sections) };
+}
+
+void Module::populate_sections()
+{
+    const FunctionSection* function_section { nullptr };
+    for_each_section_of_type<FunctionSection>([&](const FunctionSection& section) { function_section = &section; });
+    for_each_section_of_type<CodeSection>([&](const CodeSection& section) {
+        // FIXME: This should be considered invalid once validation is implemented.
+        if (!function_section)
+            return;
+        size_t index = 0;
+        for (auto& entry : section.functions()) {
+            auto& type_index = function_section->types()[index];
+            Vector<ValueType> locals;
+            for (auto& local : entry.func().locals()) {
+                for (size_t i = 0; i < local.n(); ++i)
+                    locals.append(local.type());
+            }
+            m_functions.empend(type_index, move(locals), entry.func().body());
+            ++index;
+        }
+    });
 }
 
 String parse_error_to_string(ParseError error)
