@@ -12,6 +12,7 @@
 
 namespace Kernel {
 
+Atomic<bool> g_caps_lock_remapped_to_ctrl;
 static AK::Singleton<HIDManagement> s_the;
 
 // clang-format off
