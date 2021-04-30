@@ -23,9 +23,12 @@
 */
 
 #include <LibCore/ElapsedTimer.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -217,6 +220,11 @@ int main(int argc, char** argv)
     window->set_title("Fire");
     window->set_resizable(false);
     window->resize(640, 400);
+
+    auto menubar = GUI::Menubar::construct();
+    auto& app_menu = menubar->add_menu("File");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    window->set_menubar(move(menubar));
 
     auto& fire = window->set_main_widget<Fire>();
 
