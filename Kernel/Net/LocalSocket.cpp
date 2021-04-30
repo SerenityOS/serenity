@@ -466,7 +466,8 @@ KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescr
     // FIXME: Figure out how we should limit this properly.
     if (queue.size() > 128)
         return EBUSY;
-    queue.append(move(passing_description));
+    if (!queue.try_append(move(passing_description)))
+        return ENOMEM;
     return KSuccess;
 }
 
