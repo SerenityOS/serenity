@@ -47,9 +47,9 @@ private:
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;
     virtual KResult add_child(Inode& child, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
-    virtual int set_atime(time_t) override;
-    virtual int set_ctime(time_t) override;
-    virtual int set_mtime(time_t) override;
+    virtual KResult set_atime(time_t) override;
+    virtual KResult set_ctime(time_t) override;
+    virtual KResult set_mtime(time_t) override;
     virtual KResult increment_link_count() override;
     virtual KResult decrement_link_count() override;
     virtual KResultOr<size_t> directory_entry_count() const override;

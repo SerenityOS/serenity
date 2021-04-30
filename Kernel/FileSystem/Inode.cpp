@@ -117,19 +117,19 @@ void Inode::will_be_destroyed()
         flush_metadata();
 }
 
-int Inode::set_atime(time_t)
+KResult Inode::set_atime(time_t)
 {
-    return -ENOTIMPL;
+    return ENOTIMPL;
 }
 
-int Inode::set_ctime(time_t)
+KResult Inode::set_ctime(time_t)
 {
-    return -ENOTIMPL;
+    return ENOTIMPL;
 }
 
-int Inode::set_mtime(time_t)
+KResult Inode::set_mtime(time_t)
 {
-    return -ENOTIMPL;
+    return ENOTIMPL;
 }
 
 KResult Inode::increment_link_count()

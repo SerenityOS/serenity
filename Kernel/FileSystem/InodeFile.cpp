@@ -48,9 +48,11 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, u64 offset, con
 
     ssize_t nwritten = m_inode->write_bytes(offset, count, data, &description);
     if (nwritten > 0) {
-        m_inode->set_mtime(kgettimeofday().to_truncated_seconds());
+        auto mtime_result = m_inode->set_mtime(kgettimeofday().to_truncated_seconds());
         Thread::current()->did_file_write(nwritten);
         evaluate_block_conditions();
+        if (mtime_result.is_error())
+            return mtime_result;
     }
     if (nwritten < 0)
         return KResult((ErrnoCode)-nwritten);
@@ -109,12 +111,10 @@ String InodeFile::absolute_path(const FileDescription& description) const
 
 KResult InodeFile::truncate(u64 size)
 {
-    auto truncate_result = m_inode->truncate(size);
-    if (truncate_result.is_error())
-        return truncate_result;
-    int mtime_result = m_inode->set_mtime(kgettimeofday().to_truncated_seconds());
-    if (mtime_result < 0)
-        return KResult((ErrnoCode)-mtime_result);
+    if (auto result = m_inode->truncate(size); result.is_error())
+        return result;
+    if (auto result = m_inode->set_mtime(kgettimeofday().to_truncated_seconds()); result.is_error())
+        return result;
     return KSuccess;
 }
 
