@@ -264,6 +264,7 @@ public:
 
     struct SymbolLookupResult {
         FlatPtr value { 0 };
+        size_t size { 0 };
         VirtualAddress address;
         unsigned bind { STB_LOCAL };
         const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
