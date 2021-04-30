@@ -904,7 +904,8 @@ KResult Ext2FSInode::resize(u64 new_size)
         auto blocks_or_error = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
         if (blocks_or_error.is_error())
             return blocks_or_error.error();
-        m_block_list.append(blocks_or_error.release_value());
+        if (!m_block_list.try_append(blocks_or_error.release_value()))
+            return ENOMEM;
     } else if (blocks_needed_after < blocks_needed_before) {
         if constexpr (EXT2_VERY_DEBUG) {
             dbgln("Ext2FSInode[{}]::resize(): Shrinking inode, old block list is {} entries:", identifier(), m_block_list.size());
@@ -1451,7 +1452,8 @@ KResultOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_bloc
         dbgln("Ext2FS: Failed to load bitmap block {}", bitmap_block_index);
         return result;
     }
-    m_cached_bitmaps.append(make<CachedBitmap>(bitmap_block_index, move(block)));
+    if (!m_cached_bitmaps.try_append(make<CachedBitmap>(bitmap_block_index, move(block))))
+        return ENOMEM;
     return m_cached_bitmaps.last();
 }
 
