@@ -528,6 +528,11 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             return;
         }
     case TCPSocket::State::Established:
+        if (tcp_packet.has_rst()) {
+            socket->set_state(TCPSocket::State::Closed);
+            return;
+        }
+
         if (tcp_packet.has_fin()) {
             if (payload_size != 0)
                 socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
