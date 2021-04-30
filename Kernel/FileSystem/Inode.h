@@ -76,9 +76,9 @@ public:
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 
-    virtual int set_atime(time_t);
-    virtual int set_ctime(time_t);
-    virtual int set_mtime(time_t);
+    virtual KResult set_atime(time_t);
+    virtual KResult set_ctime(time_t);
+    virtual KResult set_mtime(time_t);
     virtual KResult increment_link_count();
     virtual KResult decrement_link_count();
 

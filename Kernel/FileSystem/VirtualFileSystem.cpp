@@ -209,12 +209,10 @@ KResult VFS::utime(StringView path, Custody& base, time_t atime, time_t mtime)
     if (custody.is_readonly())
         return EROFS;
 
-    int error = inode.set_atime(atime);
-    if (error < 0)
-        return KResult((ErrnoCode)-error);
-    error = inode.set_mtime(mtime);
-    if (error < 0)
-        return KResult((ErrnoCode)-error);
+    if (auto result = inode.set_atime(atime); result.is_error())
+        return result;
+    if (auto result = inode.set_mtime(mtime); result.is_error())
+        return result;
     return KSuccess;
 }
 
@@ -319,10 +317,10 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
         return EROFS;
 
     if (should_truncate_file) {
-        KResult result = inode.truncate(0);
-        if (result.is_error())
+        if (auto result = inode.truncate(0); result.is_error())
             return result;
-        inode.set_mtime(kgettimeofday().to_truncated_seconds());
+        if (auto result = inode.set_mtime(kgettimeofday().to_truncated_seconds()); result.is_error())
+            return result;
     }
     auto description = FileDescription::create(custody);
     if (!description.is_error()) {
