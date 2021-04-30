@@ -72,7 +72,8 @@ KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
     Locker locker(m_lock);
     if (m_pending.size() >= m_backlog)
         return ECONNREFUSED;
-    m_pending.append(peer);
+    if (!m_pending.try_append(peer))
+        return ENOMEM;
     evaluate_block_conditions();
     return KSuccess;
 }
