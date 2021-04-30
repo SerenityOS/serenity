@@ -369,7 +369,8 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     if (!has_specific_local_address())
         set_local_address(routing_decision.adapter->ipv4_address());
 
-    allocate_local_port_if_needed();
+    if (auto result = allocate_local_port_if_needed(); result.is_error())
+        return result.error();
 
     m_sequence_number = get_good_random<u32>();
     m_ack_number = 0;
@@ -401,7 +402,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     return EINPROGRESS;
 }
 
-int TCPSocket::protocol_allocate_local_port()
+KResultOr<u16> TCPSocket::protocol_allocate_local_port()
 {
     static const u16 first_ephemeral_port = 32768;
     static const u16 last_ephemeral_port = 60999;
@@ -424,7 +425,7 @@ int TCPSocket::protocol_allocate_local_port()
         if (port == first_scan_port)
             break;
     }
-    return -EADDRINUSE;
+    return EADDRINUSE;
 }
 
 bool TCPSocket::protocol_is_disconnected() const
