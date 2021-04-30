@@ -4,4 +4,12 @@ repos:
       - id: meta-lint-ci
         name: Running Meta/lint-ci.sh to ensure changes will pass linting on CI
         entry: bash Meta/lint-ci.sh
+        args: [ --no-ports ]
+        language: system
+
+      - id: meta-lint-ports
+        name: Running Meta/lint-ports.py to ensure changes will pass linting on CI
+        entry: Meta/lint-ports.py
+        pass_filenames: false
+        files: ^Ports/
         language: system
