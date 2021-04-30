@@ -288,7 +288,7 @@ MasterPTY* FileDescription::master_pty()
 
 KResult FileDescription::close()
 {
-    if (m_file->ref_count() > 1)
+    if (m_file->attach_count() > 0)
         return KSuccess;
     return m_file->close();
 }
