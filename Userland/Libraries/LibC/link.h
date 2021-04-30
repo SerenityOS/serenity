@@ -11,17 +11,22 @@
 #else
 #    include <elf.h>
 #endif
+#include <limits.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
-#define ElfW(type) Elf32_##type
+#ifdef __LP64__
+#    define ElfW(type) Elf64_##type
+#else
+#    define ElfW(type) Elf32_##type
+#endif
 
 struct dl_phdr_info {
-    Elf32_Addr dlpi_addr;
+    ElfW(Addr) dlpi_addr;
     const char* dlpi_name;
-    const Elf32_Phdr* dlpi_phdr;
-    Elf32_Half dlpi_phnum;
+    const ElfW(Phdr) * dlpi_phdr;
+    ElfW(Half) dlpi_phnum;
 };
 
 int dl_iterate_phdr(int (*callback)(struct dl_phdr_info* info, size_t size, void* data), void* data);

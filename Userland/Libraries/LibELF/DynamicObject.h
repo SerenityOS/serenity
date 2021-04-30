@@ -12,6 +12,7 @@
 #include <AK/String.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibC/elf.h>
+#include <LibC/link.h>
 
 namespace ELF {
 
@@ -31,24 +32,24 @@ public:
 
     class DynamicEntry {
     public:
-        explicit DynamicEntry(const Elf32_Dyn& dyn)
+        explicit DynamicEntry(const ElfW(Dyn) & dyn)
             : m_dyn(dyn)
         {
         }
 
         ~DynamicEntry() { }
 
-        Elf32_Sword tag() const { return m_dyn.d_tag; }
-        Elf32_Addr ptr() const { return m_dyn.d_un.d_ptr; }
-        Elf32_Word val() const { return m_dyn.d_un.d_val; }
+        ElfW(Sword) tag() const { return m_dyn.d_tag; }
+        ElfW(Addr) ptr() const { return m_dyn.d_un.d_ptr; }
+        ElfW(Word) val() const { return m_dyn.d_un.d_val; }
 
     private:
-        const Elf32_Dyn& m_dyn;
+        const ElfW(Dyn) & m_dyn;
     };
 
     class Symbol {
     public:
-        Symbol(const DynamicObject& dynamic, unsigned index, const Elf32_Sym& sym)
+        Symbol(const DynamicObject& dynamic, unsigned index, const ElfW(Sym) & sym)
             : m_dynamic(dynamic)
             , m_sym(sym)
             , m_index(index)
@@ -76,7 +77,7 @@ public:
 
     private:
         const DynamicObject& m_dynamic;
-        const Elf32_Sym& m_sym;
+        const ElfW(Sym) & m_sym;
         const unsigned m_index;
     };
 
@@ -130,7 +131,7 @@ public:
 
     class Relocation {
     public:
-        Relocation(const DynamicObject& dynamic, const Elf32_Rel& rel, unsigned offset_in_section)
+        Relocation(const DynamicObject& dynamic, const ElfW(Rel) & rel, unsigned offset_in_section)
             : m_dynamic(dynamic)
             , m_rel(rel)
             , m_offset_in_section(offset_in_section)
@@ -153,7 +154,7 @@ public:
 
     private:
         const DynamicObject& m_dynamic;
-        const Elf32_Rel& m_rel;
+        const ElfW(Rel) & m_rel;
         const unsigned m_offset_in_section;
     };
 
@@ -247,8 +248,8 @@ public:
     void set_tls_offset(FlatPtr offset) { m_tls_offset = offset; }
     void set_tls_size(FlatPtr size) { m_tls_size = size; }
 
-    Elf32_Half program_header_count() const;
-    const Elf32_Phdr* program_headers() const;
+    ElfW(Half) program_header_count() const;
+    const ElfW(Phdr) * program_headers() const;
 
     template<typename F>
     void for_each_needed_library(F) const;
@@ -283,8 +284,8 @@ public:
 private:
     explicit DynamicObject(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
-    StringView symbol_string_table_string(Elf32_Word) const;
-    const char* raw_symbol_string_table_string(Elf32_Word) const;
+    StringView symbol_string_table_string(ElfW(Word)) const;
+    const char* raw_symbol_string_table_string(ElfW(Word)) const;
     void parse();
 
     String m_filename;
@@ -312,7 +313,7 @@ private:
     FlatPtr m_symbol_table_offset { 0 };
     size_t m_size_of_symbol_table_entry { 0 };
 
-    Elf32_Sword m_procedure_linkage_table_relocation_type { -1 };
+    ElfW(Sword) m_procedure_linkage_table_relocation_type { -1 };
     FlatPtr m_plt_relocation_offset_location { 0 }; // offset of PLT relocations, at end of relocations
     size_t m_size_of_plt_relocation_entry_list { 0 };
     Optional<FlatPtr> m_procedure_linkage_table_offset;
@@ -326,14 +327,14 @@ private:
     bool m_is_elf_dynamic { false };
 
     // DT_FLAGS
-    Elf32_Word m_dt_flags { 0 };
+    ElfW(Word) m_dt_flags { 0 };
 
     bool m_has_soname { false };
-    Elf32_Word m_soname_index { 0 }; // Index into dynstr table for SONAME
+    ElfW(Word) m_soname_index { 0 }; // Index into dynstr table for SONAME
     bool m_has_rpath { false };
-    Elf32_Word m_rpath_index { 0 }; // Index into dynstr table for RPATH
+    ElfW(Word) m_rpath_index { 0 }; // Index into dynstr table for RPATH
     bool m_has_runpath { false };
-    Elf32_Word m_runpath_index { 0 }; // Index into dynstr table for RUNPATH
+    ElfW(Word) m_runpath_index { 0 }; // Index into dynstr table for RUNPATH
 
     Optional<FlatPtr> m_tls_offset;
     Optional<FlatPtr> m_tls_size;
@@ -364,7 +365,7 @@ inline void DynamicObject::for_each_symbol(F func) const
 template<typename F>
 inline void DynamicObject::for_each_dynamic_entry(F func) const
 {
-    auto* dyns = reinterpret_cast<const Elf32_Dyn*>(m_dynamic_address.as_ptr());
+    auto* dyns = reinterpret_cast<const ElfW(Dyn)*>(m_dynamic_address.as_ptr());
     for (unsigned i = 0;; ++i) {
         auto&& dyn = DynamicEntry(dyns[i]);
         if (dyn.tag() == DT_NULL)
@@ -379,7 +380,7 @@ inline void DynamicObject::for_each_needed_library(F func) const
     for_each_dynamic_entry([func, this](auto entry) {
         if (entry.tag() != DT_NEEDED)
             return IterationDecision::Continue;
-        Elf32_Word offset = entry.val();
+        ElfW(Word) offset = entry.val();
         StringView name { (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr() };
         if (func(StringView(name)) == IterationDecision::Break)
             return IterationDecision::Break;
