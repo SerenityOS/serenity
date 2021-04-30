@@ -1584,34 +1584,34 @@ void Ext2FSInode::one_ref_left()
     // FIXME: I would like to not live forever, but uncached Ext2FS is fucking painful right now.
 }
 
-int Ext2FSInode::set_atime(time_t t)
+KResult Ext2FSInode::set_atime(time_t t)
 {
     Locker locker(m_lock);
     if (fs().is_readonly())
-        return -EROFS;
+        return EROFS;
     m_raw_inode.i_atime = t;
     set_metadata_dirty(true);
-    return 0;
+    return KSuccess;
 }
 
-int Ext2FSInode::set_ctime(time_t t)
+KResult Ext2FSInode::set_ctime(time_t t)
 {
     Locker locker(m_lock);
     if (fs().is_readonly())
-        return -EROFS;
+        return EROFS;
     m_raw_inode.i_ctime = t;
     set_metadata_dirty(true);
-    return 0;
+    return KSuccess;
 }
 
-int Ext2FSInode::set_mtime(time_t t)
+KResult Ext2FSInode::set_mtime(time_t t)
 {
     Locker locker(m_lock);
     if (fs().is_readonly())
-        return -EROFS;
+        return EROFS;
     m_raw_inode.i_mtime = t;
     set_metadata_dirty(true);
-    return 0;
+    return KSuccess;
 }
 
 KResult Ext2FSInode::increment_link_count()

@@ -335,7 +335,7 @@ KResult TmpFSInode::truncate(u64 size)
     return KSuccess;
 }
 
-int TmpFSInode::set_atime(time_t time)
+KResult TmpFSInode::set_atime(time_t time)
 {
     Locker locker(m_lock);
 
@@ -345,7 +345,7 @@ int TmpFSInode::set_atime(time_t time)
     return KSuccess;
 }
 
-int TmpFSInode::set_ctime(time_t time)
+KResult TmpFSInode::set_ctime(time_t time)
 {
     Locker locker(m_lock);
 
@@ -354,11 +354,11 @@ int TmpFSInode::set_ctime(time_t time)
     return KSuccess;
 }
 
-int TmpFSInode::set_mtime(time_t time)
+KResult TmpFSInode::set_mtime(time_t t)
 {
     Locker locker(m_lock);
 
-    m_metadata.mtime = time;
+    m_metadata.mtime = t;
     notify_watchers();
     return KSuccess;
 }
