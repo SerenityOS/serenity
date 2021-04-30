@@ -25,21 +25,6 @@ ListItemMarkerBox::~ListItemMarkerBox()
 {
 }
 
-static const String number_to_alphabet(unsigned int number, const String alphabet)
-{
-    auto base = alphabet.length();
-    StringBuilder output_string;
-    while (number > base) {
-        number--;
-        auto remainder = number % base;
-        number -= remainder;
-        output_string.append(alphabet[remainder]);
-        number /= base;
-    };
-    output_string.append(alphabet[number - 1]);
-    return output_string.to_string().reverse();
-}
-
 void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
 {
     if (phase != PaintPhase::Foreground)
@@ -80,11 +65,11 @@ void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
         break;
     case CSS::ListStyleType::LowerAlpha:
     case CSS::ListStyleType::LowerLatin:
-        context.painter().draw_text(enclosing, number_to_alphabet(m_index, lower_alpha), Gfx::TextAlignment::Center);
+        context.painter().draw_text(enclosing, String::bijective_base_from(m_index).to_lowercase(), Gfx::TextAlignment::Center);
         break;
     case CSS::ListStyleType::UpperAlpha:
     case CSS::ListStyleType::UpperLatin:
-        context.painter().draw_text(enclosing, number_to_alphabet(m_index, upper_alpha), Gfx::TextAlignment::Center);
+        context.painter().draw_text(enclosing, String::bijective_base_from(m_index), Gfx::TextAlignment::Center);
         break;
     case CSS::ListStyleType::None:
         return;
