@@ -34,6 +34,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <pty.h>
 #include <pwd.h>
 #include <serenity.h>
 #include <signal.h>
@@ -79,84 +80,27 @@ static void utmp_update(const char* tty, pid_t pid, bool create)
     }
 }
 
-static pid_t run_command(int ptm_fd, String command)
+static void run_command(String command)
 {
-    pid_t pid = fork();
-    if (pid < 0) {
-        perror("fork");
-        dbgln("run_command: could not fork to run '{}'", command);
-        return pid;
+    String shell = "/bin/Shell";
+    auto* pw = getpwuid(getuid());
+    if (pw && pw->pw_shell) {
+        shell = pw->pw_shell;
     }
+    endpwent();
 
-    if (pid == 0) {
-        const char* tty_name = ptsname(ptm_fd);
-        if (!tty_name) {
-            perror("ptsname");
-            exit(1);
-        }
-        close(ptm_fd);
-        int pts_fd = open(tty_name, O_RDWR);
-        if (pts_fd < 0) {
-            perror("open");
-            exit(1);
-        }
-
-        if (setsid() < 0) {
-            perror("setsid");
-        }
-
-        close(0);
-        close(1);
-        close(2);
-
-        int rc = dup2(pts_fd, 0);
-        if (rc < 0) {
-            perror("dup2");
-            exit(1);
-        }
-        rc = dup2(pts_fd, 1);
-        if (rc < 0) {
-            perror("dup2");
-            exit(1);
-        }
-        rc = dup2(pts_fd, 2);
-        if (rc < 0) {
-            perror("dup2");
-            exit(1);
-        }
-        rc = close(pts_fd);
-        if (rc < 0) {
-            perror("close");
-            exit(1);
-        }
-        rc = ioctl(0, TIOCSCTTY);
-        if (rc < 0) {
-            perror("ioctl(TIOCSCTTY)");
-            exit(1);
-        }
-
-        String shell = "/bin/Shell";
-        auto* pw = getpwuid(getuid());
-        if (pw && pw->pw_shell) {
-            shell = pw->pw_shell;
-        }
-        endpwent();
-
-        const char* args[4] = { shell.characters(), nullptr, nullptr, nullptr };
-        if (!command.is_empty()) {
-            args[1] = "-c";
-            args[2] = command.characters();
-        }
-        const char* envs[] = { "TERM=xterm", "PAGER=more", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
-        rc = execve(shell.characters(), const_cast<char**>(args), const_cast<char**>(envs));
-        if (rc < 0) {
-            perror("execve");
-            exit(1);
-        }
-        VERIFY_NOT_REACHED();
+    const char* args[4] = { shell.characters(), nullptr, nullptr, nullptr };
+    if (!command.is_empty()) {
+        args[1] = "-c";
+        args[2] = command.characters();
     }
-
-    return pid;
+    const char* envs[] = { "TERM=xterm", "PAGER=more", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
+    int rc = execve(shell.characters(), const_cast<char**>(args), const_cast<char**>(envs));
+    if (rc < 0) {
+        perror("execve");
+        exit(1);
+    }
+    VERIFY_NOT_REACHED();
 }
 
 static RefPtr<GUI::Window> create_settings_window(VT::TerminalWidget& terminal)
@@ -314,29 +258,25 @@ int main(int argc, char** argv)
 
     args_parser.parse(argc, argv);
 
-    int ptm_fd = posix_openpt(O_RDWR | O_CLOEXEC);
-    if (ptm_fd < 0) {
-        perror("posix_openpt");
-        return 1;
-    }
-    if (grantpt(ptm_fd) < 0) {
-        perror("grantpt");
-        return 1;
-    }
-    if (unlockpt(ptm_fd) < 0) {
-        perror("unlockpt");
-        return 1;
-    }
-
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
     Core::File::ensure_parent_directories(config->filename());
 
-    pid_t shell_pid = 0;
+    int ptm_fd, pts_fd;
+    pid_t shell_pid = forkpty(&ptm_fd, &pts_fd, nullptr, nullptr, nullptr);
+    if (shell_pid < 0) {
+        perror("forkpty");
+        return 1;
+    }
+    if (shell_pid == 0) {
+        close(ptm_fd);
+        if (command_to_execute)
+            run_command(command_to_execute);
+        else
+            run_command(config->read_entry("Startup", "Command", ""));
+        VERIFY_NOT_REACHED();
+    }
 
-    if (command_to_execute)
-        shell_pid = run_command(ptm_fd, command_to_execute);
-    else
-        shell_pid = run_command(ptm_fd, config->read_entry("Startup", "Command", ""));
+    close(pts_fd);
 
     auto* pts_name = ptsname(ptm_fd);
     utmp_update(pts_name, shell_pid, true);
