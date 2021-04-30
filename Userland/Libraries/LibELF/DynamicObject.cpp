@@ -440,7 +440,7 @@ auto DynamicObject::lookup_symbol(const HashSymbol& symbol) const -> Optional<Sy
     auto symbol_result = result.value();
     if (symbol_result.is_undefined())
         return {};
-    return SymbolLookupResult { symbol_result.value(), symbol_result.address(), symbol_result.bind(), this };
+    return SymbolLookupResult { symbol_result.value(), symbol_result.size(), symbol_result.address(), symbol_result.bind(), this };
 }
 
 NonnullRefPtr<DynamicObject> DynamicObject::create(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address)

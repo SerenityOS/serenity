@@ -170,7 +170,7 @@ static void allocate_tls()
 
     // Initialize TLS data
     for (const auto& entry : s_loaders) {
-        entry.value->copy_initial_tls_data_into(initial_tls_data, s_total_tls_size);
+        entry.value->copy_initial_tls_data_into(initial_tls_data);
     }
 
     void* master_tls = ::allocate_tls((char*)initial_tls_data.data(), initial_tls_data.size());
@@ -282,14 +282,14 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(co
     }
 
     for (auto& loader : loaders) {
-        bool success = loader.link(flags, s_total_tls_size);
+        bool success = loader.link(flags);
         if (!success) {
             return DlErrorMessage { String::formatted("Failed to link library {}", loader.filename()) };
         }
     }
 
     for (auto& loader : loaders) {
-        auto result = loader.load_stage_3(flags, s_total_tls_size);
+        auto result = loader.load_stage_3(flags);
         VERIFY(!result.is_error());
         auto& object = result.value();
 
