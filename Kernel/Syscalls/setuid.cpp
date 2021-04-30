@@ -163,7 +163,8 @@ KResultOr<int> Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> use
     }
 
     Vector<gid_t> new_extra_gids;
-    new_extra_gids.resize(count);
+    if (!new_extra_gids.try_resize(count))
+        return ENOMEM;
     if (!copy_n_from_user(new_extra_gids.data(), user_gids, count))
         return EFAULT;
 
@@ -174,7 +175,8 @@ KResultOr<int> Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> use
     }
 
     ProtectedDataMutationScope scope { *this };
-    m_extra_gids.resize(unique_extra_gids.size());
+    if (!m_extra_gids.try_resize(unique_extra_gids.size()))
+        return ENOMEM;
     size_t i = 0;
     for (auto& extra_gid : unique_extra_gids) {
         if (extra_gid == gid())
