@@ -414,3 +414,6 @@
 #cmakedefine01 WSSCREEN_DEBUG
 #endif
 
+#ifndef WASM_TRACE_DEBUG
+#cmakedefine01 WASM_TRACE_DEBUG
+#endif

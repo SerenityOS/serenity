@@ -176,6 +176,7 @@ set(LINE_EDITOR_DEBUG ON)
 set(LANGUAGE_SERVER_DEBUG ON)
 set(GL_DEBUG ON)
 set(WASM_BINPARSER_DEBUG ON)
+set(WASM_TRACE_DEBUG ON)
 set(PDF_DEBUG ON)
 
 # False positive: DEBUG is a flag but it works differently.
