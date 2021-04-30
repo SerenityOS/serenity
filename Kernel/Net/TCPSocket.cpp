@@ -471,8 +471,10 @@ KResult TCPSocket::close()
         set_state(State::LastAck);
     }
 
-    Locker locker(closing_sockets().lock());
-    closing_sockets().resource().set(tuple(), *this);
+    if (state() != State::Closed && state() != State::Listen) {
+        Locker locker(closing_sockets().lock());
+        closing_sockets().resource().set(tuple(), *this);
+    }
     return result;
 }
 
