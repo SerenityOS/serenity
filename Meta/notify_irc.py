@@ -55,6 +55,10 @@ def compute_lines(wrapper):
     elif 'pull_request' in event:
         # This is a PR.
         raw_action = event['action']
+        pull_request = event['pull_request']
+        # actor, until here, is whoever caused the action to run -
+        # if it's a PR we want the author's name in the notification.
+        actor = pull_request['user']['login']
         if raw_action == 'opened':
             action = 'opened'
         elif raw_action == 'reopened':
@@ -65,7 +69,7 @@ def compute_lines(wrapper):
             return False
         else:
             action = '{}(?)'.format(raw_action)
-        if event['pull_request'].get('draft', True):
+        if pull_request.get('draft', True):
             print("This is a draft PR, so IRC won't be notified.")
             print('Note: No rebuild occurs when the PR is "un-drafted"!')
             return False
@@ -74,8 +78,8 @@ def compute_lines(wrapper):
             action=action,
             status=status,
             run_id=run_id,
-            title=event['pull_request'].get('title', '???'),
-            link=event['pull_request'].get('_links', dict()).get('html', dict()).get('href', '???'),
+            title=pull_request.get('title', '???'),
+            link=pull_request.get('_links', {}).get('html', {}).get('href', '???'),
         )
     else:
         print('Unrecognized event type?!')
