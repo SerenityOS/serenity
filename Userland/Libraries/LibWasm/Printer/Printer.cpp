@@ -14,7 +14,7 @@ struct Names {
     static HashMap<OpCode, String> instruction_names;
 };
 
-static String instruction_name(const OpCode& opcode)
+String instruction_name(const OpCode& opcode)
 {
     return Names::instruction_names.get(opcode).value_or("<unknown>");
 }

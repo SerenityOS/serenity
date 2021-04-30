@@ -10,6 +10,8 @@
 
 namespace Wasm {
 
+String instruction_name(const OpCode& opcode);
+
 struct Printer {
     explicit Printer(OutputStream& stream, size_t initial_indent = 0)
         : m_stream(stream)
