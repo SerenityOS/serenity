@@ -109,9 +109,8 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
 KResult IPv4Socket::listen(size_t backlog)
 {
     Locker locker(lock());
-    int rc = allocate_local_port_if_needed();
-    if (rc < 0)
-        return EADDRINUSE;
+    if (auto result = allocate_local_port_if_needed(); result.is_error())
+        return result.error();
 
     set_backlog(backlog);
     m_role = Role::Listener;
@@ -159,15 +158,16 @@ bool IPv4Socket::can_write(const FileDescription&, size_t) const
     return is_connected();
 }
 
-int IPv4Socket::allocate_local_port_if_needed()
+KResultOr<u16> IPv4Socket::allocate_local_port_if_needed()
 {
+    Locker locker(lock());
     if (m_local_port)
         return m_local_port;
-    int port = protocol_allocate_local_port();
-    if (port < 0)
-        return port;
-    m_local_port = (u16)port;
-    return port;
+    auto port_or_error = protocol_allocate_local_port();
+    if (port_or_error.is_error())
+        return port_or_error.error();
+    m_local_port = port_or_error.value();
+    return port_or_error.value();
 }
 
 KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer& data, size_t data_length, [[maybe_unused]] int flags, Userspace<const sockaddr*> addr, socklen_t addr_length)
@@ -198,9 +198,8 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     if (m_local_address.to_u32() == 0)
         m_local_address = routing_decision.adapter->ipv4_address();
 
-    int rc = allocate_local_port_if_needed();
-    if (rc < 0)
-        return rc;
+    if (auto result = allocate_local_port_if_needed(); result.is_error())
+        return result.error();
 
     dbgln_if(IPV4_SOCKET_DEBUG, "sendto: destination={}:{}", m_peer_address, m_peer_port);
 
