@@ -338,7 +338,6 @@ const char* const sys_errlist[] = {
     "No message",
     "No protocol option",
     "Not connected",
-    "Operation would block",
     "Protocol not supported",
     "Resource deadlock would occur",
     "Timed out",
