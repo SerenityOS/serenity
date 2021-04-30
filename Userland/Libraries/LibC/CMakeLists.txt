@@ -23,6 +23,7 @@ set(LIBC_SOURCES
     pthread_forward.cpp
     pthread_integration.cpp
     pthread_tls.cpp
+    pty.cpp
     pwd.cpp
     qsort.cpp
     scanf.cpp
