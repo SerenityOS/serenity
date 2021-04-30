@@ -40,6 +40,9 @@ void TCPSocket::set_state(State new_state)
     if (new_state == State::Closed) {
         Locker locker(closing_sockets().lock());
         closing_sockets().resource().remove(tuple());
+
+        if (m_originator)
+            release_to_originator();
     }
 
     if (previous_role != m_role || was_disconnected != protocol_is_disconnected())
@@ -114,6 +117,7 @@ void TCPSocket::release_to_originator()
 {
     VERIFY(!!m_originator);
     m_originator.strong_ref()->release_for_accept(this);
+    m_originator.clear();
 }
 
 void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
