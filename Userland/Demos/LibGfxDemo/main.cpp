@@ -4,8 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -200,6 +203,11 @@ int main(int argc, char** argv)
     window->set_title("LibGfx Demo");
     window->set_resizable(false);
     window->resize(WIDTH, HEIGHT);
+
+    auto menubar = GUI::Menubar::construct();
+    auto& app_menu = menubar->add_menu("File");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    window->set_menubar(move(menubar));
 
     auto app_icon = GUI::Icon::default_icon("app-libgfx-demo");
     window->set_icon(app_icon.bitmap_for_size(16));
