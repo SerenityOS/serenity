@@ -146,12 +146,12 @@ RefPtr<DynamicObject> DynamicLoader::map()
     return m_dynamic_object;
 }
 
-bool DynamicLoader::link(unsigned flags, size_t total_tls_size)
+bool DynamicLoader::link(unsigned flags)
 {
-    return load_stage_2(flags, total_tls_size);
+    return load_stage_2(flags);
 }
 
-bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
+bool DynamicLoader::load_stage_2(unsigned flags)
 {
     VERIFY(flags & RTLD_GLOBAL);
 
@@ -173,14 +173,14 @@ bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
             }
         }
     }
-    do_main_relocations(total_tls_size);
+    do_main_relocations();
     return true;
 }
 
-void DynamicLoader::do_main_relocations(size_t total_tls_size)
+void DynamicLoader::do_main_relocations()
 {
     auto do_single_relocation = [&](const ELF::DynamicObject::Relocation& relocation) {
-        switch (do_relocation(total_tls_size, relocation, ShouldInitializeWeak::No)) {
+        switch (do_relocation(relocation, ShouldInitializeWeak::No)) {
         case RelocationResult::Failed:
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
             VERIFY_NOT_REACHED();
@@ -196,9 +196,9 @@ void DynamicLoader::do_main_relocations(size_t total_tls_size)
     m_dynamic_object->plt_relocation_section().for_each_relocation(do_single_relocation);
 }
 
-Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3(unsigned flags, size_t total_tls_size)
+Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3(unsigned flags)
 {
-    do_lazy_relocations(total_tls_size);
+    do_lazy_relocations();
     if (flags & RTLD_LAZY) {
         if (m_dynamic_object->has_plt())
             setup_plt_trampoline();
@@ -230,10 +230,10 @@ void DynamicLoader::load_stage_4()
     call_object_init_functions();
 }
 
-void DynamicLoader::do_lazy_relocations(size_t total_tls_size)
+void DynamicLoader::do_lazy_relocations()
 {
     for (const auto& relocation : m_unresolved_relocations) {
-        if (auto res = do_relocation(total_tls_size, relocation, ShouldInitializeWeak::Yes); res != RelocationResult::Success) {
+        if (auto res = do_relocation(relocation, ShouldInitializeWeak::Yes); res != RelocationResult::Success) {
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
             VERIFY_NOT_REACHED();
         }
@@ -389,7 +389,7 @@ void DynamicLoader::load_program_headers()
     // FIXME: Initialize the values in the TLS section. Currently, it is zeroed.
 }
 
-DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_size, const ELF::DynamicObject::Relocation& relocation, ShouldInitializeWeak should_initialize_weak)
+DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicObject::Relocation& relocation, ShouldInitializeWeak should_initialize_weak)
 {
     FlatPtr* patch_ptr = nullptr;
     if (is_dynamic())
@@ -462,7 +462,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
             break;
         auto* dynamic_object_of_symbol = res.value().dynamic_object;
         VERIFY(dynamic_object_of_symbol);
-        *patch_ptr = negative_offset_from_tls_block_end(res.value().value, dynamic_object_of_symbol->tls_offset().value(), total_tls_size);
+        *patch_ptr = negative_offset_from_tls_block_end(res.value().value, dynamic_object_of_symbol->tls_offset().value(), res.value().size);
         break;
     }
     case R_386_JMP_SLOT: {
@@ -487,15 +487,16 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(size_t total_tls_si
     return RelocationResult::Success;
 }
 
-ssize_t DynamicLoader::negative_offset_from_tls_block_end(size_t value_of_symbol, size_t tls_offset, size_t total_tls_size) const
+ssize_t DynamicLoader::negative_offset_from_tls_block_end(size_t value_of_symbol, size_t tls_offset, size_t symbol_size) const
 {
-    auto negative_offset = static_cast<ssize_t>(tls_offset + value_of_symbol - total_tls_size);
-    // Offset has to be strictly negative. Otherwise we'd collide with the thread's ThreadSpecificData structure.
-    VERIFY(negative_offset < 0);
-    return negative_offset;
+    VERIFY(symbol_size > 0);
+    ssize_t offset = -static_cast<ssize_t>(value_of_symbol + tls_offset + symbol_size);
+    // At offset 0 there's the thread's ThreadSpecificData structure, we don't want to collide with it.
+    VERIFY(offset < 0);
+    return offset;
 }
 
-void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer, size_t total_tls_size) const
+void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer) const
 {
     const u8* tls_data = nullptr;
     size_t tls_size_in_image = 0;
@@ -512,11 +513,11 @@ void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer, size_t total_
     if (!tls_data || !tls_size_in_image)
         return;
 
-    m_elf_image.for_each_symbol([this, &buffer, total_tls_size, tls_data](ELF::Image::Symbol symbol) {
+    m_elf_image.for_each_symbol([this, &buffer, tls_data](ELF::Image::Symbol symbol) {
         if (symbol.type() != STT_TLS)
             return IterationDecision::Continue;
 
-        ssize_t negative_offset = negative_offset_from_tls_block_end(symbol.value(), m_tls_offset, total_tls_size);
+        ssize_t negative_offset = negative_offset_from_tls_block_end(symbol.value(), m_tls_offset, symbol.size());
         VERIFY(symbol.size() != 0);
         VERIFY(buffer.size() + negative_offset + symbol.size() <= buffer.size());
         memcpy(buffer.data() + buffer.size() + negative_offset, tls_data + symbol.value(), symbol.size());
@@ -576,7 +577,8 @@ Optional<DynamicObject::SymbolLookupResult> DynamicLoader::lookup_symbol(const E
 {
     if (symbol.is_undefined() || symbol.bind() == STB_WEAK)
         return DynamicLinker::lookup_global_symbol(symbol.name());
-    return DynamicObject::SymbolLookupResult { symbol.value(), symbol.address(), symbol.bind(), &symbol.object() };
+
+    return DynamicObject::SymbolLookupResult { symbol.value(), symbol.size(), symbol.address(), symbol.bind(), &symbol.object() };
 }
 
 } // end namespace ELF
