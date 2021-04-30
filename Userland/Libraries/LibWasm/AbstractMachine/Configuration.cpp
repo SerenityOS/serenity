@@ -13,9 +13,9 @@ Optional<Label> Configuration::nth_label(size_t i)
 {
     if (i > 0)
         TODO();
-    for (size_t i = 0; i < m_stack.size(); ++i) {
-        if (auto ptr = m_stack.last(i).get_pointer<Label>())
-            return *ptr;
+    for (auto& entry : m_stack.entries()) {
+        if (auto ptr = entry.get_pointer<NonnullOwnPtr<Label>>())
+            return **ptr;
     }
     return {};
 }

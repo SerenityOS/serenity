@@ -49,7 +49,7 @@ public:
     }
 
     template<typename T>
-    requires(sizeof(T) <= sizeof(u64)) explicit Value(ValueType type, T raw_value)
+    requires(sizeof(T) == sizeof(u64)) explicit Value(ValueType type, T raw_value)
         : m_value(0)
         , m_type(type)
     {
@@ -87,6 +87,33 @@ public:
         : m_value(move(value.m_value))
         , m_type(move(value.m_type))
     {
+    }
+
+    Value& operator=(Value&& value)
+    {
+        m_value = move(value.m_value);
+        m_type = move(value.m_type);
+        return *this;
+    }
+
+    template<typename T>
+    Optional<T> to()
+    {
+        Optional<T> result;
+        m_value.visit(
+            [&](auto value) {
+                if constexpr (!IsSame<T, FunctionAddress> && !IsSame<T, ExternAddress>)
+                    result = value;
+            },
+            [&](const FunctionAddress& address) {
+                if constexpr (IsSame<T, FunctionAddress>)
+                    result = address;
+            },
+            [&](const ExternAddress& address) {
+                if constexpr (IsSame<T, ExternAddress>)
+                    result = address;
+            });
+        return result;
     }
 
     auto& type() const { return m_type; }
@@ -317,14 +344,17 @@ private:
 
 class Label {
 public:
-    explicit Label(InstructionPointer continuation)
-        : m_continuation(continuation)
+    explicit Label(size_t arity, InstructionPointer continuation)
+        : m_arity(arity)
+        , m_continuation(continuation)
     {
     }
 
     auto continuation() const { return m_continuation; }
+    auto arity() const { return m_arity; }
 
 private:
+    size_t m_arity { 0 };
     InstructionPointer m_continuation;
 };
 
@@ -342,6 +372,7 @@ public:
 
     auto& module() const { return m_module; }
     auto& locals() const { return m_locals; }
+    auto& locals() { return m_locals; }
     auto& expression() const { return m_expression; }
     auto arity() const { return m_arity; }
 
@@ -362,9 +393,8 @@ public:
     auto pop() { return m_data.take_last(); }
     auto& last() { return m_data.last(); }
 
-    // This is a hack!
-    auto& last(size_t i) const { return m_data.at(m_data.size() - i); }
     auto size() const { return m_data.size(); }
+    auto& entries() const { return m_data; }
 
 private:
     Vector<EntryType> m_data;

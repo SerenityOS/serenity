@@ -24,7 +24,7 @@ public:
     {
         m_current_frame = frame.ptr();
         m_stack.push(move(frame));
-        m_stack.push(make<Label>(m_current_frame->expression().instructions().size() - 1));
+        m_stack.push(make<Label>(m_current_frame->arity(), m_current_frame->expression().instructions().size() - 1));
     }
     auto& frame() const { return m_current_frame; }
     auto& frame() { return m_current_frame; }
@@ -34,6 +34,8 @@ public:
     auto& depth() { return m_depth; }
     auto& stack() const { return m_stack; }
     auto& stack() { return m_stack; }
+    auto& store() const { return m_store; }
+    auto& store() { return m_store; }
 
     Result call(FunctionAddress, Vector<Value> arguments);
     Result execute();
