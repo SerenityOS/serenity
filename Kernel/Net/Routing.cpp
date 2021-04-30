@@ -8,6 +8,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Net/LoopbackAdapter.h>
+#include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Thread.h>
 
@@ -215,6 +216,13 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     request.set_sender_hardware_address(adapter->mac_address());
     request.set_sender_protocol_address(adapter->ipv4_address());
     adapter->send({ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }, request);
+
+    if (NetworkTask::is_current()) {
+        // FIXME: Waiting for the ARP response from inside the NetworkTask would
+        // deadlock, so let's hope that whoever called route_to() tries again in a bit.
+        dbgln_if(ROUTING_DEBUG, "Routing: Not waiting for ARP response from inside NetworkTask, sent ARP request using adapter {} for {}", adapter->name(), target);
+        return { nullptr, {} };
+    }
 
     Optional<MACAddress> addr;
     if (!Thread::current()->block<ARPTableBlocker>({}, next_hop_ip, addr).was_interrupted()) {
