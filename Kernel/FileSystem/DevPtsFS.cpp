@@ -182,12 +182,12 @@ KResult DevPtsFSInode::remove_child(const StringView&)
 
 KResult DevPtsFSInode::chmod(mode_t)
 {
-    return EPERM;
+    return EROFS;
 }
 
 KResult DevPtsFSInode::chown(uid_t, gid_t)
 {
-    return EPERM;
+    return EROFS;
 }
 
 }
