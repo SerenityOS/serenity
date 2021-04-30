@@ -441,6 +441,7 @@ Tab::Tab(Type type)
     // FIXME: Support adding custom search engines
     add_search_engine("Bing", "https://www.bing.com/search?q={}");
     add_search_engine("DuckDuckGo", "https://duckduckgo.com/?q={}");
+    add_search_engine("FrogFind", "http://frogfind.com/?q={}");
     add_search_engine("GitHub", "https://github.com/search?q={}");
     add_search_engine("Google", "https://google.com/search?q={}");
     add_search_engine("Yandex", "https://yandex.com/search/?text={}");
