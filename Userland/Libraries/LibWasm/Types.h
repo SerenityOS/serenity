@@ -54,6 +54,7 @@ TYPEDEF_DISTINCT_ORDERED_ID(size_t, LocalIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, GlobalIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, LabelIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, DataIndex);
+TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, true, false, true, InstructionPointer);
 
 ParseError with_eof_check(const InputStream& stream, ParseError error_if_not_eof);
 
