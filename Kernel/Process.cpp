@@ -146,7 +146,10 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     auto process = adopt_ref(*new Process(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty));
     if (!first_thread)
         return {};
-    process->m_fds.resize(m_max_open_file_descriptors);
+    if (!process->m_fds.try_resize(m_max_open_file_descriptors)) {
+        first_thread = nullptr;
+        return {};
+    }
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
     auto description = device_to_use_as_tty.open(O_RDWR).value();
     process->m_fds[0].set(*description);
