@@ -97,7 +97,7 @@ KResult UDPSocket::protocol_connect(FileDescription&, ShouldBlock)
     return KSuccess;
 }
 
-int UDPSocket::protocol_allocate_local_port()
+KResultOr<u16> UDPSocket::protocol_allocate_local_port()
 {
     static const u16 first_ephemeral_port = 32768;
     static const u16 last_ephemeral_port = 60999;
@@ -118,7 +118,7 @@ int UDPSocket::protocol_allocate_local_port()
         if (port == first_scan_port)
             break;
     }
-    return -EADDRINUSE;
+    return EADDRINUSE;
 }
 
 KResult UDPSocket::protocol_bind()
