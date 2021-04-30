@@ -74,4 +74,33 @@ Result Configuration::execute()
     return Result { move(results_moved) };
 }
 
+void Configuration::dump_stack()
+{
+    for (const auto& entry : stack().entries()) {
+        entry.visit(
+            [](const NonnullOwnPtr<Value>& v) {
+                v->value().visit([]<typename T>(const T& v) {
+                    if constexpr (IsIntegral<T> || IsFloatingPoint<T>)
+                        dbgln("    {}", v);
+                    else
+                        dbgln("    *{}", v.value());
+                });
+            },
+            [](const NonnullOwnPtr<Frame>& f) {
+                dbgln("    frame({})", f->arity());
+                for (auto& local : f->locals()) {
+                    local.value().visit([]<typename T>(const T& v) {
+                        if constexpr (IsIntegral<T> || IsFloatingPoint<T>)
+                            dbgln("        {}", v);
+                        else
+                            dbgln("        *{}", v.value());
+                    });
+                }
+            },
+            [](const NonnullOwnPtr<Label>& l) {
+                dbgln("    label({}) -> {}", l->arity(), l->continuation());
+            });
+    }
+}
+
 }

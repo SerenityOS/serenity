@@ -16,16 +16,31 @@ int main(int argc, char* argv[])
     const char* filename = nullptr;
     bool print = false;
     bool attempt_instantiate = false;
-    bool attemp_execute = false;
+    String exported_function_to_execute;
+    Vector<u64> values_to_push;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(filename, "File name to parse", "file");
     parser.add_option(print, "Print the parsed module", "print", 'p');
     parser.add_option(attempt_instantiate, "Attempt to instantiate the module", "instantiate", 'i');
-    parser.add_option(attemp_execute, "Attempt to execute a function from the module (implies -i)", "execute", 'e');
+    parser.add_option(exported_function_to_execute, "Attempt to execute the named exported function from the module (implies -i)", "execute", 'e', "name");
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Supply arguments to the function (default=0) (expects u64, casts to required type)",
+        .long_name = "arg",
+        .short_name = 0,
+        .value_name = "u64",
+        .accept_value = [&](const char* str) -> bool {
+            if (auto v = StringView { str }.to_uint<u64>(); v.has_value()) {
+                values_to_push.append(v.value());
+                return true;
+            }
+            return false;
+        },
+    });
     parser.parse(argc, argv);
 
-    if (attemp_execute)
+    if (!exported_function_to_execute.is_empty())
         attempt_instantiate = true;
 
     auto result = Core::File::open(filename, Core::OpenMode::ReadOnly);
@@ -80,30 +95,40 @@ int main(int argc, char* argv[])
             }
         }
 
-        if (attemp_execute) {
+        if (!exported_function_to_execute.is_empty()) {
             Optional<Wasm::FunctionAddress> run_address;
             Vector<Wasm::Value> values;
-            // Pick a function that takes no args :P
-            for (auto& address : machine.module_instance().functions()) {
-                auto fn = machine.store().get(address);
-                if (!fn)
-                    continue;
-                if (auto ptr = fn->get_pointer<Wasm::WasmFunction>()) {
-                    const Wasm::FunctionType& ty = ptr->type();
-                    for (auto& param : ty.parameters()) {
-                        values.append(Wasm::Value { param, 0ull });
-                    }
-                    run_address = address;
-                    break;
+            for (auto& entry : machine.module_instance().exports()) {
+                if (entry.name() == exported_function_to_execute) {
+                    if (auto addr = entry.value().get_pointer<Wasm::FunctionAddress>())
+                        run_address = *addr;
                 }
             }
             if (!run_address.has_value()) {
-                warnln("No nullary function, sorry :(");
+                warnln("No such exported function, sorry :(");
                 return 1;
             }
-            outln("Executing ");
-            print_func(*run_address);
-            outln();
+
+            auto instance = machine.store().get(*run_address);
+            VERIFY(instance);
+
+            if (instance->has<Wasm::HostFunction>()) {
+                warnln("Exported function is a host function, cannot run that yet");
+                return 1;
+            }
+
+            for (auto& param : instance->get<Wasm::WasmFunction>().type().parameters()) {
+                if (values_to_push.is_empty())
+                    values.append(Wasm::Value { param, 0ull });
+                else
+                    values.append(Wasm::Value { param, values_to_push.take_last() });
+            }
+
+            if (print) {
+                outln("Executing ");
+                print_func(*run_address);
+                outln();
+            }
 
             auto result = machine.invoke(run_address.value(), move(values));
             if (!result.values().is_empty())
