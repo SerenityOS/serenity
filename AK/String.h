@@ -93,6 +93,8 @@ public:
 
     [[nodiscard]] static String repeated(char, size_t count);
 
+    [[nodiscard]] static String bijective_base_from(size_t value, unsigned base = 26, StringView map = {});
+
     template<class SeparatorType, class CollectionType>
     [[nodiscard]] static String join(const SeparatorType& separator, const CollectionType& collection)
     {

@@ -244,6 +244,33 @@ String String::repeated(char ch, size_t count)
     return *impl;
 }
 
+String String::bijective_base_from(size_t value, unsigned base, StringView map)
+{
+    if (map.is_null())
+        map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"sv;
+
+    VERIFY(base >= 2 && base <= map.length());
+
+    // The '8 bits per byte' assumption may need to go?
+    Array<char, round_up_to_power_of_two(sizeof(size_t) * 8 + 1, 2)> buffer;
+    size_t i = 0;
+    do {
+        buffer[i++] = map[value % base];
+        value /= base;
+    } while (value > 0);
+
+    // NOTE: Weird as this may seem, the thing that comes after 'Z' is 'AA', which as a number would be '00'
+    //       to make this work, only the most significant digit has to be in a range of (1..25) as opposed to (0..25),
+    //       but only if it's not the only digit in the string.
+    if (i > 1)
+        --buffer[i - 1];
+
+    for (size_t j = 0; j < i / 2; ++j)
+        swap(buffer[j], buffer[i - j - 1]);
+
+    return String { ReadonlyBytes(buffer.data(), i) };
+}
+
 bool String::matches(const StringView& mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity, &mask_spans);
