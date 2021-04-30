@@ -82,8 +82,8 @@ public:
     virtual bool can_read(const FileDescription&, size_t) const = 0;
     virtual bool can_write(const FileDescription&, size_t) const = 0;
 
-    virtual KResult attach(FileDescription&) { return KSuccess; }
-    virtual void detach(FileDescription&) { }
+    virtual KResult attach(FileDescription&);
+    virtual void detach(FileDescription&);
     virtual void did_seek(FileDescription&, off_t) { }
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) = 0;
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) = 0;
@@ -112,6 +112,8 @@ public:
 
     virtual FileBlockCondition& block_condition() { return m_block_condition; }
 
+    size_t attach_count() const { return m_attach_count; }
+
 protected:
     File();
 
@@ -138,6 +140,7 @@ private:
     }
 
     FileBlockCondition m_block_condition;
+    size_t m_attach_count { 0 };
 };
 
 }
