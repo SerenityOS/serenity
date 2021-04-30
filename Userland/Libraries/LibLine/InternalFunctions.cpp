@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FileStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
@@ -527,15 +528,15 @@ void Editor::edit_in_external_editor()
             return;
         }
 
+        OutputFileStream stream { fp };
+
         StringBuilder builder;
         builder.append(Utf32View { m_buffer.data(), m_buffer.size() });
-        auto view = builder.string_view();
-        size_t remaining_size = view.length();
-
-        while (remaining_size > 0)
-            remaining_size = fwrite(view.characters_without_null_termination() - remaining_size, sizeof(char), remaining_size, fp);
-
-        fclose(fp);
+        auto bytes = builder.string_view().bytes();
+        while (!bytes.is_empty()) {
+            auto nwritten = stream.write(bytes);
+            bytes = bytes.slice(nwritten);
+        }
     }
 
     ScopeGuard remove_temp_file_guard {
