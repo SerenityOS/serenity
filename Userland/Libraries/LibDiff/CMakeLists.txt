@@ -5,4 +5,4 @@ set(SOURCES
 )
 
 serenity_lib(LibDiff diff)
-target_link_libraries(LibDiff LibC)
+target_link_libraries(LibDiff ${LIBRARY_LIBC})

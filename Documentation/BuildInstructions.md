@@ -194,7 +194,7 @@ $ cd ../Build/i686
 Run the following commands from within the `Build/i686/` directory. Note that while `ninja` seems to be faster, you can also just use GNU make, by omitting `-G Ninja` and calling `make` instead of `ninja`:
 
 ```console
-$ cmake ../.. -G Ninja
+$ cmake ../.. -G Ninja -DCMAKE_SYSTEM_NAME=SerenityOS
 $ ninja install
 ```
 

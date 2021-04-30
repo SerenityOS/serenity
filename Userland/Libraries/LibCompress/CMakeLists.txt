@@ -5,6 +5,6 @@ set(SOURCES
 )
 
 serenity_lib(LibCompress compress)
-target_link_libraries(LibCompress LibC LibCrypto)
+target_link_libraries(LibCompress ${LIBRARY_LIBC} LibCrypto)
 
 add_subdirectory(Tests)

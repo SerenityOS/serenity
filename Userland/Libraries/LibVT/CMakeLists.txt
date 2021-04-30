@@ -5,4 +5,4 @@ set(SOURCES
 )
 
 serenity_lib(LibVT vt)
-target_link_libraries(LibVT LibC LibCore LibGUI LibGfx LibDesktop)
+target_link_libraries(LibVT ${LIBRARY_LIBC} LibCore LibGUI LibGfx LibDesktop)

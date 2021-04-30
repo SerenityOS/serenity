@@ -8,4 +8,4 @@ set(SOURCES
 )
 
 serenity_lib(LibCpp cpp)
-target_link_libraries(LibCpp LibC LibSyntax)
+target_link_libraries(LibCpp ${LIBRARY_LIBC} LibSyntax)

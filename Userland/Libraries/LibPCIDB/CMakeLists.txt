@@ -3,4 +3,4 @@ set(SOURCES
 )
 
 serenity_lib(LibPCIDB pcidb)
-target_link_libraries(LibPCIDB LibC)
+target_link_libraries(LibPCIDB ${LIBRARY_LIBC})

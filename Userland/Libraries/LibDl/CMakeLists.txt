@@ -3,4 +3,4 @@ set(SOURCES
 )
 
 serenity_libc(LibDl dl)
-target_link_libraries(LibDl LibC)
+target_link_libraries(LibDl ${LIBRARY_LIBC})

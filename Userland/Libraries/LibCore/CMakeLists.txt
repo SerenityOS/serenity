@@ -31,5 +31,10 @@ set(SOURCES
     UDPSocket.cpp
 )
 
+if(NOT CMAKE_CROSSCOMPILING)
+file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../../AK/*.cpp")
+set(SOURCES ${SOURCES} ${AK_SOURCES})
+endif()
+
 serenity_lib(LibCore core)
-target_link_libraries(LibCore LibC LibCrypt)
+target_link_libraries(LibCore ${LIBRARY_LIBC} ${LIBRARY_LIBCRYPT})

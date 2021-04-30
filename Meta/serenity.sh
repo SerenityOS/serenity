@@ -100,7 +100,7 @@ is_valid_target() {
 
 create_build_dir() {
     mkdir -p "$BUILD_DIR"
-    cmake -GNinja "${CMAKE_ARGS[@]}" -S . -B "$BUILD_DIR"
+    cmake -GNinja "${CMAKE_ARGS[@]}" -S . -B "$BUILD_DIR" -DCMAKE_SYSTEM_NAME=SerenityOS
 }
 
 cmd_with_target() {

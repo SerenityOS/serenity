@@ -6,5 +6,5 @@ set(SOURCES
 )
 
 serenity_libc(LibPthread pthread)
-target_link_libraries(LibPthread LibC LibSystem)
+target_link_libraries(LibPthread ${LIBRARY_LIBC} ${LIBRARY_SYSTEM})
 target_include_directories(LibPthread PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
