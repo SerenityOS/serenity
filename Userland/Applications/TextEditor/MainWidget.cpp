@@ -300,6 +300,9 @@ MainWidget::MainWidget()
         }
 
         editor().document().set_modified(false);
+        // FIXME: It would be cool if this would propagate from GUI::TextDocument somehow.
+        window()->set_modified(false);
+
         set_path(LexicalPath(save_path.value()));
         dbgln("Wrote document to {}", save_path.value());
     });
@@ -310,6 +313,9 @@ MainWidget::MainWidget()
                 GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
             } else {
                 editor().document().set_modified(false);
+                // FIXME: It would be cool if this would propagate from GUI::TextDocument somehow.
+                window()->set_modified(false);
+
                 update_title();
             }
             return;
