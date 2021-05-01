@@ -91,7 +91,7 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
         m_module_instance.types() = section.types();
     });
 
-    // TODO: Validate stuff
+    // FIXME: Validate stuff
 
     Vector<Value> global_values;
     ModuleInstance auxiliary_instance;
@@ -125,29 +125,10 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
         return result.error();
     }
 
-    module.for_each_section_of_type<ElementSection>([&](const ElementSection& element_section) {
-        auto frame = make<Frame>(
-            m_module_instance,
-            Vector<Value> {},
-            element_section.function().offset(),
-            1);
-        Configuration config { m_store };
-        config.set_frame(move(frame));
-        auto result = config.execute();
-        // What if this traps?
-        VERIFY(!result.is_trap());
-        size_t offset = 0;
-        result.values().first().value().visit(
-            [&](const auto& value) { offset = value; },
-            [&](const FunctionAddress&) { VERIFY_NOT_REACHED(); },
-            [&](const ExternAddress&) { VERIFY_NOT_REACHED(); });
-        // FIXME: Module::get(*Index)
-        auto table_address = m_module_instance.tables().at(element_section.function().table().value());
-        if (auto table_instance = m_store.get(table_address)) {
-            auto& init = element_section.function().init();
-            for (size_t i = 0; i < init.size(); ++i)
-                table_instance->elements()[offset + i] = Reference { Reference::Func { init[i].value() } }; // HACK!
-        }
+    module.for_each_section_of_type<ElementSection>([&](const ElementSection&) {
+        // FIXME: Implement me
+        // https://webassembly.github.io/spec/core/bikeshed/#element-segments%E2%91%A0
+        // https://webassembly.github.io/spec/core/bikeshed/#instantiation%E2%91%A1 step 9
     });
 
     module.for_each_section_of_type<DataSection>([&](const DataSection& data_section) {
