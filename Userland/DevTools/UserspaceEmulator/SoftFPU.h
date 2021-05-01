@@ -600,12 +600,13 @@ private:
     void PSRLQ_mm1_imm8(const X86::Instruction&);
 
     // DATA TRANSFER
-    // void MOVD // (reg 2 reg)
-    // void MOVD // (ld from mem)
-    // void MOVD // (st to mem)
+    void MOVD_mm1_rm32(const X86::Instruction&);
+    void MOVD_rm32_mm2(const X86::Instruction&);
 
     void MOVQ_mm1_mm2m64(const X86::Instruction&);
-    void MOVQ_mm1_m64_mm2(const X86::Instruction&);
+    void MOVQ_mm1m64_mm2(const X86::Instruction&);
+    void MOVQ_mm1_rm64(const X86::Instruction&); // long mode
+    void MOVQ_rm64_mm2(const X86::Instruction&); // long mode
 
     // EMPTY MMX STATE
     void EMMS(const X86::Instruction&);

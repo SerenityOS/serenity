@@ -2877,8 +2877,12 @@ DEFINE_GENERIC_INSN_HANDLERS(CMP, op_sub, false, false, false)
 DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(TEST, op_and, false, false, false)
 
 FPU_INSTRUCTION(MOVQ_mm1_mm2m64);
+FPU_INSTRUCTION(MOVQ_mm1m64_mm2);
+FPU_INSTRUCTION(MOVD_mm1_rm32);
+FPU_INSTRUCTION(MOVQ_mm1_rm64); // long mode
+FPU_INSTRUCTION(MOVD_rm32_mm2);
+FPU_INSTRUCTION(MOVQ_rm64_mm2); // long mode
 FPU_INSTRUCTION(EMMS);
-FPU_INSTRUCTION(MOVQ_mm1_m64_mm2);
 
 void SoftCPU::wrap_0xC0(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::wrap_0xC1_16(const X86::Instruction&) { TODO_INSN(); }
