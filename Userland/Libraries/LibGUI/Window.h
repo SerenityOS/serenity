@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,6 +28,9 @@ public:
     virtual ~Window() override;
 
     static Window* from_window_id(int);
+
+    bool is_modified() const;
+    void set_modified(bool);
 
     bool is_modal() const { return m_modal; }
     void set_modal(bool);

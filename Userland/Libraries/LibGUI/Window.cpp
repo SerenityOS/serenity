@@ -1084,4 +1084,18 @@ void Window::set_menubar(RefPtr<Menubar> menubar)
     }
 }
 
+bool Window::is_modified() const
+{
+    if (!m_window_id)
+        return false;
+    return WindowServerConnection::the().send_sync<Messages::WindowServer::IsWindowModified>(m_window_id)->modified();
+}
+
+void Window::set_modified(bool modified)
+{
+    if (!m_window_id)
+        return;
+    WindowServerConnection::the().post_message(Messages::WindowServer::SetWindowModified(m_window_id, modified));
+}
+
 }
