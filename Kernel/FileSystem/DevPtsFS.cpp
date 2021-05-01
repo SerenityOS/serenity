@@ -100,12 +100,12 @@ DevPtsFSInode::~DevPtsFSInode()
 {
 }
 
-ssize_t DevPtsFSInode::read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const
+KResultOr<ssize_t> DevPtsFSInode::read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
 
-ssize_t DevPtsFSInode::write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileDescription*)
+KResultOr<ssize_t> DevPtsFSInode::write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileDescription*)
 {
     VERIFY_NOT_REACHED();
 }
