@@ -29,6 +29,9 @@ void EllipseTool::draw_using(GUI::Painter& painter, const Gfx::IntRect& ellipse_
     case Mode::Outline:
         painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), m_thickness);
         break;
+    case Mode::Fill:
+        painter.fill_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
+        break;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -95,6 +98,9 @@ void EllipseTool::on_tool_button_contextmenu(GUI::ContextMenuEvent& event)
         m_context_menu = GUI::Menu::construct();
         m_context_menu->add_action(GUI::Action::create("Outline", [this](auto&) {
             m_mode = Mode::Outline;
+        }));
+        m_context_menu->add_action(GUI::Action::create("Fill", [this](auto&) {
+            m_mode = Mode::Fill;
         }));
         m_context_menu->add_separator();
         m_thickness_actions.set_exclusive(true);
