@@ -15,3 +15,7 @@ launcher_command=hatari
 configure() {
     run cmake $configopts
 }
+
+install() {
+    run make install
+}
