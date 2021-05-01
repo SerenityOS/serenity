@@ -94,14 +94,13 @@ bool MasterPTY::can_write_from_slave() const
 
 KResult MasterPTY::close()
 {
-    if (ref_count() == 2) {
-        InterruptDisabler disabler;
-        // After the closing FileDescription dies, slave is the only thing keeping me alive.
-        // From this point, let's consider ourselves closed.
-        m_closed = true;
+    InterruptDisabler disabler;
+    // After the closing FileDescription dies, slave is the only thing keeping me alive.
+    // From this point, let's consider ourselves closed.
+    m_closed = true;
 
+    if (m_slave)
         m_slave->hang_up();
-    }
 
     return KSuccess;
 }
