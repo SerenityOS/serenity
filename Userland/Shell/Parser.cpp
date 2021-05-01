@@ -1982,8 +1982,10 @@ RefPtr<AST::Node> Parser::parse_heredoc_initiation_record()
 
 bool Parser::parse_heredoc_entries()
 {
+    auto heredocs = move(m_heredoc_initiations);
+    m_heredoc_initiations.clear();
     // Try to parse heredoc entries, as reverse recorded in the initiation records
-    for (auto& record : m_heredoc_initiations) {
+    for (auto& record : heredocs) {
         auto rule_start = push_start();
         if (m_rule_start_offsets.size() > max_allowed_nested_rule_depth) {
             record.node->set_is_syntax_error(*create<AST::SyntaxError>(String::formatted("Expression nested too deep (max allowed is {})", max_allowed_nested_rule_depth)));
@@ -2070,8 +2072,6 @@ bool Parser::parse_heredoc_entries()
             record.node->set_contents(create<AST::DoubleQuotedString>(move(expr)));
         }
     }
-
-    m_heredoc_initiations.clear();
     return true;
 }
 
