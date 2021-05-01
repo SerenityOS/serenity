@@ -37,7 +37,8 @@ public:
     void set_mode_displayable();
     void set_mode_non_displayable();
     void set_filename(const String&);
-    const String& filename() const {return m_filename;}
+    const String& filename() const { return m_filename; }
+    bool document_dirty() const { return m_document_dirty; }
 
 private:
     EditorWrapper();
@@ -48,7 +49,7 @@ private:
     RefPtr<GUI::Label> m_filename_label;
     RefPtr<GUI::Label> m_cursor_label;
     RefPtr<Editor> m_editor;
-    bool m_document_dirty {false};
+    bool m_document_dirty { false };
 };
 
 }

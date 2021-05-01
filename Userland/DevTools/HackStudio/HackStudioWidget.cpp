@@ -896,6 +896,9 @@ void HackStudioWidget::create_toolbar(GUI::Widget& parent)
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_build_action()
 {
     return GUI::Action::create("&Build", { Mod_Ctrl, Key_B }, Gfx::Bitmap::load_from_file("/res/icons/16x16/build.png"), [this](auto&) {
+        if (warn_unsaved_changes("There are unsaved changes, do you want to save before building?") == ContinueDecision::No)
+            return;
+
         reveal_action_tab(*m_terminal_wrapper);
         build(*m_terminal_wrapper);
         m_stop_action->set_enabled(true);
@@ -1127,6 +1130,37 @@ HackStudioWidget::~HackStudioWidget()
             dbgln("error joining debugger thread");
         }
     }
+}
+
+HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(const String& prompt)
+{
+    if (!any_document_is_dirty())
+        return ContinueDecision::Yes;
+
+    auto result = GUI::MessageBox::show(window(), prompt, "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+
+    if (result == GUI::MessageBox::ExecCancel)
+        return ContinueDecision::No;
+
+    if (result == GUI::MessageBox::ExecYes) {
+        for (auto& editor_wrapper : m_all_editor_wrappers) {
+            if (editor_wrapper.document_dirty()) {
+                editor_wrapper.save();
+            }
+        }
+    }
+
+    return ContinueDecision::Yes;
+}
+
+bool HackStudioWidget::any_document_is_dirty() const
+{
+    for (auto& editor_wrapper : m_all_editor_wrappers) {
+        if (editor_wrapper.document_dirty()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 }
