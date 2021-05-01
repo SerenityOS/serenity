@@ -31,7 +31,7 @@ public:
 
     static WindowTheme& current();
 
-    virtual void paint_normal_frame(Painter&, WindowState, const IntRect& window_rect, const StringView& title, const Bitmap& icon, const Palette&, const IntRect& leftmost_button_rect, int menu_row_count) const = 0;
+    virtual void paint_normal_frame(Painter&, WindowState, const IntRect& window_rect, const StringView& title, const Bitmap& icon, const Palette&, const IntRect& leftmost_button_rect, int menu_row_count, bool window_modified) const = 0;
     virtual void paint_tool_window_frame(Painter&, WindowState, const IntRect& window_rect, const StringView& title, const Palette&, const IntRect& leftmost_button_rect) const = 0;
     virtual void paint_notification_frame(Painter&, const IntRect& window_rect, const Palette&, const IntRect& close_button_rect) const = 0;
 
