@@ -998,7 +998,7 @@ void Window::set_modified(bool modified)
         return;
 
     m_modified = modified;
-    invalidate();
+    frame().invalidate_titlebar();
 }
 
 }
