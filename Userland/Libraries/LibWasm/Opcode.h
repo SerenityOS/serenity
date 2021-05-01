@@ -209,7 +209,9 @@ static constexpr OpCode i32_trunc_sat_f32_s = 0xfc00,
                         table_copy = 0xfc0e,
                         table_grow = 0xfc0f,
                         table_size = 0xfc10,
-                        table_fill = 0xfc11;
+                        table_fill = 0xfc11,
+                        structured_else = 0xff00,
+                        structured_end = 0xff01;
 
 static constexpr u32 i32_trunc_sat_f32_s_second = 0,
                      i32_trunc_sat_f32_u_second = 1,
