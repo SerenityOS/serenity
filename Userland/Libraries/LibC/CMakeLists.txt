@@ -29,6 +29,7 @@ set(LIBC_SOURCES
     scanf.cpp
     sched.cpp
     serenity.cpp
+    shadow.cpp
     signal.cpp
     spawn.cpp
     stat.cpp
