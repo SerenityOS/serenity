@@ -27,6 +27,7 @@
 #include "Decoder.h"
 #include "LookupTables.h"
 #include "TreeParser.h"
+#include "assert.h"
 
 namespace Video::VP9 {
 
@@ -107,7 +108,7 @@ TreeParser::TreeSelection TreeParser::select_tree(SyntaxElementType type)
     case SyntaxElementType::Token:
         return { token_tree };
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 /*

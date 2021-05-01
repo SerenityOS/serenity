@@ -405,3 +405,7 @@
 #ifndef WSSCREEN_DEBUG
 #cmakedefine01 WSSCREEN_DEBUG
 #endif
+
+#ifndef MATROSKA_DEBUG
+#cmakedefine01 MATROSKA_DEBUG
+#endif

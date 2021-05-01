@@ -30,7 +30,7 @@ namespace Video::VP9 {
 
 u8 BitStream::read_byte()
 {
-    ASSERT(m_bytes_remaining >= 1);
+    assert(m_bytes_remaining >= 1);
     m_bytes_remaining--;
     return *(m_data_ptr++);
 }

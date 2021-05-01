@@ -32,6 +32,7 @@
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <math.h>
+#include <assert.h>
 
 namespace Video {
 
@@ -62,7 +63,7 @@ private:
 
         u8 read_octet()
         {
-            ASSERT(m_size_remaining >= 1);
+            assert(m_size_remaining >= 1);
             m_size_remaining--;
             m_octets_read.last()++;
             return *(m_data_ptr++);
@@ -86,9 +87,9 @@ private:
 
         Optional<u64> read_variable_size_integer(bool mask_length = true)
         {
-            dbgln<MATROSKA_TRACE>("Reading from offset %p", m_data_ptr);
+            dbgln_if(MATROSKA_DEBUG, "Reading from offset {}", m_data_ptr);
             auto length_descriptor = read_octet();
-            dbgln<MATROSKA_TRACE>("Reading VINT, first byte is %#02x", length_descriptor);
+            dbgln_if(MATROSKA_DEBUG, "Reading VINT, first byte is {}", length_descriptor);
             if (length_descriptor == 0)
                 return {};
             size_t length = 0;
@@ -97,7 +98,7 @@ private:
                     break;
                 length++;
             }
-            dbgln<MATROSKA_TRACE>("Reading VINT of total length {}", length);
+            dbgln_if(MATROSKA_DEBUG, "Reading VINT of total length {}", length);
             if (length > 8)
                 return {};
 
@@ -106,16 +107,16 @@ private:
                 result = length_descriptor & ~(1u << (8 - length));
             else
                 result = length_descriptor;
-            dbgln<MATROSKA_TRACE>("Beginning of VINT is %#02x", result);
+            dbgln_if(MATROSKA_DEBUG, "Beginning of VINT is {}", result);
             for (size_t i = 1; i < length; i++) {
                 if (!has_octet()) {
-                    dbgln<MATROSKA_TRACE>("Ran out of stream data");
+                    dbgln_if(MATROSKA_DEBUG, "Ran out of stream data");
                     return {};
                 }
                 u8 next_octet = read_octet();
-                dbgln<MATROSKA_TRACE>("Read octet of %#02x", next_octet);
+                dbgln_if(MATROSKA_DEBUG, "Read octet of {}", next_octet);
                 result = (result << 8u) | next_octet;
-                dbgln<MATROSKA_TRACE>("New result is %#010x", result);
+                dbgln_if(MATROSKA_DEBUG, "New result is {}", result);
             }
             return result;
         }
@@ -148,7 +149,7 @@ private:
 
         void drop_octets(size_t num_octets)
         {
-            ASSERT(m_size_remaining >= num_octets);
+            assert(m_size_remaining >= num_octets);
             m_size_remaining -= num_octets;
             m_octets_read.last() += num_octets;
             m_data_ptr += num_octets;

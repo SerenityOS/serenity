@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     const auto& track = document->track_for_track_type(Video::TrackEntry::TrackType::Video).value();
     const auto& video_track = track.video_track().value();
 
-    auto image = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, Gfx::IntSize(video_track.pixel_height, video_track.pixel_width));
+    auto image = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(video_track.pixel_height, video_track.pixel_width));
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
