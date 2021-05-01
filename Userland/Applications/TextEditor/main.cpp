@@ -1,15 +1,17 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "TextEditorWidget.h"
+#include "MainWidget.h"
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Menubar.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <unistd.h>
+
+using namespace TextEditor;
 
 int main(int argc, char** argv)
 {
@@ -42,7 +44,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->resize(640, 400);
 
-    auto& text_widget = window->set_main_widget<TextEditorWidget>();
+    auto& text_widget = window->set_main_widget<MainWidget>();
 
     text_widget.editor().set_focus(true);
 
@@ -55,11 +57,11 @@ int main(int argc, char** argv)
     if (preview_mode_view == "auto") {
         text_widget.set_auto_detect_preview_mode(true);
     } else if (preview_mode_view == "markdown") {
-        text_widget.set_preview_mode(TextEditorWidget::PreviewMode::Markdown);
+        text_widget.set_preview_mode(MainWidget::PreviewMode::Markdown);
     } else if (preview_mode_view == "html") {
-        text_widget.set_preview_mode(TextEditorWidget::PreviewMode::HTML);
+        text_widget.set_preview_mode(MainWidget::PreviewMode::HTML);
     } else if (preview_mode_view == "none") {
-        text_widget.set_preview_mode(TextEditorWidget::PreviewMode::None);
+        text_widget.set_preview_mode(MainWidget::PreviewMode::None);
     } else {
         warnln("Invalid mode '{}'", preview_mode);
         return 1;

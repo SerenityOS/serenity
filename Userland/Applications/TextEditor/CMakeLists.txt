@@ -2,7 +2,7 @@ compile_gml(TextEditorWindow.gml TextEditorWindowGML.h text_editor_window_gml)
 
 set(SOURCES
     main.cpp
-    TextEditorWidget.cpp
+    MainWidget.cpp
     TextEditorWindowGML.h
 )
 

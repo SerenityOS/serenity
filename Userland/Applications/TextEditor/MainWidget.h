@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,10 +16,13 @@
 #include <LibGUI/Window.h>
 #include <LibWeb/Forward.h>
 
-class TextEditorWidget final : public GUI::Widget {
-    C_OBJECT(TextEditorWidget)
+namespace TextEditor {
+
+class MainWidget final : public GUI::Widget {
+    C_OBJECT(MainWidget);
+
 public:
-    virtual ~TextEditorWidget() override;
+    virtual ~MainWidget() override;
     bool open_file(const String& path);
     bool request_close();
 
@@ -38,7 +41,7 @@ public:
     void initialize_menubar(GUI::Menubar&);
 
 private:
-    TextEditorWidget();
+    MainWidget();
     void set_path(const LexicalPath& file);
     void update_preview();
     void update_markdown_preview();
@@ -124,3 +127,5 @@ private:
 
     PreviewMode m_preview_mode { PreviewMode::None };
 };
+
+}
