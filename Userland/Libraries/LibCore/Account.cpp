@@ -9,11 +9,17 @@
 #include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
 #include <LibCore/File.h>
-#include <crypt.h>
+#ifndef AK_OS_MACOS
+#    include <crypt.h>
+#endif
 #include <errno.h>
 #include <grp.h>
 #include <pwd.h>
-#include <shadow.h>
+#ifndef AK_OS_MACOS
+#    include <shadow.h>
+#else
+#    include <LibC/shadow.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -52,7 +58,9 @@ Result<Account, String> Account::from_passwd(const passwd& pwd, const spwd& spwd
 {
     Account account(pwd, spwd, get_gids(pwd.pw_name));
     endpwent();
+#ifndef AK_OS_MACOS
     endspent();
+#endif
     return account;
 }
 
@@ -66,6 +74,7 @@ Result<Account, String> Account::from_name(const char* username)
 
         return String(strerror(errno));
     }
+#ifndef AK_OS_MACOS
     auto* spwd = getspnam(username);
     if (!spwd) {
         if (errno == 0)
@@ -73,6 +82,12 @@ Result<Account, String> Account::from_name(const char* username)
 
         return String(strerror(errno));
     }
+#else
+    spwd spwd_dummy = {};
+    spwd_dummy.sp_namp = const_cast<char*>(username);
+    spwd_dummy.sp_pwdp = const_cast<char*>("");
+    auto* spwd = &spwd_dummy;
+#endif
     return from_passwd(*pwd, *spwd);
 }
 
@@ -86,6 +101,7 @@ Result<Account, String> Account::from_uid(uid_t uid)
 
         return String(strerror(errno));
     }
+#ifndef AK_OS_MACOS
     auto* spwd = getspnam(pwd->pw_name);
     if (!spwd) {
         if (errno == 0)
@@ -93,6 +109,12 @@ Result<Account, String> Account::from_uid(uid_t uid)
 
         return String(strerror(errno));
     }
+#else
+    spwd spwd_dummy = {};
+    spwd_dummy.sp_namp = pwd->pw_name;
+    spwd_dummy.sp_pwdp = const_cast<char*>("");
+    auto* spwd = &spwd_dummy;
+#endif
     return from_passwd(*pwd, *spwd);
 }
 
@@ -193,6 +215,7 @@ String Account::generate_passwd_file() const
     return builder.to_string();
 }
 
+#ifndef AK_OS_MACOS
 String Account::generate_shadow_file() const
 {
     StringBuilder builder;
@@ -228,18 +251,21 @@ String Account::generate_shadow_file() const
 
     return builder.to_string();
 }
+#endif
 
 bool Account::sync()
 {
     auto new_passwd_file_content = generate_passwd_file();
+    VERIFY(!new_passwd_file_content.is_null());
+#ifndef AK_OS_MACOS
     auto new_shadow_file_content = generate_shadow_file();
-
-    if (new_passwd_file_content.is_null() || new_shadow_file_content.is_null()) {
-        VERIFY_NOT_REACHED();
-    }
+    VERIFY(!new_shadow_file_content.is_null());
+#endif
 
     char new_passwd_name[] = "/etc/passwd.XXXXXX";
+#ifndef AK_OS_MACOS
     char new_shadow_name[] = "/etc/shadow.XXXXXX";
+#endif
 
     {
         auto new_passwd_fd = mkstemp(new_passwd_name);
@@ -248,12 +274,14 @@ bool Account::sync()
             VERIFY_NOT_REACHED();
         }
         ScopeGuard new_passwd_fd_guard = [new_passwd_fd] { close(new_passwd_fd); };
+#ifndef AK_OS_MACOS
         auto new_shadow_fd = mkstemp(new_shadow_name);
         if (new_shadow_fd < 0) {
             perror("mkstemp");
             VERIFY_NOT_REACHED();
         }
         ScopeGuard new_shadow_fd_guard = [new_shadow_fd] { close(new_shadow_fd); };
+#endif
 
         if (fchmod(new_passwd_fd, 0644) < 0) {
             perror("fchmod");
@@ -267,12 +295,14 @@ bool Account::sync()
         }
         VERIFY(static_cast<size_t>(nwritten) == new_passwd_file_content.length());
 
+#ifndef AK_OS_MACOS
         nwritten = write(new_shadow_fd, new_shadow_file_content.characters(), new_shadow_file_content.length());
         if (nwritten < 0) {
             perror("write");
             VERIFY_NOT_REACHED();
         }
         VERIFY(static_cast<size_t>(nwritten) == new_shadow_file_content.length());
+#endif
     }
 
     if (rename(new_passwd_name, "/etc/passwd") < 0) {
@@ -280,10 +310,12 @@ bool Account::sync()
         return false;
     }
 
+#ifndef AK_OS_MACOS
     if (rename(new_shadow_name, "/etc/shadow") < 0) {
         perror("Failed to install new /etc/shadow");
         return false;
     }
+#endif
 
     return true;
     // FIXME: Sync extra groups.

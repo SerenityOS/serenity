@@ -11,7 +11,11 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <pwd.h>
-#include <shadow.h>
+#ifndef AK_OS_MACOS
+#    include <shadow.h>
+#else
+#    include <LibC/shadow.h>
+#endif
 #include <sys/types.h>
 
 namespace Core {
@@ -52,7 +56,9 @@ private:
     Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids);
 
     String generate_passwd_file() const;
+#ifndef AK_OS_MACOS
     String generate_shadow_file() const;
+#endif
 
     String m_username;
 
