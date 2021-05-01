@@ -59,7 +59,7 @@ MainWidget::MainWidget()
 
     m_editor->on_change = [this] {
         update_preview();
-        update_title();
+        window()->set_modified(editor().document().is_modified());
     };
 
     m_page_view = *find_descendant_of_type_named<Web::OutOfProcessWebView>("webview");
@@ -605,9 +605,7 @@ void MainWidget::update_title()
         builder.append("Untitled");
     else
         builder.append(m_path);
-    if (editor().document().is_modified())
-        builder.append(" (*)");
-    builder.append(" - Text Editor");
+    builder.append("[*] - Text Editor");
     window()->set_title(builder.to_string());
 }
 
