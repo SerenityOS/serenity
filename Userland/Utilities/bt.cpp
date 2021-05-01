@@ -6,6 +6,7 @@
 
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibSymbolClient/Client.h>
@@ -54,31 +55,41 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
     Core::EventLoop loop;
 
-    // FIXME: Support multiple threads in the same process!
-    auto symbols = SymbolClient::symbolicate_thread(pid, pid);
-    for (auto& symbol : symbols) {
-        out("{:p}  ", symbol.address);
-        if (!symbol.name.is_empty())
-            out("{} ", symbol.name);
-        if (!symbol.filename.is_empty()) {
-            bool linked = false;
+    Core::DirIterator iterator(String::formatted("/proc/{}/stacks", pid), Core::DirIterator::SkipDots);
+    if (iterator.has_error()) {
+        warnln("Error: pid '{}' doesn't appear to exist.", pid);
+        return 1;
+    }
 
-            out("(");
+    while (iterator.has_next()) {
+        pid_t tid = iterator.next_path().to_int().value();
+        outln("tid: {}", tid);
+        auto symbols = SymbolClient::symbolicate_thread(pid, tid);
+        for (auto& symbol : symbols) {
+            out("{:p}  ", symbol.address);
+            if (!symbol.name.is_empty())
+                out("{} ", symbol.name);
+            if (!symbol.filename.is_empty()) {
+                bool linked = false;
 
-            // See if we can find the sources in /usr/src
-            // FIXME: I'm sure this can be improved!
-            auto full_path = LexicalPath::canonicalized_path(String::formatted("/usr/src/serenity/dummy/dummy/{}", symbol.filename));
-            if (access(full_path.characters(), F_OK) == 0) {
-                linked = true;
-                out("\033]8;;file://{}{}?line_number={}\033\\", hostname, full_path, symbol.line_number);
+                out("(");
+
+                // See if we can find the sources in /usr/src
+                // FIXME: I'm sure this can be improved!
+                auto full_path = LexicalPath::canonicalized_path(String::formatted("/usr/src/serenity/dummy/dummy/{}", symbol.filename));
+                if (access(full_path.characters(), F_OK) == 0) {
+                    linked = true;
+                    out("\033]8;;file://{}{}?line_number={}\033\\", hostname, full_path, symbol.line_number);
+                }
+
+                out("\033[34;1m{}:{}\033[0m", LexicalPath(symbol.filename).basename(), symbol.line_number);
+
+                if (linked)
+                    out("\033]8;;\033\\");
+
+                out(")");
             }
-
-            out("\033[34;1m{}:{}\033[0m", LexicalPath(symbol.filename).basename(), symbol.line_number);
-
-            if (linked)
-                out("\033]8;;\033\\");
-
-            out(")");
+            outln("");
         }
         outln("");
     }
