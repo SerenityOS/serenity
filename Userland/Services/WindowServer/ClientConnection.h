@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -146,6 +146,8 @@ private:
     virtual OwnPtr<Messages::WindowServer::GetScreenBitmapResponse> handle(const Messages::WindowServer::GetScreenBitmap&) override;
     virtual OwnPtr<Messages::WindowServer::SetDoubleClickSpeedResponse> handle(const Messages::WindowServer::SetDoubleClickSpeed&) override;
     virtual OwnPtr<Messages::WindowServer::GetDoubleClickSpeedResponse> handle(const Messages::WindowServer::GetDoubleClickSpeed&) override;
+    virtual void handle(Messages::WindowServer::SetWindowModified const&) override;
+    virtual OwnPtr<Messages::WindowServer::IsWindowModifiedResponse> handle(Messages::WindowServer::IsWindowModified const&) override;
 
     Window* window_from_id(i32 window_id);
 
