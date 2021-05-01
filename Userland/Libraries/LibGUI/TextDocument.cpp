@@ -26,6 +26,7 @@ TextDocument::TextDocument(Client* client)
     if (client)
         m_clients.set(client);
     append_line(make<TextDocumentLine>(*this));
+    set_modified(false);
 
     // TODO: Instead of a repating timer, this we should call a delayed 2 sec timer when the user types.
     m_undo_timer = Core::Timer::construct(
@@ -91,6 +92,9 @@ bool TextDocument::set_text(const StringView& text)
         client->document_did_set_text();
 
     clear_text_guard.disarm();
+
+    // FIXME: Should the modified state be cleared on some of the earlier returns as well?
+    set_modified(false);
     return true;
 }
 
@@ -305,6 +309,8 @@ void TextDocument::update_views(Badge<TextDocumentLine>)
 
 void TextDocument::notify_did_change()
 {
+    set_modified(true);
+
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
             client->document_did_change();
@@ -876,6 +882,11 @@ const TextDocumentSpan* TextDocument::span_at(const TextPosition& position) cons
             return &span;
     }
     return nullptr;
+}
+
+void TextDocument::set_modified(bool modified)
+{
+    m_modified = modified;
 }
 
 }
