@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <grp.h>
 #include <pwd.h>
+#include <shadow.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -47,39 +48,52 @@ static Vector<gid_t> get_gids(const StringView& username)
     return extra_gids;
 }
 
-Result<Account, String> Account::from_passwd(const passwd& pwd)
+Result<Account, String> Account::from_passwd(const passwd& pwd, const spwd& spwd)
 {
-    Account account(pwd, get_gids(pwd.pw_name));
+    Account account(pwd, spwd, get_gids(pwd.pw_name));
     endpwent();
+    endspent();
     return account;
 }
 
 Result<Account, String> Account::from_name(const char* username)
 {
-    struct passwd* pwd = nullptr;
     errno = 0;
-    pwd = getpwnam(username);
+    auto* pwd = getpwnam(username);
     if (!pwd) {
         if (errno == 0)
             return String("No such user");
 
         return String(strerror(errno));
     }
-    return from_passwd(*pwd);
+    auto* spwd = getspnam(username);
+    if (!spwd) {
+        if (errno == 0)
+            return String("No such user");
+
+        return String(strerror(errno));
+    }
+    return from_passwd(*pwd, *spwd);
 }
 
 Result<Account, String> Account::from_uid(uid_t uid)
 {
-    struct passwd* pwd = nullptr;
     errno = 0;
-    pwd = getpwuid(uid);
+    auto* pwd = getpwuid(uid);
     if (!pwd) {
         if (errno == 0)
             return String("No such user");
 
         return String(strerror(errno));
     }
-    return from_passwd(*pwd);
+    auto* spwd = getspnam(pwd->pw_name);
+    if (!spwd) {
+        if (errno == 0)
+            return String("No such user");
+
+        return String(strerror(errno));
+    }
+    return from_passwd(*pwd, *spwd);
 }
 
 bool Account::authenticate(const char* password) const
@@ -133,8 +147,9 @@ void Account::delete_password()
     m_password_hash = "";
 }
 
-Account::Account(const passwd& pwd, Vector<gid_t> extra_gids)
+Account::Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids)
     : m_username(pwd.pw_name)
+    , m_password_hash(spwd.sp_pwdp)
     , m_uid(pwd.pw_uid)
     , m_gid(pwd.pw_gid)
     , m_gecos(pwd.pw_gecos)
@@ -142,7 +157,6 @@ Account::Account(const passwd& pwd, Vector<gid_t> extra_gids)
     , m_shell(pwd.pw_shell)
     , m_extra_gids(extra_gids)
 {
-    load_shadow_file();
 }
 
 String Account::generate_passwd_file() const
@@ -179,50 +193,39 @@ String Account::generate_passwd_file() const
     return builder.to_string();
 }
 
-void Account::load_shadow_file()
-{
-    auto file_or_error = Core::File::open("/etc/shadow", Core::File::ReadOnly);
-    VERIFY(!file_or_error.is_error());
-    auto shadow_file = file_or_error.release_value();
-    VERIFY(shadow_file->is_open());
-
-    Vector<ShadowEntry> entries;
-
-    for (;;) {
-        auto line = shadow_file->read_line();
-        if (line.is_null())
-            break;
-        auto parts = line.split(':', true);
-        if (parts.size() != 2) {
-            dbgln("Malformed shadow entry, ignoring.");
-            continue;
-        }
-        const auto& username = parts[0];
-        const auto& password_hash = parts[1];
-        entries.append({ username, password_hash });
-
-        if (username == m_username) {
-            m_password_hash = password_hash;
-        }
-    }
-
-    m_shadow_entries = move(entries);
-}
-
 String Account::generate_shadow_file() const
 {
     StringBuilder builder;
-    bool updated_entry_in_place = false;
-    for (auto& entry : m_shadow_entries) {
-        if (entry.username == m_username) {
-            updated_entry_in_place = true;
-            builder.appendff("{}:{}\n", m_username, m_password_hash);
+
+    setspent();
+
+    struct spwd* p;
+    errno = 0;
+    while ((p = getspent())) {
+        if (p->sp_namp == m_username) {
+            builder.appendff("{}:{}:{}:{}:{}:{}:{}:{}:{}\n",
+                m_username, m_password_hash,
+                p->sp_lstchg, p->sp_min,
+                p->sp_max, p->sp_warn,
+                p->sp_inact, p->sp_expire,
+                p->sp_flag);
+
         } else {
-            builder.appendff("{}:{}\n", entry.username, entry.password_hash);
+            builder.appendff("{}:{}:{}:{}:{}:{}:{}:{}:{}\n",
+                p->sp_namp, p->sp_pwdp,
+                p->sp_lstchg, p->sp_min,
+                p->sp_max, p->sp_warn,
+                p->sp_inact, p->sp_expire,
+                p->sp_flag);
         }
     }
-    if (!updated_entry_in_place)
-        builder.appendff("{}:{}\n", m_username, m_password_hash);
+    endspent();
+
+    if (errno) {
+        dbgln("errno was non-zero after generating new passwd file.");
+        return {};
+    }
+
     return builder.to_string();
 }
 
