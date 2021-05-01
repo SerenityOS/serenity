@@ -267,7 +267,7 @@ public:
 
     long double fpu_get(u8 index) const { return m_fpu.fpu_get(index); }
     long double fpu_pop() { return m_fpu.fpu_pop(); }
-    u64 mmx_get(u8 index) const { return m_fpu.mmx_get(index); };
+    mmx mmx_get(u8 index) const { return m_fpu.mmx_get(index); };
 
     void set_eax(ValueWithShadow<u32> value) { gpr32(X86::RegisterEAX) = value; }
     void set_ebx(ValueWithShadow<u32> value) { gpr32(X86::RegisterEBX) = value; }
@@ -298,7 +298,7 @@ public:
 
     void fpu_push(long double value) { m_fpu.fpu_push(value); }
     void fpu_set(u8 index, long double value) { m_fpu.fpu_set(index, value); }
-    void mmx_set(u8 index, u64 value) { m_fpu.mmx_set(index, value); }
+    void mmx_set(u8 index, mmx value) { m_fpu.mmx_set(index, value); }
 
     bool of() const { return m_eflags & Flags::OF; }
     bool sf() const { return m_eflags & Flags::SF; }

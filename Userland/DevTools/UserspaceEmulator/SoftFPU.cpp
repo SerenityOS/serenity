@@ -46,11 +46,11 @@ long double SoftFPU::fpu_get(u8 index) const
 
     if (!fpu_is_set(index)) {
         // FIXME: Are we supposed to set a flag here?
-        reportln("Read of uninitialized value on the FPU Stack");
+        reportln("\033[31;1mWarning! Read of uninitialized value on the FPU Stack ({})\033[0m\n", effective_index);
         m_emulator.dump_backtrace();
     }
     if (m_reg_is_mmx[effective_index]) {
-        reportln("Read of an MMX register as an FPU value");
+        reportln("\033[31;1mWarning! Use of an MMX register as an FPU value ({}) register\033[0m\n", effective_index);
         m_emulator.dump_backtrace();
     }
 
@@ -70,17 +70,17 @@ void SoftFPU::fpu_set(u8 index, long double value)
     fpu_set_absolute((m_fpu_stack_top + index) % 8, value);
 }
 
-u64 SoftFPU::mmx_get(u8 index) const
+mmx SoftFPU::mmx_get(u8 index) const
 {
     VERIFY(index < 8);
     if (!m_reg_is_mmx[index]) {
-        reportln("Read of an FPU value as an MMX register");
+        reportln("\033[31;1mWarning! Use of an FPU value as MM{} register\033[0m\n", index);
         m_emulator.dump_backtrace();
     }
     return m_mmx[index].value;
 }
 
-void SoftFPU::mmx_set(u8 index, u64 value)
+void SoftFPU::mmx_set(u8 index, mmx value)
 {
     m_reg_is_mmx[index] = true;
     m_mmx[index].value = value;
@@ -98,7 +98,7 @@ void SoftFPU::fpu_push(long double value)
 long double SoftFPU::fpu_pop()
 {
     if (m_reg_is_mmx[m_fpu_stack_top]) {
-        reportln("Read of an MMX register as an FPU value");
+        reportln("\033[31;1mWarning! Use of an MMX register as an FPU value (0) register\033[0m\n");
         m_emulator.dump_backtrace();
     }
     if (!fpu_is_set(0))
@@ -213,6 +213,23 @@ T SoftFPU::fpu_convert_checked(long double value)
         fpu_set_exception(FPU_Exception::Precision);
     }
     return result;
+}
+
+template<Signed R, Signed I>
+R signed_saturate(I input)
+{
+    if (input > NumericLimits<R>::max())
+        return NumericLimits<R>::max();
+    if (input < NumericLimits<R>::min())
+        return NumericLimits<R>::min();
+    return static_cast<R>(input);
+}
+template<Unsigned R, Unsigned I>
+R unsigned_saturate(I input)
+{
+    if (input > NumericLimits<R>::max())
+        return NumericLimits<R>::max();
+    return static_cast<R>(input);
 }
 
 // INSTRUCTIONS
@@ -409,7 +426,7 @@ void SoftFPU::FCMOVE(const X86::Instruction& insn)
 {
     VERIFY(insn.modrm().is_register());
     if (m_cpu.zf())
-        fpu_set(0, fpu_get(insn.rm() & 7));
+        fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 void SoftFPU::FCMOVNE(const X86::Instruction& insn)
 {
@@ -422,7 +439,7 @@ void SoftFPU::FCMOVB(const X86::Instruction& insn)
 {
     VERIFY(insn.modrm().is_register());
     if (m_cpu.cf())
-        fpu_set(0, fpu_get(insn.rm() & 7));
+        fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 void SoftFPU::FCMOVNB(const X86::Instruction& insn)
 {
@@ -434,12 +451,12 @@ void SoftFPU::FCMOVNB(const X86::Instruction& insn)
 void SoftFPU::FCMOVBE(const X86::Instruction& insn)
 {
     if (m_cpu.cf() | m_cpu.zf())
-        fpu_set(0, fpu_get(insn.rm() & 7));
+        fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 void SoftFPU::FCMOVNBE(const X86::Instruction& insn)
 {
     if (!(m_cpu.cf() | m_cpu.zf()))
-        fpu_set(0, fpu_get(insn.rm() & 7));
+        fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 
 void SoftFPU::FCMOVU(const X86::Instruction& insn)
@@ -878,7 +895,7 @@ void SoftFPU::FICOMP_RM32(const X86::Instruction& insn)
 
 void SoftFPU::FCOMI(const X86::Instruction& insn)
 {
-    auto i = insn.rm() & 7;
+    auto i = insn.modrm().rm();
     // FIXME: QNaN / exception handling.
     set_c0(0);
     if (isnan(fpu_get(0)) || isnan(fpu_get(1))) {
@@ -907,7 +924,7 @@ void SoftFPU::FCOMIP(const X86::Instruction& insn)
 
 void SoftFPU::FUCOMI(const X86::Instruction& insn)
 {
-    auto i = insn.rm() & 7;
+    auto i = insn.modrm().rm();
     // FIXME: Unordered comparison checks.
     // FIXME: QNaN / exception handling.
     set_c1(0);
@@ -1275,82 +1292,552 @@ void SoftFPU::FNENI(const X86::Instruction&) { TODO_INSN(); }
 void SoftFPU::FNDISI(const X86::Instruction&) { TODO_INSN(); }
 void SoftFPU::FNSETPM(const X86::Instruction&) { TODO_INSN(); }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 // MMX
+// helpers
+#define LOAD_MM_MM64M()                                                                 \
+    mmx mm;                                                                             \
+    mmx mm64m;                                                                          \
+    if (insn.modrm().mod() == 0b11) { /* 0b11 signals a register */                     \
+        mm64m = mmx_get(insn.modrm().rm());                                             \
+    } else {                                                                            \
+        auto temp = insn.modrm().read64(m_cpu, insn);                                   \
+        warn_if_uninitialized(temp, "Read of uninitialized Memmory as Packed integer"); \
+        mm64m.raw = temp.value();                                                       \
+    }                                                                                   \
+    mm = mmx_get(insn.modrm().reg())
 
 // ARITHMETIC
-void SoftFPU::PADDB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PADDW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PADDD_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PADDSB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PADDSW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PADDUSB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PADDUSW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+// HACK: GCC does not want singend/unsigned chars as vector type,
+//       so we have to type_cast them for now, and unsigned saturation add/sub
+//       is technically *unsigned* but gcc wants signed...
+//       this extends to the general case for int8s where GCC only wants *chars*
 
-void SoftFPU::PSUBB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSUBW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSUBD_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSUBSB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSUBSW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSUBUSB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSUBUSW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftFPU::PADDB_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v8u += mm64m.v8u;
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PADDW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v16u += mm64m.v16u;
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PADDD_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v32u += mm64m.v32u;
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PADDSB_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v8i = __builtin_convertvector(
+        __builtin_ia32_paddsb(
+            __builtin_convertvector(mm.v8i, char __attribute__((vector_size(8)))),
+            __builtin_convertvector(mm64m.v8i, char __attribute__((vector_size(8))))),
+        i8x8);
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PADDSW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v16i = __builtin_ia32_paddsw(mm.v16i, mm64m.v16i);
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PADDUSB_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v8u = __builtin_convertvector(
+        __builtin_ia32_paddusb(
+            __builtin_convertvector(mm.v8u, char __attribute__((vector_size(8)))),
+            __builtin_convertvector(mm64m.v8u, char __attribute__((vector_size(8))))),
+        u8x8);
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PADDUSW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v16i = __builtin_ia32_paddusw(mm.v16i, mm64m.v16i);
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
 
-void SoftFPU::PMULHW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PMULLW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftFPU::PSUBB_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v8u -= mm64m.v8u;
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSUBW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v16u -= mm64m.v16u;
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSUBD_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v32u -= mm64m.v32u;
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSUBSB_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v8u = __builtin_convertvector(
+        __builtin_ia32_psubsb(
+            __builtin_convertvector(mm.v8u, char __attribute__((vector_size(8)))),
+            __builtin_convertvector(mm64m.v8u, char __attribute__((vector_size(8))))),
+        u8x8);
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSUBSW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v16i = __builtin_ia32_psubsw(mm.v16i, mm64m.v16i);
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSUBUSB_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v8u = __builtin_convertvector(
+        __builtin_ia32_psubusb(
+            __builtin_convertvector(mm.v8u, char __attribute__((vector_size(8)))),
+            __builtin_convertvector(mm64m.v8u, char __attribute__((vector_size(8))))),
+        u8x8);
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSUBUSW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mm.v16i = __builtin_ia32_psubusw(mm.v16i, mm64m.v16i);
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
 
-void SoftFPU::PMADDWD_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftFPU::PMULHW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v16i = __builtin_ia32_pmulhw(mm.v16i, mm64m.v16i);
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PMULLW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v16i = __builtin_ia32_pmullw(mm.v16i, mm64m.v16i);
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+
+void SoftFPU::PMADDWD_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v32i = __builtin_ia32_pmaddwd(mm.v16i, mm64m.v16i);
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
 
 // COMPARISON
-void SoftFPU::PCMPEQB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PCMPEQW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PCMPEQD_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftFPU::PCMPEQB_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
 
-void SoftFPU::PCMPGTB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PCMPGTW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PCMPGTD_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+    mm.v8u = mm.v8u == mm64m.v8u;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PCMPEQW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v16u = mm.v16u == mm64m.v16u;
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PCMPEQD_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v32u = mm.v32u == mm64m.v32u;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+
+void SoftFPU::PCMPGTB_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v8i = mm.v8i > mm64m.v8i;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PCMPGTW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v16i = mm.v16i > mm64m.v16i;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PCMPGTD_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v32i = mm.v32i > mm64m.v32i;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
 
 // CONVERSION
-void SoftFPU::PACKSSDW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PACKSSWB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PACKUSWB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftFPU::PACKSSDW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v16i = __builtin_ia32_packssdw(mm.v32i, mm64m.v32i);
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PACKSSWB_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mmx dest;
+    // FIXME: make this a intrinsic (see type notice up above)
+    dest.v8i[0] = signed_saturate<i8>(mm.v16i[0]);
+    dest.v8i[1] = signed_saturate<i8>(mm.v16i[1]);
+    dest.v8i[2] = signed_saturate<i8>(mm.v16i[2]);
+    dest.v8i[3] = signed_saturate<i8>(mm.v16i[3]);
+    dest.v8i[4] = signed_saturate<i8>(mm64m.v16i[0]);
+    dest.v8i[5] = signed_saturate<i8>(mm64m.v16i[1]);
+    dest.v8i[6] = signed_saturate<i8>(mm64m.v16i[2]);
+    dest.v8i[7] = signed_saturate<i8>(mm64m.v16i[3]);
+
+    mmx_set(insn.modrm().reg(), dest);
+    mmx_common();
+}
+void SoftFPU::PACKUSWB_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+    mmx dest;
+    // FIXME: see above
+    dest.v8u[0] = unsigned_saturate<u8>(mm.v16u[0]);
+    dest.v8u[1] = unsigned_saturate<u8>(mm.v16u[1]);
+    dest.v8u[2] = unsigned_saturate<u8>(mm.v16u[2]);
+    dest.v8u[3] = unsigned_saturate<u8>(mm.v16u[3]);
+    dest.v8u[4] = unsigned_saturate<u8>(mm64m.v16u[0]);
+    dest.v8u[5] = unsigned_saturate<u8>(mm64m.v16u[1]);
+    dest.v8u[6] = unsigned_saturate<u8>(mm64m.v16u[2]);
+    dest.v8u[7] = unsigned_saturate<u8>(mm64m.v16u[3]);
+
+    mmx_set(insn.modrm().reg(), dest);
+    mmx_common();
+}
 
 // UNPACK
+// FIXME: See above
 void SoftFPU::PUNPCKHBW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PUNPCKHWD_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PUNPCKHDQ_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftFPU::PUNPCKHWD_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v16i = __builtin_ia32_punpckhwd(mm.v16i, mm64m.v16i);
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PUNPCKHDQ_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v32i = __builtin_ia32_punpckhdq(mm.v32i, mm64m.v32i);
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+// FIXME: See above
 void SoftFPU::PUNPCKLBW_mm1_mm2m32(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PUNPCKLWD_mm1_mm2m32(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PUNPCKLDQ_mm1_mm2m32(const X86::Instruction&) { TODO_INSN(); }
+void SoftFPU::PUNPCKLWD_mm1_mm2m32(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v16i = __builtin_ia32_punpcklwd(mm.v16i, mm64m.v16i);
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PUNPCKLDQ_mm1_mm2m32(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v32i = __builtin_ia32_punpckldq(mm.v32i, mm64m.v32i);
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
 
 // LOGICAL
-void SoftFPU::PAND_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PANDN_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::POR_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PXOR_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftFPU::PAND_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.raw &= mm64m.raw;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PANDN_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.raw &= ~mm64m.raw;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::POR_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.raw |= mm64m.raw;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PXOR_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.raw ^= mm64m.raw;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
 
 // SHIFT
-void SoftFPU::PSLLW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSLLW_mm1_imm8(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSLLD_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSLLD_mm1_imm8(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSLLQ_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSLLQ_mm1_imm8(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSRAW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSRAW_mm1_imm8(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSRAD_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSRAD_mm1_imm8(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSRLW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSRLW_mm1_imm8(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSRLD_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSRLD_mm1_imm8(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSRLQ_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::PSRLQ_mm1_imm8(const X86::Instruction&) { TODO_INSN(); }
+void SoftFPU::PSLLW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v16u <<= mm64m.v16u;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSLLW_mm1_imm8(const X86::Instruction& insn)
+{
+    u8 imm = insn.imm8();
+    mmx mm = mmx_get(insn.modrm().reg());
+
+    mm.v16u <<= imm;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSLLD_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v32u <<= mm64m.v32u;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSLLD_mm1_imm8(const X86::Instruction& insn)
+{
+    u8 imm = insn.imm8();
+    mmx mm = mmx_get(insn.modrm().reg());
+
+    mm.v32u <<= imm;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSLLQ_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.raw <<= mm64m.raw;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSLLQ_mm1_imm8(const X86::Instruction& insn)
+{
+    u8 imm = insn.imm8();
+    mmx mm = mmx_get(insn.modrm().reg());
+
+    mm.raw <<= imm;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSRAW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v16i >>= mm64m.v16i;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSRAW_mm1_imm8(const X86::Instruction& insn)
+{
+    u8 imm = insn.imm8();
+    mmx mm = mmx_get(insn.modrm().reg());
+
+    mm.v16i >>= imm;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSRAD_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v32i >>= mm64m.v32i;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSRAD_mm1_imm8(const X86::Instruction& insn)
+{
+    u8 imm = insn.imm8();
+    mmx mm = mmx_get(insn.modrm().reg());
+
+    mm.v32i >>= imm;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSRLW_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v16u >>= mm64m.v16u;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSRLW_mm1_imm8(const X86::Instruction& insn)
+{
+    u8 imm = insn.imm8();
+    mmx mm = mmx_get(insn.modrm().reg());
+
+    mm.v16u >>= imm;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSRLD_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.v32u >>= mm64m.v32u;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSRLD_mm1_imm8(const X86::Instruction& insn)
+{
+    u8 imm = insn.imm8();
+    mmx mm = mmx_get(insn.modrm().reg());
+
+    mm.v32u >>= imm;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSRLQ_mm1_mm2m64(const X86::Instruction& insn)
+{
+    LOAD_MM_MM64M();
+
+    mm.raw >>= mm64m.raw;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
+void SoftFPU::PSRLQ_mm1_imm8(const X86::Instruction& insn)
+{
+    u8 imm = insn.imm8();
+    mmx mm = mmx_get(insn.modrm().reg());
+
+    mm.raw >>= imm;
+
+    mmx_set(insn.modrm().reg(), mm);
+    mmx_common();
+}
 
 // DATA TRANSFER
-void SoftFPU::MOVD_mm1_rm32(const X86::Instruction&) { TODO_INSN(); };
-void SoftFPU::MOVD_rm32_mm2(const X86::Instruction&) { TODO_INSN(); };
+void SoftFPU::MOVD_mm1_rm32(const X86::Instruction& insn)
+{
+    u8 mmx_index = insn.modrm().reg();
+    // FIXME:: Shadow Value
+    // upper half is zeroed out
+    mmx_set(mmx_index, { .raw = insn.modrm().read32(m_cpu, insn).value() });
+    mmx_common();
+};
+void SoftFPU::MOVD_rm32_mm2(const X86::Instruction& insn)
+{
+    u8 mmx_index = insn.modrm().reg();
+    // FIXME:: Shadow Value
+    insn.modrm().write32(m_cpu, insn,
+        shadow_wrap_as_initialized(static_cast<u32>(mmx_get(mmx_index).raw)));
+    mmx_common();
+};
 
-void SoftFPU::MOVQ_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
-void SoftFPU::MOVQ_mm1m64_mm2(const X86::Instruction&) { TODO_INSN(); }
+void SoftFPU::MOVQ_mm1_mm2m64(const X86::Instruction& insn)
+{
+    // FIXME: Shadow Value
+    if (insn.modrm().mod() == 0b11) {
+        // instruction
+        mmx_set(insn.modrm().reg(),
+            mmx_get(insn.modrm().rm()));
+    } else {
+        mmx_set(insn.modrm().reg(),
+            { .raw = insn.modrm().read64(m_cpu, insn).value() });
+    }
+    mmx_common();
+}
+void SoftFPU::MOVQ_mm1m64_mm2(const X86::Instruction& insn)
+{
+    if (insn.modrm().mod() == 0b11) {
+        // instruction
+        mmx_set(insn.modrm().rm(),
+            mmx_get(insn.modrm().reg()));
+    } else {
+        // FIXME: Shadow Value
+        insn.modrm().write64(m_cpu, insn,
+            shadow_wrap_as_initialized(mmx_get(insn.modrm().reg()).raw));
+    }
+    mmx_common();
+}
 void SoftFPU::MOVQ_mm1_rm64(const X86::Instruction&) { TODO_INSN(); }; // long mode
 void SoftFPU::MOVQ_rm64_mm2(const X86::Instruction&) { TODO_INSN(); }; // long mode
 
@@ -1360,4 +1847,6 @@ void SoftFPU::EMMS(const X86::Instruction&)
     // clear tagword
     m_fpu_tw = 0xFFFF;
 }
+#pragma GCC diagnostic pop
+
 }

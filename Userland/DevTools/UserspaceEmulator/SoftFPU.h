@@ -9,6 +9,7 @@
 
 #include "Report.h"
 #include <AK/Concepts.h>
+#include <AK/SIMD.h>
 #include <LibX86/Instruction.h>
 #include <LibX86/Interpreter.h>
 
@@ -16,9 +17,20 @@
 #include <string.h>
 
 namespace UserspaceEmulator {
-
+using namespace AK::SIMD;
 class Emulator;
 class SoftCPU;
+
+union mmx {
+    u64 raw;
+    u8x8 v8u;
+    i8x8 v8i;
+    u16x4 v16u;
+    i16x4 v16i;
+    u32x2 v32u;
+    i32x2 v32i;
+};
+static_assert(sizeof(mmx) == sizeof(u64));
 
 class SoftFPU final {
 public:
@@ -45,8 +57,8 @@ public:
     void fpu_set_absolute(u8 index, long double value);
     void fpu_set(u8 index, long double value);
 
-    u64 mmx_get(u8 index) const;
-    void mmx_set(u8 index, u64 value);
+    mmx mmx_get(u8 index) const;
+    void mmx_set(u8 index, mmx value);
 
 private:
     friend class SoftCPU;
@@ -283,9 +295,8 @@ private:
         long double m_st[8] { 0 };
         struct
         {
-            // this should represent *packed* data not an int
             // this should overlap with the mantissa of the long double
-            u64 value;
+            mmx value;
             // long doubles are weird with their supposed sizes, we assume, that
             // gcc chooses either 12 (x32) or 16 (x64) byte as its size,
             // if neither is the case we assume for now, that they really are
@@ -530,7 +541,6 @@ private:
     void FNSETPM(const X86::Instruction&);
 
     // MMX
-
     // ARITHMETIC
     void PADDB_mm1_mm2m64(const X86::Instruction&);
     void PADDW_mm1_mm2m64(const X86::Instruction&);
