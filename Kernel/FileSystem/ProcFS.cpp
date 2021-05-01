@@ -1222,17 +1222,17 @@ InodeMetadata ProcFSInode::metadata() const
     return metadata;
 }
 
-ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
+KResultOr<ssize_t> ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
     dbgln_if(PROCFS_DEBUG, "ProcFS: read_bytes offset: {} count: {}", offset, count);
     VERIFY(offset >= 0);
     VERIFY(buffer.user_or_kernel_ptr());
 
     if (!description)
-        return -EIO;
+        return EIO;
     if (!description->data()) {
         dbgln_if(PROCFS_DEBUG, "ProcFS: Do not have cached data!");
-        return -EIO;
+        return EIO;
     }
 
     // Be sure to keep a reference to data_buffer while we use it!
@@ -1243,7 +1243,7 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
 
     ssize_t nread = min(static_cast<off_t>(data_buffer->size() - offset), static_cast<off_t>(count));
     if (!buffer.write(data_buffer->data() + offset, nread))
-        return -EFAULT;
+        return EFAULT;
 
     return nread;
 }
@@ -1454,7 +1454,7 @@ void ProcFSInode::flush_metadata()
 {
 }
 
-ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBuffer& buffer, FileDescription*)
+KResultOr<ssize_t> ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBuffer& buffer, FileDescription*)
 {
     // For process-specific inodes, hold the process's ptrace lock across the write
     // and refuse to write at all data if the process is not dumpable.
@@ -1493,10 +1493,10 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelB
                 break;
             }
         } else
-            return -EPERM;
+            return EPERM;
     } else {
         if (!directory_entry->write_callback)
-            return -EPERM;
+            return EPERM;
         write_callback = directory_entry->write_callback;
     }
 

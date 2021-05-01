@@ -80,7 +80,8 @@ DevFSInode::DevFSInode(DevFS& fs)
     : Inode(fs, fs.allocate_inode_index())
 {
 }
-ssize_t DevFSInode::read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const
+
+KResultOr<ssize_t> DevFSInode::read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -99,7 +100,7 @@ void DevFSInode::flush_metadata()
 {
 }
 
-ssize_t DevFSInode::write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileDescription*)
+KResultOr<ssize_t> DevFSInode::write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileDescription*)
 {
     VERIFY_NOT_REACHED();
 }
@@ -151,13 +152,13 @@ DevFSLinkInode::DevFSLinkInode(DevFS& fs, String name)
     , m_name(name)
 {
 }
-ssize_t DevFSLinkInode::read_bytes(off_t offset, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<ssize_t> DevFSLinkInode::read_bytes(off_t offset, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     Locker locker(m_lock);
     VERIFY(offset == 0);
     VERIFY(!m_link.is_null());
     if (!buffer.write(((const u8*)m_link.substring_view(0).characters_without_null_termination()) + offset, m_link.length()))
-        return -EFAULT;
+        return EFAULT;
     return m_link.length();
 }
 InodeMetadata DevFSLinkInode::metadata() const
@@ -172,7 +173,7 @@ InodeMetadata DevFSLinkInode::metadata() const
     metadata.mtime = mepoch;
     return metadata;
 }
-ssize_t DevFSLinkInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& buffer, FileDescription*)
+KResultOr<ssize_t> DevFSLinkInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& buffer, FileDescription*)
 {
     Locker locker(m_lock);
     VERIFY(offset == 0);
@@ -345,7 +346,7 @@ String DevFSDeviceInode::name() const
     return m_cached_name;
 }
 
-ssize_t DevFSDeviceInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
+KResultOr<ssize_t> DevFSDeviceInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
     Locker locker(m_lock);
     VERIFY(!!description);
@@ -353,7 +354,7 @@ ssize_t DevFSDeviceInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBu
         return 0;
     auto nread = const_cast<Device&>(*m_attached_device).read(*description, offset, buffer, count);
     if (nread.is_error())
-        return -EIO;
+        return EIO;
     return nread.value();
 }
 
@@ -371,7 +372,7 @@ InodeMetadata DevFSDeviceInode::metadata() const
     metadata.minor_device = m_attached_device->minor();
     return metadata;
 }
-ssize_t DevFSDeviceInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& buffer, FileDescription* description)
+KResultOr<ssize_t> DevFSDeviceInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& buffer, FileDescription* description)
 {
     Locker locker(m_lock);
     VERIFY(!!description);
@@ -379,7 +380,7 @@ ssize_t DevFSDeviceInode::write_bytes(off_t offset, ssize_t count, const UserOrK
         return 0;
     auto nread = const_cast<Device&>(*m_attached_device).write(*description, offset, buffer, count);
     if (nread.is_error())
-        return -EIO;
+        return EIO;
     return nread.value();
 }
 

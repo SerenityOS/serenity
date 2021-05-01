@@ -807,7 +807,7 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     return new_inode;
 }
 
-ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
+KResultOr<ssize_t> Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
     Locker inode_locker(m_lock);
     VERIFY(offset >= 0);
@@ -823,7 +823,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
         VERIFY(offset == 0);
         ssize_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
         if (!buffer.write(((const u8*)m_raw_inode.i_block) + offset, (size_t)nread))
-            return -EFAULT;
+            return EFAULT;
         return nread;
     }
 
@@ -832,7 +832,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
 
     if (m_block_list.is_empty()) {
         dmesgln("Ext2FSInode[{}]::read_bytes(): Empty block list", identifier());
-        return -EIO;
+        return EIO;
     }
 
     bool allow_cache = !description || !description->is_direct();
@@ -859,7 +859,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
         if (block_index.value() == 0) {
             // This is a hole, act as if it's filled with zeroes.
             if (!buffer_offset.memset(0, num_bytes_to_copy))
-                return -EFAULT;
+                return EFAULT;
         } else {
             if (auto result = fs().read_block(block_index, &buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
                 dmesgln("Ext2FSInode[{}]::read_bytes(): Failed to read block {} (index {})", identifier(), block_index.value(), bi);
@@ -940,19 +940,19 @@ KResult Ext2FSInode::resize(u64 new_size)
         auto clear_from = old_size;
         u8 zero_buffer[PAGE_SIZE] {};
         while (bytes_to_clear) {
-            auto nwritten = write_bytes(clear_from, min(static_cast<u64>(sizeof(zero_buffer)), bytes_to_clear), UserOrKernelBuffer::for_kernel_buffer(zero_buffer), nullptr);
-            if (nwritten < 0)
-                return KResult((ErrnoCode)-nwritten);
-            VERIFY(nwritten != 0);
-            bytes_to_clear -= nwritten;
-            clear_from += nwritten;
+            auto result = write_bytes(clear_from, min(static_cast<u64>(sizeof(zero_buffer)), bytes_to_clear), UserOrKernelBuffer::for_kernel_buffer(zero_buffer), nullptr);
+            if (result.is_error())
+                return result.error();
+            VERIFY(result.value() != 0);
+            bytes_to_clear -= result.value();
+            clear_from += result.value();
         }
     }
 
     return KSuccess;
 }
 
-ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& data, FileDescription* description)
+KResultOr<ssize_t> Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& data, FileDescription* description)
 {
     VERIFY(offset >= 0);
     VERIFY(count >= 0);
@@ -967,7 +967,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
         if (max((size_t)(offset + count), (size_t)m_raw_inode.i_size) < max_inline_symlink_length) {
             dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_bytes(): Poking into i_block array for inline symlink '{}' ({} bytes)", identifier(), data.copy_into_string(count), count);
             if (!data.read(((u8*)m_raw_inode.i_block) + offset, (size_t)count))
-                return -EFAULT;
+                return EFAULT;
             if ((size_t)(offset + count) > (size_t)m_raw_inode.i_size)
                 m_raw_inode.i_size = offset + count;
             set_metadata_dirty(true);
@@ -988,7 +988,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
 
     if (m_block_list.is_empty()) {
         dbgln("Ext2FSInode[{}]::write_bytes(): Empty block list", identifier());
-        return -EIO;
+        return EIO;
     }
 
     BlockBasedFS::BlockIndex first_block_logical_index = offset / block_size;
@@ -1113,11 +1113,11 @@ KResult Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries
     stream.fill_to_end(0);
 
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
-    ssize_t nwritten = write_bytes(0, stream.size(), buffer, nullptr);
-    if (nwritten < 0)
-        return KResult((ErrnoCode)-nwritten);
+    auto result = write_bytes(0, stream.size(), buffer, nullptr);
+    if (result.is_error())
+        return result.error();
     set_metadata_dirty(true);
-    if (static_cast<size_t>(nwritten) != directory_data.size())
+    if (static_cast<size_t>(result.value()) != directory_data.size())
         return EIO;
     return KSuccess;
 }

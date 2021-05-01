@@ -31,13 +31,14 @@ KResultOr<size_t> InodeFile::read(FileDescription& description, u64 offset, User
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
 
-    ssize_t nread = m_inode->read_bytes(offset, count, buffer, &description);
+    auto result = m_inode->read_bytes(offset, count, buffer, &description);
+    if (result.is_error())
+        return result.error();
+    auto nread = result.value();
     if (nread > 0) {
         Thread::current()->did_file_read(nread);
         evaluate_block_conditions();
     }
-    if (nread < 0)
-        return KResult((ErrnoCode)-nread);
     return nread;
 }
 
@@ -46,7 +47,11 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, u64 offset, con
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
 
-    ssize_t nwritten = m_inode->write_bytes(offset, count, data, &description);
+    auto result = m_inode->write_bytes(offset, count, data, &description);
+    if (result.is_error())
+        return result.error();
+
+    auto nwritten = result.value();
     if (nwritten > 0) {
         auto mtime_result = m_inode->set_mtime(kgettimeofday().to_truncated_seconds());
         Thread::current()->did_file_write(nwritten);
@@ -54,8 +59,6 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, u64 offset, con
         if (mtime_result.is_error())
             return mtime_result;
     }
-    if (nwritten < 0)
-        return KResult((ErrnoCode)-nwritten);
     return nwritten;
 }
 

@@ -126,7 +126,7 @@ KResult TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry
     return KSuccess;
 }
 
-ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<ssize_t> TmpFSInode::read_bytes(off_t offset, ssize_t size, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     Locker locker(m_lock, Lock::Mode::Shared);
     VERIFY(!is_directory());
@@ -143,11 +143,11 @@ ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, UserOrKernelBuffer& b
         size = m_metadata.size - offset;
 
     if (!buffer.write(m_content->data() + offset, size))
-        return -EFAULT;
+        return EFAULT;
     return size;
 }
 
-ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBuffer& buffer, FileDescription*)
+KResultOr<ssize_t> TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBuffer& buffer, FileDescription*)
 {
     Locker locker(m_lock);
     VERIFY(!is_directory());
@@ -175,7 +175,7 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBu
             //        existing ones.
             auto tmp = KBuffer::try_create_with_size(new_size * 2);
             if (!tmp)
-                return -ENOMEM;
+                return ENOMEM;
             tmp->set_size(new_size);
             if (m_content)
                 memcpy(tmp->data(), m_content->data(), old_size);
@@ -187,7 +187,7 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBu
     }
 
     if (!buffer.read(m_content->data() + offset, size)) // TODO: partial reads?
-        return -EFAULT;
+        return EFAULT;
     return size;
 }
 
