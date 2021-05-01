@@ -27,7 +27,7 @@ public:
 private:
     enum class Mode {
         Outline,
-        // FIXME: Add Mode::Fill
+        Fill,
     };
 
     void draw_using(GUI::Painter&, const Gfx::IntRect&);
