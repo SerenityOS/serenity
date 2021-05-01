@@ -1,0 +1,35 @@
+diff -Naur openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676/monitor_fdpass.c openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676.serenity/monitor_fdpass.c
+--- openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676/monitor_fdpass.c	2020-05-27 02:38:00.000000000 +0200
++++ openssh-portable-9ca7e9c861775dd6c6312bc8aaab687403d24676.serenity/monitor_fdpass.c	2021-05-01 12:32:21.145854477 +0200
+@@ -51,6 +51,7 @@
+ int
+ mm_send_fd(int sock, int fd)
+ {
++#ifndef __serenity__
+ #if defined(HAVE_SENDMSG) && (defined(HAVE_ACCRIGHTS_IN_MSGHDR) || defined(HAVE_CONTROL_IN_MSGHDR))
+ 	struct msghdr msg;
+ #ifndef HAVE_ACCRIGHTS_IN_MSGHDR
+@@ -107,11 +108,15 @@
+ 	error("%s: file descriptor passing not supported", __func__);
+ 	return -1;
+ #endif
++#else
++    return sendfd(sock, fd);
++#endif
+ }
+ 
+ int
+ mm_receive_fd(int sock)
+ {
++#ifndef __serenity__
+ #if defined(HAVE_RECVMSG) && (defined(HAVE_ACCRIGHTS_IN_MSGHDR) || defined(HAVE_CONTROL_IN_MSGHDR))
+ 	struct msghdr msg;
+ #ifndef HAVE_ACCRIGHTS_IN_MSGHDR
+@@ -184,4 +189,7 @@
+ 	error("%s: file descriptor passing not supported", __func__);
+ 	return -1;
+ #endif
++#else
++    return recvfd(sock, 0);
++#endif
+ }
