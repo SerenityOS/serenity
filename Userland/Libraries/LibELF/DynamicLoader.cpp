@@ -398,11 +398,19 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         patch_ptr = (FlatPtr*)(FlatPtr)relocation.offset();
 
     switch (relocation.type()) {
+#ifndef __LP64__
     case R_386_NONE:
+#else
+    case R_X86_64_NONE:
+#endif
         // Apparently most loaders will just skip these?
         // Seems if the 'link editor' generates one something is funky with your code
         break;
+#ifndef __LP64__
     case R_386_32: {
+#else
+    case R_X86_64_64: {
+#endif
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
         if (!res.has_value()) {
@@ -415,6 +423,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         *patch_ptr += symbol_address.get();
         break;
     }
+#ifndef __LP64__
     case R_386_PC32: {
         auto symbol = relocation.symbol();
         auto result = lookup_symbol(symbol);
@@ -425,6 +434,9 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         break;
     }
     case R_386_GLOB_DAT: {
+#else
+    case R_X86_64_GLOB_DAT: {
+#endif
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
         VirtualAddress symbol_location;
@@ -444,13 +456,18 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         *patch_ptr = symbol_location.get();
         break;
     }
+#ifndef __LP64__
     case R_386_RELATIVE: {
+#else
+    case R_X86_64_RELATIVE: {
+#endif
         // FIXME: According to the spec, R_386_relative ones must be done first.
         //     We could explicitly do them first using m_number_of_relocations from DT_RELCOUNT
         //     However, our compiler is nice enough to put them at the front of the relocations for us :)
         *patch_ptr += (FlatPtr)m_dynamic_object->base_address().as_ptr(); // + addend for RelA (addend for Rel is stored at addr)
         break;
     }
+#ifndef __LP64__
     case R_386_TLS_TPOFF32:
     case R_386_TLS_TPOFF: {
         auto symbol = relocation.symbol();
@@ -466,6 +483,9 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         break;
     }
     case R_386_JMP_SLOT: {
+#else
+    case R_X86_64_JUMP_SLOT: {
+#endif
         // FIXME: Or BIND_NOW flag passed in?
         if (m_dynamic_object->must_bind_now()) {
             // Eagerly BIND_NOW the PLT entries, doing all the symbol looking goodness
