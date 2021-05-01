@@ -150,8 +150,8 @@ foreach(lang ASM C CXX OBJC OBJCXX)
     unset(CMAKE_SHARED_MODULE_LOADER_${lang}_FLAG )
     unset(CMAKE_${lang}_OSX_DEPLOYMENT_TARGET_FLAG)
     unset(CMAKE_${lang}_SYSROOT_FLAG)
-    if (CMAKE_SYSTEM_NAME MATCHES Darwin)
-        ## macOS workaround. Use GNU ld flags for SONAMEs.
+    if (CMAKE_SYSTEM_NAME MATCHES Darwin OR CMAKE_SYSTEM_NAME MATCHES SerenityOS)
+        ## macOS and SerenityOS workaround. Use GNU ld flags for SONAMEs.
         set(CMAKE_${lang}_CREATE_SHARED_LIBRARY
             "<CMAKE_${lang}_COMPILER> <LANGUAGE_COMPILE_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_${lang}_FLAGS> <LINK_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
         set(CMAKE_SHARED_LIBRARY_SONAME_${lang}_FLAG "-Wl,-soname,")
