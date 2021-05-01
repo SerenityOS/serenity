@@ -28,7 +28,7 @@ TextDocument::TextDocument(Client* client)
     append_line(make<TextDocumentLine>(*this));
     set_modified(false);
 
-    // TODO: Instead of a repating timer, this we should call a delayed 2 sec timer when the user types.
+    // FIXME: Instead of a repeating timer, we should punt a deferred single-shot 2-sec timer on user input.
     m_undo_timer = Core::Timer::construct(
         2000, [this] {
             update_undo_timer();
