@@ -116,6 +116,7 @@ int main(int argc, char** argv)
                     return -1;
                 continue;
             }
+            auto response_time = m_timer.elapsed();
 
             if (response.header.type != ICMP_ECHOREPLY && response.header.type != ICMP_TIME_EXCEEDED)
                 continue;
@@ -129,7 +130,7 @@ int main(int argc, char** argv)
                 char addr_buf[INET_ADDRSTRLEN];
                 peer_name = inet_ntop(AF_INET, &peer_address.sin_addr, addr_buf, sizeof(addr_buf));
             }
-            outln("{:2}:  {:50}  {:4}ms", ttl, peer_name, m_timer.elapsed());
+            outln("{:2}:  {:50}  {:4}ms", ttl, peer_name, response_time);
 
             if (response.header.type == ICMP_TIME_EXCEEDED)
                 return 0;
