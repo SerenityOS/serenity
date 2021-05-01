@@ -25,7 +25,6 @@
  */
 
 #include "ProbabilityTables.h"
-#include <AK/LogStream.h>
 
 namespace Video::VP9 {
 
