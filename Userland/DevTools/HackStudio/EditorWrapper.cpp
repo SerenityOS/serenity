@@ -80,5 +80,10 @@ void EditorWrapper::set_mode_non_displayable()
     editor().set_palette(palette);
     editor().document().set_text("The contents of this file could not be displayed. Is it a binary file?");
 }
+void EditorWrapper::set_filename(const String& filename)
+{
+    m_filename = filename;
+    m_filename_label->set_text(m_filename);
+}
 
 }
