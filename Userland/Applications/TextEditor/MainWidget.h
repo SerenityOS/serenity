@@ -118,8 +118,6 @@ private:
     RefPtr<Web::OutOfProcessWebView> m_page_view;
     RefPtr<Core::ConfigFile> m_config;
 
-    bool m_document_dirty { false };
-    bool m_document_opening { false };
     bool m_auto_detect_preview_mode { false };
     bool m_use_regex { false };
     bool m_match_case { true };
