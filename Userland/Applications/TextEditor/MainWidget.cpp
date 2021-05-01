@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "TextEditorWidget.h"
+#include "MainWidget.h"
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Optional.h>
@@ -44,7 +44,9 @@
 #include <LibWeb/OutOfProcessWebView.h>
 #include <Shell/SyntaxHighlighter.h>
 
-TextEditorWidget::TextEditorWidget()
+namespace TextEditor {
+
+MainWidget::MainWidget()
 {
     load_from_gml(text_editor_window_gml);
 
@@ -347,11 +349,11 @@ TextEditorWidget::TextEditorWidget()
     m_toolbar->add_action(m_editor->redo_action());
 }
 
-TextEditorWidget::~TextEditorWidget()
+MainWidget::~MainWidget()
 {
 }
 
-void TextEditorWidget::initialize_menubar(GUI::Menubar& menubar)
+void MainWidget::initialize_menubar(GUI::Menubar& menubar)
 {
     auto& file_menu = menubar.add_menu("&File");
     file_menu.add_action(*m_new_action);
@@ -580,7 +582,7 @@ void TextEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"), window()));
 }
 
-void TextEditorWidget::set_path(const LexicalPath& lexical_path)
+void MainWidget::set_path(const LexicalPath& lexical_path)
 {
     m_path = lexical_path.string();
     m_name = lexical_path.title();
@@ -610,7 +612,7 @@ void TextEditorWidget::set_path(const LexicalPath& lexical_path)
     update_title();
 }
 
-void TextEditorWidget::update_title()
+void MainWidget::update_title()
 {
     StringBuilder builder;
     if (m_path.is_empty())
@@ -623,7 +625,7 @@ void TextEditorWidget::update_title()
     window()->set_title(builder.to_string());
 }
 
-bool TextEditorWidget::open_file(const String& path)
+bool MainWidget::open_file(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly) && file->error() != ENOENT) {
@@ -647,7 +649,7 @@ bool TextEditorWidget::open_file(const String& path)
     return true;
 }
 
-bool TextEditorWidget::request_close()
+bool MainWidget::request_close()
 {
     if (!m_document_dirty)
         return true;
@@ -664,7 +666,7 @@ bool TextEditorWidget::request_close()
     return false;
 }
 
-void TextEditorWidget::drop_event(GUI::DropEvent& event)
+void MainWidget::drop_event(GUI::DropEvent& event)
 {
     event.accept();
     window()->move_to_front();
@@ -681,7 +683,7 @@ void TextEditorWidget::drop_event(GUI::DropEvent& event)
     }
 }
 
-void TextEditorWidget::set_preview_mode(PreviewMode mode)
+void MainWidget::set_preview_mode(PreviewMode mode)
 {
     if (m_preview_mode == mode)
         return;
@@ -701,7 +703,7 @@ void TextEditorWidget::set_preview_mode(PreviewMode mode)
     }
 }
 
-void TextEditorWidget::update_preview()
+void MainWidget::update_preview()
 {
     switch (m_preview_mode) {
     case PreviewMode::Markdown:
@@ -715,7 +717,7 @@ void TextEditorWidget::update_preview()
     }
 }
 
-void TextEditorWidget::update_markdown_preview()
+void MainWidget::update_markdown_preview()
 {
     auto document = Markdown::Document::parse(m_editor->text());
     if (document) {
@@ -726,14 +728,14 @@ void TextEditorWidget::update_markdown_preview()
     }
 }
 
-void TextEditorWidget::update_html_preview()
+void MainWidget::update_html_preview()
 {
     auto current_scroll_pos = m_page_view->visible_content_rect();
     m_page_view->load_html(m_editor->text(), URL::create_with_file_protocol(m_path));
     m_page_view->scroll_into_view(current_scroll_pos, true, true);
 }
 
-void TextEditorWidget::update_statusbar()
+void MainWidget::update_statusbar()
 {
     StringBuilder builder;
     builder.appendff("Line: {}, Column: {}", m_editor->cursor().line() + 1, m_editor->cursor().column());
@@ -756,4 +758,6 @@ void TextEditorWidget::update_statusbar()
         builder.appendff("        Selected: {} {} ({} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
     m_statusbar->set_text(builder.to_string());
+}
+
 }
