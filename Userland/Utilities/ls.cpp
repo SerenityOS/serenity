@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
+#include <inttypes.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
@@ -313,7 +314,7 @@ static bool print_filesystem_object(const String& path, const String& name, cons
         if (flag_human_readable) {
             printf(" %10s ", human_readable_size(st.st_size).characters());
         } else {
-            printf(" %10lld ", st.st_size);
+            printf(" %10" PRIu64 " ", (uint64_t)st.st_size);
         }
     }
 

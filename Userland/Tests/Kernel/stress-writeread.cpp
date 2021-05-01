@@ -21,18 +21,18 @@ bool verify_block(int fd, int seed, off_t block, AK::ByteBuffer& buffer)
     auto offset = block * buffer.size();
     auto rs = lseek(fd, offset, SEEK_SET);
     if (rs < 0) {
-        fprintf(stderr, "Couldn't seek to block %lld (offset %lld) while verifying: %s\n", block, offset, strerror(errno));
+        fprintf(stderr, "Couldn't seek to block %" PRIi64 " (offset %" PRIi64 ") while verifying: %s\n", block, offset, strerror(errno));
         return false;
     }
     auto rw = read(fd, buffer.data(), buffer.size());
     if (rw != static_cast<int>(buffer.size())) {
-        fprintf(stderr, "Failure to read block %lld: %s\n", block, strerror(errno));
+        fprintf(stderr, "Failure to read block %" PRIi64 ": %s\n", block, strerror(errno));
         return false;
     }
     srand((seed + 1) * (block + 1));
     for (size_t i = 0; i < buffer.size(); i++) {
         if (buffer[i] != rand() % 256) {
-            fprintf(stderr, "Discrepancy detected at block %lld offset %zd\n", block, i);
+            fprintf(stderr, "Discrepancy detected at block %" PRIi64 " offset %zd\n", block, i);
             return false;
         }
     }
@@ -44,7 +44,7 @@ bool write_block(int fd, int seed, off_t block, AK::ByteBuffer& buffer)
     auto offset = block * buffer.size();
     auto rs = lseek(fd, offset, SEEK_SET);
     if (rs < 0) {
-        fprintf(stderr, "Couldn't seek to block %lld (offset %lld) while verifying: %s\n", block, offset, strerror(errno));
+        fprintf(stderr, "Couldn't seek to block %" PRIi64 " (offset %" PRIi64 ") while verifying: %s\n", block, offset, strerror(errno));
         return false;
     }
     srand((seed + 1) * (block + 1));
@@ -52,7 +52,7 @@ bool write_block(int fd, int seed, off_t block, AK::ByteBuffer& buffer)
         buffer[i] = rand();
     auto rw = write(fd, buffer.data(), buffer.size());
     if (rw != static_cast<int>(buffer.size())) {
-        fprintf(stderr, "Failure to write block %lld: %s\n", block, strerror(errno));
+        fprintf(stderr, "Failure to write block %" PRIi64 ": %s\n", block, strerror(errno));
         return false;
     }
     return true;
