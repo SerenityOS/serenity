@@ -540,13 +540,14 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, Scoped
     // Reading the page may block, so release the MM lock temporarily
     mm_lock.unlock();
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer);
-    auto nread = inode.read_bytes(page_index_in_vmobject * PAGE_SIZE, PAGE_SIZE, buffer, nullptr);
+    auto result = inode.read_bytes(page_index_in_vmobject * PAGE_SIZE, PAGE_SIZE, buffer, nullptr);
     mm_lock.lock();
 
-    if (nread < 0) {
-        dmesgln("MM: handle_inode_fault had error ({}) while reading!", nread);
+    if (result.is_error()) {
+        dmesgln("MM: handle_inode_fault had error ({}) while reading!", result.error());
         return PageFaultResponse::ShouldCrash;
     }
+    auto nread = result.value();
     if (nread < PAGE_SIZE) {
         // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
         memset(page_buffer + nread, 0, PAGE_SIZE - nread);

@@ -50,8 +50,8 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
 
     Elf32_Ehdr header;
     auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&header);
-    auto nread = inode.read_bytes(0, sizeof(header), buffer, nullptr);
-    if (nread != sizeof(header))
+    auto result = inode.read_bytes(0, sizeof(header), buffer, nullptr);
+    if (result.is_error() || result.value() != sizeof(header))
         return false;
 
     // The file is a valid ELF binary

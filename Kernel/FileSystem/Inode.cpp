@@ -60,9 +60,10 @@ KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptio
     off_t offset = 0;
     for (;;) {
         auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
-        nread = read_bytes(offset, sizeof(buffer), buf, description);
-        if (nread < 0)
-            return KResult((ErrnoCode)-nread);
+        auto result = read_bytes(offset, sizeof(buffer), buf, description);
+        if (result.is_error())
+            return result.error();
+        nread = result.value();
         VERIFY(nread <= (ssize_t)sizeof(buffer));
         if (nread <= 0)
             break;
