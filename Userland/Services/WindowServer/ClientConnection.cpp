@@ -903,4 +903,26 @@ OwnPtr<Messages::WindowServer::GetScreenBitmapResponse> ClientConnection::handle
     return make<Messages::WindowServer::GetScreenBitmapResponse>(bitmap.to_shareable_bitmap());
 }
 
+OwnPtr<Messages::WindowServer::IsWindowModifiedResponse> ClientConnection::handle(Messages::WindowServer::IsWindowModified const& message)
+{
+    auto it = m_windows.find(message.window_id());
+    if (it == m_windows.end()) {
+        did_misbehave("IsWindowModified: Bad window ID");
+        return {};
+    }
+    auto& window = *it->value;
+    return make<Messages::WindowServer::IsWindowModifiedResponse>(window.is_modified());
+}
+
+void ClientConnection::handle(Messages::WindowServer::SetWindowModified const& message)
+{
+    auto it = m_windows.find(message.window_id());
+    if (it == m_windows.end()) {
+        did_misbehave("SetWindowModified: Bad window ID");
+        return;
+    }
+    auto& window = *it->value;
+    window.set_modified(message.modified());
+}
+
 }

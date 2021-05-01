@@ -76,6 +76,9 @@ public:
     Window(Core::Object&, WindowType);
     virtual ~Window() override;
 
+    bool is_modified() const { return m_modified; }
+    void set_modified(bool);
+
     void popup_window_menu(const Gfx::IntPoint&, WindowMenuDefaultAction);
     void handle_window_menu_action(WindowMenuAction);
     void window_menu_activate_default();
@@ -397,6 +400,7 @@ private:
     int m_minimize_animation_step { -1 };
     int m_progress { -1 };
     bool m_should_show_menubar { true };
+    bool m_modified { false };
 };
 
 }

@@ -992,4 +992,13 @@ void Window::invalidate_menubar()
     frame().invalidate();
 }
 
+void Window::set_modified(bool modified)
+{
+    if (m_modified == modified)
+        return;
+
+    m_modified = modified;
+    invalidate();
+}
+
 }
