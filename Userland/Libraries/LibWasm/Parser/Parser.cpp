@@ -931,26 +931,141 @@ ParseResult<StartSection> StartSection::parse(InputStream& stream)
     return StartSection { result.release_value() };
 }
 
-ParseResult<ElementSection::Element> ElementSection::Element::parse(InputStream& stream)
+ParseResult<ElementSection::SegmentType0> ElementSection::SegmentType0::parse(InputStream& stream)
+{
+    auto expression = Expression::parse(stream);
+    if (expression.is_error())
+        return expression.error();
+    auto indices = parse_vector<GenericIndexParser<FunctionIndex>>(stream);
+    if (indices.is_error())
+        return indices.error();
+
+    return SegmentType0 { ValueType(ValueType::FunctionReference), indices.release_value(), Active { 0, expression.release_value() } };
+}
+
+ParseResult<ElementSection::SegmentType1> ElementSection::SegmentType1::parse(InputStream& stream)
+{
+    u8 kind;
+    stream >> kind;
+    if (stream.has_any_error())
+        return with_eof_check(stream, ParseError::ExpectedKindTag);
+    if (kind != 0)
+        return ParseError::InvalidTag;
+    auto indices = parse_vector<GenericIndexParser<FunctionIndex>>(stream);
+    if (indices.is_error())
+        return indices.error();
+
+    return SegmentType1 { ValueType(ValueType::FunctionReference), indices.release_value() };
+}
+
+ParseResult<ElementSection::SegmentType2> ElementSection::SegmentType2::parse(InputStream& stream)
+{
+    dbgln("Type 2");
+    (void)stream;
+    return ParseError::NotImplemented;
+}
+
+ParseResult<ElementSection::SegmentType3> ElementSection::SegmentType3::parse(InputStream& stream)
+{
+    dbgln("Type 3");
+    (void)stream;
+    return ParseError::NotImplemented;
+}
+
+ParseResult<ElementSection::SegmentType4> ElementSection::SegmentType4::parse(InputStream& stream)
+{
+    dbgln("Type 4");
+    (void)stream;
+    return ParseError::NotImplemented;
+}
+
+ParseResult<ElementSection::SegmentType5> ElementSection::SegmentType5::parse(InputStream& stream)
+{
+    dbgln("Type 5");
+    (void)stream;
+    return ParseError::NotImplemented;
+}
+
+ParseResult<ElementSection::SegmentType6> ElementSection::SegmentType6::parse(InputStream& stream)
+{
+    dbgln("Type 6");
+    (void)stream;
+    return ParseError::NotImplemented;
+}
+
+ParseResult<ElementSection::SegmentType7> ElementSection::SegmentType7::parse(InputStream& stream)
+{
+    dbgln("Type 7");
+    (void)stream;
+    return ParseError::NotImplemented;
+}
+
+ParseResult<ElementSection::AnyElementType> ElementSection::Element::parse(InputStream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Element");
-    auto table_index = GenericIndexParser<TableIndex>::parse(stream);
-    if (table_index.is_error())
-        return table_index.error();
-    auto offset = Expression::parse(stream);
-    if (offset.is_error())
-        return offset.error();
-    auto init = parse_vector<GenericIndexParser<FunctionIndex>>(stream);
-    if (init.is_error())
-        return init.error();
+    u8 tag;
+    stream >> tag;
+    if (stream.has_any_error())
+        return with_eof_check(stream, ParseError::ExpectedKindTag);
 
-    return Element { table_index.release_value(), offset.release_value(), init.release_value() };
+    switch (tag) {
+    case 0x00:
+        if (auto result = SegmentType0::parse(stream); result.is_error()) {
+            return result.error();
+        } else {
+            return AnyElementType { result.release_value() };
+        }
+    case 0x01:
+        if (auto result = SegmentType1::parse(stream); result.is_error()) {
+            return result.error();
+        } else {
+            return AnyElementType { result.release_value() };
+        }
+    case 0x02:
+        if (auto result = SegmentType2::parse(stream); result.is_error()) {
+            return result.error();
+        } else {
+            return AnyElementType { result.release_value() };
+        }
+    case 0x03:
+        if (auto result = SegmentType3::parse(stream); result.is_error()) {
+            return result.error();
+        } else {
+            return AnyElementType { result.release_value() };
+        }
+    case 0x04:
+        if (auto result = SegmentType4::parse(stream); result.is_error()) {
+            return result.error();
+        } else {
+            return AnyElementType { result.release_value() };
+        }
+    case 0x05:
+        if (auto result = SegmentType5::parse(stream); result.is_error()) {
+            return result.error();
+        } else {
+            return AnyElementType { result.release_value() };
+        }
+    case 0x06:
+        if (auto result = SegmentType6::parse(stream); result.is_error()) {
+            return result.error();
+        } else {
+            return AnyElementType { result.release_value() };
+        }
+    case 0x07:
+        if (auto result = SegmentType7::parse(stream); result.is_error()) {
+            return result.error();
+        } else {
+            return AnyElementType { result.release_value() };
+        }
+    default:
+        return ParseError::InvalidTag;
+    }
 }
 
 ParseResult<ElementSection> ElementSection::parse(InputStream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("ElementSection");
-    auto result = Element::parse(stream);
+    auto result = parse_vector<Element>(stream);
     if (result.is_error())
         return result.error();
     return ElementSection { result.release_value() };

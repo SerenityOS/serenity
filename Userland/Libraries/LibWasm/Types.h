@@ -744,40 +744,80 @@ private:
 
 class ElementSection {
 public:
-    class Element {
-    public:
-        explicit Element(TableIndex table, Expression expr, Vector<FunctionIndex> init)
-            : m_table(table)
-            , m_offset(move(expr))
-            , m_init(move(init))
-        {
-        }
+    struct Active {
+        TableIndex index;
+        Expression expression;
+    };
+    struct Declarative {
+    };
+    struct Passive {
+    };
 
-        auto& table() const { return m_table; }
-        auto& offset() const { return m_offset; }
-        auto& init() const { return m_init; }
+    struct SegmentType0 {
+        // FIXME: Implement me!
+        static ParseResult<SegmentType0> parse(InputStream& stream);
 
-        static ParseResult<Element> parse(InputStream& stream);
+        ValueType type;
+        Vector<FunctionIndex> function_indices;
+        Active mode;
+    };
+    struct SegmentType1 {
+        static ParseResult<SegmentType1> parse(InputStream& stream);
+        ValueType type;
+        Vector<FunctionIndex> function_indices;
+    };
+    struct SegmentType2 {
+        // FIXME: Implement me!
+        static ParseResult<SegmentType2> parse(InputStream& stream);
+    };
+    struct SegmentType3 {
+        // FIXME: Implement me!
+        static ParseResult<SegmentType3> parse(InputStream& stream);
+    };
+    struct SegmentType4 {
+        // FIXME: Implement me!
+        static ParseResult<SegmentType4> parse(InputStream& stream);
+    };
+    struct SegmentType5 {
+        // FIXME: Implement me!
+        static ParseResult<SegmentType5> parse(InputStream& stream);
+    };
+    struct SegmentType6 {
+        // FIXME: Implement me!
+        static ParseResult<SegmentType6> parse(InputStream& stream);
+    };
+    struct SegmentType7 {
+        // FIXME: Implement me!
+        static ParseResult<SegmentType7> parse(InputStream& stream);
+    };
 
-    private:
-        TableIndex m_table;
-        Expression m_offset;
-        Vector<FunctionIndex> m_init;
+    using AnyElementType = Variant<
+        SegmentType0,
+        SegmentType1,
+        SegmentType2,
+        SegmentType3,
+        SegmentType4,
+        SegmentType5,
+        SegmentType6,
+        SegmentType7>;
+
+    struct Element {
+        static ParseResult<AnyElementType> parse(InputStream&);
     };
 
     static constexpr u8 section_id = 9;
 
-    explicit ElementSection(Element func)
-        : m_function(move(func))
+    explicit ElementSection(Vector<AnyElementType> segs)
+        : m_segments(move(segs))
     {
     }
 
-    auto& function() const { return m_function; }
+    auto& segments() const { return m_segments; }
 
     static ParseResult<ElementSection> parse(InputStream& stream);
 
 private:
-    Element m_function;
+    Vector<AnyElementType> m_segments;
 };
 
 class Locals {

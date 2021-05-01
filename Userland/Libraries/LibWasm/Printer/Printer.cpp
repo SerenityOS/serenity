@@ -169,40 +169,54 @@ void Printer::print(const Wasm::ElementSection& section)
     print("(section element\n");
     {
         TemporaryChange change { m_indent, m_indent + 1 };
-        print(section.function());
+        for (auto& entry : section.segments())
+            entry.visit([this](auto& segment) { print(segment); });
     }
     print_indent();
     print(")\n");
 }
 
-void Printer::print(const Wasm::ElementSection::Element& element)
+void Printer::print(const Wasm::ElementSection::SegmentType0&)
+{
+}
+
+void Printer::print(const Wasm::ElementSection::SegmentType1& segment)
 {
     print_indent();
-    print("(element\n");
+    print("(element segment kind 1\n");
     {
         TemporaryChange change { m_indent, m_indent + 1 };
-        print_indent();
-        print("(table with index {})\n", element.table().value());
-        print_indent();
-        print("(offset\n");
-        {
-            TemporaryChange change { m_indent, m_indent + 1 };
-            print(element.offset());
+        for (auto& index : segment.function_indices) {
+            print_indent();
+            print("(function index {})\n", index.value());
         }
-        print_indent();
-        print(")\n");
-        print_indent();
-        print("(initializers\n");
-        {
-            TemporaryChange change { m_indent, m_indent + 1 };
-            for (auto& index : element.init())
-                print("(init function {})\n", index.value());
-        }
-        print_indent();
-        print(")\n");
     }
     print_indent();
     print(")\n");
+}
+
+void Printer::print(const Wasm::ElementSection::SegmentType2&)
+{
+}
+
+void Printer::print(const Wasm::ElementSection::SegmentType3&)
+{
+}
+
+void Printer::print(const Wasm::ElementSection::SegmentType4&)
+{
+}
+
+void Printer::print(const Wasm::ElementSection::SegmentType5&)
+{
+}
+
+void Printer::print(const Wasm::ElementSection::SegmentType6&)
+{
+}
+
+void Printer::print(const Wasm::ElementSection::SegmentType7&)
+{
 }
 
 void Printer::print(const Wasm::ExportSection& section)
