@@ -35,9 +35,7 @@ public:
     // ^Device
     virtual mode_t required_mode() const override { return 0440; }
 
-    //FIXME: It should be something like String::formatted("keyboard{}", minor())
-    // instead of a fixed string like this
-    virtual String device_name() const override { return "keyboard"; }
+    virtual String device_name() const override { return String::formatted("keyboard{}", minor()); }
 
     void update_modifier(u8 modifier, bool state)
     {
