@@ -70,9 +70,10 @@ int main(int argc, char** argv)
     text_widget.initialize_menubar(menubar);
     window->set_menubar(menubar);
 
-    if (file_to_edit)
+    if (file_to_edit) {
         if (!text_widget.open_file(file_to_edit))
             return 1;
+    }
 
     text_widget.update_title();
 
