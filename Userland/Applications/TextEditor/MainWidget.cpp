@@ -5,7 +5,6 @@
  */
 
 #include "MainWidget.h"
-#include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
@@ -13,11 +12,9 @@
 #include <Applications/TextEditor/TextEditorWindowGML.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
-#include <LibCore/MimeData.h>
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
-#include <LibGUI/ActionGroup.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>

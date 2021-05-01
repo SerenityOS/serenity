@@ -7,7 +7,6 @@
 #include "MainWidget.h"
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Menubar.h>
-#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <unistd.h>
 
