@@ -86,12 +86,12 @@ int main(int argc, char** argv)
     // Menu
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("File");
-    app_menu.add_action(open_action);
-    app_menu.add_action(save_action);
-    app_menu.add_action(save_as_action);
-    app_menu.add_separator();
-    app_menu.add_action(quit_action);
+    auto& file_menu = menubar->add_menu("&File");
+    file_menu.add_action(open_action);
+    file_menu.add_action(save_action);
+    file_menu.add_action(save_as_action);
+    file_menu.add_separator();
+    file_menu.add_action(quit_action);
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Keyboard Mapper", app_icon, window));

@@ -134,9 +134,9 @@ int main(int argc, char** argv)
     };
 
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("&File");
+    auto& file_menu = menubar->add_menu("&File");
 
-    app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
 
         if (!open_path.has_value())
@@ -157,7 +157,7 @@ int main(int argc, char** argv)
         editor.set_focus(true);
     }));
 
-    app_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
+    file_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "gml");
         if (!save_path.has_value())
             return;
@@ -168,9 +168,9 @@ int main(int argc, char** argv)
         }
     }));
 
-    app_menu.add_separator();
+    file_menu.add_separator();
 
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     }));
 

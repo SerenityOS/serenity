@@ -244,22 +244,22 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("File");
+    auto& file_menu = menubar->add_menu("&File");
     auto show_window_frame_action = GUI::Action::create_checkable("Show window frame", [&](auto& action) {
         cube.set_show_window_frame(action.is_checked());
     });
 
     cube.set_show_window_frame(!flag_hide_window_frame);
     show_window_frame_action->set_checked(cube.show_window_frame());
-    app_menu.add_action(move(show_window_frame_action));
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    file_menu.add_action(move(show_window_frame_action));
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Cube Demo", app_icon, window));
     window->set_menubar(move(menubar));
 
     cube.on_context_menu_request = [&](auto& event) {
-        app_menu.popup(event.screen_position());
+        file_menu.popup(event.screen_position());
     };
 
     window->show();

@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("File");
+    auto& file_menu = menubar->add_menu("&File");
 
     auto& playlist_menu = menubar->add_menu("Playlist");
 
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
         player->open_file(path);
     }
 
-    app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open sound file...");
         if (path.has_value()) {
             player->open_file(path.value());
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
     auto linear_volume_slider = GUI::Action::create_checkable("Nonlinear volume slider", [&](auto& action) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_nonlinear_volume_slider(action.is_checked());
     });
-    app_menu.add_action(linear_volume_slider);
+    file_menu.add_action(linear_volume_slider);
 
     auto playlist_toggle = GUI::Action::create_checkable("Show playlist", [&](auto& action) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_playlist_visible(action.is_checked());
@@ -96,8 +96,8 @@ int main(int argc, char** argv)
     });
     playlist_menu.add_action(playlist_loop_toggle);
 
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     }));
 

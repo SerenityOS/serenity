@@ -353,13 +353,13 @@ TextEditorWidget::~TextEditorWidget()
 
 void TextEditorWidget::initialize_menubar(GUI::Menubar& menubar)
 {
-    auto& app_menu = menubar.add_menu("&File");
-    app_menu.add_action(*m_new_action);
-    app_menu.add_action(*m_open_action);
-    app_menu.add_action(*m_save_action);
-    app_menu.add_action(*m_save_as_action);
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([this](auto&) {
+    auto& file_menu = menubar.add_menu("&File");
+    file_menu.add_action(*m_new_action);
+    file_menu.add_action(*m_open_action);
+    file_menu.add_action(*m_save_action);
+    file_menu.add_action(*m_save_as_action);
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;
         GUI::Application::the()->quit();

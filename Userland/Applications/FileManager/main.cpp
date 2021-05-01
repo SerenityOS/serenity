@@ -802,18 +802,18 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("&File");
-    app_menu.add_action(mkdir_action);
-    app_menu.add_action(touch_action);
-    app_menu.add_action(copy_action);
-    app_menu.add_action(cut_action);
-    app_menu.add_action(paste_action);
-    app_menu.add_action(focus_dependent_delete_action);
-    app_menu.add_action(directory_view.open_terminal_action());
-    app_menu.add_separator();
-    app_menu.add_action(properties_action);
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& file_menu = menubar->add_menu("&File");
+    file_menu.add_action(mkdir_action);
+    file_menu.add_action(touch_action);
+    file_menu.add_action(copy_action);
+    file_menu.add_action(cut_action);
+    file_menu.add_action(paste_action);
+    file_menu.add_action(focus_dependent_delete_action);
+    file_menu.add_action(directory_view.open_terminal_action());
+    file_menu.add_separator();
+    file_menu.add_action(properties_action);
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 

@@ -127,16 +127,15 @@ int main(int argc, char** argv)
     };
 
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("&File");
-    app_menu.add_action(GUI::Action::create("&Add Event", { Mod_Ctrl | Mod_Shift, Key_E }, Gfx::Bitmap::load_from_file("/res/icons/16x16/add-event.png"),
+    auto& file_menu = menubar->add_menu("&File");
+    file_menu.add_action(GUI::Action::create("&Add Event", { Mod_Ctrl | Mod_Shift, Key_E }, Gfx::Bitmap::load_from_file("/res/icons/16x16/add-event.png"),
         [&](const GUI::Action&) {
             AddEventDialog::show(calendar->selected_date(), window);
-            return;
         }));
 
-    app_menu.add_separator();
+    file_menu.add_separator();
 
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 

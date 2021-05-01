@@ -286,8 +286,8 @@ Tab::Tab(Type type)
 
     m_menubar = GUI::Menubar::construct();
 
-    auto& app_menu = m_menubar->add_menu("&File");
-    app_menu.add_action(WindowActions::the().create_new_tab_action());
+    auto& file_menu = m_menubar->add_menu("&File");
+    file_menu.add_action(WindowActions::the().create_new_tab_action());
 
     auto close_tab_action = GUI::Action::create(
         "&Close Tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
@@ -295,10 +295,10 @@ Tab::Tab(Type type)
         },
         this);
     close_tab_action->set_status_tip("Close current tab");
-    app_menu.add_action(close_tab_action);
+    file_menu.add_action(close_tab_action);
 
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 

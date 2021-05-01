@@ -252,11 +252,11 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("&File");
-    app_menu.add_action(open_action);
-    app_menu.add_action(delete_action);
-    app_menu.add_separator();
-    app_menu.add_action(quit_action);
+    auto& file_menu = menubar->add_menu("&File");
+    file_menu.add_action(open_action);
+    file_menu.add_action(delete_action);
+    file_menu.add_separator();
+    file_menu.add_action(quit_action);
 
     auto& image_menu = menubar->add_menu("&Image");
     image_menu.add_action(rotate_left_action);

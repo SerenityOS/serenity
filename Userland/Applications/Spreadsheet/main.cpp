@@ -91,12 +91,12 @@ int main(int argc, char* argv[])
         spreadsheet_widget.load(filename);
 
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("File");
+    auto& file_menu = menubar->add_menu("&File");
 
-    app_menu.add_action(GUI::Action::create("Add New Sheet", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"), [&](auto&) {
+    file_menu.add_action(GUI::Action::create("Add New Sheet", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"), [&](auto&) {
         spreadsheet_widget.add_sheet();
     }));
-    app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> load_path = GUI::FilePicker::get_open_filepath(window);
         if (!load_path.has_value())
             return;
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
         spreadsheet_widget.load(load_path.value());
     }));
 
-    app_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
+    file_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
         if (spreadsheet_widget.current_filename().is_empty()) {
             String name = "workbook";
             Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, name, "sheets");
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
         }
     }));
 
-    app_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
+    file_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         auto current_filename = spreadsheet_widget.current_filename();
         String name = "workbook";
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, name, "sheets");
@@ -129,9 +129,9 @@ int main(int argc, char* argv[])
         if (!current_filename.is_empty())
             spreadsheet_widget.set_filename(current_filename);
     }));
-    app_menu.add_separator();
+    file_menu.add_separator();
 
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         if (!spreadsheet_widget.request_close())
             return;
         app->quit(0);
