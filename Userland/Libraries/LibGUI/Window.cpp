@@ -609,9 +609,7 @@ void Window::update(const Gfx::IntRect& a_rect)
 
     for (auto& pending_rect : m_pending_paint_event_rects) {
         if (pending_rect.contains(a_rect)) {
-#if UPDATE_COALESCING_DEBUG
-            dbgln("Ignoring {} since it's contained by pending rect {}", a_rect, pending_rect);
-#endif
+            dbgln_if(UPDATE_COALESCING_DEBUG, "Ignoring {} since it's contained by pending rect {}", a_rect, pending_rect);
             return;
         }
     }

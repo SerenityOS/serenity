@@ -134,10 +134,8 @@ MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
     }
 
     packet.is_relative = true;
-#if PS2MOUSE_DEBUG
-    dbgln("PS2 Relative Mouse: Buttons {:x}", packet.buttons);
-    dbgln("Mouse: X {}, Y {}, Z {}", packet.x, packet.y, packet.z);
-#endif
+    dbgln_if(PS2MOUSE_DEBUG, "PS2 Relative Mouse: Buttons {:x}", packet.buttons);
+    dbgln_if(PS2MOUSE_DEBUG, "Mouse: X {}, Y {}, Z {}", packet.x, packet.y, packet.z);
     return packet;
 }
 

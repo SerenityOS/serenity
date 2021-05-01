@@ -17,9 +17,7 @@ void HttpJob::start()
     VERIFY(!m_socket);
     m_socket = Core::TCPSocket::construct(this);
     m_socket->on_connected = [this] {
-#if CHTTPJOB_DEBUG
-        dbgln("HttpJob: on_connected callback");
-#endif
+        dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_connected callback");
         on_socket_connected();
     };
     bool success = m_socket->connect(m_request.url().host(), m_request.url().port());

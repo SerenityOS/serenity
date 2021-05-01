@@ -66,9 +66,7 @@ void IOAccess::write32_field(Address address, u32 field, u32 value)
 
 void IOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
 {
-#if PCI_DEBUG
-    dbgln("PCI: IO enumerating hardware");
-#endif
+    dbgln_if(PCI_DEBUG, "PCI: IO enumerating hardware");
     // Single PCI host controller.
     if ((read8_field(Address(), PCI_HEADER_TYPE) & 0x80) == 0) {
         enumerate_bus(-1, 0, callback, true);

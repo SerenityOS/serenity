@@ -10,8 +10,6 @@
 #include "LibRegex/RegexMatcher.h"
 #include <AK/Debug.h>
 
-#if REGEX_DEBUG
-
 namespace regex {
 
 class RegexDebug {
@@ -131,5 +129,3 @@ private:
 }
 
 using regex::RegexDebug;
-
-#endif

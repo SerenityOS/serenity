@@ -49,9 +49,7 @@ void WebContentClient::handle(const Messages::WebContentClient::DidInvalidateCon
 
 void WebContentClient::handle(const Messages::WebContentClient::DidChangeSelection&)
 {
-#if SPAM_DEBUG
-    dbgln("handle: WebContentClient::DidChangeSelection!");
-#endif
+    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidChangeSelection!");
     m_view.notify_server_did_change_selection({});
 }
 
@@ -105,9 +103,7 @@ void WebContentClient::handle(const Messages::WebContentClient::DidHoverLink& me
 
 void WebContentClient::handle(const Messages::WebContentClient::DidUnhoverLink&)
 {
-#if SPAM_DEBUG
-    dbgln("handle: WebContentClient::DidUnhoverLink!");
-#endif
+    dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidUnhoverLink!");
     m_view.notify_server_did_unhover_link({});
 }
 

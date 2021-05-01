@@ -132,9 +132,7 @@ void Job::on_socket_connected()
         });
 
         if (!is_established()) {
-#if JOB_DEBUG
-            dbgln("Connection appears to have closed, finishing up");
-#endif
+            dbgln_if(JOB_DEBUG, "Connection appears to have closed, finishing up");
             finish_up();
         }
     });

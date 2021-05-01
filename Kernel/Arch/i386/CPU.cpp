@@ -324,9 +324,7 @@ void page_fault_handler(TrapFrame* trap)
 
         handle_crash(regs, "Page Fault", SIGSEGV, response == PageFaultResponse::OutOfMemory);
     } else if (response == PageFaultResponse::Continue) {
-#if PAGE_FAULT_DEBUG
-        dbgln("Continuing after resolved page fault");
-#endif
+        dbgln_if(PAGE_FAULT_DEBUG, "Continuing after resolved page fault");
     } else {
         VERIFY_NOT_REACHED();
     }

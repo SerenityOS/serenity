@@ -21,9 +21,8 @@ char* BC;
 
 int tgetent([[maybe_unused]] char* bp, [[maybe_unused]] const char* name)
 {
-#if TERMCAP_DEBUG
-    fprintf(stderr, "tgetent: bp=%p, name='%s'\n", bp, name);
-#endif
+    if constexpr (TERMCAP_DEBUG)
+        fprintf(stderr, "tgetent: bp=%p, name='%s'\n", bp, name);
     PC = '\0';
     BC = const_cast<char*>("\033[D");
     UP = const_cast<char*>("\033[A");
@@ -81,9 +80,8 @@ static void ensure_caps()
 char* tgetstr(const char* id, char** area)
 {
     ensure_caps();
-#if TERMCAP_DEBUG
-    fprintf(stderr, "tgetstr: id='%s'\n", id);
-#endif
+    if constexpr (TERMCAP_DEBUG)
+        fprintf(stderr, "tgetstr: id='%s'\n", id);
     auto it = caps->find(id);
     if (it != caps->end()) {
         char* ret = *area;
@@ -100,9 +98,8 @@ char* tgetstr(const char* id, char** area)
 
 int tgetflag([[maybe_unused]] const char* id)
 {
-#if TERMCAP_DEBUG
-    fprintf(stderr, "tgetflag: '%s'\n", id);
-#endif
+    if constexpr (TERMCAP_DEBUG)
+        fprintf(stderr, "tgetflag: '%s'\n", id);
     auto it = caps->find(id);
     if (it != caps->end())
         return 1;
@@ -111,9 +108,8 @@ int tgetflag([[maybe_unused]] const char* id)
 
 int tgetnum(const char* id)
 {
-#if TERMCAP_DEBUG
-    fprintf(stderr, "tgetnum: '%s'\n", id);
-#endif
+    if constexpr (TERMCAP_DEBUG)
+        fprintf(stderr, "tgetnum: '%s'\n", id);
     auto it = caps->find(id);
     if (it != caps->end())
         return atoi((*it).value);

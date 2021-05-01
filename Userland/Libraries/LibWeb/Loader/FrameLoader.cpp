@@ -101,10 +101,8 @@ static bool build_gemini_document(DOM::Document& document, const ByteBuffer& dat
     auto gemini_document = Gemini::Document::parse(gemini_data, document.url());
     String html_data = gemini_document->render_to_html();
 
-#if GEMINI_DEBUG
-    dbgln("Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
-    dbgln("Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
-#endif
+    dbgln_if(GEMINI_DEBUG, "Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
+    dbgln_if(GEMINI_DEBUG, "Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
 
     HTML::HTMLDocumentParser parser(document, html_data, "utf-8");
     parser.run(document.url());

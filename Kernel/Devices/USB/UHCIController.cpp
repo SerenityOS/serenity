@@ -176,9 +176,8 @@ UNMAP_AFTER_INIT void UHCIController::create_structures()
         transfer_descriptor->set_isochronous();
         transfer_descriptor->link_queue_head(m_interrupt_transfer_queue->paddr());
 
-#if UHCI_VERBOSE_DEBUG
-        transfer_descriptor->print();
-#endif
+        if constexpr (UHCI_VERBOSE_DEBUG)
+            transfer_descriptor->print();
     }
 
     m_free_td_pool.resize(MAXIMUM_NUMBER_OF_TDS);
@@ -192,10 +191,10 @@ UNMAP_AFTER_INIT void UHCIController::create_structures()
         // access the raw descriptor (that we later send to the controller)
         m_free_td_pool.at(i) = new (placement_addr) Kernel::USB::TransferDescriptor(paddr);
 
-#if UHCI_VERBOSE_DEBUG
-        auto transfer_descriptor = m_free_td_pool.at(i);
-        transfer_descriptor->print();
-#endif
+        if constexpr (UHCI_VERBOSE_DEBUG) {
+            auto transfer_descriptor = m_free_td_pool.at(i);
+            transfer_descriptor->print();
+        }
     }
 
     if constexpr (UHCI_DEBUG) {

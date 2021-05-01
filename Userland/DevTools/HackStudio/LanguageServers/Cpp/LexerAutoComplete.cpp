@@ -34,11 +34,11 @@ Vector<GUI::AutocompleteProvider::Entry> LexerAutoComplete::get_suggestions(cons
 
     auto suggestions = identifier_prefixes(lines, tokens, index_of_target_token.value());
 
-#if AUTOCOMPLETE_DEBUG
-    for (auto& suggestion : suggestions) {
-        dbgln("suggestion: {}", suggestion.completion);
+    if constexpr (AUTOCOMPLETE_DEBUG) {
+        for (auto& suggestion : suggestions) {
+            dbgln("suggestion: {}", suggestion.completion);
+        }
     }
-#endif
 
     return suggestions;
 }

@@ -222,17 +222,15 @@ Optional<Text> Text::parse(const StringView& str)
             current_link_is_actually_img = true;
             break;
         case '[':
-#if MARKDOWN_DEBUG
-            if (first_span_in_the_current_link != -1)
-                dbgln("Dropping the outer link");
-#endif
+            if constexpr (MARKDOWN_DEBUG) {
+                if (first_span_in_the_current_link != -1)
+                    dbgln("Dropping the outer link");
+            }
             first_span_in_the_current_link = spans.size();
             break;
         case ']': {
             if (first_span_in_the_current_link == -1) {
-#if MARKDOWN_DEBUG
-                dbgln("Unmatched ]");
-#endif
+                dbgln_if(MARKDOWN_DEBUG, "Unmatched ]");
                 continue;
             }
             ScopeGuard guard = [&] {
