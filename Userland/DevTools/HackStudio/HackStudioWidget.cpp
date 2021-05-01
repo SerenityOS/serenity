@@ -215,15 +215,15 @@ bool HackStudioWidget::open_file(const String& full_filename)
     if (Core::File::is_directory(filename) || !Core::File::exists(filename))
         return false;
 
-    if (!currently_open_file().is_empty()) {
+    if (!active_file().is_empty()) {
         // Since the file is previously open, it should always be in m_open_files.
-        VERIFY(m_open_files.find(currently_open_file()) != m_open_files.end());
-        auto previous_open_project_file = m_open_files.get(currently_open_file()).value();
+        VERIFY(m_open_files.find(active_file()) != m_open_files.end());
+        auto previous_open_project_file = m_open_files.get(active_file()).value();
 
         // Update the scrollbar values of the previous_open_project_file and save them to m_open_files.
         previous_open_project_file->vertical_scroll_value(current_editor().vertical_scrollbar().value());
         previous_open_project_file->horizontal_scroll_value(current_editor().horizontal_scrollbar().value());
-        m_open_files.set(currently_open_file(), previous_open_project_file);
+        m_open_files.set(active_file(), previous_open_project_file);
     }
 
     RefPtr<ProjectFile> new_project_file = nullptr;
@@ -266,16 +266,14 @@ bool HackStudioWidget::open_file(const String& full_filename)
         set_edit_mode(EditMode::Text);
     }
 
-    m_currently_open_file = filename;
-
-    String relative_file_path = m_currently_open_file;
-    if (m_currently_open_file.starts_with(m_project->root_path()))
-        relative_file_path = m_currently_open_file.substring(m_project->root_path().length() + 1);
+    String relative_file_path = filename;
+    if (filename.starts_with(m_project->root_path()))
+        relative_file_path = filename.substring(m_project->root_path().length() + 1);
 
     window()->set_title(String::formatted("{} - {} - Hack Studio", relative_file_path, m_project->name()));
     m_project_tree_view->update();
 
-    current_editor_wrapper().filename_label().set_text(filename);
+    current_editor_wrapper().set_filename(filename);
 
     current_editor().set_focus(true);
     return true;
@@ -551,10 +549,10 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_action()
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_action()
 {
     return GUI::CommonActions::make_save_action([&](auto&) {
-        if (m_currently_open_file.is_empty())
+        if (active_file().is_empty())
             return;
 
-        current_editor().write_to_file(m_currently_open_file);
+        current_editor().write_to_file(active_file());
 
         if (m_git_widget->initialized())
             m_git_widget->refresh();
@@ -716,16 +714,16 @@ String HackStudioWidget::get_project_executable_path() const
 
 void HackStudioWidget::build(TerminalWrapper& wrapper)
 {
-    if (m_currently_open_file.ends_with(".js"))
-        wrapper.run_command(String::formatted("js -A {}", m_currently_open_file));
+    if (active_file().ends_with(".js"))
+        wrapper.run_command(String::formatted("js -A {}", active_file()));
     else
         wrapper.run_command("make");
 }
 
 void HackStudioWidget::run(TerminalWrapper& wrapper)
 {
-    if (m_currently_open_file.ends_with(".js"))
-        wrapper.run_command(String::formatted("js {}", m_currently_open_file));
+    if (active_file().ends_with(".js"))
+        wrapper.run_command(String::formatted("js {}", active_file()));
     else
         wrapper.run_command("make run");
 }
@@ -1104,14 +1102,12 @@ void HackStudioWidget::handle_external_file_deletion(const String& filepath)
         if (relative_editor_file_path == filepath) {
             if (m_open_files_vector.is_empty()) {
                 editor.set_document(CodeDocument::create());
-                editor_wrapper.filename_label().set_text(String { "Undefined" });
-                m_currently_open_file = "";
+                editor_wrapper.set_filename("");
             } else {
                 auto& first_path = m_open_files_vector[0];
                 auto& document = m_open_files.get(first_path).value()->code_document();
                 editor.set_document(document);
-                editor_wrapper.filename_label().set_text(first_path);
-                m_currently_open_file = first_path;
+                editor_wrapper.set_filename(first_path);
             }
         }
     }

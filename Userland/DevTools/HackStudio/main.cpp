@@ -159,7 +159,7 @@ String currently_open_file()
 {
     if (!s_hack_studio_widget)
         return {};
-    return s_hack_studio_widget->currently_open_file();
+    return s_hack_studio_widget->active_file();
 }
 
 void set_current_editor_wrapper(RefPtr<EditorWrapper> wrapper)

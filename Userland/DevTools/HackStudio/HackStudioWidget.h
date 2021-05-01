@@ -41,7 +41,7 @@ public:
     EditorWrapper& current_editor_wrapper();
     void set_current_editor_wrapper(RefPtr<EditorWrapper>);
 
-    String currently_open_file() const { return m_currently_open_file; }
+    const String& active_file() const { return m_current_editor_wrapper->filename(); }
     void initialize_menubar(GUI::Menubar&);
 
     Locator& locator()
@@ -115,9 +115,6 @@ private:
 
     NonnullRefPtrVector<EditorWrapper> m_all_editor_wrappers;
     RefPtr<EditorWrapper> m_current_editor_wrapper;
-
-    // FIXME: This doesn't seem compatible with multiple split editors
-    String m_currently_open_file;
 
     HashMap<String, NonnullRefPtr<ProjectFile>> m_open_files;
     HashMap<String, NonnullRefPtr<Core::FileWatcher>> m_file_watchers;
