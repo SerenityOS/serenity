@@ -1943,10 +1943,14 @@ RefPtr<AST::Node> Parser::parse_heredoc_initiation_record()
 
     // StringLiteral | bareword
     if (auto bareword = parse_bareword()) {
-        if (bareword->is_syntax_error())
-            syntax_error_node = bareword->syntax_error_node();
-        else
-            record.end = static_cast<AST::BarewordLiteral*>(bareword.ptr())->text();
+        if (!bareword->is_bareword()) {
+            syntax_error_node = create<AST::SyntaxError>(String::formatted("Expected a bareword or a quoted string, not {}", bareword->class_name()));
+        } else {
+            if (bareword->is_syntax_error())
+                syntax_error_node = bareword->syntax_error_node();
+            else
+                record.end = static_cast<AST::BarewordLiteral*>(bareword.ptr())->text();
+        }
 
         record.interpolate = true;
     } else if (peek() == '\'') {
@@ -1981,6 +1985,10 @@ bool Parser::parse_heredoc_entries()
     // Try to parse heredoc entries, as reverse recorded in the initiation records
     for (auto& record : m_heredoc_initiations) {
         auto rule_start = push_start();
+        if (m_rule_start_offsets.size() > max_allowed_nested_rule_depth) {
+            record.node->set_is_syntax_error(*create<AST::SyntaxError>(String::formatted("Expression nested too deep (max allowed is {})", max_allowed_nested_rule_depth)));
+            continue;
+        }
         bool found_key = false;
         if (!record.interpolate) {
             // Since no interpolation is allowed, just read lines until we hit the key
