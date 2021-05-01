@@ -1,5 +1,7 @@
 set(SOURCES
     Object.cpp
+    Document.cpp
+    Parser.cpp
     Value.cpp
     )
 
