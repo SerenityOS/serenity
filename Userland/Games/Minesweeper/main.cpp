@@ -86,25 +86,24 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("Game");
+    auto& game_menu = menubar->add_menu("&Game");
 
-    app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
+    game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
         field.reset();
     }));
 
-    app_menu.add_separator();
+    game_menu.add_separator();
 
     auto chord_toggler_action = GUI::Action::create_checkable("Single-click chording", [&](auto& action) {
         field.set_single_chording(action.is_checked());
     });
     chord_toggler_action->set_checked(field.is_single_chording());
 
-    app_menu.add_action(*chord_toggler_action);
-    app_menu.add_separator();
+    game_menu.add_action(*chord_toggler_action);
+    game_menu.add_separator();
 
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-        return;
     }));
 
     auto& difficulty_menu = menubar->add_menu("Difficulty");

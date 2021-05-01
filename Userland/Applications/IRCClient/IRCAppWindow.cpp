@@ -238,8 +238,8 @@ void IRCAppWindow::setup_actions()
 void IRCAppWindow::setup_menus()
 {
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("File");
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& file_menu = menubar->add_menu("File");
+    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         dbgln("Terminal: Quit menu activated!");
         GUI::Application::the()->quit();
         return;

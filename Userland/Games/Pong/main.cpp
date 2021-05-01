@@ -56,8 +56,8 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("&Game");
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& game_menu = menubar->add_menu("&Game");
+    game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 

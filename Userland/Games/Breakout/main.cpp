@@ -49,14 +49,14 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("Game");
-    app_menu.add_action(GUI::Action::create_checkable("Pause", { {}, Key_P }, [&](auto& action) {
+    auto& game_menu = menubar->add_menu("&Game");
+    game_menu.add_action(GUI::Action::create_checkable("&Pause", { {}, Key_P }, [&](auto& action) {
         game.set_paused(action.is_checked());
     }));
 
-    app_menu.add_separator();
+    game_menu.add_separator();
 
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
