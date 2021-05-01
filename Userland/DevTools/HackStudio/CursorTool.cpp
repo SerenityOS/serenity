@@ -15,9 +15,7 @@ namespace HackStudio {
 
 void CursorTool::on_mousedown(GUI::MouseEvent& event)
 {
-#if CURSOR_TOOL_DEBUG
-    dbgln("CursorTool::on_mousedown");
-#endif
+    dbgln_if(CURSOR_TOOL_DEBUG, "CursorTool::on_mousedown");
     auto& form_widget = m_editor.form_widget();
     auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
 
@@ -52,9 +50,7 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
 
 void CursorTool::on_mouseup(GUI::MouseEvent& event)
 {
-#if CURSOR_TOOL_DEBUG
-    dbgln("CursorTool::on_mouseup");
-#endif
+    dbgln_if(CURSOR_TOOL_DEBUG, "CursorTool::on_mouseup");
     if (event.button() == GUI::MouseButton::Left) {
         auto& form_widget = m_editor.form_widget();
         auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
@@ -73,9 +69,7 @@ void CursorTool::on_mouseup(GUI::MouseEvent& event)
 
 void CursorTool::on_mousemove(GUI::MouseEvent& event)
 {
-#if CURSOR_TOOL_DEBUG
-    dbgln("CursorTool::on_mousemove");
-#endif
+    dbgln_if(CURSOR_TOOL_DEBUG, "CursorTool::on_mousemove");
     auto& form_widget = m_editor.form_widget();
 
     if (m_rubber_banding) {
@@ -112,9 +106,7 @@ void CursorTool::on_mousemove(GUI::MouseEvent& event)
 
 void CursorTool::on_keydown(GUI::KeyEvent& event)
 {
-#if CURSOR_TOOL_DEBUG
-    dbgln("CursorTool::on_keydown");
-#endif
+    dbgln_if(CURSOR_TOOL_DEBUG, "CursorTool::on_keydown");
 
     auto move_selected_widgets_by = [this](int x, int y) {
         m_editor.selection().for_each([&](auto& widget) {

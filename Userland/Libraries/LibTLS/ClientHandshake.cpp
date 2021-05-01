@@ -71,10 +71,10 @@ ssize_t TLSv12::handle_hello(ReadonlyBytes buffer, WritePacketStage& write_packe
     if (session_length && session_length <= 32) {
         memcpy(m_context.session_id, buffer.offset_pointer(res), session_length);
         m_context.session_id_size = session_length;
-#if TLS_DEBUG
-        dbgln("Remote session ID:");
-        print_buffer(ReadonlyBytes { m_context.session_id, session_length });
-#endif
+        if constexpr (TLS_DEBUG) {
+            dbgln("Remote session ID:");
+            print_buffer(ReadonlyBytes { m_context.session_id, session_length });
+        }
     } else {
         m_context.session_id_size = 0;
     }
@@ -268,10 +268,10 @@ void TLSv12::build_random(PacketBuilder& builder)
     }
 
     auto& certificate = m_context.certificates[certificate_option.value()];
-#if TLS_DEBUG
-    dbgln("PreMaster secret");
-    print_buffer(m_context.premaster_key);
-#endif
+    if constexpr (TLS_DEBUG) {
+        dbgln("PreMaster secret");
+        print_buffer(m_context.premaster_key);
+    }
 
     Crypto::PK::RSA_PKCS1_EME rsa(certificate.public_key.modulus(), 0, certificate.public_key.public_exponent());
 
@@ -279,10 +279,10 @@ void TLSv12::build_random(PacketBuilder& builder)
     auto outbuf = Bytes { out, rsa.output_size() };
     rsa.encrypt(m_context.premaster_key, outbuf);
 
-#if TLS_DEBUG
-    dbgln("Encrypted: ");
-    print_buffer(outbuf);
-#endif
+    if constexpr (TLS_DEBUG) {
+        dbgln("Encrypted: ");
+        print_buffer(outbuf);
+    }
 
     if (!compute_master_secret(bytes)) {
         dbgln("oh noes we could not derive a master key :(");

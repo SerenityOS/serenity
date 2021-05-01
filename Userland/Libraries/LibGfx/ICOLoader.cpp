@@ -169,25 +169,22 @@ static bool load_ico_directory(ICOLoadingContext& context)
     for (size_t i = 0; i < image_count.value(); ++i) {
         auto maybe_desc = decode_ico_direntry(stream);
         if (!maybe_desc.has_value()) {
-#if ICO_DEBUG
-            printf("load_ico_directory: error loading entry: %lu\n", i);
-#endif
+            if constexpr (ICO_DEBUG)
+                printf("load_ico_directory: error loading entry: %lu\n", i);
             return false;
         }
 
         auto& desc = maybe_desc.value();
         if (desc.offset + desc.size < desc.offset // detect integer overflow
             || (desc.offset + desc.size) > context.data_size) {
-#if ICO_DEBUG
-            printf("load_ico_directory: offset: %lu size: %lu doesn't fit in ICO size: %lu\n",
-                desc.offset, desc.size, context.data_size);
-#endif
+            if constexpr (ICO_DEBUG)
+                printf("load_ico_directory: offset: %lu size: %lu doesn't fit in ICO size: %lu\n",
+                    desc.offset, desc.size, context.data_size);
             return false;
         }
-#if ICO_DEBUG
-        printf("load_ico_directory: index %zu width: %u height: %u offset: %lu size: %lu\n",
-            i, desc.width, desc.height, desc.offset, desc.size);
-#endif
+        if constexpr (ICO_DEBUG)
+            printf("load_ico_directory: index %zu width: %u height: %u offset: %lu size: %lu\n",
+                i, desc.width, desc.height, desc.offset, desc.size);
         context.images.append(desc);
     }
     context.largest_index = find_largest_image(context);
@@ -203,16 +200,14 @@ static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
 
     memcpy(&info, context.data + desc.offset, sizeof(info));
     if (info.size != sizeof(info)) {
-#if ICO_DEBUG
-        printf("load_ico_bmp: info size: %u, expected: %lu\n", info.size, sizeof(info));
-#endif
+        if constexpr (ICO_DEBUG)
+            printf("load_ico_bmp: info size: %u, expected: %lu\n", info.size, sizeof(info));
         return false;
     }
 
     if (info.width < 0) {
-#if ICO_DEBUG
-        printf("load_ico_bmp: width %d < 0\n", info.width);
-#endif
+        if constexpr (ICO_DEBUG)
+            printf("load_ico_bmp: width %d < 0\n", info.width);
         return false;
     }
     bool topdown = false;
@@ -222,37 +217,32 @@ static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
     }
 
     if (info.planes != 1) {
-#if ICO_DEBUG
-        printf("load_ico_bmp: planes: %d != 1", info.planes);
-#endif
+        if constexpr (ICO_DEBUG)
+            printf("load_ico_bmp: planes: %d != 1", info.planes);
         return false;
     }
 
     if (info.bpp != 32) {
-#if ICO_DEBUG
-        printf("load_ico_bmp: unsupported bpp: %u\n", info.bpp);
-#endif
+        if constexpr (ICO_DEBUG)
+            printf("load_ico_bmp: unsupported bpp: %u\n", info.bpp);
         return false;
     }
 
-#if ICO_DEBUG
-    printf("load_ico_bmp: width: %d height: %d direction: %s bpp: %d size_image: %u\n",
-        info.width, info.height, topdown ? "TopDown" : "BottomUp", info.bpp, info.size_image);
-#endif
+    if constexpr (ICO_DEBUG)
+        printf("load_ico_bmp: width: %d height: %d direction: %s bpp: %d size_image: %u\n",
+            info.width, info.height, topdown ? "TopDown" : "BottomUp", info.bpp, info.size_image);
 
     if (info.compression != 0 || info.palette_size != 0 || info.important_colors != 0) {
-#if ICO_DEBUG
-        printf("load_ico_bmp: following fields must be 0: compression: %u palette_size: %u important_colors: %u\n",
-            info.compression, info.palette_size, info.important_colors);
-#endif
+        if constexpr (ICO_DEBUG)
+            printf("load_ico_bmp: following fields must be 0: compression: %u palette_size: %u important_colors: %u\n",
+                info.compression, info.palette_size, info.important_colors);
         return false;
     }
 
     if (info.width != desc.width || info.height != 2 * desc.height) {
-#if ICO_DEBUG
-        printf("load_ico_bmp: size mismatch: ico %dx%d, bmp %dx%d\n",
-            desc.width, desc.height, info.width, info.height);
-#endif
+        if constexpr (ICO_DEBUG)
+            printf("load_ico_bmp: size mismatch: ico %dx%d, bmp %dx%d\n",
+                desc.width, desc.height, info.width, info.height);
         return false;
     }
 
@@ -261,10 +251,9 @@ static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
     size_t required_len = desc.height * (desc.width * sizeof(BMP_ARGB) + mask_row_len);
     size_t available_len = desc.size - sizeof(info);
     if (required_len > available_len) {
-#if ICO_DEBUG
-        printf("load_ico_bmp: required_len: %lu > available_len: %lu\n",
-            required_len, available_len);
-#endif
+        if constexpr (ICO_DEBUG)
+            printf("load_ico_bmp: required_len: %lu > available_len: %lu\n",
+                required_len, available_len);
         return false;
     }
 
@@ -310,17 +299,15 @@ static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
     if (png_decoder.sniff()) {
         desc.bitmap = png_decoder.bitmap();
         if (!desc.bitmap) {
-#if ICO_DEBUG
-            printf("load_ico_bitmap: failed to load PNG encoded image index: %lu\n", real_index);
-#endif
+            if constexpr (ICO_DEBUG)
+                printf("load_ico_bitmap: failed to load PNG encoded image index: %lu\n", real_index);
             return false;
         }
         return true;
     } else {
         if (!load_ico_bmp(context, desc)) {
-#if ICO_DEBUG
-            printf("load_ico_bitmap: failed to load BMP encoded image index: %lu\n", real_index);
-#endif
+            if constexpr (ICO_DEBUG)
+                printf("load_ico_bitmap: failed to load BMP encoded image index: %lu\n", real_index);
             return false;
         }
         return true;

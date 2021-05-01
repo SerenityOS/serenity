@@ -233,16 +233,16 @@ void IRCClient::send_whois(const String& nick)
 
 void IRCClient::handle(const Message& msg)
 {
-#if IRC_DEBUG
-    outln("IRCClient::execute: prefix='{}', command='{}', arguments={}",
-        msg.prefix,
-        msg.command,
-        msg.arguments.size());
+    if constexpr (IRC_DEBUG) {
+        outln("IRCClient::execute: prefix='{}', command='{}', arguments={}",
+            msg.prefix,
+            msg.command,
+            msg.arguments.size());
 
-    size_t index = 0;
-    for (auto& arg : msg.arguments)
-        outln("    [{}]: {}", index++, arg);
-#endif
+        size_t index = 0;
+        for (auto& arg : msg.arguments)
+            outln("    [{}]: {}", index++, arg);
+    }
 
     auto numeric = msg.command.to_uint();
 
@@ -464,13 +464,11 @@ void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice typ
 
     bool is_ctcp = has_ctcp_payload(msg.arguments[1]);
 
-#if IRC_DEBUG
-    outln("handle_privmsg_or_notice: type='{}'{}, sender_nick='{}', target='{}'",
+    outln_if(IRC_DEBUG, "handle_privmsg_or_notice: type='{}'{}, sender_nick='{}', target='{}'",
         type == PrivmsgOrNotice::Privmsg ? "privmsg" : "notice",
         is_ctcp ? " (ctcp)" : "",
         sender_nick,
         target);
-#endif
 
     if (sender_nick.is_empty())
         return;

@@ -350,9 +350,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
         while (true) {
             Optional<u16> code = decoder.next_code();
             if (!code.has_value()) {
-#if GIF_DEBUG
-                dbgln("Unexpectedly reached end of gif frame data");
-#endif
+                dbgln_if(GIF_DEBUG, "Unexpectedly reached end of gif frame data");
                 return false;
             }
 
@@ -499,9 +497,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
 
             if (extension_type == 0xF9) {
                 if (sub_block.size() != 4) {
-#if GIF_DEBUG
-                    dbgln("Unexpected graphic control size");
-#endif
+                    dbgln_if(GIF_DEBUG, "Unexpected graphic control size");
                     continue;
                 }
 

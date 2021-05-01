@@ -797,9 +797,7 @@ void Terminal::ICH(const ParamVector& params)
 
 void Terminal::on_input(u8 ch)
 {
-#if TERMINAL_DEBUG
-    dbgln("Terminal::on_input: {:#02x} ({:c}), fg={}, bg={}\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
-#endif
+    dbgln_if(TERMINAL_DEBUG, "Terminal::on_input: {:#02x} ({:c}), fg={}, bg={}\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
 
     auto fail_utf8_parse = [this] {
         m_parser_state = Normal;

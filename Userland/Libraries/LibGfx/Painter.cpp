@@ -1880,11 +1880,11 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
             quick_sort(active_list, [](const auto& line0, const auto& line1) {
                 return line1.x < line0.x;
             });
-#if FILL_PATH_DEBUG
-            if ((int)scanline % 10 == 0) {
-                draw_text(IntRect(active_list.last().x - 20, scanline, 20, 10), String::number((int)scanline));
+            if constexpr (FILL_PATH_DEBUG) {
+                if ((int)scanline % 10 == 0) {
+                    draw_text(IntRect(active_list.last().x - 20, scanline, 20, 10), String::number((int)scanline));
+                }
             }
-#endif
 
             if (active_list.size() > 1) {
                 auto winding_number { winding_rule == WindingRule::Nonzero ? 1 : 0 };
@@ -1952,12 +1952,12 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
         }
     }
 
-#if FILL_PATH_DEBUG
-    size_t i { 0 };
-    for (auto& segment : segments) {
-        draw_line(Point<int>(segment.from), Point<int>(segment.to), Color::from_hsv(i++ * 360.0 / segments.size(), 1.0, 1.0), 1);
+    if constexpr (FILL_PATH_DEBUG) {
+        size_t i { 0 };
+        for (auto& segment : segments) {
+            draw_line(Point<int>(segment.from), Point<int>(segment.to), Color::from_hsv(i++ * 360.0 / segments.size(), 1.0, 1.0), 1);
+        }
     }
-#endif
 }
 
 void Painter::blit_disabled(const IntPoint& location, const Gfx::Bitmap& bitmap, const IntRect& rect, const Palette& palette)

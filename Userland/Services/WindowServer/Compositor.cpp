@@ -865,9 +865,7 @@ void Compositor::recompute_occlusions()
         return IterationDecision::Continue;
     });
 
-#if OCCLUSIONS_DEBUG
-    dbgln("OCCLUSIONS:");
-#endif
+    dbgln_if(OCCLUSIONS_DEBUG, "OCCLUSIONS:");
 
     auto screen_rect = Screen::the().rect();
 

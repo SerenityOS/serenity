@@ -53,22 +53,22 @@ bool TLSv12::expand_key()
     auto server_iv = key + offset;
     offset += iv_size;
 
-#if TLS_DEBUG
-    dbgln("client key");
-    print_buffer(client_key, key_size);
-    dbgln("server key");
-    print_buffer(server_key, key_size);
-    dbgln("client iv");
-    print_buffer(client_iv, iv_size);
-    dbgln("server iv");
-    print_buffer(server_iv, iv_size);
-    if (!is_aead) {
-        dbgln("client mac key");
-        print_buffer(m_context.crypto.local_mac, mac_size);
-        dbgln("server mac key");
-        print_buffer(m_context.crypto.remote_mac, mac_size);
+    if constexpr (TLS_DEBUG) {
+        dbgln("client key");
+        print_buffer(client_key, key_size);
+        dbgln("server key");
+        print_buffer(server_key, key_size);
+        dbgln("client iv");
+        print_buffer(client_iv, iv_size);
+        dbgln("server iv");
+        print_buffer(server_iv, iv_size);
+        if (!is_aead) {
+            dbgln("client mac key");
+            print_buffer(m_context.crypto.local_mac, mac_size);
+            dbgln("server mac key");
+            print_buffer(m_context.crypto.remote_mac, mac_size);
+        }
     }
-#endif
 
     if (is_aead) {
         memcpy(m_context.crypto.local_aead_iv, client_iv, iv_size);
@@ -153,10 +153,10 @@ bool TLSv12::compute_master_secret(size_t length)
         ReadonlyBytes { m_context.remote_random, sizeof(m_context.remote_random) });
 
     m_context.premaster_key.clear();
-#if TLS_DEBUG
-    dbgln("master key:");
-    print_buffer(m_context.master_key);
-#endif
+    if constexpr (TLS_DEBUG) {
+        dbgln("master key:");
+        print_buffer(m_context.master_key);
+    }
     expand_key();
     return true;
 }
@@ -195,9 +195,7 @@ ByteBuffer TLSv12::build_certificate()
     builder.append((u8)HandshakeType::CertificateMessage);
 
     if (!total_certificate_size) {
-#if TLS_DEBUG
-        dbgln("No certificates, sending empty certificate message");
-#endif
+        dbgln_if(TLS_DEBUG, "No certificates, sending empty certificate message");
         builder.append_u24(certificate_vector_header_size);
         builder.append_u24(total_certificate_size);
     } else {

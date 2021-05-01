@@ -54,9 +54,10 @@ bool WavLoaderPlugin::sniff()
 
 RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
 {
-#if AWAVLOADER_DEBUG
-    dbgln("Read {} bytes WAV with num_channels {} sample rate {}, bits per sample {}, sample format {}", max_bytes_to_read_from_input, m_num_channels, m_sample_rate, pcm_bits_per_sample(m_sample_format), sample_format_name(m_sample_format));
-#endif
+    dbgln_if(AWAVLOADER_DEBUG, "Read {} bytes WAV with num_channels {} sample rate {}, "
+                               "bits per sample {}, sample format {}",
+        max_bytes_to_read_from_input, m_num_channels,
+        m_sample_rate, pcm_bits_per_sample(m_sample_format), sample_format_name(m_sample_format));
     size_t samples_to_read = static_cast<int>(max_bytes_to_read_from_input) / (m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8));
     RefPtr<Buffer> buffer;
     if (m_file) {
@@ -215,9 +216,8 @@ bool WavLoaderPlugin::parse_header()
         }
     }
 
-#if AWAVLOADER_DEBUG
-    dbgln("WAV format {} at {}bit, {} channels, rate {}Hz ", sample_format_name(m_sample_format), pcm_bits_per_sample(m_sample_format), m_num_channels, m_sample_rate);
-#endif
+    dbgln_if(AWAVLOADER_DEBUG, "WAV format {} at {} bit, {} channels, rate {}Hz ",
+        sample_format_name(m_sample_format), pcm_bits_per_sample(m_sample_format), m_num_channels, m_sample_rate);
 
     // Read chunks until we find DATA
     bool found_data = false;

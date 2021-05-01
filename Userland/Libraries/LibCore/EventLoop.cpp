@@ -393,9 +393,7 @@ void EventLoop::pump(WaitMode mode)
                 break;
             }
         } else if (event.type() == Event::Type::DeferredInvoke) {
-#if DEFERRED_INVOKE_DEBUG
-            dbgln("DeferredInvoke: receiver = {}", *receiver);
-#endif
+            dbgln_if(DEFERRED_INVOKE_DEBUG, "DeferredInvoke: receiver = {}", *receiver);
             static_cast<DeferredInvocationEvent&>(event).m_invokee(*receiver);
         } else {
             NonnullRefPtr<Object> protector(*receiver);

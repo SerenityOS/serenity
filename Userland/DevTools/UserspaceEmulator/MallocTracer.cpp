@@ -310,9 +310,8 @@ void MallocTracer::populate_memory_graph()
             auto value = m_emulator.mmu().read32({ 0x23, mallocation.address + i * sizeof(u32) });
             auto other_address = value.value();
             if (!value.is_uninitialized() && m_memory_graph.contains(value.value())) {
-#if REACHABLE_DEBUG
-                reportln("region/mallocation {:p} is reachable from other mallocation {:p}", other_address, mallocation.address);
-#endif
+                if constexpr (REACHABLE_DEBUG)
+                    reportln("region/mallocation {:p} is reachable from other mallocation {:p}", other_address, mallocation.address);
                 edges_from_mallocation.edges_from_node.append(other_address);
             }
         }
@@ -339,9 +338,8 @@ void MallocTracer::populate_memory_graph()
             auto value = region.read32(i * sizeof(u32));
             auto other_address = value.value();
             if (!value.is_uninitialized() && m_memory_graph.contains(value.value())) {
-#if REACHABLE_DEBUG
-                reportln("region/mallocation {:p} is reachable from region {:p}-{:p}", other_address, region.base(), region.end() - 1);
-#endif
+                if constexpr (REACHABLE_DEBUG)
+                    reportln("region/mallocation {:p} is reachable from region {:p}-{:p}", other_address, region.base(), region.end() - 1);
                 m_memory_graph.find(other_address)->value.is_reachable = true;
                 reachable_mallocations.append(other_address);
             }
@@ -388,9 +386,8 @@ void MallocTracer::dump_leak_report()
 
     populate_memory_graph();
 
-#if REACHABLE_DEBUG
-    dump_memory_graph();
-#endif
+    if constexpr (REACHABLE_DEBUG)
+        dump_memory_graph();
 
     for_each_mallocation([&](auto& mallocation) {
         if (mallocation.freed)

@@ -238,9 +238,8 @@ void TreeView::paint_event(PaintEvent& event)
         auto rect = a_rect.translated(0, y_offset);
         auto toggle_rect = a_toggle_rect.translated(0, y_offset);
 
-#if ITEM_RECTS_DEBUG
-        painter.fill_rect(rect, Color::WarmGray);
-#endif
+        if constexpr (ITEM_RECTS_DEBUG)
+            painter.fill_rect(rect, Color::WarmGray);
 
         bool is_selected_row = selection().contains(index);
 

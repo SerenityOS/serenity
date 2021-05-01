@@ -263,9 +263,7 @@ Image::RelocationSection Image::Section::relocations() const
     if (relocation_section.type() != SHT_REL)
         return static_cast<const RelocationSection>(m_image.section(0));
 
-#if ELF_IMAGE_DEBUG
-    dbgln("Found relocations for {} in {}", name(), relocation_section.name());
-#endif
+    dbgln_if(ELF_IMAGE_DEBUG, "Found relocations for {} in {}", name(), relocation_section.name());
     return static_cast<const RelocationSection>(relocation_section);
 }
 

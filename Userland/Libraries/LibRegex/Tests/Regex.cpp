@@ -356,21 +356,21 @@ TEST_CASE(ini_file_entries)
     Regex<PosixExtended> re("[[:alpha:]]*=([[:digit:]]*)|\\[(.*)\\]");
     RegexResult result;
 
-#if REGEX_DEBUG
-    RegexDebug regex_dbg(stderr);
-    regex_dbg.print_raw_bytecode(re);
-    regex_dbg.print_header();
-    regex_dbg.print_bytecode(re);
-#endif
+    if constexpr (REGEX_DEBUG) {
+        RegexDebug regex_dbg(stderr);
+        regex_dbg.print_raw_bytecode(re);
+        regex_dbg.print_header();
+        regex_dbg.print_bytecode(re);
+    }
 
     String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(re.search(haystack.view(), result, PosixFlags::Multiline), true);
     EXPECT_EQ(result.count, 3u);
 
-#if REGEX_DEBUG
-    for (auto& v : result.matches)
-        fprintf(stderr, "%s\n", v.view.to_string().characters());
-#endif
+    if constexpr (REGEX_DEBUG) {
+        for (auto& v : result.matches)
+            fprintf(stderr, "%s\n", v.view.to_string().characters());
+    }
 
     EXPECT_EQ(result.matches.at(0).view, "[Window]");
     EXPECT_EQ(result.capture_group_matches.at(0).at(0).view, "Window");
@@ -405,12 +405,12 @@ TEST_CASE(named_capture_group)
     Regex<PosixExtended> re("[[:alpha:]]*=(?<Test>[[:digit:]]*)");
     RegexResult result;
 
-#if REGEX_DEBUG
-    RegexDebug regex_dbg(stderr);
-    regex_dbg.print_raw_bytecode(re);
-    regex_dbg.print_header();
-    regex_dbg.print_bytecode(re);
-#endif
+    if constexpr (REGEX_DEBUG) {
+        RegexDebug regex_dbg(stderr);
+        regex_dbg.print_raw_bytecode(re);
+        regex_dbg.print_header();
+        regex_dbg.print_bytecode(re);
+    }
 
     String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(re.search(haystack, result, PosixFlags::Multiline), true);
@@ -426,12 +426,12 @@ TEST_CASE(a_star)
     Regex<PosixExtended> re("a*");
     RegexResult result;
 
-#if REGEX_DEBUG
-    RegexDebug regex_dbg(stderr);
-    regex_dbg.print_raw_bytecode(re);
-    regex_dbg.print_header();
-    regex_dbg.print_bytecode(re);
-#endif
+    if constexpr (REGEX_DEBUG) {
+        RegexDebug regex_dbg(stderr);
+        regex_dbg.print_raw_bytecode(re);
+        regex_dbg.print_header();
+        regex_dbg.print_bytecode(re);
+    }
 
     String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(re.search(haystack.view(), result, PosixFlags::Multiline), true);
@@ -488,14 +488,14 @@ TEST_CASE(ECMA262_parse)
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern);
         EXPECT_EQ(re.parser_result.error, test.expected_error);
-#if REGEX_DEBUG
-        dbgln("\n");
-        RegexDebug regex_dbg(stderr);
-        regex_dbg.print_raw_bytecode(re);
-        regex_dbg.print_header();
-        regex_dbg.print_bytecode(re);
-        dbgln("\n");
-#endif
+        if constexpr (REGEX_DEBUG) {
+            dbgln("\n");
+            RegexDebug regex_dbg(stderr);
+            regex_dbg.print_raw_bytecode(re);
+            regex_dbg.print_header();
+            regex_dbg.print_bytecode(re);
+            dbgln("\n");
+        }
     }
 }
 
@@ -550,14 +550,14 @@ TEST_CASE(ECMA262_match)
 
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern, test.options);
-#if REGEX_DEBUG
-        dbgln("\n");
-        RegexDebug regex_dbg(stderr);
-        regex_dbg.print_raw_bytecode(re);
-        regex_dbg.print_header();
-        regex_dbg.print_bytecode(re);
-        dbgln("\n");
-#endif
+        if constexpr (REGEX_DEBUG) {
+            dbgln("\n");
+            RegexDebug regex_dbg(stderr);
+            regex_dbg.print_raw_bytecode(re);
+            regex_dbg.print_header();
+            regex_dbg.print_bytecode(re);
+            dbgln("\n");
+        }
         EXPECT_EQ(re.parser_result.error, Error::NoError);
         EXPECT_EQ(re.match(test.subject).success, test.matches);
     }
@@ -583,14 +583,14 @@ TEST_CASE(replace)
 
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern, test.options);
-#if REGEX_DEBUG
-        dbgln("\n");
-        RegexDebug regex_dbg(stderr);
-        regex_dbg.print_raw_bytecode(re);
-        regex_dbg.print_header();
-        regex_dbg.print_bytecode(re);
-        dbgln("\n");
-#endif
+        if constexpr (REGEX_DEBUG) {
+            dbgln("\n");
+            RegexDebug regex_dbg(stderr);
+            regex_dbg.print_raw_bytecode(re);
+            regex_dbg.print_header();
+            regex_dbg.print_bytecode(re);
+            dbgln("\n");
+        }
         EXPECT_EQ(re.parser_result.error, Error::NoError);
         EXPECT_EQ(re.replace(test.subject, test.replacement), test.expected);
     }

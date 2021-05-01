@@ -75,9 +75,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
 
     auto content_type = headers.get("Content-Type");
     if (content_type.has_value()) {
-#if RESOURCE_DEBUG
-        dbgln("Content-Type header: '{}'", content_type.value());
-#endif
+        dbgln_if(RESOURCE_DEBUG, "Content-Type header: '{}'", content_type.value());
         m_encoding = encoding_from_content_type(content_type.value());
         m_mime_type = mime_type_from_content_type(content_type.value());
     } else if (url().protocol() == "data" && !url().data_mime_type().is_empty()) {
@@ -85,9 +83,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
         m_mime_type = url().data_mime_type();
     } else {
-#if RESOURCE_DEBUG
-        dbgln("No Content-Type header to go on! Guessing based on filename...");
-#endif
+        dbgln_if(RESOURCE_DEBUG, "No Content-Type header to go on! Guessing based on filename...");
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
         m_mime_type = Core::guess_mime_type_based_on_filename(url().path());
     }
