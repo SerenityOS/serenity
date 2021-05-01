@@ -101,9 +101,9 @@ static void prepare_devfs()
     VERIFY(phys_group);
     chown_wrapper("/dev/fb0", 0, phys_group->gr_gid);
 
-    chown_wrapper("/dev/keyboard", 0, phys_group->gr_gid);
+    chown_wrapper("/dev/keyboard0", 0, phys_group->gr_gid);
 
-    chown_wrapper("/dev/mouse", 0, phys_group->gr_gid);
+    chown_wrapper("/dev/mouse0", 0, phys_group->gr_gid);
 
     auto tty_group = getgrnam("tty");
     VERIFY(tty_group);
