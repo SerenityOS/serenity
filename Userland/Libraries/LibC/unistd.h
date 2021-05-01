@@ -171,14 +171,6 @@ enum {
 
 long sysconf(int name);
 
-struct crypt_data {
-    int initialized;
-    char result[65];
-};
-
-char* crypt(const char* key, const char* salt);
-char* crypt_r(const char* key, const char* salt, struct crypt_data* data);
-
 // If opterr is set (the default), print error messages to stderr.
 extern int opterr;
 // On errors, optopt is set to the erroneous *character*.
