@@ -131,11 +131,17 @@ static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, V
 
     // NOTE: The stack needs to be 16-byte aligned.
     new_esp -= new_esp % 16;
+    // GCC assumes that the return address has been pushed to the stack when it enters the function,
+    // so we need to reserve an extra pointer's worth of bytes below this to make GCC's stack alignment
+    // calculations work
+    new_esp -= sizeof(void*);
 
     push_on_new_stack((FlatPtr)envp);
     push_on_new_stack((FlatPtr)argv);
     push_on_new_stack((FlatPtr)argv_entries.size());
     push_on_new_stack(0);
+
+    VERIFY((new_esp + sizeof(void*)) % 16 == 0);
 
     return new_esp;
 }
