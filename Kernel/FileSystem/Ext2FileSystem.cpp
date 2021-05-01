@@ -854,7 +854,7 @@ KResultOr<ssize_t> Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKe
     for (auto bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; bi = bi.value() + 1) {
         auto block_index = m_block_list[bi.value()];
         size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
-        size_t num_bytes_to_copy = min((off_t)block_size - offset_into_block, remaining_count);
+        size_t num_bytes_to_copy = min((size_t)block_size - offset_into_block, (size_t)remaining_count);
         auto buffer_offset = buffer.offset(nread);
         if (block_index.value() == 0) {
             // This is a hole, act as if it's filled with zeroes.
@@ -1005,7 +1005,7 @@ KResultOr<ssize_t> Ext2FSInode::write_bytes(off_t offset, ssize_t count, const U
 
     for (auto bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; bi = bi.value() + 1) {
         size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
-        size_t num_bytes_to_copy = min((off_t)block_size - offset_into_block, remaining_count);
+        size_t num_bytes_to_copy = min((size_t)block_size - offset_into_block, (size_t)remaining_count);
         dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_bytes(): Writing block {} (offset_into_block: {})", identifier(), m_block_list[bi.value()], offset_into_block);
         if (auto result = fs().write_block(m_block_list[bi.value()], data.offset(nwritten), num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
             dbgln("Ext2FSInode[{}]::write_bytes(): Failed to write block {} (index {})", identifier(), m_block_list[bi.value()], bi);
