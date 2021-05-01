@@ -4,10 +4,28 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ScopeGuard.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <unistd.h>
+
+static void read_stdin(void)
+{
+    char* line = nullptr;
+    size_t length = 0;
+    ssize_t nread = 0;
+    Vector<String> lines;
+
+    ScopeGuard free_line = [line] { free(line); };
+    while ((nread = getline(&line, &length, stdin)) != -1) {
+        VERIFY(nread > 0);
+        lines.append(String(line));
+    }
+    for (int i = lines.size() - 1; i >= 0; i--)
+        out("{}", lines[i]);
+}
 
 int main(int argc, char** argv)
 {
@@ -16,32 +34,36 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const char* path = nullptr;
+    Vector<String> paths;
     Core::ArgsParser args_parser;
-    args_parser.set_general_help("Concatenate files or pipes to stdout, last line first.");
-    args_parser.add_positional_argument(path, "File path", "path", Core::ArgsParser::Required::No);
+
+    args_parser.set_general_help("Concatenate files or pipes to stdout, line order reversed.");
+    args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    RefPtr<Core::File> file;
-    if (path == nullptr) {
-        file = Core::File::standard_input();
+    if (paths.is_empty()) {
+        read_stdin();
     } else {
-        auto file_or_error = Core::File::open(path, Core::File::ReadOnly);
-        if (file_or_error.is_error()) {
-            warnln("Failed to open {}: {}", path, file_or_error.error());
-            return 1;
+        for (auto const& path : paths) {
+            if (path == "-") {
+                read_stdin();
+            } else {
+                auto file_or_error = Core::File::open(path, Core::File::ReadOnly);
+                if (file_or_error.is_error()) {
+                    warnln("Failed to open {}: {}", path, file_or_error.error());
+                    continue;
+                }
+
+                Vector<String> lines;
+                auto file = file_or_error.value();
+                while (file->can_read_line())
+                    lines.append(file->read_line());
+
+                for (int i = lines.size() - 1; i >= 0; i--)
+                    outln("{}", lines[i]);
+            }
         }
-        file = file_or_error.value();
     }
-
-    Vector<String> lines;
-    while (file->can_read_line()) {
-        auto line = file->read_line();
-        lines.append(line);
-    }
-
-    for (int i = lines.size() - 1; i >= 0; --i)
-        outln("{}", lines[i]);
 
     return 0;
 }
