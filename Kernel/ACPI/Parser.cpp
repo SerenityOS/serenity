@@ -215,26 +215,20 @@ void Parser::try_acpi_shutdown()
 size_t Parser::get_table_size(PhysicalAddress table_header)
 {
     InterruptDisabler disabler;
-#if ACPI_DEBUG
-    dbgln("ACPI: Checking SDT Length");
-#endif
+    dbgln_if(ACPI_DEBUG, "ACPI: Checking SDT Length");
     return map_typed<Structures::SDTHeader>(table_header)->length;
 }
 
 u8 Parser::get_table_revision(PhysicalAddress table_header)
 {
     InterruptDisabler disabler;
-#if ACPI_DEBUG
-    dbgln("ACPI: Checking SDT Revision");
-#endif
+    dbgln_if(ACPI_DEBUG, "ACPI: Checking SDT Revision");
     return map_typed<Structures::SDTHeader>(table_header)->revision;
 }
 
 UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
 {
-#if ACPI_DEBUG
-    dbgln("ACPI: Checking Main SDT Length to choose the correct mapping size");
-#endif
+    dbgln_if(ACPI_DEBUG, "ACPI: Checking Main SDT Length to choose the correct mapping size");
     VERIFY(!m_main_system_description_table.is_null());
     auto length = get_table_size(m_main_system_description_table);
     auto revision = get_table_revision(m_main_system_description_table);

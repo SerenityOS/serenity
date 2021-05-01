@@ -22,17 +22,17 @@ Parser::Parser(const StringView& program, const String& filename, Preprocessor::
     , m_filename(filename)
 {
     initialize_program_tokens(program);
-#if CPP_DEBUG
-    dbgln("Tokens:");
-    for (auto& token : m_tokens) {
-        StringView text;
-        if (token.start().line != token.end().line || token.start().column > token.end().column)
-            text = {};
-        else
-            text = text_of_token(token);
-        dbgln("{}  {}:{}-{}:{} ({})", token.to_string(), token.start().line, token.start().column, token.end().line, token.end().column, text);
+    if constexpr (CPP_DEBUG) {
+        dbgln("Tokens:");
+        for (auto& token : m_tokens) {
+            StringView text;
+            if (token.start().line != token.end().line || token.start().column > token.end().column)
+                text = {};
+            else
+                text = text_of_token(token);
+            dbgln("{}  {}:{}-{}:{} ({})", token.to_string(), token.start().line, token.start().column, token.end().line, token.end().column, text);
+        }
     }
-#endif
 }
 
 void Parser::initialize_program_tokens(const StringView& program)

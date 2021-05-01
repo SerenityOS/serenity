@@ -240,12 +240,12 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     WindowIdentifier identifier { event.client_id(), event.window_id() };
     switch (event.type()) {
     case GUI::Event::WM_WindowRemoved: {
-#if EVENT_DEBUG
-        auto& removed_event = static_cast<GUI::WMWindowRemovedEvent&>(event);
-        dbgln("WM_WindowRemoved: client_id={}, window_id={}",
-            removed_event.client_id(),
-            removed_event.window_id());
-#endif
+        if constexpr (EVENT_DEBUG) {
+            auto& removed_event = static_cast<GUI::WMWindowRemovedEvent&>(event);
+            dbgln("WM_WindowRemoved: client_id={}, window_id={}",
+                removed_event.client_id(),
+                removed_event.window_id());
+        }
         if (auto* window = WindowList::the().window(identifier))
             remove_window_button(*window, true);
         WindowList::the().remove_window(identifier);
@@ -253,13 +253,13 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         break;
     }
     case GUI::Event::WM_WindowRectChanged: {
-#if EVENT_DEBUG
-        auto& changed_event = static_cast<GUI::WMWindowRectChangedEvent&>(event);
-        dbgln("WM_WindowRectChanged: client_id={}, window_id={}, rect={}",
-            changed_event.client_id(),
-            changed_event.window_id(),
-            changed_event.rect());
-#endif
+        if constexpr (EVENT_DEBUG) {
+            auto& changed_event = static_cast<GUI::WMWindowRectChangedEvent&>(event);
+            dbgln("WM_WindowRectChanged: client_id={}, window_id={}, rect={}",
+                changed_event.client_id(),
+                changed_event.window_id(),
+                changed_event.rect());
+        }
         break;
     }
 
@@ -274,15 +274,15 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
 
     case GUI::Event::WM_WindowStateChanged: {
         auto& changed_event = static_cast<GUI::WMWindowStateChangedEvent&>(event);
-#if EVENT_DEBUG
-        dbgln("WM_WindowStateChanged: client_id={}, window_id={}, title={}, rect={}, is_active={}, is_minimized={}",
-            changed_event.client_id(),
-            changed_event.window_id(),
-            changed_event.title(),
-            changed_event.rect(),
-            changed_event.is_active(),
-            changed_event.is_minimized());
-#endif
+        if constexpr (EVENT_DEBUG) {
+            dbgln("WM_WindowStateChanged: client_id={}, window_id={}, title={}, rect={}, is_active={}, is_minimized={}",
+                changed_event.client_id(),
+                changed_event.window_id(),
+                changed_event.title(),
+                changed_event.rect(),
+                changed_event.is_active(),
+                changed_event.is_minimized());
+        }
         if (changed_event.window_type() != GUI::WindowType::Normal || changed_event.is_frameless()) {
             if (auto* window = WindowList::the().window(identifier))
                 remove_window_button(*window, false);

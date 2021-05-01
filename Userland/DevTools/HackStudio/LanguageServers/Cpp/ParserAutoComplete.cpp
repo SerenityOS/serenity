@@ -49,9 +49,8 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     for (auto& path : document_data->preprocessor().included_paths()) {
         get_or_create_document_data(document_path_from_include_path(path));
     }
-#ifdef CPP_LANGUAGE_SERVER_DEBUG
-    root->dump(0);
-#endif
+    if constexpr (CPP_LANGUAGE_SERVER_DEBUG)
+        root->dump(0);
 
     update_declared_symbols(*document_data);
 

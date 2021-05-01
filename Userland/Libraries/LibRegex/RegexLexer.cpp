@@ -130,9 +130,8 @@ Token Lexer::next()
         case '\\':
             return 2;
         default:
-#if REGEX_DEBUG
-            fprintf(stderr, "[LEXER] Found invalid escape sequence: \\%c (the parser will have to deal with this!)\n", peek(1));
-#endif
+            if constexpr (REGEX_DEBUG)
+                fprintf(stderr, "[LEXER] Found invalid escape sequence: \\%c (the parser will have to deal with this!)\n", peek(1));
             return 0;
         }
     };

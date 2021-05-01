@@ -20,9 +20,7 @@ void KeyCallbackMachine::register_key_input_callback(Vector<Key> keys, Function<
 
 void KeyCallbackMachine::key_pressed(Editor& editor, Key key)
 {
-#if CALLBACK_MACHINE_DEBUG
-    dbgln("Key<{}, {}> pressed, seq_length={}, {} things in the matching vector", key.key, key.modifiers, m_sequence_length, m_current_matching_keys.size());
-#endif
+    dbgln_if(CALLBACK_MACHINE_DEBUG, "Key<{}, {}> pressed, seq_length={}, {} things in the matching vector", key.key, key.modifiers, m_sequence_length, m_current_matching_keys.size());
     if (m_sequence_length == 0) {
         VERIFY(m_current_matching_keys.is_empty());
 
@@ -61,14 +59,14 @@ void KeyCallbackMachine::key_pressed(Editor& editor, Key key)
         return;
     }
 
-#if CALLBACK_MACHINE_DEBUG
-    dbgln("seq_length={}, matching vector:", m_sequence_length);
-    for (auto& key : m_current_matching_keys) {
-        for (auto& k : key)
-            dbgln("    {}, {}", k.key, k.modifiers);
-        dbgln("");
+    if constexpr (CALLBACK_MACHINE_DEBUG) {
+        dbgln("seq_length={}, matching vector:", m_sequence_length);
+        for (auto& key : m_current_matching_keys) {
+            for (auto& k : key)
+                dbgln("    {}, {}", k.key, k.modifiers);
+            dbgln("");
+        }
     }
-#endif
 
     m_should_process_this_key = false;
     for (auto& key : m_current_matching_keys) {

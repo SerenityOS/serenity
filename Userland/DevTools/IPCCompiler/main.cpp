@@ -14,6 +14,10 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#ifndef GENERATE_DEBUG_CODE
+#    define GENERATE_DEBUG_CODE 0
+#endif
+
 struct Parameter {
     Vector<String> attributes;
     String type;
@@ -444,22 +448,22 @@ public:
         stream >> message_endpoint_magic;
         if (stream.handle_any_error()) {
 )~~~");
-#if GENERATE_DEBUG_CODE
-        endpoint_generator.append(R"~~~(
-            dbgln("Failed to read message endpoint magic");
+        if constexpr (GENERATE_DEBUG_CODE) {
+            endpoint_generator.append(R"~~~(
+                dbgln("Failed to read message endpoint magic");
 )~~~");
-#endif
+        }
         endpoint_generator.append(R"~~~(
             return {};
         }
 
         if (message_endpoint_magic != @endpoint.magic@) {
 )~~~");
-#if GENERATE_DEBUG_CODE
-        endpoint_generator.append(R"~~~(
-            dbgln("@endpoint.name@: Endpoint magic number message_endpoint_magic != @endpoint.magic@, not my message! (the other endpoint may have handled it)");
+        if constexpr (GENERATE_DEBUG_CODE) {
+            endpoint_generator.append(R"~~~(
+                dbgln("@endpoint.name@: Endpoint magic number message_endpoint_magic != @endpoint.magic@, not my message! (the other endpoint may have handled it)");
 )~~~");
-#endif
+        }
         endpoint_generator.append(R"~~~(
             return {};
         }
@@ -468,11 +472,11 @@ public:
         stream >> message_id;
         if (stream.handle_any_error()) {
 )~~~");
-#if GENERATE_DEBUG_CODE
-        endpoint_generator.append(R"~~~(
-            dbgln("Failed to read message ID");
+        if constexpr (GENERATE_DEBUG_CODE) {
+            endpoint_generator.append(R"~~~(
+                dbgln("Failed to read message ID");
 )~~~");
-#endif
+        }
         endpoint_generator.append(R"~~~(
             return {};
         }
@@ -502,22 +506,22 @@ public:
         endpoint_generator.append(R"~~~(
         default:
 )~~~");
-#if GENERATE_DEBUG_CODE
-        endpoint_generator.append(R"~~~(
-            dbgln("Failed to decode @endpoint.name@.({})", message_id);
+        if constexpr (GENERATE_DEBUG_CODE) {
+            endpoint_generator.append(R"~~~(
+                dbgln("Failed to decode @endpoint.name@.({})", message_id);
 )~~~");
-#endif
+        }
         endpoint_generator.append(R"~~~(
             return {};
         }
 
         if (stream.handle_any_error()) {
 )~~~");
-#if GENERATE_DEBUG_CODE
-        endpoint_generator.append(R"~~~(
-            dbgln("Failed to read the message");
+        if constexpr (GENERATE_DEBUG_CODE) {
+            endpoint_generator.append(R"~~~(
+                dbgln("Failed to read the message");
 )~~~");
-#endif
+        }
         endpoint_generator.append(R"~~~(
             return {};
         }

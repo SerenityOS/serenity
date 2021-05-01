@@ -31,9 +31,8 @@ namespace UserspaceEmulator {
 
 u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
-#if SPAM_DEBUG
-    reportln("Syscall: {} ({:x})", Syscall::to_string((Syscall::Function)function), function);
-#endif
+    if constexpr (SPAM_DEBUG)
+        reportln("Syscall: {} ({:x})", Syscall::to_string((Syscall::Function)function), function);
     switch (function) {
     case SC_chdir:
         return virt$chdir(arg1, arg2);

@@ -113,9 +113,7 @@ void LookupServer::load_etc_hosts()
 
 Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short record_type)
 {
-#if LOOKUPSERVER_DEBUG
-    dbgln("Got request for '{}'", name.as_string());
-#endif
+    dbgln_if(LOOKUPSERVER_DEBUG, "Got request for '{}'", name.as_string());
 
     Vector<DNSAnswer> answers;
     auto add_answer = [&](const DNSAnswer& answer) {
@@ -144,9 +142,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short recor
         for (auto& answer : cached_answers.value()) {
             // TODO: Actually remove expired answers from the cache.
             if (answer.type() == record_type && !answer.has_expired()) {
-#if LOOKUPSERVER_DEBUG
-                dbgln("Cache hit: {} -> {}", name.as_string(), answer.record_data());
-#endif
+                dbgln_if(LOOKUPSERVER_DEBUG, "Cache hit: {} -> {}", name.as_string(), answer.record_data());
                 add_answer(answer);
             }
         }
@@ -156,9 +152,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short recor
 
     // Third, ask the upstream nameservers.
     for (auto& nameserver : m_nameservers) {
-#if LOOKUPSERVER_DEBUG
-        dbgln("Doing lookup using nameserver '{}'", nameserver);
-#endif
+        dbgln_if(LOOKUPSERVER_DEBUG, "Doing lookup using nameserver '{}'", nameserver);
         bool did_get_response = false;
         int retries = 3;
         Vector<DNSAnswer> upstream_answers;

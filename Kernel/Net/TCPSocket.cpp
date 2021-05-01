@@ -453,9 +453,7 @@ bool TCPSocket::protocol_is_disconnected() const
 void TCPSocket::shut_down_for_writing()
 {
     if (state() == State::Established) {
-#if TCP_SOCKET_DEBUG
-        dbgln(" Sending FIN/ACK from Established and moving into FinWait1");
-#endif
+        dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN/ACK from Established and moving into FinWait1");
         [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         set_state(State::FinWait1);
     } else {
@@ -468,9 +466,7 @@ KResult TCPSocket::close()
     Locker socket_locker(lock());
     auto result = IPv4Socket::close();
     if (state() == State::CloseWait) {
-#if TCP_SOCKET_DEBUG
-        dbgln(" Sending FIN from CloseWait and moving into LastAck");
-#endif
+        dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN from CloseWait and moving into LastAck");
         [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         set_state(State::LastAck);
     }
