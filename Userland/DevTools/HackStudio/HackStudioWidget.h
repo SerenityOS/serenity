@@ -50,6 +50,12 @@ public:
         return *m_locator;
     }
 
+    enum class ContinueDecision {
+        No,
+        Yes
+    };
+    ContinueDecision warn_unsaved_changes(const String& prompt);
+
 private:
     static String get_full_path_of_serenity_source(const String& file);
     Vector<String> selected_file_paths() const;
@@ -112,6 +118,7 @@ private:
     void build(TerminalWrapper& wrapper);
 
     void hide_action_tabs();
+    bool any_document_is_dirty() const;
 
     NonnullRefPtrVector<EditorWrapper> m_all_editor_wrappers;
     RefPtr<EditorWrapper> m_current_editor_wrapper;
