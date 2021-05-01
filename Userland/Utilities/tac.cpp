@@ -9,8 +9,6 @@
 #include <LibCore/File.h>
 #include <unistd.h>
 
-void print_lines(const Vector<String>& vec);
-
 int main(int argc, char** argv)
 {
     if (pledge("stdio rpath", nullptr) < 0) {
