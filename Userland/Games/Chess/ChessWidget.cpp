@@ -360,13 +360,13 @@ void ChessWidget::set_piece_set(const StringView& set)
 
 Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
 {
-    size_t tile_width = width() / 8;
-    size_t tile_height = height() / 8;
+    unsigned tile_width = width() / 8;
+    unsigned tile_height = height() / 8;
 
     if (side() == Chess::Color::White) {
-        return { 7 - (event.y() / tile_height), event.x() / tile_width };
+        return { (unsigned)(7 - (event.y() / tile_height)), (unsigned)(event.x() / tile_width) };
     } else {
-        return { event.y() / tile_height, 7 - (event.x() / tile_width) };
+        return { (unsigned)(event.y() / tile_height), (unsigned)(7 - (event.x() / tile_width)) };
     }
 }
 

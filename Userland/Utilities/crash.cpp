@@ -267,8 +267,14 @@ int main(int argc, char** argv)
                 return Crash::Failure::UnexpectedError;
 
             u8* bad_esp = bad_stack + 2048;
+#ifndef __LP64__
             asm volatile("mov %%eax, %%esp" ::"a"(bad_esp));
             asm volatile("pushl $0");
+#else
+            asm volatile("movq %%rax, %%rsp" ::"a"(bad_esp));
+            asm volatile("pushq $0");
+#endif
+
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }

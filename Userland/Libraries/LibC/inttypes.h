@@ -18,23 +18,40 @@ __BEGIN_DECLS
 #define PRIi8 "d"
 #define PRIi16 "d"
 #define PRIi32 "d"
-#define PRIi64 "lld"
+#ifndef __LP64__
+#    define PRIi64 "lld"
+#else
+#    define PRIi64 "ld"
+#endif
 #define PRIu8 "u"
 #define PRIo8 "o"
 #define PRIo16 "o"
 #define PRIo32 "o"
-#define PRIo64 "llo"
+#ifndef __LP64__
+#    define PRIo64 "llo"
+#else
+#    define PRIo64 "lo"
+#endif
 #define PRIu16 "u"
 #define PRIu32 "u"
-#define PRIu64 "llu"
+#ifndef __LP64__
+#    define PRIu64 "llu"
+#else
+#    define PRIu64 "lu"
+#endif
 #define PRIx8 "b"
 #define PRIX8 "hhX"
 #define PRIx16 "w"
 #define PRIX16 "hX"
 #define PRIx32 "x"
 #define PRIX32 "X"
-#define PRIx64 "llx"
-#define PRIX64 "llX"
+#ifndef __LP64__
+#    define PRIx64 "llx"
+#    define PRIX64 "llX"
+#else
+#    define PRIx64 "lx"
+#    define PRIX64 "lX"
+#endif
 
 #define __PRI64_PREFIX "ll"
 #define __PRIPTR_PREFIX

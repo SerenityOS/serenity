@@ -53,7 +53,7 @@ int main()
 
     uintptr_t g_processes = *(uintptr_t*)&base[0x1b51c4];
     printf("base = %p\n", base);
-    printf("g_processes = %#08x\n", g_processes);
+    printf("g_processes = %p\n", (void*)g_processes);
 
     auto get_ptr = [&](uintptr_t value) -> void* {
         value -= 0xc0000000;
@@ -80,7 +80,7 @@ int main()
 
     Process* process = (Process*)get_ptr(process_list->head);
 
-    printf("{%p} PID: %d, UID: %d, next: %#08x\n", process, process->pid, process->uid, process->next);
+    printf("{%p} PID: %d, UID: %d, next: %p\n", process, process->pid, process->uid, (void*)process->next);
 
     if (process->pid == getpid()) {
         printf("That's me! Let's become r00t!\n");

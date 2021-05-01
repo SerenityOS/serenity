@@ -13,6 +13,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/Object.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -151,7 +152,7 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
             return 0;
     }
 
-    long long size = path_stat.st_size;
+    off_t size = path_stat.st_size;
     if (du_option.apparent_size) {
         const auto block_size = 512;
         size = path_stat.st_blocks * block_size;
@@ -164,7 +165,7 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
     size = size / block_size + (size % block_size != 0);
 
     if (du_option.time_type == DuOption::TimeType::NotUsed)
-        printf("%lld\t%s\n", size, path.characters());
+        printf("%" PRIi64 "\t%s\n", size, path.characters());
     else {
         auto time = path_stat.st_mtime;
         switch (du_option.time_type) {
@@ -178,7 +179,7 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
         }
 
         const auto formatted_time = Core::DateTime::from_timestamp(time).to_string();
-        printf("%lld\t%s\t%s\n", size, formatted_time.characters(), path.characters());
+        printf("%" PRIi64 "\t%s\t%s\n", size, formatted_time.characters(), path.characters());
     }
 
     return 0;

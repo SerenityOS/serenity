@@ -71,9 +71,9 @@ int main(int argc, char** argv)
             printf("%10s   ", human_readable_size((total_block_count - free_block_count) * block_size).characters());
             printf("%10s   ", human_readable_size(free_block_count * block_size).characters());
         } else {
-            printf("%10" PRIu64 "  ", total_block_count);
-            printf("%10" PRIu64 "   ", total_block_count - free_block_count);
-            printf("%10" PRIu64 "   ", free_block_count);
+            printf("%10" PRIu64 "  ", (uint64_t)total_block_count);
+            printf("%10" PRIu64 "   ", (uint64_t)(total_block_count - free_block_count));
+            printf("%10" PRIu64 "   ", (uint64_t)free_block_count);
         }
 
         printf("%s", mount_point.characters());
