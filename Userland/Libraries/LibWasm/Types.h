@@ -54,6 +54,7 @@ TYPEDEF_DISTINCT_ORDERED_ID(size_t, LocalIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, GlobalIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, LabelIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, DataIndex);
+TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, true, false, true, InstructionPointer);
 
 ParseError with_eof_check(const InputStream& stream, ParseError error_if_not_eof);
 
@@ -389,15 +390,10 @@ public:
         TableIndex rhs;
     };
 
-    struct BlockAndInstructionSet {
+    struct StructuredInstructionArgs {
         BlockType block_type;
-        NonnullOwnPtrVector<Instruction> instructions;
-    };
-
-    struct BlockAndTwoInstructionSets {
-        BlockType block_type;
-        NonnullOwnPtrVector<Instruction> left_instructions;
-        NonnullOwnPtrVector<Instruction> right_instructions;
+        InstructionPointer end_ip;
+        Optional<InstructionPointer> else_ip;
     };
 
     struct TableBranchArgs {
@@ -422,14 +418,13 @@ public:
     {
     }
 
-    static ParseResult<Instruction> parse(InputStream& stream);
+    static ParseResult<Vector<Instruction>> parse(InputStream& stream, InstructionPointer& ip);
 
 private:
     OpCode m_opcode { 0 };
     // clang-format off
     Variant<
-        BlockAndInstructionSet,
-        BlockAndTwoInstructionSets,
+        BlockType,
         DataIndex,
         ElementIndex,
         FunctionIndex,
@@ -438,6 +433,7 @@ private:
         LabelIndex,
         LocalIndex,
         MemoryArgument,
+        StructuredInstructionArgs,
         TableBranchArgs,
         TableElementArgs,
         TableIndex,

@@ -81,8 +81,8 @@ struct ParseUntilAnyOfResult {
     u8 terminator { 0 };
     Vector<T> values;
 };
-template<typename T, typename... Args>
-static ParseResult<ParseUntilAnyOfResult<T>> parse_until_any_of(InputStream& stream, Args... terminators) requires(requires(InputStream& stream) { T::parse(stream); })
+template<typename T, u8... terminators, typename... Args>
+static ParseResult<ParseUntilAnyOfResult<T>> parse_until_any_of(InputStream& stream, Args... args) requires(requires(InputStream& stream, Args... args) { T::parse(stream, args...); })
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger;
     ReconsumableStream new_stream { stream };
@@ -105,7 +105,7 @@ static ParseResult<ParseUntilAnyOfResult<T>> parse_until_any_of(InputStream& str
         }
 
         new_stream.unread({ &byte, 1 });
-        auto parse_result = T::parse(new_stream);
+        auto parse_result = T::parse(new_stream, args...);
         if (parse_result.is_error())
             return parse_result.error();
 
@@ -265,13 +265,15 @@ ParseResult<BlockType> BlockType::parse(InputStream& stream)
     if (!LEB128::read_signed(new_stream, index_value))
         return with_eof_check(stream, ParseError::ExpectedIndex);
 
-    if (index_value < 0)
+    if (index_value < 0) {
+        dbgln("Invalid type index {}", index_value);
         return with_eof_check(stream, ParseError::InvalidIndex);
+    }
 
     return BlockType { TypeIndex(index_value) };
 }
 
-ParseResult<Instruction> Instruction::parse(InputStream& stream)
+ParseResult<Vector<Instruction>> Instruction::parse(InputStream& stream, InstructionPointer& ip)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Instruction");
     u8 byte;
@@ -279,6 +281,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
     if (stream.has_any_error())
         return with_eof_check(stream, ParseError::ExpectedKindTag);
     OpCode opcode { byte };
+    ++ip;
 
     switch (opcode.value()) {
     case Instructions::block.value():
@@ -287,36 +290,43 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         auto block_type = BlockType::parse(stream);
         if (block_type.is_error())
             return block_type.error();
-        NonnullOwnPtrVector<Instruction> left_instructions, right_instructions;
+        Vector<Instruction> instructions;
+        InstructionPointer end_ip, else_ip;
+
         {
-            auto result = parse_until_any_of<Instruction>(stream, 0x0b, 0x05);
+            auto result = parse_until_any_of<Instruction, 0x0b, 0x05>(stream, ip);
             if (result.is_error())
                 return result.error();
 
             if (result.value().terminator == 0x0b) {
                 // block/loop/if without else
-                NonnullOwnPtrVector<Instruction> instructions;
-                for (auto& entry : result.value().values)
-                    instructions.append(make<Instruction>(move(entry)));
+                result.value().values.append(Instruction { Instructions::structured_end });
 
-                return Instruction { opcode, BlockAndInstructionSet { block_type.release_value(), move(instructions) } };
+                // Transform op(..., instr*) -> op(...) instr* op(end(ip))
+                result.value().values.prepend(Instruction { opcode, StructuredInstructionArgs { BlockType { block_type.release_value() }, ip, {} } });
+                return result.release_value().values;
             }
 
+            // Transform op(..., instr*, instr*) -> op(...) instr* op(else(ip) instr* op(end(ip))
             VERIFY(result.value().terminator == 0x05);
-            for (auto& entry : result.value().values)
-                left_instructions.append(make<Instruction>(move(entry)));
+            instructions.append(result.release_value().values);
+            instructions.append(Instruction { Instructions::structured_else });
+            ++ip;
+            else_ip = ip;
         }
         // if with else
         {
-            auto result = parse_until_any_of<Instruction>(stream, 0x0b);
+            auto result = parse_until_any_of<Instruction, 0x0b>(stream, ip);
             if (result.is_error())
                 return result.error();
-
-            for (auto& entry : result.value().values)
-                right_instructions.append(make<Instruction>(move(entry)));
+            instructions.append(result.release_value().values);
+            instructions.append(Instruction { Instructions::structured_end });
+            ++ip;
+            end_ip = ip;
         }
 
-        return Instruction { opcode, BlockAndTwoInstructionSets { block_type.release_value(), move(left_instructions), move(right_instructions) } };
+        instructions.prepend(Instruction { opcode, StructuredInstructionArgs { BlockType { block_type.release_value() }, end_ip, else_ip } });
+        return instructions;
     }
     case Instructions::br.value():
     case Instructions::br_if.value(): {
@@ -325,7 +335,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         if (index.is_error())
             return index.error();
 
-        return Instruction { opcode, index.release_value() };
+        return Vector { Instruction { opcode, index.release_value() } };
     }
     case Instructions::br_table.value(): {
         // br_table label* label
@@ -337,7 +347,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         if (default_label.is_error())
             return default_label.error();
 
-        return Instruction { opcode, TableBranchArgs { labels.release_value(), default_label.release_value() } };
+        return Vector { Instruction { opcode, TableBranchArgs { labels.release_value(), default_label.release_value() } } };
     }
     case Instructions::call.value(): {
         // call function
@@ -345,7 +355,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         if (function_index.is_error())
             return function_index.error();
 
-        return Instruction { opcode, function_index.release_value() };
+        return Vector { Instruction { opcode, function_index.release_value() } };
     }
     case Instructions::call_indirect.value(): {
         // call_indirect type table
@@ -357,7 +367,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         if (table_index.is_error())
             return table_index.error();
 
-        return Instruction { opcode, IndirectCallArgs { type_index.release_value(), table_index.release_value() } };
+        return Vector { Instruction { opcode, IndirectCallArgs { type_index.release_value(), table_index.release_value() } } };
     }
     case Instructions::i32_load.value():
     case Instructions::i64_load.value():
@@ -389,7 +399,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         if (!LEB128::read_unsigned(stream, offset))
             return with_eof_check(stream, ParseError::InvalidInput);
 
-        return Instruction { opcode, MemoryArgument { static_cast<u32>(align), static_cast<u32>(offset) } };
+        return Vector { Instruction { opcode, MemoryArgument { static_cast<u32>(align), static_cast<u32>(offset) } } };
     }
     case Instructions::local_get.value():
     case Instructions::local_set.value():
@@ -398,7 +408,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         if (index.is_error())
             return index.error();
 
-        return Instruction { opcode, index.release_value() };
+        return Vector { Instruction { opcode, index.release_value() } };
     }
     case Instructions::global_get.value():
     case Instructions::global_set.value(): {
@@ -406,7 +416,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         if (index.is_error())
             return index.error();
 
-        return Instruction { opcode, index.release_value() };
+        return Vector { Instruction { opcode, index.release_value() } };
     }
     case Instructions::memory_size.value():
     case Instructions::memory_grow.value(): {
@@ -416,17 +426,19 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         stream >> unused;
         if (stream.has_any_error())
             return with_eof_check(stream, ParseError::ExpectedKindTag);
-        if (unused != 0x00)
+        if (unused != 0x00) {
+            dbgln("Invalid tag in memory_grow {}", unused);
             return with_eof_check(stream, ParseError::InvalidTag);
+        }
 
-        return Instruction { opcode };
+        return Vector { Instruction { opcode } };
     }
     case Instructions::i32_const.value(): {
         i32 value;
         if (!LEB128::read_signed(stream, value))
             return with_eof_check(stream, ParseError::ExpectedSignedImmediate);
 
-        return Instruction { opcode, value };
+        return Vector { Instruction { opcode, value } };
     }
     case Instructions::i64_const.value(): {
         // op literal
@@ -434,7 +446,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         if (!LEB128::read_signed(stream, value))
             return with_eof_check(stream, ParseError::ExpectedSignedImmediate);
 
-        return Instruction { opcode, value };
+        return Vector { Instruction { opcode, value } };
     }
     case Instructions::f32_const.value(): {
         // op literal
@@ -444,7 +456,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
             return with_eof_check(stream, ParseError::ExpectedFloatingImmediate);
 
         auto floating = bit_cast<float>(static_cast<u32>(value));
-        return Instruction { opcode, floating };
+        return Vector { Instruction { opcode, floating } };
     }
     case Instructions::f64_const.value(): {
         // op literal
@@ -454,7 +466,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
             return with_eof_check(stream, ParseError::ExpectedFloatingImmediate);
 
         auto floating = bit_cast<double>(static_cast<u64>(value));
-        return Instruction { opcode, floating };
+        return Vector { Instruction { opcode, floating } };
     }
     case Instructions::table_get.value():
     case Instructions::table_set.value(): {
@@ -462,14 +474,14 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         if (index.is_error())
             return index.error();
 
-        return Instruction { opcode, index.release_value() };
+        return Vector { Instruction { opcode, index.release_value() } };
     }
     case Instructions::select_typed.value(): {
         auto types = parse_vector<ValueType>(stream);
         if (types.is_error())
             return types.error();
 
-        return Instruction { opcode, types.release_value() };
+        return Vector { Instruction { opcode, types.release_value() } };
     }
     case Instructions::ref_null.value(): {
         auto type = ValueType::parse(stream);
@@ -478,14 +490,14 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         if (!type.value().is_reference())
             return ParseError::InvalidType;
 
-        return Instruction { opcode, type.release_value() };
+        return Vector { Instruction { opcode, type.release_value() } };
     }
     case Instructions::ref_func.value(): {
         auto index = GenericIndexParser<FunctionIndex>::parse(stream);
         if (index.is_error())
             return index.error();
 
-        return Instruction { opcode, index.release_value() };
+        return Vector { Instruction { opcode, index.release_value() } };
     }
     case Instructions::ref_is_null.value():
     case Instructions::unreachable.value():
@@ -616,7 +628,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
     case Instructions::i64_reinterpret_f64.value():
     case Instructions::f32_reinterpret_i32.value():
     case Instructions::f64_reinterpret_i64.value():
-        return Instruction { opcode };
+        return Vector { Instruction { opcode } };
     case 0xfc: {
         // These are multibyte instructions.
         u32 selector;
@@ -631,7 +643,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
         case Instructions::i64_trunc_sat_f32_u_second:
         case Instructions::i64_trunc_sat_f64_s_second:
         case Instructions::i64_trunc_sat_f64_u_second:
-            return Instruction { OpCode { 0xfc00 | selector } };
+            return Vector { Instruction { OpCode { 0xfc00 | selector } } };
         case Instructions::memory_init_second: {
             auto index = GenericIndexParser<DataIndex>::parse(stream);
             if (index.is_error())
@@ -642,13 +654,13 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
                 return with_eof_check(stream, ParseError::InvalidInput);
             if (unused != 0x00)
                 return ParseError::InvalidImmediate;
-            return Instruction { OpCode { 0xfc00 | selector }, index.release_value() };
+            return Vector { Instruction { OpCode { 0xfc00 | selector }, index.release_value() } };
         }
         case Instructions::data_drop_second: {
             auto index = GenericIndexParser<DataIndex>::parse(stream);
             if (index.is_error())
                 return index.error();
-            return Instruction { OpCode { 0xfc00 | selector }, index.release_value() };
+            return Vector { Instruction { OpCode { 0xfc00 | selector }, index.release_value() } };
         }
         case Instructions::memory_copy_second: {
             for (size_t i = 0; i < 2; ++i) {
@@ -659,7 +671,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
                 if (unused != 0x00)
                     return ParseError::InvalidImmediate;
             }
-            return Instruction { OpCode { 0xfc00 | selector } };
+            return Vector { Instruction { OpCode { 0xfc00 | selector } } };
         }
         case Instructions::memory_fill_second: {
             u8 unused;
@@ -668,7 +680,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
                 return with_eof_check(stream, ParseError::InvalidInput);
             if (unused != 0x00)
                 return ParseError::InvalidImmediate;
-            return Instruction { OpCode { 0xfc00 | selector } };
+            return Vector { Instruction { OpCode { 0xfc00 | selector } } };
         }
         case Instructions::table_init_second: {
             auto element_index = GenericIndexParser<ElementIndex>::parse(stream);
@@ -677,13 +689,13 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
             auto table_index = GenericIndexParser<TableIndex>::parse(stream);
             if (table_index.is_error())
                 return table_index.error();
-            return Instruction { OpCode { 0xfc00 | selector }, TableElementArgs { element_index.release_value(), table_index.release_value() } };
+            return Vector { Instruction { OpCode { 0xfc00 | selector }, TableElementArgs { element_index.release_value(), table_index.release_value() } } };
         }
         case Instructions::elem_drop_second: {
             auto element_index = GenericIndexParser<ElementIndex>::parse(stream);
             if (element_index.is_error())
                 return element_index.error();
-            return Instruction { OpCode { 0xfc00 | selector }, element_index.release_value() };
+            return Vector { Instruction { OpCode { 0xfc00 | selector }, element_index.release_value() } };
         }
         case Instructions::table_copy_second: {
             auto lhs = GenericIndexParser<TableIndex>::parse(stream);
@@ -692,7 +704,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
             auto rhs = GenericIndexParser<TableIndex>::parse(stream);
             if (rhs.is_error())
                 return rhs.error();
-            return Instruction { OpCode { 0xfc00 | selector }, TableTableArgs { lhs.release_value(), rhs.release_value() } };
+            return Vector { Instruction { OpCode { 0xfc00 | selector }, TableTableArgs { lhs.release_value(), rhs.release_value() } } };
         }
         case Instructions::table_grow_second:
         case Instructions::table_size_second:
@@ -700,7 +712,7 @@ ParseResult<Instruction> Instruction::parse(InputStream& stream)
             auto index = GenericIndexParser<TableIndex>::parse(stream);
             if (index.is_error())
                 return index.error();
-            return Instruction { OpCode { 0xfc00 | selector }, index.release_value() };
+            return Vector { Instruction { OpCode { 0xfc00 | selector }, index.release_value() } };
         }
         default:
             return ParseError::UnknownInstruction;
@@ -834,7 +846,8 @@ ParseResult<MemorySection> MemorySection::parse(InputStream& stream)
 ParseResult<Expression> Expression::parse(InputStream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Expression");
-    auto instructions = parse_until_any_of<Instruction>(stream, 0x0b);
+    InstructionPointer ip { 0 };
+    auto instructions = parse_until_any_of<Instruction, 0x0b>(stream, ip);
     if (instructions.is_error())
         return instructions.error();
 
