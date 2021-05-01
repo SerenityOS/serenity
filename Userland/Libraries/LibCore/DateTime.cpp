@@ -7,6 +7,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <LibCore/DateTime.h>
+#include <cctype>
+#include <cerrno>
 #include <sys/time.h>
 #include <time.h>
 
@@ -228,4 +230,283 @@ String DateTime::to_string(const String& format) const
     return builder.build();
 }
 
+Optional<DateTime> DateTime::parse(const String& format, const String& string)
+{
+    unsigned format_pos = 0;
+    unsigned string_pos = 0;
+    struct tm tm = {};
+
+    const StringView wday_short_names[7] = {
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    };
+    const StringView wday_long_names[7] = {
+        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+    };
+    const StringView mon_short_names[12] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+    const StringView mon_long_names[12] = {
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    };
+
+    auto parsing_failed = false;
+
+    auto parse_number = [&] {
+        if (string_pos >= string.length()) {
+            parsing_failed = true;
+            return 0;
+        }
+
+        char* end_ptr = nullptr;
+        errno = 0;
+        int number = strtol(string.characters() + string_pos, &end_ptr, 10);
+
+        auto chars_parsed = end_ptr - (string.characters() + string_pos);
+        if (chars_parsed == 0 || errno != 0)
+            parsing_failed = true;
+        else
+            string_pos += chars_parsed;
+        return number;
+    };
+
+    auto consume = [&](char x) {
+        if (string_pos >= string.length()) {
+            parsing_failed = true;
+            return;
+        }
+        if (string[string_pos] != x)
+            parsing_failed = true;
+        else
+            string_pos++;
+    };
+
+    while (format_pos < format.length() && string_pos < string.length()) {
+        if (format[format_pos] != '%') {
+            if (format[format_pos] != string[string_pos]) {
+                return {};
+            }
+            format_pos++;
+            string_pos++;
+            continue;
+        }
+
+        format_pos++;
+        if (format_pos == format.length()) {
+            return {};
+        }
+        switch (format[format_pos]) {
+        case 'a': {
+            auto wday = 0;
+            for (auto name : wday_short_names) {
+                if (string.substring_view(string_pos).starts_with(name, AK::CaseSensitivity::CaseInsensitive)) {
+                    string_pos += name.length();
+                    tm.tm_wday = wday;
+                    break;
+                }
+                ++wday;
+            }
+            if (wday == 7)
+                return {};
+            break;
+        }
+        case 'A': {
+            auto wday = 0;
+            for (auto name : wday_long_names) {
+                if (string.substring_view(string_pos).starts_with(name, AK::CaseSensitivity::CaseInsensitive)) {
+                    string_pos += name.length();
+                    tm.tm_wday = wday;
+                    break;
+                }
+                ++wday;
+            }
+            if (wday == 7)
+                return {};
+            break;
+        }
+        case 'h':
+        case 'b': {
+            auto mon = 0;
+            for (auto name : mon_short_names) {
+                if (string.substring_view(string_pos).starts_with(name, AK::CaseSensitivity::CaseInsensitive)) {
+                    string_pos += name.length();
+                    tm.tm_mon = mon;
+                    break;
+                }
+                ++mon;
+            }
+            if (mon == 12)
+                return {};
+            break;
+        }
+        case 'B': {
+            auto mon = 0;
+            for (auto name : mon_long_names) {
+                if (string.substring_view(string_pos).starts_with(name, AK::CaseSensitivity::CaseInsensitive)) {
+                    string_pos += name.length();
+                    tm.tm_mon = mon;
+                    break;
+                }
+                ++mon;
+            }
+            if (mon == 12)
+                return {};
+            break;
+        }
+        case 'C': {
+            int num = parse_number();
+            tm.tm_year = (num - 19) * 100;
+            break;
+        }
+        case 'd': {
+            tm.tm_mday = parse_number();
+            break;
+        }
+        case 'D': {
+            int mon = parse_number();
+            consume('/');
+            int day = parse_number();
+            consume('/');
+            int year = parse_number();
+            tm.tm_mon = mon + 1;
+            tm.tm_mday = day;
+            tm.tm_year = (year + 1900) % 100;
+            break;
+        }
+        case 'e': {
+            tm.tm_mday = parse_number();
+            break;
+        }
+        case 'H': {
+            tm.tm_hour = parse_number();
+            break;
+        }
+        case 'I': {
+            int num = parse_number();
+            tm.tm_hour = num % 12;
+            break;
+        }
+        case 'j': {
+            // a little trickery here... we can get mktime() to figure out mon and mday using out of range values.
+            // yday is not used so setting it is pointless.
+            tm.tm_mday = parse_number();
+            tm.tm_mon = 0;
+            mktime(&tm);
+            break;
+        }
+        case 'm': {
+            int num = parse_number();
+            tm.tm_mon = num - 1;
+            break;
+        }
+        case 'M': {
+            tm.tm_min = parse_number();
+            break;
+        }
+        case 'n':
+        case 't':
+            while (isblank(string[string_pos])) {
+                string_pos++;
+            }
+            break;
+        case 'p': {
+            auto ampm = string.substring_view(string_pos, 4);
+            if (ampm == "p.m." && tm.tm_hour < 12) {
+                tm.tm_hour += 12;
+            }
+            string_pos += 4;
+            break;
+        }
+        case 'r': {
+            auto ampm = string.substring_view(string_pos, 4);
+            if (ampm == "p.m." && tm.tm_hour < 12) {
+                tm.tm_hour += 12;
+            }
+            string_pos += 4;
+            break;
+        }
+        case 'R': {
+            tm.tm_hour = parse_number();
+            consume(':');
+            tm.tm_min = parse_number();
+            break;
+        }
+        case 'S':
+            tm.tm_sec = parse_number();
+            break;
+        case 'T':
+            tm.tm_hour = parse_number();
+            consume(':');
+            tm.tm_min = parse_number();
+            consume(':');
+            tm.tm_sec = parse_number();
+            break;
+        case 'w':
+            tm.tm_wday = parse_number();
+            break;
+        case 'y': {
+            int year = parse_number();
+            tm.tm_year = year <= 99 && year > 69 ? 1900 + year : 2000 + year;
+            break;
+        }
+        case 'Y': {
+            int year = parse_number();
+            tm.tm_year = year - 1900;
+            break;
+        }
+        case 'z': {
+            if (string[string_pos] == 'Z') {
+                // UTC time
+                string_pos++;
+                break;
+            }
+            int sign;
+
+            if (string[string_pos] == '+')
+                sign = -1;
+            else if (string[string_pos] == '-')
+                sign = +1;
+            else
+                return {};
+
+            string_pos++;
+
+            auto hours = parse_number();
+            int minutes;
+            if (string_pos < string.length() && string[string_pos] == ':') {
+                string_pos++;
+                minutes = parse_number();
+            } else {
+                minutes = hours % 100;
+                hours = hours / 100;
+            }
+
+            tm.tm_hour += sign * hours;
+            tm.tm_min += sign * minutes;
+            break;
+        }
+        case '%':
+            if (string[string_pos] != '%') {
+                return {};
+            }
+            string_pos += 1;
+            break;
+        default:
+            parsing_failed = true;
+            break;
+        }
+
+        if (parsing_failed) {
+            return {};
+        }
+
+        format_pos++;
+    }
+    if (string_pos != string.length() || format_pos != format.length()) {
+        return {};
+    }
+
+    return DateTime::from_timestamp(mktime(&tm));
+}
 }
