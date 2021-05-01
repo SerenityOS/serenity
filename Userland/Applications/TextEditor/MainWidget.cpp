@@ -59,17 +59,7 @@ MainWidget::MainWidget()
 
     m_editor->on_change = [this] {
         update_preview();
-
-        // Do not mark as dirty on the first change (When document is first opened.)
-        if (m_document_opening) {
-            m_document_opening = false;
-            return;
-        }
-
-        bool was_dirty = m_document_dirty;
-        m_document_dirty = true;
-        if (!was_dirty)
-            update_title();
+        update_title();
     };
 
     m_page_view = *find_descendant_of_type_named<Web::OutOfProcessWebView>("webview");
@@ -269,7 +259,7 @@ MainWidget::MainWidget()
     m_editor->on_selection_change = [this] { update_statusbar(); };
 
     m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
-        if (m_document_dirty) {
+        if (editor().document().is_modified()) {
             auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
@@ -277,7 +267,6 @@ MainWidget::MainWidget()
                 return;
         }
 
-        m_document_dirty = false;
         m_editor->set_text(StringView());
         set_path(LexicalPath());
         update_title();
@@ -289,7 +278,7 @@ MainWidget::MainWidget()
         if (!open_path.has_value())
             return;
 
-        if (m_document_dirty) {
+        if (editor().document().is_modified()) {
             auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
@@ -310,7 +299,7 @@ MainWidget::MainWidget()
             return;
         }
 
-        m_document_dirty = false;
+        editor().document().set_modified(false);
         set_path(LexicalPath(save_path.value()));
         dbgln("Wrote document to {}", save_path.value());
     });
@@ -320,7 +309,7 @@ MainWidget::MainWidget()
             if (!m_editor->write_to_file(m_path)) {
                 GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
             } else {
-                m_document_dirty = false;
+                editor().document().set_modified(false);
                 update_title();
             }
             return;
@@ -616,7 +605,7 @@ void MainWidget::update_title()
         builder.append("Untitled");
     else
         builder.append(m_path);
-    if (m_document_dirty)
+    if (editor().document().is_modified())
         builder.append(" (*)");
     builder.append(" - Text Editor");
     window()->set_title(builder.to_string());
@@ -636,8 +625,6 @@ bool MainWidget::open_file(const String& path)
     }
 
     m_editor->set_text(file->read_all());
-    m_document_dirty = false;
-    m_document_opening = true;
 
     set_path(LexicalPath(path));
 
@@ -648,7 +635,7 @@ bool MainWidget::open_file(const String& path)
 
 bool MainWidget::request_close()
 {
-    if (!m_document_dirty)
+    if (!editor().document().is_modified())
         return true;
     auto result = GUI::MessageBox::show(window(), "The document has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
 
