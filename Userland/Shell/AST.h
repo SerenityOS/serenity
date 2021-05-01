@@ -1400,6 +1400,7 @@ public:
     }
     virtual void set_is_syntax_error(const SyntaxError& error) override
     {
+        m_position = error.position();
         m_is_cleared = error.m_is_cleared;
         m_is_continuable = error.m_is_continuable;
         m_syntax_error_text = error.error_text();
