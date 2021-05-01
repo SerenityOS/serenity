@@ -1,33 +1,14 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Checked.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/TypedArrayConstructor.h>
 
@@ -93,6 +74,104 @@ static void initialize_typed_array_from_array_buffer(GlobalObject& global_object
     typed_array.set_byte_offset(offset);
     typed_array.set_array_length(new_byte_length.value() / element_size);
 }
+template<typename T>
+static void initialize_typed_array_from_typed_array(GlobalObject& global_object, TypedArray<T>& dest_array, TypedArrayBase& src_array)
+{
+    auto& vm = global_object.vm();
+    if (vm.exception())
+        return;
+
+    // FIXME: 4. If IsDetachedBuffer(src_data) is true, throw a TypeError exception.
+    VERIFY(src_array.viewed_array_buffer());
+
+    auto src_array_length = src_array.array_length();
+    auto dest_element_size = dest_array.element_size();
+    Checked byte_length = src_array_length * dest_element_size;
+    if (byte_length.has_overflow()) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return;
+    }
+
+    // FIXME: 17.b If IsDetachedBuffer(array_buffer) is true, throw a TypeError exception.
+    // FIXME: 17.c If src_array.[[ContentType]] != dest_array.[[ContentType]], throw a TypeError exception.
+    auto array_buffer = ArrayBuffer::create(global_object, byte_length.value());
+    dest_array.set_array_length(src_array_length);
+    dest_array.set_viewed_array_buffer(array_buffer);
+    dest_array.set_byte_offset(0);
+    dest_array.set_byte_length(array_buffer->byte_length());
+
+    for (u32 i = 0; i < src_array_length; i++) {
+        Value v;
+#undef __JS_ENUMERATE
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    if (is<JS::ClassName>(src_array)) {                                                  \
+        auto& src = static_cast<JS::ClassName&>(src_array);                              \
+        v = src.get_by_index(i);                                                         \
+    }
+        JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+
+        VERIFY(!v.is_empty());
+
+        dest_array.put_by_index(i, v);
+    }
+}
+template<typename T>
+static void initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, const Object& array_like)
+{
+    // 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
+
+    auto& vm = global_object.vm();
+    auto length = length_of_array_like(global_object, array_like);
+    if (vm.exception())
+        return;
+
+    auto element_size = typed_array.element_size();
+    if (Checked<size_t>::multiplication_would_overflow(element_size, length)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return;
+    }
+    auto byte_length = element_size * length;
+    auto array_buffer = ArrayBuffer::create(global_object, byte_length);
+    typed_array.set_viewed_array_buffer(array_buffer);
+    typed_array.set_byte_length(byte_length);
+    typed_array.set_byte_offset(0);
+    typed_array.set_array_length(length);
+
+    for (size_t k = 0; k < length; k++) {
+        auto value = array_like.get(k).value_or(js_undefined());
+        if (vm.exception())
+            return;
+        typed_array.put_by_index(k, value);
+        if (vm.exception())
+            return;
+    }
+}
+template<typename T>
+static void initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, const MarkedValueList& list)
+{
+    // 23.2.5.1.4 InitializeTypedArrayFromList, https://tc39.es/ecma262/#sec-initializetypedarrayfromlist
+
+    auto element_size = typed_array.element_size();
+    if (Checked<size_t>::multiplication_would_overflow(element_size, list.size())) {
+        global_object.vm().throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return;
+    }
+    auto byte_length = element_size * list.size();
+    auto array_buffer = ArrayBuffer::create(global_object, byte_length);
+    typed_array.set_viewed_array_buffer(array_buffer);
+    typed_array.set_byte_length(byte_length);
+    typed_array.set_byte_offset(0);
+    typed_array.set_array_length(list.size());
+
+    auto& vm = global_object.vm();
+    for (size_t k = 0; k < list.size(); k++) {
+        auto value = list[k];
+        typed_array.put_by_index(k, value);
+        if (vm.exception())
+            return;
+    }
+}
 
 void TypedArrayBase::visit_edges(Visitor& visitor)
 {
@@ -147,16 +226,29 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         if (first_argument.is_object()) {                                                                                              \
             auto* typed_array = ClassName::create(global_object(), 0);                                                                 \
             if (first_argument.as_object().is_typed_array()) {                                                                         \
-                /* FIXME: Initialize from TypedArray */                                                                                \
-                TODO();                                                                                                                \
+                auto& arg_typed_array = static_cast<TypedArrayBase&>(first_argument.as_object());                                      \
+                initialize_typed_array_from_typed_array(global_object(), *typed_array, arg_typed_array);                               \
+                if (vm.exception())                                                                                                    \
+                    return {};                                                                                                         \
             } else if (is<ArrayBuffer>(first_argument.as_object())) {                                                                  \
                 auto& array_buffer = static_cast<ArrayBuffer&>(first_argument.as_object());                                            \
                 initialize_typed_array_from_array_buffer(global_object(), *typed_array, array_buffer, vm.argument(1), vm.argument(2)); \
                 if (vm.exception())                                                                                                    \
                     return {};                                                                                                         \
             } else {                                                                                                                   \
-                /* FIXME: Initialize from Iterator or Array-like object */                                                             \
-                TODO();                                                                                                                \
+                auto iterator = first_argument.as_object().get(vm.well_known_symbol_iterator());                                       \
+                if (vm.exception())                                                                                                    \
+                    return {};                                                                                                         \
+                if (iterator.is_function()) {                                                                                          \
+                    auto values = iterable_to_list(global_object(), first_argument, iterator);                                         \
+                    if (vm.exception())                                                                                                \
+                        return {};                                                                                                     \
+                    initialize_typed_array_from_list(global_object(), *typed_array, values);                                           \
+                } else {                                                                                                               \
+                    initialize_typed_array_from_array_like(global_object(), *typed_array, first_argument.as_object());                 \
+                }                                                                                                                      \
+                if (vm.exception())                                                                                                    \
+                    return {};                                                                                                         \
             }                                                                                                                          \
             return typed_array;                                                                                                        \
         }                                                                                                                              \

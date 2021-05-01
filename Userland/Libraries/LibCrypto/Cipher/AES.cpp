@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringBuilder.h>
@@ -65,9 +45,9 @@ void AESCipherKey::expand_encrypt_key(ReadonlyBytes user_key, size_t bits)
     u32 temp;
     size_t i { 0 };
 
-    ASSERT(!user_key.is_null());
-    ASSERT(is_valid_key_size(bits));
-    ASSERT(user_key.size() == bits / 8);
+    VERIFY(!user_key.is_null());
+    VERIFY(is_valid_key_size(bits));
+    VERIFY(user_key.size() == bits / 8);
 
     round_key = round_keys();
 
@@ -308,7 +288,6 @@ void AESCipher::encrypt_block(const AESCipherBlock& in, AESCipherBlock& out)
 
 void AESCipher::decrypt_block(const AESCipherBlock& in, AESCipherBlock& out)
 {
-
     u32 s0, s1, s2, s3, t0, t1, t2, t3;
     size_t r { 0 };
 
@@ -401,7 +380,7 @@ void AESCipherBlock::overwrite(ReadonlyBytes bytes)
     auto data = bytes.data();
     auto length = bytes.size();
 
-    ASSERT(length <= this->data_size());
+    VERIFY(length <= this->data_size());
     this->bytes().overwrite(0, data, length);
     if (length < this->data_size()) {
         switch (padding_mode()) {
@@ -419,7 +398,7 @@ void AESCipherBlock::overwrite(ReadonlyBytes bytes)
             break;
         default:
             // FIXME: We should handle the rest of the common padding modes
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     }

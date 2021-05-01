@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibJS/Heap/DeferGC.h>
@@ -32,7 +12,7 @@ namespace JS {
 
 Shape* Shape::create_unique_clone() const
 {
-    ASSERT(m_global_object);
+    VERIFY(m_global_object);
     auto* new_shape = heap().allocate_without_global_object<Shape>(*m_global_object);
     new_shape->m_unique = true;
     new_shape->m_prototype = m_prototype;
@@ -179,7 +159,7 @@ void Shape::ensure_property_table() const
             m_property_table->set(shape->m_property_name, { next_offset++, shape->m_attributes });
         } else if (shape->m_transition_type == TransitionType::Configure) {
             auto it = m_property_table->find(shape->m_property_name);
-            ASSERT(it != m_property_table->end());
+            VERIFY(it != m_property_table->end());
             it->value.attributes = shape->m_attributes;
         }
     }
@@ -187,31 +167,31 @@ void Shape::ensure_property_table() const
 
 void Shape::add_property_to_unique_shape(const StringOrSymbol& property_name, PropertyAttributes attributes)
 {
-    ASSERT(is_unique());
-    ASSERT(m_property_table);
-    ASSERT(!m_property_table->contains(property_name));
+    VERIFY(is_unique());
+    VERIFY(m_property_table);
+    VERIFY(!m_property_table->contains(property_name));
     m_property_table->set(property_name, { m_property_table->size(), attributes });
     ++m_property_count;
 }
 
 void Shape::reconfigure_property_in_unique_shape(const StringOrSymbol& property_name, PropertyAttributes attributes)
 {
-    ASSERT(is_unique());
-    ASSERT(m_property_table);
+    VERIFY(is_unique());
+    VERIFY(m_property_table);
     auto it = m_property_table->find(property_name);
-    ASSERT(it != m_property_table->end());
+    VERIFY(it != m_property_table->end());
     it->value.attributes = attributes;
     m_property_table->set(property_name, it->value);
 }
 
 void Shape::remove_property_from_unique_shape(const StringOrSymbol& property_name, size_t offset)
 {
-    ASSERT(is_unique());
-    ASSERT(m_property_table);
+    VERIFY(is_unique());
+    VERIFY(m_property_table);
     if (m_property_table->remove(property_name))
         --m_property_count;
     for (auto& it : *m_property_table) {
-        ASSERT(it.value.offset != offset);
+        VERIFY(it.value.offset != offset);
         if (it.value.offset > offset)
             --it.value.offset;
     }

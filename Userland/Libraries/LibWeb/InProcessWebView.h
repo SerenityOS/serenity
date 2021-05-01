@@ -1,32 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/URL.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/ScrollableWidget.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Page/Page.h>
@@ -78,13 +59,16 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousewheel_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
     virtual void did_scroll() override;
 
     // ^Web::PageClient
+    virtual bool is_multi_process() const override { return false; }
     virtual Gfx::Palette palette() const override { return GUI::ScrollableWidget::palette(); }
+    virtual Gfx::IntRect screen_rect() const override { return GUI::Desktop::the().rect(); }
     virtual void page_did_change_title(const String&) override;
     virtual void page_did_set_document_in_main_frame(DOM::Document*) override;
     virtual void page_did_start_loading(const URL&) override;
@@ -105,6 +89,10 @@ private:
     virtual void page_did_layout() override;
     virtual void page_did_request_scroll_into_view(const Gfx::IntRect&) override;
     virtual void page_did_request_alert(const String&) override;
+    virtual bool page_did_request_confirm(const String&) override;
+    virtual String page_did_request_prompt(const String&, const String&) override;
+    virtual String page_did_request_cookie(const URL&, Cookie::Source) override;
+    virtual void page_did_set_cookie(const URL&, const Cookie::ParsedCookie&, Cookie::Source) override;
 
     void layout_and_sync_size();
 

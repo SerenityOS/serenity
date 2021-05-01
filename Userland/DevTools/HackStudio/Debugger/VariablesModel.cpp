@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "VariablesModel.h"
@@ -52,14 +32,14 @@ GUI::ModelIndex VariablesModel::parent_index(const GUI::ModelIndex& index) const
         for (size_t row = 0; row < m_variables.size(); row++)
             if (m_variables.ptr_at(row).ptr() == parent)
                 return create_index(row, 0, parent);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     for (size_t row = 0; row < parent->parent->members.size(); row++) {
         Debug::DebugInfo::VariableInfo* child_at_row = parent->parent->members.ptr_at(row).ptr();
         if (child_at_row == parent)
             return create_index(row, 0, parent);
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 int VariablesModel::row_count(const GUI::ModelIndex& index) const
@@ -79,29 +59,30 @@ static String variable_value_as_string(const Debug::DebugInfo::VariableInfo& var
 
     if (variable.is_enum_type()) {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
-        ASSERT(value.has_value());
+        VERIFY(value.has_value());
         auto it = variable.type->members.find_if([&enumerator_value = value.value()](const auto& enumerator) {
             return enumerator->constant_data.as_u32 == enumerator_value;
         });
-        ASSERT(!it.is_end());
+        if (it.is_end())
+            return String::formatted("Unknown ({})", value.value());
         return String::formatted("{}::{}", variable.type_name, (*it)->name);
     }
 
     if (variable.type_name == "int") {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
-        ASSERT(value.has_value());
+        VERIFY(value.has_value());
         return String::formatted("{}", static_cast<int>(value.value()));
     }
 
     if (variable.type_name == "char") {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
-        ASSERT(value.has_value());
-        return String::formatted("'{0:c}' ({0:d})", value.value());
+        VERIFY(value.has_value());
+        return String::formatted("'{0:c}'", (char)value.value());
     }
 
     if (variable.type_name == "bool") {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
-        ASSERT(value.has_value());
+        VERIFY(value.has_value());
         return (value.value() & 1) ? "true" : "false";
     }
 
@@ -151,7 +132,7 @@ void VariablesModel::set_variable_value(const GUI::ModelIndex& index, const Stri
 
     if (value.has_value()) {
         auto success = Debugger::the().session()->poke((u32*)variable->location_data.address, value.value());
-        ASSERT(success);
+        VERIFY(success);
         return;
     }
 
@@ -188,7 +169,7 @@ RefPtr<VariablesModel> VariablesModel::create(const PtraceRegisters& regs)
     if (!lib)
         return nullptr;
     auto variables = lib->debug_info->get_variables_in_current_scope(regs);
-    return adopt(*new VariablesModel(move(variables), regs));
+    return adopt_ref(*new VariablesModel(move(variables), regs));
 }
 
 }

@@ -1,31 +1,13 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * 2018-2021, the SerenityOS developers
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Editor.h"
 #include "Debugger/Debugger.h"
+#include "Debugger/EvaluateExpressionDialog.h"
 #include "EditorWrapper.h"
 #include "HackStudio.h"
 #include "Language.h"
@@ -34,22 +16,23 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCpp/SyntaxHighlighter.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
-#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
-#include <LibGUI/ShellSyntaxHighlighter.h>
-#include <LibGUI/SyntaxHighlighter.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/Window.h>
+#include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/OutOfProcessWebView.h>
+#include <Shell/SyntaxHighlighter.h>
 #include <fcntl.h>
 
 namespace HackStudio {
@@ -61,6 +44,28 @@ Editor::Editor()
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
     m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
+    m_evaluate_expression_action = GUI::Action::create("Evaluate expression", { Mod_Ctrl, Key_E }, [this](auto&) {
+        if (!execution_position().has_value()) {
+            GUI::MessageBox::show(window(), "Program is not running", "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+        auto dialog = EvaluateExpressionDialog::construct(window());
+        dialog->exec();
+    });
+    m_move_execution_to_line_action = GUI::Action::create("Set execution point to line", [this](auto&) {
+        if (!execution_position().has_value()) {
+            GUI::MessageBox::show(window(), "Program must be paused", "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+        auto success = Debugger::the().set_execution_position(currently_open_file(), cursor().line());
+        if (success) {
+            set_execution_position(cursor().line());
+        } else {
+            GUI::MessageBox::show(window(), "Failed to set execution position", "Error", GUI::MessageBox::Type::Error);
+        }
+    });
+    add_custom_context_menu_action(*m_evaluate_expression_action);
+    add_custom_context_menu_action(*m_move_execution_to_line_action);
 }
 
 Editor::~Editor()
@@ -141,7 +146,7 @@ static HashMap<String, String>& man_paths()
         // FIXME: This should also search man3, possibly other places..
         Core::DirIterator it("/usr/share/man/man2", Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
-            auto path = String::formatted("/usr/share/man/man2/{}", it.next_path());
+            auto path = it.next_full_path();
             auto title = LexicalPath(path).title();
             paths.set(title, path);
         }
@@ -154,9 +159,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
 {
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {
-#if EDITOR_DEBUG
-        dbgln("no man path for {}", hovered_token);
-#endif
+        dbgln_if(EDITOR_DEBUG, "no man path for {}", hovered_token);
         m_documentation_tooltip_window->hide();
         return;
     }
@@ -165,9 +168,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
         return;
     }
 
-#if EDITOR_DEBUG
-    dbgln("opening {}", it->value);
-#endif
+    dbgln_if(EDITOR_DEBUG, "opening {}", it->value);
     auto file = Core::File::construct(it->value);
     if (!file->open(Core::File::ReadOnly)) {
         dbgln("failed to open {}, {}", it->value, file->error_string());
@@ -214,18 +215,19 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
         return;
 
     bool hide_tooltip = true;
-    bool is_over_link = false;
+    bool is_over_clickable = false;
 
     auto ruler_line_rect = ruler_content_rect(text_position.line());
     auto hovering_lines_ruler = (event.position().x() < ruler_line_rect.width());
     if (hovering_lines_ruler && !is_in_drag_select())
         set_override_cursor(Gfx::StandardCursor::Arrow);
     else if (m_hovering_editor)
-        set_override_cursor(m_hovering_link && event.ctrl() ? Gfx::StandardCursor::Hand : Gfx::StandardCursor::IBeam);
+        set_override_cursor(m_hovering_clickable && event.ctrl() ? Gfx::StandardCursor::Hand : Gfx::StandardCursor::IBeam);
 
     for (auto& span : document().spans()) {
+        bool is_clickable = (highlighter->is_navigatable(span.data) || highlighter->is_identifier(span.data));
         if (span.range.contains(m_previous_text_position) && !span.range.contains(text_position)) {
-            if (highlighter->is_navigatable(span.data) && span.attributes.underline) {
+            if (is_clickable && span.attributes.underline) {
                 span.attributes.underline = false;
                 wrapper().editor().update();
             }
@@ -236,18 +238,17 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
             auto end_line_length = document().line(span.range.end().line()).length();
             adjusted_range.end().set_column(min(end_line_length, adjusted_range.end().column() + 1));
             auto hovered_span_text = document().text_in_range(adjusted_range);
-#if EDITOR_DEBUG
-            dbgln("Hovering: {} \"{}\"", adjusted_range, hovered_span_text);
-#endif
+            dbgln_if(EDITOR_DEBUG, "Hovering: {} \"{}\"", adjusted_range, hovered_span_text);
 
-            if (highlighter->is_navigatable(span.data)) {
-                is_over_link = true;
+            if (is_clickable) {
+                is_over_clickable = true;
                 bool was_underlined = span.attributes.underline;
                 span.attributes.underline = event.modifiers() & Mod_Ctrl;
                 if (span.attributes.underline != was_underlined) {
                     wrapper().editor().update();
                 }
             }
+
             if (highlighter->is_identifier(span.data)) {
                 show_documentation_tooltip_if_available(hovered_span_text, event.position().translated(screen_relative_rect().location()));
                 hide_tooltip = false;
@@ -259,7 +260,7 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
     if (hide_tooltip)
         m_documentation_tooltip_window->hide();
 
-    m_hovering_link = is_over_link && (event.modifiers() & Mod_Ctrl);
+    m_hovering_clickable = (is_over_clickable) && (event.modifiers() & Mod_Ctrl);
 }
 
 void Editor::mousedown_event(GUI::MouseEvent& event)
@@ -275,10 +276,10 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
     if (event.button() == GUI::MouseButton::Left && event.position().x() < ruler_line_rect.width()) {
         if (!breakpoint_lines().contains_slow(text_position.line())) {
             breakpoint_lines().append(text_position.line());
-            Debugger::on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Added);
+            Debugger::the().on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Added);
         } else {
             breakpoint_lines().remove_first_matching([&](size_t line) { return line == text_position.line(); });
-            Debugger::on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Removed);
+            Debugger::the().on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Removed);
         }
     }
 
@@ -293,23 +294,34 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
     }
 
     if (auto* span = document().span_at(text_position)) {
-        if (!highlighter->is_navigatable(span->data)) {
-            GUI::TextEditor::mousedown_event(event);
+        if (highlighter->is_navigatable(span->data)) {
+            on_navigatable_link_click(*span);
             return;
         }
-
-        auto adjusted_range = span->range;
-        adjusted_range.end().set_column(adjusted_range.end().column() + 1);
-        auto span_text = document().text_in_range(adjusted_range);
-        auto header_path = span_text.substring(1, span_text.length() - 2);
-#if EDITOR_DEBUG
-        dbgln("Ctrl+click: {} \"{}\"", adjusted_range, header_path);
-#endif
-        navigate_to_include_if_available(header_path);
-        return;
+        if (highlighter->is_identifier(span->data)) {
+            on_identifier_click(*span);
+            return;
+        }
     }
 
     GUI::TextEditor::mousedown_event(event);
+}
+
+void Editor::drop_event(GUI::DropEvent& event)
+{
+    event.accept();
+    window()->move_to_front();
+
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
+            return;
+        if (urls.size() > 1) {
+            GUI::MessageBox::show(window(), "HackStudio can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error);
+            return;
+        }
+        open_file(urls.first().path());
+    }
 }
 
 void Editor::enter_event(Core::Event& event)
@@ -334,9 +346,7 @@ static HashMap<String, String>& include_paths()
             auto path = it.next_full_path();
             if (!Core::File::is_directory(path)) {
                 auto key = path.substring(base.length() + 1, path.length() - base.length() - 1);
-#if EDITOR_DEBUG
-                dbgln("Adding header \"{}\" in path \"{}\"", key, path);
-#endif
+                dbgln_if(EDITOR_DEBUG, "Adding header \"{}\" in path \"{}\"", key, path);
                 paths.set(key, path);
             } else {
                 handle_directory(base, path, handle_directory);
@@ -358,9 +368,7 @@ void Editor::navigate_to_include_if_available(String path)
 {
     auto it = include_paths().find(path);
     if (it == include_paths().end()) {
-#if EDITOR_DEBUG
-        dbgln("no header {} found.", path);
-#endif
+        dbgln_if(EDITOR_DEBUG, "no header {} found.", path);
         return;
     }
 
@@ -399,7 +407,7 @@ const Gfx::Bitmap& Editor::current_position_icon_bitmap()
 const CodeDocument& Editor::code_document() const
 {
     const auto& doc = document();
-    ASSERT(doc.is_code_document());
+    VERIFY(doc.is_code_document());
     return static_cast<const CodeDocument&>(doc);
 }
 
@@ -410,7 +418,7 @@ CodeDocument& Editor::code_document()
 
 void Editor::set_document(GUI::TextDocument& doc)
 {
-    ASSERT(doc.is_code_document());
+    VERIFY(doc.is_code_document());
     GUI::TextEditor::set_document(doc);
 
     set_override_cursor(Gfx::StandardCursor::IBeam);
@@ -418,20 +426,20 @@ void Editor::set_document(GUI::TextDocument& doc)
     CodeDocument& code_document = static_cast<CodeDocument&>(doc);
     switch (code_document.language()) {
     case Language::Cpp:
-        set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
+        set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
         m_language_client = get_language_client<LanguageClients::Cpp::ServerConnection>(project().root_path());
         break;
     case Language::GML:
         set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
         break;
     case Language::JavaScript:
-        set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+        set_syntax_highlighter(make<JS::SyntaxHighlighter>());
         break;
     case Language::Ini:
         set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
         break;
     case Language::Shell:
-        set_syntax_highlighter(make<GUI::ShellSyntaxHighlighter>());
+        set_syntax_highlighter(make<Shell::SyntaxHighlighter>());
         m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_path());
         break;
     default:
@@ -440,7 +448,11 @@ void Editor::set_document(GUI::TextDocument& doc)
 
     if (m_language_client) {
         set_autocomplete_provider(make<LanguageServerAidedAutocompleteProvider>(*m_language_client));
-        dbgln("Opening {}", code_document.file_path());
+        // NOTE:
+        // When a file is opened for the first time in HackStudio, its content is already synced with the filesystem.
+        // Otherwise, if the file has already been opened before in some Editor instance, it should exist in the LanguageServer's
+        // FileDB, and the LanguageServer should already have its up-to-date content.
+        // So it's OK to just pass an fd here (rather than the TextDocument's content).
         int fd = open(code_document.file_path().characters(), O_RDONLY | O_NOCTTY);
         if (fd < 0) {
             perror("open");
@@ -502,7 +514,7 @@ void Editor::on_edit_action(const GUI::Command& command)
         return;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Editor::undo()
@@ -526,4 +538,30 @@ void Editor::flush_file_content_to_langauge_server()
         code_document().file_path(),
         document().text());
 }
+
+void Editor::on_navigatable_link_click(const GUI::TextDocumentSpan& span)
+{
+    auto adjusted_range = span.range;
+    adjusted_range.end().set_column(adjusted_range.end().column() + 1);
+    auto span_text = document().text_in_range(adjusted_range);
+    auto header_path = span_text.substring(1, span_text.length() - 2);
+    dbgln_if(EDITOR_DEBUG, "Ctrl+click: {} \"{}\"", adjusted_range, header_path);
+    navigate_to_include_if_available(header_path);
+}
+
+void Editor::on_identifier_click(const GUI::TextDocumentSpan& span)
+{
+    if (!m_language_client)
+        return;
+
+    m_language_client->on_declaration_found = [this](const String& file, size_t line, size_t column) {
+        HackStudio::open_file(file, line, column);
+    };
+    m_language_client->search_declaration(code_document().file_path(), span.range.start().line(), span.range.start().column());
+}
+void Editor::set_cursor(const GUI::TextPosition& a_position)
+{
+    TextEditor::set_cursor(a_position);
+}
+
 }

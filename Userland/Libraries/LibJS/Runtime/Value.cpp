@@ -1,30 +1,11 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/AllOf.h>
 #include <AK/FlyString.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -41,6 +22,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -57,18 +39,23 @@ namespace JS {
 // Used in various abstract operations to make it obvious when a non-optional return value must be discarded.
 static const double INVALID { 0 };
 
+static inline bool same_type_for_equality(const Value& lhs, const Value& rhs)
+{
+    if (lhs.type() == rhs.type())
+        return true;
+    if (lhs.is_number() && rhs.is_number())
+        return true;
+    return false;
+}
+
 static const Crypto::SignedBigInteger BIGINT_ZERO { 0 };
 
-static bool is_valid_bigint_value(String string)
+static bool is_valid_bigint_value(StringView string)
 {
     string = string.trim_whitespace();
     if (string.length() > 1 && (string[0] == '-' || string[0] == '+'))
         string = string.substring_view(1, string.length() - 1);
-    for (auto& ch : string) {
-        if (!isdigit(ch))
-            return false;
-    }
-    return true;
+    return all_of(string.begin(), string.end(), [](auto ch) { return isdigit(ch); });
 }
 
 ALWAYS_INLINE bool both_number(const Value& lhs, const Value& rhs)
@@ -94,30 +81,30 @@ static String double_to_string(double d)
         builder.append(double_to_string(-d));
         return builder.to_string();
     }
-    if (d == INFINITY)
+    if (d == static_cast<double>(INFINITY))
         return "Infinity";
 
     StringBuilder number_string_builder;
 
     size_t start_index = 0;
     size_t end_index = 0;
-    size_t intpart_end = 0;
+    size_t int_part_end = 0;
 
     // generate integer part (reversed)
-    double intPart;
+    double int_part;
     double frac_part;
-    frac_part = modf(d, &intPart);
-    while (intPart > 0) {
-        number_string_builder.append('0' + (int)fmod(intPart, 10));
+    frac_part = modf(d, &int_part);
+    while (int_part > 0) {
+        number_string_builder.append('0' + (int)fmod(int_part, 10));
         end_index++;
-        intPart = floor(intPart / 10);
+        int_part = floor(int_part / 10);
     }
 
     auto reversed_integer_part = number_string_builder.to_string().reverse();
     number_string_builder.clear();
     number_string_builder.append(reversed_integer_part);
 
-    intpart_end = end_index;
+    int_part_end = end_index;
 
     int exponent = 0;
 
@@ -125,10 +112,10 @@ static String double_to_string(double d)
     while (frac_part > 0) {
         double old_frac_part = frac_part;
         frac_part *= 10;
-        frac_part = modf(frac_part, &intPart);
+        frac_part = modf(frac_part, &int_part);
         if (old_frac_part == frac_part)
             break;
-        number_string_builder.append('0' + (int)intPart);
+        number_string_builder.append('0' + (int)int_part);
         end_index++;
         exponent--;
     }
@@ -138,9 +125,9 @@ static String double_to_string(double d)
     // FIXME: Remove this hack.
     // FIXME: Instead find the shortest round-trippable representation.
     // Remove decimals after the 15th position
-    if (end_index > intpart_end + 15) {
-        exponent += end_index - intpart_end - 15;
-        end_index = intpart_end + 15;
+    if (end_index > int_part_end + 15) {
+        exponent += end_index - int_part_end - 15;
+        end_index = int_part_end + 15;
     }
 
     // remove leading zeroes
@@ -191,7 +178,7 @@ static String double_to_string(double d)
         else
             builder.append('-');
 
-        builder.append(String::format("%d", abs(exponent - 1)));
+        builder.append(String::number(fabs(exponent - 1)));
         return builder.to_string();
     }
 
@@ -205,7 +192,7 @@ static String double_to_string(double d)
     else
         builder.append('-');
 
-    builder.append(String::format("%d", abs(exponent - 1)));
+    builder.append(String::number(fabs(exponent - 1)));
     return builder.to_string();
 }
 
@@ -216,7 +203,7 @@ bool Value::is_array() const
 
 Array& Value::as_array()
 {
-    ASSERT(is_array());
+    VERIFY(is_array());
     return static_cast<Array&>(*m_value.as_object);
 }
 
@@ -227,14 +214,24 @@ bool Value::is_function() const
 
 Function& Value::as_function()
 {
-    ASSERT(is_function());
+    VERIFY(is_function());
     return static_cast<Function&>(as_object());
 }
 
+// 7.2.4 IsConstructor, https://tc39.es/ecma262/#sec-isconstructor
+bool Value::is_constructor() const
+{
+    if (!is_function())
+        return false;
+    if (is<NativeFunction>(as_object()))
+        return static_cast<const NativeFunction&>(as_object()).has_constructor();
+    // ScriptFunction or BoundFunction
+    return true;
+}
+
+// 7.2.8 IsRegExp, https://tc39.es/ecma262/#sec-isregexp
 bool Value::is_regexp(GlobalObject& global_object) const
 {
-    // 7.2.8 IsRegExp, https://tc39.es/ecma262/#sec-isregexp
-
     if (!is_object())
         return false;
 
@@ -247,6 +244,33 @@ bool Value::is_regexp(GlobalObject& global_object) const
     return is<RegExpObject>(as_object());
 }
 
+String Value::typeof() const
+{
+    switch (m_type) {
+    case Value::Type::Undefined:
+        return "undefined";
+    case Value::Type::Null:
+        return "object";
+    case Value::Type::Int32:
+    case Value::Type::Double:
+        return "number";
+    case Value::Type::String:
+        return "string";
+    case Value::Type::Object:
+        if (is_function())
+            return "function";
+        return "object";
+    case Value::Type::Boolean:
+        return "boolean";
+    case Value::Type::Symbol:
+        return "symbol";
+    case Value::Type::BigInt:
+        return "bigint";
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 String Value::to_string_without_side_effects() const
 {
     switch (m_type) {
@@ -256,7 +280,9 @@ String Value::to_string_without_side_effects() const
         return "null";
     case Type::Boolean:
         return m_value.as_bool ? "true" : "false";
-    case Type::Number:
+    case Type::Int32:
+        return String::number(m_value.as_i32);
+    case Type::Double:
         return double_to_string(m_value.as_double);
     case Type::String:
         return m_value.as_string->string();
@@ -271,7 +297,7 @@ String Value::to_string_without_side_effects() const
     case Type::NativeProperty:
         return "<native-property>";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -294,7 +320,9 @@ String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_s
         return !legacy_null_to_empty_string ? "null" : String::empty();
     case Type::Boolean:
         return m_value.as_bool ? "true" : "false";
-    case Type::Number:
+    case Type::Int32:
+        return String::number(m_value.as_i32);
+    case Type::Double:
         return double_to_string(m_value.as_double);
     case Type::String:
         return m_value.as_string->string();
@@ -304,13 +332,13 @@ String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_s
     case Type::BigInt:
         return m_value.as_bigint->big_integer().to_base10();
     case Type::Object: {
-        auto primitive_value = to_primitive(PreferredType::String);
+        auto primitive_value = to_primitive(global_object, PreferredType::String);
         if (global_object.vm().exception())
             return {};
         return primitive_value.to_string(global_object);
     }
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -322,7 +350,9 @@ bool Value::to_boolean() const
         return false;
     case Type::Boolean:
         return m_value.as_bool;
-    case Type::Number:
+    case Type::Int32:
+        return m_value.as_i32 != 0;
+    case Type::Double:
         if (is_nan())
             return false;
         return m_value.as_double != 0;
@@ -335,14 +365,39 @@ bool Value::to_boolean() const
     case Type::Object:
         return true;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
-Value Value::to_primitive(PreferredType preferred_type) const
+Value Value::to_primitive(GlobalObject& global_object, PreferredType preferred_type) const
 {
+    auto get_hint_for_preferred_type = [&]() -> String {
+        switch (preferred_type) {
+        case PreferredType::Default:
+            return "default";
+        case PreferredType::String:
+            return "string";
+        case PreferredType::Number:
+            return "number";
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
     if (is_object()) {
-        // FIXME: Also support @@toPrimitive
+        auto& vm = global_object.vm();
+        auto to_primitive_method = get_method(global_object, *this, vm.well_known_symbol_to_primitive());
+        if (vm.exception())
+            return {};
+        if (to_primitive_method) {
+            auto hint = get_hint_for_preferred_type();
+            auto result = vm.call(*to_primitive_method, *this, js_string(vm, hint));
+            if (vm.exception())
+                return {};
+            if (!result.is_object())
+                return result;
+            vm.throw_exception<TypeError>(global_object, ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
+            return {};
+        }
         if (preferred_type == PreferredType::Default)
             preferred_type = PreferredType::Number;
         return as_object().ordinary_to_primitive(preferred_type);
@@ -359,8 +414,9 @@ Object* Value::to_object(GlobalObject& global_object) const
         return nullptr;
     case Type::Boolean:
         return BooleanObject::create(global_object, m_value.as_bool);
-    case Type::Number:
-        return NumberObject::create(global_object, m_value.as_double);
+    case Type::Int32:
+    case Type::Double:
+        return NumberObject::create(global_object, as_double());
     case Type::String:
         return StringObject::create(global_object, *m_value.as_string);
     case Type::Symbol:
@@ -371,13 +427,13 @@ Object* Value::to_object(GlobalObject& global_object) const
         return &const_cast<Object&>(as_object());
     default:
         dbgln("Dying because I can't to_object() on {}", *this);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
-Value Value::to_numeric(GlobalObject& global_object) const
+FLATTEN Value Value::to_numeric(GlobalObject& global_object) const
 {
-    auto primitive = to_primitive(Value::PreferredType::Number);
+    auto primitive = to_primitive(global_object, Value::PreferredType::Number);
     if (global_object.vm().exception())
         return {};
     if (primitive.is_bigint())
@@ -394,8 +450,9 @@ Value Value::to_number(GlobalObject& global_object) const
         return Value(0);
     case Type::Boolean:
         return Value(m_value.as_bool ? 1 : 0);
-    case Type::Number:
-        return Value(m_value.as_double);
+    case Type::Int32:
+    case Type::Double:
+        return *this;
     case Type::String: {
         auto string = as_string().string().trim_whitespace();
         if (string.is_empty())
@@ -417,20 +474,20 @@ Value Value::to_number(GlobalObject& global_object) const
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "BigInt", "number");
         return {};
     case Type::Object: {
-        auto primitive = to_primitive(PreferredType::Number);
+        auto primitive = to_primitive(global_object, PreferredType::Number);
         if (global_object.vm().exception())
             return {};
         return primitive.to_number(global_object);
     }
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
 BigInt* Value::to_bigint(GlobalObject& global_object) const
 {
     auto& vm = global_object.vm();
-    auto primitive = to_primitive(PreferredType::Number);
+    auto primitive = to_primitive(global_object, PreferredType::Number);
     if (vm.exception())
         return nullptr;
     switch (primitive.type()) {
@@ -446,7 +503,8 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
     }
     case Type::BigInt:
         return &primitive.as_bigint();
-    case Type::Number:
+    case Type::Int32:
+    case Type::Double:
         vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "number", "BigInt");
         return {};
     case Type::String: {
@@ -461,10 +519,11 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
         vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "BigInt");
         return {};
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
+// FIXME: These two conversions are wrong for JS, and seem likely to be footguns
 i32 Value::as_i32() const
 {
     return static_cast<i32>(as_double());
@@ -472,14 +531,8 @@ i32 Value::as_i32() const
 
 u32 Value::as_u32() const
 {
-    ASSERT(as_double() >= 0);
-    return min((double)as_i32(), MAX_U32);
-}
-
-size_t Value::as_size_t() const
-{
-    ASSERT(as_double() >= 0);
-    return min((double)as_i32(), MAX_ARRAY_LIKE_INDEX);
+    VERIFY(as_double() >= 0);
+    return min((u32)as_i32(), NumericLimits<u32>::max());
 }
 
 double Value::to_double(GlobalObject& global_object) const
@@ -490,14 +543,23 @@ double Value::to_double(GlobalObject& global_object) const
     return number.as_double();
 }
 
-i32 Value::to_i32(GlobalObject& global_object) const
+i32 Value::to_i32_slow_case(GlobalObject& global_object) const
 {
+    VERIFY(type() != Type::Int32);
     auto number = to_number(global_object);
     if (global_object.vm().exception())
         return INVALID;
-    if (number.is_nan() || number.is_infinity())
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
         return 0;
-    return number.as_i32();
+    auto abs = fabs(value);
+    auto int_val = floor(abs);
+    if (signbit(value))
+        int_val = -int_val;
+    auto int32bit = fmod(int_val, 4294967296.0);
+    if (int32bit >= 2147483648.0)
+        int32bit -= 4294967296.0;
+    return static_cast<i32>(int32bit);
 }
 
 u32 Value::to_u32(GlobalObject& global_object) const
@@ -506,11 +568,14 @@ u32 Value::to_u32(GlobalObject& global_object) const
     auto number = to_number(global_object);
     if (global_object.vm().exception())
         return INVALID;
-    if (number.is_nan() || number.is_infinity())
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
         return 0;
-    if (number.as_double() <= 0)
-        return 0;
-    return number.as_u32();
+    auto int_val = floor(fabs(value));
+    if (signbit(value))
+        int_val = -int_val;
+    auto int32bit = fmod(int_val, NumericLimits<u32>::max() + 1.0);
+    return static_cast<u32>(int32bit);
 }
 
 size_t Value::to_length(GlobalObject& global_object) const
@@ -543,7 +608,7 @@ size_t Value::to_index(GlobalObject& global_object) const
         return INVALID;
     }
     auto index = Value(integer_index).to_length(global_object);
-    ASSERT(!vm.exception());
+    VERIFY(!vm.exception());
     if (integer_index != index) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidIndex);
         return INVALID;
@@ -564,7 +629,7 @@ double Value::to_integer_or_infinity(GlobalObject& global_object) const
         return 0;
     if (number.is_infinity())
         return number.as_double();
-    auto integer = floor(abs(number.as_double()));
+    auto integer = floor(fabs(number.as_double()));
     if (number.as_double() < 0)
         integer = -integer;
     return integer;
@@ -604,29 +669,29 @@ Value less_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 
 Value bitwise_and(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    auto rhs_numeric = rhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() || !rhs_numeric.is_finite_number())
             return Value(0);
-        return Value((i32)lhs_numeric.as_double() & (i32)rhs_numeric.as_double());
+        return Value(lhs_numeric.to_i32(global_object) & rhs_numeric.to_i32(global_object));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer()));
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise AND");
+    global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "bitwise AND");
     return {};
 }
 
 Value bitwise_or(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    auto rhs_numeric = rhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -636,20 +701,20 @@ Value bitwise_or(GlobalObject& global_object, Value lhs, Value rhs)
             return rhs_numeric;
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value((i32)lhs_numeric.as_double() | (i32)rhs_numeric.as_double());
+        return Value(lhs_numeric.to_i32(global_object) | rhs_numeric.to_i32(global_object));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer()));
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise OR");
+    global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "bitwise OR");
     return {};
 }
 
 Value bitwise_xor(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    auto rhs_numeric = rhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -659,17 +724,17 @@ Value bitwise_xor(GlobalObject& global_object, Value lhs, Value rhs)
             return rhs_numeric;
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value((i32)lhs_numeric.as_double() ^ (i32)rhs_numeric.as_double());
+        return Value(lhs_numeric.to_i32(global_object) ^ rhs_numeric.to_i32(global_object));
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer()));
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
+    global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
     return {};
 }
 
 Value bitwise_not(GlobalObject& global_object, Value lhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
     if (lhs_numeric.is_number())
@@ -682,12 +747,12 @@ Value bitwise_not(GlobalObject& global_object, Value lhs)
 
 Value unary_plus(GlobalObject& global_object, Value lhs)
 {
-    return lhs.to_number(global_object.global_object());
+    return lhs.to_number(global_object);
 }
 
 Value unary_minus(GlobalObject& global_object, Value lhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
     if (lhs_numeric.is_number()) {
@@ -704,10 +769,12 @@ Value unary_minus(GlobalObject& global_object, Value lhs)
 
 Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    // 6.1.6.1.9 Number::leftShift
+    // https://tc39.es/ecma262/#sec-numeric-types-number-leftShift
+    auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    auto rhs_numeric = rhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -715,20 +782,25 @@ Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value((i32)lhs_numeric.as_double() << (i32)rhs_numeric.as_double());
+        // Ok, so this performs toNumber() again but that "can't" throw
+        auto lhs_i32 = lhs_numeric.to_i32(global_object);
+        auto rhs_u32 = rhs_numeric.to_u32(global_object);
+        return Value(lhs_i32 << rhs_u32);
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         TODO();
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "left-shift");
+    global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "left-shift");
     return {};
 }
 
 Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    // 6.1.6.1.11 Number::signedRightShift
+    // https://tc39.es/ecma262/#sec-numeric-types-number-signedRightShift
+    auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    auto rhs_numeric = rhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -736,20 +808,25 @@ Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value((i32)lhs_numeric.as_double() >> (i32)rhs_numeric.as_double());
+        // Ok, so this performs toNumber() again but that "can't" throw
+        auto lhs_i32 = lhs_numeric.to_i32(global_object);
+        auto rhs_u32 = rhs_numeric.to_u32(global_object);
+        return Value(lhs_i32 >> rhs_u32);
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         TODO();
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "right-shift");
+    global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "right-shift");
     return {};
 }
 
 Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    // 6.1.6.1.11 Number::unsignedRightShift
+    // https://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift
+    auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    auto rhs_numeric = rhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -757,103 +834,124 @@ Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        return Value((unsigned)lhs_numeric.as_double() >> (i32)rhs_numeric.as_double());
+        // Ok, so this performs toNumber() again but that "can't" throw
+        auto lhs_u32 = lhs_numeric.to_u32(global_object);
+        auto rhs_u32 = rhs_numeric.to_u32(global_object) % 32;
+        return Value(lhs_u32 >> rhs_u32);
     }
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperator, "unsigned right-shift");
+    global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperator, "unsigned right-shift");
     return {};
 }
 
 Value add(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_primitive = lhs.to_primitive();
-    if (global_object.vm().exception())
+    if (both_number(lhs, rhs)) {
+        if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32) {
+            Checked<i32> result;
+            result = lhs.to_i32(global_object);
+            result += rhs.to_i32(global_object);
+            if (!result.has_overflow())
+                return Value(result.value());
+        }
+        return Value(lhs.as_double() + rhs.as_double());
+    }
+    auto& vm = global_object.vm();
+    auto lhs_primitive = lhs.to_primitive(global_object);
+    if (vm.exception())
         return {};
-    auto rhs_primitive = rhs.to_primitive();
-    if (global_object.vm().exception())
+    auto rhs_primitive = rhs.to_primitive(global_object);
+    if (vm.exception())
         return {};
 
     if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
-        auto lhs_string = lhs_primitive.to_string(global_object.global_object());
-        if (global_object.vm().exception())
+        auto lhs_string = lhs_primitive.to_string(global_object);
+        if (vm.exception())
             return {};
-        auto rhs_string = rhs_primitive.to_string(global_object.global_object());
-        if (global_object.vm().exception())
+        auto rhs_string = rhs_primitive.to_string(global_object);
+        if (vm.exception())
             return {};
         StringBuilder builder(lhs_string.length() + rhs_string.length());
         builder.append(lhs_string);
         builder.append(rhs_string);
-        return js_string(global_object.heap(), builder.to_string());
+        return js_string(vm.heap(), builder.to_string());
     }
 
-    auto lhs_numeric = lhs_primitive.to_numeric(global_object.global_object());
-    if (global_object.vm().exception())
+    auto lhs_numeric = lhs_primitive.to_numeric(global_object);
+    if (vm.exception())
         return {};
-    auto rhs_numeric = rhs_primitive.to_numeric(global_object.global_object());
-    if (global_object.vm().exception())
+    auto rhs_numeric = rhs_primitive.to_numeric(global_object);
+    if (vm.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() + rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer()));
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "addition");
+        return js_bigint(vm.heap(), lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer()));
+    vm.throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "addition");
     return {};
 }
 
 Value sub(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    auto rhs_numeric = rhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() - rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().minus(rhs_numeric.as_bigint().big_integer()));
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "subtraction");
+    global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "subtraction");
     return {};
 }
 
 Value mul(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    auto rhs_numeric = rhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() * rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().multiplied_by(rhs_numeric.as_bigint().big_integer()));
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "multiplication");
+    global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "multiplication");
     return {};
 }
 
 Value div(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
-    if (global_object.vm().exception())
+    auto& vm = global_object.vm();
+    auto lhs_numeric = lhs.to_numeric(global_object);
+    if (vm.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
-    if (global_object.vm().exception())
+    auto rhs_numeric = rhs.to_numeric(global_object);
+    if (vm.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() / rhs_numeric.as_double());
-    if (both_bigint(lhs_numeric, rhs_numeric))
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        if (rhs_numeric.as_bigint().big_integer() == BIGINT_ZERO) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::DivisionByZero);
+            return {};
+        }
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).quotient);
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "division");
+    }
+    vm.throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "division");
     return {};
 }
 
 Value mod(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
-    if (global_object.vm().exception())
+    auto& vm = global_object.vm();
+    auto lhs_numeric = lhs.to_numeric(global_object);
+    if (vm.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
-    if (global_object.vm().exception())
+    auto rhs_numeric = rhs.to_numeric(global_object);
+    if (vm.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (lhs_numeric.is_nan() || rhs_numeric.is_nan())
@@ -863,9 +961,14 @@ Value mod(GlobalObject& global_object, Value lhs, Value rhs)
         auto trunc = (double)(i32)(index / period);
         return Value(index - trunc * period);
     }
-    if (both_bigint(lhs_numeric, rhs_numeric))
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        if (rhs_numeric.as_bigint().big_integer() == BIGINT_ZERO) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::DivisionByZero);
+            return {};
+        }
         return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).remainder);
-    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "modulo");
+    }
+    vm.throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "modulo");
     return {};
 }
 
@@ -880,8 +983,13 @@ Value exp(GlobalObject& global_object, Value lhs, Value rhs)
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(pow(lhs_numeric.as_double(), rhs_numeric.as_double()));
-    if (both_bigint(lhs_numeric, rhs_numeric))
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        if (rhs_numeric.as_bigint().big_integer().is_negative()) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::NegativeExponent);
+            return {};
+        }
         return js_bigint(vm.heap(), Crypto::NumberTheory::Power(lhs_numeric.as_bigint().big_integer(), rhs_numeric.as_bigint().big_integer()));
+    }
     vm.throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "exponentiation");
     return {};
 }
@@ -889,13 +997,13 @@ Value exp(GlobalObject& global_object, Value lhs, Value rhs)
 Value in(GlobalObject& global_object, Value lhs, Value rhs)
 {
     if (!rhs.is_object()) {
-        global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::InOperatorWithObject);
+        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::InOperatorWithObject);
         return {};
     }
-    auto lhs_string = lhs.to_string(global_object.global_object());
+    auto lhs_string_or_symbol = StringOrSymbol::from_value(global_object, lhs);
     if (global_object.vm().exception())
         return {};
-    return Value(rhs.as_object().has_property(lhs_string));
+    return Value(rhs.as_object().has_property(lhs_string_or_symbol));
 }
 
 Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
@@ -905,18 +1013,15 @@ Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, rhs.to_string_without_side_effects());
         return {};
     }
-    auto has_instance_method = rhs.as_object().get(vm.well_known_symbol_has_instance());
-    if (!has_instance_method.is_empty()) {
-        if (!has_instance_method.is_function()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects());
-            return {};
-        }
-        auto has_instance_result = vm.call(has_instance_method.as_function(), rhs, lhs);
+    auto has_instance_method = get_method(global_object, Value(&rhs.as_object()), vm.well_known_symbol_has_instance());
+    if (vm.exception())
+        return {};
+    if (has_instance_method) {
+        auto has_instance_result = vm.call(*has_instance_method, rhs, lhs);
         if (vm.exception())
             return {};
         return Value(has_instance_result.to_boolean());
     }
-
     if (!rhs.is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, rhs.to_string_without_side_effects());
         return {};
@@ -961,7 +1066,7 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
 
 bool same_value(Value lhs, Value rhs)
 {
-    if (lhs.type() != rhs.type())
+    if (!same_type_for_equality(lhs, rhs))
         return false;
 
     if (lhs.is_number()) {
@@ -987,7 +1092,7 @@ bool same_value(Value lhs, Value rhs)
 
 bool same_value_zero(Value lhs, Value rhs)
 {
-    if (lhs.type() != rhs.type())
+    if (!same_type_for_equality(lhs, rhs))
         return false;
 
     if (lhs.is_number()) {
@@ -1004,8 +1109,8 @@ bool same_value_zero(Value lhs, Value rhs)
 
 bool same_value_non_numeric(Value lhs, Value rhs)
 {
-    ASSERT(!lhs.is_number() && !lhs.is_bigint());
-    ASSERT(lhs.type() == rhs.type());
+    VERIFY(!lhs.is_number() && !lhs.is_bigint());
+    VERIFY(same_type_for_equality(lhs, rhs));
 
     switch (lhs.type()) {
     case Value::Type::Undefined:
@@ -1020,13 +1125,13 @@ bool same_value_non_numeric(Value lhs, Value rhs)
     case Value::Type::Object:
         return &lhs.as_object() == &rhs.as_object();
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
 bool strict_eq(Value lhs, Value rhs)
 {
-    if (lhs.type() != rhs.type())
+    if (!same_type_for_equality(lhs, rhs))
         return false;
 
     if (lhs.is_number()) {
@@ -1045,17 +1150,17 @@ bool strict_eq(Value lhs, Value rhs)
 
 bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    if (lhs.type() == rhs.type())
+    if (same_type_for_equality(lhs, rhs))
         return strict_eq(lhs, rhs);
 
     if (lhs.is_nullish() && rhs.is_nullish())
         return true;
 
     if (lhs.is_number() && rhs.is_string())
-        return abstract_eq(global_object, lhs, rhs.to_number(global_object.global_object()));
+        return abstract_eq(global_object, lhs, rhs.to_number(global_object));
 
     if (lhs.is_string() && rhs.is_number())
-        return abstract_eq(global_object, lhs.to_number(global_object.global_object()), rhs);
+        return abstract_eq(global_object, lhs.to_number(global_object), rhs);
 
     if (lhs.is_bigint() && rhs.is_string()) {
         auto& rhs_string = rhs.as_string().string();
@@ -1068,16 +1173,24 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
         return abstract_eq(global_object, rhs, lhs);
 
     if (lhs.is_boolean())
-        return abstract_eq(global_object, lhs.to_number(global_object.global_object()), rhs);
+        return abstract_eq(global_object, lhs.to_number(global_object), rhs);
 
     if (rhs.is_boolean())
-        return abstract_eq(global_object, lhs, rhs.to_number(global_object.global_object()));
+        return abstract_eq(global_object, lhs, rhs.to_number(global_object));
 
-    if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object())
-        return abstract_eq(global_object, lhs, rhs.to_primitive());
+    if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object()) {
+        auto rhs_primitive = rhs.to_primitive(global_object);
+        if (global_object.vm().exception())
+            return false;
+        return abstract_eq(global_object, lhs, rhs_primitive);
+    }
 
-    if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || lhs.is_bigint() || rhs.is_symbol()))
-        return abstract_eq(global_object, lhs.to_primitive(), rhs);
+    if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || lhs.is_bigint() || rhs.is_symbol())) {
+        auto lhs_primitive = lhs.to_primitive(global_object);
+        if (global_object.vm().exception())
+            return false;
+        return abstract_eq(global_object, lhs_primitive, rhs);
+    }
 
     if ((lhs.is_bigint() && rhs.is_number()) || (lhs.is_number() && rhs.is_bigint())) {
         if (lhs.is_nan() || lhs.is_infinity() || rhs.is_nan() || rhs.is_infinity())
@@ -1085,9 +1198,9 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
         if ((lhs.is_number() && !lhs.is_integer()) || (rhs.is_number() && !rhs.is_integer()))
             return false;
         if (lhs.is_number())
-            return Crypto::SignedBigInteger { lhs.as_i32() } == rhs.as_bigint().big_integer();
+            return Crypto::SignedBigInteger { lhs.to_i32(global_object) } == rhs.as_bigint().big_integer();
         else
-            return Crypto::SignedBigInteger { rhs.as_i32() } == lhs.as_bigint().big_integer();
+            return Crypto::SignedBigInteger { rhs.to_i32(global_object) } == lhs.as_bigint().big_integer();
     }
 
     return false;
@@ -1099,17 +1212,17 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
     Value y_primitive;
 
     if (left_first) {
-        x_primitive = lhs.to_primitive(Value::PreferredType::Number);
+        x_primitive = lhs.to_primitive(global_object, Value::PreferredType::Number);
         if (global_object.vm().exception())
             return {};
-        y_primitive = rhs.to_primitive(Value::PreferredType::Number);
+        y_primitive = rhs.to_primitive(global_object, Value::PreferredType::Number);
         if (global_object.vm().exception())
             return {};
     } else {
-        y_primitive = lhs.to_primitive(Value::PreferredType::Number);
+        y_primitive = lhs.to_primitive(global_object, Value::PreferredType::Number);
         if (global_object.vm().exception())
             return {};
-        x_primitive = rhs.to_primitive(Value::PreferredType::Number);
+        x_primitive = rhs.to_primitive(global_object, Value::PreferredType::Number);
         if (global_object.vm().exception())
             return {};
     }
@@ -1118,13 +1231,14 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         auto x_string = x_primitive.as_string().string();
         auto y_string = y_primitive.as_string().string();
 
-        if (x_string.starts_with(y_string))
-            return TriState::False;
-        if (y_string.starts_with(x_string))
-            return TriState::True;
-
         Utf8View x_code_points { x_string };
         Utf8View y_code_points { y_string };
+
+        if (x_code_points.starts_with(y_code_points))
+            return TriState::False;
+        if (y_code_points.starts_with(x_code_points))
+            return TriState::True;
+
         for (auto k = x_code_points.begin(), l = y_code_points.begin();
              k != x_code_points.end() && l != y_code_points.end();
              ++k, ++l) {
@@ -1136,7 +1250,7 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
                 }
             }
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (x_primitive.is_bigint() && y_primitive.is_string()) {
@@ -1159,10 +1273,10 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
             return TriState::False;
     }
 
-    auto x_numeric = x_primitive.to_numeric(global_object.global_object());
+    auto x_numeric = x_primitive.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
-    auto y_numeric = y_primitive.to_numeric(global_object.global_object());
+    auto y_numeric = y_primitive.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
 
@@ -1189,17 +1303,17 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
             return TriState::False;
     }
 
-    ASSERT((x_numeric.is_number() && y_numeric.is_bigint()) || (x_numeric.is_bigint() && y_numeric.is_number()));
+    VERIFY((x_numeric.is_number() && y_numeric.is_bigint()) || (x_numeric.is_bigint() && y_numeric.is_number()));
 
     bool x_lower_than_y;
     if (x_numeric.is_number()) {
         x_lower_than_y = x_numeric.is_integer()
-            ? Crypto::SignedBigInteger { x_numeric.as_i32() } < y_numeric.as_bigint().big_integer()
-            : (Crypto::SignedBigInteger { x_numeric.as_i32() } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { x_numeric.as_i32() + 1 } < y_numeric.as_bigint().big_integer());
+            ? Crypto::SignedBigInteger { x_numeric.to_i32(global_object) } < y_numeric.as_bigint().big_integer()
+            : (Crypto::SignedBigInteger { x_numeric.to_i32(global_object) } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { x_numeric.to_i32(global_object) + 1 } < y_numeric.as_bigint().big_integer());
     } else {
         x_lower_than_y = y_numeric.is_integer()
-            ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() }
-            : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.as_i32() + 1 });
+            ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) }
+            : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) + 1 });
     }
     if (x_lower_than_y)
         return TriState::True;
@@ -1207,10 +1321,28 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         return TriState::False;
 }
 
+// 7.3.10 GetMethod, https://tc39.es/ecma262/#sec-getmethod
+Function* get_method(GlobalObject& global_object, Value value, const PropertyName& property_name)
+{
+    auto& vm = global_object.vm();
+    auto* object = value.to_object(global_object);
+    if (vm.exception())
+        return nullptr;
+    auto property_value = object->get(property_name);
+    if (vm.exception())
+        return nullptr;
+    if (property_value.is_empty() || property_value.is_nullish())
+        return nullptr;
+    if (!property_value.is_function()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, property_value.to_string_without_side_effects());
+        return nullptr;
+    }
+    return &property_value.as_function();
+}
+
+// 7.3.18 LengthOfArrayLike, https://tc39.es/ecma262/#sec-lengthofarraylike
 size_t length_of_array_like(GlobalObject& global_object, const Object& object)
 {
-    // 7.3.18 LengthOfArrayLike, https://tc39.es/ecma262/#sec-lengthofarraylike
-
     auto& vm = global_object.vm();
     auto result = object.get(vm.names.length).value_or(js_undefined());
     if (vm.exception())
@@ -1218,4 +1350,25 @@ size_t length_of_array_like(GlobalObject& global_object, const Object& object)
     return result.to_length(global_object);
 }
 
+// 7.3.22 SpeciesConstructor, https://tc39.es/ecma262/#sec-speciesconstructor
+Object* species_constructor(GlobalObject& global_object, const Object& object, Object& default_constructor)
+{
+    auto& vm = global_object.vm();
+    auto constructor = object.get(vm.names.constructor).value_or(js_undefined());
+    if (vm.exception())
+        return nullptr;
+    if (constructor.is_undefined())
+        return &default_constructor;
+    if (!constructor.is_object()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
+        return nullptr;
+    }
+    auto species = constructor.as_object().get(vm.well_known_symbol_species()).value_or(js_undefined());
+    if (species.is_nullish())
+        return &default_constructor;
+    if (species.is_constructor())
+        return &species.as_object();
+    vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
+    return nullptr;
+}
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -36,13 +16,16 @@
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextRange.h>
 #include <LibGfx/TextAlignment.h>
+#include <LibSyntax/Forward.h>
+#include <LibSyntax/HighlighterClient.h>
 
 namespace GUI {
 
 class TextEditor
     : public ScrollableWidget
-    , public TextDocument::Client {
-    C_OBJECT(TextEditor)
+    , public TextDocument::Client
+    , public Syntax::HighlighterClient {
+    C_OBJECT(TextEditor);
 
 public:
     enum Type {
@@ -54,6 +37,12 @@ public:
         Editable,
         ReadOnly,
         DisplayOnly
+    };
+
+    enum WrappingMode {
+        NoWrap,
+        WrapAnywhere,
+        WrapAtWords
     };
 
     virtual ~TextEditor() override;
@@ -72,16 +61,18 @@ public:
     void set_visualize_trailing_whitespace(bool);
     bool visualize_trailing_whitespace() const { return m_visualize_trailing_whitespace; }
 
-    bool has_visible_list() const { return m_has_visible_list; }
-    void set_has_visible_list(bool);
+    void set_visualize_leading_whitespace(bool);
+    bool visualize_leading_whitespace() const { return m_visualize_leading_whitespace; }
 
     virtual bool is_automatic_indentation_enabled() const final { return m_automatic_indentation_enabled; }
     void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
 
     virtual int soft_tab_width() const final { return m_soft_tab_width; }
+    void set_soft_tab_width(int width) { m_soft_tab_width = width; };
 
-    bool is_line_wrapping_enabled() const { return m_line_wrapping_enabled; }
-    void set_line_wrapping_enabled(bool);
+    WrappingMode wrapping_mode() const { return m_wrapping_mode; }
+    bool is_wrapping_enabled() const { return m_wrapping_mode != WrappingMode::NoWrap; }
+    void set_wrapping_mode(WrappingMode);
 
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
     void set_text_alignment(Gfx::TextAlignment);
@@ -97,7 +88,7 @@ public:
     void set_mode(const Mode);
 
     bool is_ruler_visible() const { return m_ruler_visible; }
-    void set_ruler_visible(bool b) { m_ruler_visible = b; }
+    void set_ruler_visible(bool);
 
     void set_icon(const Gfx::Bitmap*);
     const Gfx::Bitmap* icon() const { return m_icon; }
@@ -164,10 +155,10 @@ public:
 
     void set_cursor_and_focus_line(size_t line, size_t column);
     void set_cursor(size_t line, size_t column);
-    void set_cursor(const TextPosition&);
+    virtual void set_cursor(const TextPosition&);
 
-    const SyntaxHighlighter* syntax_highlighter() const;
-    void set_syntax_highlighter(OwnPtr<SyntaxHighlighter>);
+    const Syntax::Highlighter* syntax_highlighter() const;
+    void set_syntax_highlighter(OwnPtr<Syntax::Highlighter>);
 
     const AutocompleteProvider* autocomplete_provider() const;
     void set_autocomplete_provider(OwnPtr<AutocompleteProvider>&&);
@@ -187,7 +178,7 @@ public:
 
     void add_code_point(u32 code_point);
     void reset_cursor_blink();
-    void toggle_selection_if_needed_for_event(bool is_selecting);
+    void update_selection(bool is_selecting);
 
     int number_of_visible_lines() const;
     Gfx::IntRect cursor_content_rect() const;
@@ -232,6 +223,16 @@ private:
     virtual void document_did_change() override;
     virtual void document_did_set_text() override;
     virtual void document_did_set_cursor(const TextPosition&) override;
+
+    // ^Syntax::HighlighterClient
+    virtual Vector<TextDocumentSpan>& spans() final { return document().spans(); }
+    virtual const Vector<TextDocumentSpan>& spans() const final { return document().spans(); }
+    virtual void highlighter_did_set_spans(Vector<TextDocumentSpan> spans) final { document().set_spans(move(spans)); }
+    virtual void set_span_at_index(size_t index, TextDocumentSpan span) final { document().set_span_at_index(index, move(span)); }
+    virtual void highlighter_did_request_update() final { update(); }
+    virtual String highlighter_did_request_text() const final { return text(); }
+    virtual GUI::TextDocument& highlighter_did_request_document() final { return document(); }
+    virtual GUI::TextPosition highlighter_did_request_cursor() const final { return m_cursor; }
 
     void create_actions();
     void paint_ruler(Painter&);
@@ -299,9 +300,9 @@ private:
     bool m_ruler_visible { false };
     bool m_has_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
-    bool m_line_wrapping_enabled { false };
-    bool m_has_visible_list { false };
+    WrappingMode m_wrapping_mode { WrappingMode::NoWrap };
     bool m_visualize_trailing_whitespace { true };
+    bool m_visualize_leading_whitespace { false };
     int m_line_spacing { 4 };
     size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 3 };
@@ -337,7 +338,7 @@ private:
 
     NonnullOwnPtrVector<LineVisualData> m_line_visual_data;
 
-    OwnPtr<SyntaxHighlighter> m_highlighter;
+    OwnPtr<Syntax::Highlighter> m_highlighter;
     OwnPtr<AutocompleteProvider> m_autocomplete_provider;
     OwnPtr<AutocompleteBox> m_autocomplete_box;
     bool m_should_keep_autocomplete_box { false };

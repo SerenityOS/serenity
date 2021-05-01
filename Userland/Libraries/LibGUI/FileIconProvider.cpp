@@ -1,34 +1,13 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/String.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibELF/Image.h>
@@ -38,6 +17,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGLoader.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 namespace GUI {
 
@@ -45,6 +25,7 @@ static Icon s_hard_disk_icon;
 static Icon s_directory_icon;
 static Icon s_directory_open_icon;
 static Icon s_inaccessible_directory_icon;
+static Icon s_desktop_directory_icon;
 static Icon s_home_directory_icon;
 static Icon s_home_directory_open_icon;
 static Icon s_file_icon;
@@ -84,6 +65,7 @@ static void initialize_if_needed()
     s_inaccessible_directory_icon = Icon::default_icon("filetype-folder-inaccessible");
     s_home_directory_icon = Icon::default_icon("home-directory");
     s_home_directory_open_icon = Icon::default_icon("home-directory-open");
+    s_desktop_directory_icon = Icon::default_icon("desktop");
     s_file_icon = Icon::default_icon("filetype-unknown");
     s_symlink_icon = Icon::default_icon("filetype-symlink");
     s_socket_icon = Icon::default_icon("filetype-socket");
@@ -116,6 +98,12 @@ Icon FileIconProvider::home_directory_icon()
 {
     initialize_if_needed();
     return s_home_directory_icon;
+}
+
+Icon FileIconProvider::desktop_directory_icon()
+{
+    initialize_if_needed();
+    return s_desktop_directory_icon;
 }
 
 Icon FileIconProvider::home_directory_open_icon()
@@ -189,7 +177,7 @@ Icon FileIconProvider::icon_for_executable(const String& path)
 
         RefPtr<Gfx::Bitmap> bitmap;
         if (section.is_undefined()) {
-            bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size)->clone();
+            bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size);
         } else {
             bitmap = Gfx::load_png_from_memory(reinterpret_cast<const u8*>(section.raw_data()), section.size());
         }
@@ -219,6 +207,8 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
     if (S_ISDIR(mode)) {
         if (path == Core::StandardPaths::home_directory())
             return s_home_directory_icon;
+        if (path == Core::StandardPaths::desktop_directory())
+            return s_desktop_directory_icon;
         if (access(path.characters(), R_OK | X_OK) < 0)
             return s_inaccessible_directory_icon;
         return s_directory_icon;
@@ -235,12 +225,14 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
             target_path = Core::File::real_path_for(String::formatted("{}/{}", LexicalPath(path).dirname(), raw_symlink_target));
         }
         auto target_icon = icon_for_path(target_path);
+        if (target_icon.sizes().is_empty())
+            return s_symlink_icon;
 
         Icon generated_icon;
         for (auto size : target_icon.sizes()) {
             auto& emblem = size < 32 ? *s_symlink_emblem_small : *s_symlink_emblem;
             auto original_bitmap = target_icon.bitmap_for_size(size);
-            ASSERT(original_bitmap);
+            VERIFY(original_bitmap);
             auto generated_bitmap = original_bitmap->clone();
             if (!generated_bitmap) {
                 dbgln("Failed to clone {}x{} icon for symlink variant", size, size);

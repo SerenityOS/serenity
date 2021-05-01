@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -52,8 +32,9 @@ enum class BitmapFormat {
     Indexed2,
     Indexed4,
     Indexed8,
-    RGB32,
-    RGBA32,
+    BGRx8888,
+    BGRA8888,
+    RGBA8888,
 };
 
 inline bool is_valid_bitmap_format(unsigned format)
@@ -64,8 +45,9 @@ inline bool is_valid_bitmap_format(unsigned format)
     case (unsigned)BitmapFormat::Indexed2:
     case (unsigned)BitmapFormat::Indexed4:
     case (unsigned)BitmapFormat::Indexed8:
-    case (unsigned)BitmapFormat::RGB32:
-    case (unsigned)BitmapFormat::RGBA32:
+    case (unsigned)BitmapFormat::BGRx8888:
+    case (unsigned)BitmapFormat::BGRA8888:
+    case (unsigned)BitmapFormat::RGBA8888:
         return true;
     }
     return false;
@@ -73,24 +55,27 @@ inline bool is_valid_bitmap_format(unsigned format)
 
 enum class StorageFormat {
     Indexed8,
-    RGB32,
-    RGBA32,
+    BGRx8888,
+    BGRA8888,
+    RGBA8888,
 };
 
 static StorageFormat determine_storage_format(BitmapFormat format)
 {
     switch (format) {
-    case BitmapFormat::RGB32:
-        return StorageFormat::RGB32;
-    case BitmapFormat::RGBA32:
-        return StorageFormat::RGBA32;
+    case BitmapFormat::BGRx8888:
+        return StorageFormat::BGRx8888;
+    case BitmapFormat::BGRA8888:
+        return StorageFormat::BGRA8888;
+    case BitmapFormat::RGBA8888:
+        return StorageFormat::RGBA8888;
     case BitmapFormat::Indexed1:
     case BitmapFormat::Indexed2:
     case BitmapFormat::Indexed4:
     case BitmapFormat::Indexed8:
         return StorageFormat::Indexed8;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -112,7 +97,7 @@ public:
     static RefPtr<Bitmap> create_shareable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     static RefPtr<Bitmap> create_purgeable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, int intrinsic_scale, size_t pitch, void*);
-    static RefPtr<Bitmap> load_from_file(const StringView& path, int scale_factor = 1);
+    static RefPtr<Bitmap> load_from_file(String const& path, int scale_factor = 1);
     static RefPtr<Bitmap> create_with_anon_fd(BitmapFormat, int anon_fd, const IntSize&, int intrinsic_scale, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile);
     static RefPtr<Bitmap> create_from_serialized_byte_buffer(ByteBuffer&& buffer);
     static bool is_path_a_supported_image_format(const StringView& path)
@@ -194,11 +179,11 @@ public:
             return 4;
         case BitmapFormat::Indexed8:
             return 8;
-        case BitmapFormat::RGB32:
-        case BitmapFormat::RGBA32:
+        case BitmapFormat::BGRx8888:
+        case BitmapFormat::BGRA8888:
             return 32;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case BitmapFormat::Invalid:
             return 0;
         }
@@ -213,10 +198,10 @@ public:
 
     void fill(Color);
 
-    bool has_alpha_channel() const { return m_format == BitmapFormat::RGBA32; }
+    bool has_alpha_channel() const { return m_format == BitmapFormat::BGRA8888; }
     BitmapFormat format() const { return m_format; }
 
-    void set_mmap_name(const StringView&);
+    void set_mmap_name(String const&);
 
     static constexpr size_t size_in_bytes(size_t pitch, int physical_height) { return pitch * physical_height; }
     size_t size_in_bytes() const { return size_in_bytes(m_pitch, physical_height()); }
@@ -274,13 +259,13 @@ private:
 
 inline u8* Bitmap::scanline_u8(int y)
 {
-    ASSERT(y >= 0 && y < physical_height());
+    VERIFY(y >= 0 && y < physical_height());
     return reinterpret_cast<u8*>(m_data) + (y * m_pitch);
 }
 
 inline const u8* Bitmap::scanline_u8(int y) const
 {
-    ASSERT(y >= 0 && y < physical_height());
+    VERIFY(y >= 0 && y < physical_height());
     return reinterpret_cast<const u8*>(m_data) + (y * m_pitch);
 }
 
@@ -295,65 +280,65 @@ inline const RGBA32* Bitmap::scanline(int y) const
 }
 
 template<>
-inline Color Bitmap::get_pixel<StorageFormat::RGB32>(int x, int y) const
+inline Color Bitmap::get_pixel<StorageFormat::BGRx8888>(int x, int y) const
 {
-    ASSERT(x >= 0 && x < physical_width());
+    VERIFY(x >= 0 && x < physical_width());
     return Color::from_rgb(scanline(y)[x]);
 }
 
 template<>
-inline Color Bitmap::get_pixel<StorageFormat::RGBA32>(int x, int y) const
+inline Color Bitmap::get_pixel<StorageFormat::BGRA8888>(int x, int y) const
 {
-    ASSERT(x >= 0 && x < physical_width());
+    VERIFY(x >= 0 && x < physical_width());
     return Color::from_rgba(scanline(y)[x]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::Indexed8>(int x, int y) const
 {
-    ASSERT(x >= 0 && x < physical_width());
+    VERIFY(x >= 0 && x < physical_width());
     return Color::from_rgb(m_palette[scanline_u8(y)[x]]);
 }
 
 inline Color Bitmap::get_pixel(int x, int y) const
 {
     switch (determine_storage_format(m_format)) {
-    case StorageFormat::RGB32:
-        return get_pixel<StorageFormat::RGB32>(x, y);
-    case StorageFormat::RGBA32:
-        return get_pixel<StorageFormat::RGBA32>(x, y);
+    case StorageFormat::BGRx8888:
+        return get_pixel<StorageFormat::BGRx8888>(x, y);
+    case StorageFormat::BGRA8888:
+        return get_pixel<StorageFormat::BGRA8888>(x, y);
     case StorageFormat::Indexed8:
         return get_pixel<StorageFormat::Indexed8>(x, y);
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
 template<>
-inline void Bitmap::set_pixel<StorageFormat::RGB32>(int x, int y, Color color)
+inline void Bitmap::set_pixel<StorageFormat::BGRx8888>(int x, int y, Color color)
 {
-    ASSERT(x >= 0 && x < physical_width());
+    VERIFY(x >= 0 && x < physical_width());
     scanline(y)[x] = color.value();
 }
 template<>
-inline void Bitmap::set_pixel<StorageFormat::RGBA32>(int x, int y, Color color)
+inline void Bitmap::set_pixel<StorageFormat::BGRA8888>(int x, int y, Color color)
 {
-    ASSERT(x >= 0 && x < physical_width());
+    VERIFY(x >= 0 && x < physical_width());
     scanline(y)[x] = color.value(); // drop alpha
 }
 inline void Bitmap::set_pixel(int x, int y, Color color)
 {
     switch (determine_storage_format(m_format)) {
-    case StorageFormat::RGB32:
-        set_pixel<StorageFormat::RGB32>(x, y, color);
+    case StorageFormat::BGRx8888:
+        set_pixel<StorageFormat::BGRx8888>(x, y, color);
         break;
-    case StorageFormat::RGBA32:
-        set_pixel<StorageFormat::RGBA32>(x, y, color);
+    case StorageFormat::BGRA8888:
+        set_pixel<StorageFormat::BGRA8888>(x, y, color);
         break;
     case StorageFormat::Indexed8:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

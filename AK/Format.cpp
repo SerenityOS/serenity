@@ -1,57 +1,41 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/kstdio.h>
 #include <ctype.h>
+
+#if defined(__serenity__) && !defined(KERNEL)
+#    include <serenity.h>
+#endif
 
 #ifdef KERNEL
 #    include <Kernel/Process.h>
 #    include <Kernel/Thread.h>
 #else
 #    include <stdio.h>
-#    include <unistd.h>
 #endif
 
 namespace AK {
 
 namespace {
 
-constexpr size_t use_next_index = NumericLimits<size_t>::max();
+static constexpr size_t use_next_index = NumericLimits<size_t>::max();
 
 // The worst case is that we have the largest 64-bit value formatted as binary number, this would take
 // 65 bytes. Choosing a larger power of two won't hurt and is a bit of mitigation against out-of-bounds accesses.
-inline size_t convert_unsigned_to_string(u64 value, Array<u8, 128>& buffer, u8 base, bool upper_case)
+static constexpr size_t convert_unsigned_to_string(u64 value, Array<u8, 128>& buffer, u8 base, bool upper_case)
 {
-    ASSERT(base >= 2 && base <= 16);
+    VERIFY(base >= 2 && base <= 16);
 
-    static constexpr const char* lowercase_lookup = "0123456789abcdef";
-    static constexpr const char* uppercase_lookup = "0123456789ABCDEF";
+    constexpr const char* lowercase_lookup = "0123456789abcdef";
+    constexpr const char* uppercase_lookup = "0123456789ABCDEF";
 
     if (value == 0) {
         buffer[0] = '0';
@@ -81,7 +65,7 @@ void vformat_impl(TypeErasedFormatParams& params, FormatBuilder& builder, Format
 
     FormatParser::FormatSpecifier specifier;
     if (!parser.consume_specifier(specifier)) {
-        ASSERT(parser.is_eof());
+        VERIFY(parser.is_eof());
         return;
     }
 
@@ -97,34 +81,6 @@ void vformat_impl(TypeErasedFormatParams& params, FormatBuilder& builder, Format
 }
 
 } // namespace AK::{anonymous}
-
-size_t TypeErasedParameter::to_size() const
-{
-    i64 svalue;
-
-    if (type == TypeErasedParameter::Type::UInt8)
-        svalue = *reinterpret_cast<const u8*>(value);
-    else if (type == TypeErasedParameter::Type::UInt16)
-        svalue = *reinterpret_cast<const u16*>(value);
-    else if (type == TypeErasedParameter::Type::UInt32)
-        svalue = *reinterpret_cast<const u32*>(value);
-    else if (type == TypeErasedParameter::Type::UInt64)
-        svalue = *reinterpret_cast<const u64*>(value);
-    else if (type == TypeErasedParameter::Type::Int8)
-        svalue = *reinterpret_cast<const i8*>(value);
-    else if (type == TypeErasedParameter::Type::Int16)
-        svalue = *reinterpret_cast<const i16*>(value);
-    else if (type == TypeErasedParameter::Type::Int32)
-        svalue = *reinterpret_cast<const i32*>(value);
-    else if (type == TypeErasedParameter::Type::Int64)
-        svalue = *reinterpret_cast<const i64*>(value);
-    else
-        ASSERT_NOT_REACHED();
-
-    ASSERT(svalue >= 0);
-
-    return static_cast<size_t>(svalue);
-}
 
 FormatParser::FormatParser(StringView input)
     : GenericLexer(input)
@@ -164,7 +120,7 @@ bool FormatParser::consume_number(size_t& value)
 }
 bool FormatParser::consume_specifier(FormatSpecifier& specifier)
 {
-    ASSERT(!next_is('}'));
+    VERIFY(!next_is('}'));
 
     if (!consume_specific('{'))
         return false;
@@ -177,7 +133,7 @@ bool FormatParser::consume_specifier(FormatSpecifier& specifier)
 
         size_t level = 1;
         while (level > 0) {
-            ASSERT(!is_eof());
+            VERIFY(!is_eof());
 
             if (consume_specific('{')) {
                 ++level;
@@ -195,7 +151,7 @@ bool FormatParser::consume_specifier(FormatSpecifier& specifier)
         specifier.flags = m_input.substring_view(begin, tell() - begin - 1);
     } else {
         if (!consume_specific('}'))
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
 
         specifier.flags = "";
     }
@@ -211,7 +167,7 @@ bool FormatParser::consume_replacement_field(size_t& index)
         index = use_next_index;
 
     if (!consume_specific('}'))
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     return true;
 }
@@ -369,7 +325,7 @@ void FormatBuilder::put_i64(
     const auto is_negative = value < 0;
     value = is_negative ? -value : value;
 
-    put_u64(static_cast<size_t>(value), base, prefix, upper_case, zero_pad, align, min_width, fill, sign_mode, is_negative);
+    put_u64(static_cast<u64>(value), base, prefix, upper_case, zero_pad, align, min_width, fill, sign_mode, is_negative);
 }
 
 #ifndef KERNEL
@@ -386,8 +342,11 @@ void FormatBuilder::put_f64(
     StringBuilder string_builder;
     FormatBuilder format_builder { string_builder };
 
-    format_builder.put_i64(static_cast<i64>(value), base, false, upper_case, false, Align::Right, 0, ' ', sign_mode);
-    string_builder.append('.');
+    bool is_negative = value < 0.0;
+    if (is_negative)
+        value = -value;
+
+    format_builder.put_u64(static_cast<u64>(value), base, false, upper_case, false, Align::Right, 0, ' ', sign_mode, is_negative);
 
     if (precision > 0) {
         // FIXME: This is a terrible approximation but doing it properly would be a lot of work. If someone is up for that, a good
@@ -395,15 +354,22 @@ void FormatBuilder::put_f64(
         // https://youtu.be/4P_kbF0EbZM (Stephan T. Lavavej “Floating-Point <charconv>: Making Your Code 10x Faster With C++17's Final Boss”)
         value -= static_cast<i64>(value);
 
-        if (value < 0)
-            value = -value;
+        double epsilon = 0.5;
+        for (size_t i = 0; i < precision; ++i)
+            epsilon /= 10.0;
 
-        for (u32 i = 0; i < precision; ++i)
-            value *= 10;
+        size_t visible_precision = 0;
+        for (; visible_precision < precision; ++visible_precision) {
+            if (value - static_cast<i64>(value) < epsilon)
+                break;
+            value *= 10.0;
+            epsilon *= 10.0;
+        }
 
-        format_builder.put_u64(static_cast<u64>(value), base, false, upper_case, true, Align::Right, precision);
-
-        // FIXME: Cut off trailing zeroes by default?
+        if (visible_precision > 0) {
+            string_builder.append('.');
+            format_builder.put_u64(static_cast<u64>(value), base, false, upper_case, true, Align::Right, visible_precision);
+        }
     }
 
     put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill);
@@ -417,17 +383,11 @@ void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams p
 
     vformat_impl(params, fmtbuilder, parser);
 }
-void vformat(const LogStream& stream, StringView fmtstr, TypeErasedFormatParams params)
-{
-    StringBuilder builder;
-    vformat(builder, fmtstr, params);
-    stream << builder.to_string();
-}
 
 void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& parser)
 {
     if (StringView { "<^>" }.contains(parser.peek(1))) {
-        ASSERT(!parser.next_is(is_any_of("{}")));
+        VERIFY(!parser.next_is(is_any_of("{}")));
         m_fill = parser.consume();
     }
 
@@ -499,21 +459,21 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
     if (!parser.is_eof())
         dbgln("{} did not consume '{}'", __PRETTY_FUNCTION__, parser.remaining());
 
-    ASSERT(parser.is_eof());
+    VERIFY(parser.is_eof());
 }
 
 void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
 {
     if (m_sign_mode != FormatBuilder::SignMode::Default)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_alternative_form)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_zero_pad)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_mode != Mode::Default && m_mode != Mode::String && m_mode != Mode::Character)
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     if (m_width.has_value() && m_precision.has_value())
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     m_width = m_width.value_or(0);
     m_precision = m_precision.value_or(NumericLimits<size_t>::max());
@@ -527,11 +487,11 @@ void Formatter<FormatString>::vformat(FormatBuilder& builder, StringView fmtstr,
 }
 
 template<typename T>
-void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(FormatBuilder& builder, T value)
+void Formatter<T, typename EnableIf<IsIntegral<T>>::Type>::format(FormatBuilder& builder, T value)
 {
     if (m_mode == Mode::Character) {
         // FIXME: We just support ASCII for now, in the future maybe unicode?
-        ASSERT(value >= 0 && value <= 127);
+        VERIFY(value >= 0 && value <= 127);
 
         m_mode = Mode::String;
 
@@ -540,17 +500,17 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(FormatB
     }
 
     if (m_precision.has_value())
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     if (m_mode == Mode::Pointer) {
         if (m_sign_mode != FormatBuilder::SignMode::Default)
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         if (m_align != FormatBuilder::Align::Default)
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         if (m_alternative_form)
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         if (m_width.has_value())
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
 
         m_mode = Mode::Hexadecimal;
         m_alternative_form = true;
@@ -575,12 +535,12 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(FormatB
         base = 16;
         upper_case = true;
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     m_width = m_width.value_or(0);
 
-    if (IsSame<typename MakeUnsigned<T>::Type, T>::value)
+    if constexpr (IsSame<MakeUnsigned<T>, T>)
         builder.put_u64(value, base, m_alternative_form, upper_case, m_zero_pad, m_align, m_width.value(), m_fill, m_sign_mode);
     else
         builder.put_i64(value, base, m_alternative_form, upper_case, m_zero_pad, m_align, m_width.value(), m_fill, m_sign_mode);
@@ -622,7 +582,7 @@ void Formatter<double>::format(FormatBuilder& builder, double value)
         base = 16;
         upper_case = true;
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     m_width = m_width.value_or(0);
@@ -648,7 +608,7 @@ void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams params, bool new
 
     const auto string = builder.string_view();
     const auto retval = ::fwrite(string.characters_without_null_termination(), 1, string.length(), file);
-    ASSERT(static_cast<size_t>(retval) == string.length());
+    VERIFY(static_cast<size_t>(retval) == string.length());
 }
 #endif
 
@@ -685,7 +645,7 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams params)
             got_process_name = TriState::False;
     }
     if (got_process_name == TriState::True)
-        builder.appendff("\033[33;1m{}({})\033[0m: ", process_name_buffer, getpid());
+        builder.appendff("\033[33;1m{}({}:{})\033[0m: ", process_name_buffer, getpid(), gettid());
 #    endif
 #endif
 

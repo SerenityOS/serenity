@@ -1,4 +1,4 @@
-endpoint WindowClient = 4
+endpoint WindowClient
 {
     Paint(i32 window_id, Gfx::IntSize window_size, Vector<Gfx::IntRect> rects) =|
     MouseMove(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta, bool is_drag, Vector<String> mime_types) =|
@@ -18,14 +18,12 @@ endpoint WindowClient = 4
     WindowCloseRequest(i32 window_id) =|
     WindowResized(i32 window_id, Gfx::IntRect new_rect) =|
 
-    MenuItemActivated(i32 menu_id, i32 identifier) =|
+    MenuItemActivated(i32 menu_id, u32 identifier) =|
+    MenuItemEntered(i32 menu_id, u32 identifier) =|
+    MenuItemLeft(i32 menu_id, u32 identifier) =|
+    MenuVisibilityDidChange(i32 menu_id, bool visible) =|
 
     ScreenRectChanged(Gfx::IntRect rect) =|
-
-    WM_WindowRemoved(i32 wm_id, i32 client_id, i32 window_id) =|
-    WM_WindowStateChanged(i32 wm_id, i32 client_id, i32 window_id, i32 parent_client_id, i32 parent_window_id, bool is_active, bool is_minimized, bool is_modal, bool is_frameless, i32 window_type, [UTF8] String title, Gfx::IntRect rect, i32 progress) =|
-    WM_WindowIconBitmapChanged(i32 wm_id, i32 client_id, i32 window_id, Gfx::ShareableBitmap bitmap) =|
-    WM_WindowRectChanged(i32 wm_id, i32 client_id, i32 window_id, Gfx::IntRect rect) =|
 
     AsyncSetWallpaperFinished(bool success) =|
 

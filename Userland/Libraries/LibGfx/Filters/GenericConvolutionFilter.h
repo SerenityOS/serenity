@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -33,7 +13,7 @@
 namespace Gfx {
 
 template<size_t N, typename T>
-inline static constexpr void normalize(Matrix<N, T>& matrix)
+static constexpr void normalize(Matrix<N, T>& matrix)
 {
     auto sum = 0.0f;
     for (size_t i = 0; i < matrix.Size; ++i) {
@@ -85,7 +65,7 @@ public:
 
     virtual void apply(Bitmap& target_bitmap, const IntRect& target_rect, const Bitmap& source_bitmap, const IntRect& source_rect, const Filter::Parameters& parameters) override
     {
-        ASSERT(parameters.is_generic_convolution_filter());
+        VERIFY(parameters.is_generic_convolution_filter());
         auto& gcf_params = static_cast<const GenericConvolutionFilter::Parameters&>(parameters);
 
         ApplyCache apply_cache;
@@ -98,10 +78,10 @@ public:
         // contained by the source area. source_rect should be describing
         // the pixels that can be accessed to apply this filter, while
         // target_rect should describe the area where to apply the filter on.
-        ASSERT(source_rect.contains(target_rect));
-        ASSERT(source.size().contains(target.size()));
-        ASSERT(target.rect().contains(target_rect));
-        ASSERT(source.rect().contains(source_rect));
+        VERIFY(source_rect.contains(target_rect));
+        VERIFY(source.size().contains(target.size()));
+        VERIFY(target.rect().contains(target_rect));
+        VERIFY(source.rect().contains(source_rect));
 
         // If source is different from target, it should still be describing
         // essentially the same bitmap. But it allows us to modify target

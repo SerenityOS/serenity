@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 /*
@@ -31,20 +11,18 @@
 
 #include <AK/Assertions.h>
 #include <AK/NonnullOwnPtrVector.h>
-#include <AK/Optional.h>
-#include <AK/StringView.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Debug.h>
 #include <Kernel/Heap/Heap.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>
-
-#define SANITIZE_KMALLOC
 
 #define CHUNK_SIZE 32
 #define POOL_SIZE (2 * MiB)
@@ -67,10 +45,12 @@ struct KmallocGlobalHeap {
         bool add_memory(size_t allocation_request)
         {
             if (!MemoryManager::is_initialized()) {
-                klog() << "kmalloc(): Cannot expand heap before MM is initialized!";
+                if constexpr (KMALLOC_DEBUG) {
+                    dmesgln("kmalloc: Cannot expand heap before MM is initialized!");
+                }
                 return false;
             }
-            ASSERT(!m_adding);
+            VERIFY(!m_adding);
             TemporaryChange change(m_adding, true);
             // At this point we have very little memory left. Any attempt to
             // kmalloc() could fail, so use our backup memory first, so we
@@ -81,13 +61,17 @@ struct KmallocGlobalHeap {
                 // Be careful to not log too much here. We don't want to trigger
                 // any further calls to kmalloc(). We're already out of memory
                 // and don't have any backup memory, either!
-                klog() << "kmalloc(): Cannot expand heap: no backup memory";
+                if constexpr (KMALLOC_DEBUG) {
+                    dmesgln("kmalloc: Cannot expand heap: no backup memory");
+                }
                 return false;
             }
 
             // At this point we should have at least enough memory from the
             // backup region to be able to log properly
-            klog() << "kmalloc(): Adding memory to heap at " << region->vaddr() << ", bytes: " << region->size();
+            if constexpr (KMALLOC_DEBUG) {
+                dmesgln("kmalloc: Adding memory to heap at {}, bytes: {}", region->vaddr(), region->size());
+            }
 
             auto& subheap = m_global_heap.m_heap.add_subheap(region->vaddr().as_ptr(), region->size());
             m_global_heap.m_subheap_memory.append(region.release_nonnull());
@@ -107,19 +91,19 @@ struct KmallocGlobalHeap {
             // was big enough to likely satisfy the request
             if (subheap.free_bytes() < allocation_request) {
                 // Looks like we probably need more
-                size_t memory_size = PAGE_ROUND_UP(decltype(m_global_heap.m_heap)::calculate_memory_for_bytes(allocation_request));
+                size_t memory_size = page_round_up(decltype(m_global_heap.m_heap)::calculate_memory_for_bytes(allocation_request));
                 // Add some more to the new heap. We're already using it for other
                 // allocations not including the original allocation_request
                 // that triggered heap expansion. If we don't allocate
                 memory_size += 1 * MiB;
-                region = MM.allocate_kernel_region(memory_size, "kmalloc subheap", Region::Access::Read | Region::Access::Write, false, AllocationStrategy::AllocateNow);
+                region = MM.allocate_kernel_region(memory_size, "kmalloc subheap", Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
                 if (region) {
-                    klog() << "kmalloc(): Adding even more memory to heap at " << region->vaddr() << ", bytes: " << region->size();
+                    dbgln("kmalloc: Adding even more memory to heap at {}, bytes: {}", region->vaddr(), region->size());
 
                     m_global_heap.m_heap.add_subheap(region->vaddr().as_ptr(), region->size());
                     m_global_heap.m_subheap_memory.append(region.release_nonnull());
                 } else {
-                    klog() << "kmalloc(): Could not expand heap to satisfy allocation of " << allocation_request << " bytes";
+                    dbgln("kmalloc: Could not expand heap to satisfy allocation of {} bytes", allocation_request);
                     return false;
                 }
             }
@@ -134,10 +118,14 @@ struct KmallocGlobalHeap {
                 if (m_global_heap.m_subheap_memory[i].vaddr().as_ptr() == memory) {
                     auto region = m_global_heap.m_subheap_memory.take(i);
                     if (!m_global_heap.m_backup_memory) {
-                        klog() << "kmalloc(): Using removed memory as backup: " << region->vaddr() << ", bytes: " << region->size();
+                        if constexpr (KMALLOC_DEBUG) {
+                            dmesgln("kmalloc: Using removed memory as backup: {}, bytes: {}", region->vaddr(), region->size());
+                        }
                         m_global_heap.m_backup_memory = move(region);
                     } else {
-                        klog() << "kmalloc(): Queue removing memory from heap at " << region->vaddr() << ", bytes: " << region->size();
+                        if constexpr (KMALLOC_DEBUG) {
+                            dmesgln("kmalloc: Queue removing memory from heap at {}, bytes: {}", region->vaddr(), region->size());
+                        }
                         Processor::deferred_call_queue([this, region = move(region)]() mutable {
                             // We need to defer freeing the region to prevent a potential
                             // deadlock since we are still holding the kmalloc lock
@@ -147,10 +135,14 @@ struct KmallocGlobalHeap {
                             // new backup.
                             ScopedSpinLock lock(s_lock);
                             if (!m_global_heap.m_backup_memory) {
-                                klog() << "kmalloc(): Queued memory region at " << region->vaddr() << ", bytes: " << region->size() << " will be used as new backup";
+                                if constexpr (KMALLOC_DEBUG) {
+                                    dmesgln("kmalloc: Queued memory region at {}, bytes: {} will be used as new backup", region->vaddr(), region->size());
+                                }
                                 m_global_heap.m_backup_memory = move(region);
                             } else {
-                                klog() << "kmalloc(): Queued memory region at " << region->vaddr() << ", bytes: " << region->size() << " will be freed now";
+                                if constexpr (KMALLOC_DEBUG) {
+                                    dmesgln("kmalloc: Queued memory region at {}, bytes: {} will be freed now", region->vaddr(), region->size());
+                                }
                             }
                         });
                     }
@@ -158,7 +150,9 @@ struct KmallocGlobalHeap {
                 }
             }
 
-            klog() << "kmalloc(): Cannot remove memory from heap: " << VirtualAddress(memory);
+            if constexpr (KMALLOC_DEBUG) {
+                dmesgln("kmalloc: Cannot remove memory from heap: {}", VirtualAddress(memory));
+            }
             return false;
         }
     };
@@ -176,7 +170,7 @@ struct KmallocGlobalHeap {
     {
         if (m_backup_memory)
             return;
-        m_backup_memory = MM.allocate_kernel_region(1 * MiB, "kmalloc subheap", Region::Access::Read | Region::Access::Write, false, AllocationStrategy::AllocateNow);
+        m_backup_memory = MM.allocate_kernel_region(1 * MiB, "kmalloc subheap", Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
     }
 
     size_t backup_memory_bytes() const
@@ -185,7 +179,7 @@ struct KmallocGlobalHeap {
     }
 };
 
-static KmallocGlobalHeap* g_kmalloc_global;
+READONLY_AFTER_INIT static KmallocGlobalHeap* g_kmalloc_global;
 static u8 g_kmalloc_global_heap[sizeof(KmallocGlobalHeap)];
 
 // Treat the heap as logically separate from .bss
@@ -198,7 +192,7 @@ static size_t g_kfree_call_count;
 bool g_dump_kmalloc_stacks;
 
 static u8* s_next_eternal_ptr;
-static u8* s_end_of_eternal_range;
+READONLY_AFTER_INIT static u8* s_end_of_eternal_range;
 
 static void kmalloc_allocate_backup_memory()
 {
@@ -210,7 +204,7 @@ void kmalloc_enable_expand()
     g_kmalloc_global->allocate_backup_memory();
 }
 
-void kmalloc_init()
+UNMAP_AFTER_INIT void kmalloc_init()
 {
     // Zero out heap since it's placed after end_of_kernel_bss.
     memset(kmalloc_eternal_heap, 0, sizeof(kmalloc_eternal_heap));
@@ -230,12 +224,12 @@ void* kmalloc_eternal(size_t size)
     ScopedSpinLock lock(s_lock);
     void* ptr = s_next_eternal_ptr;
     s_next_eternal_ptr += size;
-    ASSERT(s_next_eternal_ptr < s_end_of_eternal_range);
+    VERIFY(s_next_eternal_ptr < s_end_of_eternal_range);
     g_kmalloc_bytes_eternal += size;
     return ptr;
 }
 
-void* kmalloc_impl(size_t size)
+void* kmalloc(size_t size)
 {
     ScopedSpinLock lock(s_lock);
     ++g_kmalloc_call_count;
@@ -247,9 +241,7 @@ void* kmalloc_impl(size_t size)
 
     void* ptr = g_kmalloc_global->m_heap.allocate(size);
     if (!ptr) {
-        klog() << "kmalloc(): PANIC! Out of memory (no suitable block for size " << size << ")";
-        Kernel::dump_backtrace();
-        Processor::halt();
+        PANIC("kmalloc: Out of memory (requested size: {})", size);
     }
 
     return ptr;

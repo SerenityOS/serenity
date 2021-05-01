@@ -1,30 +1,11 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
@@ -35,7 +16,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibThread/BackgroundAction.h>
-#include <dirent.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -53,7 +33,7 @@ ModelIndex FileSystemModel::Node::index(int column) const
         if (&parent->children[row] == this)
             return m_model.create_index(row, column, const_cast<Node*>(this));
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool FileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
@@ -122,42 +102,46 @@ void FileSystemModel::Node::traverse_if_needed()
     }
     quick_sort(child_names);
 
-    for (auto& name : child_names) {
-        String child_path = String::formatted("{}/{}", full_path, name);
+    NonnullOwnPtrVector<Node> directory_children;
+    NonnullOwnPtrVector<Node> file_children;
+
+    for (auto& child_name : child_names) {
+        String child_path = String::formatted("{}/{}", full_path, child_name);
         auto child = adopt_own(*new Node(m_model));
         bool ok = child->fetch_data(child_path, false);
         if (!ok)
             continue;
         if (m_model.m_mode == DirectoriesOnly && !S_ISDIR(child->mode))
             continue;
-        child->name = name;
+        child->name = child_name;
         child->parent = this;
         total_size += child->size;
-        children.append(move(child));
+        if (S_ISDIR(child->mode))
+            directory_children.append(move(child));
+        else
+            file_children.append(move(child));
     }
 
-    if (m_watch_fd >= 0)
-        return;
+    children.append(move(directory_children));
+    children.append(move(file_children));
 
-    m_watch_fd = watch_file(full_path.characters(), full_path.length());
-    if (m_watch_fd < 0) {
-        perror("watch_file");
-        return;
+    if (!m_file_watcher) {
+
+        // We are not already watching this file, create a new watcher
+        auto watcher_or_error = Core::FileWatcher::watch(full_path);
+
+        // Note : the watcher may not be created (e.g. we do not have access rights.) This is expected, just don't watch if that's the case.
+        if (!watcher_or_error.is_error()) {
+            m_file_watcher = watcher_or_error.release_value();
+            m_file_watcher->on_change = [this](auto) {
+                has_traversed = false;
+                mode = 0;
+                children.clear();
+                reify_if_needed();
+                m_model.did_update();
+            };
+        }
     }
-    fcntl(m_watch_fd, F_SETFD, FD_CLOEXEC);
-    dbgln("Watching {} for changes, m_watch_fd={}", full_path, m_watch_fd);
-    m_notifier = Core::Notifier::construct(m_watch_fd, Core::Notifier::Event::Read);
-    m_notifier->on_ready_to_read = [this] {
-        char buffer[32];
-        int rc = read(m_notifier->fd(), buffer, sizeof(buffer));
-        ASSERT(rc >= 0);
-
-        has_traversed = false;
-        mode = 0;
-        children.clear();
-        reify_if_needed();
-        m_model.did_update();
-    };
 }
 
 void FileSystemModel::Node::reify_if_needed()
@@ -166,6 +150,16 @@ void FileSystemModel::Node::reify_if_needed()
     if (mode != 0)
         return;
     fetch_data(full_path(), parent == nullptr || parent->m_parent_of_root);
+}
+
+bool FileSystemModel::Node::is_symlink_to_directory() const
+{
+    if (!S_ISLNK(mode))
+        return false;
+    struct stat st;
+    if (lstat(symlink_target.characters(), &st) < 0)
+        return false;
+    return S_ISDIR(st.st_mode);
 }
 
 String FileSystemModel::Node::full_path() const
@@ -185,9 +179,9 @@ String FileSystemModel::Node::full_path() const
     return LexicalPath::canonicalized_path(builder.to_string());
 }
 
-ModelIndex FileSystemModel::index(const StringView& path, int column) const
+ModelIndex FileSystemModel::index(String path, int column) const
 {
-    LexicalPath lexical_path(path);
+    LexicalPath lexical_path(move(path));
     const Node* node = m_root->m_parent_of_root ? &m_root->children.first() : m_root;
     if (lexical_path.string() == "/")
         return node->index(column);
@@ -217,8 +211,8 @@ String FileSystemModel::full_path(const ModelIndex& index) const
     return node.full_path();
 }
 
-FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
-    : m_root_path(LexicalPath::canonicalized_path(root_path))
+FileSystemModel::FileSystemModel(String root_path, Mode mode)
+    : m_root_path(LexicalPath::canonicalized_path(move(root_path)))
     , m_mode(mode)
 {
     setpwent();
@@ -304,12 +298,12 @@ void FileSystemModel::update_node_on_selection(const ModelIndex& index, const bo
     node.set_selected(selected);
 }
 
-void FileSystemModel::set_root_path(const StringView& root_path)
+void FileSystemModel::set_root_path(String root_path)
 {
     if (root_path.is_null())
         m_root_path = {};
     else
-        m_root_path = LexicalPath::canonicalized_path(root_path);
+        m_root_path = LexicalPath::canonicalized_path(move(root_path));
     update();
 
     if (m_root->has_error()) {
@@ -345,7 +339,7 @@ const FileSystemModel::Node& FileSystemModel::node(const ModelIndex& index) cons
 {
     if (!index.is_valid())
         return *m_root;
-    ASSERT(index.internal_data());
+    VERIFY(index.internal_data());
     return *(Node*)index.internal_data();
 }
 
@@ -366,7 +360,7 @@ ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
         return {};
     auto& node = this->node(index);
     if (!node.parent) {
-        ASSERT(&node == m_root);
+        VERIFY(&node == m_root);
         return {};
     }
     return node.parent->index(index.column());
@@ -374,7 +368,7 @@ ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
 
 Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
 {
-    ASSERT(index.is_valid());
+    VERIFY(index.is_valid());
 
     if (role == ModelRole::TextAlignment) {
         switch (index.column()) {
@@ -391,7 +385,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
         case Column::SymlinkTarget:
             return Gfx::TextAlignment::CenterLeft;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -399,7 +393,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
 
     if (role == ModelRole::Custom) {
         // For GUI::FileSystemModel, custom role means the full path.
-        ASSERT(index.column() == Column::Name);
+        VERIFY(index.column() == Column::Name);
         return node.full_path();
     }
 
@@ -418,7 +412,9 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
         case Column::Icon:
             return node.is_directory() ? 0 : 1;
         case Column::Name:
-            return node.name;
+            // NOTE: The children of a Node are grouped by directory-or-file and then sorted alphabetically.
+            //       Hence, the sort value for the name column is simply the index row. :^)
+            return index.row();
         case Column::Size:
             return (int)node.size;
         case Column::Owner:
@@ -434,7 +430,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
         case Column::SymlinkTarget:
             return node.symlink_target;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (role == ModelRole::Display) {
@@ -444,7 +440,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
         case Column::Name:
             return node.name;
         case Column::Size:
-            return (int)node.size;
+            return human_readable_size(node.size);
         case Column::Owner:
             return name_for_uid(node.uid);
         case Column::Group:
@@ -485,6 +481,8 @@ Icon FileSystemModel::icon_for(const Node& node) const
                 return FileIconProvider::home_directory_open_icon();
             return FileIconProvider::home_directory_icon();
         }
+        if (node.full_path() == Core::StandardPaths::desktop_directory())
+            return FileIconProvider::desktop_directory_icon();
         if (node.is_selected() && node.is_accessible_directory)
             return FileIconProvider::directory_open_icon();
     }
@@ -502,7 +500,7 @@ static RefPtr<Gfx::Bitmap> render_thumbnail(const StringView& path)
 
     double scale = min(32 / (double)png_bitmap->width(), 32 / (double)png_bitmap->height());
 
-    auto thumbnail = Gfx::Bitmap::create(png_bitmap->format(), { 32, 32 });
+    auto thumbnail = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 32, 32 });
     Gfx::IntRect destination = Gfx::IntRect(0, 0, (int)(png_bitmap->width() * scale), (int)(png_bitmap->height() * scale));
     destination.center_within(thumbnail->rect());
 
@@ -586,7 +584,7 @@ String FileSystemModel::column_name(int column) const
     case Column::SymlinkTarget:
         return "Symlink target";
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool FileSystemModel::accepts_drag(const ModelIndex& index, const Vector<String>& mime_types) const
@@ -616,7 +614,7 @@ bool FileSystemModel::is_editable(const ModelIndex& index) const
 
 void FileSystemModel::set_data(const ModelIndex& index, const Variant& data)
 {
-    ASSERT(is_editable(index));
+    VERIFY(is_editable(index));
     Node& node = const_cast<Node&>(this->node(index));
     auto dirname = LexicalPath(node.full_path()).dirname();
     auto new_full_path = String::formatted("{}/{}", dirname, data.to_string());
@@ -631,17 +629,17 @@ Vector<ModelIndex, 1> FileSystemModel::matches(const StringView& searching, unsi
 {
     Node& node = const_cast<Node&>(this->node(index));
     node.reify_if_needed();
-    Vector<ModelIndex, 1> found_indexes;
+    Vector<ModelIndex, 1> found_indices;
     for (auto& child : node.children) {
         if (string_matches(child.name, searching, flags)) {
             const_cast<Node&>(child).reify_if_needed();
-            found_indexes.append(child.index(Column::Name));
+            found_indices.append(child.index(Column::Name));
             if (flags & FirstMatchOnly)
                 break;
         }
     }
 
-    return found_indexes;
+    return found_indices;
 }
 
 }

@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
@@ -41,6 +21,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/JSONObject.h>
+#include <LibTest/Results.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -48,26 +29,6 @@
 #include <sys/time.h>
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
-
-enum class TestResult {
-    Pass,
-    Fail,
-    Skip,
-};
-
-struct JSTest {
-    String name;
-    TestResult result;
-    String details;
-};
-
-struct JSSuite {
-    String name;
-    // A failed test takes precedence over a skipped test, which both have
-    // precedence over a passed test
-    TestResult most_severe_test_result { TestResult::Pass };
-    Vector<JSTest> tests {};
-};
 
 struct ParserError {
     JS::Parser::Error error;
@@ -80,18 +41,9 @@ struct JSFileResult {
     double time_taken { 0 };
     // A failed test takes precedence over a skipped test, which both have
     // precedence over a passed test
-    TestResult most_severe_test_result { TestResult::Pass };
-    Vector<JSSuite> suites {};
+    Test::Result most_severe_test_result { Test::Result::Pass };
+    Vector<Test::Suite> suites {};
     Vector<String> logged_messages {};
-};
-
-struct JSTestRunnerCounts {
-    int tests_failed { 0 };
-    int tests_passed { 0 };
-    int tests_skipped { 0 };
-    int suites_failed { 0 };
-    int suites_passed { 0 };
-    int files_total { 0 };
 };
 
 Function<void(const URL&)> g_on_page_change;
@@ -157,7 +109,7 @@ private:
     bool m_print_times;
 
     double m_total_elapsed_time_in_ms { 0 };
-    JSTestRunnerCounts m_counts;
+    Test::Counts m_counts;
 
     RefPtr<Web::InProcessWebView> m_page_view;
 
@@ -186,7 +138,7 @@ static double get_time_in_ms()
 {
     struct timeval tv1;
     auto return_code = gettimeofday(&tv1, nullptr);
-    ASSERT(return_code >= 0);
+    VERIFY(return_code >= 0);
     return static_cast<double>(tv1.tv_sec) * 1000.0 + static_cast<double>(tv1.tv_usec) / 1000.0;
 }
 
@@ -196,7 +148,7 @@ void iterate_directory_recursively(const String& directory_path, Callback callba
     Core::DirIterator directory_iterator(directory_path, Core::DirIterator::Flags::SkipDots);
 
     while (directory_iterator.has_next()) {
-        auto file_path = String::format("%s/%s", directory_path.characters(), directory_iterator.next_path().characters());
+        auto file_path = directory_iterator.next_full_path();
         if (Core::File::is_directory(file_path)) {
             iterate_directory_recursively(file_path, callback);
         } else {
@@ -230,20 +182,23 @@ void TestRunner::run()
             cleanup_and_exit();
         }
 
-        ASSERT(m_page_view->document());
+        VERIFY(m_page_view->document());
 
         // We want to keep the same document since the interpreter is tied to the document,
         // and we don't want to lose the test state. So, we just clear the document and
         // give a new parser the existing document to work on.
         m_page_view->document()->remove_all_children();
 
+        Web::LoadRequest request;
+        request.set_url(page_to_load);
+
         Web::ResourceLoader::the().load_sync(
-            page_to_load,
-            [&](auto data, auto&) {
+            request,
+            [&](auto data, auto&, auto) {
                 Web::HTML::HTMLDocumentParser parser(*m_page_view->document(), data, "utf-8");
                 parser.run(page_to_load);
             },
-            [page_to_load](auto error) {
+            [page_to_load](auto& error, auto) {
                 printf("Failed to load test page: %s (%s)", page_to_load.to_string().characters(), error.characters());
                 cleanup_and_exit();
             });
@@ -303,14 +258,11 @@ static Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 JSFileResult TestRunner::run_file_test(const String& test_path)
 {
     double start_time = get_time_in_ms();
-    ASSERT(m_page_view->document());
+    VERIFY(m_page_view->document());
     auto& old_interpreter = m_page_view->document()->interpreter();
 
-    // FIXME: This is a hack while we're refactoring Interpreter/VM stuff.
-    JS::VM::InterpreterExecutionScope scope(old_interpreter);
-
     if (!m_js_test_common) {
-        auto result = parse_file(String::format("%s/test-common.js", m_js_test_root.characters()));
+        auto result = parse_file(String::formatted("{}/test-common.js", m_js_test_root));
         if (result.is_error()) {
             printf("Unable to parse %s/test-common.js\n", m_js_test_root.characters());
             printf("%s\n", result.error().error.to_string().characters());
@@ -321,7 +273,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     }
 
     if (!m_web_test_common) {
-        auto result = parse_file(String::format("%s/test-common.js", m_web_test_root.characters()));
+        auto result = parse_file(String::formatted("{}/test-common.js", m_web_test_root));
         if (result.is_error()) {
             printf("Unable to parse %s/test-common.js\n", m_web_test_root.characters());
             printf("%s\n", result.error().error.to_string().characters());
@@ -346,13 +298,19 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
 
     JSFileResult file_result;
 
+    Web::LoadRequest request;
+    request.set_url(page_to_load);
+
     Web::ResourceLoader::the().load_sync(
-        page_to_load,
-        [&](auto data, auto&) {
+        request,
+        [&](auto data, auto&, auto) {
             // Create a new parser and immediately get its document to replace the old interpreter.
             auto document = Web::DOM::Document::create();
             Web::HTML::HTMLDocumentParser parser(document, data, "utf-8");
             auto& new_interpreter = parser.document().interpreter();
+
+            // FIXME: This is a hack while we're refactoring Interpreter/VM stuff.
+            JS::VM::InterpreterExecutionScope scope(new_interpreter);
 
             // Setup the test environment and call "__BeforeInitialPageLoad__"
             new_interpreter.global_object().define_property(
@@ -394,46 +352,46 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             }
 
             test_json.value().as_object().for_each_member([&](const String& suite_name, const JsonValue& suite_value) {
-                JSSuite suite { suite_name };
+                Test::Suite suite { suite_name };
 
-                ASSERT(suite_value.is_object());
+                VERIFY(suite_value.is_object());
 
                 suite_value.as_object().for_each_member([&](const String& test_name, const JsonValue& test_value) {
-                    JSTest test { test_name, TestResult::Fail, "" };
+                    Test::Case test { test_name, Test::Result::Fail, "" };
 
-                    ASSERT(test_value.is_object());
-                    ASSERT(test_value.as_object().has("result"));
+                    VERIFY(test_value.is_object());
+                    VERIFY(test_value.as_object().has("result"));
 
                     auto result = test_value.as_object().get("result");
-                    ASSERT(result.is_string());
+                    VERIFY(result.is_string());
                     auto result_string = result.as_string();
                     if (result_string == "pass") {
-                        test.result = TestResult::Pass;
+                        test.result = Test::Result::Pass;
                         m_counts.tests_passed++;
                     } else if (result_string == "fail") {
-                        test.result = TestResult::Fail;
+                        test.result = Test::Result::Fail;
                         m_counts.tests_failed++;
-                        suite.most_severe_test_result = TestResult::Fail;
-                        ASSERT(test_value.as_object().has("details"));
+                        suite.most_severe_test_result = Test::Result::Fail;
+                        VERIFY(test_value.as_object().has("details"));
                         auto details = test_value.as_object().get("details");
-                        ASSERT(result.is_string());
+                        VERIFY(result.is_string());
                         test.details = details.as_string();
                     } else {
-                        test.result = TestResult::Skip;
-                        if (suite.most_severe_test_result == TestResult::Pass)
-                            suite.most_severe_test_result = TestResult::Skip;
+                        test.result = Test::Result::Skip;
+                        if (suite.most_severe_test_result == Test::Result::Pass)
+                            suite.most_severe_test_result = Test::Result::Skip;
                         m_counts.tests_skipped++;
                     }
 
                     suite.tests.append(test);
                 });
 
-                if (suite.most_severe_test_result == TestResult::Fail) {
+                if (suite.most_severe_test_result == Test::Result::Fail) {
                     m_counts.suites_failed++;
-                    file_result.most_severe_test_result = TestResult::Fail;
+                    file_result.most_severe_test_result = Test::Result::Fail;
                 } else {
-                    if (suite.most_severe_test_result == TestResult::Skip && file_result.most_severe_test_result == TestResult::Pass)
-                        file_result.most_severe_test_result = TestResult::Skip;
+                    if (suite.most_severe_test_result == Test::Result::Skip && file_result.most_severe_test_result == Test::Result::Pass)
+                        file_result.most_severe_test_result = Test::Result::Skip;
                     m_counts.suites_passed++;
                 }
 
@@ -445,7 +403,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             file_result.time_taken = get_time_in_ms() - start_time;
             m_total_elapsed_time_in_ms += file_result.time_taken;
         },
-        [page_to_load](auto error) {
+        [page_to_load](auto& error, auto) {
             printf("Failed to load test page: %s (%s)", page_to_load.to_string().characters(), error.characters());
             cleanup_and_exit();
         });
@@ -492,7 +450,7 @@ static void print_modifiers(Vector<Modifier> modifiers)
             case CLEAR:
                 return "\033[0m";
             }
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         };
         printf("%s", code().characters());
     }
@@ -500,12 +458,12 @@ static void print_modifiers(Vector<Modifier> modifiers)
 
 void TestRunner::print_file_result(const JSFileResult& file_result) const
 {
-    if (file_result.most_severe_test_result == TestResult::Fail || file_result.error.has_value()) {
+    if (file_result.most_severe_test_result == Test::Result::Fail || file_result.error.has_value()) {
         print_modifiers({ BG_RED, FG_BLACK, FG_BOLD });
         printf(" FAIL ");
         print_modifiers({ CLEAR });
     } else {
-        if (m_print_times || file_result.most_severe_test_result != TestResult::Pass) {
+        if (m_print_times || file_result.most_severe_test_result != Test::Result::Pass) {
             print_modifiers({ BG_GREEN, FG_BLACK, FG_BOLD });
             printf(" PASS ");
             print_modifiers({ CLEAR });
@@ -561,12 +519,12 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
         return;
     }
 
-    if (file_result.most_severe_test_result != TestResult::Pass) {
+    if (file_result.most_severe_test_result != Test::Result::Pass) {
         for (auto& suite : file_result.suites) {
-            if (suite.most_severe_test_result == TestResult::Pass)
+            if (suite.most_severe_test_result == Test::Result::Pass)
                 continue;
 
-            bool failed = suite.most_severe_test_result == TestResult::Fail;
+            bool failed = suite.most_severe_test_result == Test::Result::Fail;
 
             print_modifiers({ FG_GRAY, FG_BOLD });
 
@@ -596,12 +554,12 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
             print_modifiers({ CLEAR });
 
             for (auto& test : suite.tests) {
-                if (test.result == TestResult::Pass)
+                if (test.result == Test::Result::Pass)
                     continue;
 
                 print_modifiers({ FG_GRAY, FG_BOLD });
                 printf("         Test:   ");
-                if (test.result == TestResult::Fail) {
+                if (test.result == Test::Result::Fail) {
                     print_modifiers({ CLEAR, FG_RED });
                     printf("%s (failed):\n", test.name.characters());
                     printf("                 %s\n", test.details.characters());
@@ -698,12 +656,12 @@ int main(int argc, char** argv)
 #ifdef __serenity__
     TestRunner("/home/anon/web-tests", "/home/anon/js-tests", view, print_times).run();
 #else
-    char* serenity_root = getenv("SERENITY_ROOT");
-    if (!serenity_root) {
-        printf("test-web requires the SERENITY_ROOT environment variable to be set");
+    char* serenity_source_dir = getenv("SERENITY_SOURCE_DIR");
+    if (!serenity_source_dir) {
+        printf("test-web requires the SERENITY_SOURCE_DIR environment variable to be set");
         return 1;
     }
-    TestRunner(String::format("%s/Userland/Libraries/LibWeb/Tests", serenity_root), String::format("%s/Userland/Libraries/LibJS/Tests", serenity_root), view, print_times).run();
+    TestRunner(String::formatted("{}/Userland/Libraries/LibWeb/Tests", serenity_source_dir), String::formatted("{}/Userland/Libraries/LibJS/Tests", serenity_source_dir), view, print_times).run();
 #endif
     return 0;
 }

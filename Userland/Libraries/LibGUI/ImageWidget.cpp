@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/MappedFile.h>
@@ -71,6 +51,7 @@ void ImageWidget::set_auto_resize(bool value)
         set_fixed_size(m_bitmap->size());
 }
 
+// Same as QSWidget::animate(), you probably want to keep any changes in sync
 void ImageWidget::animate()
 {
     m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();
@@ -99,17 +80,15 @@ void ImageWidget::load_from_file(const StringView& path)
     auto& mapped_file = *file_or_error.value();
     m_image_decoder = Gfx::ImageDecoder::create((const u8*)mapped_file.data(), mapped_file.size());
     auto bitmap = m_image_decoder->bitmap();
-    ASSERT(bitmap);
+    VERIFY(bitmap);
 
     set_bitmap(bitmap);
 
-    if (path.ends_with(".gif")) {
-        if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
-            const auto& first_frame = m_image_decoder->frame(0);
-            m_timer->set_interval(first_frame.duration);
-            m_timer->on_timeout = [this] { animate(); };
-            m_timer->start();
-        }
+    if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
+        const auto& first_frame = m_image_decoder->frame(0);
+        m_timer->set_interval(first_frame.duration);
+        m_timer->on_timeout = [this] { animate(); };
+        m_timer->start();
     }
 }
 
@@ -128,12 +107,22 @@ void ImageWidget::paint_event(PaintEvent& event)
     }
 
     Painter painter(*this);
+    painter.add_clip_rect(event.rect());
 
     if (m_should_stretch) {
-        painter.draw_scaled_bitmap(frame_inner_rect(), *m_bitmap, m_bitmap->rect());
+        painter.draw_scaled_bitmap(frame_inner_rect(), *m_bitmap, m_bitmap->rect(), (float)opacity_percent() / 100.0f);
     } else {
         auto location = frame_inner_rect().center().translated(-(m_bitmap->width() / 2), -(m_bitmap->height() / 2));
-        painter.blit(location, *m_bitmap, m_bitmap->rect());
+        painter.blit(location, *m_bitmap, m_bitmap->rect(), (float)opacity_percent() / 100.0f);
     }
 }
+
+void ImageWidget::set_opacity_percent(int percent)
+{
+    if (m_opacity_percent == percent)
+        return;
+    m_opacity_percent = percent;
+    update();
+}
+
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Nico Weber <thakis@chromium.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #define _BSD_SOURCE
@@ -74,7 +54,7 @@ const unsigned SecondsFrom1900To1970 = (70u * 365u + 70u / 4u) * 24u * 60u * 60u
 
 static NtpTimestamp ntp_timestamp_from_timeval(const timeval& t)
 {
-    ASSERT(t.tv_usec >= 0 && t.tv_usec < 1'000'000); // Fits in 20 bits when normalized.
+    VERIFY(t.tv_usec >= 0 && t.tv_usec < 1'000'000); // Fits in 20 bits when normalized.
 
     // Seconds just need translation to the different origin.
     uint32_t seconds = t.tv_sec + SecondsFrom1900To1970;
@@ -100,9 +80,9 @@ static String format_ntp_timestamp(NtpTimestamp ntp_timestamp)
     struct tm tm;
     gmtime_r(&t.tv_sec, &tm);
     size_t written = strftime(buffer, sizeof(buffer), "%Y-%m-%dT%T.", &tm);
-    ASSERT(written == 20);
+    VERIFY(written == 20);
     written += snprintf(buffer + written, sizeof(buffer) - written, "%06d", (int)t.tv_usec);
-    ASSERT(written == 26);
+    VERIFY(written == 26);
     buffer[written++] = 'Z';
     buffer[written] = '\0';
     return buffer;
@@ -231,9 +211,9 @@ int main(int argc, char** argv)
     }
 
     cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
-    ASSERT(cmsg->cmsg_level == SOL_SOCKET);
-    ASSERT(cmsg->cmsg_type == SCM_TIMESTAMP);
-    ASSERT(!CMSG_NXTHDR(&msg, cmsg));
+    VERIFY(cmsg->cmsg_level == SOL_SOCKET);
+    VERIFY(cmsg->cmsg_type == SCM_TIMESTAMP);
+    VERIFY(!CMSG_NXTHDR(&msg, cmsg));
     timeval kernel_receive_time;
     memcpy(&kernel_receive_time, CMSG_DATA(cmsg), sizeof(kernel_receive_time));
 

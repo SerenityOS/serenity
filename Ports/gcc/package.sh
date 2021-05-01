@@ -1,24 +1,26 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=gcc
-version=10.2.0
+version=11.1.0
 useconfigure=true
-configopts="--target=i686-pc-serenity --with-sysroot=/ --with-build-sysroot=$SERENITY_ROOT/Build/Root --with-newlib --enable-languages=c,c++ --disable-lto --disable-nls --enable-shared --enable-default-pie --enable-host-shared"
-files="https://ftp.gnu.org/gnu/gcc/gcc-${version}/gcc-${version}.tar.xz gcc-${version}.tar.xz
-https://ftp.gnu.org/gnu/gcc/gcc-${version}/gcc-${version}.tar.xz.sig gcc-${version}.tar.xz.sig
-https://ftp.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
+configopts="--target=${SERENITY_ARCH}-pc-serenity --with-sysroot=/ --with-build-sysroot=${SERENITY_INSTALL_ROOT} --with-newlib --enable-languages=c,c++ --disable-lto --disable-nls --enable-shared --enable-default-pie --enable-host-shared --enable-threads=posix"
+files="https://ftpmirror.gnu.org/gnu/gcc/gcc-${version}/gcc-${version}.tar.xz gcc-${version}.tar.xz 4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf"
 makeopts="all-gcc all-target-libgcc all-target-libstdc++-v3 -j $(nproc)"
-installopts="DESTDIR=$SERENITY_ROOT/Build/Root install-gcc install-target-libgcc install-target-libstdc++-v3"
+installopts="DESTDIR=${SERENITY_INSTALL_ROOT} install-gcc install-target-libgcc install-target-libstdc++-v3"
 depends="binutils"
-auth_type="sig"
-auth_opts="--keyring ./gnu-keyring.gpg gcc-${version}.tar.xz.sig"
+auth_type="sha256"
 
 post_fetch() {
     run contrib/download_prerequisites
 }
 
+pre_configure() {
+    patch_internal
+    run sed -i 's@-fno-exceptions @@' gcc/config/serenity.h
+}
+
 build() {
     run make $makeopts
-    run find ./host-i686-pc-serenity/gcc/ -maxdepth 1 -type f -executable -exec strip --strip-debug {} \; || echo
+    run find "./host-${SERENITY_ARCH}-pc-serenity/gcc/" -maxdepth 1 -type f -executable -exec strip --strip-debug {} \; || echo
 }
 
 install() {

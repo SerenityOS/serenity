@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -43,6 +23,7 @@ public:
     static RefPtr<AnonymousVMObject> create_with_size(size_t, AllocationStrategy);
     static RefPtr<AnonymousVMObject> create_for_physical_range(PhysicalAddress paddr, size_t size);
     static NonnullRefPtr<AnonymousVMObject> create_with_physical_page(PhysicalPage& page);
+    static NonnullRefPtr<AnonymousVMObject> create_with_physical_pages(NonnullRefPtrVector<PhysicalPage>);
     virtual RefPtr<VMObject> clone() override;
 
     RefPtr<PhysicalPage> allocate_committed_page(size_t);
@@ -62,7 +43,7 @@ public:
     template<typename F>
     IterationDecision for_each_volatile_range(F f) const
     {
-        ASSERT(m_lock.is_locked());
+        VERIFY(m_lock.is_locked());
         // This is a little ugly. Basically, we're trying to find the
         // volatile ranges that all share, because those are the only
         // pages we can actually purge
@@ -115,12 +96,11 @@ public:
         return IterationDecision::Continue;
     }
 
-    size_t get_lazy_committed_page_count() const;
-
 private:
     explicit AnonymousVMObject(size_t, AllocationStrategy);
     explicit AnonymousVMObject(PhysicalAddress, size_t);
     explicit AnonymousVMObject(PhysicalPage&);
+    explicit AnonymousVMObject(NonnullRefPtrVector<PhysicalPage>);
     explicit AnonymousVMObject(const AnonymousVMObject&);
 
     virtual const char* class_name() const override { return "AnonymousVMObject"; }
@@ -149,7 +129,7 @@ private:
     Vector<PurgeablePageRanges*> m_purgeable_ranges;
     size_t m_unused_committed_pages { 0 };
 
-    mutable OwnPtr<Bitmap> m_cow_map;
+    Bitmap m_cow_map;
 
     // We share a pool of committed cow-pages with clones
     RefPtr<CommittedCowPages> m_shared_committed_cow_pages;

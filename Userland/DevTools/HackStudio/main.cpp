@@ -1,29 +1,10 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Editor.h"
 #include "HackStudio.h"
 #include "HackStudioWidget.h"
 #include "Project.h"
@@ -33,8 +14,9 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Notification.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibThread/Lock.h>
@@ -53,6 +35,7 @@ static RefPtr<GUI::Window> s_window;
 static RefPtr<HackStudioWidget> s_hack_studio_widget;
 
 static bool make_is_available();
+static void notify_make_not_available();
 static void update_path_environment_variable();
 
 int main(int argc, char** argv)
@@ -75,8 +58,9 @@ int main(int argc, char** argv)
 
     update_path_environment_variable();
 
-    if (!make_is_available())
-        GUI::MessageBox::show(s_window, "The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GUI::MessageBox::Type::Error);
+    if (!make_is_available()) {
+        notify_make_not_available();
+    }
 
     const char* path_argument = nullptr;
     Core::ArgsParser args_parser;
@@ -93,9 +77,9 @@ int main(int argc, char** argv)
 
     s_window->set_title(String::formatted("{} - Hack Studio", s_hack_studio_widget->project().name()));
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
     s_hack_studio_widget->initialize_menubar(menubar);
-    app->set_menubar(menubar);
+    s_window->set_menubar(menubar);
 
     s_window->show();
 
@@ -122,6 +106,15 @@ static bool make_is_available()
     return WEXITSTATUS(wstatus) == 0;
 }
 
+static void notify_make_not_available()
+{
+    auto notification = GUI::Notification::construct();
+    notification->set_icon(Gfx::Bitmap::load_from_file("/res/icons/32x32/app-hack-studio.png"));
+    notification->set_title("'make' Not Available");
+    notification->set_text("You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository");
+    notification->show();
+}
+
 static void update_path_environment_variable()
 {
     StringBuilder path;
@@ -139,9 +132,15 @@ GUI::TextEditor& current_editor()
     return s_hack_studio_widget->current_editor();
 }
 
-void open_file(const String& file_name)
+void open_file(const String& filename)
 {
-    return s_hack_studio_widget->open_file(file_name);
+    s_hack_studio_widget->open_file(filename);
+}
+
+void open_file(const String& filename, size_t line, size_t column)
+{
+    s_hack_studio_widget->open_file(filename);
+    s_hack_studio_widget->current_editor_wrapper().editor().set_cursor({ line, column });
 }
 
 RefPtr<EditorWrapper> current_editor_wrapper()
@@ -166,6 +165,11 @@ String currently_open_file()
 void set_current_editor_wrapper(RefPtr<EditorWrapper> wrapper)
 {
     s_hack_studio_widget->set_current_editor_wrapper(wrapper);
+}
+
+Locator& locator()
+{
+    return s_hack_studio_widget->locator();
 }
 
 }

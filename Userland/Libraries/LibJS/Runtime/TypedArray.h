@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -50,7 +30,7 @@ public:
     virtual size_t element_size() const = 0;
 
 protected:
-    TypedArrayBase(Object& prototype)
+    explicit TypedArrayBase(Object& prototype)
         : Object(prototype)
     {
     }
@@ -101,7 +81,7 @@ public:
             return Value((i32)data()[property_index]);
         } else if constexpr (sizeof(T) == 4 || sizeof(T) == 8) {
             auto value = data()[property_index];
-            if constexpr (IsFloatingPoint<T>::value) {
+            if constexpr (IsFloatingPoint<T>) {
                 return Value((double)value);
             } else if constexpr (NumericLimits<T>::is_signed()) {
                 if (value > NumericLimits<i32>::max() || value < NumericLimits<i32>::min())
@@ -116,7 +96,14 @@ public:
         }
     }
 
-    T* data() const { return reinterpret_cast<T*>(m_viewed_array_buffer->buffer().data()); }
+    Span<const T> data() const
+    {
+        return { reinterpret_cast<const T*>(m_viewed_array_buffer->buffer().data()), m_array_length };
+    }
+    Span<T> data()
+    {
+        return { reinterpret_cast<T*>(m_viewed_array_buffer->buffer().data()), m_array_length };
+    }
 
     virtual size_t element_size() const override { return sizeof(T); };
 
@@ -124,10 +111,10 @@ protected:
     TypedArray(u32 array_length, Object& prototype)
         : TypedArrayBase(prototype)
     {
-        ASSERT(!Checked<u32>::multiplication_would_overflow(array_length, sizeof(T)));
+        VERIFY(!Checked<u32>::multiplication_would_overflow(array_length, sizeof(T)));
         m_viewed_array_buffer = ArrayBuffer::create(global_object(), array_length * sizeof(T));
         if (array_length)
-            ASSERT(data() != nullptr);
+            VERIFY(!data().is_null());
         m_array_length = array_length;
         m_byte_length = m_viewed_array_buffer->byte_length();
     }

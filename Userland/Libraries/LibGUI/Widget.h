@@ -1,31 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/JsonObject.h>
 #include <AK/String.h>
 #include <LibCore/Object.h>
@@ -79,6 +60,8 @@ enum class FocusPolicy {
     ClickFocus = 0x2,
     StrongFocus = TabFocus | ClickFocus,
 };
+
+AK_ENUM_BITWISE_OPERATORS(FocusPolicy)
 
 class Widget : public Core::Object {
     C_OBJECT(Widget)
@@ -137,18 +120,13 @@ public:
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
     String tooltip() const { return m_tooltip; }
-    void set_tooltip(const StringView&);
+    void set_tooltip(String);
 
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
 
     bool updates_enabled() const { return m_updates_enabled; }
     void set_updates_enabled(bool);
-
-    virtual void event(Core::Event&) override;
-
-    // This is called after children have been painted.
-    virtual void second_paint_event(PaintEvent&);
 
     Gfx::IntRect relative_rect() const { return m_relative_rect; }
     Gfx::IntPoint relative_position() const { return m_relative_rect.location(); }
@@ -241,8 +219,14 @@ public:
     bool fill_with_background_color() const { return m_fill_with_background_color; }
 
     const Gfx::Font& font() const { return *m_font; }
+
     void set_font(const Gfx::Font*);
     void set_font(const Gfx::Font& font) { set_font(&font); }
+
+    void set_font_family(const String&);
+    void set_font_size(unsigned);
+    void set_font_weight(unsigned);
+    void set_font_fixed_width(bool);
 
     void set_global_cursor_tracking(bool);
     bool global_cursor_tracking() const;
@@ -307,6 +291,11 @@ public:
 protected:
     Widget();
 
+    virtual void event(Core::Event&) override;
+
+    // This is called after children have been painted.
+    virtual void second_paint_event(PaintEvent&);
+
     virtual void custom_layout() { }
     virtual void did_change_font() { }
     virtual void did_layout() { }
@@ -333,6 +322,7 @@ protected:
     virtual void drag_leave_event(Event&);
     virtual void drop_event(DropEvent&);
     virtual void theme_change_event(ThemeChangeEvent&);
+    virtual void screen_rect_change_event(ScreenRectChangeEvent&);
 
     virtual void did_begin_inspection() override;
     virtual void did_end_inspection() override;
@@ -345,6 +335,7 @@ private:
     void handle_mousedown_event(MouseEvent&);
     void handle_mousedoubleclick_event(MouseEvent&);
     void handle_mouseup_event(MouseEvent&);
+    void handle_keydown_event(KeyEvent&);
     void handle_enter_event(Core::Event&);
     void handle_leave_event(Core::Event&);
     void focus_previous_widget(FocusSource, bool siblings_only);

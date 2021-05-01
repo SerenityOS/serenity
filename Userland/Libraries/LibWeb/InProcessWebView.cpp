@@ -1,52 +1,24 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/ImageDecoder.h>
 #include <LibGfx/ShareableBitmap.h>
-#include <LibJS/Runtime/Value.h>
-#include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/DOM/Text.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
-#include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -55,7 +27,6 @@
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
-#include <stdio.h>
 
 REGISTER_WIDGET(Web, InProcessWebView)
 
@@ -105,8 +76,8 @@ void InProcessWebView::select_all()
             last_layout_node = layout_node;
     }
 
-    ASSERT(first_layout_node);
-    ASSERT(last_layout_node);
+    VERIFY(first_layout_node);
+    VERIFY(last_layout_node);
 
     int last_layout_node_index_in_node = 0;
     if (is<Layout::TextNode>(*last_layout_node))
@@ -123,7 +94,7 @@ String InProcessWebView::selected_text() const
 
 void InProcessWebView::page_did_layout()
 {
-    ASSERT(layout_root());
+    VERIFY(layout_root());
     set_content_size(layout_root()->size().to_type<int>());
 }
 
@@ -271,14 +242,7 @@ void InProcessWebView::paint_event(GUI::PaintEvent& event)
         return;
     }
 
-    painter.fill_rect(event.rect(), document()->background_color(palette()));
-
-    if (auto background_bitmap = document()->background_image()) {
-        painter.draw_tiled_bitmap(event.rect(), *background_bitmap);
-    }
-
     painter.translate(frame_thickness(), frame_thickness());
-    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     PaintContext context(painter, palette(), { horizontal_scrollbar().value(), vertical_scrollbar().value() });
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
@@ -303,6 +267,12 @@ void InProcessWebView::mouseup_event(GUI::MouseEvent& event)
 {
     page().handle_mouseup(to_content_position(event.position()), event.button(), event.modifiers());
     GUI::ScrollableWidget::mouseup_event(event);
+}
+
+void InProcessWebView::mousewheel_event(GUI::MouseEvent& event)
+{
+    page().handle_mousewheel(to_content_position(event.position()), event.button(), event.modifiers(), event.wheel_delta());
+    GUI::ScrollableWidget::mousewheel_event(event);
 }
 
 void InProcessWebView::keydown_event(GUI::KeyEvent& event)
@@ -411,7 +381,6 @@ void InProcessWebView::set_document(DOM::Document* document)
 void InProcessWebView::did_scroll()
 {
     page().main_frame().set_viewport_scroll_offset({ horizontal_scrollbar().value(), vertical_scrollbar().value() });
-    page().main_frame().did_scroll({});
 }
 
 void InProcessWebView::drop_event(GUI::DropEvent& event)
@@ -428,6 +397,33 @@ void InProcessWebView::drop_event(GUI::DropEvent& event)
 void InProcessWebView::page_did_request_alert(const String& message)
 {
     GUI::MessageBox::show(window(), message, "Alert", GUI::MessageBox::Type::Information);
+}
+
+bool InProcessWebView::page_did_request_confirm(const String& message)
+{
+    auto confirm_result = GUI::MessageBox::show(window(), message, "Confirm", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
+    return confirm_result == GUI::Dialog::ExecResult::ExecOK;
+}
+
+String InProcessWebView::page_did_request_prompt(const String& message, const String& default_)
+{
+    String value { default_ };
+    if (GUI::InputBox::show(window(), value, message, "Prompt") == GUI::InputBox::ExecOK)
+        return value;
+    return {};
+}
+
+String InProcessWebView::page_did_request_cookie(const URL& url, Cookie::Source source)
+{
+    if (on_get_cookie)
+        return on_get_cookie(url, source);
+    return {};
+}
+
+void InProcessWebView::page_did_set_cookie(const URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source)
+{
+    if (on_set_cookie)
+        on_set_cookie(url, cookie, source);
 }
 
 }

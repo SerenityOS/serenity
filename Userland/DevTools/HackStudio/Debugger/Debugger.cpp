@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Debugger.h"
@@ -33,7 +13,7 @@ static Debugger* s_the;
 
 Debugger& Debugger::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
@@ -70,9 +50,9 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
     auto position = create_source_position(file, line);
 
     if (change_type == BreakpointChange::Added) {
-        Debugger::the().m_breakpoints.append(position);
+        m_breakpoints.append(position);
     } else {
-        Debugger::the().m_breakpoints.remove_all_matching([&](Debug::DebugInfo::SourcePosition val) { return val == position; });
+        m_breakpoints.remove_all_matching([&](const Debug::DebugInfo::SourcePosition& val) { return val == position; });
     }
 
     auto session = Debugger::the().session();
@@ -90,37 +70,57 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
 
     if (change_type == BreakpointChange::Added) {
         bool success = session->insert_breakpoint(reinterpret_cast<void*>(address.value().address));
-        ASSERT(success);
+        VERIFY(success);
     } else {
         bool success = session->remove_breakpoint(reinterpret_cast<void*>(address.value().address));
-        ASSERT(success);
+        VERIFY(success);
     }
+}
+
+bool Debugger::set_execution_position(const String& file, size_t line)
+{
+    auto position = create_source_position(file, line);
+    auto session = Debugger::the().session();
+    if (!session)
+        return false;
+    auto address = session->get_address_from_source_position(position.file_path, position.line_number);
+    if (!address.has_value())
+        return false;
+    auto registers = session->get_registers();
+    registers.eip = address.value().address;
+    session->set_registers(registers);
+    return true;
 }
 
 Debug::DebugInfo::SourcePosition Debugger::create_source_position(const String& file, size_t line)
 {
-    if (!file.starts_with('/') && !file.starts_with("./"))
-        return { String::formatted("./{}", file), line + 1 };
-    return { file, line + 1 };
+    if (file.starts_with("/"))
+        return { file, line + 1 };
+    return { LexicalPath::canonicalized_path(String::formatted("{}/{}", m_source_root, file)), line + 1 };
 }
 
-int Debugger::start_static()
+intptr_t Debugger::start_static()
 {
     Debugger::the().start();
     return 0;
 }
 
+void Debugger::stop()
+{
+    set_requested_debugger_action(DebuggerAction::Exit);
+}
+
 void Debugger::start()
 {
     m_debug_session = Debug::DebugSession::exec_and_attach(m_executable_path, m_source_root);
-    ASSERT(!!m_debug_session);
+    VERIFY(!!m_debug_session);
 
     for (const auto& breakpoint : m_breakpoints) {
         dbgln("inserting breakpoint at: {}:{}", breakpoint.file_path, breakpoint.line_number);
         auto address = m_debug_session->get_address_from_source_position(breakpoint.file_path, breakpoint.line_number);
         if (address.has_value()) {
             bool success = m_debug_session->insert_breakpoint(reinterpret_cast<void*>(address.value().address));
-            ASSERT(success);
+            VERIFY(success);
         } else {
             dbgln("couldn't insert breakpoint");
         }
@@ -131,7 +131,7 @@ void Debugger::start()
 
 int Debugger::debugger_loop()
 {
-    ASSERT(m_debug_session);
+    VERIFY(m_debug_session);
 
     m_debug_session->run(Debug::DebugSession::DesiredInitialDebugeeState::Running, [this](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
@@ -140,7 +140,7 @@ int Debugger::debugger_loop()
             return Debug::DebugSession::DebugDecision::Detach;
         }
         remove_temporary_breakpoints();
-        ASSERT(optional_regs.has_value());
+        VERIFY(optional_regs.has_value());
         const PtraceRegisters& regs = optional_regs.value();
 
         auto source_position = m_debug_session->get_source_position(regs.eip);
@@ -151,7 +151,7 @@ int Debugger::debugger_loop()
         if (source_position.value().file_path.ends_with(".S"))
             return Debug::DebugSession::DebugDecision::SingleStep;
 
-        ASSERT(source_position.has_value());
+        VERIFY(source_position.has_value());
         if (m_state.get() == Debugger::DebuggingState::SingleStepping) {
             if (m_state.should_stop_single_stepping(source_position.value())) {
                 m_state.set_normal();
@@ -190,13 +190,11 @@ int Debugger::debugger_loop()
             do_step_over(regs);
             return Debug::DebugSession::DebugDecision::Continue;
         case DebuggerAction::Exit:
-            // NOTE: Is detaching from the debuggee the best thing to do here?
-            // We could display a dialog in the UI, remind the user that there is
-            // a live debugged process, and ask whether they want to terminate/detach.
             dbgln("Debugger exiting");
-            return Debug::DebugSession::DebugDecision::Detach;
+            m_on_exit_callback();
+            return Debug::DebugSession::DebugDecision::Kill;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     });
     m_debug_session.clear();
     return 0;
@@ -216,16 +214,16 @@ void Debugger::DebuggingState::set_single_stepping(Debug::DebugInfo::SourcePosit
 
 bool Debugger::DebuggingState::should_stop_single_stepping(const Debug::DebugInfo::SourcePosition& current_source_position) const
 {
-    ASSERT(m_state == State::SingleStepping);
+    VERIFY(m_state == State::SingleStepping);
     return m_original_source_position.value() != current_source_position;
 }
 
 void Debugger::remove_temporary_breakpoints()
 {
     for (auto breakpoint_address : m_state.temporary_breakpoints()) {
-        ASSERT(m_debug_session->breakpoint_exists((void*)breakpoint_address));
+        VERIFY(m_debug_session->breakpoint_exists((void*)breakpoint_address));
         bool rc = m_debug_session->remove_breakpoint((void*)breakpoint_address);
-        ASSERT(rc);
+        VERIFY(rc);
     }
     m_state.clear_temporary_breakpoints();
 }
@@ -259,7 +257,7 @@ void Debugger::do_step_over(const PtraceRegisters& regs)
         dbgln("cannot perform step_over, failed to find containing function of: {:p}", regs.eip);
         return;
     }
-    ASSERT(current_function.has_value());
+    VERIFY(current_function.has_value());
     auto lines_in_current_function = lib->debug_info->source_lines_in_scope(current_function.value());
     for (const auto& line : lines_in_current_function) {
         insert_temporary_breakpoint(line.address_of_first_statement.value() + lib->base_address);
@@ -270,7 +268,7 @@ void Debugger::do_step_over(const PtraceRegisters& regs)
 void Debugger::insert_temporary_breakpoint_at_return_address(const PtraceRegisters& regs)
 {
     auto frame_info = Debug::StackFrameUtils::get_info(*m_debug_session, regs.ebp);
-    ASSERT(frame_info.has_value());
+    VERIFY(frame_info.has_value());
     u32 return_address = frame_info.value().return_address;
     insert_temporary_breakpoint(return_address);
 }
@@ -280,7 +278,7 @@ void Debugger::insert_temporary_breakpoint(FlatPtr address)
     if (m_debug_session->breakpoint_exists((void*)address))
         return;
     bool success = m_debug_session->insert_breakpoint(reinterpret_cast<void*>(address));
-    ASSERT(success);
+    VERIFY(success);
     m_state.add_temporary_breakpoint(address);
 }
 

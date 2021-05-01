@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -58,7 +38,7 @@ public:
     bool is_maximized() const;
 
     bool is_frameless() const { return m_frameless; }
-    void set_frameless(bool frameless) { m_frameless = frameless; }
+    void set_frameless(bool);
 
     bool is_resizable() const { return m_resizable; }
     void set_resizable(bool resizable) { m_resizable = resizable; }
@@ -68,15 +48,22 @@ public:
 
     void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
+    bool has_alpha_channel() const { return m_has_alpha_channel; }
     void set_opacity(float);
+    float opacity() const { return m_opacity_when_windowless; }
+
+    void set_alpha_hit_threshold(float);
+    float alpha_hit_threshold() const { return m_alpha_hit_threshold; }
 
     WindowType window_type() const { return m_window_type; }
     void set_window_type(WindowType);
 
     int window_id() const { return m_window_id; }
 
+    void make_window_manager(unsigned event_mask);
+
     String title() const;
-    void set_title(const StringView&);
+    void set_title(String);
 
     Color background_color() const { return m_background_color; }
     void set_background_color(Color color) { m_background_color = color; }
@@ -96,12 +83,16 @@ public:
     int height() const { return rect().height(); }
 
     Gfx::IntRect rect() const;
-    Gfx::IntRect rect_in_menubar() const;
+    Gfx::IntRect applet_rect_on_screen() const;
     Gfx::IntSize size() const { return rect().size(); }
     void set_rect(const Gfx::IntRect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
 
     Gfx::IntPoint position() const { return rect().location(); }
+
+    Gfx::IntSize minimum_size() const;
+    void set_minimum_size(const Gfx::IntSize&);
+    void set_minimum_size(int width, int height) { set_minimum_size({ width, height }); }
 
     void move_to(int x, int y) { move_to({ x, y }); }
     void move_to(const Gfx::IntPoint& point) { set_rect({ point, size() }); }
@@ -126,7 +117,7 @@ public:
     virtual void close();
     void move_to_front();
 
-    void start_wm_resize();
+    void start_interactive_resize();
 
     Widget* main_widget() { return m_main_widget; }
     const Widget* main_widget() const { return m_main_widget; }
@@ -202,9 +193,12 @@ public:
 
     void did_disable_focused_widget(Badge<Widget>);
 
+    void set_menubar(RefPtr<Menubar>);
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);
+    virtual void screen_rect_change_event(ScreenRectChangeEvent&);
 
 private:
     void update_cursor();
@@ -219,6 +213,7 @@ private:
     void handle_became_active_or_inactive_event(Core::Event&);
     void handle_close_request();
     void handle_theme_change_event(ThemeChangeEvent&);
+    void handle_screen_rect_change_event(ScreenRectChangeEvent&);
     void handle_drag_move_event(DragEvent&);
     void handle_left_event();
 
@@ -232,16 +227,21 @@ private:
     OwnPtr<WindowBackingStore> m_front_store;
     OwnPtr<WindowBackingStore> m_back_store;
 
+    RefPtr<Menubar> m_menubar;
+
     RefPtr<Gfx::Bitmap> m_icon;
     RefPtr<Gfx::Bitmap> m_custom_cursor;
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
+    float m_alpha_hit_threshold { 0.0f };
     RefPtr<Widget> m_main_widget;
     WeakPtr<Widget> m_focused_widget;
     WeakPtr<Widget> m_global_cursor_tracking_widget;
     WeakPtr<Widget> m_automatic_cursor_tracking_widget;
     WeakPtr<Widget> m_hovered_widget;
     Gfx::IntRect m_rect_when_windowless;
+    Gfx::IntSize m_minimum_size_when_windowless { 50, 50 };
+    bool m_minimum_size_modified { false };
     String m_title_when_windowless;
     Vector<Gfx::IntRect, 32> m_pending_paint_event_rects;
     Gfx::IntSize m_size_increment;

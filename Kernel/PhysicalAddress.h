@@ -1,54 +1,34 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <AK/Types.h>
 
 class PhysicalAddress {
 public:
-    PhysicalAddress() { }
+    PhysicalAddress() = default;
     explicit PhysicalAddress(FlatPtr address)
         : m_address(address)
     {
     }
 
-    PhysicalAddress offset(FlatPtr o) const { return PhysicalAddress(m_address + o); }
-    FlatPtr get() const { return m_address; }
+    [[nodiscard]] PhysicalAddress offset(FlatPtr o) const { return PhysicalAddress(m_address + o); }
+    [[nodiscard]] FlatPtr get() const { return m_address; }
     void set(FlatPtr address) { m_address = address; }
     void mask(FlatPtr m) { m_address &= m; }
 
-    bool is_null() const { return m_address == 0; }
+    [[nodiscard]] bool is_null() const { return m_address == 0; }
 
-    u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
-    const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
+    [[nodiscard]] u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
+    [[nodiscard]] const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
 
-    PhysicalAddress page_base() const { return PhysicalAddress(m_address & 0xfffff000); }
-    FlatPtr offset_in_page() const { return PhysicalAddress(m_address & 0xfff).get(); }
+    [[nodiscard]] PhysicalAddress page_base() const { return PhysicalAddress(m_address & 0xfffff000); }
+    [[nodiscard]] FlatPtr offset_in_page() const { return PhysicalAddress(m_address & 0xfff).get(); }
 
     bool operator==(const PhysicalAddress& other) const { return m_address == other.m_address; }
     bool operator!=(const PhysicalAddress& other) const { return m_address != other.m_address; }
@@ -60,11 +40,6 @@ public:
 private:
     FlatPtr m_address { 0 };
 };
-
-inline const LogStream& operator<<(const LogStream& stream, PhysicalAddress value)
-{
-    return stream << 'P' << value.as_ptr();
-}
 
 template<>
 struct AK::Formatter<PhysicalAddress> : AK::Formatter<FormatString> {

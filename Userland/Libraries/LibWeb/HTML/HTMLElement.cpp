@@ -1,40 +1,28 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringBuilder.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Parser.h>
+#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/UIEvents/EventNames.h>
 
 namespace Web::HTML {
 
-HTMLElement::HTMLElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : Element(document, qualified_name)
+HTMLElement::HTMLElement(DOM::Document& document, QualifiedName qualified_name)
+    : Element(document, move(qualified_name))
 {
 }
 
@@ -65,7 +53,7 @@ bool HTMLElement::is_editable() const
     case ContentEditableState::Inherit:
         return parent() && parent()->is_editable();
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -79,25 +67,26 @@ String HTMLElement::content_editable() const
     case ContentEditableState::Inherit:
         return "inherit";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
-void HTMLElement::set_content_editable(const String& content_editable)
+// https://html.spec.whatwg.org/multipage/interaction.html#contenteditable
+DOM::ExceptionOr<void> HTMLElement::set_content_editable(const String& content_editable)
 {
     if (content_editable.equals_ignoring_case("inherit")) {
         remove_attribute(HTML::AttributeNames::contenteditable);
-        return;
+        return {};
     }
     if (content_editable.equals_ignoring_case("true")) {
         set_attribute(HTML::AttributeNames::contenteditable, "true");
-        return;
+        return {};
     }
     if (content_editable.equals_ignoring_case("false")) {
         set_attribute(HTML::AttributeNames::contenteditable, "false");
-        return;
+        return {};
     }
-    // FIXME: otherwise the attribute setter must throw a "SyntaxError" DOMException.
+    return DOM::SyntaxError::create("Invalid contentEditable value, must be 'true', 'false', or 'inherit'");
 }
 
 void HTMLElement::set_inner_text(StringView text)
@@ -132,10 +121,41 @@ String HTMLElement::inner_text()
     return builder.to_string();
 }
 
+unsigned HTMLElement::offset_top() const
+{
+    if (is<HTML::HTMLBodyElement>(this) || !layout_node() || !parent_element() || !parent_element()->layout_node())
+        return 0;
+    auto position = layout_node()->box_type_agnostic_position();
+    auto parent_position = parent_element()->layout_node()->box_type_agnostic_position();
+    return position.y() - parent_position.y();
+}
+
+unsigned HTMLElement::offset_left() const
+{
+    if (is<HTML::HTMLBodyElement>(this) || !layout_node() || !parent_element() || !parent_element()->layout_node())
+        return 0;
+    auto position = layout_node()->box_type_agnostic_position();
+    auto parent_position = parent_element()->layout_node()->box_type_agnostic_position();
+    return position.x() - parent_position.x();
+}
+
 bool HTMLElement::cannot_navigate() const
 {
     // FIXME: Return true if element's node document is not fully active
     return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
+}
+
+void HTMLElement::parse_attribute(const FlyString& name, const String& value)
+{
+    Element::parse_attribute(name, value);
+
+#undef __ENUMERATE
+#define __ENUMERATE(attribute_name, event_name)                          \
+    if (name == HTML::AttributeNames::attribute_name) {                  \
+        set_event_handler_attribute(event_name, EventHandler { value }); \
+    }
+    ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
+#undef __ENUMERATE
 }
 
 }

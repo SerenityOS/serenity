@@ -1,31 +1,12 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
+#include <AK/SourceGenerator.h>
 #include <LibGemini/Document.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibMarkdown/Document.h>
@@ -101,7 +82,7 @@ static bool build_image_document(DOM::Document& document, const ByteBuffer& data
     head_element->append_child(title_element);
 
     auto basename = LexicalPath(document.url().path()).basename();
-    auto title_text = adopt(*new DOM::Text(document, String::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())));
+    auto title_text = adopt_ref(*new DOM::Text(document, String::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())));
     title_element->append_child(title_text);
 
     auto body_element = document.create_element("body");
@@ -140,7 +121,7 @@ bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data
     }
     if (mime_type.starts_with("image/"))
         return build_image_document(document, data);
-    if (mime_type == "text/plain")
+    if (mime_type == "text/plain" || mime_type == "application/json")
         return build_text_document(document, data);
     if (mime_type == "text/markdown")
         return build_markdown_document(document, data);
@@ -178,7 +159,7 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
 
         ResourceLoader::the().load(
             favicon_url,
-            [this, favicon_url](auto data, auto&) {
+            [this, favicon_url](auto data, auto&, auto) {
                 dbgln("Favicon downloaded, {} bytes from {}", data.size(), favicon_url);
                 auto decoder = Gfx::ImageDecoder::create(data.data(), data.size());
                 auto bitmap = decoder->bitmap();
@@ -204,9 +185,7 @@ bool FrameLoader::load(const URL& url, Type type)
         return false;
     }
 
-    LoadRequest request;
-    request.set_url(url);
-
+    auto request = LoadRequest::create_for_url_on_page(url, frame().page());
     return load(request, type);
 }
 
@@ -226,21 +205,20 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
     auto error_page_url = "file:///res/html/error.html";
     ResourceLoader::the().load(
         error_page_url,
-        [this, failed_url, error](auto data, auto&) {
-            ASSERT(!data.is_null());
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-            auto html = String::format(
-                String::copy(data).characters(),
-                escape_html_entities(failed_url.to_string()).characters(),
-                escape_html_entities(error).characters());
-#pragma GCC diagnostic pop
-            auto document = HTML::parse_html_document(html, failed_url, "utf-8");
-            ASSERT(document);
+        [this, failed_url, error](auto data, auto&, auto) {
+            VERIFY(!data.is_null());
+            StringBuilder builder;
+            SourceGenerator generator { builder };
+            generator.set("failed_url", escape_html_entities(failed_url.to_string()));
+            generator.set("error", escape_html_entities(error));
+            generator.append(data);
+            auto document = HTML::parse_html_document(generator.as_string_view(), failed_url, "utf-8");
+            VERIFY(document);
             frame().set_document(document);
         },
-        [](auto error) {
+        [](auto& error, auto) {
             dbgln("Failed to load error page: {}", error);
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         });
 }
 
@@ -274,12 +252,17 @@ void FrameLoader::resource_did_load()
         return;
     }
 
+    // FIXME: Support multiple instances of the Set-Cookie response header.
+    auto set_cookie = resource()->response_headers().get("Set-Cookie");
+    if (set_cookie.has_value())
+        document->set_cookie(set_cookie.value(), Cookie::Source::Http);
+
     if (!url.fragment().is_empty())
         frame().scroll_to_anchor(url.fragment());
 
     if (auto* host_element = frame().host_element()) {
         // FIXME: Perhaps in the future we'll have a better common base class for <frame> and <iframe>
-        ASSERT(is<HTML::HTMLIFrameElement>(*host_element));
+        VERIFY(is<HTML::HTMLIFrameElement>(*host_element));
         downcast<HTML::HTMLIFrameElement>(*host_element).content_frame_did_load({});
     }
 

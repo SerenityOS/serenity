@@ -5,5 +5,5 @@ set(SOURCES
     main.cpp
 )
 
-serenity_app(HexEditor ICON app-hexeditor)
+serenity_app(HexEditor ICON app-hex-editor)
 target_link_libraries(HexEditor LibGUI)

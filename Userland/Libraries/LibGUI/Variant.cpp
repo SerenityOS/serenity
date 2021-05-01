@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/FlyString.h>
@@ -65,7 +45,7 @@ const char* to_string(Variant::Type type)
     case Variant::Type::TextAlignment:
         return "TextAlignment";
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Variant::Variant()
@@ -143,6 +123,11 @@ Variant::Variant(const FlyString& value)
 {
 }
 
+Variant::Variant(const StringView& value)
+    : Variant(value.to_string())
+{
+}
+
 Variant::Variant(const String& value)
     : m_type(Type::String)
 {
@@ -195,7 +180,7 @@ Variant::Variant(const JsonValue& value)
         return;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Variant::Variant(const Gfx::Bitmap& value)
@@ -257,7 +242,7 @@ Variant& Variant::operator=(Variant&& other)
     if (&other == this)
         return *this;
     clear();
-    move_from(AK::move(other));
+    move_from(move(other));
     return *this;
 }
 
@@ -276,7 +261,7 @@ void Variant::move_from(Variant&& other)
 
 void Variant::copy_from(const Variant& other)
 {
-    ASSERT(!is_valid());
+    VERIFY(!is_valid());
     m_type = other.m_type;
     switch (m_type) {
     case Type::Bool:
@@ -366,7 +351,7 @@ bool Variant::operator==(const Variant& other) const
     case Type::Invalid:
         return true;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 bool Variant::operator<(const Variant& other) const
@@ -400,11 +385,11 @@ bool Variant::operator<(const Variant& other) const
     case Type::Font:
     case Type::TextAlignment:
         // FIXME: Figure out how to compare these.
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     case Type::Invalid:
         break;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 String Variant::to_string() const
@@ -419,7 +404,7 @@ String Variant::to_string() const
     case Type::UnsignedInt:
         return String::number(as_uint());
     case Type::Float:
-        return String::format("%.2f", (double)as_float());
+        return String::formatted("{}", as_float());
     case Type::String:
         return as_string();
     case Type::Bitmap:
@@ -449,14 +434,14 @@ String Variant::to_string() const
         case Gfx::TextAlignment::TopRight:
             return "Gfx::TextAlignment::TopRight";
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         return "";
     }
     case Type::Invalid:
         return "[null]";
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 }

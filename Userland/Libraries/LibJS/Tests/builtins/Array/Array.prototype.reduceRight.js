@@ -84,21 +84,21 @@ describe("normal behavior", () => {
         }, 100);
         expect(result).toBe("100123456");
 
-        var indexes = [];
+        var indices = [];
         result = ["foo", 1, true].reduceRight((a, v, i) => {
-            indexes.push(i);
+            indices.push(i);
         });
         expect(result).toBeUndefined();
-        expect(indexes.length).toBe(2);
-        expect(indexes[0]).toBe(1);
-        expect(indexes[1]).toBe(0);
+        expect(indices.length).toBe(2);
+        expect(indices[0]).toBe(1);
+        expect(indices[1]).toBe(0);
 
-        indexes = [];
+        indices = [];
         result = ["foo", 1, true].reduceRight((a, v, i) => {
-            indexes.push(i);
+            indices.push(i);
         }, "foo");
         expect(result).toBeUndefined();
-        expect(indexes).toEqual([2, 1, 0]);
+        expect(indices).toEqual([2, 1, 0]);
 
         var mutable = { prop: 0 };
         result = ["foo", 1, true].reduceRight((a, v) => {

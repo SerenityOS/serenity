@@ -1,32 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
 #include <Kernel/Time/HPET.h>
@@ -42,12 +22,12 @@ KernelRng& KernelRng::the()
     return *s_the;
 }
 
-KernelRng::KernelRng()
+UNMAP_AFTER_INIT KernelRng::KernelRng()
 {
     bool supports_rdseed = Processor::current().has_feature(CPUFeature::RDSEED);
     bool supports_rdrand = Processor::current().has_feature(CPUFeature::RDRAND);
     if (supports_rdseed || supports_rdrand) {
-        klog() << "KernelRng: Using RDSEED or RDRAND as entropy source";
+        dmesgln("KernelRng: Using RDSEED or RDRAND as entropy source");
         for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
             u32 value = 0;
             if (supports_rdseed) {
@@ -68,20 +48,20 @@ KernelRng::KernelRng()
         }
     } else if (TimeManagement::the().can_query_precise_time()) {
         // Add HPET as entropy source if we don't have anything better.
-        klog() << "KernelRng: Using HPET as entropy source";
+        dmesgln("KernelRng: Using HPET as entropy source");
 
         for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
-            u64 hpet_time = HPET::the().read_main_counter();
+            u64 hpet_time = HPET::the().read_main_counter_unsafe();
             this->resource().add_random_event(hpet_time, i % 32);
         }
     } else {
         // Fallback to RTC
-        klog() << "KernelRng: Using RTC as entropy source (bad!)";
-        time_t current_time = RTC::now();
+        dmesgln("KernelRng: Using RTC as entropy source (bad!)");
+        auto current_time = static_cast<u64>(RTC::now());
         for (size_t i = 0; i < resource().pool_count * resource().reseed_threshold; ++i) {
             this->resource().add_random_event(current_time, i % 32);
-            current_time *= 0x574a;
-            current_time += 0x40b2;
+            current_time *= 0x574au;
+            current_time += 0x40b2u;
         }
     }
 }
@@ -91,13 +71,13 @@ void KernelRng::wait_for_entropy()
     ScopedSpinLock lock(get_lock());
     if (!resource().is_ready()) {
         dbgln("Entropy starvation...");
-        m_seed_queue.wait_on({}, "KernelRng");
+        m_seed_queue.wait_forever("KernelRng");
     }
 }
 
 void KernelRng::wake_if_ready()
 {
-    ASSERT(get_lock().is_locked());
+    VERIFY(get_lock().is_locked());
     if (resource().is_ready()) {
         m_seed_queue.wake_all();
     }
@@ -145,7 +125,7 @@ bool get_good_random_bytes(u8* buffer, size_t buffer_size, bool allow_wait, bool
     if (can_wait && allow_wait) {
         for (;;) {
             {
-                LOCKER(KernelRng::the().lock());
+                Locker locker(KernelRng::the().lock());
                 if (kernel_rng.resource().get_random_bytes(buffer, buffer_size)) {
                     result = true;
                     break;
@@ -167,7 +147,7 @@ bool get_good_random_bytes(u8* buffer, size_t buffer_size, bool allow_wait, bool
     // NOTE: The only case where this function should ever return false and
     // not actually return random data is if fallback_to_fast == false and
     // allow_wait == false and interrupts are enabled!
-    ASSERT(result || !fallback_to_fast);
+    VERIFY(result || !fallback_to_fast);
     return result;
 }
 
@@ -176,7 +156,7 @@ void get_fast_random_bytes(u8* buffer, size_t buffer_size)
     // Try to get good randomness, but don't block if we can't right now
     // and allow falling back to fast randomness
     auto result = get_good_random_bytes(buffer, buffer_size, false, true);
-    ASSERT(result);
+    VERIFY(result);
 }
 
 }

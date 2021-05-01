@@ -1,31 +1,13 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
- * All rights reserved.
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "AppletManager.h"
 #include <AK/QuickSort.h>
+#include <LibCore/EventLoop.h>
 #include <LibGfx/Painter.h>
 #include <WindowServer/MenuManager.h>
 
@@ -38,7 +20,7 @@ AppletManager::AppletManager()
 {
     s_the = this;
 
-    auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
     auto order = wm_config->read_entry("Applet", "Order");
     order_vector = order.split(',');
 }
@@ -49,21 +31,50 @@ AppletManager::~AppletManager()
 
 AppletManager& AppletManager::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
+}
+
+void AppletManager::set_position(const Gfx::IntPoint& position)
+{
+    m_window->move_to(position);
+    m_window->set_visible(true);
+}
+
+void AppletManager::set_hovered_applet(Window* applet)
+{
+    if (m_hovered_applet == applet)
+        return;
+
+    if (m_hovered_applet)
+        Core::EventLoop::current().post_event(*m_hovered_applet, make<Event>(Event::WindowLeft));
+
+    m_hovered_applet = applet;
+
+    if (m_hovered_applet)
+        Core::EventLoop::current().post_event(*m_hovered_applet, make<Event>(Event::WindowEntered));
 }
 
 void AppletManager::event(Core::Event& event)
 {
+    if (event.type() == Event::WindowLeft && m_hovered_applet) {
+        set_hovered_applet(nullptr);
+        return;
+    }
+
+    if (!is<MouseEvent>(event))
+        return;
     auto& mouse_event = static_cast<MouseEvent&>(event);
 
     for (auto& applet : m_applets) {
         if (!applet)
             continue;
-        if (!applet->rect_in_menubar().contains(mouse_event.position()))
+        if (!applet->rect_in_applet_area().contains(mouse_event.position()))
             continue;
-        auto local_event = mouse_event.translated(-applet->rect_in_menubar().location());
-        applet->event(local_event);
+        auto local_event = mouse_event.translated(-applet->rect_in_applet_area().location());
+        set_hovered_applet(applet);
+        Core::EventLoop::current().post_event(*applet, make<MouseEvent>(local_event));
+        return;
     }
 }
 
@@ -82,24 +93,68 @@ void AppletManager::add_applet(Window& applet)
         return index_a.value_or(0) > index_b.value_or(0);
     });
 
-    calculate_applet_rects(MenuManager::the().window());
+    relayout();
 
     MenuManager::the().refresh();
 }
 
-void AppletManager::calculate_applet_rects(Window& window)
+void AppletManager::relayout()
 {
-    auto menubar_rect = window.rect();
-    int right_edge_x = menubar_rect.width() - 4;
+    constexpr int applet_spacing = 4;
+    constexpr int applet_window_height = 20;
+    int total_width = 0;
     for (auto& existing_applet : m_applets) {
-
-        Gfx::IntRect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
-        Gfx::IntRect dummy_menubar_rect(0, 0, 0, 18);
-        new_applet_rect.center_vertically_within(dummy_menubar_rect);
-
-        existing_applet->set_rect_in_menubar(new_applet_rect);
-        right_edge_x = existing_applet->rect_in_menubar().x() - 4;
+        total_width += max(0, existing_applet->size().width()) + applet_spacing;
     }
+
+    if (total_width > 0)
+        total_width -= applet_spacing;
+
+    auto right_edge_x = total_width;
+
+    for (auto& existing_applet : m_applets) {
+        auto applet_size = existing_applet->size();
+        Gfx::IntRect new_applet_rect(right_edge_x - applet_size.width(), 0, applet_size.width(), applet_size.height());
+
+        Gfx::IntRect dummy_container_rect(0, 0, 0, applet_window_height);
+        new_applet_rect.center_vertically_within(dummy_container_rect);
+
+        existing_applet->set_rect_in_applet_area(new_applet_rect);
+        right_edge_x = existing_applet->rect_in_applet_area().x() - applet_spacing;
+    }
+
+    if (!m_window) {
+        m_window = Window::construct(*this, WindowType::AppletArea);
+        m_window->set_visible(false);
+    }
+
+    Gfx::IntRect rect { m_window->position(), Gfx::IntSize { total_width, applet_window_height } };
+    if (m_window->rect() == rect)
+        return;
+    m_window->set_rect(rect);
+
+    repaint();
+
+    WindowManager::the().tell_wms_applet_area_size_changed(rect.size());
+}
+
+void AppletManager::repaint()
+{
+    if (!m_window) {
+        return;
+    }
+
+    auto rect = Gfx::IntRect { { 0, 0 }, m_window->size() };
+
+    if (!rect.is_empty()) {
+        Gfx::Painter painter(*m_window->backing_store());
+        painter.fill_rect(rect, WindowManager::the().palette().button());
+    }
+}
+
+void AppletManager::did_change_theme()
+{
+    repaint();
 }
 
 void AppletManager::remove_applet(Window& applet)
@@ -108,7 +163,7 @@ void AppletManager::remove_applet(Window& applet)
         return &applet == entry.ptr();
     });
 
-    MenuManager::the().refresh();
+    relayout();
 }
 
 void AppletManager::draw()
@@ -125,17 +180,20 @@ void AppletManager::draw_applet(const Window& applet)
     if (!applet.backing_store())
         return;
 
-    Gfx::Painter painter(*MenuManager::the().window().backing_store());
+    Gfx::Painter painter(*m_window->backing_store());
     Gfx::PainterStateSaver saver(painter);
-    painter.add_clip_rect(applet.rect_in_menubar());
-    painter.fill_rect(applet.rect_in_menubar(), WindowManager::the().palette().window());
-    painter.blit(applet.rect_in_menubar().location(), *applet.backing_store(), applet.backing_store()->rect());
+    painter.add_clip_rect(applet.rect_in_applet_area());
+    painter.fill_rect(applet.rect_in_applet_area(), WindowManager::the().palette().button());
+    painter.blit(applet.rect_in_applet_area().location(), *applet.backing_store(), applet.backing_store()->rect());
 }
 
-void AppletManager::invalidate_applet(const Window& applet, const Gfx::IntRect& rect)
+void AppletManager::invalidate_applet(const Window& applet, const Gfx::IntRect&)
 {
     draw_applet(applet);
-    MenuManager::the().window().invalidate(rect.translated(applet.rect_in_menubar().location()));
+    draw();
+    // FIXME: Invalidate only the exact rect we've been given.
+    if (m_window)
+        m_window->invalidate();
 }
 
 }

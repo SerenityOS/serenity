@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -38,7 +18,6 @@ namespace GUI {
 class Menu final : public Core::Object {
     C_OBJECT(Menu)
 public:
-    explicit Menu(const StringView& name = "");
     virtual ~Menu() override;
 
     void realize_menu_if_needed();
@@ -59,8 +38,16 @@ public:
     void popup(const Gfx::IntPoint& screen_position, const RefPtr<Action>& default_action = nullptr);
     void dismiss();
 
+    void visibility_did_change(Badge<WindowServerConnection>, bool visible);
+
+    Function<void(bool)> on_visibility_change;
+
+    bool is_visible() const { return m_visible; }
+
 private:
-    friend class MenuBar;
+    friend class Menubar;
+
+    explicit Menu(String name = "");
 
     int realize_menu(RefPtr<Action> default_action = nullptr);
     void unrealize_menu();
@@ -71,6 +58,7 @@ private:
     RefPtr<Gfx::Bitmap> m_icon;
     NonnullOwnPtrVector<MenuItem> m_items;
     WeakPtr<Action> m_last_default_action;
+    bool m_visible { false };
 };
 
 }

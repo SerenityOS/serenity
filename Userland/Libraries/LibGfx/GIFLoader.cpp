@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Array.h>
@@ -104,7 +84,7 @@ struct GIFLoadingContext {
     RefPtr<Gfx::Bitmap> prev_frame_buffer;
 };
 
-RefPtr<Gfx::Bitmap> load_gif(const StringView& path)
+RefPtr<Gfx::Bitmap> load_gif(String const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
@@ -212,13 +192,13 @@ public:
         }
 
         if (m_current_code > m_code_table.size()) {
-            dbgln<GIF_DEBUG>("Corrupted LZW stream, invalid code: {} at bit index {}, code table size: {}",
+            dbgln_if(GIF_DEBUG, "Corrupted LZW stream, invalid code: {} at bit index {}, code table size: {}",
                 m_current_code,
                 m_current_bit_index,
                 m_code_table.size());
             return {};
         } else if (m_current_code == m_code_table.size() && m_output.is_empty()) {
-            dbgln<GIF_DEBUG>("Corrupted LZW stream, valid new code but output buffer is empty: {} at bit index {}, code table size: {}",
+            dbgln_if(GIF_DEBUG, "Corrupted LZW stream, valid new code but output buffer is empty: {} at bit index {}, code table size: {}",
                 m_current_code,
                 m_current_bit_index,
                 m_code_table.size());
@@ -232,14 +212,14 @@ public:
 
     Vector<u8>& get_output()
     {
-        ASSERT(m_current_code <= m_code_table.size());
+        VERIFY(m_current_code <= m_code_table.size());
         if (m_current_code < m_code_table.size()) {
             Vector<u8> new_entry = m_output;
             m_output = m_code_table.at(m_current_code);
             new_entry.append(m_output[0]);
             extend_code_table(new_entry);
         } else if (m_current_code == m_code_table.size()) {
-            ASSERT(!m_output.is_empty());
+            VERIFY(!m_output.is_empty());
             m_output.append(m_output[0]);
             extend_code_table(m_output);
         }
@@ -285,7 +265,7 @@ private:
 
 static void copy_frame_buffer(Bitmap& dest, const Bitmap& src)
 {
-    ASSERT(dest.size_in_bytes() == src.size_in_bytes());
+    VERIFY(dest.size_in_bytes() == src.size_in_bytes());
     memcpy(dest.scanline(0), src.scanline(0), dest.size_in_bytes());
 }
 
@@ -294,7 +274,7 @@ static void clear_rect(Bitmap& bitmap, const IntRect& rect, Color color)
     if (rect.is_empty())
         return;
 
-    ASSERT(bitmap.rect().contains(rect));
+    VERIFY(bitmap.rect().contains(rect));
 
     RGBA32* dst = bitmap.scanline(rect.top()) + rect.left();
     const size_t dst_skip = bitmap.pitch() / sizeof(RGBA32);
@@ -318,10 +298,10 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
     size_t start_frame = context.current_frame + 1;
     if (context.state < GIFLoadingContext::State::FrameComplete) {
         start_frame = 0;
-        context.frame_buffer = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
+        context.frame_buffer = Bitmap::create_purgeable(BitmapFormat::BGRA8888, { context.logical_screen.width, context.logical_screen.height });
         if (!context.frame_buffer)
             return false;
-        context.prev_frame_buffer = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
+        context.prev_frame_buffer = Bitmap::create_purgeable(BitmapFormat::BGRA8888, { context.logical_screen.width, context.logical_screen.height });
         if (!context.prev_frame_buffer)
             return false;
     } else if (frame_index < context.current_frame) {
@@ -399,14 +379,14 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
                 ++pixel_index;
                 if (pixel_index % image.width == 0) {
                     if (image.interlaced) {
-                        if (row + INTERLACE_ROW_STRIDES[interlace_pass] >= image.height) {
-                            ++interlace_pass;
-                            // FIXME: We could probably figure this out earlier and fail before doing a bunch of work.
-                            if (interlace_pass >= 4)
-                                return false;
-                            row = INTERLACE_ROW_OFFSETS[interlace_pass];
-                        } else {
-                            row += INTERLACE_ROW_STRIDES[interlace_pass];
+                        if (interlace_pass < 4) {
+                            if (row + INTERLACE_ROW_STRIDES[interlace_pass] >= image.height) {
+                                ++interlace_pass;
+                                if (interlace_pass < 4)
+                                    row = INTERLACE_ROW_OFFSETS[interlace_pass];
+                            } else {
+                                row += INTERLACE_ROW_STRIDES[interlace_pass];
+                            }
                         }
                     } else {
                         ++row;
@@ -542,12 +522,12 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
 
             if (extension_type == 0xFF) {
                 if (sub_block.size() != 14) {
-                    dbgln<GIF_DEBUG>("Unexpected application extension size: {}", sub_block.size());
+                    dbgln_if(GIF_DEBUG, "Unexpected application extension size: {}", sub_block.size());
                     continue;
                 }
 
                 if (sub_block[11] != 1) {
-                    dbgln<GIF_DEBUG>("Unexpected application extension format");
+                    dbgln_if(GIF_DEBUG, "Unexpected application extension format");
                     continue;
                 }
 

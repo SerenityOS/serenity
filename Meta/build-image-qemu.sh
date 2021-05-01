@@ -19,42 +19,82 @@ if [ "$(uname -s)" = "Darwin" ]; then
 fi
 
 disk_usage() {
-    du -sm "$1" | cut -f1
+    # shellcheck disable=SC2003
+    expr "$(du -sk "$1" | cut -f1)" / 1024
 }
 
-DISK_SIZE=$(($(disk_usage "$SERENITY_ROOT/Base") + $(disk_usage Root) + 100))
+DISK_SIZE=$(($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + 100))
+DISK_SIZE=${DISK_SIZE:-600}
+DISK_SIZE_BYTES=$((DISK_SIZE * 1024 * 1024))
+unset DISK_SIZE
 
-echo "setting up disk image..."
-qemu-img create _disk_image "${DISK_SIZE:-600}"m || die "could not create disk image"
-chown "$SUDO_UID":"$SUDO_GID" _disk_image || die "could not adjust permissions on disk image"
-echo "done"
+USE_EXISTING=0
 
-printf "creating new filesystem... "
-if [ "$(uname -s)" = "OpenBSD" ]; then
-    VND=$(vnconfig _disk_image)
-    (echo "e 0"; echo 83; echo n; echo 0; echo "*"; echo "quit") | fdisk -e "$VND"
-    mkfs.ext2 -I 128 -F "/dev/${VND}i" || die "could not create filesystem"
-elif [ "$(uname -s)" = "FreeBSD" ]; then
-    MD=$(mdconfig _disk_image)
-    mke2fs -q -I 128 _disk_image || die "could not create filesystem"
-else
-    if [ -x /sbin/mke2fs ]; then
-        /sbin/mke2fs -q -I 128 _disk_image || die "could not create filesystem"
+if [ -f _disk_image ]; then
+    USE_EXISTING=1
+
+    echo "checking existing image"
+    result=0
+    e2fsck -f -y _disk_image || result=$?
+    if [ $result -ge 4 ]; then
+        rm -f _disk_image
+        USE_EXISTING=0
+        echo "failed, not using existing image"
     else
-        mke2fs -q -I 128 _disk_image || die "could not create filesystem"
+        echo "done"
     fi
 fi
-echo "done"
+
+if [ $USE_EXISTING -eq 1 ];  then
+    OLD_DISK_SIZE_BYTES=$(wc -c < _disk_image)
+    if [ $DISK_SIZE_BYTES -gt "$OLD_DISK_SIZE_BYTES" ]; then
+        echo "resizing disk image..."
+        qemu-img resize -f raw _disk_image $DISK_SIZE_BYTES || die "could not resize disk image"
+        if ! resize2fs _disk_image; then
+            rm -f _disk_image
+            USE_EXISTING=0
+            echo "failed, not using existing image"
+        fi
+        echo "done"
+    fi
+fi
+
+if [ $USE_EXISTING -ne 1 ]; then
+    printf "setting up disk image... "
+    qemu-img create -q -f raw _disk_image $DISK_SIZE_BYTES || die "could not create disk image"
+    chown "$SUDO_UID":"$SUDO_GID" _disk_image || die "could not adjust permissions on disk image"
+    echo "done"
+
+    printf "creating new filesystem... "
+    if [ "$(uname -s)" = "OpenBSD" ]; then
+        VND=$(vnconfig _disk_image)
+        (echo "e 0"; echo 83; echo n; echo 0; echo "*"; echo "quit") | fdisk -e "$VND"
+        newfs_ext2fs -D 128 "/dev/r${VND}i" || die "could not create filesystem"
+    elif [ "$(uname -s)" = "FreeBSD" ]; then
+        MD=$(mdconfig _disk_image)
+        mke2fs -q -I 128 _disk_image || die "could not create filesystem"
+    else
+        if [ -x /sbin/mke2fs ]; then
+            /sbin/mke2fs -q -I 128 _disk_image || die "could not create filesystem"
+        else
+            mke2fs -q -I 128 _disk_image || die "could not create filesystem"
+        fi
+    fi
+    echo "done"
+fi
 
 printf "mounting filesystem... "
 mkdir -p mnt
 use_genext2fs=0
 if [ "$(uname -s)" = "Darwin" ]; then
     fuse-ext2 _disk_image mnt -o rw+,allow_other,uid=501,gid=20 || die "could not mount filesystem"
+    echo "done"
 elif [ "$(uname -s)" = "OpenBSD" ]; then
     mount -t ext2fs "/dev/${VND}i" mnt/ || die "could not mount filesystem"
+    echo "done"
 elif [ "$(uname -s)" = "FreeBSD" ]; then
     fuse-ext2 -o rw+,direct_io "/dev/${MD}" mnt/ || die "could not mount filesystem"
+    echo "done"
 else
     if ! mount _disk_image mnt/ ; then
         if command -v genext2fs 1>/dev/null ; then
@@ -63,9 +103,10 @@ else
         else
             die "could not mount filesystem and genext2fs is missing"
         fi
+    else
+         echo "done"
     fi
 fi
-echo "done"
 
 cleanup() {
     if [ -d mnt ]; then
@@ -95,7 +136,7 @@ if [ $use_genext2fs = 1 ]; then
     # genext2fs is very slow in generating big images, so I use a smaller image here. size can be updated
     # if it's not enough.
     # not using "-i 128" since it hangs. Serenity handles whatever default this uses instead.
-    genext2fs -b 250000 -d mnt _disk_image || die "try increasing image size (genext2fs -b)"
+    genext2fs -B 4096 -b $((DISK_SIZE_BYTES / 4096)) -d mnt _disk_image || die "try increasing image size (genext2fs -b)"
     # if using docker with shared mount, file is created as root, so make it writable for users
     chmod 0666 _disk_image
 fi

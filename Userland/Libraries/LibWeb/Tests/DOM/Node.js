@@ -25,4 +25,38 @@ afterInitialPageLoad(() => {
             HIDDEN TEXT
         `);
     });
+
+    test("Node.isConnected", () => {
+        var element = document.createElement("p");
+        expect(element.isConnected).toBeFalse();
+
+        document.body.appendChild(element);
+        expect(element.isConnected).toBeTrue();
+
+        document.body.removeChild(element);
+        expect(element.isConnected).toBeFalse();
+    });
+
+    test("Node.compareDocumentPosition()", () => {
+        const head = document.head;
+        const body = document.body;
+
+        expect(head.compareDocumentPosition(head)).toBe(0);
+
+        // FIXME: Can be uncommented once the IDL parser correctly implements nullable parameters.
+        // expect(head.compareDocumentPosition(null) & Node.DOCUMENT_POSITION_DISCONNECTED | Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC).
+        //    toBe(Node.DOCUMENT_POSITION_DISCONNECTED | Node.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+
+        expect(head.compareDocumentPosition(body)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+        expect(body.compareDocumentPosition(head)).toBe(Node.DOCUMENT_POSITION_PRECEDING);
+
+        const source = document.getElementById("source");
+        expect(source.compareDocumentPosition(body)).toBe(
+            Node.DOCUMENT_POSITION_CONTAINS | Node.DOCUMENT_POSITION_PRECEDING
+        );
+        expect(body.compareDocumentPosition(source)).toBe(
+            Node.DOCUMENT_POSITION_CONTAINED_BY | Node.DOCUMENT_POSITION_FOLLOWING
+        );
+        expect(source.compareDocumentPosition(head)).toBe(Node.DOCUMENT_POSITION_PRECEDING);
+    });
 });

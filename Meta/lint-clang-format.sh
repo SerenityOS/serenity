@@ -11,13 +11,8 @@ if [ "$#" -eq "1" ]; then
             '*.cpp' \
             '*.h' \
             ':!:Base' \
-            ':!:Kernel/Arch/i386/CPU.cpp' \
             ':!:Kernel/FileSystem/ext2_fs.h' \
-            ':!:Userland/Libraries/LibC/getopt.cpp' \
-            ':!:Userland/Libraries/LibC/syslog.h' \
-            ':!:Userland/Libraries/LibCore/puff.h' \
-            ':!:Userland/Libraries/LibCore/puff.cpp' \
-            ':!:Userland/Libraries/LibELF/exec_elf.h'
+            ':!:Userland/Libraries/LibC/syslog.h'
     )
 else
     files=()

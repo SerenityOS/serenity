@@ -1,0 +1,11 @@
+--- MilkyTracker-1.03.00/src/tracker/CMakeLists.txt	2021-04-27 15:17:42.529000000 +1000
++++ MilkyTracker-1.03.00/src/tracker/CMakeLists.txt	2021-04-27 15:17:42.529000000 +1000
+@@ -374,4 +375,7 @@
+     set(INSTALL_DEST ${CMAKE_INSTALL_BINDIR})
+ endif()
+ 
++target_link_libraries(tracker -lSDL2 -lgui -lipc -lm)
++set(INSTALL_DEST bin)
++
+ install(TARGETS tracker DESTINATION ${INSTALL_DEST})
+ 

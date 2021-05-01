@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/LocalServer.h>
@@ -50,28 +30,39 @@ LocalServer::~LocalServer()
         ::close(m_fd);
 }
 
-bool LocalServer::take_over_from_system_server()
+bool LocalServer::take_over_from_system_server(String const& socket_path)
 {
     if (m_listening)
         return false;
 
-    constexpr auto socket_takeover = "SOCKET_TAKEOVER";
+    if (!LocalSocket::s_overtaken_sockets_parsed)
+        LocalSocket::parse_sockets_from_system_server();
 
-    if (getenv(socket_takeover)) {
+    int fd = -1;
+    if (socket_path.is_null()) {
+        // We want the first (and only) socket.
+        if (LocalSocket::s_overtaken_sockets.size() == 1) {
+            fd = LocalSocket::s_overtaken_sockets.begin()->value;
+        }
+    } else {
+        auto it = LocalSocket::s_overtaken_sockets.find(socket_path);
+        if (it != LocalSocket::s_overtaken_sockets.end()) {
+            fd = it->value;
+        }
+    }
+
+    if (fd >= 0) {
         // Sanity check: it has to be a socket.
         struct stat stat;
-        int rc = fstat(3, &stat);
+        int rc = fstat(fd, &stat);
         if (rc == 0 && S_ISSOCK(stat.st_mode)) {
-            // The SystemServer has passed us the socket as fd 3,
-            // so use that instead of creating our own.
-            m_fd = 3;
+            // The SystemServer has passed us the socket, so use that instead of
+            // creating our own.
+            m_fd = fd;
             // It had to be !CLOEXEC for obvious reasons, but we
             // don't need it to be !CLOEXEC anymore, so set the
             // CLOEXEC flag now.
             fcntl(m_fd, F_SETFD, FD_CLOEXEC);
-            // We wouldn't want our children to think we're passing
-            // them a socket either, so unset the env variable.
-            unsetenv(socket_takeover);
 
             m_listening = true;
             setup_notifier();
@@ -112,12 +103,12 @@ bool LocalServer::listen(const String& address)
     ioctl(m_fd, FIONBIO, &option);
     fcntl(m_fd, F_SETFD, FD_CLOEXEC);
 #endif
-    ASSERT(m_fd >= 0);
+    VERIFY(m_fd >= 0);
 #ifndef __APPLE__
     rc = fchmod(m_fd, 0600);
     if (rc < 0) {
         perror("fchmod");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 #endif
 
@@ -147,7 +138,7 @@ bool LocalServer::listen(const String& address)
 
 RefPtr<LocalSocket> LocalServer::accept()
 {
-    ASSERT(m_listening);
+    VERIFY(m_listening);
     sockaddr_un un;
     socklen_t un_size = sizeof(un);
     int accepted_fd = ::accept(m_fd, (sockaddr*)&un, &un_size);

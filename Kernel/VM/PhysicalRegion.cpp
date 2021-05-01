@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Bitmap.h>
@@ -37,19 +17,18 @@ namespace Kernel {
 
 NonnullRefPtr<PhysicalRegion> PhysicalRegion::create(PhysicalAddress lower, PhysicalAddress upper)
 {
-    return adopt(*new PhysicalRegion(lower, upper));
+    return adopt_ref(*new PhysicalRegion(lower, upper));
 }
 
 PhysicalRegion::PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper)
     : m_lower(lower)
     , m_upper(upper)
-    , m_bitmap(Bitmap::create())
 {
 }
 
 void PhysicalRegion::expand(PhysicalAddress lower, PhysicalAddress upper)
 {
-    ASSERT(!m_pages);
+    VERIFY(!m_pages);
 
     m_lower = lower;
     m_upper = upper;
@@ -57,7 +36,7 @@ void PhysicalRegion::expand(PhysicalAddress lower, PhysicalAddress upper)
 
 unsigned PhysicalRegion::finalize_capacity()
 {
-    ASSERT(!m_pages);
+    VERIFY(!m_pages);
 
     m_pages = (m_upper.get() - m_lower.get()) / PAGE_SIZE;
     m_bitmap.grow(m_pages, false);
@@ -67,8 +46,8 @@ unsigned PhysicalRegion::finalize_capacity()
 
 NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count, bool supervisor, size_t physical_alignment)
 {
-    ASSERT(m_pages);
-    ASSERT(m_used != m_pages);
+    VERIFY(m_pages);
+    VERIFY(m_used != m_pages);
 
     NonnullRefPtrVector<PhysicalPage> physical_pages;
     physical_pages.ensure_capacity(count);
@@ -82,11 +61,11 @@ NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(siz
 
 unsigned PhysicalRegion::find_contiguous_free_pages(size_t count, size_t physical_alignment)
 {
-    ASSERT(count != 0);
-    ASSERT(physical_alignment % PAGE_SIZE == 0);
+    VERIFY(count != 0);
+    VERIFY(physical_alignment % PAGE_SIZE == 0);
     // search from the last page we allocated
     auto range = find_and_allocate_contiguous_range(count, physical_alignment / PAGE_SIZE);
-    ASSERT(range.has_value());
+    VERIFY(range.has_value());
     return range.value();
 }
 
@@ -100,8 +79,8 @@ Optional<unsigned> PhysicalRegion::find_one_free_page()
             Checked<FlatPtr> local_offset = m_recently_returned[index].get();
             local_offset -= m_lower.get();
             m_recently_returned.remove(index);
-            ASSERT(!local_offset.has_overflow());
-            ASSERT(local_offset.value() < (FlatPtr)(m_pages * PAGE_SIZE));
+            VERIFY(!local_offset.has_overflow());
+            VERIFY(local_offset.value() < (FlatPtr)(m_pages * PAGE_SIZE));
             return local_offset.value() / PAGE_SIZE;
         }
         return {};
@@ -121,7 +100,7 @@ Optional<unsigned> PhysicalRegion::find_one_free_page()
 
 Optional<unsigned> PhysicalRegion::find_and_allocate_contiguous_range(size_t count, unsigned alignment)
 {
-    ASSERT(count != 0);
+    VERIFY(count != 0);
     size_t found_pages_count = 0;
     // TODO: Improve how we deal with alignment != 1
     auto first_index = m_bitmap.find_longest_range_of_unset_bits(count + alignment - 1, found_pages_count);
@@ -146,7 +125,7 @@ Optional<unsigned> PhysicalRegion::find_and_allocate_contiguous_range(size_t cou
 
 RefPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
 {
-    ASSERT(m_pages);
+    VERIFY(m_pages);
 
     auto free_index = find_one_free_page();
     if (!free_index.has_value())
@@ -157,16 +136,16 @@ RefPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
 
 void PhysicalRegion::free_page_at(PhysicalAddress addr)
 {
-    ASSERT(m_pages);
+    VERIFY(m_pages);
 
     if (m_used == 0) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     Checked<FlatPtr> local_offset = addr.get();
     local_offset -= m_lower.get();
-    ASSERT(!local_offset.has_overflow());
-    ASSERT(local_offset.value() < (FlatPtr)(m_pages * PAGE_SIZE));
+    VERIFY(!local_offset.has_overflow());
+    VERIFY(local_offset.value() < (FlatPtr)(m_pages * PAGE_SIZE));
 
     auto page = local_offset.value() / PAGE_SIZE;
     m_bitmap.set(page, false);

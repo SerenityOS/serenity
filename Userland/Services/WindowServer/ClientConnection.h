@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -35,6 +15,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibIPC/ClientConnection.h>
 #include <WindowServer/Event.h>
+#include <WindowServer/Menu.h>
 #include <WindowServer/WindowClientEndpoint.h>
 #include <WindowServer/WindowServerEndpoint.h>
 
@@ -43,7 +24,8 @@ namespace WindowServer {
 class Compositor;
 class Window;
 class Menu;
-class MenuBar;
+class Menubar;
+class WMClientConnection;
 
 class ClientConnection final
     : public IPC::ClientConnection<WindowClientEndpoint, WindowServerEndpoint>
@@ -56,8 +38,6 @@ public:
 
     static ClientConnection* from_client_id(int client_id);
     static void for_each_client(Function<void(ClientConnection&)>);
-
-    MenuBar* app_menubar() { return m_app_menubar.ptr(); }
 
     void notify_about_new_screen_rect(const Gfx::IntRect&);
     void post_paint_message(Window&, bool ignore_occlusion = false);
@@ -75,6 +55,23 @@ public:
         if (!menu.has_value())
             return nullptr;
         return menu.value().ptr();
+    }
+
+    template<typename Callback>
+    void for_each_window(Callback callback)
+    {
+        for (auto& it : m_windows) {
+            if (callback(*it.value) == IterationDecision::Break)
+                break;
+        }
+    }
+    template<typename Callback>
+    void for_each_menu(Callback callback)
+    {
+        for (auto& it : m_menus) {
+            if (callback(*it.value) == IterationDecision::Break)
+                break;
+        }
     }
 
     void notify_display_link(Badge<Compositor>);
@@ -96,7 +93,7 @@ private:
     virtual OwnPtr<Messages::WindowServer::CreateMenuResponse> handle(const Messages::WindowServer::CreateMenu&) override;
     virtual OwnPtr<Messages::WindowServer::DestroyMenuResponse> handle(const Messages::WindowServer::DestroyMenu&) override;
     virtual OwnPtr<Messages::WindowServer::AddMenuToMenubarResponse> handle(const Messages::WindowServer::AddMenuToMenubar&) override;
-    virtual OwnPtr<Messages::WindowServer::SetApplicationMenubarResponse> handle(const Messages::WindowServer::SetApplicationMenubar&) override;
+    virtual OwnPtr<Messages::WindowServer::SetWindowMenubarResponse> handle(const Messages::WindowServer::SetWindowMenubar&) override;
     virtual OwnPtr<Messages::WindowServer::AddMenuItemResponse> handle(const Messages::WindowServer::AddMenuItem&) override;
     virtual OwnPtr<Messages::WindowServer::AddMenuSeparatorResponse> handle(const Messages::WindowServer::AddMenuSeparator&) override;
     virtual OwnPtr<Messages::WindowServer::UpdateMenuItemResponse> handle(const Messages::WindowServer::UpdateMenuItem&) override;
@@ -105,21 +102,22 @@ private:
     virtual OwnPtr<Messages::WindowServer::SetWindowTitleResponse> handle(const Messages::WindowServer::SetWindowTitle&) override;
     virtual OwnPtr<Messages::WindowServer::GetWindowTitleResponse> handle(const Messages::WindowServer::GetWindowTitle&) override;
     virtual OwnPtr<Messages::WindowServer::IsMaximizedResponse> handle(const Messages::WindowServer::IsMaximized&) override;
+    virtual void handle(const Messages::WindowServer::StartWindowResize&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowRectResponse> handle(const Messages::WindowServer::SetWindowRect&) override;
     virtual OwnPtr<Messages::WindowServer::GetWindowRectResponse> handle(const Messages::WindowServer::GetWindowRect&) override;
-    virtual OwnPtr<Messages::WindowServer::GetWindowRectInMenubarResponse> handle(const Messages::WindowServer::GetWindowRectInMenubar&) override;
+    virtual OwnPtr<Messages::WindowServer::SetWindowMinimumSizeResponse> handle(const Messages::WindowServer::SetWindowMinimumSize&) override;
+    virtual OwnPtr<Messages::WindowServer::GetWindowMinimumSizeResponse> handle(const Messages::WindowServer::GetWindowMinimumSize&) override;
+    virtual OwnPtr<Messages::WindowServer::GetAppletRectOnScreenResponse> handle(const Messages::WindowServer::GetAppletRectOnScreen&) override;
     virtual void handle(const Messages::WindowServer::InvalidateRect&) override;
     virtual void handle(const Messages::WindowServer::DidFinishPainting&) override;
     virtual OwnPtr<Messages::WindowServer::SetGlobalCursorTrackingResponse> handle(const Messages::WindowServer::SetGlobalCursorTracking&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowOpacityResponse> handle(const Messages::WindowServer::SetWindowOpacity&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> handle(const Messages::WindowServer::SetWindowBackingStore&) override;
-    virtual void handle(const Messages::WindowServer::WM_SetActiveWindow&) override;
-    virtual void handle(const Messages::WindowServer::WM_SetWindowMinimized&) override;
-    virtual void handle(const Messages::WindowServer::WM_StartWindowResize&) override;
-    virtual void handle(const Messages::WindowServer::WM_PopupWindowMenu&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowHasAlphaChannelResponse> handle(const Messages::WindowServer::SetWindowHasAlphaChannel&) override;
+    virtual OwnPtr<Messages::WindowServer::SetWindowAlphaHitThresholdResponse> handle(const Messages::WindowServer::SetWindowAlphaHitThreshold&) override;
     virtual OwnPtr<Messages::WindowServer::MoveWindowToFrontResponse> handle(const Messages::WindowServer::MoveWindowToFront&) override;
     virtual OwnPtr<Messages::WindowServer::SetFullscreenResponse> handle(const Messages::WindowServer::SetFullscreen&) override;
+    virtual OwnPtr<Messages::WindowServer::SetFramelessResponse> handle(const Messages::WindowServer::SetFrameless&) override;
     virtual void handle(const Messages::WindowServer::AsyncSetWallpaper&) override;
     virtual OwnPtr<Messages::WindowServer::SetBackgroundColorResponse> handle(const Messages::WindowServer::SetBackgroundColor&) override;
     virtual OwnPtr<Messages::WindowServer::SetWallpaperModeResponse> handle(const Messages::WindowServer::SetWallpaperMode&) override;
@@ -130,9 +128,7 @@ private:
     virtual OwnPtr<Messages::WindowServer::PopupMenuResponse> handle(const Messages::WindowServer::PopupMenu&) override;
     virtual OwnPtr<Messages::WindowServer::DismissMenuResponse> handle(const Messages::WindowServer::DismissMenu&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> handle(const Messages::WindowServer::SetWindowIconBitmap&) override;
-    virtual void handle(const Messages::WindowServer::WM_SetWindowTaskbarRect&) override;
     virtual OwnPtr<Messages::WindowServer::StartDragResponse> handle(const Messages::WindowServer::StartDrag&) override;
-    virtual OwnPtr<Messages::WindowServer::SetSystemMenuResponse> handle(const Messages::WindowServer::SetSystemMenu&) override;
     virtual OwnPtr<Messages::WindowServer::SetSystemThemeResponse> handle(const Messages::WindowServer::SetSystemTheme&) override;
     virtual OwnPtr<Messages::WindowServer::GetSystemThemeResponse> handle(const Messages::WindowServer::GetSystemTheme&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> handle(const Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement&) override;
@@ -147,13 +143,15 @@ private:
     virtual OwnPtr<Messages::WindowServer::GetMouseAccelerationResponse> handle(const Messages::WindowServer::GetMouseAcceleration&) override;
     virtual OwnPtr<Messages::WindowServer::SetScrollStepSizeResponse> handle(const Messages::WindowServer::SetScrollStepSize&) override;
     virtual OwnPtr<Messages::WindowServer::GetScrollStepSizeResponse> handle(const Messages::WindowServer::GetScrollStepSize&) override;
+    virtual OwnPtr<Messages::WindowServer::GetScreenBitmapResponse> handle(const Messages::WindowServer::GetScreenBitmap&) override;
+    virtual OwnPtr<Messages::WindowServer::SetDoubleClickSpeedResponse> handle(const Messages::WindowServer::SetDoubleClickSpeed&) override;
+    virtual OwnPtr<Messages::WindowServer::GetDoubleClickSpeedResponse> handle(const Messages::WindowServer::GetDoubleClickSpeed&) override;
 
     Window* window_from_id(i32 window_id);
 
     HashMap<int, NonnullRefPtr<Window>> m_windows;
-    HashMap<int, NonnullOwnPtr<MenuBar>> m_menubars;
+    HashMap<int, NonnullRefPtr<Menubar>> m_menubars;
     HashMap<int, NonnullRefPtr<Menu>> m_menus;
-    WeakPtr<MenuBar> m_app_menubar;
 
     RefPtr<Core::Timer> m_ping_timer;
 
@@ -163,6 +161,9 @@ private:
 
     bool m_has_display_link { false };
     bool m_unresponsive { false };
+
+    // Need this to get private client connection stuff
+    friend WMClientConnection;
 };
 
 }

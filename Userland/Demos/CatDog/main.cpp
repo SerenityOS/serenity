@@ -1,28 +1,7 @@
 /*
  * Copyright (c) 2021, Richard Gráčik <r.gracik@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ElapsedTimer.h>
@@ -30,7 +9,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -137,6 +116,8 @@ public:
 
     void mousemove_event(GUI::MouseEvent& event) override
     {
+        if (m_temp_pos == event.position())
+            return;
         m_temp_pos = event.position();
         m_timer.start();
         if (m_sleeping) {
@@ -148,9 +129,9 @@ public:
 
     void track_cursor_globally()
     {
-        ASSERT(window());
+        VERIFY(window());
         auto window_id = window()->window_id();
-        ASSERT(window_id >= 0);
+        VERIFY(window_id >= 0);
 
         set_global_cursor_tracking(true);
         GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetGlobalCursorTracking>(window_id, true);
@@ -224,18 +205,19 @@ int main(int argc, char** argv)
     window->set_frameless(true);
     window->set_resizable(false);
     window->set_has_alpha_channel(true);
+    window->set_alpha_hit_threshold(1.0f);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& root_widget = window->set_main_widget<MainFrame>();
     root_widget.set_layout<GUI::VerticalBoxLayout>();
     root_widget.layout()->set_spacing(0);
 
-    auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("CatDog Demo");
+    auto menubar = GUI::Menubar::construct();
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("CatDog Demo", app_icon, window));
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     window->show();
     root_widget.track_cursor_globally();

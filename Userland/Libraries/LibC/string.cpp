@@ -1,29 +1,10 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <AK/MemMem.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
@@ -142,13 +123,26 @@ void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 
 void* memset(void* dest_ptr, int c, size_t n)
 {
-    void* original_dest = dest_ptr;
+    size_t dest = (size_t)dest_ptr;
+    // FIXME: Support starting at an unaligned address.
+    if (!(dest & 0x3) && n >= 12) {
+        size_t size_ts = n / sizeof(size_t);
+        size_t expanded_c = explode_byte((u8)c);
+        asm volatile(
+            "rep stosl\n"
+            : "=D"(dest)
+            : "D"(dest), "c"(size_ts), "a"(expanded_c)
+            : "memory");
+        n -= size_ts * sizeof(size_t);
+        if (n == 0)
+            return dest_ptr;
+    }
     asm volatile(
         "rep stosb\n"
-        : "=D"(dest_ptr), "=c"(n)
-        : "0"(dest_ptr), "1"(n), "a"(c)
+        : "=D"(dest), "=c"(n)
+        : "0"(dest), "1"(n), "a"(c)
         : "memory");
-    return original_dest;
+    return dest_ptr;
 }
 #else
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
@@ -188,10 +182,10 @@ const void* memmem(const void* haystack, size_t haystack_length, const void* nee
 
 char* strcpy(char* dest, const char* src)
 {
-    char* originalDest = dest;
+    char* original_dest = dest;
     while ((*dest++ = *src++) != '\0')
         ;
-    return originalDest;
+    return original_dest;
 }
 
 char* strncpy(char* dest, const char* src, size_t n)
@@ -344,7 +338,6 @@ const char* const sys_errlist[] = {
     "No message",
     "No protocol option",
     "Not connected",
-    "Operation would block",
     "Protocol not supported",
     "Resource deadlock would occur",
     "Timed out",
@@ -363,7 +356,7 @@ int sys_nerr = EMAXERRNO;
 char* strerror(int errnum)
 {
     if (errnum < 0 || errnum >= EMAXERRNO) {
-        printf("strerror() missing string for errnum=%d\n", errnum);
+        dbgln("strerror() missing string for errnum={}", errnum);
         return const_cast<char*>("Unknown error");
     }
     return const_cast<char*>(sys_errlist[errnum]);
@@ -372,7 +365,7 @@ char* strerror(int errnum)
 char* strsignal(int signum)
 {
     if (signum >= NSIG) {
-        printf("strsignal() missing string for signum=%d\n", signum);
+        dbgln("strsignal() missing string for signum={}", signum);
         return const_cast<char*>("Unknown signal");
     }
     return const_cast<char*>(sys_siglist[signum]);

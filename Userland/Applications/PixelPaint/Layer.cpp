@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Layer.h"
@@ -38,7 +18,7 @@ RefPtr<Layer> Layer::create_with_size(Image& image, const Gfx::IntSize& size, co
     if (size.width() > 16384 || size.height() > 16384)
         return nullptr;
 
-    return adopt(*new Layer(image, size, name));
+    return adopt_ref(*new Layer(image, size, name));
 }
 
 RefPtr<Layer> Layer::create_with_bitmap(Image& image, const Gfx::Bitmap& bitmap, const String& name)
@@ -49,16 +29,23 @@ RefPtr<Layer> Layer::create_with_bitmap(Image& image, const Gfx::Bitmap& bitmap,
     if (bitmap.size().width() > 16384 || bitmap.size().height() > 16384)
         return nullptr;
 
-    return adopt(*new Layer(image, bitmap, name));
+    return adopt_ref(*new Layer(image, bitmap, name));
 }
 
 RefPtr<Layer> Layer::create_snapshot(Image& image, const Layer& layer)
 {
     auto snapshot = create_with_bitmap(image, *layer.bitmap().clone(), layer.name());
-    snapshot->set_opacity_percent(layer.opacity_percent());
-    snapshot->set_visible(layer.is_visible());
+    /*
+        We set these properties directly because calling the setters might 
+        notify the image of an update on the newly created layer, but this 
+        layer has not yet been added to the image.
+    */
+    snapshot->m_opacity_percent = layer.opacity_percent();
+    snapshot->m_visible = layer.is_visible();
+
     snapshot->set_selected(layer.is_selected());
     snapshot->set_location(layer.location());
+
     return snapshot;
 }
 
@@ -66,7 +53,7 @@ Layer::Layer(Image& image, const Gfx::IntSize& size, const String& name)
     : m_image(image)
     , m_name(name)
 {
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, size);
+    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size);
 }
 
 Layer::Layer(Image& image, const Gfx::Bitmap& bitmap, const String& name)

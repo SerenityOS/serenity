@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -42,6 +22,7 @@ public:
     Variant(i64);
     Variant(unsigned);
     Variant(const char*);
+    Variant(const StringView&);
     Variant(const String&);
     Variant(const FlyString&);
     Variant(const Gfx::Bitmap&);
@@ -51,7 +32,7 @@ public:
     Variant(const Gfx::IntRect&);
     Variant(const Gfx::Font&);
     Variant(const Gfx::TextAlignment);
-    Variant(const AK::JsonValue&);
+    Variant(const JsonValue&);
     Variant(Color);
 
     Variant(const Variant&);
@@ -100,7 +81,7 @@ public:
 
     bool as_bool() const
     {
-        ASSERT(type() == Type::Bool);
+        VERIFY(type() == Type::Bool);
         return m_value.as_bool;
     }
 
@@ -127,19 +108,19 @@ public:
 
     int as_i32() const
     {
-        ASSERT(type() == Type::Int32);
+        VERIFY(type() == Type::Int32);
         return m_value.as_i32;
     }
 
     int as_i64() const
     {
-        ASSERT(type() == Type::Int64);
+        VERIFY(type() == Type::Int64);
         return m_value.as_i64;
     }
 
     unsigned as_uint() const
     {
-        ASSERT(type() == Type::UnsignedInt);
+        VERIFY(type() == Type::UnsignedInt);
         return m_value.as_uint;
     }
 
@@ -155,7 +136,7 @@ public:
         if (is_float())
             return (int)as_float();
         if (is_uint()) {
-            ASSERT(as_uint() <= INT32_MAX);
+            VERIFY(as_uint() <= INT32_MAX);
             return (int)as_uint();
         }
         if (is_string())
@@ -175,7 +156,7 @@ public:
 
     float as_float() const
     {
-        ASSERT(type() == Type::Float);
+        VERIFY(type() == Type::Float);
         return m_value.as_float;
     }
 
@@ -196,31 +177,31 @@ public:
 
     String as_string() const
     {
-        ASSERT(type() == Type::String);
+        VERIFY(type() == Type::String);
         return m_value.as_string;
     }
 
     const Gfx::Bitmap& as_bitmap() const
     {
-        ASSERT(type() == Type::Bitmap);
+        VERIFY(type() == Type::Bitmap);
         return *m_value.as_bitmap;
     }
 
     GUI::Icon as_icon() const
     {
-        ASSERT(type() == Type::Icon);
+        VERIFY(type() == Type::Icon);
         return GUI::Icon(*m_value.as_icon);
     }
 
     Color as_color() const
     {
-        ASSERT(type() == Type::Color);
+        VERIFY(type() == Type::Color);
         return Color::from_rgba(m_value.as_color);
     }
 
     const Gfx::Font& as_font() const
     {
-        ASSERT(type() == Type::Font);
+        VERIFY(type() == Type::Font);
         return *m_value.as_font;
     }
 

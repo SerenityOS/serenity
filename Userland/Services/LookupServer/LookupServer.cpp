@@ -1,32 +1,12 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "LookupServer.h"
-#include "DNSRequest.h"
-#include "DNSResponse.h"
+#include "ClientConnection.h"
+#include "DNSPacket.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
@@ -41,31 +21,62 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+namespace LookupServer {
+
+static LookupServer* s_the;
+
+LookupServer& LookupServer::the()
+{
+    VERIFY(s_the);
+    return *s_the;
+}
+
 LookupServer::LookupServer()
 {
+    VERIFY(s_the == nullptr);
+    s_the = this;
+
     auto config = Core::ConfigFile::get_for_system("LookupServer");
-    dbgln("Using network config file at {}", config->file_name());
+    dbgln("Using network config file at {}", config->filename());
     m_nameservers = config->read_entry("DNS", "Nameservers", "1.1.1.1,1.0.0.1").split(',');
 
     load_etc_hosts();
 
+    if (config->read_bool_entry("DNS", "EnableServer")) {
+        m_dns_server = DNSServer::construct(this);
+        // TODO: drop root privileges here.
+    }
+
     m_local_server = Core::LocalServer::construct(this);
     m_local_server->on_ready_to_accept = [this]() {
         auto socket = m_local_server->accept();
-        if (!socket)
+        if (!socket) {
+            dbgln("Failed to accept a client connection");
             return;
-        socket->on_ready_to_read = [this, socket]() {
-            service_client(*socket);
-            NonnullRefPtr keeper = *socket;
-            const_cast<Core::LocalSocket&>(*socket).on_ready_to_read = [] {};
-        };
+        }
+        static int s_next_client_id = 0;
+        int client_id = ++s_next_client_id;
+        IPC::new_client_connection<ClientConnection>(socket.release_nonnull(), client_id);
     };
     bool ok = m_local_server->take_over_from_system_server();
-    ASSERT(ok);
+    VERIFY(ok);
 }
 
 void LookupServer::load_etc_hosts()
 {
+    // The TTL we return for static data from /etc/hosts.
+    // The value here is 1 day.
+    static constexpr u32 static_ttl = 86400;
+
+    auto add_answer = [this](const DNSName& name, unsigned short record_type, String data) {
+        auto it = m_etc_hosts.find(name);
+        if (it == m_etc_hosts.end()) {
+            m_etc_hosts.set(name, {});
+            it = m_etc_hosts.find(name);
+        }
+        it->value.empend(name, record_type, (u16)C_IN, static_ttl, data);
+    };
+
     auto file = Core::File::construct("/etc/hosts");
     if (!file->open(Core::IODevice::ReadOnly))
         return;
@@ -82,9 +93,10 @@ void LookupServer::load_etc_hosts()
             (u8)atoi(sections[2].characters()),
             (u8)atoi(sections[3].characters()),
         };
+        auto raw_addr = addr.to_in_addr_t();
 
-        auto name = fields[1];
-        m_etc_hosts.set(name, addr.to_string());
+        DNSName name = fields[1];
+        add_answer(name, T_A, String { (const char*)&raw_addr, sizeof(raw_addr) });
 
         IPv4Address reverse_addr {
             (u8)atoi(sections[3].characters()),
@@ -95,102 +107,94 @@ void LookupServer::load_etc_hosts()
         StringBuilder builder;
         builder.append(reverse_addr.to_string());
         builder.append(".in-addr.arpa");
-        m_etc_hosts.set(builder.to_string(), name);
+        add_answer(builder.to_string(), T_PTR, name.as_string());
     }
 }
 
-void LookupServer::service_client(NonnullRefPtr<Core::LocalSocket> socket)
+Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short record_type)
 {
-    u8 client_buffer[1024];
-    int nrecv = socket->read(client_buffer, sizeof(client_buffer) - 1);
-    if (nrecv < 0) {
-        perror("read");
-        return;
-    }
-
-    client_buffer[nrecv] = '\0';
-
-    char lookup_type = client_buffer[0];
-    if (lookup_type != 'L' && lookup_type != 'R') {
-        dbgln("Invalid lookup_type '{}'", lookup_type);
-        return;
-    }
-    auto hostname = String((const char*)client_buffer + 1, nrecv - 1, Chomp);
 #if LOOKUPSERVER_DEBUG
-    dbgln("Got request for '{}'", hostname);
+    dbgln("Got request for '{}'", name.as_string());
 #endif
 
-    Vector<String> responses;
+    Vector<DNSAnswer> answers;
+    auto add_answer = [&](const DNSAnswer& answer) {
+        DNSAnswer answer_with_original_case {
+            name,
+            answer.type(),
+            answer.class_code(),
+            answer.ttl(),
+            answer.record_data()
+        };
+        answers.append(answer_with_original_case);
+    };
 
-    if (auto known_host = m_etc_hosts.get(hostname); known_host.has_value()) {
-        responses.append(known_host.value());
-    } else if (!hostname.is_empty()) {
-        for (auto& nameserver : m_nameservers) {
+    // First, try local data.
+    if (auto local_answers = m_etc_hosts.get(name); local_answers.has_value()) {
+        for (auto& answer : local_answers.value()) {
+            if (answer.type() == record_type)
+                add_answer(answer);
+        }
+        if (!answers.is_empty())
+            return answers;
+    }
+
+    // Second, try our cache.
+    if (auto cached_answers = m_lookup_cache.get(name); cached_answers.has_value()) {
+        for (auto& answer : cached_answers.value()) {
+            // TODO: Actually remove expired answers from the cache.
+            if (answer.type() == record_type && !answer.has_expired()) {
 #if LOOKUPSERVER_DEBUG
-            dbgln("Doing lookup using nameserver '{}'", nameserver);
+                dbgln("Cache hit: {} -> {}", name.as_string(), answer.record_data());
 #endif
-            bool did_get_response = false;
-            int retries = 3;
-            do {
-                if (lookup_type == 'L')
-                    responses = lookup(hostname, nameserver, did_get_response, T_A);
-                else if (lookup_type == 'R')
-                    responses = lookup(hostname, nameserver, did_get_response, T_PTR);
-                if (did_get_response)
-                    break;
-            } while (--retries);
-            if (!responses.is_empty()) {
+                add_answer(answer);
+            }
+        }
+        if (!answers.is_empty())
+            return answers;
+    }
+
+    // Third, ask the upstream nameservers.
+    for (auto& nameserver : m_nameservers) {
+#if LOOKUPSERVER_DEBUG
+        dbgln("Doing lookup using nameserver '{}'", nameserver);
+#endif
+        bool did_get_response = false;
+        int retries = 3;
+        Vector<DNSAnswer> upstream_answers;
+        do {
+            upstream_answers = lookup(name, nameserver, did_get_response, record_type);
+            if (did_get_response)
                 break;
-            } else {
-                if (!did_get_response)
-                    dbgln("Never got a response from '{}', trying next nameserver", nameserver);
-                else
-                    dbgln("Received response from '{}' but no result(s), trying next nameserver", nameserver);
-            }
+        } while (--retries);
+        if (!upstream_answers.is_empty()) {
+            for (auto& answer : upstream_answers)
+                add_answer(answer);
+            break;
+        } else {
+            if (!did_get_response)
+                dbgln("Never got a response from '{}', trying next nameserver", nameserver);
+            else
+                dbgln("Received response from '{}' but no result(s), trying next nameserver", nameserver);
         }
-        if (responses.is_empty()) {
-            fprintf(stderr, "LookupServer: Tried all nameservers but never got a response :(\n");
-            return;
-        }
+    }
+    if (answers.is_empty()) {
+        dbgln("Tried all nameservers but never got a response :(");
+        return {};
     }
 
-    if (responses.is_empty()) {
-        int nsent = socket->write("Not found.\n");
-        if (nsent < 0)
-            perror("write");
-        return;
-    }
-    for (auto& response : responses) {
-        auto line = String::formatted("{}\n", response);
-        int nsent = socket->write(line);
-        if (nsent < 0) {
-            perror("write");
-            break;
-        }
-    }
+    return answers;
 }
 
-Vector<String> LookupServer::lookup(const String& hostname, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
+Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
 {
-    if (auto it = m_lookup_cache.find(hostname); it != m_lookup_cache.end()) {
-        auto& cached_lookup = it->value;
-        if (cached_lookup.question.record_type() == record_type) {
-            Vector<String> responses;
-            for (auto& cached_answer : cached_lookup.answers) {
-#if LOOKUPSERVER_DEBUG
-                dbgln("Cache hit: {} -> {}, expired: {}", hostname, cached_answer.record_data(), cached_answer.has_expired());
-#endif
-                if (!cached_answer.has_expired())
-                    responses.append(cached_answer.record_data());
-            }
-            if (!responses.is_empty())
-                return responses;
-        }
-        m_lookup_cache.remove(it);
-    }
-
-    DNSRequest request;
-    request.add_question(hostname, record_type, should_randomize_case);
+    DNSPacket request;
+    request.set_is_query();
+    request.set_id(arc4random_uniform(UINT16_MAX));
+    DNSName name_in_question = name;
+    if (should_randomize_case == ShouldRandomizeCase::Yes)
+        name_in_question.randomize_case();
+    request.add_question({ name_in_question, record_type, C_IN });
 
     auto buffer = request.to_byte_buffer();
 
@@ -220,7 +224,7 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
 
     did_get_response = true;
 
-    auto o_response = DNSResponse::from_raw_response(response_buffer, nrecv);
+    auto o_response = DNSPacket::from_raw_packet(response_buffer, nrecv);
     if (!o_response.has_value())
         return {};
 
@@ -231,10 +235,10 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
         return {};
     }
 
-    if (response.code() == DNSResponse::Code::REFUSED) {
+    if (response.code() == DNSPacket::Code::REFUSED) {
         if (should_randomize_case == ShouldRandomizeCase::Yes) {
             // Retry with 0x20 case randomization turned off.
-            return lookup(hostname, nameserver, did_get_response, record_type, ShouldRandomizeCase::No);
+            return lookup(name, nameserver, did_get_response, record_type, ShouldRandomizeCase::No);
         }
         return {};
     }
@@ -244,36 +248,52 @@ Vector<String> LookupServer::lookup(const String& hostname, const String& namese
         return {};
     }
 
+    // Verify the questions in our request and in their response match exactly, including case.
     for (size_t i = 0; i < request.question_count(); ++i) {
         auto& request_question = request.questions()[i];
         auto& response_question = response.questions()[i];
-        if (request_question != response_question) {
+        bool exact_match = request_question.class_code() == response_question.class_code()
+            && request_question.record_type() == response_question.record_type()
+            && request_question.name().as_string() == response_question.name().as_string();
+        if (!exact_match) {
             dbgln("Request and response questions do not match");
-            dbgln("   Request: name=_{}_, type={}, class={}", request_question.name(), response_question.record_type(), response_question.class_code());
-            dbgln("  Response: name=_{}_, type={}, class={}", response_question.name(), response_question.record_type(), response_question.class_code());
+            dbgln("   Request: name=_{}_, type={}, class={}", request_question.name().as_string(), response_question.record_type(), response_question.class_code());
+            dbgln("  Response: name=_{}_, type={}, class={}", response_question.name().as_string(), response_question.record_type(), response_question.class_code());
             return {};
         }
     }
 
     if (response.answer_count() < 1) {
-        dbgln("LookupServer: Not enough answers ({}) :(", response.answer_count());
+        dbgln("LookupServer: No answers :(");
         return {};
     }
 
-    Vector<String, 8> responses;
-    Vector<DNSAnswer, 8> cacheable_answers;
+    Vector<DNSAnswer, 8> answers;
     for (auto& answer : response.answers()) {
+        put_in_cache(answer);
         if (answer.type() != record_type)
             continue;
-        responses.append(answer.record_data());
-        if (!answer.has_expired())
-            cacheable_answers.append(answer);
+        answers.append(answer);
     }
 
-    if (!cacheable_answers.is_empty()) {
-        if (m_lookup_cache.size() >= 256)
-            m_lookup_cache.remove(m_lookup_cache.begin());
-        m_lookup_cache.set(hostname, { request.questions()[0], move(cacheable_answers) });
-    }
-    return responses;
+    return answers;
+}
+
+void LookupServer::put_in_cache(const DNSAnswer& answer)
+{
+    if (answer.has_expired())
+        return;
+
+    // Prevent the cache from growing too big.
+    // TODO: Evict least used entries.
+    if (m_lookup_cache.size() >= 256)
+        m_lookup_cache.remove(m_lookup_cache.begin());
+
+    auto it = m_lookup_cache.find(answer.name());
+    if (it == m_lookup_cache.end())
+        m_lookup_cache.set(answer.name(), { answer });
+    else
+        it->value.append(answer);
+}
+
 }

@@ -1,44 +1,21 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Demangle.h>
-#include <LibGUI/Painter.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Element.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Node.h>
-#include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/Frame.h>
-#include <typeinfo>
 
 namespace Web::Layout {
 
@@ -117,25 +94,25 @@ HitTestResult Node::hit_test(const Gfx::IntPoint& position, HitTestType type) co
 
 const Frame& Node::frame() const
 {
-    ASSERT(document().frame());
+    VERIFY(document().frame());
     return *document().frame();
 }
 
 Frame& Node::frame()
 {
-    ASSERT(document().frame());
+    VERIFY(document().frame());
     return *document().frame();
 }
 
 const InitialContainingBlockBox& Node::root() const
 {
-    ASSERT(document().layout_node());
+    VERIFY(document().layout_node());
     return *document().layout_node();
 }
 
 InitialContainingBlockBox& Node::root()
 {
-    ASSERT(document().layout_node());
+    VERIFY(document().layout_node());
     return *document().layout_node();
 }
 
@@ -162,7 +139,7 @@ Gfx::FloatPoint Node::box_type_agnostic_position() const
 {
     if (is<Box>(*this))
         return downcast<Box>(*this).absolute_position();
-    ASSERT(is_inline());
+    VERIFY(is_inline());
     Gfx::FloatPoint position;
     if (auto* block = containing_block()) {
         block->for_each_fragment([&](auto& fragment) {
@@ -237,6 +214,14 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         m_background_image = static_ptr_cast<CSS::ImageStyleValue>(bgimage.value());
     }
 
+    auto background_repeat_x = specified_style.background_repeat_x();
+    if (background_repeat_x.has_value())
+        computed_values.set_background_repeat_x(background_repeat_x.value());
+
+    auto background_repeat_y = specified_style.background_repeat_y();
+    if (background_repeat_y.has_value())
+        computed_values.set_background_repeat_y(background_repeat_y.value());
+
     computed_values.set_display(specified_style.display());
 
     auto flex_direction = specified_style.flex_direction();
@@ -262,6 +247,18 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     auto clear = specified_style.clear();
     if (clear.has_value())
         computed_values.set_clear(clear.value());
+
+    auto overflow_x = specified_style.overflow_x();
+    if (overflow_x.has_value())
+        computed_values.set_overflow_x(overflow_x.value());
+
+    auto overflow_y = specified_style.overflow_y();
+    if (overflow_y.has_value())
+        computed_values.set_overflow_y(overflow_y.value());
+
+    auto cursor = specified_style.cursor();
+    if (cursor.has_value())
+        computed_values.set_cursor(cursor.value());
 
     auto text_decoration_line = specified_style.text_decoration_line();
     if (text_decoration_line.has_value())
@@ -290,9 +287,12 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     computed_values.set_padding(specified_style.length_box(CSS::PropertyID::PaddingLeft, CSS::PropertyID::PaddingTop, CSS::PropertyID::PaddingRight, CSS::PropertyID::PaddingBottom, CSS::Length::make_px(0)));
 
     auto do_border_style = [&](CSS::BorderData& border, CSS::PropertyID width_property, CSS::PropertyID color_property, CSS::PropertyID style_property) {
-        border.width = specified_style.length_or_fallback(width_property, {}).resolved_or_zero(*this, 0).to_px(*this);
         border.color = specified_style.color_or_fallback(color_property, document(), Color::Transparent);
         border.line_style = specified_style.line_style(style_property).value_or(CSS::LineStyle::None);
+        if (border.line_style == CSS::LineStyle::None)
+            border.width = 0;
+        else
+            border.width = specified_style.length_or_fallback(width_property, {}).resolved_or_zero(*this, 0).to_px(*this);
     };
 
     do_border_style(computed_values.border_left(), CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftStyle);
@@ -311,6 +311,20 @@ void Node::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, u
 
 void Node::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)
 {
+}
+
+bool Node::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned, int wheel_delta)
+{
+    if (auto* containing_block = this->containing_block()) {
+        if (!containing_block->is_scrollable())
+            return false;
+        auto new_offset = containing_block->scroll_offset();
+        new_offset.move_by(0, wheel_delta);
+        containing_block->set_scroll_offset(new_offset);
+        return true;
+    }
+
+    return false;
 }
 
 bool Node::is_root_element() const
@@ -332,7 +346,7 @@ bool Node::is_inline_block() const
 
 NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
-    auto wrapper = adopt(*new BlockBox(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values()));
+    auto wrapper = adopt_ref(*new BlockBox(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values()));
     wrapper->m_font = m_font;
     wrapper->m_font_size = m_font_size;
     wrapper->m_line_height = m_line_height;

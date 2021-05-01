@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -45,6 +25,7 @@
     __ENUMERATE_SHELL_BUILTIN(cd)      \
     __ENUMERATE_SHELL_BUILTIN(cdh)     \
     __ENUMERATE_SHELL_BUILTIN(pwd)     \
+    __ENUMERATE_SHELL_BUILTIN(type)    \
     __ENUMERATE_SHELL_BUILTIN(exec)    \
     __ENUMERATE_SHELL_BUILTIN(exit)    \
     __ENUMERATE_SHELL_BUILTIN(export)  \
@@ -65,11 +46,21 @@
     __ENUMERATE_SHELL_BUILTIN(fg)      \
     __ENUMERATE_SHELL_BUILTIN(bg)      \
     __ENUMERATE_SHELL_BUILTIN(wait)    \
-    __ENUMERATE_SHELL_BUILTIN(dump)
+    __ENUMERATE_SHELL_BUILTIN(dump)    \
+    __ENUMERATE_SHELL_BUILTIN(kill)
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
     __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")
+
+#define ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS()           \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(concat_lists)  \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(length)        \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(length_across) \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(remove_suffix) \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(remove_prefix) \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(regex_replace) \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(split)
 
 namespace Shell {
 
@@ -100,6 +91,8 @@ public:
     bool run_file(const String&, bool explicitly_invoked = true);
     bool run_builtin(const AST::Command&, const NonnullRefPtrVector<AST::Rewiring>&, int& retval);
     bool has_builtin(const StringView&) const;
+    RefPtr<AST::Node> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&);
+    static bool has_immediate_function(const StringView&);
     void block_on_job(RefPtr<Job>);
     void block_on_pipeline(RefPtr<AST::Pipeline>);
     String prompt() const;
@@ -110,6 +103,8 @@ public:
     Vector<AST::Command> expand_aliases(Vector<AST::Command>);
     String resolve_path(String) const;
     String resolve_alias(const String&) const;
+
+    static String find_in_path(const StringView& program_name);
 
     static bool has_history_event(StringView);
 
@@ -128,8 +123,8 @@ public:
     RefPtr<Line::Editor> editor() const { return m_editor; }
 
     struct LocalFrame {
-        LocalFrame(const String& name, HashMap<String, RefPtr<AST::Value>> variables)
-            : name(name)
+        LocalFrame(String name, HashMap<String, RefPtr<AST::Value>> variables)
+            : name(move(name))
             , local_variables(move(variables))
         {
         }
@@ -166,18 +161,24 @@ public:
     static bool is_glob(const StringView&);
     static Vector<StringView> split_path(const StringView&);
 
+    enum class ExecutableOnly {
+        Yes,
+        No
+    };
+
     void highlight(Line::Editor&) const;
     Vector<Line::CompletionSuggestion> complete();
-    Vector<Line::CompletionSuggestion> complete_path(const String& base, const String&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_path(const String& base, const String&, size_t offset, ExecutableOnly executable_only);
     Vector<Line::CompletionSuggestion> complete_program_name(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_variable(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_user(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_option(const String&, const String&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_immediate_function_name(const String&, size_t offset);
 
     void restore_ios();
 
     u64 find_last_job_id() const;
-    const Job* find_job(u64 id);
+    const Job* find_job(u64 id, bool is_pid = false);
     const Job* current_job() const { return m_current_job; }
     void kill_job(const Job*, int sig);
 
@@ -223,6 +224,7 @@ public:
         EvaluatedSyntaxError,
         NonExhaustiveMatchRules,
         InvalidGlobError,
+        InvalidSliceContentsError,
         OpenFailure,
     };
 
@@ -243,7 +245,7 @@ public:
         return err;
     }
     void possibly_print_error() const;
-    bool is_control_flow(ShellError error)
+    static bool is_control_flow(ShellError error)
     {
         switch (error) {
         case ShellError::InternalControlFlowBreak:
@@ -264,7 +266,7 @@ public:
 #undef __ENUMERATE_SHELL_OPTION
 
 private:
-    Shell(Line::Editor&);
+    Shell(Line::Editor&, bool attempt_interactive);
     Shell();
     virtual ~Shell() override;
 
@@ -272,6 +274,7 @@ private:
     void save_to(JsonObject&);
     void bring_cursor_to_beginning_of_a_line() const;
 
+    Optional<int> resolve_job_spec(const String&);
     void cache_path();
     void add_entry_to_cache(const String&);
     void stop_all_jobs();
@@ -284,6 +287,15 @@ private:
     [[noreturn]] void execute_process(Vector<const char*>&& argv);
 
     virtual void custom_event(Core::CustomEvent&) override;
+
+#define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(name) \
+    RefPtr<AST::Node> immediate_##name(AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&);
+
+    ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS();
+
+#undef __ENUMERATE_SHELL_IMMEDIATE_FUNCTION
+
+    RefPtr<AST::Node> immediate_length_impl(AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&, bool across);
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
     int builtin_##builtin(int argc, const char** argv);

@@ -1,33 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/ProcessorInfo.h>
+#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/ProcessorInfo.h>
 
 namespace Kernel {
 
@@ -39,7 +19,7 @@ ProcessorInfo::ProcessorInfo(Processor& processor)
         CPUID cpuid(0);
         StringBuilder builder;
         auto emit_u32 = [&](u32 value) {
-            builder.appendf("%c%c%c%c",
+            builder.appendff("{:c}{:c}{:c}{:c}",
                 value & 0xff,
                 (value >> 8) & 0xff,
                 (value >> 16) & 0xff,
@@ -52,7 +32,7 @@ ProcessorInfo::ProcessorInfo(Processor& processor)
         m_cpuid = builder.build();
     }
     {
-        ASSERT(max_leaf >= 1);
+        VERIFY(max_leaf >= 1);
         CPUID cpuid(1);
         m_stepping = cpuid.eax() & 0xf;
         u32 model = (cpuid.eax() >> 4) & 0xf;

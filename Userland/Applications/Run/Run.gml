@@ -22,8 +22,7 @@
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             text: "Open:"
@@ -31,18 +30,16 @@
             text_alignment: "CenterLeft"
         }
 
-        @GUI::TextBox {
+        @GUI::ComboBox {
             name: "path"
         }
     }
 
     @GUI::Widget {
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         // HACK: using an empty widget as a spacer
-        @GUI::Widget {
-        }
+        @GUI::Widget
 
         @GUI::Button {
             name: "ok_button"

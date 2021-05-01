@@ -8,16 +8,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo "$DIR"
 
 ARCH=${ARCH:-"i686"}
-TARGET="$ARCH-pc-serenity"
 PREFIX="$DIR/Local/$ARCH"
 BUILD=$(realpath "$DIR/../Build")
 SYSROOT="$BUILD/Root"
 
-QEMU300_MD5SUM="6a5c8df583406ea24ef25b239c3243e0"
-QEMU410_MD5SUM="cdf2b5ca52b9abac9bacb5842fa420f8"
+QEMU600_MD5SUM="cce185dc0119546e395909e8a71a75bb"
 
-QEMU_VERSION="qemu-4.1.0"
-QEMU_MD5SUM="${QEMU410_MD5SUM}"
+QEMU_VERSION="qemu-6.0.0"
+QEMU_MD5SUM="${QEMU600_MD5SUM}"
 
 echo PREFIX is "$PREFIX"
 echo SYSROOT is "$SYSROOT"

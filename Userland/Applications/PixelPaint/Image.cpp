@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Image.h"
@@ -47,7 +27,7 @@ RefPtr<Image> Image::create_with_size(const Gfx::IntSize& size)
     if (size.width() > 16384 || size.height() > 16384)
         return nullptr;
 
-    return adopt(*new Image(size));
+    return adopt_ref(*new Image(size));
 }
 
 Image::Image(const Gfx::IntSize& size)
@@ -141,7 +121,7 @@ void Image::save(const String& file_path) const
 
 void Image::export_bmp(const String& file_path)
 {
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, m_size);
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, m_size);
     GUI::Painter painter(*bitmap);
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
 
@@ -154,12 +134,12 @@ void Image::export_bmp(const String& file_path)
 
 void Image::export_png(const String& file_path)
 {
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, m_size);
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, m_size);
+    VERIFY(bitmap);
     GUI::Painter painter(*bitmap);
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
 
-    Gfx::PNGWriter png_writer;
-    auto png = png_writer.write(bitmap);
+    auto png = Gfx::PNGWriter::encode(*bitmap);
     auto file = fopen(file_path.characters(), "wb");
     fwrite(png.data(), sizeof(u8), png.size(), file);
     fclose(file);
@@ -168,7 +148,7 @@ void Image::export_png(const String& file_path)
 void Image::add_layer(NonnullRefPtr<Layer> layer)
 {
     for (auto& existing_layer : m_layers) {
-        ASSERT(&existing_layer != layer.ptr());
+        VERIFY(&existing_layer != layer.ptr());
     }
     m_layers.append(move(layer));
 
@@ -206,7 +186,7 @@ size_t Image::index_of(const Layer& layer) const
         if (&m_layers.at(i) == &layer)
             return i;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Image::move_layer_to_back(Layer& layer)
@@ -255,8 +235,8 @@ void Image::move_layer_up(Layer& layer)
 
 void Image::change_layer_index(size_t old_index, size_t new_index)
 {
-    ASSERT(old_index < m_layers.size());
-    ASSERT(new_index < m_layers.size());
+    VERIFY(old_index < m_layers.size());
+    VERIFY(new_index < m_layers.size());
     auto layer = m_layers.take(old_index);
     m_layers.insert(new_index, move(layer));
     did_modify_layer_stack();
@@ -290,13 +270,13 @@ void Image::select_layer(Layer* layer)
 
 void Image::add_client(ImageClient& client)
 {
-    ASSERT(!m_clients.contains(&client));
+    VERIFY(!m_clients.contains(&client));
     m_clients.set(&client);
 }
 
 void Image::remove_client(ImageClient& client)
 {
-    ASSERT(m_clients.contains(&client));
+    VERIFY(m_clients.contains(&client));
     m_clients.remove(&client);
 }
 

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -41,22 +21,18 @@ public:
     size_t size() const { return m_size; }
     bool is_empty() const { return m_size == 0; }
 
-    void enqueue(T&& value)
+    template<typename U = T>
+    void enqueue(U&& value)
     {
         if (m_segments.is_empty() || m_segments.last()->size() >= segment_size)
             m_segments.append(make<Vector<T, segment_size>>());
-        m_segments.last()->append(move(value));
+        m_segments.last()->append(forward<U>(value));
         ++m_size;
-    }
-
-    void enqueue(const T& value)
-    {
-        enqueue(T(value));
     }
 
     T dequeue()
     {
-        ASSERT(!is_empty());
+        VERIFY(!is_empty());
         auto value = move((*m_segments.first())[m_index_into_first++]);
         if (m_index_into_first == segment_size) {
             m_segments.take_first();
@@ -68,7 +44,7 @@ public:
 
     const T& head() const
     {
-        ASSERT(!is_empty());
+        VERIFY(!is_empty());
         return (*m_segments.first())[m_index_into_first];
     }
 

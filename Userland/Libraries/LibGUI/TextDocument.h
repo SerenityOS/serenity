@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -79,9 +59,9 @@ public:
     const TextDocumentLine& line(size_t line_index) const { return m_lines[line_index]; }
     TextDocumentLine& line(size_t line_index) { return m_lines[line_index]; }
 
-    void set_spans(const Vector<TextDocumentSpan>& spans) { m_spans = spans; }
+    void set_spans(Vector<TextDocumentSpan> spans) { m_spans = move(spans); }
 
-    void set_text(const StringView&);
+    bool set_text(const StringView&);
 
     const NonnullOwnPtrVector<TextDocumentLine>& lines() const { return m_lines; }
     NonnullOwnPtrVector<TextDocumentLine>& lines() { return m_lines; }
@@ -109,8 +89,8 @@ public:
     Vector<TextRange> find_all(const StringView& needle, bool regmatch = false);
 
     void update_regex_matches(const StringView&);
-    TextRange find_next(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes, bool regmatch = false);
-    TextRange find_previous(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes, bool regmatch = false);
+    TextRange find_next(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes, bool regmatch = false, bool match_case = true);
+    TextRange find_previous(const StringView&, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes, bool regmatch = false, bool match_case = true);
 
     TextPosition next_position_after(const TextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
     TextPosition previous_position_before(const TextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
@@ -176,7 +156,7 @@ public:
     Utf32View view() const { return { code_points(), length() }; }
     const u32* code_points() const { return m_text.data(); }
     size_t length() const { return m_text.size(); }
-    void set_text(TextDocument&, const StringView&);
+    bool set_text(TextDocument&, const StringView&);
     void set_text(TextDocument&, Vector<u32>);
     void append(TextDocument&, u32);
     void prepend(TextDocument&, u32);
@@ -190,6 +170,7 @@ public:
     size_t first_non_whitespace_column() const;
     Optional<size_t> last_non_whitespace_column() const;
     bool ends_in_whitespace() const;
+    bool can_select() const;
     bool is_empty() const { return length() == 0; }
     size_t leading_spaces() const;
 

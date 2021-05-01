@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "RegexMatcher.h"
@@ -102,9 +82,21 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
     input.regex_options = m_regex_options | regex_options.value_or({}).value();
     input.start_offset = m_pattern.start_offset;
     output.operations = 0;
+    size_t lines_to_skip = 0;
 
-    if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
-        ASSERT(views.size() == 1);
+    if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
+        if (views.size() > 1 && input.start_offset > views.first().length()) {
+            dbgln_if(REGEX_DEBUG, "Started with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
+            for (auto& view : views) {
+                if (input.start_offset < view.length() + 1)
+                    break;
+                ++lines_to_skip;
+                input.start_offset -= view.length() + 1;
+                input.global_offset += view.length() + 1;
+            }
+            dbgln_if(REGEX_DEBUG, "Ended with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
+        }
+    }
 
     if (c_match_preallocation_count) {
         output.matches.ensure_capacity(c_match_preallocation_count);
@@ -130,7 +122,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
         if (output.matches.size() == input.match_index)
             output.matches.empend();
 
-        ASSERT(start_position + state.string_position - start_position <= input.view.length());
+        VERIFY(start_position + state.string_position - start_position <= input.view.length());
         if (input.regex_options.has_flag_set(AllFlags::StringCopyMatches)) {
             output.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position).to_string(), input.line, start_position, input.global_offset + start_position };
         } else { // let the view point to the original string ...
@@ -147,12 +139,18 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
         continue_search = false;
 
     for (auto& view : views) {
+        if (lines_to_skip != 0) {
+            ++input.line;
+            --lines_to_skip;
+            continue;
+        }
         input.view = view;
-        dbgln<REGEX_DEBUG>("[match] Starting match with view ({}): _{}_", view.length(), view);
+        dbgln_if(REGEX_DEBUG, "[match] Starting match with view ({}): _{}_", view.length(), view);
 
         auto view_length = view.length();
         size_t view_index = m_pattern.start_offset;
         state.string_position = view_index;
+        bool succeeded = false;
 
         if (view_index == view_length && m_pattern.parser_result.match_length_minimum == 0) {
             // Run the code until it tries to consume something.
@@ -202,6 +200,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                 return { false, 0, {}, {}, {}, output.operations };
 
             if (success.value()) {
+                succeeded = true;
 
                 if (input.regex_options.has_flag_set(AllFlags::MatchNotEndOfLine) && state.string_position == input.view.length()) {
                     if (!continue_search)
@@ -214,10 +213,8 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                     continue;
                 }
 
-                if constexpr (REGEX_DEBUG) {
-                    dbgln("state.string_position={}, view_index={}", state.string_position, view_index);
-                    dbgln("[match] Found a match (length={}): '{}'", state.string_position - view_index, input.view.substring_view(view_index, state.string_position - view_index));
-                }
+                dbgln_if(REGEX_DEBUG, "state.string_position={}, view_index={}", state.string_position, view_index);
+                dbgln_if(REGEX_DEBUG, "[match] Found a match (length={}): '{}'", state.string_position - view_index, input.view.substring_view(view_index, state.string_position - view_index));
 
                 ++match_count;
 
@@ -249,40 +246,37 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 
         if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
             m_pattern.start_offset = state.string_position;
+
+        if (succeeded && !continue_search)
+            break;
     }
 
     MatchOutput output_copy;
     if (match_count) {
-        auto capture_groups_count = min(output.capture_group_matches.size(), output.matches.size());
-        for (size_t i = 0; i < capture_groups_count; ++i) {
-            if (input.regex_options.has_flag_set(AllFlags::SkipTrimEmptyMatches)) {
-                output_copy.capture_group_matches.append(output.capture_group_matches.at(i));
-            } else {
-                Vector<Match> capture_group_matches;
-                for (size_t j = 0; j < output.capture_group_matches.at(i).size(); ++j) {
-                    if (!output.capture_group_matches.at(i).at(j).view.is_null())
-                        capture_group_matches.append(output.capture_group_matches.at(i).at(j));
-                }
-                output_copy.capture_group_matches.append(capture_group_matches);
-            }
+        output_copy.capture_group_matches = output.capture_group_matches;
+        // Make sure there are as many capture matches as there are actual matches.
+        if (output_copy.capture_group_matches.size() < match_count)
+            output_copy.capture_group_matches.resize(match_count);
+        for (auto& matches : output_copy.capture_group_matches)
+            matches.resize(m_pattern.parser_result.capture_groups_count + 1);
+        if (!input.regex_options.has_flag_set(AllFlags::SkipTrimEmptyMatches)) {
+            for (auto& matches : output_copy.capture_group_matches)
+                matches.template remove_all_matching([](auto& match) { return match.view.is_null(); });
         }
 
-        auto named_capture_groups_count = min(output.named_capture_group_matches.size(), output.matches.size());
-        for (size_t i = 0; i < named_capture_groups_count; ++i) {
-            if (output.matches.at(i).view.length())
-                output_copy.named_capture_group_matches.append(output.named_capture_group_matches.at(i));
-        }
+        output_copy.named_capture_group_matches = output.named_capture_group_matches;
+        // Make sure there are as many capture matches as there are actual matches.
+        if (output_copy.named_capture_group_matches.size() < match_count)
+            output_copy.named_capture_group_matches.resize(match_count);
 
-        for (size_t i = 0; i < match_count; ++i)
-            output_copy.matches.append(output.matches.at(i));
-
+        output_copy.matches = output.matches;
     } else {
         output_copy.capture_group_matches.clear_with_capacity();
         output_copy.named_capture_group_matches.clear_with_capacity();
     }
 
     return {
-        match_count ? true : false,
+        match_count != 0,
         match_count,
         move(output_copy.matches),
         move(output_copy.capture_group_matches),
@@ -360,7 +354,7 @@ Optional<bool> Matcher<Parser>::execute(const MatchInput& input, MatchState& sta
         }
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 template<class Parser>

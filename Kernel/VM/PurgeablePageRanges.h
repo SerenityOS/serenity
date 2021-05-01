@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -65,7 +45,7 @@ struct VolatilePageRange {
 
     void combine_intersecting_or_adjacent(const VolatilePageRange& other)
     {
-        ASSERT(intersects_or_adjacent(other));
+        VERIFY(intersects_or_adjacent(other));
         if (base <= other.base) {
             count = (other.base - base) + other.count;
         } else {
@@ -165,7 +145,7 @@ public:
 
         if (existing_range->range_equals(r))
             return f(r);
-        ASSERT(existing_range == &m_ranges[nearby_index]); // sanity check
+        VERIFY(existing_range == &m_ranges[nearby_index]); // sanity check
         while (nearby_index < m_ranges.size()) {
             existing_range = &m_ranges[nearby_index];
             if (!existing_range->intersects(range))
@@ -220,7 +200,6 @@ public:
         ScopedSpinLock lock(m_volatile_ranges_lock);
         ScopedSpinLock other_lock(other.m_volatile_ranges_lock);
         m_volatile_ranges = other.m_volatile_ranges;
-        return;
     }
 
     bool add_volatile_range(const VolatilePageRange& range);

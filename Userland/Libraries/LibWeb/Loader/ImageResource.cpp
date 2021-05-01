@@ -1,32 +1,11 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageDecoder.h>
 #include <LibImageDecoderClient/Client.h>
 #include <LibWeb/Loader/ImageResource.h>
 
@@ -49,6 +28,18 @@ int ImageResource::frame_duration(size_t frame_index) const
     return m_decoded_frames[frame_index].duration;
 }
 
+static ImageDecoderClient::Client& image_decoder_client()
+{
+    static RefPtr<ImageDecoderClient::Client> image_decoder_client;
+    if (!image_decoder_client) {
+        image_decoder_client = ImageDecoderClient::Client::construct();
+        image_decoder_client->on_death = [&] {
+            image_decoder_client = nullptr;
+        };
+    }
+    return *image_decoder_client;
+}
+
 void ImageResource::decode_if_needed() const
 {
     if (!has_encoded_data())
@@ -60,8 +51,9 @@ void ImageResource::decode_if_needed() const
     if (!m_decoded_frames.is_empty())
         return;
 
-    auto image_decoder_client = ImageDecoderClient::Client::construct();
-    auto image = image_decoder_client->decode_image(encoded_data());
+    NonnullRefPtr decoder = image_decoder_client();
+    auto image = decoder->decode_image(encoded_data());
+
     if (image.has_value()) {
         m_loop_count = image.value().loop_count;
         m_animated = image.value().is_animated;

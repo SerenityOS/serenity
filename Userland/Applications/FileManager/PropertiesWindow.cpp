@@ -1,31 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "PropertiesWindow.h"
 #include <AK/LexicalPath.h>
+#include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
@@ -47,7 +28,7 @@ PropertiesWindow::PropertiesWindow(const String& path, bool disable_rename, Wind
     : Window(parent_window)
 {
     auto lexical_path = LexicalPath(path);
-    ASSERT(lexical_path.is_valid());
+    VERIFY(lexical_path.is_valid());
 
     auto& main_widget = set_main_widget<GUI::Widget>();
     main_widget.set_layout<GUI::VerticalBoxLayout>();
@@ -113,7 +94,7 @@ PropertiesWindow::PropertiesWindow(const String& path, bool disable_rename, Wind
 
     auto properties = Vector<PropertyValuePair>();
     properties.append({ "Type:", get_description(m_mode) });
-    auto parent_link = URL::create_with_file_protocol(m_parent_path);
+    auto parent_link = URL::create_with_file_protocol(m_parent_path, m_name);
     properties.append(PropertyValuePair { "Location:", path, Optional(parent_link) });
 
     if (S_ISLNK(m_mode)) {
@@ -122,13 +103,13 @@ PropertiesWindow::PropertiesWindow(const String& path, bool disable_rename, Wind
             perror("readlink");
         } else {
             auto link_directory = LexicalPath(link_destination);
-            ASSERT(link_directory.is_valid());
-            auto link_parent = URL::create_with_file_protocol(link_directory.dirname());
+            VERIFY(link_directory.is_valid());
+            auto link_parent = URL::create_with_file_protocol(link_directory.dirname(), link_directory.basename());
             properties.append({ "Link target:", link_destination, Optional(link_parent) });
         }
     }
 
-    properties.append({ "Size:", String::formatted("{} bytes", st.st_size) });
+    properties.append({ "Size:", human_readable_size_long(st.st_size) });
     properties.append({ "Owner:", String::formatted("{} ({})", owner_name, st.st_uid) });
     properties.append({ "Group:", String::formatted("{} ({})", group_name, st.st_gid) });
     properties.append({ "Created at:", GUI::FileSystemModel::timestamp_string(st.st_ctime) });
@@ -199,7 +180,7 @@ bool PropertiesWindow::apply_changes()
         String new_name = m_name_box->text();
         String new_file = make_full_path(new_name).characters();
 
-        if (GUI::FilePicker::file_exists(new_file)) {
+        if (Core::File::exists(new_file)) {
             GUI::MessageBox::show(this, String::formatted("A file \"{}\" already exists!", new_name), "Error", GUI::MessageBox::Type::Error);
             return false;
         }

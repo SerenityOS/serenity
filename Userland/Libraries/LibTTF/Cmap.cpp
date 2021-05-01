@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Optional.h>
@@ -45,7 +25,7 @@ Cmap::Subtable::Platform Cmap::Subtable::platform_id() const
     case 4:
         return Platform::Custom;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -71,7 +51,7 @@ Cmap::Subtable::Format Cmap::Subtable::format() const
     case 14:
         return Format::UnicodeVariationSequences;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -89,7 +69,7 @@ Optional<Cmap::Subtable> Cmap::subtable(u32 index) const
     u16 platform_id = be_u16(m_slice.offset_pointer(record_offset));
     u16 encoding_id = be_u16(m_slice.offset_pointer(record_offset + (u32)Offsets::EncodingRecord_EncodingID));
     u32 subtable_offset = be_u32(m_slice.offset_pointer(record_offset + (u32)Offsets::EncodingRecord_Offset));
-    ASSERT(subtable_offset < m_slice.size());
+    VERIFY(subtable_offset < m_slice.size());
     auto subtable_slice = ReadonlyBytes(m_slice.offset_pointer(subtable_offset), m_slice.size() - subtable_offset);
     return Subtable(subtable_slice, platform_id, encoding_id);
 }
@@ -128,7 +108,7 @@ u32 Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
             return (codepoint + delta) & 0xffff;
         }
         u32 glyph_offset = (u32)Table4Offsets::GlyphOffsetConstBase + segcount_x2 * 3 + offset + range + (codepoint - start_codepoint) * 2;
-        ASSERT(glyph_offset + 2 <= m_slice.size());
+        VERIFY(glyph_offset + 2 <= m_slice.size());
         return (be_u16(m_slice.offset_pointer(glyph_offset)) + delta) & 0xffff;
     }
     return 0;
@@ -137,7 +117,7 @@ u32 Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
 u32 Cmap::Subtable::glyph_id_for_codepoint_table_12(u32 codepoint) const
 {
     u32 num_groups = be_u32(m_slice.offset_pointer((u32)Table12Offsets::NumGroups));
-    ASSERT(m_slice.size() >= (u32)Table12Sizes::Header + (u32)Table12Sizes::Record * num_groups);
+    VERIFY(m_slice.size() >= (u32)Table12Sizes::Header + (u32)Table12Sizes::Record * num_groups);
     for (u32 offset = 0; offset < num_groups * (u32)Table12Sizes::Record; offset += (u32)Table12Sizes::Record) {
         u32 start_codepoint = be_u32(m_slice.offset_pointer((u32)Table12Offsets::Record_StartCode + offset));
         if (codepoint < start_codepoint) {

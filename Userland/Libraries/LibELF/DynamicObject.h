@@ -1,42 +1,23 @@
 /*
  * Copyright (c) 2019-2020, Andrew Kaster <andrewdkaster@gmail.com>
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/Assertions.h>
 #include <AK/RefCounted.h>
+#include <AK/String.h>
 #include <Kernel/VirtualAddress.h>
-#include <LibELF/exec_elf.h>
+#include <LibC/elf.h>
 
 namespace ELF {
 
 class DynamicObject : public RefCounted<DynamicObject> {
 public:
-    static NonnullRefPtr<DynamicObject> construct(VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    static NonnullRefPtr<DynamicObject> create(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);
 
     ~DynamicObject();
     void dump() const;
@@ -50,7 +31,7 @@ public:
 
     class DynamicEntry {
     public:
-        DynamicEntry(const Elf32_Dyn& dyn)
+        explicit DynamicEntry(const Elf32_Dyn& dyn)
             : m_dyn(dyn)
         {
         }
@@ -72,28 +53,10 @@ public:
             , m_sym(sym)
             , m_index(index)
         {
-            if (section_index() == 0)
-                m_is_undefined = true;
         }
 
-        Symbol(const Symbol& other)
-            : m_dynamic(other.m_dynamic)
-            , m_sym(other.m_sym)
-            , m_index(other.m_index)
-            , m_is_undefined(other.m_is_undefined)
-        {
-        }
-
-        static Symbol create_undefined(const DynamicObject& dynamic)
-        {
-            auto s = Symbol(dynamic, 0, {});
-            s.m_is_undefined = true;
-            return s;
-        }
-
-        ~Symbol() { }
-
-        const char* name() const { return m_dynamic.symbol_string_table_string(m_sym.st_name); }
+        StringView name() const { return m_dynamic.symbol_string_table_string(m_sym.st_name); }
+        const char* raw_name() const { return m_dynamic.raw_symbol_string_table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
         unsigned value() const { return m_sym.st_value; }
         unsigned size() const { return m_sym.st_size; }
@@ -101,10 +64,8 @@ public:
         unsigned type() const { return ELF32_ST_TYPE(m_sym.st_info); }
         unsigned bind() const { return ELF32_ST_BIND(m_sym.st_info); }
 
-        bool is_undefined() const
-        {
-            return m_is_undefined;
-        }
+        bool is_undefined() const { return section_index() == 0; }
+
         VirtualAddress address() const
         {
             if (m_dynamic.elf_is_dynamic())
@@ -117,12 +78,11 @@ public:
         const DynamicObject& m_dynamic;
         const Elf32_Sym& m_sym;
         const unsigned m_index;
-        bool m_is_undefined { false };
     };
 
     class Section {
     public:
-        Section(const DynamicObject& dynamic, unsigned section_offset, unsigned section_size_bytes, unsigned entry_size, const char* name)
+        Section(const DynamicObject& dynamic, unsigned section_offset, unsigned section_size_bytes, unsigned entry_size, const StringView& name)
             : m_dynamic(dynamic)
             , m_section_offset(section_offset)
             , m_section_size_bytes(section_size_bytes)
@@ -132,7 +92,7 @@ public:
         }
         ~Section() { }
 
-        const char* name() const { return m_name; }
+        StringView name() const { return m_name; }
         unsigned offset() const { return m_section_offset; }
         unsigned size() const { return m_section_size_bytes; }
         unsigned entry_size() const { return m_entry_size; }
@@ -152,18 +112,18 @@ public:
         unsigned m_section_offset;
         unsigned m_section_size_bytes;
         unsigned m_entry_size;
-        const char* m_name { nullptr };
+        StringView m_name;
     };
 
     class RelocationSection : public Section {
     public:
-        RelocationSection(const Section& section)
+        explicit RelocationSection(const Section& section)
             : Section(section.m_dynamic, section.m_section_offset, section.m_section_size_bytes, section.m_entry_size, section.m_name)
         {
         }
         unsigned relocation_count() const { return entry_count(); }
-        const Relocation relocation(unsigned index) const;
-        const Relocation relocation_at_offset(unsigned offset) const;
+        Relocation relocation(unsigned index) const;
+        Relocation relocation_at_offset(unsigned offset) const;
         template<typename F>
         void for_each_relocation(F) const;
     };
@@ -183,7 +143,7 @@ public:
         unsigned offset() const { return m_rel.r_offset; }
         unsigned type() const { return ELF32_R_TYPE(m_rel.r_info); }
         unsigned symbol_index() const { return ELF32_R_SYM(m_rel.r_info); }
-        const Symbol symbol() const { return m_dynamic.symbol(symbol_index()); }
+        Symbol symbol() const { return m_dynamic.symbol(symbol_index()); }
         VirtualAddress address() const
         {
             if (m_dynamic.elf_is_dynamic())
@@ -202,55 +162,68 @@ public:
         GNU
     };
 
+    class HashSymbol {
+    public:
+        HashSymbol(const StringView& name)
+            : m_name(name)
+        {
+        }
+
+        StringView name() const { return m_name; }
+        u32 gnu_hash() const;
+        u32 sysv_hash() const;
+
+    private:
+        StringView m_name;
+        mutable Optional<u32> m_gnu_hash;
+        mutable Optional<u32> m_sysv_hash;
+    };
+
     class HashSection : public Section {
     public:
         HashSection(const Section& section, HashType hash_type)
             : Section(section.m_dynamic, section.m_section_offset, section.m_section_size_bytes, section.m_entry_size, section.m_name)
+            , m_hash_type(hash_type)
         {
-            switch (hash_type) {
-            case HashType::SYSV:
-                m_lookup_function = &HashSection::lookup_elf_symbol;
-                break;
-            case HashType::GNU:
-                m_lookup_function = &HashSection::lookup_gnu_symbol;
-                break;
-            default:
-                ASSERT_NOT_REACHED();
-                break;
-            }
         }
 
-        const Symbol lookup_symbol(const char*) const;
+        Optional<Symbol> lookup_symbol(const HashSymbol& symbol) const
+        {
+            if (m_hash_type == HashType::SYSV)
+                return lookup_sysv_symbol(symbol.name(), symbol.sysv_hash());
+            return lookup_gnu_symbol(symbol.name(), symbol.gnu_hash());
+        }
 
     private:
-        u32 calculate_elf_hash(const char* name) const;
-        u32 calculate_gnu_hash(const char* name) const;
+        Optional<Symbol> lookup_sysv_symbol(const StringView& name, u32 hash_value) const;
+        Optional<Symbol> lookup_gnu_symbol(const StringView& name, u32 hash) const;
 
-        const DynamicObject::Symbol lookup_elf_symbol(const char* name) const;
-        const DynamicObject::Symbol lookup_gnu_symbol(const char* name) const;
-
-        typedef const DynamicObject::Symbol (HashSection::*LookupFunction)(const char*) const;
-        LookupFunction m_lookup_function;
+        HashType m_hash_type {};
     };
 
     unsigned symbol_count() const { return m_symbol_count; }
 
-    const Symbol symbol(unsigned) const;
+    Symbol symbol(unsigned) const;
 
     typedef void (*InitializationFunction)();
 
     bool has_init_section() const { return m_init_offset != 0; }
     bool has_init_array_section() const { return m_init_array_offset != 0; }
-    const Section init_section() const;
+    Section init_section() const;
     InitializationFunction init_section_function() const;
-    const Section fini_section() const;
-    const Section init_array_section() const;
-    const Section fini_array_section() const;
+    Section fini_section() const;
+    Section init_array_section() const;
+    Section fini_array_section() const;
 
-    const HashSection hash_section() const;
+    HashSection hash_section() const
+    {
+        auto section_name = m_hash_type == HashType::SYSV ? "DT_HASH"sv : "DT_GNU_HASH"sv;
 
-    const RelocationSection relocation_section() const;
-    const RelocationSection plt_relocation_section() const;
+        return HashSection(Section(*this, m_hash_table_offset, 0, 0, section_name), m_hash_type);
+    }
+
+    RelocationSection relocation_section() const;
+    RelocationSection plt_relocation_section() const;
 
     bool should_process_origin() const { return m_dt_flags & DF_ORIGIN; }
     bool requires_symbolic_symbol_resolution() const { return m_dt_flags & DF_SYMBOLIC; }
@@ -259,15 +232,23 @@ public:
     bool must_bind_now() const { return m_dt_flags & DF_BIND_NOW; }
     bool has_static_thread_local_storage() const { return m_dt_flags & DF_STATIC_TLS; }
 
-    VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset); }
+    bool has_plt() const { return m_procedure_linkage_table_offset.has_value(); }
+    VirtualAddress plt_got_base_address() const { return m_base_address.offset(m_procedure_linkage_table_offset.value()); }
     VirtualAddress base_address() const { return m_base_address; }
 
-    const char* soname() const { return m_has_soname ? symbol_string_table_string(m_soname_index) : nullptr; }
+    const String& filename() const { return m_filename; }
+
+    StringView rpath() const { return m_has_rpath ? symbol_string_table_string(m_rpath_index) : StringView {}; }
+    StringView runpath() const { return m_has_runpath ? symbol_string_table_string(m_runpath_index) : StringView {}; }
+    StringView soname() const { return m_has_soname ? symbol_string_table_string(m_soname_index) : StringView {}; }
 
     Optional<FlatPtr> tls_offset() const { return m_tls_offset; }
     Optional<FlatPtr> tls_size() const { return m_tls_size; }
     void set_tls_offset(FlatPtr offset) { m_tls_offset = offset; }
     void set_tls_size(FlatPtr size) { m_tls_size = size; }
+
+    Elf32_Half program_header_count() const;
+    const Elf32_Phdr* program_headers() const;
 
     template<typename F>
     void for_each_needed_library(F) const;
@@ -275,32 +256,38 @@ public:
     template<typename F>
     void for_each_initialization_array_function(F f) const;
 
-    struct SymbolLookupResult {
-        FlatPtr value { 0 };
-        FlatPtr address { 0 };
-        unsigned bind { STB_LOCAL };
-        const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
-    };
-    Optional<SymbolLookupResult> lookup_symbol(const char* name) const;
-
-    // Will be called from _fixup_plt_entry, as part of the PLT trampoline
-    Elf32_Addr patch_plt_entry(u32 relocation_offset);
-
-    Optional<SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&) const;
-
-    bool elf_is_dynamic() const { return m_is_elf_dynamic; }
-
-private:
-    explicit DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address);
-
-    const char* symbol_string_table_string(Elf32_Word) const;
-    void parse();
+    template<typename F>
+    void for_each_dynamic_entry(F) const;
 
     template<typename F>
     void for_each_symbol(F) const;
 
-    template<typename F>
-    void for_each_dynamic_entry(F) const;
+    struct SymbolLookupResult {
+        FlatPtr value { 0 };
+        size_t size { 0 };
+        VirtualAddress address;
+        unsigned bind { STB_LOCAL };
+        const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
+    };
+
+    Optional<SymbolLookupResult> lookup_symbol(const StringView& name) const;
+    Optional<SymbolLookupResult> lookup_symbol(const HashSymbol& symbol) const;
+
+    // Will be called from _fixup_plt_entry, as part of the PLT trampoline
+    VirtualAddress patch_plt_entry(u32 relocation_offset);
+
+    bool elf_is_dynamic() const { return m_is_elf_dynamic; }
+
+    void* symbol_for_name(const StringView& name);
+
+private:
+    explicit DynamicObject(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address);
+
+    StringView symbol_string_table_string(Elf32_Word) const;
+    const char* raw_symbol_string_table_string(Elf32_Word) const;
+    void parse();
+
+    String m_filename;
 
     VirtualAddress m_base_address;
     VirtualAddress m_dynamic_address;
@@ -328,7 +315,7 @@ private:
     Elf32_Sword m_procedure_linkage_table_relocation_type { -1 };
     FlatPtr m_plt_relocation_offset_location { 0 }; // offset of PLT relocations, at end of relocations
     size_t m_size_of_plt_relocation_entry_list { 0 };
-    FlatPtr m_procedure_linkage_table_offset { 0 };
+    Optional<FlatPtr> m_procedure_linkage_table_offset;
 
     // NOTE: We'll only ever either RELA or REL entries, not both (thank god)
     // NOTE: The x86 ABI will only ever genrerate REL entries.
@@ -343,6 +330,10 @@ private:
 
     bool m_has_soname { false };
     Elf32_Word m_soname_index { 0 }; // Index into dynstr table for SONAME
+    bool m_has_rpath { false };
+    Elf32_Word m_rpath_index { 0 }; // Index into dynstr table for RPATH
+    bool m_has_runpath { false };
+    Elf32_Word m_runpath_index { 0 }; // Index into dynstr table for RUNPATH
 
     Optional<FlatPtr> m_tls_offset;
     Optional<FlatPtr> m_tls_size;
@@ -389,7 +380,7 @@ inline void DynamicObject::for_each_needed_library(F func) const
         if (entry.tag() != DT_NEEDED)
             return IterationDecision::Continue;
         Elf32_Word offset = entry.val();
-        const char* name = (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr();
+        StringView name { (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr() };
         if (func(StringView(name)) == IterationDecision::Break)
             return IterationDecision::Break;
         return IterationDecision::Continue;

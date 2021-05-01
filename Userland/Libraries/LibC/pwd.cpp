@@ -1,30 +1,11 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/String.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
 #include <errno_numbers.h>
 #include <pwd.h>
@@ -160,6 +141,93 @@ struct passwd* getpwent()
             return &s_passwd_entry;
         // Otherwise, proceed to the next line.
     }
+}
+
+static void construct_pwd(struct passwd* pwd, char* buf, struct passwd** result)
+{
+    auto* buf_name = &buf[0];
+    auto* buf_passwd = &buf[s_name.length() + 1];
+    auto* buf_gecos = &buf[s_name.length() + 1 + s_gecos.length() + 1];
+    auto* buf_dir = &buf[s_gecos.length() + 1 + s_name.length() + 1 + s_gecos.length() + 1];
+    auto* buf_shell = &buf[s_dir.length() + 1 + s_gecos.length() + 1 + s_name.length() + 1 + s_gecos.length() + 1];
+
+    bool ok = true;
+    ok = ok && s_name.copy_characters_to_buffer(buf_name, s_name.length() + 1);
+    ok = ok && s_passwd.copy_characters_to_buffer(buf_passwd, s_passwd.length() + 1);
+    ok = ok && s_gecos.copy_characters_to_buffer(buf_gecos, s_gecos.length() + 1);
+    ok = ok && s_dir.copy_characters_to_buffer(buf_dir, s_dir.length() + 1);
+    ok = ok && s_shell.copy_characters_to_buffer(buf_shell, s_shell.length() + 1);
+
+    VERIFY(ok);
+
+    *result = pwd;
+    pwd->pw_name = buf_name;
+    pwd->pw_passwd = buf_passwd;
+    pwd->pw_gecos = buf_gecos;
+    pwd->pw_dir = buf_dir;
+    pwd->pw_shell = buf_shell;
+}
+
+int getpwnam_r(const char* name, struct passwd* pwd, char* buf, size_t buflen, struct passwd** result)
+{
+    // FIXME: This is a HACK!
+    TemporaryChange name_change { s_name, {} };
+    TemporaryChange passwd_change { s_passwd, {} };
+    TemporaryChange gecos_change { s_gecos, {} };
+    TemporaryChange dir_change { s_dir, {} };
+    TemporaryChange shell_change { s_shell, {} };
+
+    setpwent();
+    bool found = false;
+    while (auto* pw = getpwent()) {
+        if (!strcmp(pw->pw_name, name)) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        *result = nullptr;
+        return 0;
+    }
+
+    const auto total_buffer_length = s_name.length() + s_passwd.length() + s_gecos.length() + s_dir.length() + s_shell.length() + 5;
+    if (buflen < total_buffer_length)
+        return ERANGE;
+
+    construct_pwd(pwd, buf, result);
+    return 0;
+}
+
+int getpwuid_r(uid_t uid, struct passwd* pwd, char* buf, size_t buflen, struct passwd** result)
+{
+    // FIXME: This is a HACK!
+    TemporaryChange name_change { s_name, {} };
+    TemporaryChange passwd_change { s_passwd, {} };
+    TemporaryChange gecos_change { s_gecos, {} };
+    TemporaryChange dir_change { s_dir, {} };
+    TemporaryChange shell_change { s_shell, {} };
+
+    setpwent();
+    bool found = false;
+    while (auto* pw = getpwent()) {
+        if (pw->pw_uid == uid) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        *result = nullptr;
+        return 0;
+    }
+
+    const auto total_buffer_length = s_name.length() + s_passwd.length() + s_gecos.length() + s_dir.length() + s_shell.length() + 5;
+    if (buflen < total_buffer_length)
+        return ERANGE;
+
+    construct_pwd(pwd, buf, result);
+    return 0;
 }
 
 int putpwent(const struct passwd* p, FILE* stream)

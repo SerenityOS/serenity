@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringBuilder.h>
@@ -32,15 +12,16 @@
 
 namespace JS {
 
-Date* Date::create(GlobalObject& global_object, Core::DateTime datetime, u16 milliseconds)
+Date* Date::create(GlobalObject& global_object, Core::DateTime datetime, u16 milliseconds, bool is_invalid)
 {
-    return global_object.heap().allocate<Date>(global_object, datetime, milliseconds, *global_object.date_prototype());
+    return global_object.heap().allocate<Date>(global_object, datetime, milliseconds, is_invalid, *global_object.date_prototype());
 }
 
-Date::Date(Core::DateTime datetime, u16 milliseconds, Object& prototype)
+Date::Date(Core::DateTime datetime, u16 milliseconds, bool is_invalid, Object& prototype)
     : Object(prototype)
     , m_datetime(datetime)
     , m_milliseconds(milliseconds)
+    , m_is_invalid(is_invalid)
 {
 }
 
@@ -89,6 +70,13 @@ int Date::utc_month() const
 int Date::utc_seconds() const
 {
     return to_utc_tm().tm_sec;
+}
+
+String Date::gmt_date_string() const
+{
+    // Mon, 18 Dec 1995 17:28:35 GMT
+    // FIXME: Note that we're totally cheating with the timezone part here..
+    return datetime().to_string("%a, %e %b %Y %T GMT");
 }
 
 String Date::iso_date_string() const

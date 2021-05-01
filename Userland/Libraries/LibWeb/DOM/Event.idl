@@ -1,5 +1,8 @@
 interface Event {
 
+    // FIXME: second parameter: 'optional EventInit eventInitDict = {}'
+    constructor(DOMString type);
+
     readonly attribute DOMString type;
     readonly attribute EventTarget? target;
     readonly attribute EventTarget? srcTarget;
@@ -19,5 +22,7 @@ interface Event {
     readonly attribute boolean composed;
 
     readonly attribute boolean isTrusted;
+
+    undefined initEvent(DOMString type, optional boolean bubbles = false, optional boolean cancelable = false);
 
 };

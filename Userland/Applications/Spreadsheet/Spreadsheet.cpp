@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Spreadsheet.h"
@@ -40,6 +20,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Function.h>
 #include <ctype.h>
+#include <unistd.h>
 
 namespace Spreadsheet {
 
@@ -60,7 +41,7 @@ Sheet::Sheet(Workbook& workbook)
 {
     JS::DeferGC defer_gc(m_workbook.interpreter().heap());
     m_global_object = m_workbook.interpreter().heap().allocate_without_global_object<SheetGlobalObject>(*this);
-    global_object().initialize();
+    global_object().initialize_global_object();
     global_object().put("workbook", m_workbook.workbook_object());
     global_object().put("thisSheet", &global_object()); // Self-reference is unfortunate, but required.
 
@@ -74,10 +55,13 @@ Sheet::Sheet(Workbook& workbook)
             parser.print_errors();
         } else {
             interpreter().run(global_object(), parser.parse_program());
-            if (auto exc = interpreter().exception()) {
-                warnln("Spreadsheet: Failed to run runtime code: ");
-                for (auto& t : exc->trace())
-                    warnln("{}", t);
+            if (auto* exception = interpreter().exception()) {
+                warnln("Spreadsheet: Failed to run runtime code:");
+                for (auto& traceback_frame : exception->traceback()) {
+                    auto& function_name = traceback_frame.function_name;
+                    auto& source_range = traceback_frame.source_range;
+                    dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
+                }
                 interpreter().vm().clear_exception();
             }
         }
@@ -98,44 +82,17 @@ size_t Sheet::add_row()
     return m_rows++;
 }
 
-static String convert_to_string(size_t value, unsigned base = 26, StringView map = {})
-{
-    if (map.is_null())
-        map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    ASSERT(base >= 2 && base <= map.length());
-
-    // The '8 bits per byte' assumption may need to go?
-    Array<char, round_up_to_power_of_two(sizeof(size_t) * 8 + 1, 2)> buffer;
-    size_t i = 0;
-    do {
-        buffer[i++] = map[value % base];
-        value /= base;
-    } while (value > 0);
-
-    // NOTE: Weird as this may seem, the thing that comes after 'A' is 'AA', which as a number would be '00'
-    //       to make this work, only the most significant digit has to be in a range of (1..25) as opposed to (0..25),
-    //       but only if it's not the only digit in the string.
-    if (i > 1)
-        --buffer[i - 1];
-
-    for (size_t j = 0; j < i / 2; ++j)
-        swap(buffer[j], buffer[i - j - 1]);
-
-    return String { ReadonlyBytes(buffer.data(), i) };
-}
-
 static size_t convert_from_string(StringView str, unsigned base = 26, StringView map = {})
 {
     if (map.is_null())
         map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    ASSERT(base >= 2 && base <= map.length());
+    VERIFY(base >= 2 && base <= map.length());
 
     size_t value = 0;
     for (size_t i = str.length(); i > 0; --i) {
         auto digit_value = map.find_first_of(str[i - 1]).value_or(0);
-        // NOTE: Refer to the note in `convert_to_string()'.
+        // NOTE: Refer to the note in `String::bijective_base_from()'.
         if (i == str.length() && str.length() > 1)
             ++digit_value;
         value = value * base + digit_value;
@@ -146,7 +103,7 @@ static size_t convert_from_string(StringView str, unsigned base = 26, StringView
 
 String Sheet::add_column()
 {
-    auto next_column = convert_to_string(m_columns.size());
+    auto next_column = String::bijective_base_from(m_columns.size());
     m_columns.append(next_column);
     return next_column;
 }
@@ -198,10 +155,10 @@ Sheet::ValueAndException Sheet::evaluate(const StringView& source, Cell* on_beha
     ScopeGuard clear_exception { [&] { interpreter().vm().clear_exception(); } };
 
     auto parser = JS::Parser(JS::Lexer(source));
+    auto program = parser.parse_program();
     if (parser.has_errors() || interpreter().exception())
         return { JS::js_undefined(), interpreter().exception() };
 
-    auto program = parser.parse_program();
     interpreter().run(global_object(), program);
     if (interpreter().exception()) {
         auto exc = interpreter().exception();
@@ -233,7 +190,7 @@ Cell* Sheet::at(const Position& position)
     return it->value;
 }
 
-Optional<Position> Sheet::parse_cell_name(const StringView& name)
+Optional<Position> Sheet::parse_cell_name(const StringView& name) const
 {
     GenericLexer lexer(name);
     auto col = lexer.consume_while(isalpha);
@@ -242,7 +199,11 @@ Optional<Position> Sheet::parse_cell_name(const StringView& name)
     if (!lexer.is_eof() || row.is_empty() || col.is_empty())
         return {};
 
-    return Position { col, row.to_uint().value() };
+    auto it = m_columns.find(col);
+    if (it == m_columns.end())
+        return {};
+
+    return Position { it.index(), row.to_uint().value() };
 }
 
 Optional<size_t> Sheet::column_index(const StringView& column_name) const
@@ -295,37 +256,33 @@ Optional<Position> Sheet::position_from_url(const URL& url) const
     }
 
     // FIXME: Figure out a way to do this cross-process.
-    ASSERT(url.path() == String::formatted("/{}", getpid()));
+    VERIFY(url.path() == String::formatted("/{}", getpid()));
 
     return parse_cell_name(url.fragment());
 }
 
 Position Sheet::offset_relative_to(const Position& base, const Position& offset, const Position& offset_base) const
 {
-    auto offset_column_it = m_columns.find(offset.column);
-    auto offset_base_column_it = m_columns.find(offset_base.column);
-    auto base_column_it = m_columns.find(base.column);
-
-    if (offset_column_it.is_end()) {
+    if (offset.column >= m_columns.size()) {
         dbgln("Column '{}' does not exist!", offset.column);
         return base;
     }
-    if (offset_base_column_it.is_end()) {
-        dbgln("Column '{}' does not exist!", offset.column);
+    if (offset_base.column >= m_columns.size()) {
+        dbgln("Column '{}' does not exist!", offset_base.column);
         return base;
     }
-    if (base_column_it.is_end()) {
-        dbgln("Column '{}' does not exist!", offset.column);
+    if (base.column >= m_columns.size()) {
+        dbgln("Column '{}' does not exist!", base.column);
         return offset;
     }
 
-    auto new_column = column(offset_column_it.index() + base_column_it.index() - offset_base_column_it.index());
+    auto new_column = offset.column + base.column - offset_base.column;
     auto new_row = offset.row + base.row - offset_base.row;
 
-    return { move(new_column), new_row };
+    return { new_column, new_row };
 }
 
-void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to)
+void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to, CopyOperation copy_operation)
 {
     auto copy_to = [&](auto& source_position, Position target_position) {
         auto& target_cell = ensure(target_position);
@@ -337,6 +294,8 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
         }
 
         target_cell.copy_from(*source_cell);
+        if (copy_operation == CopyOperation::Cut)
+            source_cell->set_data("");
     };
 
     if (from.size() == to.size()) {
@@ -353,7 +312,7 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
         auto& target = to.first();
 
         for (auto& position : from) {
-            dbgln<COPY_DEBUG>("Paste from '{}' to '{}'", position.to_url(), target.to_url());
+            dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", position.to_url(*this), target.to_url(*this));
             copy_to(position, resolve_relative_to.has_value() ? offset_relative_to(target, position, resolve_relative_to.value()) : target);
         }
 
@@ -364,7 +323,7 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
         // Fill the target selection with the single cell.
         auto& source = from.first();
         for (auto& position : to) {
-            dbgln<COPY_DEBUG>("Paste from '{}' to '{}'", source.to_url(), position.to_url());
+            dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", source.to_url(*this), position.to_url(*this));
             copy_to(source, resolve_relative_to.has_value() ? offset_relative_to(position, source, resolve_relative_to.value()) : position);
         }
         return;
@@ -376,10 +335,14 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
 
 RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
 {
-    auto sheet = adopt(*new Sheet(workbook));
+    auto sheet = adopt_ref(*new Sheet(workbook));
     auto rows = object.get("rows").to_u32(default_row_count);
     auto columns = object.get("columns");
     auto name = object.get("name").as_string_or("Sheet");
+    auto cells_value = object.get_or("cells", JsonObject {});
+    if (!cells_value.is_object())
+        return nullptr;
+    auto& cells = cells_value.as_object();
 
     sheet->set_name(name);
 
@@ -399,7 +362,6 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
             sheet->add_column();
     }
 
-    auto cells = object.get("cells").as_object();
     auto json = sheet->interpreter().global_object().get("JSON");
     auto& parse_function = json.as_object().get("parse").as_function();
 
@@ -411,7 +373,7 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
     };
 
     cells.for_each_member([&](auto& name, JsonValue& value) {
-        auto position_option = parse_cell_name(name);
+        auto position_option = sheet->parse_cell_name(name);
         if (!position_option.has_value())
             return IterationDecision::Continue;
 
@@ -489,6 +451,8 @@ Position Sheet::written_data_bounds() const
 {
     Position bound;
     for (auto& entry : m_cells) {
+        if (entry.value->data().is_empty())
+            continue;
         if (entry.key.row >= bound.row)
             bound.row = entry.key.row;
         if (entry.key.column >= bound.column)
@@ -500,11 +464,11 @@ Position Sheet::written_data_bounds() const
 
 /// The sheet is allowed to have nonstandard column names
 /// this checks whether all existing columns are 'standard'
-/// (i.e. as generated by 'convert_to_string()'
+/// (i.e. as generated by 'String::bijective_base_from()'
 bool Sheet::columns_are_standard() const
 {
     for (size_t i = 0; i < m_columns.size(); ++i) {
-        if (m_columns[i] != convert_to_string(i))
+        if (m_columns[i] != String::bijective_base_from(i))
             return false;
     }
 
@@ -536,7 +500,7 @@ JsonObject Sheet::to_json() const
     JsonObject cells;
     for (auto& it : m_cells) {
         StringBuilder builder;
-        builder.append(it.key.column);
+        builder.append(column(it.key.column));
         builder.appendff("{}", it.key.row);
         auto key = builder.to_string();
 
@@ -600,7 +564,7 @@ Vector<Vector<String>> Sheet::to_xsv() const
     // First row = headers.
     size_t column_count = m_columns.size();
     if (columns_are_standard()) {
-        column_count = convert_from_string(bottom_right.column) + 1;
+        column_count = bottom_right.column + 1;
         Vector<String> cols;
         for (size_t i = 0; i < column_count; ++i)
             cols.append(m_columns[i]);
@@ -613,7 +577,7 @@ Vector<Vector<String>> Sheet::to_xsv() const
         Vector<String> row;
         row.resize(column_count);
         for (size_t j = 0; j < column_count; ++j) {
-            auto cell = at({ m_columns[j], i });
+            auto cell = at({ j, i });
             if (cell)
                 row[j] = cell->typed_display();
         }
@@ -629,8 +593,14 @@ RefPtr<Sheet> Sheet::from_xsv(const Reader::XSV& xsv, Workbook& workbook)
     auto cols = xsv.headers();
     auto rows = xsv.size();
 
-    auto sheet = adopt(*new Sheet(workbook));
-    sheet->m_columns = cols;
+    auto sheet = adopt_ref(*new Sheet(workbook));
+    if (xsv.has_explicit_headers()) {
+        sheet->m_columns = cols;
+    } else {
+        sheet->m_columns.ensure_capacity(cols.size());
+        for (size_t i = 0; i < cols.size(); ++i)
+            sheet->m_columns.append(String::bijective_base_from(i));
+    }
     for (size_t i = 0; i < max(rows, Sheet::default_row_count); ++i)
         sheet->add_row();
     if (sheet->columns_are_standard()) {
@@ -643,7 +613,7 @@ RefPtr<Sheet> Sheet::from_xsv(const Reader::XSV& xsv, Workbook& workbook)
             auto str = row[i];
             if (str.is_empty())
                 continue;
-            Position position { cols[i], row.index() };
+            Position position { i, row.index() };
             auto cell = make<Cell>(str, position, *sheet);
             sheet->m_cells.set(position, move(cell));
         }
@@ -724,6 +694,21 @@ String Sheet::generate_inline_documentation_for(StringView function, size_t argu
 
     builder.append(')');
     return builder.build();
+}
+
+String Position::to_cell_identifier(const Sheet& sheet) const
+{
+    return String::formatted("{}{}", sheet.column(column), row);
+}
+
+URL Position::to_url(const Sheet& sheet) const
+{
+    URL url;
+    url.set_protocol("spreadsheet");
+    url.set_host("cell");
+    url.set_path(String::formatted("/{}", getpid()));
+    url.set_fragment(to_cell_identifier(sheet));
+    return url;
 }
 
 }

@@ -1,49 +1,30 @@
 /*
  * Copyright (c) 2019-2020, Andrew Kaster <andrewdkaster@gmail.com>
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibELF/DynamicLinker.h>
+#include <LibC/elf.h>
+#include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
-#include <LibELF/exec_elf.h>
-#include <stdio.h>
+#include <LibELF/Hashes.h>
 #include <string.h>
 
 namespace ELF {
 
 static const char* name_for_dtag(Elf32_Sword d_tag);
 
-DynamicObject::DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_addresss)
-    : m_base_address(base_address)
-    , m_dynamic_address(dynamic_section_addresss)
+DynamicObject::DynamicObject(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address)
+    : m_filename(filename)
+    , m_base_address(base_address)
+    , m_dynamic_address(dynamic_section_address)
 {
-    Elf32_Ehdr* header = (Elf32_Ehdr*)base_address.as_ptr();
-    Elf32_Phdr* pheader = (Elf32_Phdr*)(base_address.as_ptr() + header->e_phoff);
+    auto* header = (Elf32_Ehdr*)base_address.as_ptr();
+    auto* pheader = (Elf32_Phdr*)(base_address.as_ptr() + header->e_phoff);
     m_elf_base_address = VirtualAddress(pheader->p_vaddr - pheader->p_offset);
     if (header->e_type == ET_DYN)
         m_is_elf_dynamic = true;
@@ -55,6 +36,7 @@ DynamicObject::DynamicObject(VirtualAddress base_address, VirtualAddress dynamic
 
 DynamicObject::~DynamicObject()
 {
+    // TODO: unmap the object
 }
 
 void DynamicObject::dump() const
@@ -71,10 +53,14 @@ void DynamicObject::dump() const
     });
 
     if (m_has_soname)
-        builder.appendf("DT_SONAME: %s\n", soname()); // FIXME: Valdidate that this string is null terminated?
+        builder.appendff("DT_SONAME: {}\n", soname()); // FIXME: Validate that this string is null terminated?
+    if (m_has_rpath)
+        builder.appendff("DT_RPATH: {}\n", rpath());
+    if (m_has_runpath)
+        builder.appendff("DT_RUNPATH: {}\n", runpath());
 
-    dbgln<DYNAMIC_LOAD_DEBUG>("Dynamic section at address {} contains {} entries:", m_dynamic_address.as_ptr(), num_dynamic_sections);
-    dbgln<DYNAMIC_LOAD_DEBUG>("{}", builder.string_view());
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "Dynamic section at address {} contains {} entries:", m_dynamic_address.as_ptr(), num_dynamic_sections);
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "{}", builder.string_view());
 }
 
 void DynamicObject::parse()
@@ -129,7 +115,7 @@ void DynamicObject::parse()
             break;
         case DT_PLTREL:
             m_procedure_linkage_table_relocation_type = entry.val();
-            ASSERT(m_procedure_linkage_table_relocation_type & (DT_REL | DT_RELA));
+            VERIFY(m_procedure_linkage_table_relocation_type & (DT_REL | DT_RELA));
             break;
         case DT_JMPREL:
             m_plt_relocation_offset_location = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
@@ -160,6 +146,17 @@ void DynamicObject::parse()
             m_soname_index = entry.val();
             m_has_soname = true;
             break;
+        case DT_BIND_NOW:
+            m_dt_flags |= DF_BIND_NOW;
+            break;
+        case DT_RPATH:
+            m_rpath_index = entry.val();
+            m_has_rpath = true;
+            break;
+        case DT_RUNPATH:
+            m_runpath_index = entry.val();
+            m_has_runpath = true;
+            break;
         case DT_DEBUG:
             break;
         case DT_FLAGS_1:
@@ -167,9 +164,11 @@ void DynamicObject::parse()
         case DT_NEEDED:
             // We handle these in for_each_needed_library
             break;
+        case DT_SYMBOLIC:
+            break;
         default:
             dbgln("DynamicObject: DYNAMIC tag handling not implemented for DT_{}", name_for_dtag(entry.tag()));
-            ASSERT_NOT_REACHED(); // FIXME: Maybe just break out here and return false?
+            VERIFY_NOT_REACHED(); // FIXME: Maybe just break out here and return false?
             break;
         }
         return IterationDecision::Continue;
@@ -188,107 +187,73 @@ void DynamicObject::parse()
     m_symbol_count = num_hash_chains;
 }
 
-const DynamicObject::Relocation DynamicObject::RelocationSection::relocation(unsigned index) const
+DynamicObject::Relocation DynamicObject::RelocationSection::relocation(unsigned index) const
 {
-    ASSERT(index < entry_count());
+    VERIFY(index < entry_count());
     unsigned offset_in_section = index * entry_size();
     auto relocation_address = (Elf32_Rel*)address().offset(offset_in_section).as_ptr();
     return Relocation(m_dynamic, *relocation_address, offset_in_section);
 }
 
-const DynamicObject::Relocation DynamicObject::RelocationSection::relocation_at_offset(unsigned offset) const
+DynamicObject::Relocation DynamicObject::RelocationSection::relocation_at_offset(unsigned offset) const
 {
-    ASSERT(offset <= (m_section_size_bytes - m_entry_size));
+    VERIFY(offset <= (m_section_size_bytes - m_entry_size));
     auto relocation_address = (Elf32_Rel*)address().offset(offset).as_ptr();
     return Relocation(m_dynamic, *relocation_address, offset);
 }
 
-const DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
+DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
 {
     auto symbol_section = Section(*this, m_symbol_table_offset, (m_symbol_count * m_size_of_symbol_table_entry), m_size_of_symbol_table_entry, "DT_SYMTAB");
     auto symbol_entry = (Elf32_Sym*)symbol_section.address().offset(index * symbol_section.entry_size()).as_ptr();
     return Symbol(*this, index, *symbol_entry);
 }
 
-const DynamicObject::Section DynamicObject::init_section() const
+DynamicObject::Section DynamicObject::init_section() const
 {
-    return Section(*this, m_init_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_INIT");
+    return Section(*this, m_init_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_INIT"sv);
 }
 
-const DynamicObject::Section DynamicObject::fini_section() const
+DynamicObject::Section DynamicObject::fini_section() const
 {
-    return Section(*this, m_fini_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_FINI");
+    return Section(*this, m_fini_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_FINI"sv);
 }
 
-const DynamicObject::Section DynamicObject::init_array_section() const
+DynamicObject::Section DynamicObject::init_array_section() const
 {
-    return Section(*this, m_init_array_offset, m_init_array_size, sizeof(void (*)()), "DT_INIT_ARRAY");
+    return Section(*this, m_init_array_offset, m_init_array_size, sizeof(void (*)()), "DT_INIT_ARRAY"sv);
 }
 
-const DynamicObject::Section DynamicObject::fini_array_section() const
+DynamicObject::Section DynamicObject::fini_array_section() const
 {
-    return Section(*this, m_fini_array_offset, m_fini_array_size, sizeof(void (*)()), "DT_FINI_ARRAY");
+    return Section(*this, m_fini_array_offset, m_fini_array_size, sizeof(void (*)()), "DT_FINI_ARRAY"sv);
 }
 
-const DynamicObject::HashSection DynamicObject::hash_section() const
+DynamicObject::RelocationSection DynamicObject::relocation_section() const
 {
-    const char* section_name = m_hash_type == HashType::SYSV ? "DT_HASH" : "DT_GNU_HASH";
-    return HashSection(Section(*this, m_hash_table_offset, 0, 0, section_name), m_hash_type);
+    return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"sv));
 }
 
-const DynamicObject::RelocationSection DynamicObject::relocation_section() const
+DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
 {
-    return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"));
+    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv));
 }
 
-const DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
+Elf32_Half DynamicObject::program_header_count() const
 {
-    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"));
+    auto* header = (const Elf32_Ehdr*)m_base_address.as_ptr();
+    return header->e_phnum;
 }
 
-u32 DynamicObject::HashSection::calculate_elf_hash(const char* name) const
+const Elf32_Phdr* DynamicObject::program_headers() const
 {
-    // SYSV ELF hash algorithm
-    // Note that the GNU HASH algorithm has less collisions
-
-    uint32_t hash = 0;
-
-    while (*name != '\0') {
-        hash = hash << 4;
-        hash += *name;
-        name++;
-
-        const uint32_t top_nibble_of_hash = hash & 0xF0000000U;
-        hash ^= top_nibble_of_hash >> 24;
-        hash &= ~top_nibble_of_hash;
-    }
-
-    return hash;
+    auto* header = (const Elf32_Ehdr*)m_base_address.as_ptr();
+    return (const Elf32_Phdr*)(m_base_address.as_ptr() + header->e_phoff);
 }
 
-u32 DynamicObject::HashSection::calculate_gnu_hash(const char* name) const
+auto DynamicObject::HashSection::lookup_sysv_symbol(const StringView& name, u32 hash_value) const -> Optional<Symbol>
 {
-    // GNU ELF hash algorithm
-    u32 hash = 5381;
-
-    for (; *name != '\0'; ++name) {
-        hash = hash * 33 + *name;
-    }
-
-    return hash;
-}
-
-const DynamicObject::Symbol DynamicObject::HashSection::lookup_symbol(const char* name) const
-{
-    return (this->*(m_lookup_function))(name);
-}
-
-const DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const char* name) const
-{
-    u32 hash_value = calculate_elf_hash(name);
-
     u32* hash_table_begin = (u32*)address().as_ptr();
-
     size_t num_buckets = hash_table_begin[0];
 
     // This is here for completeness, but, since we're using the fact that every chain
@@ -302,15 +267,15 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_elf_symbol(const 
 
     for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
         auto symbol = m_dynamic.symbol(i);
-        if (strcmp(name, symbol.name()) == 0) {
-            dbgln<DYNAMIC_LOAD_DEBUG>("Returning SYSV dynamic symbol with index {} for {}: {}", i, symbol.name(), symbol.address().as_ptr());
+        if (name == symbol.name()) {
+            dbgln_if(DYNAMIC_LOAD_DEBUG, "Returning SYSV dynamic symbol with index {} for {}: {}", i, symbol.name(), symbol.address().as_ptr());
             return symbol;
         }
     }
-    return Symbol::create_undefined(m_dynamic);
+    return {};
 }
 
-const DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const char* name) const
+auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name, u32 hash_value) const -> Optional<Symbol>
 {
     // Algorithm reference: https://ent-voy.blogspot.com/2011/02/
     // TODO: Handle 64bit bloomwords for ELF_CLASS64
@@ -330,43 +295,43 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_gnu_symbol(const 
     const u32* const buckets = &bloom_words[num_maskwords];
     const u32* const chains = &buckets[num_buckets];
 
-    BloomWord hash1 = calculate_gnu_hash(name);
+    BloomWord hash1 = hash_value;
     BloomWord hash2 = hash1 >> shift2;
     const BloomWord bitmask = (1 << (hash1 % bloom_word_size)) | (1 << (hash2 % bloom_word_size));
 
-    if ((bloom_words[(hash1 / bloom_word_size) & num_maskwords_bitmask] & bitmask) != bitmask) {
-        return Symbol::create_undefined(m_dynamic);
-    }
+    if ((bloom_words[(hash1 / bloom_word_size) & num_maskwords_bitmask] & bitmask) != bitmask)
+        return {};
 
     size_t current_sym = buckets[hash1 % num_buckets];
-    if (current_sym == 0) {
-        return Symbol::create_undefined(m_dynamic);
-    }
+    if (current_sym == 0)
+        return {};
     const u32* current_chain = &chains[current_sym - num_omitted_symbols];
 
     for (hash1 &= ~1;; ++current_sym) {
         hash2 = *(current_chain++);
-        const auto symbol = m_dynamic.symbol(current_sym);
-        if ((hash1 == (hash2 & ~1)) && strcmp(name, symbol.name()) == 0) {
-            dbgln<DYNAMIC_LOAD_DEBUG>("Returning GNU dynamic symbol with index {} for {}: {}", current_sym, symbol.name(), symbol.address().as_ptr());
+        auto symbol = m_dynamic.symbol(current_sym);
+        if ((hash1 == (hash2 & ~1)) && name == symbol.raw_name())
             return symbol;
-        }
-        if (hash2 & 1) {
+        if (hash2 & 1)
             break;
-        }
     }
 
-    return Symbol::create_undefined(m_dynamic);
+    return {};
 }
 
-const char* DynamicObject::symbol_string_table_string(Elf32_Word index) const
+StringView DynamicObject::symbol_string_table_string(Elf32_Word index) const
+{
+    return StringView { (const char*)base_address().offset(m_string_table_offset + index).as_ptr() };
+}
+
+const char* DynamicObject::raw_symbol_string_table_string(Elf32_Word index) const
 {
     return (const char*)base_address().offset(m_string_table_offset + index).as_ptr();
 }
 
 DynamicObject::InitializationFunction DynamicObject::init_section_function() const
 {
-    ASSERT(has_init_section());
+    VERIFY(has_init_section());
     return (InitializationFunction)init_section().address().as_ptr();
 }
 
@@ -462,56 +427,71 @@ static const char* name_for_dtag(Elf32_Sword d_tag)
     }
 }
 
-Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const char* name) const
+auto DynamicObject::lookup_symbol(const StringView& name) const -> Optional<SymbolLookupResult>
 {
-    auto res = hash_section().lookup_symbol(name);
-    if (res.is_undefined())
-        return {};
-    return SymbolLookupResult { res.value(), (FlatPtr)res.address().as_ptr(), res.bind(), this };
+    return lookup_symbol(HashSymbol { name });
 }
 
-NonnullRefPtr<DynamicObject> DynamicObject::construct(VirtualAddress base_address, VirtualAddress dynamic_section_address)
+auto DynamicObject::lookup_symbol(const HashSymbol& symbol) const -> Optional<SymbolLookupResult>
 {
-    return adopt(*new DynamicObject(base_address, dynamic_section_address));
+    auto result = hash_section().lookup_symbol(symbol);
+    if (!result.has_value())
+        return {};
+    auto symbol_result = result.value();
+    if (symbol_result.is_undefined())
+        return {};
+    return SymbolLookupResult { symbol_result.value(), symbol_result.size(), symbol_result.address(), symbol_result.bind(), this };
+}
+
+NonnullRefPtr<DynamicObject> DynamicObject::create(const String& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address)
+{
+    return adopt_ref(*new DynamicObject(filename, base_address, dynamic_section_address));
 }
 
 // offset is in PLT relocation table
-Elf32_Addr DynamicObject::patch_plt_entry(u32 relocation_offset)
+VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
 {
     auto relocation = plt_relocation_section().relocation_at_offset(relocation_offset);
-
-    ASSERT(relocation.type() == R_386_JMP_SLOT);
-
-    auto sym = relocation.symbol();
-
+    VERIFY(relocation.type() == R_386_JMP_SLOT);
+    auto symbol = relocation.symbol();
     u8* relocation_address = relocation.address().as_ptr();
-    auto result = lookup_symbol(sym);
 
+    auto result = DynamicLoader::lookup_symbol(symbol);
     if (!result.has_value()) {
-        dbgln("did not find symbol: {}", sym.name());
-        ASSERT_NOT_REACHED();
+        dbgln("did not find symbol while doing relocations for library {}: {}", m_filename, symbol.name());
+        VERIFY_NOT_REACHED();
     }
 
-    u32 symbol_location = result.value().address;
+    auto symbol_location = result.value().address;
+    dbgln_if(DYNAMIC_LOAD_DEBUG, "DynamicLoader: Jump slot relocation: putting {} ({}) into PLT at {}", symbol.name(), symbol_location, (void*)relocation_address);
 
-    dbgln<DYNAMIC_LOAD_DEBUG>("DynamicLoader: Jump slot relocation: putting {} ({:p}) into PLT at {}", sym.name(), symbol_location, (void*)relocation_address);
-
-    *(u32*)relocation_address = symbol_location;
+    *(FlatPtr*)relocation_address = symbol_location.get();
 
     return symbol_location;
 }
 
-Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
+u32 DynamicObject::HashSymbol::gnu_hash() const
 {
-    dbgln<DYNAMIC_LOAD_DEBUG>("looking up symbol: {}", symbol.name());
-    if (symbol.is_undefined() || symbol.bind() == STB_WEAK)
-        return DynamicLinker::lookup_global_symbol(symbol.name());
-
-    if (!symbol.is_undefined()) {
-        dbgln<DYNAMIC_LOAD_DEBUG>("symbol is defined in its object");
-        return SymbolLookupResult { symbol.value(), (FlatPtr)symbol.address().as_ptr(), symbol.bind(), &symbol.object() };
-    }
-    return DynamicLinker::lookup_global_symbol(symbol.name());
+    if (!m_gnu_hash.has_value())
+        m_gnu_hash = compute_gnu_hash(m_name);
+    return m_gnu_hash.value();
 }
 
+u32 DynamicObject::HashSymbol::sysv_hash() const
+{
+    if (!m_sysv_hash.has_value())
+        m_sysv_hash = compute_sysv_hash(m_name);
+    return m_sysv_hash.value();
+}
+
+void* DynamicObject::symbol_for_name(const StringView& name)
+{
+    auto result = hash_section().lookup_symbol(name);
+    if (!result.has_value())
+        return nullptr;
+    auto symbol = result.value();
+    if (symbol.is_undefined())
+        return nullptr;
+    return base_address().offset(symbol.value()).as_ptr();
+}
 } // end namespace ELF

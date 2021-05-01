@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -128,7 +108,8 @@ void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8*
     auto label_seed_buffer = Bytes { l_seed, l_seed_size };
     label_seed_buffer.overwrite(0, label, label_length);
     label_seed_buffer.overwrite(label_length, seed.data(), seed.size());
-    label_seed_buffer.overwrite(label_length + seed.size(), seed_b.data(), seed_b.size());
+    if (seed_b.size() > 0)
+        label_seed_buffer.overwrite(label_length + seed.size(), seed_b.data(), seed_b.size());
 
     auto digest_size = hmac.digest_size();
 
@@ -182,14 +163,14 @@ bool TLSv12::compute_master_secret(size_t length)
 
 ByteBuffer TLSv12::build_certificate()
 {
-    PacketBuilder builder { MessageType::Handshake, m_context.version };
+    PacketBuilder builder { MessageType::Handshake, m_context.options.version };
 
     Vector<const Certificate*> certificates;
     Vector<Certificate>* local_certificates = nullptr;
 
     if (m_context.is_server) {
         dbgln("Unsupported: Server mode");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     } else {
         local_certificates = &m_context.client_certificates;
     }
@@ -237,7 +218,7 @@ ByteBuffer TLSv12::build_certificate()
 
 ByteBuffer TLSv12::build_change_cipher_spec()
 {
-    PacketBuilder builder { MessageType::ChangeCipher, m_context.version, 64 };
+    PacketBuilder builder { MessageType::ChangeCipher, m_context.options.version, 64 };
     builder.append((u8)1);
     auto packet = builder.build();
     update_packet(packet);
@@ -253,7 +234,7 @@ ByteBuffer TLSv12::build_server_key_exchange()
 
 ByteBuffer TLSv12::build_client_key_exchange()
 {
-    PacketBuilder builder { MessageType::Handshake, m_context.version };
+    PacketBuilder builder { MessageType::Handshake, m_context.options.version };
     builder.append((u8)HandshakeType::ClientKeyExchange);
     build_random(builder);
 

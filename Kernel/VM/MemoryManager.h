@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -29,7 +9,7 @@
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Forward.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/AllocationStrategy.h>
@@ -39,33 +19,33 @@
 
 namespace Kernel {
 
-#define PAGE_ROUND_UP(x) ((((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
-#define PAGE_ROUND_DOWN(x) (((FlatPtr)(x)) & ~(PAGE_SIZE - 1))
-
-template<typename T>
-inline T* low_physical_to_virtual(T* physical)
+constexpr bool page_round_up_would_wrap(FlatPtr x)
 {
-    return (T*)(((u8*)physical) + 0xc0000000);
+    return x > 0xfffff000u;
 }
 
-inline u32 low_physical_to_virtual(u32 physical)
+constexpr FlatPtr page_round_up(FlatPtr x)
+{
+    FlatPtr rounded = (((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1));
+    // Rounding up >0xffff0000 wraps back to 0. That's never what we want.
+    VERIFY(x == 0 || rounded != 0);
+    return rounded;
+}
+
+constexpr FlatPtr page_round_down(FlatPtr x)
+{
+    return ((FlatPtr)(x)) & ~(PAGE_SIZE - 1);
+}
+
+inline FlatPtr low_physical_to_virtual(FlatPtr physical)
 {
     return physical + 0xc0000000;
 }
 
-template<typename T>
-inline T* virtual_to_low_physical(T* physical)
-{
-    return (T*)(((u8*)physical) - 0xc0000000);
-}
-
-inline u32 virtual_to_low_physical(u32 physical)
+inline FlatPtr virtual_to_low_physical(FlatPtr physical)
 {
     return physical - 0xc0000000;
 }
-
-class KBuffer;
-class SynthFSInode;
 
 enum class UsedMemoryRangeType {
     LowMemory = 0,
@@ -80,12 +60,30 @@ constexpr static const char* UserMemoryRangeTypeNames[] {
 };
 
 struct UsedMemoryRange {
-    UsedMemoryRangeType type;
+    UsedMemoryRangeType type {};
     PhysicalAddress start;
     PhysicalAddress end;
 };
 
-const LogStream& operator<<(const LogStream& stream, const UsedMemoryRange& value);
+struct ContiguousReservedMemoryRange {
+    PhysicalAddress start;
+    size_t length {};
+};
+
+enum class PhysicalMemoryRangeType {
+    Usable = 0,
+    Reserved,
+    ACPI_Reclaimable,
+    ACPI_NVS,
+    BadMemory,
+    Unknown,
+};
+
+struct PhysicalMemoryRange {
+    PhysicalMemoryRangeType type { PhysicalMemoryRangeType::Unknown };
+    PhysicalAddress start;
+    size_t length {};
+};
 
 #define MM Kernel::MemoryManager::the()
 
@@ -106,14 +104,13 @@ class MemoryManager {
     friend class PhysicalRegion;
     friend class AnonymousVMObject;
     friend class Region;
+    friend class ScatterGatherList;
     friend class VMObject;
-    friend OwnPtr<KBuffer> procfs$memstat(InodeIdentifier);
 
 public:
     static MemoryManager& the();
     static bool is_initialized();
 
-    static void early_initialize();
     static void initialize(u32 cpu);
 
     static inline MemoryManagerData& get_data()
@@ -123,7 +120,13 @@ public:
 
     PageFaultResponse handle_page_fault(const PageFault&);
 
-    void enter_process_paging_scope(Process&);
+    void set_page_writable_direct(VirtualAddress, bool);
+
+    void protect_readonly_after_init_memory();
+    void unmap_memory_after_init();
+
+    static void enter_process_paging_scope(Process&);
+    static void enter_space(Space&);
 
     bool validate_user_stack(const Process&, VirtualAddress) const;
 
@@ -141,13 +144,12 @@ public:
     void deallocate_user_physical_page(const PhysicalPage&);
     void deallocate_supervisor_physical_page(const PhysicalPage&);
 
-    OwnPtr<Region> allocate_contiguous_kernel_region(size_t, const StringView& name, u8 access, size_t physical_alignment = PAGE_SIZE, bool user_accessible = false, bool cacheable = true);
-    OwnPtr<Region> allocate_kernel_region(size_t, const StringView& name, u8 access, bool user_accessible = false, AllocationStrategy strategy = AllocationStrategy::Reserve, bool cacheable = true);
-    OwnPtr<Region> allocate_kernel_region(PhysicalAddress, size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = true);
-    OwnPtr<Region> allocate_kernel_region_identity(PhysicalAddress, size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = true);
-    OwnPtr<Region> allocate_kernel_region_with_vmobject(VMObject&, size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = true);
-    OwnPtr<Region> allocate_kernel_region_with_vmobject(const Range&, VMObject&, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = true);
-    OwnPtr<Region> allocate_user_accessible_kernel_region(size_t, const StringView& name, u8 access, bool cacheable = true);
+    OwnPtr<Region> allocate_contiguous_kernel_region(size_t, String name, Region::Access access, size_t physical_alignment = PAGE_SIZE, Region::Cacheable = Region::Cacheable::Yes);
+    OwnPtr<Region> allocate_kernel_region(size_t, String name, Region::Access access, AllocationStrategy strategy = AllocationStrategy::Reserve, Region::Cacheable = Region::Cacheable::Yes);
+    OwnPtr<Region> allocate_kernel_region(PhysicalAddress, size_t, String name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
+    OwnPtr<Region> allocate_kernel_region_identity(PhysicalAddress, size_t, String name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
+    OwnPtr<Region> allocate_kernel_region_with_vmobject(VMObject&, size_t, String name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
+    OwnPtr<Region> allocate_kernel_region_with_vmobject(const Range&, VMObject&, String name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
 
     unsigned user_physical_pages() const { return m_user_physical_pages; }
     unsigned user_physical_pages_used() const { return m_user_physical_pages_used; }
@@ -165,19 +167,8 @@ public:
         }
     }
 
-    template<typename T, typename Callback>
-    static void for_each_vmobject_of_type(Callback callback)
-    {
-        for (auto& vmobject : MM.m_vmobjects) {
-            if (!is<T>(vmobject))
-                continue;
-            if (callback(static_cast<T&>(vmobject)) == IterationDecision::Break)
-                break;
-        }
-    }
-
-    static Region* find_region_from_vaddr(Process&, VirtualAddress);
-    static const Region* find_region_from_vaddr(const Process&, VirtualAddress);
+    static Region* find_region_from_vaddr(Space&, VirtualAddress);
+    static Region* find_user_region_from_vaddr(Space&, VirtualAddress);
 
     void dump_kernel_regions();
 
@@ -187,30 +178,24 @@ public:
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
     const Vector<UsedMemoryRange>& used_memory_ranges() { return m_used_memory_ranges; }
+    bool is_allowed_to_mmap_to_userspace(PhysicalAddress, const Range&) const;
 
 private:
     MemoryManager();
     ~MemoryManager();
 
-    enum class AccessSpace { Kernel,
-        User };
-    enum class AccessType { Read,
-        Write };
-    template<AccessSpace, AccessType>
-    bool validate_range(const Process&, VirtualAddress, size_t) const;
+    void register_reserved_ranges();
 
     void register_vmobject(VMObject&);
     void unregister_vmobject(VMObject&);
     void register_region(Region&);
     void unregister_region(Region&);
 
-    void detect_cpu_features();
     void protect_kernel_image();
     void parse_memory_map();
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);
     static void flush_tlb(const PageDirectory*, VirtualAddress, size_t page_count = 1);
 
-    static Region* user_region_from_vaddr(Process&, VirtualAddress);
     static Region* kernel_region_from_vaddr(VirtualAddress);
 
     static Region* find_region_from_vaddr(VirtualAddress);
@@ -227,7 +212,6 @@ private:
     void release_pte(PageDirectory&, VirtualAddress, bool);
 
     RefPtr<PageDirectory> m_kernel_page_directory;
-    RefPtr<PhysicalPage> m_low_page_table;
 
     RefPtr<PhysicalPage> m_shared_zero_page;
     RefPtr<PhysicalPage> m_lazy_committed_page;
@@ -245,10 +229,10 @@ private:
     InlineLinkedList<Region> m_user_regions;
     InlineLinkedList<Region> m_kernel_regions;
     Vector<UsedMemoryRange> m_used_memory_ranges;
+    Vector<PhysicalMemoryRange> m_physical_memory_ranges;
+    Vector<ContiguousReservedMemoryRange> m_reserved_memory_ranges;
 
     InlineLinkedList<VMObject> m_vmobjects;
-
-    RefPtr<PhysicalPage> m_low_pseudo_identity_mapping_pages[4];
 };
 
 template<typename Callback>
@@ -277,6 +261,11 @@ inline bool is_user_range(VirtualAddress vaddr, size_t size)
     if (vaddr.offset(size) < vaddr)
         return false;
     return is_user_address(vaddr) && is_user_address(vaddr.offset(size));
+}
+
+inline bool is_user_range(const Range& range)
+{
+    return is_user_range(range.base(), range.size());
 }
 
 inline bool PhysicalPage::is_shared_zero_page() const

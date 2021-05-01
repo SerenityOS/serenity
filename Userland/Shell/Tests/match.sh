@@ -1,6 +1,6 @@
 #!/bin/Shell
 
-source test-commons.inc
+source $(dirname "$0")/test-commons.inc
 
 result=no
 match hello {

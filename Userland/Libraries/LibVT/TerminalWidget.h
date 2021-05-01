@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -37,9 +17,13 @@
 #include <LibVT/Range.h>
 #include <LibVT/Terminal.h>
 
-class TerminalWidget final : public GUI::Frame
+namespace VT {
+
+class TerminalWidget final
+    : public GUI::Frame
     , public VT::TerminalClient {
-    C_OBJECT(TerminalWidget)
+    C_OBJECT(TerminalWidget);
+
 public:
     TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Core::ConfigFile> config);
     virtual ~TerminalWidget() override;
@@ -51,10 +35,7 @@ public:
         flush_dirty_lines();
     }
 
-    void create_window();
-
     void flush_dirty_lines();
-    void force_repaint();
 
     void apply_size_increments_to_window(GUI::Window&);
 
@@ -102,6 +83,7 @@ public:
     void clear_including_history();
 
     Function<void(const StringView&)> on_title_change;
+    Function<void(const Gfx::IntSize&)> on_terminal_size_change;
     Function<void()> on_command_exit;
 
     GUI::Menu& context_menu() { return *m_context_menu; }
@@ -172,7 +154,6 @@ private:
     String m_context_menu_href;
 
     BellMode m_bell_mode { BellMode::Visible };
-    bool m_belling { false };
     bool m_alt_key_held { false };
     bool m_rectangle_selection { false };
 
@@ -186,17 +167,15 @@ private:
     int m_ptm_fd { -1 };
 
     bool m_has_logical_focus { false };
+    bool m_in_relayout { false };
 
     RefPtr<Core::Notifier> m_notifier;
 
     u8 m_opacity { 255 };
-    bool m_needs_background_fill { true };
     bool m_cursor_blink_state { true };
     bool m_automatic_size_policy { false };
 
     RefPtr<Gfx::Font> m_bold_font;
-
-    int m_glyph_width { 0 };
 
     enum class AutoScrollDirection {
         None,
@@ -211,7 +190,7 @@ private:
     RefPtr<Core::Timer> m_auto_scroll_timer;
     RefPtr<Core::ConfigFile> m_config;
 
-    RefPtr<GUI::ScrollBar> m_scrollbar;
+    RefPtr<GUI::Scrollbar> m_scrollbar;
 
     RefPtr<GUI::Action> m_copy_action;
     RefPtr<GUI::Action> m_paste_action;
@@ -224,3 +203,5 @@ private:
 
     Gfx::IntPoint m_left_mousedown_position;
 };
+
+}

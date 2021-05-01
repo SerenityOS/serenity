@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -52,7 +32,7 @@ public:                                                                \
     template<class... Args>                                            \
     static inline NonnullRefPtr<klass> construct(Args&&... args)       \
     {                                                                  \
-        return adopt(*new klass(forward<Args>(args)...));              \
+        return adopt_ref(*new klass(forward<Args>(args)...));          \
     }
 
 #define C_OBJECT_ABSTRACT(klass) \
@@ -67,16 +47,15 @@ class Object
     AK_MAKE_NONCOPYABLE(Object);
     AK_MAKE_NONMOVABLE(Object);
 
-    IntrusiveListNode m_all_objects_list_node;
+    IntrusiveListNode<Object> m_all_objects_list_node;
 
 public:
     virtual ~Object();
 
     virtual const char* class_name() const = 0;
-    virtual void event(Core::Event&);
 
     const String& name() const { return m_name; }
-    void set_name(const StringView& name) { m_name = name; }
+    void set_name(String name) { m_name = move(name); }
 
     NonnullRefPtrVector<Object>& children() { return m_children; }
     const NonnullRefPtrVector<Object>& children() const { return m_children; }
@@ -91,13 +70,13 @@ public:
     }
 
     template<typename T, typename Callback>
-    void for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>::value;
+    void for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>;
 
     template<typename T>
-    T* find_child_of_type_named(const String&) requires IsBaseOf<Object, T>::value;
+    T* find_child_of_type_named(const String&) requires IsBaseOf<Object, T>;
 
     template<typename T>
-    T* find_descendant_of_type_named(const String&) requires IsBaseOf<Object, T>::value;
+    T* find_descendant_of_type_named(const String&) requires IsBaseOf<Object, T>;
 
     bool is_ancestor_of(const Object&) const;
 
@@ -113,17 +92,19 @@ public:
     void remove_child(Object&);
     void remove_all_children();
 
+    void set_event_filter(Function<bool(Core::Event&)>);
+
     void dump_tree(int indent = 0);
 
     void deferred_invoke(Function<void(Object&)>);
 
-    void save_to(AK::JsonObject&);
+    void save_to(JsonObject&);
 
-    bool set_property(const StringView& name, const JsonValue& value);
-    JsonValue property(const StringView& name) const;
+    bool set_property(String const& name, const JsonValue& value);
+    JsonValue property(String const& name) const;
     const HashMap<String, NonnullOwnPtr<Property>>& properties() const { return m_properties; }
 
-    static IntrusiveList<Object, &Object::m_all_objects_list_node>& all_objects();
+    static IntrusiveList<Object, RawPtr<Object>, &Object::m_all_objects_list_node>& all_objects();
 
     void dispatch_event(Core::Event&, Object* stay_within = nullptr);
 
@@ -153,6 +134,8 @@ protected:
 
     void register_property(const String& name, Function<JsonValue()> getter, Function<bool(const JsonValue&)> setter = nullptr);
 
+    virtual void event(Core::Event&);
+
     virtual void timer_event(TimerEvent&);
     virtual void custom_event(CustomEvent&);
 
@@ -169,6 +152,7 @@ private:
     unsigned m_inspector_count { 0 };
     HashMap<String, NonnullOwnPtr<Property>> m_properties;
     NonnullRefPtrVector<Object> m_children;
+    Function<bool(Core::Event&)> m_event_filter;
 };
 
 }
@@ -183,17 +167,17 @@ struct AK::Formatter<Core::Object> : AK::Formatter<FormatString> {
 
 namespace Core {
 template<typename T, typename Callback>
-inline void Object::for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>::value
+inline void Object::for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>
 {
     for_each_child([&](auto& child) {
-        if (auto* child_as_t = dynamic_cast<T*>(&child); child_as_t)
-            return callback(*child_as_t);
+        if (is<T>(child))
+            return callback(static_cast<T&>(child));
         return IterationDecision::Continue;
     });
 }
 
 template<typename T>
-T* Object::find_child_of_type_named(const String& name) requires IsBaseOf<Object, T>::value
+T* Object::find_child_of_type_named(const String& name) requires IsBaseOf<Object, T>
 {
     T* found_child = nullptr;
     for_each_child_of_type<T>([&](auto& child) {
@@ -208,11 +192,11 @@ T* Object::find_child_of_type_named(const String& name) requires IsBaseOf<Object
 }
 
 template<typename T>
-T* Object::find_descendant_of_type_named(const String& name) requires IsBaseOf<Object, T>::value
+T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<Object, T>
 {
-    auto* this_as_t = dynamic_cast<T*>(this);
-    if (this_as_t && this->name() == name)
-        return this_as_t;
+    if (is<T>(*this) && this->name() == name) {
+        return static_cast<T*>(this);
+    }
     T* found_child = nullptr;
     for_each_child([&](auto& child) {
         found_child = child.template find_descendant_of_type_named<T>(name);
@@ -222,8 +206,6 @@ T* Object::find_descendant_of_type_named(const String& name) requires IsBaseOf<O
     });
     return found_child;
 }
-
-const LogStream& operator<<(const LogStream&, const Object&);
 
 #define REGISTER_INT_PROPERTY(property_name, getter, setter) \
     register_property(                                       \
@@ -323,6 +305,8 @@ const LogStream& operator<<(const LogStream&, const Object&);
                 EnumType enum_value;                                         \
                 String string_value;                                         \
             } options[] = { __VA_ARGS__ };                                   \
+            if (!value.is_string())                                          \
+                return false;                                                \
             auto string_value = value.as_string();                           \
             for (size_t i = 0; i < array_size(options); ++i) {               \
                 auto& option = options[i];                                   \
@@ -343,4 +327,18 @@ const LogStream& operator<<(const LogStream&, const Object&);
         { Gfx::TextAlignment::CenterRight, "CenterRight" },             \
         { Gfx::TextAlignment::TopRight, "TopRight" },                   \
         { Gfx::TextAlignment::BottomRight, "BottomRight" })
+
+#define REGISTER_FONT_WEIGHT_PROPERTY(property_name, getter, setter) \
+    REGISTER_ENUM_PROPERTY(                                          \
+        property_name, getter, setter, unsigned,                     \
+        { Gfx::FontWeight::Thin, "Thin" },                           \
+        { Gfx::FontWeight::ExtraLight, "ExtraLight" },               \
+        { Gfx::FontWeight::Light, "Light" },                         \
+        { Gfx::FontWeight::Regular, "Regular" },                     \
+        { Gfx::FontWeight::Medium, "Medium" },                       \
+        { Gfx::FontWeight::SemiBold, "SemiBold" },                   \
+        { Gfx::FontWeight::Bold, "Bold" },                           \
+        { Gfx::FontWeight::ExtraBold, "ExtraBold" },                 \
+        { Gfx::FontWeight::Black, "Black" },                         \
+        { Gfx::FontWeight::ExtraBlack, "ExtraBlack" })
 }

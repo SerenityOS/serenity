@@ -1,40 +1,22 @@
 /*
  * Copyright (c) 2021, Pierre Hoffmeister
- * All rights reserved.
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "PNGWriter.h"
 #include <AK/String.h>
 #include <LibCrypto/Checksum/CRC32.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/PNGWriter.h>
 
 namespace Gfx {
 
 class PNGChunk {
 public:
-    PNGChunk(const String&);
-    const Vector<u8>& data() const { return m_data; };
-    const String& type() const { return m_type; };
+    explicit PNGChunk(String);
+    Vector<u8> const& data() const { return m_data; };
+    String const& type() const { return m_type; };
     void add_u8(u8);
     void add_u16_big(u16);
     void add_u32_big(u32);
@@ -51,8 +33,8 @@ public:
     void finalize(PNGChunk&);
     void add_byte_to_block(u8 data, PNGChunk&);
 
-    u32 adler_s1() { return m_adler_s1; }
-    u32 adler_s2() { return m_adler_s2; }
+    u32 adler_s1() const { return m_adler_s1; }
+    u32 adler_s2() const { return m_adler_s2; }
 
 private:
     void add_block_to_chunk(PNGChunk&, bool);
@@ -63,7 +45,7 @@ private:
     u32 m_adler_s2 { 0 };
 };
 
-PNGChunk::PNGChunk(const String& type)
+PNGChunk::PNGChunk(String type)
     : m_type(move(type))
 {
 }
@@ -141,7 +123,7 @@ void NonCompressibleBlock::update_adler(u8 data)
     m_adler_s2 = (m_adler_s2 + m_adler_s1) % 65521;
 }
 
-void PNGWriter::add_chunk(const PNGChunk& png_chunk)
+void PNGWriter::add_chunk(PNGChunk const& png_chunk)
 {
     Vector<u8> combined;
     for (auto character : png_chunk.type()) {
@@ -185,7 +167,7 @@ void PNGWriter::add_IEND_chunk()
     add_chunk(png_chunk);
 }
 
-void PNGWriter::add_IDAT_chunk(const RefPtr<Bitmap> bitmap)
+void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
 {
     PNGChunk png_chunk { "IDAT" };
 
@@ -194,11 +176,11 @@ void PNGWriter::add_IDAT_chunk(const RefPtr<Bitmap> bitmap)
 
     NonCompressibleBlock non_compressible_block;
 
-    for (int y = 0; y < bitmap->height(); ++y) {
+    for (int y = 0; y < bitmap.height(); ++y) {
         non_compressible_block.add_byte_to_block(0, png_chunk);
 
-        for (int x = 0; x < bitmap->width(); ++x) {
-            auto pixel = bitmap->get_pixel(x, y);
+        for (int x = 0; x < bitmap.width(); ++x) {
+            auto pixel = bitmap.get_pixel(x, y);
             non_compressible_block.add_byte_to_block(pixel.red(), png_chunk);
             non_compressible_block.add_byte_to_block(pixel.green(), png_chunk);
             non_compressible_block.add_byte_to_block(pixel.blue(), png_chunk);
@@ -213,16 +195,14 @@ void PNGWriter::add_IDAT_chunk(const RefPtr<Bitmap> bitmap)
     add_chunk(png_chunk);
 }
 
-ByteBuffer PNGWriter::write(const RefPtr<Bitmap> bitmap)
+ByteBuffer PNGWriter::encode(Gfx::Bitmap const& bitmap)
 {
-    add_png_header();
-    add_IHDR_chunk(bitmap->width(), bitmap->height(), 8, 6, 0, 0, 0);
-    add_IDAT_chunk(bitmap);
-    add_IEND_chunk();
-
-    ByteBuffer buf;
-    buf.append(m_data.data(), m_data.size());
-    return buf;
+    PNGWriter writer;
+    writer.add_png_header();
+    writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, 6, 0, 0, 0);
+    writer.add_IDAT_chunk(bitmap);
+    writer.add_IEND_chunk();
+    return ByteBuffer::copy(writer.m_data);
 }
 
 }

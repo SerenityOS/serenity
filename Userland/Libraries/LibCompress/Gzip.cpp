@@ -1,27 +1,8 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCompress/Gzip.h>
@@ -31,12 +12,17 @@
 
 namespace Compress {
 
-bool GzipDecompressor::BlockHeader::valid_magic_number() const
+bool GzipDecompressor::is_likely_compressed(ReadonlyBytes bytes)
 {
-    return identification_1 == 0x1f && identification_2 == 0x8b;
+    return bytes.size() >= 2 && bytes[0] == gzip_magic_1 && bytes[1] == gzip_magic_2;
 }
 
-bool GzipDecompressor::BlockHeader::supported_by_implementation() const
+bool BlockHeader::valid_magic_number() const
+{
+    return identification_1 == gzip_magic_1 && identification_2 == gzip_magic_2;
+}
+
+bool BlockHeader::supported_by_implementation() const
 {
     if (compression_method != 0x08) {
         // RFC 1952 does not define any compression methods other than deflate.
@@ -46,10 +32,6 @@ bool GzipDecompressor::BlockHeader::supported_by_implementation() const
     if (flags > Flags::MAX) {
         // RFC 1952 does not define any more flags.
         return false;
-    }
-
-    if (flags & Flags::FHCRC) {
-        TODO();
     }
 
     return true;
@@ -68,69 +50,94 @@ GzipDecompressor::~GzipDecompressor()
 // FIXME: Again, there are surely a ton of bugs because the code doesn't check for read errors.
 size_t GzipDecompressor::read(Bytes bytes)
 {
-    if (has_any_error() || m_eof)
-        return 0;
+    size_t total_read = 0;
+    while (total_read < bytes.size()) {
+        if (has_any_error() || m_eof)
+            break;
 
-    if (m_current_member.has_value()) {
-        size_t nread = current_member().m_stream.read(bytes);
-        current_member().m_checksum.update(bytes.trim(nread));
-        current_member().m_nread += nread;
+        auto slice = bytes.slice(total_read);
 
-        if (nread < bytes.size()) {
-            LittleEndian<u32> crc32, input_size;
-            m_input_stream >> crc32 >> input_size;
+        if (m_current_member.has_value()) {
+            size_t nread = current_member().m_stream.read(slice);
+            current_member().m_checksum.update(slice.trim(nread));
+            current_member().m_nread += nread;
 
-            if (crc32 != current_member().m_checksum.digest()) {
-                // FIXME: Somehow the checksum is incorrect?
-
+            if (current_member().m_stream.handle_any_error()) {
                 set_fatal_error();
-                return 0;
+                break;
             }
 
-            if (input_size != current_member().m_nread) {
-                set_fatal_error();
-                return 0;
+            if (nread < slice.size()) {
+                LittleEndian<u32> crc32, input_size;
+                m_input_stream >> crc32 >> input_size;
+
+                if (crc32 != current_member().m_checksum.digest()) {
+                    // FIXME: Somehow the checksum is incorrect?
+
+                    set_fatal_error();
+                    break;
+                }
+
+                if (input_size != current_member().m_nread) {
+                    set_fatal_error();
+                    break;
+                }
+
+                m_current_member.clear();
+
+                total_read += nread;
+                continue;
             }
 
-            m_current_member.clear();
+            total_read += nread;
+            continue;
+        } else {
+            m_partial_header_offset += m_input_stream.read(Bytes { m_partial_header, sizeof(BlockHeader) }.slice(m_partial_header_offset));
 
-            return nread + read(bytes.slice(nread));
+            if (m_input_stream.handle_any_error() || m_input_stream.unreliable_eof()) {
+                m_eof = true;
+                break;
+            }
+
+            if (m_partial_header_offset < sizeof(BlockHeader)) {
+                break; // partial header read
+            }
+            m_partial_header_offset = 0;
+
+            BlockHeader header = *(reinterpret_cast<BlockHeader*>(m_partial_header));
+
+            if (!header.valid_magic_number() || !header.supported_by_implementation()) {
+                set_fatal_error();
+                break;
+            }
+
+            if (header.flags & Flags::FEXTRA) {
+                LittleEndian<u16> subfield_id, length;
+                m_input_stream >> subfield_id >> length;
+                m_input_stream.discard_or_error(length);
+            }
+
+            if (header.flags & Flags::FNAME) {
+                String original_filename;
+                m_input_stream >> original_filename;
+            }
+
+            if (header.flags & Flags::FCOMMENT) {
+                String comment;
+                m_input_stream >> comment;
+            }
+
+            if (header.flags & Flags::FHCRC) {
+                LittleEndian<u16> crc16;
+                m_input_stream >> crc16;
+                // FIXME: we should probably verify this instead of just assuming it matches
+            }
+
+            m_current_member.emplace(header, m_input_stream);
+            continue;
         }
-
-        return nread;
-    } else {
-        BlockHeader header;
-        m_input_stream >> Bytes { &header, sizeof(header) };
-
-        if (m_input_stream.handle_any_error()) {
-            m_eof = true;
-            return 0;
-        }
-
-        if (!header.valid_magic_number() || !header.supported_by_implementation()) {
-            set_fatal_error();
-            return 0;
-        }
-
-        if (header.flags & Flags::FEXTRA) {
-            LittleEndian<u16> subfield_id, length;
-            m_input_stream >> subfield_id >> length;
-            m_input_stream.discard_or_error(length);
-        }
-
-        if (header.flags & Flags::FNAME) {
-            String original_filename;
-            m_input_stream >> original_filename;
-        }
-
-        if (header.flags & Flags::FCOMMENT) {
-            String comment;
-            m_input_stream >> comment;
-        }
-
-        m_current_member.emplace(header, m_input_stream);
-        return read(bytes);
     }
+    return total_read;
 }
 
 bool GzipDecompressor::read_or_error(Bytes bytes)
@@ -179,5 +186,65 @@ Optional<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 }
 
 bool GzipDecompressor::unreliable_eof() const { return m_eof; }
+
+bool GzipDecompressor::handle_any_error()
+{
+    bool handled_errors = m_input_stream.handle_any_error();
+    return Stream::handle_any_error() || handled_errors;
+}
+
+GzipCompressor::GzipCompressor(OutputStream& stream)
+    : m_output_stream(stream)
+{
+}
+
+GzipCompressor::~GzipCompressor()
+{
+}
+
+size_t GzipCompressor::write(ReadonlyBytes bytes)
+{
+    BlockHeader header;
+    header.identification_1 = 0x1f;
+    header.identification_2 = 0x8b;
+    header.compression_method = 0x08;
+    header.flags = 0;
+    header.modification_time = 0;
+    header.extra_flags = 3;      // DEFLATE sets 2 for maximum compression and 4 for minimum compression
+    header.operating_system = 3; // unix
+    m_output_stream << Bytes { &header, sizeof(header) };
+    DeflateCompressor compressed_stream { m_output_stream };
+    VERIFY(compressed_stream.write_or_error(bytes));
+    compressed_stream.final_flush();
+    Crypto::Checksum::CRC32 crc32;
+    crc32.update(bytes);
+    LittleEndian<u32> digest = crc32.digest();
+    LittleEndian<u32> size = bytes.size();
+    m_output_stream << digest << size;
+    return bytes.size();
+}
+
+bool GzipCompressor::write_or_error(ReadonlyBytes bytes)
+{
+    if (write(bytes) < bytes.size()) {
+        set_fatal_error();
+        return false;
+    }
+
+    return true;
+}
+
+Optional<ByteBuffer> GzipCompressor::compress_all(const ReadonlyBytes& bytes)
+{
+    DuplexMemoryStream output_stream;
+    GzipCompressor gzip_stream { output_stream };
+
+    gzip_stream.write_or_error(bytes);
+
+    if (gzip_stream.handle_any_error())
+        return {};
+
+    return output_stream.copy_into_contiguous_buffer();
+}
 
 }

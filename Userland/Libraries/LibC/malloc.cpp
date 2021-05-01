@@ -1,34 +1,14 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
 #include <AK/InlineLinkedList.h>
-#include <AK/LogStream.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
+#include <LibELF/AuxiliaryVector.h>
 #include <LibThread/Lock.h>
 #include <assert.h>
 #include <mallocdefs.h>
@@ -38,27 +18,13 @@
 #include <string.h>
 #include <sys/internals.h>
 #include <sys/mman.h>
+#include <syscall.h>
 
 // FIXME: Thread safety.
 
 #define RECYCLE_BIG_ALLOCATIONS
 
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
-
-ALWAYS_INLINE static void ue_notify_malloc(const void* ptr, size_t size)
-{
-    send_secret_data_to_userspace_emulator(1, size, (FlatPtr)ptr);
-}
-
-ALWAYS_INLINE static void ue_notify_free(const void* ptr)
-{
-    send_secret_data_to_userspace_emulator(2, (FlatPtr)ptr, 0);
-}
-
-ALWAYS_INLINE static void ue_notify_realloc(const void* ptr, size_t size)
-{
-    send_secret_data_to_userspace_emulator(3, size, (FlatPtr)ptr);
-}
 
 static LibThread::Lock& malloc_lock()
 {
@@ -73,6 +39,25 @@ static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
 static bool s_scrub_free = true;
 static bool s_profiling = false;
+static bool s_in_userspace_emulator = false;
+
+ALWAYS_INLINE static void ue_notify_malloc(const void* ptr, size_t size)
+{
+    if (s_in_userspace_emulator)
+        syscall(SC_emuctl, 1, size, (FlatPtr)ptr);
+}
+
+ALWAYS_INLINE static void ue_notify_free(const void* ptr)
+{
+    if (s_in_userspace_emulator)
+        syscall(SC_emuctl, 2, (FlatPtr)ptr, 0);
+}
+
+ALWAYS_INLINE static void ue_notify_realloc(const void* ptr, size_t size)
+{
+    if (s_in_userspace_emulator)
+        syscall(SC_emuctl, 3, size, (FlatPtr)ptr);
+}
 
 struct MallocStats {
     size_t number_of_malloc_calls;
@@ -155,7 +140,7 @@ extern "C" {
 static void* os_alloc(size_t size, const char* name)
 {
     auto* ptr = serenity_mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, ChunkedBlock::block_size, name);
-    ASSERT(ptr != MAP_FAILED);
+    VERIFY(ptr != MAP_FAILED);
     return ptr;
 }
 
@@ -165,12 +150,17 @@ static void os_free(void* ptr, size_t size)
     assert(rc == 0);
 }
 
-static void* malloc_impl(size_t size)
+enum class CallerWillInitializeMemory {
+    No,
+    Yes,
+};
+
+static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_initialize_memory)
 {
     LOCKER(malloc_lock());
 
     if (s_log_malloc)
-        dbgprintf("LibC: malloc(%zu)\n", size);
+        dbgln("LibC: malloc({})", size);
 
     if (!size)
         return nullptr;
@@ -191,11 +181,11 @@ static void* malloc_impl(size_t size)
                 bool this_block_was_purged = rc == 1;
                 if (rc < 0) {
                     perror("madvise");
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
                 if (mprotect(block, real_size, PROT_READ | PROT_WRITE) < 0) {
                     perror("mprotect");
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
                 if (this_block_was_purged) {
                     g_malloc_stats.number_of_big_allocator_purge_hits++;
@@ -228,12 +218,12 @@ static void* malloc_impl(size_t size)
         bool this_block_was_purged = rc == 1;
         if (rc < 0) {
             perror("madvise");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         rc = mprotect(block, ChunkedBlock::block_size, PROT_READ | PROT_WRITE);
         if (rc < 0) {
             perror("mprotect");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         if (this_block_was_purged) {
             g_malloc_stats.number_of_empty_block_purge_hits++;
@@ -254,21 +244,17 @@ static void* malloc_impl(size_t size)
 
     --block->m_free_chunks;
     void* ptr = block->m_freelist;
-    ASSERT(ptr);
+    VERIFY(ptr);
     block->m_freelist = block->m_freelist->next;
     if (block->is_full()) {
         g_malloc_stats.number_of_blocks_full++;
-#if MALLOC_DEBUG
-        dbgprintf("Block %p is now full in size class %zu\n", block, good_size);
-#endif
+        dbgln_if(MALLOC_DEBUG, "Block {:p} is now full in size class {}", block, good_size);
         allocator->usable_blocks.remove(block);
         allocator->full_blocks.append(block);
     }
-#if MALLOC_DEBUG
-    dbgprintf("LibC: allocated %p (chunk in block %p, size %zu)\n", ptr, block, block->bytes_per_chunk());
-#endif
+    dbgln_if(MALLOC_DEBUG, "LibC: allocated {:p} (chunk in block {:p}, size {})", ptr, block, block->bytes_per_chunk());
 
-    if (s_scrub_malloc)
+    if (s_scrub_malloc && caller_will_initialize_memory == CallerWillInitializeMemory::No)
         memset(ptr, MALLOC_SCRUB_BYTE, block->m_size);
 
     ue_notify_malloc(ptr, size);
@@ -299,11 +285,11 @@ static void free_impl(void* ptr)
                 size_t this_block_size = block->m_size;
                 if (mprotect(block, this_block_size, PROT_NONE) < 0) {
                     perror("mprotect");
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
                 if (madvise(block, this_block_size, MADV_SET_VOLATILE) != 0) {
                     perror("madvise");
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
                 return;
             }
@@ -317,9 +303,7 @@ static void free_impl(void* ptr)
     assert(magic == MAGIC_PAGE_HEADER);
     auto* block = (ChunkedBlock*)block_base;
 
-#if MALLOC_DEBUG
-    dbgprintf("LibC: freeing %p in allocator %p (size=%zu, used=%zu)\n", ptr, block, block->bytes_per_chunk(), block->used_chunks());
-#endif
+    dbgln_if(MALLOC_DEBUG, "LibC: freeing {:p} in allocator {:p} (size={}, used={})", ptr, block, block->bytes_per_chunk(), block->used_chunks());
 
     if (s_scrub_free)
         memset(ptr, FREE_SCRUB_BYTE, block->bytes_per_chunk());
@@ -331,9 +315,7 @@ static void free_impl(void* ptr)
     if (block->is_full()) {
         size_t good_size;
         auto* allocator = allocator_for_size(block->m_size, good_size);
-#if MALLOC_DEBUG
-        dbgprintf("Block %p no longer full in size class %zu\n", block, good_size);
-#endif
+        dbgln_if(MALLOC_DEBUG, "Block {:p} no longer full in size class {}", block, good_size);
         g_malloc_stats.number_of_freed_full_blocks++;
         allocator->full_blocks.remove(block);
         allocator->usable_blocks.prepend(block);
@@ -345,9 +327,7 @@ static void free_impl(void* ptr)
         size_t good_size;
         auto* allocator = allocator_for_size(block->m_size, good_size);
         if (allocator->block_count < number_of_chunked_blocks_to_keep_around_per_size_class) {
-#if MALLOC_DEBUG
-            dbgprintf("Keeping block %p around for size class %zu\n", block, good_size);
-#endif
+            dbgln_if(MALLOC_DEBUG, "Keeping block {:p} around for size class {}", block, good_size);
             g_malloc_stats.number_of_keeps++;
             allocator->usable_blocks.remove(block);
             allocator->empty_blocks[allocator->empty_block_count++] = block;
@@ -355,9 +335,7 @@ static void free_impl(void* ptr)
             madvise(block, ChunkedBlock::block_size, MADV_SET_VOLATILE);
             return;
         }
-#if MALLOC_DEBUG
-        dbgprintf("Releasing block %p for size class %zu\n", block, good_size);
-#endif
+        dbgln_if(MALLOC_DEBUG, "Releasing block {:p} for size class {}", block, good_size);
         g_malloc_stats.number_of_frees++;
         allocator->usable_blocks.remove(block);
         --allocator->block_count;
@@ -367,7 +345,7 @@ static void free_impl(void* ptr)
 
 [[gnu::flatten]] void* malloc(size_t size)
 {
-    void* ptr = malloc_impl(size);
+    void* ptr = malloc_impl(size, CallerWillInitializeMemory::No);
     if (s_profiling)
         perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<FlatPtr>(ptr));
     return ptr;
@@ -384,7 +362,7 @@ static void free_impl(void* ptr)
 void* calloc(size_t count, size_t size)
 {
     size_t new_size = count * size;
-    auto* ptr = malloc(new_size);
+    auto* ptr = malloc_impl(new_size, CallerWillInitializeMemory::Yes);
     if (ptr)
         memset(ptr, 0, new_size);
     return ptr;
@@ -401,7 +379,7 @@ size_t malloc_size(void* ptr)
     if (header->m_magic == MAGIC_BIGALLOC_HEADER)
         size -= sizeof(CommonHeader);
     else
-        ASSERT(header->m_magic == MAGIC_PAGE_HEADER);
+        VERIFY(header->m_magic == MAGIC_PAGE_HEADER);
     return size;
 }
 
@@ -430,13 +408,22 @@ void* realloc(void* ptr, size_t size)
 void __malloc_init()
 {
     new (&malloc_lock()) LibThread::Lock();
-    if (getenv("LIBC_NOSCRUB_MALLOC"))
+
+    s_in_userspace_emulator = (int)syscall(SC_emuctl, 0) != -ENOSYS;
+    if (s_in_userspace_emulator) {
+        // Don't bother scrubbing memory if we're running in UE since it
+        // keeps track of heap memory anyway.
         s_scrub_malloc = false;
-    if (getenv("LIBC_NOSCRUB_FREE"))
         s_scrub_free = false;
-    if (getenv("LIBC_LOG_MALLOC"))
+    }
+
+    if (secure_getenv("LIBC_NOSCRUB_MALLOC"))
+        s_scrub_malloc = false;
+    if (secure_getenv("LIBC_NOSCRUB_FREE"))
+        s_scrub_free = false;
+    if (secure_getenv("LIBC_LOG_MALLOC"))
         s_log_malloc = true;
-    if (getenv("LIBC_PROFILE_MALLOC"))
+    if (secure_getenv("LIBC_PROFILE_MALLOC"))
         s_profiling = true;
 
     for (size_t i = 0; i < num_size_classes; ++i) {

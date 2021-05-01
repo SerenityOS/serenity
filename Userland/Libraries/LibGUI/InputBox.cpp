@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGUI/BoxLayout.h>
@@ -34,8 +14,9 @@
 
 namespace GUI {
 
-InputBox::InputBox(Window* parent_window, const StringView& prompt, const StringView& title)
+InputBox::InputBox(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title)
     : Dialog(parent_window)
+    , m_text_value(text_value)
     , m_prompt(prompt)
 {
     set_title(title);
@@ -46,9 +27,9 @@ InputBox::~InputBox()
 {
 }
 
-int InputBox::show(String& text_value, Window* parent_window, const StringView& prompt, const StringView& title)
+int InputBox::show(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title)
 {
-    auto box = InputBox::construct(parent_window, prompt, title);
+    auto box = InputBox::construct(parent_window, text_value, prompt, title);
     box->set_resizable(false);
     if (parent_window)
         box->set_icon(parent_window->icon());
@@ -63,7 +44,7 @@ void InputBox::build()
 
     int text_width = widget.font().width(m_prompt);
     int title_width = widget.font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
-    int max_width = AK::max(text_width, title_width);
+    int max_width = max(text_width, title_width);
 
     set_rect(x(), y(), max_width + 140, 62);
 
@@ -81,6 +62,7 @@ void InputBox::build()
 
     m_text_editor = label_editor_container.add<TextBox>();
     m_text_editor->set_fixed_height(19);
+    m_text_editor->set_text(m_text_value);
 
     auto& button_container_outer = widget.add<Widget>();
     button_container_outer.set_fixed_height(20);

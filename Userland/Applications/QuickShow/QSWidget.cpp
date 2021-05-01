@@ -1,40 +1,23 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "QSWidget.h"
+#include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Palette.h>
 
 QSWidget::QSWidget()
+    : m_timer(Core::Timer::construct())
 {
     set_fill_with_background_color(false);
 }
@@ -48,7 +31,7 @@ void QSWidget::clear()
     m_bitmap = nullptr;
     m_path = {};
 
-    set_scale(100);
+    reset_view();
     update();
 }
 
@@ -78,7 +61,7 @@ void QSWidget::navigate(Directions direction)
     StringBuilder sb;
     sb.append("/");
     sb.join("/", parts);
-    AK::String current_dir = sb.to_string();
+    auto current_dir = sb.to_string();
 
     if (m_files_in_same_dir.is_empty()) {
         Core::DirIterator iterator(current_dir, Core::DirIterator::Flags::SkipDots);
@@ -134,9 +117,6 @@ void QSWidget::set_scale(int scale)
     if (scale > 1000)
         scale = 1000;
 
-    if (scale == 100)
-        m_pan_origin = { 0, 0 };
-
     m_scale = scale;
     float scale_factor = (float)m_scale / 100.0f;
 
@@ -156,12 +136,11 @@ void QSWidget::relayout()
     if (m_bitmap.is_null())
         return;
 
-    float scale_factor = (float)m_scale / 100.0f;
     Gfx::IntSize new_size = m_bitmap_rect.size();
 
     Gfx::IntPoint new_location;
-    new_location.set_x((width() / 2) - (new_size.width() / 2) - (m_pan_origin.x() * scale_factor));
-    new_location.set_y((height() / 2) - (new_size.height() / 2) - (m_pan_origin.y() * scale_factor));
+    new_location.set_x((width() / 2) - (new_size.width() / 2) - m_pan_origin.x());
+    new_location.set_y((height() / 2) - (new_size.height() / 2) - m_pan_origin.y());
     m_bitmap_rect.set_location(new_location);
 
     update();
@@ -208,10 +187,9 @@ void QSWidget::mousemove_event(GUI::MouseEvent& event)
         return;
 
     auto delta = event.position() - m_click_position;
-    float scale_factor = (float)m_scale / 100.0f;
     m_pan_origin = m_saved_pan_origin.translated(
-        -delta.x() / scale_factor,
-        -delta.y() / scale_factor);
+        -delta.x(),
+        -delta.y());
 
     relayout();
 }
@@ -231,29 +209,54 @@ void QSWidget::mousewheel_event(GUI::MouseEvent& event)
     auto old_scale_factor = (float)m_scale / 100.0f;
     auto new_scale_factor = (float)new_scale / 100.0f;
 
-    auto focus_point = Gfx::FloatPoint(
-        m_pan_origin.x() - ((float)event.x() - (float)width() / 2.0) / old_scale_factor,
-        m_pan_origin.y() - ((float)event.y() - (float)height() / 2.0) / old_scale_factor);
+    // focus_point is the window position the cursor is pointing to.
+    // The pixel (in image space) the cursor points to is located at
+    // (m_pan_origin + focus_point) / scale_factor.
+    // We want the image after scaling to be panned in such a way that the cursor
+    // will still point to the same image pixel. Basically, we need to solve
+    // (m_pan_origin + focus_point) / old_scale_factor = (new_m_pan_origin + focus_point) / new_scale_factor.
+    Gfx::FloatPoint focus_point {
+        event.x() - width() / 2.0f,
+        event.y() - height() / 2.0f
+    };
 
-    m_pan_origin = Gfx::FloatPoint(
-        focus_point.x() - new_scale_factor / old_scale_factor * (focus_point.x() - m_pan_origin.x()),
-        focus_point.y() - new_scale_factor / old_scale_factor * (focus_point.y() - m_pan_origin.y()));
+    // A little algebra shows that new m_pan_origin equals to:
+    m_pan_origin = (m_pan_origin + focus_point) * (new_scale_factor / old_scale_factor) - focus_point;
 
     set_scale(new_scale);
 }
 
 void QSWidget::load_from_file(const String& path)
 {
-    auto bitmap = Gfx::Bitmap::load_from_file(path);
-    if (!bitmap) {
+    auto show_error = [&] {
         GUI::MessageBox::show(window(), String::formatted("Failed to open {}", path), "Cannot open image", GUI::MessageBox::Type::Error);
+    };
+
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error()) {
+        show_error();
         return;
+    }
+
+    auto& mapped_file = *file_or_error.value();
+    m_image_decoder = Gfx::ImageDecoder::create((const u8*)mapped_file.data(), mapped_file.size());
+    auto bitmap = m_image_decoder->bitmap();
+    if (!bitmap) {
+        show_error();
+        return;
+    }
+
+    if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
+        const auto& first_frame = m_image_decoder->frame(0);
+        m_timer->set_interval(first_frame.duration);
+        m_timer->on_timeout = [this] { animate(); };
+        m_timer->start();
     }
 
     m_path = path;
     m_bitmap = bitmap;
     m_scale = -1;
-    set_scale(100);
+    reset_view();
 }
 
 void QSWidget::drop_event(GUI::DropEvent& event)
@@ -280,4 +283,38 @@ void QSWidget::resize_window()
 
     new_size.set_height(new_size.height() + m_toolbar_height);
     window()->resize(new_size);
+}
+
+void QSWidget::reset_view()
+{
+    m_pan_origin = { 0, 0 };
+    set_scale(100);
+}
+
+void QSWidget::set_bitmap(const Gfx::Bitmap* bitmap)
+{
+    if (m_bitmap == bitmap)
+        return;
+    m_bitmap = bitmap;
+    update();
+}
+
+// Same as ImageWidget::animate(), you probably want to keep any changes in sync
+void QSWidget::animate()
+{
+    m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();
+
+    const auto& current_frame = m_image_decoder->frame(m_current_frame_index);
+    set_bitmap(current_frame.image);
+
+    if (current_frame.duration != m_timer->interval()) {
+        m_timer->restart(current_frame.duration);
+    }
+
+    if (m_current_frame_index == m_image_decoder->frame_count() - 1) {
+        ++m_loops_completed;
+        if (m_loops_completed > 0 && m_loops_completed == m_image_decoder->loop_count()) {
+            m_timer->stop();
+        }
+    }
 }

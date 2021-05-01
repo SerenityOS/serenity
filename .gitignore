@@ -4,6 +4,7 @@
 !Makefile
 !LICENSE
 !Base/**
+!Meta/ShellCompletions/**
 
 *.o
 *.ao
@@ -37,7 +38,7 @@ compile_commands.json
 .clang_complete
 .clangd
 *Endpoint.h
-Ports/packages.db
 .idea/
 cmake-build-debug/
 sync-local.sh
+.vim/

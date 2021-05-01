@@ -1,31 +1,15 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/CheckedFormatString.h>
+
+#include <AK/AllOf.h>
+#include <AK/AnyOf.h>
 #include <AK/Array.h>
 #include <AK/GenericLexer.h>
 #include <AK/Optional.h>
@@ -61,41 +45,68 @@ struct TypeErasedParameter {
         Custom
     };
 
-    static Type get_type_from_size(size_t size, bool is_unsigned)
+    template<size_t size, bool is_unsigned>
+    static consteval Type get_type_from_size()
     {
-        if (is_unsigned) {
-            if (size == 1)
+        if constexpr (is_unsigned) {
+            if constexpr (size == 1)
                 return Type::UInt8;
-            if (size == 2)
+            if constexpr (size == 2)
                 return Type::UInt16;
-            if (size == 4)
+            if constexpr (size == 4)
                 return Type::UInt32;
-            if (size == 8)
+            if constexpr (size == 8)
                 return Type::UInt64;
         } else {
-            if (size == 1)
+            if constexpr (size == 1)
                 return Type::Int8;
-            if (size == 2)
+            if constexpr (size == 2)
                 return Type::Int16;
-            if (size == 4)
+            if constexpr (size == 4)
                 return Type::Int32;
-            if (size == 8)
+            if constexpr (size == 8)
                 return Type::Int64;
         }
 
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     template<typename T>
-    static Type get_type()
+    static consteval Type get_type()
     {
-        if (IsIntegral<T>::value)
-            return get_type_from_size(sizeof(T), IsUnsigned<T>::value);
-
-        return Type::Custom;
+        if constexpr (IsIntegral<T>)
+            return get_type_from_size<sizeof(T), IsUnsigned<T>>();
+        else
+            return Type::Custom;
     }
 
-    size_t to_size() const;
+    constexpr size_t to_size() const
+    {
+        i64 svalue;
+
+        if (type == TypeErasedParameter::Type::UInt8)
+            svalue = *static_cast<const u8*>(value);
+        else if (type == TypeErasedParameter::Type::UInt16)
+            svalue = *static_cast<const u16*>(value);
+        else if (type == TypeErasedParameter::Type::UInt32)
+            svalue = *static_cast<const u32*>(value);
+        else if (type == TypeErasedParameter::Type::UInt64)
+            svalue = *static_cast<const u64*>(value);
+        else if (type == TypeErasedParameter::Type::Int8)
+            svalue = *static_cast<const i8*>(value);
+        else if (type == TypeErasedParameter::Type::Int16)
+            svalue = *static_cast<const i16*>(value);
+        else if (type == TypeErasedParameter::Type::Int32)
+            svalue = *static_cast<const i32*>(value);
+        else if (type == TypeErasedParameter::Type::Int64)
+            svalue = *static_cast<const i64*>(value);
+        else
+            VERIFY_NOT_REACHED();
+
+        VERIFY(svalue >= 0);
+
+        return static_cast<size_t>(svalue);
+    }
 
     // FIXME: Getters and setters.
 
@@ -265,7 +276,7 @@ struct StandardFormatter {
 };
 
 template<typename T>
-struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> : StandardFormatter {
+struct Formatter<T, typename EnableIf<IsIntegral<T>>::Type> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
@@ -360,48 +371,60 @@ struct Formatter<std::nullptr_t> : Formatter<FlatPtr> {
 };
 
 void vformat(StringBuilder&, StringView fmtstr, TypeErasedFormatParams);
-void vformat(const LogStream& stream, StringView fmtstr, TypeErasedFormatParams);
 
 #ifndef KERNEL
 void vout(FILE*, StringView fmtstr, TypeErasedFormatParams, bool newline = false);
 
 template<typename... Parameters>
-void out(FILE* file, StringView fmtstr, const Parameters&... parameters) { vout(file, fmtstr, VariadicFormatParams { parameters... }); }
+void out(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { vout(file, fmtstr.view(), VariadicFormatParams { parameters... }); }
+
 template<typename... Parameters>
-void outln(FILE* file, StringView fmtstr, const Parameters&... parameters) { vout(file, fmtstr, VariadicFormatParams { parameters... }, true); }
-template<typename... Parameters>
-void outln(FILE* file, const char* fmtstr, const Parameters&... parameters) { vout(file, fmtstr, VariadicFormatParams { parameters... }, true); }
+void outln(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { vout(file, fmtstr.view(), VariadicFormatParams { parameters... }, true); }
+
 inline void outln(FILE* file) { fputc('\n', file); }
 
 template<typename... Parameters>
-void out(StringView fmtstr, const Parameters&... parameters) { out(stdout, fmtstr, parameters...); }
-template<typename... Parameters>
-void outln(StringView fmtstr, const Parameters&... parameters) { outln(stdout, fmtstr, parameters...); }
-template<typename... Parameters>
-void outln(const char* fmtstr, const Parameters&... parameters) { outln(stdout, fmtstr, parameters...); }
-inline void outln() { outln(stdout); }
+void out(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { out(stdout, move(fmtstr), parameters...); }
 
 template<typename... Parameters>
-void warn(StringView fmtstr, const Parameters&... parameters) { out(stderr, fmtstr, parameters...); }
+void outln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { outln(stdout, move(fmtstr), parameters...); }
+
+inline void outln() { outln(stdout); }
+
+#    define outln_if(flag, fmt, ...)       \
+        do {                               \
+            if constexpr (flag)            \
+                outln(fmt, ##__VA_ARGS__); \
+        } while (0)
+
 template<typename... Parameters>
-void warnln(StringView fmtstr, const Parameters&... parameters) { outln(stderr, fmtstr, parameters...); }
+void warn(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+{
+    out(stderr, move(fmtstr), parameters...);
+}
+
 template<typename... Parameters>
-void warnln(const char* fmtstr, const Parameters&... parameters) { outln(stderr, fmtstr, parameters...); }
+void warnln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { outln(stderr, move(fmtstr), parameters...); }
+
 inline void warnln() { outln(stderr); }
+
+#    define warnln_if(flag, fmt, ...)      \
+        do {                               \
+            if constexpr (flag)            \
+                outln(fmt, ##__VA_ARGS__); \
+        } while (0)
+
 #endif
 
 void vdbgln(StringView fmtstr, TypeErasedFormatParams);
 
-template<bool enabled = true, typename... Parameters>
-void dbgln(StringView fmtstr, const Parameters&... parameters)
+template<typename... Parameters>
+void dbgln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
 {
-    if constexpr (enabled)
-        vdbgln(fmtstr, VariadicFormatParams { parameters... });
+    vdbgln(fmtstr.view(), VariadicFormatParams { parameters... });
 }
-template<bool enabled = true, typename... Parameters>
-void dbgln(const char* fmtstr, const Parameters&... parameters) { dbgln<enabled>(StringView { fmtstr }, parameters...); }
-template<bool enabled = true>
-void dbgln() { dbgln<enabled>(""); }
+
+inline void dbgln() { dbgln(""); }
 
 void set_debug_enabled(bool);
 
@@ -409,18 +432,17 @@ void set_debug_enabled(bool);
 void vdmesgln(StringView fmtstr, TypeErasedFormatParams);
 
 template<typename... Parameters>
-void dmesgln(StringView fmtstr, const Parameters&... parameters) { vdmesgln(fmtstr, VariadicFormatParams { parameters... }); }
-template<typename... Parameters>
-void dmesgln(const char* fmtstr, const Parameters&... parameters) { vdmesgln(fmtstr, VariadicFormatParams { parameters... }); }
-inline void dmesgln() { dmesgln(""); }
+void dmesgln(CheckedFormatString<Parameters...>&& fmt, const Parameters&... parameters)
+{
+    vdmesgln(fmt.view(), VariadicFormatParams { parameters... });
+}
 #endif
 
 template<typename T, typename = void>
-struct HasFormatter : TrueType {
-};
+inline constexpr bool HasFormatter = true;
+
 template<typename T>
-struct HasFormatter<T, typename Formatter<T>::__no_formatter_defined> : FalseType {
-};
+inline constexpr bool HasFormatter<T, typename Formatter<T>::__no_formatter_defined> = false;
 
 template<typename T>
 class FormatIfSupported {
@@ -450,7 +472,7 @@ struct __FormatIfSupported<T, true> : Formatter<T> {
     }
 };
 template<typename T>
-struct Formatter<FormatIfSupported<T>> : __FormatIfSupported<T, HasFormatter<T>::value> {
+struct Formatter<FormatIfSupported<T>> : __FormatIfSupported<T, HasFormatter<T>> {
 };
 
 // This is a helper class, the idea is that if you want to implement a formatter you can inherit
@@ -481,5 +503,12 @@ using AK::warnln;
 
 using AK::dbgln;
 
+using AK::CheckedFormatString;
 using AK::FormatIfSupported;
 using AK::FormatString;
+
+#define dbgln_if(flag, fmt, ...)       \
+    do {                               \
+        if constexpr (flag)            \
+            dbgln(fmt, ##__VA_ARGS__); \
+    } while (0)

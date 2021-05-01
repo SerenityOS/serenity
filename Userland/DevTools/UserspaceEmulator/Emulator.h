@@ -1,32 +1,13 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include "MallocTracer.h"
+#include "RangeAllocator.h"
 #include "Report.h"
 #include "SoftCPU.h"
 #include "SoftMMU.h"
@@ -63,8 +44,12 @@ public:
 
     bool is_in_malloc_or_free() const;
     bool is_in_loader_code() const;
+    bool is_in_libsystem() const;
+    bool is_in_libc() const;
 
     void did_receive_signal(int signum) { m_pending_signals |= (1 << signum); }
+
+    void dump_regions() const;
 
 private:
     const String m_executable_path;
@@ -81,6 +66,7 @@ private:
     void register_signal_handlers();
     void setup_signal_trampoline();
 
+    int virt$emuctl(FlatPtr, FlatPtr, FlatPtr);
     int virt$fork();
     int virt$execve(FlatPtr);
     int virt$access(FlatPtr, size_t, int);
@@ -98,7 +84,7 @@ private:
     u32 virt$mmap(u32);
     FlatPtr virt$mremap(FlatPtr);
     u32 virt$mount(u32);
-    u32 virt$munmap(FlatPtr address, u32 size);
+    u32 virt$munmap(FlatPtr address, size_t size);
     u32 virt$gettid();
     u32 virt$getpid();
     u32 virt$unveil(u32);
@@ -117,8 +103,13 @@ private:
     int virt$pipe(FlatPtr pipefd, int flags);
     int virt$close(int);
     int virt$mkdir(FlatPtr path, size_t path_length, mode_t mode);
+    int virt$rmdir(FlatPtr path, size_t path_length);
     int virt$unlink(FlatPtr path, size_t path_length);
+    int virt$symlink(FlatPtr address);
+    int virt$rename(FlatPtr address);
+    int virt$set_coredump_metadata(FlatPtr address);
     int virt$get_process_name(FlatPtr buffer, int size);
+    int virt$set_process_name(FlatPtr buffer, int size);
     int virt$set_mmap_name(FlatPtr);
     int virt$gettimeofday(FlatPtr);
     int virt$clock_gettime(int, FlatPtr);
@@ -132,14 +123,17 @@ private:
     int virt$clock_settime(uint32_t clock_id, FlatPtr user_ts);
     int virt$listen(int, int);
     int virt$kill(pid_t, int);
+    int virt$killpg(int pgrp, int sig);
     int virt$fstat(int, FlatPtr);
     u32 virt$fcntl(int fd, int, u32);
     int virt$getgroups(ssize_t count, FlatPtr);
     int virt$setgroups(ssize_t count, FlatPtr);
-    int virt$lseek(int fd, off_t offset, int whence);
+    int virt$lseek(int fd, FlatPtr offset_addr, int whence);
     int virt$socket(int, int, int);
     int virt$getsockopt(FlatPtr);
     int virt$setsockopt(FlatPtr);
+    int virt$getsockname(FlatPtr);
+    int virt$getpeername(FlatPtr);
     int virt$select(FlatPtr);
     int virt$get_stack_bounds(FlatPtr, FlatPtr);
     int virt$accept(int sockfd, FlatPtr address, FlatPtr address_length);
@@ -147,6 +141,8 @@ private:
     int virt$recvmsg(int sockfd, FlatPtr msg_addr, int flags);
     int virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags);
     int virt$connect(int sockfd, FlatPtr address, socklen_t address_size);
+    int virt$shutdown(int sockfd, int how);
+    void virt$sync();
     void virt$exit(int);
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
     int virt$chdir(FlatPtr, size_t);
@@ -167,13 +163,13 @@ private:
     u32 virt$allocate_tls(size_t);
     int virt$ptsname(int fd, FlatPtr buffer, size_t buffer_size);
     int virt$beep();
-    int virt$ftruncate(int fd, off_t);
+    int virt$ftruncate(int fd, FlatPtr length_addr);
     mode_t virt$umask(mode_t);
     int virt$anon_create(size_t, int);
-    int virt$recvfd(int);
+    int virt$recvfd(int, int);
     int virt$sendfd(int, int);
+    int virt$msyscall(FlatPtr);
 
-    FlatPtr allocate_vm(size_t size, size_t alignment);
     bool find_malloc_symbols(const MmapRegion& libc_text);
 
     void dispatch_one_pending_signal();
@@ -187,10 +183,17 @@ private:
     FlatPtr m_malloc_symbol_end { 0 };
     FlatPtr m_realloc_symbol_start { 0 };
     FlatPtr m_realloc_symbol_end { 0 };
+    FlatPtr m_calloc_symbol_start { 0 };
+    FlatPtr m_calloc_symbol_end { 0 };
     FlatPtr m_free_symbol_start { 0 };
     FlatPtr m_free_symbol_end { 0 };
     FlatPtr m_malloc_size_symbol_start { 0 };
     FlatPtr m_malloc_size_symbol_end { 0 };
+
+    FlatPtr m_libc_start { 0 };
+    FlatPtr m_libc_end { 0 };
+    FlatPtr m_libsystem_start { 0 };
+    FlatPtr m_libsystem_end { 0 };
 
     sigset_t m_pending_signals { 0 };
     sigset_t m_signal_mask { 0 };
@@ -212,13 +215,28 @@ private:
     };
 
     HashMap<String, CachedELF> m_dynamic_library_cache;
+
+    RangeAllocator m_range_allocator;
 };
+
+ALWAYS_INLINE bool Emulator::is_in_libc() const
+{
+    return m_cpu.base_eip() >= m_libc_start && m_cpu.base_eip() < m_libc_end;
+}
+
+ALWAYS_INLINE bool Emulator::is_in_libsystem() const
+{
+    return m_cpu.base_eip() >= m_libsystem_start && m_cpu.base_eip() < m_libsystem_end;
+}
 
 ALWAYS_INLINE bool Emulator::is_in_malloc_or_free() const
 {
+    if (!is_in_libc())
+        return false;
     return (m_cpu.base_eip() >= m_malloc_symbol_start && m_cpu.base_eip() < m_malloc_symbol_end)
         || (m_cpu.base_eip() >= m_free_symbol_start && m_cpu.base_eip() < m_free_symbol_end)
         || (m_cpu.base_eip() >= m_realloc_symbol_start && m_cpu.base_eip() < m_realloc_symbol_end)
+        || (m_cpu.base_eip() >= m_calloc_symbol_start && m_cpu.base_eip() < m_calloc_symbol_end)
         || (m_cpu.base_eip() >= m_malloc_size_symbol_start && m_cpu.base_eip() < m_malloc_size_symbol_end);
 }
 

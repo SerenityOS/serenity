@@ -1,39 +1,22 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
+#include <LibWeb/CSS/CSSImportRule.h>
+#include <LibWeb/CSS/CSSRule.h>
+#include <LibWeb/CSS/CSSStyleRule.h>
+#include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/PropertyID.h>
-#include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/DocumentFragment.h>
-#include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
@@ -46,27 +29,31 @@ namespace Web {
 
 void dump_tree(const DOM::Node& node)
 {
+    StringBuilder builder;
+    dump_tree(builder, node);
+    dbgln("{}", builder.string_view());
+}
+
+void dump_tree(StringBuilder& builder, const DOM::Node& node)
+{
     static int indent = 0;
     for (int i = 0; i < indent; ++i)
-        dbgprintf("  ");
-    if (is<DOM::Document>(node)) {
-        dbgprintf("*Document*\n");
-    } else if (is<DOM::Element>(node)) {
-        dbgprintf("<%s", downcast<DOM::Element>(node).local_name().characters());
-        downcast<DOM::Element>(node).for_each_attribute([](auto& name, auto& value) {
-            dbgprintf(" %s=%s", name.characters(), value.characters());
+        builder.append("  ");
+    if (is<DOM::Element>(node)) {
+        builder.appendff("<{}", downcast<DOM::Element>(node).local_name());
+        downcast<DOM::Element>(node).for_each_attribute([&](auto& name, auto& value) {
+            builder.appendff(" {}={}", name, value);
         });
-        dbgprintf(">\n");
+        builder.append(">\n");
     } else if (is<DOM::Text>(node)) {
-        dbgprintf("\"%s\"\n", downcast<DOM::Text>(node).data().characters());
-    } else if (is<DOM::DocumentType>(node)) {
-        dbgprintf("<!DOCTYPE html>\n");
-    } else if (is<DOM::Comment>(node)) {
-        dbgprintf("<!--%s-->\n", downcast<DOM::Comment>(node).data().characters());
-    } else if (is<DOM::DocumentFragment>(node)) {
-        dbgprintf("#document-fragment\n");
+        builder.appendff("\"{}\"\n", downcast<DOM::Text>(node).data());
+    } else {
+        builder.appendff("{}\n", node.node_name());
     }
     ++indent;
+    if (is<DOM::Element>(node) && downcast<DOM::Element>(node).shadow_root()) {
+        dump_tree(*downcast<DOM::Element>(node).shadow_root());
+    }
     if (is<DOM::ParentNode>(node)) {
         if (!is<HTML::HTMLTemplateElement>(node)) {
             static_cast<const DOM::ParentNode&>(node).for_each_child([](auto& child) {
@@ -84,7 +71,7 @@ void dump_tree(const Layout::Node& layout_node, bool show_box_model, bool show_s
 {
     StringBuilder builder;
     dump_tree(builder, layout_node, show_box_model, show_specified_style, true);
-    dbgprintf("%s", builder.to_string().characters());
+    dbgln("{}", builder.string_view());
 }
 
 void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool show_box_model, bool show_specified_style, bool interactive)
@@ -96,14 +83,10 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
     FlyString tag_name;
     if (layout_node.is_anonymous())
         tag_name = "(anonymous)";
-    else if (is<DOM::Text>(layout_node.dom_node()))
-        tag_name = "#text";
-    else if (is<DOM::Document>(layout_node.dom_node()))
-        tag_name = "#document";
     else if (is<DOM::Element>(layout_node.dom_node()))
         tag_name = downcast<DOM::Element>(*layout_node.dom_node()).local_name();
     else
-        tag_name = "???";
+        tag_name = layout_node.dom_node()->node_name();
 
     String identifier = "";
     if (layout_node.dom_node() && is<DOM::Element>(*layout_node.dom_node())) {
@@ -144,7 +127,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
     }
 
     if (!is<Layout::Box>(layout_node)) {
-        builder.appendff("{}{}{} <{}{}{}>",
+        builder.appendff("{}{}{} <{}{}{}{}>",
             nonbox_color_on,
             layout_node.class_name().substring_view(13),
             color_off,
@@ -186,7 +169,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
 
         if (show_box_model) {
             // Dump the horizontal box properties
-            builder.appendf(" [%g+%g+%g %g %g+%g+%g]",
+            builder.appendff(" [{}+{}+{} {} {}+{}+{}]",
                 box.box_model().margin.left,
                 box.box_model().border.left,
                 box.box_model().padding.left,
@@ -196,7 +179,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
                 box.box_model().margin.right);
 
             // And the vertical box properties
-            builder.appendf(" [%g+%g+%g %g %g+%g+%g]",
+            builder.appendff(" [{}+{}+{} {} {}+{}+{}]",
                 box.box_model().margin.top,
                 box.box_model().border.top,
                 box.box_model().padding.top,
@@ -273,10 +256,17 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
 
 void dump_selector(const CSS::Selector& selector)
 {
-    dbgprintf("  CSS::Selector:\n");
+    StringBuilder builder;
+    dump_selector(builder, selector);
+    dbgln("{}", builder.string_view());
+}
+
+void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
+{
+    builder.append("  CSS::Selector:\n");
 
     for (auto& complex_selector : selector.complex_selectors()) {
-        dbgprintf("    ");
+        builder.append("    ");
 
         const char* relation_description = "";
         switch (complex_selector.relation) {
@@ -295,10 +285,13 @@ void dump_selector(const CSS::Selector& selector)
         case CSS::Selector::ComplexSelector::Relation::GeneralSibling:
             relation_description = "GeneralSibling";
             break;
+        case CSS::Selector::ComplexSelector::Relation::Column:
+            relation_description = "Column";
+            break;
         }
 
         if (*relation_description)
-            dbgprintf("{%s} ", relation_description);
+            builder.appendff("{{{}}} ", relation_description);
 
         for (size_t i = 0; i < complex_selector.compound_selector.size(); ++i) {
             auto& simple_selector = complex_selector.compound_selector[i];
@@ -333,6 +326,9 @@ void dump_selector(const CSS::Selector& selector)
             case CSS::Selector::SimpleSelector::AttributeMatchType::Contains:
                 attribute_match_type_description = "Contains";
                 break;
+            case CSS::Selector::SimpleSelector::AttributeMatchType::StartsWith:
+                attribute_match_type_description = "StartsWith";
+                break;
             }
 
             const char* pseudo_class_description = "";
@@ -348,6 +344,12 @@ void dump_selector(const CSS::Selector& selector)
                 break;
             case CSS::Selector::SimpleSelector::PseudoClass::Root:
                 pseudo_class_description = "Root";
+                break;
+            case CSS::Selector::SimpleSelector::PseudoClass::FirstOfType:
+                pseudo_class_description = "FirstOfType";
+                break;
+            case CSS::Selector::SimpleSelector::PseudoClass::LastOfType:
+                pseudo_class_description = "LastOfType";
                 break;
             case CSS::Selector::SimpleSelector::PseudoClass::Focus:
                 pseudo_class_description = "Focus";
@@ -369,38 +371,73 @@ void dump_selector(const CSS::Selector& selector)
                 break;
             }
 
-            dbgprintf("%s:%s", type_description, simple_selector.value.characters());
+            builder.appendff("{}:{}", type_description, simple_selector.value);
             if (simple_selector.pseudo_class != CSS::Selector::SimpleSelector::PseudoClass::None)
-                dbgprintf(" pseudo_class=%s", pseudo_class_description);
+                builder.appendff(" pseudo_class={}", pseudo_class_description);
             if (simple_selector.attribute_match_type != CSS::Selector::SimpleSelector::AttributeMatchType::None) {
-                dbgprintf(" [%s, name='%s', value='%s']", attribute_match_type_description, simple_selector.attribute_name.characters(), simple_selector.attribute_value.characters());
+                builder.appendff(" [{}, name='{}', value='{}']", attribute_match_type_description, simple_selector.attribute_name, simple_selector.attribute_value);
             }
 
             if (i != complex_selector.compound_selector.size() - 1)
-                dbgprintf(", ");
+                builder.append(", ");
         }
-        dbgprintf("\n");
+        builder.append("\n");
     }
 }
 
-void dump_rule(const CSS::StyleRule& rule)
+void dump_rule(const CSS::CSSRule& rule)
 {
-    dbgprintf("Rule:\n");
-    for (auto& selector : rule.selectors()) {
-        dump_selector(selector);
+    StringBuilder builder;
+    dump_rule(builder, rule);
+    dbgln("{}", builder.string_view());
+}
+
+void dump_rule(StringBuilder& builder, const CSS::CSSRule& rule)
+{
+    builder.appendff("{}:\n", rule.class_name());
+    switch (rule.type()) {
+    case CSS::CSSRule::Type::Style:
+        dump_style_rule(builder, downcast<const CSS::CSSStyleRule>(rule));
+        break;
+    case CSS::CSSRule::Type::Import:
+        dump_import_rule(builder, downcast<const CSS::CSSImportRule>(rule));
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
-    dbgprintf("  Declarations:\n");
+}
+
+void dump_import_rule(StringBuilder& builder, const CSS::CSSImportRule& rule)
+{
+    builder.appendff("  Document URL: {}\n", rule.url());
+}
+
+void dump_style_rule(StringBuilder& builder, const CSS::CSSStyleRule& rule)
+{
+    for (auto& selector : rule.selectors()) {
+        dump_selector(builder, selector);
+    }
+    builder.append("  Declarations:\n");
     for (auto& property : rule.declaration().properties()) {
-        dbgprintf("    %s: '%s'\n", CSS::string_from_property_id(property.property_id), property.value->to_string().characters());
+        builder.appendff("    {}: '{}'\n", CSS::string_from_property_id(property.property_id), property.value->to_string());
     }
 }
 
 void dump_sheet(const CSS::StyleSheet& sheet)
 {
-    dbgprintf("StyleSheet{%p}: %zu rule(s)\n", &sheet, sheet.rules().size());
+    StringBuilder builder;
+    dump_sheet(builder, sheet);
+    dbgln("{}", builder.string_view());
+}
 
-    for (auto& rule : sheet.rules()) {
-        dump_rule(rule);
+void dump_sheet(StringBuilder& builder, const CSS::StyleSheet& sheet)
+{
+    VERIFY(is<CSS::CSSStyleSheet>(sheet));
+
+    builder.appendff("CSSStyleSheet{{{}}}: {} rule(s)\n", &sheet, static_cast<const CSS::CSSStyleSheet&>(sheet).rules().size());
+
+    for (auto& rule : static_cast<const CSS::CSSStyleSheet&>(sheet).rules()) {
+        dump_rule(builder, rule);
     }
 }
 

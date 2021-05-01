@@ -1,33 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/HashFunctions.h>
-#include <AK/LogStream.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
@@ -88,7 +67,7 @@ class HashTable {
 
 public:
     HashTable() = default;
-    HashTable(size_t capacity) { rehash(capacity); }
+    explicit HashTable(size_t capacity) { rehash(capacity); }
 
     ~HashTable()
     {
@@ -143,9 +122,9 @@ public:
         swap(a.m_deleted_count, b.m_deleted_count);
     }
 
-    bool is_empty() const { return !m_size; }
-    size_t size() const { return m_size; }
-    size_t capacity() const { return m_capacity; }
+    [[nodiscard]] bool is_empty() const { return !m_size; }
+    [[nodiscard]] size_t size() const { return m_size; }
+    [[nodiscard]] size_t capacity() const { return m_capacity; }
 
     template<typename U, size_t N>
     void set_from(U (&from_array)[N])
@@ -157,7 +136,7 @@ public:
 
     void ensure_capacity(size_t capacity)
     {
-        ASSERT(capacity >= size());
+        VERIFY(capacity >= size());
         rehash(capacity * 2);
     }
 
@@ -203,15 +182,16 @@ public:
         *this = HashTable();
     }
 
-    HashSetResult set(T&& value)
+    template<typename U = T>
+    HashSetResult set(U&& value)
     {
         auto& bucket = lookup_for_writing(value);
         if (bucket.used) {
-            (*bucket.slot()) = move(value);
+            (*bucket.slot()) = forward<U>(value);
             return HashSetResult::ReplacedExistingEntry;
         }
 
-        new (bucket.slot()) T(move(value));
+        new (bucket.slot()) T(forward<U>(value));
         bucket.used = true;
         if (bucket.deleted) {
             bucket.deleted = false;
@@ -219,11 +199,6 @@ public:
         }
         ++m_size;
         return HashSetResult::InsertedNewEntry;
-    }
-
-    HashSetResult set(const T& value)
-    {
-        return set(T(value));
     }
 
     template<typename Finder>
@@ -260,11 +235,11 @@ public:
 
     void remove(Iterator iterator)
     {
-        ASSERT(iterator.m_bucket);
+        VERIFY(iterator.m_bucket);
         auto& bucket = *iterator.m_bucket;
-        ASSERT(bucket.used);
-        ASSERT(!bucket.end);
-        ASSERT(!bucket.deleted);
+        VERIFY(bucket.used);
+        VERIFY(!bucket.end);
+        VERIFY(!bucket.deleted);
         bucket.slot()->~T();
         bucket.used = false;
         bucket.deleted = true;
@@ -309,17 +284,13 @@ private:
     }
 
     template<typename Finder>
-    Bucket* lookup_with_hash(unsigned hash, Finder finder, Bucket** usable_bucket_for_writing = nullptr) const
+    Bucket* lookup_with_hash(unsigned hash, Finder finder) const
     {
         if (is_empty())
             return nullptr;
-        size_t bucket_index = hash % m_capacity;
-        for (;;) {
-            auto& bucket = m_buckets[bucket_index];
 
-            if (usable_bucket_for_writing && !*usable_bucket_for_writing && !bucket.used) {
-                *usable_bucket_for_writing = &bucket;
-            }
+        for (;;) {
+            auto& bucket = m_buckets[hash % m_capacity];
 
             if (bucket.used && finder(*bucket.slot()))
                 return &bucket;
@@ -328,7 +299,6 @@ private:
                 return nullptr;
 
             hash = double_hash(hash);
-            bucket_index = hash % m_capacity;
         }
     }
 
@@ -339,33 +309,31 @@ private:
 
     Bucket& lookup_for_writing(const T& value)
     {
-        auto hash = TraitsForT::hash(value);
-        Bucket* usable_bucket_for_writing = nullptr;
-        if (auto* bucket_for_reading = lookup_with_hash(
-                hash,
-                [&value](auto& entry) { return TraitsForT::equals(entry, value); },
-                &usable_bucket_for_writing)) {
-            return *const_cast<Bucket*>(bucket_for_reading);
-        }
-
         if (should_grow())
             rehash(capacity() * 2);
-        else if (usable_bucket_for_writing)
-            return *usable_bucket_for_writing;
 
-        size_t bucket_index = hash % m_capacity;
-
+        auto hash = TraitsForT::hash(value);
+        Bucket* first_empty_bucket = nullptr;
         for (;;) {
-            auto& bucket = m_buckets[bucket_index];
-            if (!bucket.used)
+            auto& bucket = m_buckets[hash % m_capacity];
+
+            if (bucket.used && TraitsForT::equals(*bucket.slot(), value))
                 return bucket;
+
+            if (!bucket.used) {
+                if (!first_empty_bucket)
+                    first_empty_bucket = &bucket;
+
+                if (!bucket.deleted)
+                    return *const_cast<Bucket*>(first_empty_bucket);
+            }
+
             hash = double_hash(hash);
-            bucket_index = hash % m_capacity;
         }
     }
 
-    size_t used_bucket_count() const { return m_size + m_deleted_count; }
-    bool should_grow() const { return ((used_bucket_count() + 1) * 100) >= (m_capacity * load_factor_in_percent); }
+    [[nodiscard]] size_t used_bucket_count() const { return m_size + m_deleted_count; }
+    [[nodiscard]] bool should_grow() const { return ((used_bucket_count() + 1) * 100) >= (m_capacity * load_factor_in_percent); }
 
     Bucket* m_buckets { nullptr };
     size_t m_size { 0 };

@@ -1,9 +1,11 @@
+compile_gml(WelcomeWindow.gml WelcomeWindowGML.h welcome_window_gml)
+
 set(SOURCES
-    BackgroundWidget.cpp
+    WelcomeWindowGML.h
+    WelcomeWidget.cpp
+    WelcomeWidget.h
     main.cpp
-    TextWidget.cpp
-    UnuncheckableButton.cpp
 )
 
-serenity_bin(Welcome)
-target_link_libraries(Welcome LibGUI)
+serenity_app(Welcome ICON app-welcome)
+target_link_libraries(Welcome LibGUI LibWeb)

@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/AnyOf.h>
@@ -31,20 +11,17 @@
 #include <AK/Memory.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <AK/Vector.h>
 
 namespace AK {
 
 StringView::StringView(const String& string)
-    : m_impl(string.impl())
-    , m_characters(string.characters())
+    : m_characters(string.characters())
     , m_length(string.length())
 {
 }
 
 StringView::StringView(const FlyString& string)
-    : m_impl(string.impl())
-    , m_characters(string.characters())
+    : m_characters(string.characters())
     , m_length(string.length())
 {
 }
@@ -79,7 +56,7 @@ Vector<StringView> StringView::split_view(const char separator, bool keep_empty)
 
 Vector<StringView> StringView::split_view(const StringView& separator, bool keep_empty) const
 {
-    ASSERT(!separator.is_empty());
+    VERIFY(!separator.is_empty());
 
     if (is_empty())
         return {};
@@ -195,22 +172,11 @@ bool StringView::equals_ignoring_case(const StringView& other) const
     return StringUtils::equals_ignoring_case(*this, other);
 }
 
-StringView StringView::substring_view(size_t start, size_t length) const
-{
-    ASSERT(start + length <= m_length);
-    return { m_characters + start, length };
-}
-StringView StringView::substring_view(size_t start) const
-{
-    ASSERT(start <= m_length);
-    return { m_characters + start, length() - start };
-}
-
 StringView StringView::substring_view_starting_from_substring(const StringView& substring) const
 {
     const char* remaining_characters = substring.characters_without_null_termination();
-    ASSERT(remaining_characters >= m_characters);
-    ASSERT(remaining_characters <= m_characters + m_length);
+    VERIFY(remaining_characters >= m_characters);
+    VERIFY(remaining_characters <= m_characters + m_length);
     size_t remaining_length = m_length - (remaining_characters - m_characters);
     return { remaining_characters, remaining_length };
 }
@@ -218,8 +184,8 @@ StringView StringView::substring_view_starting_from_substring(const StringView& 
 StringView StringView::substring_view_starting_after_substring(const StringView& substring) const
 {
     const char* remaining_characters = substring.characters_without_null_termination() + substring.length();
-    ASSERT(remaining_characters >= m_characters);
-    ASSERT(remaining_characters <= m_characters + m_length);
+    VERIFY(remaining_characters >= m_characters);
+    VERIFY(remaining_characters <= m_characters + m_length);
     size_t remaining_length = m_length - (remaining_characters - m_characters);
     return { remaining_characters, remaining_length };
 }
@@ -252,8 +218,6 @@ unsigned StringView::hash() const
 {
     if (is_empty())
         return 0;
-    if (m_impl)
-        return m_impl->hash();
     return string_hash(characters_without_null_termination(), length());
 }
 
@@ -282,7 +246,7 @@ Optional<size_t> StringView::find_first_of(const StringView& view) const
 {
     if (const auto location = AK::find_if(begin(), end(),
             [&](const auto c) {
-                return AK::any_of(view.begin(), view.end(),
+                return any_of(view.begin(), view.end(),
                     [&](const auto view_char) {
                         return c == view_char;
                     });
@@ -295,20 +259,20 @@ Optional<size_t> StringView::find_first_of(const StringView& view) const
 
 Optional<size_t> StringView::find_last_of(char c) const
 {
-    for (size_t pos = m_length; --pos > 0;) {
-        if (m_characters[pos] == c)
-            return pos;
+    for (size_t pos = m_length; pos != 0; --pos) {
+        if (m_characters[pos - 1] == c)
+            return pos - 1;
     }
     return {};
 }
 
 Optional<size_t> StringView::find_last_of(const StringView& view) const
 {
-    for (size_t pos = m_length - 1; --pos > 0;) {
-        char c = m_characters[pos];
+    for (size_t pos = m_length; pos != 0; --pos) {
+        char c = m_characters[pos - 1];
         for (char view_char : view) {
             if (c == view_char)
-                return pos;
+                return pos - 1;
         }
     }
     return {};

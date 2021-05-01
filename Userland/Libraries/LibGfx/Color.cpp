@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
@@ -38,105 +18,20 @@
 
 namespace Gfx {
 
-Color::Color(NamedColor named)
-{
-    if (named == Transparent) {
-        m_value = 0;
-        return;
-    }
-
-    struct {
-        u8 r;
-        u8 g;
-        u8 b;
-    } rgb;
-
-    switch (named) {
-    case Black:
-        rgb = { 0, 0, 0 };
-        break;
-    case White:
-        rgb = { 255, 255, 255 };
-        break;
-    case Red:
-        rgb = { 255, 0, 0 };
-        break;
-    case Green:
-        rgb = { 0, 255, 0 };
-        break;
-    case Cyan:
-        rgb = { 0, 255, 255 };
-        break;
-    case DarkCyan:
-        rgb = { 0, 127, 127 };
-        break;
-    case MidCyan:
-        rgb = { 0, 192, 192 };
-        break;
-    case Blue:
-        rgb = { 0, 0, 255 };
-        break;
-    case Yellow:
-        rgb = { 255, 255, 0 };
-        break;
-    case Magenta:
-        rgb = { 255, 0, 255 };
-        break;
-    case DarkGray:
-        rgb = { 64, 64, 64 };
-        break;
-    case MidGray:
-        rgb = { 127, 127, 127 };
-        break;
-    case LightGray:
-        rgb = { 192, 192, 192 };
-        break;
-    case MidGreen:
-        rgb = { 0, 192, 0 };
-        break;
-    case MidBlue:
-        rgb = { 0, 0, 192 };
-        break;
-    case MidRed:
-        rgb = { 192, 0, 0 };
-        break;
-    case MidMagenta:
-        rgb = { 192, 0, 192 };
-        break;
-    case DarkGreen:
-        rgb = { 0, 128, 0 };
-        break;
-    case DarkBlue:
-        rgb = { 0, 0, 128 };
-        break;
-    case DarkRed:
-        rgb = { 128, 0, 0 };
-        break;
-    case WarmGray:
-        rgb = { 212, 208, 200 };
-        break;
-    default:
-        ASSERT_NOT_REACHED();
-        break;
-    }
-
-    m_value = 0xff000000 | (rgb.r << 16) | (rgb.g << 8) | rgb.b;
-}
-
 String Color::to_string() const
 {
-    return String::format("#%02x%02x%02x%02x", red(), green(), blue(), alpha());
+    return String::formatted("#{:02x}{:02x}{:02x}{:02x}", red(), green(), blue(), alpha());
 }
 
 String Color::to_string_without_alpha() const
 {
-    return String::format("#%02x%02x%02x", red(), green(), blue());
+    return String::formatted("#{:02x}{:02x}{:02x}", red(), green(), blue());
 }
 
 static Optional<Color> parse_rgb_color(const StringView& string)
 {
-    ASSERT(string.starts_with("rgb("));
-    ASSERT(string.ends_with(")"));
+    VERIFY(string.starts_with("rgb("));
+    VERIFY(string.ends_with(")"));
 
     auto substring = string.substring_view(4, string.length() - 5);
     auto parts = substring.split_view(',');
@@ -156,8 +51,8 @@ static Optional<Color> parse_rgb_color(const StringView& string)
 
 static Optional<Color> parse_rgba_color(const StringView& string)
 {
-    ASSERT(string.starts_with("rgba("));
-    ASSERT(string.ends_with(")"));
+    VERIFY(string.starts_with("rgba("));
+    VERIFY(string.ends_with(")"));
 
     auto substring = string.substring_view(5, string.length() - 6);
     auto parts = substring.split_view(',');
@@ -413,10 +308,6 @@ Optional<Color> Color::from_string(const StringView& string)
     return Color(r.value(), g.value(), b.value(), a.value());
 }
 
-const LogStream& operator<<(const LogStream& stream, Color value)
-{
-    return stream << value.to_string();
-}
 }
 
 bool IPC::encode(IPC::Encoder& encoder, const Color& color)

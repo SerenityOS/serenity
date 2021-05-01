@@ -1,34 +1,13 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 
@@ -36,13 +15,12 @@ namespace Kernel {
 
 static const FlatPtr userspace_range_base = 0x00800000;
 static const FlatPtr userspace_range_ceiling = 0xbe000000;
-static const FlatPtr kernelspace_range_base = 0xc0800000;
 
 static AK::Singleton<HashMap<u32, PageDirectory*>> s_cr3_map;
 
 static HashMap<u32, PageDirectory*>& cr3_map()
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     return *s_cr3_map;
 }
 
@@ -56,24 +34,24 @@ extern "C" PageDirectoryEntry* boot_pdpt[4];
 extern "C" PageDirectoryEntry boot_pd0[1024];
 extern "C" PageDirectoryEntry boot_pd3[1024];
 
-PageDirectory::PageDirectory()
+UNMAP_AFTER_INIT PageDirectory::PageDirectory()
 {
-    m_range_allocator.initialize_with_range(VirtualAddress(0xc0800000), 0x3f000000);
+    m_range_allocator.initialize_with_range(VirtualAddress(0xc1000000), 0x30800000);
     m_identity_range_allocator.initialize_with_range(VirtualAddress(FlatPtr(0x00000000)), 0x00200000);
 
     // Adopt the page tables already set up by boot.S
     PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((FlatPtr)boot_pdpt));
     PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((FlatPtr)boot_pd0));
     PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((FlatPtr)boot_pd3));
-    klog() << "MM: boot_pdpt @ " << boot_pdpt_paddr;
-    klog() << "MM: boot_pd0 @ " << boot_pd0_paddr;
-    klog() << "MM: boot_pd3 @ " << boot_pd3_paddr;
+    dmesgln("MM: boot_pdpt @ {}", boot_pdpt_paddr);
+    dmesgln("MM: boot_pd0 @ {}", boot_pd0_paddr);
+    dmesgln("MM: boot_pd3 @ {}", boot_pd3_paddr);
     m_directory_table = PhysicalPage::create(boot_pdpt_paddr, true, false);
     m_directory_pages[0] = PhysicalPage::create(boot_pd0_paddr, true, false);
     m_directory_pages[3] = PhysicalPage::create(boot_pd3_paddr, true, false);
 }
 
-PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_range_allocator)
+PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
 {
     ScopedSpinLock lock(s_mm_lock);
     if (parent_range_allocator) {
@@ -127,10 +105,10 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
         //    when writing out the PDPT pointer to CR3.
         // The reason we're not checking the page directory's physical address directly is because
         // we're checking for sign extension when putting it into a PDPTE. See issue #4584.
-        ASSERT((table.raw[0] & ~pdpte_bit_flags) <= max_physical_address);
-        ASSERT((table.raw[1] & ~pdpte_bit_flags) <= max_physical_address);
-        ASSERT((table.raw[2] & ~pdpte_bit_flags) <= max_physical_address);
-        ASSERT((table.raw[3] & ~pdpte_bit_flags) <= max_physical_address);
+        VERIFY((table.raw[0] & ~pdpte_bit_flags) <= max_physical_address);
+        VERIFY((table.raw[1] & ~pdpte_bit_flags) <= max_physical_address);
+        VERIFY((table.raw[2] & ~pdpte_bit_flags) <= max_physical_address);
+        VERIFY((table.raw[3] & ~pdpte_bit_flags) <= max_physical_address);
 
         MM.unquickmap_page();
     }
@@ -142,8 +120,8 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     auto* new_pd = MM.quickmap_pd(*this, 0);
     memcpy(new_pd, &buffer, sizeof(PageDirectoryEntry));
 
-    // If we got here, we successfully created it. Set m_process now
-    m_process = &process;
+    // If we got here, we successfully created it. Set m_space now
+    m_valid = true;
 
     cr3_map().set(cr3(), this);
 }
@@ -151,7 +129,7 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
 PageDirectory::~PageDirectory()
 {
     ScopedSpinLock lock(s_mm_lock);
-    if (m_process)
+    if (m_space)
         cr3_map().remove(cr3());
 }
 

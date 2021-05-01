@@ -1,34 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibVT/Terminal.h>
-#include <string.h>
 
 namespace VT {
 
@@ -88,6 +67,14 @@ void Terminal::alter_mode(bool should_set, bool question_param, const ParamVecto
         }
     } else {
         switch (mode) {
+        case 3: {
+            // 80/132-column mode (DECCOLM)
+            unsigned new_columns = should_set ? 80 : 132;
+            dbgln("Setting {}-column mode", new_columns);
+            set_size(new_columns, rows());
+            clear();
+            break;
+        }
         case 25:
             // Hide cursor command, but doesn't need to be run (for now, because
             // we don't do inverse control codes anyways)
@@ -97,6 +84,7 @@ void Terminal::alter_mode(bool should_set, bool question_param, const ParamVecto
                 dbgln("Terminal: Show Cursor escapecode received. Not needed: ignored.");
             break;
         default:
+            dbgln("Set Mode: Unimplemented mode {}", mode);
             break;
         }
     }
@@ -104,19 +92,16 @@ void Terminal::alter_mode(bool should_set, bool question_param, const ParamVecto
 
 void Terminal::RM(bool question_param, const ParamVector& params)
 {
-    // RM – Reset Mode
     alter_mode(true, question_param, params);
 }
 
 void Terminal::SM(bool question_param, const ParamVector& params)
 {
-    // SM – Set Mode
     alter_mode(false, question_param, params);
 }
 
 void Terminal::SGR(const ParamVector& params)
 {
-    // SGR – Select Graphic Rendition
     if (params.is_empty()) {
         m_current_attribute.reset();
         return;
@@ -230,27 +215,26 @@ void Terminal::SGR(const ParamVector& params)
     }
 }
 
-void Terminal::escape$s(const ParamVector&)
+void Terminal::SCOSC(const ParamVector&)
 {
     m_saved_cursor_row = m_cursor_row;
     m_saved_cursor_column = m_cursor_column;
 }
 
-void Terminal::escape$u(const ParamVector&)
+void Terminal::SCORC(const ParamVector&)
 {
     set_cursor(m_saved_cursor_row, m_saved_cursor_column);
 }
 
-void Terminal::escape$t(const ParamVector& params)
+void Terminal::XTERM_WM(const ParamVector& params)
 {
     if (params.size() < 1)
         return;
-    dbgln("FIXME: escape$t: Ps: {} (param count: {})", params[0], params.size());
+    dbgln("FIXME: XTERM_WM: Ps: {} (param count: {})", params[0], params.size());
 }
 
 void Terminal::DECSTBM(const ParamVector& params)
 {
-    // DECSTBM – Set Top and Bottom Margins ("Scrolling Region")
     unsigned top = 1;
     unsigned bottom = m_rows;
     if (params.size() >= 1)
@@ -280,7 +264,6 @@ void Terminal::CUP(const ParamVector& params)
 
 void Terminal::HVP(const ParamVector& params)
 {
-    // HVP – Horizontal and Vertical Position
     unsigned row = 1;
     unsigned col = 1;
     if (params.size() >= 1)
@@ -292,7 +275,6 @@ void Terminal::HVP(const ParamVector& params)
 
 void Terminal::CUU(const ParamVector& params)
 {
-    // CUU – Cursor Up
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
@@ -306,7 +288,6 @@ void Terminal::CUU(const ParamVector& params)
 
 void Terminal::CUD(const ParamVector& params)
 {
-    // CUD – Cursor Down
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
@@ -320,7 +301,6 @@ void Terminal::CUD(const ParamVector& params)
 
 void Terminal::CUF(const ParamVector& params)
 {
-    // CUF – Cursor Forward
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
@@ -334,7 +314,6 @@ void Terminal::CUF(const ParamVector& params)
 
 void Terminal::CUB(const ParamVector& params)
 {
-    // CUB – Cursor Backward
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
@@ -346,7 +325,7 @@ void Terminal::CUB(const ParamVector& params)
     set_cursor(m_cursor_row, new_column);
 }
 
-void Terminal::escape$G(const ParamVector& params)
+void Terminal::CHA(const ParamVector& params)
 {
     int new_column = 1;
     if (params.size() >= 1)
@@ -356,7 +335,7 @@ void Terminal::escape$G(const ParamVector& params)
     set_cursor(m_cursor_row, new_column);
 }
 
-void Terminal::escape$b(const ParamVector& params)
+void Terminal::REP(const ParamVector& params)
 {
     if (params.size() < 1)
         return;
@@ -365,7 +344,7 @@ void Terminal::escape$b(const ParamVector& params)
         put_character_at(m_cursor_row, m_cursor_column++, m_last_code_point);
 }
 
-void Terminal::escape$d(const ParamVector& params)
+void Terminal::VPA(const ParamVector& params)
 {
     int new_row = 1;
     if (params.size() >= 1)
@@ -375,7 +354,7 @@ void Terminal::escape$d(const ParamVector& params)
     set_cursor(new_row, m_cursor_column);
 }
 
-void Terminal::escape$X(const ParamVector& params)
+void Terminal::ECH(const ParamVector& params)
 {
     // Erase characters (without moving cursor)
     int num = 1;
@@ -421,7 +400,6 @@ void Terminal::EL(const ParamVector& params)
 
 void Terminal::ED(const ParamVector& params)
 {
-    // ED - Erase in Display
     int mode = 0;
     if (params.size() >= 1)
         mode = params[0];
@@ -459,7 +437,7 @@ void Terminal::ED(const ParamVector& params)
     }
 }
 
-void Terminal::escape$S(const ParamVector& params)
+void Terminal::SU(const ParamVector& params)
 {
     int count = 1;
     if (params.size() >= 1)
@@ -469,7 +447,7 @@ void Terminal::escape$S(const ParamVector& params)
         scroll_up();
 }
 
-void Terminal::escape$T(const ParamVector& params)
+void Terminal::SD(const ParamVector& params)
 {
     int count = 1;
     if (params.size() >= 1)
@@ -479,7 +457,7 @@ void Terminal::escape$T(const ParamVector& params)
         scroll_down();
 }
 
-void Terminal::escape$L(const ParamVector& params)
+void Terminal::IL(const ParamVector& params)
 {
     int count = 1;
     if (params.size() >= 1)
@@ -498,11 +476,10 @@ void Terminal::escape$L(const ParamVector& params)
 
 void Terminal::DA(const ParamVector&)
 {
-    // DA - Device Attributes
     emit_string("\033[?1;0c");
 }
 
-void Terminal::escape$M(const ParamVector& params)
+void Terminal::DL(const ParamVector& params)
 {
     int count = 1;
     if (params.size() >= 1)
@@ -525,7 +502,7 @@ void Terminal::escape$M(const ParamVector& params)
     }
 }
 
-void Terminal::escape$P(const ParamVector& params)
+void Terminal::DCH(const ParamVector& params)
 {
     int num = 1;
     if (params.size() >= 1)
@@ -537,11 +514,11 @@ void Terminal::escape$P(const ParamVector& params)
     auto& line = m_lines[m_cursor_row];
 
     // Move n characters of line to the left
-    for (int i = m_cursor_column; i < line.length() - num; i++)
+    for (size_t i = m_cursor_column; i < line.length() - num; i++)
         line.set_code_point(i, line.code_point(i + num));
 
     // Fill remainder of line with blanks
-    for (int i = line.length() - num; i < line.length(); i++)
+    for (size_t i = line.length() - num; i < line.length(); i++)
         line.set_code_point(i, ' ');
 
     line.set_dirty(true);
@@ -581,7 +558,7 @@ void Terminal::execute_xterm_command()
         } else {
             m_current_attribute.href = params[2];
             // FIXME: Respect the provided ID
-            m_current_attribute.href_id = String::format("%u", m_next_href_id++);
+            m_current_attribute.href_id = String::number(m_next_href_id++);
         }
         break;
     case 9:
@@ -638,43 +615,43 @@ void Terminal::execute_escape_sequence(u8 final)
         EL(params);
         break;
     case 'M':
-        escape$M(params);
+        DL(params);
         break;
     case 'P':
-        escape$P(params);
+        DCH(params);
         break;
     case 'S':
-        escape$S(params);
+        SU(params);
         break;
     case 'T':
-        escape$T(params);
+        SD(params);
         break;
     case 'L':
-        escape$L(params);
+        IL(params);
         break;
     case 'G':
-        escape$G(params);
+        CHA(params);
         break;
     case 'X':
-        escape$X(params);
+        ECH(params);
         break;
     case 'b':
-        escape$b(params);
+        REP(params);
         break;
     case 'd':
-        escape$d(params);
+        VPA(params);
         break;
     case 'm':
         SGR(params);
         break;
     case 's':
-        escape$s(params);
+        SCOSC(params);
         break;
     case 'u':
-        escape$u(params);
+        SCORC(params);
         break;
     case 't':
-        escape$t(params);
+        XTERM_WM(params);
         break;
     case 'r':
         DECSTBM(params);
@@ -746,8 +723,8 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column)
     unsigned column = min(a_column, m_columns - 1u);
     if (row == m_cursor_row && column == m_cursor_column)
         return;
-    ASSERT(row < rows());
-    ASSERT(column < columns());
+    VERIFY(row < rows());
+    VERIFY(column < columns());
     invalidate_cursor();
     m_cursor_row = row;
     m_cursor_column = column;
@@ -757,12 +734,12 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column)
 
 void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
 {
-    ASSERT(row < rows());
-    ASSERT(column < columns());
+    VERIFY(row < rows());
+    VERIFY(column < columns());
     auto& line = m_lines[row];
     line.set_code_point(column, code_point);
-    line.attributes()[column] = m_current_attribute;
-    line.attributes()[column].flags |= Attribute::Touched;
+    line.attribute_at(column) = m_current_attribute;
+    line.attribute_at(column).flags |= Attribute::Touched;
     line.set_dirty(true);
 
     m_last_code_point = code_point;
@@ -770,19 +747,16 @@ void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
 
 void Terminal::NEL()
 {
-    // NEL - Next Line
     newline();
 }
 
 void Terminal::IND()
 {
-    // IND - Index (move down)
     CUD({});
 }
 
 void Terminal::RI()
 {
-    // RI - Reverse Index (move up)
     CUU({});
 }
 
@@ -793,7 +767,7 @@ void Terminal::DSR(const ParamVector& params)
         emit_string("\033[0n"); // Terminal status OK!
     } else if (params.size() == 1 && params[0] == 6) {
         // Cursor position query
-        emit_string(String::format("\033[%d;%dR", m_cursor_row + 1, m_cursor_column + 1));
+        emit_string(String::formatted("\e[{};{}R", m_cursor_row + 1, m_cursor_column + 1));
     } else {
         dbgln("Unknown DSR");
     }
@@ -1030,15 +1004,15 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 
     auto emit_final_with_modifier = [this, modifier_mask](char final) {
         if (modifier_mask)
-            emit_string(String::format("\e[1;%d%c", modifier_mask + 1, final));
+            emit_string(String::formatted("\e[1;{}{:c}", modifier_mask + 1, final));
         else
-            emit_string(String::format("\e[%c", final));
+            emit_string(String::formatted("\e[{:c}", final));
     };
     auto emit_tilde_with_modifier = [this, modifier_mask](unsigned num) {
         if (modifier_mask)
-            emit_string(String::format("\e[%d;%d~", num, modifier_mask + 1));
+            emit_string(String::formatted("\e[{};{}~", num, modifier_mask + 1));
         else
-            emit_string(String::format("\e[%d~", num));
+            emit_string(String::formatted("\e[{}~", num));
     };
 
     switch (key) {
@@ -1109,25 +1083,23 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 void Terminal::unimplemented_escape()
 {
     StringBuilder builder;
-    builder.appendf("((Unimplemented escape: %c", m_final);
+    builder.appendff("Unimplemented escape: {:c}", m_final);
     if (!m_parameters.is_empty()) {
-        builder.append(" parameters:");
+        builder.append(", parameters:");
         for (size_t i = 0; i < m_parameters.size(); ++i)
             builder.append((char)m_parameters[i]);
     }
     if (!m_intermediates.is_empty()) {
-        builder.append(" intermediates:");
+        builder.append(", intermediates:");
         for (size_t i = 0; i < m_intermediates.size(); ++i)
             builder.append((char)m_intermediates[i]);
     }
-    builder.append("))");
-    inject_string(builder.to_string());
+    dbgln("{}", builder.string_view());
 }
 
 void Terminal::unimplemented_xterm_escape()
 {
-    auto message = String::format("((Unimplemented xterm escape: %c))\n", m_final);
-    inject_string(message);
+    dbgln("Unimplemented xterm escape: {:c}", m_final);
 }
 
 void Terminal::set_size(u16 columns, u16 rows)
@@ -1198,9 +1170,9 @@ Attribute Terminal::attribute_at(const Position& position) const
     if (position.row() >= static_cast<int>(line_count()))
         return {};
     auto& line = this->line(position.row());
-    if (position.column() >= line.length())
+    if (static_cast<size_t>(position.column()) >= line.length())
         return {};
-    return line.attributes()[position.column()];
+    return line.attribute_at(position.column());
 }
 
 }

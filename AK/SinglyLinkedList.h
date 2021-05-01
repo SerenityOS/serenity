@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -104,28 +84,28 @@ public:
 
     T& first()
     {
-        ASSERT(head());
+        VERIFY(head());
         return head()->value;
     }
     const T& first() const
     {
-        ASSERT(head());
+        VERIFY(head());
         return head()->value;
     }
     T& last()
     {
-        ASSERT(head());
+        VERIFY(head());
         return tail()->value;
     }
     const T& last() const
     {
-        ASSERT(head());
+        VERIFY(head());
         return tail()->value;
     }
 
     T take_first()
     {
-        ASSERT(m_head);
+        VERIFY(m_head);
         auto* prev_head = m_head;
         T value = move(first());
         if (m_tail == m_head)
@@ -135,14 +115,10 @@ public:
         return value;
     }
 
-    void append(const T& value)
+    template<typename U = T>
+    void append(U&& value)
     {
-        append(T(value));
-    }
-
-    void append(T&& value)
-    {
-        auto* node = new Node(move(value));
+        auto* node = new Node(forward<U>(value));
         if (!m_head) {
             m_head = node;
             m_tail = node;
@@ -191,7 +167,7 @@ public:
 
     void remove(Iterator iterator)
     {
-        ASSERT(!iterator.is_end());
+        VERIFY(!iterator.is_end());
         if (m_head == iterator.m_node)
             m_head = iterator.m_node->next;
         if (m_tail == iterator.m_node)
@@ -201,14 +177,10 @@ public:
         delete iterator.m_node;
     }
 
-    void insert_before(Iterator iterator, const T& value)
+    template<typename U = T>
+    void insert_before(Iterator iterator, U&& value)
     {
-        insert_before(iterator, T(value));
-    }
-
-    void insert_before(Iterator iterator, T&& value)
-    {
-        auto* node = new Node(move(value));
+        auto* node = new Node(forward<U>(value));
         node->next = iterator.m_node;
         if (m_head == iterator.m_node)
             m_head = node;
@@ -216,19 +188,15 @@ public:
             iterator.m_prev->next = node;
     }
 
-    void insert_after(Iterator iterator, const T& value)
-    {
-        insert_after(iterator, T(value));
-    }
-
-    void insert_after(Iterator iterator, T&& value)
+    template<typename U = T>
+    void insert_after(Iterator iterator, U&& value)
     {
         if (iterator.is_end()) {
             append(value);
             return;
         }
 
-        auto* node = new Node(move(value));
+        auto* node = new Node(forward<U>(value));
         node->next = iterator.m_node->next;
 
         iterator.m_node->next = node;

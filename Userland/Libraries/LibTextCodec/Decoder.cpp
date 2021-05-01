@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/String.h>
@@ -33,7 +13,7 @@ namespace TextCodec {
 namespace {
 Latin1Decoder& latin1_decoder()
 {
-    static Latin1Decoder* decoder;
+    static Latin1Decoder* decoder = nullptr;
     if (!decoder)
         decoder = new Latin1Decoder;
     return *decoder;
@@ -41,9 +21,17 @@ Latin1Decoder& latin1_decoder()
 
 UTF8Decoder& utf8_decoder()
 {
-    static UTF8Decoder* decoder;
+    static UTF8Decoder* decoder = nullptr;
     if (!decoder)
         decoder = new UTF8Decoder;
+    return *decoder;
+}
+
+UTF16BEDecoder& utf16be_decoder()
+{
+    static UTF16BEDecoder* decoder = nullptr;
+    if (!decoder)
+        decoder = new UTF16BEDecoder;
     return *decoder;
 }
 
@@ -52,6 +40,14 @@ Latin2Decoder& latin2_decoder()
     static Latin2Decoder* decoder = nullptr;
     if (!decoder)
         decoder = new Latin2Decoder;
+    return *decoder;
+}
+
+HebrewDecoder& hebrew_decoder()
+{
+    static HebrewDecoder* decoder = nullptr;
+    if (!decoder)
+        decoder = new HebrewDecoder;
     return *decoder;
 }
 
@@ -64,8 +60,12 @@ Decoder* decoder_for(const String& a_encoding)
         return &latin1_decoder();
     if (encoding.equals_ignoring_case("utf-8"))
         return &utf8_decoder();
+    if (encoding.equals_ignoring_case("utf-16be"))
+        return &utf16be_decoder();
     if (encoding.equals_ignoring_case("iso-8859-2"))
         return &latin2_decoder();
+    if (encoding.equals_ignoring_case("windows-1255"))
+        return &hebrew_decoder();
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
     return nullptr;
 }
@@ -77,8 +77,8 @@ String get_standardized_encoding(const String& encoding)
 
     if (trimmed_lowercase_encoding.is_one_of("unicode-1-1-utf-8", "unicode11utf8", "unicode20utf8", "utf-8", "utf8", "x-unicode20utf8"))
         return "UTF-8";
-    if (trimmed_lowercase_encoding.is_one_of("866", "cp866", "csibm866", "ibm666"))
-        return "IBM666";
+    if (trimmed_lowercase_encoding.is_one_of("866", "cp866", "csibm866", "ibm866"))
+        return "IBM866";
     if (trimmed_lowercase_encoding.is_one_of("csisolatin2", "iso-8859-2", "iso-ir-101", "iso8859-2", "iso88592", "iso_8859-2", "iso_8859-2:1987", "l2", "latin2"))
         return "ISO-8859-2";
     if (trimmed_lowercase_encoding.is_one_of("csisolatin3", "iso-8859-3", "iso-ir-109", "iso8859-3", "iso88593", "iso_8859-3", "iso_8859-3:1988", "l3", "latin3"))
@@ -162,13 +162,23 @@ String get_standardized_encoding(const String& encoding)
 
 bool is_standardized_encoding(const String& encoding)
 {
-    auto lowercase_encoding = encoding.to_lowercase();
-    return lowercase_encoding.is_one_of("utf-8", "ibm666", "iso-8859-2", "iso-8859-3", "iso-8859-4", "iso-8859-5", "iso-8859-6", "iso-8859-7", "iso-8859-8", "iso-8859-8-I", "iso-8859-10", "iso-8859-13", "iso-8859-14", "iso-8859-15", "iso-8859-16", "koi8-r", "koi8-u", "macintosh", "windows-874", "windows-1250", "windows-1251", "windows-1252", "windows-1253", "windows-1254", "windows-1255", "windows-1256", "windows-1257", "windows-1258", "x-mac-cyrillic", "gbk", "gb18030", "big5", "euc-jp", "iso-2022-JP", "shift_jis", "euc-kr", "replacement", "utf-16be", "utf-16le", "x-user-defined");
+    return encoding.equals_ignoring_case(get_standardized_encoding(encoding));
 }
 
 String UTF8Decoder::to_utf8(const StringView& input)
 {
     return input;
+}
+
+String UTF16BEDecoder::to_utf8(const StringView& input)
+{
+    StringBuilder builder(input.length() / 2);
+    size_t utf16_length = input.length() - (input.length() % 2);
+    for (size_t i = 0; i < utf16_length; i += 2) {
+        u16 code_point = (input[i] << 8) | input[i + 1];
+        builder.append_code_point(code_point);
+    }
+    return builder.to_string();
 }
 
 String Latin1Decoder::to_utf8(const StringView& input)
@@ -268,6 +278,29 @@ String Latin2Decoder::to_utf8(const StringView& input)
         builder.append_code_point(convert_latin2_to_utf8(c));
     }
 
+    return builder.to_string();
+}
+
+String HebrewDecoder::to_utf8(const StringView& input)
+{
+    static constexpr Array<u32, 128> translation_table = {
+        0x20AC, 0xFFFD, 0x201A, 0x192, 0x201E, 0x2026, 0x2020, 0x2021, 0x2C6, 0x2030, 0xFFFD, 0x2039, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
+        0xFFFD, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0x2DC, 0x2122, 0xFFFD, 0x203A, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
+        0xA0, 0xA1, 0xA2, 0xA3, 0x20AA, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xD7, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF,
+        0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xF7, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF,
+        0x5B0, 0x5B1, 0x5B2, 0x5B3, 0x5B4, 0x5B5, 0x5B6, 0x5B7, 0x5B8, 0x5B9, 0x5BA, 0x5BB, 0x5BC, 0x5BD, 0x5BE, 0x5BF,
+        0x5C0, 0x5C1, 0x5C2, 0x5C3, 0x5F0, 0x5F1, 0x5F2, 0x5F3, 0x5F4, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
+        0x5D0, 0x5D1, 0x5D2, 0x5D3, 0x5D4, 0x5D5, 0x5D6, 0x5D7, 0x5D8, 0x5D9, 0x5DA, 0x5DB, 0x5DC, 0x5DD, 0x5DE, 0x5DF,
+        0x5E0, 0x5E1, 0x5E2, 0x5E3, 0x5E4, 0x5E5, 0x5E6, 0x5E7, 0x5E8, 0x5E9, 0x5EA, 0xFFFD, 0xFFFD, 0x200E, 0x200F, 0xFFFD
+    };
+    StringBuilder builder(input.length());
+    for (unsigned char ch : input) {
+        if (ch < 0x80) { // Superset of ASCII
+            builder.append(ch);
+        } else {
+            builder.append_code_point(translation_table[ch - 0x80]);
+        }
+    }
     return builder.to_string();
 }
 

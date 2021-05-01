@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "SpreadsheetWidget.h"
@@ -59,10 +39,14 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     auto& help_button = top_bar.add<GUI::Button>("🛈");
     help_button.set_fixed_size(20, 20);
     help_button.on_click = [&](auto) {
-        auto docs = m_selected_view->sheet().gather_documentation();
-        auto help_window = HelpWindow::the(window());
-        help_window->set_docs(move(docs));
-        help_window->show();
+        if (!m_selected_view) {
+            GUI::MessageBox::show_error(window(), "Can only show function documentation/help when a worksheet exists and is open");
+        } else if (auto* sheet_ptr = m_selected_view->sheet_if_available()) {
+            auto docs = sheet_ptr->gather_documentation();
+            auto help_window = HelpWindow::the(window());
+            help_window->set_docs(move(docs));
+            help_window->show();
+        }
     };
 
     auto& cell_value_editor = top_bar.add<GUI::TextEditor>(GUI::TextEditor::Type::SingleLine);
@@ -96,11 +80,13 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
 
     m_tab_context_menu = GUI::Menu::construct();
     auto rename_action = GUI::Action::create("Rename...", [this](auto&) {
-        ASSERT(m_tab_context_menu_sheet_view);
+        VERIFY(m_tab_context_menu_sheet_view);
 
-        auto& sheet = m_tab_context_menu_sheet_view->sheet();
+        auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
+        VERIFY(sheet_ptr); // How did we get here without a sheet?
+        auto& sheet = *sheet_ptr;
         String new_name;
-        if (GUI::InputBox::show(new_name, window(), String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
+        if (GUI::InputBox::show(window(), new_name, String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
             sheet.set_name(new_name);
             sheet.update();
             m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
@@ -109,7 +95,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     m_tab_context_menu->add_action(rename_action);
     m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", [this](auto&) {
         String name;
-        if (GUI::InputBox::show(name, window(), "Name for new sheet", "Create sheet") == GUI::Dialog::ExecOK) {
+        if (GUI::InputBox::show(window(), name, "Name for new sheet", "Create sheet") == GUI::Dialog::ExecOK) {
             NonnullRefPtrVector<Sheet> new_sheets;
             new_sheets.append(m_workbook->add_sheet(name));
             setup_tabs(move(new_sheets));
@@ -139,9 +125,13 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
         if (m_selected_view) {
             m_selected_view->on_selection_changed = nullptr;
             m_selected_view->on_selection_dropped = nullptr;
-        };
+        }
         m_selected_view = &static_cast<SpreadsheetView&>(selected_widget);
         m_selected_view->on_selection_changed = [&](Vector<Position>&& selection) {
+            auto* sheet_ptr = m_selected_view->sheet_if_available();
+            // How did this even happen?
+            VERIFY(sheet_ptr);
+            auto& sheet = *sheet_ptr;
             if (selection.is_empty()) {
                 m_current_cell_label->set_enabled(false);
                 m_current_cell_label->set_text({});
@@ -155,13 +145,10 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
             if (selection.size() == 1) {
                 auto& position = selection.first();
-                StringBuilder builder;
-                builder.append(position.column);
-                builder.appendff("{}", position.row);
                 m_current_cell_label->set_enabled(true);
-                m_current_cell_label->set_text(builder.string_view());
+                m_current_cell_label->set_text(position.to_cell_identifier(sheet));
 
-                auto& cell = m_selected_view->sheet().ensure(position);
+                auto& cell = sheet.ensure(position);
                 m_cell_value_editor->on_change = nullptr;
                 m_cell_value_editor->set_text(cell.source());
                 m_cell_value_editor->on_change = [&] {
@@ -170,11 +157,11 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                     auto offset = m_cell_value_editor->cursor().column();
                     try_generate_tip_for_input_expression(text, offset);
                     cell.set_data(move(text));
-                    m_selected_view->sheet().update();
+                    sheet.update();
                     update();
                 };
                 m_cell_value_editor->set_enabled(true);
-                static_cast<CellSyntaxHighlighter*>(const_cast<GUI::SyntaxHighlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&cell);
+                static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&cell);
                 return;
             }
 
@@ -186,7 +173,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
             Vector<Cell*> cells;
             for (auto& position : selection)
-                cells.append(&m_selected_view->sheet().ensure(position));
+                cells.append(&sheet.ensure(position));
 
             auto first_cell = cells.first();
             m_cell_value_editor->on_change = nullptr;
@@ -196,22 +183,26 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             m_cell_value_editor->on_focusout = [this] { m_should_change_selected_cells = false; };
             m_cell_value_editor->on_change = [cells = move(cells), this] {
                 if (m_should_change_selected_cells) {
+                    auto* sheet_ptr = m_selected_view->sheet_if_available();
+                    if (!sheet_ptr)
+                        return;
+                    auto& sheet = *sheet_ptr;
                     auto text = m_cell_value_editor->text();
                     // FIXME: Lines?
                     auto offset = m_cell_value_editor->cursor().column();
                     try_generate_tip_for_input_expression(text, offset);
                     for (auto* cell : cells)
                         cell->set_data(text);
-                    m_selected_view->sheet().update();
+                    sheet.update();
                     update();
                 }
             };
             m_cell_value_editor->set_enabled(true);
-            static_cast<CellSyntaxHighlighter*>(const_cast<GUI::SyntaxHighlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(first_cell);
+            static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(first_cell);
         };
         m_selected_view->on_selection_dropped = [&]() {
             m_cell_value_editor->set_enabled(false);
-            static_cast<CellSyntaxHighlighter*>(const_cast<GUI::SyntaxHighlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
+            static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
             m_cell_value_editor->set_text("");
             m_current_cell_label->set_enabled(false);
             m_current_cell_label->set_text("");
@@ -233,6 +224,12 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
 void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source, size_t cursor_offset)
 {
+    auto* sheet_ptr = m_selected_view->sheet_if_available();
+    if (!sheet_ptr)
+        return;
+
+    auto& sheet = *sheet_ptr;
+
     m_inline_documentation_window->set_rect(m_cell_value_editor->screen_relative_rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
     if (!m_selected_view || !source.starts_with('=')) {
         m_inline_documentation_window->hide();
@@ -245,7 +242,6 @@ void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source,
     }
 
     auto& [name, index] = maybe_function_and_argument.value();
-    auto& sheet = m_selected_view->sheet();
     auto text = sheet.generate_inline_documentation_for(name, index);
     if (text.is_empty()) {
         m_inline_documentation_window->hide();
@@ -321,7 +317,7 @@ void SpreadsheetWidget::add_sheet()
 
 void SpreadsheetWidget::add_sheet(NonnullRefPtr<Sheet>&& sheet)
 {
-    ASSERT(m_workbook == &sheet->workbook());
+    VERIFY(m_workbook == &sheet->workbook());
 
     NonnullRefPtrVector<Sheet> new_sheets;
     new_sheets.append(move(sheet));

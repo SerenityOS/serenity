@@ -1,35 +1,15 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <Kernel/API/Syscall.h>
 #include <alloca.h>
 #include <assert.h>
+#include <bits/pthread_integration.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -42,6 +22,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/types.h>
+#include <syscall.h>
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
@@ -75,12 +56,22 @@ int fchown(int fd, uid_t uid, gid_t gid)
 
 pid_t fork()
 {
+    __pthread_fork_prepare();
+
     int rc = syscall(SC_fork);
     if (rc == 0) {
         s_cached_tid = 0;
         s_cached_pid = 0;
+        __pthread_fork_child();
+    } else if (rc != -1) {
+        __pthread_fork_parent();
     }
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+pid_t vfork()
+{
+    return fork();
 }
 
 int execv(const char* path, char* const argv[])
@@ -146,7 +137,7 @@ int execvp(const char* filename, char* const argv[])
 {
     int rc = execvpe(filename, argv, environ);
     int saved_errno = errno;
-    dbgln("execvp() about to return {} with errno={}", rc, saved_errno);
+    dbgln("execvp({}, ...) about to return {} with errno={}", filename, rc, saved_errno);
     errno = saved_errno;
     return rc;
 }
@@ -278,10 +269,30 @@ ssize_t read(int fd, void* buf, size_t count)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+ssize_t pread(int fd, void* buf, size_t count, off_t offset)
+{
+    // FIXME: This is not thread safe and should be implemented in the kernel instead.
+    off_t old_offset = lseek(fd, 0, SEEK_CUR);
+    lseek(fd, offset, SEEK_SET);
+    ssize_t nread = read(fd, buf, count);
+    lseek(fd, old_offset, SEEK_SET);
+    return nread;
+}
+
 ssize_t write(int fd, const void* buf, size_t count)
 {
     int rc = syscall(SC_write, fd, buf, count);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+ssize_t pwrite(int fd, const void* buf, size_t count, off_t offset)
+{
+    // FIXME: This is not thread safe and should be implemented in the kernel instead.
+    off_t old_offset = lseek(fd, 0, SEEK_CUR);
+    lseek(fd, offset, SEEK_SET);
+    ssize_t nwritten = write(fd, buf, count);
+    lseek(fd, old_offset, SEEK_SET);
+    return nwritten;
 }
 
 int ttyname_r(int fd, char* buffer, size_t size)
@@ -398,7 +409,7 @@ char* getwd(char* buf)
     return p;
 }
 
-int sleep(unsigned seconds)
+unsigned int sleep(unsigned int seconds)
 {
     struct timespec ts = { seconds, 0 };
     if (clock_nanosleep(CLOCK_MONOTONIC_COARSE, 0, &ts, nullptr) < 0)
@@ -434,8 +445,8 @@ ssize_t readlink(const char* path, char* buffer, size_t size)
 
 off_t lseek(int fd, off_t offset, int whence)
 {
-    int rc = syscall(SC_lseek, fd, offset, whence);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    int rc = syscall(SC_lseek, fd, &offset, whence);
+    __RETURN_WITH_ERRNO(rc, offset, -1);
 }
 
 int link(const char* old_path, const char* new_path)
@@ -544,6 +555,12 @@ int setgid(gid_t gid)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int setreuid(uid_t ruid, uid_t euid)
+{
+    int rc = syscall(SC_setreuid, ruid, euid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int setresuid(uid_t ruid, uid_t euid, uid_t suid)
 {
     int rc = syscall(SC_setresuid, ruid, euid, suid);
@@ -580,31 +597,35 @@ int mknod(const char* pathname, mode_t mode, dev_t dev)
 long fpathconf([[maybe_unused]] int fd, [[maybe_unused]] int name)
 {
     switch (name) {
+    case _PC_NAME_MAX:
+        return NAME_MAX;
     case _PC_PATH_MAX:
         return PATH_MAX;
     case _PC_VDISABLE:
         return _POSIX_VDISABLE;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 long pathconf([[maybe_unused]] const char* path, int name)
 {
     switch (name) {
+    case _PC_NAME_MAX:
+        return NAME_MAX;
     case _PC_PATH_MAX:
         return PATH_MAX;
     case _PC_PIPE_BUF:
         return PIPE_BUF;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void _exit(int status)
 {
     syscall(SC_exit, status);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void sync()
@@ -627,7 +648,7 @@ char* getlogin()
 
 int ftruncate(int fd, off_t length)
 {
-    int rc = syscall(SC_ftruncate, fd, length);
+    int rc = syscall(SC_ftruncate, fd, &length);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -667,7 +688,7 @@ void sysbeep()
 
 int fsync([[maybe_unused]] int fd)
 {
-    dbgprintf("FIXME: Implement fsync()\n");
+    dbgln("FIXME: Implement fsync()");
     return 0;
 }
 
@@ -756,16 +777,6 @@ int unveil(const char* path, const char* permissions)
     };
     int rc = syscall(SC_unveil, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-ssize_t pread(int fd, void* buf, size_t count, off_t offset)
-{
-    // FIXME: This is not thread safe and should be implemented in the kernel instead.
-    off_t old_offset = lseek(fd, 0, SEEK_CUR);
-    lseek(fd, offset, SEEK_SET);
-    ssize_t nread = read(fd, buf, count);
-    lseek(fd, old_offset, SEEK_SET);
-    return nread;
 }
 
 char* getpass(const char* prompt)

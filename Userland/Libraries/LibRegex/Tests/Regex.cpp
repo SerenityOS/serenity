@@ -1,30 +1,10 @@
 /*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h> // import first, to prevent warning of ASSERT* redefinition
+#include <LibTest/TestCase.h> // import first, to prevent warning of VERIFY* redefinition
 
 #include <AK/StringBuilder.h>
 #include <LibRegex/Regex.h>
@@ -501,6 +481,8 @@ TEST_CASE(ECMA262_parse)
         { "\\u1234", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
         { "[\\u1234]", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
         { ",(?", regex::Error::InvalidCaptureGroup }, // #4583
+        { "{1}", regex::Error::InvalidPattern },
+        { "{1,2}", regex::Error::InvalidPattern },
     };
 
     for (auto& test : tests) {
@@ -525,7 +507,7 @@ TEST_CASE(ECMA262_match)
         bool matches { true };
         ECMAScriptFlags options {};
     };
-
+    // clang-format off
     constexpr _test tests[] {
         { "^hello.$", "hello1" },
         { "^(hello.)$", "hello1" },
@@ -536,6 +518,7 @@ TEST_CASE(ECMA262_match)
         { "^hel(?<LO>l.)1$", "hello1" },
         { "^hel(?<LO>l.)1*\\k<LO>.$", "hello1lo1" },
         { "^[-a-z1-3\\s]+$", "hell2 o1" },
+        { "^[\\0-\\x1f]$", "\n" },
         { .pattern = "\\bhello\\B", .subject = "hello1", .options = ECMAScriptFlags::Global },
         { "\\b.*\\b", "hello1" },
         { "[^\\D\\S]{2}", "1 " },
@@ -547,7 +530,23 @@ TEST_CASE(ECMA262_match)
         { "bar.*(?<!foo)", "barbar", true },
         { "((...)X)+", "fooXbarXbazX", true },
         { "(?:)", "", true },
+        { "\\^", "^" },
+        // ECMA262, B.1.4. Regular Expression Pattern extensions for browsers
+        { "{", "{", true, ECMAScriptFlags::BrowserExtended },
+        { "\\5", "\5", true, ECMAScriptFlags::BrowserExtended },
+        { "\\05", "\5", true, ECMAScriptFlags::BrowserExtended },
+        { "\\455", "\45""5", true, ECMAScriptFlags::BrowserExtended },
+        { "\\314", "\314", true, ECMAScriptFlags::BrowserExtended },
+        { "\\cf", "\06", true, ECMAScriptFlags::BrowserExtended },
+        { "\\c1", "\\c1", true, ECMAScriptFlags::BrowserExtended },
+        { "[\\c1]", "\x11", true, ECMAScriptFlags::BrowserExtended },
+        { "[\\w-\\d]", "-", true, ECMAScriptFlags::BrowserExtended },
+        { "^(?:^^\\.?|[!+-]|!=|!==|#|%|%=|&|&&|&&=|&=|\\(|\\*|\\*=|\\+=|,|-=|->|\\/|\\/=|:|::|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|[?@[^]|\\^=|\\^\\^|\\^\\^=|{|\\||\\|=|\\|\\||\\|\\|=|~|break|case|continue|delete|do|else|finally|instanceof|return|throw|try|typeof)\\s*(\\/(?=[^*/])(?:[^/[\\\\]|\\\\[\\S\\s]|\\[(?:[^\\\\\\]]|\\\\[\\S\\s])*(?:]|$))+\\/)",
+                 "return /xx/", true, ECMAScriptFlags::BrowserExtended
+        }, // #5517, appears to be matching JS expressions that involve regular expressions...
+        { "a{2,}", "aaaa" }, // #5518
     };
+    // clang-format on
 
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern, test.options);
@@ -596,5 +595,3 @@ TEST_CASE(replace)
         EXPECT_EQ(re.replace(test.subject, test.replacement), test.expected);
     }
 }
-
-TEST_MAIN(Regex)

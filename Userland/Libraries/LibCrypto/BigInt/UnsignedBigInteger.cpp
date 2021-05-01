@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "UnsignedBigInteger.h"
@@ -106,7 +86,7 @@ String UnsignedBigInteger::to_base10() const
 
     while (temp != UnsignedBigInteger { 0 }) {
         divide_u16_without_allocation(temp, 10, quotient, remainder);
-        ASSERT(remainder.words()[0] < 10);
+        VERIFY(remainder.words()[0] < 10);
         builder.append(static_cast<char>(remainder.words()[0] + '0'));
         temp.set_to(quotient);
     }
@@ -154,6 +134,13 @@ size_t UnsignedBigInteger::trimmed_length() const
         m_cached_trimmed_length = length() - num_leading_zeroes;
     }
     return m_cached_trimmed_length.value();
+}
+
+void UnsignedBigInteger::clamp_to_trimmed_length()
+{
+    auto length = trimmed_length();
+    if (m_words.size() > length)
+        m_words.resize(length);
 }
 
 FLATTEN UnsignedBigInteger UnsignedBigInteger::plus(const UnsignedBigInteger& other) const
@@ -281,7 +268,7 @@ bool UnsignedBigInteger::operator==(const UnsignedBigInteger& other) const
     if (length != other.trimmed_length())
         return false;
 
-    return !__builtin_memcmp(m_words.data(), other.words().data(), length);
+    return !__builtin_memcmp(m_words.data(), other.words().data(), length * (BITS_IN_WORD / 8));
 }
 
 bool UnsignedBigInteger::operator!=(const UnsignedBigInteger& other) const
@@ -389,7 +376,7 @@ void UnsignedBigInteger::subtract_without_allocation(
     }
 
     // This assertion should not fail, because we verified that *this>=other at the beginning of the function
-    ASSERT(borrow == 0);
+    VERIFY(borrow == 0);
 }
 
 /**
@@ -578,7 +565,7 @@ FLATTEN void UnsignedBigInteger::shift_left_without_allocation(
 
         // output += (carry_word << temp_result.length())
         // FIXME : Using temp_plus this way to transform carry_word into a bigint is not
-        // efficient nor pretty. Maybe we should have an "add_with_shift" method ?
+        //         efficient nor pretty. Maybe we should have an "add_with_shift" method ?
         temp_plus.set_to_0();
         temp_plus.m_words.append(carry_word);
         shift_left_by_n_words(temp_plus, temp_result.length(), temp_result);
@@ -591,8 +578,8 @@ FLATTEN void UnsignedBigInteger::shift_left_without_allocation(
  * Complexity: O(N^2) where N is the number of words in the larger number
  * Multiplication method:
  * An integer is equal to the sum of the powers of two
- * according to the indexes of its 'on' bits.
- * So to multiple x*y, we go over each '1' bit in x (say the i'th bit), 
+ * according to the indices of its 'on' bits.
+ * So to multiple x*y, we go over each '1' bit in x (say the i'th bit),
  * and add y<<i to the result.
  */
 FLATTEN void UnsignedBigInteger::multiply_without_allocation(
@@ -672,7 +659,7 @@ FLATTEN void UnsignedBigInteger::divide_u16_without_allocation(
     UnsignedBigInteger& quotient,
     UnsignedBigInteger& remainder)
 {
-    ASSERT(denominator < (1 << 16));
+    VERIFY(denominator < (1 << 16));
     u32 remainder_word = 0;
     auto numerator_length = numerator.trimmed_length();
     quotient.set_to_0();
@@ -717,8 +704,8 @@ ALWAYS_INLINE u32 UnsignedBigInteger::shift_left_get_one_word(
 {
     // "<= length()" (rather than length() - 1) is intentional,
     // The result inedx of length() is used when calculating the carry word
-    ASSERT(result_word_index <= number.length());
-    ASSERT(num_bits <= UnsignedBigInteger::BITS_IN_WORD);
+    VERIFY(result_word_index <= number.length());
+    VERIFY(num_bits <= UnsignedBigInteger::BITS_IN_WORD);
     u32 result = 0;
 
     // we need to check for "num_bits != 0" since shifting right by 32 is apparently undefined behaviour!

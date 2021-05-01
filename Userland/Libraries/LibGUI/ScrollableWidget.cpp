@@ -1,44 +1,24 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGUI/ScrollBar.h>
 #include <LibGUI/ScrollableWidget.h>
+#include <LibGUI/Scrollbar.h>
 
 namespace GUI {
 
 ScrollableWidget::ScrollableWidget()
 {
-    m_vertical_scrollbar = add<ScrollBar>(Orientation::Vertical);
+    m_vertical_scrollbar = add<ScrollableWidgetScrollbar>(*this, Orientation::Vertical);
     m_vertical_scrollbar->set_step(4);
     m_vertical_scrollbar->on_change = [this](int) {
         did_scroll();
         update();
     };
 
-    m_horizontal_scrollbar = add<ScrollBar>(Orientation::Horizontal);
+    m_horizontal_scrollbar = add<ScrollableWidgetScrollbar>(*this, Orientation::Horizontal);
     m_horizontal_scrollbar->set_step(4);
     m_horizontal_scrollbar->set_page_step(30);
     m_horizontal_scrollbar->on_change = [this](int) {
@@ -54,18 +34,23 @@ ScrollableWidget::~ScrollableWidget()
 {
 }
 
-void ScrollableWidget::mousewheel_event(MouseEvent& event)
+void ScrollableWidget::handle_wheel_event(MouseEvent& event, Widget& event_source)
 {
     if (!m_scrollbars_enabled) {
         event.ignore();
         return;
     }
     // FIXME: The wheel delta multiplier should probably come from... somewhere?
-    if (event.shift()) {
+    if (event.shift() || &event_source == m_horizontal_scrollbar.ptr()) {
         horizontal_scrollbar().set_value(horizontal_scrollbar().value() + event.wheel_delta() * 60);
     } else {
         vertical_scrollbar().set_value(vertical_scrollbar().value() + event.wheel_delta() * 20);
     }
+}
+
+void ScrollableWidget::mousewheel_event(MouseEvent& event)
+{
+    handle_wheel_event(event, *this);
 }
 
 void ScrollableWidget::custom_layout()
@@ -106,24 +91,38 @@ Gfx::IntSize ScrollableWidget::available_size() const
     return { available_width, available_height };
 }
 
-void ScrollableWidget::update_scrollbar_ranges()
+Gfx::IntSize ScrollableWidget::excess_size() const
 {
     auto available_size = this->available_size();
-
     int excess_height = max(0, m_content_size.height() - available_size.height());
-    m_vertical_scrollbar->set_range(0, excess_height);
-    m_vertical_scrollbar->set_page_step(available_size.height());
-
-    if (should_hide_unnecessary_scrollbars())
-        m_vertical_scrollbar->set_visible(excess_height > 0);
-
     int excess_width = max(0, m_content_size.width() - available_size.width());
-    m_horizontal_scrollbar->set_range(0, excess_width);
-    m_horizontal_scrollbar->set_page_step(available_size.width());
+    return { excess_width, excess_height };
+}
 
-    if (should_hide_unnecessary_scrollbars())
-        m_horizontal_scrollbar->set_visible(excess_width > 0);
+void ScrollableWidget::update_scrollbar_ranges()
+{
+    if (should_hide_unnecessary_scrollbars()) {
+        if (excess_size().height() - height_occupied_by_horizontal_scrollbar() <= 0 && excess_size().width() - width_occupied_by_vertical_scrollbar() <= 0) {
+            m_horizontal_scrollbar->set_visible(false);
+            m_vertical_scrollbar->set_visible(false);
+        } else {
+            auto vertical_initial_visibility = m_vertical_scrollbar->is_visible();
+            auto horizontal_initial_visibility = m_horizontal_scrollbar->is_visible();
 
+            m_vertical_scrollbar->set_visible(excess_size().height() > 0);
+            m_horizontal_scrollbar->set_visible(excess_size().width() > 0);
+
+            if (m_vertical_scrollbar->is_visible() != vertical_initial_visibility)
+                m_horizontal_scrollbar->set_visible(excess_size().width() > 0);
+            if (m_horizontal_scrollbar->is_visible() != horizontal_initial_visibility)
+                m_vertical_scrollbar->set_visible(excess_size().height() > 0);
+        }
+    }
+
+    m_horizontal_scrollbar->set_range(0, excess_size().width());
+    m_horizontal_scrollbar->set_page_step(visible_content_rect().width() - m_horizontal_scrollbar->step());
+
+    m_vertical_scrollbar->set_range(0, excess_size().height());
     m_vertical_scrollbar->set_page_step(visible_content_rect().height() - m_vertical_scrollbar->step());
 }
 

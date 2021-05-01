@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DisassemblyModel.h"
@@ -38,7 +18,7 @@ static const Gfx::Bitmap& heat_gradient()
 {
     static RefPtr<Gfx::Bitmap> bitmap;
     if (!bitmap) {
-        bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { 101, 1 });
+        bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { 101, 1 });
         GUI::Painter painter(*bitmap);
         painter.fill_rect_with_gradient(Orientation::Horizontal, bitmap->rect(), Color::from_rgb(0xffc080), Color::from_rgb(0xff3000));
     }
@@ -47,7 +27,7 @@ static const Gfx::Bitmap& heat_gradient()
 
 static Color color_for_percent(int percent)
 {
-    ASSERT(percent >= 0 && percent <= 100);
+    VERIFY(percent >= 0 && percent <= 100);
     return heat_gradient().get_pixel(percent, 0);
 }
 
@@ -68,23 +48,28 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         kernel_elf = make<ELF::Image>((const u8*)m_kernel_file->data(), m_kernel_file->size());
         elf = kernel_elf.ptr();
     } else {
-        auto library_data = profile.libraries().library_containing(node.address());
-        if (!library_data) {
-            dbgln("no library data");
+        auto process = node.process(profile, node.timestamp());
+        if (!process) {
+            dbgln("no process for address {}", node.address());
             return;
         }
-        elf = &library_data->elf;
+        auto library_data = process->library_metadata.library_containing(node.address());
+        if (!library_data) {
+            dbgln("no library data for address {}", node.address());
+            return;
+        }
+        elf = &library_data->object->elf;
         base_address = library_data->base;
     }
 
-    ASSERT(elf != nullptr);
+    VERIFY(elf != nullptr);
 
     auto symbol = elf->find_symbol(node.address() - base_address);
     if (!symbol.has_value()) {
         dbgln("DisassemblyModel: symbol not found");
         return;
     }
-    ASSERT(symbol.has_value());
+    VERIFY(symbol.has_value());
 
     auto view = symbol.value().raw_data();
 
@@ -97,7 +82,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         auto insn = disassembler.next();
         if (!insn.has_value())
             break;
-        FlatPtr address_in_profiled_program = symbol.value().value() + offset_into_symbol;
+        FlatPtr address_in_profiled_program = base_address + symbol.value().value() + offset_into_symbol;
 
         auto disassembly = insn.value().to_string(address_in_profiled_program, &symbol_provider);
 
@@ -132,7 +117,7 @@ String DisassemblyModel::column_name(int column) const
     case Column::Disassembly:
         return "Disassembly";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return {};
     }
 }

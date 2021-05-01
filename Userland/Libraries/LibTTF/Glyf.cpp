@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGfx/Path.h>
@@ -214,7 +194,7 @@ Rasterizer::Rasterizer(Gfx::IntSize size)
 {
     m_data.resize(m_size.width() * m_size.height());
     for (int i = 0; i < m_size.width() * m_size.height(); i++) {
-        m_data[i] = 0.0;
+        m_data[i] = 0.0f;
     }
 }
 
@@ -227,20 +207,20 @@ void Rasterizer::draw_path(Gfx::Path& path)
 
 RefPtr<Gfx::Bitmap> Rasterizer::accumulate()
 {
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, m_size);
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, m_size);
     Color base_color = Color::from_rgb(0xffffff);
     for (int y = 0; y < m_size.height(); y++) {
         float accumulator = 0.0;
         for (int x = 0; x < m_size.width(); x++) {
             accumulator += m_data[y * m_size.width() + x];
             float value = accumulator;
-            if (value < 0.0) {
+            if (value < 0.0f) {
                 value = -value;
             }
-            if (value > 1.0) {
+            if (value > 1.0f) {
                 value = 1.0;
             }
-            u8 alpha = value * 255.0;
+            u8 alpha = value * 255.0f;
             bitmap->set_pixel(x, y, base_color.with_alpha(alpha));
         }
     }
@@ -250,31 +230,31 @@ RefPtr<Gfx::Bitmap> Rasterizer::accumulate()
 void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
 {
     // FIXME: Shift x and y according to dy/dx
-    if (p0.x() < 0.0) {
+    if (p0.x() < 0.0f) {
         p0.set_x(roundf(p0.x()));
     }
-    if (p0.y() < 0.0) {
+    if (p0.y() < 0.0f) {
         p0.set_y(roundf(p0.y()));
     }
-    if (p1.x() < 0.0) {
+    if (p1.x() < 0.0f) {
         p1.set_x(roundf(p1.x()));
     }
-    if (p1.y() < 0.0) {
+    if (p1.y() < 0.0f) {
         p1.set_y(roundf(p1.y()));
     }
 
-    if (!(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height())) {
+    if (!(p0.x() >= 0.0f && p0.y() >= 0.0f && p0.x() <= m_size.width() && p0.y() <= m_size.height())) {
         dbgln("!P0({},{})", p0.x(), p0.y());
         return;
     }
 
-    if (!(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height())) {
+    if (!(p1.x() >= 0.0f && p1.y() >= 0.0f && p1.x() <= m_size.width() && p1.y() <= m_size.height())) {
         dbgln("!P1({},{})", p1.x(), p1.y());
         return;
     }
 
-    ASSERT(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height());
-    ASSERT(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height());
+    VERIFY(p0.x() >= 0.0f && p0.y() >= 0.0f && p0.x() <= m_size.width() && p0.y() <= m_size.height());
+    VERIFY(p1.x() >= 0.0f && p1.y() >= 0.0f && p1.x() <= m_size.width() && p1.y() <= m_size.height());
 
     // If we're on the same Y, there's no need to draw
     if (p0.y() == p1.y()) {
@@ -300,8 +280,8 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
         float dy = min(y + 1.0f, p1.y()) - max((float)y, p0.y());
         float directed_dy = dy * direction;
         float x_next = x_cur + dy * dxdy;
-        if (x_next < 0.0) {
-            x_next = 0.0;
+        if (x_next < 0.0f) {
+            x_next = 0.0f;
         }
         float x0 = x_cur;
         float x1 = x_next;
@@ -313,24 +293,26 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
         float x1_ceil = ceil(x1);
         u32 x0i = x0_floor;
 
-        if (x1_ceil <= x0_floor + 1.0) {
+        if (x1_ceil <= x0_floor + 1.0f) {
             // If x0 and x1 are within the same pixel, then area to the right is (1 - (mid(x0, x1) - x0_floor)) * dy
-            float area = ((x0 + x1) * 0.5) - x0_floor;
-            m_data[line_offset + x0i] += directed_dy * (1.0 - area);
+            float area = ((x0 + x1) * 0.5f) - x0_floor;
+            m_data[line_offset + x0i] += directed_dy * (1.0f - area);
             m_data[line_offset + x0i + 1] += directed_dy * area;
         } else {
-            float dydx = 1.0 / dxdy;
-            float x0_right = 1.0 - (x0 - x0_floor);
+            float dydx = 1.0f / dxdy;
+            if (dydx < 0)
+                dydx = -dydx;
+
+            float x0_right = 1.0f - (x0 - x0_floor);
             u32 x1_floor_i = floor(x1);
-            float area_upto_here = 0.5 * x0_right * x0_right * dydx;
+            float area_upto_here = 0.5f * x0_right * x0_right * dydx;
             m_data[line_offset + x0i] += direction * area_upto_here;
             for (u32 x = x0i + 1; x < x1_floor_i; x++) {
-                x0_right += 1.0;
-                float total_area_here = 0.5 * x0_right * x0_right * dydx;
-                m_data[line_offset + x] += direction * (total_area_here - area_upto_here);
-                area_upto_here = total_area_here;
+                m_data[line_offset + x] += direction * dydx;
+                area_upto_here += dydx;
             }
-            m_data[line_offset + x1_floor_i] += direction * (dy - area_upto_here);
+            float remaining_area = (dy - area_upto_here);
+            m_data[line_offset + x1_floor_i] += direction * remaining_area;
         }
 
         x_cur = x_next;
@@ -356,14 +338,14 @@ Optional<Loca> Loca::from_slice(const ReadonlyBytes& slice, u32 num_glyphs, Inde
 
 u32 Loca::get_glyph_offset(u32 glyph_id) const
 {
-    ASSERT(glyph_id < m_num_glyphs);
+    VERIFY(glyph_id < m_num_glyphs);
     switch (m_index_to_loc_format) {
     case IndexToLocFormat::Offset16:
         return ((u32)be_u16(m_slice.offset_pointer(glyph_id * 2))) * 2;
     case IndexToLocFormat::Offset32:
         return be_u32(m_slice.offset_pointer(glyph_id * 4));
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -428,7 +410,7 @@ void Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& aff
             contour_size = current_contour_end - last_contour_end;
             last_contour_end = current_contour_end;
             auto opt_item = point_iterator.next();
-            ASSERT(opt_item.has_value());
+            VERIFY(opt_item.has_value());
             contour_start = opt_item.value().point;
             path.move_to(contour_start.value());
             contour_size--;
@@ -506,7 +488,7 @@ RefPtr<Gfx::Bitmap> Glyf::Glyph::raster_simple(float x_scale, float y_scale) con
 
 Glyf::Glyph Glyf::glyph(u32 offset) const
 {
-    ASSERT(m_slice.size() >= offset + (u32)Sizes::GlyphHeader);
+    VERIFY(m_slice.size() >= offset + (u32)Sizes::GlyphHeader);
     i16 num_contours = be_i16(m_slice.offset_pointer(offset));
     i16 xmin = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::XMin));
     i16 ymin = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::YMin));

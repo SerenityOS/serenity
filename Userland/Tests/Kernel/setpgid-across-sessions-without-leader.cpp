@@ -1,31 +1,11 @@
 /*
  * Copyright (c) 2020, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <fcntl.h>
 #include <serenity.h>
 #include <stdio.h>
@@ -95,7 +75,7 @@ static void sleep_steps(useconds_t steps)
     const int rc = usleep(steps * STEP_SIZE);
     if (rc < 0) {
         perror("usleep");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -146,7 +126,7 @@ int main(int, char**)
         }
         exit(1);
     }
-    ASSERT(rc == 1);
+    VERIFY(rc == 1);
     if (buf == 0) {
         printf("PASS\n");
         return 0;
@@ -171,7 +151,7 @@ static void run_pa1(void*)
     int rc = setsid();
     if (rc < 0) {
         perror("setsid (PA)");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     dbgln("PA1 did setsid() -> PGA={}, SA={}, yay!", rc, getsid(0));
     sleep_steps(1);
@@ -210,7 +190,7 @@ static void run_pb1(void* pipe_fd_ptr)
     int rc = setsid();
     if (rc < 0) {
         perror("setsid (PB)");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     dbgln("PB1 did setsid() -> PGB={}, SB={}, yay!", rc, getsid(0));
     sleep_steps(1);
@@ -258,7 +238,7 @@ static void run_pb2(void* pipe_fd_ptr)
         dbgln("PB2: setgpid SUCCESSFUL! CHANGED PGROUP!");
         to_write = 1;
     } else {
-        ASSERT(rc == -1);
+        VERIFY(rc == -1);
         switch (errno) {
         case EACCES:
             dbgln("PB2: Failed with EACCES. Huh?!");
@@ -286,7 +266,7 @@ static void run_pb2(void* pipe_fd_ptr)
 
     dbgln("PB2 ends with SID={}, PGID={}, PID={}.", getsid(0), getpgid(0), getpid());
     int* pipe_fd = static_cast<int*>(pipe_fd_ptr);
-    ASSERT(*pipe_fd);
+    VERIFY(*pipe_fd);
     rc = write(*pipe_fd, &to_write, 1);
     if (rc != 1) {
         dbgln("Wrote only {} bytes instead of 1?!", rc);

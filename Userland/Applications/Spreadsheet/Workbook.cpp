@@ -1,42 +1,23 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Workbook.h"
+#include "ExportDialog.h"
+#include "ImportDialog.h"
 #include "JSIntegration.h"
 #include "Readers/CSV.h"
 #include "Writers/CSV.h"
 #include <AK/ByteBuffer.h>
 #include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
-#include <AK/JsonParser.h>
 #include <AK/Stream.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 #include <LibCore/MimeData.h>
+#include <LibGUI/TextBox.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <string.h>
@@ -84,55 +65,12 @@ Result<bool, String> Workbook::load(const StringView& filename)
 
     auto mime = Core::guess_mime_type_based_on_filename(filename);
 
-    if (mime == "text/csv") {
-        // FIXME: Prompt the user for settings.
-        NonnullRefPtrVector<Sheet> sheets;
+    // Make an import dialog, we might need to import it.
+    auto result = ImportDialog::make_and_run_for(mime, file_or_error.value(), *this);
+    if (result.is_error())
+        return result.error();
 
-        auto sheet = Sheet::from_xsv(Reader::CSV(file_or_error.value()->read_all(), Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders), *this);
-        if (sheet)
-            sheets.append(sheet.release_nonnull());
-
-        m_sheets.clear();
-        m_sheets = move(sheets);
-    } else {
-        // Assume JSON.
-        auto json_value_option = JsonParser(file_or_error.value()->read_all()).parse();
-        if (!json_value_option.has_value()) {
-            StringBuilder sb;
-            sb.append("Failed to parse ");
-            sb.append(filename);
-
-            return sb.to_string();
-        }
-
-        auto& json_value = json_value_option.value();
-        if (!json_value.is_array()) {
-            StringBuilder sb;
-            sb.append("Did not find a spreadsheet in ");
-            sb.append(filename);
-
-            return sb.to_string();
-        }
-
-        NonnullRefPtrVector<Sheet> sheets;
-
-        auto& json_array = json_value.as_array();
-        json_array.for_each([&](auto& sheet_json) {
-            if (!sheet_json.is_object())
-                return IterationDecision::Continue;
-
-            auto sheet = Sheet::from_json(sheet_json.as_object(), *this);
-            if (!sheet)
-                return IterationDecision::Continue;
-
-            sheets.append(sheet.release_nonnull());
-
-            return IterationDecision::Continue;
-        });
-
-        m_sheets.clear();
-        m_sheets = move(sheets);
-    }
+    m_sheets = result.release_value();
 
     set_filename(filename);
 
@@ -154,33 +92,10 @@ Result<bool, String> Workbook::save(const StringView& filename)
         return sb.to_string();
     }
 
-    if (mime == "text/csv") {
-        // FIXME: Prompt the user for settings and which sheet to export.
-        Core::OutputFileStream stream { file };
-        auto data = m_sheets[0].to_xsv();
-        auto header_string = data.take_first();
-        Vector<StringView> headers;
-        for (auto& str : header_string)
-            headers.append(str);
-        Writer::CSV csv { stream, data, headers };
-        if (csv.has_error())
-            return String::formatted("Unable to save file, CSV writer error: {}", csv.error_string());
-    } else {
-        JsonArray array;
-        for (auto& sheet : m_sheets)
-            array.append(sheet.to_json());
-
-        auto file_content = array.to_string();
-        bool result = file->write(file_content);
-        if (!result) {
-            int error_number = errno;
-            StringBuilder sb;
-            sb.append("Unable to save file. Error: ");
-            sb.append(strerror(error_number));
-
-            return sb.to_string();
-        }
-    }
+    // Make an export dialog, we might need to import it.
+    auto result = ExportDialog::make_and_run_for(mime, *file, *this);
+    if (result.is_error())
+        return result.error();
 
     set_filename(filename);
     set_dirty(false);

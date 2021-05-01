@@ -18,8 +18,7 @@
             spacing: 10
         }
 
-        @GUI::Widget {
-        }
+        @GUI::Widget
 
         @GUI::Button {
             name: "add_button"
@@ -33,8 +32,6 @@
             fixed_width: 70
         }
 
-        @GUI::Widget {
-        }
-
+        @GUI::Widget
     }
 }

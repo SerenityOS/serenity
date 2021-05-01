@@ -1,27 +1,8 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Painter.h"
@@ -34,6 +15,7 @@
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/Memory.h>
+#include <AK/Queue.h>
 #include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
@@ -42,6 +24,7 @@
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
+#include <LibGfx/TextDirection.h>
 #include <math.h>
 #include <stdio.h>
 
@@ -62,9 +45,9 @@ ALWAYS_INLINE Color get_pixel(const Gfx::Bitmap& bitmap, int x, int y)
         return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
     if constexpr (format == BitmapFormat::Indexed1)
         return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
-    if constexpr (format == BitmapFormat::RGB32)
+    if constexpr (format == BitmapFormat::BGRx8888)
         return Color::from_rgb(bitmap.scanline(y)[x]);
-    if constexpr (format == BitmapFormat::RGBA32)
+    if constexpr (format == BitmapFormat::BGRA8888)
         return Color::from_rgba(bitmap.scanline(y)[x]);
     return bitmap.get_pixel(x, y);
 }
@@ -73,9 +56,9 @@ Painter::Painter(Gfx::Bitmap& bitmap)
     : m_target(bitmap)
 {
     int scale = bitmap.scale();
-    ASSERT(bitmap.format() == Gfx::BitmapFormat::RGB32 || bitmap.format() == Gfx::BitmapFormat::RGBA32);
-    ASSERT(bitmap.physical_width() % scale == 0);
-    ASSERT(bitmap.physical_height() % scale == 0);
+    VERIFY(bitmap.format() == Gfx::BitmapFormat::BGRx8888 || bitmap.format() == Gfx::BitmapFormat::BGRA8888);
+    VERIFY(bitmap.physical_width() % scale == 0);
+    VERIFY(bitmap.physical_height() % scale == 0);
     m_state_stack.append(State());
     state().font = &FontDatabase::default_font();
     state().clip_rect = { { 0, 0 }, bitmap.size() };
@@ -89,7 +72,7 @@ Painter::~Painter()
 
 void Painter::fill_rect_with_draw_op(const IntRect& a_rect, Color color)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
@@ -111,7 +94,7 @@ void Painter::clear_rect(const IntRect& a_rect, Color color)
     if (rect.is_empty())
         return;
 
-    ASSERT(m_target->rect().contains(rect));
+    VERIFY(m_target->rect().contains(rect));
     rect *= scale();
 
     RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
@@ -154,14 +137,14 @@ void Painter::fill_rect(const IntRect& a_rect, Color color)
     auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
         return;
-    ASSERT(m_target->rect().contains(rect));
+    VERIFY(m_target->rect().contains(rect));
 
     fill_physical_rect(rect * scale(), color);
 }
 
 void Painter::fill_rect_with_dither_pattern(const IntRect& a_rect, Color color_a, Color color_b)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
@@ -185,7 +168,7 @@ void Painter::fill_rect_with_dither_pattern(const IntRect& a_rect, Color color_a
 
 void Painter::fill_rect_with_checkerboard(const IntRect& a_rect, const IntSize& cell_size, Color color_dark, Color color_light)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
@@ -206,6 +189,10 @@ void Painter::fill_rect_with_checkerboard(const IntRect& a_rect, const IntSize& 
 
 void Painter::fill_rect_with_gradient(Orientation orientation, const IntRect& a_rect, Color gradient_start, Color gradient_end)
 {
+    if (gradient_start == gradient_end) {
+        fill_rect(a_rect, gradient_start);
+        return;
+    }
 
 #ifdef NO_FPU
     return fill_rect(a_rect, gradient_start);
@@ -222,23 +209,31 @@ void Painter::fill_rect_with_gradient(Orientation orientation, const IntRect& a_
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
     float increment = (1.0 / ((rect.primary_size_for_orientation(orientation))));
+    float alpha_increment = increment * ((float)gradient_end.alpha() - (float)gradient_start.alpha());
 
     if (orientation == Orientation::Horizontal) {
         for (int i = clipped_rect.height() - 1; i >= 0; --i) {
             float c = offset * increment;
+            float c_alpha = gradient_start.alpha() + offset * alpha_increment;
             for (int j = 0; j < clipped_rect.width(); ++j) {
-                dst[j] = gamma_accurate_blend(gradient_start, gradient_end, c).value();
+                auto color = gamma_accurate_blend(gradient_start, gradient_end, c);
+                color.set_alpha(c_alpha);
+                dst[j] = color.value();
+                c_alpha += alpha_increment;
                 c += increment;
             }
             dst += dst_skip;
         }
     } else {
         float c = offset * increment;
+        float c_alpha = gradient_start.alpha() + offset * alpha_increment;
         for (int i = clipped_rect.height() - 1; i >= 0; --i) {
-            auto color = gamma_accurate_blend(gradient_start, gradient_end, c);
+            auto color = gamma_accurate_blend(gradient_end, gradient_start, c);
+            color.set_alpha(c_alpha);
             for (int j = 0; j < clipped_rect.width(); ++j) {
                 dst[j] = color.value();
             }
+            c_alpha += alpha_increment;
             c += increment;
             dst += dst_skip;
         }
@@ -252,13 +247,13 @@ void Painter::fill_rect_with_gradient(const IntRect& a_rect, Color gradient_star
 
 void Painter::fill_ellipse(const IntRect& a_rect, Color color)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
         return;
 
-    ASSERT(m_target->rect().contains(rect));
+    VERIFY(m_target->rect().contains(rect));
 
     RGBA32* dst = m_target->scanline(rect.top()) + rect.left() + rect.width() / 2;
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
@@ -273,7 +268,7 @@ void Painter::fill_ellipse(const IntRect& a_rect, Color color)
 
 void Painter::draw_ellipse_intersecting(const IntRect& rect, Color color, int thickness)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     constexpr int number_samples = 100; // FIXME: dynamically work out the number of samples based upon the rect size
     double increment = M_PI / number_samples;
@@ -286,7 +281,7 @@ void Painter::draw_ellipse_intersecting(const IntRect& rect, Color color, int th
         return (sin(theta) * rect.height() / sqrt(2)) + rect.center().y();
     };
 
-    for (float theta = 0; theta < 2 * M_PI; theta += increment) {
+    for (auto theta = 0.0; theta < 2 * M_PI; theta += increment) {
         draw_line({ ellipse_x(theta), ellipse_y(theta) }, { ellipse_x(theta + increment), ellipse_y(theta + increment) }, color, thickness);
     }
 }
@@ -312,7 +307,7 @@ static void for_each_pixel_around_rect_clockwise(const RectType& rect, Callback 
 
 void Painter::draw_focus_rect(const IntRect& rect, Color color)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     if (rect.is_empty())
         return;
@@ -377,7 +372,7 @@ void Painter::draw_rect(const IntRect& a_rect, Color color, bool rough)
 
 void Painter::draw_bitmap(const IntPoint& p, const CharacterBitmap& bitmap, Color color)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     auto rect = IntRect(p, bitmap.size()).translated(translation());
     auto clipped_rect = rect.intersected(clip_rect());
@@ -442,14 +437,13 @@ void Painter::draw_bitmap(const IntPoint& p, const GlyphBitmap& bitmap, Color co
 
 void Painter::draw_triangle(const IntPoint& a, const IntPoint& b, const IntPoint& c, Color color)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
-
-    RGBA32 rgba = color.value();
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     IntPoint p0(a);
     IntPoint p1(b);
     IntPoint p2(c);
 
+    // sort points from top to bottom
     if (p0.y() > p1.y())
         swap(p0, p1);
     if (p0.y() > p2.y())
@@ -457,41 +451,52 @@ void Painter::draw_triangle(const IntPoint& a, const IntPoint& b, const IntPoint
     if (p1.y() > p2.y())
         swap(p1, p2);
 
+    // return if top and bottom points are on same line
+    if (p0.y() == p2.y())
+        return;
+
+    // return if top is below clip rect or bottom is above clip rect
     auto clip = clip_rect();
     if (p0.y() >= clip.bottom())
         return;
     if (p2.y() < clip.top())
         return;
 
-    float dx01 = (float)(p1.x() - p0.x()) / (p1.y() - p0.y());
-    float dx02 = (float)(p2.x() - p0.x()) / (p2.y() - p0.y());
-    float dx12 = (float)(p2.x() - p1.x()) / (p2.y() - p1.y());
+    int rgba = color.value();
 
+    float dx02 = (float)(p2.x() - p0.x()) / (p2.y() - p0.y());
     float x01 = p0.x();
     float x02 = p0.x();
 
-    int top = p0.y();
-    if (top < clip.top()) {
-        x01 += dx01 * (clip.top() - top);
-        x02 += dx02 * (clip.top() - top);
-        top = clip.top();
-    }
+    if (p0.y() != p1.y()) { // p0 and p1 are on different lines
+        float dx01 = (float)(p1.x() - p0.x()) / (p1.y() - p0.y());
 
-    for (int y = top; y < p1.y() && y < clip.bottom(); ++y) { // XXX <=?
-        int start = x01 > x02 ? max((int)x02, clip.left()) : max((int)x01, clip.left());
-        int end = x01 > x02 ? min((int)x01, clip.right()) : min((int)x02, clip.right());
-        auto* scanline = m_target->scanline(y);
-        for (int x = start; x < end; x++) {
-            scanline[x] = rgba;
+        int top = p0.y();
+        if (top < clip.top()) {
+            x01 += dx01 * (clip.top() - top);
+            x02 += dx02 * (clip.top() - top);
+            top = clip.top();
         }
-        x01 += dx01;
-        x02 += dx02;
+
+        for (int y = top; y < p1.y() && y < clip.bottom(); ++y) { // XXX <=?
+            int start = x01 > x02 ? max((int)x02, clip.left()) : max((int)x01, clip.left());
+            int end = x01 > x02 ? min((int)x01, clip.right()) : min((int)x02, clip.right());
+            auto* scanline = m_target->scanline(y);
+            for (int x = start; x < end; x++) {
+                scanline[x] = rgba;
+            }
+            x01 += dx01;
+            x02 += dx02;
+        }
     }
 
-    x02 = p0.x() + dx02 * (p1.y() - p0.y());
-    float x12 = p1.x();
+    // return if middle point and bottom point are on same line
+    if (p1.y() == p2.y())
+        return;
 
-    top = p1.y();
+    float x12 = p1.x();
+    float dx12 = (float)(p2.x() - p1.x()) / (p2.y() - p1.y());
+    int top = p1.y();
     if (top < clip.top()) {
         x02 += dx02 * (clip.top() - top);
         x12 += dx12 * (clip.top() - top);
@@ -510,17 +515,51 @@ void Painter::draw_triangle(const IntPoint& a, const IntPoint& b, const IntPoint
     }
 }
 
-void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity)
+struct BlitState {
+    enum AlphaState {
+        NoAlpha = 0,
+        SrcAlpha = 1,
+        DstAlpha = 2,
+        BothAlpha = SrcAlpha | DstAlpha
+    };
+
+    const RGBA32* src;
+    RGBA32* dst;
+    size_t src_pitch;
+    size_t dst_pitch;
+    int row_count;
+    int column_count;
+    float opacity;
+};
+
+template<BlitState::AlphaState has_alpha>
+static void do_blit_with_opacity(BlitState& state)
 {
-    ASSERT(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
-    ASSERT(!m_target->has_alpha_channel());
+    for (int row = 0; row < state.row_count; ++row) {
+        for (int x = 0; x < state.column_count; ++x) {
+            Color dest_color = (has_alpha & BlitState::DstAlpha) ? Color::from_rgba(state.dst[x]) : Color::from_rgb(state.dst[x]);
+            if constexpr (has_alpha & BlitState::SrcAlpha) {
+                Color src_color_with_alpha = Color::from_rgba(state.src[x]);
+                float pixel_opacity = src_color_with_alpha.alpha() / 255.0;
+                src_color_with_alpha.set_alpha(255 * (state.opacity * pixel_opacity));
+                state.dst[x] = dest_color.blend(src_color_with_alpha).value();
+            } else {
+                Color src_color_with_alpha = Color::from_rgb(state.src[x]);
+                src_color_with_alpha.set_alpha(state.opacity * 255);
+                state.dst[x] = dest_color.blend(src_color_with_alpha).value();
+            }
+        }
+        state.dst += state.dst_pitch;
+        state.src += state.src_pitch;
+    }
+}
 
-    if (!opacity)
-        return;
-    if (opacity >= 1.0f)
+void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity, bool apply_alpha)
+{
+    VERIFY(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
+
+    if (opacity >= 1.0f && !(source.has_alpha_channel() && apply_alpha))
         return blit(position, source, a_src_rect);
-
-    u8 alpha = 255 * opacity;
 
     IntRect safe_src_rect = IntRect::intersection(a_src_rect, source.rect());
     if (scale() != source.scale())
@@ -540,29 +579,33 @@ void Painter::blit_with_opacity(const IntPoint& position, const Gfx::Bitmap& sou
     const int last_row = clipped_rect.bottom() - dst_rect.top();
     const int first_column = clipped_rect.left() - dst_rect.left();
     const int last_column = clipped_rect.right() - dst_rect.left();
-    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
-    const unsigned src_skip = source.pitch() / sizeof(RGBA32);
+    BlitState blit_state {
+        .src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column,
+        .dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x(),
+        .src_pitch = source.pitch() / sizeof(RGBA32),
+        .dst_pitch = m_target->pitch() / sizeof(RGBA32),
+        .row_count = last_row - first_row + 1,
+        .column_count = last_column - first_column + 1,
+        .opacity = opacity
+    };
 
-    // FIXME: This does the wrong thing if source has an alpha channel: It ignores it and pretends that every pixel in source is fully opaque.
-    // Maybe just punt to draw_scaled_bitmap() in that case too?
-    for (int row = first_row; row <= last_row; ++row) {
-        for (int x = 0; x <= (last_column - first_column); ++x) {
-            Color src_color_with_alpha = Color::from_rgb(src[x]);
-            src_color_with_alpha.set_alpha(alpha);
-            Color dst_color = Color::from_rgb(dst[x]);
-            dst[x] = dst_color.blend(src_color_with_alpha).value();
-        }
-        dst += dst_skip;
-        src += src_skip;
+    if (source.has_alpha_channel() && apply_alpha) {
+        if (m_target->has_alpha_channel())
+            do_blit_with_opacity<BlitState::BothAlpha>(blit_state);
+        else
+            do_blit_with_opacity<BlitState::SrcAlpha>(blit_state);
+    } else {
+        if (m_target->has_alpha_channel())
+            do_blit_with_opacity<BlitState::DstAlpha>(blit_state);
+        else
+            do_blit_with_opacity<BlitState::NoAlpha>(blit_state);
     }
 }
 
 void Painter::blit_filtered(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& src_rect, Function<Color(Color)> filter)
 {
-    ASSERT((source.scale() == 1 || source.scale() == scale()) && "blit_filtered only supports integer upsampling");
+    VERIFY((source.scale() == 1 || source.scale() == scale()) && "blit_filtered only supports integer upsampling");
 
     IntRect safe_src_rect = src_rect.intersected(source.rect());
     auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
@@ -590,9 +633,13 @@ void Painter::blit_filtered(const IntPoint& position, const Gfx::Bitmap& source,
         for (int row = first_row; row <= last_row; ++row) {
             for (int x = 0; x <= (last_column - first_column); ++x) {
                 u8 alpha = Color::from_rgba(src[x]).alpha();
-                if (alpha == 0xff)
-                    dst[x] = filter(Color::from_rgba(src[x])).value();
-                else if (!alpha)
+                if (alpha == 0xff) {
+                    auto color = filter(Color::from_rgba(src[x]));
+                    if (color.alpha() == 0xff)
+                        dst[x] = color.value();
+                    else
+                        dst[x] = Color::from_rgba(dst[x]).blend(color).value();
+                } else if (!alpha)
                     continue;
                 else
                     dst[x] = Color::from_rgba(dst[x]).blend(filter(Color::from_rgba(src[x]))).value();
@@ -605,9 +652,13 @@ void Painter::blit_filtered(const IntPoint& position, const Gfx::Bitmap& source,
             const RGBA32* src = source.scanline(safe_src_rect.top() + row / s) + safe_src_rect.left() + first_column / s;
             for (int x = 0; x <= (last_column - first_column); ++x) {
                 u8 alpha = Color::from_rgba(src[x / s]).alpha();
-                if (alpha == 0xff)
-                    dst[x] = filter(Color::from_rgba(src[x / s])).value();
-                else if (!alpha)
+                if (alpha == 0xff) {
+                    auto color = filter(Color::from_rgba(src[x / s]));
+                    if (color.alpha() == 0xff)
+                        dst[x] = color.value();
+                    else
+                        dst[x] = Color::from_rgba(dst[x]).blend(color).value();
+                } else if (!alpha)
                     continue;
                 else
                     dst[x] = Color::from_rgba(dst[x]).blend(filter(Color::from_rgba(src[x / s]))).value();
@@ -633,7 +684,7 @@ void Painter::blit_dimmed(const IntPoint& position, const Gfx::Bitmap& source, c
 
 void Painter::draw_tiled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& source)
 {
-    ASSERT((source.scale() == 1 || source.scale() == scale()) && "draw_tiled_bitmap only supports integer upsampling");
+    VERIFY((source.scale() == 1 || source.scale() == scale()) && "draw_tiled_bitmap only supports integer upsampling");
 
     auto dst_rect = a_dst_rect.translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
@@ -650,7 +701,7 @@ void Painter::draw_tiled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& so
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    if (source.format() == BitmapFormat::RGB32 || source.format() == BitmapFormat::RGBA32) {
+    if (source.format() == BitmapFormat::BGRx8888 || source.format() == BitmapFormat::BGRA8888) {
         int s = scale / source.scale();
         if (s == 1) {
             int x_start = first_column + a_dst_rect.left() * scale;
@@ -674,7 +725,7 @@ void Painter::draw_tiled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& so
         return;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Painter::blit_offset(const IntPoint& a_position, const Gfx::Bitmap& source, const IntRect& a_src_rect, const IntPoint& offset)
@@ -692,57 +743,12 @@ void Painter::blit_offset(const IntPoint& a_position, const Gfx::Bitmap& source,
     blit(position, source, src_rect);
 }
 
-void Painter::blit_with_alpha(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect)
+void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity, bool apply_alpha)
 {
-    auto safe_src_rect = a_src_rect.intersected(source.rect());
-    if (scale() != source.scale())
-        return draw_scaled_bitmap({ position, safe_src_rect.size() }, source, safe_src_rect);
+    VERIFY(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
 
-    ASSERT(source.has_alpha_channel());
-    auto dst_rect = IntRect(position, safe_src_rect.size()).translated(translation());
-
-    auto clipped_rect = dst_rect.intersected(clip_rect());
-    if (clipped_rect.is_empty())
-        return;
-
-    int scale = this->scale();
-    auto src_rect = a_src_rect * scale;
-    clipped_rect *= scale;
-    dst_rect *= scale;
-
-    const int first_row = clipped_rect.top() - dst_rect.top();
-    const int last_row = clipped_rect.bottom() - dst_rect.top();
-    const int first_column = clipped_rect.left() - dst_rect.left();
-    const int last_column = clipped_rect.right() - dst_rect.left();
-
-    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
-    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
-    const size_t src_skip = source.pitch() / sizeof(RGBA32);
-
-    for (int row = first_row; row <= last_row; ++row) {
-        for (int x = 0; x <= (last_column - first_column); ++x) {
-            u8 alpha = Color::from_rgba(src[x]).alpha();
-            if (alpha == 0xff)
-                dst[x] = src[x];
-            else if (!alpha)
-                continue;
-            else
-                dst[x] = Color::from_rgba(dst[x]).blend(Color::from_rgba(src[x])).value();
-        }
-        dst += dst_skip;
-        src += src_skip;
-    }
-}
-
-void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& a_src_rect, float opacity)
-{
-    ASSERT(scale() >= source.scale() && "painter doesn't support downsampling scale factors");
-
-    if (opacity < 1.0f)
-        return blit_with_opacity(position, source, a_src_rect, opacity);
-    if (source.has_alpha_channel())
-        return blit_with_alpha(position, source, a_src_rect);
+    if (opacity < 1.0f || (source.has_alpha_channel() && apply_alpha))
+        return blit_with_opacity(position, source, a_src_rect, opacity, apply_alpha);
 
     auto safe_src_rect = a_src_rect.intersected(source.rect());
     if (scale() != source.scale())
@@ -767,11 +773,28 @@ void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const In
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    if (source.format() == BitmapFormat::RGB32 || source.format() == BitmapFormat::RGBA32) {
+    if (source.format() == BitmapFormat::BGRx8888 || source.format() == BitmapFormat::BGRA8888) {
         const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
         const size_t src_skip = source.pitch() / sizeof(RGBA32);
         for (int row = first_row; row <= last_row; ++row) {
             fast_u32_copy(dst, src, clipped_rect.width());
+            dst += dst_skip;
+            src += src_skip;
+        }
+        return;
+    }
+
+    if (source.format() == BitmapFormat::RGBA8888) {
+        const u32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
+        const size_t src_skip = source.pitch() / sizeof(u32);
+        for (int row = first_row; row <= last_row; ++row) {
+            for (int i = 0; i < clipped_rect.width(); ++i) {
+                u32 rgba = src[i];
+                u32 bgra = (rgba & 0xff00ff00)
+                    | ((rgba & 0x000000ff) << 16)
+                    | ((rgba & 0x00ff0000) >> 16);
+                dst[i] = bgra;
+            }
             dst += dst_skip;
             src += src_skip;
         }
@@ -790,7 +813,7 @@ void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const In
         return;
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 template<bool has_alpha_channel, typename GetPixel>
@@ -874,11 +897,11 @@ void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& s
 
     if (source.has_alpha_channel() || opacity != 1.0f) {
         switch (source.format()) {
-        case BitmapFormat::RGB32:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::RGB32>, opacity);
+        case BitmapFormat::BGRx8888:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRx8888>, opacity);
             break;
-        case BitmapFormat::RGBA32:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::RGBA32>, opacity);
+        case BitmapFormat::BGRA8888:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRA8888>, opacity);
             break;
         case BitmapFormat::Indexed8:
             do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity);
@@ -898,8 +921,8 @@ void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& s
         }
     } else {
         switch (source.format()) {
-        case BitmapFormat::RGB32:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::RGB32>, opacity);
+        case BitmapFormat::BGRx8888:
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::BGRx8888>, opacity);
             break;
         case BitmapFormat::Indexed8:
             do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, get_pixel<BitmapFormat::Indexed8>, opacity);
@@ -918,7 +941,16 @@ FLATTEN void Painter::draw_glyph(const IntPoint& point, u32 code_point, Color co
 
 FLATTEN void Painter::draw_glyph(const IntPoint& point, u32 code_point, const Font& font, Color color)
 {
-    draw_bitmap(point, font.glyph_bitmap(code_point), color);
+    auto glyph = font.glyph(code_point);
+    auto top_left = point + IntPoint(glyph.left_bearing(), font.glyph_height() - glyph.ascent());
+
+    if (glyph.is_glyph_bitmap()) {
+        draw_bitmap(top_left, glyph.glyph_bitmap(), color);
+    } else {
+        blit_filtered(top_left, *glyph.bitmap(), glyph.bitmap()->rect(), [color](Color pixel) -> Color {
+            return pixel.multiply(color);
+        });
+    }
 }
 
 void Painter::draw_emoji(const IntPoint& point, const Gfx::Bitmap& emoji, const Font& font)
@@ -938,16 +970,15 @@ void Painter::draw_emoji(const IntPoint& point, const Gfx::Bitmap& emoji, const 
 
 void Painter::draw_glyph_or_emoji(const IntPoint& point, u32 code_point, const Font& font, Color color)
 {
-    if (code_point < (u32)font.glyph_count()) {
-        // This looks like a regular character.
-        draw_glyph(point, (size_t)code_point, font, color);
+    if (font.contains_glyph(code_point)) {
+        draw_glyph(point, code_point, font, color);
         return;
     }
 
     // Perhaps it's an emoji?
     auto* emoji = Emoji::emoji_for_code_point(code_point);
     if (emoji == nullptr) {
-        dbgln<EMOJI_DEBUG>("Failed to find an emoji for code_point {}", code_point);
+        dbgln_if(EMOJI_DEBUG, "Failed to find an emoji for code_point {}", code_point);
         draw_glyph(point, '?', font, color);
         return;
     }
@@ -988,12 +1019,12 @@ struct ElidedText<Utf32View> {
 };
 
 template<typename TextType, typename DrawGlyphFunction>
-void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& font, TextAlignment alignment, TextElision elision, DrawGlyphFunction draw_glyph)
+void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& font, TextAlignment alignment, TextElision elision, TextDirection direction, DrawGlyphFunction draw_glyph)
 {
     auto rect = a_rect;
     TextType final_text(text);
     typename ElidedText<TextType>::Type elided_text;
-    if (elision == TextElision::Right) {
+    if (elision == TextElision::Right) { // FIXME: This needs to be specialized for bidirectional text
         int text_width = font.width(final_text);
         if (font.width(final_text) > rect.width()) {
             int glyph_spacing = font.glyph_spacing();
@@ -1034,7 +1065,7 @@ void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& fon
         break;
     }
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (is_vertically_centered_text_alignment(alignment)) {
@@ -1045,14 +1076,22 @@ void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& fon
     auto point = rect.location();
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
 
+    if (direction == TextDirection::RTL) {
+        point.move_by(rect.width(), 0); // Start drawing from the end
+        space_width = -space_width;     // Draw spaces backwards
+    }
+
     for (u32 code_point : final_text) {
         if (code_point == ' ') {
             point.move_by(space_width, 0);
             continue;
         }
         IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.glyph_height());
+        if (direction == TextDirection::RTL)
+            point.move_by(-glyph_size.width(), 0); // If we are drawing right to left, we have to move backwards before drawing the glyph
         draw_glyph({ point, glyph_size }, code_point);
-        point.move_by(glyph_size.width(), 0);
+        if (direction == TextDirection::LTR)
+            point.move_by(glyph_size.width(), 0);
     }
 }
 
@@ -1076,9 +1115,170 @@ static inline size_t draw_text_get_length(const Utf32View& text)
     return text.length();
 }
 
+template<typename TextType>
+Vector<DirectionalRun> split_text_into_directional_runs(const TextType& text, TextDirection initial_direction)
+{
+    // FIXME: This is a *very* simplified version of the UNICODE BIDIRECTIONAL ALGORITHM (https://www.unicode.org/reports/tr9/), that can render most bidirectional text
+    //  but also produces awkward results in a large amount of edge cases. This should probably be replaced with a fully spec compliant implementation at some point.
+
+    // FIXME: Support HTML "dir" attribute (how?)
+    u8 paragraph_embedding_level = initial_direction == TextDirection::LTR ? 0 : 1;
+    Vector<u8> embedding_levels;
+    embedding_levels.ensure_capacity(text.length());
+    for (size_t i = 0; i < text.length(); i++)
+        embedding_levels.unchecked_append(paragraph_embedding_level);
+
+    // FIXME: Support Explicit Directional Formatting Characters
+
+    Vector<BidirectionalClass> character_classes;
+    character_classes.ensure_capacity(text.length());
+    for (u32 code_point : text)
+        character_classes.unchecked_append(get_char_bidi_class(code_point));
+
+    // resolving weak types
+    BidirectionalClass paragraph_class = initial_direction == TextDirection::LTR ? BidirectionalClass::STRONG_LTR : BidirectionalClass::STRONG_RTL;
+    for (size_t i = 0; i < character_classes.size(); i++) {
+        if (character_classes[i] != BidirectionalClass::WEAK_SEPARATORS)
+            continue;
+        for (ssize_t j = i - 1; j >= 0; j--) {
+            auto character_class = character_classes[j];
+            if (character_class != BidirectionalClass::STRONG_RTL && character_class != BidirectionalClass::STRONG_LTR)
+                continue;
+            character_classes[i] = character_class;
+            break;
+        }
+        if (character_classes[i] == BidirectionalClass::WEAK_SEPARATORS)
+            character_classes[i] = paragraph_class;
+    }
+
+    // resolving neutral types
+    auto left_side = BidirectionalClass::NEUTRAL;
+    auto sequence_length = 0;
+    for (size_t i = 0; i < character_classes.size(); i++) {
+        auto character_class = character_classes[i];
+        if (left_side == BidirectionalClass::NEUTRAL) {
+            if (character_class != BidirectionalClass::NEUTRAL)
+                left_side = character_class;
+            else
+                character_classes[i] = paragraph_class;
+            continue;
+        }
+        if (character_class != BidirectionalClass::NEUTRAL) {
+            BidirectionalClass sequence_class;
+            if (bidi_class_to_direction(left_side) == bidi_class_to_direction(character_class)) {
+                sequence_class = left_side == BidirectionalClass::STRONG_RTL ? BidirectionalClass::STRONG_RTL : BidirectionalClass::STRONG_LTR;
+            } else {
+                sequence_class = paragraph_class;
+            }
+            for (auto j = 0; j < sequence_length; j++) {
+                character_classes[i - j - 1] = sequence_class;
+            }
+            sequence_length = 0;
+            left_side = character_class;
+        } else {
+            sequence_length++;
+        }
+    }
+    for (auto i = 0; i < sequence_length; i++)
+        character_classes[character_classes.size() - i - 1] = paragraph_class;
+
+    // resolving implicit levels
+    for (size_t i = 0; i < character_classes.size(); i++) {
+        auto character_class = character_classes[i];
+        if ((embedding_levels[i] % 2) == 0) {
+            if (character_class == BidirectionalClass::STRONG_RTL)
+                embedding_levels[i] += 1;
+            else if (character_class == BidirectionalClass::WEAK_NUMBERS || character_class == BidirectionalClass::WEAK_SEPARATORS)
+                embedding_levels[i] += 2;
+        } else {
+            if (character_class == BidirectionalClass::STRONG_LTR || character_class == BidirectionalClass::WEAK_NUMBERS || character_class == BidirectionalClass::WEAK_SEPARATORS)
+                embedding_levels[i] += 1;
+        }
+    }
+
+    // splitting into runs
+    auto run_code_points_start = text.begin();
+    auto next_code_points_slice = [&](auto length) {
+        Vector<u32> run_code_points;
+        run_code_points.ensure_capacity(length);
+        for (size_t j = 0; j < length; ++j, ++run_code_points_start)
+            run_code_points.unchecked_append(*run_code_points_start);
+        return run_code_points;
+    };
+    Vector<DirectionalRun> runs;
+    size_t start = 0;
+    u8 level = embedding_levels[0];
+    for (size_t i = 1; i < embedding_levels.size(); ++i) {
+        if (embedding_levels[i] == level)
+            continue;
+        auto code_points_slice = next_code_points_slice(i - start);
+        runs.append({ move(code_points_slice), level });
+        start = i;
+        level = embedding_levels[i];
+    }
+    auto code_points_slice = next_code_points_slice(embedding_levels.size() - start);
+    runs.append({ move(code_points_slice), level });
+
+    // reordering resolved levels
+    // FIXME: missing special cases for trailing whitespace characters
+    u8 minimum_level = 128;
+    u8 maximum_level = 0;
+    for (auto& run : runs) {
+        minimum_level = min(minimum_level, run.embedding_level());
+        maximum_level = max(minimum_level, run.embedding_level());
+    }
+    if ((minimum_level % 2) == 0)
+        minimum_level++;
+    auto runs_count = runs.size() - 1;
+    while (maximum_level <= minimum_level) {
+        size_t run_index = 0;
+        while (run_index < runs_count) {
+            while (run_index < runs_count && runs[run_index].embedding_level() < maximum_level)
+                run_index++;
+            auto reverse_start = run_index;
+            while (run_index <= runs_count && runs[run_index].embedding_level() >= maximum_level)
+                run_index++;
+            auto reverse_end = run_index - 1;
+            while (reverse_start < reverse_end) {
+                swap(runs[reverse_start], runs[reverse_end]);
+                reverse_start++;
+                reverse_end--;
+            }
+        }
+        maximum_level--;
+    }
+
+    // mirroring RTL mirror characters
+    for (auto& run : runs) {
+        if (run.direction() == TextDirection::LTR)
+            continue;
+        for (auto& code_point : run.code_points()) {
+            code_point = get_mirror_char(code_point);
+        }
+    }
+
+    return runs;
+}
+
+template<typename TextType>
+bool text_contains_bidirectional_text(const TextType& text, TextDirection initial_direction)
+{
+    for (u32 code_point : text) {
+        auto char_class = get_char_bidi_class(code_point);
+        if (char_class == BidirectionalClass::NEUTRAL)
+            continue;
+        if (bidi_class_to_direction(char_class) != initial_direction)
+            return true;
+    }
+    return false;
+}
+
 template<typename TextType, typename DrawGlyphFunction>
 void do_draw_text(const IntRect& rect, const TextType& text, const Font& font, TextAlignment alignment, TextElision elision, DrawGlyphFunction draw_glyph)
 {
+    if (draw_text_get_length(text) == 0)
+        return;
+
     Vector<TextType, 32> lines;
 
     size_t start_of_current_line = 0;
@@ -1127,14 +1327,32 @@ void do_draw_text(const IntRect& rect, const TextType& text, const Font& font, T
         bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), (rect.bottom() + 1) - bounding_rect.height() });
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     for (size_t i = 0; i < lines.size(); ++i) {
         auto& line = lines[i];
+
         IntRect line_rect { bounding_rect.x(), bounding_rect.y() + static_cast<int>(i) * line_height, bounding_rect.width(), line_height };
         line_rect.intersect(rect);
-        draw_text_line(line_rect, line, font, alignment, elision, draw_glyph);
+
+        TextDirection line_direction = get_text_direction(line);
+        if (text_contains_bidirectional_text(line, line_direction)) { // Slow Path: The line contains mixed BiDi classes
+            auto directional_runs = split_text_into_directional_runs(line, line_direction);
+            auto current_dx = line_direction == TextDirection::LTR ? 0 : line_rect.width();
+            for (auto& directional_run : directional_runs) {
+                auto run_width = font.width(directional_run.text());
+                if (line_direction == TextDirection::RTL)
+                    current_dx -= run_width;
+                auto run_rect = line_rect.translated(current_dx, 0);
+                run_rect.set_width(run_width);
+                draw_text_line(run_rect, directional_run.text(), font, alignment, elision, directional_run.direction(), draw_glyph);
+                if (line_direction == TextDirection::LTR)
+                    current_dx += run_width;
+            }
+        } else {
+            draw_text_line(line_rect, line, font, alignment, elision, line_direction, draw_glyph);
+        }
     }
 }
 
@@ -1165,7 +1383,7 @@ void Painter::draw_text(const IntRect& rect, const Utf32View& text, const Font& 
 
 void Painter::draw_text(Function<void(const IntRect&, u32)> draw_one_glyph, const IntRect& rect, const StringView& raw_text, const Font& font, TextAlignment alignment, TextElision elision)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     Utf8View text { raw_text };
     do_draw_text(rect, text, font, alignment, elision, [&](const IntRect& r, u32 code_point) {
@@ -1175,7 +1393,7 @@ void Painter::draw_text(Function<void(const IntRect&, u32)> draw_one_glyph, cons
 
 void Painter::draw_text(Function<void(const IntRect&, u32)> draw_one_glyph, const IntRect& rect, const Utf8View& text, const Font& font, TextAlignment alignment, TextElision elision)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     do_draw_text(rect, text, font, alignment, elision, [&](const IntRect& r, u32 code_point) {
         draw_one_glyph(r, code_point);
@@ -1184,7 +1402,7 @@ void Painter::draw_text(Function<void(const IntRect&, u32)> draw_one_glyph, cons
 
 void Painter::draw_text(Function<void(const IntRect&, u32)> draw_one_glyph, const IntRect& rect, const Utf32View& text, const Font& font, TextAlignment alignment, TextElision elision)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     do_draw_text(rect, text, font, alignment, elision, [&](const IntRect& r, u32 code_point) {
         draw_one_glyph(r, code_point);
@@ -1193,7 +1411,7 @@ void Painter::draw_text(Function<void(const IntRect&, u32)> draw_one_glyph, cons
 
 void Painter::set_pixel(const IntPoint& p, Color color)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     auto point = p;
     point.move_by(state().translation);
@@ -1255,7 +1473,7 @@ void Painter::draw_physical_pixel(const IntPoint& physical_position, Color color
     // This always draws a single physical pixel, independent of scale().
     // This should only be called by routines that already handle scale
     // (including scaling thickness).
-    ASSERT(draw_op() == DrawOp::Copy);
+    VERIFY(draw_op() == DrawOp::Copy);
 
     if (thickness == 1) { // Implies scale() == 1.
         auto& pixel = m_target->scanline(physical_position.y())[physical_position.x()];
@@ -1263,6 +1481,7 @@ void Painter::draw_physical_pixel(const IntPoint& physical_position, Color color
     }
 
     IntRect rect { physical_position, { thickness, thickness } };
+    rect.intersect(clip_rect() * scale());
     fill_physical_rect(rect, color);
 }
 
@@ -1336,10 +1555,10 @@ void Painter::draw_line(const IntPoint& p1, const IntPoint& p2, Color color, int
     }
 
     // FIXME: Implement dotted/dashed diagonal lines.
-    ASSERT(style == LineStyle::Solid);
+    VERIFY(style == LineStyle::Solid);
 
-    const double adx = abs(point2.x() - point1.x());
-    const double ady = abs(point2.y() - point1.y());
+    const int adx = abs(point2.x() - point1.x());
+    const int ady = abs(point2.y() - point1.y());
 
     if (adx > ady) {
         if (point1.x() > point2.x())
@@ -1350,52 +1569,37 @@ void Painter::draw_line(const IntPoint& p1, const IntPoint& p2, Color color, int
     }
 
     // FIXME: Implement clipping below.
-    const double dx = point2.x() - point1.x();
-    const double dy = point2.y() - point1.y();
-    double error = 0;
+    const int dx = point2.x() - point1.x();
+    const int dy = point2.y() - point1.y();
+    int error = 0;
 
     if (dx > dy) {
-        const double y_step = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
-        const double delta_error = fabs(dy / dx);
+        const int y_step = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
+        const int delta_error = 2 * abs(dy);
         int y = point1.y();
         for (int x = point1.x(); x <= point2.x(); ++x) {
             if (clip_rect.contains(x, y))
                 draw_physical_pixel({ x, y }, color, thickness);
             error += delta_error;
-            if (error >= 0.5) {
-                y = (double)y + y_step;
-                error -= 1.0;
+            if (error >= dx) {
+                y += y_step;
+                error -= 2 * dx;
             }
         }
     } else {
-        const double x_step = dx == 0 ? 0 : (dx > 0 ? 1 : -1);
-        const double delta_error = fabs(dx / dy);
+        const int x_step = dx == 0 ? 0 : (dx > 0 ? 1 : -1);
+        const int delta_error = 2 * abs(dx);
         int x = point1.x();
         for (int y = point1.y(); y <= point2.y(); ++y) {
             if (clip_rect.contains(x, y))
                 draw_physical_pixel({ x, y }, color, thickness);
             error += delta_error;
-            if (error >= 0.5) {
-                x = (double)x + x_step;
-                error -= 1.0;
+            if (error >= dy) {
+                x += x_step;
+                error -= 2 * dy;
             }
         }
     }
-}
-
-static void split_quadratic_bezier_curve(const FloatPoint& original_control, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
-{
-    auto po1_midpoint = original_control + p1;
-    po1_midpoint /= 2;
-
-    auto po2_midpoint = original_control + p2;
-    po2_midpoint /= 2;
-
-    auto new_segment = po1_midpoint + po2_midpoint;
-    new_segment /= 2;
-
-    Painter::for_each_line_segment_on_bezier_curve(po1_midpoint, p1, new_segment, callback);
-    Painter::for_each_line_segment_on_bezier_curve(po2_midpoint, new_segment, p2, callback);
 }
 
 static bool can_approximate_bezier_curve(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& control)
@@ -1418,10 +1622,35 @@ static bool can_approximate_bezier_curve(const FloatPoint& p1, const FloatPoint&
 // static
 void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
 {
-    if (can_approximate_bezier_curve(p1, p2, control_point)) {
-        callback(p1, p2);
-    } else {
-        split_quadratic_bezier_curve(control_point, p1, p2, callback);
+    struct SegmentDescriptor {
+        FloatPoint control_point;
+        FloatPoint p1;
+        FloatPoint p2;
+    };
+
+    static constexpr auto split_quadratic_bezier_curve = [](const FloatPoint& original_control, const FloatPoint& p1, const FloatPoint& p2, auto& segments) {
+        auto po1_midpoint = original_control + p1;
+        po1_midpoint /= 2;
+
+        auto po2_midpoint = original_control + p2;
+        po2_midpoint /= 2;
+
+        auto new_segment = po1_midpoint + po2_midpoint;
+        new_segment /= 2;
+
+        segments.enqueue({ po1_midpoint, p1, new_segment });
+        segments.enqueue({ po2_midpoint, new_segment, p2 });
+    };
+
+    Queue<SegmentDescriptor> segments;
+    segments.enqueue({ control_point, p1, p2 });
+    while (!segments.is_empty()) {
+        auto segment = segments.dequeue();
+
+        if (can_approximate_bezier_curve(segment.p1, segment.p2, segment.control_point))
+            callback(segment.p1, segment.p2);
+        else
+            split_quadratic_bezier_curve(segment.control_point, segment.p1, segment.p2, segments);
     }
 }
 
@@ -1430,28 +1659,9 @@ void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_po
     for_each_line_segment_on_bezier_curve(control_point, p1, p2, callback);
 }
 
-static void split_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
-{
-    auto half_theta_delta = theta_delta / 2;
-    auto theta_mid = theta_1 + half_theta_delta;
-
-    auto xc = cosf(x_axis_rotation);
-    auto xs = sinf(x_axis_rotation);
-    auto tc = cosf(theta_1 + half_theta_delta);
-    auto ts = sinf(theta_1 + half_theta_delta);
-
-    auto x2 = xc * radii.x() * tc - xs * radii.y() * ts + center.x();
-    auto y2 = xs * radii.x() * tc + xc * radii.y() * ts + center.y();
-
-    FloatPoint mid_point = { x2, y2 };
-
-    Painter::for_each_line_segment_on_elliptical_arc(p1, mid_point, center, radii, x_axis_rotation, theta_1, half_theta_delta, callback);
-    Painter::for_each_line_segment_on_elliptical_arc(mid_point, p2, center, radii, x_axis_rotation, theta_mid, half_theta_delta, callback);
-}
-
 static bool can_approximate_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta)
 {
-    constexpr static float tolerance = 1;
+    constexpr static float tolerance = 0.3f;
 
     auto half_theta_delta = theta_delta / 2.0f;
 
@@ -1466,12 +1676,13 @@ static bool can_approximate_elliptical_arc(const FloatPoint& p1, const FloatPoin
     auto ellipse_mid_point = FloatPoint { x2, y2 };
     auto line_mid_point = p1 + (p2 - p1) / 2.0f;
 
-    return ellipse_mid_point.distance_from(line_mid_point) < tolerance;
+    auto v = ellipse_mid_point.distance_from(line_mid_point);
+    return v < tolerance;
 }
 
 void Painter::draw_quadratic_bezier_curve(const IntPoint& control_point, const IntPoint& p1, const IntPoint& p2, Color color, int thickness, LineStyle style)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     for_each_line_segment_on_bezier_curve(FloatPoint(control_point), FloatPoint(p1), FloatPoint(p2), [&](const FloatPoint& fp1, const FloatPoint& fp2) {
         draw_line(IntPoint(fp1.x(), fp1.y()), IntPoint(fp2.x(), fp2.y()), color, thickness, style);
@@ -1481,10 +1692,39 @@ void Painter::draw_quadratic_bezier_curve(const IntPoint& control_point, const I
 // static
 void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
 {
-    if (can_approximate_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta)) {
-        callback(p1, p2);
-    } else {
-        split_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, callback);
+    struct SegmentDescriptor {
+        FloatPoint p1;
+        FloatPoint p2;
+        float theta;
+        float theta_delta;
+    };
+
+    static constexpr auto split_elliptical_arc = [](const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, auto& segments) {
+        auto half_theta_delta = theta_delta / 2;
+        auto theta_mid = theta_1 + half_theta_delta;
+
+        auto xc = cosf(x_axis_rotation);
+        auto xs = sinf(x_axis_rotation);
+        auto tc = cosf(theta_1 + half_theta_delta);
+        auto ts = sinf(theta_1 + half_theta_delta);
+
+        auto x2 = xc * radii.x() * tc - xs * radii.y() * ts + center.x();
+        auto y2 = xs * radii.x() * tc + xc * radii.y() * ts + center.y();
+
+        FloatPoint mid_point = { x2, y2 };
+
+        segments.enqueue({ p1, mid_point, theta_1, half_theta_delta });
+        segments.enqueue({ mid_point, p2, theta_mid, half_theta_delta });
+    };
+
+    Queue<SegmentDescriptor> segments;
+    segments.enqueue({ p1, p2, theta_1, theta_delta });
+    while (!segments.is_empty()) {
+        auto segment = segments.dequeue();
+        if (can_approximate_elliptical_arc(segment.p1, segment.p2, center, radii, x_axis_rotation, segment.theta, segment.theta_delta))
+            callback(segment.p1, segment.p2);
+        else
+            split_elliptical_arc(segment.p1, segment.p2, center, radii, x_axis_rotation, segment.theta, segment.theta_delta, segments);
     }
 }
 
@@ -1496,7 +1736,7 @@ void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, cons
 
 void Painter::draw_elliptical_arc(const IntPoint& p1, const IntPoint& p2, const IntPoint& center, const FloatPoint& radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, int thickness, LineStyle style)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     for_each_line_segment_on_elliptical_arc(FloatPoint(p1), FloatPoint(p2), FloatPoint(center), radii, x_axis_rotation, theta_1, theta_delta, [&](const FloatPoint& fp1, const FloatPoint& fp2) {
         draw_line(IntPoint(fp1.x(), fp1.y()), IntPoint(fp2.x(), fp2.y()), color, thickness, style);
@@ -1527,14 +1767,14 @@ PainterStateSaver::~PainterStateSaver()
 
 void Painter::stroke_path(const Path& path, Color color, int thickness)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     FloatPoint cursor;
 
     for (auto& segment : path.segments()) {
         switch (segment.type()) {
         case Segment::Type::Invalid:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         case Segment::Type::MoveTo:
             cursor = segment.point();
@@ -1582,7 +1822,7 @@ void Painter::stroke_path(const Path& path, Color color, int thickness)
 
 void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 {
-    ASSERT(scale() == 1); // FIXME: Add scaling support.
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     const auto& segments = path.split_lines();
 
@@ -1613,7 +1853,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
         if (winding_rule == WindingRule::EvenOdd)
             return winding_number % 2 == 0;
 
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     };
 
     auto increment_winding = [winding_rule](int& winding_number, const IntPoint& from, const IntPoint& to) {
@@ -1630,7 +1870,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
             return;
         }
 
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     };
 
     while (scanline >= last_y) {
@@ -1647,7 +1887,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 #endif
 
             if (active_list.size() > 1) {
-                auto winding_number { 0 };
+                auto winding_number { winding_rule == WindingRule::Nonzero ? 1 : 0 };
                 for (size_t i = 1; i < active_list.size(); ++i) {
                     auto& previous = active_list[i - 1];
                     auto& current = active_list[i];
@@ -1661,7 +1901,7 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
                         // The points between this segment and the previous are
                         // inside the shape
 
-                        dbgln<FILL_PATH_DEBUG>("y={}: {} at {}: {} -- {}", scanline, winding_number, i, from, to);
+                        dbgln_if(FILL_PATH_DEBUG, "y={}: {} at {}: {} -- {}", scanline, winding_number, i, from, to);
                         draw_line(from, to, color, 1);
                     }
 
@@ -1733,6 +1973,74 @@ void Painter::blit_disabled(const IntPoint& location, const Gfx::Bitmap& bitmap,
             return bright_color;
         return dark_color;
     });
+}
+
+void Painter::blit_tiled(const IntRect& dst_rect, const Gfx::Bitmap& bitmap, const IntRect& rect)
+{
+    auto tile_width = rect.width();
+    auto tile_height = rect.height();
+    auto dst_right = dst_rect.right();
+    auto dst_bottom = dst_rect.bottom();
+    for (int tile_y = dst_rect.top(); tile_y < dst_bottom; tile_y += tile_height) {
+        for (int tile_x = dst_rect.left(); tile_x < dst_right; tile_x += tile_width) {
+            IntRect tile_src_rect = rect;
+            auto tile_x_overflow = tile_x + tile_width - dst_right;
+            if (tile_x_overflow > 0) {
+                tile_src_rect.set_width(tile_width - tile_x_overflow);
+            }
+            auto tile_y_overflow = tile_y + tile_height - dst_bottom;
+            if (tile_y_overflow > 0) {
+                tile_src_rect.set_height(tile_height - tile_y_overflow);
+            }
+            blit(IntPoint(tile_x, tile_y), bitmap, tile_src_rect);
+        }
+    }
+}
+
+String parse_ampersand_string(const StringView& raw_text, Optional<size_t>* underline_offset)
+{
+    if (raw_text.is_empty())
+        return String::empty();
+
+    StringBuilder builder;
+
+    for (size_t i = 0; i < raw_text.length(); ++i) {
+        if (raw_text[i] == '&') {
+            if (i != (raw_text.length() - 1) && raw_text[i + 1] == '&')
+                builder.append(raw_text[i]);
+            else if (underline_offset && !(*underline_offset).has_value())
+                *underline_offset = i;
+            continue;
+        }
+        builder.append(raw_text[i]);
+    }
+    return builder.to_string();
+}
+
+void Gfx::Painter::draw_ui_text(const Gfx::IntRect& rect, const StringView& text, const Gfx::Font& font, Gfx::TextAlignment text_alignment, Gfx::Color color)
+{
+    Optional<size_t> underline_offset;
+    auto name_to_draw = parse_ampersand_string(text, &underline_offset);
+
+    Gfx::IntRect text_rect { 0, 0, font.width(name_to_draw), font.glyph_height() };
+    text_rect.align_within(rect, text_alignment);
+
+    draw_text(text_rect, name_to_draw, font, text_alignment, color);
+
+    if (underline_offset.has_value()) {
+        Utf8View utf8_view { name_to_draw };
+        int width = 0;
+        for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
+            if (utf8_view.byte_offset_of(it) >= underline_offset.value()) {
+                int y = text_rect.bottom() + 1;
+                int x1 = text_rect.left() + width;
+                int x2 = x1 + font.glyph_or_emoji_width(*it);
+                draw_line({ x1, y }, { x2, y }, color);
+                break;
+            }
+            width += font.glyph_or_emoji_width(*it) + font.glyph_spacing();
+        }
+    }
 }
 
 }

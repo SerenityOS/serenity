@@ -6,15 +6,22 @@ set(LOADER_SOURCES
 
 file(GLOB AK_SOURCES "../../AK/*.cpp")
 file(GLOB ELF_SOURCES "../Libraries/LibELF/*.cpp")
-set(ELF_SOURCES ${ELF_SOURCES} ../Libraries/LibELF/Arch/i386/plt_trampoline.S)
 file(GLOB LIBC_SOURCES1 "../Libraries/LibC/*.cpp")
 file(GLOB LIBC_SOURCES2 "../Libraries/LibC/*/*.cpp")
-file(GLOB LIBC_SOURCES3 "../Libraries/LibC/*.S")
 
-list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".+crt0.cpp")
-list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".+crt0.+.cpp")
+if ("${SERENITY_ARCH}" STREQUAL "i686")
+    file(GLOB LIBC_SOURCES3 "../Libraries/LibC/arch/i386/*.S")
+    set(ELF_SOURCES ${ELF_SOURCES} ../Libraries/LibELF/Arch/i386/plt_trampoline.S)
+elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
+    file(GLOB LIBC_SOURCES3 "../Libraries/LibC/arch/x86_64/*.S") # FIXME: this does not exist at this point!
+    set(ELF_SOURCES ${ELF_SOURCES} ../Libraries/LibELF/Arch/x86_64/plt_trampoline.S)
+endif()
 
-set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3})
+file(GLOB LIBSYSTEM_SOURCES "../Libraries/LibSystem/*.cpp")
+
+add_definitions(-D_DYNAMIC_LOADER)
+
+set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nostdlib -pie -fpic -DNO_TLS")
 

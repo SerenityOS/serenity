@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ArgsParser.h>
@@ -29,6 +9,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>
+#include <serenity.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,21 +17,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-
-static uint16_t internet_checksum(const void* ptr, size_t count)
-{
-    uint32_t checksum = 0;
-    auto* w = (const uint16_t*)ptr;
-    while (count > 1) {
-        checksum += ntohs(*w++);
-        if (checksum & 0x80000000)
-            checksum = (checksum & 0xffff) | (checksum >> 16);
-        count -= 2;
-    }
-    while (checksum >> 16)
-        checksum = (checksum & 0xffff) + (checksum >> 16);
-    return htons(~checksum);
-}
 
 static int total_pings;
 static int successful_pings;
@@ -157,14 +123,14 @@ int main(int argc, char** argv)
         PingPacket ping_packet;
         memset(&ping_packet, 0, sizeof(PingPacket));
 
-        ping_packet.header.type = 8; // Echo request
+        ping_packet.header.type = ICMP_ECHO;
         ping_packet.header.code = 0;
         ping_packet.header.un.echo.id = htons(pid);
         ping_packet.header.un.echo.sequence = htons(seq++);
 
         bool fits = String("Hello there!\n").copy_characters_to_buffer(ping_packet.msg, sizeof(ping_packet.msg));
         // It's a constant string, we can be sure that it fits.
-        ASSERT(fits);
+        VERIFY(fits);
 
         ping_packet.header.checksum = internet_checksum(&ping_packet, sizeof(PingPacket));
 
@@ -192,7 +158,7 @@ int main(int argc, char** argv)
                 return 1;
             }
 
-            if (pong_packet.header.type != 0)
+            if (pong_packet.header.type != ICMP_ECHOREPLY)
                 continue;
             if (pong_packet.header.code != 0)
                 continue;
@@ -221,7 +187,7 @@ int main(int argc, char** argv)
             else if (ms > max_ms)
                 max_ms = ms;
 
-            char addr_buf[64];
+            char addr_buf[INET_ADDRSTRLEN];
             printf("Pong from %s: id=%u, seq=%u%s, time=%dms\n",
                 inet_ntop(AF_INET, &peer_address.sin_addr, addr_buf, sizeof(addr_buf)),
                 ntohs(pong_packet.header.un.echo.id),

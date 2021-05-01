@@ -13,8 +13,7 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             text: "Wallpaper:"
@@ -29,7 +28,7 @@
         @GUI::Button {
             name: "wallpaper_open_button"
             tooltip: "Select wallpaper from file system."
-            button_style: "CoolBar"
+            button_style: "Coolbar"
             fixed_width: 22
             fixed_height: 22
         }
@@ -37,8 +36,7 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             text: "Modes:"
@@ -53,8 +51,7 @@
 
     @GUI::Widget {
         shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             text: "Resolution:"
@@ -67,31 +64,28 @@
             fixed_width: 90
         }
 
-        @GUI::Widget {
-        }
+        @GUI::Widget
 
         @GUI::Label {
             text: "Display scale:"
             text_alignment: "CenterLeft"
-            fixed_width: 75
+            fixed_width: 95
         }
 
         @GUI::RadioButton {
             name: "scale_1x"
-            text: "100%"
+            text: "1x"
         }
 
         @GUI::RadioButton {
             name: "scale_2x"
-            text: "200%"
+            text: "2x"
         }
     }
 
-
     @GUI::Widget {
         shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
         @GUI::Label {
             text: "Color:"
@@ -105,33 +99,30 @@
         }
     }
 
-    @GUI::Widget {
-    }
+    @GUI::Widget
 
     @GUI::Widget {
         shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout {
-        }
+        layout: @GUI::HorizontalBoxLayout
 
-        @GUI::Widget {
-        }
+        @GUI::Widget
 
         @GUI::Button {
             name: "ok_button"
             text: "OK"
-            fixed_width: 60
+            fixed_width: 75
         }
 
         @GUI::Button {
             name: "cancel_button"
             text: "Cancel"
-            fixed_width: 60
+            fixed_width: 75
         }
 
         @GUI::Button {
             name: "apply_button"
             text: "Apply"
-            fixed_width: 60
+            fixed_width: 75
         }
     }
 }

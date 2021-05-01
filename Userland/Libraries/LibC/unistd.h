@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 /* standard symbolic constants and types
@@ -34,6 +14,7 @@
 #pragma once
 
 #include <errno.h>
+#include <fd_set.h>
 #include <limits.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
@@ -63,6 +44,7 @@ int gettid();
 int donate(int tid);
 int getpagesize();
 pid_t fork();
+pid_t vfork();
 int execv(const char* path, char* const argv[]);
 int execve(const char* filename, char* const argv[], char* const envp[]);
 int execvpe(const char* filename, char* const argv[], char* const envp[]);
@@ -92,6 +74,7 @@ int seteuid(uid_t);
 int setegid(gid_t);
 int setuid(uid_t);
 int setgid(gid_t);
+int setreuid(uid_t, uid_t);
 int setresuid(uid_t, uid_t, uid_t);
 int setresgid(gid_t, gid_t, gid_t);
 pid_t tcgetpgrp(int fd);
@@ -99,12 +82,13 @@ int tcsetpgrp(int fd, pid_t pgid);
 ssize_t read(int fd, void* buf, size_t count);
 ssize_t pread(int fd, void* buf, size_t count, off_t);
 ssize_t write(int fd, const void* buf, size_t count);
+ssize_t pwrite(int fd, const void* buf, size_t count, off_t);
 int close(int fd);
 int chdir(const char* path);
 int fchdir(int fd);
 char* getcwd(char* buffer, size_t size);
 char* getwd(char* buffer);
-int sleep(unsigned seconds);
+unsigned int sleep(unsigned int seconds);
 int usleep(useconds_t);
 int gethostname(char*, size_t);
 int sethostname(const char*, ssize_t);
@@ -146,8 +130,6 @@ enum {
     _PC_VDISABLE
 };
 
-#define HOST_NAME_MAX 64
-
 #define R_OK 4
 #define W_OK 2
 #define X_OK 1
@@ -175,6 +157,8 @@ enum {
     _SC_OPEN_MAX,
     _SC_TTY_NAME_MAX,
     _SC_PAGESIZE,
+    _SC_GETPW_R_SIZE_MAX,
+    _SC_CLK_TCK,
 };
 
 #define _SC_NPROCESSORS_CONF _SC_NPROCESSORS_CONF
@@ -182,6 +166,8 @@ enum {
 #define _SC_OPEN_MAX _SC_OPEN_MAX
 #define _SC_PAGESIZE _SC_PAGESIZE
 #define _SC_TTY_NAME_MAX _SC_TTY_NAME_MAX
+#define _SC_GETPW_R_SIZE_MAX _SC_GETPW_R_SIZE_MAX
+#define _SC_CLK_TCK _SC_CLK_TCK
 
 long sysconf(int name);
 
@@ -207,6 +193,6 @@ extern int optreset;
 // value.
 extern char* optarg;
 
-int getopt(int argc, char** argv, const char* short_options);
+int getopt(int argc, char* const* argv, const char* short_options);
 
 __END_DECLS

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringBuilder.h>
@@ -33,7 +13,7 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Palette.h>
 
@@ -63,13 +43,13 @@ void AbstractView::set_model(RefPtr<Model> model)
     m_model = move(model);
     if (m_model)
         m_model->register_view({}, *this);
-    model_did_update(GUI::Model::InvalidateAllIndexes);
+    model_did_update(GUI::Model::InvalidateAllIndices);
     scroll_to_top();
 }
 
 void AbstractView::model_did_update(unsigned int flags)
 {
-    if (!model() || (flags & GUI::Model::InvalidateAllIndexes)) {
+    if (!model() || (flags & GUI::Model::InvalidateAllIndices)) {
         stop_editing();
         m_edit_index = {};
         m_hovered_index = {};
@@ -91,6 +71,7 @@ void AbstractView::model_did_update(unsigned int flags)
             m_drop_candidate_index = {};
         selection().remove_matching([this](auto& index) { return !model()->is_valid(index); });
     }
+    m_selection_start_index = {};
 }
 
 void AbstractView::clear_selection()
@@ -101,6 +82,11 @@ void AbstractView::clear_selection()
 void AbstractView::set_selection(const ModelIndex& new_index)
 {
     m_selection.set(new_index);
+}
+
+void AbstractView::set_selection_start_index(const ModelIndex& new_index)
+{
+    m_selection_start_index = new_index;
 }
 
 void AbstractView::add_selection(const ModelIndex& new_index)
@@ -140,8 +126,8 @@ void AbstractView::update_edit_widget_position()
 
 void AbstractView::begin_editing(const ModelIndex& index)
 {
-    ASSERT(is_editable());
-    ASSERT(model());
+    VERIFY(is_editable());
+    VERIFY(model());
     if (m_edit_index == index)
         return;
     if (!model()->is_editable(index))
@@ -152,7 +138,7 @@ void AbstractView::begin_editing(const ModelIndex& index)
     }
     m_edit_index = index;
 
-    ASSERT(aid_create_editing_delegate);
+    VERIFY(aid_create_editing_delegate);
     m_editing_delegate = aid_create_editing_delegate(index);
     m_editing_delegate->bind(*model(), index);
     m_editing_delegate->set_value(index.data());
@@ -164,12 +150,12 @@ void AbstractView::begin_editing(const ModelIndex& index)
     m_edit_widget->set_focus(true);
     m_editing_delegate->will_begin_editing();
     m_editing_delegate->on_commit = [this] {
-        ASSERT(model());
+        VERIFY(model());
         model()->set_data(m_edit_index, m_editing_delegate->value());
         stop_editing();
     };
     m_editing_delegate->on_rollback = [this] {
-        ASSERT(model());
+        VERIFY(model());
         stop_editing();
     };
 }
@@ -208,7 +194,8 @@ void AbstractView::notify_selection_changed(Badge<ModelSelection>)
     did_update_selection();
     if (on_selection_change)
         on_selection_change();
-    update();
+    if (!m_suppress_update_on_selection_change)
+        update();
 }
 
 NonnullRefPtr<Gfx::Font> AbstractView::font_for_index(const ModelIndex& index) const
@@ -298,7 +285,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
     if (distance_travelled_squared <= drag_distance_threshold)
         return ScrollableWidget::mousemove_event(event);
 
-    ASSERT(!data_type.is_null());
+    VERIFY(!data_type.is_null());
 
     if (m_is_dragging)
         return;
@@ -323,7 +310,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
         dbgln("Drag was cancelled!");
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         break;
     }
 }
@@ -340,9 +327,10 @@ void AbstractView::mouseup_event(MouseEvent& event)
         // in mousedown_event(), because we could be seeing a start of a drag.
         // Since we're here, it was not that; so fix up the selection now.
         auto index = index_at_event_position(event.position());
-        if (index.is_valid())
+        if (index.is_valid()) {
             set_selection(index);
-        else
+            set_selection_start_index(index);
+        } else
             clear_selection();
         m_might_drag = false;
         update();
@@ -449,20 +437,21 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
         selection_update = SelectionUpdate::Set;
 
     if (model()->is_valid(index)) {
-        if (selection_update == SelectionUpdate::Set)
+        if (selection_update == SelectionUpdate::Set) {
             set_selection(index);
-        else if (selection_update == SelectionUpdate::Ctrl)
+            set_selection_start_index(index);
+        } else if (selection_update == SelectionUpdate::Ctrl) {
             toggle_selection(index);
-        else if (selection_update == SelectionUpdate::ClearIfNotSelected) {
+        } else if (selection_update == SelectionUpdate::ClearIfNotSelected) {
             if (!m_selection.contains(index))
                 clear_selection();
         } else if (selection_update == SelectionUpdate::Shift) {
-            // Toggle all from cursor to new index.
-            auto min_row = min(cursor_index().row(), index.row());
-            auto max_row = max(cursor_index().row(), index.row());
-            auto min_column = min(cursor_index().column(), index.column());
-            auto max_column = max(cursor_index().column(), index.column());
+            auto min_row = min(selection_start_index().row(), index.row());
+            auto max_row = max(selection_start_index().row(), index.row());
+            auto min_column = min(selection_start_index().column(), index.column());
+            auto max_column = max(selection_start_index().column(), index.column());
 
+            clear_selection();
             for (auto row = min_row; row <= max_row; ++row) {
                 for (auto column = min_column; column <= max_column; ++column) {
                     auto new_index = model()->index(row, column);
@@ -470,9 +459,6 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
                         toggle_selection(new_index);
                 }
             }
-
-            // Finally toggle the cursor index again to make it go back to its current state.
-            toggle_selection(cursor_index());
         }
 
         // FIXME: Support the other SelectionUpdate types
@@ -500,6 +486,11 @@ void AbstractView::hide_event(HideEvent& event)
 
 void AbstractView::keydown_event(KeyEvent& event)
 {
+    if (event.alt()) {
+        event.ignore();
+        return;
+    }
+
     if (event.key() == KeyCode::Key_F2) {
         if (is_editable() && edit_triggers() & EditTrigger::EditKeyPressed) {
             begin_editing(cursor_index());
@@ -639,9 +630,9 @@ void AbstractView::do_search(String&& searching)
         return;
     }
 
-    auto found_indexes = model()->matches(searching, Model::MatchesFlag::FirstMatchOnly | Model::MatchesFlag::MatchAtStart | Model::MatchesFlag::CaseInsensitive, model()->parent_index(cursor_index()));
-    if (!found_indexes.is_empty() && found_indexes[0].is_valid()) {
-        auto& index = found_indexes[0];
+    auto found_indices = model()->matches(searching, Model::MatchesFlag::FirstMatchOnly | Model::MatchesFlag::MatchAtStart | Model::MatchesFlag::CaseInsensitive, model()->parent_index(cursor_index()));
+    if (!found_indices.is_empty() && found_indices[0].is_valid()) {
+        auto& index = found_indices[0];
         m_highlighted_search_index = index;
         m_searching = move(searching);
         set_selection(index);

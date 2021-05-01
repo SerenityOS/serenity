@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -32,9 +12,9 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/SyscallUtils.h>
 #include <LibCore/Timer.h>
 #include <LibIPC/Message.h>
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,12 +35,11 @@ public:
     {
         m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
         m_notifier->on_ready_to_read = [this] {
+            NonnullRefPtr protect = *this;
             drain_messages_from_peer();
             handle_messages();
         };
     }
-
-    pid_t peer_pid() const { return m_peer_pid; }
 
     template<typename MessageType>
     OwnPtr<MessageType> wait_for_specific_message()
@@ -119,12 +98,19 @@ public:
     }
 
     template<typename RequestType, typename... Args>
-    OwnPtr<typename RequestType::ResponseType> send_sync(Args&&... args)
+    NonnullOwnPtr<typename RequestType::ResponseType> send_sync(Args&&... args)
     {
         post_message(RequestType(forward<Args>(args)...));
         auto response = wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
-        ASSERT(response);
-        return response;
+        VERIFY(response);
+        return response.release_nonnull();
+    }
+
+    template<typename RequestType, typename... Args>
+    OwnPtr<typename RequestType::ResponseType> send_sync_but_allow_failure(Args&&... args)
+    {
+        post_message(RequestType(forward<Args>(args)...));
+        return wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
     }
 
     virtual void may_have_become_unresponsive() { }
@@ -141,7 +127,6 @@ public:
 
 protected:
     Core::LocalSocket& socket() { return *m_socket; }
-    void set_peer_pid(pid_t pid) { m_peer_pid = pid; }
 
     template<typename MessageType, typename Endpoint>
     OwnPtr<MessageType> wait_for_specific_endpoint_message()
@@ -162,12 +147,19 @@ protected:
             fd_set rfds;
             FD_ZERO(&rfds);
             FD_SET(m_socket->fd(), &rfds);
-            int rc = Core::safe_syscall(select, m_socket->fd() + 1, &rfds, nullptr, nullptr, nullptr);
-            if (rc < 0) {
-                perror("select");
+            for (;;) {
+                if (auto rc = select(m_socket->fd() + 1, &rfds, nullptr, nullptr, nullptr); rc < 0) {
+                    if (errno == EINTR)
+                        continue;
+                    perror("wait_for_specific_endpoint_message: select");
+                    VERIFY_NOT_REACHED();
+                } else {
+                    VERIFY(rc > 0);
+                    VERIFY(FD_ISSET(m_socket->fd(), &rfds));
+                    break;
+                }
             }
-            ASSERT(rc > 0);
-            ASSERT(FD_ISSET(m_socket->fd(), &rfds));
+
             if (!drain_messages_from_peer())
                 break;
         }
@@ -257,17 +249,6 @@ protected:
     }
 
 protected:
-    void initialize_peer_info()
-    {
-        ucred creds;
-        socklen_t creds_size = sizeof(creds);
-        if (getsockopt(this->socket().fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0) {
-            // FIXME: We should handle this more gracefully.
-            ASSERT_NOT_REACHED();
-        }
-        m_peer_pid = creds.pid;
-    }
-
     LocalEndpoint& m_local_endpoint;
     NonnullRefPtr<Core::LocalSocket> m_socket;
     RefPtr<Core::Timer> m_responsiveness_timer;
@@ -275,7 +256,6 @@ protected:
     RefPtr<Core::Notifier> m_notifier;
     NonnullOwnPtrVector<Message> m_unprocessed_messages;
     ByteBuffer m_unprocessed_bytes;
-    pid_t m_peer_pid { -1 };
 };
 
 }

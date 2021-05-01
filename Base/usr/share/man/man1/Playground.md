@@ -8,6 +8,10 @@ Playground - GUI Markup Language (GML) editor
 $ Playground [file]
 ```
 
+## Arguments
+
+* file: Path of GML file to load
+
 ## Description
 
 Playground facilitates development of graphical user interfaces (GUI)

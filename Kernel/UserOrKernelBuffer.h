@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -36,13 +16,13 @@
 
 namespace Kernel {
 
-class UserOrKernelBuffer {
+class [[nodiscard]] UserOrKernelBuffer {
 public:
     UserOrKernelBuffer() = delete;
 
     static UserOrKernelBuffer for_kernel_buffer(u8* kernel_buffer)
     {
-        ASSERT(!kernel_buffer || !is_user_address(VirtualAddress(kernel_buffer)));
+        VERIFY(!kernel_buffer || !is_user_address(VirtualAddress(kernel_buffer)));
         return UserOrKernelBuffer(kernel_buffer);
     }
 
@@ -61,20 +41,20 @@ public:
         return UserOrKernelBuffer(const_cast<u8*>((const u8*)userspace.unsafe_userspace_ptr()));
     }
 
-    bool is_kernel_buffer() const;
-    const void* user_or_kernel_ptr() const { return m_buffer; }
+    [[nodiscard]] bool is_kernel_buffer() const;
+    [[nodiscard]] const void* user_or_kernel_ptr() const { return m_buffer; }
 
-    UserOrKernelBuffer offset(ssize_t offset) const
+    [[nodiscard]] UserOrKernelBuffer offset(ssize_t offset) const
     {
         if (!m_buffer)
             return *this;
         UserOrKernelBuffer offset_buffer = *this;
         offset_buffer.m_buffer += offset;
-        ASSERT(offset_buffer.is_kernel_buffer() == is_kernel_buffer());
+        VERIFY(offset_buffer.is_kernel_buffer() == is_kernel_buffer());
         return offset_buffer;
     }
 
-    String copy_into_string(size_t size) const;
+    [[nodiscard]] String copy_into_string(size_t size) const;
     [[nodiscard]] bool write(const void* src, size_t offset, size_t len);
     [[nodiscard]] bool write(const void* src, size_t len)
     {
@@ -120,7 +100,7 @@ public:
             ssize_t copied = f(buffer, to_copy);
             if (copied < 0)
                 return copied;
-            ASSERT((size_t)copied <= to_copy);
+            VERIFY((size_t)copied <= to_copy);
             if (!write(buffer, nwritten, (size_t)copied))
                 return -EFAULT;
             nwritten += (size_t)copied;
@@ -156,7 +136,7 @@ public:
             ssize_t copied = f(buffer, to_copy);
             if (copied < 0)
                 return copied;
-            ASSERT((size_t)copied <= to_copy);
+            VERIFY((size_t)copied <= to_copy);
             nread += (size_t)copied;
             if ((size_t)copied < to_copy)
                 break;

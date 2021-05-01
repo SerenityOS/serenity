@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/HashMap.h>
@@ -51,6 +31,8 @@
 static int do_file_system_object_long(const char* path);
 static int do_file_system_object_short(const char* path);
 
+static bool print_names(const char* path, size_t longest_name, const Vector<String>& names);
+
 static bool flag_classify = false;
 static bool flag_colorize = false;
 static bool flag_long = false;
@@ -73,6 +55,8 @@ static bool output_is_terminal = false;
 static HashMap<uid_t, String> users;
 static HashMap<gid_t, String> groups;
 
+static bool is_a_tty = false;
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio rpath tty", nullptr) < 0) {
@@ -87,7 +71,9 @@ int main(int argc, char** argv)
         terminal_columns = ws.ws_col;
         output_is_terminal = true;
     }
-    if (!isatty(STDOUT_FILENO)) {
+
+    is_a_tty = isatty(STDOUT_FILENO);
+    if (!is_a_tty) {
         flag_disable_hyperlinks = true;
     } else {
         flag_colorize = true;
@@ -139,16 +125,31 @@ int main(int argc, char** argv)
         return do_file_system_object_short(path);
     };
 
-    int status = 0;
     if (paths.is_empty()) {
-        status = do_file_system_object(".");
-    } else if (paths.size() == 1) {
-        status = do_file_system_object(paths[0]);
-    } else {
-        for (auto& path : paths) {
-            status = do_file_system_object(path);
+        paths.append(".");
+    }
+
+    quick_sort(paths, [](const String& a, const String& b) {
+        return a < b;
+    });
+
+    int status = 0;
+
+    for (size_t i = 0; i < paths.size(); i++) {
+        auto path = paths[i];
+
+        bool show_dir_separator = paths.size() > 1 && Core::File::is_directory(path) && !flag_list_directories_only;
+        if (show_dir_separator) {
+            printf("%s:\n", path);
+        }
+        auto rc = do_file_system_object(path);
+        if (rc != 0)
+            status = rc;
+        if (show_dir_separator && i != paths.size() - 1) {
+            puts("");
         }
     }
+
     return status;
 }
 
@@ -310,9 +311,9 @@ static bool print_filesystem_object(const String& path, const String& name, cons
         printf("  %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
     } else {
         if (flag_human_readable) {
-            printf(" %10s ", human_readable_size((size_t)st.st_size).characters());
+            printf(" %10s ", human_readable_size(st.st_size).characters());
         } else {
-            printf(" %10zd ", st.st_size);
+            printf(" %10lld ", st.st_size);
         }
     }
 
@@ -372,7 +373,7 @@ static int do_file_system_object_long(const char* path)
     while (di.has_next()) {
         FileMetadata metadata;
         metadata.name = di.next_path();
-        ASSERT(!metadata.name.is_empty());
+        VERIFY(!metadata.name.is_empty());
 
         if (metadata.name.ends_with('~') && flag_ignore_backups && metadata.name != path)
             continue;
@@ -382,7 +383,7 @@ static int do_file_system_object_long(const char* path)
         builder.append('/');
         builder.append(metadata.name);
         metadata.path = builder.to_string();
-        ASSERT(!metadata.path.is_null());
+        VERIFY(!metadata.path.is_null());
         int rc = lstat(metadata.path.characters(), &metadata.stat);
         if (rc < 0) {
             perror("lstat");
@@ -424,6 +425,40 @@ static bool print_filesystem_object_short(const char* path, const char* name, si
 
     *nprinted = print_name(st, name, nullptr, path);
     return true;
+}
+
+static bool print_names(const char* path, size_t longest_name, const Vector<String>& names)
+{
+    size_t printed_on_row = 0;
+    size_t nprinted = 0;
+    for (size_t i = 0; i < names.size(); ++i) {
+        auto& name = names[i];
+        StringBuilder builder;
+        builder.append(path);
+        builder.append('/');
+        builder.append(name);
+        if (!print_filesystem_object_short(builder.to_string().characters(), name.characters(), &nprinted))
+            return 2;
+        int offset = 0;
+        if (terminal_columns > longest_name)
+            offset = terminal_columns % longest_name / (terminal_columns / longest_name);
+
+        // The offset must be at least 2 because:
+        // - With each file an additional char is printed e.g. '@','*'.
+        // - Each filename must be separated by a space.
+        size_t column_width = longest_name + max(offset, 2);
+        printed_on_row += column_width;
+
+        if (is_a_tty) {
+            for (size_t j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
+                printf(" ");
+        }
+        if ((printed_on_row + column_width) >= terminal_columns) {
+            printf("\n");
+            printed_on_row = 0;
+        }
+    }
+    return printed_on_row;
 }
 
 int do_file_system_object_short(const char* path)
@@ -471,34 +506,7 @@ int do_file_system_object_short(const char* path)
     }
     quick_sort(names);
 
-    size_t printed_on_row = 0;
-    size_t nprinted = 0;
-    for (size_t i = 0; i < names.size(); ++i) {
-        auto& name = names[i];
-        StringBuilder builder;
-        builder.append(path);
-        builder.append('/');
-        builder.append(name);
-        if (!print_filesystem_object_short(builder.to_string().characters(), name.characters(), &nprinted))
-            return 2;
-        int offset = 0;
-        if (terminal_columns > longest_name)
-            offset = terminal_columns % longest_name / (terminal_columns / longest_name);
-
-        // The offset must be at least 2 because:
-        // - With each file an additional char is printed e.g. '@','*'.
-        // - Each filename must be separated by a space.
-        size_t column_width = longest_name + max(offset, 2);
-        printed_on_row += column_width;
-
-        for (size_t j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
-            printf(" ");
-        if ((printed_on_row + column_width) >= terminal_columns) {
-            printf("\n");
-            printed_on_row = 0;
-        }
-    }
-    if (printed_on_row)
+    if (print_names(path, longest_name, names))
         printf("\n");
     return 0;
 }

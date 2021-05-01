@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -61,7 +41,7 @@ String TLSv12::read_line(size_t max_size)
 
     auto* start = m_context.application_buffer.data();
     auto* newline = (u8*)memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size());
-    ASSERT(newline);
+    VERIFY(newline);
 
     size_t offset = newline - start;
 
@@ -83,7 +63,7 @@ bool TLSv12::write(ReadonlyBytes buffer)
         return false;
     }
 
-    PacketBuilder builder { MessageType::ApplicationData, m_context.version, buffer.size() };
+    PacketBuilder builder { MessageType::ApplicationData, m_context.options.version, buffer.size() };
     builder.append(buffer);
     auto packet = builder.build();
 
@@ -106,7 +86,7 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
 
     if (Core::Socket::is_connected()) {
         if (is_established()) {
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         } else {
             Core::Socket::close(); // reuse?
         }
@@ -160,21 +140,34 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
 
 void TLSv12::read_from_socket()
 {
-    if (m_context.application_buffer.size() > 0) {
-        deferred_invoke([&](auto&) { read_from_socket(); });
-        if (on_tls_ready_to_read)
-            on_tls_ready_to_read(*this);
-    }
+    auto did_schedule_read = false;
+    auto notify_client_for_app_data = [&] {
+        if (m_context.application_buffer.size() > 0) {
+            if (!did_schedule_read) {
+                deferred_invoke([&](auto&) { read_from_socket(); });
+                did_schedule_read = true;
+            }
+            if (on_tls_ready_to_read)
+                on_tls_ready_to_read(*this);
+        }
+    };
+
+    // If there's anything before we consume stuff, let the client know
+    // since we won't be consuming things if the connection is terminated.
+    notify_client_for_app_data();
 
     if (!check_connection_state(true))
         return;
 
     consume(Core::Socket::read(4096));
+
+    // If anything new shows up, tell the client about the event.
+    notify_client_for_app_data();
 }
 
 void TLSv12::write_into_socket()
 {
-    dbgln<TLS_DEBUG>("Flushing cached records: {} established? {}", m_context.tls_buffer.size(), is_established());
+    dbgln_if(TLS_DEBUG, "Flushing cached records: {} established? {}", m_context.tls_buffer.size(), is_established());
 
     m_has_scheduled_write_flush = false;
     if (!check_connection_state(false))
@@ -199,7 +192,7 @@ bool TLSv12::check_connection_state(bool read)
         m_context.connection_finished = true;
     }
     if (m_context.critical_error) {
-        dbgln<TLS_DEBUG>("CRITICAL ERROR {} :(", m_context.critical_error);
+        dbgln_if(TLS_DEBUG, "CRITICAL ERROR {} :(", m_context.critical_error);
 
         if (on_tls_error)
             on_tls_error((AlertDescription)m_context.critical_error);
@@ -211,7 +204,7 @@ bool TLSv12::check_connection_state(bool read)
                 on_tls_finished();
         }
         if (m_context.tls_buffer.size()) {
-            dbgln<TLS_DEBUG>("connection closed without finishing data transfer, {} bytes still in buffer and {} bytes in application buffer",
+            dbgln_if(TLS_DEBUG, "connection closed without finishing data transfer, {} bytes still in buffer and {} bytes in application buffer",
                 m_context.tls_buffer.size(),
                 m_context.application_buffer.size());
         } else {
@@ -247,7 +240,7 @@ bool TLSv12::flush()
     }
     if (m_context.send_retries++ == 10) {
         // drop the records, we can't send
-        dbgln<TLS_DEBUG>("Dropping {} bytes worth of TLS records as max retries has been reached", write_buffer().size());
+        dbgln_if(TLS_DEBUG, "Dropping {} bytes worth of TLS records as max retries has been reached", write_buffer().size());
         write_buffer().clear();
         m_context.send_retries = 0;
     }

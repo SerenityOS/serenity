@@ -1,30 +1,39 @@
 ENTRY(start)
 
+KERNEL_VIRTUAL_BASE = 0xc0000000;
+
 SECTIONS
 {
-    . = 0xc0100000;
+    . = KERNEL_VIRTUAL_BASE + 0x00100000;
 
     start_of_kernel_image = .;
 
-    .text ALIGN(4K) : AT (ADDR(.text) - 0xc0000000)
+    .text ALIGN(4K) : AT (ADDR(.text) - KERNEL_VIRTUAL_BASE)
     {
         $<TARGET_OBJECTS:boot>
         *(.multiboot)
         start_of_kernel_text = .;
-        *(.text)
-        *(.text.startup)
 
         start_of_safemem_text = .;
-        *(.text.safemem)
+        KEEP(*(.text.safemem))
         end_of_safemem_text = .;
         start_of_safemem_atomic_text = .;
-        *(.text.safemem.atomic)
+        KEEP(*(.text.safemem.atomic))
         end_of_safemem_atomic_text = .;
+
+        *(.text*)
+    }
+
+    .unmap_after_init ALIGN(4K) : AT (ADDR(.unmap_after_init) - KERNEL_VIRTUAL_BASE)
+    {
+        start_of_unmap_after_init = .;
+        *(.unmap_after_init*);
+        end_of_unmap_after_init = .;
 
         end_of_kernel_text = .;
     }
 
-    .rodata ALIGN(4K) : AT (ADDR(.rodata) - 0xc0000000)
+    .rodata ALIGN(4K) : AT (ADDR(.rodata) - KERNEL_VIRTUAL_BASE)
     {
         start_heap_ctors = .;
         *libkernel_heap.a:*(.ctors)
@@ -34,17 +43,24 @@ SECTIONS
         *(.ctors)
         end_ctors = .;
 
-        *(.rodata)
+        *(.rodata*)
     }
 
-    .data ALIGN(4K) : AT (ADDR(.data) - 0xc0000000)
+    .data ALIGN(4K) : AT (ADDR(.data) - KERNEL_VIRTUAL_BASE)
     {
         start_of_kernel_data = .;
-        *(.data)
+        *(.data*)
         end_of_kernel_data = .;
     }
 
-    .bss ALIGN(4K) (NOLOAD) : AT (ADDR(.bss) - 0xc0000000)
+    .ro_after_init ALIGN(4K) (NOLOAD) : AT(ADDR(.ro_after_init) - KERNEL_VIRTUAL_BASE)
+    {
+        start_of_ro_after_init = .;
+        *(.ro_after_init);
+        end_of_ro_after_init = .;
+    }
+
+    .bss ALIGN(4K) (NOLOAD) : AT (ADDR(.bss) - KERNEL_VIRTUAL_BASE)
     {
         start_of_kernel_bss = .;
         *(page_tables)

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -144,36 +124,95 @@ private:
 
     void alter_mode(bool should_set, bool question_param, const ParamVector&);
 
+    // CUU – Cursor Up
     void CUU(const ParamVector&);
+
+    // CUD – Cursor Down
     void CUD(const ParamVector&);
+
+    // CUF – Cursor Forward
     void CUF(const ParamVector&);
+
+    // CUB – Cursor Backward
     void CUB(const ParamVector&);
+
+    // CUP - Cursor Position
     void CUP(const ParamVector&);
+
+    // ED - Erase in Display
     void ED(const ParamVector&);
+
+    // EL - Erase in Line
     void EL(const ParamVector&);
-    void escape$M(const ParamVector&);
-    void escape$P(const ParamVector&);
-    void escape$G(const ParamVector&);
-    void escape$X(const ParamVector&);
-    void escape$b(const ParamVector&);
-    void escape$d(const ParamVector&);
+
+    // SGR – Select Graphic Rendition
     void SGR(const ParamVector&);
-    void escape$s(const ParamVector&);
-    void escape$u(const ParamVector&);
-    void escape$t(const ParamVector&);
+
+    // Save Current Cursor Position
+    void SCOSC(const ParamVector&);
+
+    // Restore Saved Cursor Position
+    void SCORC(const ParamVector&);
+
+    // DECSTBM – Set Top and Bottom Margins ("Scrolling Region")
     void DECSTBM(const ParamVector&);
-    void escape$S(const ParamVector&);
-    void escape$T(const ParamVector&);
-    void escape$L(const ParamVector&);
+
+    // RM – Reset Mode
     void RM(bool question_param, const ParamVector&);
+
+    // SM – Set Mode
     void SM(bool question_param, const ParamVector&);
+
+    // DA - Device Attributes
     void DA(const ParamVector&);
+
+    // HVP – Horizontal and Vertical Position
     void HVP(const ParamVector&);
+
+    // NEL - Next Line
     void NEL();
+
+    // IND - Index (move down)
     void IND();
+
+    // RI - Reverse Index (move up)
     void RI();
+
+    // DSR - Device Status Reports
     void DSR(const ParamVector&);
+
+    // ICH - Insert Character
     void ICH(const ParamVector&);
+
+    // SU - Scroll Up (called "Pan Down" in VT510)
+    void SU(const ParamVector&);
+
+    // SD - Scroll Down (called "Pan Up" in VT510)
+    void SD(const ParamVector&);
+
+    // IL - Insert Line
+    void IL(const ParamVector&);
+
+    // DCH - Delete Character
+    void DCH(const ParamVector&);
+
+    // DL - Delete Line
+    void DL(const ParamVector&);
+
+    // CHA - Cursor Horizontal Absolute
+    void CHA(const ParamVector&);
+
+    // REP - Repeat
+    void REP(const ParamVector&);
+
+    // VPA - Vertical Line Position Absolute
+    void VPA(const ParamVector&);
+
+    // ECH - Erase Character
+    void ECH(const ParamVector&);
+
+    // FIXME: Find the right names for these.
+    void XTERM_WM(const ParamVector&);
 
     TerminalClient& m_client;
 
@@ -185,7 +224,7 @@ private:
             return;
 
         if (m_history.size() < max_history_size()) {
-            ASSERT(m_history_start == 0);
+            VERIFY(m_history_start == 0);
             m_history.append(move(line));
             return;
         }

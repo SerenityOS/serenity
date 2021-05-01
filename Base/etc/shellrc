@@ -1,7 +1,6 @@
 #!sh
 
 alias fm=FileManager
-alias hw=HelloWorld
 alias irc=IRCClient
 alias ms=Minesweeper
 alias sh=Shell
@@ -25,7 +24,16 @@ alias sm=SystemMonitor
 alias pv=Profiler
 alias ws=WebServer
 alias sl=Solitaire
-alias wv=WebView
 alias ue=UserspaceEmulator
 
+alias rgrep="grep -r"
+alias egrep="grep -E"
 alias ll='ls -l'
+
+if [ "$(id -u)" = "0" ] {
+    prompt_color=31
+} else {
+    prompt_color=32
+}
+
+export PROMPT="\\X\\u@\\h:\\w\\a\\e[$prompt_color;1m\\h\\e[0m:\\e[34;1m\\w\\e[0m \\p "

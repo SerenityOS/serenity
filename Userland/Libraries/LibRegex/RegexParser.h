@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -95,7 +75,9 @@ protected:
     ALWAYS_INLINE Token consume(TokenType type, Error error);
     ALWAYS_INLINE bool consume(const String&);
     ALWAYS_INLINE bool try_skip(StringView);
+    ALWAYS_INLINE bool lookahead_any(StringView);
     ALWAYS_INLINE char skip();
+    ALWAYS_INLINE void back(size_t = 1);
     ALWAYS_INLINE void reset();
     ALWAYS_INLINE bool done() const;
     ALWAYS_INLINE bool set_error(Error error);
@@ -165,6 +147,7 @@ public:
     ECMA262Parser(Lexer& lexer, Optional<typename ParserTraits<ECMA262Parser>::OptionsType> regex_options)
         : Parser(lexer, regex_options.value_or({}))
     {
+        m_should_use_browser_extended_grammar = regex_options.has_value() && regex_options->has_flag_set(ECMAScriptFlags::BrowserExtended);
     }
 
     ~ECMA262Parser() = default;
@@ -175,14 +158,9 @@ private:
     enum class ReadDigitsInitialZeroState {
         Allow,
         Disallow,
-        Require,
     };
-    enum class ReadDigitFollowPolicy {
-        Any,
-        DisallowDigit,
-        DisallowNonDigit,
-    };
-    Optional<unsigned> read_digits(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy follow_policy = ReadDigitFollowPolicy::Any, bool hex = false, int max_count = -1);
+    StringView read_digits_as_string(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, bool hex = false, int max_count = -1);
+    Optional<unsigned> read_digits(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, bool hex = false, int max_count = -1);
     StringView read_capture_group_specifier(bool take_starting_angle_bracket = false);
 
     bool parse_pattern(ByteCode&, size_t&, bool unicode, bool named);
@@ -197,6 +175,25 @@ private:
     bool parse_capture_group(ByteCode&, size_t&, bool unicode, bool named);
     Optional<CharClass> parse_character_class_escape(bool& out_inverse, bool expect_backslash = false);
     bool parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&, bool unicode);
+
+    // Used only by B.1.4, Regular Expression Patterns (Extended for use in browsers)
+    bool parse_quantifiable_assertion(ByteCode&, size_t&, bool named);
+    bool parse_extended_atom(ByteCode&, size_t&, bool named);
+    bool parse_inner_disjunction(ByteCode& bytecode_stack, size_t& length, bool unicode, bool named);
+    bool parse_invalid_braced_quantifier(); // Note: This function either parses and *fails*, or doesn't parse anything and returns false.
+    bool parse_legacy_octal_escape_sequence(ByteCode& bytecode_stack, size_t& length);
+    Optional<u8> parse_legacy_octal_escape();
+
+    size_t ensure_total_number_of_capturing_parenthesis();
+
+    // ECMA-262's flavour of regex is a bit weird in that it allows backrefs to reference "future" captures, and such backrefs
+    // always match the empty string. So we have to know how many capturing parenthesis there are, but we don't want to always
+    // parse it twice, so we'll just do so when it's actually needed.
+    // Most patterns should have no need to ever populate this field.
+    Optional<size_t> m_total_number_of_capturing_parenthesis;
+
+    // Keep the Annex B. behaviour behind a flag, the users can enable it by passing the `ECMAScriptFlags::BrowserExtended` flag.
+    bool m_should_use_browser_extended_grammar { false };
 };
 
 using PosixExtended = PosixExtendedParser;

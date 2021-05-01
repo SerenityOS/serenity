@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
@@ -188,20 +168,23 @@ int main(int argc, char** argv)
         }
     };
 
+    bool did_match_something = false;
     if (!files.size() && !recursive) {
         char* line = nullptr;
         size_t line_len = 0;
         ssize_t nread = 0;
         ScopeGuard free_line = [line] { free(line); };
         while ((nread = getline(&line, &line_len, stdin)) != -1) {
-            ASSERT(nread > 0);
+            VERIFY(nread > 0);
             StringView line_view(line, nread - 1);
             bool is_binary = line_view.contains(0);
 
             if (is_binary && binary_mode == BinaryFileMode::Skip)
                 return 1;
 
-            if (matches(line_view, "stdin", false, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
+            auto matched = matches(line_view, "stdin", false, is_binary);
+            did_match_something = did_match_something || matched;
+            if (matched && is_binary && binary_mode == BinaryFileMode::Binary)
                 return 0;
         }
     } else {
@@ -217,5 +200,5 @@ int main(int argc, char** argv)
         }
     }
 
-    return 0;
+    return did_match_something ? 0 : 1;
 }

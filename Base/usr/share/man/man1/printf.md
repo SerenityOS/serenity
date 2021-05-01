@@ -5,7 +5,7 @@ printf - format and print data
 ## Synopsis
 
 ```**sh
-printf <format> [arguments...]
+$ printf <format> [arguments...]
 ```
 
 ## Description
@@ -15,7 +15,7 @@ printf <format> [arguments...]
 _format_ is similar to the C printf format string, with the following differences:
 - The format specifier `b` (`%b`) is not supported.
 - The format specifiers that require a writable pointer (e.g. `n`) are not supported.
-- The format specifier `q` (`%q`) has a different behaviour, where it shall print a given string as a quoted string, which is safe to use in shell inputs.
+- The format specifier `q` (`%q`) has a different behavior, where it shall print a given string as a quoted string, which is safe to use in shell inputs.
 - Common escape sequences are interpreted, namely the following:
 
 | escape | description |

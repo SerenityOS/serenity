@@ -1,30 +1,9 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LogStream.h>
 #include <LibC/sys/internals.h>
 #include <LibC/unistd.h>
 #include <LibELF/AuxiliaryVector.h>
@@ -55,7 +34,7 @@ static void perform_self_relocations(auxv_t* auxvp)
             found_base_address = true;
         }
     }
-    ASSERT(found_base_address);
+    VERIFY(found_base_address);
     Elf32_Ehdr* header = (Elf32_Ehdr*)(base_address);
     Elf32_Phdr* pheader = (Elf32_Phdr*)(base_address + header->e_phoff);
     u32 dynamic_section_addr = 0;
@@ -67,7 +46,7 @@ static void perform_self_relocations(auxv_t* auxvp)
     if (!dynamic_section_addr)
         exit(1);
 
-    auto dynamic_object = ELF::DynamicObject::construct((VirtualAddress(base_address)), (VirtualAddress(dynamic_section_addr)));
+    auto dynamic_object = ELF::DynamicObject::create({}, (VirtualAddress(base_address)), (VirtualAddress(dynamic_section_addr)));
 
     dynamic_object->relocation_section().for_each_relocation([base_address](auto& reloc) {
         if (reloc.type() != R_386_RELATIVE)
@@ -131,10 +110,10 @@ void _start(int argc, char** argv, char** envp)
         _exit(1);
     }
 
-    ASSERT(main_program_fd >= 0);
-    ASSERT(!main_program_name.is_empty());
+    VERIFY(main_program_fd >= 0);
+    VERIFY(!main_program_name.is_empty());
 
     ELF::DynamicLinker::linker_main(move(main_program_name), main_program_fd, is_secure, argc, argv, envp);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 }

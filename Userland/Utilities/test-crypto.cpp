@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Random.h>
@@ -29,6 +9,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/Authentication/GHash.h>
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
@@ -147,7 +128,7 @@ static int run(Function<void(const char*, size_t)> fn)
         }
     } else {
         if (filename == nullptr) {
-            puts("must specify a file name");
+            puts("must specify a filename");
             return 1;
         }
         if (!Core::File::exists(filename)) {
@@ -431,11 +412,16 @@ auto main(int argc, char** argv) -> int
             return 1;
         }
         auto config = Core::ConfigFile::open(ca_certs_file);
+        auto now = Core::DateTime::now();
+        auto last_year = Core::DateTime::create(now.year() - 1);
+        auto next_year = Core::DateTime::create(now.year() + 1);
         for (auto& entity : config->groups()) {
             Certificate cert;
-            cert.subject = entity;
-            cert.issuer_subject = config->read_entry(entity, "issuer_subject", entity);
-            cert.country = config->read_entry(entity, "country");
+            cert.subject.subject = entity;
+            cert.issuer.subject = config->read_entry(entity, "issuer_subject", entity);
+            cert.subject.country = config->read_entry(entity, "country");
+            cert.not_before = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_before", "")).value_or(last_year);
+            cert.not_after = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_after", "")).value_or(next_year);
             s_root_ca_certificates.append(move(cert));
         }
         if (run_tests)
@@ -474,11 +460,16 @@ auto main(int argc, char** argv) -> int
                 return 1;
             }
             auto config = Core::ConfigFile::open(ca_certs_file);
+            auto now = Core::DateTime::now();
+            auto last_year = Core::DateTime::create(now.year() - 1);
+            auto next_year = Core::DateTime::create(now.year() + 1);
             for (auto& entity : config->groups()) {
                 Certificate cert;
-                cert.subject = entity;
-                cert.issuer_subject = config->read_entry(entity, "issuer_subject", entity);
-                cert.country = config->read_entry(entity, "country");
+                cert.subject.subject = entity;
+                cert.issuer.subject = config->read_entry(entity, "issuer_subject", entity);
+                cert.subject.country = config->read_entry(entity, "country");
+                cert.not_before = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_before", "")).value_or(last_year);
+                cert.not_after = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_after", "")).value_or(next_year);
                 s_root_ca_certificates.append(move(cert));
             }
             tls_tests();
@@ -1970,8 +1961,9 @@ static void rsa_emsa_pss_test_create()
 
 static void rsa_test_der_parse()
 {
-    I_TEST((RSA | ASN1 DER / PEM encoded Key import));
-    auto privkey = R"(-----BEGIN RSA PRIVATE KEY-----
+    {
+        I_TEST((RSA | ASN1 PKCS1 DER / PEM encoded Key import));
+        auto privkey = R"(-----BEGIN RSA PRIVATE KEY-----
 MIIBOgIBAAJBAJsrIYHxs1YL9tpfodaWs1lJoMdF4kgFisUFSj6nvBhJUlmBh607AlgTaX0E
 DGPYycXYGZ2n6rqmms5lpDXBpUcCAwEAAQJAUNpPkmtEHDENxsoQBUXvXDYeXdePSiIBJhpU
 joNOYoR5R9z5oX2cpcyykQ58FC2vKKg+x8N6xczG7qO95tw5UQIhAN354CP/FA+uTeJ6KJ+i
@@ -1980,14 +1972,57 @@ IQCTjYI861Y+hjMnlORkGSdvWlTHUj6gjEOh4TlWeJzQoQIgAxMZOQKtxCZUuxFwzRq4xLRG
 nrDlBQpuxz7bwSyQO7UCIHrYMnDohgNbwtA5ZpW3H1cKKQQvueWm6sxW9P5sUrZ3
 -----END RSA PRIVATE KEY-----)";
 
-    Crypto::PK::RSA rsa(privkey);
-    if (rsa.public_key().public_exponent() == 65537) {
-        if (rsa.private_key().private_exponent() == "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"_bigint) {
-            PASS;
-        } else
-            FAIL(Invalid private exponent);
-    } else {
-        FAIL(Invalid public exponent);
+        Crypto::PK::RSA rsa(privkey);
+        if (rsa.public_key().public_exponent() == 65537) {
+            if (rsa.private_key().private_exponent() == "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"_bigint) {
+                PASS;
+            } else
+                FAIL(Invalid private exponent);
+        } else {
+            FAIL(Invalid public exponent);
+        }
+    }
+
+    {
+        I_TEST((RSA | ASN1 PKCS8 DER / PEM encoded Key import));
+        auto privkey = R"(-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC7ZBYaG9+CcJP7
+WVFJRI/uw3hljc7WpzeYs8MN82/g9CG1gnEF3P3ZSBdWVr8gnbh05EsSGHKghIce
+CB7DNrM5Ab0ru04CuODdPx56xCj+4MmzTc/aq79ntmOt131NGHgq9yVwfJqnSpyl
+OoVw7j/Wg4ciwPDQaeLmD1BsE/W9UsF1km7DWasBpW5br82DpudKgJq2Ixf52+rY
+TCkMgyWcetx4MfXll4y5ZVtJXCnHJfkCS64EaCqXmClP4ovOuHH4khJ3rW9j4yuL
+e5ck3PSXOrtOTR43HZkCXzseCkbW7qKSmk/9ZreImOzOgu8vvw7ewLAQR9qYVS6X
+PXY8IilDAgMBAAECggEBAIV3ld5mt90Z/exqA2Fh+fofMyNxyz5Lv2d9sZHAL5FT
+kKbND18TtaIKnMSb6Gl8rKJk76slyo7Vlb8oHXEBBsm1mV0KfVenAlHS4QyjpmdT
+B5Yz97VR2nQuDfUFpHNC2GQRv5LMzQIWPFfaxKxYpRNOfvOb5Gks4bTmd2tjFAYR
+MCbHgPw1liKA9dYKk4NB0301EY05e4Zz8RjqYHkkmOPD7DnjFbHqcFUjVKK5E3vD
+WjxNXUbiSudCCN7WLEOyeHZNd+l6kSAVxZuCAp0G3Da5ndXgIStcy4hYi/fL3XQQ
+bNpxjfhsjlD3tdHNr3NNYDAqxcxpsyO1NCpCIW3ZVrECgYEA7l6gTZ3e9AiSNlMd
+2O2vNnbQ6UZfsEfu2y7HmpCuNJkFkAnM/1h72Krejnn31rRuR6uCFn4YgQUN9Eq0
+E1PJCtTay2ucZw5rqtkewT9QzXvVD9eiGM+MF89UzSCC+dOW0/odkD+xP2evnPvG
+PbXztnuERC1pi0YWLj1YcsfsEX0CgYEAyUA2UtYjnvCcteIy+rURT0aoZ9tDMrG+
+Es42EURVv1sduVdUst5R+bXx1aDzpCkcdni3TyxeosvTGAZngI3O8ghh1GV7NPZR
+nkiPXjMnhL0Zf+X9gCA6TFANfPuWhMSGijYsCd46diKGDReGYUnmcN9XopeG1h6i
+3JiOuVPAIb8CgYBmIcUtfGb6yHFdNV+kgrJ/84ivaqe1MBz3bKO5ZiQ+BRKNFKXx
+AkiOHSgeg8PdCpH1w1aJrJ1zKmdANIHThiKtsWXNot3wig03tq+mvSox4Mz5bLrX
+RpYP3ZXIDhYQVMhbKt9f3upi8FoeOQJHjp5Nob6aN5rxQaZfSYmMJHzRQQKBgQCO
+ALwUGTtLNBYvlKtKEadkG8RKfAFfbOFkXZLy/hfPDRjdJY0DJTIMk+BPT+F6rPOD
+eMxHllQ0ZMPPiP1RTT5/s4BsISsdhMy0dhiLbGbvF4s9nugPly3rmPTbgp6DkjQo
+o+7RC7iOkO+rnzTXwxBSBpXMiUTAIx/hrdfPVxQT+wKBgCh7N3OLIOH6EWcW1fif
+UoENh8rkt/kzm89G1JLwBhuBIBPXUEZt2dS/xSUempqVqFGONpP87gvqxkMTtgCA
+73KXn/cxHWM2kmXyHA3kQlOYw6WHjpldQAxLE+TRHXO2JUtZ09Mu4rVXX7lmwbTm
+l3vmuDEF3/Bo1C1HTg0xRV/l
+-----END PRIVATE KEY-----)";
+
+        Crypto::PK::RSA rsa(privkey);
+        if (rsa.public_key().public_exponent() == 65537) {
+            if (rsa.private_key().private_exponent() == "16848664331299797559656678180469464902267415922431923391961407795209879741791261105581093539484181644099608161661780611501562625272630894063592208758992911105496755004417051031019663332258403844985328863382168329621318366311519850803972480500782200178279692319955495383119697563295214236936264406600739633470565823022975212999060908747002623721589308539473108154612454595201561671949550531384574873324370774408913092560971930541734744950937900805812300970883306404011323308000168926094053141613790857814489531436452649384151085451448183385611208320292948291211969430321231180227006521681776197974694030147965578466993"_bigint) {
+                PASS;
+            } else
+                FAIL(Invalid private exponent);
+        } else {
+            FAIL(Invalid public exponent);
+        }
     }
 }
 
@@ -2173,7 +2208,7 @@ static void bigint_test_fibo500()
 {
     {
         I_TEST((BigInteger | Fibonacci500));
-        bool pass = (bigint_fibonacci(500).words() == AK::Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
+        bool pass = (bigint_fibonacci(500).words() == Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
 
         if (pass) {
             PASS;
@@ -2384,7 +2419,7 @@ static void bigint_import_export()
         I_TEST((BigInteger | BigEndian Decode / Encode roundtrip));
         u8 random_bytes[128];
         u8 target_buffer[128];
-        AK::fill_with_random(random_bytes, 128);
+        fill_with_random(random_bytes, 128);
         auto encoded = Crypto::UnsignedBigInteger::import_data(random_bytes, 128);
         encoded.export_data({ target_buffer, 128 });
         if (memcmp(target_buffer, random_bytes, 128) != 0)
@@ -2496,7 +2531,7 @@ static void bigint_test_signed_fibo500()
 {
     {
         I_TEST((Signed BigInteger | Fibonacci500));
-        bool pass = (bigint_signed_fibonacci(500).unsigned_value().words() == AK::Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
+        bool pass = (bigint_signed_fibonacci(500).unsigned_value().words() == Vector<u32> { 315178285, 505575602, 1883328078, 125027121, 3649625763, 347570207, 74535262, 3832543808, 2472133297, 1600064941, 65273441 });
 
         if (pass) {
             PASS;
@@ -2701,7 +2736,7 @@ static void bigint_signed_import_export()
         u8 random_bytes[129];
         u8 target_buffer[129];
         random_bytes[0] = 1;
-        AK::fill_with_random(random_bytes + 1, 128);
+        fill_with_random(random_bytes + 1, 128);
         auto encoded = Crypto::SignedBigInteger::import_data(random_bytes, 129);
         encoded.export_data({ target_buffer, 129 });
         if (memcmp(target_buffer, random_bytes, 129) != 0)

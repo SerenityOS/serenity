@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -144,6 +124,47 @@ private:
     ReadonlyBytes m_slice;
     u32 m_num_glyphs { 0 };
     u32 m_number_of_h_metrics { 0 };
+};
+
+class Name {
+public:
+    enum class Platform {
+        Unicode = 0,
+        Macintosh = 1,
+        Windows = 3,
+    };
+    static Optional<Name> from_slice(const ReadonlyBytes&);
+
+    String family_name() const { return string_for_id(NameId::FamilyName); }
+    String subfamily_name() const { return string_for_id(NameId::SubfamilyName); }
+    String typographic_family_name() const { return string_for_id(NameId::TypographicFamilyName); }
+    String typographic_subfamily_name() const { return string_for_id(NameId::TypographicSubfamilyName); }
+
+private:
+    enum class NameId {
+        Copyright = 0,
+        FamilyName = 1,
+        SubfamilyName = 2,
+        UniqueIdentifier = 3,
+        FullName = 4,
+        VersionString = 5,
+        PostscriptName = 6,
+        Trademark = 7,
+        Manufacturer = 8,
+        Designer = 9,
+        Description = 10,
+        TypographicFamilyName = 16,
+        TypographicSubfamilyName = 17,
+    };
+
+    Name(const ReadonlyBytes& slice)
+        : m_slice(slice)
+    {
+    }
+
+    String string_for_id(NameId id) const;
+
+    ReadonlyBytes m_slice;
 };
 
 }

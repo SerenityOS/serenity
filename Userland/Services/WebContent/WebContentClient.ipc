@@ -1,18 +1,30 @@
-endpoint WebContentClient = 90
+endpoint WebContentClient
 {
     DidStartLoading(URL url) =|
     DidFinishLoading(URL url) =|
     DidPaint(Gfx::IntRect content_rect, i32 bitmap_id) =|
     DidInvalidateContentRect(Gfx::IntRect content_rect) =|
     DidChangeSelection() =|
+    DidRequestCursorChange(i32 cursor_type) =|
     DidLayout(Gfx::IntSize content_size) =|
     DidChangeTitle(String title) =|
+    DidRequestScroll(int wheel_delta) =|
     DidRequestScrollIntoView(Gfx::IntRect rect) =|
+    DidEnterTooltipArea(Gfx::IntPoint content_position, String title) =|
+    DidLeaveTooltipArea() =|
     DidHoverLink(URL url) =|
     DidUnhoverLink() =|
     DidClickLink(URL url, String target, unsigned modifiers) =|
     DidMiddleClickLink(URL url, String target, unsigned modifiers) =|
     DidRequestContextMenu(Gfx::IntPoint content_position) =|
     DidRequestLinkContextMenu(Gfx::IntPoint content_position, URL url, String target, unsigned modifiers) =|
+    DidRequestImageContextMenu(Gfx::IntPoint content_position, URL url, String target, unsigned modifiers, Gfx::ShareableBitmap bitmap) =|
     DidRequestAlert(String message) => ()
+    DidRequestConfirm(String message) => (bool result)
+    DidRequestPrompt(String message, String default_) => (String response)
+    DidGetSource(URL url, String source) =|
+    DidJSConsoleOutput(String method, String line) =|
+    DidChangeFavicon(Gfx::ShareableBitmap favicon) =|
+    DidRequestCookie(URL url, u8 source) => (String cookie)
+    DidSetCookie(URL url, Web::Cookie::ParsedCookie cookie, u8 source) =|
 }

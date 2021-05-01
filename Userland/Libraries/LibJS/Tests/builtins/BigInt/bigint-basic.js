@@ -54,6 +54,11 @@ describe("correct behavior", () => {
         expect(1 != 1n).toBeFalse();
         expect(1n != 1.23).toBeTrue();
         expect(1.23 != 1n).toBeTrue();
+
+        const a = 552141064586571465517761649840658n;
+        const b = 704179908449526267977309288010258n;
+        expect(a == a).toBeTrue();
+        expect(a == b).toBeFalse();
     });
 
     test("strong equality operators", () => {
@@ -68,6 +73,11 @@ describe("correct behavior", () => {
         expect(1 !== 1n).toBeTrue();
         expect(1n !== 1.23).toBeTrue();
         expect(1.23 !== 1n).toBeTrue();
+
+        const a = 552141064586571465517761649840658n;
+        const b = 704179908449526267977309288010258n;
+        expect(a === a).toBeTrue();
+        expect(a === b).toBeFalse();
     });
 });
 
@@ -76,5 +86,20 @@ describe("errors", () => {
         expect(() => {
             +123n;
         }).toThrowWithMessage(TypeError, "Cannot convert BigInt to number");
+    });
+
+    test("division by zero", () => {
+        expect(() => {
+            1n / 0n;
+        }).toThrowWithMessage(RangeError, "Division by zero");
+        expect(() => {
+            1n % 0n;
+        }).toThrowWithMessage(RangeError, "Division by zero");
+    });
+
+    test("negative exponent", () => {
+        expect(() => {
+            1n ** -1n;
+        }).toThrowWithMessage(RangeError, "Exponent must be positive");
     });
 });

@@ -4,7 +4,9 @@ SystemServer - services configuration
 
 ## Synopsis
 
-`/etc/SystemServer.ini`
+```**
+/etc/SystemServer.ini
+```
 
 ## Description
 
@@ -22,8 +24,8 @@ describing how to launch and manage this service.
 * `Priority` - the scheduling priority to set for the service, either "low", "normal", or "high". The default is "normal".
 * `KeepAlive` - whether the service should be restarted if it exits or crashes. For lazy services, this means the service will get respawned once a new connection is attempted on their socket after they exit or crash.
 * `Lazy` - whether the service should only get spawned once a client attempts to connect to their socket.
-* `Socket` - a path to a socket to create on behalf of the service. For lazy services, SystemServer will actually watch the socket for new connection attempts. An open file descriptor to this socket will be passed as fd 3 to the service.
-* `SocketPermissions` - (octal) file system permissions for the socket file. The default permissions are 0600.
+* `Socket` - a comma-separated list of paths to sockets to create on behalf of the service. For lazy services, SystemServer will actually watch the socket for new connection attempts. See [socket takeover mechanism](#socket-takeover-mechanism) for details on how sockets are passed to services by SystemServer.
+* `SocketPermissions` - comma-separated list of (octal) file system permissions for the socket file. The default permissions are 0600. If the number of socket permissions defined is less than the number of sockets defined, then the last defined permission will be used for the remainder of the items in `Socket`.
 * `User` - a name of the user to run the service as. This impacts what UID, GID (and extra GIDs) the service processes have. By default, services are run as root.
 * `WorkingDirectory` - the working directory in which the service is spawned. By default, services are spawned in the root (`"/"`) directory.
 * `BootModes` - a comma-separated list of boot modes the service should be enabled in. By default, services are only enabled in the "graphical" mode. The current boot mode is read from the kernel command line, and is assumed to be "graphical" if not specified there.
@@ -32,14 +34,24 @@ describing how to launch and manage this service.
 * `AcceptSocketConnections` - whether SystemServer should accept connections on the socket, and spawn an instance of the service for each client connection.
 
 Note that:
-* `Lazy` requires a `Socket`.
+* `Lazy` requires `Socket`, but only one socket must be defined.
 * `SocketPermissions` require a `Socket`.
 * `MultiInstance` conflicts with `KeepAlive`.
-* `AcceptSocketConnections` requires `Socket`, `Lazy`, and `MultiInstance`.
+* `AcceptSocketConnections` requires `Socket` (only one), `Lazy`, and `MultiInstance`.
 
 ## Environment
 
-* `SOCKET_TAKEOVER` - set by the SystemServer for a service if the service is being passed a socket.
+* `SOCKET_TAKEOVER` - set by SystemServer to describe the sockets being passed.
+
+## Socket takeover mechanism
+
+When SystemServer runs a service which has `Socket` defined, it will create the sockets and then pass an environment variable named `SOCKET_TAKEOVER` to the launched service. This environment variable is structured as follows:
+
+```console
+SOCKET_TAKEOVER=/tmp/socket1:3 /tmp/socket2:4
+```
+
+Items in the variable are separated by spaces, and each item has two components separated by a colon. The first part is the path of the socket requested, and the second part is the file descriptor number that was passed to the newly created service. The service can then parse this information and obtain file descriptors for each socket.
 
 ## Examples
 
@@ -65,6 +77,15 @@ StdIO=/dev/tty0
 Environment=TERM=xterm
 KeepAlive=1
 BootModes=text
+
+# Launch WindowManager with two sockets: one for main windowing operations, and
+# one for window management operations. Both sockets get file permissions as 660.
+[WindowServer]
+Socket=/tmp/portal/window,/tmp/portal/wm
+SocketPermissions=660
+Priority=high
+KeepAlive=1
+User=window
 ```
 
 ## See also

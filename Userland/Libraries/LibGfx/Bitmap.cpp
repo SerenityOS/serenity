@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Checked.h>
@@ -64,12 +44,13 @@ size_t Bitmap::minimum_pitch(size_t physical_width, BitmapFormat format)
     case StorageFormat::Indexed8:
         element_size = 1;
         break;
-    case StorageFormat::RGB32:
-    case StorageFormat::RGBA32:
+    case StorageFormat::BGRx8888:
+    case StorageFormat::BGRA8888:
+    case StorageFormat::RGBA8888:
         element_size = 4;
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     return physical_width * element_size;
@@ -92,7 +73,7 @@ RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const IntSize& size, int scal
     auto backing_store = Bitmap::allocate_backing_store(format, size, scale_factor, Purgeable::No);
     if (!backing_store.has_value())
         return nullptr;
-    return adopt(*new Bitmap(format, size, scale_factor, Purgeable::No, backing_store.value()));
+    return adopt_ref(*new Bitmap(format, size, scale_factor, Purgeable::No, backing_store.value()));
 }
 
 RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const IntSize& size, int scale_factor)
@@ -100,7 +81,7 @@ RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const IntSize& size
     auto backing_store = Bitmap::allocate_backing_store(format, size, scale_factor, Purgeable::Yes);
     if (!backing_store.has_value())
         return nullptr;
-    return adopt(*new Bitmap(format, size, scale_factor, Purgeable::Yes, backing_store.value()));
+    return adopt_ref(*new Bitmap(format, size, scale_factor, Purgeable::Yes, backing_store.value()));
 }
 
 #ifdef __serenity__
@@ -127,10 +108,10 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, Purge
     , m_format(format)
     , m_purgeable(purgeable == Purgeable::Yes)
 {
-    ASSERT(!m_size.is_empty());
-    ASSERT(!size_would_overflow(format, size, scale_factor));
-    ASSERT(m_data);
-    ASSERT(backing_store.size_in_bytes == size_in_bytes());
+    VERIFY(!m_size.is_empty());
+    VERIFY(!size_would_overflow(format, size, scale_factor));
+    VERIFY(m_data);
+    VERIFY(backing_store.size_in_bytes == size_in_bytes());
     allocate_palette_from_format(format, {});
     m_needs_munmap = true;
 }
@@ -139,10 +120,10 @@ RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const IntSize& size, 
 {
     if (size_would_overflow(format, size, scale_factor))
         return nullptr;
-    return adopt(*new Bitmap(format, size, scale_factor, pitch, data));
+    return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
 }
 
-RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path, int scale_factor)
+RefPtr<Bitmap> Bitmap::load_from_file(String const& path, int scale_factor)
 {
     if (scale_factor > 1 && path.starts_with("/res/")) {
         LexicalPath lexical_path { path };
@@ -160,8 +141,8 @@ RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path, int scale_factor)
         ENUMERATE_IMAGE_FORMATS
 #undef __ENUMERATE_IMAGE_FORMAT
         if (bmp) {
-            ASSERT(bmp->width() % scale_factor == 0);
-            ASSERT(bmp->height() % scale_factor == 0);
+            VERIFY(bmp->width() % scale_factor == 0);
+            VERIFY(bmp->height() % scale_factor == 0);
             bmp->m_size.set_width(bmp->width() / scale_factor);
             bmp->m_size.set_height(bmp->height() / scale_factor);
             bmp->m_scale = scale_factor;
@@ -185,8 +166,8 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, size_
     , m_pitch(pitch)
     , m_format(format)
 {
-    ASSERT(pitch >= minimum_pitch(size.width() * scale_factor, format));
-    ASSERT(!size_would_overflow(format, size, scale_factor));
+    VERIFY(pitch >= minimum_pitch(size.width() * scale_factor, format));
+    VERIFY(!size_would_overflow(format, size, scale_factor));
     // FIXME: assert that `data` is actually long enough!
 
     allocate_palette_from_format(format, {});
@@ -220,7 +201,7 @@ RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, con
         ScopeGuard close_guard = [&] {
             if (should_close_anon_fd == ShouldCloseAnonymousFile::Yes) {
                 int rc = close(anon_fd);
-                ASSERT(rc == 0);
+                VERIFY(rc == 0);
                 anon_fd = -1;
             }
         };
@@ -238,7 +219,7 @@ RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, con
         }
     }
 
-    return adopt(*new Bitmap(format, anon_fd, size, scale_factor, data, palette));
+    return adopt_ref(*new Bitmap(format, anon_fd, size, scale_factor, data, palette));
 }
 
 /// Read a bitmap as described by:
@@ -248,7 +229,7 @@ RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, con
 /// - scale_factor
 /// - format
 /// - palette count
-/// - palette data (= palette count * RGBA32)
+/// - palette data (= palette count * BGRA8888)
 /// - image data (= actual size * u8)
 RefPtr<Bitmap> Bitmap::create_from_serialized_byte_buffer(ByteBuffer&& buffer)
 {
@@ -270,7 +251,7 @@ RefPtr<Bitmap> Bitmap::create_from_serialized_byte_buffer(ByteBuffer&& buffer)
     if (!read(actual_size) || !read(width) || !read(height) || !read(scale_factor) || !read(format) || !read(palette_size))
         return nullptr;
 
-    if (format > BitmapFormat::RGBA32 || format < BitmapFormat::Indexed1)
+    if (format > BitmapFormat::BGRA8888 || format < BitmapFormat::Indexed1)
         return nullptr;
 
     if (!check_size({ width, height }, scale_factor, format, actual_size))
@@ -321,7 +302,7 @@ ByteBuffer Bitmap::serialize_to_byte_buffer() const
     }
 
     auto size = size_in_bytes();
-    ASSERT(stream.remaining() == size);
+    VERIFY(stream.remaining() == size);
     if (stream.write({ scanline(0), size }) != size)
         return {};
 
@@ -338,8 +319,8 @@ Bitmap::Bitmap(BitmapFormat format, int anon_fd, const IntSize& size, int scale_
     , m_purgeable(true)
     , m_anon_fd(anon_fd)
 {
-    ASSERT(!is_indexed() || !palette.is_empty());
-    ASSERT(!size_would_overflow(format, size, scale_factor));
+    VERIFY(!is_indexed() || !palette.is_empty());
+    VERIFY(!size_would_overflow(format, size, scale_factor));
 
     if (is_indexed(m_format))
         allocate_palette_from_format(m_format, palette);
@@ -358,7 +339,7 @@ RefPtr<Gfx::Bitmap> Bitmap::clone() const
         return nullptr;
     }
 
-    ASSERT(size_in_bytes() == new_bitmap->size_in_bytes());
+    VERIFY(size_in_bytes() == new_bitmap->size_in_bytes());
     memcpy(new_bitmap->scanline(0), scanline(0), size_in_bytes());
 
     return new_bitmap;
@@ -428,27 +409,27 @@ Bitmap::~Bitmap()
 {
     if (m_needs_munmap) {
         int rc = munmap(m_data, size_in_bytes());
-        ASSERT(rc == 0);
+        VERIFY(rc == 0);
     }
     if (m_anon_fd != -1) {
         int rc = close(m_anon_fd);
-        ASSERT(rc == 0);
+        VERIFY(rc == 0);
     }
     m_data = nullptr;
     delete[] m_palette;
 }
 
-void Bitmap::set_mmap_name([[maybe_unused]] const StringView& name)
+void Bitmap::set_mmap_name([[maybe_unused]] String const& name)
 {
-    ASSERT(m_needs_munmap);
+    VERIFY(m_needs_munmap);
 #ifdef __serenity__
-    ::set_mmap_name(m_data, size_in_bytes(), name.to_string().characters());
+    ::set_mmap_name(m_data, size_in_bytes(), name.characters());
 #endif
 }
 
 void Bitmap::fill(Color color)
 {
-    ASSERT(!is_indexed(m_format));
+    VERIFY(!is_indexed(m_format));
     for (int y = 0; y < physical_height(); ++y) {
         auto* scanline = this->scanline(y);
         fast_u32_fill(scanline, color.value(), physical_width());
@@ -457,14 +438,14 @@ void Bitmap::fill(Color color)
 
 void Bitmap::set_volatile()
 {
-    ASSERT(m_purgeable);
+    VERIFY(m_purgeable);
     if (m_volatile)
         return;
 #ifdef __serenity__
     int rc = madvise(m_data, size_in_bytes(), MADV_SET_VOLATILE);
     if (rc < 0) {
         perror("madvise(MADV_SET_VOLATILE)");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 #endif
     m_volatile = true;
@@ -472,14 +453,14 @@ void Bitmap::set_volatile()
 
 [[nodiscard]] bool Bitmap::set_nonvolatile()
 {
-    ASSERT(m_purgeable);
+    VERIFY(m_purgeable);
     if (!m_volatile)
         return true;
 #ifdef __serenity__
     int rc = madvise(m_data, size_in_bytes(), MADV_SET_NONVOLATILE);
     if (rc < 0) {
         perror("madvise(MADV_SET_NONVOLATILE)");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 #else
     int rc = 0;
@@ -510,7 +491,7 @@ Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const
     if (purgeable == Purgeable::Yes)
         map_flags |= MAP_NORESERVE;
 #ifdef __serenity__
-    void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", size.width(), size.height()).characters());
+    void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, String::formatted("GraphicsBitmap [{}]", size).characters());
 #else
     void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0);
 #endif
@@ -528,7 +509,7 @@ void Bitmap::allocate_palette_from_format(BitmapFormat format, const Vector<RGBA
         return;
     m_palette = new RGBA32[size];
     if (!source_palette.is_empty()) {
-        ASSERT(source_palette.size() == size);
+        VERIFY(source_palette.size() == size);
         memcpy(m_palette, source_palette.data(), size * sizeof(RGBA32));
     }
 }

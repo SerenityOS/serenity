@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -57,7 +37,7 @@ inline WriterBehaviour operator|(WriterBehaviour left, WriterBehaviour right)
 struct WriterTraits {
     String separator;
     String quote { "\"" };
-    enum {
+    enum QuoteEscape {
         Repeat,
         Backslash,
     } quote_escape { Repeat };
@@ -74,15 +54,15 @@ enum class WriteError {
 #undef E
 };
 
-inline constexpr WriterBehaviour default_behaviours()
+constexpr WriterBehaviour default_behaviours()
 {
     return WriterBehaviour::None;
 }
 
-template<typename ContainerType>
+template<typename ContainerType, typename HeaderType = Vector<StringView>>
 class XSV {
 public:
-    XSV(OutputStream& output, const ContainerType& data, const WriterTraits& traits, const Vector<StringView>& headers = {}, WriterBehaviour behaviours = default_behaviours())
+    XSV(OutputStream& output, const ContainerType& data, const WriterTraits& traits, const HeaderType& headers = {}, WriterBehaviour behaviours = default_behaviours())
         : m_data(data)
         , m_traits(traits)
         , m_behaviours(behaviours)
@@ -109,7 +89,7 @@ public:
             ENUMERATE_WRITE_ERRORS();
 #undef E
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
 private:
@@ -159,13 +139,17 @@ private:
     {
         auto string = String::formatted("{}", FormatIfSupported(entry));
 
-        auto safe_to_write_normally = !string.contains("\n") && !string.contains(m_traits.separator);
+        auto safe_to_write_normally = (m_behaviours & WriterBehaviour::QuoteAll) == WriterBehaviour::None
+            && !string.contains("\n")
+            && !string.contains(m_traits.separator);
+
         if (safe_to_write_normally) {
             if ((m_behaviours & WriterBehaviour::QuoteOnlyInFieldStart) == WriterBehaviour::None)
                 safe_to_write_normally = !string.contains(m_traits.quote);
             else
                 safe_to_write_normally = !string.starts_with(m_traits.quote);
         }
+
         if (safe_to_write_normally) {
             if (m_output.write(string.bytes()) != string.length())
                 set_error(WriteError::InternalError);
@@ -207,7 +191,7 @@ private:
     const ContainerType& m_data;
     const WriterTraits& m_traits;
     WriterBehaviour m_behaviours;
-    const Vector<StringView>& m_names;
+    const HeaderType& m_names;
     WriteError m_error { WriteError::None };
     OutputStream& m_output;
 };

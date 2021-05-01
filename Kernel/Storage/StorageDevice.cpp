@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Memory.h>
@@ -29,10 +9,18 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Storage/StorageDevice.h>
+#include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {
 
-StorageDevice::StorageDevice(const StorageController& controller, int major, int minor, size_t sector_size, size_t max_addressable_block)
+StorageDevice::StorageDevice(const StorageController& controller, size_t sector_size, u64 max_addressable_block)
+    : BlockDevice(StorageManagement::major_number(), StorageManagement::minor_number(), sector_size)
+    , m_storage_controller(controller)
+    , m_max_addressable_block(max_addressable_block)
+{
+}
+
+StorageDevice::StorageDevice(const StorageController& controller, int major, int minor, size_t sector_size, u64 max_addressable_block)
     : BlockDevice(major, minor, sector_size)
     , m_storage_controller(controller)
     , m_max_addressable_block(max_addressable_block)
@@ -49,7 +37,7 @@ NonnullRefPtr<StorageController> StorageDevice::controller() const
     return m_storage_controller;
 }
 
-KResultOr<size_t> StorageDevice::read(FileDescription&, size_t offset, UserOrKernelBuffer& outbuf, size_t len)
+KResultOr<size_t> StorageDevice::read(FileDescription&, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
@@ -64,9 +52,7 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, size_t offset, UserOrKer
         remaining = 0;
     }
 
-#if STORAGE_DEVICE_DEBUG
-    klog() << "StorageDevice::read() index=" << index << " whole_blocks=" << whole_blocks << " remaining=" << remaining;
-#endif
+    dbgln_if(STORAGE_DEVICE_DEBUG, "StorageDevice::read() index={}, whole_blocks={}, remaining={}", index, whole_blocks, remaining);
 
     if (whole_blocks > 0) {
         auto read_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index, whole_blocks, outbuf, whole_blocks * block_size());
@@ -100,7 +86,7 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, size_t offset, UserOrKer
             return EIO;
         case AsyncDeviceRequest::MemoryFault:
             // This should never happen, we're writing to a kernel buffer!
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         default:
             break;
         }
@@ -116,7 +102,7 @@ bool StorageDevice::can_read(const FileDescription&, size_t offset) const
     return offset < (max_addressable_block() * block_size());
 }
 
-KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const UserOrKernelBuffer& inbuf, size_t len)
+KResultOr<size_t> StorageDevice::write(FileDescription&, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
@@ -131,9 +117,7 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const Us
         remaining = 0;
     }
 
-#if STORAGE_DEVICE_DEBUG
-    klog() << "StorageDevice::write() index=" << index << " whole_blocks=" << whole_blocks << " remaining=" << remaining;
-#endif
+    dbgln_if(STORAGE_DEVICE_DEBUG, "StorageDevice::write() index={}, whole_blocks={}, remaining={}", index, whole_blocks, remaining);
 
     if (whole_blocks > 0) {
         auto write_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index, whole_blocks, inbuf, whole_blocks * block_size());
@@ -172,7 +156,7 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const Us
                 return EIO;
             case AsyncDeviceRequest::MemoryFault:
                 // This should never happen, we're writing to a kernel buffer!
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             default:
                 break;
             }
@@ -193,7 +177,7 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, size_t offset, const Us
                 return EIO;
             case AsyncDeviceRequest::MemoryFault:
                 // This should never happen, we're writing to a kernel buffer!
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             default:
                 break;
             }

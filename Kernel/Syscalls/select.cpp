@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ScopeGuard.h>
@@ -32,23 +12,25 @@
 
 namespace Kernel {
 
-int Process::sys$select(const Syscall::SC_select_params* user_params)
+using BlockFlags = Thread::FileBlocker::BlockFlags;
+
+KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
-    Syscall::SC_select_params params;
+    Syscall::SC_select_params params {};
 
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
 
     if (params.nfds < 0)
-        return -EINVAL;
+        return EINVAL;
 
     Thread::BlockTimeout timeout;
     if (params.timeout) {
-        timespec timeout_copy;
-        if (!copy_from_user(&timeout_copy, params.timeout))
-            return -EFAULT;
-        timeout = Thread::BlockTimeout(false, &timeout_copy);
+        Optional<Time> timeout_time = copy_time_from_user(params.timeout);
+        if (!timeout_time.has_value())
+            return EFAULT;
+        timeout = Thread::BlockTimeout(false, &timeout_time.value());
     }
 
     auto current_thread = Thread::current();
@@ -57,7 +39,7 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
     if (params.sigmask) {
         sigset_t sigmask_copy;
         if (!copy_from_user(&sigmask_copy, params.sigmask))
-            return -EFAULT;
+            return EFAULT;
         previous_signal_mask = current_thread->update_signal_mask(sigmask_copy);
     }
     ScopeGuard rollback_signal_mask([&]() {
@@ -66,41 +48,48 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
     });
 
     fd_set fds_read, fds_write, fds_except;
-    if (params.readfds && !copy_from_user(&fds_read, params.readfds))
-        return -EFAULT;
-    if (params.writefds && !copy_from_user(&fds_write, params.writefds))
-        return -EFAULT;
-    if (params.exceptfds && !copy_from_user(&fds_except, params.exceptfds))
-        return -EFAULT;
+
+    size_t bytes_used = ceil_div(params.nfds, 8);
+    if (bytes_used > sizeof(fds_read))
+        return EINVAL;
+
+    if (params.readfds && !copy_from_user(&fds_read, params.readfds, bytes_used))
+        return EFAULT;
+    if (params.writefds && !copy_from_user(&fds_write, params.writefds, bytes_used))
+        return EFAULT;
+    if (params.exceptfds && !copy_from_user(&fds_except, params.exceptfds, bytes_used))
+        return EFAULT;
 
     Thread::SelectBlocker::FDVector fds_info;
-    Vector<int> fds;
+    Vector<int, FD_SETSIZE> fds;
     for (int fd = 0; fd < params.nfds; fd++) {
-        u32 block_flags = (u32)Thread::FileBlocker::BlockFlags::None;
+        auto block_flags = BlockFlags::None;
         if (params.readfds && FD_ISSET(fd, &fds_read))
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::Read;
+            block_flags |= BlockFlags::Read;
         if (params.writefds && FD_ISSET(fd, &fds_write))
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::Write;
+            block_flags |= BlockFlags::Write;
         if (params.exceptfds && FD_ISSET(fd, &fds_except))
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::Exception;
-        if (block_flags == (u32)Thread::FileBlocker::BlockFlags::None)
+            block_flags |= BlockFlags::Exception;
+        if (block_flags == BlockFlags::None)
             continue;
 
         auto description = file_description(fd);
         if (!description) {
             dbgln("sys$select: Bad fd number {}", fd);
-            return -EBADF;
+            return EBADF;
         }
-        fds_info.append({ description.release_nonnull(), (Thread::FileBlocker::BlockFlags)block_flags });
-        fds.append(fd);
+        if (!fds_info.try_append({ description.release_nonnull(), block_flags }))
+            return ENOMEM;
+        if (!fds.try_append(fd))
+            return ENOMEM;
     }
 
     if constexpr (IO_DEBUG || POLL_SELECT_DEBUG)
         dbgln("selecting on {} fds, timeout={}", fds_info.size(), params.timeout);
 
     if (current_thread->block<Thread::SelectBlocker>(timeout, fds_info).was_interrupted()) {
-        dbgln<POLL_SELECT_DEBUG>("select was interrupted");
-        return -EINTR;
+        dbgln_if(POLL_SELECT_DEBUG, "select was interrupted");
+        return EINTR;
     }
 
     if (params.readfds)
@@ -113,61 +102,64 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
     int marked_fd_count = 0;
     for (size_t i = 0; i < fds_info.size(); i++) {
         auto& fd_entry = fds_info[i];
-        if (fd_entry.unblocked_flags == Thread::FileBlocker::BlockFlags::None)
+        if (fd_entry.unblocked_flags == BlockFlags::None)
             continue;
-        if (params.readfds && ((u32)fd_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Read)) {
+        if (params.readfds && has_flag(fd_entry.unblocked_flags, BlockFlags::Read)) {
             FD_SET(fds[i], &fds_read);
             marked_fd_count++;
         }
-        if (params.writefds && ((u32)fd_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Write)) {
+        if (params.writefds && has_flag(fd_entry.unblocked_flags, BlockFlags::Write)) {
             FD_SET(fds[i], &fds_write);
             marked_fd_count++;
         }
-        if (params.exceptfds && ((u32)fd_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Exception)) {
+        if (params.exceptfds && has_flag(fd_entry.unblocked_flags, BlockFlags::Exception)) {
             FD_SET(fds[i], &fds_except);
             marked_fd_count++;
         }
     }
 
-    if (params.readfds && !copy_to_user(params.readfds, &fds_read))
-        return -EFAULT;
-    if (params.writefds && !copy_to_user(params.writefds, &fds_write))
-        return -EFAULT;
-    if (params.exceptfds && !copy_to_user(params.exceptfds, &fds_except))
-        return -EFAULT;
+    if (params.readfds && !copy_to_user(params.readfds, &fds_read, bytes_used))
+        return EFAULT;
+    if (params.writefds && !copy_to_user(params.writefds, &fds_write, bytes_used))
+        return EFAULT;
+    if (params.exceptfds && !copy_to_user(params.exceptfds, &fds_except, bytes_used))
+        return EFAULT;
     return marked_fd_count;
 }
 
-int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
+KResultOr<int> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
-    // FIXME: Return -EINVAL if timeout is invalid.
     Syscall::SC_poll_params params;
     if (!copy_from_user(&params, user_params))
-        return -EFAULT;
+        return EFAULT;
+
+    if (params.nfds >= m_max_open_file_descriptors)
+        return ENOBUFS;
 
     Thread::BlockTimeout timeout;
     if (params.timeout) {
-        timespec timeout_copy;
-        if (!copy_from_user(&timeout_copy, params.timeout))
-            return -EFAULT;
-        timeout = Thread::BlockTimeout(false, &timeout_copy);
+        auto timeout_time = copy_time_from_user(params.timeout);
+        if (!timeout_time.has_value())
+            return EFAULT;
+        timeout = Thread::BlockTimeout(false, &timeout_time.value());
     }
 
     sigset_t sigmask = {};
     if (params.sigmask && !copy_from_user(&sigmask, params.sigmask))
-        return -EFAULT;
+        return EFAULT;
 
     Vector<pollfd> fds_copy;
     if (params.nfds > 0) {
         Checked nfds_checked = sizeof(pollfd);
         nfds_checked *= params.nfds;
         if (nfds_checked.has_overflow())
-            return -EFAULT;
-        fds_copy.resize(params.nfds);
-        if (!copy_from_user(&fds_copy[0], &params.fds[0], params.nfds * sizeof(pollfd)))
-            return -EFAULT;
+            return EFAULT;
+        if (!fds_copy.try_resize(params.nfds))
+            return ENOMEM;
+        if (!copy_from_user(fds_copy.data(), &params.fds[0], nfds_checked.value()))
+            return EFAULT;
     }
 
     Thread::SelectBlocker::FDVector fds_info;
@@ -176,16 +168,17 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
         auto description = file_description(pfd.fd);
         if (!description) {
             dbgln("sys$poll: Bad fd number {}", pfd.fd);
-            return -EBADF;
+            return EBADF;
         }
-        u32 block_flags = (u32)Thread::FileBlocker::BlockFlags::Exception; // always want POLLERR, POLLHUP, POLLNVAL
+        BlockFlags block_flags = BlockFlags::Exception; // always want POLLERR, POLLHUP, POLLNVAL
         if (pfd.events & POLLIN)
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::Read;
+            block_flags |= BlockFlags::Read;
         if (pfd.events & POLLOUT)
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::Write;
+            block_flags |= BlockFlags::Write;
         if (pfd.events & POLLPRI)
-            block_flags |= (u32)Thread::FileBlocker::BlockFlags::ReadPriority;
-        fds_info.append({ description.release_nonnull(), (Thread::FileBlocker::BlockFlags)block_flags });
+            block_flags |= BlockFlags::ReadPriority;
+        if (!fds_info.try_append({ description.release_nonnull(), block_flags }))
+            return ENOMEM;
     }
 
     auto current_thread = Thread::current();
@@ -202,7 +195,7 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
         dbgln("polling on {} fds, timeout={}", fds_info.size(), params.timeout);
 
     if (current_thread->block<Thread::SelectBlocker>(timeout, fds_info).was_interrupted())
-        return -EINTR;
+        return EINTR;
 
     int fds_with_revents = 0;
 
@@ -211,27 +204,27 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
         auto& fds_entry = fds_info[i];
 
         pfd.revents = 0;
-        if (fds_entry.unblocked_flags == Thread::FileBlocker::BlockFlags::None)
+        if (fds_entry.unblocked_flags == BlockFlags::None)
             continue;
 
-        if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Exception) {
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::ReadHangUp)
+        if (has_flag(fds_entry.unblocked_flags, BlockFlags::Exception)) {
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::ReadHangUp))
                 pfd.revents |= POLLRDHUP;
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::WriteError)
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteError))
                 pfd.revents |= POLLERR;
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::WriteHangUp)
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteHangUp))
                 pfd.revents |= POLLNVAL;
         } else {
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Read) {
-                ASSERT(pfd.events & POLLIN);
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::Read)) {
+                VERIFY(pfd.events & POLLIN);
                 pfd.revents |= POLLIN;
             }
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::ReadPriority) {
-                ASSERT(pfd.events & POLLPRI);
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::ReadPriority)) {
+                VERIFY(pfd.events & POLLPRI);
                 pfd.revents |= POLLPRI;
             }
-            if ((u32)fds_entry.unblocked_flags & (u32)Thread::FileBlocker::BlockFlags::Write) {
-                ASSERT(pfd.events & POLLOUT);
+            if (has_flag(fds_entry.unblocked_flags, BlockFlags::Write)) {
+                VERIFY(pfd.events & POLLOUT);
                 pfd.revents |= POLLOUT;
             }
         }
@@ -239,8 +232,8 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
             fds_with_revents++;
     }
 
-    if (params.nfds > 0 && !copy_to_user(&params.fds[0], &fds_copy[0], params.nfds * sizeof(pollfd)))
-        return -EFAULT;
+    if (params.nfds > 0 && !copy_to_user(&params.fds[0], fds_copy.data(), params.nfds * sizeof(pollfd)))
+        return EFAULT;
 
     return fds_with_revents;
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -45,6 +25,10 @@ public:
     void set_section_size(int section, int size);
     int section_size(int section) const;
 
+    void set_default_section_size(int section, int size);
+    int default_section_size(int section) const;
+    bool is_default_section_size_initialized(int section) const;
+
     Gfx::TextAlignment section_alignment(int section) const;
     void set_section_alignment(int section, Gfx::TextAlignment);
 
@@ -54,6 +38,8 @@ public:
     int section_count() const;
     Gfx::IntRect section_rect(int section) const;
 
+    Function<void(int section)> on_resize_doubleclick;
+
 private:
     HeaderView(AbstractTableView&, Gfx::Orientation);
 
@@ -61,6 +47,7 @@ private:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
+    virtual void doubleclick_event(MouseEvent&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
     virtual void leave_event(Core::Event&) override;
 
@@ -78,7 +65,9 @@ private:
 
     struct SectionData {
         int size { 0 };
+        int default_size { 0 };
         bool has_initialized_size { false };
+        bool has_initialized_default_size { false };
         bool visibility { true };
         RefPtr<Action> visibility_action;
         Gfx::TextAlignment alignment { Gfx::TextAlignment::CenterLeft };

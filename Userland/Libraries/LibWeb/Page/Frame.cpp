@@ -1,37 +1,20 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/HTMLCollection.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Layout/WidgetBox.h>
 #include <LibWeb/Page/Frame.h>
+#include <LibWeb/UIEvents/EventNames.h>
 
 namespace Web {
 
@@ -72,8 +55,11 @@ void Frame::setup()
 
 void Frame::did_edit(Badge<EditEventHandler>)
 {
-    // The user has edited the content, restart the cursor blink cycle so that
-    // the cursor doesn't disappear during rapid continuous editing.
+    reset_cursor_blink_cycle();
+}
+
+void Frame::reset_cursor_blink_cycle()
+{
     m_cursor_blink_state = true;
     m_cursor_blink_timer->restart();
 }
@@ -97,7 +83,7 @@ void Frame::set_document(DOM::Document* document)
 
     if (m_document) {
         m_document->attach_to_frame({}, *this);
-        if (m_page)
+        if (m_page && is_main_frame())
             m_page->client().page_did_change_title(m_document->title());
     }
 
@@ -105,13 +91,39 @@ void Frame::set_document(DOM::Document* document)
         m_page->client().page_did_set_document_in_main_frame(m_document);
 }
 
+void Frame::set_viewport_rect(const Gfx::IntRect& rect)
+{
+    bool did_change = false;
+
+    if (m_size != rect.size()) {
+        m_size = rect.size();
+        if (m_document) {
+            m_document->window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
+            m_document->update_layout();
+        }
+        did_change = true;
+    }
+
+    if (m_viewport_scroll_offset != rect.location()) {
+        m_viewport_scroll_offset = rect.location();
+        did_change = true;
+    }
+
+    if (did_change) {
+        for (auto* client : m_viewport_clients)
+            client->frame_did_set_viewport_rect(rect);
+    }
+}
+
 void Frame::set_size(const Gfx::IntSize& size)
 {
     if (m_size == size)
         return;
     m_size = size;
-    if (m_document)
+    if (m_document) {
+        m_document->window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
         m_document->update_layout();
+    }
 
     for (auto* client : m_viewport_clients)
         client->frame_did_set_viewport_rect(viewport_rect());
@@ -142,18 +154,6 @@ void Frame::set_needs_display(const Gfx::IntRect& rect)
         host_element()->layout_node()->set_needs_display();
 }
 
-void Frame::did_scroll(Badge<InProcessWebView>)
-{
-    if (!m_document)
-        return;
-    if (!m_document->layout_node())
-        return;
-    m_document->layout_node()->for_each_in_subtree_of_type<Layout::WidgetBox>([&](auto& layout_widget) {
-        layout_widget.update_widget();
-        return IterationDecision::Continue;
-    });
-}
-
 void Frame::scroll_to_anchor(const String& fragment)
 {
     if (!document())
@@ -162,9 +162,9 @@ void Frame::scroll_to_anchor(const String& fragment)
     auto element = document()->get_element_by_id(fragment);
     if (!element) {
         auto candidates = document()->get_elements_by_name(fragment);
-        for (auto& candidate : candidates) {
-            if (is<HTML::HTMLAnchorElement>(candidate)) {
-                element = downcast<HTML::HTMLAnchorElement>(candidate);
+        for (auto& candidate : candidates->collect_matching_elements()) {
+            if (is<HTML::HTMLAnchorElement>(*candidate)) {
+                element = downcast<HTML::HTMLAnchorElement>(*candidate);
                 break;
             }
         }
@@ -211,7 +211,7 @@ Gfx::IntPoint Frame::to_main_frame_position(const Gfx::IntPoint& a_position)
     return position;
 }
 
-void Frame::set_cursor_position(const DOM::Position& position)
+void Frame::set_cursor_position(DOM::Position position)
 {
     if (m_cursor_position == position)
         return;
@@ -219,12 +219,12 @@ void Frame::set_cursor_position(const DOM::Position& position)
     if (m_cursor_position.node() && m_cursor_position.node()->layout_node())
         m_cursor_position.node()->layout_node()->set_needs_display();
 
-    m_cursor_position = position;
+    m_cursor_position = move(position);
 
     if (m_cursor_position.node() && m_cursor_position.node()->layout_node())
         m_cursor_position.node()->layout_node()->set_needs_display();
 
-    dbgln("Cursor position: {}", m_cursor_position);
+    reset_cursor_blink_cycle();
 }
 
 String Frame::selected_text() const
@@ -265,7 +265,7 @@ String Frame::selected_text() const
     }
 
     // End node
-    ASSERT(layout_node == selection.end().layout_node);
+    VERIFY(layout_node == selection.end().layout_node);
     if (is<Layout::TextNode>(*layout_node)) {
         auto& text = downcast<Layout::TextNode>(*layout_node).text_for_rendering();
         builder.append(text.substring(0, selection.end().index_in_node));
@@ -277,13 +277,13 @@ String Frame::selected_text() const
 void Frame::register_viewport_client(ViewportClient& client)
 {
     auto result = m_viewport_clients.set(&client);
-    ASSERT(result == AK::HashSetResult::InsertedNewEntry);
+    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 }
 
 void Frame::unregister_viewport_client(ViewportClient& client)
 {
     bool was_removed = m_viewport_clients.remove(&client);
-    ASSERT(was_removed);
+    VERIFY(was_removed);
 }
 
 }

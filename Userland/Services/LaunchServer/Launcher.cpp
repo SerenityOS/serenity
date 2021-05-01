@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Nicholas Hollett <niax@niax.co.uk>, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Launcher.h"
@@ -41,7 +21,7 @@
 namespace LaunchServer {
 
 static Launcher* s_the;
-static bool spawn(String executable, String argument);
+static bool spawn(String executable, const Vector<String>& arguments);
 
 String Handler::name_from_executable(const StringView& executable)
 {
@@ -85,13 +65,13 @@ String Handler::to_details_str() const
 
 Launcher::Launcher()
 {
-    ASSERT(s_the == nullptr);
+    VERIFY(s_the == nullptr);
     s_the = this;
 }
 
 Launcher& Launcher::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
@@ -176,7 +156,7 @@ bool Launcher::open_url(const URL& url, const String& handler_name)
     if (url.protocol() == "file")
         return open_file_url(url);
 
-    return open_with_user_preferences(m_protocol_handlers, url.protocol(), url.to_string());
+    return open_with_user_preferences(m_protocol_handlers, url.protocol(), { url.to_string() });
 }
 
 bool Launcher::open_with_handler_name(const URL& url, const String& handler_name)
@@ -191,14 +171,18 @@ bool Launcher::open_with_handler_name(const URL& url, const String& handler_name
         argument = url.path();
     else
         argument = url.to_string();
-    return spawn(handler.executable, argument);
+    return spawn(handler.executable, { argument });
 }
 
-bool spawn(String executable, String argument)
+bool spawn(String executable, const Vector<String>& arguments)
 {
+    Vector<const char*> argv { executable.characters() };
+    for (auto& arg : arguments)
+        argv.append(arg.characters());
+    argv.append(nullptr);
+
     pid_t child_pid;
-    const char* argv[] = { executable.characters(), argument.characters(), nullptr };
-    if ((errno = posix_spawn(&child_pid, executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
+    if ((errno = posix_spawn(&child_pid, executable.characters(), nullptr, nullptr, const_cast<char**>(argv.data()), environ))) {
         perror("posix_spawn");
         return false;
     } else {
@@ -221,20 +205,20 @@ Handler Launcher::get_handler_for_executable(Handler::Type handler_type, const S
     return handler;
 }
 
-bool Launcher::open_with_user_preferences(const HashMap<String, String>& user_preferences, const String key, const String argument, const String default_program)
+bool Launcher::open_with_user_preferences(const HashMap<String, String>& user_preferences, const String& key, const Vector<String>& arguments, const String& default_program)
 {
     auto program_path = user_preferences.get(key);
     if (program_path.has_value())
-        return spawn(program_path.value(), argument);
+        return spawn(program_path.value(), arguments);
 
     // There wasn't a handler for this, so try the fallback instead
     program_path = user_preferences.get("*");
     if (program_path.has_value())
-        return spawn(program_path.value(), argument);
+        return spawn(program_path.value(), arguments);
 
     // Absolute worst case, try the provided default program, if any
     if (!default_program.is_empty())
-        return spawn(default_program, argument);
+        return spawn(default_program, arguments);
 
     return false;
 }
@@ -294,8 +278,17 @@ bool Launcher::open_file_url(const URL& url)
     }
 
     // TODO: Make directory opening configurable
-    if (S_ISDIR(st.st_mode))
-        return spawn("/bin/FileManager", url.path());
+    if (S_ISDIR(st.st_mode)) {
+        Vector<String> fm_arguments;
+        if (url.fragment().is_empty()) {
+            fm_arguments.append(url.path());
+        } else {
+            fm_arguments.append("-s");
+            fm_arguments.append("-r");
+            fm_arguments.append(String::formatted("{}/{}", url.path(), url.fragment()));
+        }
+        return spawn("/bin/FileManager", fm_arguments);
+    }
 
     if ((st.st_mode & S_IFMT) == S_IFREG && st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
         return spawn(url.path(), {});
@@ -304,6 +297,19 @@ bool Launcher::open_file_url(const URL& url)
     String extension = {};
     if (extension_parts.size() > 1)
         extension = extension_parts.last();
-    return open_with_user_preferences(m_file_handlers, extension, url.path(), "/bin/TextEditor");
+
+    // Additional parameters parsing, specific for the file protocol and TextEditor
+    Vector<String> additional_parameters;
+    additional_parameters.append(url.path());
+    auto parameters = url.query().split('&');
+    for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter) {
+        auto pair = parameter->split('=');
+        if (pair.size() == 2 && pair[0] == "line_number") {
+            auto line = pair[1].to_int();
+            if (line.has_value())
+                additional_parameters.prepend(String::formatted("-l {}", line.value()));
+        }
+    }
+    return open_with_user_preferences(m_file_handlers, extension, additional_parameters, "/bin/TextEditor");
 }
 }

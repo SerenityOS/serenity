@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -33,6 +13,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Rect.h>
+#include <WindowServer/Cursor.h>
 #include <WindowServer/WindowFrame.h>
 #include <WindowServer/WindowType.h>
 
@@ -40,7 +21,9 @@ namespace WindowServer {
 
 class ClientConnection;
 class Cursor;
+class KeyEvent;
 class Menu;
+class Menubar;
 class MenuItem;
 class MouseEvent;
 
@@ -68,6 +51,13 @@ enum class PopupMenuItem {
     Maximize,
 };
 
+enum class WindowMenuAction {
+    MinimizeOrUnminimize = 0,
+    MaximizeOrRestore,
+    ToggleMenubarVisibility,
+    Close,
+};
+
 enum class WindowMenuDefaultAction {
     None = 0,
     BasedOnWindowState,
@@ -87,16 +77,14 @@ public:
     virtual ~Window() override;
 
     void popup_window_menu(const Gfx::IntPoint&, WindowMenuDefaultAction);
+    void handle_window_menu_action(WindowMenuAction);
     void window_menu_activate_default();
     void request_close();
-
-    unsigned wm_event_mask() const { return m_wm_event_mask; }
-    void set_wm_event_mask(unsigned mask) { m_wm_event_mask = mask; }
 
     bool is_minimized() const { return m_minimized; }
     void set_minimized(bool);
 
-    bool is_minimizable() const { return m_minimizable; }
+    bool is_minimizable() const { return m_type == WindowType::Normal && m_minimizable; }
     void set_minimizable(bool);
 
     bool is_resizable() const { return m_resizable && !m_fullscreen; }
@@ -105,27 +93,27 @@ public:
     bool is_maximized() const { return m_maximized; }
     void set_maximized(bool, Optional<Gfx::IntPoint> fixed_point = {});
 
+    void set_vertically_maximized();
+
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
 
     WindowTileType tiled() const { return m_tiled; }
     void set_tiled(WindowTileType);
-    bool set_untiled(const Gfx::IntPoint& fixed_point);
+    bool set_untiled(Optional<Gfx::IntPoint> fixed_point = {});
 
     bool is_occluded() const { return m_occluded; }
     void set_occluded(bool);
 
     bool is_movable() const
     {
-        return m_type == WindowType::Normal;
+        return m_type == WindowType::Normal || m_type == WindowType::ToolWindow;
     }
 
     WindowFrame& frame() { return m_frame; }
     const WindowFrame& frame() const { return m_frame; }
 
     Window* blocking_modal_window();
-
-    bool listens_to_wm_events() const { return m_listens_to_wm_events; }
 
     ClientConnection* client() { return m_client; }
     const ClientConnection* client() const { return m_client; }
@@ -141,6 +129,17 @@ public:
 
     float opacity() const { return m_opacity; }
     void set_opacity(float);
+
+    void set_hit_testing_enabled(bool value)
+    {
+        m_hit_testing_enabled = value;
+    }
+    float alpha_hit_threshold() const { return m_alpha_hit_threshold; }
+    void set_alpha_hit_threshold(float threshold)
+    {
+        m_alpha_hit_threshold = threshold;
+    }
+    bool hit_test(const Gfx::IntPoint&, bool include_frame = true) const;
 
     int x() const { return m_rect.x(); }
     int y() const { return m_rect.y(); }
@@ -159,8 +158,12 @@ public:
     void set_rect(const Gfx::IntRect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(const Gfx::IntRect&);
-    void apply_minimum_size(Gfx::IntRect&);
+    bool apply_minimum_size(Gfx::IntRect&);
     void nudge_into_desktop(bool force_titlebar_visible = true);
+
+    Gfx::IntSize minimum_size() const { return m_minimum_size; }
+    void set_minimum_size(const Gfx::IntSize&);
+    void set_minimum_size(int width, int height) { set_minimum_size({ width, height }); }
 
     void set_taskbar_rect(const Gfx::IntRect&);
     const Gfx::IntRect& taskbar_rect() const { return m_taskbar_rect; }
@@ -176,19 +179,20 @@ public:
 
     Gfx::IntSize size() const { return m_rect.size(); }
 
-    void invalidate(bool with_frame = true);
+    void invalidate(bool with_frame = true, bool re_render_frame = false);
     void invalidate(const Gfx::IntRect&, bool with_frame = false);
+    void invalidate_menubar();
     bool invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame = false);
+
+    void refresh_client_size();
 
     void prepare_dirty_rects();
     void clear_dirty_rects();
     Gfx::DisjointRectSet& dirty_rects() { return m_dirty_rects; }
 
-    virtual void event(Core::Event&) override;
-
-    // Only used by WindowType::MenuApplet. Perhaps it could be a Window subclass? I don't know.
-    void set_rect_in_menubar(const Gfx::IntRect& rect) { m_rect_in_menubar = rect; }
-    const Gfx::IntRect& rect_in_menubar() const { return m_rect_in_menubar; }
+    // Only used by WindowType::Applet. Perhaps it could be a Window subclass? I don't know.
+    void set_rect_in_applet_area(const Gfx::IntRect& rect) { m_rect_in_applet_area = rect; }
+    const Gfx::IntRect& rect_in_applet_area() const { return m_rect_in_applet_area; }
 
     const Gfx::Bitmap* backing_store() const { return m_backing_store.ptr(); }
     Gfx::Bitmap* backing_store() { return m_backing_store.ptr(); }
@@ -216,7 +220,7 @@ public:
     bool global_cursor_tracking() const { return m_global_cursor_tracking_enabled || m_automatic_cursor_tracking_enabled; }
 
     bool has_alpha_channel() const { return m_has_alpha_channel; }
-    void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
+    void set_has_alpha_channel(bool value);
 
     Gfx::IntSize size_increment() const { return m_size_increment; }
     void set_size_increment(const Gfx::IntSize& increment) { m_size_increment = increment; }
@@ -241,8 +245,10 @@ public:
 
     void set_default_icon();
 
-    const Cursor* cursor() const { return m_cursor.ptr(); }
+    const Cursor* cursor() const { return (m_cursor_override ? m_cursor_override : m_cursor).ptr(); }
     void set_cursor(RefPtr<Cursor> cursor) { m_cursor = move(cursor); }
+    void set_cursor_override(RefPtr<Cursor> cursor) { m_cursor_override = move(cursor); }
+    void remove_cursor_override() { m_cursor_override = nullptr; }
 
     void request_update(const Gfx::IntRect&, bool ignore_occlusion = false);
     Gfx::DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
@@ -281,8 +287,10 @@ public:
     bool is_accessory() const;
     bool is_accessory_of(Window&) const;
 
-    void set_frameless(bool frameless) { m_frameless = frameless; }
+    void set_frameless(bool);
     bool is_frameless() const { return m_frameless; }
+
+    bool should_show_menubar() const { return m_should_show_menubar; }
 
     int progress() const { return m_progress; }
     void set_progress(int);
@@ -308,8 +316,14 @@ public:
     Gfx::DisjointRectSet& transparency_rects() { return m_transparency_rects; }
     Gfx::DisjointRectSet& transparency_wallpaper_rects() { return m_transparency_wallpaper_rects; }
 
+    Menubar* menubar() { return m_menubar; }
+    const Menubar* menubar() const { return m_menubar; }
+    void set_menubar(Menubar*);
+
 private:
+    virtual void event(Core::Event&) override;
     void handle_mouse_event(const MouseEvent&);
+    void handle_keydown_event(const KeyEvent&);
     void update_menu_item_text(PopupMenuItem item);
     void update_menu_item_enabled(PopupMenuItem item);
     void add_child_window(Window&);
@@ -322,6 +336,8 @@ private:
     WeakPtr<Window> m_parent_window;
     Vector<WeakPtr<Window>> m_child_windows;
     Vector<WeakPtr<Window>> m_accessory_windows;
+
+    RefPtr<Menubar> m_menubar;
 
     String m_title;
     Gfx::IntRect m_rect;
@@ -341,7 +357,6 @@ private:
     bool m_frameless { false };
     bool m_resizable { false };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
-    bool m_listens_to_wm_events { false };
     bool m_minimized { false };
     bool m_maximized { false };
     bool m_fullscreen { false };
@@ -352,6 +367,7 @@ private:
     bool m_invalidated { true };
     bool m_invalidated_all { true };
     bool m_invalidated_frame { true };
+    bool m_hit_testing_enabled { true };
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };
@@ -362,21 +378,25 @@ private:
     int m_window_id { -1 };
     i32 m_client_id { -1 };
     float m_opacity { 1 };
+    float m_alpha_hit_threshold { 0.0f };
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;
+    Gfx::IntSize m_minimum_size { 1, 1 };
     NonnullRefPtr<Gfx::Bitmap> m_icon;
     RefPtr<Cursor> m_cursor;
+    RefPtr<Cursor> m_cursor_override;
     WindowFrame m_frame;
-    unsigned m_wm_event_mask { 0 };
     Gfx::DisjointRectSet m_pending_paint_rects;
     Gfx::IntRect m_unmaximized_rect;
-    Gfx::IntRect m_rect_in_menubar;
+    Gfx::IntRect m_rect_in_applet_area;
     RefPtr<Menu> m_window_menu;
     MenuItem* m_window_menu_minimize_item { nullptr };
     MenuItem* m_window_menu_maximize_item { nullptr };
     MenuItem* m_window_menu_close_item { nullptr };
+    MenuItem* m_window_menu_menubar_visibility_item { nullptr };
     int m_minimize_animation_step { -1 };
     int m_progress { -1 };
+    bool m_should_show_menubar { true };
 };
 
 }

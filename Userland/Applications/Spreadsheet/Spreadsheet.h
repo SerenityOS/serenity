@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -51,7 +31,7 @@ public:
 
     ~Sheet();
 
-    static Optional<Position> parse_cell_name(const StringView&);
+    Optional<Position> parse_cell_name(const StringView&) const;
     Optional<size_t> column_index(const StringView& column_name) const;
     Optional<String> column_arithmetic(const StringView& column_name, int offset);
 
@@ -106,12 +86,12 @@ public:
         for (size_t i = column_count(); i < index; ++i)
             add_column();
 
-        ASSERT(column_count() > index);
+        VERIFY(column_count() > index);
         return m_columns[index];
     }
     const String& column(size_t index) const
     {
-        ASSERT(column_count() > index);
+        VERIFY(column_count() > index);
         return m_columns[index];
     }
 
@@ -140,7 +120,12 @@ public:
 
     const Workbook& workbook() const { return m_workbook; }
 
-    void copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to = {});
+    enum class CopyOperation {
+        Copy,
+        Cut
+    };
+
+    void copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to = {}, CopyOperation copy_operation = CopyOperation::Copy);
 
     /// Gives the bottom-right corner of the smallest bounding box containing all the written data.
     Position written_data_bounds() const;
@@ -179,9 +164,7 @@ struct Traits<Spreadsheet::Position> : public GenericTraits<Spreadsheet::Positio
     static constexpr bool is_trivial() { return false; }
     static unsigned hash(const Spreadsheet::Position& p)
     {
-        return pair_int_hash(
-            string_hash(p.column.characters(), p.column.length()),
-            u64_hash(p.row));
+        return p.hash();
     }
 };
 

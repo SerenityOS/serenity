@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Format.h>
@@ -104,16 +84,16 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
         Option* found_option = nullptr;
         if (c == 0) {
             // It was a long option.
-            ASSERT(index_of_found_long_option >= 0);
+            VERIFY(index_of_found_long_option >= 0);
             found_option = &m_options[index_of_found_long_option];
             index_of_found_long_option = -1;
         } else {
             // It was a short option, look it up.
             auto it = m_options.find_if([c](auto& opt) { return c == opt.short_name; });
-            ASSERT(!it.is_end());
+            VERIFY(!it.is_end());
             found_option = &*it;
         }
-        ASSERT(found_option);
+        VERIFY(found_option);
 
         const char* arg = found_option->requires_argument ? optarg : nullptr;
         if (!found_option->accept_value(arg)) {
@@ -264,7 +244,7 @@ void ArgsParser::add_option(bool& value, const char* help_string, const char* lo
         short_name,
         nullptr,
         [&value](const char* s) {
-            ASSERT(s == nullptr);
+            VERIFY(s == nullptr);
             value = true;
             return true;
         }
@@ -273,6 +253,22 @@ void ArgsParser::add_option(bool& value, const char* help_string, const char* lo
 }
 
 void ArgsParser::add_option(const char*& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+{
+    Option option {
+        true,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        [&value](const char* s) {
+            value = s;
+            return true;
+        }
+    };
+    add_option(move(option));
+}
+
+void ArgsParser::add_option(String& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
 {
     Option option {
         true,
@@ -342,6 +338,21 @@ void ArgsParser::add_positional_argument(const char*& value, const char* help_st
     add_positional_argument(move(arg));
 }
 
+void ArgsParser::add_positional_argument(String& value, const char* help_string, const char* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        1,
+        [&value](const char* s) {
+            value = s;
+            return true;
+        }
+    };
+    add_positional_argument(move(arg));
+}
+
 void ArgsParser::add_positional_argument(int& value, const char* help_string, const char* name, Required required)
 {
     Arg arg {
@@ -375,6 +386,21 @@ void ArgsParser::add_positional_argument(double& value, const char* help_string,
 }
 
 void ArgsParser::add_positional_argument(Vector<const char*>& values, const char* help_string, const char* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        INT_MAX,
+        [&values](const char* s) {
+            values.append(s);
+            return true;
+        }
+    };
+    add_positional_argument(move(arg));
+}
+
+void ArgsParser::add_positional_argument(Vector<String>& values, const char* help_string, const char* name, Required required)
 {
     Arg arg {
         help_string,

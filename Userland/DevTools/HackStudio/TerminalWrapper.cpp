@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "TerminalWrapper.h"
@@ -55,15 +35,15 @@ void TerminalWrapper::run_command(const String& command)
     int ptm_fd = posix_openpt(O_RDWR | O_CLOEXEC);
     if (ptm_fd < 0) {
         perror("posix_openpt");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     if (grantpt(ptm_fd) < 0) {
         perror("grantpt");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     if (unlockpt(ptm_fd) < 0) {
         perror("unlockpt");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     m_terminal_widget->set_pty_master_fd(ptm_fd);
@@ -72,7 +52,7 @@ void TerminalWrapper::run_command(const String& command)
         int rc = waitpid(m_pid, &wstatus, 0);
         if (rc < 0) {
             perror("waitpid");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         if (WIFEXITED(wstatus)) {
             m_terminal_widget->inject_string(String::formatted("\033[{};1m(Command exited with code {})\033[0m\n", wstatus == 0 ? 32 : 31, WEXITSTATUS(wstatus)));
@@ -147,7 +127,7 @@ void TerminalWrapper::run_command(const String& command)
         setenv("TERM", "xterm", true);
 
         auto parts = command.split(' ');
-        ASSERT(!parts.is_empty());
+        VERIFY(!parts.is_empty());
         const char** args = (const char**)calloc(parts.size() + 1, sizeof(const char*));
         for (size_t i = 0; i < parts.size(); i++) {
             args[i] = parts[i].characters();
@@ -157,7 +137,7 @@ void TerminalWrapper::run_command(const String& command)
             perror("execve");
             exit(1);
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     // (In parent process)
@@ -166,7 +146,7 @@ void TerminalWrapper::run_command(const String& command)
 
 void TerminalWrapper::kill_running_command()
 {
-    ASSERT(m_pid != -1);
+    VERIFY(m_pid != -1);
 
     // Kill our child process and its whole process group.
     [[maybe_unused]] auto rc = killpg(m_pid, SIGTERM);
@@ -178,7 +158,7 @@ TerminalWrapper::TerminalWrapper(bool user_spawned)
     set_layout<GUI::VerticalBoxLayout>();
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
-    m_terminal_widget = add<TerminalWidget>(-1, false, config);
+    m_terminal_widget = add<VT::TerminalWidget>(-1, false, config);
 
     if (user_spawned)
         run_command("Shell");

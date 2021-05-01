@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
@@ -79,28 +59,28 @@ bool Socket::connect(const String& hostname, int port)
     }
 
     IPv4Address host_address((const u8*)hostent->h_addr_list[0]);
-    dbgln<CSOCKET_DEBUG>("Socket::connect: Resolved '{}' to {}", hostname, host_address);
+    dbgln_if(CSOCKET_DEBUG, "Socket::connect: Resolved '{}' to {}", hostname, host_address);
     return connect(host_address, port);
 }
 
 void Socket::set_blocking(bool blocking)
 {
     int flags = fcntl(fd(), F_GETFL, 0);
-    ASSERT(flags >= 0);
+    VERIFY(flags >= 0);
     if (blocking)
         flags = fcntl(fd(), F_SETFL, flags & ~O_NONBLOCK);
     else
         flags = fcntl(fd(), F_SETFL, flags | O_NONBLOCK);
-    ASSERT(flags == 0);
+    VERIFY(flags == 0);
 }
 
 bool Socket::connect(const SocketAddress& address, int port)
 {
-    ASSERT(!is_connected());
-    ASSERT(address.type() == SocketAddress::Type::IPv4);
-    dbgln<CSOCKET_DEBUG>("{} connecting to {}...", *this, address);
+    VERIFY(!is_connected());
+    VERIFY(address.type() == SocketAddress::Type::IPv4);
+    dbgln_if(CSOCKET_DEBUG, "{} connecting to {}...", *this, address);
 
-    ASSERT(port > 0 && port <= 65535);
+    VERIFY(port > 0 && port <= 65535);
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -117,9 +97,9 @@ bool Socket::connect(const SocketAddress& address, int port)
 
 bool Socket::connect(const SocketAddress& address)
 {
-    ASSERT(!is_connected());
-    ASSERT(address.type() == SocketAddress::Type::Local);
-    dbgln<CSOCKET_DEBUG>("{} connecting to {}...", *this, address);
+    VERIFY(!is_connected());
+    VERIFY(address.type() == SocketAddress::Type::Local);
+    dbgln_if(CSOCKET_DEBUG, "{} connecting to {}...", *this, address);
 
     sockaddr_un saddr;
     saddr.sun_family = AF_LOCAL;
@@ -138,7 +118,7 @@ bool Socket::connect(const SocketAddress& address)
 bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
 {
     auto connected = [this] {
-        dbgln<CSOCKET_DEBUG>("{} connected!", *this);
+        dbgln_if(CSOCKET_DEBUG, "{} connected!", *this);
         if (!m_connected) {
             m_connected = true;
             ensure_read_notifier();
@@ -153,7 +133,7 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
     int rc = ::connect(fd(), addr, addrlen);
     if (rc < 0) {
         if (errno == EINPROGRESS) {
-            dbgln<CSOCKET_DEBUG>("{} connection in progress (EINPROGRESS)", *this);
+            dbgln_if(CSOCKET_DEBUG, "{} connection in progress (EINPROGRESS)", *this);
             m_notifier = Notifier::construct(fd(), Notifier::Event::Write, this);
             m_notifier->on_ready_to_write = move(connected);
             return true;
@@ -163,7 +143,7 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
         errno = saved_errno;
         return false;
     }
-    dbgln<CSOCKET_DEBUG>("{} connected ok!", *this);
+    dbgln_if(CSOCKET_DEBUG, "{} connected ok!", *this);
     connected();
     return true;
 }
@@ -183,7 +163,7 @@ bool Socket::send(ReadonlyBytes data)
         set_error(errno);
         return false;
     }
-    ASSERT(static_cast<size_t>(nsent) == data.size());
+    VERIFY(static_cast<size_t>(nsent) == data.size());
     return true;
 }
 
@@ -204,13 +184,13 @@ void Socket::did_update_fd(int fd)
         ensure_read_notifier();
     } else {
         // I don't think it would be right if we updated the fd while not connected *but* while having a notifier..
-        ASSERT(!m_read_notifier);
+        VERIFY(!m_read_notifier);
     }
 }
 
 void Socket::ensure_read_notifier()
 {
-    ASSERT(m_connected);
+    VERIFY(m_connected);
     m_read_notifier = Notifier::construct(fd(), Notifier::Event::Read, this);
     m_read_notifier->on_ready_to_read = [this] {
         if (!can_read())

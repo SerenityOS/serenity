@@ -1,28 +1,9 @@
 /*
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2020, Nico Weber <thakis@chromium.org>
- * All rights reserved.
+ * Copyright (c) 2021, Petróczi Zoltán <petroczizoltan@tutanota.com>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/GenericLexer.h>
@@ -108,7 +89,7 @@ static Value parse_simplified_iso8601(const String& iso_8601)
     }
 
     // We parsed a valid date simplified ISO 8601 string. Values not present in the string are -1.
-    ASSERT(year != -1); // A valid date string always has at least a year.
+    VERIFY(year != -1); // A valid date string always has at least a year.
     struct tm tm = {};
     tm.tm_year = year - 1900;
     tm.tm_mon = month == -1 ? 0 : month - 1;
@@ -168,34 +149,100 @@ Value DateConstructor::call()
 
 Value DateConstructor::construct(Function&)
 {
-    if (vm().argument_count() == 0) {
+    auto& vm = this->vm();
+    if (vm.argument_count() == 0) {
         struct timeval tv;
         gettimeofday(&tv, nullptr);
         auto datetime = Core::DateTime::now();
         auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
         return Date::create(global_object(), datetime, milliseconds);
     }
-    if (vm().argument_count() == 1) {
-        auto value = vm().argument(0);
+
+    auto create_invalid_date = [this]() {
+        auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(0));
+        auto milliseconds = static_cast<u16>(0);
+        return Date::create(global_object(), datetime, milliseconds, true);
+    };
+
+    if (vm.argument_count() == 1) {
+        auto value = vm.argument(0);
         if (value.is_string())
             value = parse_simplified_iso8601(value.as_string().string());
+        else
+            value = value.to_number(global_object());
+
+        if (vm.exception())
+            return {};
+
+        if (!value.is_finite_number()) {
+            return create_invalid_date();
+        }
+
         // A timestamp since the epoch, in UTC.
-        // FIXME: Date() probably should use a double as internal representation, so that NaN arguments and larger offsets are handled correctly.
-        double value_as_double = value.to_double(global_object());
+        double value_as_double = value.as_double();
         auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
         auto milliseconds = static_cast<u16>(fmod(value_as_double, 1000));
         return Date::create(global_object(), datetime, milliseconds);
     }
+
     // A date/time in components, in local time.
-    // FIXME: This doesn't construct an "Invalid Date" object if one of the parameters is NaN.
-    auto arg_or = [this](size_t i, i32 fallback) { return vm().argument_count() > i ? vm().argument(i).to_i32(global_object()) : fallback; };
-    int year = vm().argument(0).to_i32(global_object());
-    int month_index = vm().argument(1).to_i32(global_object());
-    int day = arg_or(2, 1);
-    int hours = arg_or(3, 0);
-    int minutes = arg_or(4, 0);
-    int seconds = arg_or(5, 0);
-    int milliseconds = arg_or(6, 0);
+    auto arg_or = [&vm, this](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_number(global_object()) : Value(fallback); };
+
+    auto year_value = vm.argument(0).to_number(global_object());
+    if (vm.exception())
+        return {};
+    if (!year_value.is_finite_number()) {
+        return create_invalid_date();
+    }
+    auto year = year_value.as_i32();
+
+    auto month_index_value = vm.argument(1).to_number(global_object());
+    if (vm.exception())
+        return {};
+    if (!month_index_value.is_finite_number()) {
+        return create_invalid_date();
+    }
+    auto month_index = month_index_value.as_i32();
+
+    auto day_value = arg_or(2, 1);
+    if (vm.exception())
+        return {};
+    if (!day_value.is_finite_number()) {
+        return create_invalid_date();
+    }
+    auto day = day_value.as_i32();
+
+    auto hours_value = arg_or(3, 0);
+    if (vm.exception())
+        return {};
+    if (!hours_value.is_finite_number()) {
+        return create_invalid_date();
+    }
+    auto hours = hours_value.as_i32();
+
+    auto minutes_value = arg_or(4, 0);
+    if (vm.exception())
+        return {};
+    if (!minutes_value.is_finite_number()) {
+        return create_invalid_date();
+    }
+    auto minutes = minutes_value.as_i32();
+
+    auto seconds_value = arg_or(5, 0);
+    if (vm.exception())
+        return {};
+    if (!seconds_value.is_finite_number()) {
+        return create_invalid_date();
+    }
+    auto seconds = seconds_value.as_i32();
+
+    auto milliseconds_value = arg_or(6, 0);
+    if (vm.exception())
+        return {};
+    if (!milliseconds_value.is_finite_number()) {
+        return create_invalid_date();
+    }
+    auto milliseconds = milliseconds_value.as_i32();
 
     seconds += milliseconds / 1000;
     milliseconds %= 1000;
@@ -225,7 +272,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 
     auto iso_8601 = vm.argument(0).to_string(global_object);
     if (vm.exception())
-        return js_nan();
+        return {};
 
     return parse_simplified_iso8601(iso_8601);
 }

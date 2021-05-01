@@ -1,37 +1,20 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "AST.h"
 #include "Shell.h"
+#include "Shell/Formatter.h"
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <errno.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -87,9 +70,31 @@ int Shell::builtin_alias(int argc, const char** argv)
 int Shell::builtin_bg(int argc, const char** argv)
 {
     int job_id = -1;
+    bool is_pid = false;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(job_id, "Job ID to run in background", "job-id", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "Job ID or Jobspec to run in background",
+        .name = "job-id",
+        .min_values = 0,
+        .max_values = 1,
+        .accept_value = [&](const String& value) -> bool {
+            // Check if it's a pid (i.e. literal integer)
+            if (auto number = value.to_uint(); number.has_value()) {
+                job_id = number.value();
+                is_pid = true;
+                return true;
+            }
+
+            // Check if it's a jobspec
+            if (auto id = resolve_job_spec(value); id.has_value()) {
+                job_id = id.value();
+                is_pid = false;
+                return true;
+            }
+
+            return false;
+        } });
 
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
@@ -97,20 +102,20 @@ int Shell::builtin_bg(int argc, const char** argv)
     if (job_id == -1 && !jobs.is_empty())
         job_id = find_last_job_id();
 
-    auto* job = const_cast<Job*>(find_job(job_id));
+    auto* job = const_cast<Job*>(find_job(job_id, is_pid));
 
     if (!job) {
         if (job_id == -1) {
-            fprintf(stderr, "bg: no current job\n");
+            warnln("bg: No current job");
         } else {
-            fprintf(stderr, "bg: job with id %d not found\n", job_id);
+            warnln("bg: Job with id/pid {} not found", job_id);
         }
         return 1;
     }
 
     job->set_running_in_background(true);
     job->set_should_announce_exit(true);
-    job->set_is_suspended(false);
+    job->set_shell_did_continue(true);
 
     dbgln("Resuming {} ({})", job->pid(), job->cmd());
     warnln("Resuming job {} - {}", job->job_id(), job->cmd().characters());
@@ -124,6 +129,75 @@ int Shell::builtin_bg(int argc, const char** argv)
     }
 
     return 0;
+}
+
+int Shell::builtin_type(int argc, const char** argv)
+{
+    Vector<const char*> commands;
+    bool dont_show_function_source = false;
+
+    Core::ArgsParser parser;
+    parser.set_general_help("Display information about commands.");
+    parser.add_positional_argument(commands, "Command(s) to list info about", "command");
+    parser.add_option(dont_show_function_source, "Do not show functions source.", "no-fn-source", 'f');
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    bool something_not_found = false;
+
+    for (auto& command : commands) {
+        // check if it is an alias
+        if (auto alias = m_aliases.get(command); alias.has_value()) {
+            printf("%s is aliased to `%s`\n", escape_token(command).characters(), escape_token(alias.value()).characters());
+            continue;
+        }
+
+        // check if it is a function
+        if (auto function = m_functions.get(command); function.has_value()) {
+            auto fn = function.value();
+            printf("%s is a function\n", command);
+            if (!dont_show_function_source) {
+                StringBuilder builder;
+                builder.append(fn.name);
+                builder.append("(");
+                for (size_t i = 0; i < fn.arguments.size(); i++) {
+                    builder.append(fn.arguments[i]);
+                    if (!(i == fn.arguments.size() - 1))
+                        builder.append(" ");
+                }
+                builder.append(") {\n");
+                if (fn.body) {
+                    auto formatter = Formatter(*fn.body);
+                    builder.append(formatter.format());
+                    printf("%s\n}\n", builder.build().characters());
+                } else {
+                    printf("%s\n}\n", builder.build().characters());
+                }
+            }
+            continue;
+        }
+
+        // check if its a builtin
+        if (has_builtin(command)) {
+            printf("%s is a shell builtin\n", command);
+            continue;
+        }
+
+        // check if its an executable in PATH
+        auto fullpath = Core::find_executable_in_path(command);
+        if (!fullpath.is_null()) {
+            printf("%s is %s\n", command, escape_token(fullpath).characters());
+            continue;
+        }
+        something_not_found = true;
+        printf("type: %s not found\n", command);
+    }
+
+    if (something_not_found)
+        return 1;
+    else
+        return 0;
 }
 
 int Shell::builtin_cd(int argc, const char** argv)
@@ -146,14 +220,8 @@ int Shell::builtin_cd(int argc, const char** argv)
             if (oldpwd == nullptr)
                 return 1;
             new_path = oldpwd;
-        } else if (arg_path[0] == '/') {
-            new_path = argv[1];
         } else {
-            StringBuilder builder;
-            builder.append(cwd);
-            builder.append('/');
-            builder.append(arg_path);
-            new_path = builder.to_string();
+            new_path = arg_path;
         }
     }
 
@@ -299,9 +367,10 @@ int Shell::builtin_exit(int argc, const char** argv)
         }
     }
     stop_all_jobs();
-    m_editor->save_history(get_history_path());
-    if (m_is_interactive)
+    if (m_is_interactive) {
+        m_editor->save_history(get_history_path());
         printf("Good-bye!\n");
+    }
     exit(exit_code);
     return 0;
 }
@@ -372,9 +441,31 @@ int Shell::builtin_glob(int argc, const char** argv)
 int Shell::builtin_fg(int argc, const char** argv)
 {
     int job_id = -1;
+    bool is_pid = false;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(job_id, "Job ID to bring to foreground", "job-id", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "Job ID or Jobspec to bring to foreground",
+        .name = "job-id",
+        .min_values = 0,
+        .max_values = 1,
+        .accept_value = [&](const String& value) -> bool {
+            // Check if it's a pid (i.e. literal integer)
+            if (auto number = value.to_uint(); number.has_value()) {
+                job_id = number.value();
+                is_pid = true;
+                return true;
+            }
+
+            // Check if it's a jobspec
+            if (auto id = resolve_job_spec(value); id.has_value()) {
+                job_id = id.value();
+                is_pid = false;
+                return true;
+            }
+
+            return false;
+        } });
 
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
@@ -382,19 +473,19 @@ int Shell::builtin_fg(int argc, const char** argv)
     if (job_id == -1 && !jobs.is_empty())
         job_id = find_last_job_id();
 
-    RefPtr<Job> job = find_job(job_id);
+    RefPtr<Job> job = find_job(job_id, is_pid);
 
     if (!job) {
         if (job_id == -1) {
-            fprintf(stderr, "fg: no current job\n");
+            warnln("fg: No current job");
         } else {
-            fprintf(stderr, "fg: job with id %d not found\n", job_id);
+            warnln("fg: Job with id/pid {} not found", job_id);
         }
         return 1;
     }
 
     job->set_running_in_background(false);
-    job->set_is_suspended(false);
+    job->set_shell_did_continue(true);
 
     dbgln("Resuming {} ({})", job->pid(), job->cmd());
     warnln("Resuming job {} - {}", job->job_id(), job->cmd().characters());
@@ -420,39 +511,56 @@ int Shell::builtin_fg(int argc, const char** argv)
 
 int Shell::builtin_disown(int argc, const char** argv)
 {
-    Vector<const char*> str_job_ids;
+    Vector<int> job_ids;
+    Vector<bool> id_is_pid;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(str_job_ids, "Id of the jobs to disown (omit for current job)", "job_ids", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "Job IDs or Jobspecs to disown",
+        .name = "job-id",
+        .min_values = 0,
+        .max_values = INT_MAX,
+        .accept_value = [&](const String& value) -> bool {
+            // Check if it's a pid (i.e. literal integer)
+            if (auto number = value.to_uint(); number.has_value()) {
+                job_ids.append(number.value());
+                id_is_pid.append(true);
+                return true;
+            }
+
+            // Check if it's a jobspec
+            if (auto id = resolve_job_spec(value); id.has_value()) {
+                job_ids.append(id.value());
+                id_is_pid.append(false);
+                return true;
+            }
+
+            return false;
+        } });
 
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
 
-    Vector<size_t> job_ids;
-    for (auto& job_id : str_job_ids) {
-        auto id = StringView(job_id).to_uint();
-        if (id.has_value())
-            job_ids.append(id.value());
-        else
-            fprintf(stderr, "disown: Invalid job id %s\n", job_id);
-    }
-
-    if (job_ids.is_empty())
+    if (job_ids.is_empty()) {
         job_ids.append(find_last_job_id());
+        id_is_pid.append(false);
+    }
 
     Vector<const Job*> jobs_to_disown;
 
-    for (auto id : job_ids) {
-        auto job = find_job(id);
+    for (size_t i = 0; i < job_ids.size(); ++i) {
+        auto id = job_ids[i];
+        auto is_pid = id_is_pid[i];
+        auto job = find_job(id, is_pid);
         if (!job)
-            fprintf(stderr, "disown: job with id %zu not found\n", id);
+            warnln("disown: Job with id/pid {} not found", id);
         else
             jobs_to_disown.append(job);
     }
 
     if (jobs_to_disown.is_empty()) {
-        if (str_job_ids.is_empty())
-            fprintf(stderr, "disown: no current job\n");
+        if (job_ids.is_empty())
+            warnln("disown: No current job");
         // An error message has already been printed about the nonexistence of each listed job.
         return 1;
     }
@@ -461,7 +569,7 @@ int Shell::builtin_disown(int argc, const char** argv)
         job->deactivate();
 
         if (!job->is_running_in_background())
-            fprintf(stderr, "disown warning: job %" PRIu64 " is currently not running, 'kill -%d %d' to make it continue\n", job->job_id(), SIGCONT, job->pid());
+            warnln("disown warning: Job {} is currently not running, 'kill -{} {}' to make it continue", job->job_id(), SIGCONT, job->pid());
 
         jobs.remove(job->pid());
     }
@@ -720,7 +828,7 @@ int Shell::builtin_shift(int argc, const char** argv)
     }
 
     if (!argv_->is_list())
-        argv_ = adopt(*new AST::ListValue({ argv_.release_nonnull() }));
+        argv_ = adopt_ref(*new AST::ListValue({ argv_.release_nonnull() }));
 
     auto& values = static_cast<AST::ListValue*>(argv_.ptr())->values();
     if ((size_t)count > values.size()) {
@@ -822,32 +930,51 @@ int Shell::builtin_umask(int argc, const char** argv)
 
 int Shell::builtin_wait(int argc, const char** argv)
 {
-    Vector<const char*> job_ids;
+    Vector<int> job_ids;
+    Vector<bool> id_is_pid;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(job_ids, "Job IDs to wait for, defaults to all jobs if missing", "jobs", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(Core::ArgsParser::Arg {
+        .help_string = "Job IDs or Jobspecs to wait for",
+        .name = "job-id",
+        .min_values = 0,
+        .max_values = INT_MAX,
+        .accept_value = [&](const String& value) -> bool {
+            // Check if it's a pid (i.e. literal integer)
+            if (auto number = value.to_uint(); number.has_value()) {
+                job_ids.append(number.value());
+                id_is_pid.append(true);
+                return true;
+            }
+
+            // Check if it's a jobspec
+            if (auto id = resolve_job_spec(value); id.has_value()) {
+                job_ids.append(id.value());
+                id_is_pid.append(false);
+                return true;
+            }
+
+            return false;
+        } });
 
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
 
     Vector<NonnullRefPtr<Job>> jobs_to_wait_for;
 
-    if (job_ids.is_empty()) {
-        for (auto it : jobs)
-            jobs_to_wait_for.append(it.value);
-    } else {
-        for (String id_s : job_ids) {
-            auto id_opt = id_s.to_uint();
-            if (id_opt.has_value()) {
-                if (auto job = find_job(id_opt.value())) {
-                    jobs_to_wait_for.append(*job);
-                    continue;
-                }
-            }
+    for (size_t i = 0; i < job_ids.size(); ++i) {
+        auto id = job_ids[i];
+        auto is_pid = id_is_pid[i];
+        auto job = find_job(id, is_pid);
+        if (!job)
+            warnln("wait: Job with id/pid {} not found", id);
+        else
+            jobs_to_wait_for.append(*job);
+    }
 
-            warnln("wait: invalid or nonexistent job id {}", id_s);
-            return 1;
-        }
+    if (job_ids.is_empty()) {
+        for (const auto& it : jobs)
+            jobs_to_wait_for.append(it.value);
     }
 
     for (auto& job : jobs_to_wait_for) {
@@ -891,11 +1018,53 @@ int Shell::builtin_not(int argc, const char** argv)
 
     auto commands = expand_aliases({ move(command) });
     int exit_code = 1;
+    auto found_a_job = false;
     for (auto& job : run_commands(commands)) {
+        found_a_job = true;
         block_on_job(job);
         exit_code = job.exit_code();
     }
+    // In case it was a function.
+    if (!found_a_job)
+        exit_code = last_return_code;
     return exit_code == 0 ? 1 : 0;
+}
+
+int Shell::builtin_kill(int argc, const char** argv)
+{
+    // Simply translate the arguments and pass them to `kill'
+    Vector<String> replaced_values;
+    auto kill_path = find_in_path("kill");
+    if (kill_path.is_empty()) {
+        warnln("kill: `kill' not found in PATH");
+        return 126;
+    }
+    replaced_values.append(kill_path);
+    for (auto i = 1; i < argc; ++i) {
+        if (auto job_id = resolve_job_spec(argv[i]); job_id.has_value()) {
+            auto job = find_job(job_id.value());
+            if (job) {
+                replaced_values.append(String::number(job->pid()));
+            } else {
+                warnln("kill: Job with pid {} not found", job_id.value());
+                return 1;
+            }
+        } else {
+            replaced_values.append(argv[i]);
+        }
+    }
+
+    // Now just run `kill'
+    AST::Command command;
+    command.argv = move(replaced_values);
+    command.position = m_source_position.has_value() ? m_source_position->position : Optional<AST::Position> {};
+
+    auto exit_code = 1;
+    if (auto job = run_command(command)) {
+        block_on_job(job);
+        exit_code = job->exit_code();
+    }
+    return exit_code;
 }
 
 bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings, int& retval)
@@ -932,6 +1101,8 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
         retval = builtin_##builtin(argv.size() - 1, argv.data());        \
         if (!has_error(ShellError::None))                                \
             raise_error(m_error, m_error_description, command.position); \
+        fflush(stdout);                                                  \
+        fflush(stderr);                                                  \
         return true;                                                     \
     }
 

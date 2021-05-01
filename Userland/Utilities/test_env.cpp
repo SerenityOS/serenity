@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <assert.h>
@@ -35,11 +15,11 @@ static void assert_env(const char* name, const char* value)
     if (!result) {
         perror("getenv");
         printf("(When reading value for '%s'; we expected '%s'.)\n", name, value);
-        ASSERT(false);
+        VERIFY(false);
     }
     if (strcmp(result, value) != 0) {
         printf("Expected '%s', got '%s' instead.\n", value, result);
-        ASSERT(false);
+        VERIFY(false);
     }
 }
 
@@ -54,7 +34,7 @@ static void test_puttenv()
     int rc = putenv(to_put);
     if (rc) {
         perror("putenv");
-        ASSERT(false);
+        VERIFY(false);
     }
     assert_env("PUTENVTEST", "HELLOPUTENV");
     // Do not free `to_put`!
@@ -65,7 +45,7 @@ static void test_settenv()
     int rc = setenv("SETENVTEST", "HELLO SETENV!", 0);
     if (rc) {
         perror("setenv");
-        ASSERT(false);
+        VERIFY(false);
     }
     // This used to trigger a very silly bug! :)
     assert_env("SETENVTEST", "HELLO SETENV!");
@@ -73,14 +53,14 @@ static void test_settenv()
     rc = setenv("SETENVTEST", "How are you today?", 0);
     if (rc) {
         perror("setenv");
-        ASSERT(false);
+        VERIFY(false);
     }
     assert_env("SETENVTEST", "HELLO SETENV!");
 
     rc = setenv("SETENVTEST", "Goodbye, friend!", 1);
     if (rc) {
         perror("setenv");
-        ASSERT(false);
+        VERIFY(false);
     }
     assert_env("SETENVTEST", "Goodbye, friend!");
 }
@@ -90,7 +70,7 @@ static void test_settenv_overwrite_empty()
     int rc = setenv("EMPTYTEST", "Forcefully overwrite non-existing envvar", 1);
     if (rc) {
         perror("setenv");
-        ASSERT(false);
+        VERIFY(false);
     }
     assert_env("EMPTYTEST", "Forcefully overwrite non-existing envvar");
 }

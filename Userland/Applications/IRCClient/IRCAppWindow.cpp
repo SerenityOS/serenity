@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "IRCAppWindow.h"
@@ -33,12 +13,12 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 
 static IRCAppWindow* s_the;
 
@@ -50,7 +30,7 @@ IRCAppWindow& IRCAppWindow::the()
 IRCAppWindow::IRCAppWindow(String server, int port)
     : m_client(IRCClient::construct(server, port))
 {
-    ASSERT(!s_the);
+    VERIFY(!s_the);
     s_the = this;
 
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-irc-client.png"));
@@ -93,21 +73,21 @@ void IRCAppWindow::setup_client()
 
     if (m_client->hostname().is_empty()) {
         String value;
-        if (GUI::InputBox::show(value, this, "Enter server:", "Connect to server") == GUI::InputBox::ExecCancel)
+        if (GUI::InputBox::show(this, value, "Enter server:", "Connect to server") == GUI::InputBox::ExecCancel)
             ::exit(0);
 
         m_client->set_server(value, 6667);
     }
     update_title();
     bool success = m_client->connect();
-    ASSERT(success);
+    VERIFY(success);
 }
 
 void IRCAppWindow::setup_actions()
 {
     m_join_action = GUI::Action::create("Join channel", { Mod_Ctrl, Key_J }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
         String value;
-        if (GUI::InputBox::show(value, this, "Enter channel name:", "Join channel") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter channel name:", "Join channel") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_join_action(value);
     });
 
@@ -125,13 +105,13 @@ void IRCAppWindow::setup_actions()
 
     m_whois_action = GUI::Action::create("Whois user", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](auto&) {
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nickname:", "IRC WHOIS lookup") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nickname:", "IRC WHOIS lookup") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_whois_action(value);
     });
 
     m_open_query_action = GUI::Action::create("Open query", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](auto&) {
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nickname:", "Open IRC query with...") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nickname:", "Open IRC query with...") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_open_query_action(value);
     });
 
@@ -141,7 +121,7 @@ void IRCAppWindow::setup_actions()
 
     m_change_nick_action = GUI::Action::create("Change nickname", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this](auto&) {
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nickname:", "Change nickname") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nickname:", "Change nickname") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_change_nick_action(value);
     });
 
@@ -151,7 +131,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter topic:", "Change topic") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter topic:", "Change topic") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_change_topic_action(window->channel().name(), value);
     });
 
@@ -161,7 +141,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "Invite user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Invite user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_invite_user_action(window->channel().name(), value);
     });
 
@@ -179,7 +159,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "Voice user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Voice user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_voice_user_action(window->channel().name(), value);
     });
 
@@ -189,7 +169,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "DeVoice user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "DeVoice user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_devoice_user_action(window->channel().name(), value);
     });
 
@@ -199,7 +179,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "Hop user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Hop user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_hop_user_action(window->channel().name(), value);
     });
 
@@ -209,7 +189,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "DeHop user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "DeHop user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_dehop_user_action(window->channel().name(), value);
     });
 
@@ -219,7 +199,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "Op user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Op user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_op_user_action(window->channel().name(), value);
     });
 
@@ -229,7 +209,7 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(value, this, "Enter nick:", "DeOp user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "DeOp user") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_deop_user_action(window->channel().name(), value);
     });
 
@@ -239,10 +219,10 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String nick_value;
-        if (GUI::InputBox::show(nick_value, this, "Enter nick:", "Kick user") != GUI::InputBox::ExecOK || nick_value.is_empty())
+        if (GUI::InputBox::show(this, nick_value, "Enter nick:", "Kick user") != GUI::InputBox::ExecOK || nick_value.is_empty())
             return;
         String reason_value;
-        if (GUI::InputBox::show(reason_value, this, "Enter reason:", "Reason") == GUI::InputBox::ExecOK)
+        if (GUI::InputBox::show(this, reason_value, "Enter reason:", "Reason") == GUI::InputBox::ExecOK)
             m_client->handle_kick_user_action(window->channel().name(), nick_value, reason_value.characters());
     });
 
@@ -257,8 +237,8 @@ void IRCAppWindow::setup_actions()
 
 void IRCAppWindow::setup_menus()
 {
-    auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("IRC Client");
+    auto menubar = GUI::Menubar::construct();
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         dbgln("Terminal: Quit menu activated!");
         GUI::Application::the()->quit();
@@ -297,7 +277,7 @@ void IRCAppWindow::setup_menus()
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("IRC Client", GUI::Icon::default_icon("app-irc-client"), this));
 
-    GUI::Application::the()->set_menubar(move(menubar));
+    set_menubar(move(menubar));
 }
 
 void IRCAppWindow::setup_widgets()
@@ -307,8 +287,8 @@ void IRCAppWindow::setup_widgets()
     widget.set_layout<GUI::VerticalBoxLayout>();
     widget.layout()->set_spacing(0);
 
-    auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
-    auto& toolbar = toolbar_container.add<GUI::ToolBar>();
+    auto& toolbar_container = widget.add<GUI::ToolbarContainer>();
+    auto& toolbar = toolbar_container.add<GUI::Toolbar>();
     toolbar.set_has_frame(false);
     toolbar.add_action(*m_change_nick_action);
     toolbar.add_separator();

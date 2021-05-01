@@ -1,34 +1,16 @@
 /*
  * Copyright (c) 2021, Nick Vella <nick@nxk.io>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "RunWindow.h"
+#include <AK/LexicalPath.h>
 #include <AK/URL.h>
 #include <AK/URLParser.h>
 #include <Applications/Run/RunGML.h>
 #include <LibCore/File.h>
+#include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Event.h>
@@ -37,14 +19,17 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Widget.h>
-#include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 RunWindow::RunWindow()
+    : m_path_history()
+    , m_path_history_model(GUI::ItemListModel<String>::create(m_path_history))
 {
+    load_history();
+
     auto app_icon = GUI::Icon::default_icon("app-run");
 
     set_title("Run");
@@ -59,8 +44,10 @@ RunWindow::RunWindow()
     m_icon_image_widget = *main_widget.find_descendant_of_type_named<GUI::ImageWidget>("icon");
     m_icon_image_widget->set_bitmap(app_icon.bitmap_for_size(32));
 
-    m_path_text_box = *main_widget.find_descendant_of_type_named<GUI::TextBox>("path");
-    m_path_text_box->on_return_pressed = [this] {
+    m_path_combo_box = *main_widget.find_descendant_of_type_named<GUI::ComboBox>("path");
+    m_path_combo_box->set_model(m_path_history_model);
+    m_path_combo_box->set_selected_index(0);
+    m_path_combo_box->on_return_pressed = [this] {
         m_ok_button->click();
     };
 
@@ -78,7 +65,7 @@ RunWindow::RunWindow()
     m_browse_button->on_click = [this](auto) {
         Optional<String> path = GUI::FilePicker::get_open_filepath(this);
         if (path.has_value())
-            m_path_text_box->set_text(path.value().view());
+            m_path_combo_box->set_text(path.value().view());
     };
 }
 
@@ -94,6 +81,8 @@ void RunWindow::event(Core::Event& event)
             // Escape key pressed, close dialog
             close();
             return;
+        } else if ((key_event.key() == Key_Up || key_event.key() == Key_Down) && m_path_history.is_empty()) {
+            return;
         }
     }
 
@@ -102,11 +91,16 @@ void RunWindow::event(Core::Event& event)
 
 void RunWindow::do_run()
 {
-    auto run_input = m_path_text_box->text();
+    auto run_input = m_path_combo_box->text().trim_whitespace();
 
     hide();
 
     if (run_via_launch(run_input) || run_as_command(run_input)) {
+        // Remove any existing history entry, prepend the successful run string to history and save.
+        m_path_history.remove_all_matching([&](String v) { return v == run_input; });
+        m_path_history.prepend(run_input);
+        save_history();
+
         close();
         return;
     }
@@ -167,4 +161,36 @@ bool RunWindow::run_via_launch(const String& run_input)
     dbgln("Ran via URL launch.");
 
     return true;
+}
+
+String RunWindow::history_file_path()
+{
+    return LexicalPath::canonicalized_path(String::formatted("{}/{}", Core::StandardPaths::config_directory(), "RunHistory.txt"));
+}
+
+void RunWindow::load_history()
+{
+    m_path_history.clear();
+    auto file_or_error = Core::File::open(history_file_path(), Core::IODevice::ReadOnly);
+    if (file_or_error.is_error())
+        return;
+
+    auto file = file_or_error.release_value();
+    while (!file->eof()) {
+        auto line = file->read_line();
+        if (!line.is_empty() && !line.is_whitespace())
+            m_path_history.append(line);
+    }
+}
+
+void RunWindow::save_history()
+{
+    auto file_or_error = Core::File::open(history_file_path(), Core::IODevice::WriteOnly);
+    if (file_or_error.is_error())
+        return;
+
+    auto file = file_or_error.release_value();
+    // Write the first 25 items of history
+    for (int i = 0; i < min(static_cast<int>(m_path_history.size()), 25); i++)
+        file->write(String::formatted("{}\n", m_path_history[i]));
 }

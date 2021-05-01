@@ -1,0 +1,7 @@
+[CustomGet,CustomPut]
+interface CSSStyleDeclaration {
+
+    readonly attribute unsigned long length;
+    CSSOMString item(unsigned long index);
+
+};

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/DirIterator.h>
@@ -48,7 +28,7 @@ StyleProperties::StyleProperties(const StyleProperties& other)
 
 NonnullRefPtr<StyleProperties> StyleProperties::clone() const
 {
-    return adopt(*new StyleProperties(*this));
+    return adopt_ref(*new StyleProperties(*this));
 }
 
 void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue> value)
@@ -112,10 +92,15 @@ void StyleProperties::load_font() const
     auto family_parts = family_value.split(',');
     auto family = family_parts[0];
 
-    if (family.is_one_of("monospace", "ui-monospace"))
+    auto monospace = false;
+    auto bold = false;
+
+    if (family.is_one_of("monospace", "ui-monospace")) {
+        monospace = true;
         family = "Csilla";
-    else if (family.is_one_of("serif", "sans-serif", "cursive", "fantasy", "ui-serif", "ui-sans-serif", "ui-rounded"))
+    } else if (family.is_one_of("serif", "sans-serif", "cursive", "fantasy", "ui-serif", "ui-sans-serif", "ui-rounded")) {
         family = "Katica";
+    }
 
     int weight = 400;
     if (font_weight->is_identifier()) {
@@ -146,6 +131,8 @@ void StyleProperties::load_font() const
             weight = 700;
         weight = 900;
     }
+
+    bold = weight > 400;
 
     int size = 10;
     if (font_size->is_identifier()) {
@@ -179,12 +166,7 @@ void StyleProperties::load_font() const
     } else if (font_size->is_length()) {
         // FIXME: This isn't really a length, it's a numeric value..
         int font_size_integer = font_size->to_length().raw_value();
-        if (font_size_integer <= 10)
-            size = 10;
-        else if (font_size_integer <= 12)
-            size = 12;
-        else
-            size = 14;
+        size = font_size_integer;
     }
 
     FontSelector font_selector { family, size, weight };
@@ -202,11 +184,25 @@ void StyleProperties::load_font() const
 
     if (!found_font) {
         dbgln("Font not found: '{}' {} {}", family, size, weight);
-        found_font = Gfx::FontDatabase::default_font();
+        found_font = font_fallback(monospace, bold);
     }
 
     m_font = found_font;
     FontCache::the().set(font_selector, *m_font);
+}
+
+RefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bold) const
+{
+    if (monospace && bold)
+        return Gfx::FontDatabase::default_bold_fixed_width_font();
+
+    if (monospace)
+        return Gfx::FontDatabase::default_fixed_width_font();
+
+    if (bold)
+        return Gfx::FontDatabase::default_bold_font();
+
+    return Gfx::FontDatabase::default_font();
 }
 
 float StyleProperties::line_height(const Layout::Node& layout_node) const
@@ -395,6 +391,89 @@ Optional<CSS::Clear> StyleProperties::clear() const
     }
 }
 
+Optional<CSS::Cursor> StyleProperties::cursor() const
+{
+    auto value = property(CSS::PropertyID::Cursor);
+    if (!value.has_value() || !value.value()->is_identifier())
+        return {};
+    switch (static_cast<const IdentifierStyleValue&>(*value.value()).id()) {
+    case CSS::ValueID::Auto:
+        return CSS::Cursor::Auto;
+    case CSS::ValueID::Default:
+        return CSS::Cursor::Default;
+    case CSS::ValueID::None:
+        return CSS::Cursor::None;
+    case CSS::ValueID::ContextMenu:
+        return CSS::Cursor::ContextMenu;
+    case CSS::ValueID::Help:
+        return CSS::Cursor::Help;
+    case CSS::ValueID::Pointer:
+        return CSS::Cursor::Pointer;
+    case CSS::ValueID::Progress:
+        return CSS::Cursor::Progress;
+    case CSS::ValueID::Wait:
+        return CSS::Cursor::Wait;
+    case CSS::ValueID::Cell:
+        return CSS::Cursor::Cell;
+    case CSS::ValueID::Crosshair:
+        return CSS::Cursor::Crosshair;
+    case CSS::ValueID::Text:
+        return CSS::Cursor::Text;
+    case CSS::ValueID::VerticalText:
+        return CSS::Cursor::VerticalText;
+    case CSS::ValueID::Alias:
+        return CSS::Cursor::Alias;
+    case CSS::ValueID::Copy:
+        return CSS::Cursor::Copy;
+    case CSS::ValueID::Move:
+        return CSS::Cursor::Move;
+    case CSS::ValueID::NoDrop:
+        return CSS::Cursor::NoDrop;
+    case CSS::ValueID::NotAllowed:
+        return CSS::Cursor::NotAllowed;
+    case CSS::ValueID::Grab:
+        return CSS::Cursor::Grab;
+    case CSS::ValueID::Grabbing:
+        return CSS::Cursor::Grabbing;
+    case CSS::ValueID::EResize:
+        return CSS::Cursor::EResize;
+    case CSS::ValueID::NResize:
+        return CSS::Cursor::NResize;
+    case CSS::ValueID::NeResize:
+        return CSS::Cursor::NeResize;
+    case CSS::ValueID::NwResize:
+        return CSS::Cursor::NwResize;
+    case CSS::ValueID::SResize:
+        return CSS::Cursor::SResize;
+    case CSS::ValueID::SeResize:
+        return CSS::Cursor::SeResize;
+    case CSS::ValueID::SwResize:
+        return CSS::Cursor::SwResize;
+    case CSS::ValueID::WResize:
+        return CSS::Cursor::WResize;
+    case CSS::ValueID::EwResize:
+        return CSS::Cursor::EwResize;
+    case CSS::ValueID::NsResize:
+        return CSS::Cursor::NsResize;
+    case CSS::ValueID::NeswResize:
+        return CSS::Cursor::NeswResize;
+    case CSS::ValueID::NwseResize:
+        return CSS::Cursor::NwseResize;
+    case CSS::ValueID::ColResize:
+        return CSS::Cursor::ColResize;
+    case CSS::ValueID::RowResize:
+        return CSS::Cursor::RowResize;
+    case CSS::ValueID::AllScroll:
+        return CSS::Cursor::AllScroll;
+    case CSS::ValueID::ZoomIn:
+        return CSS::Cursor::ZoomIn;
+    case CSS::ValueID::ZoomOut:
+        return CSS::Cursor::ZoomOut;
+    default:
+        return {};
+    }
+}
+
 CSS::Display StyleProperties::display() const
 {
     auto value = property(CSS::PropertyID::Display);
@@ -497,6 +576,88 @@ Optional<CSS::ListStyleType> StyleProperties::list_style_type() const
         return CSS::ListStyleType::Square;
     case CSS::ValueID::Decimal:
         return CSS::ListStyleType::Decimal;
+    case CSS::ValueID::DecimalLeadingZero:
+        return CSS::ListStyleType::DecimalLeadingZero;
+    case CSS::ValueID::LowerAlpha:
+        return CSS::ListStyleType::LowerAlpha;
+    case CSS::ValueID::LowerLatin:
+        return CSS::ListStyleType::LowerLatin;
+    case CSS::ValueID::UpperAlpha:
+        return CSS::ListStyleType::UpperAlpha;
+    case CSS::ValueID::UpperLatin:
+        return CSS::ListStyleType::UpperLatin;
+    default:
+        return {};
+    }
+}
+
+Optional<CSS::Overflow> StyleProperties::overflow_x() const
+{
+    return overflow(CSS::PropertyID::OverflowX);
+}
+
+Optional<CSS::Overflow> StyleProperties::overflow_y() const
+{
+    return overflow(CSS::PropertyID::OverflowY);
+}
+
+Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) const
+{
+    auto value = property(property_id);
+    if (!value.has_value())
+        return {};
+
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Auto:
+        return CSS::Overflow::Auto;
+    case CSS::ValueID::Visible:
+        return CSS::Overflow::Visible;
+    case CSS::ValueID::Hidden:
+        return CSS::Overflow::Hidden;
+    case CSS::ValueID::Clip:
+        return CSS::Overflow::Clip;
+    case CSS::ValueID::Scroll:
+        return CSS::Overflow::Scroll;
+    default:
+        return {};
+    }
+}
+
+Optional<CSS::Repeat> StyleProperties::background_repeat_x() const
+{
+    auto value = property(CSS::PropertyID::BackgroundRepeatX);
+    if (!value.has_value())
+        return {};
+
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::NoRepeat:
+        return CSS::Repeat::NoRepeat;
+    case CSS::ValueID::Repeat:
+        return CSS::Repeat::Repeat;
+    case CSS::ValueID::Round:
+        return CSS::Repeat::Round;
+    case CSS::ValueID::Space:
+        return CSS::Repeat::Space;
+    default:
+        return {};
+    }
+}
+
+Optional<CSS::Repeat> StyleProperties::background_repeat_y() const
+{
+    auto value = property(CSS::PropertyID::BackgroundRepeatY);
+    if (!value.has_value())
+        return {};
+
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::NoRepeat:
+        return CSS::Repeat::NoRepeat;
+    case CSS::ValueID::Repeat:
+        return CSS::Repeat::Repeat;
+    case CSS::ValueID::Round:
+        return CSS::Repeat::Round;
+    case CSS::ValueID::Space:
+        return CSS::Repeat::Space;
     default:
         return {};
     }

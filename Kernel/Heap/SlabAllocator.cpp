@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
@@ -38,7 +18,7 @@ namespace Kernel {
 template<size_t templated_slab_size>
 class SlabAllocator {
 public:
-    SlabAllocator() { }
+    SlabAllocator() = default;
 
     void init(size_t size)
     {
@@ -86,7 +66,7 @@ public:
 
     void dealloc(void* ptr)
     {
-        ASSERT(ptr);
+        VERIFY(ptr);
         if (ptr < m_base || ptr >= m_end) {
             kfree(ptr);
             return;
@@ -130,7 +110,9 @@ static SlabAllocator<32> s_slab_allocator_32;
 static SlabAllocator<64> s_slab_allocator_64;
 static SlabAllocator<128> s_slab_allocator_128;
 
+#if ARCH(I386)
 static_assert(sizeof(Region) <= s_slab_allocator_128.slab_size());
+#endif
 
 template<typename Callback>
 void for_each_allocator(Callback callback)
@@ -141,7 +123,7 @@ void for_each_allocator(Callback callback)
     callback(s_slab_allocator_128);
 }
 
-void slab_alloc_init()
+UNMAP_AFTER_INIT void slab_alloc_init()
 {
     s_slab_allocator_16.init(128 * KiB);
     s_slab_allocator_32.init(128 * KiB);
@@ -159,7 +141,7 @@ void* slab_alloc(size_t slab_size)
         return s_slab_allocator_64.alloc();
     if (slab_size <= 128)
         return s_slab_allocator_128.alloc();
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void slab_dealloc(void* ptr, size_t slab_size)
@@ -172,7 +154,7 @@ void slab_dealloc(void* ptr, size_t slab_size)
         return s_slab_allocator_64.dealloc(ptr);
     if (slab_size <= 128)
         return s_slab_allocator_128.dealloc(ptr);
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void slab_alloc_stats(Function<void(size_t slab_size, size_t allocated, size_t free)> callback)

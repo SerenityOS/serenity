@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "CharacterMapFileListModel.h"
@@ -37,7 +17,7 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibKeyboard/CharacterMap.h>
@@ -82,12 +62,12 @@ int main(int argc, char** argv)
 
     auto proc_keymap = Core::File::construct("/proc/keymap");
     if (!proc_keymap->open(Core::IODevice::OpenMode::ReadOnly))
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     auto json = JsonValue::from_string(proc_keymap->read_all());
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
     JsonObject keymap_object = json.value().as_object();
-    ASSERT(keymap_object.has("keymap"));
+    VERIFY(keymap_object.has("keymap"));
     String current_keymap = keymap_object.get("keymap").to_string();
     dbgln("KeyboardSettings thinks the current keymap is: {}", current_keymap);
 
@@ -110,7 +90,7 @@ int main(int argc, char** argv)
         if (character_map_files[i].equals_ignoring_case(current_keymap))
             initial_keymap_index = i;
     }
-    ASSERT(initial_keymap_index < character_map_files.size());
+    VERIFY(initial_keymap_index < character_map_files.size());
 
     auto window = GUI::Window::construct();
     window->set_title("Keyboard Settings");
@@ -186,15 +166,15 @@ int main(int argc, char** argv)
             app->quit();
         });
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("Keyboard Settings");
+    auto& app_menu = menubar->add_menu("File");
     app_menu.add_action(quit_action);
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Keyboard Settings", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     window->show();
 

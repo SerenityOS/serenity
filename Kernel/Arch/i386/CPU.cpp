@@ -1,79 +1,66 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
-#include <Kernel/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/ISRStubs.h>
-#include <Kernel/Arch/i386/ProcessorInfo.h>
-#include <Kernel/Arch/i386/SafeMem.h>
+#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/ISRStubs.h>
+#include <Kernel/Arch/x86/ProcessorInfo.h>
+#include <Kernel/Arch/x86/SafeMem.h>
+#include <Kernel/Assertions.h>
+#include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
-#include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/SpinLock.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/ProcessPagingScope.h>
 #include <LibC/mallocdefs.h>
 
+extern FlatPtr start_of_unmap_after_init;
+extern FlatPtr end_of_unmap_after_init;
+extern FlatPtr start_of_ro_after_init;
+extern FlatPtr end_of_ro_after_init;
+
 namespace Kernel {
 
-static DescriptorTablePointer s_idtr;
-static Descriptor s_idt[256];
+READONLY_AFTER_INIT static DescriptorTablePointer s_idtr;
+READONLY_AFTER_INIT static IDTEntry s_idt[256];
 
 static GenericInterruptHandler* s_interrupt_handler[GENERIC_INTERRUPT_HANDLERS_COUNT];
 
-static EntropySource s_entropy_source_interrupts{EntropySource::Static::Interrupts};
+static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interrupts };
 
 // The compiler can't see the calls to these functions inside assembly.
 // Declare them, to avoid dead code warnings.
-extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread);
-extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap);
-extern "C" u32 do_init_context(Thread* thread, u32 flags);
+extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
+extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap) __attribute__((used));
+extern "C" u32 do_init_context(Thread* thread, u32 flags) __attribute__((used));
 extern "C" void exit_kernel_thread(void);
-extern "C" void pre_init_finished(void);
-extern "C" void post_init_finished(void);
-extern "C" void handle_interrupt(TrapFrame*);
+extern "C" void pre_init_finished(void) __attribute__((used));
+extern "C" void post_init_finished(void) __attribute__((used));
+extern "C" void handle_interrupt(TrapFrame*) __attribute__((used));
 
+// clang-format off
+
+#if ARCH(I386)
 #define EH_ENTRY(ec, title)                         \
     extern "C" void title##_asm_entry();            \
-    extern "C" void title##_handler(TrapFrame*); \
+    extern "C" void title##_handler(TrapFrame*) __attribute__((used)); \
     asm(                                            \
         ".globl " #title "_asm_entry\n"             \
         "" #title "_asm_entry: \n"                  \
@@ -97,8 +84,8 @@ extern "C" void handle_interrupt(TrapFrame*);
         "    jmp common_trap_exit \n");
 
 #define EH_ENTRY_NO_CODE(ec, title)                 \
-    extern "C" void title##_handler(TrapFrame*); \
-    extern "C" void title##_asm_entry();            \
+    extern "C" void title##_asm_entry();	    \
+    extern "C" void title##_handler(TrapFrame*) __attribute__((used)); \
     asm(                                            \
         ".globl " #title "_asm_entry\n"             \
         "" #title "_asm_entry: \n"                  \
@@ -122,6 +109,28 @@ extern "C" void handle_interrupt(TrapFrame*);
         "    call " #title "_handler\n"             \
         "    jmp common_trap_exit \n");
 
+#elif ARCH(X86_64)
+#define EH_ENTRY(ec, title)                         \
+    extern "C" void title##_asm_entry();            \
+    extern "C" void title##_handler(TrapFrame*);    \
+    asm(                                            \
+        ".globl " #title "_asm_entry\n"             \
+        "" #title "_asm_entry: \n"                  \
+        "    cli;hlt;\n"                            \
+);
+
+#define EH_ENTRY_NO_CODE(ec, title)                 \
+    extern "C" void title##_handler(TrapFrame*);    \
+    extern "C" void title##_asm_entry();            \
+asm(                                                \
+        ".globl " #title "_asm_entry\n"             \
+        "" #title "_asm_entry: \n"                  \
+        "    cli;hlt;\n"                            \
+);
+#endif
+
+// clang-format on
+
 static void dump(const RegisterState& regs)
 {
     u16 ss;
@@ -135,55 +144,33 @@ static void dump(const RegisterState& regs)
         esp = regs.userspace_esp;
     }
 
-    klog() << "exception code: " << String::format("%04x", regs.exception_code) << " (isr: " << String::format("%04x", regs.isr_number);
-    klog() << "  pc=" << String::format("%04x", (u16)regs.cs) << ":" << String::format("%08x", regs.eip) << " flags=" << String::format("%04x", (u16)regs.eflags);
-    klog() << " stk=" << String::format("%04x", ss) << ":" << String::format("%08x", esp);
-    klog() << "  ds=" << String::format("%04x", (u16)regs.ds) << " es=" << String::format("%04x", (u16)regs.es) << " fs=" << String::format("%04x", (u16)regs.fs) << " gs=" << String::format("%04x", (u16)regs.gs);
-    klog() << "eax=" << String::format("%08x", regs.eax) << " ebx=" << String::format("%08x", regs.ebx) << " ecx=" << String::format("%08x", regs.ecx) << " edx=" << String::format("%08x", regs.edx);
-    klog() << "ebp=" << String::format("%08x", regs.ebp) << " esp=" << String::format("%08x", regs.esp) << " esi=" << String::format("%08x", regs.esi) << " edi=" << String::format("%08x", regs.edi);
-    u32 cr0;
-    asm("movl %%cr0, %%eax"
-        : "=a"(cr0));
-    u32 cr2;
-    asm("movl %%cr2, %%eax"
-        : "=a"(cr2));
-    u32 cr3 = read_cr3();
-    u32 cr4;
-    asm("movl %%cr4, %%eax"
-        : "=a"(cr4));
-    klog() << "cr0=" << String::format("%08x", cr0) << " cr2=" << String::format("%08x", cr2) << " cr3=" << String::format("%08x", cr3) << " cr4=" << String::format("%08x", cr4);
-
-    auto process = Process::current();
-    u8 code[8];
-    void* fault_at;
-    if (process && safe_memcpy(code, (void*)regs.eip, 8, fault_at)) {
-        SmapDisabler disabler;
-        klog() << "code: " << String::format("%02x", code[0]) << " " << String::format("%02x", code[1]) << " " << String::format("%02x", code[2]) << " " << String::format("%02x", code[3]) << " " << String::format("%02x", code[4]) << " " << String::format("%02x", code[5]) << " " << String::format("%02x", code[6]) << " " << String::format("%02x", code[7]);
-    }
+    dbgln("Exception code: {:04x} (isr: {:04x})", regs.exception_code, regs.isr_number);
+    dbgln("    pc={:04x}:{:08x} eflags={:08x}", (u16)regs.cs, regs.eip, regs.eflags);
+    dbgln(" stack={:04x}:{:08x}", ss, esp);
+    dbgln("    ds={:04x} es={:04x} fs={:04x} gs={:04x}", (u16)regs.ds, (u16)regs.es, (u16)regs.fs, (u16)regs.gs);
+    dbgln("   eax={:08x} ebx={:08x} ecx={:08x} edx={:08x}", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    dbgln("   ebp={:08x} esp={:08x} esi={:08x} edi={:08x}", regs.ebp, regs.esp, regs.esi, regs.edi);
+    dbgln("   cr0={:08x} cr2={:08x} cr3={:08x} cr4={:08x}", read_cr0(), read_cr2(), read_cr3(), read_cr4());
 }
 
 void handle_crash(RegisterState& regs, const char* description, int signal, bool out_of_memory)
 {
     auto process = Process::current();
     if (!process) {
-        klog() << description << " with !current";
-        Processor::halt();
+        PANIC("{} with !current", description);
     }
 
     // If a process crashed while inspecting another process,
     // make sure we switch back to the right page tables.
     MM.enter_process_paging_scope(*process);
 
-    klog() << "CRASH: CPU #" << Processor::id() << " " << description << ". Ring " << (regs.cs & 3) << ".";
+    dmesgln("CRASH: CPU #{} {} in ring {}", Processor::id(), description, (regs.cs & 3));
     dump(regs);
 
     if (!(regs.cs & 3)) {
-        klog() << "Crash in ring 0 :(";
-        dump_backtrace();
-        Processor::halt();
+        PANIC("Crash in ring 0");
     }
 
-    cli();
     process->crash(signal, regs.eip, out_of_memory);
 }
 
@@ -217,7 +204,6 @@ void fpu_exception_handler(TrapFrame*)
     asm volatile("clts");
 }
 
-
 // 14: Page Fault
 EH_ENTRY(14, page_fault);
 void page_fault_handler(TrapFrame* trap)
@@ -225,9 +211,7 @@ void page_fault_handler(TrapFrame* trap)
     clac();
 
     auto& regs = *trap->regs;
-    u32 fault_address;
-    asm("movl %%cr2, %%eax"
-        : "=a"(fault_address));
+    auto fault_address = read_cr2();
 
     if constexpr (PAGE_FAULT_DEBUG) {
         u32 fault_page_directory = read_cr3();
@@ -269,10 +253,20 @@ void page_fault_handler(TrapFrame* trap)
     if (!faulted_in_kernel && !MM.validate_user_stack(current_thread->process(), VirtualAddress(regs.userspace_esp))) {
         dbgln("Invalid stack pointer: {}", VirtualAddress(regs.userspace_esp));
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
-        ASSERT_NOT_REACHED();
     }
 
-    auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
+    if (fault_address >= (FlatPtr)&start_of_ro_after_init && fault_address < (FlatPtr)&end_of_ro_after_init) {
+        dump(regs);
+        PANIC("Attempt to write into READONLY_AFTER_INIT section");
+    }
+
+    if (fault_address >= (FlatPtr)&start_of_unmap_after_init && fault_address < (FlatPtr)&end_of_unmap_after_init) {
+        dump(regs);
+        PANIC("Attempt to access UNMAP_AFTER_INIT section");
+    }
+
+    PageFault fault { regs.exception_code, VirtualAddress { fault_address } };
+    auto response = MM.handle_page_fault(fault);
 
     if (response == PageFaultResponse::ShouldCrash || response == PageFaultResponse::OutOfMemory) {
         if (faulted_in_kernel && handle_safe_access_fault(regs, fault_address)) {
@@ -316,13 +310,25 @@ void page_fault_handler(TrapFrame* trap)
             dbgln("Note: Address {} looks like a possible nullptr dereference", VirtualAddress(fault_address));
         }
 
+        auto& current_process = current_thread->process();
+        if (current_process.is_user_process()) {
+            current_process.set_coredump_metadata("fault_address", String::formatted("{:p}", fault_address));
+            current_process.set_coredump_metadata("fault_type", fault.type() == PageFault::Type::PageNotPresent ? "NotPresent" : "ProtectionViolation");
+            String fault_access;
+            if (fault.is_instruction_fetch())
+                fault_access = "Execute";
+            else
+                fault_access = fault.access() == PageFault::Access::Read ? "Read" : "Write";
+            current_process.set_coredump_metadata("fault_access", fault_access);
+        }
+
         handle_crash(regs, "Page Fault", SIGSEGV, response == PageFaultResponse::OutOfMemory);
     } else if (response == PageFaultResponse::Continue) {
 #if PAGE_FAULT_DEBUG
         dbgln("Continuing after resolved page fault");
 #endif
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -334,19 +340,18 @@ void debug_handler(TrapFrame* trap)
     auto current_thread = Thread::current();
     auto& process = current_thread->process();
     if ((regs.cs & 3) == 0) {
-        klog() << "Debug Exception in Ring0";
-        Processor::halt();
-        return;
+        PANIC("Debug exception in ring 0");
     }
     constexpr u8 REASON_SINGLESTEP = 14;
-    bool is_reason_singlestep = (read_dr6() & (1 << REASON_SINGLESTEP));
-    if (!is_reason_singlestep)
+    auto debug_status = read_dr6();
+    auto should_trap_mask = (1 << REASON_SINGLESTEP) | 0b1111;
+    if ((debug_status & should_trap_mask) == 0)
         return;
-
     if (auto tracer = process.tracer()) {
         tracer->set_regs(regs);
     }
     current_thread->send_urgent_signal_to_self(SIGTRAP);
+    write_dr6(debug_status & ~(should_trap_mask));
 }
 
 EH_ENTRY_NO_CODE(3, breakpoint);
@@ -357,9 +362,7 @@ void breakpoint_handler(TrapFrame* trap)
     auto current_thread = Thread::current();
     auto& process = current_thread->process();
     if ((regs.cs & 3) == 0) {
-        klog() << "Breakpoint Trap in Ring0";
-        Processor::halt();
-        return;
+        PANIC("Breakpoint trap in ring 0");
     }
     if (auto tracer = process.tracer()) {
         tracer->set_regs(regs);
@@ -367,21 +370,11 @@ void breakpoint_handler(TrapFrame* trap)
     current_thread->send_urgent_signal_to_self(SIGTRAP);
 }
 
-#define EH(i, msg)                                                                                                                                                             \
-    static void _exception##i()                                                                                                                                                \
-    {                                                                                                                                                                          \
-        klog() << msg;                                                                                                                                                         \
-        u32 cr0, cr2, cr3, cr4;                                                                                                                                                \
-        asm("movl %%cr0, %%eax"                                                                                                                                                \
-            : "=a"(cr0));                                                                                                                                                      \
-        asm("movl %%cr2, %%eax"                                                                                                                                                \
-            : "=a"(cr2));                                                                                                                                                      \
-        asm("movl %%cr3, %%eax"                                                                                                                                                \
-            : "=a"(cr3));                                                                                                                                                      \
-        asm("movl %%cr4, %%eax"                                                                                                                                                \
-            : "=a"(cr4));                                                                                                                                                      \
-        klog() << "CR0=" << String::format("%x", cr0) << " CR2=" << String::format("%x", cr2) << " CR3=" << String::format("%x", cr3) << " CR4=" << String::format("%x", cr4); \
-        Processor::halt();                                                                                                                                                     \
+#define EH(i, msg)                                                                                            \
+    static void _exception##i()                                                                               \
+    {                                                                                                         \
+        dbgln("{}", msg);                                                                                     \
+        PANIC("cr0={:08x} cr2={:08x} cr3={:08x} cr4={:08x}", read_cr0(), read_cr2(), read_cr3(), read_cr4()); \
     }
 
 EH(2, "Unknown error")
@@ -402,94 +395,110 @@ const DescriptorTablePointer& get_idtr()
 
 static void unimp_trap()
 {
-    klog() << "Unhandled IRQ.";
-    Processor::Processor::halt();
+    PANIC("Unhandled IRQ");
 }
 
 GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number)
 {
-    ASSERT(s_interrupt_handler[interrupt_number] != nullptr);
-    return *s_interrupt_handler[interrupt_number];
+    auto*& handler_slot = s_interrupt_handler[interrupt_number];
+    VERIFY(handler_slot != nullptr);
+    return *handler_slot;
 }
 
 static void revert_to_unused_handler(u8 interrupt_number)
 {
-    new UnhandledInterruptHandler(interrupt_number);
+    auto handler = new UnhandledInterruptHandler(interrupt_number);
+    handler->register_interrupt_handler();
 }
 
 void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
 {
-    ASSERT(interrupt_number < GENERIC_INTERRUPT_HANDLERS_COUNT);
-    if (s_interrupt_handler[interrupt_number] != nullptr) {
-        if (s_interrupt_handler[interrupt_number]->type() == HandlerType::UnhandledInterruptHandler) {
-            s_interrupt_handler[interrupt_number] = &handler;
+    VERIFY(interrupt_number < GENERIC_INTERRUPT_HANDLERS_COUNT);
+    auto*& handler_slot = s_interrupt_handler[interrupt_number];
+    if (handler_slot != nullptr) {
+        if (handler_slot->type() == HandlerType::UnhandledInterruptHandler) {
+            if (handler_slot) {
+                auto* unhandled_handler = static_cast<UnhandledInterruptHandler*>(handler_slot);
+                unhandled_handler->unregister_interrupt_handler();
+                delete unhandled_handler;
+            }
+            handler_slot = &handler;
             return;
         }
-        if (s_interrupt_handler[interrupt_number]->is_shared_handler() && !s_interrupt_handler[interrupt_number]->is_sharing_with_others()) {
-            ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::SharedIRQHandler);
-            static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->register_handler(handler);
+        if (handler_slot->is_shared_handler() && !handler_slot->is_sharing_with_others()) {
+            VERIFY(handler_slot->type() == HandlerType::SharedIRQHandler);
+            static_cast<SharedIRQHandler*>(handler_slot)->register_handler(handler);
             return;
         }
-        if (!s_interrupt_handler[interrupt_number]->is_shared_handler()) {
-            if (s_interrupt_handler[interrupt_number]->type() == HandlerType::SpuriousInterruptHandler) {
-                static_cast<SpuriousInterruptHandler*>(s_interrupt_handler[interrupt_number])->register_handler(handler);
+        if (!handler_slot->is_shared_handler()) {
+            if (handler_slot->type() == HandlerType::SpuriousInterruptHandler) {
+                static_cast<SpuriousInterruptHandler*>(handler_slot)->register_handler(handler);
                 return;
             }
-            ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::IRQHandler);
-            auto& previous_handler = *s_interrupt_handler[interrupt_number];
-            s_interrupt_handler[interrupt_number] = nullptr;
+            VERIFY(handler_slot->type() == HandlerType::IRQHandler);
+            auto& previous_handler = *handler_slot;
+            handler_slot = nullptr;
             SharedIRQHandler::initialize(interrupt_number);
-            static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->register_handler(previous_handler);
-            static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->register_handler(handler);
+            VERIFY(handler_slot);
+            static_cast<SharedIRQHandler*>(handler_slot)->register_handler(previous_handler);
+            static_cast<SharedIRQHandler*>(handler_slot)->register_handler(handler);
             return;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     } else {
-        s_interrupt_handler[interrupt_number] = &handler;
+        handler_slot = &handler;
     }
 }
 
 void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHandler& handler)
 {
-    ASSERT(s_interrupt_handler[interrupt_number] != nullptr);
-    if (s_interrupt_handler[interrupt_number]->type() == HandlerType::UnhandledInterruptHandler) {
+    auto*& handler_slot = s_interrupt_handler[interrupt_number];
+    VERIFY(handler_slot != nullptr);
+    if (handler_slot->type() == HandlerType::UnhandledInterruptHandler) {
         dbgln("Trying to unregister unused handler (?)");
         return;
     }
-    if (s_interrupt_handler[interrupt_number]->is_shared_handler() && !s_interrupt_handler[interrupt_number]->is_sharing_with_others()) {
-        ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::SharedIRQHandler);
-        static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->unregister_handler(handler);
-        if (!static_cast<SharedIRQHandler*>(s_interrupt_handler[interrupt_number])->sharing_devices_count()) {
+    if (handler_slot->is_shared_handler() && !handler_slot->is_sharing_with_others()) {
+        VERIFY(handler_slot->type() == HandlerType::SharedIRQHandler);
+        auto* shared_handler = static_cast<SharedIRQHandler*>(handler_slot);
+        shared_handler->unregister_handler(handler);
+        if (!shared_handler->sharing_devices_count()) {
+            handler_slot = nullptr;
             revert_to_unused_handler(interrupt_number);
         }
         return;
     }
-    if (!s_interrupt_handler[interrupt_number]->is_shared_handler()) {
-        ASSERT(s_interrupt_handler[interrupt_number]->type() == HandlerType::IRQHandler);
+    if (!handler_slot->is_shared_handler()) {
+        VERIFY(handler_slot->type() == HandlerType::IRQHandler);
+        handler_slot = nullptr;
         revert_to_unused_handler(interrupt_number);
         return;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
-void register_interrupt_handler(u8 index, void (*f)())
+UNMAP_AFTER_INIT void register_interrupt_handler(u8 index, void (*handler)())
 {
-    s_idt[index].low = 0x00080000 | LSW((f));
-    s_idt[index].high = ((u32)(f)&0xffff0000) | 0x8e00;
+    // FIXME: Why is that with selector 8?
+    // FIXME: Is the Gate Type really required to be an Interrupt
+    // FIXME: What's up with that storage segment 0?
+    s_idt[index] = IDTEntry((FlatPtr)handler, 8, IDTEntryType::InterruptGate32, 0, 0);
 }
 
-void register_user_callable_interrupt_handler(u8 index, void (*f)())
+UNMAP_AFTER_INIT void register_user_callable_interrupt_handler(u8 index, void (*handler)())
 {
-    s_idt[index].low = 0x00080000 | LSW((f));
-    s_idt[index].high = ((u32)(f)&0xffff0000) | 0xef00;
+    // FIXME: Why is that with selector 8?
+    // FIXME: Is the Gate Type really required to be a Trap
+    // FIXME: What's up with that storage segment 0?
+    s_idt[index] = IDTEntry((FlatPtr)handler, 8, IDTEntryType::TrapGate32, 0, 3);
 }
 
-void flush_idt()
+UNMAP_AFTER_INIT void flush_idt()
 {
     asm("lidt %0" ::"m"(s_idtr));
 }
 
-static void idt_init()
+UNMAP_AFTER_INIT static void idt_init()
 {
     s_idtr.address = s_idt;
     s_idtr.limit = 256 * 8 - 1;
@@ -695,7 +704,8 @@ static void idt_init()
     dbgln("Installing Unhandled Handlers");
 
     for (u8 i = 0; i < GENERIC_INTERRUPT_HANDLERS_COUNT; ++i) {
-        new UnhandledInterruptHandler(i);
+        auto* handler = new UnhandledInterruptHandler(i);
+        handler->register_interrupt_handler();
     }
 
     flush_idt();
@@ -710,11 +720,11 @@ void handle_interrupt(TrapFrame* trap)
 {
     clac();
     auto& regs = *trap->regs;
-    ASSERT(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
+    VERIFY(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
     u8 irq = (u8)(regs.isr_number - 0x50);
     s_entropy_source_interrupts.add_random_event(irq);
     auto* handler = s_interrupt_handler[irq];
-    ASSERT(handler);
+    VERIFY(handler);
     handler->increment_invoking_counter();
     handler->handle_interrupt(regs);
     handler->eoi();
@@ -738,67 +748,186 @@ void exit_trap(TrapFrame* trap)
     return Processor::current().exit_trap(*trap);
 }
 
-static void sse_init()
+UNMAP_AFTER_INIT void write_cr0(FlatPtr value)
 {
-    asm volatile(
-        "mov %cr0, %eax\n"
-        "andl $0xfffffffb, %eax\n"
-        "orl $0x2, %eax\n"
-        "mov %eax, %cr0\n"
-        "mov %cr4, %eax\n"
-        "orl $0x600, %eax\n"
-        "mov %eax, %cr4\n");
+#if ARCH(I386)
+    asm volatile("mov %%eax, %%cr0" ::"a"(value));
+#else
+    asm volatile("mov %%rax, %%cr0" ::"a"(value));
+#endif
 }
 
-u32 read_cr0()
+UNMAP_AFTER_INIT void write_cr4(FlatPtr value)
 {
-    u32 cr0;
-    asm("movl %%cr0, %%eax"
+#if ARCH(I386)
+    asm volatile("mov %%eax, %%cr4" ::"a"(value));
+#else
+    asm volatile("mov %%rax, %%cr4" ::"a"(value));
+#endif
+}
+
+UNMAP_AFTER_INIT static void sse_init()
+{
+    write_cr0((read_cr0() & 0xfffffffbu) | 0x2);
+    write_cr4(read_cr4() | 0x600);
+}
+
+FlatPtr read_cr0()
+{
+    FlatPtr cr0;
+#if ARCH(I386)
+    asm("mov %%cr0, %%eax"
         : "=a"(cr0));
+#else
+    asm("mov %%cr0, %%rax"
+        : "=a"(cr0));
+#endif
     return cr0;
 }
 
-u32 read_cr3()
+FlatPtr read_cr2()
 {
-    u32 cr3;
-    asm("movl %%cr3, %%eax"
+    FlatPtr cr2;
+#if ARCH(I386)
+    asm("mov %%cr2, %%eax"
+        : "=a"(cr2));
+#else
+    asm("mov %%cr2, %%rax"
+        : "=a"(cr2));
+#endif
+    return cr2;
+}
+
+FlatPtr read_cr3()
+{
+    FlatPtr cr3;
+#if ARCH(I386)
+    asm("mov %%cr3, %%eax"
         : "=a"(cr3));
+#else
+    asm("mov %%cr3, %%rax"
+        : "=a"(cr3));
+#endif
     return cr3;
 }
 
-void write_cr3(u32 cr3)
+void write_cr3(FlatPtr cr3)
 {
     // NOTE: If you're here from a GPF crash, it's very likely that a PDPT entry is incorrect, not this!
-    asm volatile("movl %%eax, %%cr3" ::"a"(cr3)
+#if ARCH(I386)
+    asm volatile("mov %%eax, %%cr3" ::"a"(cr3)
                  : "memory");
+#else
+    asm volatile("mov %%rax, %%cr3" ::"a"(cr3)
+                 : "memory");
+#endif
 }
 
-u32 read_cr4()
+FlatPtr read_cr4()
 {
-    u32 cr4;
-    asm("movl %%cr4, %%eax"
+    FlatPtr cr4;
+#if ARCH(I386)
+    asm("mov %%cr4, %%eax"
         : "=a"(cr4));
+#else
+    asm("mov %%cr4, %%rax"
+        : "=a"(cr4));
+#endif
     return cr4;
 }
 
-u32 read_dr6()
+void read_debug_registers_into(DebugRegisterState& state)
 {
-    u32 dr6;
-    asm("movl %%dr6, %%eax"
-        : "=a"(dr6));
-    return dr6;
+    state.dr0 = read_dr0();
+    state.dr1 = read_dr1();
+    state.dr2 = read_dr2();
+    state.dr3 = read_dr3();
+    state.dr6 = read_dr6();
+    state.dr7 = read_dr7();
 }
 
-FPUState Processor::s_clean_fpu_state;
+void write_debug_registers_from(const DebugRegisterState& state)
+{
+    write_dr0(state.dr0);
+    write_dr1(state.dr1);
+    write_dr2(state.dr2);
+    write_dr3(state.dr3);
+    write_dr6(state.dr6);
+    write_dr7(state.dr7);
+}
 
-static Vector<Processor*>* s_processors;
+void clear_debug_registers()
+{
+    write_dr0(0);
+    write_dr1(0);
+    write_dr2(0);
+    write_dr3(0);
+    write_dr7(1 << 10); // Bit 10 is reserved and must be set to 1.
+}
+
+#if ARCH(I386)
+#    define DEFINE_DEBUG_REGISTER(index)                         \
+        FlatPtr read_dr##index()                                 \
+        {                                                        \
+            FlatPtr value;                                       \
+            asm("mov %%dr" #index ", %%eax"                      \
+                : "=a"(value));                                  \
+            return value;                                        \
+        }                                                        \
+        void write_dr##index(FlatPtr value)                      \
+        {                                                        \
+            asm volatile("mov %%eax, %%dr" #index ::"a"(value)); \
+        }
+#else
+#    define DEFINE_DEBUG_REGISTER(index)                         \
+        FlatPtr read_dr##index()                                 \
+        {                                                        \
+            FlatPtr value;                                       \
+            asm("mov %%dr" #index ", %%rax"                      \
+                : "=a"(value));                                  \
+            return value;                                        \
+        }                                                        \
+        void write_dr##index(FlatPtr value)                      \
+        {                                                        \
+            asm volatile("mov %%rax, %%dr" #index ::"a"(value)); \
+        }
+#endif
+
+DEFINE_DEBUG_REGISTER(0);
+DEFINE_DEBUG_REGISTER(1);
+DEFINE_DEBUG_REGISTER(2);
+DEFINE_DEBUG_REGISTER(3);
+DEFINE_DEBUG_REGISTER(6);
+DEFINE_DEBUG_REGISTER(7);
+
+#define XCR_XFEATURE_ENABLED_MASK 0
+
+UNMAP_AFTER_INIT u64 read_xcr0()
+{
+    u32 eax, edx;
+    asm volatile("xgetbv"
+                 : "=a"(eax), "=d"(edx)
+                 : "c"(XCR_XFEATURE_ENABLED_MASK));
+    return eax + ((u64)edx << 32);
+}
+
+UNMAP_AFTER_INIT void write_xcr0(u64 value)
+{
+    u32 eax = value;
+    u32 edx = value >> 32;
+    asm volatile("xsetbv" ::"a"(eax), "d"(edx), "c"(XCR_XFEATURE_ENABLED_MASK));
+}
+
+READONLY_AFTER_INIT FPUState Processor::s_clean_fpu_state;
+
+READONLY_AFTER_INIT static Vector<Processor*>* s_processors;
 static SpinLock s_processor_lock;
-volatile u32 Processor::g_total_processors;
+READONLY_AFTER_INIT volatile u32 Processor::g_total_processors;
 static volatile bool s_smp_enabled;
 
 Vector<Processor*>& Processor::processors()
 {
-    ASSERT(s_processors);
+    VERIFY(s_processors);
     return *s_processors;
 }
 
@@ -809,8 +938,8 @@ Processor& Processor::by_id(u32 cpu)
     // for all APs to finish, after which this array never gets modified
     // again, so it's safe to not protect access to it here
     auto& procs = processors();
-    ASSERT(procs[cpu] != nullptr);
-    ASSERT(procs.size() > cpu);
+    VERIFY(procs[cpu] != nullptr);
+    VERIFY(procs.size() > cpu);
     return *procs[cpu];
 }
 
@@ -821,7 +950,7 @@ Processor& Processor::by_id(u32 cpu)
     }
 }
 
-void Processor::cpu_detect()
+UNMAP_AFTER_INIT void Processor::cpu_detect()
 {
     // NOTE: This is called during Processor::early_initialize, we cannot
     //       safely log at this point because we don't have kmalloc
@@ -853,6 +982,10 @@ void Processor::cpu_detect()
         set_feature(CPUFeature::SSE4_1);
     if (processor_info.ecx() & (1 << 20))
         set_feature(CPUFeature::SSE4_2);
+    if (processor_info.ecx() & (1 << 26))
+        set_feature(CPUFeature::XSAVE);
+    if (processor_info.ecx() & (1 << 28))
+        set_feature(CPUFeature::AVX);
     if (processor_info.ecx() & (1 << 30))
         set_feature(CPUFeature::RDRAND);
     if (processor_info.edx() & (1 << 11)) {
@@ -867,7 +1000,7 @@ void Processor::cpu_detect()
 
     u32 max_extended_leaf = CPUID(0x80000000).eax();
 
-    ASSERT(max_extended_leaf >= 0x80000001);
+    VERIFY(max_extended_leaf >= 0x80000001);
     CPUID extended_processor_info(0x80000001);
     if (extended_processor_info.edx() & (1 << 20))
         set_feature(CPUFeature::NX);
@@ -906,7 +1039,7 @@ void Processor::cpu_detect()
         set_feature(CPUFeature::RDSEED);
 }
 
-void Processor::cpu_setup()
+UNMAP_AFTER_INIT void Processor::cpu_setup()
 {
     // NOTE: This is called during Processor::early_initialize, we cannot
     //       safely log at this point because we don't have kmalloc
@@ -916,18 +1049,11 @@ void Processor::cpu_setup()
     if (has_feature(CPUFeature::SSE))
         sse_init();
 
-    asm volatile(
-        "movl %%cr0, %%eax\n"
-        "orl $0x00010000, %%eax\n"
-        "movl %%eax, %%cr0\n" ::
-            : "%eax", "memory");
+    write_cr0(read_cr0() | 0x00010000);
 
     if (has_feature(CPUFeature::PGE)) {
         // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x80, %eax\n"
-            "mov %eax, %cr4\n");
+        write_cr4(read_cr4() | 0x80);
     }
 
     if (has_feature(CPUFeature::NX)) {
@@ -941,32 +1067,34 @@ void Processor::cpu_setup()
 
     if (has_feature(CPUFeature::SMEP)) {
         // Turn on CR4.SMEP
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x100000, %eax\n"
-            "mov %eax, %cr4\n");
+        write_cr4(read_cr4() | 0x100000);
     }
 
     if (has_feature(CPUFeature::SMAP)) {
         // Turn on CR4.SMAP
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x200000, %eax\n"
-            "mov %eax, %cr4\n");
+        write_cr4(read_cr4() | 0x200000);
     }
 
     if (has_feature(CPUFeature::UMIP)) {
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x800, %eax\n"
-            "mov %eax, %cr4\n");
+        write_cr4(read_cr4() | 0x800);
     }
 
     if (has_feature(CPUFeature::TSC)) {
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x4, %eax\n"
-            "mov %eax, %cr4\n");
+        write_cr4(read_cr4() | 0x4);
+    }
+
+    if (has_feature(CPUFeature::XSAVE)) {
+        // Turn on CR4.OSXSAVE
+        write_cr4(read_cr4() | 0x40000);
+
+        // According to the Intel manual: "After reset, all bits (except bit 0) in XCR0 are cleared to zero; XCR0[0] is set to 1."
+        // Sadly we can't trust this, for example VirtualBox starts with bits 0-4 set, so let's do it ourselves.
+        write_xcr0(0x1);
+
+        if (has_feature(CPUFeature::AVX)) {
+            // Turn on SSE, AVX and x87 flags
+            write_xcr0(read_xcr0() | 0x7);
+        }
     }
 }
 
@@ -974,57 +1102,60 @@ String Processor::features_string() const
 {
     StringBuilder builder;
     auto feature_to_str =
-        [](CPUFeature f) -> const char*
-        {
-            switch (f) {
-                case CPUFeature::NX:
-                    return "nx";
-                case CPUFeature::PAE:
-                    return "pae";
-                case CPUFeature::PGE:
-                    return "pge";
-                case CPUFeature::RDRAND:
-                    return "rdrand";
-                case CPUFeature::RDSEED:
-                    return "rdseed";
-                case CPUFeature::SMAP:
-                    return "smap";
-                case CPUFeature::SMEP:
-                    return "smep";
-                case CPUFeature::SSE:
-                    return "sse";
-                case CPUFeature::TSC:
-                    return "tsc";
-                case CPUFeature::RDTSCP:
-                    return "rdtscp";
-                case CPUFeature::CONSTANT_TSC:
-                    return "constant_tsc";
-                case CPUFeature::NONSTOP_TSC:
-                    return "nonstop_tsc";
-                case CPUFeature::UMIP:
-                    return "umip";
-                case CPUFeature::SEP:
-                    return "sep";
-                case CPUFeature::SYSCALL:
-                    return "syscall";
-                case CPUFeature::MMX:
-                    return "mmx";
-                case CPUFeature::SSE2:
-                    return "sse2";
-                case CPUFeature::SSE3:
-                    return "sse3";
-                case CPUFeature::SSSE3:
-                    return "ssse3";
-                case CPUFeature::SSE4_1:
-                    return "sse4.1";
-                case CPUFeature::SSE4_2:
-                    return "sse4.2";
-                // no default statement here intentionally so that we get
-                // a warning if a new feature is forgotten to be added here
-            }
-            // Shouldn't ever happen
-            return "???";
-        };
+        [](CPUFeature f) -> const char* {
+        switch (f) {
+        case CPUFeature::NX:
+            return "nx";
+        case CPUFeature::PAE:
+            return "pae";
+        case CPUFeature::PGE:
+            return "pge";
+        case CPUFeature::RDRAND:
+            return "rdrand";
+        case CPUFeature::RDSEED:
+            return "rdseed";
+        case CPUFeature::SMAP:
+            return "smap";
+        case CPUFeature::SMEP:
+            return "smep";
+        case CPUFeature::SSE:
+            return "sse";
+        case CPUFeature::TSC:
+            return "tsc";
+        case CPUFeature::RDTSCP:
+            return "rdtscp";
+        case CPUFeature::CONSTANT_TSC:
+            return "constant_tsc";
+        case CPUFeature::NONSTOP_TSC:
+            return "nonstop_tsc";
+        case CPUFeature::UMIP:
+            return "umip";
+        case CPUFeature::SEP:
+            return "sep";
+        case CPUFeature::SYSCALL:
+            return "syscall";
+        case CPUFeature::MMX:
+            return "mmx";
+        case CPUFeature::SSE2:
+            return "sse2";
+        case CPUFeature::SSE3:
+            return "sse3";
+        case CPUFeature::SSSE3:
+            return "ssse3";
+        case CPUFeature::SSE4_1:
+            return "sse4.1";
+        case CPUFeature::SSE4_2:
+            return "sse4.2";
+        case CPUFeature::XSAVE:
+            return "xsave";
+        case CPUFeature::AVX:
+            return "avx";
+            // no default statement here intentionally so that we get
+            // a warning if a new feature is forgotten to be added here
+        }
+        // Shouldn't ever happen
+        return "???";
+    };
     bool first = true;
     for (u32 flag = 1; flag != 0; flag <<= 1) {
         if ((static_cast<u32>(m_features) & flag) != 0) {
@@ -1039,7 +1170,12 @@ String Processor::features_string() const
     return builder.build();
 }
 
-void Processor::early_initialize(u32 cpu)
+String Processor::platform_string() const
+{
+    return "i386";
+}
+
+UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
 {
     m_self = this;
 
@@ -1070,19 +1206,19 @@ void Processor::early_initialize(u32 cpu)
     cpu_setup();
     gdt_init();
 
-    ASSERT(is_initialized()); // sanity check
-    ASSERT(&current() == this); // sanity check
+    VERIFY(is_initialized());   // sanity check
+    VERIFY(&current() == this); // sanity check
 }
 
-void Processor::initialize(u32 cpu)
+UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
 {
-    ASSERT(m_self == this);
-    ASSERT(&current() == this); // sanity check
+    VERIFY(m_self == this);
+    VERIFY(&current() == this); // sanity check
 
-    klog() << "CPU[" << id() << "]: Supported features: " << features_string();
+    dmesgln("CPU[{}]: Supported features: {}", id(), features_string());
     if (!has_feature(CPUFeature::RDRAND))
-        klog() << "CPU[" << id() << "]: No RDRAND support detected, randomness will be poor";
-    klog() << "CPU[" << id() << "]: Physical address bit width: " << m_physical_address_bit_width;
+        dmesgln("CPU[{}]: No RDRAND support detected, randomness will be poor", id());
+    dmesgln("CPU[{}]: Physical address bit width: {}", id(), m_physical_address_bit_width);
 
     if (cpu == 0)
         idt_init();
@@ -1090,10 +1226,10 @@ void Processor::initialize(u32 cpu)
         flush_idt();
 
     if (cpu == 0) {
-        ASSERT((FlatPtr(&s_clean_fpu_state) & 0xF) == 0);
+        VERIFY((FlatPtr(&s_clean_fpu_state) & 0xF) == 0);
         asm volatile("fninit");
         asm volatile("fxsave %0"
-            : "=m"(s_clean_fpu_state));
+                     : "=m"(s_clean_fpu_state));
     }
 
     m_info = new ProcessorInfo(*this);
@@ -1116,7 +1252,7 @@ void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
 
     if (i > m_gdt_length) {
         m_gdt_length = i + 1;
-        ASSERT(m_gdt_length <= sizeof(m_gdt) / sizeof(m_gdt[0]));
+        VERIFY(m_gdt_length <= sizeof(m_gdt) / sizeof(m_gdt[0]));
         m_gdtr.limit = (m_gdt_length + 1) * 8 - 1;
     }
     m_gdt[i].low = low;
@@ -1146,7 +1282,7 @@ void Processor::flush_gdt()
     m_gdtr.address = m_gdt;
     m_gdtr.limit = (m_gdt_length * 8) - 1;
     asm volatile("lgdt %0" ::"m"(m_gdtr)
-        : "memory");
+                 : "memory");
 }
 
 const DescriptorTablePointer& Processor::get_gdtr()
@@ -1159,11 +1295,11 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     FlatPtr frame_ptr = 0, eip = 0;
     Vector<FlatPtr, 32> stack_trace;
 
-    auto walk_stack = [&](FlatPtr stack_ptr)
-    {
+    auto walk_stack = [&](FlatPtr stack_ptr) {
+        static constexpr size_t max_stack_frames = 4096;
         stack_trace.append(eip);
         size_t count = 1;
-        while (stack_ptr) {
+        while (stack_ptr && stack_trace.size() < max_stack_frames) {
             FlatPtr retaddr;
 
             count++;
@@ -1186,8 +1322,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             }
         }
     };
-    auto capture_current_thread = [&]()
-    {
+    auto capture_current_thread = [&]() {
         frame_ptr = (FlatPtr)__builtin_frame_address(0);
         eip = (FlatPtr)__builtin_return_address(0);
 
@@ -1200,26 +1335,27 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     // reflect the status at the last context switch.
     ScopedSpinLock lock(g_scheduler_lock);
     if (&thread == Processor::current_thread()) {
-        ASSERT(thread.state() == Thread::Running);
+        VERIFY(thread.state() == Thread::Running);
         // Leave the scheduler lock. If we trigger page faults we may
         // need to be preempted. Since this is our own thread it won't
         // cause any problems as the stack won't change below this frame.
         lock.unlock();
         capture_current_thread();
     } else if (thread.is_active()) {
-        ASSERT(thread.cpu() != Processor::id());
+        VERIFY(thread.cpu() != Processor::id());
         // If this is the case, the thread is currently running
         // on another processor. We can't trust the kernel stack as
         // it may be changing at any time. We need to probably send
         // an IPI to that processor, have it walk the stack and wait
         // until it returns the data back to us
         auto& proc = Processor::current();
-        smp_unicast(thread.cpu(),
+        smp_unicast(
+            thread.cpu(),
             [&]() {
                 dbgln("CPU[{}] getting stack for cpu #{}", Processor::id(), proc.get_id());
                 ProcessPagingScope paging_scope(thread.process());
-                ASSERT(&Processor::current() != &proc);
-                ASSERT(&thread == Processor::current_thread());
+                VERIFY(&Processor::current() != &proc);
+                VERIFY(&thread == Processor::current_thread());
                 // NOTE: Because the other processor is still holding the
                 // scheduler lock while waiting for this callback to finish,
                 // the current thread on the target processor cannot change
@@ -1228,11 +1364,12 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
                 //       because the other processor is still holding the
                 //       scheduler lock...
                 capture_current_thread();
-            }, false);
+            },
+            false);
     } else {
         switch (thread.state()) {
         case Thread::Running:
-            ASSERT_NOT_REACHED(); // should have been handled above
+            VERIFY_NOT_REACHED(); // should have been handled above
         case Thread::Runnable:
         case Thread::Stopped:
         case Thread::Blocked:
@@ -1271,24 +1408,33 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
 
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 {
-    ASSERT(from_thread == to_thread || from_thread->state() != Thread::Running);
-    ASSERT(to_thread->state() == Thread::Running);
+    VERIFY(from_thread == to_thread || from_thread->state() != Thread::Running);
+    VERIFY(to_thread->state() == Thread::Running);
 
     Processor::set_current_thread(*to_thread);
 
     auto& from_tss = from_thread->tss();
     auto& to_tss = to_thread->tss();
     asm volatile("fxsave %0"
-        : "=m"(from_thread->fpu_state()));
+                 : "=m"(from_thread->fpu_state()));
 
     from_tss.fs = get_fs();
     from_tss.gs = get_gs();
     set_fs(to_tss.fs);
     set_gs(to_tss.gs);
 
+    if (from_thread->process().is_traced())
+        read_debug_registers_into(from_thread->debug_register_state());
+
+    if (to_thread->process().is_traced()) {
+        write_debug_registers_from(to_thread->debug_register_state());
+    } else {
+        clear_debug_registers();
+    }
+
     auto& processor = Processor::current();
     auto& tls_descriptor = processor.get_gdt_entry(GDT_SELECTOR_TLS);
-    tls_descriptor.set_base(to_thread->thread_specific_data().as_ptr());
+    tls_descriptor.set_base(to_thread->thread_specific_data());
     tls_descriptor.set_limit(to_thread->thread_specific_region_size());
 
     if (from_tss.cr3 != to_tss.cr3)
@@ -1297,10 +1443,8 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     to_thread->set_cpu(processor.get_id());
     processor.restore_in_critical(to_thread->saved_critical());
 
-    asm volatile("fxrstor %0"
-        ::"m"(to_thread->fpu_state()));
+    asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
 
-    // TODO: debug registers
     // TODO: ioperm?
 }
 
@@ -1308,13 +1452,15 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
 void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
-    ASSERT(!in_irq());
-    ASSERT(m_in_critical == 1);
-    ASSERT(is_kernel_mode());
+    VERIFY(!in_irq());
+    VERIFY(m_in_critical == 1);
+    VERIFY(is_kernel_mode());
 
-    dbgln<CONTEXT_SWITCH_DEBUG>("switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
     from_thread->save_critical(m_in_critical);
 
+#if ARCH(I386)
+    // clang-format off
     // Switch to new thread context, passing from_thread and to_thread
     // through to the new context using registers edx and eax
     asm volatile(
@@ -1355,20 +1501,24 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
           [to_thread] "a" (to_thread)
         : "memory"
     );
+    // clang-format on
+#else
+    PANIC("Context switching not implemented.");
+#endif
 
-    dbgln<CONTEXT_SWITCH_DEBUG>("switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
     Processor::current().restore_in_critical(to_thread->saved_critical());
 }
 
 extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe_unused]] Thread* to_thread, [[maybe_unused]] TrapFrame* trap)
 {
-    ASSERT(!are_interrupts_enabled());
-    ASSERT(is_kernel_mode());
+    VERIFY(!are_interrupts_enabled());
+    VERIFY(is_kernel_mode());
 
-    dbgln<CONTEXT_SWITCH_DEBUG>("switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
-    ASSERT(to_thread == Thread::current());
+    VERIFY(to_thread == Thread::current());
 
     Scheduler::enter_current(*from_thread, true);
 
@@ -1382,6 +1532,8 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 }
 
 extern "C" void thread_context_first_enter(void);
+
+// clang-format off
 asm(
 // enter_thread_context returns to here first time a thread is executing
 ".globl thread_context_first_enter \n"
@@ -1396,6 +1548,7 @@ asm(
 "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
 "    jmp common_trap_exit \n"
 );
+// clang-format on
 
 void exit_kernel_thread(void)
 {
@@ -1404,20 +1557,24 @@ void exit_kernel_thread(void)
 
 u32 Processor::init_context(Thread& thread, bool leave_crit)
 {
-    ASSERT(is_kernel_mode());
-    ASSERT(g_scheduler_lock.is_locked());
+    VERIFY(is_kernel_mode());
+    VERIFY(g_scheduler_lock.is_locked());
     if (leave_crit) {
         // Leave the critical section we set up in in Process::exec,
         // but because we still have the scheduler lock we should end up with 1
         m_in_critical--; // leave it without triggering anything or restoring flags
-        ASSERT(in_critical() == 1);
+        VERIFY(in_critical() == 1);
     }
 
     u32 kernel_stack_top = thread.kernel_stack_top();
+
+    // Add a random offset between 0-256 (16-byte aligned)
+    kernel_stack_top -= round_up_to_power_of_two(get_fast_random<u8>(), 16);
+
     u32 stack_top = kernel_stack_top;
 
     // TODO: handle NT?
-    ASSERT((cpu_flags() & 0x24000) == 0); // Assume !(NT | VM)
+    VERIFY((cpu_flags() & 0x24000) == 0); // Assume !(NT | VM)
 
     auto& tss = thread.tss();
     bool return_to_user = (tss.cs & 3) != 0;
@@ -1515,13 +1672,15 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
 
 extern "C" u32 do_init_context(Thread* thread, u32 flags)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     thread->tss().eflags = flags;
     return Processor::current().init_context(*thread, true);
 }
 
 extern "C" void do_assume_context(Thread* thread, u32 flags);
 
+#if ARCH(I386)
+// clang-format off
 asm(
 ".global do_assume_context \n"
 "do_assume_context: \n"
@@ -1541,23 +1700,30 @@ asm(
 "    pushl $thread_context_first_enter \n" // should be same as tss.eip
 "    jmp enter_thread_context \n"
 );
+// clang-format on
+#endif
 
-void Processor::assume_context(Thread& thread, u32 flags)
+void Processor::assume_context(Thread& thread, FlatPtr flags)
 {
-    dbgln<CONTEXT_SWITCH_DEBUG>("Assume context for thread {} {}", VirtualAddress(&thread), thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
 
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     Scheduler::prepare_after_exec();
     // in_critical() should be 2 here. The critical section in Process::exec
     // and then the scheduler lock
-    ASSERT(Processor::current().in_critical() == 2);
+    VERIFY(Processor::current().in_critical() == 2);
+#if ARCH(I386)
     do_assume_context(&thread, flags);
-    ASSERT_NOT_REACHED();
+#elif ARCH(X86_64)
+    (void)flags;
+    TODO();
+#endif
+    VERIFY_NOT_REACHED();
 }
 
-extern "C" void pre_init_finished(void)
+extern "C" UNMAP_AFTER_INIT void pre_init_finished(void)
 {
-    ASSERT(g_scheduler_lock.own_lock());
+    VERIFY(g_scheduler_lock.own_lock());
 
     // Because init_finished() will wait on the other APs, we need
     // to release the scheduler lock so that the other APs can also get
@@ -1568,16 +1734,16 @@ extern "C" void pre_init_finished(void)
     Scheduler::leave_on_first_switch(prev_flags);
 }
 
-extern "C" void post_init_finished(void)
+extern "C" UNMAP_AFTER_INIT void post_init_finished(void)
 {
     // We need to re-acquire the scheduler lock before a context switch
     // transfers control into the idle loop, which needs the lock held
     Scheduler::prepare_for_idle_loop();
 }
 
-void Processor::initialize_context_switching(Thread& initial_thread)
+UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_thread)
 {
-    ASSERT(initial_thread.process().is_kernel_process());
+    VERIFY(initial_thread.process().is_kernel_process());
 
     auto& tss = initial_thread.tss();
     m_tss = tss;
@@ -1589,6 +1755,8 @@ void Processor::initialize_context_switching(Thread& initial_thread)
 
     m_scheduler_initialized = true;
 
+#if ARCH(I386)
+    // clang-format off
     asm volatile(
         "movl %[new_esp], %%esp \n" // switch to new stack
         "pushl %[from_to_thread] \n" // to_thread
@@ -1612,14 +1780,16 @@ void Processor::initialize_context_switching(Thread& initial_thread)
            [from_to_thread] "b" (&initial_thread),
            [cpu] "c" (id())
     );
+    // clang-format on
+#endif
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(&Processor::current() == this);
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(&Processor::current() == this);
     trap.prev_irq_level = m_in_irq;
     if (raise_irq)
         m_in_irq++;
@@ -1637,9 +1807,9 @@ void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
 
 void Processor::exit_trap(TrapFrame& trap)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(&Processor::current() == this);
-    ASSERT(m_in_irq >= trap.prev_irq_level);
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(&Processor::current() == this);
+    VERIFY(m_in_irq >= trap.prev_irq_level);
     m_in_irq = trap.prev_irq_level;
 
     smp_process_pending_messages();
@@ -1652,7 +1822,7 @@ void Processor::exit_trap(TrapFrame& trap)
         auto& current_trap = current_thread->current_trap();
         current_trap = trap.next_trap;
         if (current_trap) {
-            ASSERT(current_trap->regs);
+            VERIFY(current_trap->regs);
             // If we have another higher level trap then we probably returned
             // from an interrupt or irq handler. The cs register of the
             // new/higher level trap tells us what the mode prior to it was
@@ -1667,8 +1837,8 @@ void Processor::exit_trap(TrapFrame& trap)
 
 void Processor::check_invoke_scheduler()
 {
-    ASSERT(!m_in_irq);
-    ASSERT(!m_in_critical);
+    VERIFY(!m_in_irq);
+    VERIFY(!m_in_critical);
     if (m_invoke_scheduler_async && m_scheduler_initialized) {
         m_invoke_scheduler_async = false;
         Scheduler::invoke_async();
@@ -1679,10 +1849,12 @@ void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
     auto ptr = vaddr.as_ptr();
     while (page_count > 0) {
+        // clang-format off
         asm volatile("invlpg %0"
              :
              : "m"(*ptr)
              : "memory");
+        // clang-format on
         ptr += PAGE_SIZE;
         page_count--;
     }
@@ -1690,7 +1862,7 @@ void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 
 void Processor::flush_tlb(const PageDirectory* page_directory, VirtualAddress vaddr, size_t page_count)
 {
-    if (s_smp_enabled)
+    if (s_smp_enabled && (!is_user_address(vaddr) || Process::current()->thread_count() > 1))
         smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
     else
         flush_tlb_local(vaddr, page_count);
@@ -1730,23 +1902,23 @@ ProcessorMessage& Processor::smp_get_from_pool()
         }
     }
 
-    ASSERT(msg != nullptr);
+    VERIFY(msg != nullptr);
     return *msg;
 }
 
-Atomic<u32> Processor::s_idle_cpu_mask{ 0 };
+Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 
 u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
 {
-    ASSERT(Processor::current().in_critical());
-    ASSERT(wake_count > 0);
+    VERIFY(Processor::current().in_critical());
+    VERIFY(wake_count > 0);
     if (!s_smp_enabled)
         return 0;
 
     // Wake at most N - 1 processors
     if (wake_count >= Processor::count()) {
         wake_count = Processor::count() - 1;
-        ASSERT(wake_count > 0);
+        VERIFY(wake_count > 0);
     }
 
     u32 current_id = Processor::current().id();
@@ -1785,7 +1957,7 @@ u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
     return did_wake_count;
 }
 
-void Processor::smp_enable()
+UNMAP_AFTER_INIT void Processor::smp_enable()
 {
     size_t msg_pool_size = Processor::count() * 100u;
     size_t msg_entries_cnt = Processor::count();
@@ -1828,17 +2000,16 @@ bool Processor::smp_process_pending_messages()
     if (auto pending_msgs = atomic_exchange(&m_message_queue, nullptr, AK::MemoryOrder::memory_order_acq_rel)) {
         // We pulled the stack of pending messages in LIFO order, so we need to reverse the list first
         auto reverse_list =
-            [](ProcessorMessageEntry* list) -> ProcessorMessageEntry*
-            {
-                ProcessorMessageEntry* rev_list = nullptr;
-                while (list) {
-                    auto next = list->next;
-                    list->next = rev_list;
-                    rev_list = list;
-                    list = next;
-                }
-                return rev_list;
-            };
+            [](ProcessorMessageEntry* list) -> ProcessorMessageEntry* {
+            ProcessorMessageEntry* rev_list = nullptr;
+            while (list) {
+                auto next = list->next;
+                list->next = rev_list;
+                rev_list = list;
+                list = next;
+            }
+            return rev_list;
+        };
 
         pending_msgs = reverse_list(pending_msgs);
 
@@ -1848,7 +2019,7 @@ bool Processor::smp_process_pending_messages()
             next_msg = cur_msg->next;
             auto msg = cur_msg->msg;
 
-            dbgln<SMP_DEBUG>("SMP[{}]: Processing message {}", id(), VirtualAddress(msg));
+            dbgln_if(SMP_DEBUG, "SMP[{}]: Processing message {}", id(), VirtualAddress(msg));
 
             switch (msg->type) {
             case ProcessorMessage::Callback:
@@ -1858,22 +2029,22 @@ bool Processor::smp_process_pending_messages()
                 msg->callback_with_data.handler(msg->callback_with_data.data);
                 break;
             case ProcessorMessage::FlushTlb:
-				if (is_user_address(VirtualAddress(msg->flush_tlb.ptr))) {
-					// We assume that we don't cross into kernel land!
-					ASSERT(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
-					if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
-						// This processor isn't using this page directory right now, we can ignore this request
-                        dbgln<SMP_DEBUG>("SMP[{}]: No need to flush {} pages at {}", id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
-						break;
-					}
-				}
+                if (is_user_address(VirtualAddress(msg->flush_tlb.ptr))) {
+                    // We assume that we don't cross into kernel land!
+                    VERIFY(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
+                    if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
+                        // This processor isn't using this page directory right now, we can ignore this request
+                        dbgln_if(SMP_DEBUG, "SMP[{}]: No need to flush {} pages at {}", id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
+                        break;
+                    }
+                }
                 flush_tlb_local(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count);
                 break;
             }
 
             bool is_async = msg->async; // Need to cache this value *before* dropping the ref count!
             auto prev_refs = atomic_fetch_sub(&msg->refs, 1u, AK::MemoryOrder::memory_order_acq_rel);
-            ASSERT(prev_refs != 0);
+            VERIFY(prev_refs != 0);
             if (prev_refs == 1) {
                 // All processors handled this. If this is an async message,
                 // we need to clean it up and return it to the pool
@@ -1901,7 +2072,7 @@ bool Processor::smp_queue_message(ProcessorMessage& msg)
     // the queue at any given time. We rely on the fact that the messages
     // are pooled and never get freed!
     auto& msg_entry = msg.per_proc_entries[id()];
-    ASSERT(msg_entry.msg == &msg);
+    VERIFY(msg_entry.msg == &msg);
     ProcessorMessageEntry* next = nullptr;
     do {
         msg_entry.next = next;
@@ -1913,10 +2084,10 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
 {
     auto& cur_proc = Processor::current();
 
-    dbgln<SMP_DEBUG>("SMP[{}]: Broadcast message {} to cpus: {} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), count(), VirtualAddress(&cur_proc));
+    dbgln_if(SMP_DEBUG, "SMP[{}]: Broadcast message {} to cpus: {} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), count(), VirtualAddress(&cur_proc));
 
     atomic_store(&msg.refs, count() - 1, AK::MemoryOrder::memory_order_release);
-    ASSERT(msg.refs > 0);
+    VERIFY(msg.refs > 0);
     bool need_broadcast = false;
     for_each(
         [&](Processor& proc) -> IterationDecision {
@@ -1935,7 +2106,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
 void Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
 {
     auto& cur_proc = Processor::current();
-    ASSERT(!msg.async);
+    VERIFY(!msg.async);
     // If synchronous then we must cleanup and return the message back
     // to the pool. Otherwise, the last processor to complete it will return it
     while (atomic_load(&msg.refs, AK::MemoryOrder::memory_order_consume) != 0) {
@@ -1978,11 +2149,11 @@ void Processor::smp_broadcast(void (*callback)(), bool async)
 void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
 {
     auto& cur_proc = Processor::current();
-    ASSERT(cpu != cur_proc.get_id());
+    VERIFY(cpu != cur_proc.get_id());
     auto& target_proc = processors()[cpu];
     msg.async = async;
 
-    dbgln<SMP_DEBUG>("SMP[{}]: Send message {} to cpu #{} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_proc));
+    dbgln_if(SMP_DEBUG, "SMP[{}]: Send message {} to cpu #{} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_proc));
 
     atomic_store(&msg.refs, 1u, AK::MemoryOrder::memory_order_release);
     if (target_proc->smp_queue_message(msg)) {
@@ -2061,7 +2232,7 @@ void Processor::Processor::halt()
     halt_this();
 }
 
-void Processor::deferred_call_pool_init()
+UNMAP_AFTER_INIT void Processor::deferred_call_pool_init()
 {
     size_t pool_count = sizeof(m_deferred_call_pool) / sizeof(m_deferred_call_pool[0]);
     for (size_t i = 0; i < pool_count; i++) {
@@ -2075,8 +2246,8 @@ void Processor::deferred_call_pool_init()
 
 void Processor::deferred_call_return_to_pool(DeferredCallEntry* entry)
 {
-    ASSERT(m_in_critical);
-    ASSERT(!entry->was_allocated);
+    VERIFY(m_in_critical);
+    VERIFY(!entry->was_allocated);
 
     entry->next = m_free_deferred_call_pool_entry;
     m_free_deferred_call_pool_entry = entry;
@@ -2084,13 +2255,13 @@ void Processor::deferred_call_return_to_pool(DeferredCallEntry* entry)
 
 DeferredCallEntry* Processor::deferred_call_get_free()
 {
-    ASSERT(m_in_critical);
+    VERIFY(m_in_critical);
 
     if (m_free_deferred_call_pool_entry) {
         // Fast path, we have an entry in our pool
         auto* entry = m_free_deferred_call_pool_entry;
         m_free_deferred_call_pool_entry = entry->next;
-        ASSERT(!entry->was_allocated);
+        VERIFY(!entry->was_allocated);
         return entry;
     }
 
@@ -2101,7 +2272,7 @@ DeferredCallEntry* Processor::deferred_call_get_free()
 
 void Processor::deferred_call_execute_pending()
 {
-    ASSERT(m_in_critical);
+    VERIFY(m_in_critical);
 
     if (!m_pending_deferred_calls)
         return;
@@ -2110,17 +2281,16 @@ void Processor::deferred_call_execute_pending()
 
     // We pulled the stack of pending deferred calls in LIFO order, so we need to reverse the list first
     auto reverse_list =
-        [](DeferredCallEntry* list) -> DeferredCallEntry*
-        {
-            DeferredCallEntry* rev_list = nullptr;
-            while (list) {
-                auto next = list->next;
-                list->next = rev_list;
-                rev_list = list;
-                list = next;
-            }
-            return rev_list;
-        };
+        [](DeferredCallEntry* list) -> DeferredCallEntry* {
+        DeferredCallEntry* rev_list = nullptr;
+        while (list) {
+            auto next = list->next;
+            list->next = rev_list;
+            rev_list = list;
+            list = next;
+        }
+        return rev_list;
+    };
     pending_list = reverse_list(pending_list);
 
     do {
@@ -2145,7 +2315,7 @@ void Processor::deferred_call_execute_pending()
 
 void Processor::deferred_call_queue_entry(DeferredCallEntry* entry)
 {
-    ASSERT(m_in_critical);
+    VERIFY(m_in_critical);
     entry->next = m_pending_deferred_calls;
     m_pending_deferred_calls = entry;
 }
@@ -2180,7 +2350,7 @@ void Processor::deferred_call_queue(void (*callback)(void*), void* data, void (*
     cur_proc.deferred_call_queue_entry(entry);
 }
 
-void Processor::gdt_init()
+UNMAP_AFTER_INIT void Processor::gdt_init()
 {
     m_gdt_length = 0;
     m_gdtr.address = nullptr;
@@ -2192,37 +2362,37 @@ void Processor::gdt_init()
     write_raw_gdt_entry(GDT_SELECTOR_CODE3, 0x0000ffff, 0x00cffa00); // code3
     write_raw_gdt_entry(GDT_SELECTOR_DATA3, 0x0000ffff, 0x00cff200); // data3
 
-    Descriptor tls_descriptor;
+    Descriptor tls_descriptor {};
     tls_descriptor.low = tls_descriptor.high = 0;
     tls_descriptor.dpl = 3;
     tls_descriptor.segment_present = 1;
     tls_descriptor.granularity = 0;
-    tls_descriptor.zero = 0;
-    tls_descriptor.operation_size = 1;
+    tls_descriptor.operation_size64 = 0;
+    tls_descriptor.operation_size32 = 1;
     tls_descriptor.descriptor_type = 1;
     tls_descriptor.type = 2;
     write_gdt_entry(GDT_SELECTOR_TLS, tls_descriptor); // tls3
 
-    Descriptor fs_descriptor;
-    fs_descriptor.set_base(this);
+    Descriptor fs_descriptor {};
+    fs_descriptor.set_base(VirtualAddress { this });
     fs_descriptor.set_limit(sizeof(Processor));
     fs_descriptor.dpl = 0;
     fs_descriptor.segment_present = 1;
     fs_descriptor.granularity = 0;
-    fs_descriptor.zero = 0;
-    fs_descriptor.operation_size = 1;
+    fs_descriptor.operation_size64 = 0;
+    fs_descriptor.operation_size32 = 1;
     fs_descriptor.descriptor_type = 1;
     fs_descriptor.type = 2;
     write_gdt_entry(GDT_SELECTOR_PROC, fs_descriptor); // fs0
 
-    Descriptor tss_descriptor;
-    tss_descriptor.set_base(&m_tss);
+    Descriptor tss_descriptor {};
+    tss_descriptor.set_base(VirtualAddress { &m_tss });
     tss_descriptor.set_limit(sizeof(TSS32));
     tss_descriptor.dpl = 0;
     tss_descriptor.segment_present = 1;
     tss_descriptor.granularity = 0;
-    tss_descriptor.zero = 0;
-    tss_descriptor.operation_size = 1;
+    tss_descriptor.operation_size64 = 0;
+    tss_descriptor.operation_size32 = 1;
     tss_descriptor.descriptor_type = 0;
     tss_descriptor.type = 9;
     write_gdt_entry(GDT_SELECTOR_TSS, tss_descriptor); // tss
@@ -2238,28 +2408,65 @@ void Processor::gdt_init()
         : "memory");
     set_fs(GDT_SELECTOR_PROC);
 
+#if ARCH(I386)
     // Make sure CS points to the kernel code descriptor.
+    // clang-format off
     asm volatile(
         "ljmpl $" __STRINGIFY(GDT_SELECTOR_CODE0) ", $sanity\n"
         "sanity:\n");
+    // clang-format on
+#endif
 }
 
-void Processor::set_thread_specific(u8* data, size_t len)
+void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, const RegisterState& kernel_regs)
 {
-    auto& descriptor = get_gdt_entry(GDT_SELECTOR_TLS);
-    descriptor.set_base(data);
-    descriptor.set_limit(len);
+    ptrace_regs.eax = kernel_regs.eax,
+    ptrace_regs.ecx = kernel_regs.ecx,
+    ptrace_regs.edx = kernel_regs.edx,
+    ptrace_regs.ebx = kernel_regs.ebx,
+    ptrace_regs.esp = kernel_regs.userspace_esp,
+    ptrace_regs.ebp = kernel_regs.ebp,
+    ptrace_regs.esi = kernel_regs.esi,
+    ptrace_regs.edi = kernel_regs.edi,
+    ptrace_regs.eip = kernel_regs.eip,
+    ptrace_regs.eflags = kernel_regs.eflags,
+    ptrace_regs.cs = 0;
+    ptrace_regs.ss = 0;
+    ptrace_regs.ds = 0;
+    ptrace_regs.es = 0;
+    ptrace_regs.fs = 0;
+    ptrace_regs.gs = 0;
 }
 
+void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, const PtraceRegisters& ptrace_regs)
+{
+    kernel_regs.eax = ptrace_regs.eax;
+    kernel_regs.ecx = ptrace_regs.ecx;
+    kernel_regs.edx = ptrace_regs.edx;
+    kernel_regs.ebx = ptrace_regs.ebx;
+    kernel_regs.esp = ptrace_regs.esp;
+    kernel_regs.ebp = ptrace_regs.ebp;
+    kernel_regs.esi = ptrace_regs.esi;
+    kernel_regs.edi = ptrace_regs.edi;
+    kernel_regs.eip = ptrace_regs.eip;
+    kernel_regs.eflags = (kernel_regs.eflags & ~safe_eflags_mask) | (ptrace_regs.eflags & safe_eflags_mask);
+}
 }
 
 #ifdef DEBUG
 void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
 {
     asm volatile("cli");
-    klog() << "ASSERTION FAILED: " << msg << "\n"
-           << file << ":" << line << " in " << func;
+    dmesgln("ASSERTION FAILED: {}", msg);
+    dmesgln("{}:{} in {}", file, line, func);
 
+    abort();
+}
+#endif
+
+[[noreturn]] void abort()
+{
+#ifdef DEBUG
     // Switch back to the current process's page tables if there are any.
     // Otherwise stack walking will be a disaster.
     auto process = Process::current();
@@ -2268,8 +2475,16 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
 
     Kernel::dump_backtrace();
     Processor::halt();
-}
 #endif
+
+    abort();
+}
+
+[[noreturn]] void _abort()
+{
+    asm volatile("ud2");
+    __builtin_unreachable();
+}
 
 NonMaskableInterruptDisabler::NonMaskableInterruptDisabler()
 {

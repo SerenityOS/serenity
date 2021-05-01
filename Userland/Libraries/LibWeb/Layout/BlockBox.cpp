@@ -1,41 +1,17 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGUI/Painter.h>
+#include <LibGfx/Painter.h>
 #include <LibWeb/CSS/StyleResolver.h>
-#include <LibWeb/DOM/Element.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
-#include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Layout/WidgetBox.h>
-#include <math.h>
 
 namespace Web::Layout {
 
@@ -53,6 +29,11 @@ BlockBox::~BlockBox()
 {
 }
 
+bool BlockBox::should_clip_overflow() const
+{
+    return computed_values().overflow_x() != CSS::Overflow::Visible && computed_values().overflow_y() != CSS::Overflow::Visible;
+}
+
 void BlockBox::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
@@ -63,12 +44,23 @@ void BlockBox::paint(PaintContext& context, PaintPhase phase)
     if (!children_are_inline())
         return;
 
+    if (should_clip_overflow()) {
+        context.painter().save();
+        // FIXME: Handle overflow-x and overflow-y being different values.
+        context.painter().add_clip_rect(enclosing_int_rect(padded_rect()));
+        context.painter().translate(-m_scroll_offset.to_type<int>());
+    }
+
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
             if (context.should_show_line_box_borders())
                 context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
             fragment.paint(context, phase);
         }
+    }
+
+    if (should_clip_overflow()) {
+        context.painter().restore();
     }
 
     // FIXME: Merge this loop with the above somehow..
@@ -128,6 +120,32 @@ void BlockBox::split_into_lines(InlineFormattingContext& context, LayoutMode lay
         line_box = &containing_block.add_line_box();
     }
     line_box->add_fragment(*this, 0, 0, border_box_width(), height());
+}
+
+bool BlockBox::is_scrollable() const
+{
+    // FIXME: Support horizontal scroll as well (overflow-x)
+    return computed_values().overflow_y() == CSS::Overflow::Scroll;
+}
+
+void BlockBox::set_scroll_offset(const Gfx::FloatPoint& offset)
+{
+    // FIXME: If there is horizontal and vertical scroll ignore only part of the new offset
+    if (offset.y() < 0 || m_scroll_offset == offset)
+        return;
+    m_scroll_offset = offset;
+    set_needs_display();
+}
+
+bool BlockBox::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned int, unsigned int, int wheel_delta)
+{
+    if (!is_scrollable())
+        return false;
+    auto new_offset = m_scroll_offset;
+    new_offset.move_by(0, wheel_delta);
+    set_scroll_offset(new_offset);
+
+    return true;
 }
 
 }

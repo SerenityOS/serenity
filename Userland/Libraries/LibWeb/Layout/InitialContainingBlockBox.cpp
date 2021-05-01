@@ -1,33 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Painter.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
-#include <LibWeb/Layout/WidgetBox.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/Painting/StackingContext.h>
 
@@ -49,22 +28,35 @@ void InitialContainingBlockBox::build_stacking_context_tree()
 
     set_stacking_context(make<StackingContext>(*this, nullptr));
 
-    for_each_in_subtree_of_type<Box>([&](Box& box) {
+    for_each_in_inclusive_subtree_of_type<Box>([&](Box& box) {
         if (&box == this)
             return IterationDecision::Continue;
         if (!box.establishes_stacking_context()) {
-            ASSERT(!box.stacking_context());
+            VERIFY(!box.stacking_context());
             return IterationDecision::Continue;
         }
         auto* parent_context = box.enclosing_stacking_context();
-        ASSERT(parent_context);
+        VERIFY(parent_context);
         box.set_stacking_context(make<StackingContext>(box, parent_context));
         return IterationDecision::Continue;
     });
 }
 
+void InitialContainingBlockBox::paint_document_background(PaintContext& context)
+{
+    context.painter().fill_rect(Gfx::IntRect { {}, context.viewport_rect().size() }, document().background_color(context.palette()));
+    context.painter().translate(-context.viewport_rect().location());
+
+    if (auto background_bitmap = document().background_image()) {
+        Gfx::IntRect background_rect = { 0, 0, context.viewport_rect().x() + context.viewport_rect().width(), context.viewport_rect().y() + context.viewport_rect().height() };
+        paint_background_image(context, *background_bitmap, document().background_repeat_x(), document().background_repeat_y(), move(background_rect));
+    }
+}
+
 void InitialContainingBlockBox::paint_all_phases(PaintContext& context)
 {
+    paint_document_background(context);
+
     paint(context, PaintPhase::Background);
     paint(context, PaintPhase::Border);
     paint(context, PaintPhase::Foreground);
@@ -89,7 +81,7 @@ void InitialContainingBlockBox::recompute_selection_states()
 
     auto selection = this->selection().normalized();
 
-    for_each_in_subtree([&](auto& layout_node) {
+    for_each_in_inclusive_subtree([&](auto& layout_node) {
         if (!selection.is_valid()) {
             // Everything gets SelectionState::None.
         } else if (&layout_node == selection.start().layout_node && &layout_node == selection.end().layout_node) {

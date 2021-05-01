@@ -1,10 +1,12 @@
 test("in operator with objects", () => {
-    const o = { foo: "bar", bar: undefined };
+    const sym = Symbol();
+    const o = { foo: "bar", bar: undefined, [sym]: "qux" };
     expect("" in o).toBeFalse();
     expect("foo" in o).toBeTrue();
     expect("bar" in o).toBeTrue();
     expect("baz" in o).toBeFalse();
     expect("toString" in o).toBeTrue();
+    expect(sym in o).toBeTrue();
 });
 
 test("in operator with arrays", () => {

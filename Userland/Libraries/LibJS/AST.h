@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -47,7 +27,7 @@ template<class T, class... Args>
 static inline NonnullRefPtr<T>
 create_ast_node(SourceRange range, Args&&... args)
 {
-    return adopt(*new T(range, forward<Args>(args)...));
+    return adopt_ref(*new T(range, forward<Args>(args)...));
 }
 
 class ASTNode : public RefCounted<ASTNode> {
@@ -91,7 +71,7 @@ public:
         : Statement(move(source_range))
     {
     }
-    Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
+    Value execute(Interpreter&, GlobalObject&) const override { return {}; }
 };
 
 class ErrorStatement final : public Statement {
@@ -100,7 +80,7 @@ public:
         : Statement(move(source_range))
     {
     }
-    Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
+    Value execute(Interpreter&, GlobalObject&) const override { return {}; }
 };
 
 class ExpressionStatement final : public Statement {
@@ -202,7 +182,7 @@ public:
         : Declaration(move(source_range))
     {
     }
-    Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
+    Value execute(Interpreter&, GlobalObject&) const override { return {}; }
 };
 
 class FunctionNode {
@@ -233,6 +213,13 @@ protected:
     void dump(int indent, const String& class_name) const;
 
     const NonnullRefPtrVector<VariableDeclaration>& variables() const { return m_variables; }
+
+protected:
+    void set_name(FlyString name)
+    {
+        VERIFY(m_name.is_empty());
+        m_name = move(name);
+    }
 
 private:
     FlyString m_name;
@@ -266,7 +253,7 @@ public:
     static bool must_have_name() { return false; }
 
     FunctionExpression(SourceRange source_range, const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode, bool is_arrow_function = false)
-        : Expression(move(source_range))
+        : Expression(source_range)
         , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_strict_mode)
         , m_is_arrow_function(is_arrow_function)
     {
@@ -275,8 +262,20 @@ public:
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
 
+    void set_name_if_possible(FlyString new_name)
+    {
+        if (m_cannot_auto_rename)
+            return;
+        m_cannot_auto_rename = true;
+        if (name().is_empty())
+            set_name(move(new_name));
+    }
+    bool cannot_auto_rename() const { return m_cannot_auto_rename; }
+    void set_cannot_auto_rename() { m_cannot_auto_rename = true; }
+
 private:
-    bool m_is_arrow_function;
+    bool m_cannot_auto_rename { false };
+    bool m_is_arrow_function { false };
 };
 
 class ErrorExpression final : public Expression {
@@ -286,7 +285,7 @@ public:
     {
     }
 
-    Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
+    Value execute(Interpreter&, GlobalObject&) const override { return {}; }
 };
 
 class ReturnStatement final : public Statement {
@@ -563,6 +562,7 @@ public:
         : Expression(move(source_range))
         , m_expressions(move(expressions))
     {
+        VERIFY(m_expressions.size() >= 2);
     }
 
     virtual void dump(int indent) const override;
@@ -598,7 +598,7 @@ private:
 class NumericLiteral final : public Literal {
 public:
     explicit NumericLiteral(SourceRange source_range, double value)
-        : Literal(move(source_range))
+        : Literal(source_range)
         , m_value(value)
     {
     }
@@ -607,7 +607,7 @@ public:
     virtual void dump(int indent) const override;
 
 private:
-    double m_value { 0 };
+    Value m_value;
 };
 
 class BigIntLiteral final : public Literal {
@@ -971,7 +971,7 @@ public:
     const Expression& key() const { return m_key; }
     const Expression& value() const
     {
-        ASSERT(m_value);
+        VERIFY(m_value);
         return *m_value;
     }
 

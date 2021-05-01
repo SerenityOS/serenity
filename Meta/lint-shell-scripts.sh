@@ -11,7 +11,8 @@ if [ "$#" -eq "0" ]; then
             '*.sh' \
             ':!:Toolchain' \
             ':!:Ports' \
-            ':!:Userland/Shell/Tests'
+            ':!:Userland/Shell/Tests' \
+            ':!:Base/home/anon/tests'
     )
 else
     files=()

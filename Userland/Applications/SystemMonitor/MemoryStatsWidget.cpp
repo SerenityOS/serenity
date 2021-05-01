@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "MemoryStatsWidget.h"
@@ -48,7 +28,7 @@ MemoryStatsWidget* MemoryStatsWidget::the()
 MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
     : m_graph(graph)
 {
-    ASSERT(!s_the);
+    VERIFY(!s_the);
     s_the = this;
 
     set_fixed_height(110);
@@ -98,11 +78,11 @@ void MemoryStatsWidget::refresh()
 {
     auto proc_memstat = Core::File::construct("/proc/memstat");
     if (!proc_memstat->open(Core::IODevice::OpenMode::ReadOnly))
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
 
     auto file_contents = proc_memstat->read_all();
     auto json_result = JsonValue::from_string(file_contents);
-    ASSERT(json_result.has_value());
+    VERIFY(json_result.has_value());
     auto json = json_result.value().as_object();
 
     [[maybe_unused]] unsigned kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_u32();

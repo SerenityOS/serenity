@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Base64.h>
@@ -29,6 +9,7 @@
 #include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
 #include <LibCore/File.h>
+#include <errno.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -41,7 +22,7 @@ namespace Core {
 static String get_salt()
 {
     char random_data[12];
-    AK::fill_with_random(random_data, sizeof(random_data));
+    fill_with_random(random_data, sizeof(random_data));
 
     StringBuilder builder;
     builder.append("$5$");
@@ -200,9 +181,9 @@ String Account::generate_passwd_file() const
 void Account::load_shadow_file()
 {
     auto file_or_error = Core::File::open("/etc/shadow", Core::File::ReadOnly);
-    ASSERT(!file_or_error.is_error());
+    VERIFY(!file_or_error.is_error());
     auto shadow_file = file_or_error.release_value();
-    ASSERT(shadow_file->is_open());
+    VERIFY(shadow_file->is_open());
 
     Vector<ShadowEntry> entries;
 
@@ -250,7 +231,7 @@ bool Account::sync()
     auto new_shadow_file_content = generate_shadow_file();
 
     if (new_passwd_file_content.is_null() || new_shadow_file_content.is_null()) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     char new_passwd_name[] = "/etc/passwd.XXXXXX";
@@ -260,34 +241,34 @@ bool Account::sync()
         auto new_passwd_fd = mkstemp(new_passwd_name);
         if (new_passwd_fd < 0) {
             perror("mkstemp");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         ScopeGuard new_passwd_fd_guard = [new_passwd_fd] { close(new_passwd_fd); };
         auto new_shadow_fd = mkstemp(new_shadow_name);
         if (new_shadow_fd < 0) {
             perror("mkstemp");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
         ScopeGuard new_shadow_fd_guard = [new_shadow_fd] { close(new_shadow_fd); };
 
         if (fchmod(new_passwd_fd, 0644) < 0) {
             perror("fchmod");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
 
         auto nwritten = write(new_passwd_fd, new_passwd_file_content.characters(), new_passwd_file_content.length());
         if (nwritten < 0) {
             perror("write");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
-        ASSERT(static_cast<size_t>(nwritten) == new_passwd_file_content.length());
+        VERIFY(static_cast<size_t>(nwritten) == new_passwd_file_content.length());
 
         nwritten = write(new_shadow_fd, new_shadow_file_content.characters(), new_shadow_file_content.length());
         if (nwritten < 0) {
             perror("write");
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
-        ASSERT(static_cast<size_t>(nwritten) == new_shadow_file_content.length());
+        VERIFY(static_cast<size_t>(nwritten) == new_shadow_file_content.length());
     }
 
     if (rename(new_passwd_name, "/etc/passwd") < 0) {

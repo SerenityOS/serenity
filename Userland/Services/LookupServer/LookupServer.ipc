@@ -1,0 +1,5 @@
+endpoint LookupServer [magic=9001]
+{
+    LookupName(String name) => (int code, Vector<String> addresses)
+    LookupAddress(String address) => (int code, String name)
+}

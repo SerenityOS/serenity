@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
@@ -54,6 +34,29 @@ void Event::set_cancelled_flag()
 {
     if (m_cancelable && !m_in_passive_listener)
         m_cancelled = true;
+}
+
+// https://dom.spec.whatwg.org/#concept-event-initialize
+void Event::initialize(const String& type, bool bubbles, bool cancelable)
+{
+    m_initialized = true;
+    m_stop_propagation = false;
+    m_stop_immediate_propagation = false;
+    m_cancelled = false;
+    m_is_trusted = false;
+    m_target = nullptr;
+    m_type = type;
+    m_bubbles = bubbles;
+    m_cancelable = cancelable;
+}
+
+// https://dom.spec.whatwg.org/#dom-event-initevent
+void Event::init_event(const String& type, bool bubbles, bool cancelable)
+{
+    if (m_dispatch)
+        return;
+
+    initialize(type, bubbles, cancelable);
 }
 
 }

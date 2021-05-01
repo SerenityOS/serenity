@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -180,13 +160,13 @@ struct BMPLoadingContext {
             return 124;
         }
 
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 };
 
 static RefPtr<Bitmap> load_bmp_impl(const u8*, size_t);
 
-RefPtr<Gfx::Bitmap> load_bmp(const StringView& path)
+RefPtr<Gfx::Bitmap> load_bmp(String const& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
@@ -215,7 +195,7 @@ public:
 
     u8 read_u8()
     {
-        ASSERT(m_size_remaining >= 1);
+        VERIFY(m_size_remaining >= 1);
         m_size_remaining--;
         return *(m_data_ptr++);
     }
@@ -242,7 +222,7 @@ public:
 
     void drop_bytes(u8 num_bytes)
     {
-        ASSERT(m_size_remaining >= num_bytes);
+        VERIFY(m_size_remaining >= num_bytes);
         m_size_remaining -= num_bytes;
         m_data_ptr += num_bytes;
     }
@@ -317,7 +297,7 @@ static u8 get_scaled_color(u32 data, u8 mask_size, i8 mask_shift)
 //   to scale the values in order to reach the proper value of 255.
 static u32 int_to_scaled_rgb(BMPLoadingContext& context, u32 data)
 {
-    dbgln<BMP_DEBUG>("DIB info sizes before access: #masks={}, #mask_sizes={}, #mask_shifts={}",
+    dbgln_if(BMP_DEBUG, "DIB info sizes before access: #masks={}, #mask_sizes={}, #mask_shifts={}",
         context.dib.info.masks.size(),
         context.dib.info.mask_sizes.size(),
         context.dib.info.mask_shifts.size());
@@ -355,7 +335,7 @@ static void populate_dib_mask_info_if_needed(BMPLoadingContext& context)
     if (!mask_shifts.is_empty() && !mask_sizes.is_empty())
         return;
 
-    ASSERT(mask_shifts.is_empty() && mask_sizes.is_empty());
+    VERIFY(mask_shifts.is_empty() && mask_sizes.is_empty());
 
     mask_shifts.ensure_capacity(masks.size());
     mask_sizes.ensure_capacity(masks.size());
@@ -471,7 +451,7 @@ static bool decode_bmp_header(BMPLoadingContext& context)
         return true;
 
     if (!context.file_bytes || context.file_size < bmp_header_size) {
-        dbgln<BMP_DEBUG>("Missing BMP header");
+        dbgln_if(BMP_DEBUG, "Missing BMP header");
         context.state = BMPLoadingContext::State::Error;
         return false;
     }
@@ -480,7 +460,7 @@ static bool decode_bmp_header(BMPLoadingContext& context)
 
     u16 header = streamer.read_u16();
     if (header != 0x4d42) {
-        dbgln<BMP_DEBUG>("BMP has invalid magic header number: {:#04x}", header);
+        dbgln_if(BMP_DEBUG, "BMP has invalid magic header number: {:#04x}", header);
         context.state = BMPLoadingContext::State::Error;
         return false;
     }
@@ -502,7 +482,7 @@ static bool decode_bmp_header(BMPLoadingContext& context)
     }
 
     if (context.data_offset >= context.file_size) {
-        dbgln<BMP_DEBUG>("BMP data offset is beyond file end?!");
+        dbgln_if(BMP_DEBUG, "BMP data offset is beyond file end?!");
         return false;
     }
 
@@ -725,12 +705,12 @@ static bool decode_bmp_v3_dib(BMPLoadingContext& context, Streamer& streamer)
     // suite results.
     if (context.dib.info.compression == Compression::ALPHABITFIELDS) {
         context.dib.info.masks.append(streamer.read_u32());
-        dbgln<BMP_DEBUG>("BMP alpha mask: {:#08x}", context.dib.info.masks[3]);
+        dbgln_if(BMP_DEBUG, "BMP alpha mask: {:#08x}", context.dib.info.masks[3]);
     } else if (context.dib_size() >= 56 && context.dib.core.bpp >= 16) {
         auto mask = streamer.read_u32();
         if ((context.dib.core.bpp == 32 && mask != 0) || context.dib.core.bpp == 16) {
             context.dib.info.masks.append(mask);
-            dbgln<BMP_DEBUG>("BMP alpha mask: {:#08x}", mask);
+            dbgln_if(BMP_DEBUG, "BMP alpha mask: {:#08x}", mask);
         }
     } else {
         streamer.drop_bytes(4);
@@ -807,7 +787,7 @@ static bool decode_bmp_dib(BMPLoadingContext& context)
 
     streamer = Streamer(context.file_bytes + bmp_header_size + 4, context.data_offset - bmp_header_size - 4);
 
-    dbgln<BMP_DEBUG>("BMP dib size: {}", dib_size);
+    dbgln_if(BMP_DEBUG, "BMP dib size: {}", dib_size);
 
     bool error = false;
 
@@ -896,7 +876,7 @@ static bool decode_bmp_color_table(BMPLoadingContext& context)
 
     auto bytes_per_color = context.dib_type == DIBType::Core ? 3 : 4;
     u32 max_colors = 1 << context.dib.core.bpp;
-    ASSERT(context.data_offset >= bmp_header_size + context.dib_size());
+    VERIFY(context.data_offset >= bmp_header_size + context.dib_size());
     auto size_of_color_table = context.data_offset - bmp_header_size - context.dib_size();
 
     if (context.dib_type <= DIBType::OSV2) {
@@ -937,7 +917,7 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
 {
     // RLE-compressed images cannot be stored top-down
     if (context.dib.core.height < 0) {
-        dbgln<BMP_DEBUG>("BMP is top-down and RLE compressed");
+        dbgln_if(BMP_DEBUG, "BMP is top-down and RLE compressed");
         context.state = BMPLoadingContext::State::Error;
         return false;
     }
@@ -1161,7 +1141,7 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
         }
     }
 
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 static bool decode_bmp_pixel_data(BMPLoadingContext& context)
@@ -1186,12 +1166,12 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
             return BitmapFormat::Indexed8;
         case 16:
             if (context.dib.info.masks.size() == 4)
-                return BitmapFormat::RGBA32;
-            return BitmapFormat::RGB32;
+                return BitmapFormat::BGRA8888;
+            return BitmapFormat::BGRx8888;
         case 24:
-            return BitmapFormat::RGB32;
+            return BitmapFormat::BGRx8888;
         case 32:
-            return BitmapFormat::RGBA32;
+            return BitmapFormat::BGRA8888;
         default:
             return BitmapFormat::Invalid;
         }
@@ -1302,7 +1282,7 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
             case 3:
                 return 1;
             }
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }();
         if (streamer.remaining() < bytes_to_drop)
             return false;
@@ -1377,7 +1357,7 @@ RefPtr<Gfx::Bitmap> BMPImageDecoderPlugin::bitmap()
     if (m_context->state < BMPLoadingContext::State::PixelDataDecoded && !decode_bmp_pixel_data(*m_context))
         return nullptr;
 
-    ASSERT(m_context->bitmap);
+    VERIFY(m_context->bitmap);
     return m_context->bitmap;
 }
 

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "LineTool.h"
@@ -36,15 +16,15 @@ namespace PixelPaint {
 
 static Gfx::IntPoint constrain_line_angle(const Gfx::IntPoint& start_pos, const Gfx::IntPoint& end_pos, float angle_increment)
 {
-    float current_angle = atan2(end_pos.y() - start_pos.y(), end_pos.x() - start_pos.x()) + M_PI * 2.;
+    float current_angle = atan2f(end_pos.y() - start_pos.y(), end_pos.x() - start_pos.x()) + float { M_PI * 2 };
 
-    float constrained_angle = ((int)((current_angle + angle_increment / 2.) / angle_increment)) * angle_increment;
+    float constrained_angle = ((int)((current_angle + angle_increment / 2) / angle_increment)) * angle_increment;
 
     auto diff = end_pos - start_pos;
     float line_length = sqrt(diff.x() * diff.x() + diff.y() * diff.y());
 
-    return { start_pos.x() + (int)(cos(constrained_angle) * line_length),
-        start_pos.y() + (int)(sin(constrained_angle) * line_length) };
+    return { start_pos.x() + (int)(cosf(constrained_angle) * line_length),
+        start_pos.y() + (int)(sinf(constrained_angle) * line_length) };
 }
 
 LineTool::LineTool()
@@ -90,7 +70,7 @@ void LineTool::on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEven
     if (!m_constrain_angle) {
         m_line_end_position = layer_event.position();
     } else {
-        const float ANGLE_STEP = M_PI / 8.0f;
+        constexpr auto ANGLE_STEP = M_PI / 8;
         m_line_end_position = constrain_line_angle(m_line_start_position, layer_event.position(), ANGLE_STEP);
     }
     m_editor->update();

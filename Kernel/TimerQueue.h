@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -31,11 +11,12 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/Time.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 
-typedef u64 TimerId;
+TYPEDEF_DISTINCT_ORDERED_ID(u64, TimerId);
 
 class Timer : public RefCounted<Timer>
     , public InlineLinkedListNode<Timer> {
@@ -43,7 +24,7 @@ class Timer : public RefCounted<Timer>
     friend class InlineLinkedListNode<Timer>;
 
 public:
-    Timer(clockid_t clock_id, u64 expires, Function<void()>&& callback)
+    Timer(clockid_t clock_id, Time expires, Function<void()>&& callback)
         : m_clock_id(clock_id)
         , m_expires(expires)
         , m_callback(move(callback))
@@ -51,16 +32,16 @@ public:
     }
     ~Timer()
     {
-        ASSERT(!is_queued());
+        VERIFY(!is_queued());
     }
 
-    timespec remaining() const;
+    Time remaining() const;
 
 private:
     TimerId m_id;
     clockid_t m_clock_id;
-    u64 m_expires;
-    u64 m_remaining { 0 };
+    Time m_expires;
+    Time m_remaining {};
     Function<void()> m_callback;
     Timer* m_next { nullptr };
     Timer* m_prev { nullptr };
@@ -80,7 +61,7 @@ private:
     }
     bool is_queued() const { return m_queued; }
     void set_queued(bool queued) { m_queued = queued; }
-    u64 now(bool) const;
+    Time now(bool) const;
 };
 
 class TimerQueue {
@@ -91,8 +72,8 @@ public:
     static TimerQueue& the();
 
     TimerId add_timer(NonnullRefPtr<Timer>&&);
-    RefPtr<Timer> add_timer_without_id(clockid_t, const timespec&, Function<void()>&&);
-    TimerId add_timer(clockid_t, timeval& timeout, Function<void()>&& callback);
+    RefPtr<Timer> add_timer_without_id(clockid_t, const Time&, Function<void()>&&);
+    TimerId add_timer(clockid_t, const Time& timeout, Function<void()>&& callback);
     bool cancel_timer(TimerId id);
     bool cancel_timer(Timer&);
     bool cancel_timer(NonnullRefPtr<Timer>&& timer)
@@ -104,7 +85,7 @@ public:
 private:
     struct Queue {
         InlineLinkedList<Timer> list;
-        u64 next_timer_due { 0 };
+        Time next_timer_due {};
     };
     void remove_timer_locked(Queue&, Timer&);
     void update_next_timer_due(Queue&);
@@ -121,7 +102,7 @@ private:
         case CLOCK_REALTIME_COARSE:
             return m_timer_queue_realtime;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 

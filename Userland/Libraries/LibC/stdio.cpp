@@ -1,36 +1,16 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Format.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
-#include <AK/kmalloc.h>
-#include <Kernel/API/Syscall.h>
+#include <AK/String.h>
+#include <LibC/bits/pthread_integration.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -41,6 +21,7 @@
 #include <sys/internals.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <syscall.h>
 #include <unistd.h>
 
 struct FILE {
@@ -49,6 +30,7 @@ public:
         : m_fd(fd)
         , m_mode(mode)
     {
+        __pthread_mutex_init(&m_mutex, nullptr);
     }
     ~FILE();
 
@@ -130,18 +112,24 @@ private:
     // Flush *some* data from the buffer.
     bool write_from_buffer();
 
+    void lock();
+    void unlock();
+
     int m_fd { -1 };
     int m_mode { 0 };
     int m_error { 0 };
     bool m_eof { false };
     pid_t m_popen_child { -1 };
     Buffer m_buffer;
+    __pthread_mutex_t m_mutex;
+
+    friend class ScopedFileLock;
 };
 
 FILE::~FILE()
 {
     bool already_closed = m_fd == -1;
-    ASSERT(already_closed);
+    VERIFY(already_closed);
 }
 
 FILE* FILE::create(int fd, int mode)
@@ -175,12 +163,12 @@ bool FILE::flush()
     }
     if (m_mode & O_RDONLY) {
         // When open for reading, just drop the buffered data.
-        size_t had_buffered = m_buffer.buffered_size();
+        VERIFY(m_buffer.buffered_size() <= NumericLimits<off_t>::max());
+        off_t had_buffered = m_buffer.buffered_size();
         m_buffer.drop();
         // Attempt to reset the underlying file position to what the user
         // expects.
-        int rc = lseek(m_fd, -had_buffered, SEEK_CUR);
-        if (rc < 0) {
+        if (lseek(m_fd, -had_buffered, SEEK_CUR) < 0) {
             if (errno == ESPIPE) {
                 // We can't set offset on this file; oh well, the user will just
                 // have to cope.
@@ -222,7 +210,7 @@ bool FILE::read_into_buffer()
     size_t available_size;
     u8* data = m_buffer.begin_enqueue(available_size);
     // If we want to read, the buffer must have some space!
-    ASSERT(available_size);
+    VERIFY(available_size);
 
     ssize_t nread = do_read(data, available_size);
 
@@ -238,7 +226,7 @@ bool FILE::write_from_buffer()
     size_t size;
     const u8* data = m_buffer.begin_dequeue(size);
     // If we want to write, the buffer must have something in it!
-    ASSERT(size);
+    VERIFY(size);
 
     ssize_t nwritten = do_write(data, size);
 
@@ -378,7 +366,7 @@ bool FILE::gets(u8* data, size_t size)
                 *data = 0;
                 return total_read > 0;
             }
-            ASSERT(nread == 1);
+            VERIFY(nread == 1);
             *data = byte;
             total_read++;
             data++;
@@ -508,17 +496,17 @@ const u8* FILE::Buffer::begin_dequeue(size_t& available_size) const
 
 void FILE::Buffer::did_dequeue(size_t actual_size)
 {
-    ASSERT(actual_size > 0);
+    VERIFY(actual_size > 0);
 
     if (m_ungotten) {
-        ASSERT(actual_size == 1);
+        VERIFY(actual_size == 1);
         m_ungotten = false;
         return;
     }
 
     m_begin += actual_size;
 
-    ASSERT(m_begin <= m_capacity);
+    VERIFY(m_begin <= m_capacity);
     if (m_begin == m_capacity) {
         // Wrap around.
         m_begin = 0;
@@ -534,7 +522,7 @@ void FILE::Buffer::did_dequeue(size_t actual_size)
 
 u8* FILE::Buffer::begin_enqueue(size_t& available_size) const
 {
-    ASSERT(m_data != nullptr);
+    VERIFY(m_data != nullptr);
 
     if (m_begin < m_end || m_empty)
         available_size = m_capacity - m_end;
@@ -546,12 +534,12 @@ u8* FILE::Buffer::begin_enqueue(size_t& available_size) const
 
 void FILE::Buffer::did_enqueue(size_t actual_size)
 {
-    ASSERT(m_data != nullptr);
-    ASSERT(actual_size > 0);
+    VERIFY(m_data != nullptr);
+    VERIFY(actual_size > 0);
 
     m_end += actual_size;
 
-    ASSERT(m_end <= m_capacity);
+    VERIFY(m_end <= m_capacity);
     if (m_end == m_capacity) {
         // Wrap around.
         m_end = 0;
@@ -572,6 +560,33 @@ bool FILE::Buffer::enqueue_front(u8 byte)
     return true;
 }
 
+void FILE::lock()
+{
+    __pthread_mutex_lock(&m_mutex);
+}
+
+void FILE::unlock()
+{
+    __pthread_mutex_unlock(&m_mutex);
+}
+
+class ScopedFileLock {
+public:
+    ScopedFileLock(FILE* file)
+        : m_file(file)
+    {
+        m_file->lock();
+    }
+
+    ~ScopedFileLock()
+    {
+        m_file->unlock();
+    }
+
+private:
+    FILE* m_file;
+};
+
 extern "C" {
 
 static u8 default_streams[3][sizeof(FILE)];
@@ -590,7 +605,8 @@ void __stdio_init()
 
 int setvbuf(FILE* stream, char* buf, int mode, size_t size)
 {
-    ASSERT(stream);
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
     if (mode != _IONBF && mode != _IOLBF && mode != _IOFBF) {
         errno = EINVAL;
         return -1;
@@ -611,13 +627,15 @@ void setlinebuf(FILE* stream)
 
 int fileno(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->fileno();
 }
 
 int feof(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->eof();
 }
 
@@ -627,21 +645,33 @@ int fflush(FILE* stream)
         dbgln("FIXME: fflush(nullptr) should flush all open streams");
         return 0;
     }
+    ScopedFileLock lock(stream);
     return stream->flush() ? 0 : EOF;
 }
 
 char* fgets(char* buffer, int size, FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
     bool ok = stream->gets(reinterpret_cast<u8*>(buffer), size);
     return ok ? buffer : nullptr;
 }
 
 int fgetc(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     char ch;
     size_t nread = fread(&ch, sizeof(char), 1, stream);
+    if (nread == 1)
+        return ch;
+    return EOF;
+}
+
+int fgetc_unlocked(FILE* stream)
+{
+    VERIFY(stream);
+    char ch;
+    size_t nread = fread_unlocked(&ch, sizeof(char), 1, stream);
     if (nread == 1)
         return ch;
     return EOF;
@@ -654,7 +684,7 @@ int getc(FILE* stream)
 
 int getc_unlocked(FILE* stream)
 {
-    return fgetc(stream);
+    return fgetc_unlocked(stream);
 }
 
 int getchar()
@@ -715,19 +745,21 @@ ssize_t getline(char** lineptr, size_t* n, FILE* stream)
 
 int ungetc(int c, FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
     bool ok = stream->ungetc(c);
     return ok ? c : EOF;
 }
 
 int fputc(int ch, FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     u8 byte = ch;
+    ScopedFileLock lock(stream);
     size_t nwritten = stream->write(&byte, 1);
     if (nwritten == 0)
         return EOF;
-    ASSERT(nwritten == 1);
+    VERIFY(nwritten == 1);
     return byte;
 }
 
@@ -743,8 +775,9 @@ int putchar(int ch)
 
 int fputs(const char* s, FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     size_t len = strlen(s);
+    ScopedFileLock lock(stream);
     size_t nwritten = stream->write(reinterpret_cast<const u8*>(s), len);
     if (nwritten < len)
         return EOF;
@@ -761,63 +794,82 @@ int puts(const char* s)
 
 void clearerr(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
     stream->clear_err();
 }
 
 int ferror(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->error();
+}
+
+size_t fread_unlocked(void* ptr, size_t size, size_t nmemb, FILE* stream)
+{
+    VERIFY(stream);
+    VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
+
+    size_t nread = stream->read(reinterpret_cast<u8*>(ptr), size * nmemb);
+    if (!nread)
+        return 0;
+    return nread / size;
 }
 
 size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
-    ASSERT(stream);
-    ASSERT(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
-
-    size_t nread = stream->read(reinterpret_cast<u8*>(ptr), size * nmemb);
-    return nread / size;
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
+    return fread_unlocked(ptr, size, nmemb, stream);
 }
 
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
-    ASSERT(stream);
-    ASSERT(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
+    VERIFY(stream);
+    VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
 
+    ScopedFileLock lock(stream);
     size_t nwritten = stream->write(reinterpret_cast<const u8*>(ptr), size * nmemb);
+    if (!nwritten)
+        return 0;
     return nwritten / size;
 }
 
 int fseek(FILE* stream, long offset, int whence)
 {
-    ASSERT(stream);
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->seek(offset, whence);
 }
 
 int fseeko(FILE* stream, off_t offset, int whence)
 {
-    ASSERT(stream);
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->seek(offset, whence);
 }
 
 long ftell(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->tell();
 }
 
 off_t ftello(FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->tell();
 }
 
 int fgetpos(FILE* stream, fpos_t* pos)
 {
-    ASSERT(stream);
-    ASSERT(pos);
+    VERIFY(stream);
+    VERIFY(pos);
 
+    ScopedFileLock lock(stream);
     off_t val = stream->tell();
     if (val == -1L)
         return 1;
@@ -828,31 +880,17 @@ int fgetpos(FILE* stream, fpos_t* pos)
 
 int fsetpos(FILE* stream, const fpos_t* pos)
 {
-    ASSERT(stream);
-    ASSERT(pos);
+    VERIFY(stream);
+    VERIFY(pos);
 
+    ScopedFileLock lock(stream);
     return stream->seek(*pos, SEEK_SET);
 }
 
 void rewind(FILE* stream)
 {
-    ASSERT(stream);
-    int rc = stream->seek(0, SEEK_SET);
-    ASSERT(rc == 0);
-}
-
-int vdbgprintf(const char* fmt, va_list ap)
-{
-    return printf_internal([](char*&, char ch) { dbgputch(ch); }, nullptr, fmt, ap);
-}
-
-int dbgprintf(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    int ret = printf_internal([](char*&, char ch) { dbgputch(ch); }, nullptr, fmt, ap);
-    va_end(ap);
-    return ret;
+    fseek(stream, 0, SEEK_SET);
+    clearerr(stream);
 }
 
 ALWAYS_INLINE void stdout_putch(char*&, char ch)
@@ -893,6 +931,29 @@ int printf(const char* fmt, ...)
     int ret = vprintf(fmt, ap);
     va_end(ap);
     return ret;
+}
+
+int vasprintf(char** strp, const char* fmt, va_list ap)
+{
+    StringBuilder builder;
+    builder.appendvf(fmt, ap);
+    VERIFY(builder.length() <= NumericLimits<int>::max());
+    int length = builder.length();
+    *strp = strdup(builder.to_string().characters());
+    return length;
+}
+
+int asprintf(char** strp, const char* fmt, ...)
+{
+    StringBuilder builder;
+    va_list ap;
+    va_start(ap, fmt);
+    builder.appendvf(fmt, ap);
+    va_end(ap);
+    VERIFY(builder.length() <= NumericLimits<int>::max());
+    int length = builder.length();
+    *strp = strdup(builder.to_string().characters());
+    return length;
 }
 
 static void buffer_putch(char*& bufptr, char ch)
@@ -1005,7 +1066,7 @@ FILE* fopen(const char* pathname, const char* mode)
 
 FILE* freopen(const char* pathname, const char* mode, FILE* stream)
 {
-    ASSERT(stream);
+    VERIFY(stream);
     if (!pathname) {
         // FIXME: Someone should probably implement this path.
         TODO();
@@ -1036,8 +1097,13 @@ static inline bool is_default_stream(FILE* stream)
 
 int fclose(FILE* stream)
 {
-    ASSERT(stream);
-    bool ok = stream->close();
+    VERIFY(stream);
+    bool ok;
+
+    {
+        ScopedFileLock lock(stream);
+        ok = stream->close();
+    }
     ScopedValueRollback errno_restorer(errno);
 
     stream->~FILE();
@@ -1063,10 +1129,9 @@ void dbgputch(char ch)
     syscall(SC_dbgputch, ch);
 }
 
-int dbgputstr(const char* characters, ssize_t length)
+void dbgputstr(const char* characters, size_t length)
 {
-    int rc = syscall(SC_dbgputstr, characters, length);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    syscall(SC_dbgputstr, characters, length);
 }
 
 char* tmpnam(char*)
@@ -1138,8 +1203,8 @@ FILE* popen(const char* command, const char* type)
 
 int pclose(FILE* stream)
 {
-    ASSERT(stream);
-    ASSERT(stream->popen_child() != 0);
+    VERIFY(stream);
+    VERIFY(stream->popen_child() != 0);
 
     int wstatus = 0;
     int rc = waitpid(stream->popen_child(), &wstatus, 0);
@@ -1194,12 +1259,12 @@ int vfscanf(FILE* stream, const char* fmt, va_list ap)
 
 void flockfile([[maybe_unused]] FILE* filehandle)
 {
-    dbgprintf("FIXME: Implement flockfile()\n");
+    dbgln("FIXME: Implement flockfile()");
 }
 
 void funlockfile([[maybe_unused]] FILE* filehandle)
 {
-    dbgprintf("FIXME: Implement funlockfile()\n");
+    dbgln("FIXME: Implement funlockfile()");
 }
 
 FILE* tmpfile()

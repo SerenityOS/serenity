@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ConfigFile.h>
@@ -36,13 +16,13 @@ static Core::AnonymousBuffer theme_buffer;
 
 const SystemTheme& current_system_theme()
 {
-    ASSERT(theme_page);
+    VERIFY(theme_page);
     return *theme_page;
 }
 
 Core::AnonymousBuffer& current_system_theme_buffer()
 {
-    ASSERT(theme_buffer.is_valid());
+    VERIFY(theme_buffer.is_valid());
     return theme_buffer;
 }
 
@@ -85,14 +65,14 @@ Core::AnonymousBuffer load_system_theme(const String& path)
         return metric;
     };
 
-    auto get_path = [&](auto& name, auto role) {
+    auto get_path = [&](auto& name, auto role, bool allow_empty) {
         auto path = file->read_entry("Paths", name);
         if (path.is_empty()) {
             switch (role) {
             case (int)PathRole::TitleButtonIcons:
                 return "/res/icons/16x16/";
             default:
-                return "/res/";
+                return allow_empty ? "" : "/res/";
             }
         }
         return &path[0];
@@ -111,14 +91,19 @@ Core::AnonymousBuffer load_system_theme(const String& path)
     DO_METRIC(TitleButtonWidth);
     DO_METRIC(TitleButtonHeight);
 
-#define DO_PATH(x)                                                                                               \
+#define DO_PATH(x, allow_empty)                                                                                  \
     do {                                                                                                         \
-        auto path = get_path(#x, (int)PathRole::x);                                                              \
+        auto path = get_path(#x, (int)PathRole::x, allow_empty);                                                 \
         memcpy(data->path[(int)PathRole::x], path, min(strlen(path) + 1, sizeof(data->path[(int)PathRole::x]))); \
         data->path[(int)PathRole::x][sizeof(data->path[(int)PathRole::x]) - 1] = '\0';                           \
     } while (0)
 
-    DO_PATH(TitleButtonIcons);
+    DO_PATH(TitleButtonIcons, false);
+    DO_PATH(ActiveWindowShadow, true);
+    DO_PATH(InactiveWindowShadow, true);
+    DO_PATH(TaskbarShadow, true);
+    DO_PATH(MenuShadow, true);
+    DO_PATH(TooltipShadow, true);
 
     return buffer;
 }

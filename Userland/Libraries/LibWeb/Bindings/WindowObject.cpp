@@ -1,33 +1,10 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Base64.h>
-#include <AK/ByteBuffer.h>
-#include <AK/FlyString.h>
-#include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Runtime/Error.h>
@@ -43,15 +20,13 @@
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceWrapper.h>
-#include <LibWeb/Bindings/RangeConstructor.h>
-#include <LibWeb/Bindings/RangePrototype.h>
+#include <LibWeb/Bindings/ScreenWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
-#include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Origin.h>
+#include <LibWeb/Page/Frame.h>
 
 #include <LibWeb/Bindings/WindowObjectHelper.h>
 
@@ -63,19 +38,25 @@ WindowObject::WindowObject(DOM::Window& impl)
     impl.set_wrapper({}, *this);
 }
 
-void WindowObject::initialize()
+void WindowObject::initialize_global_object()
 {
-    GlobalObject::initialize();
+    Base::initialize_global_object();
 
     set_prototype(&ensure_web_prototype<EventTargetPrototype>("EventTarget"));
 
     define_property("window", this, JS::Attribute::Enumerable);
     define_property("frames", this, JS::Attribute::Enumerable);
     define_property("self", this, JS::Attribute::Enumerable);
-    define_native_property("document", document_getter, document_setter, JS::Attribute::Enumerable);
+    define_native_property("top", top_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_property("parent", parent_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_property("document", document_getter, nullptr, JS::Attribute::Enumerable);
     define_native_property("performance", performance_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_property("screen", screen_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_property("innerWidth", inner_width_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_property("innerHeight", inner_height_getter, nullptr, JS::Attribute::Enumerable);
     define_native_function("alert", alert);
     define_native_function("confirm", confirm);
+    define_native_function("prompt", prompt);
     define_native_function("setInterval", set_interval, 1);
     define_native_function("setTimeout", set_timeout, 1);
     define_native_function("clearInterval", clear_interval, 1);
@@ -116,7 +97,7 @@ static DOM::Window* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return nullptr;
     }
     if (StringView("WindowObject") != this_object->class_name()) {
@@ -128,6 +109,10 @@ static DOM::Window* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::alert)
 {
+    // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#simple-dialogs
+    // Note: This method is defined using two overloads, instead of using an optional argument,
+    //       for historical reasons. The practical impact of this is that alert(undefined) is
+    //       treated as alert("undefined"), but alert() is treated as alert("").
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
@@ -147,12 +132,35 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::confirm)
     if (!impl)
         return {};
     String message = "";
-    if (vm.argument_count()) {
+    if (!vm.argument(0).is_undefined()) {
         message = vm.argument(0).to_string(global_object);
         if (vm.exception())
             return {};
     }
     return JS::Value(impl->confirm(message));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::prompt)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    String message = "";
+    String default_ = "";
+    if (!vm.argument(0).is_undefined()) {
+        message = vm.argument(0).to_string(global_object);
+        if (vm.exception())
+            return {};
+    }
+    if (!vm.argument(1).is_undefined()) {
+        default_ = vm.argument(1).to_string(global_object);
+        if (vm.exception())
+            return {};
+    }
+    auto response = impl->prompt(message, default_);
+    if (response.is_null())
+        return JS::js_null();
+    return JS::js_string(vm, response);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
@@ -296,7 +304,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
 
     // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.
     auto decoder = TextCodec::decoder_for("windows-1252");
-    ASSERT(decoder);
+    VERIFY(decoder);
     return JS::js_string(vm, decoder->to_utf8(decoded));
 }
 
@@ -327,17 +335,40 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
     return JS::js_string(vm, move(encoded));
 }
 
+JS_DEFINE_NATIVE_GETTER(WindowObject::top_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    auto* this_frame = impl->document().frame();
+    VERIFY(this_frame);
+    VERIFY(this_frame->main_frame().document());
+    auto& top_window = this_frame->main_frame().document()->window();
+    return top_window.wrapper();
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::parent_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    auto* this_frame = impl->document().frame();
+    VERIFY(this_frame);
+    if (this_frame->parent()) {
+        VERIFY(this_frame->parent()->document());
+        auto& parent_window = this_frame->parent()->document()->window();
+        return parent_window.wrapper();
+    }
+    VERIFY(this_frame == &this_frame->main_frame());
+    return impl->wrapper();
+}
+
 JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
     return wrap(global_object, impl->document());
-}
-
-JS_DEFINE_NATIVE_SETTER(WindowObject::document_setter)
-{
-    // FIXME: Figure out what we should do here. Just ignore attempts to set window.document for now.
 }
 
 JS_DEFINE_NATIVE_GETTER(WindowObject::performance_getter)
@@ -348,6 +379,14 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::performance_getter)
     return wrap(global_object, impl->performance());
 }
 
+JS_DEFINE_NATIVE_GETTER(WindowObject::screen_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return wrap(global_object, impl->screen());
+}
+
 JS_DEFINE_NATIVE_GETTER(WindowObject::event_getter)
 {
     auto* impl = impl_from(vm, global_object);
@@ -356,6 +395,22 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::event_getter)
     if (!impl->current_event())
         return JS::js_undefined();
     return wrap(global_object, const_cast<DOM::Event&>(*impl->current_event()));
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::inner_width_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return JS::Value(impl->inner_width());
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::inner_height_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return JS::Value(impl->inner_height());
 }
 
 }

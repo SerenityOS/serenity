@@ -1,32 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <LibGUI/Frame.h>
+#include <LibGUI/Scrollbar.h>
 
 namespace GUI {
 
@@ -57,11 +38,12 @@ public:
     bool is_scrollbars_enabled() const { return m_scrollbars_enabled; }
 
     Gfx::IntSize available_size() const;
+    Gfx::IntSize excess_size() const;
 
-    ScrollBar& vertical_scrollbar() { return *m_vertical_scrollbar; }
-    const ScrollBar& vertical_scrollbar() const { return *m_vertical_scrollbar; }
-    ScrollBar& horizontal_scrollbar() { return *m_horizontal_scrollbar; }
-    const ScrollBar& horizontal_scrollbar() const { return *m_horizontal_scrollbar; }
+    Scrollbar& vertical_scrollbar() { return *m_vertical_scrollbar; }
+    const Scrollbar& vertical_scrollbar() const { return *m_vertical_scrollbar; }
+    Scrollbar& horizontal_scrollbar() { return *m_horizontal_scrollbar; }
+    const Scrollbar& horizontal_scrollbar() const { return *m_horizontal_scrollbar; }
     Widget& corner_widget() { return *m_corner_widget; }
     const Widget& corner_widget() const { return *m_corner_widget; }
 
@@ -90,10 +72,31 @@ protected:
     void set_size_occupied_by_fixed_elements(const Gfx::IntSize&);
 
 private:
-    void update_scrollbar_ranges();
+    class ScrollableWidgetScrollbar final : public Scrollbar {
+        C_OBJECT(ScrollableWidgetScrollbar);
 
-    RefPtr<ScrollBar> m_vertical_scrollbar;
-    RefPtr<ScrollBar> m_horizontal_scrollbar;
+    protected:
+        explicit ScrollableWidgetScrollbar(ScrollableWidget& owner, Gfx::Orientation orientation)
+            : Scrollbar(orientation)
+            , m_owner(owner)
+        {
+        }
+
+        virtual void mousewheel_event(MouseEvent& event) override
+        {
+            m_owner.handle_wheel_event(event, *this);
+        }
+
+    private:
+        ScrollableWidget& m_owner;
+    };
+    friend class ScrollableWidgetScrollbar;
+
+    void update_scrollbar_ranges();
+    void handle_wheel_event(MouseEvent&, Widget&);
+
+    RefPtr<ScrollableWidgetScrollbar> m_vertical_scrollbar;
+    RefPtr<ScrollableWidgetScrollbar> m_horizontal_scrollbar;
     RefPtr<Widget> m_corner_widget;
     Gfx::IntSize m_content_size;
     Gfx::IntSize m_size_occupied_by_fixed_elements;

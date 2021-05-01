@@ -1,56 +1,28 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ProcessModel.h"
-#include "GraphWidget.h"
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/FileIconProvider.h>
-#include <fcntl.h>
-#include <stdio.h>
 
 static ProcessModel* s_the;
 
 ProcessModel& ProcessModel::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
 ProcessModel::ProcessModel()
 {
-    ASSERT(!s_the);
+    VERIFY(!s_the);
     s_the = this;
-    m_generic_process_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png");
-    m_high_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/highpriority.png");
-    m_low_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/lowpriority.png");
-    m_normal_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/normalpriority.png");
 
     auto file = Core::File::construct("/proc/cpuinfo");
     if (file->open(Core::IODevice::ReadOnly)) {
@@ -65,6 +37,8 @@ ProcessModel::ProcessModel()
 
     if (m_cpus.is_empty())
         m_cpus.append(make<CpuInfo>(0));
+
+    m_kernel_process_icon = GUI::Icon::default_icon("gear");
 }
 
 ProcessModel::~ProcessModel()
@@ -73,7 +47,7 @@ ProcessModel::~ProcessModel()
 
 int ProcessModel::row_count(const GUI::ModelIndex&) const
 {
-    return m_pids.size();
+    return m_tids.size();
 }
 
 int ProcessModel::column_count(const GUI::ModelIndex&) const
@@ -107,7 +81,7 @@ String ProcessModel::column_name(int column) const
     case Column::Physical:
         return "Physical";
     case Column::DirtyPrivate:
-        return "DirtyP";
+        return "Private";
     case Column::CleanInode:
         return "CleanI";
     case Column::PurgeableVolatile:
@@ -145,7 +119,7 @@ String ProcessModel::column_name(int column) const
     case Column::Veil:
         return "Veil";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -156,7 +130,7 @@ static String pretty_byte_size(size_t size)
 
 GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    ASSERT(is_valid(index));
+    VERIFY(is_valid(index));
 
     if (role == GUI::ModelRole::TextAlignment) {
         switch (index.column()) {
@@ -193,11 +167,11 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Column::IPv4SocketWriteBytes:
             return Gfx::TextAlignment::CenterRight;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
-    auto it = m_threads.find(m_pids[index.row()]);
+    auto it = m_threads.find(m_tids[index.row()]);
     auto& thread = *(*it).value;
 
     if (role == GUI::ModelRole::Sort) {
@@ -263,17 +237,15 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Column::Veil:
             return thread.current_state.veil;
         }
-        ASSERT_NOT_REACHED();
-        return {};
+        VERIFY_NOT_REACHED();
     }
 
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Icon: {
-            auto icon = GUI::FileIconProvider::icon_for_executable(thread.current_state.executable);
-            if (auto* bitmap = icon.bitmap_for_size(16))
-                return *bitmap;
-            return *m_generic_process_icon;
+            if (thread.current_state.kernel)
+                return m_kernel_process_icon;
+            return GUI::FileIconProvider::icon_for_executable(thread.current_state.executable);
         }
         case Column::PID:
             return thread.current_state.pid;
@@ -304,10 +276,12 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Column::PurgeableNonvolatile:
             return pretty_byte_size(thread.current_state.amount_purgeable_nonvolatile);
         case Column::CPU:
-            return thread.current_state.cpu_percent;
+            return String::formatted("{:.2}", thread.current_state.cpu_percent);
         case Column::Processor:
             return thread.current_state.cpu;
         case Column::Name:
+            if (thread.current_state.kernel)
+                return String::formatted("{} (*)", thread.current_state.name);
             return thread.current_state.name;
         case Column::Syscalls:
             return thread.current_state.syscall_count;
@@ -341,7 +315,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 
 void ProcessModel::update()
 {
-    auto previous_pid_count = m_pids.size();
+    auto previous_tid_count = m_tids.size();
     auto all_processes = Core::ProcessStatisticsReader::get_all(m_proc_all);
 
     u64 last_sum_ticks_scheduled = 0, last_sum_ticks_scheduled_kernel = 0;
@@ -351,12 +325,13 @@ void ProcessModel::update()
         last_sum_ticks_scheduled_kernel += current_state.ticks_kernel;
     }
 
-    HashTable<PidAndTid> live_pids;
+    HashTable<int> live_tids;
     u64 sum_ticks_scheduled = 0, sum_ticks_scheduled_kernel = 0;
     if (all_processes.has_value()) {
         for (auto& it : all_processes.value()) {
             for (auto& thread : it.value.threads) {
                 ThreadState state;
+                state.kernel = it.value.kernel;
                 state.pid = it.value.pid;
                 state.user = it.value.username;
                 state.pledge = it.value.pledge;
@@ -385,7 +360,6 @@ void ProcessModel::update()
                 state.tid = thread.tid;
                 state.pgid = it.value.pgid;
                 state.sid = it.value.sid;
-                state.times_scheduled = thread.times_scheduled;
                 state.ticks_user = thread.ticks_user;
                 state.ticks_kernel = thread.ticks_kernel;
                 state.cpu = thread.cpu;
@@ -395,51 +369,54 @@ void ProcessModel::update()
                 sum_ticks_scheduled += thread.ticks_user + thread.ticks_kernel;
                 sum_ticks_scheduled_kernel += thread.ticks_kernel;
                 {
-                    auto pit = m_threads.find({ it.value.pid, thread.tid });
+                    auto pit = m_threads.find(thread.tid);
                     if (pit == m_threads.end())
-                        m_threads.set({ it.value.pid, thread.tid }, make<Thread>());
+                        m_threads.set(thread.tid, make<Thread>());
                 }
-                auto pit = m_threads.find({ it.value.pid, thread.tid });
-                ASSERT(pit != m_threads.end());
+                auto pit = m_threads.find(thread.tid);
+                VERIFY(pit != m_threads.end());
                 (*pit).value->previous_state = (*pit).value->current_state;
                 (*pit).value->current_state = state;
 
-                live_pids.set({ it.value.pid, thread.tid });
+                live_tids.set(thread.tid);
             }
         }
     }
 
-    m_pids.clear();
+    m_tids.clear();
     for (auto& c : m_cpus) {
         c.total_cpu_percent = 0.0;
         c.total_cpu_percent_kernel = 0.0;
     }
-    Vector<PidAndTid, 16> pids_to_remove;
+    Vector<int, 16> tids_to_remove;
     for (auto& it : m_threads) {
-        if (!live_pids.contains(it.key)) {
-            pids_to_remove.append(it.key);
+        if (!live_tids.contains(it.key)) {
+            tids_to_remove.append(it.key);
             continue;
         }
-        auto& process = *it.value;
-        u32 ticks_scheduled_diff = (process.current_state.ticks_user + process.current_state.ticks_kernel)
-            - (process.previous_state.ticks_user + process.previous_state.ticks_kernel);
-        u32 ticks_scheduled_diff_kernel = process.current_state.ticks_kernel - process.previous_state.ticks_kernel;
-        process.current_state.cpu_percent = ((float)ticks_scheduled_diff * 100) / (float)(sum_ticks_scheduled - last_sum_ticks_scheduled);
-        process.current_state.cpu_percent_kernel = ((float)ticks_scheduled_diff_kernel * 100) / (float)(sum_ticks_scheduled - last_sum_ticks_scheduled);
-        if (it.key.pid != 0) {
-            auto& cpu_info = m_cpus[process.current_state.cpu];
-            cpu_info.total_cpu_percent += process.current_state.cpu_percent;
-            cpu_info.total_cpu_percent_kernel += process.current_state.cpu_percent_kernel;
-            m_pids.append(it.key);
+        auto& thread = *it.value;
+        u32 ticks_scheduled_diff = (thread.current_state.ticks_user + thread.current_state.ticks_kernel)
+            - (thread.previous_state.ticks_user + thread.previous_state.ticks_kernel);
+        u32 ticks_scheduled_diff_kernel = thread.current_state.ticks_kernel - thread.previous_state.ticks_kernel;
+        thread.current_state.cpu_percent = ((float)ticks_scheduled_diff * 100) / (float)(sum_ticks_scheduled - last_sum_ticks_scheduled);
+        thread.current_state.cpu_percent_kernel = ((float)ticks_scheduled_diff_kernel * 100) / (float)(sum_ticks_scheduled - last_sum_ticks_scheduled);
+        if (it.value->current_state.pid != 0) {
+            auto& cpu_info = m_cpus[thread.current_state.cpu];
+            cpu_info.total_cpu_percent += thread.current_state.cpu_percent;
+            cpu_info.total_cpu_percent_kernel += thread.current_state.cpu_percent_kernel;
+            m_tids.append(it.key);
         }
     }
-    for (auto pid : pids_to_remove)
-        m_threads.remove(pid);
+    for (auto tid : tids_to_remove)
+        m_threads.remove(tid);
 
     if (on_cpu_info_change)
         on_cpu_info_change(m_cpus);
 
-    // FIXME: This is a rather hackish way of invalidating indexes.
-    //        It would be good if GUI::Model had a way to orchestrate removal/insertion while preserving indexes.
-    did_update(previous_pid_count == m_pids.size() ? GUI::Model::UpdateFlag::DontInvalidateIndexes : GUI::Model::UpdateFlag::InvalidateAllIndexes);
+    if (on_state_update)
+        on_state_update(all_processes->size(), m_threads.size());
+
+    // FIXME: This is a rather hackish way of invalidating indices.
+    //        It would be good if GUI::Model had a way to orchestrate removal/insertion while preserving indices.
+    did_update(previous_tid_count == m_tids.size() ? GUI::Model::UpdateFlag::DontInvalidateIndices : GUI::Model::UpdateFlag::InvalidateAllIndices);
 }

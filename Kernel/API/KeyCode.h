@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -134,7 +114,8 @@
     __ENUMERATE_KEY_CODE(Pipe, "|")                  \
     __ENUMERATE_KEY_CODE(Tilde, "~")                 \
     __ENUMERATE_KEY_CODE(Backtick, "`")              \
-    __ENUMERATE_KEY_CODE(Logo, "Logo")
+    __ENUMERATE_KEY_CODE(Super, "Super")             \
+    __ENUMERATE_KEY_CODE(Menu, "Menu")
 
 enum KeyCode : u8 {
 #define __ENUMERATE_KEY_CODE(name, ui_name) Key_##name,
@@ -144,14 +125,14 @@ enum KeyCode : u8 {
         Key_Shift
     = Key_LeftShift,
 };
-const int key_code_count = Key_Logo;
+const int key_code_count = Key_Super;
 
 enum KeyModifier {
     Mod_None = 0x00,
     Mod_Alt = 0x01,
     Mod_Ctrl = 0x02,
     Mod_Shift = 0x04,
-    Mod_Logo = 0x08,
+    Mod_Super = 0x08,
     Mod_AltGr = 0x10,
     Mod_Mask = 0x1f,
 
@@ -168,7 +149,7 @@ struct KeyEvent {
     bool alt() const { return flags & Mod_Alt; }
     bool ctrl() const { return flags & Mod_Ctrl; }
     bool shift() const { return flags & Mod_Shift; }
-    bool logo() const { return flags & Mod_Logo; }
+    bool super() const { return flags & Mod_Super; }
     bool altgr() const { return flags & Mod_AltGr; }
     unsigned modifiers() const { return flags & Mod_Mask; }
     bool is_press() const { return flags & Is_Press; }

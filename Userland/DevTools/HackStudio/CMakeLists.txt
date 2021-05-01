@@ -1,16 +1,25 @@
 add_subdirectory(LanguageServers)
 add_subdirectory(LanguageClients)
 
+compile_gml(Dialogs/NewProjectDialog.gml Dialogs/NewProjectDialogGML.h new_project_dialog_gml)
+
 set(SOURCES
     CodeDocument.cpp
+    ClassViewWidget.cpp
     CursorTool.cpp
     Debugger/BacktraceModel.cpp
     Debugger/DebugInfoWidget.cpp
     Debugger/Debugger.cpp
+    Debugger/DebuggerGlobalJSObject.cpp
+    Debugger/DebuggerVariableJSObject.cpp
     Debugger/DisassemblyModel.cpp
     Debugger/DisassemblyWidget.cpp
+    Debugger/EvaluateExpressionDialog.cpp
     Debugger/RegistersModel.cpp
     Debugger/VariablesModel.cpp
+    Dialogs/NewProjectDialog.cpp
+    Dialogs/NewProjectDialogGML.h
+    Dialogs/ProjectTemplatesModel.cpp
     Editor.cpp
     EditorWrapper.cpp
     FindInFilesWidget.cpp
@@ -22,10 +31,13 @@ set(SOURCES
     Git/GitRepo.cpp
     Git/GitWidget.cpp
     HackStudioWidget.cpp
+    Language.cpp
     LanguageClient.cpp
     Locator.cpp
     Project.cpp
+    ProjectDeclarations.cpp
     ProjectFile.cpp
+    ProjectTemplate.cpp
     TerminalWrapper.cpp
     WidgetTool.cpp
     WidgetTreeModel.cpp
@@ -33,5 +45,5 @@ set(SOURCES
 )
 
 serenity_app(HackStudio ICON app-hack-studio)
-target_link_libraries(HackStudio LibWeb LibMarkdown LibGUI LibGfx LibCore LibVT LibDebug LibX86 LibDiff LibShell)
+target_link_libraries(HackStudio LibWeb LibMarkdown LibGUI LibCpp LibGfx LibCore LibVT LibDebug LibX86 LibDiff LibShell LibRegex)
 add_dependencies(HackStudio CppLanguageServer)

@@ -1,33 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/AnonymousVMObject.h>
@@ -38,17 +19,20 @@
 
 namespace Kernel {
 
-Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, u8 access, bool cacheable, bool kernel, bool shared)
+Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, String name, Region::Access access, Cacheable cacheable, bool shared)
     : PurgeablePageRanges(vmobject)
     , m_range(range)
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
-    , m_name(name)
+    , m_name(move(name))
     , m_access(access | ((access & 0x7) << 4))
     , m_shared(shared)
-    , m_cacheable(cacheable)
-    , m_kernel(kernel)
+    , m_cacheable(cacheable == Cacheable::Yes)
 {
+    VERIFY(m_range.base().is_page_aligned());
+    VERIFY(m_range.size());
+    VERIFY((m_range.size() % PAGE_SIZE) == 0);
+
     m_vmobject->ref_region();
     register_purgeable_page_ranges();
     MM.register_region(*this);
@@ -65,7 +49,7 @@ Region::~Region()
     ScopedSpinLock lock(s_mm_lock);
     if (m_page_directory) {
         unmap(ShouldDeallocateVirtualMemoryRange::Yes);
-        ASSERT(!m_page_directory);
+        VERIFY(!m_page_directory);
     }
 
     MM.unregister_region(*this);
@@ -89,27 +73,28 @@ void Region::unregister_purgeable_page_ranges()
 
 OwnPtr<Region> Region::clone(Process& new_owner)
 {
-    ASSERT(Process::current());
+    VERIFY(Process::current());
 
     ScopedSpinLock lock(s_mm_lock);
 
     if (m_shared) {
-        ASSERT(!m_stack);
+        VERIFY(!m_stack);
         if (vmobject().is_inode())
-            ASSERT(vmobject().is_shared_inode());
+            VERIFY(vmobject().is_shared_inode());
 
         // Create a new region backed by the same VMObject.
         auto region = Region::create_user_accessible(
-            &new_owner, m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access, m_cacheable, m_shared);
+            &new_owner, m_range, m_vmobject, m_offset_in_vmobject, m_name, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
         if (m_vmobject->is_anonymous())
             region->copy_purgeable_page_ranges(*this);
         region->set_mmap(m_mmap);
         region->set_shared(m_shared);
+        region->set_syscall_region(is_syscall_region());
         return region;
     }
 
     if (vmobject().is_inode())
-        ASSERT(vmobject().is_private_inode());
+        VERIFY(vmobject().is_private_inode());
 
     auto vmobject_clone = vmobject().clone();
     if (!vmobject_clone)
@@ -118,15 +103,16 @@ OwnPtr<Region> Region::clone(Process& new_owner)
     // Set up a COW region. The parent (this) region becomes COW as well!
     remap();
     auto clone_region = Region::create_user_accessible(
-        &new_owner, m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name, m_access, m_cacheable, m_shared);
+        &new_owner, m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
     if (m_vmobject->is_anonymous())
         clone_region->copy_purgeable_page_ranges(*this);
     if (m_stack) {
-        ASSERT(is_readable());
-        ASSERT(is_writable());
-        ASSERT(vmobject().is_anonymous());
+        VERIFY(is_readable());
+        VERIFY(is_writable());
+        VERIFY(vmobject().is_anonymous());
         clone_region->set_stack(true);
     }
+    clone_region->set_syscall_region(is_syscall_region());
     clone_region->set_mmap(m_mmap);
     return clone_region;
 }
@@ -148,8 +134,8 @@ bool Region::is_volatile(VirtualAddress vaddr, size_t size) const
         return false;
 
     auto offset_in_vmobject = vaddr.get() - (this->vaddr().get() - m_offset_in_vmobject);
-    size_t first_page_index = PAGE_ROUND_DOWN(offset_in_vmobject) / PAGE_SIZE;
-    size_t last_page_index = PAGE_ROUND_UP(offset_in_vmobject + size) / PAGE_SIZE;
+    size_t first_page_index = page_round_down(offset_in_vmobject) / PAGE_SIZE;
+    size_t last_page_index = page_round_up(offset_in_vmobject + size) / PAGE_SIZE;
     return is_volatile_range({ first_page_index, last_page_index - first_page_index });
 }
 
@@ -165,16 +151,16 @@ auto Region::set_volatile(VirtualAddress vaddr, size_t size, bool is_volatile, b
         // partial pages volatile to prevent potentially non-volatile
         // data to be discarded. So rund up the first page and round
         // down the last page.
-        size_t first_page_index = PAGE_ROUND_UP(offset_in_vmobject) / PAGE_SIZE;
-        size_t last_page_index = PAGE_ROUND_DOWN(offset_in_vmobject + size) / PAGE_SIZE;
+        size_t first_page_index = page_round_up(offset_in_vmobject) / PAGE_SIZE;
+        size_t last_page_index = page_round_down(offset_in_vmobject + size) / PAGE_SIZE;
         if (first_page_index != last_page_index)
             add_volatile_range({ first_page_index, last_page_index - first_page_index });
     } else {
         // If marking pages as non-volatile, round down the first page
         // and round up the last page to make sure the beginning and
         // end of the range doesn't inadvertedly get discarded.
-        size_t first_page_index = PAGE_ROUND_DOWN(offset_in_vmobject) / PAGE_SIZE;
-        size_t last_page_index = PAGE_ROUND_UP(offset_in_vmobject + size) / PAGE_SIZE;
+        size_t first_page_index = page_round_down(offset_in_vmobject) / PAGE_SIZE;
+        size_t last_page_index = page_round_up(offset_in_vmobject + size) / PAGE_SIZE;
         switch (remove_volatile_range({ first_page_index, last_page_index - first_page_index }, was_purged)) {
         case PurgeablePageRanges::RemoveVolatileError::Success:
         case PurgeablePageRanges::RemoveVolatileError::SuccessNoChange:
@@ -222,20 +208,17 @@ size_t Region::amount_shared() const
     return bytes;
 }
 
-NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable, bool shared)
+NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, String name, Region::Access access, Cacheable cacheable, bool shared)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable, false, shared);
+    auto region = adopt_own(*new Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
     if (owner)
         region->m_owner = owner->make_weak_ptr();
-    region->m_user_accessible = true;
     return region;
 }
 
-NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable)
+NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, String name, Region::Access access, Cacheable cacheable)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable, true, false);
-    region->m_user_accessible = false;
-    return region;
+    return adopt_own(*new Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, false));
 }
 
 bool Region::should_cow(size_t page_index) const
@@ -247,15 +230,21 @@ bool Region::should_cow(size_t page_index) const
 
 void Region::set_should_cow(size_t page_index, bool cow)
 {
-    ASSERT(!m_shared);
+    VERIFY(!m_shared);
     if (vmobject().is_anonymous())
         static_cast<AnonymousVMObject&>(vmobject()).set_should_cow(first_page_index() + page_index, cow);
 }
 
 bool Region::map_individual_page_impl(size_t page_index)
 {
-    ASSERT(m_page_directory->get_lock().own_lock());
+    VERIFY(m_page_directory->get_lock().own_lock());
     auto page_vaddr = vaddr_from_page_index(page_index);
+
+    bool user_allowed = page_vaddr.get() >= 0x00800000 && is_user_address(page_vaddr);
+    if (is_mmap() && !user_allowed) {
+        PANIC("About to map mmap'ed page at a kernel address");
+    }
+
     auto* pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     if (!pte)
         return false;
@@ -272,7 +261,7 @@ bool Region::map_individual_page_impl(size_t page_index)
             pte->set_writable(is_writable());
         if (Processor::current().has_feature(CPUFeature::NX))
             pte->set_execute_disabled(!is_executable());
-        pte->set_user_allowed(is_user_accessible());
+        pte->set_user_allowed(user_allowed);
     }
     return true;
 }
@@ -280,7 +269,7 @@ bool Region::map_individual_page_impl(size_t page_index)
 bool Region::do_remap_vmobject_page_range(size_t page_index, size_t page_count)
 {
     bool success = true;
-    ASSERT(s_mm_lock.own_lock());
+    VERIFY(s_mm_lock.own_lock());
     if (!m_page_directory)
         return success; // not an error, region may have not yet mapped it
     if (!translate_vmobject_page_range(page_index, page_count))
@@ -324,7 +313,7 @@ bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
     if (!translate_vmobject_page(page_index))
         return true; // not an error, region doesn't map this page
     ScopedSpinLock page_lock(m_page_directory->get_lock());
-    ASSERT(physical_page(page_index));
+    VERIFY(physical_page(page_index));
     bool success = map_individual_page_impl(page_index);
     if (with_flush)
         MM.flush_tlb(m_page_directory, vaddr_from_page_index(page_index));
@@ -371,19 +360,19 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
 
 void Region::set_page_directory(PageDirectory& page_directory)
 {
-    ASSERT(!m_page_directory || m_page_directory == &page_directory);
-    ASSERT(s_mm_lock.own_lock());
+    VERIFY(!m_page_directory || m_page_directory == &page_directory);
+    VERIFY(s_mm_lock.own_lock());
     m_page_directory = page_directory;
 }
 
-bool Region::map(PageDirectory& page_directory)
+bool Region::map(PageDirectory& page_directory, ShouldFlushTLB should_flush_tlb)
 {
     ScopedSpinLock lock(s_mm_lock);
     ScopedSpinLock page_lock(page_directory.get_lock());
 
     // FIXME: Find a better place for this sanity check(?)
-    if (is_user_accessible() && !is_shared()) {
-        ASSERT(!vmobject().is_shared_inode());
+    if (is_user() && !is_shared()) {
+        VERIFY(!vmobject().is_shared_inode());
     }
 
     set_page_directory(page_directory);
@@ -394,7 +383,8 @@ bool Region::map(PageDirectory& page_directory)
         ++page_index;
     }
     if (page_index > 0) {
-        MM.flush_tlb(m_page_directory, vaddr(), page_index);
+        if (should_flush_tlb == ShouldFlushTLB::Yes)
+            MM.flush_tlb(m_page_directory, vaddr(), page_index);
         return page_index == page_count();
     }
     return false;
@@ -402,7 +392,7 @@ bool Region::map(PageDirectory& page_directory)
 
 void Region::remap()
 {
-    ASSERT(m_page_directory);
+    VERIFY(m_page_directory);
     map(*m_page_directory);
 }
 
@@ -419,7 +409,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault, ScopedSpinLock<Re
             return PageFaultResponse::ShouldCrash;
         }
         if (vmobject().is_inode()) {
-            dbgln<PAGE_FAULT_DEBUG>("NP(inode) fault in Region({})[{}]", this, page_index_in_region);
+            dbgln_if(PAGE_FAULT_DEBUG, "NP(inode) fault in Region({})[{}]", this, page_index_in_region);
             return handle_inode_fault(page_index_in_region, mm_lock);
         }
 
@@ -442,12 +432,12 @@ PageFaultResponse Region::handle_fault(const PageFault& fault, ScopedSpinLock<Re
         return PageFaultResponse::ShouldCrash;
 #endif
     }
-    ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
+    VERIFY(fault.type() == PageFault::Type::ProtectionViolation);
     if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
-        dbgln<PAGE_FAULT_DEBUG>("PV(cow) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+        dbgln_if(PAGE_FAULT_DEBUG, "PV(cow) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
         auto* phys_page = physical_page(page_index_in_region);
         if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
-            dbgln<PAGE_FAULT_DEBUG>("NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+            dbgln_if(PAGE_FAULT_DEBUG, "NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
             return handle_zero_fault(page_index_in_region);
         }
         return handle_cow_fault(page_index_in_region);
@@ -458,10 +448,10 @@ PageFaultResponse Region::handle_fault(const PageFault& fault, ScopedSpinLock<Re
 
 PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(vmobject().is_anonymous());
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(vmobject().is_anonymous());
 
-    LOCKER(vmobject().m_paging_lock);
+    Locker locker(vmobject().m_paging_lock);
 
     auto& page_slot = physical_page_slot(page_index_in_region);
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
@@ -481,18 +471,18 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
     if (page_slot->is_lazy_committed_page()) {
         page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_vmobject);
-        dbgln<PAGE_FAULT_DEBUG>("      >> ALLOCATED COMMITTED {}", page_slot->paddr());
+        dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED COMMITTED {}", page_slot->paddr());
     } else {
         page_slot = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
         if (page_slot.is_null()) {
-            klog() << "MM: handle_zero_fault was unable to allocate a physical page";
+            dmesgln("MM: handle_zero_fault was unable to allocate a physical page");
             return PageFaultResponse::OutOfMemory;
         }
-        dbgln<PAGE_FAULT_DEBUG>("      >> ALLOCATED {}", page_slot->paddr());
+        dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED {}", page_slot->paddr());
     }
 
     if (!remap_vmobject_page(page_index_in_vmobject)) {
-        klog() << "MM: handle_zero_fault was unable to allocate a page table to map " << page_slot;
+        dmesgln("MM: handle_zero_fault was unable to allocate a page table to map {}", page_slot);
         return PageFaultResponse::OutOfMemory;
     }
     return PageFaultResponse::Continue;
@@ -500,7 +490,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
 PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     auto current_thread = Thread::current();
     if (current_thread)
         current_thread->did_cow_fault();
@@ -517,26 +507,26 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 
 PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, ScopedSpinLock<RecursiveSpinLock>& mm_lock)
 {
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(vmobject().is_inode());
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(vmobject().is_inode());
 
     mm_lock.unlock();
-    ASSERT(!s_mm_lock.own_lock());
-    ASSERT(!g_scheduler_lock.own_lock());
+    VERIFY(!s_mm_lock.own_lock());
+    VERIFY(!g_scheduler_lock.own_lock());
 
-    LOCKER(vmobject().m_paging_lock);
+    Locker locker(vmobject().m_paging_lock);
 
     mm_lock.lock();
 
-    ASSERT_INTERRUPTS_DISABLED();
+    VERIFY_INTERRUPTS_DISABLED();
     auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
     auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[page_index_in_vmobject];
 
-    dbgln<PAGE_FAULT_DEBUG>("Inode fault in {} page index: {}", name(), page_index_in_region);
+    dbgln_if(PAGE_FAULT_DEBUG, "Inode fault in {} page index: {}", name(), page_index_in_region);
 
     if (!vmobject_physical_page_entry.is_null()) {
-        dbgln<PAGE_FAULT_DEBUG>("MM: page_in_from_inode() but page already present. Fine with me!");
+        dbgln_if(PAGE_FAULT_DEBUG, "MM: page_in_from_inode() but page already present. Fine with me!");
         if (!remap_vmobject_page(page_index_in_vmobject))
             return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
@@ -556,7 +546,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, Scoped
     mm_lock.lock();
 
     if (nread < 0) {
-        klog() << "MM: handle_inode_fault had error (" << nread << ") while reading!";
+        dmesgln("MM: handle_inode_fault had error ({}) while reading!", nread);
         return PageFaultResponse::ShouldCrash;
     }
     if (nread < PAGE_SIZE) {
@@ -566,7 +556,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, Scoped
 
     vmobject_physical_page_entry = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
     if (vmobject_physical_page_entry.is_null()) {
-        klog() << "MM: handle_inode_fault was unable to allocate a physical page";
+        dmesgln("MM: handle_inode_fault was unable to allocate a physical page");
         return PageFaultResponse::OutOfMemory;
     }
 
@@ -580,7 +570,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, Scoped
                     VirtualAddress(dest_ptr),
                     VirtualAddress(fault_at));
             else
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
         }
     }
     MM.unquickmap_page();

@@ -22,16 +22,18 @@ diff -Naur lua-5.3.5/src/Makefile lua-5.3.5.serenity/src/Makefile
  
  LUA_A=	liblua.a
  CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \
-@@ -124,6 +124,13 @@
+@@ -124,6 +124,15 @@
  solaris:
  	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_POSIX -DLUA_USE_DLOPEN -D_REENTRANT" SYSLIBS="-ldl"
  
 +serenity:
++   # FIXME: Replace these with $CC, $AR, $RANLIB
 +	$(MAKE) $(ALL) \
 +		CC="i686-pc-serenity-gcc -std=gnu99" \
 +		AR="i686-pc-serenity-ar rcu" \
 +		RANLIB="i686-pc-serenity-ranlib" \
-+		SYSCFLAGS="-DLUA_USE_DLOPEN"
++		SYSCFLAGS="-DLUA_USE_DLOPEN" \
++		SYSLIBS="-ldl"
 +
  # list targets that do not create files (but not all makes understand .PHONY)
  .PHONY: all $(PLATS) default o a clean depend echo none

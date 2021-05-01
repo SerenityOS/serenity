@@ -1,36 +1,29 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Badge.h>
 #include <AK/Debug.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibJS/Console.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Parser.h>
+#include <LibJS/Runtime/VM.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/Dump.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Page/Frame.h>
 #include <WebContent/ClientConnection.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebContentClientEndpoint.h>
+#include <pthread.h>
 
 namespace WebContent {
 
@@ -65,10 +58,9 @@ const Web::Page& ClientConnection::page() const
     return m_page_host->page();
 }
 
-OwnPtr<Messages::WebContentServer::GreetResponse> ClientConnection::handle(const Messages::WebContentServer::Greet& message)
+OwnPtr<Messages::WebContentServer::GreetResponse> ClientConnection::handle(const Messages::WebContentServer::Greet&)
 {
-    set_client_pid(message.client_pid());
-    return make<Messages::WebContentServer::GreetResponse>(client_id(), getpid());
+    return make<Messages::WebContentServer::GreetResponse>();
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemTheme& message)
@@ -78,21 +70,35 @@ void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemThem
     m_page_host->set_palette_impl(*impl);
 }
 
+void ClientConnection::handle(const Messages::WebContentServer::UpdateScreenRect& message)
+{
+    m_page_host->set_screen_rect(message.rect());
+}
+
 void ClientConnection::handle(const Messages::WebContentServer::LoadURL& message)
 {
-    dbgln<SPAM_DEBUG>("handle: WebContentServer::LoadURL: url={}", message.url());
+    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", message.url());
+
+    String process_name;
+    if (message.url().host().is_empty())
+        process_name = "WebContent";
+    else
+        process_name = String::formatted("WebContent: {}", message.url().host());
+
+    pthread_setname_np(pthread_self(), process_name.characters());
+
     page().load(message.url());
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::LoadHTML& message)
 {
-    dbgln<SPAM_DEBUG>("handle: WebContentServer::LoadHTML: html={}, url={}", message.html(), message.url());
+    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}, url={}", message.html(), message.url());
     page().load_html(message.html(), message.url());
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::SetViewportRect& message)
 {
-    dbgln<SPAM_DEBUG>("handle: WebContentServer::SetViewportRect: rect={}", message.rect());
+    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::SetViewportRect: rect={}", message.rect());
     m_page_host->set_viewport_rect(message.rect());
 }
 
@@ -150,9 +156,81 @@ void ClientConnection::handle(const Messages::WebContentServer::MouseUp& message
     page().handle_mouseup(message.position(), message.button(), message.modifiers());
 }
 
+void ClientConnection::handle(const Messages::WebContentServer::MouseWheel& message)
+{
+    page().handle_mousewheel(message.position(), message.button(), message.modifiers(), message.wheel_delta());
+}
+
 void ClientConnection::handle(const Messages::WebContentServer::KeyDown& message)
 {
     page().handle_keydown((KeyCode)message.key(), message.modifiers(), message.code_point());
+}
+
+void ClientConnection::handle(const Messages::WebContentServer::DebugRequest& message)
+{
+    if (message.request() == "dump-dom-tree") {
+        if (auto* doc = page().main_frame().document())
+            Web::dump_tree(*doc);
+    }
+
+    if (message.request() == "dump-layout-tree") {
+        if (auto* doc = page().main_frame().document()) {
+            if (auto* icb = doc->layout_node())
+                Web::dump_tree(*icb);
+        }
+    }
+
+    if (message.request() == "dump-style-sheets") {
+        if (auto* doc = page().main_frame().document()) {
+            for (auto& sheet : doc->style_sheets().sheets()) {
+                Web::dump_sheet(sheet);
+            }
+        }
+    }
+
+    if (message.request() == "collect-garbage") {
+        Web::Bindings::main_thread_vm().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
+    }
+
+    if (message.request() == "set-line-box-borders") {
+        bool state = message.argument() == "on";
+        m_page_host->set_should_show_line_box_borders(state);
+        page().main_frame().set_needs_display(page().main_frame().viewport_rect());
+    }
+
+    if (message.request() == "clear-cache") {
+        Web::ResourceLoader::the().clear_cache();
+    }
+
+    if (message.request() == "spoof-user-agent") {
+        Web::ResourceLoader::the().set_user_agent(message.argument());
+    }
+}
+
+void ClientConnection::handle(const Messages::WebContentServer::GetSource&)
+{
+    if (auto* doc = page().main_frame().document()) {
+        post_message(Messages::WebContentClient::DidGetSource(doc->url(), doc->source()));
+    }
+}
+
+void ClientConnection::handle(const Messages::WebContentServer::JSConsoleInitialize&)
+{
+    if (auto* document = page().main_frame().document()) {
+        auto interpreter = document->interpreter().make_weak_ptr();
+        if (m_interpreter.ptr() == interpreter.ptr())
+            return;
+
+        m_interpreter = interpreter;
+        m_console_client = make<WebContentConsoleClient>(interpreter->global_object().console(), interpreter, *this);
+        interpreter->global_object().console().set_client(*m_console_client.ptr());
+    }
+}
+
+void ClientConnection::handle(const Messages::WebContentServer::JSConsoleInput& message)
+{
+    if (m_console_client)
+        m_console_client->handle_input(message.js_source());
 }
 
 }

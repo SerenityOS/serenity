@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -38,8 +18,9 @@
 
 namespace Web::HTML {
 
-HTMLScriptElement::HTMLScriptElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
+HTMLScriptElement::HTMLScriptElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
+    , m_script_filename("(document)")
 {
 }
 
@@ -85,15 +66,15 @@ void HTMLScriptElement::execute_script()
             document().set_current_script({}, nullptr);
 
         if (m_from_an_external_file)
-            dbgln<HTML_SCRIPT_DEBUG>("HTMLScriptElement: Running script {}", attribute(HTML::AttributeNames::src));
+            dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running script {}", attribute(HTML::AttributeNames::src));
         else
-            dbgln<HTML_SCRIPT_DEBUG>("HTMLScriptElement: Running inline script");
+            dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running inline script");
 
-        document().run_javascript(m_script_source);
+        document().run_javascript(m_script_source, m_script_filename);
 
         document().set_current_script({}, old_current_script);
     } else {
-        ASSERT(!document().current_script());
+        VERIFY(!document().current_script());
         TODO();
     }
 
@@ -105,16 +86,14 @@ void HTMLScriptElement::execute_script()
 }
 
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type-essence-match
-static bool is_javascript_mime_type_essence_match(const String& mime_type)
+static bool is_javascript_mime_type_essence_match(const String& string)
 {
-    // FIXME: This operates on the whole mime type, instead of just the essence. https://mimesniff.spec.whatwg.org/#mime-type-essence
-    //        It'd probably be best to make a helper class for mime types, since there is a whole spec about mime types.
-    auto lowercase_mime_type = mime_type.to_lowercase();
-    return lowercase_mime_type.is_one_of("application/ecmascript", "application/javascript", "application/x-ecmascript", "application/x-javascript", "text/ecmascript", "text/javascript", "text/javascript1.0", "text/javascript1.1", "text/javascript1.2", "text/javascript1.3", "text/javascript1.4", "text/javascript1.5", "text/jscript", "text/livescript", "text/x-ecmascript", "text/x-javascript");
+    auto lowercase_string = string.to_lowercase();
+    return lowercase_string.is_one_of("application/ecmascript", "application/javascript", "application/x-ecmascript", "application/x-javascript", "text/ecmascript", "text/javascript", "text/javascript1.0", "text/javascript1.1", "text/javascript1.2", "text/javascript1.3", "text/javascript1.4", "text/javascript1.5", "text/jscript", "text/livescript", "text/x-ecmascript", "text/x-javascript");
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#prepare-a-script
-void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
+void HTMLScriptElement::prepare_script()
 {
     if (m_already_started) {
         dbgln("HTMLScriptElement: Refusing to run script because it has already started.");
@@ -204,9 +183,6 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
     // FIXME: Cryptographic nonce
     // FIXME: Check "integrity" attribute
     // FIXME: Check "referrerpolicy" attribute
-
-    m_parser_inserted = !!m_parser_document;
-
     // FIXME: Check fetch options
 
     if (has_attribute(HTML::AttributeNames::src)) {
@@ -228,10 +204,13 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
         }
 
         if (m_script_type == ScriptType::Classic) {
+            auto request = LoadRequest::create_for_url_on_page(url, document().page());
+
             // FIXME: This load should be made asynchronous and the parser should spin an event loop etc.
+            m_script_filename = url.to_string();
             ResourceLoader::the().load_sync(
-                url,
-                [this, url](auto data, auto&) {
+                request,
+                [this, url](auto data, auto&, auto) {
                     if (data.is_null()) {
                         dbgln("HTMLScriptElement: Failed to load {}", url);
                         return;
@@ -239,7 +218,7 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
                     m_script_source = String::copy(data);
                     script_became_ready();
                 },
-                [this](auto&) {
+                [this](auto&, auto) {
                     m_failed_to_load = true;
                 });
         } else {
@@ -254,15 +233,15 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
         }
     }
 
-    if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && has_attribute(HTML::AttributeNames::defer) && m_parser_inserted && !has_attribute(HTML::AttributeNames::async))
-        || (m_script_type == ScriptType::Module && m_parser_inserted && !has_attribute(HTML::AttributeNames::async))) {
+    if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && has_attribute(HTML::AttributeNames::defer) && is_parser_inserted() && !has_attribute(HTML::AttributeNames::async))
+        || (m_script_type == ScriptType::Module && is_parser_inserted() && !has_attribute(HTML::AttributeNames::async))) {
         document().add_script_to_execute_when_parsing_has_finished({}, *this);
         when_the_script_is_ready([this] {
             m_ready_to_be_parser_executed = true;
         });
     }
 
-    else if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && m_parser_inserted && !has_attribute(HTML::AttributeNames::async)) {
+    else if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && is_parser_inserted() && !has_attribute(HTML::AttributeNames::async)) {
         document().set_pending_parsing_blocking_script({}, this);
         when_the_script_is_ready([this] {
             m_ready_to_be_parser_executed = true;
@@ -271,7 +250,23 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
 
     else if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src) && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)
         || (m_script_type == ScriptType::Module && !has_attribute(HTML::AttributeNames::async) && !m_non_blocking)) {
-        TODO();
+        m_preparation_time_document->add_script_to_execute_as_soon_as_possible({}, *this);
+
+        // FIXME: When the script is ready, run the following steps:
+        //
+        // If the element is not now the first element in the list of scripts
+        // that will execute in order as soon as possible to which it was added above,
+        // then mark the element as ready but return without executing the script yet.
+        //
+        // Execution: Execute the script block corresponding to the first script element
+        // in this list of scripts that will execute in order as soon as possible.
+        //
+        // Remove the first element from this list of scripts that will execute in order
+        // as soon as possible.
+        //
+        // If this list of scripts that will execute in order as soon as possible is still
+        // not empty and the first entry has already been marked as ready, then jump back
+        // to the step labeled execution.
     }
 
     else if ((m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::src)) || m_script_type == ScriptType::Module) {
@@ -311,6 +306,17 @@ void HTMLScriptElement::when_the_script_is_ready(Function<void()> callback)
         return;
     }
     m_script_ready_callback = move(callback);
+}
+
+void HTMLScriptElement::inserted()
+{
+    if (!is_parser_inserted()) {
+        // FIXME: Only do this if the element was previously not connected.
+        if (is_connected()) {
+            prepare_script();
+        }
+    }
+    HTMLElement::inserted();
 }
 
 }

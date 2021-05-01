@@ -1,32 +1,12 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/PIC.h>
@@ -42,19 +22,17 @@ namespace Kernel {
 #define PIC1_CTL 0xA0
 #define PIC1_CMD 0xA1
 
-// clang-format off
-#define ICW1_ICW4 0x01      /* ICW4 (not) needed */
-#define ICW1_SINGLE 0x02    /* Single (cascade) mode */
-#define ICW1_INTERVAL4 0x04 /* Call address interval 4 (8) */
-#define ICW1_LEVEL 0x08     /* Level triggered (edge) mode */
-#define ICW1_INIT 0x10      /* Initialization - required! */
+#define ICW1_ICW4 0x01      // ICW4 (not) needed
+#define ICW1_SINGLE 0x02    // Single (cascade) mode
+#define ICW1_INTERVAL4 0x04 // Call address interval 4 (8)
+#define ICW1_LEVEL 0x08     // Level triggered (edge) mode
+#define ICW1_INIT 0x10      // Initialization - required
 
-#define ICW4_8086 0x01       /* 8086/88 (MCS-80/85) mode */
-#define ICW4_AUTO 0x02       /* Auto (normal) EOI */
-#define ICW4_BUF_SLAVE 0x08  /* Buffered mode/slave */
-#define ICW4_BUF_MASTER 0x0C /* Buffered mode/master */
-#define ICW4_SFNM 0x10       /* Special fully nested (not) */
-// clang-format on
+#define ICW4_8086 0x01       // 8086/88 (MCS-80/85) mode
+#define ICW4_AUTO 0x02       // Auto (normal) EOI
+#define ICW4_BUF_SLAVE 0x08  // Buffered mode/slave
+#define ICW4_BUF_MASTER 0x0C // Buffered mode/master
+#define ICW4_SFNM 0x10       // Special fully nested (not)
 
 bool inline static is_all_masked(u16 reg)
 {
@@ -69,8 +47,8 @@ bool PIC::is_enabled() const
 void PIC::disable(const GenericInterruptHandler& handler)
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
-    ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
+    VERIFY(!is_hard_disabled());
+    VERIFY(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
     u8 irq = handler.interrupt_number();
     if (m_cached_irq_mask & (1 << irq))
         return;
@@ -87,14 +65,14 @@ void PIC::disable(const GenericInterruptHandler& handler)
     m_cached_irq_mask |= 1 << irq;
 }
 
-PIC::PIC()
+UNMAP_AFTER_INIT PIC::PIC()
 {
     initialize();
 }
 
 void PIC::spurious_eoi(const GenericInterruptHandler& handler) const
 {
-    ASSERT(handler.type() == HandlerType::SpuriousInterruptHandler);
+    VERIFY(handler.type() == HandlerType::SpuriousInterruptHandler);
     if (handler.interrupt_number() == 7)
         return;
     if (handler.interrupt_number() == 15) {
@@ -111,15 +89,15 @@ bool PIC::is_vector_enabled(u8 irq) const
 void PIC::enable(const GenericInterruptHandler& handler)
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
-    ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
+    VERIFY(!is_hard_disabled());
+    VERIFY(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
     enable_vector(handler.interrupt_number());
 }
 
 void PIC::enable_vector(u8 irq)
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
+    VERIFY(!is_hard_disabled());
     if (!(m_cached_irq_mask & (1 << irq)))
         return;
     u8 imr;
@@ -138,9 +116,9 @@ void PIC::enable_vector(u8 irq)
 void PIC::eoi(const GenericInterruptHandler& handler) const
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
+    VERIFY(!is_hard_disabled());
     u8 irq = handler.interrupt_number();
-    ASSERT(irq >= gsi_base() && irq < interrupt_vectors_count());
+    VERIFY(irq >= gsi_base() && irq < interrupt_vectors_count());
     if ((1 << irq) & m_cached_irq_mask) {
         spurious_eoi(handler);
         return;
@@ -203,7 +181,7 @@ void PIC::remap(u8 offset)
     enable_vector(2);
 }
 
-void PIC::initialize()
+UNMAP_AFTER_INIT void PIC::initialize()
 {
     /* ICW1 (edge triggered mode, cascading controllers, expect ICW4) */
     IO::out8(PIC0_CTL, ICW1_INIT | ICW1_ICW4);
@@ -228,7 +206,7 @@ void PIC::initialize()
     // ...except IRQ2, since that's needed for the master to let through slave interrupts.
     enable_vector(2);
 
-    klog() << "PIC(i8259): cascading mode, vectors 0x" << String::format("%x", IRQ_VECTOR_BASE) << "-0x" << String::format("%x", IRQ_VECTOR_BASE + 0xf);
+    dmesgln("PIC: Cascading mode, vectors {:#02x}-{:#02x}", IRQ_VECTOR_BASE, IRQ_VECTOR_BASE + 0xf);
 }
 
 u16 PIC::get_isr() const

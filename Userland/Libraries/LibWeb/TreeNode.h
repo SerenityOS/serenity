@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -39,17 +19,17 @@ class TreeNode : public Weakable<T> {
 public:
     void ref()
     {
-        ASSERT(!m_in_removed_last_ref);
-        ASSERT(m_ref_count);
+        VERIFY(!m_in_removed_last_ref);
+        VERIFY(m_ref_count);
         ++m_ref_count;
     }
 
     void unref()
     {
-        ASSERT(!m_in_removed_last_ref);
-        ASSERT(m_ref_count);
+        VERIFY(!m_in_removed_last_ref);
+        VERIFY(m_ref_count);
         if (!--m_ref_count) {
-            if constexpr (IsBaseOf<DOM::Node, T>::value) {
+            if constexpr (IsBaseOf<DOM::Node, T>) {
                 m_in_removed_last_ref = true;
                 static_cast<T*>(this)->removed_last_ref();
             } else {
@@ -97,14 +77,48 @@ public:
         return const_cast<TreeNode*>(this)->child_at_index(index);
     }
 
+    Optional<size_t> index_of_child(const T& search_child)
+    {
+        VERIFY(search_child.parent() == this);
+        size_t index = 0;
+        auto* child = first_child();
+        VERIFY(child);
+
+        do {
+            if (child == &search_child)
+                return index;
+            index++;
+        } while (child && (child = child->next_sibling()));
+        return {};
+    }
+
+    template<typename ChildType>
+    Optional<size_t> index_of_child(const T& search_child)
+    {
+        VERIFY(search_child.parent() == this);
+        size_t index = 0;
+        auto* child = first_child();
+        VERIFY(child);
+
+        do {
+            if (!is<ChildType>(child))
+                continue;
+            if (child == &search_child)
+                return index;
+            index++;
+        } while (child && (child = child->next_sibling()));
+        return {};
+    }
+
     bool is_ancestor_of(const TreeNode&) const;
+    bool is_inclusive_ancestor_of(const TreeNode&) const;
+    bool is_descendant_of(const TreeNode&) const;
+    bool is_inclusive_descendant_of(const TreeNode&) const;
 
+    void append_child(NonnullRefPtr<T> node);
     void prepend_child(NonnullRefPtr<T> node);
-    void append_child(NonnullRefPtr<T> node, bool notify = true);
-    void insert_before(NonnullRefPtr<T> node, RefPtr<T> child, bool notify = true);
-    NonnullRefPtr<T> remove_child(NonnullRefPtr<T> node);
-
-    void remove_all_children();
+    void insert_before(NonnullRefPtr<T> node, RefPtr<T> child);
+    void remove_child(NonnullRefPtr<T> node);
 
     bool is_child_allowed(const T&) const { return true; }
 
@@ -140,12 +154,62 @@ public:
     }
 
     template<typename Callback>
-    IterationDecision for_each_in_subtree(Callback callback) const
+    IterationDecision for_each_in_inclusive_subtree(Callback callback) const
     {
         if (callback(static_cast<const T&>(*this)) == IterationDecision::Break)
             return IterationDecision::Break;
         for (auto* child = first_child(); child; child = child->next_sibling()) {
-            if (child->for_each_in_subtree(callback) == IterationDecision::Break)
+            if (child->for_each_in_inclusive_subtree(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename Callback>
+    IterationDecision for_each_in_inclusive_subtree(Callback callback)
+    {
+        if (callback(static_cast<T&>(*this)) == IterationDecision::Break)
+            return IterationDecision::Break;
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->for_each_in_inclusive_subtree(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename U, typename Callback>
+    IterationDecision for_each_in_inclusive_subtree_of_type(Callback callback)
+    {
+        if (is<U>(static_cast<const T&>(*this))) {
+            if (callback(static_cast<U&>(*this)) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename U, typename Callback>
+    IterationDecision for_each_in_inclusive_subtree_of_type(Callback callback) const
+    {
+        if (is<U>(static_cast<const T&>(*this))) {
+            if (callback(static_cast<const U&>(*this)) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename Callback>
+    IterationDecision for_each_in_subtree(Callback callback) const
+    {
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->for_each_in_inclusive_subtree(callback) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
         return IterationDecision::Continue;
@@ -154,10 +218,8 @@ public:
     template<typename Callback>
     IterationDecision for_each_in_subtree(Callback callback)
     {
-        if (callback(static_cast<T&>(*this)) == IterationDecision::Break)
-            return IterationDecision::Break;
         for (auto* child = first_child(); child; child = child->next_sibling()) {
-            if (child->for_each_in_subtree(callback) == IterationDecision::Break)
+            if (child->for_each_in_inclusive_subtree(callback) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
         return IterationDecision::Continue;
@@ -166,12 +228,8 @@ public:
     template<typename U, typename Callback>
     IterationDecision for_each_in_subtree_of_type(Callback callback)
     {
-        if (is<U>(static_cast<const T&>(*this))) {
-            if (callback(static_cast<U&>(*this)) == IterationDecision::Break)
-                return IterationDecision::Break;
-        }
         for (auto* child = first_child(); child; child = child->next_sibling()) {
-            if (child->template for_each_in_subtree_of_type<U>(callback) == IterationDecision::Break)
+            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
         return IterationDecision::Continue;
@@ -180,12 +238,8 @@ public:
     template<typename U, typename Callback>
     IterationDecision for_each_in_subtree_of_type(Callback callback) const
     {
-        if (is<U>(static_cast<const T&>(*this))) {
-            if (callback(static_cast<const U&>(*this)) == IterationDecision::Break)
-                return IterationDecision::Break;
-        }
         for (auto* child = first_child(); child; child = child->next_sibling()) {
-            if (child->template for_each_in_subtree_of_type<U>(callback) == IterationDecision::Break)
+            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
         return IterationDecision::Continue;
@@ -284,6 +338,12 @@ public:
     }
 
     template<typename U>
+    bool has_child_of_type() const
+    {
+        return first_child_of_type<U>() != nullptr;
+    }
+
+    template<typename U>
     const U* first_ancestor_of_type() const
     {
         return const_cast<TreeNode*>(this)->template first_ancestor_of_type<U>();
@@ -297,6 +357,17 @@ public:
                 return &downcast<U>(*ancestor);
         }
         return nullptr;
+    }
+
+    ~TreeNode()
+    {
+        VERIFY(!m_parent);
+        T* next_child = nullptr;
+        for (auto* child = m_first_child; child; child = next_child) {
+            next_child = child->m_next_sibling;
+            child->m_parent = nullptr;
+            child->unref();
+        }
     }
 
 protected:
@@ -315,16 +386,9 @@ private:
 };
 
 template<typename T>
-inline void TreeNode<T>::remove_all_children()
+inline void TreeNode<T>::remove_child(NonnullRefPtr<T> node)
 {
-    while (RefPtr<T> child = first_child())
-        remove_child(child.release_nonnull());
-}
-
-template<typename T>
-inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node)
-{
-    ASSERT(node->m_parent == this);
+    VERIFY(node->m_parent == this);
 
     if (m_first_child == node)
         m_first_child = node->m_next_sibling;
@@ -342,19 +406,13 @@ inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node)
     node->m_previous_sibling = nullptr;
     node->m_parent = nullptr;
 
-    node->removed_from(static_cast<T&>(*this));
-
     node->unref();
-
-    static_cast<T*>(this)->children_changed();
-
-    return node;
 }
 
 template<typename T>
-inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool notify)
+inline void TreeNode<T>::append_child(NonnullRefPtr<T> node)
 {
-    ASSERT(!node->m_parent);
+    VERIFY(!node->m_parent);
 
     if (!static_cast<T*>(this)->is_child_allowed(*node))
         return;
@@ -366,25 +424,17 @@ inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool notify)
     m_last_child = node.ptr();
     if (!m_first_child)
         m_first_child = m_last_child;
-    if (notify)
-        node->inserted_into(static_cast<T&>(*this));
     [[maybe_unused]] auto& rc = node.leak_ref();
-
-    if (notify)
-        static_cast<T*>(this)->children_changed();
 }
 
 template<typename T>
-inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child, bool notify)
+inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child)
 {
     if (!child)
-        return append_child(move(node), notify);
+        return append_child(move(node));
 
-    ASSERT(!node->m_parent);
-    ASSERT(child->parent() == this);
-
-    if (!static_cast<T*>(this)->is_child_allowed(*node))
-        return;
+    VERIFY(!node->m_parent);
+    VERIFY(child->parent() == this);
 
     node->m_previous_sibling = child->m_previous_sibling;
     node->m_next_sibling = child;
@@ -397,22 +447,14 @@ inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child, b
 
     child->m_previous_sibling = node;
 
-    if (m_first_child == child)
-        m_first_child = node;
-
     node->m_parent = static_cast<T*>(this);
-    if (notify)
-        node->inserted_into(static_cast<T&>(*this));
     [[maybe_unused]] auto& rc = node.leak_ref();
-
-    if (notify)
-        static_cast<T*>(this)->children_changed();
 }
 
 template<typename T>
 inline void TreeNode<T>::prepend_child(NonnullRefPtr<T> node)
 {
-    ASSERT(!node->m_parent);
+    VERIFY(!node->m_parent);
 
     if (!static_cast<T*>(this)->is_child_allowed(*node))
         return;
@@ -438,6 +480,24 @@ inline bool TreeNode<T>::is_ancestor_of(const TreeNode<T>& other) const
             return true;
     }
     return false;
+}
+
+template<typename T>
+inline bool TreeNode<T>::is_inclusive_ancestor_of(const TreeNode<T>& other) const
+{
+    return &other == this || is_ancestor_of(other);
+}
+
+template<typename T>
+inline bool TreeNode<T>::is_descendant_of(const TreeNode<T>& other) const
+{
+    return other.is_ancestor_of(*this);
+}
+
+template<typename T>
+inline bool TreeNode<T>::is_inclusive_descendant_of(const TreeNode<T>& other) const
+{
+    return other.is_inclusive_ancestor_of(*this);
 }
 
 }

@@ -4,11 +4,13 @@ tty:x:2:
 phys:x:3:window,anon
 audio:x:4:anon
 utmp:x:5:
-lookup:x:10:protocol,anon
-protocol:x:11:webcontent,anon
+lookup:x:10:request,websocket,anon
+request:x:11:webcontent,anon
 notify:x:12:anon
 window:x:13:anon,notify
 clipboard:x:14:anon,notify
 webcontent:x:15:anon
 image:x:16:anon,webcontent
+symbol:x:17:anon
+websocket:x:18:webcontent,anon
 users:x:100:anon

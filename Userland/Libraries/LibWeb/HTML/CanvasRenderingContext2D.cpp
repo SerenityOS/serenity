@@ -1,29 +1,10 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ExtraMathConstants.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
@@ -61,6 +42,17 @@ void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float he
 
     auto rect = m_transform.map(Gfx::FloatRect(x, y, width, height));
     painter->fill_rect(enclosing_int_rect(rect), m_fill_style);
+    did_draw(rect);
+}
+
+void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float height)
+{
+    auto painter = this->painter();
+    if (!painter)
+        return;
+
+    auto rect = m_transform.map(Gfx::FloatRect(x, y, width, height));
+    painter->clear_rect(enclosing_int_rect(rect), Color());
     did_draw(rect);
 }
 
@@ -152,6 +144,22 @@ OwnPtr<Gfx::Painter> CanvasRenderingContext2D::painter()
     return make<Gfx::Painter>(*m_element->bitmap());
 }
 
+void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, Optional<double> max_width)
+{
+    if (max_width.has_value() && max_width.value() <= 0)
+        return;
+
+    auto painter = this->painter();
+    if (!painter)
+        return;
+
+    // FIXME: painter only supports integer rects for text right now, so this effectively chops off any fractional position
+    auto text_rect = Gfx::IntRect(x, y, max_width.has_value() ? max_width.value() : painter->font().width(text), painter->font().glyph_height());
+    auto transformed_rect = m_transform.map(text_rect);
+    painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, m_fill_style);
+    did_draw(transformed_rect.to<float>());
+}
+
 void CanvasRenderingContext2D::begin_path()
 {
     m_path = Gfx::Path();
@@ -177,6 +185,85 @@ void CanvasRenderingContext2D::quadratic_curve_to(float cx, float cy, float x, f
     m_path.quadratic_bezier_curve_to({ cx, cy }, { x, y });
 }
 
+DOM::ExceptionOr<void> CanvasRenderingContext2D::arc(float x, float y, float radius, float start_angle, float end_angle, bool counter_clockwise)
+{
+    if (radius < 0)
+        return DOM::IndexSizeError::create(String::formatted("The radius provided ({}) is negative.", radius));
+    return ellipse(x, y, radius, radius, 0, start_angle, end_angle, counter_clockwise);
+}
+
+DOM::ExceptionOr<void> CanvasRenderingContext2D::ellipse(float x, float y, float radius_x, float radius_y, float rotation, float start_angle, float end_angle, bool counter_clockwise)
+{
+    if (radius_x < 0)
+        return DOM::IndexSizeError::create(String::formatted("The major-axis radius provided ({}) is negative.", radius_x));
+
+    if (radius_y < 0)
+        return DOM::IndexSizeError::create(String::formatted("The minor-axis radius provided ({}) is negative.", radius_y));
+
+    if (constexpr float tau = M_TAU; (!counter_clockwise && (end_angle - start_angle) >= tau)
+        || (counter_clockwise && (start_angle - end_angle) >= tau)) {
+        start_angle = 0;
+        end_angle = tau;
+    } else {
+        start_angle = fmodf(start_angle, tau);
+        end_angle = fmodf(end_angle, tau);
+    }
+
+    // Then, figure out where the ends of the arc are.
+    // To do so, we can pretend that the center of this ellipse is at (0, 0),
+    // and the whole coordinate system is rotated `rotation` radians around the x axis, centered on `center`.
+    // The sign of the resulting relative positions is just whether our angle is on one of the left quadrants.
+    auto sin_rotation = sinf(rotation);
+    auto cos_rotation = cosf(rotation);
+
+    auto resolve_point_with_angle = [&](float angle) {
+        auto tan_relative = tanf(angle);
+        auto tan2 = tan_relative * tan_relative;
+
+        auto ab = radius_x * radius_y;
+        auto a2 = radius_x * radius_x;
+        auto b2 = radius_y * radius_y;
+        auto sqrt = sqrtf(b2 + a2 * tan2);
+
+        auto relative_x_position = ab / sqrt;
+        auto relative_y_position = ab * tan_relative / sqrt;
+
+        // Make sure to set the correct sign
+        float sn = sinf(angle) >= 0 ? 1 : -1;
+        relative_x_position *= sn;
+        relative_y_position *= sn;
+
+        // Now rotate it (back) around the center point by 'rotation' radians, then move it back to our actual origin.
+        auto relative_rotated_x_position = relative_x_position * cos_rotation - relative_y_position * sin_rotation;
+        auto relative_rotated_y_position = relative_x_position * sin_rotation + relative_y_position * cos_rotation;
+        return Gfx::FloatPoint { relative_rotated_x_position + x, relative_rotated_y_position + y };
+    };
+
+    auto start_point = resolve_point_with_angle(start_angle);
+    auto end_point = resolve_point_with_angle(end_angle);
+
+    m_path.move_to(start_point);
+
+    double delta_theta = end_angle - start_angle;
+
+    // FIXME: This is still goofy for some values.
+    m_path.elliptical_arc_to(end_point, { radius_x, radius_y }, rotation, delta_theta > M_PI, !counter_clockwise);
+
+    m_path.close();
+    return {};
+}
+
+void CanvasRenderingContext2D::rect(float x, float y, float width, float height)
+{
+    m_path.move_to({ x, y });
+    if (width == 0 || height == 0)
+        return;
+    m_path.line_to({ x + width, y });
+    m_path.line_to({ x + width, y + height });
+    m_path.line_to({ x, y + height });
+    m_path.close();
+}
+
 void CanvasRenderingContext2D::stroke()
 {
     auto painter = this->painter();
@@ -184,6 +271,7 @@ void CanvasRenderingContext2D::stroke()
         return;
 
     painter->stroke_path(m_path, m_stroke_style, m_line_width);
+    did_draw(m_path.bounding_box());
 }
 
 void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
@@ -195,6 +283,7 @@ void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
     auto path = m_path;
     path.close_all_subpaths();
     painter->fill_path(path, m_fill_style, winding);
+    did_draw(m_path.bounding_box());
 }
 
 void CanvasRenderingContext2D::fill(const String& fill_rule)

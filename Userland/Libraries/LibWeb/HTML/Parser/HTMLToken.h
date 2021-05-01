@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -75,9 +55,9 @@ public:
 
     u32 code_point() const
     {
-        ASSERT(is_character());
+        VERIFY(is_character());
         Utf8View view(m_comment_or_character.data.string_view());
-        ASSERT(view.length() == 1);
+        VERIFY(view.length() == 1);
         return *view.begin();
     }
 
@@ -100,19 +80,19 @@ public:
 
     String tag_name() const
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         return m_tag.tag_name.to_string();
     }
 
     bool is_self_closing() const
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         return m_tag.self_closing;
     }
 
     bool has_acknowledged_self_closing_flag() const
     {
-        ASSERT(is_self_closing());
+        VERIFY(is_self_closing());
         return m_tag.self_closing_acknowledged;
     }
 
@@ -124,7 +104,7 @@ public:
 
     StringView attribute(const FlyString& attribute_name)
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
             if (attribute_name == attribute.local_name_builder.string_view())
                 return attribute.value_builder.string_view();
@@ -139,7 +119,7 @@ public:
 
     void adjust_tag_name(const FlyString& old_name, const FlyString& new_name)
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         if (old_name == m_tag.tag_name.string_view()) {
             m_tag.tag_name.clear();
             m_tag.tag_name.append(new_name);
@@ -148,7 +128,7 @@ public:
 
     void adjust_attribute_name(const FlyString& old_name, const FlyString& new_name)
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
             if (old_name == attribute.local_name_builder.string_view()) {
                 attribute.local_name_builder.clear();
@@ -159,7 +139,7 @@ public:
 
     void adjust_foreign_attribute(const FlyString& old_name, const FlyString& prefix, const FlyString& local_name, const FlyString& namespace_)
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
             if (old_name == attribute.local_name_builder.string_view()) {
                 attribute.prefix_builder.clear();
@@ -176,7 +156,7 @@ public:
 
     void drop_attributes()
     {
-        ASSERT(is_start_tag() || is_end_tag());
+        VERIFY(is_start_tag() || is_end_tag());
         m_tag.attributes.clear();
     }
 

@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/LexicalPath.h>
@@ -30,6 +10,7 @@
 #include <AK/URL.h>
 #include <Applications/CrashReporter/CrashReporterWindowGML.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCoreDump/Backtrace.h>
 #include <LibCoreDump/Reader.h>
 #include <LibDesktop/AppFile.h>
@@ -48,6 +29,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <string.h>
+#include <unistd.h>
 
 struct TitleAndText {
     String title;
@@ -57,11 +39,12 @@ struct TitleAndText {
 static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF::Core::ThreadInfo& thread_info, size_t thread_index)
 {
     CoreDump::Backtrace backtrace(coredump, thread_info);
+    auto metadata = coredump.metadata();
 
     StringBuilder builder;
 
-    auto prepend_metadata = [&](auto& key, auto& fmt) {
-        auto maybe_value = coredump.metadata().get(key);
+    auto prepend_metadata = [&](auto& key, StringView fmt) {
+        auto maybe_value = metadata.get(key);
         if (!maybe_value.has_value() || maybe_value.value().is_empty())
             return;
         builder.appendff(fmt, maybe_value.value());
@@ -69,17 +52,26 @@ static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF:
         builder.append('\n');
     };
 
+    auto& backtrace_entries = backtrace.entries();
+
+    if (metadata.contains("assertion"))
+        prepend_metadata("assertion", "ASSERTION FAILED: {}");
+    else if (metadata.contains("pledge_violation"))
+        prepend_metadata("pledge_violation", "Has not pledged {}");
+
+    auto fault_address = metadata.get("fault_address");
+    auto fault_type = metadata.get("fault_type");
+    auto fault_access = metadata.get("fault_access");
+    if (fault_address.has_value() && fault_type.has_value() && fault_access.has_value()) {
+        builder.appendff("{} fault on {} at address {}\n\n", fault_type.value(), fault_access.value(), fault_address.value());
+    }
+
     auto first_entry = true;
     for (auto& entry : backtrace.entries()) {
-        if (first_entry) {
-            if (entry.function_name.starts_with("__assertion_failed"))
-                prepend_metadata("assertion", "ASSERTION FAILED: {}");
-            else if (coredump.metadata().contains("pledge_violation"))
-                prepend_metadata("pledge_violation", "Has not pledged {}");
+        if (first_entry)
             first_entry = false;
-        } else {
+        else
             builder.append('\n');
-        }
         builder.append(entry.to_string());
     }
 
@@ -115,10 +107,12 @@ int main(int argc, char** argv)
     }
 
     const char* coredump_path = nullptr;
+    bool unlink_after_use = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Show information from an application crash coredump.");
     args_parser.add_positional_argument(coredump_path, "Coredump path", "coredump-path");
+    args_parser.add_option(unlink_after_use, "Delete the coredump after its parsed", "unlink", 0);
     args_parser.parse(argc, argv);
 
     Vector<TitleAndText> thread_backtraces;
@@ -150,6 +144,11 @@ int main(int argc, char** argv)
         environment = coredump->process_environment();
         pid = coredump->process_pid();
         termination_signal = coredump->process_termination_signal();
+    }
+
+    if (unlink_after_use) {
+        if (Core::File::remove(coredump_path, Core::File::RecursionMode::Disallowed, false).is_error())
+            dbgln("Failed deleting coredump file");
     }
 
     auto app = GUI::Application::construct(argc, argv);
@@ -204,13 +203,15 @@ int main(int argc, char** argv)
     auto& executable_link_label = *widget.find_descendant_of_type_named<GUI::LinkLabel>("executable_link");
     executable_link_label.set_text(LexicalPath::canonicalized_path(executable_path));
     executable_link_label.on_click = [&] {
-        Desktop::Launcher::open(URL::create_with_file_protocol(LexicalPath(executable_path).dirname()));
+        LexicalPath path { executable_path };
+        Desktop::Launcher::open(URL::create_with_file_protocol(path.dirname(), path.basename()));
     };
 
     auto& coredump_link_label = *widget.find_descendant_of_type_named<GUI::LinkLabel>("coredump_link");
     coredump_link_label.set_text(LexicalPath::canonicalized_path(coredump_path));
     coredump_link_label.on_click = [&] {
-        Desktop::Launcher::open(URL::create_with_file_protocol(LexicalPath(coredump_path).dirname()));
+        LexicalPath path { coredump_path };
+        Desktop::Launcher::open(URL::create_with_file_protocol(path.dirname(), path.basename()));
     };
 
     auto& arguments_label = *widget.find_descendant_of_type_named<GUI::Label>("arguments_label");

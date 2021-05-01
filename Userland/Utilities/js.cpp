@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
@@ -47,6 +27,7 @@
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
@@ -58,19 +39,20 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <unistd.h>
 
 RefPtr<JS::VM> vm;
 Vector<String> repl_statements;
 
-class ReplObject : public JS::GlobalObject {
+class ReplObject final : public JS::GlobalObject {
+    JS_OBJECT(ReplObject, JS::GlobalObject);
+
 public:
     ReplObject();
-    virtual void initialize() override;
+    virtual void initialize_global_object() override;
     virtual ~ReplObject() override;
 
 private:
-    virtual const char* class_name() const override { return "ReplObject"; }
-
     JS_DECLARE_NATIVE_FUNCTION(exit_interpreter);
     JS_DECLARE_NATIVE_FUNCTION(repl_help);
     JS_DECLARE_NATIVE_FUNCTION(load_file);
@@ -237,18 +219,25 @@ static void print_function(const JS::Object& object, HashTable<JS::Object*>&)
         out(" {}", static_cast<const JS::NativeFunction&>(object).name());
 }
 
-static void print_date(const JS::Object& date, HashTable<JS::Object*>&)
+static void print_date(const JS::Object& object, HashTable<JS::Object*>&)
 {
     print_type("Date");
-    out(" \033[34;1m{}\033[0m", static_cast<const JS::Date&>(date).string());
+    out(" \033[34;1m{}\033[0m", static_cast<const JS::Date&>(object).string());
 }
 
-static void print_error(const JS::Object& object, HashTable<JS::Object*>&)
+static void print_error(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
-    auto& error = static_cast<const JS::Error&>(object);
-    print_type(error.name());
-    if (!error.message().is_empty())
-        out(" \033[31;1m{}\033[0m", error.message());
+    auto name = object.get_without_side_effects(vm->names.name).value_or(JS::js_undefined());
+    auto message = object.get_without_side_effects(vm->names.message).value_or(JS::js_undefined());
+    if (name.is_accessor() || name.is_native_property() || message.is_accessor() || message.is_native_property()) {
+        print_value(&object, seen_objects);
+    } else {
+        auto name_string = name.to_string_without_side_effects();
+        auto message_string = message.to_string_without_side_effects();
+        print_type(name_string);
+        if (!message_string.is_empty())
+            out(" \033[31;1m{}\033[0m", message_string);
+    }
 }
 
 static void print_regexp_object(const JS::Object& object, HashTable<JS::Object*>&)
@@ -268,6 +257,32 @@ static void print_proxy_object(const JS::Object& object, HashTable<JS::Object*>&
     print_value(&proxy_object.target(), seen_objects);
     out("\n  handler: ");
     print_value(&proxy_object.handler(), seen_objects);
+}
+
+static void print_promise(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& promise = static_cast<const JS::Promise&>(object);
+    print_type("Promise");
+    switch (promise.state()) {
+    case JS::Promise::State::Pending:
+        out("\n  state: ");
+        out("\033[36;1mPending\033[0m");
+        break;
+    case JS::Promise::State::Fulfilled:
+        out("\n  state: ");
+        out("\033[32;1mFulfilled\033[0m");
+        out("\n  result: ");
+        print_value(promise.result(), seen_objects);
+        break;
+    case JS::Promise::State::Rejected:
+        out("\n  state: ");
+        out("\033[31;1mRejected\033[0m");
+        out("\n  result: ");
+        print_value(promise.result(), seen_objects);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 static void print_array_buffer(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
@@ -309,7 +324,7 @@ static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& 
     outln();
     // FIXME: This kinda sucks.
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    if (StringView(object.class_name()) == StringView(#ClassName)) {                     \
+    if (is<JS::ClassName>(object)) {                                                     \
         out("[ ");                                                                       \
         auto& typed_array = static_cast<const JS::ClassName&>(typed_array_base);         \
         auto data = typed_array.data();                                                  \
@@ -323,7 +338,7 @@ static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& 
     }
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 static void print_primitive_wrapper_object(const FlyString& name, const JS::Object& object, HashTable<JS::Object*>& seen_objects)
@@ -366,6 +381,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_regexp_object(object, seen_objects);
         if (is<JS::ProxyObject>(object))
             return print_proxy_object(object, seen_objects);
+        if (is<JS::Promise>(object))
+            return print_promise(object, seen_objects);
         if (is<JS::ArrayBuffer>(object))
             return print_array_buffer(object, seen_objects);
         if (object.is_typed_array())
@@ -406,14 +423,14 @@ static void print(JS::Value value)
     outln();
 }
 
-static bool file_has_shebang(AK::ByteBuffer file_contents)
+static bool file_has_shebang(ByteBuffer file_contents)
 {
     if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!')
         return true;
     return false;
 }
 
-static StringView strip_shebang(AK::ByteBuffer file_contents)
+static StringView strip_shebang(ByteBuffer file_contents)
 {
     size_t i = 0;
     for (i = 2; i < file_contents.size(); ++i) {
@@ -468,39 +485,46 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
     }
 
     auto handle_exception = [&] {
+        auto* exception = vm->exception();
+        vm->clear_exception();
         out("Uncaught exception: ");
-        print(vm->exception()->value());
-        auto trace = vm->exception()->trace();
-        if (trace.size() > 1) {
+        print(exception->value());
+        auto& traceback = exception->traceback();
+        if (traceback.size() > 1) {
             unsigned repetitions = 0;
-            for (size_t i = 0; i < trace.size(); ++i) {
-                auto& function_name = trace[i];
-                if (i + 1 < trace.size() && trace[i + 1] == function_name) {
-                    repetitions++;
-                    continue;
+            for (size_t i = 0; i < traceback.size(); ++i) {
+                auto& traceback_frame = traceback[i];
+                if (i + 1 < traceback.size()) {
+                    auto& next_traceback_frame = traceback[i + 1];
+                    if (next_traceback_frame.function_name == traceback_frame.function_name) {
+                        repetitions++;
+                        continue;
+                    }
                 }
                 if (repetitions > 4) {
                     // If more than 5 (1 + >4) consecutive function calls with the same name, print
                     // the name only once and show the number of repetitions instead. This prevents
                     // printing ridiculously large call stacks of recursive functions.
-                    outln(" -> {}", function_name);
+                    outln(" -> {}", traceback_frame.function_name);
                     outln(" {} more calls", repetitions);
                 } else {
                     for (size_t j = 0; j < repetitions + 1; ++j)
-                        outln(" -> {}", function_name);
+                        outln(" -> {}", traceback_frame.function_name);
                 }
                 repetitions = 0;
             }
         }
-        vm->clear_exception();
     };
-    if (vm->exception())
-        handle_exception();
 
-    if (s_print_last_result) {
+    if (vm->exception()) {
+        handle_exception();
+        return false;
+    }
+    if (s_print_last_result)
         print(vm->last_value());
-        if (vm->exception())
-            handle_exception();
+    if (vm->exception()) {
+        handle_exception();
+        return false;
     }
     return true;
 }
@@ -509,9 +533,9 @@ ReplObject::ReplObject()
 {
 }
 
-void ReplObject::initialize()
+void ReplObject::initialize_global_object()
 {
-    GlobalObject::initialize();
+    Base::initialize_global_object();
     define_property("global", this, JS::Attribute::Enumerable);
     define_native_function("exit", exit_interpreter);
     define_native_function("help", repl_help);
@@ -550,8 +574,8 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
     outln("REPL commands:");
     outln("    exit(code): exit the REPL with specified code. Defaults to 0.");
     outln("    help(): display this menu");
-    outln("    load(files): accepts file names as params to load into running session. For example load(\"js/1.js\", \"js/2.js\", \"js/3.js\")");
-    outln("    save(file): accepts a file name, writes REPL input history to a file. For example: save(\"foo.txt\")");
+    outln("    load(files): accepts filenames as params to load into running session. For example load(\"js/1.js\", \"js/2.js\", \"js/3.js\")");
+    outln("    save(file): accepts a filename, writes REPL input history to a file. For example: save(\"foo.txt\")");
     return JS::js_undefined();
 }
 
@@ -561,10 +585,10 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
         return JS::Value(false);
 
     for (auto& file : vm.call_frame().arguments) {
-        String file_name = file.as_string().string();
-        auto js_file = Core::File::construct(file_name);
+        String filename = file.as_string().string();
+        auto js_file = Core::File::construct(filename);
         if (!js_file->open(Core::IODevice::ReadOnly)) {
-            warnln("Failed to open {}: {}", file_name, js_file->error_string());
+            warnln("Failed to open {}: {}", filename, js_file->error_string());
             continue;
         }
         auto file_contents = js_file->read_all();
@@ -609,32 +633,38 @@ public:
         outln("{}", vm().join_arguments());
         return JS::js_undefined();
     }
+
     virtual JS::Value info() override
     {
         outln("(i) {}", vm().join_arguments());
         return JS::js_undefined();
     }
+
     virtual JS::Value debug() override
     {
         outln("\033[36;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
+
     virtual JS::Value warn() override
     {
         outln("\033[33;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
+
     virtual JS::Value error() override
     {
         outln("\033[31;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
+
     virtual JS::Value clear() override
     {
         out("\033[3J\033[H\033[2J");
         fflush(stdout);
         return JS::js_undefined();
     }
+
     virtual JS::Value trace() override
     {
         outln("{}", vm().join_arguments());
@@ -646,6 +676,7 @@ public:
         }
         return JS::js_undefined();
     }
+
     virtual JS::Value count() override
     {
         auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
@@ -653,6 +684,7 @@ public:
         outln("{}: {}", label, counter_value);
         return JS::js_undefined();
     }
+
     virtual JS::Value count_reset() override
     {
         auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
@@ -660,6 +692,20 @@ public:
             outln("{}: 0", label);
         else
             outln("\033[33;1m\"{}\" doesn't have a count\033[0m", label);
+        return JS::js_undefined();
+    }
+
+    virtual JS::Value assert_() override
+    {
+        auto& vm = this->vm();
+        if (!vm.argument(0).to_boolean()) {
+            if (vm.argument_count() > 1) {
+                out("\033[31;1mAssertion failed:\033[0m");
+                outln(" {}", vm.join_arguments(1));
+            } else {
+                outln("\033[31;1mAssertion failed\033[0m");
+            }
+        }
         return JS::js_undefined();
     }
 };
@@ -682,10 +728,30 @@ int main(int argc, char** argv)
     bool syntax_highlight = !disable_syntax_highlight;
 
     vm = JS::VM::create();
+    // NOTE: These will print out both warnings when using something like Promise.reject().catch(...) -
+    // which is, as far as I can tell, correct - a promise is created, rejected without handler, and a
+    // handler then attached to it. The Node.js REPL doesn't warn in this case, so it's something we
+    // might want to revisit at a later point and disable warnings for promises created this way.
+    vm->on_promise_unhandled_rejection = [](auto& promise) {
+        // FIXME: Optionally make print_value() to print to stderr
+        out("WARNING: A promise was rejected without any handlers");
+        out(" (result: ");
+        HashTable<JS::Object*> seen_objects;
+        print_value(promise.result(), seen_objects);
+        outln(")");
+    };
+    vm->on_promise_rejection_handled = [](auto& promise) {
+        // FIXME: Optionally make print_value() to print to stderr
+        out("WARNING: A handler was added to an already rejected promise");
+        out(" (result: ");
+        HashTable<JS::Object*> seen_objects;
+        print_value(promise.result(), seen_objects);
+        outln(")");
+    };
     OwnPtr<JS::Interpreter> interpreter;
 
     interrupt_interpreter = [&] {
-        auto error = JS::Error::create(interpreter->global_object(), "Error", "Received SIGINT");
+        auto error = JS::Error::create(interpreter->global_object(), "Received SIGINT");
         vm->throw_exception(interpreter->global_object(), error);
     };
 
@@ -884,7 +950,7 @@ int main(int argc, char** argv)
                 break;
             }
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
 
             return results;

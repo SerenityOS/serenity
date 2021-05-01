@@ -1,29 +1,9 @@
 /*
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
@@ -34,12 +14,11 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Process.h>
-#include <Kernel/Ptrace.h>
 #include <Kernel/RTC.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/ProcessPagingScope.h>
+#include <LibC/elf.h>
 #include <LibELF/CoreDump.h>
-#include <LibELF/exec_elf.h>
 
 namespace Kernel {
 
@@ -59,25 +38,21 @@ OwnPtr<CoreDump> CoreDump::create(NonnullRefPtr<Process> process, const String& 
 CoreDump::CoreDump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription>&& fd)
     : m_process(move(process))
     , m_fd(move(fd))
-    , m_num_program_headers(m_process->m_regions.size() + 1) // +1 for NOTE segment
-{
-}
-
-CoreDump::~CoreDump()
+    , m_num_program_headers(m_process->space().region_count() + 1) // +1 for NOTE segment
 {
 }
 
 RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, const String& output_path)
 {
     LexicalPath lexical_path(output_path);
-    auto output_directory = lexical_path.dirname();
+    const auto& output_directory = lexical_path.dirname();
     auto dump_directory = VFS::the().open_directory(output_directory, VFS::the().root_custody());
     if (dump_directory.is_error()) {
         dbgln("Can't find directory '{}' for core dump", output_directory);
         return nullptr;
     }
     auto dump_directory_metadata = dump_directory.value()->inode().metadata();
-    if (dump_directory_metadata.uid != 0 || dump_directory_metadata.gid != 0 || dump_directory_metadata.mode != 040755) {
+    if (dump_directory_metadata.uid != 0 || dump_directory_metadata.gid != 0 || dump_directory_metadata.mode != 040777) {
         dbgln("Refusing to put core dump in sketchy directory '{}'", output_directory);
         return nullptr;
     }
@@ -137,22 +112,22 @@ KResult CoreDump::write_elf_header()
 KResult CoreDump::write_program_headers(size_t notes_size)
 {
     size_t offset = sizeof(Elf32_Ehdr) + m_num_program_headers * sizeof(Elf32_Phdr);
-    for (auto& region : m_process->m_regions) {
+    for (auto& region : m_process->space().regions()) {
         Elf32_Phdr phdr {};
 
         phdr.p_type = PT_LOAD;
         phdr.p_offset = offset;
-        phdr.p_vaddr = reinterpret_cast<uint32_t>(region.vaddr().as_ptr());
+        phdr.p_vaddr = region->vaddr().get();
         phdr.p_paddr = 0;
 
-        phdr.p_filesz = region.page_count() * PAGE_SIZE;
-        phdr.p_memsz = region.page_count() * PAGE_SIZE;
+        phdr.p_filesz = region->page_count() * PAGE_SIZE;
+        phdr.p_memsz = region->page_count() * PAGE_SIZE;
         phdr.p_align = 0;
 
-        phdr.p_flags = region.is_readable() ? PF_R : 0;
-        if (region.is_writable())
+        phdr.p_flags = region->is_readable() ? PF_R : 0;
+        if (region->is_writable())
             phdr.p_flags |= PF_W;
-        if (region.is_executable())
+        if (region->is_executable())
             phdr.p_flags |= PF_X;
 
         offset += phdr.p_filesz;
@@ -178,21 +153,21 @@ KResult CoreDump::write_program_headers(size_t notes_size)
 
 KResult CoreDump::write_regions()
 {
-    for (auto& region : m_process->m_regions) {
-        if (region.is_kernel())
+    for (auto& region : m_process->space().regions()) {
+        if (region->is_kernel())
             continue;
 
-        region.set_readable(true);
-        region.remap();
+        region->set_readable(true);
+        region->remap();
 
-        for (size_t i = 0; i < region.page_count(); i++) {
-            auto* page = region.physical_page(i);
+        for (size_t i = 0; i < region->page_count(); i++) {
+            auto* page = region->physical_page(i);
 
             uint8_t zero_buffer[PAGE_SIZE] = {};
             Optional<UserOrKernelBuffer> src_buffer;
 
             if (page) {
-                src_buffer = UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region.vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
+                src_buffer = UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region->vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
             } else {
                 // If the current page is not backed by a physical page, we zero it in the coredump file.
                 // TODO: Do we want to include the contents of pages that have not been faulted-in in the coredump?
@@ -246,7 +221,7 @@ ByteBuffer CoreDump::create_notes_threads_data() const
         ELF::Core::ThreadInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::ThreadInfo;
         info.tid = thread.tid().value();
-        Ptrace::copy_kernel_registers_into_ptrace_registers(info.regs, thread.get_register_dump_from_stack());
+        copy_kernel_registers_into_ptrace_registers(info.regs, thread.get_register_dump_from_stack());
 
         entry_buff.append((void*)&info, sizeof(info));
 
@@ -258,20 +233,20 @@ ByteBuffer CoreDump::create_notes_threads_data() const
 ByteBuffer CoreDump::create_notes_regions_data() const
 {
     ByteBuffer regions_data;
-    for (size_t region_index = 0; region_index < m_process->m_regions.size(); ++region_index) {
+    size_t region_index = 0;
+    for (auto& region : m_process->space().regions()) {
 
         ByteBuffer memory_region_info_buffer;
         ELF::Core::MemoryRegionInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo;
 
-        auto& region = m_process->m_regions[region_index];
-        info.region_start = reinterpret_cast<uint32_t>(region.vaddr().as_ptr());
-        info.region_end = reinterpret_cast<uint32_t>(region.vaddr().as_ptr() + region.size());
-        info.program_header_index = region_index;
+        info.region_start = region->vaddr().get();
+        info.region_end = region->vaddr().offset(region->size()).get();
+        info.program_header_index = region_index++;
 
         memory_region_info_buffer.append((void*)&info, sizeof(info));
 
-        auto name = region.name();
+        auto name = region->name();
         if (name.is_null())
             name = String::empty();
         memory_region_info_buffer.append(name.characters(), name.length() + 1);
@@ -316,7 +291,7 @@ ByteBuffer CoreDump::create_notes_segment_data() const
 
 KResult CoreDump::write()
 {
-    ScopedSpinLock lock(m_process->get_lock());
+    ScopedSpinLock lock(m_process->space().get_lock());
     ProcessPagingScope scope(m_process);
 
     ByteBuffer notes_segment = create_notes_segment_data();
@@ -334,7 +309,7 @@ KResult CoreDump::write()
     if (result.is_error())
         return result;
 
-    return m_fd->chmod(0400); // Make coredump file readable
+    return m_fd->chmod(0600); // Make coredump file read/writable
 }
 
 }

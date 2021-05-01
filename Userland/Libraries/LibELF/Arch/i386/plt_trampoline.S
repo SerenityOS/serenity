@@ -45,7 +45,7 @@ _plt_trampoline:	# (obj, reloff)
 
 	pushl	20(%esp)		 # Copy of reloff
 	pushl	20(%esp)		 # Copy of obj
-	call	_fixup_plt_entry # Call the binder
+	call	_fixup_plt_entry@PLT # Call the binder
 	addl	$8,%esp			 # pop binder args
 	movl	%eax,20(%esp)	 # Store function to be called in obj
 

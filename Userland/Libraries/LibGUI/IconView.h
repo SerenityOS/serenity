@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -46,12 +26,14 @@ public:
     FlowDirection flow_direction() const { return m_flow_direction; }
     void set_flow_direction(FlowDirection);
 
-    int content_width() const;
     int horizontal_padding() const { return m_horizontal_padding; }
 
     virtual void scroll_into_view(const ModelIndex&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
 
     Gfx::IntSize effective_item_size() const { return m_effective_item_size; }
+
+    bool always_wrap_item_labels() const { return m_always_wrap_item_labels; }
+    void set_always_wrap_item_labels(bool value) { m_always_wrap_item_labels = value; }
 
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
@@ -97,14 +79,19 @@ private:
 
         bool is_intersecting(const Gfx::IntRect& rect) const
         {
-            ASSERT(valid);
+            VERIFY(valid);
             return icon_rect.intersects(rect) || text_rect.intersects(rect);
         }
 
         bool is_containing(const Gfx::IntPoint& point) const
         {
-            ASSERT(valid);
+            VERIFY(valid);
             return icon_rect.contains(point) || text_rect.contains(point);
+        }
+
+        Gfx::IntRect rect() const
+        {
+            return text_rect.united(icon_rect);
         }
     };
 
@@ -129,10 +116,10 @@ private:
     void scroll_out_of_view_timer_fired();
     int items_per_page() const;
 
-    void reinit_item_cache() const;
+    void rebuild_item_cache() const;
     int model_index_to_item_index(const ModelIndex& model_index) const
     {
-        ASSERT(model_index.row() < item_count());
+        VERIFY(model_index.row() < item_count());
         return model_index.row();
     }
 
@@ -157,8 +144,9 @@ private:
 
     Gfx::IntSize m_effective_item_size { 80, 80 };
 
+    bool m_always_wrap_item_labels { false };
+
     bool m_rubber_banding { false };
-    bool m_rubber_banding_store_selection { false };
     RefPtr<Core::Timer> m_out_of_view_timer;
     Gfx::IntPoint m_out_of_view_position;
     Gfx::IntPoint m_rubber_band_origin;
@@ -172,6 +160,8 @@ private:
     mutable bool m_item_data_cache_valid { false };
 
     bool m_changing_selection { false };
+
+    bool m_had_valid_size { false };
 };
 
 }

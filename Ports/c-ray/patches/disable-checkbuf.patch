@@ -1,23 +1,11 @@
-diff --git a/src/utils/filehandler.c b/src/utils/filehandler.c
-index 99638f3..feded8f 100644
---- a/src/utils/filehandler.c
-+++ b/src/utils/filehandler.c
-@@ -162,7 +162,7 @@ char *loadFile(char *inputFileName, size_t *bytes) {
+--- c-ray-master/src/utils/fileio.c	2021-03-13 00:13:46.067407670 +0100
++++ c-ray-master/src/utils/fileio.c	2021-01-11 01:01:57.000000000 +0100
+@@ -83,7 +83,7 @@
+ 
  //Wait for 2 secs and abort if nothing is coming in from stdin
  void checkBuf() {
- #ifndef WINDOWS
--	fd_set set;
-+	/*fd_set set;
+-#ifndef WINDOWS
++#if !defined(WINDOWS) && !defined(__serenity__)
+ 	fd_set set;
  	struct timeval timeout;
  	int rv;
- 	FD_ZERO(&set);
-@@ -176,7 +176,8 @@ void checkBuf() {
- 		logr(error, "No input found after %i seconds. Hint: Try `./bin/c-ray input/scene.json`.\n", timeout.tv_sec);
- 	} else {
- 		return;
--	}
-+	}*/
-+	return;
- #endif
- }
- 

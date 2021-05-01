@@ -4,10 +4,10 @@ Shell Variables - Special local and environment variables used by the Shell
 
 ## Description
 
-The Shell uses various variables to allow for customisations of certain behavioural or visual things.
+The Shell uses various variables to allow for customisations of certain behavioral or visual things.
 Such variables can be changed or set by the user to tweak how the shell presents things.
 
-## Behavioural
+## Behavioral
 
 1. Output interpretations
 
@@ -23,7 +23,7 @@ The value of this variable is used to determine which entries are kept in the Sh
 
 - `ignorespace`: Entries starting with one or more space characters are ignored
 - `ignoredups`: Consecutive duplicate entries are ignored
-- `ignoreboth`: The behaviour of `ignorespace` and `ignoredups` is combined
+- `ignoreboth`: The behavior of `ignorespace` and `ignoredups` is combined
 - If the variable is unset (this is the default) or has any other value than the above, no entries will be excluded from history.
 
 Note: This variable is respected by every program using `Line::Editor`, e.g. [`js`(1)](../man1/js.md).
@@ -40,10 +40,13 @@ Its default value is `~/.history`.
 `PROMPT` (environment)
 
 The value of this variable is used to generate a prompt, the following escape sequences can be used literally inside the value, and they would expand to their respective values:
-- `\\u` : the current username
-- `\\h` : the current hostname
-- `\\w` : a collapsed path (relative to home) to the current directory
-- `\\p` : the string '$' (or '#' if the user is 'root')
+- `\\a`: bell character (behavior depends on terminal)
+- `\\e`: escape character (`0x1b`)
+- `\\h`: the current hostname
+- `\\p`: the string '$' (or '#' if the user is 'root')
+- `\\u`: the current username
+- `\\w`: a collapsed path (relative to home) to the current directory
+- `\\X`: reset style (foreground and background color, etc)
 
 Any other escaped character shall be ignored.
 

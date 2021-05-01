@@ -1,39 +1,20 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, Shannon Booth <shannon.ml.booth@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
 #include <AK/String.h>
-#include <Kernel/API/Syscall.h>
 #include <Kernel/IO.h>
 #include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
+#include <syscall.h>
+#include <unistd.h>
 
 #pragma GCC optimize("O0")
 
@@ -72,7 +53,7 @@ public:
                 printf("Unexpected error!\n");
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         };
 
@@ -84,7 +65,7 @@ public:
             pid_t pid = fork();
             if (pid < 0) {
                 perror("fork");
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             } else if (pid == 0) {
                 run_crash_and_print_if_error();
                 exit(0);
@@ -195,12 +176,15 @@ int main(int argc, char** argv)
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
             [[maybe_unused]] volatile auto x = uninitialized_memory[0][0];
+#pragma GCC diagnostic pop
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
-    if (do_read_from_uninitialized_malloc_memory || do_all_crash_types) {
+    if (do_read_from_freed_memory || do_all_crash_types) {
         Crash("Read from freed memory", []() {
             auto* uninitialized_memory = (volatile u32**)malloc(1024);
             if (!uninitialized_memory)
@@ -218,7 +202,10 @@ int main(int argc, char** argv)
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
             uninitialized_memory[4][0] = 1;
+#pragma GCC diagnostic pop
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
@@ -237,8 +224,8 @@ int main(int argc, char** argv)
 
     if (do_write_to_read_only_memory || do_all_crash_types) {
         Crash("Write to read only memory", []() {
-            auto* ptr = (u8*)mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_ANON, 0, 0);
-            if (ptr != MAP_FAILED)
+            auto* ptr = (u8*)mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, 0, 0);
+            if (ptr == MAP_FAILED)
                 return Crash::Failure::UnexpectedError;
 
             *ptr = 'x'; // This should work fine.
@@ -342,7 +329,7 @@ int main(int argc, char** argv)
 
     if (do_failing_assertion || do_all_crash_types) {
         Crash("Perform a failing assertion", [] {
-            ASSERT(1 == 2);
+            VERIFY(1 == 2);
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }

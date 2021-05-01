@@ -1,33 +1,13 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * Copyright (c) 2021 Glenford Williams <gw_dev@outlook.com>
- * All rights reserved.
+ * Copyright (c) 2021, Glenford Williams <gw_dev@outlook.com>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "CalculatorWidget.h"
-#include "Applications/Calculator/CalculatorGML.h"
 #include <AK/Assertions.h>
+#include <Applications/Calculator/CalculatorGML.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
@@ -42,7 +22,6 @@ CalculatorWidget::CalculatorWidget()
     m_entry = *find_descendant_of_type_named<GUI::TextBox>("entry_textbox");
     m_entry->set_relative_rect(5, 5, 244, 26);
     m_entry->set_text_alignment(Gfx::TextAlignment::CenterRight);
-    m_entry->set_font(Gfx::FontDatabase::default_fixed_width_font());
 
     m_label = *find_descendant_of_type_named<GUI::Label>("label");
 
@@ -145,6 +124,17 @@ void CalculatorWidget::add_digit_button(GUI::Button& button, int digit)
         m_keypad.type_digit(digit);
         update_display();
     };
+}
+
+String CalculatorWidget::get_entry()
+{
+    return m_entry->text();
+}
+
+void CalculatorWidget::set_entry(double value)
+{
+    m_keypad.set_value(value);
+    update_display();
 }
 
 void CalculatorWidget::update_display()

@@ -1,33 +1,12 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/BinarySearch.h>
 #include <AK/Checked.h>
 #include <AK/QuickSort.h>
-#include <Kernel/Debug.h>
 #include <Kernel/Random.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/RangeAllocator.h>
@@ -60,36 +39,22 @@ RangeAllocator::~RangeAllocator()
 
 void RangeAllocator::dump() const
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
     dbgln("RangeAllocator({})", this);
     for (auto& range : m_available_ranges) {
         dbgln("    {:x} -> {:x}", range.base().get(), range.end().get() - 1);
     }
 }
 
-Vector<Range, 2> Range::carve(const Range& taken)
-{
-    ASSERT((taken.size() % PAGE_SIZE) == 0);
-
-    Vector<Range, 2> parts;
-    if (taken == *this)
-        return {};
-    if (taken.base() > base())
-        parts.append({ base(), taken.base().get() - base().get() });
-    if (taken.end() < end())
-        parts.append({ taken.end(), end().get() - taken.end().get() });
-    return parts;
-}
-
 void RangeAllocator::carve_at_index(int index, const Range& range)
 {
-    ASSERT(m_lock.is_locked());
+    VERIFY(m_lock.is_locked());
     auto remaining_parts = m_available_ranges[index].carve(range);
-    ASSERT(remaining_parts.size() >= 1);
-    ASSERT(m_total_range.contains(remaining_parts[0]));
+    VERIFY(remaining_parts.size() >= 1);
+    VERIFY(m_total_range.contains(remaining_parts[0]));
     m_available_ranges[index] = remaining_parts[0];
     if (remaining_parts.size() == 2) {
-        ASSERT(m_total_range.contains(remaining_parts[1]));
+        VERIFY(m_total_range.contains(remaining_parts[1]));
         m_available_ranges.insert(index + 1, move(remaining_parts[1]));
     }
 }
@@ -99,14 +64,13 @@ Optional<Range> RangeAllocator::allocate_randomized(size_t size, size_t alignmen
     if (!size)
         return {};
 
-    ASSERT((size % PAGE_SIZE) == 0);
-    ASSERT((alignment % PAGE_SIZE) == 0);
+    VERIFY((size % PAGE_SIZE) == 0);
+    VERIFY((alignment % PAGE_SIZE) == 0);
 
     // FIXME: I'm sure there's a smarter way to do this.
     static constexpr size_t maximum_randomization_attempts = 1000;
     for (size_t i = 0; i < maximum_randomization_attempts; ++i) {
-        VirtualAddress random_address { get_good_random<FlatPtr>() };
-        random_address.mask(PAGE_MASK);
+        VirtualAddress random_address { round_up_to_power_of_two(get_fast_random<FlatPtr>(), alignment) };
 
         if (!m_total_range.contains(random_address, size))
             continue;
@@ -124,8 +88,8 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
     if (!size)
         return {};
 
-    ASSERT((size % PAGE_SIZE) == 0);
-    ASSERT((alignment % PAGE_SIZE) == 0);
+    VERIFY((size % PAGE_SIZE) == 0);
+    VERIFY((alignment % PAGE_SIZE) == 0);
 
 #ifdef VM_GUARD_PAGES
     // NOTE: We pad VM allocations with a guard page on each side.
@@ -153,7 +117,7 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
         FlatPtr aligned_base = round_up_to_power_of_two(initial_base, alignment);
 
         Range allocated_range(VirtualAddress(aligned_base), size);
-        ASSERT(m_total_range.contains(allocated_range));
+        VERIFY(m_total_range.contains(allocated_range));
 
         if (available_range == allocated_range) {
             m_available_ranges.remove(i);
@@ -162,7 +126,7 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
         carve_at_index(i, allocated_range);
         return allocated_range;
     }
-    klog() << "RangeAllocator: Failed to allocate anywhere: " << size << ", " << alignment;
+    dmesgln("RangeAllocator: Failed to allocate anywhere: size={}, alignment={}", size, alignment);
     return {};
 }
 
@@ -171,14 +135,14 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     if (!size)
         return {};
 
-    ASSERT(base.is_page_aligned());
-    ASSERT((size % PAGE_SIZE) == 0);
+    VERIFY(base.is_page_aligned());
+    VERIFY((size % PAGE_SIZE) == 0);
 
     Range allocated_range(base, size);
     ScopedSpinLock lock(m_lock);
     for (size_t i = 0; i < m_available_ranges.size(); ++i) {
         auto& available_range = m_available_ranges[i];
-        ASSERT(m_total_range.contains(allocated_range));
+        VERIFY(m_total_range.contains(allocated_range));
         if (!available_range.contains(base, size))
             continue;
         if (available_range == allocated_range) {
@@ -194,11 +158,11 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
 void RangeAllocator::deallocate(const Range& range)
 {
     ScopedSpinLock lock(m_lock);
-    ASSERT(m_total_range.contains(range));
-    ASSERT(range.size());
-    ASSERT((range.size() % PAGE_SIZE) == 0);
-    ASSERT(range.base() < range.end());
-    ASSERT(!m_available_ranges.is_empty());
+    VERIFY(m_total_range.contains(range));
+    VERIFY(range.size());
+    VERIFY((range.size() % PAGE_SIZE) == 0);
+    VERIFY(range.base() < range.end());
+    VERIFY(!m_available_ranges.is_empty());
 
     size_t nearby_index = 0;
     auto* existing_range = binary_search(

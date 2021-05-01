@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Benoit Lormeau <blormeau@outlook.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
@@ -30,92 +10,6 @@
 #include <AK/StringBuilder.h>
 
 namespace AK {
-
-GenericLexer::GenericLexer(const StringView& input)
-    : m_input(input)
-{
-}
-
-GenericLexer::~GenericLexer()
-{
-}
-
-// Tells whether the parser's index has reached input's end
-bool GenericLexer::is_eof() const
-{
-    return m_index >= m_input.length();
-}
-
-// Returns the current character at the parser index, plus `offset` if specified
-char GenericLexer::peek(size_t offset) const
-{
-    return (m_index + offset < m_input.length()) ? m_input[m_index + offset] : '\0';
-}
-
-// Tests the next character in the input
-bool GenericLexer::next_is(char expected) const
-{
-    return peek() == expected;
-}
-
-// Tests if the `expected` string comes next in the input
-bool GenericLexer::next_is(StringView expected) const
-{
-    for (size_t i = 0; i < expected.length(); ++i)
-        if (peek(i) != expected[i])
-            return false;
-    return true;
-}
-
-// Tests if the `expected` string comes next in the input
-bool GenericLexer::next_is(const char* expected) const
-{
-    for (size_t i = 0; expected[i] != '\0'; ++i)
-        if (peek(i) != expected[i])
-            return false;
-    return true;
-}
-
-// Go back to the previous character
-void GenericLexer::retreat()
-{
-    ASSERT(m_index > 0);
-    m_index--;
-}
-
-// Consume a character and advance the parser index
-char GenericLexer::consume()
-{
-    ASSERT(!is_eof());
-    return m_input[m_index++];
-}
-
-// Consume the given character if it is next in the input
-bool GenericLexer::consume_specific(char specific)
-{
-    if (peek() != specific)
-        return false;
-
-    ignore();
-    return true;
-}
-
-// Consume the given string if it is next in the input
-bool GenericLexer::consume_specific(StringView str)
-{
-    if (!next_is(str))
-        return false;
-
-    ignore(str.length());
-    return true;
-}
-
-// Consume the given string if it is next in the input
-bool GenericLexer::consume_specific(const char* str)
-{
-    return consume_specific(StringView(str));
-}
-
 // Consume a number of characters
 StringView GenericLexer::consume(size_t count)
 {
@@ -232,48 +126,6 @@ String GenericLexer::consume_and_unescape_string(char escape_char)
     for (size_t i = 0; i < view.length(); ++i)
         builder.append(consume_escaped_character(escape_char));
     return builder.to_string();
-}
-
-char GenericLexer::consume_escaped_character(char escape_char, const StringView& escape_map)
-{
-    if (!consume_specific(escape_char))
-        return consume();
-
-    auto c = consume();
-
-    for (size_t i = 0; i < escape_map.length(); i += 2) {
-        if (c == escape_map[i])
-            return escape_map[i + 1];
-    }
-
-    return c;
-}
-
-// Ignore a number of characters (1 by default)
-void GenericLexer::ignore(size_t count)
-{
-    count = min(count, m_input.length() - m_index);
-    m_index += count;
-}
-
-// Ignore characters until `stop` is peek'd
-// The `stop` character is ignored as it is user-defined
-void GenericLexer::ignore_until(char stop)
-{
-    while (!is_eof() && peek() != stop)
-        m_index++;
-
-    ignore();
-}
-
-// Ignore characters until the string `stop` is found
-// The `stop` string is ignored, as it is user-defined
-void GenericLexer::ignore_until(const char* stop)
-{
-    while (!is_eof() && !next_is(stop))
-        m_index++;
-
-    ignore(__builtin_strlen(stop));
 }
 
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Client.h"
@@ -137,6 +117,8 @@ void Client::send_response(InputStream& response, const HTTP::HttpRequest& reque
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n");
     builder.append("Server: WebServer (SerenityOS)\r\n");
+    builder.append("X-Frame-Options: SAMEORIGIN\r\n");
+    builder.append("X-Content-Type-Options: nosniff\r\n");
     builder.append("Content-Type: ");
     builder.append(content_type);
     builder.append("\r\n");
@@ -174,7 +156,7 @@ static String folder_image_data()
     static String cache;
     if (cache.is_empty()) {
         auto file_or_error = MappedFile::map("/res/icons/16x16/filetype-folder.png");
-        ASSERT(!file_or_error.is_error());
+        VERIFY(!file_or_error.is_error());
         cache = encode_base64(file_or_error.value()->bytes());
     }
     return cache;
@@ -185,7 +167,7 @@ static String file_image_data()
     static String cache;
     if (cache.is_empty()) {
         auto file_or_error = MappedFile::map("/res/icons/16x16/filetype-unknown.png");
-        ASSERT(!file_or_error.is_error());
+        VERIFY(!file_or_error.is_error());
         cache = encode_base64(file_or_error.value()->bytes());
     }
     return cache;
@@ -238,7 +220,7 @@ void Client::handle_directory_listing(const String& requested_path, const String
         builder.append(escape_html_entities(name));
         builder.append("</a></td><td>&nbsp;</td>");
 
-        builder.appendf("<td>%10zd</td><td>&nbsp;</td>", st.st_size);
+        builder.appendf("<td>%10lld</td><td>&nbsp;</td>", st.st_size);
         builder.append("<td>");
         builder.append(Core::DateTime::from_timestamp(st.st_mtime).to_string());
         builder.append("</td>");

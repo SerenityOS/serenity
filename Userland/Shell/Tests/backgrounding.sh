@@ -4,7 +4,7 @@ echo "Not running Shell-backgrounding as it has a high failure rate"
 echo PASS
 exit 0
 
-source test-commons.inc
+source $(dirname "$0")/test-commons.inc
 
 setopt --verbose
 

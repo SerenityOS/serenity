@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
@@ -95,31 +75,64 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
     auto* array = Array::create(global_object);
 
+    Function* map_fn = nullptr;
+    if (!vm.argument(1).is_undefined()) {
+        auto callback = vm.argument(1);
+        if (!callback.is_function()) {
+            vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
+            return {};
+        }
+        map_fn = &callback.as_function();
+    }
+
+    auto this_arg = vm.argument(2);
+
     // Array.from() lets you create Arrays from:
     if (auto size = object->indexed_properties().array_like_size()) {
         // * array-like objects (objects with a length property and indexed elements)
         MarkedValueList elements(vm.heap());
         elements.ensure_capacity(size);
         for (size_t i = 0; i < size; ++i) {
-            elements.append(object->get(i));
-            if (vm.exception())
-                return {};
+            if (map_fn) {
+                auto element = object->get(i);
+                if (vm.exception())
+                    return {};
+
+                auto map_fn_result = vm.call(*map_fn, this_arg, element, Value((i32)i));
+                if (vm.exception())
+                    return {};
+
+                elements.append(map_fn_result);
+            } else {
+                elements.append(object->get(i));
+                if (vm.exception())
+                    return {};
+            }
         }
         array->set_indexed_property_elements(move(elements));
     } else {
         // * iterable objects
+        i32 i = 0;
         get_iterator_values(global_object, value, [&](Value element) {
             if (vm.exception())
                 return IterationDecision::Break;
-            array->indexed_properties().append(element);
+
+            if (map_fn) {
+                auto map_fn_result = vm.call(*map_fn, this_arg, element, Value(i));
+                i++;
+                if (vm.exception())
+                    return IterationDecision::Break;
+
+                array->indexed_properties().append(map_fn_result);
+            } else {
+                array->indexed_properties().append(element);
+            }
+
             return IterationDecision::Continue;
         });
         if (vm.exception())
             return {};
     }
-
-    // FIXME: if interpreter.argument_count() >= 2: mapFn
-    // FIXME: if interpreter.argument_count() >= 3: thisArg
 
     return array;
 }

@@ -27,7 +27,7 @@ disk_usage() {
     du -sm "$1" | cut -f1
 }
 
-DISK_SIZE=$(($(disk_usage "$SERENITY_ROOT/Base") + $(disk_usage Root) + 300))
+DISK_SIZE=$(($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + 300))
 
 echo "setting up disk image..."
 if [ "$1" = "ebr" ]; then
@@ -97,12 +97,18 @@ echo "done"
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 "$script_path/build-root-filesystem.sh"
 
-echo "installing grub using $grub..."
+if [ -z "$2" ]; then
+    grub_cfg="$SERENITY_SOURCE_DIR"/Meta/grub-"${partition_scheme}".cfg
+else
+    grub_cfg=$2
+fi
+
+echo "installing grub using $grub with $grub_cfg..."
 $grub --boot-directory=mnt/boot --target=i386-pc --modules="ext2 part_msdos" "${dev}"
 
 if [ -d mnt/boot/grub2 ]; then
-    cp "$SERENITY_ROOT"/Meta/grub-"${partition_scheme}".cfg mnt/boot/grub2/grub.cfg
+    cp "$grub_cfg" mnt/boot/grub2/grub.cfg
 else
-    cp "$SERENITY_ROOT"/Meta/grub-"${partition_scheme}".cfg mnt/boot/grub/grub.cfg
+    cp "$grub_cfg" mnt/boot/grub/grub.cfg
 fi
 echo "done"

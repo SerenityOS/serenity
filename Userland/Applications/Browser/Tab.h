@@ -1,33 +1,14 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include "History.h"
 #include <AK/URL.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibHTTP/HttpJob.h>
@@ -66,15 +47,21 @@ public:
     void did_become_active();
     void context_menu_requested(const Gfx::IntPoint& screen_position);
 
+    void action_entered(GUI::Action&);
+    void action_left(GUI::Action&);
+
     Function<void(String)> on_title_change;
     Function<void(const URL&)> on_tab_open_request;
     Function<void(Tab&)> on_tab_close_request;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
+    Function<String(const URL& url, Web::Cookie::Source source)> on_get_cookie;
+    Function<void(const URL& url, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)> on_set_cookie;
+    Function<void()> on_dump_cookies;
 
     const String& title() const { return m_title; }
     const Gfx::Bitmap* icon() const { return m_icon; }
 
-    GUI::Widget& view();
+    GUI::ScrollableWidget& view();
 
 private:
     explicit Tab(Type);
@@ -82,6 +69,8 @@ private:
     Web::WebViewHooks& hooks();
     void update_actions();
     void update_bookmark_button(const String& url);
+    void start_download(const URL& url);
+    void view_source(const URL& url, const String& source);
 
     Type m_type;
 
@@ -92,14 +81,15 @@ private:
 
     RefPtr<GUI::Action> m_go_back_action;
     RefPtr<GUI::Action> m_go_forward_action;
+    RefPtr<GUI::Action> m_go_home_action;
     RefPtr<GUI::Action> m_reload_action;
     RefPtr<GUI::TextBox> m_location_box;
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<GUI::Window> m_dom_inspector_window;
     RefPtr<GUI::Window> m_console_window;
-    RefPtr<GUI::StatusBar> m_statusbar;
-    RefPtr<GUI::MenuBar> m_menubar;
-    RefPtr<GUI::ToolBarContainer> m_toolbar_container;
+    RefPtr<GUI::Statusbar> m_statusbar;
+    RefPtr<GUI::Menubar> m_menubar;
+    RefPtr<GUI::ToolbarContainer> m_toolbar_container;
 
     RefPtr<GUI::Menu> m_link_context_menu;
     RefPtr<GUI::Action> m_link_context_menu_default_action;
@@ -108,6 +98,10 @@ private:
     RefPtr<GUI::Menu> m_image_context_menu;
     Gfx::ShareableBitmap m_image_context_menu_bitmap;
     URL m_image_context_menu_url;
+
+    GUI::ActionGroup m_user_agent_spoof_actions;
+    GUI::ActionGroup m_search_engine_actions;
+    RefPtr<GUI::Action> m_disable_user_agent_spoofing;
 
     RefPtr<GUI::Menu> m_tab_context_menu;
     RefPtr<GUI::Menu> m_page_context_menu;

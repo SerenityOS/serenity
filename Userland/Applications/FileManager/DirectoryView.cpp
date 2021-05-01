@@ -1,30 +1,11 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DirectoryView.h"
+#include "FileOperationProgressWidget.h"
 #include "FileUtils.h"
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
@@ -44,6 +25,61 @@
 #include <unistd.h>
 
 namespace FileManager {
+
+enum class FileOperation {
+    Copy,
+};
+
+static HashTable<RefPtr<GUI::Window>> file_operation_windows;
+
+static void run_file_operation([[maybe_unused]] FileOperation operation, const String& source, const String& destination, GUI::Window* parent_window)
+{
+    int pipe_fds[2];
+    if (pipe(pipe_fds) < 0) {
+        perror("pipe");
+        VERIFY_NOT_REACHED();
+    }
+
+    pid_t child_pid = fork();
+    if (child_pid < 0) {
+        perror("fork");
+        VERIFY_NOT_REACHED();
+    }
+
+    if (!child_pid) {
+        if (close(pipe_fds[0]) < 0) {
+            perror("close");
+            _exit(1);
+        }
+        if (dup2(pipe_fds[1], STDOUT_FILENO) < 0) {
+            perror("dup2");
+            _exit(1);
+        }
+        if (execlp("/bin/FileOperation", "/bin/FileOperation", "Copy", source.characters(), LexicalPath(destination).dirname().characters(), nullptr) < 0) {
+            perror("execlp");
+            _exit(1);
+        }
+        VERIFY_NOT_REACHED();
+    } else {
+        if (close(pipe_fds[1]) < 0) {
+            perror("close");
+            _exit(1);
+        }
+    }
+
+    auto window = GUI::Window::construct();
+    file_operation_windows.set(window);
+
+    auto pipe_input_file = Core::File::construct();
+    pipe_input_file->open(pipe_fds[0], Core::IODevice::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
+
+    window->set_title("Copying Files...");
+    window->set_main_widget<FileOperationProgressWidget>(pipe_input_file);
+    window->resize(320, 190);
+    if (parent_window)
+        window->center_within(*parent_window);
+    window->show();
+}
 
 NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(const LauncherHandler&)> launch_handler)
 {
@@ -82,7 +118,7 @@ NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(const UR
 {
     NonnullRefPtrVector<LauncherHandler> handlers;
     for (auto& h : Desktop::Launcher::get_handlers_with_details_for_url(url)) {
-        handlers.append(adopt(*new LauncherHandler(h)));
+        handlers.append(adopt_ref(*new LauncherHandler(h)));
     }
     return handlers;
 }
@@ -169,7 +205,7 @@ void DirectoryView::setup_model()
         add_path_to_history(model().root_path());
 
         if (on_path_change)
-            on_path_change(failed_path, false);
+            on_path_change(failed_path, false, false);
     };
 
     m_model->on_complete = [this] {
@@ -186,7 +222,7 @@ void DirectoryView::setup_model()
         m_touch_action->set_enabled(can_write_in_path);
 
         if (on_path_change)
-            on_path_change(model().root_path(), can_write_in_path);
+            on_path_change(model().root_path(), true, can_write_in_path);
     };
 
     m_model->register_client(*this);
@@ -307,7 +343,7 @@ DirectoryView::~DirectoryView()
 
 void DirectoryView::model_did_update(unsigned flags)
 {
-    if (flags & GUI::Model::UpdateFlag::InvalidateAllIndexes) {
+    if (flags & GUI::Model::UpdateFlag::InvalidateAllIndices) {
         for_each_view_implementation([](auto& view) {
             view.selection().clear();
         });
@@ -333,10 +369,10 @@ void DirectoryView::set_view_mode(ViewMode mode)
         set_active_widget(m_icon_view);
         return;
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
-void DirectoryView::add_path_to_history(const StringView& path)
+void DirectoryView::add_path_to_history(String path)
 {
     if (m_path_history.size() && m_path_history.at(m_path_history_position) == path)
         return;
@@ -344,11 +380,11 @@ void DirectoryView::add_path_to_history(const StringView& path)
     if (m_path_history_position < m_path_history.size())
         m_path_history.resize(m_path_history_position + 1);
 
-    m_path_history.append(path);
+    m_path_history.append(move(path));
     m_path_history_position = m_path_history.size() - 1;
 }
 
-void DirectoryView::open(const StringView& path)
+void DirectoryView::open(String const& path)
 {
     auto real_path = Core::File::real_path_for(path);
 
@@ -401,11 +437,13 @@ void DirectoryView::update_statusbar()
     if (m_view_mode == ViewMode::Invalid)
         return;
 
-    size_t total_size = model().node({}).total_size;
+    StringBuilder builder;
+
     if (current_view().selection().is_empty()) {
-        set_status_message(String::formatted("{} item(s) ({})",
-            model().row_count(),
-            human_readable_size(total_size)));
+        int total_item_count = model().row_count();
+        size_t total_size = model().node({}).total_size;
+        builder.appendff("{} item{} ({})", total_item_count, total_item_count != 1 ? "s" : "", human_readable_size(total_size));
+        set_status_message(builder.string_view());
         return;
     }
 
@@ -413,20 +451,11 @@ void DirectoryView::update_statusbar()
     size_t selected_byte_count = 0;
 
     current_view().selection().for_each_index([&](auto& index) {
-        auto& model = *current_view().model();
-        auto size_index = model.index(index.row(), GUI::FileSystemModel::Column::Size, model.parent_index(index));
-        auto file_size = size_index.data().to_i32();
-        selected_byte_count += file_size;
+        const auto& node = this->node(index);
+        selected_byte_count += node.size;
     });
 
-    StringBuilder builder;
-    builder.append(String::number(selected_item_count));
-    builder.append(" item");
-    if (selected_item_count != 1)
-        builder.append('s');
-    builder.append(" selected (");
-    builder.append(human_readable_size(selected_byte_count).characters());
-    builder.append(')');
+    builder.appendff("{} item{} selected ({})", selected_item_count, selected_item_count != 1 ? "s" : "", human_readable_size(selected_byte_count));
 
     if (selected_item_count == 1) {
         auto& node = this->node(current_view().selection().first());
@@ -436,7 +465,7 @@ void DirectoryView::update_statusbar()
         }
     }
 
-    set_status_message(builder.to_string());
+    set_status_message(builder.string_view());
 }
 
 void DirectoryView::set_should_show_dotfiles(bool show_dotfiles)
@@ -444,7 +473,7 @@ void DirectoryView::set_should_show_dotfiles(bool show_dotfiles)
     m_model->set_should_show_dotfiles(show_dotfiles);
 }
 
-void DirectoryView::launch(const URL&, const LauncherHandler& launcher_handler)
+void DirectoryView::launch(const URL&, const LauncherHandler& launcher_handler) const
 {
     pid_t child;
     if (launcher_handler.details().launcher_type == Desktop::Launcher::LauncherType::Application) {
@@ -479,7 +508,7 @@ Vector<String> DirectoryView::selected_file_paths() const
 void DirectoryView::do_delete(bool should_confirm)
 {
     auto paths = selected_file_paths();
-    ASSERT(!paths.is_empty());
+    VERIFY(!paths.is_empty());
     FileUtils::delete_paths(paths, should_confirm, window());
 }
 
@@ -497,9 +526,9 @@ void DirectoryView::handle_selection_change()
 
 void DirectoryView::setup_actions()
 {
-    m_mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
+    m_mkdir_action = GUI::Action::create("New &Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(value, window(), "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
@@ -509,9 +538,9 @@ void DirectoryView::setup_actions()
         }
     });
 
-    m_touch_action = GUI::Action::create("New file...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
+    m_touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(value, window(), "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_file_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
             struct stat st;
             int rc = stat(new_file_path.characters(), &st);
@@ -531,11 +560,11 @@ void DirectoryView::setup_actions()
                 return;
             }
             rc = close(fd);
-            ASSERT(rc >= 0);
+            VERIFY(rc >= 0);
         }
     });
 
-    m_open_terminal_action = GUI::Action::create("Open Terminal here", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+    m_open_terminal_action = GUI::Action::create("Open &Terminal Here", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
         posix_spawn_file_actions_t spawn_actions;
         posix_spawn_file_actions_init(&spawn_actions);
         posix_spawn_file_actions_addchdir(&spawn_actions, path().characters());
@@ -553,7 +582,7 @@ void DirectoryView::setup_actions()
     m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) { do_delete(true); }, window());
 
     m_force_delete_action = GUI::Action::create(
-        "Delete without confirmation", { Mod_Shift, Key_Delete },
+        "Delete Without Confirmation", { Mod_Shift, Key_Delete },
         [this](auto&) { do_delete(false); },
         window());
 }
@@ -580,12 +609,8 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
         if (url_to_copy.path() == new_path)
             continue;
 
-        if (!FileUtils::copy_file_or_directory(url_to_copy.path(), new_path)) {
-            auto error_message = String::formatted("Could not copy {} into {}.", url_to_copy.to_string(), new_path);
-            GUI::MessageBox::show(window(), error_message, "File Manager", GUI::MessageBox::Type::Error);
-        } else {
-            had_accepted_drop = true;
-        }
+        run_file_operation(FileOperation::Copy, url_to_copy.path(), new_path, window());
+        had_accepted_drop = true;
     }
     if (had_accepted_drop && on_accepted_drop)
         on_accepted_drop();

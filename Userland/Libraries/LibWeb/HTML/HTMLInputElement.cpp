@@ -1,47 +1,28 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGUI/Button.h>
-#include <LibGUI/TextBox.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/InProcessWebView.h>
+#include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/CheckBox.h>
-#include <LibWeb/Layout/WidgetBox.h>
+#include <LibWeb/Layout/RadioButton.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web::HTML {
 
-HTMLInputElement::HTMLInputElement(DOM::Document& document, const QualifiedName& qualified_name)
-    : HTMLElement(document, qualified_name)
+HTMLInputElement::HTMLInputElement(DOM::Document& document, QualifiedName qualified_name)
+    : HTMLElement(document, move(qualified_name))
 {
 }
 
@@ -64,10 +45,6 @@ void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
 
 RefPtr<Layout::Node> HTMLInputElement::create_layout_node()
 {
-    ASSERT(document().page());
-    auto& page = *document().page();
-    auto& page_view = const_cast<InProcessWebView&>(static_cast<const InProcessWebView&>(page.client()));
-
     if (type() == "hidden")
         return nullptr;
 
@@ -76,26 +53,18 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node()
         return nullptr;
 
     if (type().equals_ignoring_case("submit") || type().equals_ignoring_case("button"))
-        return adopt(*new Layout::ButtonBox(document(), *this, move(style)));
+        return adopt_ref(*new Layout::ButtonBox(document(), *this, move(style)));
 
     if (type() == "checkbox")
-        return adopt(*new Layout::CheckBox(document(), *this, move(style)));
+        return adopt_ref(*new Layout::CheckBox(document(), *this, move(style)));
 
-    auto& text_box = page_view.add<GUI::TextBox>();
-    text_box.set_text(value());
-    text_box.on_change = [this] {
-        auto& widget = downcast<Layout::WidgetBox>(layout_node())->widget();
-        const_cast<HTMLInputElement*>(this)->set_attribute(HTML::AttributeNames::value, static_cast<const GUI::TextBox&>(widget).text());
-    };
-    int text_width = Gfx::FontDatabase::default_font().width(value());
-    auto size_value = attribute(HTML::AttributeNames::size);
-    if (!size_value.is_null()) {
-        auto size = size_value.to_uint();
-        if (size.has_value())
-            text_width = Gfx::FontDatabase::default_font().glyph_width('x') * size.value();
-    }
-    text_box.set_relative_rect(0, 0, text_width + 20, 20);
-    return adopt(*new Layout::WidgetBox(document(), *this, text_box));
+    if (type() == "radio")
+        return adopt_ref(*new Layout::RadioButton(document(), *this, move(style)));
+
+    create_shadow_tree_if_needed();
+    auto layout_node = adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+    layout_node->set_inline(true);
+    return layout_node;
 }
 
 void HTMLInputElement::set_checked(bool checked)
@@ -112,6 +81,51 @@ void HTMLInputElement::set_checked(bool checked)
 bool HTMLInputElement::enabled() const
 {
     return !has_attribute(HTML::AttributeNames::disabled);
+}
+
+String HTMLInputElement::value() const
+{
+    if (m_text_node)
+        return m_text_node->data();
+    return default_value();
+}
+
+void HTMLInputElement::set_value(String value)
+{
+    if (m_text_node) {
+        m_text_node->set_data(move(value));
+        return;
+    }
+    set_attribute(HTML::AttributeNames::value, move(value));
+}
+
+void HTMLInputElement::create_shadow_tree_if_needed()
+{
+    if (shadow_root())
+        return;
+
+    // FIXME: This assumes that we want a text box. Is that always true?
+    auto shadow_root = adopt_ref(*new DOM::ShadowRoot(document(), *this));
+    auto initial_value = attribute(HTML::AttributeNames::value);
+    if (initial_value.is_null())
+        initial_value = String::empty();
+    auto element = document().create_element(HTML::TagNames::div);
+    element->set_attribute(HTML::AttributeNames::style, "white-space: pre");
+    m_text_node = adopt_ref(*new DOM::Text(document(), initial_value));
+    m_text_node->set_always_editable(true);
+    element->append_child(*m_text_node);
+    shadow_root->append_child(move(element));
+    set_shadow_root(move(shadow_root));
+}
+
+void HTMLInputElement::inserted()
+{
+    set_form(first_ancestor_of_type<HTMLFormElement>());
+}
+
+void HTMLInputElement::removed_from(DOM::Node*)
+{
+    set_form(nullptr);
 }
 
 }

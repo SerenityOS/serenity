@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Random.h>
@@ -33,10 +13,10 @@ namespace TLS {
 
 ByteBuffer TLSv12::build_hello()
 {
-    AK::fill_with_random(&m_context.local_random, 32);
+    fill_with_random(&m_context.local_random, 32);
 
-    auto packet_version = (u16)m_context.version;
-    auto version = (u16)m_context.version;
+    auto packet_version = (u16)m_context.options.version;
+    auto version = (u16)m_context.options.version;
     PacketBuilder builder { MessageType::Handshake, packet_version };
 
     builder.append((u8)ClientHello);
@@ -73,21 +53,19 @@ ByteBuffer TLSv12::build_hello()
     }
 
     // Ciphers
-    builder.append((u16)(5 * sizeof(u16)));
-    builder.append((u16)CipherSuite::RSA_WITH_AES_128_CBC_SHA256);
-    builder.append((u16)CipherSuite::RSA_WITH_AES_256_CBC_SHA256);
-    builder.append((u16)CipherSuite::RSA_WITH_AES_128_CBC_SHA);
-    builder.append((u16)CipherSuite::RSA_WITH_AES_256_CBC_SHA);
-    builder.append((u16)CipherSuite::RSA_WITH_AES_128_GCM_SHA256);
+    builder.append((u16)(m_context.options.usable_cipher_suites.size() * sizeof(u16)));
+    for (auto suite : m_context.options.usable_cipher_suites)
+        builder.append((u16)suite);
 
     // we don't like compression
+    VERIFY(!m_context.options.use_compression);
     builder.append((u8)1);
-    builder.append((u8)0);
+    builder.append((u8)m_context.options.use_compression);
 
-    // set SNI if we have one
+    // set SNI if we have one, and the user hasn't explicitly asked us to omit it.
     auto sni_length = 0;
-    if (!m_context.SNI.is_null())
-        sni_length = m_context.SNI.length();
+    if (!m_context.extensions.SNI.is_null() && m_context.options.use_sni)
+        sni_length = m_context.extensions.SNI.length();
 
     if (sni_length)
         extension_length += sni_length + 9;
@@ -105,12 +83,12 @@ ByteBuffer TLSv12::build_hello()
         builder.append((u8)0);
         // SNI host length + value
         builder.append((u16)sni_length);
-        builder.append((const u8*)m_context.SNI.characters(), sni_length);
+        builder.append((const u8*)m_context.extensions.SNI.characters(), sni_length);
     }
 
     if (alpn_length) {
         // TODO
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     // set the "length" field of the packet
@@ -130,7 +108,7 @@ ByteBuffer TLSv12::build_hello()
 
 ByteBuffer TLSv12::build_alert(bool critical, u8 code)
 {
-    PacketBuilder builder(MessageType::Alert, (u16)m_context.version);
+    PacketBuilder builder(MessageType::Alert, (u16)m_context.options.version);
     builder.append((u8)(critical ? AlertLevel::Critical : AlertLevel::Warning));
     builder.append(code);
 
@@ -145,7 +123,7 @@ ByteBuffer TLSv12::build_alert(bool critical, u8 code)
 
 ByteBuffer TLSv12::build_finished()
 {
-    PacketBuilder builder { MessageType::Handshake, m_context.version, 12 + 64 };
+    PacketBuilder builder { MessageType::Handshake, m_context.options.version, 12 + 64 };
     builder.append((u8)HandshakeType::Finished);
 
     u32 out_size = 12;

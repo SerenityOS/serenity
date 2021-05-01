@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -51,8 +31,8 @@ Menu* Menu::from_menu_id(int menu_id)
     return (*it).value;
 }
 
-Menu::Menu(const StringView& name)
-    : m_name(name)
+Menu::Menu(String name)
+    : m_name(move(name))
 {
 }
 
@@ -69,9 +49,6 @@ void Menu::set_icon(const Gfx::Bitmap* icon)
 void Menu::add_action(NonnullRefPtr<Action> action)
 {
     m_items.append(make<MenuItem>(m_menu_id, move(action)));
-#if GMENU_DEBUG
-    dbgln("GUI::Menu::add_action(): MenuItem Menu ID: {}", m_menu_id);
-#endif
 }
 
 Menu& Menu::add_submenu(const String& name)
@@ -113,7 +90,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
 #if MENU_DEBUG
     dbgln("GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
 #endif
-    ASSERT(m_menu_id > 0);
+    VERIFY(m_menu_id > 0);
     for (size_t i = 0; i < m_items.size(); ++i) {
         auto& item = m_items[i];
         item.set_menu_id({}, m_menu_id);
@@ -163,6 +140,15 @@ Action* Menu::action_at(size_t index)
     if (index >= m_items.size())
         return nullptr;
     return m_items[index].action();
+}
+
+void Menu::visibility_did_change(Badge<WindowServerConnection>, bool visible)
+{
+    if (m_visible == visible)
+        return;
+    m_visible = visible;
+    if (on_visibility_change)
+        on_visibility_change(visible);
 }
 
 }

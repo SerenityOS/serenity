@@ -1,32 +1,13 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
+#include <AK/IntrusiveList.h>
+#include <AK/NonnullRefPtr.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UserOrKernelBuffer.h>
@@ -37,12 +18,14 @@ namespace Kernel {
 
 class Device;
 
+extern WorkQueue* g_io_work;
+
 class AsyncDeviceRequest : public RefCounted<AsyncDeviceRequest> {
     AK_MAKE_NONCOPYABLE(AsyncDeviceRequest);
     AK_MAKE_NONMOVABLE(AsyncDeviceRequest);
 
 public:
-    enum RequestResult {
+    enum [[nodiscard]] RequestResult {
         Pending = 0,
         Started,
         Success,
@@ -76,18 +59,23 @@ public:
 
     void add_sub_request(NonnullRefPtr<AsyncDeviceRequest>);
 
-    [[nodiscard]] RequestWaitResult wait(timeval* = nullptr);
+    [[nodiscard]] RequestWaitResult wait(Time* = nullptr);
 
-    void do_start(Badge<Device>)
+    void do_start(ScopedSpinLock<SpinLock<u8>>&& requests_lock)
     {
-        do_start();
+        if (is_completed_result(m_result))
+            return;
+        m_result = Started;
+        requests_lock.unlock();
+
+        start();
     }
 
     void complete(RequestResult result);
 
     void set_private(void* priv)
     {
-        ASSERT(!m_private || !priv);
+        VERIFY(!m_private || !priv);
         m_private = priv;
     }
     void* get_private() const { return m_private; }
@@ -137,25 +125,14 @@ private:
     void sub_request_finished(AsyncDeviceRequest&);
     void request_finished();
 
-    void do_start()
-    {
-        {
-            ScopedSpinLock lock(m_lock);
-            if (is_completed_result(m_result))
-                return;
-            m_result = Started;
-        }
-        start();
-    }
-
-    bool in_target_context(const UserOrKernelBuffer& buffer) const
+    [[nodiscard]] bool in_target_context(const UserOrKernelBuffer& buffer) const
     {
         if (buffer.is_kernel_buffer())
             return true;
         return m_process == Process::current();
     }
 
-    static bool is_completed_result(RequestResult result)
+    [[nodiscard]] static bool is_completed_result(RequestResult result)
     {
         return result > Started;
     }
@@ -164,8 +141,12 @@ private:
 
     AsyncDeviceRequest* m_parent_request { nullptr };
     RequestResult m_result { Pending };
-    NonnullRefPtrVector<AsyncDeviceRequest> m_sub_requests_pending;
-    NonnullRefPtrVector<AsyncDeviceRequest> m_sub_requests_complete;
+    IntrusiveListNode<AsyncDeviceRequest, RefPtr<AsyncDeviceRequest>> m_list_node;
+
+    typedef IntrusiveList<AsyncDeviceRequest, RefPtr<AsyncDeviceRequest>, &AsyncDeviceRequest::m_list_node> AsyncDeviceSubRequestList;
+
+    AsyncDeviceSubRequestList m_sub_requests_pending;
+    AsyncDeviceSubRequestList m_sub_requests_complete;
     WaitQueue m_queue;
     NonnullRefPtr<Process> m_process;
     void* m_private { nullptr };

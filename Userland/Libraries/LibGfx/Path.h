@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -154,9 +134,23 @@ public:
         invalidate_split_lines();
     }
 
-    void elliptical_arc_to(const FloatPoint& point, const FloatPoint& center, const FloatPoint& radii, float x_axis_rotation, float theta_1, float theta_delta)
+    void elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, double x_axis_rotation, bool large_arc, bool sweep);
+    void arc_to(const FloatPoint& point, float radius, bool large_arc, bool sweep)
     {
-        append_segment<EllipticalArcSegment>(point, center, radii, x_axis_rotation, theta_1, theta_delta);
+        elliptical_arc_to(point, { radius, radius }, 0, large_arc, sweep);
+    }
+
+    // Note: This does not do any sanity checks!
+    void elliptical_arc_to(const FloatPoint& endpoint, const FloatPoint& center, const FloatPoint& radii, double x_axis_rotation, double theta, double theta_delta)
+    {
+        append_segment<EllipticalArcSegment>(
+            endpoint,
+            center,
+            radii,
+            x_axis_rotation,
+            theta,
+            theta_delta);
+
         invalidate_split_lines();
     }
 
@@ -177,7 +171,7 @@ public:
     {
         if (!m_split_lines.has_value()) {
             segmentize_path();
-            ASSERT(m_split_lines.has_value());
+            VERIFY(m_split_lines.has_value());
         }
         return m_split_lines.value();
     }
@@ -186,7 +180,7 @@ public:
     {
         if (!m_bounding_box.has_value()) {
             segmentize_path();
-            ASSERT(m_bounding_box.has_value());
+            VERIFY(m_bounding_box.has_value());
         }
         return m_bounding_box.value();
     }
@@ -203,7 +197,7 @@ private:
     template<typename T, typename... Args>
     void append_segment(Args&&... args)
     {
-        m_segments.append(adopt(*new T(forward<Args>(args)...)));
+        m_segments.append(adopt_ref(*new T(forward<Args>(args)...)));
     }
 
     NonnullRefPtrVector<Segment> m_segments {};
@@ -211,10 +205,5 @@ private:
     Optional<Vector<SplitLineSegment>> m_split_lines {};
     Optional<Gfx::FloatRect> m_bounding_box;
 };
-
-inline const LogStream& operator<<(const LogStream& stream, const Path& path)
-{
-    return stream << path.to_string();
-}
 
 }

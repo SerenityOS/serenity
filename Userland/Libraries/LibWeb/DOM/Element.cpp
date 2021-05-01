@@ -1,40 +1,22 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/AnyOf.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/CSS/Length.h>
-#include <LibWeb/CSS/Parser/CSSParser.h>
+#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleInvalidator.h>
 #include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/ExceptionOr.h>
+#include <LibWeb/DOM/HTMLCollection.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InlineNode.h>
@@ -44,13 +26,13 @@
 #include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TableRowGroupBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
-#include <LibWeb/Layout/WidgetBox.h>
+#include <LibWeb/Namespace.h>
 
 namespace Web::DOM {
 
-Element::Element(Document& document, const QualifiedName& qualified_name)
+Element::Element(Document& document, QualifiedName qualified_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
-    , m_qualified_name(qualified_name)
+    , m_qualified_name(move(qualified_name))
 {
 }
 
@@ -83,8 +65,12 @@ String Element::attribute(const FlyString& name) const
     return {};
 }
 
-void Element::set_attribute(const FlyString& name, const String& value)
+ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& value)
 {
+    // FIXME: Proper name validation
+    if (name.is_empty())
+        return InvalidCharacterError::create("Attribute name must not be empty");
+
     CSS::StyleInvalidator style_invalidator(document());
 
     if (auto* attribute = find_attribute(name))
@@ -93,6 +79,7 @@ void Element::set_attribute(const FlyString& name, const String& value)
         m_attributes.empend(name, value);
 
     parse_attribute(name, value);
+    return {};
 }
 
 void Element::remove_attribute(const FlyString& name)
@@ -102,13 +89,13 @@ void Element::remove_attribute(const FlyString& name)
     m_attributes.remove_first_matching([&](auto& attribute) { return attribute.name() == name; });
 }
 
-bool Element::has_class(const FlyString& class_name) const
+bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensitivity) const
 {
-    for (auto& class_ : m_classes) {
-        if (class_ == class_name)
-            return true;
-    }
-    return false;
+    return any_of(m_classes.begin(), m_classes.end(), [&](auto& it) {
+        return case_sensitivity == CaseSensitivity::CaseSensitive
+            ? it == class_name
+            : it.to_lowercase() == class_name.to_lowercase();
+    });
 }
 
 RefPtr<Layout::Node> Element::create_layout_node()
@@ -123,33 +110,42 @@ RefPtr<Layout::Node> Element::create_layout_node()
     if (local_name() == "noscript" && document().is_scripting_enabled())
         return nullptr;
 
-    if (display == CSS::Display::Block)
-        return adopt(*new Layout::BlockBox(document(), this, move(style)));
-
-    if (display == CSS::Display::Inline) {
+    switch (display) {
+    case CSS::Display::None:
+        VERIFY_NOT_REACHED();
+        break;
+    case CSS::Display::Block:
+        return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+    case CSS::Display::Inline:
         if (style->float_().value_or(CSS::Float::None) != CSS::Float::None)
-            return adopt(*new Layout::BlockBox(document(), this, move(style)));
-        return adopt(*new Layout::InlineNode(document(), *this, move(style)));
-    }
-
-    if (display == CSS::Display::ListItem)
-        return adopt(*new Layout::ListItemBox(document(), *this, move(style)));
-    if (display == CSS::Display::Table)
-        return adopt(*new Layout::TableBox(document(), this, move(style)));
-    if (display == CSS::Display::TableRow)
-        return adopt(*new Layout::TableRowBox(document(), this, move(style)));
-    if (display == CSS::Display::TableCell)
-        return adopt(*new Layout::TableCellBox(document(), this, move(style)));
-    if (display == CSS::Display::TableRowGroup || display == CSS::Display::TableHeaderGroup || display == CSS::Display::TableFooterGroup)
-        return adopt(*new Layout::TableRowGroupBox(document(), *this, move(style)));
-    if (display == CSS::Display::InlineBlock) {
-        auto inline_block = adopt(*new Layout::BlockBox(document(), this, move(style)));
+            return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::InlineNode(document(), *this, move(style)));
+    case CSS::Display::ListItem:
+        return adopt_ref(*new Layout::ListItemBox(document(), *this, move(style)));
+    case CSS::Display::Table:
+        return adopt_ref(*new Layout::TableBox(document(), this, move(style)));
+    case CSS::Display::TableRow:
+        return adopt_ref(*new Layout::TableRowBox(document(), this, move(style)));
+    case CSS::Display::TableCell:
+        return adopt_ref(*new Layout::TableCellBox(document(), this, move(style)));
+    case CSS::Display::TableRowGroup:
+    case CSS::Display::TableHeaderGroup:
+    case CSS::Display::TableFooterGroup:
+        return adopt_ref(*new Layout::TableRowGroupBox(document(), *this, move(style)));
+    case CSS::Display::InlineBlock: {
+        auto inline_block = adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
         inline_block->set_inline(true);
         return inline_block;
     }
-    if (display == CSS::Display::Flex)
-        return adopt(*new Layout::BlockBox(document(), this, move(style)));
-    ASSERT_NOT_REACHED();
+    case CSS::Display::Flex:
+        return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+    case CSS::Display::TableColumn:
+    case CSS::Display::TableColumnGroup:
+    case CSS::Display::TableCaption:
+        // FIXME: This is just an incorrect placeholder until we improve table layout support.
+        return adopt_ref(*new Layout::BlockBox(document(), this, move(style)));
+    }
+    VERIFY_NOT_REACHED();
 }
 
 void Element::parse_attribute(const FlyString& name, const String& value)
@@ -199,7 +195,7 @@ static StyleDifference compute_style_difference(const CSS::StyleProperties& old_
 void Element::recompute_style()
 {
     set_needs_style_update(false);
-    ASSERT(parent());
+    VERIFY(parent());
     auto old_specified_css_values = m_specified_css_values;
     auto new_specified_css_values = document().style_resolver().resolve_style(*this);
     m_specified_css_values = new_specified_css_values;
@@ -211,10 +207,6 @@ void Element::recompute_style()
         tree_builder.build(*this);
         return;
     }
-
-    // Don't bother with style on widgets. NATIVE LOOK & FEEL BABY!
-    if (is<Layout::WidgetBox>(layout_node()))
-        return;
 
     auto diff = StyleDifference::NeedsRelayout;
     if (old_specified_css_values)
@@ -332,6 +324,39 @@ String Element::inner_html() const
 bool Element::is_focused() const
 {
     return document().focused_element() == this;
+}
+
+NonnullRefPtr<HTMLCollection> Element::get_elements_by_tag_name(FlyString const& tag_name)
+{
+    // FIXME: Support "*" for tag_name
+    // https://dom.spec.whatwg.org/#concept-getelementsbytagname
+    return HTMLCollection::create(*this, [tag_name](Element const& element) {
+        if (element.namespace_() == Namespace::HTML)
+            return element.local_name().to_lowercase() == tag_name.to_lowercase();
+        return element.local_name() == tag_name;
+    });
+}
+
+NonnullRefPtr<HTMLCollection> Element::get_elements_by_class_name(FlyString const& class_name)
+{
+    return HTMLCollection::create(*this, [class_name, quirks_mode = document().in_quirks_mode()](Element const& element) {
+        return element.has_class(class_name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive);
+    });
+}
+
+void Element::set_shadow_root(RefPtr<ShadowRoot> shadow_root)
+{
+    if (m_shadow_root == shadow_root)
+        return;
+    m_shadow_root = move(shadow_root);
+    invalidate_style();
+}
+
+NonnullRefPtr<CSS::CSSStyleDeclaration> Element::style_for_bindings()
+{
+    if (!m_inline_style)
+        m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this);
+    return *m_inline_style;
 }
 
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "SpreadsheetView.h"
@@ -35,7 +15,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/TableView.h>
 #include <LibGfx/Palette.h>
 
@@ -57,7 +37,7 @@ void SpreadsheetView::EditingDelegate::set_value(const GUI::Variant& value)
         return StringModelEditingDelegate::set_value(value);
 
     m_has_set_initial_value = true;
-    const auto option = m_sheet.at({ m_sheet.column(index().column()), (size_t)index().row() });
+    const auto option = m_sheet.at({ (size_t)index().column(), (size_t)index().row() });
     if (option)
         return StringModelEditingDelegate::set_value(option->source());
 
@@ -69,13 +49,25 @@ void InfinitelyScrollableTableView::did_scroll()
     TableView::did_scroll();
     auto& vscrollbar = vertical_scrollbar();
     auto& hscrollbar = horizontal_scrollbar();
-    if (vscrollbar.is_visible() && vscrollbar.value() == vscrollbar.max()) {
-        if (on_reaching_vertical_end)
-            on_reaching_vertical_end();
+    if (!m_vertical_scroll_end_timer->is_active()) {
+        if (vscrollbar.is_visible() && vscrollbar.value() == vscrollbar.max()) {
+            m_vertical_scroll_end_timer->on_timeout = [&] {
+                if (on_reaching_vertical_end)
+                    on_reaching_vertical_end();
+                m_vertical_scroll_end_timer->stop();
+            };
+            m_vertical_scroll_end_timer->start(50);
+        }
     }
-    if (hscrollbar.is_visible() && hscrollbar.value() == hscrollbar.max()) {
-        if (on_reaching_horizontal_end)
-            on_reaching_horizontal_end();
+    if (!m_horizontal_scroll_end_timer->is_active()) {
+        if (hscrollbar.is_visible() && hscrollbar.value() == hscrollbar.max()) {
+            m_horizontal_scroll_end_timer->on_timeout = [&] {
+                if (on_reaching_horizontal_end)
+                    on_reaching_horizontal_end();
+                m_horizontal_scroll_end_timer->stop();
+            };
+            m_horizontal_scroll_end_timer->start(50);
+        }
     }
 }
 
@@ -169,6 +161,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             m_sheet->add_column();
             auto last_column_index = m_sheet->column_count() - 1;
             m_table_view->set_column_width(last_column_index, 50);
+            m_table_view->set_default_column_width(last_column_index, 50);
             m_table_view->set_column_header_alignment(last_column_index, Gfx::TextAlignment::Center);
         }
         update_with_model();
@@ -180,6 +173,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     for (size_t i = 0; i < m_sheet->column_count(); ++i) {
         m_table_view->set_column_painting_delegate(i, make<TableCellPainter>(*m_table_view));
         m_table_view->set_column_width(i, 50);
+        m_table_view->set_default_column_width(i, 50);
         m_table_view->set_column_header_alignment(i, Gfx::TextAlignment::Center);
     }
 
@@ -190,15 +184,15 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         auto delegate = make<EditingDelegate>(*m_sheet);
         delegate->on_cursor_key_pressed = [this](auto& event) {
             m_table_view->stop_editing();
-            m_table_view->event(event);
+            m_table_view->dispatch_event(event);
         };
         return delegate;
     };
 
     m_table_view->on_selection_change = [&] {
         m_sheet->selected_cells().clear();
-        for (auto& index : m_table_view->selection().indexes()) {
-            Position position { m_sheet->column(index.column()), (size_t)index.row() };
+        for (auto& index : m_table_view->selection().indices()) {
+            Position position { (size_t)index.column(), (size_t)index.row() };
             m_sheet->selected_cells().set(position);
         }
 
@@ -207,8 +201,8 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
 
         Vector<Position> selected_positions;
         selected_positions.ensure_capacity(m_table_view->selection().size());
-        for (auto& selection : m_table_view->selection().indexes())
-            selected_positions.empend(m_sheet->column(selection.column()), (size_t)selection.row());
+        for (auto& selection : m_table_view->selection().indices())
+            selected_positions.empend((size_t)selection.column(), (size_t)selection.row());
 
         if (on_selection_changed) {
             on_selection_changed(move(selected_positions));
@@ -228,14 +222,14 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_cell_range_context_menu = GUI::Menu::construct();
     m_cell_range_context_menu->add_action(GUI::Action::create("Type and Formatting...", [this](auto&) {
         Vector<Position> positions;
-        for (auto& index : m_table_view->selection().indexes()) {
-            Position position { m_sheet->column(index.column()), (size_t)index.row() };
+        for (auto& index : m_table_view->selection().indices()) {
+            Position position { (size_t)index.column(), (size_t)index.row() };
             positions.append(move(position));
         }
 
         if (positions.is_empty()) {
             auto& index = m_table_view->cursor_index();
-            Position position { m_sheet->column(index.column()), (size_t)index.row() };
+            Position position { (size_t)index.column(), (size_t)index.row() };
             positions.append(move(position));
         }
 
@@ -270,7 +264,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             }
 
             // Drop always has a single target.
-            Position target { m_sheet->column(index.column()), (size_t)index.row() };
+            Position target { (size_t)index.column(), (size_t)index.row() };
             target_positions.append(move(target));
 
             if (source_positions.is_empty())
@@ -283,10 +277,8 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         }
 
         if (event.mime_data().has_text()) {
-            auto* target_cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
-            ASSERT(target_cell);
-
-            target_cell->set_data(event.text());
+            auto& target_cell = m_sheet->ensure({ (size_t)index.column(), (size_t)index.row() });
+            target_cell.set_data(event.text());
             return;
         }
     };
@@ -303,8 +295,8 @@ void SpreadsheetView::show_event(GUI::ShowEvent&)
     if (on_selection_changed && !m_table_view->selection().is_empty()) {
         Vector<Position> selected_positions;
         selected_positions.ensure_capacity(m_table_view->selection().size());
-        for (auto& selection : m_table_view->selection().indexes())
-            selected_positions.empend(m_sheet->column(selection.column()), (size_t)selection.row());
+        for (auto& selection : m_table_view->selection().indices())
+            selected_positions.empend((size_t)selection.column(), (size_t)selection.row());
 
         on_selection_changed(move(selected_positions));
     }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -36,10 +16,13 @@
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/ScriptExecutionContext.h>
+#include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/StyleResolver.h>
-#include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/CSS/StyleSheetList.h>
+#include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/DOM/DOMImplementation.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
@@ -55,12 +38,24 @@ enum class QuirksMode {
 class Document
     : public ParentNode
     , public NonElementParentNode<Document>
+    , public HTML::GlobalEventHandlers
     , public Bindings::ScriptExecutionContext {
 public:
     using WrapperType = Bindings::DocumentWrapper;
 
-    static NonnullRefPtr<Document> create(const URL& url = "about:blank") { return adopt(*new Document(url)); }
+    static NonnullRefPtr<Document> create(const URL& url = "about:blank")
+    {
+        return adopt_ref(*new Document(url));
+    }
+    static NonnullRefPtr<Document> create_with_global_object(Bindings::WindowObject&)
+    {
+        return Document::create();
+    }
+
     virtual ~Document() override;
+
+    String cookie(Cookie::Source = Cookie::Source::NonHttp);
+    void set_cookie(String, Cookie::Source = Cookie::Source::NonHttp);
 
     bool should_invalidate_styles_on_attribute_changes() const { return m_should_invalidate_styles_on_attribute_changes; }
     void set_should_invalidate_styles_on_attribute_changes(bool b) { m_should_invalidate_styles_on_attribute_changes = b; }
@@ -81,6 +76,8 @@ public:
     CSS::StyleSheetList& style_sheets() { return *m_style_sheets; }
     const CSS::StyleSheetList& style_sheets() const { return *m_style_sheets; }
 
+    NonnullRefPtr<CSS::StyleSheetList> style_sheets_for_bindings() { return *m_style_sheets; }
+
     virtual FlyString node_name() const override { return "#document"; }
 
     void set_hovered_node(Node*);
@@ -91,11 +88,13 @@ public:
     Node* inspected_node() { return m_inspected_node; }
     const Node* inspected_node() const { return m_inspected_node; }
 
+    Element* document_element();
     const Element* document_element() const;
+
     const HTML::HTMLHtmlElement* html_element() const;
     const HTML::HTMLHeadElement* head() const;
     const HTML::HTMLElement* body() const;
-    void set_body(HTML::HTMLElement& new_body);
+    ExceptionOr<void> set_body(HTML::HTMLElement& new_body);
 
     String title() const;
     void set_title(const String&);
@@ -111,6 +110,8 @@ public:
 
     Color background_color(const Gfx::Palette&) const;
     RefPtr<Gfx::Bitmap> background_image() const;
+    CSS::Repeat background_repeat_x() const;
+    CSS::Repeat background_repeat_y() const;
 
     Color link_color() const;
     void set_link_color(Color);
@@ -135,22 +136,27 @@ public:
     void schedule_style_update();
     void schedule_forced_layout();
 
-    NonnullRefPtrVector<Element> get_elements_by_name(const String&) const;
-    NonnullRefPtrVector<Element> get_elements_by_tag_name(const FlyString&) const;
-    NonnullRefPtrVector<Element> get_elements_by_class_name(const FlyString&) const;
+    NonnullRefPtr<HTMLCollection> get_elements_by_name(String const&);
+    NonnullRefPtr<HTMLCollection> get_elements_by_tag_name(FlyString const&);
+    NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
+
+    NonnullRefPtr<HTMLCollection> applets();
+    NonnullRefPtr<HTMLCollection> anchors();
 
     const String& source() const { return m_source; }
     void set_source(const String& source) { m_source = source; }
 
     virtual JS::Interpreter& interpreter() override;
 
-    JS::Value run_javascript(const StringView&);
+    JS::Value run_javascript(const StringView& source, const StringView& filename = "(unknown)");
 
     NonnullRefPtr<Element> create_element(const String& tag_name);
     NonnullRefPtr<Element> create_element_ns(const String& namespace_, const String& qualifed_name);
     NonnullRefPtr<DocumentFragment> create_document_fragment();
     NonnullRefPtr<Text> create_text_node(const String& data);
     NonnullRefPtr<Comment> create_comment(const String& data);
+    NonnullRefPtr<Range> create_range();
+    NonnullRefPtr<Event> create_event(const String& interface);
 
     void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
     HTML::HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }
@@ -167,6 +173,7 @@ public:
     void set_quirks_mode(QuirksMode mode) { m_quirks_mode = mode; }
 
     void adopt_node(Node&);
+    ExceptionOr<NonnullRefPtr<Node>> adopt_node_binding(NonnullRefPtr<Node>);
 
     const DocumentType* doctype() const;
     const String& compat_mode() const;
@@ -203,6 +210,8 @@ public:
 
     Window& window() { return *m_window; }
 
+    Window* default_view() { return m_window; }
+
     const String& content_type() const { return m_content_type; }
     void set_content_type(const String& content_type) { m_content_type = content_type; }
 
@@ -233,20 +242,24 @@ public:
 private:
     explicit Document(const URL&);
 
+    // ^DOM::Node
     virtual RefPtr<Layout::Node> create_layout_node() override;
+
+    // ^HTML::GlobalEventHandlers
+    virtual EventTarget& global_event_handlers_to_event_target() final { return *this; }
 
     void tear_down_layout_tree();
 
     void increment_referencing_node_count()
     {
-        ASSERT(!m_deletion_has_begun);
+        VERIFY(!m_deletion_has_begun);
         ++m_referencing_node_count;
     }
 
     void decrement_referencing_node_count()
     {
-        ASSERT(!m_deletion_has_begun);
-        ASSERT(m_referencing_node_count);
+        VERIFY(!m_deletion_has_begun);
+        VERIFY(m_referencing_node_count);
         --m_referencing_node_count;
         if (!m_referencing_node_count && !ref_count()) {
             m_deletion_has_begun = true;

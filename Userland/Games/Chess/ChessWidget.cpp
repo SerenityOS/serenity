@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ChessWidget.h"
@@ -111,15 +91,18 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         float dx = B.x() - A.x();
         float dy = A.y() - B.y();
         float phi = atan2f(dy, dx);
-        float hdx = h * cos(phi);
-        float hdy = h * sin(phi);
+        float hdx = h * cosf(phi);
+        float hdy = h * sinf(phi);
 
-        Gfx::FloatPoint A1(A.x() - (w1 / 2) * cos(M_PI_2 - phi), A.y() - (w1 / 2) * sin(M_PI_2 - phi));
-        Gfx::FloatPoint B3(A.x() + (w1 / 2) * cos(M_PI_2 - phi), A.y() + (w1 / 2) * sin(M_PI_2 - phi));
+        const auto cos_pi_2_phi = cosf(float { M_PI_2 } - phi);
+        const auto sin_pi_2_phi = sinf(float { M_PI_2 } - phi);
+
+        Gfx::FloatPoint A1(A.x() - (w1 / 2) * cos_pi_2_phi, A.y() - (w1 / 2) * sin_pi_2_phi);
+        Gfx::FloatPoint B3(A.x() + (w1 / 2) * cos_pi_2_phi, A.y() + (w1 / 2) * sin_pi_2_phi);
         Gfx::FloatPoint A2(A1.x() + (dx - hdx), A1.y() - (dy - hdy));
         Gfx::FloatPoint B2(B3.x() + (dx - hdx), B3.y() - (dy - hdy));
-        Gfx::FloatPoint A3(A2.x() - w2 * cos(M_PI_2 - phi), A2.y() - w2 * sin(M_PI_2 - phi));
-        Gfx::FloatPoint B1(B2.x() + w2 * cos(M_PI_2 - phi), B2.y() + w2 * sin(M_PI_2 - phi));
+        Gfx::FloatPoint A3(A2.x() - w2 * cos_pi_2_phi, A2.y() - w2 * sin_pi_2_phi);
+        Gfx::FloatPoint B1(B2.x() + w2 * cos_pi_2_phi, B2.y() + w2 * sin_pi_2_phi);
 
         auto path = Gfx::Path();
         path.move_to(A);
@@ -155,6 +138,21 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
     }
 
     if (m_dragging_piece) {
+        if (m_show_available_moves) {
+            Gfx::IntPoint move_point;
+            Gfx::IntPoint point_offset = { tile_width / 3, tile_height / 3 };
+            Gfx::IntSize rect_size = { tile_width / 3, tile_height / 3 };
+            for (const auto& square : m_available_moves) {
+                if (side() == Chess::Color::White) {
+                    move_point = { square.file * tile_width, (7 - square.rank) * tile_height };
+                } else {
+                    move_point = { (7 - square.file) * tile_width, square.rank * tile_height };
+                }
+
+                painter.fill_ellipse({ move_point + point_offset, rect_size }, Gfx::Color::LightGray);
+            }
+        }
+
         auto bmp = m_pieces.get(active_board.get_piece(m_moving_square));
         if (bmp.has_value()) {
             auto center = m_drag_point - Gfx::IntPoint(tile_width / 2, tile_height / 2);
@@ -168,7 +166,12 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     GUI::Widget::mousedown_event(event);
 
     if (event.button() == GUI::MouseButton::Right) {
-        m_current_marking.from = mouse_to_square(event);
+        if (m_dragging_piece) {
+            m_dragging_piece = false;
+            m_available_moves.clear();
+        } else {
+            m_current_marking.from = mouse_to_square(event);
+        }
         return;
     }
     m_board_markings.clear();
@@ -179,6 +182,13 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
         m_dragging_piece = true;
         m_drag_point = event.position();
         m_moving_square = square;
+
+        m_board.generate_moves([&](Chess::Move move) {
+            if (move.from == m_moving_square) {
+                m_available_moves.append(move.to);
+            }
+            return IterationDecision::Continue;
+        });
     }
 
     update();
@@ -207,6 +217,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
         return;
 
     m_dragging_piece = false;
+    m_available_moves.clear();
 
     auto target_square = mouse_to_square(event);
 
@@ -266,7 +277,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
                 msg = "Draw by insufficient material.";
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
             if (over) {
                 set_drag_enabled(false);
@@ -416,7 +427,7 @@ void ChessWidget::input_engine_move()
         if (!want_engine_move())
             return;
         set_drag_enabled(drag_was_enabled);
-        ASSERT(board().apply_move(move));
+        VERIFY(board().apply_move(move));
         m_playback_move_number = m_board.moves().size();
         m_playback = false;
         m_board_markings.clear();
@@ -460,7 +471,7 @@ void ChessWidget::playback_move(PlaybackDirection direction)
         }
         break;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     update();
 }

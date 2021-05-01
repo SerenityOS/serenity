@@ -1,34 +1,14 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/Atomic.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Forward.h>
 
 namespace Kernel {
@@ -53,7 +33,7 @@ public:
 
     ALWAYS_INLINE void unlock(u32 prev_flags)
     {
-        ASSERT(is_locked());
+        VERIFY(is_locked());
         m_lock.store(0, AK::memory_order_release);
         Processor::current().leave_critical(prev_flags);
     }
@@ -69,7 +49,7 @@ public:
     }
 
 private:
-    AK::Atomic<BaseType> m_lock { 0 };
+    Atomic<BaseType> m_lock { 0 };
 };
 
 class RecursiveSpinLock {
@@ -98,8 +78,8 @@ public:
 
     ALWAYS_INLINE void unlock(u32 prev_flags)
     {
-        ASSERT(m_recursions > 0);
-        ASSERT(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
+        VERIFY(m_recursions > 0);
+        VERIFY(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
         if (--m_recursions == 0)
             m_lock.store(0, AK::memory_order_release);
         Processor::current().leave_critical(prev_flags);
@@ -121,12 +101,12 @@ public:
     }
 
 private:
-    AK::Atomic<FlatPtr> m_lock { 0 };
+    Atomic<FlatPtr> m_lock { 0 };
     u32 m_recursions { 0 };
 };
 
 template<typename LockType>
-class NO_DISCARD ScopedSpinLock {
+class [[nodiscard]] ScopedSpinLock {
 
     AK_MAKE_NONCOPYABLE(ScopedSpinLock);
 
@@ -137,7 +117,7 @@ public:
     ScopedSpinLock(LockType& lock)
         : m_lock(&lock)
     {
-        ASSERT(m_lock);
+        VERIFY(m_lock);
         m_prev_flags = m_lock->lock();
         m_have_lock = true;
     }
@@ -161,16 +141,16 @@ public:
 
     ALWAYS_INLINE void lock()
     {
-        ASSERT(m_lock);
-        ASSERT(!m_have_lock);
+        VERIFY(m_lock);
+        VERIFY(!m_have_lock);
         m_prev_flags = m_lock->lock();
         m_have_lock = true;
     }
 
     ALWAYS_INLINE void unlock()
     {
-        ASSERT(m_lock);
-        ASSERT(m_have_lock);
+        VERIFY(m_lock);
+        VERIFY(m_have_lock);
         m_lock->unlock(m_prev_flags);
         m_prev_flags = 0;
         m_have_lock = false;

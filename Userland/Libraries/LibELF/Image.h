@@ -1,37 +1,15 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <Kernel/VirtualAddress.h>
-#include <LibELF/exec_elf.h>
+#include <LibC/elf.h>
 
 namespace ELF {
 
@@ -77,7 +55,7 @@ public:
         unsigned index() const { return m_index; }
         unsigned type() const { return ELF32_ST_TYPE(m_sym.st_info); }
         unsigned bind() const { return ELF32_ST_BIND(m_sym.st_info); }
-        const Section section() const { return m_image.section(section_index()); }
+        Section section() const { return m_image.section(section_index()); }
         bool is_undefined() const { return section_index() == 0; }
         StringView raw_data() const;
 
@@ -137,7 +115,7 @@ public:
         const char* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
         ReadonlyBytes bytes() const { return { raw_data(), size() }; }
         bool is_undefined() const { return m_section_index == SHN_UNDEF; }
-        const RelocationSection relocations() const;
+        RelocationSection relocations() const;
         u32 flags() const { return m_section_header.sh_flags; }
         bool is_writable() const { return flags() & SHF_WRITE; }
         bool is_executable() const { return flags() & PF_X; }
@@ -151,12 +129,12 @@ public:
 
     class RelocationSection : public Section {
     public:
-        RelocationSection(const Section& section)
+        explicit RelocationSection(const Section& section)
             : Section(section.m_image, section.m_section_index)
         {
         }
         unsigned relocation_count() const { return entry_count(); }
-        const Relocation relocation(unsigned index) const;
+        Relocation relocation(unsigned index) const;
         template<typename F>
         void for_each_relocation(F) const;
     };
@@ -174,7 +152,7 @@ public:
         unsigned offset() const { return m_rel.r_offset; }
         unsigned type() const { return ELF32_R_TYPE(m_rel.r_info); }
         unsigned symbol_index() const { return ELF32_R_SYM(m_rel.r_info); }
-        const Symbol symbol() const { return m_image.symbol(symbol_index()); }
+        Symbol symbol() const { return m_image.symbol(symbol_index()); }
 
     private:
         const Image& m_image;
@@ -185,9 +163,9 @@ public:
     unsigned section_count() const;
     unsigned program_header_count() const;
 
-    const Symbol symbol(unsigned) const;
-    const Section section(unsigned) const;
-    const ProgramHeader program_header(unsigned const) const;
+    Symbol symbol(unsigned) const;
+    Section section(unsigned) const;
+    ProgramHeader program_header(unsigned) const;
     FlatPtr program_header_table_offset() const;
 
     template<typename F>
@@ -201,7 +179,7 @@ public:
 
     // NOTE: Returns section(0) if section with name is not found.
     // FIXME: I don't love this API.
-    const Section lookup_section(const String& name) const;
+    Section lookup_section(const String& name) const;
 
     bool is_executable() const { return header().e_type == ET_EXEC; }
     bool is_relocatable() const { return header().e_type == ET_REL; }
@@ -230,7 +208,6 @@ private:
     const u8* m_buffer { nullptr };
     size_t m_size { 0 };
     bool m_verbose_logging { true };
-    HashMap<String, unsigned> m_sections;
     bool m_valid { false };
     unsigned m_symbol_table_section_index { 0 };
     unsigned m_string_table_section_index { 0 };
@@ -258,7 +235,7 @@ inline void Image::for_each_section_of_type(unsigned type, F func) const
 {
     auto section_count = this->section_count();
     for (unsigned i = 0; i < section_count; ++i) {
-        auto& section = this->section(i);
+        auto section = this->section(i);
         if (section.type() == type) {
             if (func(section) == IterationDecision::Break)
                 break;

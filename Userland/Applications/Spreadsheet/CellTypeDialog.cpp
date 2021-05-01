@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "CellTypeDialog.h"
@@ -36,7 +16,6 @@
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
-#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/SpinBox.h>
@@ -44,6 +23,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibJS/SyntaxHighlighter.h>
 
 REGISTER_WIDGET(Spreadsheet, ConditionsView);
 
@@ -52,12 +32,12 @@ namespace Spreadsheet {
 CellTypeDialog::CellTypeDialog(const Vector<Position>& positions, Sheet& sheet, GUI::Window* parent)
     : GUI::Dialog(parent)
 {
-    ASSERT(!positions.is_empty());
+    VERIFY(!positions.is_empty());
 
     StringBuilder builder;
 
     if (positions.size() == 1)
-        builder.appendff("Format cell {}{}", positions.first().column, positions.first().row);
+        builder.appendff("Format cell {}", positions.first().to_cell_identifier(sheet));
     else
         builder.appendff("Format {} cells", positions.size());
 
@@ -239,7 +219,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                     m_horizontal_alignment = HorizontalAlignment::Right;
                     break;
                 default:
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
             };
         }
@@ -271,7 +251,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                     m_vertical_alignment = VerticalAlignment::Bottom;
                     break;
                 default:
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
             };
         }
@@ -425,9 +405,8 @@ ConditionView::ConditionView(ConditionalFormat& fmt)
         m_format.background_color = bg_input.color();
     };
 
-    formula_editor.set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+    formula_editor.set_syntax_highlighter(make<JS::SyntaxHighlighter>());
     formula_editor.set_should_hide_unnecessary_scrollbars(true);
-    formula_editor.set_font(&Gfx::FontDatabase::default_fixed_width_font());
     formula_editor.on_change = [&] {
         m_format.condition = formula_editor.text();
     };
@@ -444,7 +423,7 @@ ConditionsView::ConditionsView()
 
 void ConditionsView::set_formats(Vector<ConditionalFormat>* formats)
 {
-    ASSERT(!m_formats);
+    VERIFY(!m_formats);
 
     m_formats = formats;
 
@@ -454,7 +433,7 @@ void ConditionsView::set_formats(Vector<ConditionalFormat>* formats)
 
 void ConditionsView::add_format()
 {
-    ASSERT(m_formats);
+    VERIFY(m_formats);
 
     m_formats->empend();
     auto& last = m_formats->last();
@@ -466,7 +445,7 @@ void ConditionsView::add_format()
 
 void ConditionsView::remove_top()
 {
-    ASSERT(m_formats);
+    VERIFY(m_formats);
 
     if (m_formats->is_empty())
         return;

@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
@@ -30,11 +10,13 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
-#include <Kernel/API/Syscall.h>
+#include <LibELF/AuxiliaryVector.h>
+#include <LibPthread/pthread.h>
 #include <alloca.h>
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -44,6 +26,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <syscall.h>
 #include <unistd.h>
 
 static void strtons(const char* str, char** endptr)
@@ -195,17 +178,38 @@ inline int generate_unique_filename(char* pattern, Callback callback)
 
 extern "C" {
 
+long getauxval(long type)
+{
+    errno = 0;
+    char** env;
+    for (env = environ; *env; ++env) {
+    }
+
+    auxv_t* auxvp = (auxv_t*)++env;
+    for (; auxvp->a_type != AT_NULL; ++auxvp) {
+        if (auxvp->a_type == type)
+            return auxvp->a_un.a_val;
+    }
+    errno = ENOENT;
+    return 0;
+}
+
 void exit(int status)
 {
     __cxa_finalize(nullptr);
 
-    if (getenv("LIBC_DUMP_MALLOC_STATS"))
+    if (secure_getenv("LIBC_DUMP_MALLOC_STATS"))
         serenity_dump_malloc_stats();
 
     extern void _fini();
     _fini();
     fflush(stdout);
     fflush(stderr);
+
+#ifndef _DYNAMIC_LOADER
+    __pthread_key_destroy_for_current_thread();
+#endif
+
     _exit(status);
 }
 
@@ -224,8 +228,12 @@ void abort()
     // For starters, send ourselves a SIGABRT.
     raise(SIGABRT);
     // If that didn't kill us, try harder.
-    raise(SIGKILL);
-    _exit(127);
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGABRT);
+    sigprocmask(SIG_UNBLOCK, &set, nullptr);
+    raise(SIGABRT);
+    _abort();
 }
 
 static HashTable<const char*> s_malloced_environment_variables;
@@ -256,6 +264,13 @@ char* getenv(const char* name)
     return nullptr;
 }
 
+char* secure_getenv(const char* name)
+{
+    if (getauxval(AT_SECURE))
+        return nullptr;
+    return getenv(name);
+}
+
 int unsetenv(const char* name)
 {
     auto new_var_len = strlen(name);
@@ -265,7 +280,7 @@ int unsetenv(const char* name)
     for (; environ[environ_size]; ++environ_size) {
         char* old_var = environ[environ_size];
         char* old_eq = strchr(old_var, '=');
-        ASSERT(old_eq);
+        VERIFY(old_eq);
         size_t old_var_len = old_eq - old_var;
 
         if (new_var_len != old_var_len)
@@ -319,7 +334,7 @@ int putenv(char* new_var)
     for (; environ[environ_size]; ++environ_size) {
         char* old_var = environ[environ_size];
         char* old_eq = strchr(old_var, '=');
-        ASSERT(old_eq);
+        VERIFY(old_eq);
         auto old_var_len = old_eq - old_var;
 
         if (new_var_len != old_var_len)
@@ -467,7 +482,7 @@ double strtod(const char* str, char** endptr)
                 is_a_digit = false;
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         }
 
@@ -523,7 +538,7 @@ double strtod(const char* str, char** endptr)
                     is_a_digit = false;
                     break;
                 default:
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
             }
 
@@ -698,6 +713,11 @@ int abs(int i)
     return i < 0 ? -i : i;
 }
 
+long long int llabs(long long int i)
+{
+    return i < 0 ? -i : i;
+}
+
 long int random()
 {
     return rand();
@@ -812,6 +832,19 @@ ldiv_t ldiv(long numerator, long denominator)
     return result;
 }
 
+lldiv_t lldiv(long long numerator, long long denominator)
+{
+    lldiv_t result;
+    result.quot = numerator / denominator;
+    result.rem = numerator % denominator;
+
+    if (numerator >= 0 && result.rem < 0) {
+        result.quot++;
+        result.rem -= denominator;
+    }
+    return result;
+}
+
 size_t mbstowcs(wchar_t*, const char*, size_t)
 {
     dbgln("FIXME: Implement mbstowcs()");
@@ -841,15 +874,15 @@ int wctomb(char*, wchar_t)
 
 size_t wcstombs(char* dest, const wchar_t* src, size_t max)
 {
-    char* originalDest = dest;
-    while ((size_t)(dest - originalDest) < max) {
+    char* original_dest = dest;
+    while ((size_t)(dest - original_dest) < max) {
         StringView v { (const char*)src, sizeof(wchar_t) };
 
         // FIXME: dependent on locale, for now utf-8 is supported.
         Utf8View utf8 { v };
         if (*utf8.begin() == '\0') {
             *dest = '\0';
-            return (size_t)(dest - originalDest); // Exclude null character in returned size
+            return (size_t)(dest - original_dest); // Exclude null character in returned size
         }
 
         for (auto byte : utf8) {
@@ -931,7 +964,7 @@ long long strtoll(const char* str, char** endptr, int base)
                 is_a_digit = false;
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         }
 
@@ -967,6 +1000,14 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
     char* parse_ptr = const_cast<char*>(str);
     strtons(parse_ptr, &parse_ptr);
 
+    if (base == 16) {
+        // Dr. POSIX: "If the value of base is 16, the characters 0x or 0X may optionally precede
+        //             the sequence of letters and digits, following the sign if present."
+        if (*parse_ptr == '0') {
+            if (tolower(*(parse_ptr + 1)) == 'x')
+                parse_ptr += 2;
+        }
+    }
     // Parse base
     if (base == 0) {
         if (*parse_ptr == '0') {
@@ -1007,7 +1048,7 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
                 is_a_digit = false;
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         }
 

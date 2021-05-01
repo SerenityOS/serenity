@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ImageEditor.h"
@@ -249,24 +229,8 @@ void ImageEditor::mouseup_event(GUI::MouseEvent& event)
 
 void ImageEditor::mousewheel_event(GUI::MouseEvent& event)
 {
-    auto old_scale = m_scale;
-
-    m_scale += -event.wheel_delta() * 0.1f;
-    if (m_scale < 0.1f)
-        m_scale = 0.1f;
-    if (m_scale > 100.0f)
-        m_scale = 100.0f;
-
-    auto focus_point = Gfx::FloatPoint(
-        m_pan_origin.x() - ((float)event.x() - (float)width() / 2.0) / old_scale,
-        m_pan_origin.y() - ((float)event.y() - (float)height() / 2.0) / old_scale);
-
-    m_pan_origin = Gfx::FloatPoint(
-        focus_point.x() - m_scale / old_scale * (focus_point.x() - m_pan_origin.x()),
-        focus_point.y() - m_scale / old_scale * (focus_point.y() - m_pan_origin.y()));
-
-    if (old_scale != m_scale)
-        relayout();
+    auto scale_delta = -event.wheel_delta() * 0.1f;
+    scale_centered_on_position(event.position(), scale_delta);
 }
 
 void ImageEditor::context_menu_event(GUI::ContextMenuEvent& event)
@@ -341,7 +305,7 @@ Color ImageEditor::color_for(GUI::MouseButton button) const
         return m_primary_color;
     if (button == GUI::MouseButton::Right)
         return m_secondary_color;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 Color ImageEditor::color_for(const GUI::MouseEvent& event) const
@@ -350,7 +314,7 @@ Color ImageEditor::color_for(const GUI::MouseEvent& event) const
         return m_primary_color;
     if (event.buttons() & GUI::MouseButton::Right)
         return m_secondary_color;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void ImageEditor::set_primary_color(Color color)
@@ -384,6 +348,50 @@ Layer* ImageEditor::layer_at_editor_position(const Gfx::IntPoint& editor_positio
             return const_cast<Layer*>(&layer);
     }
     return nullptr;
+}
+
+void ImageEditor::clamped_scale(float scale_delta)
+{
+    m_scale += scale_delta;
+    if (m_scale < 0.1f)
+        m_scale = 0.1f;
+    if (m_scale > 100.0f)
+        m_scale = 100.0f;
+}
+
+void ImageEditor::scale_centered_on_position(const Gfx::IntPoint& position, float scale_delta)
+{
+    auto old_scale = m_scale;
+    clamped_scale(scale_delta);
+
+    Gfx::FloatPoint focus_point {
+        m_pan_origin.x() - (position.x() - width() / 2.0f) / old_scale,
+        m_pan_origin.y() - (position.y() - height() / 2.0f) / old_scale
+    };
+
+    m_pan_origin = Gfx::FloatPoint(
+        focus_point.x() - m_scale / old_scale * (focus_point.x() - m_pan_origin.x()),
+        focus_point.y() - m_scale / old_scale * (focus_point.y() - m_pan_origin.y()));
+
+    if (old_scale != m_scale)
+        relayout();
+}
+
+void ImageEditor::scale_by(float scale_delta)
+{
+    if (scale_delta != 0) {
+        clamped_scale(scale_delta);
+        relayout();
+    }
+}
+
+void ImageEditor::reset_scale_and_position()
+{
+    if (m_scale != 1.0f)
+        m_scale = 1.0f;
+
+    m_pan_origin = Gfx::FloatPoint(0, 0);
+    relayout();
 }
 
 void ImageEditor::relayout()

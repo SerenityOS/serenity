@@ -1,0 +1,37 @@
+name: Discord notifications
+
+on: [push, pull_request_target]
+
+jobs:
+  notify_discord:
+    runs-on: ubuntu-20.04
+    if: always() && github.repository == 'SerenityOS/serenity' && (github.event_name == 'pull_request_target' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
+
+    steps:
+      - name: Wait for tests to finish
+        uses: IdanHo/action-wait-for-check@7b2192dd83108237d2f2e6518f6351be333a955c
+        id: wait-for-tests
+        if: ${{ (github.event['pull_request'] && github.event['action'] == 'opened' && !github.event.pull_request.draft) || github.event['commits'] }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          excludedCheckName: "notify_discord"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          timeoutSeconds: 21600
+          intervalSeconds: 100
+
+      - name: Discord action notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          CUSTOM_GITHUB_EVENT_NAME: ${{ github.event_name == 'pull_request_target' && 'pull_request' || github.event_name }} # fake the event type as discord doesn't know how to parse the special pull_request_target context
+        uses: IdanHo/action-discord@754598254f288e6d8e9fca637832e3c163515ba8
+        if: ${{ (github.event['pull_request'] && github.event['action'] == 'opened' && !github.event.pull_request.draft) || github.event['commits'] }}
+
+      - name: Discord build status
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_USERNAME: GitHub # we have to set these manually for non-default messages
+          DISCORD_AVATAR: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+        uses: IdanHo/action-discord@754598254f288e6d8e9fca637832e3c163515ba8
+        if: ${{ (github.event['pull_request'] && github.event['action'] == 'opened' && !github.event.pull_request.draft) || github.event['commits'] }}
+        with:
+          args: "The build ${{ steps.wait-for-tests.outputs.conclusion == 'success' && 'passed :white_check_mark:' || 'failed :x:' }}"

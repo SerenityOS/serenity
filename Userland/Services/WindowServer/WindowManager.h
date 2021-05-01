@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -39,13 +19,17 @@
 #include <LibGfx/Rect.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/Event.h>
-#include <WindowServer/MenuBar.h>
 #include <WindowServer/MenuManager.h>
+#include <WindowServer/Menubar.h>
+#include <WindowServer/WMClientConnection.h>
 #include <WindowServer/Window.h>
 #include <WindowServer/WindowSwitcher.h>
 #include <WindowServer/WindowType.h>
 
 namespace WindowServer {
+
+const int double_click_speed_max = 900;
+const int double_click_speed_min = 100;
 
 class Screen;
 class MouseEvent;
@@ -94,7 +78,6 @@ public:
     void notify_opacity_changed(Window&);
     void notify_occlusion_state_changed(Window&);
     void notify_progress_changed(Window&);
-    void notify_client_changed_app_menubar(ClientConnection&);
 
     Gfx::IntRect maximized_window_rect(const Window&) const;
 
@@ -113,12 +96,15 @@ public:
     const Window* active_input_window() const { return m_active_input_window.ptr(); }
     const ClientConnection* active_client() const;
 
+    Window* window_with_active_menu() { return m_window_with_active_menu; }
+    const Window* window_with_active_menu() const { return m_window_with_active_menu; }
+    void set_window_with_active_menu(Window*);
+
     const Window* highlight_window() const { return m_highlight_window.ptr(); }
     void set_highlight_window(Window*);
 
     void move_to_front_and_make_active(Window&);
 
-    Gfx::IntRect menubar_rect() const;
     Gfx::IntRect desktop_rect() const;
     Gfx::IntRect arena_rect_for_type(WindowType) const;
 
@@ -149,6 +135,8 @@ public:
 
     void set_acceleration_factor(double);
     void set_scroll_step_size(unsigned);
+    void set_double_click_speed(int);
+    int double_click_speed() const;
 
     Window* set_active_input_window(Window*);
     void restore_active_input_window(Window*);
@@ -162,9 +150,12 @@ public:
     void clear_resize_candidate();
     ResizeDirection resize_direction_of_window(const Window&);
 
-    void tell_wm_listeners_window_state_changed(Window&);
-    void tell_wm_listeners_window_icon_changed(Window&);
-    void tell_wm_listeners_window_rect_changed(Window&);
+    void greet_window_manager(WMClientConnection&);
+    void tell_wms_window_state_changed(Window&);
+    void tell_wms_window_icon_changed(Window&);
+    void tell_wms_window_rect_changed(Window&);
+    void tell_wms_applet_area_size_changed(const Gfx::IntSize&);
+    void tell_wms_super_key_pressed();
 
     bool is_active_window_or_accessory(Window&) const;
 
@@ -189,8 +180,8 @@ public:
 
     bool update_theme(String theme_path, String theme_name);
 
-    void set_hovered_window(Window*);
-    void deliver_mouse_event(Window& window, MouseEvent& event);
+    bool set_hovered_window(Window*);
+    void deliver_mouse_event(Window& window, MouseEvent& event, bool process_double_click);
 
     void did_popup_a_menu(Badge<Menu>);
 
@@ -234,6 +225,9 @@ public:
     int compositor_icon_scale() const;
     void reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icons = true);
 
+    void reevaluate_hovered_window(Window* = nullptr);
+    Window* hovered_window() const { return m_hovered_window.ptr(); }
+
 private:
     NonnullRefPtr<Cursor> get_cursor(const String& name);
 
@@ -252,17 +246,18 @@ private:
     template<typename Callback>
     IterationDecision for_each_visible_window_from_back_to_front(Callback);
     template<typename Callback>
-    void for_each_window_listening_to_wm_events(Callback);
-    template<typename Callback>
     void for_each_window(Callback);
     template<typename Callback>
     IterationDecision for_each_window_of_type_from_front_to_back(WindowType, Callback, bool ignore_highlight = false);
 
+    template<typename Callback>
+    void for_each_window_manager(Callback);
+
     virtual void event(Core::Event&) override;
     void paint_window_frame(const Window&);
-    void tell_wm_listener_about_window(Window& listener, Window&);
-    void tell_wm_listener_about_window_icon(Window& listener, Window&);
-    void tell_wm_listener_about_window_rect(Window& listener, Window&);
+    void tell_wm_about_window(WMClientConnection& conn, Window&);
+    void tell_wm_about_window_icon(WMClientConnection& conn, Window&);
+    void tell_wm_about_window_rect(WMClientConnection& conn, Window&);
     bool pick_new_active_window(Window*);
 
     void do_move_to_front(Window&, bool, bool);
@@ -320,12 +315,14 @@ private:
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
     int m_max_distance_for_double_click { 4 };
+    bool m_previous_event_was_super_keydown { false };
 
     WeakPtr<Window> m_active_window;
     WeakPtr<Window> m_hovered_window;
     WeakPtr<Window> m_highlight_window;
     WeakPtr<Window> m_active_input_window;
     WeakPtr<Window> m_active_input_tracking_window;
+    WeakPtr<Window> m_window_with_active_menu;
 
     WeakPtr<Window> m_move_window;
     Gfx::IntPoint m_move_origin;
@@ -387,13 +384,15 @@ IterationDecision WindowManager::for_each_visible_window_from_back_to_front(Call
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WindowType::Normal, callback) == IterationDecision::Break)
         return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_back_to_front(WindowType::ToolWindow, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WindowType::Taskbar, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_back_to_front(WindowType::AppletArea, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WindowType::Notification, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WindowType::Tooltip, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Menubar, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WindowType::Menu, callback) == IterationDecision::Break)
         return IterationDecision::Break;
@@ -430,13 +429,15 @@ IterationDecision WindowManager::for_each_visible_window_from_front_to_back(Call
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Menu, callback) == IterationDecision::Break)
         return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Menubar, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Tooltip, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Notification, callback) == IterationDecision::Break)
         return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_front_to_back(WindowType::AppletArea, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Taskbar, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_front_to_back(WindowType::ToolWindow, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, callback) == IterationDecision::Break)
         return IterationDecision::Break;
@@ -444,12 +445,13 @@ IterationDecision WindowManager::for_each_visible_window_from_front_to_back(Call
 }
 
 template<typename Callback>
-void WindowManager::for_each_window_listening_to_wm_events(Callback callback)
+void WindowManager::for_each_window_manager(Callback callback)
 {
-    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (!window->listens_to_wm_events())
-            continue;
-        if (callback(*window) == IterationDecision::Break)
+    auto& connections = WMClientConnection::s_connections;
+
+    // FIXME: this isn't really ordered... does it need to be?
+    for (auto it = connections.begin(); it != connections.end(); ++it) {
+        if (callback(*it->value) == IterationDecision::Break)
             return;
     }
 }

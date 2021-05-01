@@ -1,33 +1,14 @@
 /*
  * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
+#include <AK/Time.h>
 #include <AK/Types.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
@@ -53,15 +34,15 @@ public:
     static TimeManagement& the();
 
     static bool is_valid_clock_id(clockid_t);
-    KResultOr<timespec> current_time(clockid_t) const;
-    timespec monotonic_time(TimePrecision = TimePrecision::Coarse) const;
-    timespec monotonic_time_raw() const
+    KResultOr<Time> current_time(clockid_t) const;
+    Time monotonic_time(TimePrecision = TimePrecision::Coarse) const;
+    Time monotonic_time_raw() const
     {
         // TODO: implement
         return monotonic_time(TimePrecision::Precise);
     }
-    timespec epoch_time(TimePrecision = TimePrecision::Precise) const;
-    void set_epoch_time(timespec);
+    Time epoch_time(TimePrecision = TimePrecision::Precise) const;
+    void set_epoch_time(Time);
     time_t ticks_per_second() const;
     time_t boot_time() const;
 
@@ -75,9 +56,13 @@ public:
     static bool is_hpet_periodic_mode_allowed();
 
     u64 uptime_ms() const;
-    static timeval now_as_timeval();
+    static Time now();
 
+    // FIXME: Should use AK::Time internally
+    // FIXME: Also, most likely broken, because it does not check m_update[12] for in-progress updates.
     timespec remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
+    // FIXME: Should use AK::Time internally
+    // FIXME: Also, most likely broken, because it does not check m_update[12] for in-progress updates.
     void set_remaining_epoch_time_adjustment(const timespec& adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
 
     bool can_query_precise_time() const { return m_can_query_precise_time; }
@@ -95,6 +80,7 @@ private:
     Atomic<u32> m_update1 { 0 };
     u32 m_ticks_this_second { 0 };
     u64 m_seconds_since_boot { 0 };
+    // FIXME: Should use AK::Time internally
     timespec m_epoch_time { 0, 0 };
     timespec m_remaining_epoch_time_adjustment { 0, 0 };
     Atomic<u32> m_update2 { 0 };

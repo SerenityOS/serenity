@@ -1,31 +1,10 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
@@ -79,7 +58,7 @@ Color opposing_color(Color color)
 
 Square::Square(const StringView& name)
 {
-    ASSERT(name.length() == 2);
+    VERIFY(name.length() == 2);
     char filec = name[0];
     char rankc = name[1];
 
@@ -88,13 +67,13 @@ Square::Square(const StringView& name)
     } else if (filec >= 'A' && filec <= 'H') {
         file = filec - 'A';
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     if (rankc >= '1' && rankc <= '8') {
         rank = rankc - '1';
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -312,7 +291,7 @@ String Board::to_fen() const
     }
 
     // 2. Active color
-    ASSERT(m_turn != Color::None);
+    VERIFY(m_turn != Color::None);
     builder.append(m_turn == Color::White ? " w " : " b ");
 
     // 3. Castling availability
@@ -349,15 +328,15 @@ String Board::to_fen() const
 
 Piece Board::get_piece(const Square& square) const
 {
-    ASSERT(square.rank < 8);
-    ASSERT(square.file < 8);
+    VERIFY(square.rank < 8);
+    VERIFY(square.file < 8);
     return m_board[square.rank][square.file];
 }
 
 Piece Board::set_piece(const Square& square, const Piece& piece)
 {
-    ASSERT(square.rank < 8);
-    ASSERT(square.file < 8);
+    VERIFY(square.rank < 8);
+    VERIFY(square.file < 8);
     return m_board[square.rank][square.file] = piece;
 }
 
@@ -913,7 +892,7 @@ String Board::result_to_string(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:
-        ASSERT(turn != Chess::Color::None);
+        VERIFY(turn != Chess::Color::None);
         return turn == Chess::Color::White ? "Black wins by Checkmate" : "White wins by Checkmate";
     case Result::WhiteResign:
         return "Black wins by Resignation";
@@ -934,7 +913,7 @@ String Board::result_to_string(Result result, Color turn)
     case Chess::Board::Result::NotFinished:
         return "Game not finished";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -942,7 +921,7 @@ String Board::result_to_points(Result result, Color turn)
 {
     switch (result) {
     case Result::CheckMate:
-        ASSERT(turn != Chess::Color::None);
+        VERIFY(turn != Chess::Color::None);
         return turn == Chess::Color::White ? "0-1" : "1-0";
     case Result::WhiteResign:
         return "0-1";
@@ -963,7 +942,7 @@ String Board::result_to_points(Result result, Color turn)
     case Chess::Board::Result::NotFinished:
         return "*";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

@@ -1,0 +1,15 @@
+diff -Naur openttd-1.11.0/src/framerate_gui.cpp openttd-1.11.0.serenity/src/framerate_gui.cpp
+--- openttd-1.11.0/src/framerate_gui.cpp	2021-04-29 23:45:25.247427868 +0200
++++ openttd-1.11.0.serenity/src/framerate_gui.cpp	2021-04-29 23:41:57.679926623 +0200
+@@ -222,8 +222,9 @@
+  */
+ static TimingMeasurement GetPerformanceTimer()
+ {
+-	using namespace std::chrono;
+-	return (TimingMeasurement)time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch().count();
++	//using namespace std::chrono;
++	//return (TimingMeasurement)time_point_cast<microseconds>(high_resolution_clock::now()).time_since_epoch().count();
++	return 0;
+ }
+ 
+ 

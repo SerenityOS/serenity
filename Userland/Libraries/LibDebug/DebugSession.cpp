@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DebugSession.h"
@@ -32,6 +12,7 @@
 #include <LibCore/File.h>
 #include <LibRegex/Regex.h>
 #include <stdlib.h>
+#include <sys/mman.h>
 
 namespace Debug {
 
@@ -51,6 +32,11 @@ DebugSession::~DebugSession()
         disable_breakpoint(bp.key);
     }
     m_breakpoints.clear();
+
+    for (const auto& wp : m_watchpoints) {
+        disable_watchpoint(wp.key);
+    }
+    m_watchpoints.clear();
 
     if (ptrace(PT_DETACH, m_debuggee_pid, 0, 0) < 0) {
         perror("PT_DETACH");
@@ -73,7 +59,7 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command, String
         }
 
         auto parts = command.split(' ');
-        ASSERT(!parts.is_empty());
+        VERIFY(!parts.is_empty());
         const char** args = (const char**)calloc(parts.size() + 1, sizeof(const char*));
         for (size_t i = 0; i < parts.size(); i++) {
             args[i] = parts[i].characters();
@@ -120,7 +106,7 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command, String
     // At this point, libraries should have been loaded
     debug_session->update_loaded_libs();
 
-    return move(debug_session);
+    return debug_session;
 }
 
 bool DebugSession::poke(u32* address, u32 data)
@@ -141,6 +127,24 @@ Optional<u32> DebugSession::peek(u32* address) const
     return result;
 }
 
+bool DebugSession::poke_debug(u32 register_index, u32 data)
+{
+    if (ptrace(PT_POKEDEBUG, m_debuggee_pid, reinterpret_cast<u32*>(register_index), data) < 0) {
+        perror("PT_POKEDEBUG");
+        return false;
+    }
+    return true;
+}
+
+Optional<u32> DebugSession::peek_debug(u32 register_index) const
+{
+    Optional<u32> result;
+    int rc = ptrace(PT_PEEKDEBUG, m_debuggee_pid, reinterpret_cast<u32*>(register_index), 0);
+    if (errno == 0)
+        result = static_cast<u32>(rc);
+    return result;
+}
+
 bool DebugSession::insert_breakpoint(void* address)
 {
     // We insert a software breakpoint by
@@ -155,7 +159,7 @@ bool DebugSession::insert_breakpoint(void* address)
     if (!original_bytes.has_value())
         return false;
 
-    ASSERT((original_bytes.value() & 0xff) != BREAKPOINT_INSTRUCTION);
+    VERIFY((original_bytes.value() & 0xff) != BREAKPOINT_INSTRUCTION);
 
     BreakPoint breakpoint { address, original_bytes.value(), BreakPointState::Disabled };
 
@@ -169,7 +173,7 @@ bool DebugSession::insert_breakpoint(void* address)
 bool DebugSession::disable_breakpoint(void* address)
 {
     auto breakpoint = m_breakpoints.get(address);
-    ASSERT(breakpoint.has_value());
+    VERIFY(breakpoint.has_value());
     if (!poke(reinterpret_cast<u32*>(reinterpret_cast<char*>(breakpoint.value().address)), breakpoint.value().original_first_word))
         return false;
 
@@ -182,9 +186,9 @@ bool DebugSession::disable_breakpoint(void* address)
 bool DebugSession::enable_breakpoint(void* address)
 {
     auto breakpoint = m_breakpoints.get(address);
-    ASSERT(breakpoint.has_value());
+    VERIFY(breakpoint.has_value());
 
-    ASSERT(breakpoint.value().state == BreakPointState::Disabled);
+    VERIFY(breakpoint.value().state == BreakPointState::Disabled);
 
     if (!poke(reinterpret_cast<u32*>(breakpoint.value().address), (breakpoint.value().original_first_word & ~(uint32_t)0xff) | BREAKPOINT_INSTRUCTION))
         return false;
@@ -209,12 +213,74 @@ bool DebugSession::breakpoint_exists(void* address) const
     return m_breakpoints.contains(address);
 }
 
+bool DebugSession::insert_watchpoint(void* address, u32 ebp)
+{
+    auto current_register_status = peek_debug(DEBUG_CONTROL_REGISTER);
+    if (!current_register_status.has_value())
+        return false;
+    u32 dr7_value = current_register_status.value();
+    u32 next_available_index;
+    for (next_available_index = 0; next_available_index < 4; next_available_index++) {
+        auto bitmask = 1 << (next_available_index * 2);
+        if ((dr7_value & bitmask) == 0)
+            break;
+    }
+    if (next_available_index > 3)
+        return false;
+    WatchPoint watchpoint { address, next_available_index, ebp };
+
+    if (!poke_debug(next_available_index, reinterpret_cast<uintptr_t>(address)))
+        return false;
+
+    dr7_value |= (1u << (next_available_index * 2)); // Enable local breakpoint for our index
+    auto condition_shift = 16 + (next_available_index * 4);
+    dr7_value &= ~(0b11u << condition_shift);
+    dr7_value |= 1u << condition_shift; // Trigger on writes
+    auto length_shift = 18 + (next_available_index * 4);
+    dr7_value &= ~(0b11u << length_shift);
+    // FIXME: take variable size into account?
+    dr7_value |= 0b11u << length_shift; // 4 bytes wide
+    if (!poke_debug(DEBUG_CONTROL_REGISTER, dr7_value))
+        return false;
+
+    m_watchpoints.set(address, watchpoint);
+    return true;
+}
+
+bool DebugSession::remove_watchpoint(void* address)
+{
+    if (!disable_watchpoint(address))
+        return false;
+    return m_watchpoints.remove(address);
+}
+
+bool DebugSession::disable_watchpoint(void* address)
+{
+    VERIFY(watchpoint_exists(address));
+    auto watchpoint = m_watchpoints.get(address).value();
+    if (!poke_debug(watchpoint.debug_register_index, 0))
+        return false;
+    auto current_register_status = peek_debug(DEBUG_CONTROL_REGISTER);
+    if (!current_register_status.has_value())
+        return false;
+    u32 dr7_value = current_register_status.value();
+    dr7_value &= ~(1u << watchpoint.debug_register_index * 2);
+    if (!poke_debug(watchpoint.debug_register_index, dr7_value))
+        return false;
+    return true;
+}
+
+bool DebugSession::watchpoint_exists(void* address) const
+{
+    return m_watchpoints.contains(address);
+}
+
 PtraceRegisters DebugSession::get_registers() const
 {
     PtraceRegisters regs;
     if (ptrace(PT_GETREGS, m_debuggee_pid, &regs, 0) < 0) {
         perror("PT_GETREGS");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     return regs;
 }
@@ -223,7 +289,7 @@ void DebugSession::set_registers(const PtraceRegisters& regs)
 {
     if (ptrace(PT_SETREGS, m_debuggee_pid, reinterpret_cast<void*>(&const_cast<PtraceRegisters&>(regs)), 0) < 0) {
         perror("PT_SETREGS");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -232,7 +298,7 @@ void DebugSession::continue_debuggee(ContinueType type)
     int command = (type == ContinueType::FreeRun) ? PT_CONTINUE : PT_SYSCALL;
     if (ptrace(command, m_debuggee_pid, 0, 0) < 0) {
         perror("continue");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -242,7 +308,7 @@ int DebugSession::continue_debuggee_and_wait(ContinueType type)
     int wstatus = 0;
     if (waitpid(m_debuggee_pid, &wstatus, WSTOPPED | WEXITED) != m_debuggee_pid) {
         perror("waitpid");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     return wstatus;
 }
@@ -264,7 +330,7 @@ void* DebugSession::single_step()
 
     if (waitpid(m_debuggee_pid, 0, WSTOPPED) != m_debuggee_pid) {
         perror("waitpid");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     regs = get_registers();
@@ -278,6 +344,8 @@ void DebugSession::detach()
     for (auto& breakpoint : m_breakpoints.keys()) {
         remove_breakpoint(breakpoint);
     }
+    for (auto& watchpoint : m_watchpoints.keys())
+        remove_watchpoint(watchpoint);
     continue_debuggee();
 }
 
@@ -304,9 +372,9 @@ Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_brea
     return result;
 }
 
-Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::insert_breakpoint(const String& file_name, size_t line_number)
+Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::insert_breakpoint(const String& filename, size_t line_number)
 {
-    auto address_and_source_position = get_address_from_source_position(file_name, line_number);
+    auto address_and_source_position = get_address_from_source_position(filename, line_number);
     if (!address_and_source_position.has_value())
         return {};
 
@@ -316,20 +384,20 @@ Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::ins
         return {};
 
     auto lib = library_at(address);
-    ASSERT(lib);
+    VERIFY(lib);
 
     return InsertBreakpointAtSourcePositionResult { lib->name, address_and_source_position.value().file, address_and_source_position.value().line, address };
 }
 
 void DebugSession::update_loaded_libs()
 {
-    auto file = Core::File::construct(String::format("/proc/%u/vm", m_debuggee_pid));
+    auto file = Core::File::construct(String::formatted("/proc/{}/vm", m_debuggee_pid));
     bool rc = file->open(Core::IODevice::ReadOnly);
-    ASSERT(rc);
+    VERIFY(rc);
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    ASSERT(json.has_value());
+    VERIFY(json.has_value());
 
     auto vm_entries = json.value().as_array();
     Regex<PosixExtended> re("(.+): \\.text");
@@ -344,7 +412,7 @@ void DebugSession::update_loaded_libs()
         auto lib_name = result.capture_group_matches.at(0).at(0).view.u8view().to_string();
         if (lib_name.starts_with("/"))
             return lib_name;
-        return String::format("/usr/lib/%s", lib_name.characters());
+        return String::formatted("/usr/lib/{}", lib_name);
     };
 
     vm_entries.for_each([&](auto& entry) {

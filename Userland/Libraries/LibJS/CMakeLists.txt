@@ -55,6 +55,12 @@ set(SOURCES
     Runtime/Object.cpp
     Runtime/ObjectPrototype.cpp
     Runtime/PrimitiveString.cpp
+    Runtime/Promise.cpp
+    Runtime/PromiseConstructor.cpp
+    Runtime/PromiseJobs.cpp
+    Runtime/PromisePrototype.cpp
+    Runtime/PromiseReaction.cpp
+    Runtime/PromiseResolvingFunction.cpp
     Runtime/ProxyConstructor.cpp
     Runtime/ProxyObject.cpp
     Runtime/Reference.cpp
@@ -81,8 +87,12 @@ set(SOURCES
     Runtime/VM.cpp
     Runtime/Value.cpp
     Runtime/WithScope.cpp
+    SyntaxHighlighter.cpp
     Token.cpp
 )
 
 serenity_lib(LibJS js)
-target_link_libraries(LibJS LibM LibCore LibCrypto LibRegex)
+target_link_libraries(LibJS LibM LibCore LibCrypto LibRegex LibSyntax)
+
+serenity_add_precompiled_header_to_target(LibJS ${CMAKE_CURRENT_SOURCE_DIR}/Heap/Heap.h)
+serenity_add_precompiled_header_to_target(LibJS ${CMAKE_CURRENT_SOURCE_DIR}/Runtime/GlobalObject.h)

@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -39,7 +19,7 @@
 #include <string.h>
 
 enum class DHCPv4Flags : u16 {
-    Broadcast = 1,
+    Broadcast = 1 << 15,
     /* everything else is reserved and must be zero */
 };
 
@@ -127,7 +107,7 @@ enum class DHCPMessageType : u8 {
 };
 
 template<>
-struct AK::Traits<DHCPOption> : public AK::GenericTraits<DHCPOption> {
+struct AK::Traits<DHCPOption> : public GenericTraits<DHCPOption> {
     static constexpr bool is_trivial() { return true; }
     static unsigned hash(DHCPOption u) { return int_hash((u8)u); }
 };
@@ -269,15 +249,16 @@ public:
 
     void add_option(DHCPOption option, u8 length, const void* data)
     {
-        ASSERT(m_can_add);
+        VERIFY(m_can_add);
         // we need enough space to fit the option value, its length, and its data
-        ASSERT(next_option_offset + length + 2 < DHCPV4_OPTION_FIELD_MAX_LENGTH);
+        VERIFY(next_option_offset + length + 2 < DHCPV4_OPTION_FIELD_MAX_LENGTH);
 
         auto* options = peek().options();
         options[next_option_offset++] = (u8)option;
         memcpy(options + next_option_offset, &length, 1);
         next_option_offset++;
-        memcpy(options + next_option_offset, data, length);
+        if (data && length)
+            memcpy(options + next_option_offset, data, length);
         next_option_offset += length;
     }
 

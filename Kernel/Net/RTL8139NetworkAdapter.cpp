@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/MACAddress.h>
@@ -125,7 +105,7 @@ namespace Kernel {
 #define RX_BUFFER_SIZE 32768
 #define TX_BUFFER_SIZE PACKET_SIZE_MAX
 
-void RTL8139NetworkAdapter::detect()
+UNMAP_AFTER_INIT void RTL8139NetworkAdapter::detect()
 {
     static const PCI::ID rtl8139_id = { 0x10EC, 0x8139 };
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
@@ -134,47 +114,47 @@ void RTL8139NetworkAdapter::detect()
         if (id != rtl8139_id)
             return;
         u8 irq = PCI::get_interrupt_line(address);
-        [[maybe_unused]] auto& unused = adopt(*new RTL8139NetworkAdapter(address, irq)).leak_ref();
+        [[maybe_unused]] auto& unused = adopt_ref(*new RTL8139NetworkAdapter(address, irq)).leak_ref();
     });
 }
 
-RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
+UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
     : PCI::Device(address, irq)
     , m_io_base(PCI::get_BAR0(pci_address()) & ~1)
-    , m_rx_buffer(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(RX_BUFFER_SIZE + PACKET_SIZE_MAX), "RTL8139 RX", Region::Access::Read | Region::Access::Write))
-    , m_packet_buffer(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(PACKET_SIZE_MAX), "RTL8139 Packet buffer", Region::Access::Read | Region::Access::Write))
+    , m_rx_buffer(MM.allocate_contiguous_kernel_region(page_round_up(RX_BUFFER_SIZE + PACKET_SIZE_MAX), "RTL8139 RX", Region::Access::Read | Region::Access::Write))
+    , m_packet_buffer(MM.allocate_contiguous_kernel_region(page_round_up(PACKET_SIZE_MAX), "RTL8139 Packet buffer", Region::Access::Read | Region::Access::Write))
 {
     m_tx_buffers.ensure_capacity(RTL8139_TX_BUFFER_COUNT);
     set_interface_name("rtl8139");
 
-    klog() << "RTL8139: Found @ " << pci_address();
+    dmesgln("RTL8139: Found @ {}", pci_address());
 
     enable_bus_mastering(pci_address());
 
     m_interrupt_line = PCI::get_interrupt_line(pci_address());
-    klog() << "RTL8139: port base: " << m_io_base;
-    klog() << "RTL8139: Interrupt line: " << m_interrupt_line;
+    dmesgln("RTL8139: I/O port base: {}", m_io_base);
+    dmesgln("RTL8139: Interrupt line: {}", m_interrupt_line);
 
     // we add space to account for overhang from the last packet - the rtl8139
     // can optionally guarantee that packets will be contiguous by
     // purposefully overrunning the rx buffer
-    klog() << "RTL8139: RX buffer: " << m_rx_buffer->physical_page(0)->paddr();
+    dbgln("RTL8139: RX buffer: {}", m_rx_buffer->physical_page(0)->paddr());
 
     for (int i = 0; i < RTL8139_TX_BUFFER_COUNT; i++) {
-        m_tx_buffers.append(MM.allocate_contiguous_kernel_region(PAGE_ROUND_UP(TX_BUFFER_SIZE), "RTL8139 TX", Region::Access::Write | Region::Access::Read));
-        klog() << "RTL8139: TX buffer " << i << ": " << m_tx_buffers[i]->physical_page(0)->paddr();
+        m_tx_buffers.append(MM.allocate_contiguous_kernel_region(page_round_up(TX_BUFFER_SIZE), "RTL8139 TX", Region::Access::Write | Region::Access::Read));
+        dbgln("RTL8139: TX buffer {}: {}", i, m_tx_buffers[i]->physical_page(0)->paddr());
     }
 
     reset();
 
     read_mac_address();
     const auto& mac = mac_address();
-    klog() << "RTL8139: MAC address: " << mac.to_string().characters();
+    dmesgln("RTL8139: MAC address: {}", mac.to_string());
 
     enable_irq();
 }
 
-RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
+UNMAP_AFTER_INIT RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
 {
 }
 
@@ -186,47 +166,41 @@ void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
 
         m_entropy_source.add_random_event(status);
 
-#if RTL8139_DEBUG
-        klog() << "RTL8139NetworkAdapter::handle_irq status=0x" << String::format("%x", status);
-#endif
+        dbgln_if(RTL8139_DEBUG, "RTL8139: handle_irq status={:#04x}", status);
 
         if ((status & (INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_BUFFER_OVERFLOW | INT_LINK_CHANGE | INT_RX_FIFO_OVERFLOW | INT_LENGTH_CHANGE | INT_SYSTEM_ERROR)) == 0)
             break;
 
         if (status & INT_RXOK) {
-#if RTL8139_DEBUG
-            klog() << "RTL8139NetworkAdapter: rx ready";
-#endif
+            dbgln_if(RTL8139_DEBUG, "RTL8139: RX ready");
             receive();
         }
         if (status & INT_RXERR) {
-            klog() << "RTL8139NetworkAdapter: rx error - resetting device";
+            dmesgln("RTL8139: RX error - resetting device");
             reset();
         }
         if (status & INT_TXOK) {
-#if RTL8139_DEBUG
-            klog() << "RTL8139NetworkAdapter: tx complete";
-#endif
+            dbgln_if(RTL8139_DEBUG, "RTL8139: TX complete");
         }
         if (status & INT_TXERR) {
-            klog() << "RTL8139NetworkAdapter: tx error - resetting device";
+            dmesgln("RTL8139: TX error - resetting device");
             reset();
         }
         if (status & INT_RX_BUFFER_OVERFLOW) {
-            klog() << "RTL8139NetworkAdapter: rx buffer overflow";
+            dmesgln("RTL8139: RX buffer overflow");
         }
         if (status & INT_LINK_CHANGE) {
             m_link_up = (in8(REG_MSR) & MSR_LINKB) == 0;
-            klog() << "RTL8139NetworkAdapter: link status changed up=" << m_link_up;
+            dmesgln("RTL8139: Link status changed up={}", m_link_up);
         }
         if (status & INT_RX_FIFO_OVERFLOW) {
-            klog() << "RTL8139NetworkAdapter: rx fifo overflow";
+            dmesgln("RTL8139: RX FIFO overflow");
         }
         if (status & INT_LENGTH_CHANGE) {
-            klog() << "RTL8139NetworkAdapter: cable length change";
+            dmesgln("RTL8139: Cable length change");
         }
         if (status & INT_SYSTEM_ERROR) {
-            klog() << "RTL8139NetworkAdapter: system error - resetting device";
+            dmesgln("RTL8139: System error - resetting device");
             reset();
         }
     }
@@ -282,7 +256,7 @@ void RTL8139NetworkAdapter::reset()
     out16(REG_ISR, 0xffff);
 }
 
-void RTL8139NetworkAdapter::read_mac_address()
+UNMAP_AFTER_INIT void RTL8139NetworkAdapter::read_mac_address()
 {
     MACAddress mac {};
     for (int i = 0; i < 6; i++)
@@ -292,12 +266,10 @@ void RTL8139NetworkAdapter::read_mac_address()
 
 void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
-#if RTL8139_DEBUG
-    klog() << "RTL8139NetworkAdapter::send_raw length=" << payload.size();
-#endif
+    dbgln_if(RTL8139_DEBUG, "RTL8139: send_raw length={}", payload.size());
 
     if (payload.size() > PACKET_SIZE_MAX) {
-        klog() << "RTL8139NetworkAdapter: packet was too big; discarding";
+        dmesgln("RTL8139: Packet was too big; discarding");
         return;
     }
 
@@ -313,14 +285,12 @@ void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
     }
 
     if (hw_buffer == -1) {
-        klog() << "RTL8139NetworkAdapter: hardware buffers full; discarding packet";
+        dmesgln("RTL8139: Hardware buffers full; discarding packet");
         return;
-    } else {
-#if RTL8139_DEBUG
-        klog() << "RTL8139NetworkAdapter: chose buffer " << hw_buffer << " @ " << PhysicalAddress(m_tx_buffers[hw_buffer]);
-#endif
-        m_tx_next_buffer = (hw_buffer + 1) % 4;
     }
+
+    dbgln_if(RTL8139_DEBUG, "RTL8139: Chose buffer {}", hw_buffer);
+    m_tx_next_buffer = (hw_buffer + 1) % 4;
 
     memcpy(m_tx_buffers[hw_buffer]->vaddr().as_ptr(), payload.data(), payload.size());
     memset(m_tx_buffers[hw_buffer]->vaddr().as_ptr() + payload.size(), 0, TX_BUFFER_SIZE - payload.size());
@@ -331,9 +301,7 @@ void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
     // 60 bytes if necessary to make sure the whole thing is large enough.
     auto length = payload.size();
     if (length < 60) {
-#if RTL8139_DEBUG
-        klog() << "RTL8139NetworkAdapter: adjusting payload size from " << length << " to 60";
-#endif
+        dbgln_if(RTL8139_DEBUG, "RTL8139: adjusting payload size from {} to 60", length);
         length = 60;
     }
 
@@ -347,12 +315,10 @@ void RTL8139NetworkAdapter::receive()
     u16 status = *(const u16*)(start_of_packet + 0);
     u16 length = *(const u16*)(start_of_packet + 2);
 
-#if RTL8139_DEBUG
-    klog() << "RTL8139NetworkAdapter::receive status=0x" << String::format("%x", status) << " length=" << length << " offset=" << m_rx_buffer_offset;
-#endif
+    dbgln_if(RTL8139_DEBUG, "RTL8139: receive, status={:#04x}, length={}, offset={}", status, length, m_rx_buffer_offset);
 
     if (!(status & RX_OK) || (status & (RX_INVALID_SYMBOL_ERROR | RX_CRC_ERROR | RX_FRAME_ALIGNMENT_ERROR)) || (length >= PACKET_SIZE_MAX) || (length < PACKET_SIZE_MIN)) {
-        klog() << "RTL8139NetworkAdapter::receive got bad packet status=0x" << String::format("%x", status) << " length=" << length;
+        dmesgln("RTL8139: receive got bad packet, status={:#04x}, length={}", status, length);
         reset();
         return;
     }

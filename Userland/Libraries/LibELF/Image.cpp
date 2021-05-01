@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -74,17 +54,17 @@ static const char* object_file_type_to_string(Elf32_Half type)
 
 StringView Image::section_index_to_string(unsigned index) const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     if (index == SHN_UNDEF)
-        return "Undefined";
+        return "Undefined"sv;
     if (index >= SHN_LORESERVE)
-        return "Reserved";
+        return "Reserved"sv;
     return section(index).name();
 }
 
 unsigned Image::symbol_count() const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     if (!section_count())
         return 0;
     return section(m_symbol_table_section_index).entry_count();
@@ -120,7 +100,7 @@ void Image::dump() const
     });
 
     for (unsigned i = 0; i < header().e_shnum; ++i) {
-        auto& section = this->section(i);
+        const auto& section = this->section(i);
         dbgln("    Section {}: {{", i);
         dbgln("        name: {}", section.name());
         dbgln("        type: {:x}", section.type());
@@ -132,7 +112,7 @@ void Image::dump() const
 
     dbgln("Symbol count: {} (table is {})", symbol_count(), m_symbol_table_section_index);
     for (unsigned i = 1; i < symbol_count(); ++i) {
-        auto& sym = symbol(i);
+        const auto& sym = symbol(i);
         dbgln("Symbol @{}:", i);
         dbgln("    Name: {}", sym.name());
         dbgln("    In section: {}", section_index_to_string(sym.section_index()));
@@ -146,13 +126,13 @@ void Image::dump() const
 
 unsigned Image::section_count() const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     return header().e_shnum;
 }
 
 unsigned Image::program_header_count() const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     return header().e_phnum;
 }
 
@@ -186,18 +166,12 @@ bool Image::parse()
         }
     }
 
-    // Then create a name-to-index map.
-    for (unsigned i = 0; i < section_count(); ++i) {
-        auto& section = this->section(i);
-        m_sections.set(section.name(), move(i));
-    }
-
     return m_valid;
 }
 
 StringView Image::table_string(unsigned table_index, unsigned offset) const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     auto& sh = section_header(table_index);
     if (sh.sh_type != SHT_STRTAB)
         return nullptr;
@@ -214,80 +188,75 @@ StringView Image::table_string(unsigned table_index, unsigned offset) const
 
 StringView Image::section_header_table_string(unsigned offset) const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     return table_string(header().e_shstrndx, offset);
 }
 
 StringView Image::table_string(unsigned offset) const
 {
-    ASSERT(m_valid);
+    VERIFY(m_valid);
     return table_string(m_string_table_section_index, offset);
 }
 
 const char* Image::raw_data(unsigned offset) const
 {
-    ASSERT(offset < m_size); // Callers must check indices into raw_data()'s result are also in bounds.
+    VERIFY(offset < m_size); // Callers must check indices into raw_data()'s result are also in bounds.
     return reinterpret_cast<const char*>(m_buffer) + offset;
 }
 
 const Elf32_Ehdr& Image::header() const
 {
-    ASSERT(m_size >= sizeof(Elf32_Ehdr));
+    VERIFY(m_size >= sizeof(Elf32_Ehdr));
     return *reinterpret_cast<const Elf32_Ehdr*>(raw_data(0));
 }
 
 const Elf32_Phdr& Image::program_header_internal(unsigned index) const
 {
-    ASSERT(m_valid);
-    ASSERT(index < header().e_phnum);
+    VERIFY(m_valid);
+    VERIFY(index < header().e_phnum);
     return *reinterpret_cast<const Elf32_Phdr*>(raw_data(header().e_phoff + (index * sizeof(Elf32_Phdr))));
 }
 
 const Elf32_Shdr& Image::section_header(unsigned index) const
 {
-    ASSERT(m_valid);
-    ASSERT(index < header().e_shnum);
+    VERIFY(m_valid);
+    VERIFY(index < header().e_shnum);
     return *reinterpret_cast<const Elf32_Shdr*>(raw_data(header().e_shoff + (index * header().e_shentsize)));
 }
 
-const Image::Symbol Image::symbol(unsigned index) const
+Image::Symbol Image::symbol(unsigned index) const
 {
-    ASSERT(m_valid);
-    ASSERT(index < symbol_count());
+    VERIFY(m_valid);
+    VERIFY(index < symbol_count());
     auto* raw_syms = reinterpret_cast<const Elf32_Sym*>(raw_data(section(m_symbol_table_section_index).offset()));
     return Symbol(*this, index, raw_syms[index]);
 }
 
-const Image::Section Image::section(unsigned index) const
+Image::Section Image::section(unsigned index) const
 {
-    ASSERT(m_valid);
-    ASSERT(index < section_count());
+    VERIFY(m_valid);
+    VERIFY(index < section_count());
     return Section(*this, index);
 }
 
-const Image::ProgramHeader Image::program_header(unsigned index) const
+Image::ProgramHeader Image::program_header(unsigned index) const
 {
-    ASSERT(m_valid);
-    ASSERT(index < program_header_count());
+    VERIFY(m_valid);
+    VERIFY(index < program_header_count());
     return ProgramHeader(*this, index);
 }
 
-FlatPtr Image::program_header_table_offset() const
+Image::Relocation Image::RelocationSection::relocation(unsigned index) const
 {
-    return header().e_phoff;
-}
-
-const Image::Relocation Image::RelocationSection::relocation(unsigned index) const
-{
-    ASSERT(index < relocation_count());
+    VERIFY(index < relocation_count());
     auto* rels = reinterpret_cast<const Elf32_Rel*>(m_image.raw_data(offset()));
     return Relocation(m_image, rels[index]);
 }
 
-const Image::RelocationSection Image::Section::relocations() const
+Image::RelocationSection Image::Section::relocations() const
 {
     StringBuilder builder;
-    builder.append(".rel");
+    builder.append(".rel"sv);
     builder.append(name());
 
     auto relocation_section = m_image.lookup_section(builder.to_string());
@@ -300,24 +269,27 @@ const Image::RelocationSection Image::Section::relocations() const
     return static_cast<const RelocationSection>(relocation_section);
 }
 
-const Image::Section Image::lookup_section(const String& name) const
+Image::Section Image::lookup_section(const String& name) const
 {
-    ASSERT(m_valid);
-    if (auto it = m_sections.find(name); it != m_sections.end())
-        return section((*it).value);
+    VERIFY(m_valid);
+    for (unsigned i = 0; i < section_count(); ++i) {
+        auto section = this->section(i);
+        if (section.name() == name)
+            return section;
+    }
     return section(0);
 }
 
 StringView Image::Symbol::raw_data() const
 {
-    auto& section = this->section();
+    auto section = this->section();
     return { section.raw_data() + (value() - section.address()), size() };
 }
 
 Optional<Image::Symbol> Image::find_demangled_function(const String& name) const
 {
     Optional<Image::Symbol> found;
-    for_each_symbol([&](const Image::Symbol symbol) {
+    for_each_symbol([&](const Image::Symbol& symbol) {
         if (symbol.type() != STT_FUNC)
             return IterationDecision::Continue;
         if (symbol.is_undefined())
@@ -344,7 +316,7 @@ Optional<Image::Symbol> Image::find_symbol(u32 address, u32* out_offset) const
     SortedSymbol* sorted_symbols = nullptr;
     if (m_sorted_symbols.is_empty()) {
         m_sorted_symbols.ensure_capacity(symbol_count);
-        for_each_symbol([this](auto& symbol) {
+        for_each_symbol([this](const auto& symbol) {
             m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
             return IterationDecision::Continue;
         });
@@ -376,10 +348,9 @@ String Image::symbolicate(u32 address, u32* out_offset) const
         return "??";
     }
     SortedSymbol* sorted_symbols = nullptr;
-
     if (m_sorted_symbols.is_empty()) {
         m_sorted_symbols.ensure_capacity(symbol_count);
-        for_each_symbol([this](auto& symbol) {
+        for_each_symbol([this](const auto& symbol) {
             m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
             return IterationDecision::Continue;
         });
@@ -407,7 +378,7 @@ String Image::symbolicate(u32 address, u32* out_offset) const
                 *out_offset = address - symbol.address;
                 return demangled_name;
             }
-            return String::format("%s +0x%x", demangled_name.characters(), address - symbol.address);
+            return String::formatted("{} +{:#x}", demangled_name, address - symbol.address);
         }
     }
     if (out_offset)

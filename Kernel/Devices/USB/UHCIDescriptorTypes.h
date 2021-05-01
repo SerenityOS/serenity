@@ -1,32 +1,13 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <AK/Ptr32.h>
 #include <AK/Types.h>
 
 namespace Kernel::USB {
@@ -105,13 +86,13 @@ struct alignas(16) TransferDescriptor final {
     void set_in_use(bool in_use) { m_in_use = in_use; }
     void set_max_len(u16 max_len)
     {
-        ASSERT(max_len < 0x500 || max_len == 0x7ff);
+        VERIFY(max_len < 0x500 || max_len == 0x7ff);
         m_token |= (max_len << 21);
     }
 
     void set_device_address(u8 address)
     {
-        ASSERT(address <= 0x7f);
+        VERIFY(address <= 0x7f);
         m_token |= (address << 8);
     }
 
@@ -124,12 +105,10 @@ struct alignas(16) TransferDescriptor final {
 
     void print()
     {
-        // FIXME: Use dbgln() or klog() when we have something working.
-        // We're using kprintf() for now because the output stands out from the rest of the text in the log
-        kprintf("UHCI: TD(%p) @ 0x%08x: link_ptr=0x%08x, status=0x%08x, token=0x%08x, buffer_ptr=0x%08x\n", this, m_paddr, m_link_ptr, m_control_status, m_token, m_buffer_ptr);
+        dbgln("UHCI: TD({}) @ {}: link_ptr={}, status={}, token={}, buffer_ptr={}", this, m_paddr, m_link_ptr, (u32)m_control_status, m_token, m_buffer_ptr);
 
         // Now let's print the flags!
-        kprintf("UHCI: TD(%p) @ 0x%08x: link_ptr=%s%s%s, status=%s%s%s%s%s%s%s\n",
+        dbgln("UHCI: TD({}) @ {}: link_ptr={}{}{}, status={}{}{}{}{}{}{}",
             this,
             m_paddr,
             (last_in_chain()) ? "T " : "",
@@ -185,10 +164,10 @@ private:
     u32 m_buffer_ptr;              // Points to a data buffer for this transaction (i.e what we want to send or recv)
 
     // These values will be ignored by the controller, but we can use them for configuration/bookkeeping
-    u32 m_paddr;                   // Physical address where this TransferDescriptor is located
-    TransferDescriptor* m_next_td; // Pointer to first TD
-    TransferDescriptor* m_prev_td; // Pointer to first TD
-    bool m_in_use;                 // Has this TD been allocated (and therefore in use)?
+    u32 m_paddr;                                     // Physical address where this TransferDescriptor is located
+    Ptr32<TransferDescriptor> m_next_td { nullptr }; // Pointer to first TD
+    Ptr32<TransferDescriptor> m_prev_td { nullptr }; // Pointer to first TD
+    bool m_in_use;                                   // Has this TD been allocated (and therefore in use)?
 };
 
 static_assert(sizeof(TransferDescriptor) == 32); // Transfer Descriptor is always 8 Dwords
@@ -266,7 +245,7 @@ struct alignas(16) QueueHead {
 
     void print()
     {
-        kprintf("UHCI: QH(%p) @ 0x%08x: link_ptr=0x%08x, element_link_ptr=0x%08x\n", this, m_paddr, m_link_ptr, m_element_link_ptr);
+        dbgln("UHCI: QH({}) @ {}: link_ptr={}, element_link_ptr={}", this, m_paddr, m_link_ptr, (FlatPtr)m_element_link_ptr);
     }
 
 private:
@@ -275,11 +254,11 @@ private:
 
     // These values will be ignored by the controller, but we can use them for configuration/bookkeeping
     // Any addresses besides `paddr` are assumed virtual and can be dereferenced
-    u32 m_paddr { 0 };                          // Physical address where this QueueHead is located
-    QueueHead* m_next_qh { nullptr };           // Next QH
-    QueueHead* m_prev_qh { nullptr };           // Previous QH
-    TransferDescriptor* m_first_td { nullptr }; // Pointer to first TD
-    bool m_in_use { false };                    // Is this QH currently in use?
+    u32 m_paddr { 0 };                                // Physical address where this QueueHead is located
+    Ptr32<QueueHead> m_next_qh { nullptr };           // Next QH
+    Ptr32<QueueHead> m_prev_qh { nullptr };           // Previous QH
+    Ptr32<TransferDescriptor> m_first_td { nullptr }; // Pointer to first TD
+    bool m_in_use { false };                          // Is this QH currently in use?
 };
 
 static_assert(sizeof(QueueHead) == 32); // Queue Head is always 8 Dwords

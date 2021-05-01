@@ -1,35 +1,15 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <LibCompress/Gzip.h>
 #include <LibCoreDump/Reader.h>
 #include <signal_numbers.h>
 #include <string.h>
-#include <sys/stat.h>
 
 namespace CoreDump {
 
@@ -38,12 +18,12 @@ OwnPtr<Reader> Reader::create(const String& path)
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
         return {};
-    return adopt_own(*new Reader(file_or_error.release_value()));
+    return adopt_own(*new Reader(file_or_error.value()->bytes()));
 }
 
-Reader::Reader(NonnullRefPtr<MappedFile> coredump_file)
-    : m_coredump_file(move(coredump_file))
-    , m_coredump_image(m_coredump_file->bytes())
+Reader::Reader(ReadonlyBytes coredump_bytes)
+    : m_coredump_buffer(decompress_coredump(coredump_bytes))
+    , m_coredump_image(m_coredump_buffer.bytes())
 {
     size_t index = 0;
     m_coredump_image.for_each_program_header([this, &index](auto pheader) {
@@ -54,7 +34,17 @@ Reader::Reader(NonnullRefPtr<MappedFile> coredump_file)
         ++index;
         return IterationDecision::Continue;
     });
-    ASSERT(m_notes_segment_index != -1);
+    VERIFY(m_notes_segment_index != -1);
+}
+
+ByteBuffer Reader::decompress_coredump(const ReadonlyBytes& raw_coredump)
+{
+    if (!Compress::GzipDecompressor::is_likely_compressed(raw_coredump))
+        return ByteBuffer::copy(raw_coredump); // handle old format core dumps (uncompressed)
+    auto decompressed_coredump = Compress::GzipDecompressor::decompress_all(raw_coredump);
+    if (!decompressed_coredump.has_value())
+        return ByteBuffer::copy(raw_coredump); // if we didn't manage to decompress it, try and parse it as decompressed core dump
+    return decompressed_coredump.value();
 }
 
 Reader::~Reader()
@@ -69,7 +59,7 @@ Reader::NotesEntryIterator::NotesEntryIterator(const u8* notes_data)
 
 ELF::Core::NotesEntryHeader::Type Reader::NotesEntryIterator::type() const
 {
-    ASSERT(m_current->header.type == ELF::Core::NotesEntryHeader::Type::ProcessInfo
+    VERIFY(m_current->header.type == ELF::Core::NotesEntryHeader::Type::ProcessInfo
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::ThreadInfo
         || m_current->header.type == ELF::Core::NotesEntryHeader::Type::Metadata
@@ -84,7 +74,7 @@ const ELF::Core::NotesEntry* Reader::NotesEntryIterator::current() const
 
 void Reader::NotesEntryIterator::next()
 {
-    ASSERT(!at_end());
+    VERIFY(!at_end());
     switch (type()) {
     case ELF::Core::NotesEntryHeader::Type::ProcessInfo: {
         const auto* current = reinterpret_cast<const ELF::Core::ProcessInfo*>(m_current);
@@ -107,7 +97,7 @@ void Reader::NotesEntryIterator::next()
         break;
     }
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -252,7 +242,7 @@ const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
 
     String path;
     if (name.contains(".so"))
-        path = String::format("/usr/lib/%s", name.characters());
+        path = String::formatted("/usr/lib/{}", name);
     else {
         path = name;
     }

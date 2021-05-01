@@ -1,31 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2021, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/QuickSort.h>
-#include <LibWeb/CSS/Parser/CSSParser.h>
+#include <LibWeb/CSS/CSSStyleRule.h>
+#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/CSS/StyleSheet.h>
@@ -85,8 +67,10 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& e
 
     size_t style_sheet_index = 0;
     for_each_stylesheet([&](auto& sheet) {
+        if (!is<CSSStyleSheet>(sheet))
+            return;
         size_t rule_index = 0;
-        for (auto& rule : sheet.rules()) {
+        static_cast<const CSSStyleSheet&>(sheet).for_each_effective_style_rule([&](auto& rule) {
             size_t selector_index = 0;
             for (auto& selector : rule.selectors()) {
                 if (SelectorEngine::matches(selector, element)) {
@@ -96,7 +80,7 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& e
                 ++selector_index;
             }
             ++rule_index;
-        }
+        });
         ++style_sheet_index;
     });
 
@@ -188,7 +172,7 @@ static bool contains(Edge a, Edge b)
 
 static inline void set_property_border_width(StyleProperties& style, const StyleValue& value, Edge edge)
 {
-    ASSERT(value.is_length());
+    VERIFY(value.is_length());
     if (contains(Edge::Top, edge))
         style.set_property(CSS::PropertyID::BorderTopWidth, value);
     if (contains(Edge::Right, edge))
@@ -201,7 +185,7 @@ static inline void set_property_border_width(StyleProperties& style, const Style
 
 static inline void set_property_border_color(StyleProperties& style, const StyleValue& value, Edge edge)
 {
-    ASSERT(value.is_color());
+    VERIFY(value.is_color());
     if (contains(Edge::Top, edge))
         style.set_property(CSS::PropertyID::BorderTopColor, value);
     if (contains(Edge::Right, edge))
@@ -214,7 +198,7 @@ static inline void set_property_border_color(StyleProperties& style, const Style
 
 static inline void set_property_border_style(StyleProperties& style, const StyleValue& value, Edge edge)
 {
-    ASSERT(value.is_string());
+    VERIFY(value.type() == CSS::StyleValue::Type::Identifier);
     if (contains(Edge::Top, edge))
         style.set_property(CSS::PropertyID::BorderTopStyle, value);
     if (contains(Edge::Right, edge))
@@ -225,9 +209,32 @@ static inline void set_property_border_style(StyleProperties& style, const Style
         style.set_property(CSS::PropertyID::BorderLeftStyle, value);
 }
 
-static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value, DOM::Document& document)
+static inline bool is_background_repeat_property(const StyleValue& value)
+{
+    if (!value.is_identifier())
+        return false;
+
+    switch (value.to_identifier()) {
+    case CSS::ValueID::NoRepeat:
+    case CSS::ValueID::Repeat:
+    case CSS::ValueID::RepeatX:
+    case CSS::ValueID::RepeatY:
+    case CSS::ValueID::Round:
+    case CSS::ValueID::Space:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value, DOM::Document& document, bool is_internally_generated_pseudo_property = false)
 {
     CSS::ParsingContext context(document);
+
+    if (is_pseudo_property(property_id) && !is_internally_generated_pseudo_property) {
+        dbgln("Ignoring non-internally-generated pseudo property: {}", string_from_property_id(property_id));
+        return;
+    }
 
     if (property_id == CSS::PropertyID::TextDecoration) {
         switch (value.to_identifier()) {
@@ -240,6 +247,12 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         default:
             break;
         }
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::Overflow) {
+        style.set_property(CSS::PropertyID::OverflowX, value);
+        style.set_property(CSS::PropertyID::OverflowY, value);
         return;
     }
 
@@ -297,7 +310,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
             RefPtr<LengthStyleValue> line_width_value;
             RefPtr<ColorStyleValue> color_value;
-            RefPtr<StringStyleValue> line_style_value;
+            RefPtr<IdentifierStyleValue> line_style_value;
 
             for (auto& part : parts) {
                 if (auto value = parse_line_width(context, part)) {
@@ -334,7 +347,18 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
     if (property_id == CSS::PropertyID::BorderStyle) {
         auto parts = split_on_whitespace(value.to_string());
-        if (value.is_string() && parts.size() == 3) {
+        if (value.is_string() && parts.size() == 4) {
+            auto top = parse_css_value(context, parts[0]);
+            auto right = parse_css_value(context, parts[1]);
+            auto bottom = parse_css_value(context, parts[2]);
+            auto left = parse_css_value(context, parts[3]);
+            if (top && right && bottom && left) {
+                style.set_property(CSS::PropertyID::BorderTopStyle, *top);
+                style.set_property(CSS::PropertyID::BorderRightStyle, *right);
+                style.set_property(CSS::PropertyID::BorderBottomStyle, *bottom);
+                style.set_property(CSS::PropertyID::BorderLeftStyle, *left);
+            }
+        } else if (value.is_string() && parts.size() == 3) {
             auto top = parse_css_value(context, parts[0]);
             auto right = parse_css_value(context, parts[1]);
             auto bottom = parse_css_value(context, parts[2]);
@@ -344,6 +368,15 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                 style.set_property(CSS::PropertyID::BorderRightStyle, *right);
                 style.set_property(CSS::PropertyID::BorderBottomStyle, *bottom);
                 style.set_property(CSS::PropertyID::BorderLeftStyle, *left);
+            }
+        } else if (value.is_string() && parts.size() == 2) {
+            auto vertical = parse_css_value(context, parts[0]);
+            auto horizontal = parse_css_value(context, parts[1]);
+            if (vertical && horizontal) {
+                style.set_property(CSS::PropertyID::BorderTopStyle, *vertical);
+                style.set_property(CSS::PropertyID::BorderRightStyle, *horizontal);
+                style.set_property(CSS::PropertyID::BorderBottomStyle, *vertical);
+                style.set_property(CSS::PropertyID::BorderLeftStyle, *horizontal);
             }
         } else {
             style.set_property(CSS::PropertyID::BorderTopStyle, value);
@@ -418,10 +451,22 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         if (values[0].is_color() && color_value_count == 1)
             style.set_property(CSS::PropertyID::BackgroundColor, values[0]);
 
-        for (auto& value : values) {
+        for (auto it = values.begin(); it != values.end(); ++it) {
+            auto& value = *it;
+
+            if (is_background_repeat_property(value)) {
+                if ((it + 1 != values.end()) && is_background_repeat_property(*(it + 1))) {
+                    ++it;
+
+                    set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, value, document, true);
+                    set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, *it, document, true);
+                } else {
+                    set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, value, document);
+                }
+            }
+
             if (!value.is_string())
                 continue;
-            auto string = value.to_string();
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document);
         }
         return;
@@ -443,6 +488,44 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
         auto background_image_value = ImageStyleValue::create(document.complete_url(url), document);
         style.set_property(CSS::PropertyID::BackgroundImage, move(background_image_value));
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::BackgroundRepeat) {
+        auto parts = split_on_whitespace(value.to_string());
+        NonnullRefPtrVector<StyleValue> values;
+        for (auto& part : parts) {
+            auto value = parse_css_value(context, part);
+            if (!value || !is_background_repeat_property(*value))
+                return;
+            values.append(value.release_nonnull());
+        }
+
+        if (values.size() == 1) {
+            auto value_id = values[0].to_identifier();
+            if (value_id == CSS::ValueID::RepeatX || value_id == CSS::ValueID::RepeatY) {
+                auto repeat_x = IdentifierStyleValue::create(value_id == CSS::ValueID::RepeatX ? CSS::ValueID::Repeat : CSS::ValueID::NoRepeat);
+                auto repeat_y = IdentifierStyleValue::create(value_id == CSS::ValueID::RepeatX ? CSS::ValueID::NoRepeat : CSS::ValueID::Repeat);
+                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, repeat_x, document, true);
+                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, repeat_y, document, true);
+            } else {
+                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, values[0], document, true);
+                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, values[0], document, true);
+            }
+        } else if (values.size() == 2) {
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, values[0], document, true);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, values[1], document, true);
+        }
+
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::BackgroundRepeatX || property_id == CSS::PropertyID::BackgroundRepeatY) {
+        auto value_id = value.to_identifier();
+        if (value_id == CSS::ValueID::RepeatX || value_id == CSS::ValueID::RepeatY)
+            return;
+
+        style.set_property(property_id, value);
         return;
     }
 
@@ -558,6 +641,30 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                 return;
             style.set_property(CSS::PropertyID::ListStyleType, value.release_nonnull());
         }
+        return;
+    }
+
+    // FIXME: parse other values as well
+    if (property_id == CSS::PropertyID::Font) {
+        auto parts = split_on_whitespace(value.to_string());
+        if (parts.size() < 2)
+            return;
+        auto size_parts = parts[0].split_view('/');
+        if (size_parts.size() == 2) {
+            auto size = parse_css_value(context, size_parts[0]);
+            auto line_height = parse_css_value(context, size_parts[1]);
+            if (!size || !line_height)
+                return;
+            style.set_property(CSS::PropertyID::FontSize, size.release_nonnull());
+            style.set_property(CSS::PropertyID::LineHeight, line_height.release_nonnull());
+        } else if (size_parts.size() == 1) {
+            auto size = parse_css_value(context, parts[0]);
+            if (!size)
+                return;
+            style.set_property(CSS::PropertyID::FontSize, size.release_nonnull());
+        }
+        auto family = parse_css_value(context, parts[1]);
+        style.set_property(CSS::PropertyID::FontFamily, family.release_nonnull());
         return;
     }
 

@@ -1,33 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "TaskbarButton.h"
 #include "WindowList.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/WindowManagerServerConnection.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
@@ -45,13 +26,17 @@ TaskbarButton::~TaskbarButton()
 
 void TaskbarButton::context_menu_event(GUI::ContextMenuEvent&)
 {
-    GUI::WindowServerConnection::the().post_message(Messages::WindowServer::WM_PopupWindowMenu(m_identifier.client_id(), m_identifier.window_id(), screen_relative_rect().location()));
+    GUI::WindowManagerServerConnection::the().post_message(
+        Messages::WindowManagerServer::PopupWindowMenu(
+            m_identifier.client_id(),
+            m_identifier.window_id(),
+            screen_relative_rect().location()));
 }
 
 void TaskbarButton::update_taskbar_rect()
 {
-    GUI::WindowServerConnection::the().post_message(
-        Messages::WindowServer::WM_SetWindowTaskbarRect(
+    GUI::WindowManagerServerConnection::the().post_message(
+        Messages::WindowManagerServer::SetWindowTaskbarRect(
             m_identifier.client_id(),
             m_identifier.window_id(),
             screen_relative_rect()));
@@ -59,8 +44,8 @@ void TaskbarButton::update_taskbar_rect()
 
 void TaskbarButton::clear_taskbar_rect()
 {
-    GUI::WindowServerConnection::the().post_message(
-        Messages::WindowServer::WM_SetWindowTaskbarRect(
+    GUI::WindowManagerServerConnection::the().post_message(
+        Messages::WindowManagerServer::SetWindowTaskbarRect(
             m_identifier.client_id(),
             m_identifier.window_id(),
             {}));
@@ -72,7 +57,7 @@ void TaskbarButton::resize_event(GUI::ResizeEvent& event)
     return GUI::Button::resize_event(event);
 }
 
-static void paint_custom_progress_bar(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::IntRect& text_rect, const Palette& palette, int min, int max, int value, const StringView& text, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
+static void paint_custom_progressbar(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::IntRect& text_rect, const Palette& palette, int min, int max, int value, const StringView& text, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
 {
     float range_size = max - min;
     float progress = (value - min) / range_size;
@@ -105,7 +90,7 @@ static void paint_custom_progress_bar(GUI::Painter& painter, const Gfx::IntRect&
 
 void TaskbarButton::paint_event(GUI::PaintEvent& event)
 {
-    ASSERT(icon());
+    VERIFY(icon());
     auto& icon = *this->icon();
     auto& font = is_checked() ? Gfx::FontDatabase::default_bold_font() : this->font();
     auto& window = WindowList::the().ensure_window(m_identifier);
@@ -145,7 +130,7 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
         if (is_being_pressed() || is_checked()) {
             adjusted_rect.set_height(adjusted_rect.height() + 1);
         }
-        paint_custom_progress_bar(painter, adjusted_rect, text_rect, palette(), 0, 100, window.progress(), text(), font, text_alignment());
+        paint_custom_progressbar(painter, adjusted_rect, text_rect, palette(), 0, 100, window.progress(), text(), font, text_alignment());
     }
 
     if (is_enabled()) {

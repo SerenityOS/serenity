@@ -1,5 +1,8 @@
 compile_gml(CondFormatting.gml CondFormattingGML.h cond_fmt_gml)
 compile_gml(CondView.gml CondFormattingViewGML.h cond_fmt_view_gml)
+compile_gml(csv_import.gml CSVImportGML.h csv_import_gml)
+compile_gml(csv_export.gml CSVExportGML.h csv_export_gml)
+compile_gml(select_format_page.gml FormatSelectionPageGML.h select_format_page_gml)
 
 set(SOURCES
     Cell.cpp
@@ -13,7 +16,9 @@ set(SOURCES
     CellTypeDialog.cpp
     CondFormattingGML.h
     CondFormattingViewGML.h
+    ExportDialog.cpp
     HelpWindow.cpp
+    ImportDialog.cpp
     JSIntegration.cpp
     Readers/XSV.cpp
     Spreadsheet.cpp
@@ -24,5 +29,16 @@ set(SOURCES
     main.cpp
 )
 
+set(GENERATED_SOURCES
+    CSVExportGML.h
+    CSVImportGML.h
+    FormatSelectionPageGML.h
+)
+
 serenity_app(Spreadsheet ICON app-spreadsheet)
 target_link_libraries(Spreadsheet LibGUI LibJS LibWeb)
+
+serenity_test(Writers/Test/TestXSVWriter.cpp Spreadsheet)
+
+serenity_test(Readers/Test/TestXSV.cpp Spreadsheet)
+target_sources(TestXSV PRIVATE Readers/XSV.cpp)

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "HelpWindow.h"
@@ -41,7 +21,7 @@ namespace Spreadsheet {
 
 class HelpListModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<HelpListModel> create() { return adopt(*new HelpListModel); }
+    static NonnullRefPtr<HelpListModel> create() { return adopt_ref(*new HelpListModel); }
 
     virtual ~HelpListModel() override { }
 
@@ -100,7 +80,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 
     m_webview = splitter.add<Web::OutOfProcessWebView>();
     m_webview->on_link_click = [this](auto& url, auto&, auto&&) {
-        ASSERT(url.protocol() == "spreadsheet");
+        VERIFY(url.protocol() == "spreadsheet");
         if (url.host() == "example") {
             auto entry = LexicalPath(url.path()).basename();
             auto doc_option = m_docs.get(entry);
@@ -159,19 +139,19 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 String HelpWindow::render(const StringView& key)
 {
     auto doc_option = m_docs.get(key);
-    ASSERT(doc_option.is_object());
+    VERIFY(doc_option.is_object());
 
     auto& doc = doc_option.as_object();
 
     auto name = doc.get("name").to_string();
     auto argc = doc.get("argc").to_u32(0);
     auto argnames_value = doc.get("argnames");
-    ASSERT(argnames_value.is_array());
+    VERIFY(argnames_value.is_array());
     auto& argnames = argnames_value.as_array();
 
     auto docstring = doc.get("doc").to_string();
     auto examples_value = doc.get_or("examples", JsonObject {});
-    ASSERT(examples_value.is_object());
+    VERIFY(examples_value.is_object());
     auto& examples = examples_value.as_object();
 
     StringBuilder markdown_builder;

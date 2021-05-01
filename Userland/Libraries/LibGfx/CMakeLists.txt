@@ -10,7 +10,6 @@ set(SOURCES
     Color.cpp
     DisjointRectSet.cpp
     Emoji.cpp
-    Font.cpp
     FontDatabase.cpp
     GIFLoader.cpp
     ICOLoader.cpp
@@ -30,9 +29,11 @@ set(SOURCES
     Size.cpp
     StylePainter.cpp
     SystemTheme.cpp
+    TextDirection.cpp
     Triangle.cpp
+    Typeface.cpp
     WindowTheme.cpp
 )
 
 serenity_lib(LibGfx gfx)
-target_link_libraries(LibGfx LibM LibCore)
+target_link_libraries(LibGfx LibM LibCompress LibCore LibTTF)

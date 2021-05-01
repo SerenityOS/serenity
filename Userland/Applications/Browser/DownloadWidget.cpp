@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DownloadWidget.h"
@@ -36,9 +16,9 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/ProgressBar.h>
+#include <LibGUI/Progressbar.h>
 #include <LibGUI/Window.h>
-#include <LibProtocol/Client.h>
+#include <LibProtocol/RequestClient.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <math.h>
 
@@ -56,8 +36,8 @@ DownloadWidget::DownloadWidget(const URL& url)
     }
 
     m_elapsed_timer.start();
-    m_download = Web::ResourceLoader::the().protocol_client().start_download("GET", url.to_string());
-    ASSERT(m_download);
+    m_download = Web::ResourceLoader::the().protocol_client().start_request("GET", url.to_string());
+    VERIFY(m_download);
     m_download->on_progress = [this](Optional<u32> total_size, u32 downloaded_size) {
         did_progress(total_size.value(), downloaded_size);
     };
@@ -91,8 +71,8 @@ DownloadWidget::DownloadWidget(const URL& url)
     source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     source_label.set_fixed_height(16);
 
-    m_progress_bar = add<GUI::ProgressBar>();
-    m_progress_bar->set_fixed_height(20);
+    m_progressbar = add<GUI::Progressbar>();
+    m_progressbar->set_fixed_height(20);
 
     m_progress_label = add<GUI::Label>();
     m_progress_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -109,7 +89,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_cancel_button->set_fixed_size(100, 22);
     m_cancel_button->on_click = [this](auto) {
         bool success = m_download->stop();
-        ASSERT(success);
+        VERIFY(success);
         window()->close();
     };
 
@@ -127,15 +107,15 @@ DownloadWidget::~DownloadWidget()
 
 void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
 {
-    m_progress_bar->set_min(0);
+    m_progressbar->set_min(0);
     if (total_size.has_value()) {
         int percent = roundf(((float)downloaded_size / (float)total_size.value()) * 100.0f);
         window()->set_progress(percent);
-        m_progress_bar->set_max(total_size.value());
+        m_progressbar->set_max(total_size.value());
     } else {
-        m_progress_bar->set_max(0);
+        m_progressbar->set_max(0);
     }
-    m_progress_bar->set_value(downloaded_size);
+    m_progressbar->set_value(downloaded_size);
 
     {
         StringBuilder builder;
@@ -166,7 +146,7 @@ void DownloadWidget::did_finish(bool success)
     m_close_button->set_enabled(true);
     m_cancel_button->set_text("Open in Folder");
     m_cancel_button->on_click = [this](auto) {
-        Desktop::Launcher::open(URL::create_with_file_protocol(Core::StandardPaths::downloads_directory()));
+        Desktop::Launcher::open(URL::create_with_file_protocol(Core::StandardPaths::downloads_directory(), m_url.basename()));
         window()->close();
     };
     m_cancel_button->update();

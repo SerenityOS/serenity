@@ -8,11 +8,8 @@ interface Element : Node {
     boolean hasAttribute(DOMString qualifiedName);
     boolean hasAttributes();
 
-    readonly attribute Element? firstElementChild;
-    readonly attribute Element? lastElementChild;
-
-    Element? querySelector(DOMString selectors);
-    ArrayFromVector querySelectorAll(DOMString selectors);
+    HTMLCollection getElementsByTagName(DOMString tagName);
+    HTMLCollection getElementsByClassName(DOMString className);
 
     [LegacyNullToEmptyString] attribute DOMString innerHTML;
     [Reflect] attribute DOMString id;
@@ -20,4 +17,14 @@ interface Element : Node {
 
     readonly attribute Element? nextElementSibling;
     readonly attribute Element? previousElementSibling;
+
+    [ImplementedAs=style_for_bindings] readonly attribute CSSStyleDeclaration style;
+
+    // FIXME: These should all come from a ParentNode mixin
+    readonly attribute Element? firstElementChild;
+    readonly attribute Element? lastElementChild;
+    readonly attribute unsigned long childElementCount;
+
+    Element? querySelector(DOMString selectors);
+    ArrayFromVector querySelectorAll(DOMString selectors);
 };

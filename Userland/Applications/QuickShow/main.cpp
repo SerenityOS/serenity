@@ -1,33 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "QSWidget.h"
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MimeData.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -36,30 +17,45 @@
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
 #include <serenity.h>
-#include <spawn.h>
 #include <stdio.h>
 #include <string.h>
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd accept cpath rpath wpath unix cpath fattr proc exec thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept rpath wpath cpath unix fattr thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd accept cpath rpath wpath proc exec thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept cpath rpath wpath unix thread", nullptr) < 0) {
         perror("pledge");
+        return 1;
+    }
+
+    if (!Desktop::Launcher::add_allowed_handler_with_any_url("/bin/QuickShow")) {
+        warnln("Failed to set up allowed launch URLs");
+        return 1;
+    }
+
+    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
+            "/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/QuickShow.md") })) {
+        warnln("Failed to set up allowed launch URLs");
+        return 1;
+    }
+
+    if (!Desktop::Launcher::seal_allowlist()) {
+        warnln("Failed to seal allowed launch URLs");
         return 1;
     }
 
@@ -81,8 +77,8 @@ int main(int argc, char** argv)
     root_widget.set_layout<GUI::VerticalBoxLayout>();
     root_widget.layout()->set_spacing(2);
 
-    auto& toolbar_container = root_widget.add<GUI::ToolBarContainer>();
-    auto& main_toolbar = toolbar_container.add<GUI::ToolBar>();
+    auto& toolbar_container = root_widget.add<GUI::ToolbarContainer>();
+    auto& main_toolbar = toolbar_container.add<GUI::Toolbar>();
 
     auto& widget = root_widget.add<QSWidget>();
     widget.on_scale_change = [&](int scale, Gfx::IntRect rect) {
@@ -106,24 +102,18 @@ int main(int argc, char** argv)
     widget.on_drop = [&](auto& event) {
         window->move_to_front();
 
-        if (event.mime_data().has_urls()) {
-            auto urls = event.mime_data().urls();
+        if (!event.mime_data().has_urls())
+            return;
 
-            if (!urls.is_empty()) {
-                auto url = urls.first();
-                widget.load_from_file(url.path());
-            }
+        auto urls = event.mime_data().urls();
 
-            pid_t child;
-            for (size_t i = 1; i < urls.size(); ++i) {
-                const char* argv[] = { "/bin/QuickShow", urls[i].path().characters(), nullptr };
-                if ((errno = posix_spawn(&child, "/bin/QuickShow", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-                    perror("posix_spawn");
-                } else {
-                    if (disown(child) < 0)
-                        perror("disown");
-                }
-            }
+        if (urls.is_empty())
+            return;
+
+        widget.load_from_file(urls.first().path());
+
+        for (size_t i = 1; i < urls.size(); ++i) {
+            Desktop::Launcher::open(URL::create_with_file_protocol(urls[i].path().characters()), "/bin/QuickShow");
         }
     };
     widget.on_doubleclick = [&] {
@@ -134,7 +124,7 @@ int main(int argc, char** argv)
     // Actions
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
-            Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open image...");
+            auto path = GUI::FilePicker::get_open_filepath(window, "Open Image");
             if (path.has_value()) {
                 widget.load_from_file(path.value());
             }
@@ -155,10 +145,7 @@ int main(int argc, char** argv)
             if (msgbox_result == GUI::MessageBox::ExecCancel)
                 return;
 
-            auto unlink_result = unlink(widget.path().characters());
-            dbgln("unlink_result::{}", unlink_result);
-
-            if (unlink_result < 0) {
+            if (unlink(widget.path().characters()) < 0) {
                 int saved_errno = errno;
                 GUI::MessageBox::show(window,
                     String::formatted("unlink({}) failed: {}", path, strerror(saved_errno)),
@@ -176,47 +163,47 @@ int main(int argc, char** argv)
             app->quit();
         });
 
-    auto rotate_left_action = GUI::Action::create("Rotate Left", { Mod_None, Key_L },
+    auto rotate_left_action = GUI::Action::create("Rotate &Left", { Mod_None, Key_L },
         [&](auto&) {
             widget.rotate(Gfx::RotationDirection::Left);
         });
 
-    auto rotate_right_action = GUI::Action::create("Rotate Right", { Mod_None, Key_R },
+    auto rotate_right_action = GUI::Action::create("Rotate &Right", { Mod_None, Key_R },
         [&](auto&) {
             widget.rotate(Gfx::RotationDirection::Right);
         });
 
-    auto vertical_flip_action = GUI::Action::create("Vertical Flip", { Mod_None, Key_V },
+    auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, Key_V },
         [&](auto&) {
             widget.flip(Gfx::Orientation::Vertical);
         });
 
-    auto horizontal_flip_action = GUI::Action::create("Horizontal Flip", { Mod_None, Key_H },
+    auto horizontal_flip_action = GUI::Action::create("Flip &Horizontally", { Mod_None, Key_H },
         [&](auto&) {
             widget.flip(Gfx::Orientation::Horizontal);
         });
 
-    auto desktop_wallpaper_action = GUI::Action::create("Set as desktop wallpaper",
+    auto desktop_wallpaper_action = GUI::Action::create("Set as Desktop &Wallpaper",
         [&](auto&) {
             GUI::Desktop::the().set_wallpaper(widget.path());
         });
 
-    auto go_first_action = GUI::Action::create("First", { Mod_None, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"),
+    auto go_first_action = GUI::Action::create("Go to &First", { Mod_None, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"),
         [&](auto&) {
             widget.navigate(QSWidget::Directions::First);
         });
 
-    auto go_back_action = GUI::Action::create("Back", { Mod_None, Key_Left }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"),
+    auto go_back_action = GUI::Action::create("Go &Back", { Mod_None, Key_Left }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"),
         [&](auto&) {
             widget.navigate(QSWidget::Directions::Back);
         });
 
-    auto go_forward_action = GUI::Action::create("Forward", { Mod_None, Key_Right }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"),
+    auto go_forward_action = GUI::Action::create("Go &Forward", { Mod_None, Key_Right }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"),
         [&](auto&) {
             widget.navigate(QSWidget::Directions::Forward);
         });
 
-    auto go_last_action = GUI::Action::create("Last", { Mod_None, Key_End }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"),
+    auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, Key_End }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"),
         [&](auto&) {
             widget.navigate(QSWidget::Directions::Last);
         });
@@ -226,22 +213,22 @@ int main(int argc, char** argv)
             widget.on_doubleclick();
         });
 
-    auto zoom_in_action = GUI::Action::create("Zoom In", { Mod_None, Key_Plus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-in.png"),
+    auto zoom_in_action = GUI::Action::create("Zoom &In", { Mod_None, Key_Plus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-in.png"),
         [&](auto&) {
             widget.set_scale(widget.scale() + 10);
         });
 
-    auto zoom_reset_action = GUI::Action::create("Zoom 100%", { Mod_None, Key_0 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-reset.png"),
+    auto zoom_reset_action = GUI::Action::create("Zoom to &100%", { Mod_None, Key_0 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-reset.png"),
         [&](auto&) {
             widget.set_scale(100);
         });
 
-    auto zoom_out_action = GUI::Action::create("Zoom Out", { Mod_None, Key_Minus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-out.png"),
+    auto zoom_out_action = GUI::Action::create("Zoom &Out", { Mod_None, Key_Minus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-out.png"),
         [&](auto&) {
             widget.set_scale(widget.scale() - 10);
         });
 
-    auto hide_show_toolbar_action = GUI::Action::create("Hide/Show Toolbar", { Mod_Ctrl, Key_T },
+    auto hide_show_toolbar_action = GUI::Action::create("Hide/Show &Toolbar", { Mod_Ctrl, Key_T },
         [&](auto&) {
             toolbar_container.set_visible(!toolbar_container.is_visible());
         });
@@ -263,15 +250,15 @@ int main(int argc, char** argv)
     main_toolbar.add_action(zoom_reset_action);
     main_toolbar.add_action(zoom_out_action);
 
-    auto menubar = GUI::MenuBar::construct();
+    auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("QuickShow");
+    auto& app_menu = menubar->add_menu("&File");
     app_menu.add_action(open_action);
     app_menu.add_action(delete_action);
     app_menu.add_separator();
     app_menu.add_action(quit_action);
 
-    auto& image_menu = menubar->add_menu("Image");
+    auto& image_menu = menubar->add_menu("&Image");
     image_menu.add_action(rotate_left_action);
     image_menu.add_action(rotate_right_action);
     image_menu.add_action(vertical_flip_action);
@@ -279,13 +266,13 @@ int main(int argc, char** argv)
     image_menu.add_separator();
     image_menu.add_action(desktop_wallpaper_action);
 
-    auto& navigate_menu = menubar->add_menu("Navigate");
+    auto& navigate_menu = menubar->add_menu("&Navigate");
     navigate_menu.add_action(go_first_action);
     navigate_menu.add_action(go_back_action);
     navigate_menu.add_action(go_forward_action);
     navigate_menu.add_action(go_last_action);
 
-    auto& view_menu = menubar->add_menu("View");
+    auto& view_menu = menubar->add_menu("&View");
     view_menu.add_action(full_sceen_action);
     view_menu.add_separator();
     view_menu.add_action(zoom_in_action);
@@ -294,10 +281,13 @@ int main(int argc, char** argv)
     view_menu.add_separator();
     view_menu.add_action(hide_show_toolbar_action);
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/QuickShow.md"), "/bin/Help");
+    }));
     help_menu.add_action(GUI::CommonActions::make_about_action("QuickShow", app_icon, window));
 
-    app->set_menubar(move(menubar));
+    window->set_menubar(move(menubar));
 
     if (path != nullptr) {
         widget.load_from_file(path);

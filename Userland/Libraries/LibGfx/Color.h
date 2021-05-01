@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -77,7 +57,7 @@ public:
     };
 
     constexpr Color() { }
-    Color(NamedColor);
+    constexpr Color(NamedColor);
     constexpr Color(u8 r, u8 g, u8 b)
         : m_value(0xff000000 | (r << 16) | (g << 8) | b)
     {
@@ -119,12 +99,12 @@ public:
         m_value |= value;
     }
 
-    Color with_alpha(u8 alpha) const
+    constexpr Color with_alpha(u8 alpha) const
     {
         return Color((m_value & 0x00ffffff) | alpha << 24);
     }
 
-    Color blend(Color source) const
+    constexpr Color blend(Color source) const
     {
         if (!alpha() || source.alpha() == 255)
             return source;
@@ -159,40 +139,49 @@ public:
 #endif
     }
 
-    Color to_grayscale() const
+    constexpr Color multiply(const Color& other) const
+    {
+        return Color(
+            red() * other.red() / 255,
+            green() * other.green() / 255,
+            blue() * other.blue() / 255,
+            alpha() * other.alpha() / 255);
+    }
+
+    constexpr Color to_grayscale() const
     {
         int gray = (red() + green() + blue()) / 3;
         return Color(gray, gray, gray, alpha());
     }
 
-    Color darkened(float amount = 0.5f) const
+    constexpr Color darkened(float amount = 0.5f) const
     {
         return Color(red() * amount, green() * amount, blue() * amount, alpha());
     }
 
-    Color lightened(float amount = 1.2f) const
+    constexpr Color lightened(float amount = 1.2f) const
     {
         return Color(min(255, (int)((float)red() * amount)), min(255, (int)((float)green() * amount)), min(255, (int)((float)blue() * amount)), alpha());
     }
 
-    Color inverted() const
+    constexpr Color inverted() const
     {
         return Color(~red(), ~green(), ~blue(), alpha());
     }
 
-    Color xored(const Color& other) const
+    constexpr Color xored(const Color& other) const
     {
         return Color(((other.m_value ^ m_value) & 0x00ffffff) | (m_value & 0xff000000));
     }
 
-    RGBA32 value() const { return m_value; }
+    constexpr RGBA32 value() const { return m_value; }
 
-    bool operator==(const Color& other) const
+    constexpr bool operator==(const Color& other) const
     {
         return m_value == other.m_value;
     }
 
-    bool operator!=(const Color& other) const
+    constexpr bool operator!=(const Color& other) const
     {
         return m_value != other.m_value;
     }
@@ -201,7 +190,7 @@ public:
     String to_string_without_alpha() const;
     static Optional<Color> from_string(const StringView&);
 
-    HSV to_hsv() const
+    constexpr HSV to_hsv() const
     {
         HSV hsv;
         double r = static_cast<double>(red()) / 255.0;
@@ -230,23 +219,23 @@ public:
 
         hsv.value = max;
 
-        ASSERT(hsv.hue >= 0.0 && hsv.hue < 360.0);
-        ASSERT(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);
-        ASSERT(hsv.value >= 0.0 && hsv.value <= 1.0);
+        VERIFY(hsv.hue >= 0.0 && hsv.hue < 360.0);
+        VERIFY(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);
+        VERIFY(hsv.value >= 0.0 && hsv.value <= 1.0);
 
         return hsv;
     }
 
-    static Color from_hsv(double hue, double saturation, double value)
+    static constexpr Color from_hsv(double hue, double saturation, double value)
     {
         return from_hsv({ hue, saturation, value });
     }
 
-    static Color from_hsv(const HSV& hsv)
+    static constexpr Color from_hsv(const HSV& hsv)
     {
-        ASSERT(hsv.hue >= 0.0 && hsv.hue < 360.0);
-        ASSERT(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);
-        ASSERT(hsv.value >= 0.0 && hsv.value <= 1.0);
+        VERIFY(hsv.hue >= 0.0 && hsv.hue < 360.0);
+        VERIFY(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);
+        VERIFY(hsv.value >= 0.0 && hsv.value <= 1.0);
 
         double hue = hsv.hue;
         double saturation = hsv.saturation;
@@ -310,7 +299,90 @@ private:
     RGBA32 m_value { 0 };
 };
 
-const LogStream& operator<<(const LogStream&, Color);
+constexpr Color::Color(NamedColor named)
+{
+    if (named == Transparent) {
+        m_value = 0;
+        return;
+    }
+
+    struct {
+        u8 r;
+        u8 g;
+        u8 b;
+    } rgb;
+
+    switch (named) {
+    case Black:
+        rgb = { 0, 0, 0 };
+        break;
+    case White:
+        rgb = { 255, 255, 255 };
+        break;
+    case Red:
+        rgb = { 255, 0, 0 };
+        break;
+    case Green:
+        rgb = { 0, 255, 0 };
+        break;
+    case Cyan:
+        rgb = { 0, 255, 255 };
+        break;
+    case DarkCyan:
+        rgb = { 0, 127, 127 };
+        break;
+    case MidCyan:
+        rgb = { 0, 192, 192 };
+        break;
+    case Blue:
+        rgb = { 0, 0, 255 };
+        break;
+    case Yellow:
+        rgb = { 255, 255, 0 };
+        break;
+    case Magenta:
+        rgb = { 255, 0, 255 };
+        break;
+    case DarkGray:
+        rgb = { 64, 64, 64 };
+        break;
+    case MidGray:
+        rgb = { 127, 127, 127 };
+        break;
+    case LightGray:
+        rgb = { 192, 192, 192 };
+        break;
+    case MidGreen:
+        rgb = { 0, 192, 0 };
+        break;
+    case MidBlue:
+        rgb = { 0, 0, 192 };
+        break;
+    case MidRed:
+        rgb = { 192, 0, 0 };
+        break;
+    case MidMagenta:
+        rgb = { 192, 0, 192 };
+        break;
+    case DarkGreen:
+        rgb = { 0, 128, 0 };
+        break;
+    case DarkBlue:
+        rgb = { 0, 0, 128 };
+        break;
+    case DarkRed:
+        rgb = { 128, 0, 0 };
+        break;
+    case WarmGray:
+        rgb = { 212, 208, 200 };
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+        break;
+    }
+
+    m_value = 0xff000000 | (rgb.r << 16) | (rgb.g << 8) | rgb.b;
+}
 
 }
 

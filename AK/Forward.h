@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -32,17 +12,16 @@ namespace AK {
 
 class Bitmap;
 class ByteBuffer;
-class DebugLogStream;
 class IPv4Address;
 class JsonArray;
 class JsonObject;
 class JsonValue;
-class LogStream;
 class StackInfo;
 class String;
 class StringBuilder;
 class StringImpl;
 class StringView;
+class Time;
 class URL;
 class FlyString;
 class Utf32View;
@@ -52,6 +31,7 @@ class InputMemoryStream;
 class DuplexMemoryStream;
 class OutputStream;
 class InputBitStream;
+class OutputBitStream;
 class OutputMemoryStream;
 
 template<size_t Capacity>
@@ -108,10 +88,10 @@ class NonnullRefPtr;
 template<typename T>
 class NonnullOwnPtr;
 
-template<typename T, int inline_capacity = 0>
+template<typename T, size_t inline_capacity = 0>
 class NonnullRefPtrVector;
 
-template<typename T, int inline_capacity = 0>
+template<typename T, size_t inline_capacity = 0>
 class NonnullOwnPtrVector;
 
 template<typename T>
@@ -142,7 +122,6 @@ using AK::ByteBuffer;
 using AK::Bytes;
 using AK::CircularDuplexStream;
 using AK::CircularQueue;
-using AK::DebugLogStream;
 using AK::DoublyLinkedList;
 using AK::DuplexMemoryStream;
 using AK::FlyString;
@@ -157,12 +136,12 @@ using AK::IPv4Address;
 using AK::JsonArray;
 using AK::JsonObject;
 using AK::JsonValue;
-using AK::LogStream;
 using AK::NonnullOwnPtr;
 using AK::NonnullOwnPtrVector;
 using AK::NonnullRefPtr;
 using AK::NonnullRefPtrVector;
 using AK::Optional;
+using AK::OutputBitStream;
 using AK::OutputMemoryStream;
 using AK::OutputStream;
 using AK::OwnPtr;
@@ -175,6 +154,7 @@ using AK::String;
 using AK::StringBuilder;
 using AK::StringImpl;
 using AK::StringView;
+using AK::Time;
 using AK::Traits;
 using AK::URL;
 using AK::Utf32View;

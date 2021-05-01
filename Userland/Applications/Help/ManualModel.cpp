@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ManualModel.h"
@@ -134,14 +114,14 @@ GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
         for (size_t row = 0; row < sizeof(s_sections) / sizeof(s_sections[0]); row++)
             if (&s_sections[row] == parent)
                 return create_index(row, 0, parent);
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
     for (size_t row = 0; row < parent->parent()->children().size(); row++) {
         ManualNode* child_at_row = &parent->parent()->children()[row];
         if (child_at_row == parent)
             return create_index(row, 0, parent);
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 int ManualModel::row_count(const GUI::ModelIndex& index) const
@@ -184,7 +164,7 @@ void ManualModel::update_section_node_on_toggle(const GUI::ModelIndex& index, co
     node->set_open(open);
 }
 
-TriState ManualModel::data_matches(const GUI::ModelIndex& index, GUI::Variant term) const
+TriState ManualModel::data_matches(const GUI::ModelIndex& index, const GUI::Variant& term) const
 {
     auto view_result = page_view(page_path(index));
     if (view_result.is_error() || view_result.value().is_empty())

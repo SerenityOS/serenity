@@ -1,33 +1,14 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "PageHost.h"
 #include "ClientConnection.h"
 #include <LibGfx/Painter.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Page/Frame.h>
 #include <WebContent/WebContentClientEndpoint.h>
@@ -84,25 +65,15 @@ void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
         return;
     }
 
-    painter.fill_rect(bitmap_rect, layout_root->document().background_color(palette()));
-
-    if (auto background_bitmap = layout_root->document().background_image()) {
-        painter.draw_tiled_bitmap(bitmap_rect, *background_bitmap);
-    }
-
-    painter.translate(-content_rect.x(), -content_rect.y());
-
-    Web::PaintContext context(painter, palette(), Gfx::IntPoint());
+    Web::PaintContext context(painter, palette(), content_rect.top_left());
+    context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     context.set_viewport_rect(content_rect);
     layout_root->paint_all_phases(context);
 }
 
 void PageHost::set_viewport_rect(const Gfx::IntRect& rect)
 {
-    page().main_frame().set_size(rect.size());
-    if (page().main_frame().document())
-        page().main_frame().document()->update_layout();
-    page().main_frame().set_viewport_scroll_offset(rect.location());
+    page().main_frame().set_viewport_rect(rect);
 }
 
 void PageHost::page_did_invalidate(const Gfx::IntRect& content_rect)
@@ -115,10 +86,15 @@ void PageHost::page_did_change_selection()
     m_client.post_message(Messages::WebContentClient::DidChangeSelection());
 }
 
+void PageHost::page_did_request_cursor_change(Gfx::StandardCursor cursor)
+{
+    m_client.post_message(Messages::WebContentClient::DidRequestCursorChange((u32)cursor));
+}
+
 void PageHost::page_did_layout()
 {
     auto* layout_root = this->layout_root();
-    ASSERT(layout_root);
+    VERIFY(layout_root);
     auto content_size = enclosing_int_rect(layout_root->absolute_rect()).size();
     m_client.post_message(Messages::WebContentClient::DidLayout(content_size));
 }
@@ -128,9 +104,24 @@ void PageHost::page_did_change_title(const String& title)
     m_client.post_message(Messages::WebContentClient::DidChangeTitle(title));
 }
 
+void PageHost::page_did_request_scroll(int wheel_delta)
+{
+    m_client.post_message(Messages::WebContentClient::DidRequestScroll(wheel_delta));
+}
+
 void PageHost::page_did_request_scroll_into_view(const Gfx::IntRect& rect)
 {
     m_client.post_message(Messages::WebContentClient::DidRequestScrollIntoView(rect));
+}
+
+void PageHost::page_did_enter_tooltip_area(const Gfx::IntPoint& content_position, const String& title)
+{
+    m_client.post_message(Messages::WebContentClient::DidEnterTooltipArea(content_position, title));
+}
+
+void PageHost::page_did_leave_tooltip_area()
+{
+    m_client.post_message(Messages::WebContentClient::DidLeaveTooltipArea());
 }
 
 void PageHost::page_did_hover_link(const URL& url)
@@ -176,6 +167,36 @@ void PageHost::page_did_request_link_context_menu(const Gfx::IntPoint& content_p
 void PageHost::page_did_request_alert(const String& message)
 {
     m_client.send_sync<Messages::WebContentClient::DidRequestAlert>(message);
+}
+
+bool PageHost::page_did_request_confirm(const String& message)
+{
+    return m_client.send_sync<Messages::WebContentClient::DidRequestConfirm>(message)->result();
+}
+
+String PageHost::page_did_request_prompt(const String& message, const String& default_)
+{
+    return m_client.send_sync<Messages::WebContentClient::DidRequestPrompt>(message, default_)->response();
+}
+
+void PageHost::page_did_change_favicon(const Gfx::Bitmap& favicon)
+{
+    m_client.post_message(Messages::WebContentClient::DidChangeFavicon(favicon.to_shareable_bitmap()));
+}
+
+void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, const URL& url, const String& target, unsigned modifiers, const Gfx::Bitmap* bitmap)
+{
+    m_client.post_message(Messages::WebContentClient::DidRequestImageContextMenu(content_position, url, target, modifiers, bitmap->to_shareable_bitmap()));
+}
+
+String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
+{
+    return m_client.send_sync<Messages::WebContentClient::DidRequestCookie>(url, static_cast<u8>(source))->cookie();
+}
+
+void PageHost::page_did_set_cookie(const URL& url, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)
+{
+    m_client.post_message(Messages::WebContentClient::DidSetCookie(url, cookie, static_cast<u8>(source)));
 }
 
 }

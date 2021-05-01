@@ -1,40 +1,21 @@
 /*
  * Copyright (c) 2020, Hunter Salyer <thefalsehonesty@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ConsoleWidget.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/SyntaxHighlighter.h>
+#include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
@@ -49,7 +30,7 @@ ConsoleWidget::ConsoleWidget()
     set_fill_with_background_color(true);
 
     auto base_document = Web::DOM::Document::create();
-    base_document->append_child(adopt(*new Web::DOM::DocumentType(base_document)));
+    base_document->append_child(adopt_ref(*new Web::DOM::DocumentType(base_document)));
     auto html_element = base_document->create_element("html");
     base_document->append_child(html_element);
     auto head_element = base_document->create_element("head");
@@ -66,7 +47,7 @@ ConsoleWidget::ConsoleWidget()
     bottom_container.set_fixed_height(22);
 
     m_input = bottom_container.add<GUI::TextBox>();
-    m_input->set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+    m_input->set_syntax_highlighter(make<JS::SyntaxHighlighter>());
     // FIXME: Syntax Highlighting breaks the cursor's position on non fixed-width fonts.
     m_input->set_font(Gfx::FontDatabase::default_fixed_width_font());
     m_input->set_history_enabled(true);
@@ -83,6 +64,13 @@ ConsoleWidget::ConsoleWidget()
 
         print_source_line(js_source);
 
+        if (on_js_input)
+            on_js_input(js_source);
+
+        // no interpreter being set means we are running in multi-process mode
+        if (!m_interpreter)
+            return;
+
         auto parser = JS::Parser(JS::Lexer(js_source));
         auto program = parser.parse_program();
 
@@ -98,11 +86,15 @@ ConsoleWidget::ConsoleWidget()
         }
 
         if (m_interpreter->exception()) {
-            output_html.append("Uncaught exception: ");
-            output_html.append(JS::MarkupGenerator::html_from_value(m_interpreter->exception()->value()));
-            print_html(output_html.string_view());
-
+            auto* exception = m_interpreter->exception();
             m_interpreter->vm().clear_exception();
+            output_html.append("Uncaught exception: ");
+            auto error = exception->value();
+            if (error.is_object())
+                output_html.append(JS::MarkupGenerator::html_from_error(error.as_object()));
+            else
+                output_html.append(JS::MarkupGenerator::html_from_value(error));
+            print_html(output_html.string_view());
             return;
         }
 
@@ -122,6 +114,15 @@ ConsoleWidget::ConsoleWidget()
 
 ConsoleWidget::~ConsoleWidget()
 {
+}
+
+void ConsoleWidget::handle_js_console_output(const String& method, const String& line)
+{
+    if (method == "html") {
+        print_html(line);
+    } else if (method == "clear") {
+        clear_output();
+    }
 }
 
 void ConsoleWidget::set_interpreter(WeakPtr<JS::Interpreter> interpreter)

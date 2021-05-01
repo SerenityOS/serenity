@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "SolitaireWidget.h"
@@ -71,7 +51,7 @@ void SolitaireWidget::tick(GUI::Window& window)
         return;
 
     if (m_game_over_animation) {
-        ASSERT(!m_animation.card().is_null());
+        VERIFY(!m_animation.card().is_null());
         if (m_animation.card()->position().x() > SolitaireWidget::width || m_animation.card()->rect().right() < 0)
             create_new_animation_card();
 
@@ -92,7 +72,7 @@ void SolitaireWidget::create_new_animation_card()
     card->set_position({ rand() % (SolitaireWidget::width - Card::width), rand() % (SolitaireWidget::height / 8) });
 
     int x_sgn = card->position().x() > (SolitaireWidget::width / 2) ? -1 : 1;
-    m_animation = Animation(card, rand_float() + .4, x_sgn * ((rand() % 3) + 2), .6 + rand_float() * .4);
+    m_animation = Animation(card, rand_float() + .4f, x_sgn * ((rand() % 3) + 2), .6f + rand_float() * .4f);
 }
 
 void SolitaireWidget::start_game_over_animation()

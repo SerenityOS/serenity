@@ -1,6 +1,0 @@
-add_subdirectory(Audio)
-add_subdirectory(ClipboardHistory)
-add_subdirectory(Clock)
-add_subdirectory(Network)
-add_subdirectory(ResourceGraph)
-add_subdirectory(UserName)

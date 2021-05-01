@@ -1,33 +1,19 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Hex.h>
+#include <AK/Platform.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/DeferGC.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Lexer.h>
+#include <LibJS/Parser.h>
 #include <LibJS/Runtime/ArrayBufferConstructor.h>
 #include <LibJS/Runtime/ArrayBufferPrototype.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
@@ -54,6 +40,8 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
+#include <LibJS/Runtime/PromiseConstructor.h>
+#include <LibJS/Runtime/PromisePrototype.h>
 #include <LibJS/Runtime/ProxyConstructor.h>
 #include <LibJS/Runtime/ReflectObject.h>
 #include <LibJS/Runtime/RegExpConstructor.h>
@@ -78,7 +66,7 @@ GlobalObject::GlobalObject()
 {
 }
 
-void GlobalObject::initialize()
+void GlobalObject::initialize_global_object()
 {
     auto& vm = this->vm();
 
@@ -119,6 +107,11 @@ void GlobalObject::initialize()
     define_native_function(vm.names.isFinite, is_finite, 1, attr);
     define_native_function(vm.names.parseFloat, parse_float, 1, attr);
     define_native_function(vm.names.parseInt, parse_int, 1, attr);
+    define_native_function(vm.names.eval, eval, 1, attr);
+    define_native_function(vm.names.encodeURI, encode_uri, 1, attr);
+    define_native_function(vm.names.decodeURI, decode_uri, 1, attr);
+    define_native_function(vm.names.encodeURIComponent, encode_uri_component, 1, attr);
+    define_native_function(vm.names.decodeURIComponent, decode_uri_component, 1, attr);
 
     define_property(vm.names.NaN, js_nan(), 0);
     define_property(vm.names.Infinity, js_infinity(), 0);
@@ -139,6 +132,7 @@ void GlobalObject::initialize()
     add_constructor(vm.names.Function, m_function_constructor, m_function_prototype);
     add_constructor(vm.names.Number, m_number_constructor, m_number_prototype);
     add_constructor(vm.names.Object, m_object_constructor, m_object_prototype);
+    add_constructor(vm.names.Promise, m_promise_constructor, m_promise_prototype);
     add_constructor(vm.names.Proxy, m_proxy_constructor, nullptr);
     add_constructor(vm.names.RegExp, m_regexp_constructor, m_regexp_prototype);
     add_constructor(vm.names.String, m_string_constructor, m_string_prototype);
@@ -167,8 +161,10 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_proxy_constructor);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    visitor.visit(m_##snake_name##_constructor);
+    visitor.visit(m_##snake_name##_constructor);                                         \
+    visitor.visit(m_##snake_name##_prototype);
     JS_ENUMERATE_ERROR_SUBCLASSES
+    JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
@@ -305,6 +301,142 @@ bool GlobalObject::has_this_binding() const
 Value GlobalObject::get_this_binding(GlobalObject&) const
 {
     return Value(this);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
+{
+    if (!vm.argument(0).is_string())
+        return vm.argument(0);
+    auto& code_string = vm.argument(0).as_string();
+    JS::Parser parser { JS::Lexer { code_string.string() } };
+    auto program = parser.parse_program();
+
+    if (parser.has_errors()) {
+        auto& error = parser.errors()[0];
+        vm.throw_exception<SyntaxError>(global_object, error.to_string());
+        return {};
+    }
+
+    auto& caller_frame = vm.call_stack().at(vm.call_stack().size() - 2);
+    TemporaryChange scope_change(vm.call_frame().scope, caller_frame->scope);
+
+    vm.interpreter().execute_statement(global_object, program);
+    if (vm.exception())
+        return {};
+    return vm.last_value().value_or(js_undefined());
+}
+
+// 19.2.6.1.1 Encode ( string, unescapedSet )
+static String encode([[maybe_unused]] JS::GlobalObject& global_object, const String& string, StringView unescaped_set)
+{
+    StringBuilder encoded_builder;
+    for (unsigned char code_unit : string) {
+        if (unescaped_set.contains(code_unit)) {
+            encoded_builder.append(code_unit);
+            continue;
+        }
+        // FIXME: check for unpaired surrogates and throw URIError
+        encoded_builder.appendff("%{:02X}", code_unit);
+    }
+    return encoded_builder.build();
+}
+
+// 19.2.6.1.2 Decode ( string, reservedSet )
+static String decode(JS::GlobalObject& global_object, const String& string, StringView reserved_set)
+{
+    StringBuilder decoded_builder;
+    auto expected_continuation_bytes = 0;
+    for (size_t k = 0; k < string.length(); k++) {
+        auto code_unit = string[k];
+        if (code_unit != '%') {
+            if (expected_continuation_bytes > 0) {
+                global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
+                return {};
+            }
+            decoded_builder.append(code_unit);
+            continue;
+        }
+        if (k + 2 >= string.length()) {
+            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
+            return {};
+        }
+        auto first_digit = decode_hex_digit(string[k + 1]);
+        if (first_digit >= 16) {
+            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
+            return {};
+        }
+        auto second_digit = decode_hex_digit(string[k + 2]);
+        if (second_digit >= 16) {
+            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
+            return {};
+        }
+        char decoded_code_unit = (first_digit << 4) | second_digit;
+        k += 2;
+        if (expected_continuation_bytes > 0) {
+            decoded_builder.append(decoded_code_unit);
+            expected_continuation_bytes--;
+            continue;
+        }
+        if ((decoded_code_unit & 0x80) == 0) {
+            if (reserved_set.contains(decoded_code_unit))
+                decoded_builder.append(string.substring_view(k - 2, 3));
+            else
+                decoded_builder.append(decoded_code_unit);
+            continue;
+        }
+        auto leading_ones = count_trailing_zeroes_32_safe(~decoded_code_unit) - 24;
+        if (leading_ones == 1 || leading_ones > 4) {
+            global_object.vm().throw_exception<URIError>(global_object, ErrorType::URIMalformed);
+            return {};
+        }
+        decoded_builder.append(decoded_code_unit);
+        expected_continuation_bytes = leading_ones - 1;
+    }
+    return decoded_builder.build();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
+{
+    auto uri_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto encoded = encode(global_object, uri_string, ";/?:@&=+$,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()#"sv);
+    if (vm.exception())
+        return {};
+    return js_string(vm, move(encoded));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
+{
+    auto uri_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto decoded = decode(global_object, uri_string, ";/?:@&=+$,#"sv);
+    if (vm.exception())
+        return {};
+    return js_string(vm, move(decoded));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
+{
+    auto uri_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto encoded = encode(global_object, uri_string, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"sv);
+    if (vm.exception())
+        return {};
+    return js_string(vm, move(encoded));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
+{
+    auto uri_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto decoded = decode(global_object, uri_string, ""sv);
+    if (vm.exception())
+        return {};
+    return js_string(vm, move(decoded));
 }
 
 }

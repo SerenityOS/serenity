@@ -1,31 +1,11 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <AK/Utf8View.h>
 
 namespace AK {
@@ -67,8 +47,8 @@ Utf8CodepointIterator Utf8View::end() const
 
 size_t Utf8View::byte_offset_of(const Utf8CodepointIterator& it) const
 {
-    ASSERT(it.m_ptr >= begin_ptr());
-    ASSERT(it.m_ptr <= end_ptr());
+    VERIFY(it.m_ptr >= begin_ptr());
+    VERIFY(it.m_ptr <= end_ptr());
 
     return it.m_ptr - begin_ptr();
 }
@@ -144,6 +124,24 @@ size_t Utf8View::calculate_length() const
     return length;
 }
 
+bool Utf8View::starts_with(const Utf8View& start) const
+{
+    if (start.is_empty())
+        return true;
+    if (is_empty())
+        return false;
+    if (start.length() > length())
+        return false;
+    if (begin_ptr() == start.begin_ptr())
+        return true;
+
+    for (auto k = begin(), l = start.begin(); l != start.end(); ++k, ++l) {
+        if (*k != *l)
+            return false;
+    }
+    return true;
+}
+
 Utf8CodepointIterator::Utf8CodepointIterator(const unsigned char* ptr, size_t length)
     : m_ptr(ptr)
     , m_length(length)
@@ -162,15 +160,15 @@ bool Utf8CodepointIterator::operator!=(const Utf8CodepointIterator& other) const
 
 Utf8CodepointIterator& Utf8CodepointIterator::operator++()
 {
-    ASSERT(m_length > 0);
+    VERIFY(m_length > 0);
 
     size_t code_point_length_in_bytes = 0;
     u32 value;
     bool first_byte_makes_sense = decode_first_byte(*m_ptr, code_point_length_in_bytes, value);
 
-    ASSERT(first_byte_makes_sense);
+    VERIFY(first_byte_makes_sense);
 
-    ASSERT(code_point_length_in_bytes <= m_length);
+    VERIFY(code_point_length_in_bytes <= m_length);
     m_ptr += code_point_length_in_bytes;
     m_length -= code_point_length_in_bytes;
 
@@ -179,17 +177,17 @@ Utf8CodepointIterator& Utf8CodepointIterator::operator++()
 
 size_t Utf8CodepointIterator::code_point_length_in_bytes() const
 {
-    ASSERT(m_length > 0);
+    VERIFY(m_length > 0);
     size_t code_point_length_in_bytes = 0;
     u32 value;
     bool first_byte_makes_sense = decode_first_byte(*m_ptr, code_point_length_in_bytes, value);
-    ASSERT(first_byte_makes_sense);
+    VERIFY(first_byte_makes_sense);
     return code_point_length_in_bytes;
 }
 
 u32 Utf8CodepointIterator::operator*() const
 {
-    ASSERT(m_length > 0);
+    VERIFY(m_length > 0);
 
     u32 code_point_value_so_far = 0;
     size_t code_point_length_in_bytes = 0;
@@ -197,13 +195,13 @@ u32 Utf8CodepointIterator::operator*() const
     bool first_byte_makes_sense = decode_first_byte(m_ptr[0], code_point_length_in_bytes, code_point_value_so_far);
     if (!first_byte_makes_sense)
         dbgln("First byte doesn't make sense, bytes: {}", StringView { (const char*)m_ptr, m_length });
-    ASSERT(first_byte_makes_sense);
+    VERIFY(first_byte_makes_sense);
     if (code_point_length_in_bytes > m_length)
         dbgln("Not enough bytes (need {}, have {}), first byte is: {:#02x}, '{}'", code_point_length_in_bytes, m_length, m_ptr[0], (const char*)m_ptr);
-    ASSERT(code_point_length_in_bytes <= m_length);
+    VERIFY(code_point_length_in_bytes <= m_length);
 
     for (size_t offset = 1; offset < code_point_length_in_bytes; offset++) {
-        ASSERT(m_ptr[offset] >> 6 == 2);
+        VERIFY(m_ptr[offset] >> 6 == 2);
         code_point_value_so_far <<= 6;
         code_point_value_so_far |= m_ptr[offset] & 63;
     }

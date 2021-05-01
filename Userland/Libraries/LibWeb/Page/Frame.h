@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -43,8 +23,8 @@ namespace Web {
 
 class Frame : public TreeNode<Frame> {
 public:
-    static NonnullRefPtr<Frame> create_subframe(DOM::Element& host_element, Frame& main_frame) { return adopt(*new Frame(host_element, main_frame)); }
-    static NonnullRefPtr<Frame> create(Page& page) { return adopt(*new Frame(page)); }
+    static NonnullRefPtr<Frame> create_subframe(DOM::Element& host_element, Frame& main_frame) { return adopt_ref(*new Frame(host_element, main_frame)); }
+    static NonnullRefPtr<Frame> create(Page& page) { return adopt_ref(*new Frame(page)); }
     ~Frame();
 
     class ViewportClient {
@@ -73,8 +53,7 @@ public:
 
     void set_viewport_scroll_offset(const Gfx::IntPoint&);
     Gfx::IntRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
-
-    void did_scroll(Badge<InProcessWebView>);
+    void set_viewport_rect(const Gfx::IntRect&);
 
     FrameLoader& loader() { return m_loader; }
     const FrameLoader& loader() const { return m_loader; }
@@ -82,7 +61,6 @@ public:
     EventHandler& event_handler() { return m_event_handler; }
     const EventHandler& event_handler() const { return m_event_handler; }
 
-    void scroll_to(const Gfx::IntPoint&);
     void scroll_to_anchor(const String&);
 
     Frame& main_frame() { return m_main_frame; }
@@ -94,9 +72,8 @@ public:
     Gfx::IntPoint to_main_frame_position(const Gfx::IntPoint&);
     Gfx::IntRect to_main_frame_rect(const Gfx::IntRect&);
 
-    DOM::Position& cursor_position() { return m_cursor_position; }
     const DOM::Position& cursor_position() const { return m_cursor_position; }
-    void set_cursor_position(const DOM::Position&);
+    void set_cursor_position(DOM::Position);
 
     bool cursor_blink_state() const { return m_cursor_blink_state; }
 
@@ -107,6 +84,8 @@ public:
 private:
     explicit Frame(DOM::Element& host_element, Frame& main_frame);
     explicit Frame(Page&);
+
+    void reset_cursor_blink_cycle();
 
     void setup();
 

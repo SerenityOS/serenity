@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <Kernel/FileSystem/Plan9FileSystem.h>
@@ -31,7 +11,7 @@ namespace Kernel {
 
 NonnullRefPtr<Plan9FS> Plan9FS::create(FileDescription& file_description)
 {
-    return adopt(*new Plan9FS(file_description));
+    return adopt_ref(*new Plan9FS(file_description));
 }
 
 Plan9FS::Plan9FS(FileDescription& file_description)
@@ -44,7 +24,7 @@ Plan9FS::~Plan9FS()
 {
     // Make sure to destroy the root inode before the FS gets destroyed.
     if (m_root_inode) {
-        ASSERT(m_root_inode->ref_count() == 1);
+        VERIFY(m_root_inode->ref_count() == 1);
         m_root_inode = nullptr;
     }
 }
@@ -153,7 +133,7 @@ public:
         template<typename N>
         Decoder& read_number(N& number)
         {
-            ASSERT(sizeof(number) <= m_data.length());
+            VERIFY(sizeof(number) <= m_data.length());
             memcpy(&number, m_data.characters_without_null_termination(), sizeof(number));
             m_data = m_data.substring_view(sizeof(number), m_data.length() - sizeof(number));
             return *this;
@@ -170,14 +150,14 @@ public:
     template<typename T>
     Message& operator>>(T& t)
     {
-        ASSERT(m_have_been_built);
+        VERIFY(m_have_been_built);
         m_built.decoder >> t;
         return *this;
     }
 
     StringView read_data()
     {
-        ASSERT(m_have_been_built);
+        VERIFY(m_have_been_built);
         return m_built.decoder.read_data();
     }
 
@@ -197,7 +177,7 @@ private:
     template<typename N>
     Message& append_number(N number)
     {
-        ASSERT(!m_have_been_built);
+        VERIFY(!m_have_been_built);
         m_builder.append(reinterpret_cast<const char*>(&number), sizeof(number));
         return *this;
     }
@@ -330,7 +310,7 @@ Plan9FS::Message::Decoder& Plan9FS::Message::Decoder::operator>>(StringView& str
 {
     u16 length;
     *this >> length;
-    ASSERT(length <= m_data.length());
+    VERIFY(length <= m_data.length());
     string = m_data.substring_view(0, length);
     m_data = m_data.substring_view_starting_after_substring(string);
     return *this;
@@ -340,7 +320,7 @@ StringView Plan9FS::Message::Decoder::read_data()
 {
     u32 length;
     *this >> length;
-    ASSERT(length <= m_data.length());
+    VERIFY(length <= m_data.length());
     auto data = m_data.substring_view(0, length);
     m_data = m_data.substring_view_starting_after_substring(data);
     return data;
@@ -401,12 +381,12 @@ Plan9FS::Message& Plan9FS::Message::operator=(Message&& message)
 
 const KBuffer& Plan9FS::Message::build()
 {
-    ASSERT(!m_have_been_built);
+    VERIFY(!m_have_been_built);
 
     auto tmp_buffer = m_builder.build();
 
     // FIXME: We should not assume success here.
-    ASSERT(tmp_buffer);
+    VERIFY(tmp_buffer);
 
     m_have_been_built = true;
     m_builder.~KBufferBuilder();
@@ -470,7 +450,7 @@ bool Plan9FS::Plan9FSBlockCondition::should_add_blocker(Thread::Blocker& b, void
 void Plan9FS::Plan9FSBlockCondition::unblock_completed(u16 tag)
 {
     unblock([&](Thread::Blocker& b, void*, bool&) {
-        ASSERT(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
+        VERIFY(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
         auto& blocker = static_cast<Blocker&>(b);
         return blocker.unblock(tag);
     });
@@ -479,7 +459,7 @@ void Plan9FS::Plan9FSBlockCondition::unblock_completed(u16 tag)
 void Plan9FS::Plan9FSBlockCondition::unblock_all()
 {
     unblock([&](Thread::Blocker& b, void*, bool&) {
-        ASSERT(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
+        VERIFY(b.blocker_type() == Thread::Blocker::Type::Plan9FS);
         auto& blocker = static_cast<Blocker&>(b);
         return blocker.unblock();
     });
@@ -495,16 +475,16 @@ void Plan9FS::Plan9FSBlockCondition::try_unblock(Plan9FS::Blocker& blocker)
 
 bool Plan9FS::is_complete(const ReceiveCompletion& completion)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     if (m_completions.contains(completion.tag)) {
         // If it's still in the map then it can't be complete
-        ASSERT(!completion.completed);
+        VERIFY(!completion.completed);
         return false;
     }
 
     // if it's not in the map anymore, it must be complete. But we MUST
     // hold m_lock to be able to check completion.completed!
-    ASSERT(completion.completed);
+    VERIFY(completion.completed);
     return true;
 }
 
@@ -515,12 +495,12 @@ KResult Plan9FS::post_message(Message& message, RefPtr<ReceiveCompletion> comple
     size_t size = buffer.size();
     auto& description = file_description();
 
-    LOCKER(m_send_lock);
+    Locker locker(m_send_lock);
 
     if (completion) {
         // Save the completion record *before* we send the message. This
         // ensures that it exists when the thread reads the response
-        LOCKER(m_lock);
+        Locker locker(m_lock);
         auto tag = completion->tag;
         m_completions.set(tag, completion.release_nonnull());
         // TODO: What if there is a collision? Do we need to wait until
@@ -589,7 +569,7 @@ KResult Plan9FS::read_and_dispatch_one_message()
     if (result.is_error())
         return result;
 
-    LOCKER(m_lock);
+    Locker locker(m_lock);
 
     auto optional_completion = m_completions.get(header.tag);
     if (optional_completion.has_value()) {
@@ -617,7 +597,7 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
 {
     auto request_type = message.type();
     auto tag = message.tag();
-    auto completion = adopt(*new ReceiveCompletion(tag));
+    auto completion = adopt_ref(*new ReceiveCompletion(tag));
     auto result = post_message(message, completion);
     if (result.is_error())
         return result;
@@ -667,7 +647,7 @@ void Plan9FS::thread_main()
         auto result = read_and_dispatch_one_message();
         if (result.is_error()) {
             // If we fail to read, wake up everyone with an error.
-            LOCKER(m_lock);
+            Locker locker(m_lock);
 
             for (auto& it : m_completions) {
                 it.value->result = result;
@@ -700,7 +680,7 @@ Plan9FSInode::Plan9FSInode(Plan9FS& fs, u32 fid)
 
 NonnullRefPtr<Plan9FSInode> Plan9FSInode::create(Plan9FS& fs, u32 fid)
 {
-    return adopt(*new Plan9FSInode(fs, fid));
+    return adopt_ref(*new Plan9FSInode(fs, fid));
 }
 
 Plan9FSInode::~Plan9FSInode()
@@ -718,7 +698,7 @@ KResult Plan9FSInode::ensure_open_for_mode(int mode)
     u8 p9_mode = 0;
 
     {
-        LOCKER(m_lock);
+        Locker locker(m_lock);
 
         // If it's already open in this mode, we're done.
         if ((m_open_mode & mode) == mode)

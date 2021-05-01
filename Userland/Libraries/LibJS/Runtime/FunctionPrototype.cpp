@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
@@ -142,16 +122,15 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
         return {};
     }
-    String function_name = static_cast<Function*>(this_object)->name();
-    String function_parameters = "";
+    String function_name;
+    String function_parameters;
     String function_body;
 
-    if (is<NativeFunction>(this_object) || is<BoundFunction>(this_object)) {
-        function_body = String::formatted("  [{}]", this_object->class_name());
-    } else {
+    if (is<ScriptFunction>(this_object)) {
+        auto& script_function = static_cast<ScriptFunction&>(*this_object);
         StringBuilder parameters_builder;
         auto first = true;
-        for (auto& parameter : static_cast<ScriptFunction*>(this_object)->parameters()) {
+        for (auto& parameter : script_function.parameters()) {
             if (!first)
                 parameters_builder.append(", ");
             first = false;
@@ -161,16 +140,25 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
                 parameters_builder.append(" = TODO");
             }
         }
+        function_name = script_function.name();
         function_parameters = parameters_builder.build();
         // FIXME: ASTNodes should be able to dump themselves to source strings - something like this:
         // auto& body = static_cast<ScriptFunction*>(this_object)->body();
         // function_body = body.to_source();
         function_body = "  ???";
+    } else {
+        // This is "implementation-defined" - other engines don't include a name for
+        // ProxyObject and BoundFunction, only NativeFunction - let's do the same here.
+        if (is<NativeFunction>(this_object))
+            function_name = static_cast<NativeFunction&>(*this_object).name();
+        function_body = "  [native code]";
     }
 
     auto function_source = String::formatted(
         "function {}({}) {{\n{}\n}}",
-        function_name.is_null() ? "" : function_name, function_parameters, function_body);
+        function_name.is_null() ? "" : function_name,
+        function_parameters.is_null() ? "" : function_parameters,
+        function_body);
     return js_string(vm, function_source);
 }
 

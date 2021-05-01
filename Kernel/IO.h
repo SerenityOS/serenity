@@ -1,36 +1,15 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/LogStream.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 
 namespace IO {
 
@@ -61,14 +40,6 @@ inline u32 in32(u16 port)
     return value;
 }
 
-inline void repeated_in16(u16 port, u16* buffer, int buffer_size)
-{
-    asm volatile("rep insw"
-                 : "+D"(buffer), "+c"(buffer_size)
-                 : "d"(port)
-                 : "memory");
-}
-
 inline void out8(u16 port, u8 value)
 {
     asm volatile("outb %0, %1" ::"a"(value), "Nd"(port));
@@ -84,13 +55,6 @@ inline void out32(u16 port, u32 value)
     asm volatile("outl %0, %1" ::"a"(value), "Nd"(port));
 }
 
-inline void repeated_out16(u16 port, const u16* data, int data_size)
-{
-    asm volatile("rep outsw"
-                 : "+S"(data), "+c"(data_size)
-                 : "d"(port));
-}
-
 inline void delay(size_t microseconds)
 {
     for (size_t i = 0; i < microseconds; ++i)
@@ -101,7 +65,7 @@ inline void delay(size_t microseconds)
 
 class IOAddress {
 public:
-    IOAddress() { }
+    IOAddress() = default;
     explicit IOAddress(u16 address)
         : m_address(address)
     {
@@ -121,7 +85,7 @@ public:
             return IO::in16(get());
         if constexpr (sizeof(T) == 1)
             return IO::in8(get());
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     template<typename T>
@@ -139,7 +103,7 @@ public:
             IO::out8(get(), value);
             return;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     inline void out(u32 value, u8 bit_width)
@@ -156,7 +120,7 @@ public:
             IO::out8(get(), value);
             return;
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     bool is_null() const { return m_address == 0; }
@@ -171,11 +135,6 @@ public:
 private:
     u16 m_address { 0 };
 };
-
-inline const LogStream& operator<<(const LogStream& stream, IOAddress value)
-{
-    return stream << "IO " << String::formatted("{:x}", value.get());
-}
 
 template<>
 struct AK::Formatter<IOAddress> : AK::Formatter<FormatString> {

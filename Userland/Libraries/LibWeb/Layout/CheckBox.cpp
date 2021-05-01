@@ -1,40 +1,21 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGUI/Event.h>
-#include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/CheckBox.h>
+#include <LibWeb/Layout/Label.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web::Layout {
 
 CheckBox::CheckBox(DOM::Document& document, HTML::HTMLInputElement& element, NonnullRefPtr<CSS::StyleProperties> style)
-    : ReplacedBox(document, element, move(style))
+    : LabelableNode(document, element, move(style))
 {
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
@@ -51,7 +32,7 @@ void CheckBox::paint(PaintContext& context, PaintPhase phase)
     if (!is_visible())
         return;
 
-    ReplacedBox::paint(context, phase);
+    LabelableNode::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
         Gfx::StylePainter::paint_check_box(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), dom_node().enabled(), dom_node().checked(), m_being_pressed);
@@ -78,8 +59,11 @@ void CheckBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position
     // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protect = *this;
 
-    bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);
-    if (is_inside)
+    bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
+    if (!is_inside_node_or_label)
+        is_inside_node_or_label = Label::is_inside_associated_label(*this, position);
+
+    if (is_inside_node_or_label)
         dom_node().set_checked(!dom_node().checked());
 
     m_being_pressed = false;
@@ -92,11 +76,38 @@ void CheckBox::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& positi
     if (!m_tracking_mouse || !dom_node().enabled())
         return;
 
-    bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);
-    if (m_being_pressed == is_inside)
+    bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
+    if (!is_inside_node_or_label)
+        is_inside_node_or_label = Label::is_inside_associated_label(*this, position);
+
+    if (m_being_pressed == is_inside_node_or_label)
         return;
 
-    m_being_pressed = is_inside;
+    m_being_pressed = is_inside_node_or_label;
+    set_needs_display();
+}
+
+void CheckBox::handle_associated_label_mousedown(Badge<Label>)
+{
+    m_being_pressed = true;
+    set_needs_display();
+}
+
+void CheckBox::handle_associated_label_mouseup(Badge<Label>)
+{
+    // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
+    NonnullRefPtr protect = *this;
+
+    dom_node().set_checked(!dom_node().checked());
+    m_being_pressed = false;
+}
+
+void CheckBox::handle_associated_label_mousemove(Badge<Label>, bool is_inside_node_or_label)
+{
+    if (m_being_pressed == is_inside_node_or_label)
+        return;
+
+    m_being_pressed = is_inside_node_or_label;
     set_needs_display();
 }
 

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Singleton.h>
@@ -40,14 +20,14 @@ namespace Kernel {
 
 void TCPSocket::for_each(Function<void(const TCPSocket&)> callback)
 {
-    LOCKER(sockets_by_tuple().lock(), Lock::Mode::Shared);
+    Locker locker(sockets_by_tuple().lock(), Lock::Mode::Shared);
     for (auto& it : sockets_by_tuple().resource())
         callback(*it.value);
 }
 
 void TCPSocket::set_state(State new_state)
 {
-    dbgln<TCP_SOCKET_DEBUG>("TCPSocket({}) state moving from {} to {}", this, to_string(m_state), to_string(new_state));
+    dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket({}) state moving from {} to {}", this, to_string(m_state), to_string(new_state));
 
     auto was_disconnected = protocol_is_disconnected();
     auto previous_role = m_role;
@@ -58,8 +38,11 @@ void TCPSocket::set_state(State new_state)
         m_role = Role::Connected;
 
     if (new_state == State::Closed) {
-        LOCKER(closing_sockets().lock());
+        Locker locker(closing_sockets().lock());
         closing_sockets().resource().remove(tuple());
+
+        if (m_originator)
+            release_to_originator();
     }
 
     if (previous_role != m_role || was_disconnected != protocol_is_disconnected())
@@ -82,7 +65,7 @@ Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 
 RefPtr<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
 {
-    LOCKER(sockets_by_tuple().lock(), Lock::Mode::Shared);
+    Locker locker(sockets_by_tuple().lock(), Lock::Mode::Shared);
 
     auto exact_match = sockets_by_tuple().resource().get(tuple);
     if (exact_match.has_value())
@@ -110,7 +93,7 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
 {
     auto tuple = IPv4SocketTuple(new_local_address, new_local_port, new_peer_address, new_peer_port);
 
-    LOCKER(sockets_by_tuple().lock());
+    Locker locker(sockets_by_tuple().lock());
     if (sockets_by_tuple().resource().contains(tuple))
         return {};
 
@@ -132,13 +115,14 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
 
 void TCPSocket::release_to_originator()
 {
-    ASSERT(!!m_originator);
+    VERIFY(!!m_originator);
     m_originator.strong_ref()->release_for_accept(this);
+    m_originator.clear();
 }
 
 void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
 {
-    ASSERT(m_pending_release_for_accept.contains(socket->tuple()));
+    VERIFY(m_pending_release_for_accept.contains(socket->tuple()));
     m_pending_release_for_accept.remove(socket->tuple());
     // FIXME: Should we observe this error somehow?
     [[maybe_unused]] auto rc = queue_connection_from(*socket);
@@ -151,15 +135,15 @@ TCPSocket::TCPSocket(int protocol)
 
 TCPSocket::~TCPSocket()
 {
-    LOCKER(sockets_by_tuple().lock());
+    Locker locker(sockets_by_tuple().lock());
     sockets_by_tuple().resource().remove(tuple());
 
-    dbgln<TCP_SOCKET_DEBUG>("~TCPSocket in state {}", to_string(state()));
+    dbgln_if(TCP_SOCKET_DEBUG, "~TCPSocket in state {}", to_string(state()));
 }
 
 NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
 {
-    return adopt(*new TCPSocket(protocol));
+    return adopt_ref(*new TCPSocket(protocol));
 }
 
 KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
@@ -167,10 +151,8 @@ KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     auto& ipv4_packet = *reinterpret_cast<const IPv4Packet*>(raw_ipv4_packet.data());
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
     size_t payload_size = raw_ipv4_packet.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
-#if TCP_SOCKET_DEBUG
-    klog() << "payload_size " << payload_size << ", will it fit in " << buffer_size << "?";
-#endif
-    ASSERT(buffer_size >= payload_size);
+    dbgln_if(TCP_SOCKET_DEBUG, "payload_size {}, will it fit in {}?", payload_size, buffer_size);
+    VERIFY(buffer_size >= payload_size);
     if (!buffer.write(tcp_packet.payload(), payload_size))
         return EFAULT;
     return payload_size;
@@ -184,13 +166,12 @@ KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_
     return data_length;
 }
 
-int TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size)
+KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size)
 {
     const size_t buffer_size = sizeof(TCPPacket) + payload_size;
-    alignas(TCPPacket) u8 buffer[buffer_size];
-    new (buffer) TCPPacket;
-    auto& tcp_packet = *(TCPPacket*)(buffer);
-    ASSERT(local_port());
+    auto buffer = ByteBuffer::create_zeroed(buffer_size);
+    auto& tcp_packet = *(TCPPacket*)(buffer.data());
+    VERIFY(local_port());
     tcp_packet.set_source_port(local_port());
     tcp_packet.set_destination_port(peer_port());
     tcp_packet.set_window_size(1024);
@@ -202,7 +183,7 @@ int TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, siz
         tcp_packet.set_ack_number(m_ack_number);
 
     if (payload && !payload->read(tcp_packet.payload(), payload_size))
-        return -EFAULT;
+        return EFAULT;
 
     if (flags & TCPFlags::SYN) {
         ++m_sequence_number;
@@ -213,54 +194,77 @@ int TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, siz
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 
     if (tcp_packet.has_syn() || payload_size > 0) {
-        LOCKER(m_not_acked_lock);
-        m_not_acked.append({ m_sequence_number, ByteBuffer::copy(buffer, buffer_size) });
+        Locker locker(m_not_acked_lock);
+        m_not_acked.append({ m_sequence_number, move(buffer) });
         send_outgoing_packets();
-        return 0;
+        return KSuccess;
     }
 
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
-    ASSERT(!routing_decision.is_zero());
+    if (routing_decision.is_zero())
+        return EHOSTUNREACH;
 
-    auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer);
-    int err = routing_decision.adapter->send_ipv4(
+    auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer.data());
+    auto result = routing_decision.adapter->send_ipv4(
         routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
         packet_buffer, buffer_size, ttl());
-    if (err < 0)
-        return err;
+    if (result.is_error())
+        return result;
 
     m_packets_out++;
     m_bytes_out += buffer_size;
-    return 0;
+    return KSuccess;
 }
 
 void TCPSocket::send_outgoing_packets()
 {
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
-    ASSERT(!routing_decision.is_zero());
+    if (routing_decision.is_zero())
+        return;
 
     auto now = kgettimeofday();
 
-    LOCKER(m_not_acked_lock, Lock::Mode::Shared);
+    Locker locker(m_not_acked_lock, Lock::Mode::Shared);
     for (auto& packet : m_not_acked) {
-        timeval diff;
-        timeval_sub(packet.tx_time, now, diff);
-        if (diff.tv_sec == 0 && diff.tv_usec <= 500000)
+        auto diff = now - packet.tx_time;
+        if (diff <= Time::from_nanoseconds(500'000'000))
             continue;
         packet.tx_time = now;
         packet.tx_counter++;
 
-#if TCP_SOCKET_DEBUG
-        auto& tcp_packet = *(TCPPacket*)(packet.buffer.data());
-        klog() << "sending tcp packet from " << local_address().to_string().characters() << ":" << local_port() << " to " << peer_address().to_string().characters() << ":" << peer_port() << " with (" << (tcp_packet.has_syn() ? "SYN " : "") << (tcp_packet.has_ack() ? "ACK " : "") << (tcp_packet.has_fin() ? "FIN " : "") << (tcp_packet.has_rst() ? "RST " : "") << ") seq_no=" << tcp_packet.sequence_number() << ", ack_no=" << tcp_packet.ack_number() << ", tx_counter=" << packet.tx_counter;
-#endif
+        if constexpr (TCP_SOCKET_DEBUG) {
+            auto& tcp_packet = *(const TCPPacket*)(packet.buffer.data());
+            dbgln("Sending TCP packet from {}:{} to {}:{} with ({}{}{}{}) seq_no={}, ack_no={}, tx_counter={}",
+                local_address(), local_port(),
+                peer_address(), peer_port(),
+                (tcp_packet.has_syn() ? "SYN " : ""),
+                (tcp_packet.has_ack() ? "ACK " : ""),
+                (tcp_packet.has_fin() ? "FIN " : ""),
+                (tcp_packet.has_rst() ? "RST " : ""),
+                tcp_packet.sequence_number(),
+                tcp_packet.ack_number(),
+                packet.tx_counter);
+        }
+
         auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(packet.buffer.data());
         int err = routing_decision.adapter->send_ipv4(
             routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
             packet_buffer, packet.buffer.size(), ttl());
         if (err < 0) {
-            auto& tcp_packet = *(TCPPacket*)(packet.buffer.data());
-            klog() << "Error (" << err << ") sending tcp packet from " << local_address().to_string().characters() << ":" << local_port() << " to " << peer_address().to_string().characters() << ":" << peer_port() << " with (" << (tcp_packet.has_syn() ? "SYN " : "") << (tcp_packet.has_ack() ? "ACK " : "") << (tcp_packet.has_fin() ? "FIN " : "") << (tcp_packet.has_rst() ? "RST " : "") << ") seq_no=" << tcp_packet.sequence_number() << ", ack_no=" << tcp_packet.ack_number() << ", tx_counter=" << packet.tx_counter;
+            auto& tcp_packet = *(const TCPPacket*)(packet.buffer.data());
+            dmesgln("Error ({}) sending TCP packet from {}:{} to {}:{} with ({}{}{}{}) seq_no={}, ack_no={}, tx_counter={}",
+                err,
+                local_address(),
+                local_port(),
+                peer_address(),
+                peer_port(),
+                (tcp_packet.has_syn() ? "SYN " : ""),
+                (tcp_packet.has_ack() ? "ACK " : ""),
+                (tcp_packet.has_fin() ? "FIN " : ""),
+                (tcp_packet.has_rst() ? "RST " : ""),
+                tcp_packet.sequence_number(),
+                tcp_packet.ack_number(),
+                packet.tx_counter);
         } else {
             m_packets_out++;
             m_bytes_out += packet.buffer.size();
@@ -273,14 +277,14 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
     if (packet.has_ack()) {
         u32 ack_number = packet.ack_number();
 
-        dbgln<TCP_SOCKET_DEBUG>("TCPSocket: receive_tcp_packet: {}", ack_number);
+        dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket: receive_tcp_packet: {}", ack_number);
 
         int removed = 0;
-        LOCKER(m_not_acked_lock);
+        Locker locker(m_not_acked_lock);
         while (!m_not_acked.is_empty()) {
             auto& packet = m_not_acked.first();
 
-            dbgln<TCP_SOCKET_DEBUG>("TCPSocket: iterate: {}", packet.ack_number);
+            dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket: iterate: {}", packet.ack_number);
 
             if (packet.ack_number <= ack_number) {
                 m_not_acked.take_first();
@@ -290,7 +294,7 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
             }
         }
 
-        dbgln<TCP_SOCKET_DEBUG>("TCPSocket: receive_tcp_packet acknowledged {} packets", removed);
+        dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket: receive_tcp_packet acknowledged {} packets", removed);
     }
 
     m_packets_in++;
@@ -322,7 +326,7 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, c
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
-    ASSERT(packet.data_offset() * 4 == sizeof(TCPPacket));
+    VERIFY(packet.data_offset() * 4 == sizeof(TCPPacket));
     w = (const NetworkOrdered<u16>*)packet.payload();
     for (size_t i = 0; i < payload_size / sizeof(u16); ++i) {
         checksum += w[i];
@@ -351,7 +355,7 @@ KResult TCPSocket::protocol_bind()
 
 KResult TCPSocket::protocol_listen()
 {
-    LOCKER(sockets_by_tuple().lock());
+    Locker locker(sockets_by_tuple().lock());
     if (sockets_by_tuple().resource().contains(tuple()))
         return EADDRINUSE;
     sockets_by_tuple().resource().set(tuple(), this);
@@ -371,7 +375,8 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     if (!has_specific_local_address())
         set_local_address(routing_decision.adapter->ipv4_address());
 
-    allocate_local_port_if_needed();
+    if (auto result = allocate_local_port_if_needed(); result.is_error())
+        return result.error();
 
     m_sequence_number = get_good_random<u32>();
     m_ack_number = 0;
@@ -392,7 +397,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
         if (Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags).was_interrupted())
             return EINTR;
         locker.lock();
-        ASSERT(setup_state() == SetupState::Completed);
+        VERIFY(setup_state() == SetupState::Completed);
         if (has_error()) { // TODO: check unblock_flags
             m_role = Role::None;
             return ECONNREFUSED;
@@ -403,14 +408,14 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     return EINPROGRESS;
 }
 
-int TCPSocket::protocol_allocate_local_port()
+KResultOr<u16> TCPSocket::protocol_allocate_local_port()
 {
     static const u16 first_ephemeral_port = 32768;
     static const u16 last_ephemeral_port = 60999;
     static const u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
     u16 first_scan_port = first_ephemeral_port + get_good_random<u16>() % ephemeral_port_range_size;
 
-    LOCKER(sockets_by_tuple().lock());
+    Locker locker(sockets_by_tuple().lock());
     for (u16 port = first_scan_port;;) {
         IPv4SocketTuple proposed_tuple(local_address(), port, peer_address(), peer_port());
 
@@ -426,7 +431,7 @@ int TCPSocket::protocol_allocate_local_port()
         if (port == first_scan_port)
             break;
     }
-    return -EADDRINUSE;
+    return EADDRINUSE;
 }
 
 bool TCPSocket::protocol_is_disconnected() const
@@ -470,8 +475,10 @@ KResult TCPSocket::close()
         set_state(State::LastAck);
     }
 
-    LOCKER(closing_sockets().lock());
-    closing_sockets().resource().set(tuple(), *this);
+    if (state() != State::Closed && state() != State::Listen) {
+        Locker locker(closing_sockets().lock());
+        closing_sockets().resource().set(tuple(), *this);
+    }
     return result;
 }
 

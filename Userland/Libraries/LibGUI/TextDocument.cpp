@@ -1,30 +1,11 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Badge.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibCore/Timer.h>
@@ -37,7 +18,7 @@ namespace GUI {
 
 NonnullRefPtr<TextDocument> TextDocument::create(Client* client)
 {
-    return adopt(*new TextDocument(client));
+    return adopt_ref(*new TextDocument(client));
 }
 
 TextDocument::TextDocument(Client* client)
@@ -57,32 +38,60 @@ TextDocument::~TextDocument()
 {
 }
 
-void TextDocument::set_text(const StringView& text)
+bool TextDocument::set_text(const StringView& text)
 {
     m_client_notifications_enabled = false;
     m_spans.clear();
     remove_all_lines();
 
+    ArmedScopeGuard clear_text_guard([this]() {
+        set_text({});
+    });
+
     size_t start_of_current_line = 0;
 
-    auto add_line = [&](size_t current_position) {
+    auto add_line = [&](size_t current_position) -> bool {
         size_t line_length = current_position - start_of_current_line;
         auto line = make<TextDocumentLine>(*this);
+
+        bool success = true;
         if (line_length)
-            line->set_text(*this, text.substring_view(start_of_current_line, current_position - start_of_current_line));
+            success = line->set_text(*this, text.substring_view(start_of_current_line, current_position - start_of_current_line));
+
+        if (!success)
+            return false;
+
         append_line(move(line));
         start_of_current_line = current_position + 1;
+
+        return true;
     };
+
     size_t i = 0;
     for (i = 0; i < text.length(); ++i) {
-        if (text[i] == '\n')
-            add_line(i);
+        if (text[i] != '\n')
+            continue;
+
+        auto success = add_line(i);
+        if (!success)
+            return false;
     }
-    add_line(i);
+
+    auto success = add_line(i);
+    if (!success)
+        return false;
+
+    // Don't show the file's trailing newline as an actual new line.
+    if (line_count() > 1 && line(line_count() - 1).is_empty())
+        m_lines.take_last();
+
     m_client_notifications_enabled = true;
 
     for (auto* client : m_clients)
         client->document_did_set_text();
+
+    clear_text_guard.disarm();
+    return true;
 }
 
 size_t TextDocumentLine::first_non_whitespace_column() const
@@ -110,6 +119,18 @@ bool TextDocumentLine::ends_in_whitespace() const
     if (!length())
         return false;
     return isspace(code_points()[length() - 1]);
+}
+
+bool TextDocumentLine::can_select() const
+{
+    if (is_empty())
+        return false;
+    for (size_t i = 0; i < length(); ++i) {
+        auto code_point = code_points()[i];
+        if (code_point != '\n' && code_point != '\r' && code_point != '\f' && code_point != '\v')
+            return true;
+    }
+    return false;
 }
 
 size_t TextDocumentLine::leading_spaces() const
@@ -152,17 +173,21 @@ void TextDocumentLine::set_text(TextDocument& document, const Vector<u32> text)
     document.update_views({});
 }
 
-void TextDocumentLine::set_text(TextDocument& document, const StringView& text)
+bool TextDocumentLine::set_text(TextDocument& document, const StringView& text)
 {
     if (text.is_empty()) {
         clear(document);
-        return;
+        return true;
     }
     m_text.clear();
     Utf8View utf8_view(text);
+    if (!utf8_view.validate()) {
+        return false;
+    }
     for (auto code_point : utf8_view)
         m_text.append(code_point);
     document.update_views({});
+    return true;
 }
 
 void TextDocumentLine::append(TextDocument& document, const u32* code_points, size_t length)
@@ -205,7 +230,7 @@ void TextDocumentLine::remove(TextDocument& document, size_t index)
 
 void TextDocumentLine::remove_range(TextDocument& document, size_t start, size_t length)
 {
-    ASSERT(length <= m_text.size());
+    VERIFY(length <= m_text.size());
 
     Vector<u32> new_data;
     new_data.ensure_capacity(m_text.size() - length);
@@ -311,6 +336,8 @@ String TextDocument::text() const
 String TextDocument::text_in_range(const TextRange& a_range) const
 {
     auto range = a_range.normalized();
+    if (is_empty() || line_count() < range.end().line() - range.start().line() || line(range.start().line()).is_empty())
+        return String("");
 
     StringBuilder builder;
     for (size_t i = range.start().line(); i <= range.end().line(); ++i) {
@@ -327,7 +354,7 @@ String TextDocument::text_in_range(const TextRange& a_range) const
 
 u32 TextDocument::code_point_at(const TextPosition& position) const
 {
-    ASSERT(position.line() < line_count());
+    VERIFY(position.line() < line_count());
     auto& line = this->line(position.line());
     if (position.column() == line.length())
         return '\n';
@@ -382,7 +409,7 @@ void TextDocument::update_regex_matches(const StringView& needle)
     }
 }
 
-TextRange TextDocument::find_next(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch)
+TextRange TextDocument::find_next(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
 {
     if (needle.is_empty())
         return {};
@@ -445,7 +472,7 @@ TextRange TextDocument::find_next(const StringView& needle, const TextPosition& 
     do {
         auto ch = code_point_at(position);
         // FIXME: This is not the right way to use a Unicode needle!
-        if (ch == (u32)needle[needle_index]) {
+        if (match_case ? ch == (u32)needle[needle_index] : tolower(ch) == tolower((u32)needle[needle_index])) {
             if (needle_index == 0)
                 start_of_potential_match = position;
             ++needle_index;
@@ -462,7 +489,7 @@ TextRange TextDocument::find_next(const StringView& needle, const TextPosition& 
     return {};
 }
 
-TextRange TextDocument::find_previous(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch)
+TextRange TextDocument::find_previous(const StringView& needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
 {
     if (needle.is_empty())
         return {};
@@ -519,6 +546,8 @@ TextRange TextDocument::find_previous(const StringView& needle, const TextPositi
 
     TextPosition position = start.is_valid() ? start : TextPosition(0, 0);
     position = previous_position_before(position, should_wrap);
+    if (position.line() >= line_count())
+        return {};
     TextPosition original_position = position;
 
     TextPosition end_of_potential_match;
@@ -527,7 +556,7 @@ TextRange TextDocument::find_previous(const StringView& needle, const TextPositi
     do {
         auto ch = code_point_at(position);
         // FIXME: This is not the right way to use a Unicode needle!
-        if (ch == (u32)needle[needle_index]) {
+        if (match_case ? ch == (u32)needle[needle_index] : tolower(ch) == tolower((u32)needle[needle_index])) {
             if (needle_index == needle.length() - 1)
                 end_of_potential_match = position;
             if (needle_index == 0)
@@ -599,7 +628,11 @@ TextPosition TextDocument::first_word_break_before(const TextPosition& position,
 
     auto target = position;
     auto line = this->line(target.line());
-    auto is_start_alphanumeric = isalnum(line.code_points()[target.column() - (start_at_column_before ? 1 : 0)]);
+    auto modifier = start_at_column_before ? 1 : 0;
+    if (target.column() == line.length())
+        modifier = 1;
+
+    auto is_start_alphanumeric = isalnum(line.code_points()[target.column() - modifier]);
 
     while (target.column() > 0) {
         auto prev_code_point = line.code_points()[target.column() - 1];
@@ -807,7 +840,7 @@ void TextDocument::remove(const TextRange& unnormalized_range)
         }
     } else {
         // Delete across a newline, merging lines.
-        ASSERT(range.start().line() == range.end().line() - 1);
+        VERIFY(range.start().line() == range.end().line() - 1);
         auto& first_line = line(range.start().line());
         auto& second_line = line(range.end().line());
         Vector<u32> code_points;

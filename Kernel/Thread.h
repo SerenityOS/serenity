@@ -1,43 +1,25 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
+#include <AK/SourceLocation.h>
 #include <AK/String.h>
 #include <AK/Time.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/SafeMem.h>
+#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
@@ -47,7 +29,7 @@
 #include <Kernel/TimerQueue.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/fd_set.h>
-#include <LibELF/AuxiliaryVector.h>
+#include <LibC/signal_numbers.h>
 
 namespace Kernel {
 
@@ -85,8 +67,9 @@ class Thread
     AK_MAKE_NONMOVABLE(Thread);
 
     friend class Process;
+    friend class ProtectedProcessBase;
     friend class Scheduler;
-    friend class ThreadReadyQueue;
+    friend struct ThreadReadyQueue;
 
     static SpinLock<u8> g_tid_map_lock;
     static HashMap<ThreadID, Thread*>* g_tid_map;
@@ -99,7 +82,7 @@ public:
 
     static void initialize();
 
-    explicit Thread(NonnullRefPtr<Process>);
+    static KResultOr<NonnullRefPtr<Thread>> try_create(NonnullRefPtr<Process>);
     ~Thread();
 
     static RefPtr<Thread> from_tid(ThreadID);
@@ -125,9 +108,6 @@ public:
 
     Process& process() { return m_process; }
     const Process& process() const { return m_process; }
-
-    String backtrace();
-    Vector<FlatPtr> raw_backtrace(FlatPtr ebp, FlatPtr eip) const;
 
     String name() const
     {
@@ -159,7 +139,7 @@ public:
         Blocked
     };
 
-    class BlockResult {
+    class [[nodiscard]] BlockResult {
     public:
         enum Type {
             WokeNormally,
@@ -211,44 +191,17 @@ public:
             : m_infinite(true)
         {
         }
-        explicit BlockTimeout(bool is_absolute, const timeval* time, const timespec* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE)
-            : m_clock_id(clock_id)
-            , m_infinite(!time)
-        {
-            if (!m_infinite) {
-                if (time->tv_sec > 0 || time->tv_usec > 0) {
-                    timeval_to_timespec(*time, m_time);
-                    m_should_block = true;
-                }
-                m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id).value();
-                if (!is_absolute)
-                    timespec_add(m_time, m_start_time, m_time);
-            }
-        }
-        explicit BlockTimeout(bool is_absolute, const timespec* time, const timespec* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE)
-            : m_clock_id(clock_id)
-            , m_infinite(!time)
-        {
-            if (!m_infinite) {
-                if (time->tv_sec > 0 || time->tv_nsec > 0) {
-                    m_time = *time;
-                    m_should_block = true;
-                }
-                m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id).value();
-                if (!is_absolute)
-                    timespec_add(m_time, m_start_time, m_time);
-            }
-        }
+        explicit BlockTimeout(bool is_absolute, const Time* time, const Time* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE);
 
-        const timespec& absolute_time() const { return m_time; }
-        const timespec* start_time() const { return !m_infinite ? &m_start_time : nullptr; }
+        const Time& absolute_time() const { return m_time; }
+        const Time* start_time() const { return !m_infinite ? &m_start_time : nullptr; }
         clockid_t clock_id() const { return m_clock_id; }
         bool is_infinite() const { return m_infinite; }
         bool should_block() const { return m_infinite || m_should_block; };
 
     private:
-        timespec m_time { 0, 0 };
-        timespec m_start_time { 0, 0 };
+        Time m_time {};
+        Time m_start_time {};
         clockid_t m_clock_id { CLOCK_MONOTONIC_COARSE };
         bool m_infinite { false };
         bool m_should_block { false };
@@ -320,7 +273,7 @@ public:
         }
         void do_set_interrupted_by_signal(u8 signal)
         {
-            ASSERT(signal != 0);
+            VERIFY(signal != 0);
             m_was_interrupted_by_signal = signal;
         }
         void do_clear_interrupted_by_signal()
@@ -343,7 +296,7 @@ public:
                 ScopedSpinLock lock(m_lock);
                 if (m_is_blocking) {
                     m_is_blocking = false;
-                    ASSERT(m_blocked_thread);
+                    VERIFY(m_blocked_thread);
                     thread = m_blocked_thread;
                 }
             }
@@ -380,7 +333,7 @@ public:
         virtual ~BlockCondition()
         {
             ScopedSpinLock lock(m_lock);
-            ASSERT(m_blockers.is_empty());
+            VERIFY(m_blockers.is_empty());
         }
 
         bool add_blocker(Blocker& blocker, void* data)
@@ -418,7 +371,7 @@ public:
         template<typename UnblockOne>
         bool do_unblock(UnblockOne unblock_one)
         {
-            ASSERT(m_lock.is_locked());
+            VERIFY(m_lock.is_locked());
             bool stop_iterating = false;
             bool did_unblock = false;
             for (size_t i = 0; i < m_blockers.size() && !stop_iterating;) {
@@ -436,7 +389,7 @@ public:
 
         bool is_empty_locked() const
         {
-            ASSERT(m_lock.is_locked());
+            VERIFY(m_lock.is_locked());
             return m_blockers.is_empty();
         }
 
@@ -453,7 +406,7 @@ public:
                 return move(m_blockers);
 
             size_t move_count = (count <= m_blockers.size()) ? count : m_blockers.size();
-            ASSERT(move_count > 0);
+            VERIFY(move_count > 0);
 
             Vector<BlockerInfo, 4> taken_blockers;
             taken_blockers.ensure_capacity(move_count);
@@ -560,7 +513,7 @@ public:
 
     class FileBlocker : public Blocker {
     public:
-        enum class BlockFlags : u32 {
+        enum class BlockFlags : u16 {
             None = 0,
 
             Read = 1 << 0,
@@ -643,7 +596,7 @@ public:
 
     class SleepBlocker final : public Blocker {
     public:
-        explicit SleepBlocker(const BlockTimeout&, timespec* = nullptr);
+        explicit SleepBlocker(const BlockTimeout&, Time* = nullptr);
         virtual const char* state_string() const override { return "Sleeping"; }
         virtual Type blocker_type() const override { return Type::Sleep; }
         virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
@@ -655,14 +608,14 @@ public:
         void calculate_remaining();
 
         BlockTimeout m_deadline;
-        timespec* m_remaining;
+        Time* m_remaining;
     };
 
     class SelectBlocker final : public FileBlocker {
     public:
         struct FDInfo {
             NonnullRefPtr<FileDescription> description;
-            BlockFlags block_flags;
+            BlockFlags block_flags { BlockFlags::None };
             BlockFlags unblocked_flags { BlockFlags::None };
         };
 
@@ -788,13 +741,14 @@ public:
     u32 affinity() const { return m_cpu_affinity; }
     void set_affinity(u32 affinity) { m_cpu_affinity = affinity; }
 
-    u32 stack_ptr() const { return m_tss.esp; }
-
     RegisterState& get_register_dump_from_stack();
     const RegisterState& get_register_dump_from_stack() const { return const_cast<Thread*>(this)->get_register_dump_from_stack(); }
 
-    TSS32& tss() { return m_tss; }
-    const TSS32& tss() const { return m_tss; }
+    DebugRegisterState& debug_register_state() { return m_debug_register_state; }
+    const DebugRegisterState& debug_register_state() const { return m_debug_register_state; }
+
+    TSS& tss() { return m_tss; }
+    const TSS& tss() const { return m_tss; }
     State state() const { return m_state; }
     const char* state_string() const;
 
@@ -819,19 +773,19 @@ public:
         }
     }
 
-    template<typename T, class... Args>
+    template<typename BlockerType, class... Args>
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
     {
-        ASSERT(!Processor::current().in_irq());
-        ASSERT(this == Thread::current());
+        VERIFY(!Processor::current().in_irq());
+        VERIFY(this == Thread::current());
         ScopedCritical critical;
-        ASSERT(!s_mm_lock.own_lock());
+        VERIFY(!s_mm_lock.own_lock());
 
         ScopedSpinLock block_lock(m_block_lock);
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
         m_in_block = true;
-        T t(forward<Args>(args)...);
+        BlockerType blocker(forward<Args>(args)...);
 
         ScopedSpinLock scheduler_lock(g_scheduler_lock);
         // Relaxed semantics are fine for timeout_unblocked because we
@@ -844,29 +798,29 @@ public:
                 // It's possible that we were requested to be stopped!
                 break;
             case Thread::Running:
-                ASSERT(m_blocker == nullptr);
+                VERIFY(m_blocker == nullptr);
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
 
-            m_blocker = &t;
-            if (!t.should_block()) {
+            m_blocker = &blocker;
+            if (!blocker.should_block()) {
                 // Don't block if the wake condition is already met
-                t.not_blocking(false);
+                blocker.not_blocking(false);
                 m_blocker = nullptr;
                 m_in_block = false;
                 return BlockResult::NotBlocked;
             }
 
-            auto& block_timeout = t.override_timeout(timeout);
+            auto& block_timeout = blocker.override_timeout(timeout);
             if (!block_timeout.is_infinite()) {
                 // Process::kill_all_threads may be called at any time, which will mark all
                 // threads to die. In that case
                 timer = TimerQueue::the().add_timer_without_id(block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
-                    ASSERT(!Processor::current().in_irq());
-                    ASSERT(!g_scheduler_lock.own_lock());
-                    ASSERT(!m_block_lock.own_lock());
+                    VERIFY(!Processor::current().in_irq());
+                    VERIFY(!g_scheduler_lock.own_lock());
+                    VERIFY(!m_block_lock.own_lock());
                     // NOTE: this may execute on the same or any other processor!
                     ScopedSpinLock scheduler_lock(g_scheduler_lock);
                     ScopedSpinLock block_lock(m_block_lock);
@@ -875,14 +829,14 @@ public:
                 });
                 if (!timer) {
                     // Timeout is already in the past
-                    t.not_blocking(true);
+                    blocker.not_blocking(true);
                     m_blocker = nullptr;
                     m_in_block = false;
                     return BlockResult::InterruptedByTimeout;
                 }
             }
 
-            t.begin_blocking({});
+            blocker.begin_blocking({});
 
             set_state(Thread::Blocked);
         }
@@ -890,16 +844,16 @@ public:
         scheduler_lock.unlock();
         block_lock.unlock();
 
-        dbgln<THREAD_DEBUG>("Thread {} blocking on {} ({}) -->", *this, &t, t.state_string());
+        dbgln_if(THREAD_DEBUG, "Thread {} blocking on {} ({}) -->", *this, &blocker, blocker.state_string());
         bool did_timeout = false;
         u32 lock_count_to_restore = 0;
         auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
         for (;;) {
             // Yield to the scheduler, and wait for us to resume unblocked.
-            ASSERT(!g_scheduler_lock.own_lock());
-            ASSERT(Processor::current().in_critical());
+            VERIFY(!g_scheduler_lock.own_lock());
+            VERIFY(Processor::current().in_critical());
             yield_while_not_holding_big_lock();
-            ASSERT(Processor::current().in_critical());
+            VERIFY(Processor::current().in_critical());
 
             ScopedSpinLock block_lock2(m_block_lock);
             if (should_be_stopped() || state() == Stopped) {
@@ -909,7 +863,7 @@ public:
             }
             if (m_blocker && !m_blocker->can_be_interrupted() && !m_should_die) {
                 block_lock2.unlock();
-                dbgln("Thread should not be unblocking, current state: ", state_string());
+                dbgln("Thread should not be unblocking, current state: {}", state_string());
                 set_state(Thread::Blocked);
                 continue;
             }
@@ -918,15 +872,15 @@ public:
             did_timeout |= timeout_unblocked.exchange(true);
             if (m_blocker) {
                 // Remove ourselves...
-                ASSERT(m_blocker == &t);
+                VERIFY(m_blocker == &blocker);
                 m_blocker = nullptr;
             }
-            dbgln<THREAD_DEBUG>("<-- Thread {} unblocked from {} ({})", *this, &t, t.state_string());
+            dbgln_if(THREAD_DEBUG, "<-- Thread {} unblocked from {} ({})", *this, &blocker, blocker.state_string());
             m_in_block = false;
             break;
         }
 
-        if (t.was_interrupted_by_signal()) {
+        if (blocker.was_interrupted_by_signal()) {
             ScopedSpinLock scheduler_lock(g_scheduler_lock);
             ScopedSpinLock lock(m_lock);
             dispatch_one_pending_signal();
@@ -934,7 +888,7 @@ public:
 
         // Notify the blocker that we are no longer blocking. It may need
         // to clean up now while we're still holding m_lock
-        auto result = t.end_blocking({}, did_timeout); // calls was_unblocked internally
+        auto result = blocker.end_blocking({}, did_timeout); // calls was_unblocked internally
 
         if (timer && !did_timeout) {
             // Cancel the timer while not holding any locks. This allows
@@ -956,17 +910,17 @@ public:
     template<class... Args>
     Thread::BlockResult wait_on(WaitQueue& wait_queue, const Thread::BlockTimeout& timeout, Args&&... args)
     {
-        ASSERT(this == Thread::current());
+        VERIFY(this == Thread::current());
         return block<Thread::QueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
     }
 
-    BlockResult sleep(clockid_t, const timespec&, timespec* = nullptr);
-    BlockResult sleep(const timespec& duration, timespec* remaining_time = nullptr)
+    BlockResult sleep(clockid_t, const Time&, Time* = nullptr);
+    BlockResult sleep(const Time& duration, Time* remaining_time = nullptr)
     {
         return sleep(CLOCK_MONOTONIC_COARSE, duration, remaining_time);
     }
-    BlockResult sleep_until(clockid_t, const timespec&);
-    BlockResult sleep_until(const timespec& duration)
+    BlockResult sleep_until(clockid_t, const Time&);
+    BlockResult sleep_until(const Time& duration)
     {
         return sleep_until(CLOCK_MONOTONIC_COARSE, duration);
     }
@@ -999,6 +953,9 @@ public:
     u32 signal_mask() const;
     void clear_signals();
 
+    KResultOr<u32> peek_debug_register(u32 register_index);
+    KResult poke_debug_register(u32 register_index, u32 data);
+
     void set_dump_backtrace_on_finalization() { m_dump_backtrace_on_finalization = true; }
 
     DispatchSignalResult dispatch_one_pending_signal();
@@ -1006,17 +963,12 @@ public:
     DispatchSignalResult dispatch_signal(u8 signal);
     void check_dispatch_pending_signal();
     [[nodiscard]] bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(AK::memory_order_consume); }
-    void terminate_due_to_signal(u8 signal);
     [[nodiscard]] bool should_ignore_signal(u8 signal) const;
     [[nodiscard]] bool has_signal_handler(u8 signal) const;
-    [[nodiscard]] bool has_pending_signal(u8 signal) const;
     u32 pending_signals() const;
     u32 pending_signals_for_state() const;
 
     FPUState& fpu_state() { return *m_fpu_state; }
-
-    void set_default_signal_dispositions();
-    bool push_value_on_stack(FlatPtr);
 
     KResult make_thread_specific_region(Badge<Process>);
 
@@ -1098,13 +1050,8 @@ public:
     template<typename Callback>
     static IterationDecision for_each(Callback);
 
-    [[nodiscard]] static bool is_runnable_state(Thread::State state)
-    {
-        return state == Thread::State::Running || state == Thread::State::Runnable;
-    }
-
     static constexpr u32 default_kernel_stack_size = 65536;
-    static constexpr u32 default_userspace_stack_size = 4 * MiB;
+    static constexpr u32 default_userspace_stack_size = 1 * MiB;
 
     u32 ticks_in_user() const { return m_ticks_in_user; }
     u32 ticks_in_kernel() const { return m_ticks_in_kernel; }
@@ -1120,9 +1067,9 @@ public:
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
 #if LOCK_DEBUG
-    void holding_lock(Lock& lock, int refs_delta, const char* file = nullptr, int line = 0)
+    void holding_lock(Lock& lock, int refs_delta, const SourceLocation& location)
     {
-        ASSERT(refs_delta != 0);
+        VERIFY(refs_delta != 0);
         m_holding_locks.fetch_add(refs_delta, AK::MemoryOrder::memory_order_relaxed);
         ScopedSpinLock list_lock(m_holding_locks_lock);
         if (refs_delta > 0) {
@@ -1136,14 +1083,14 @@ public:
                 }
             }
             if (!have_existing)
-                m_holding_locks_list.append({ &lock, file ? file : "unknown", line, 1 });
+                m_holding_locks_list.append({ &lock, location, 1 });
         } else {
-            ASSERT(refs_delta < 0);
+            VERIFY(refs_delta < 0);
             bool found = false;
             for (size_t i = 0; i < m_holding_locks_list.size(); i++) {
                 auto& info = m_holding_locks_list[i];
                 if (info.lock == &lock) {
-                    ASSERT(info.count >= (unsigned)-refs_delta);
+                    VERIFY(info.count >= (unsigned)-refs_delta);
                     info.count -= (unsigned)-refs_delta;
                     if (info.count == 0)
                         m_holding_locks_list.remove(i);
@@ -1151,7 +1098,7 @@ public:
                     break;
                 }
             }
-            ASSERT(found);
+            VERIFY(found);
         }
     }
     u32 lock_count() const
@@ -1160,16 +1107,16 @@ public:
     }
 #endif
 
-    bool was_created() const
+    bool is_handling_page_fault() const
     {
-        return m_kernel_stack_region;
+        return m_handling_page_fault;
     }
-
-    bool is_handling_page_fault() const { return m_handling_page_fault; }
     void set_handling_page_fault(bool b) { m_handling_page_fault = b; }
 
 private:
-    IntrusiveListNode m_process_thread_list_node;
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region> kernel_stack_region);
+
+    IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
 
     friend class WaitQueue;
@@ -1179,7 +1126,7 @@ private:
         void thread_did_exit(void* exit_value)
         {
             ScopedSpinLock lock(m_lock);
-            ASSERT(!m_thread_did_exit);
+            VERIFY(!m_thread_did_exit);
             m_thread_did_exit = true;
             m_exit_value.store(exit_value, AK::MemoryOrder::memory_order_release);
             do_unblock_joiner();
@@ -1191,7 +1138,7 @@ private:
         }
         void* exit_value() const
         {
-            ASSERT(m_thread_did_exit);
+            VERIFY(m_thread_did_exit);
             return m_exit_value.load(AK::MemoryOrder::memory_order_acquire);
         }
 
@@ -1205,7 +1152,7 @@ private:
     protected:
         virtual bool should_add_blocker(Blocker& b, void*) override
         {
-            ASSERT(b.blocker_type() == Blocker::Type::Join);
+            VERIFY(b.blocker_type() == Blocker::Type::Join);
             auto& blocker = static_cast<JoinBlocker&>(b);
 
             // NOTE: m_lock is held already!
@@ -1220,7 +1167,7 @@ private:
         void do_unblock_joiner()
         {
             do_unblock([&](Blocker& b, void*, bool&) {
-                ASSERT(b.blocker_type() == Blocker::Type::Join);
+                VERIFY(b.blocker_type() == Blocker::Type::Join);
                 auto& blocker = static_cast<JoinBlocker&>(b);
                 return blocker.unblock(exit_value(), false);
             });
@@ -1232,17 +1179,18 @@ private:
 
     LockMode unlock_process_if_locked(u32&);
     void relock_process(LockMode, u32);
-    String backtrace_impl();
+    String backtrace();
     void reset_fpu_state();
 
     mutable RecursiveSpinLock m_lock;
     mutable RecursiveSpinLock m_block_lock;
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
-    TSS32 m_tss;
+    TSS m_tss {};
+    DebugRegisterState m_debug_register_state {};
     TrapFrame* m_current_trap { nullptr };
     u32 m_saved_critical { 1 };
-    IntrusiveListNode m_ready_queue_node;
+    IntrusiveListNode<Thread> m_ready_queue_node;
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
     u32 m_ticks_left { 0 };
@@ -1255,14 +1203,13 @@ private:
     u32 m_kernel_stack_top { 0 };
     OwnPtr<Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
-    SignalActionData m_signal_action_data[32];
+    Array<SignalActionData, NSIG> m_signal_action_data;
     Blocker* m_blocker { nullptr };
 
 #if LOCK_DEBUG
     struct HoldingLockInfo {
         Lock* lock;
-        const char* file;
-        int line;
+        SourceLocation source_location;
         unsigned count;
     };
     Atomic<u32> m_holding_locks { 0 };
@@ -1309,6 +1256,8 @@ private:
     void drop_thread_count(bool);
 };
 
+AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);
+
 template<typename Callback>
 inline IterationDecision Thread::for_each(Callback callback)
 {
@@ -1335,8 +1284,6 @@ inline IterationDecision Thread::for_each_in_state(State state, Callback callbac
     }
     return IterationDecision::Continue;
 }
-
-const LogStream& operator<<(const LogStream&, const Thread&);
 
 }
 

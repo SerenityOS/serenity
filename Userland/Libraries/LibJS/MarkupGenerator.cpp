@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Hunter Salyer <thefalsehonesty@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/HashTable.h>
@@ -53,6 +33,14 @@ String MarkupGenerator::html_from_value(Value value)
     return output_html.to_string();
 }
 
+String MarkupGenerator::html_from_error(Object& object)
+{
+    StringBuilder output_html;
+    HashTable<Object*> seen_objects;
+    error_to_html(object, output_html, seen_objects);
+    return output_html.to_string();
+}
+
 void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, HashTable<Object*> seen_objects)
 {
     if (value.is_empty()) {
@@ -75,6 +63,7 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
 
     if (value.is_object()) {
         auto& object = value.as_object();
+        output_html.append(wrap_string_in_style(object.class_name(), StyleType::ObjectType));
         if (object.is_function())
             return function_to_html(object, output_html, seen_objects);
         if (is<Date>(object))
@@ -156,10 +145,16 @@ void MarkupGenerator::date_to_html(const Object& date, StringBuilder& html_outpu
 
 void MarkupGenerator::error_to_html(const Object& object, StringBuilder& html_output, HashTable<Object*>&)
 {
-    auto& error = static_cast<const Error&>(object);
-    html_output.append(wrap_string_in_style(String::formatted("[{}]", error.name()), StyleType::Invalid));
-    if (!error.message().is_empty()) {
-        html_output.appendff(": {}", escape_html_entities(error.message()));
+    auto name = object.get_without_side_effects("name").value_or(JS::js_undefined());
+    auto message = object.get_without_side_effects("message").value_or(JS::js_undefined());
+    if (name.is_accessor() || name.is_native_property() || message.is_accessor() || message.is_native_property()) {
+        html_output.append(wrap_string_in_style(JS::Value(&object).to_string_without_side_effects(), StyleType::Invalid));
+    } else {
+        auto name_string = name.to_string_without_side_effects();
+        auto message_string = message.to_string_without_side_effects();
+        html_output.append(wrap_string_in_style(String::formatted("[{}]", name_string), StyleType::Invalid));
+        if (!message_string.is_empty())
+            html_output.appendff(": {}", escape_html_entities(message_string));
     }
 }
 
@@ -184,8 +179,10 @@ String MarkupGenerator::style_from_style_type(StyleType type)
         return "color: -libweb-palette-syntax-control-keyword;";
     case StyleType::Identifier:
         return "color: -libweb-palette-syntax-identifier;";
+    case StyleType::ObjectType:
+        return "padding: 2px; background-color: #ddf; color: black; font-weight: bold;";
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -216,7 +213,7 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
         return StyleType::Identifier;
     default:
         dbgln("Unknown style type for token {}", token.name());
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 

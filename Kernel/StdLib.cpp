@@ -1,34 +1,15 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
 #include <AK/MemMem.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -36,14 +17,13 @@
 String copy_string_from_user(const char* user_str, size_t user_str_size)
 {
     bool is_user = Kernel::is_user_range(VirtualAddress(user_str), user_str_size);
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
     void* fault_at;
     ssize_t length = Kernel::safe_strnlen(user_str, user_str_size, fault_at);
     if (length < 0) {
-        klog() << "copy_string_from_user(" << user_str << ", " << user_str_size << ") failed at " << VirtualAddress(fault_at) << " (strnlen)";
+        dbgln("copy_string_from_user({:p}, {}) failed at {} (strnlen)", static_cast<const void*>(user_str), user_str_size, VirtualAddress { fault_at });
         return {};
     }
     if (length == 0)
@@ -52,7 +32,7 @@ String copy_string_from_user(const char* user_str, size_t user_str_size)
     char* buffer;
     auto copied_string = StringImpl::create_uninitialized((size_t)length, buffer);
     if (!Kernel::safe_memcpy(buffer, user_str, (size_t)length, fault_at)) {
-        klog() << "copy_string_from_user(" << user_str << ", " << user_str_size << ") failed at " << VirtualAddress(fault_at) << " (memcpy)";
+        dbgln("copy_string_from_user({:p}, {}) failed at {} (memcpy)", static_cast<const void*>(user_str), user_str_size, VirtualAddress { fault_at });
         return {};
     }
     return copied_string;
@@ -63,12 +43,37 @@ String copy_string_from_user(Userspace<const char*> user_str, size_t user_str_si
     return copy_string_from_user(user_str.unsafe_userspace_ptr(), user_str_size);
 }
 
+[[nodiscard]] Optional<Time> copy_time_from_user(const timespec* ts_user)
+{
+    timespec ts;
+    if (!copy_from_user(&ts, ts_user, sizeof(timespec))) {
+        return {};
+    }
+    return Time::from_timespec(ts);
+}
+[[nodiscard]] Optional<Time> copy_time_from_user(const timeval* tv_user)
+{
+    timeval tv;
+    if (!copy_from_user(&tv, tv_user, sizeof(timeval))) {
+        return {};
+    }
+    return Time::from_timeval(tv);
+}
+
+template<>
+[[nodiscard]] Optional<Time> copy_time_from_user<const timeval>(Userspace<const timeval*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+template<>
+[[nodiscard]] Optional<Time> copy_time_from_user<timeval>(Userspace<timeval*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+template<>
+[[nodiscard]] Optional<Time> copy_time_from_user<const timespec>(Userspace<const timespec*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+template<>
+[[nodiscard]] Optional<Time> copy_time_from_user<timespec>(Userspace<timespec*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+
 Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -80,7 +85,6 @@ Optional<u32> user_atomic_exchange_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -92,7 +96,6 @@ Optional<u32> user_atomic_load_relaxed(volatile u32* var)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -104,7 +107,6 @@ bool user_atomic_store_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return false; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return false;
     Kernel::SmapDisabler disabler;
@@ -115,9 +117,8 @@ Optional<bool> user_atomic_compare_exchange_relaxed(volatile u32* var, u32& expe
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
-    ASSERT(!Kernel::is_user_range(VirtualAddress(&expected), sizeof(expected)));
+    VERIFY(!Kernel::is_user_range(VirtualAddress(&expected), sizeof(expected)));
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -129,7 +130,6 @@ Optional<u32> user_atomic_fetch_and_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -141,7 +141,6 @@ Optional<u32> user_atomic_fetch_and_not_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -153,7 +152,6 @@ Optional<u32> user_atomic_fetch_or_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -165,7 +163,6 @@ Optional<u32> user_atomic_fetch_xor_relaxed(volatile u32* var, u32 val)
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
     bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -177,15 +174,14 @@ extern "C" {
 bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
     bool is_user = Kernel::is_user_range(VirtualAddress(dest_ptr), n);
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return false;
-    ASSERT(!Kernel::is_user_range(VirtualAddress(src_ptr), n));
+    VERIFY(!Kernel::is_user_range(VirtualAddress(src_ptr), n));
     Kernel::SmapDisabler disabler;
     void* fault_at;
     if (!Kernel::safe_memcpy(dest_ptr, src_ptr, n, fault_at)) {
-        ASSERT(VirtualAddress(fault_at) >= VirtualAddress(dest_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)dest_ptr + n));
-        klog() << "copy_to_user(" << dest_ptr << ", " << src_ptr << ", " << n << ") failed at " << VirtualAddress(fault_at);
+        VERIFY(VirtualAddress(fault_at) >= VirtualAddress(dest_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)dest_ptr + n));
+        dbgln("copy_to_user({:p}, {:p}, {}) failed at {}", dest_ptr, src_ptr, n, VirtualAddress { fault_at });
         return false;
     }
     return true;
@@ -194,15 +190,14 @@ bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 bool copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
     bool is_user = Kernel::is_user_range(VirtualAddress(src_ptr), n);
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return false;
-    ASSERT(!Kernel::is_user_range(VirtualAddress(dest_ptr), n));
+    VERIFY(!Kernel::is_user_range(VirtualAddress(dest_ptr), n));
     Kernel::SmapDisabler disabler;
     void* fault_at;
     if (!Kernel::safe_memcpy(dest_ptr, src_ptr, n, fault_at)) {
-        ASSERT(VirtualAddress(fault_at) >= VirtualAddress(src_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)src_ptr + n));
-        klog() << "copy_from_user(" << dest_ptr << ", " << src_ptr << ", " << n << ") failed at " << VirtualAddress(fault_at);
+        VERIFY(VirtualAddress(fault_at) >= VirtualAddress(src_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)src_ptr + n));
+        dbgln("copy_from_user({:p}, {:p}, {}) failed at {}", dest_ptr, src_ptr, n, VirtualAddress { fault_at });
         return false;
     }
     return true;
@@ -250,13 +245,12 @@ const void* memmem(const void* haystack, size_t haystack_length, const void* nee
 [[nodiscard]] bool memset_user(void* dest_ptr, int c, size_t n)
 {
     bool is_user = Kernel::is_user_range(VirtualAddress(dest_ptr), n);
-    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
     if (!is_user)
         return false;
     Kernel::SmapDisabler disabler;
     void* fault_at;
     if (!Kernel::safe_memset(dest_ptr, c, n, fault_at)) {
-        klog() << "memset(" << dest_ptr << ", " << n << ") failed at " << VirtualAddress(fault_at);
+        dbgln("memset_user({:p}, {}, {}) failed at {}", dest_ptr, c, n, VirtualAddress { fault_at });
         return false;
     }
     return true;
@@ -268,9 +262,7 @@ void* memset(void* dest_ptr, int c, size_t n)
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && n >= 12) {
         size_t size_ts = n / sizeof(size_t);
-        size_t expanded_c = (u8)c;
-        expanded_c |= expanded_c << 8;
-        expanded_c |= expanded_c << 16;
+        size_t expanded_c = explode_byte((u8)c);
         asm volatile(
             "rep stosl\n"
             : "=D"(dest)
@@ -367,29 +359,29 @@ void free(void* p)
 
 // Functions that are automatically called by the C++ compiler.
 // Declare them first, to tell the silly compiler that they are indeed being used.
-[[noreturn]] void __stack_chk_fail();
-[[noreturn]] void __stack_chk_fail_local();
+[[noreturn]] void __stack_chk_fail() __attribute__((used));
+[[noreturn]] void __stack_chk_fail_local() __attribute__((used));
 extern "C" int __cxa_atexit(void (*)(void*), void*, void*);
 [[noreturn]] void __cxa_pure_virtual();
 
 [[noreturn]] void __stack_chk_fail()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 [[noreturn]] void __stack_chk_fail_local()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
     return 0;
 }
 
 [[noreturn]] void __cxa_pure_virtual()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 }

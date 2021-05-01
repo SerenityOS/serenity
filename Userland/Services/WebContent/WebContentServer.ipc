@@ -1,8 +1,9 @@
-endpoint WebContentServer = 89
+endpoint WebContentServer
 {
-    Greet(i32 client_pid) => (i32 client_id, i32 server_pid)
+    Greet() => ()
 
     UpdateSystemTheme(Core::AnonymousBuffer theme_buffer) =|
+    UpdateScreenRect(Gfx::IntRect rect) =|
 
     LoadURL(URL url) =|
     LoadHTML(String html, URL url) =|
@@ -16,6 +17,12 @@ endpoint WebContentServer = 89
     MouseDown(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
     MouseMove(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
     MouseUp(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
+    MouseWheel(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers, i32 wheel_delta) =|
 
     KeyDown(i32 key, unsigned modifiers, u32 code_point) =|
+
+    DebugRequest(String request, String argument) =|
+    GetSource() =|
+    JSConsoleInitialize() =|
+    JSConsoleInput(String js_source) =|
 }

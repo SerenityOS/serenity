@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/PrintfImplementation.h>
@@ -36,7 +16,7 @@
 
 static bool serial_debug;
 // A recursive spinlock allows us to keep writing in the case where a
-// page fault happens in the middle of a dbgln(), klog(), etc
+// page fault happens in the middle of a dbgln(), etc
 static RecursiveSpinLock s_log_lock;
 
 void set_serial_debug(bool on_or_off)
@@ -47,23 +27,6 @@ void set_serial_debug(bool on_or_off)
 int get_serial_debug()
 {
     return serial_debug;
-}
-
-static void color_on()
-{
-    IO::out8(0xe9, 0x1b);
-    IO::out8(0xe9, '[');
-    IO::out8(0xe9, '3');
-    IO::out8(0xe9, '6');
-    IO::out8(0xe9, 'm');
-}
-
-static void color_off()
-{
-    IO::out8(0xe9, 0x1b);
-    IO::out8(0xe9, '[');
-    IO::out8(0xe9, '0');
-    IO::out8(0xe9, 'm');
 }
 
 static void serial_putch(char ch)
@@ -111,23 +74,6 @@ static void console_out(char ch)
     }
 }
 
-static void console_putch(char*&, char ch)
-{
-    console_out(ch);
-}
-
-int kprintf(const char* fmt, ...)
-{
-    ScopedSpinLock lock(s_log_lock);
-    color_on();
-    va_list ap;
-    va_start(ap, fmt);
-    int ret = printf_internal(console_putch, nullptr, fmt, ap);
-    va_end(ap);
-    color_off();
-    return ret;
-}
-
 static void buffer_putch(char*& bufptr, char ch)
 {
     *bufptr++ = ch;
@@ -139,7 +85,6 @@ extern "C" int sprintf(char* buffer, const char* fmt, ...);
 
 int sprintf(char* buffer, const char* fmt, ...)
 {
-    ScopedSpinLock lock(s_log_lock);
     va_list ap;
     va_start(ap, fmt);
     int ret = printf_internal(buffer_putch, buffer, fmt, ap);
@@ -183,45 +128,20 @@ static void debugger_out(char ch)
     IO::out8(0xe9, ch);
 }
 
-static void debugger_putch(char*&, char ch)
-{
-    debugger_out(ch);
-}
-
-extern "C" int dbgputstr(const char* characters, int length)
+extern "C" void dbgputstr(const char* characters, size_t length)
 {
     if (!characters)
-        return 0;
+        return;
     ScopedSpinLock lock(s_log_lock);
-    for (int i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
         debugger_out(characters[i]);
-    return 0;
 }
 
-extern "C" int kernelputstr(const char* characters, int length)
+extern "C" void kernelputstr(const char* characters, size_t length)
 {
     if (!characters)
-        return 0;
+        return;
     ScopedSpinLock lock(s_log_lock);
-    for (int i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
         console_out(characters[i]);
-    return 0;
-}
-
-static int vdbgprintf(const char* fmt, va_list ap)
-{
-    ScopedSpinLock lock(s_log_lock);
-    color_on();
-    int ret = printf_internal(debugger_putch, nullptr, fmt, ap);
-    color_off();
-    return ret;
-}
-
-extern "C" int dbgprintf(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    int ret = vdbgprintf(fmt, ap);
-    va_end(ap);
-    return ret;
 }

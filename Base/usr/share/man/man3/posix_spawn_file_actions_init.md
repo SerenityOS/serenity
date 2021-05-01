@@ -29,7 +29,7 @@ A `posix_spawn_file_actions_t` object is allocated on the stack but starts in an
 
 `posix_spawn_file_actions_destroy()` frees up resources used by a valid `posix_spawn_file_actions_t` object and puts it into an undefined state. It has to be called after a `posix_spawn_file_actions_t` object is no longer needed.
 
-It is valid to alternatingly call `posix_spawn_file_actions_init()` and `posix_spawn_file_actions_destroy()` on the same object, 
+It is valid to alternatingly call `posix_spawn_file_actions_init()` and `posix_spawn_file_actions_destroy()` on the same object,
 
 `posix_spawn_file_actions_addchdir()` and `posix_spawn_file_actions_addfchdir()` make `posix_spawn()` change the current working directory before spawning a process, like `chdir` and `fchdir` would.. The current working directory affects the spawned child process, but also relative paths passed to later `posix_spawn_file_actions_add(f)chdir()` and `posix_spawn_file_actions_addopen()`, and relative paths passed to `posix_spawn()` for the executable path.
 

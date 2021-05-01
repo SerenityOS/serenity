@@ -1,30 +1,11 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Checked.h>
+#include <AK/Format.h>
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BXVGADevice.h>
@@ -60,7 +41,7 @@ namespace Kernel {
 
 static AK::Singleton<BXVGADevice> s_the;
 
-void BXVGADevice::initialize()
+UNMAP_AFTER_INIT void BXVGADevice::initialize()
 {
     s_the.ensure_instance();
 }
@@ -70,7 +51,7 @@ BXVGADevice& BXVGADevice::the()
     return *s_the;
 }
 
-BXVGADevice::BXVGADevice()
+UNMAP_AFTER_INIT BXVGADevice::BXVGADevice()
     : BlockDevice(29, 0)
 
 {
@@ -101,12 +82,12 @@ u16 BXVGADevice::get_register(u16 index)
 void BXVGADevice::revert_resolution()
 {
     set_resolution_registers(m_framebuffer_width, m_framebuffer_height);
-    ASSERT(validate_setup_resolution(m_framebuffer_width, m_framebuffer_height));
+    VERIFY(validate_setup_resolution(m_framebuffer_width, m_framebuffer_height));
 }
 
 void BXVGADevice::set_resolution_registers(size_t width, size_t height)
 {
-    dbgln<BXVGA_DEBUG>("BXVGADevice resolution registers set to - {}x{}", width, height);
+    dbgln_if(BXVGA_DEBUG, "BXVGADevice resolution registers set to - {}x{}", width, height);
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
     set_register(VBE_DISPI_INDEX_XRES, (u16)width);
     set_register(VBE_DISPI_INDEX_YRES, (u16)height);
@@ -119,7 +100,7 @@ void BXVGADevice::set_resolution_registers(size_t width, size_t height)
 
 bool BXVGADevice::test_resolution(size_t width, size_t height)
 {
-    dbgln<BXVGA_DEBUG>("BXVGADevice resolution test - {}x{}", width, height);
+    dbgln_if(BXVGA_DEBUG, "BXVGADevice resolution test - {}x{}", width, height);
     set_resolution_registers(width, height);
     bool resolution_changed = validate_setup_resolution(width, height);
     revert_resolution();
@@ -152,12 +133,12 @@ bool BXVGADevice::validate_setup_resolution(size_t width, size_t height)
 
 void BXVGADevice::set_y_offset(size_t y_offset)
 {
-    ASSERT(y_offset == 0 || y_offset == m_framebuffer_height);
+    VERIFY(y_offset == 0 || y_offset == m_framebuffer_height);
     m_y_offset = y_offset;
     set_register(VBE_DISPI_INDEX_Y_OFFSET, (u16)y_offset);
 }
 
-u32 BXVGADevice::find_framebuffer_address()
+UNMAP_AFTER_INIT u32 BXVGADevice::find_framebuffer_address()
 {
     // NOTE: The QEMU card has the same PCI ID as the Bochs one.
     static const PCI::ID bochs_vga_id = { 0x1234, 0x1111 };
@@ -166,26 +147,26 @@ u32 BXVGADevice::find_framebuffer_address()
     PCI::enumerate([&framebuffer_address](const PCI::Address& address, PCI::ID id) {
         if (id == bochs_vga_id || id == virtualbox_vga_id) {
             framebuffer_address = PCI::get_BAR0(address) & 0xfffffff0;
-            klog() << "BXVGA: framebuffer @ " << PhysicalAddress(framebuffer_address);
+            dbgln("BXVGA: framebuffer @ {}", PhysicalAddress(framebuffer_address));
         }
     });
     return framebuffer_address;
 }
 
-KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, const Range& range, size_t offset, int prot, bool shared)
+KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
 {
     REQUIRE_PROMISE(video);
     if (!shared)
         return ENODEV;
     if (offset != 0)
         return ENXIO;
-    if (range.size() != PAGE_ROUND_UP(framebuffer_size_in_bytes()))
+    if (range.size() != page_round_up(framebuffer_size_in_bytes()))
         return EOVERFLOW;
 
     auto vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());
     if (!vmobject)
         return ENOMEM;
-    return process.allocate_region_with_vmobject(
+    return process.space().allocate_region_with_vmobject(
         range,
         vmobject.release_nonnull(),
         0,
@@ -241,7 +222,7 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         if (resolution.width > MAX_RESOLUTION_WIDTH || resolution.height > MAX_RESOLUTION_HEIGHT)
             return -EINVAL;
         if (!set_resolution(resolution.width, resolution.height)) {
-            dbgln<BXVGA_DEBUG>("Reverting resolution: [{}x{}]", m_framebuffer_width, m_framebuffer_height);
+            dbgln_if(BXVGA_DEBUG, "Reverting resolution: [{}x{}]", m_framebuffer_width, m_framebuffer_height);
             resolution.pitch = m_framebuffer_pitch;
             resolution.width = m_framebuffer_width;
             resolution.height = m_framebuffer_height;
@@ -249,7 +230,7 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
                 return -EFAULT;
             return -EINVAL;
         }
-        dbgln<BXVGA_DEBUG>("New resolution: [{}x{}]", m_framebuffer_width, m_framebuffer_height);
+        dbgln_if(BXVGA_DEBUG, "New resolution: [{}x{}]", m_framebuffer_width, m_framebuffer_height);
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;
         resolution.height = m_framebuffer_height;

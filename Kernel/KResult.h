@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -56,7 +36,7 @@ public:
 private:
     template<typename T>
     friend class KResultOr;
-    KResult() { }
+    KResult() = default;
 
     int m_error { 0 };
 };
@@ -89,10 +69,7 @@ public:
         m_have_storage = true;
     }
 
-    // FIXME: clang-format gets confused about KResultOr. Why?
-    // clang-format off
     KResultOr(KResultOr&& other)
-    // clang-format on
     {
         m_is_error = other.m_is_error;
         if (m_is_error)
@@ -111,6 +88,8 @@ public:
 
     KResultOr& operator=(KResultOr&& other)
     {
+        if (&other == this)
+            return *this;
         if (!m_is_error && m_have_storage) {
             value().~T();
             m_have_storage = false;
@@ -139,39 +118,41 @@ public:
 
     [[nodiscard]] bool is_error() const { return m_is_error; }
 
-    ALWAYS_INLINE KResult error() const
+    [[nodiscard]] ALWAYS_INLINE KResult error() const
     {
-        ASSERT(m_is_error);
+        VERIFY(m_is_error);
         return m_error;
     }
 
-    KResult result() const { return m_is_error ? m_error : KSuccess; }
+    [[nodiscard]] KResult result() const { return m_is_error ? m_error : KSuccess; }
 
-    ALWAYS_INLINE T& value()
+    [[nodiscard]] ALWAYS_INLINE T& value()
     {
-        ASSERT(!m_is_error);
+        VERIFY(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);
     }
 
-    ALWAYS_INLINE const T& value() const
+    [[nodiscard]] ALWAYS_INLINE const T& value() const
     {
-        ASSERT(!m_is_error);
+        VERIFY(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);
     }
 
-    ALWAYS_INLINE T release_value()
+    [[nodiscard]] ALWAYS_INLINE T release_value()
     {
-        ASSERT(!m_is_error);
-        ASSERT(m_have_storage);
-        T released_value = *reinterpret_cast<T*>(&m_storage);
+        VERIFY(!m_is_error);
+        VERIFY(m_have_storage);
+        T released_value(move(*reinterpret_cast<T*>(&m_storage)));
         value().~T();
         m_have_storage = false;
         return released_value;
     }
 
 private:
-    alignas(T) char m_storage[sizeof(T)];
-    KResult m_error;
+    union {
+        alignas(T) char m_storage[sizeof(T)];
+        KResult m_error;
+    };
     bool m_is_error { false };
     bool m_have_storage { false };
 };

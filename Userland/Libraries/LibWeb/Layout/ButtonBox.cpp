@@ -1,41 +1,22 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGUI/Event.h>
-#include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/ButtonBox.h>
+#include <LibWeb/Layout/Label.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web::Layout {
 
 ButtonBox::ButtonBox(DOM::Document& document, HTML::HTMLInputElement& element, NonnullRefPtr<CSS::StyleProperties> style)
-    : ReplacedBox(document, element, move(style))
+    : LabelableNode(document, element, move(style))
 {
 }
 
@@ -57,10 +38,13 @@ void ButtonBox::paint(PaintContext& context, PaintPhase phase)
     if (!is_visible())
         return;
 
-    ReplacedBox::paint(context, phase);
+    LabelableNode::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
         bool hovered = document().hovered_node() == &dom_node();
+        if (!hovered)
+            hovered = Label::is_associated_label_hovered(*this);
+
         Gfx::StylePainter::paint_button(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::ButtonStyle::Normal, m_being_pressed, hovered, dom_node().checked(), dom_node().enabled());
 
         auto text_rect = enclosing_int_rect(absolute_rect());
@@ -91,8 +75,11 @@ void ButtonBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& positio
     NonnullRefPtr protected_this = *this;
     NonnullRefPtr protected_frame = frame();
 
-    bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);
-    if (is_inside)
+    bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
+    if (!is_inside_node_or_label)
+        is_inside_node_or_label = Label::is_inside_associated_label(*this, position);
+
+    if (is_inside_node_or_label)
         dom_node().did_click_button({});
 
     m_being_pressed = false;
@@ -106,11 +93,39 @@ void ButtonBox::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& posit
     if (!m_tracking_mouse || !dom_node().enabled())
         return;
 
-    bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);
-    if (m_being_pressed == is_inside)
+    bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
+    if (!is_inside_node_or_label)
+        is_inside_node_or_label = Label::is_inside_associated_label(*this, position);
+
+    if (m_being_pressed == is_inside_node_or_label)
         return;
 
-    m_being_pressed = is_inside;
+    m_being_pressed = is_inside_node_or_label;
+    set_needs_display();
+}
+
+void ButtonBox::handle_associated_label_mousedown(Badge<Label>)
+{
+    m_being_pressed = true;
+    set_needs_display();
+}
+
+void ButtonBox::handle_associated_label_mouseup(Badge<Label>)
+{
+    // NOTE: Handling the click may run arbitrary JS, which could disappear this node.
+    NonnullRefPtr protected_this = *this;
+    NonnullRefPtr protected_frame = frame();
+
+    dom_node().did_click_button({});
+    m_being_pressed = false;
+}
+
+void ButtonBox::handle_associated_label_mousemove(Badge<Label>, bool is_inside_node_or_label)
+{
+    if (m_being_pressed == is_inside_node_or_label)
+        return;
+
+    m_being_pressed = is_inside_node_or_label;
     set_needs_display();
 }
 

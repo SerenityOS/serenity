@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -108,7 +88,7 @@ struct InodeMetadata {
         if (!is_valid())
             return EIO;
         buffer.st_rdev = encoded_device(major_device, minor_device);
-        buffer.st_ino = inode.index();
+        buffer.st_ino = inode.index().value();
         buffer.st_mode = mode;
         buffer.st_nlink = link_count;
         buffer.st_uid = uid;
@@ -117,9 +97,12 @@ struct InodeMetadata {
         buffer.st_size = size;
         buffer.st_blksize = block_size;
         buffer.st_blocks = block_count;
-        buffer.st_atime = atime;
-        buffer.st_mtime = mtime;
-        buffer.st_ctime = ctime;
+        buffer.st_atim.tv_sec = atime;
+        buffer.st_atim.tv_nsec = 0;
+        buffer.st_mtim.tv_sec = mtime;
+        buffer.st_mtim.tv_nsec = 0;
+        buffer.st_ctim.tv_sec = ctime;
+        buffer.st_ctim.tv_nsec = 0;
         return KSuccess;
     }
 

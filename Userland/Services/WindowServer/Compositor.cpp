@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Compositor.h"
@@ -92,16 +72,16 @@ void Compositor::init_bitmaps()
     auto& screen = Screen::the();
     auto size = screen.size();
 
-    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.scale_factor(), screen.pitch(), screen.scanline(0));
+    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(0));
     m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
 
     if (m_screen_can_set_buffer)
-        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGB32, size, screen.scale_factor(), screen.pitch(), screen.scanline(screen.physical_height()));
+        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(screen.physical_height()));
     else
-        m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size, screen.scale_factor());
+        m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
 
-    m_temp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size, screen.scale_factor());
+    m_temp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
     m_temp_painter = make<Gfx::Painter>(*m_temp_bitmap);
 
     m_buffers_are_flipped = false;
@@ -127,8 +107,10 @@ void Compositor::compose()
 
     {
         auto& current_cursor = wm.active_cursor();
-        if (m_current_cursor != &current_cursor)
+        if (m_current_cursor != &current_cursor) {
             change_cursor(&current_cursor);
+            m_invalidated_cursor = m_invalidated_any = true;
+        }
     }
 
     if (!m_invalidated_any) {
@@ -151,7 +133,7 @@ void Compositor::compose()
 
     // Mark window regions as dirty that need to be re-rendered
     wm.for_each_visible_window_from_back_to_front([&](Window& window) {
-        auto frame_rect = window.frame().rect();
+        auto frame_rect = window.frame().render_rect();
         for (auto& dirty_rect : dirty_screen_rects.rects()) {
             auto invalidate_rect = dirty_rect.intersected(frame_rect);
             if (!invalidate_rect.is_empty()) {
@@ -173,12 +155,12 @@ void Compositor::compose()
         if (transparency_rects.is_empty())
             return IterationDecision::Continue;
 
-        auto frame_rect = window.frame().rect();
+        auto frame_rect = window.frame().render_rect();
         auto& dirty_rects = window.dirty_rects();
         wm.for_each_visible_window_from_back_to_front([&](Window& w) {
             if (&w == &window)
                 return IterationDecision::Continue;
-            auto frame_rect2 = w.frame().rect();
+            auto frame_rect2 = w.frame().render_rect();
             if (!frame_rect2.intersects(frame_rect))
                 return IterationDecision::Continue;
             transparency_rects.for_each_intersected(w.dirty_rects(), [&](const Gfx::IntRect& intersected_dirty) {
@@ -206,6 +188,9 @@ void Compositor::compose()
     auto cursor_rect = current_cursor_rect();
     bool need_to_draw_cursor = false;
 
+    auto back_painter = *m_back_painter;
+    auto temp_painter = *m_temp_painter;
+
     auto check_restore_cursor_back = [&](const Gfx::IntRect& rect) {
         if (!need_to_draw_cursor && rect.intersects(cursor_rect)) {
             // Restore what's behind the cursor if anything touches the area of the cursor
@@ -215,35 +200,27 @@ void Compositor::compose()
     };
 
     auto prepare_rect = [&](const Gfx::IntRect& rect) {
-        dbgln<COMPOSE_DEBUG>("    -> flush opaque: {}", rect);
-        ASSERT(!flush_rects.intersects(rect));
-        ASSERT(!flush_transparent_rects.intersects(rect));
+        dbgln_if(COMPOSE_DEBUG, "    -> flush opaque: {}", rect);
+        VERIFY(!flush_rects.intersects(rect));
+        VERIFY(!flush_transparent_rects.intersects(rect));
         flush_rects.add(rect);
         check_restore_cursor_back(rect);
     };
 
     auto prepare_transparency_rect = [&](const Gfx::IntRect& rect) {
-        dbgln<COMPOSE_DEBUG>("   -> flush transparent: {}", rect);
-        ASSERT(!flush_rects.intersects(rect));
-        bool have_rect = false;
+        dbgln_if(COMPOSE_DEBUG, "   -> flush transparent: {}", rect);
+        VERIFY(!flush_rects.intersects(rect));
         for (auto& r : flush_transparent_rects.rects()) {
-            if (r == rect) {
-                have_rect = true;
-                break;
-            }
+            if (r == rect)
+                return;
         }
 
-        if (!have_rect) {
-            flush_transparent_rects.add(rect);
-            check_restore_cursor_back(rect);
-        }
+        flush_transparent_rects.add(rect);
+        check_restore_cursor_back(rect);
     };
 
     if (!m_cursor_back_bitmap || m_invalidated_cursor)
         check_restore_cursor_back(cursor_rect);
-
-    auto back_painter = *m_back_painter;
-    auto temp_painter = *m_temp_painter;
 
     auto paint_wallpaper = [&](Gfx::Painter& painter, const Gfx::IntRect& rect) {
         // FIXME: If the wallpaper is opaque and covers the whole rect, no need to fill with color!
@@ -264,42 +241,48 @@ void Compositor::compose()
                 auto src_rect = Gfx::FloatRect { rect.x() * hscale, rect.y() * vscale, rect.width() * hscale, rect.height() * vscale };
                 painter.draw_scaled_bitmap(rect, *m_wallpaper, src_rect);
             } else {
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
             }
         }
     };
 
     m_opaque_wallpaper_rects.for_each_intersected(dirty_screen_rects, [&](const Gfx::IntRect& render_rect) {
-        dbgln<COMPOSE_DEBUG>("  render wallpaper opaque: {}", render_rect);
+        dbgln_if(COMPOSE_DEBUG, "  render wallpaper opaque: {}", render_rect);
         prepare_rect(render_rect);
         paint_wallpaper(back_painter, render_rect);
         return IterationDecision::Continue;
     });
 
     auto compose_window = [&](Window& window) -> IterationDecision {
-        auto frame_rect = window.frame().rect();
+        auto frame_rect = window.frame().render_rect();
         if (!frame_rect.intersects(ws.rect()))
             return IterationDecision::Continue;
-        auto frame_rects = frame_rect.shatter(window.rect());
+        auto window_rect = window.rect();
+        auto frame_rects = frame_rect.shatter(window_rect);
 
-        dbgln<COMPOSE_DEBUG>("  window {} frame rect: {}", window.title(), frame_rect);
+        dbgln_if(COMPOSE_DEBUG, "  window {} frame rect: {}", window.title(), frame_rect);
 
         RefPtr<Gfx::Bitmap> backing_store = window.backing_store();
         auto compose_window_rect = [&](Gfx::Painter& painter, const Gfx::IntRect& rect) {
             if (!window.is_fullscreen()) {
                 rect.for_each_intersected(frame_rects, [&](const Gfx::IntRect& intersected_rect) {
-                    // TODO: Should optimize this to use a backing buffer
                     Gfx::PainterStateSaver saver(painter);
                     painter.add_clip_rect(intersected_rect);
-                    dbgln<COMPOSE_DEBUG>("    render frame: {}", intersected_rect);
-                    window.frame().paint(painter);
+                    dbgln_if(COMPOSE_DEBUG, "    render frame: {}", intersected_rect);
+                    window.frame().paint(painter, intersected_rect);
                     return IterationDecision::Continue;
                 });
             }
 
+            auto clear_window_rect = [&](const Gfx::IntRect& clear_rect) {
+                auto fill_color = wm.palette().window();
+                if (!window.is_opaque())
+                    fill_color.set_alpha(255 * window.opacity());
+                painter.fill_rect(clear_rect, fill_color);
+            };
+
             if (!backing_store) {
-                if (window.is_opaque())
-                    painter.fill_rect(window.rect().intersected(rect), wm.palette().window());
+                clear_window_rect(window_rect.intersected(rect));
                 return;
             }
 
@@ -318,44 +301,51 @@ void Compositor::compose()
             case ResizeDirection::Right:
             case ResizeDirection::Down:
             case ResizeDirection::DownRight:
-                backing_rect.set_location(window.rect().location());
+                backing_rect.set_location(window_rect.location());
                 break;
             case ResizeDirection::Left:
             case ResizeDirection::Up:
             case ResizeDirection::UpLeft:
-                backing_rect.set_right_without_resize(window.rect().right());
-                backing_rect.set_bottom_without_resize(window.rect().bottom());
+                backing_rect.set_right_without_resize(window_rect.right());
+                backing_rect.set_bottom_without_resize(window_rect.bottom());
                 break;
             case ResizeDirection::UpRight:
                 backing_rect.set_left(window.rect().left());
-                backing_rect.set_bottom_without_resize(window.rect().bottom());
+                backing_rect.set_bottom_without_resize(window_rect.bottom());
                 break;
             case ResizeDirection::DownLeft:
-                backing_rect.set_right_without_resize(window.rect().right());
-                backing_rect.set_top(window.rect().top());
+                backing_rect.set_right_without_resize(window_rect.right());
+                backing_rect.set_top(window_rect.top());
                 break;
             }
 
-            Gfx::IntRect dirty_rect_in_backing_coordinates = rect.intersected(window.rect())
+            Gfx::IntRect dirty_rect_in_backing_coordinates = rect.intersected(window_rect)
                                                                  .intersected(backing_rect)
                                                                  .translated(-backing_rect.location());
 
-            if (dirty_rect_in_backing_coordinates.is_empty())
-                return;
-            auto dst = backing_rect.location().translated(dirty_rect_in_backing_coordinates.location());
+            if (!dirty_rect_in_backing_coordinates.is_empty()) {
+                auto dst = backing_rect.location().translated(dirty_rect_in_backing_coordinates.location());
 
-            if (window.client() && window.client()->is_unresponsive()) {
-                painter.blit_filtered(dst, *backing_store, dirty_rect_in_backing_coordinates, [](Color src) {
-                    return src.to_grayscale().darkened(0.75f);
-                });
-            } else {
-                painter.blit(dst, *backing_store, dirty_rect_in_backing_coordinates, window.opacity());
+                if (window.client() && window.client()->is_unresponsive()) {
+                    if (window.is_opaque()) {
+                        painter.blit_filtered(dst, *backing_store, dirty_rect_in_backing_coordinates, [](Color src) {
+                            return src.to_grayscale().darkened(0.75f);
+                        });
+                    } else {
+                        u8 alpha = 255 * window.opacity();
+                        painter.blit_filtered(dst, *backing_store, dirty_rect_in_backing_coordinates, [&](Color src) {
+                            auto color = src.to_grayscale().darkened(0.75f);
+                            color.set_alpha(alpha);
+                            return color;
+                        });
+                    }
+                } else {
+                    painter.blit(dst, *backing_store, dirty_rect_in_backing_coordinates, window.opacity());
+                }
             }
 
-            if (window.is_opaque()) {
-                for (auto background_rect : window.rect().shatter(backing_rect))
-                    painter.fill_rect(background_rect, wm.palette().window());
-            }
+            for (auto background_rect : window_rect.shatter(backing_rect))
+                clear_window_rect(background_rect);
         };
 
         auto& dirty_rects = window.dirty_rects();
@@ -373,7 +363,7 @@ void Compositor::compose()
         auto& opaque_rects = window.opaque_rects();
         if (!opaque_rects.is_empty()) {
             opaque_rects.for_each_intersected(dirty_rects, [&](const Gfx::IntRect& render_rect) {
-                dbgln<COMPOSE_DEBUG>("    render opaque: {}", render_rect);
+                dbgln_if(COMPOSE_DEBUG, "    render opaque: {}", render_rect);
 
                 prepare_rect(render_rect);
                 Gfx::PainterStateSaver saver(back_painter);
@@ -388,7 +378,7 @@ void Compositor::compose()
         auto& transparency_wallpaper_rects = window.transparency_wallpaper_rects();
         if (!transparency_wallpaper_rects.is_empty()) {
             transparency_wallpaper_rects.for_each_intersected(dirty_rects, [&](const Gfx::IntRect& render_rect) {
-                dbgln<COMPOSE_DEBUG>("    render wallpaper: {}", render_rect);
+                dbgln_if(COMPOSE_DEBUG, "    render wallpaper: {}", render_rect);
 
                 prepare_transparency_rect(render_rect);
                 paint_wallpaper(temp_painter, render_rect);
@@ -398,7 +388,7 @@ void Compositor::compose()
         auto& transparency_rects = window.transparency_rects();
         if (!transparency_rects.is_empty()) {
             transparency_rects.for_each_intersected(dirty_rects, [&](const Gfx::IntRect& render_rect) {
-                dbgln<COMPOSE_DEBUG>("    render transparent: {}", render_rect);
+                dbgln_if(COMPOSE_DEBUG, "    render transparent: {}", render_rect);
 
                 prepare_transparency_rect(render_rect);
                 Gfx::PainterStateSaver saver(temp_painter);
@@ -414,6 +404,7 @@ void Compositor::compose()
     if (m_invalidated_window) {
         if (auto* fullscreen_window = wm.active_fullscreen_window()) {
             compose_window(*fullscreen_window);
+            fullscreen_window->clear_dirty_rects();
         } else {
             wm.for_each_visible_window_from_back_to_front([&](Window& window) {
                 compose_window(window);
@@ -423,7 +414,7 @@ void Compositor::compose()
         }
 
         // Check that there are no overlapping transparent and opaque flush rectangles
-        ASSERT(![&]() {
+        VERIFY(![&]() {
             for (auto& rect_transparent : flush_transparent_rects.rects()) {
                 for (auto& rect_opaque : flush_rects.rects()) {
                     if (rect_opaque.intersects(rect_transparent)) {
@@ -638,7 +629,7 @@ bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callba
 
 void Compositor::flip_buffers()
 {
-    ASSERT(m_screen_can_set_buffer);
+    VERIFY(m_screen_can_set_buffer);
     swap(m_front_bitmap, m_back_bitmap);
     swap(m_front_painter, m_back_painter);
     Screen::the().set_buffer(m_buffers_are_flipped ? 0 : 1);
@@ -671,7 +662,7 @@ void Compositor::run_animations(Gfx::DisjointRectSet& flush_rects)
                 from_rect.height() - (int)(height_delta_per_step * animation_index)
             };
 
-            dbgln<MINIMIZE_ANIMATION_DEBUG>("Minimize animation from {} to {} frame# {} {}", from_rect, to_rect, animation_index, rect);
+            dbgln_if(MINIMIZE_ANIMATION_DEBUG, "Minimize animation from {} to {} frame# {} {}", from_rect, to_rect, animation_index, rect);
 
             painter.draw_rect(rect, Color::Transparent); // Color doesn't matter, we draw inverted
             flush_rects.add(rect);
@@ -792,7 +783,7 @@ void Compositor::draw_cursor(const Gfx::IntRect& cursor_rect)
     auto& wm = WindowManager::the();
 
     if (!m_cursor_back_bitmap || m_cursor_back_bitmap->size() != cursor_rect.size() || m_cursor_back_bitmap->scale() != Screen::the().scale_factor()) {
-        m_cursor_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, cursor_rect.size(), Screen::the().scale_factor());
+        m_cursor_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, cursor_rect.size(), Screen::the().scale_factor());
         m_cursor_back_painter = make<Gfx::Painter>(*m_cursor_back_bitmap);
     }
 
@@ -827,7 +818,7 @@ void Compositor::increment_display_link_count(Badge<ClientConnection>)
 
 void Compositor::decrement_display_link_count(Badge<ClientConnection>)
 {
-    ASSERT(m_display_link_count);
+    VERIFY(m_display_link_count);
     --m_display_link_count;
     if (!m_display_link_count)
         m_display_link_notify_timer->stop();
@@ -850,7 +841,7 @@ bool Compositor::any_opaque_window_above_this_one_contains_rect(const Window& a_
             return IterationDecision::Continue;
         if (!window.is_opaque())
             return IterationDecision::Continue;
-        if (window.frame().rect().contains(rect)) {
+        if (window.frame().render_rect().contains(rect)) {
             found_containing_window = true;
             return IterationDecision::Break;
         }
@@ -908,7 +899,7 @@ void Compositor::recompute_occlusions()
         Gfx::DisjointRectSet visible_rects(screen_rect);
         bool have_transparent = false;
         WindowManager::the().for_each_visible_window_from_front_to_back([&](Window& w) {
-            auto window_frame_rect = w.frame().rect().intersected(screen_rect);
+            auto window_frame_rect = w.frame().render_rect().intersected(screen_rect);
             w.transparency_wallpaper_rects().clear();
             auto& visible_opaque = w.opaque_rects();
             auto& transparency_rects = w.transparency_rects();
@@ -920,11 +911,23 @@ void Compositor::recompute_occlusions()
 
             Gfx::DisjointRectSet opaque_covering;
             if (w.is_opaque()) {
-                visible_opaque = visible_rects.intersected(window_frame_rect);
                 transparency_rects.clear();
+                if (w.frame().is_opaque()) {
+                    visible_opaque = visible_rects.intersected(window_frame_rect);
+                } else {
+                    auto window_rect = w.rect().intersected(screen_rect);
+                    visible_opaque = visible_rects.intersected(window_rect);
+                    transparency_rects.add_many(window_frame_rect.shatter(window_rect));
+                }
             } else {
                 visible_opaque.clear();
-                transparency_rects = visible_rects.intersected(window_frame_rect);
+                if (w.frame().is_opaque()) {
+                    auto window_rect = w.rect().intersected(screen_rect);
+                    visible_opaque.add_many(window_frame_rect.shatter(window_rect));
+                    transparency_rects = visible_rects.intersected(window_rect);
+                } else {
+                    transparency_rects = visible_rects.intersected(window_frame_rect);
+                }
             }
 
             bool found_this_window = false;
@@ -937,31 +940,32 @@ void Compositor::recompute_occlusions()
 
                 if (w2.is_minimized())
                     return IterationDecision::Continue;
-                auto window_frame_rect2 = w2.frame().rect().intersected(screen_rect);
+                auto window_frame_rect2 = w2.frame().render_rect().intersected(screen_rect);
                 auto covering_rect = window_frame_rect2.intersected(window_frame_rect);
                 if (covering_rect.is_empty())
                     return IterationDecision::Continue;
 
-                if (w2.is_opaque()) {
-                    opaque_covering.add(covering_rect);
+                auto add_opaque = [&](const Gfx::IntRect& covering) -> bool {
+                    opaque_covering.add(covering);
                     if (opaque_covering.contains(window_frame_rect)) {
-                        // This window is entirely covered by another opaque window
+                        // This window (including frame) is entirely covered by another opaque window
                         visible_opaque.clear();
                         transparency_rects.clear();
-                        return IterationDecision::Break;
+                        return false;
                     }
-
                     if (!visible_opaque.is_empty()) {
-                        auto uncovered_opaque = visible_opaque.shatter(covering_rect);
+                        auto uncovered_opaque = visible_opaque.shatter(covering);
                         visible_opaque = move(uncovered_opaque);
                     }
 
                     if (!transparency_rects.is_empty()) {
-                        auto uncovered_transparency = transparency_rects.shatter(covering_rect);
+                        auto uncovered_transparency = transparency_rects.shatter(covering);
                         transparency_rects = move(uncovered_transparency);
                     }
-                } else {
-                    visible_rects.for_each_intersected(covering_rect, [&](const Gfx::IntRect& intersected) {
+                    return true;
+                };
+                auto add_transparent = [&](const Gfx::IntRect& covering) {
+                    visible_rects.for_each_intersected(covering, [&](const Gfx::IntRect& intersected) {
                         transparency_rects.add(intersected);
                         if (!visible_opaque.is_empty()) {
                             auto uncovered_opaque = visible_opaque.shatter(intersected);
@@ -969,6 +973,29 @@ void Compositor::recompute_occlusions()
                         }
                         return IterationDecision::Continue;
                     });
+                };
+                if (w2.is_opaque()) {
+                    if (w2.frame().is_opaque()) {
+                        if (!add_opaque(covering_rect))
+                            return IterationDecision::Break;
+                    } else {
+                        auto covering_window_rect = covering_rect.intersected(w2.rect());
+                        if (!add_opaque(covering_window_rect))
+                            return IterationDecision::Break;
+                        for (auto& covering_frame_rect : covering_rect.shatter(covering_window_rect))
+                            add_transparent(covering_frame_rect);
+                    }
+                } else {
+                    if (w2.frame().is_opaque()) {
+                        auto covering_window_rect = covering_rect.intersected(w2.rect());
+                        for (auto& covering_frame_rect : covering_rect.shatter(covering_window_rect)) {
+                            if (!add_opaque(covering_frame_rect))
+                                return IterationDecision::Break;
+                        }
+                        add_transparent(covering_window_rect);
+                    } else {
+                        add_transparent(covering_rect);
+                    }
                 }
 
                 return IterationDecision::Continue;
@@ -977,12 +1004,22 @@ void Compositor::recompute_occlusions()
             if (!transparency_rects.is_empty())
                 have_transparent = true;
 
-            ASSERT(!visible_opaque.intersects(transparency_rects));
+            VERIFY(!visible_opaque.intersects(transparency_rects));
 
+            // Determine visible area for the window below
             if (w.is_opaque()) {
-                // Determine visible area for the window below
-                auto visible_rects_below_window = visible_rects.shatter(window_frame_rect);
-                visible_rects = move(visible_rects_below_window);
+                if (w.frame().is_opaque()) {
+                    auto visible_rects_below_window = visible_rects.shatter(window_frame_rect);
+                    visible_rects = move(visible_rects_below_window);
+                } else {
+                    auto visible_rects_below_window = visible_rects.shatter(w.rect().intersected(screen_rect));
+                    visible_rects = move(visible_rects_below_window);
+                }
+            } else if (w.frame().is_opaque()) {
+                for (auto& rect : window_frame_rect.shatter(w.rect())) {
+                    auto visible_rects_below_window = visible_rects.shatter(rect);
+                    visible_rects = move(visible_rects_below_window);
+                }
             }
             return IterationDecision::Continue;
         });
@@ -991,7 +1028,7 @@ void Compositor::recompute_occlusions()
             // Determine what transparent window areas need to render the wallpaper first
             WindowManager::the().for_each_visible_window_from_back_to_front([&](Window& w) {
                 auto& transparency_wallpaper_rects = w.transparency_wallpaper_rects();
-                if (w.is_opaque() || w.is_minimized()) {
+                if (w.is_minimized()) {
                     transparency_wallpaper_rects.clear();
                     return IterationDecision::Continue;
                 }
@@ -1018,7 +1055,7 @@ void Compositor::recompute_occlusions()
     }
 
     wm.for_each_visible_window_from_back_to_front([&](Window& w) {
-        auto window_frame_rect = w.frame().rect().intersected(screen_rect);
+        auto window_frame_rect = w.frame().render_rect().intersected(screen_rect);
         if (w.is_minimized() || window_frame_rect.is_empty())
             return IterationDecision::Continue;
 
@@ -1032,9 +1069,9 @@ void Compositor::recompute_occlusions()
                 dbgln("    transparent: {}", r);
         }
 
-        ASSERT(!w.opaque_rects().intersects(m_opaque_wallpaper_rects));
-        ASSERT(!w.transparency_rects().intersects(m_opaque_wallpaper_rects));
-        ASSERT(!w.transparency_wallpaper_rects().intersects(m_opaque_wallpaper_rects));
+        VERIFY(!w.opaque_rects().intersects(m_opaque_wallpaper_rects));
+        VERIFY(!w.transparency_rects().intersects(m_opaque_wallpaper_rects));
+        VERIFY(!w.transparency_wallpaper_rects().intersects(m_opaque_wallpaper_rects));
         return IterationDecision::Continue;
     });
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -36,6 +16,7 @@ class InitialValues {
 public:
     static CSS::Float float_() { return CSS::Float::None; }
     static CSS::Clear clear() { return CSS::Clear::None; }
+    static CSS::Cursor cursor() { return CSS::Cursor::Auto; }
     static CSS::WhiteSpace white_space() { return CSS::WhiteSpace::Normal; }
     static CSS::TextAlign text_align() { return CSS::TextAlign::Left; }
     static CSS::Position position() { return CSS::Position::Static; }
@@ -44,8 +25,10 @@ public:
     static CSS::Display display() { return CSS::Display::Inline; }
     static Color color() { return Color::Black; }
     static Color background_color() { return Color::Transparent; }
+    static CSS::Repeat background_repeat() { return CSS::Repeat::Repeat; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
+    static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
 };
 
 struct BorderData {
@@ -59,6 +42,7 @@ class ComputedValues {
 public:
     CSS::Float float_() const { return m_noninherited.float_; }
     CSS::Clear clear() const { return m_noninherited.clear; }
+    CSS::Cursor cursor() const { return m_inherited.cursor; }
     CSS::Display display() const { return m_noninherited.display; }
     Optional<int> z_index() const { return m_noninherited.z_index; }
     CSS::TextAlign text_align() const { return m_inherited.text_align; }
@@ -83,8 +67,13 @@ public:
     const BorderData& border_right() const { return m_noninherited.border_right; }
     const BorderData& border_bottom() const { return m_noninherited.border_bottom; }
 
+    CSS::Overflow overflow_x() const { return m_noninherited.overflow_x; }
+    CSS::Overflow overflow_y() const { return m_noninherited.overflow_y; }
+
     Color color() const { return m_inherited.color; }
     Color background_color() const { return m_noninherited.background_color; }
+    CSS::Repeat background_repeat_x() const { return m_noninherited.background_repeat_x; }
+    CSS::Repeat background_repeat_y() const { return m_noninherited.background_repeat_y; }
 
     CSS::ListStyleType list_style_type() const { return m_inherited.list_style_type; }
 
@@ -98,6 +87,7 @@ public:
 protected:
     struct {
         Color color { InitialValues::color() };
+        CSS::Cursor cursor { InitialValues::cursor() };
         CSS::TextAlign text_align { InitialValues::text_align() };
         CSS::TextTransform text_transform { InitialValues::text_transform() };
         CSS::WhiteSpace white_space { InitialValues::white_space() };
@@ -125,7 +115,11 @@ protected:
         BorderData border_right;
         BorderData border_bottom;
         Color background_color { InitialValues::background_color() };
+        CSS::Repeat background_repeat_x { InitialValues::background_repeat() };
+        CSS::Repeat background_repeat_y { InitialValues::background_repeat() };
         CSS::FlexDirection flex_direction { InitialValues::flex_direction() };
+        CSS::Overflow overflow_x { InitialValues::overflow() };
+        CSS::Overflow overflow_y { InitialValues::overflow() };
     } m_noninherited;
 };
 
@@ -135,7 +129,10 @@ class ImmutableComputedValues final : public ComputedValues {
 class MutableComputedValues final : public ComputedValues {
 public:
     void set_color(const Color& color) { m_inherited.color = color; }
+    void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
     void set_background_color(const Color& color) { m_noninherited.background_color = color; }
+    void set_background_repeat_x(CSS::Repeat repeat) { m_noninherited.background_repeat_x = repeat; }
+    void set_background_repeat_y(CSS::Repeat repeat) { m_noninherited.background_repeat_y = repeat; }
     void set_float(CSS::Float value) { m_noninherited.float_ = value; }
     void set_clear(CSS::Clear value) { m_noninherited.clear = value; }
     void set_z_index(Optional<int> value) { m_noninherited.z_index = value; }
@@ -153,6 +150,8 @@ public:
     void set_offset(const CSS::LengthBox& offset) { m_noninherited.offset = offset; }
     void set_margin(const CSS::LengthBox& margin) { m_noninherited.margin = margin; }
     void set_padding(const CSS::LengthBox& padding) { m_noninherited.padding = padding; }
+    void set_overflow_x(CSS::Overflow value) { m_noninherited.overflow_x = value; }
+    void set_overflow_y(CSS::Overflow value) { m_noninherited.overflow_y = value; }
     void set_list_style_type(CSS::ListStyleType value) { m_inherited.list_style_type = value; }
     void set_display(CSS::Display value) { m_noninherited.display = value; }
     BorderData& border_left() { return m_noninherited.border_left; }

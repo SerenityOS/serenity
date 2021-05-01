@@ -1,33 +1,13 @@
 /*
  * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/IOAPIC.h>
@@ -45,7 +25,7 @@ enum DeliveryMode {
     External = 7
 };
 
-IOAPIC::IOAPIC(PhysicalAddress address, u32 gsi_base)
+UNMAP_AFTER_INIT IOAPIC::IOAPIC(PhysicalAddress address, u32 gsi_base)
     : m_address(address)
     , m_regs(map_typed_writable<ioapic_mmio_regs>(m_address))
     , m_gsi_base(gsi_base)
@@ -54,13 +34,13 @@ IOAPIC::IOAPIC(PhysicalAddress address, u32 gsi_base)
     , m_redirection_entries_count((read_register(0x1) >> 16) + 1)
 {
     InterruptDisabler disabler;
-    klog() << "IOAPIC ID: 0x" << String::format("%x", m_id);
-    klog() << "IOAPIC Version: 0x" << String::format("%x", m_version) << ", Redirection Entries count - " << m_redirection_entries_count;
-    klog() << "IOAPIC Arbitration ID 0x" << String::format("%x", read_register(0x2));
+    dmesgln("IOAPIC ID: {:#x}", m_id);
+    dmesgln("IOAPIC Version: {:#x}, redirection entries: {}", m_version, m_redirection_entries_count);
+    dmesgln("IOAPIC Arbitration ID {:#x}", read_register(0x2));
     mask_all_redirection_entries();
 }
 
-void IOAPIC::initialize()
+UNMAP_AFTER_INIT void IOAPIC::initialize()
 {
 }
 
@@ -80,7 +60,7 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
             active_low = false;
             break;
         case 2:
-            ASSERT_NOT_REACHED(); // Reserved value
+            VERIFY_NOT_REACHED(); // Reserved value
         case 3:
             active_low = true;
             break;
@@ -96,7 +76,7 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
             trigger_level_mode = false;
             break;
         case 2:
-            ASSERT_NOT_REACHED(); // Reserved value
+            VERIFY_NOT_REACHED(); // Reserved value
         case 3:
             trigger_level_mode = true;
             break;
@@ -127,9 +107,9 @@ bool IOAPIC::is_enabled() const
 void IOAPIC::spurious_eoi(const GenericInterruptHandler& handler) const
 {
     InterruptDisabler disabler;
-    ASSERT(handler.type() == HandlerType::SpuriousInterruptHandler);
-    ASSERT(handler.interrupt_number() == APIC::spurious_interrupt_vector());
-    klog() << "IOAPIC::spurious_eoi - Spurious Interrupt occurred";
+    VERIFY(handler.type() == HandlerType::SpuriousInterruptHandler);
+    VERIFY(handler.interrupt_number() == APIC::spurious_interrupt_vector());
+    dbgln("IOAPIC: Spurious interrupt");
 }
 
 void IOAPIC::map_isa_interrupts()
@@ -148,7 +128,7 @@ void IOAPIC::map_isa_interrupts()
             active_low = false;
             break;
         case 2:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case 3:
             active_low = true;
             break;
@@ -164,7 +144,7 @@ void IOAPIC::map_isa_interrupts()
             trigger_level_mode = false;
             break;
         case 2:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         case 3:
             trigger_level_mode = true;
             break;
@@ -196,7 +176,7 @@ void IOAPIC::reset_redirection_entry(int index) const
 void IOAPIC::configure_redirection_entry(int index, u8 interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const
 {
     InterruptDisabler disabler;
-    ASSERT((u32)index < m_redirection_entries_count);
+    VERIFY((u32)index < m_redirection_entries_count);
     u32 redirection_entry1 = interrupt_vector | (delivery_mode & 0b111) << 8 | logical_destination << 11 | active_low << 13 | trigger_level_mode << 15 | masked << 16;
     u32 redirection_entry2 = destination << 24;
     write_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET, redirection_entry1);
@@ -219,7 +199,7 @@ void IOAPIC::mask_all_redirection_entries() const
 
 void IOAPIC::mask_redirection_entry(u8 index) const
 {
-    ASSERT((u32)index < m_redirection_entries_count);
+    VERIFY((u32)index < m_redirection_entries_count);
     u32 redirection_entry = read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET);
     if (redirection_entry & (1 << 16))
         return;
@@ -228,13 +208,13 @@ void IOAPIC::mask_redirection_entry(u8 index) const
 
 bool IOAPIC::is_redirection_entry_masked(u8 index) const
 {
-    ASSERT((u32)index < m_redirection_entries_count);
+    VERIFY((u32)index < m_redirection_entries_count);
     return (read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET) & (1 << 16)) != 0;
 }
 
 void IOAPIC::unmask_redirection_entry(u8 index) const
 {
-    ASSERT((u32)index < m_redirection_entries_count);
+    VERIFY((u32)index < m_redirection_entries_count);
     u32 redirection_entry = read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET);
     if (!(redirection_entry & (1 << 16)))
         return;
@@ -249,7 +229,7 @@ bool IOAPIC::is_vector_enabled(u8 interrupt_vector) const
 
 u8 IOAPIC::read_redirection_entry_vector(u8 index) const
 {
-    ASSERT((u32)index < m_redirection_entries_count);
+    VERIFY((u32)index < m_redirection_entries_count);
     return (read_register((index << 1) + IOAPIC_REDIRECTION_ENTRY_OFFSET) & 0xFF);
 }
 
@@ -266,52 +246,52 @@ Optional<int> IOAPIC::find_redirection_entry_by_vector(u8 vector) const
 void IOAPIC::disable(const GenericInterruptHandler& handler)
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
+    VERIFY(!is_hard_disabled());
     u8 interrupt_vector = handler.interrupt_number();
-    ASSERT(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
+    VERIFY(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
     auto found_index = find_redirection_entry_by_vector(interrupt_vector);
     if (!found_index.has_value()) {
         map_interrupt_redirection(interrupt_vector);
         found_index = find_redirection_entry_by_vector(interrupt_vector);
     }
-    ASSERT(found_index.has_value());
+    VERIFY(found_index.has_value());
     mask_redirection_entry(found_index.value());
 }
 
 void IOAPIC::enable(const GenericInterruptHandler& handler)
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
+    VERIFY(!is_hard_disabled());
     u8 interrupt_vector = handler.interrupt_number();
-    ASSERT(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
+    VERIFY(interrupt_vector >= gsi_base() && interrupt_vector < interrupt_vectors_count());
     auto found_index = find_redirection_entry_by_vector(interrupt_vector);
     if (!found_index.has_value()) {
         map_interrupt_redirection(interrupt_vector);
         found_index = find_redirection_entry_by_vector(interrupt_vector);
     }
-    ASSERT(found_index.has_value());
+    VERIFY(found_index.has_value());
     unmask_redirection_entry(found_index.value());
 }
 
 void IOAPIC::eoi(const GenericInterruptHandler& handler) const
 {
     InterruptDisabler disabler;
-    ASSERT(!is_hard_disabled());
-    ASSERT(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
-    ASSERT(handler.type() != HandlerType::SpuriousInterruptHandler);
+    VERIFY(!is_hard_disabled());
+    VERIFY(handler.interrupt_number() >= gsi_base() && handler.interrupt_number() < interrupt_vectors_count());
+    VERIFY(handler.type() != HandlerType::SpuriousInterruptHandler);
     APIC::the().eoi();
 }
 
 u16 IOAPIC::get_isr() const
 {
     InterruptDisabler disabler;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 u16 IOAPIC::get_irr() const
 {
     InterruptDisabler disabler;
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void IOAPIC::write_register(u32 index, u32 value) const
@@ -320,13 +300,13 @@ void IOAPIC::write_register(u32 index, u32 value) const
     m_regs->select = index;
     m_regs->window = value;
 
-    dbgln<IOAPIC_DEBUG>("IOAPIC Writing, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
+    dbgln_if(IOAPIC_DEBUG, "IOAPIC Writing, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
 }
 u32 IOAPIC::read_register(u32 index) const
 {
     InterruptDisabler disabler;
     m_regs->select = index;
-    dbgln<IOAPIC_DEBUG>("IOAPIC Reading, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
+    dbgln_if(IOAPIC_DEBUG, "IOAPIC Reading, Value {:#x} @ offset {:#x}", (u32)m_regs->window, (u32)m_regs->select);
     return m_regs->window;
 }
 

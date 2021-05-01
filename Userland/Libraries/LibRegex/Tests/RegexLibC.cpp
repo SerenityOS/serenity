@@ -1,30 +1,10 @@
 /*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/StringBuilder.h>
 #include <LibC/regex.h>
@@ -163,26 +143,26 @@ TEST_CASE(simple_questionmark_matchall)
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "a", num_matches, matches, REG_GLOBAL), REG_NOMATCH);
-    EXPECT_EQ(matches[0].rm_cnt, 0u);
+    EXPECT_EQ(matches[0].rm_cnt, 0);
     EXPECT_EQ(regexec(&regex, "daa", num_matches, matches, REG_GLOBAL), REG_NOMATCH);
-    EXPECT_EQ(matches[0].rm_cnt, 0u);
+    EXPECT_EQ(matches[0].rm_cnt, 0);
 
     EXPECT_EQ(regexec(&regex, "ddddd", num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 2u);
+    EXPECT_EQ(matches[0].rm_cnt, 2);
 
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 2u);
-    EXPECT_EQ(matches[1].rm_so, 2u);
-    EXPECT_EQ(matches[1].rm_eo, 4u);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 2);
+    EXPECT_EQ(matches[1].rm_so, 2);
+    EXPECT_EQ(matches[1].rm_eo, 4);
 
     EXPECT_EQ(regexec(&regex, "dd", num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
     EXPECT_EQ(regexec(&regex, "dad", num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
     EXPECT_EQ(regexec(&regex, "dada", num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
     EXPECT_EQ(regexec(&regex, "adadaa", num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
 
     regfree(&regex);
 }
@@ -197,9 +177,9 @@ TEST_CASE(character_class)
     String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
     EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, 0), REG_NOMATCH);
-    EXPECT_EQ(matches[0].rm_cnt, 0u);
+    EXPECT_EQ(matches[0].rm_cnt, 0);
     EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 24u);
+    EXPECT_EQ(matches[0].rm_cnt, 24);
     EXPECT_EQ(haystack.substring_view(matches[0].rm_so, matches[0].rm_eo - matches[0].rm_so), "W");
     EXPECT_EQ(haystack.substring_view(matches[1].rm_so, matches[1].rm_eo - matches[1].rm_so), "i");
 
@@ -217,7 +197,7 @@ TEST_CASE(character_class2)
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED | REG_NEWLINE), REG_NOERR);
     EXPECT_EQ(regexec(&regex, haystack.characters(), num_matches, matches, 0), REG_NOERR);
 
-    EXPECT_EQ(matches[0].rm_cnt, 3u);
+    EXPECT_EQ(matches[0].rm_cnt, 3);
 #if 0
     for (int i = 0; i < num_matches; ++i) {
         fprintf(stderr, "Matches[%i].rm_so: %li, .rm_eo: %li .rm_cnt: %li: ", i, matches[i].rm_so, matches[i].rm_eo, matches[i].rm_cnt);
@@ -275,7 +255,7 @@ TEST_CASE(char_qualifier_asterisk)
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "#include <regex.h>", num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
 
     regfree(&regex);
 }
@@ -289,7 +269,7 @@ TEST_CASE(char_utf8)
 
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "Привет, мир! 😀 γειά σου κόσμος 😀 こんにちは世界", num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 2u);
+    EXPECT_EQ(matches[0].rm_cnt, 2);
 
     regfree(&regex);
 }
@@ -304,12 +284,12 @@ TEST_CASE(parens)
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
 
     EXPECT_EQ(regexec(&regex, "testhellotest", num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
 
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 13u);
-    EXPECT_EQ(matches[1].rm_so, 4u);
-    EXPECT_EQ(matches[1].rm_eo, 9u);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 13);
+    EXPECT_EQ(matches[1].rm_so, 4);
+    EXPECT_EQ(matches[1].rm_eo, 9);
 
     regfree(&regex);
 }
@@ -427,18 +407,18 @@ TEST_CASE(parens_qualifier_questionmark)
 
     match_str = "testtest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 8u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 8);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testtest");
 
     match_str = "testhellotest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 13u);
-    EXPECT_EQ(matches[1].rm_so, 4u);
-    EXPECT_EQ(matches[1].rm_eo, 9u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 13);
+    EXPECT_EQ(matches[1].rm_so, 4);
+    EXPECT_EQ(matches[1].rm_eo, 9);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testhellotest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
@@ -457,32 +437,32 @@ TEST_CASE(parens_qualifier_asterisk)
 
     match_str = "testtest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 8u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 8);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testtest");
 
     match_str = "testhellohellotest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 18u);
-    EXPECT_EQ(matches[1].rm_so, 9u);
-    EXPECT_EQ(matches[1].rm_eo, 14u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 18);
+    EXPECT_EQ(matches[1].rm_so, 9);
+    EXPECT_EQ(matches[1].rm_eo, 14);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testhellohellotest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
     match_str = "testhellohellotest, testhellotest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 2u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 18u);
-    EXPECT_EQ(matches[1].rm_so, 9u);
-    EXPECT_EQ(matches[1].rm_eo, 14u);
-    EXPECT_EQ(matches[2].rm_so, 20u);
-    EXPECT_EQ(matches[2].rm_eo, 33u);
-    EXPECT_EQ(matches[3].rm_so, 24u);
-    EXPECT_EQ(matches[3].rm_eo, 29u);
+    EXPECT_EQ(matches[0].rm_cnt, 2);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 18);
+    EXPECT_EQ(matches[1].rm_so, 9);
+    EXPECT_EQ(matches[1].rm_eo, 14);
+    EXPECT_EQ(matches[2].rm_so, 20);
+    EXPECT_EQ(matches[2].rm_eo, 33);
+    EXPECT_EQ(matches[3].rm_so, 24);
+    EXPECT_EQ(matches[3].rm_eo, 29);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testhellohellotest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
     EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "testhellotest");
@@ -503,31 +483,31 @@ TEST_CASE(parens_qualifier_asterisk_2)
 
     match_str = "testasdftest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 12u);
-    EXPECT_EQ(matches[1].rm_so, 4u);
-    EXPECT_EQ(matches[1].rm_eo, 8u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 12);
+    EXPECT_EQ(matches[1].rm_so, 4);
+    EXPECT_EQ(matches[1].rm_eo, 8);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testasdftest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "asdf");
 
     match_str = "testasdfasdftest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 16u);
-    EXPECT_EQ(matches[1].rm_so, 4u);
-    EXPECT_EQ(matches[1].rm_eo, 12u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 16);
+    EXPECT_EQ(matches[1].rm_so, 4);
+    EXPECT_EQ(matches[1].rm_eo, 12);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testasdfasdftest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "asdfasdf");
 
     match_str = "testaaaatest, testbbbtest, testtest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 35u);
-    EXPECT_EQ(matches[1].rm_so, 4u);
-    EXPECT_EQ(matches[1].rm_eo, 31u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 35);
+    EXPECT_EQ(matches[1].rm_so, 4);
+    EXPECT_EQ(matches[1].rm_eo, 31);
 
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testaaaatest, testbbbtest, testtest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "aaaatest, testbbbtest, test");
@@ -549,52 +529,52 @@ TEST_CASE(mulit_parens_qualifier_too_less_result_values)
 
     match_str = "testabtest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches - 1, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 10u);
-    EXPECT_EQ(matches[1].rm_so, 4u);
-    EXPECT_EQ(matches[1].rm_eo, 5u);
-    EXPECT_EQ(matches[2].rm_so, 5u);
-    EXPECT_EQ(matches[2].rm_eo, 6u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 10);
+    EXPECT_EQ(matches[1].rm_so, 4);
+    EXPECT_EQ(matches[1].rm_eo, 5);
+    EXPECT_EQ(matches[2].rm_so, 5);
+    EXPECT_EQ(matches[2].rm_eo, 6);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testabtest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "a");
     EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "b");
     EXPECT_EQ(matches[3].rm_so, -2);
     EXPECT_EQ(matches[3].rm_eo, -2);
-    EXPECT_EQ(matches[3].rm_cnt, 100u);
+    EXPECT_EQ(matches[3].rm_cnt, 100);
 
     match_str = "testabctest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches - 1, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 11u);
-    EXPECT_EQ(matches[1].rm_so, 4u);
-    EXPECT_EQ(matches[1].rm_eo, 5u);
-    EXPECT_EQ(matches[2].rm_so, 5u);
-    EXPECT_EQ(matches[2].rm_eo, 6u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 11);
+    EXPECT_EQ(matches[1].rm_so, 4);
+    EXPECT_EQ(matches[1].rm_eo, 5);
+    EXPECT_EQ(matches[2].rm_so, 5);
+    EXPECT_EQ(matches[2].rm_eo, 6);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testabctest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "a");
     EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "b");
     EXPECT_EQ(matches[3].rm_so, -2);
     EXPECT_EQ(matches[3].rm_eo, -2);
-    EXPECT_EQ(matches[3].rm_cnt, 100u);
+    EXPECT_EQ(matches[3].rm_cnt, 100);
 
     match_str = "testabctest, testabctest";
 
     EXPECT_EQ(regexec(&regex, match_str, num_matches - 1, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 2u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 11u);
-    EXPECT_EQ(matches[1].rm_so, 4u);
-    EXPECT_EQ(matches[1].rm_eo, 5u);
-    EXPECT_EQ(matches[2].rm_so, 5u);
-    EXPECT_EQ(matches[2].rm_eo, 6u);
+    EXPECT_EQ(matches[0].rm_cnt, 2);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 11);
+    EXPECT_EQ(matches[1].rm_so, 4);
+    EXPECT_EQ(matches[1].rm_eo, 5);
+    EXPECT_EQ(matches[2].rm_so, 5);
+    EXPECT_EQ(matches[2].rm_eo, 6);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testabctest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "a");
     EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "b");
     EXPECT_EQ(matches[3].rm_so, -2);
     EXPECT_EQ(matches[3].rm_eo, -2);
-    EXPECT_EQ(matches[3].rm_cnt, 100u);
+    EXPECT_EQ(matches[3].rm_cnt, 100);
 
     regfree(&regex);
 }
@@ -611,20 +591,20 @@ TEST_CASE(multi_parens_qualifier_questionmark)
 
     match_str = "testtest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 8u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 8);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testtest");
 
     match_str = "testabctest";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 11u);
-    EXPECT_EQ(matches[1].rm_so, 4u);
-    EXPECT_EQ(matches[1].rm_eo, 5u);
-    EXPECT_EQ(matches[2].rm_so, 5u);
-    EXPECT_EQ(matches[2].rm_eo, 6u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 11);
+    EXPECT_EQ(matches[1].rm_so, 4);
+    EXPECT_EQ(matches[1].rm_eo, 5);
+    EXPECT_EQ(matches[2].rm_so, 5);
+    EXPECT_EQ(matches[2].rm_eo, 6);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testabctest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "a");
     EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "b");
@@ -632,24 +612,24 @@ TEST_CASE(multi_parens_qualifier_questionmark)
     match_str = "testabctest, testactest";
 
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 2u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 11u);
-    EXPECT_EQ(matches[1].rm_so, 4u);
-    EXPECT_EQ(matches[1].rm_eo, 5u);
-    EXPECT_EQ(matches[2].rm_so, 5u);
-    EXPECT_EQ(matches[2].rm_eo, 6u);
-    EXPECT_EQ(matches[3].rm_so, 6u);
-    EXPECT_EQ(matches[3].rm_eo, 7u);
+    EXPECT_EQ(matches[0].rm_cnt, 2);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 11);
+    EXPECT_EQ(matches[1].rm_so, 4);
+    EXPECT_EQ(matches[1].rm_eo, 5);
+    EXPECT_EQ(matches[2].rm_so, 5);
+    EXPECT_EQ(matches[2].rm_eo, 6);
+    EXPECT_EQ(matches[3].rm_so, 6);
+    EXPECT_EQ(matches[3].rm_eo, 7);
 
-    EXPECT_EQ(matches[4].rm_so, 13u);
-    EXPECT_EQ(matches[4].rm_eo, 23u);
-    EXPECT_EQ(matches[5].rm_so, 17u);
-    EXPECT_EQ(matches[5].rm_eo, 18u);
+    EXPECT_EQ(matches[4].rm_so, 13);
+    EXPECT_EQ(matches[4].rm_eo, 23);
+    EXPECT_EQ(matches[5].rm_so, 17);
+    EXPECT_EQ(matches[5].rm_eo, 18);
     EXPECT_EQ(matches[6].rm_so, -1);
     EXPECT_EQ(matches[6].rm_eo, -1);
-    EXPECT_EQ(matches[7].rm_so, 18u);
-    EXPECT_EQ(matches[7].rm_eo, 19u);
+    EXPECT_EQ(matches[7].rm_so, 18);
+    EXPECT_EQ(matches[7].rm_eo, 19);
 
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testabctest");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "a");
@@ -673,19 +653,19 @@ TEST_CASE(simple_alternative)
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_NOERR);
 
     EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 4u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 4);
 
     EXPECT_EQ(regexec(&regex, "hello", num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 5u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 5);
 
     EXPECT_EQ(regexec(&regex, "friends", num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 7u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 7);
 
     regfree(&regex);
 }
@@ -702,7 +682,7 @@ TEST_CASE(alternative_match_groups)
 
     match_str = "test";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
     EXPECT_EQ(matches[0].rm_so, 0);
     EXPECT_EQ(matches[0].rm_eo, 4);
     EXPECT_EQ(matches[1].rm_so, -1);
@@ -715,11 +695,11 @@ TEST_CASE(alternative_match_groups)
 
     match_str = "testa";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 5u);
-    EXPECT_EQ(matches[1].rm_so, 4u);
-    EXPECT_EQ(matches[1].rm_eo, 5u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 5);
+    EXPECT_EQ(matches[1].rm_so, 4);
+    EXPECT_EQ(matches[1].rm_eo, 5);
     EXPECT_EQ(matches[2].rm_so, -1);
     EXPECT_EQ(matches[2].rm_eo, -1);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testa");
@@ -728,22 +708,22 @@ TEST_CASE(alternative_match_groups)
 
     match_str = "testb";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 5u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 5);
     EXPECT_EQ(matches[1].rm_so, -1);
     EXPECT_EQ(matches[1].rm_eo, -1);
-    EXPECT_EQ(matches[2].rm_so, 4u);
-    EXPECT_EQ(matches[2].rm_eo, 5u);
+    EXPECT_EQ(matches[2].rm_so, 4);
+    EXPECT_EQ(matches[2].rm_eo, 5);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "testb");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "");
     EXPECT_EQ(StringView(&match_str[matches[2].rm_so], matches[2].rm_eo - matches[2].rm_so), "b");
 
     match_str = "hello friends";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 13u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 13);
     EXPECT_EQ(matches[1].rm_so, -1);
     EXPECT_EQ(matches[1].rm_eo, -1);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hello friends");
@@ -751,9 +731,9 @@ TEST_CASE(alternative_match_groups)
 
     match_str = "hello dear friends";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 18u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 18);
     EXPECT_EQ(matches[1].rm_so, -1);
     EXPECT_EQ(matches[1].rm_eo, -1);
     EXPECT_EQ(matches[2].rm_so, -1);
@@ -767,9 +747,9 @@ TEST_CASE(alternative_match_groups)
 
     match_str = "hello my friends";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 16u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 16);
     EXPECT_EQ(matches[1].rm_so, -1);
     EXPECT_EQ(matches[1].rm_eo, -1);
     EXPECT_EQ(matches[2].rm_so, -1);
@@ -783,13 +763,13 @@ TEST_CASE(alternative_match_groups)
 
     match_str = "testabc";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOMATCH);
-    EXPECT_EQ(matches[0].rm_cnt, 0u);
+    EXPECT_EQ(matches[0].rm_cnt, 0);
     EXPECT_EQ(matches[0].rm_so, -1);
     EXPECT_EQ(matches[0].rm_eo, -1);
 
     match_str = "hello test friends";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOMATCH);
-    EXPECT_EQ(matches[0].rm_cnt, 0u);
+    EXPECT_EQ(matches[0].rm_cnt, 0);
     EXPECT_EQ(matches[0].rm_so, -1);
     EXPECT_EQ(matches[0].rm_eo, -1);
 
@@ -808,35 +788,35 @@ TEST_CASE(parens_qualifier_exact)
 
     match_str = "hello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOMATCH);
-    EXPECT_EQ(matches[0].rm_cnt, 0u);
+    EXPECT_EQ(matches[0].rm_cnt, 0);
 
     match_str = "hellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 15u);
-    EXPECT_EQ(matches[1].rm_so, 10u);
-    EXPECT_EQ(matches[1].rm_eo, 15u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 15);
+    EXPECT_EQ(matches[1].rm_so, 10);
+    EXPECT_EQ(matches[1].rm_eo, 15);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
     match_str = "hellohellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 15u);
-    EXPECT_EQ(matches[1].rm_so, 10u);
-    EXPECT_EQ(matches[1].rm_eo, 15u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 15);
+    EXPECT_EQ(matches[1].rm_so, 10);
+    EXPECT_EQ(matches[1].rm_eo, 15);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
     match_str = "test hellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 5u);
-    EXPECT_EQ(matches[0].rm_eo, 20u);
-    EXPECT_EQ(matches[1].rm_so, 15u);
-    EXPECT_EQ(matches[1].rm_eo, 20u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 5);
+    EXPECT_EQ(matches[0].rm_eo, 20);
+    EXPECT_EQ(matches[1].rm_so, 15);
+    EXPECT_EQ(matches[1].rm_eo, 20);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
@@ -855,46 +835,46 @@ TEST_CASE(parens_qualifier_minimum)
 
     match_str = "hello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOMATCH);
-    EXPECT_EQ(matches[0].rm_cnt, 0u);
+    EXPECT_EQ(matches[0].rm_cnt, 0);
 
     match_str = "hellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 15u);
-    EXPECT_EQ(matches[1].rm_so, 10u);
-    EXPECT_EQ(matches[1].rm_eo, 15u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 15);
+    EXPECT_EQ(matches[1].rm_so, 10);
+    EXPECT_EQ(matches[1].rm_eo, 15);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
     match_str = "hellohellohellohello";
 
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_SEARCH), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 20u);
-    EXPECT_EQ(matches[1].rm_so, 15u);
-    EXPECT_EQ(matches[1].rm_eo, 20u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 20);
+    EXPECT_EQ(matches[1].rm_so, 15);
+    EXPECT_EQ(matches[1].rm_eo, 20);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
     match_str = "test hellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 5u);
-    EXPECT_EQ(matches[0].rm_eo, 20u);
-    EXPECT_EQ(matches[1].rm_so, 15u);
-    EXPECT_EQ(matches[1].rm_eo, 20u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 5);
+    EXPECT_EQ(matches[0].rm_eo, 20);
+    EXPECT_EQ(matches[1].rm_so, 15);
+    EXPECT_EQ(matches[1].rm_eo, 20);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
     match_str = "test hellohellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 5u);
-    EXPECT_EQ(matches[0].rm_eo, 25u);
-    EXPECT_EQ(matches[1].rm_so, 20u);
-    EXPECT_EQ(matches[1].rm_eo, 25u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 5);
+    EXPECT_EQ(matches[0].rm_eo, 25);
+    EXPECT_EQ(matches[1].rm_so, 20);
+    EXPECT_EQ(matches[1].rm_eo, 25);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
@@ -913,45 +893,45 @@ TEST_CASE(parens_qualifier_maximum)
 
     match_str = "hello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOMATCH);
-    EXPECT_EQ(matches[0].rm_cnt, 0u);
+    EXPECT_EQ(matches[0].rm_cnt, 0);
 
     match_str = "hellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 15u);
-    EXPECT_EQ(matches[1].rm_so, 10u);
-    EXPECT_EQ(matches[1].rm_eo, 15u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 15);
+    EXPECT_EQ(matches[1].rm_so, 10);
+    EXPECT_EQ(matches[1].rm_eo, 15);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
     match_str = "hellohellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 0u);
-    EXPECT_EQ(matches[0].rm_eo, 15u);
-    EXPECT_EQ(matches[1].rm_so, 10u);
-    EXPECT_EQ(matches[1].rm_eo, 15u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 0);
+    EXPECT_EQ(matches[0].rm_eo, 15);
+    EXPECT_EQ(matches[1].rm_so, 10);
+    EXPECT_EQ(matches[1].rm_eo, 15);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
     match_str = "test hellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 5u);
-    EXPECT_EQ(matches[0].rm_eo, 20u);
-    EXPECT_EQ(matches[1].rm_so, 15u);
-    EXPECT_EQ(matches[1].rm_eo, 20u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 5);
+    EXPECT_EQ(matches[0].rm_eo, 20);
+    EXPECT_EQ(matches[1].rm_so, 15);
+    EXPECT_EQ(matches[1].rm_eo, 20);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
     match_str = "test hellohellohellohello";
     EXPECT_EQ(regexec(&regex, match_str, num_matches, matches, REG_GLOBAL), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
-    EXPECT_EQ(matches[0].rm_so, 5u);
-    EXPECT_EQ(matches[0].rm_eo, 20u);
-    EXPECT_EQ(matches[1].rm_so, 15u);
-    EXPECT_EQ(matches[1].rm_eo, 20u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
+    EXPECT_EQ(matches[0].rm_so, 5);
+    EXPECT_EQ(matches[0].rm_eo, 20);
+    EXPECT_EQ(matches[1].rm_so, 15);
+    EXPECT_EQ(matches[1].rm_eo, 20);
     EXPECT_EQ(StringView(&match_str[matches[0].rm_so], matches[0].rm_eo - matches[0].rm_so), "hellohellohello");
     EXPECT_EQ(StringView(&match_str[matches[1].rm_so], matches[1].rm_eo - matches[1].rm_so), "hello");
 
@@ -970,7 +950,7 @@ TEST_CASE(char_qualifier_min_max)
     EXPECT_EQ(regexec(&regex, "cc", num_matches, matches, 0), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "ccc", num_matches, matches, 0), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "cccccccccccccccccccccccccccccc", num_matches, matches, 0), REG_NOERR);
-    EXPECT_EQ(matches[0].rm_cnt, 1u);
+    EXPECT_EQ(matches[0].rm_cnt, 1);
     EXPECT_EQ(regexec(&regex, "ccccccccccccccccccccccccccccccc", num_matches, matches, 0), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "ccccccccccccccccccccccccccccccc", num_matches, matches, REG_GLOBAL), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "cccccccccccccccccccccccccccccccc", num_matches, matches, 0), REG_NOMATCH);
@@ -1136,5 +1116,3 @@ TEST_CASE(simple_notbol_noteol)
 
     regfree(&regex);
 }
-
-TEST_MAIN(Regex)

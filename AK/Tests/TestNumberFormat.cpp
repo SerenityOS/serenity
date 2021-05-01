@@ -1,30 +1,10 @@
 /*
  * Copyright (c) 2020, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/NumberFormat.h>
 
@@ -129,35 +109,19 @@ TEST_CASE(extremes_4byte)
     EXPECT_EQ(human_readable_size(0xffffffff), "3.9 GiB");
 }
 
-template<int>
-void actual_extremes_8byte();
-
-template<>
-void actual_extremes_8byte<4>()
-{
-    warnln("(Skipping 8-byte-size_t test)");
-}
-
-template<>
-void actual_extremes_8byte<8>()
-{
-    warnln("(Running true 8-byte-size_t test)");
-    // Your editor might show "implicit conversion" warnings here.
-    // This is because your editor thinks the world is 32-bit, but it isn't.
-    EXPECT_EQ(human_readable_size(0x100000000ULL), "4.0 GiB");
-    EXPECT_EQ(human_readable_size(0x100000001ULL), "4.0 GiB");
-    EXPECT_EQ(human_readable_size(0x800000000ULL), "32.0 GiB");
-    EXPECT_EQ(human_readable_size(0x10000000000ULL), "1024.0 GiB");
-
-    // Oh yeah! These are *correct*!
-    EXPECT_EQ(human_readable_size(0x7fffffffffffffffULL), "8589934591.9 GiB");
-    EXPECT_EQ(human_readable_size(0x8000000000000000ULL), "8589934592.0 GiB");
-    EXPECT_EQ(human_readable_size(0xffffffffffffffffULL), "17179869183.9 GiB");
-}
-
 TEST_CASE(extremes_8byte)
 {
-    actual_extremes_8byte<sizeof(size_t)>();
+    if constexpr (sizeof(size_t) == 8) {
+        warnln("(Running 8-byte-size_t test)");
+        EXPECT_EQ(human_readable_size(0x100000000ULL), "4.0 GiB");
+        EXPECT_EQ(human_readable_size(0x100000001ULL), "4.0 GiB");
+        EXPECT_EQ(human_readable_size(0x800000000ULL), "32.0 GiB");
+        EXPECT_EQ(human_readable_size(0x10000000000ULL), "1.0 TiB");
+        EXPECT_EQ(human_readable_size(0x4000000000000ULL), "1.0 PiB");
+        EXPECT_EQ(human_readable_size(0x7fffffffffffffffULL), "7.9 EiB");
+        EXPECT_EQ(human_readable_size(0x8000000000000000ULL), "8.0 EiB");
+        EXPECT_EQ(human_readable_size(0xffffffffffffffffULL), "15.9 EiB");
+    } else {
+        warnln("(Skipping 8-byte-size_t test on 32-bit platform)");
+    }
 }
-
-TEST_MAIN(NumberFormat)

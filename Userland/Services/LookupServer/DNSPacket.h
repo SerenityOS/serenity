@@ -1,115 +1,89 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sergey Bugaev <bugaevc@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/Endian.h>
+#include "DNSAnswer.h"
+#include "DNSQuestion.h"
+#include <AK/Optional.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 
-class [[gnu::packed]] DNSPacket {
+#define T_A 1
+#define T_NS 2
+#define T_CNAME 5
+#define T_SOA 6
+#define T_PTR 12
+#define T_MX 15
+
+#define C_IN 1
+
+namespace LookupServer {
+
+enum class ShouldRandomizeCase {
+    No = 0,
+    Yes
+};
+
+class DNSPacket {
 public:
-    DNSPacket()
-        : m_recursion_desired(false)
-        , m_truncated(false)
-        , m_authoritative_answer(false)
-        , m_opcode(0)
-        , m_query_or_response(false)
-        , m_response_code(0)
-        , m_checking_disabled(false)
-        , m_authenticated_data(false)
-        , m_zero(false)
-        , m_recursion_available(false)
-    {
-    }
+    DNSPacket() { }
 
-    u16 id() const { return m_id; }
-    void set_id(u16 w) { m_id = w; }
-
-    bool recursion_desired() const { return m_recursion_desired; }
-    void set_recursion_desired(bool b) { m_recursion_desired = b; }
-
-    bool is_truncated() const { return m_truncated; }
-    void set_truncated(bool b) { m_truncated = b; }
-
-    bool is_authoritative_answer() const { return m_authoritative_answer; }
-    void set_authoritative_answer(bool b) { m_authoritative_answer = b; }
-
-    u8 opcode() const { return m_opcode; }
-    void set_opcode(u8 b) { m_opcode = b; }
+    static Optional<DNSPacket> from_raw_packet(const u8*, size_t);
+    ByteBuffer to_byte_buffer() const;
 
     bool is_query() const { return !m_query_or_response; }
     bool is_response() const { return m_query_or_response; }
     void set_is_query() { m_query_or_response = false; }
     void set_is_response() { m_query_or_response = true; }
 
-    u8 response_code() const { return m_response_code; }
-    void set_response_code(u8 b) { m_response_code = b; }
+    u16 id() const { return m_id; }
+    void set_id(u16 id) { m_id = id; }
 
-    bool checking_disabled() const { return m_checking_disabled; }
-    void set_checking_disabled(bool b) { m_checking_disabled = b; }
+    const Vector<DNSQuestion>& questions() const { return m_questions; }
+    const Vector<DNSAnswer>& answers() const { return m_answers; }
 
-    bool is_authenticated_data() const { return m_authenticated_data; }
-    void set_authenticated_data(bool b) { m_authenticated_data = b; }
+    u16 question_count() const
+    {
+        VERIFY(m_questions.size() <= UINT16_MAX);
+        return m_questions.size();
+    }
 
-    bool is_recursion_available() const { return m_recursion_available; }
-    void set_recursion_available(bool b) { m_recursion_available = b; }
+    u16 answer_count() const
+    {
+        VERIFY(m_answers.size() <= UINT16_MAX);
+        return m_answers.size();
+    }
 
-    u16 question_count() const { return m_question_count; }
-    void set_question_count(u16 w) { m_question_count = w; }
+    void add_question(const DNSQuestion&);
+    void add_answer(const DNSAnswer&);
 
-    u16 answer_count() const { return m_answer_count; }
-    void set_answer_count(u16 w) { m_answer_count = w; }
+    enum class Code : u8 {
+        NOERROR = 0,
+        FORMERR = 1,
+        SERVFAIL = 2,
+        NXDOMAIN = 3,
+        NOTIMP = 4,
+        REFUSED = 5,
+        YXDOMAIN = 6,
+        XRRSET = 7,
+        NOTAUTH = 8,
+        NOTZONE = 9,
+    };
 
-    u16 authority_count() const { return m_authority_count; }
-    void set_authority_count(u16 w) { m_authority_count = w; }
-
-    u16 additional_count() const { return m_additional_count; }
-    void set_additional_count(u16 w) { m_additional_count = w; }
-
-    void* payload() { return this + 1; }
-    const void* payload() const { return this + 1; }
+    Code code() const { return (Code)m_code; }
+    void set_code(Code code) { m_code = (u8)code; }
 
 private:
-    NetworkOrdered<u16> m_id;
-
-    bool m_recursion_desired : 1;
-    bool m_truncated : 1;
-    bool m_authoritative_answer : 1;
-    u8 m_opcode : 4;
-    bool m_query_or_response : 1;
-    u8 m_response_code : 4;
-    bool m_checking_disabled : 1;
-    bool m_authenticated_data : 1;
-    bool m_zero : 1;
-    bool m_recursion_available : 1;
-
-    NetworkOrdered<u16> m_question_count;
-    NetworkOrdered<u16> m_answer_count;
-    NetworkOrdered<u16> m_authority_count;
-    NetworkOrdered<u16> m_additional_count;
+    u16 m_id { 0 };
+    u8 m_code { 0 };
+    bool m_query_or_response { false };
+    Vector<DNSQuestion> m_questions;
+    Vector<DNSAnswer> m_answers;
 };
 
-static_assert(sizeof(DNSPacket) == 12);
+}

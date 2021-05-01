@@ -1,30 +1,10 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TestSuite.h>
+#include <LibTest/TestCase.h>
 
 #include <AK/String.h>
 
@@ -57,6 +37,15 @@ TEST_CASE(compare_views)
     EXPECT_EQ(view1, foo1);
     EXPECT_EQ(view1, foo2);
     EXPECT_EQ(view1, "foo");
+}
+
+TEST_CASE(string_view_literal_operator)
+{
+    StringView literal_view = "foo"sv;
+    String test_string = "foo";
+
+    EXPECT_EQ(literal_view.length(), test_string.length());
+    EXPECT_EQ(literal_view, test_string);
 }
 
 TEST_CASE(starts_with)
@@ -155,6 +144,12 @@ TEST_CASE(find_last_of)
 
     EXPECT_EQ(test_string_view.find_last_of('3').has_value(), false);
     EXPECT_EQ(test_string_view.find_last_of("fghi").has_value(), false);
+
+    test_string_view = "/";
+    EXPECT_EQ(test_string_view.find_last_of('/').has_value(), true);
+    EXPECT_EQ(test_string_view.find_last_of('/').value(), 0U);
+    EXPECT_EQ(test_string_view.find_last_of("/").has_value(), true);
+    EXPECT_EQ(test_string_view.find_last_of("/").value(), 0U);
 }
 
 TEST_CASE(split_view)
@@ -174,6 +169,11 @@ TEST_CASE(split_view)
     test_string_view = "axxbcxxdxx";
     EXPECT_EQ(test_string_view.split_view("xx"), Vector<StringView>({ "a", "bc", "d" }));
     EXPECT_EQ(test_string_view.split_view("xx", true), Vector<StringView>({ "a", "bc", "d", "" }));
-}
 
-TEST_MAIN(StringView)
+    test_string_view = "ax_b_cxd";
+    auto predicate = [](char ch) { return ch == 'x' || ch == '_'; };
+    EXPECT_EQ(test_string_view.split_view_if(predicate), Vector<StringView>({ "a", "b", "c", "d" }));
+    EXPECT_EQ(test_string_view.split_view_if(predicate, true), Vector<StringView>({ "a", "", "b", "c", "d" }));
+    EXPECT_EQ(test_string_view.split_view_if(predicate), Vector<StringView>({ "a", "b", "c", "d" }));
+    EXPECT_EQ(test_string_view.split_view_if(predicate, true), Vector<StringView>({ "a", "", "b", "c", "d" }));
+}

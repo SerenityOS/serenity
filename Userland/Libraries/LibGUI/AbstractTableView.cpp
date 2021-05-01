@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringBuilder.h>
@@ -33,7 +13,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 
@@ -48,6 +28,9 @@ AbstractTableView::AbstractTableView()
     m_corner_button->set_fill_with_background_color(true);
     m_column_header = add<HeaderView>(*this, Gfx::Orientation::Horizontal);
     m_column_header->move_to_back();
+    m_column_header->on_resize_doubleclick = [this](auto column) {
+        auto_resize_column(column);
+    };
     m_row_header = add<HeaderView>(*this, Gfx::Orientation::Vertical);
     m_row_header->move_to_back();
     m_row_header->set_visible(false);
@@ -67,6 +50,44 @@ void AbstractTableView::select_all()
     }
 }
 
+void AbstractTableView::auto_resize_column(int column)
+{
+    if (!model())
+        return;
+
+    if (!column_header().is_section_visible(column))
+        return;
+
+    auto& model = *this->model();
+    int row_count = model.row_count();
+
+    int header_width = m_column_header->font().width(model.column_name(column));
+    if (column == m_key_column && model.is_column_sortable(column))
+        header_width += font().width(" \xE2\xAC\x86");
+
+    int column_width = header_width;
+    bool is_empty = true;
+    for (int row = 0; row < row_count; ++row) {
+        auto cell_data = model.index(row, column).data();
+        int cell_width = 0;
+        if (cell_data.is_icon()) {
+            cell_width = cell_data.as_icon().bitmap_for_size(16)->width();
+        } else if (cell_data.is_bitmap()) {
+            cell_width = cell_data.as_bitmap().width();
+        } else if (cell_data.is_valid()) {
+            cell_width = font().width(cell_data.to_string());
+        }
+        if (is_empty && cell_width > 0)
+            is_empty = false;
+        column_width = max(column_width, cell_width);
+    }
+
+    auto default_column_size = column_header().default_section_size(column);
+    if (is_empty && column_header().is_default_section_size_initialized(column))
+        column_header().set_section_size(column, default_column_size);
+    else
+        column_header().set_section_size(column, column_width);
+}
 void AbstractTableView::update_column_sizes()
 {
     if (!model())
@@ -87,7 +108,7 @@ void AbstractTableView::update_column_sizes()
             auto cell_data = model.index(row, column).data();
             int cell_width = 0;
             if (cell_data.is_icon()) {
-                cell_width = row_height();
+                cell_width = cell_data.as_icon().bitmap_for_size(16)->width();
             } else if (cell_data.is_bitmap()) {
                 cell_width = cell_data.as_bitmap().width();
             } else if (cell_data.is_valid()) {
@@ -326,9 +347,14 @@ void AbstractTableView::header_did_change_section_visibility(Badge<HeaderView>, 
     update();
 }
 
-void AbstractTableView::set_column_hidden(int column, bool hidden)
+void AbstractTableView::set_default_column_width(int column, int width)
 {
-    column_header().set_section_visible(column, !hidden);
+    column_header().set_default_section_size(column, width);
+}
+
+void AbstractTableView::set_column_visible(int column, bool visible)
+{
+    column_header().set_section_visible(column, visible);
 }
 
 void AbstractTableView::set_column_headers_visible(bool visible)
@@ -350,7 +376,7 @@ void AbstractTableView::layout_headers()
 
         int x = frame_thickness() + row_header_width - horizontal_scrollbar().value();
         int y = frame_thickness();
-        int width = AK::max(content_width(), rect().width() - frame_thickness() * 2 - row_header_width - vertical_scrollbar_width);
+        int width = max(content_width(), rect().width() - frame_thickness() * 2 - row_header_width - vertical_scrollbar_width);
 
         column_header().set_relative_rect(x, y, width, column_header().min_size().height());
     }
@@ -361,7 +387,7 @@ void AbstractTableView::layout_headers()
 
         int x = frame_thickness();
         int y = frame_thickness() + column_header_height - vertical_scrollbar().value();
-        int height = AK::max(content_height(), rect().height() - frame_thickness() * 2 - column_header_height - horizontal_scrollbar_height);
+        int height = max(content_height(), rect().height() - frame_thickness() * 2 - column_header_height - horizontal_scrollbar_height);
 
         row_header().set_relative_rect(x, y, row_header().min_size().width(), height);
     }
@@ -390,16 +416,6 @@ void AbstractTableView::keydown_event(KeyEvent& event)
     }
 
     AbstractView::keydown_event(event);
-}
-
-int AbstractTableView::horizontal_padding() const
-{
-    return font().glyph_height() / 2;
-}
-
-int AbstractTableView::row_height() const
-{
-    return font().glyph_height() + 6;
 }
 
 }

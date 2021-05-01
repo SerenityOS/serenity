@@ -1,32 +1,14 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/FlyString.h>
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <AK/StackInfo.h>
@@ -36,6 +18,7 @@
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/MarkedValueList.h>
+#include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -56,7 +39,9 @@ struct ScopeFrame {
 };
 
 struct CallFrame {
+    const ASTNode* current_node;
     FlyString function_name;
+    Value callee;
     Value this_value;
     Vector<Value> arguments;
     Array* arguments_object { nullptr };
@@ -69,9 +54,6 @@ public:
     static NonnullRefPtr<VM> create();
     ~VM();
 
-    bool should_log_exceptions() const { return m_should_log_exceptions; }
-    void set_should_log_exceptions(bool b) { m_should_log_exceptions = b; }
-
     Heap& heap() { return m_heap; }
     const Heap& heap() const { return m_heap; }
 
@@ -81,11 +63,8 @@ public:
     void push_interpreter(Interpreter&);
     void pop_interpreter(Interpreter&);
 
-    Exception* exception()
-    {
-        return m_exception;
-    }
-
+    Exception* exception() { return m_exception; }
+    void set_exception(Exception& exception) { m_exception = &exception; }
     void clear_exception() { m_exception = nullptr; }
 
     class InterpreterExecutionScope {
@@ -109,31 +88,32 @@ public:
     PrimitiveString& empty_string() { return *m_empty_string; }
     PrimitiveString& single_ascii_character_string(u8 character)
     {
-        ASSERT(character < 0x80);
+        VERIFY(character < 0x80);
         return *m_single_ascii_character_strings[character];
     }
 
     void push_call_frame(CallFrame& call_frame, GlobalObject& global_object)
     {
-        ASSERT(!exception());
+        VERIFY(!exception());
         // Ensure we got some stack space left, so the next function call doesn't kill us.
         // This value is merely a guess and might need tweaking at a later point.
         if (m_stack_info.size_free() < 16 * KiB)
-            throw_exception<Error>(global_object, "RuntimeError", "Call stack size limit exceeded");
+            throw_exception<Error>(global_object, "Call stack size limit exceeded");
         else
             m_call_stack.append(&call_frame);
     }
 
-    void pop_call_frame() { m_call_stack.take_last(); }
-
-    void push_ast_node(const ASTNode& node) { m_ast_nodes.append(&node); }
-    void pop_ast_node() { m_ast_nodes.take_last(); }
+    void pop_call_frame()
+    {
+        m_call_stack.take_last();
+        if (m_call_stack.is_empty() && on_call_stack_emptied)
+            on_call_stack_emptied();
+    }
 
     CallFrame& call_frame() { return *m_call_stack.last(); }
     const CallFrame& call_frame() const { return *m_call_stack.last(); }
     const Vector<CallFrame*>& call_stack() const { return m_call_stack; }
     Vector<CallFrame*>& call_stack() { return m_call_stack; }
-    const Vector<const ASTNode*>& node_stack() const { return m_ast_nodes; }
 
     const ScopeObject* current_scope() const { return call_frame().scope; }
     ScopeObject* current_scope() { return call_frame().scope; }
@@ -184,7 +164,11 @@ public:
         m_unwind_until = type;
         m_unwind_until_label = label;
     }
-    void stop_unwind() { m_unwind_until = ScopeType::None; }
+    void stop_unwind()
+    {
+        m_unwind_until = ScopeType::None;
+        m_unwind_until_label = {};
+    }
     bool should_unwind_until(ScopeType type, FlyString label = {}) const
     {
         if (m_unwind_until_label.is_null())
@@ -206,10 +190,10 @@ public:
         return throw_exception(global_object, T::create(global_object, forward<Args>(args)...));
     }
 
-    void throw_exception(Exception*);
+    void throw_exception(Exception&);
     void throw_exception(GlobalObject& global_object, Value value)
     {
-        return throw_exception(heap().allocate<Exception>(global_object, value));
+        return throw_exception(*heap().allocate<Exception>(global_object, value));
     }
 
     template<typename T, typename... Args>
@@ -220,7 +204,7 @@ public:
 
     Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject&);
 
-    String join_arguments() const;
+    String join_arguments(size_t start_index = 0) const;
 
     Value resolve_this_binding(GlobalObject&) const;
     const ScopeObject* find_this_scope() const;
@@ -242,6 +226,15 @@ public:
 
     Shape& scope_object_shape() { return *m_scope_object_shape; }
 
+    void run_queued_promise_jobs();
+    void enqueue_promise_job(NativeFunction&);
+
+    void promise_rejection_tracker(const Promise&, Promise::RejectionOperation) const;
+
+    AK::Function<void()> on_call_stack_emptied;
+    AK::Function<void(const Promise&)> on_promise_unhandled_rejection;
+    AK::Function<void(const Promise&)> on_promise_rejection_handled;
+
 private:
     VM();
 
@@ -253,7 +246,6 @@ private:
     Vector<Interpreter*> m_interpreters;
 
     Vector<CallFrame*> m_call_stack;
-    Vector<const ASTNode*> m_ast_nodes;
 
     Value m_last_value;
     ScopeType m_unwind_until { ScopeType::None };
@@ -261,9 +253,9 @@ private:
 
     StackInfo m_stack_info;
 
-    bool m_underscore_is_last_value { false };
-
     HashMap<String, Symbol*> m_global_symbol_map;
+
+    Vector<NativeFunction*> m_promise_jobs;
 
     PrimitiveString* m_empty_string { nullptr };
     PrimitiveString* m_single_ascii_character_strings[128] {};
@@ -275,7 +267,7 @@ private:
 
     Shape* m_scope_object_shape { nullptr };
 
-    bool m_should_log_exceptions { false };
+    bool m_underscore_is_last_value { false };
 };
 
 template<>
@@ -286,5 +278,15 @@ template<>
 
 template<>
 [[nodiscard]] ALWAYS_INLINE Value VM::call(Function& function, Value this_value) { return call(function, this_value, Optional<MarkedValueList> {}); }
+
+ALWAYS_INLINE Heap& Cell::heap() const
+{
+    return HeapBlock::from_cell(this)->heap();
+}
+
+ALWAYS_INLINE VM& Cell::vm() const
+{
+    return heap().vm();
+}
 
 }

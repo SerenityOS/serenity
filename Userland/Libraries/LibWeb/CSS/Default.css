@@ -2,6 +2,10 @@ html {
     font-family: sans-serif;
 }
 
+a {
+    cursor: pointer;
+}
+
 head,
 link,
 meta,
@@ -193,4 +197,23 @@ blockquote {
 ul,
 ol {
     padding-left: 20px;
+}
+
+ul {
+    list-style-type: disc;
+}
+
+ol {
+    list-style-type: decimal;
+}
+
+/* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
+input[type=text] {
+    border: 1px solid black;
+    min-width: 80px;
+    min-height: 16px;
+}
+
+option {
+    display: none;
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
@@ -109,6 +89,24 @@ Widget::Widget()
 
     REGISTER_INT_PROPERTY("x", x, set_x);
     REGISTER_INT_PROPERTY("y", y, set_y);
+
+    REGISTER_STRING_PROPERTY("font", m_font->family, set_font_family);
+    REGISTER_INT_PROPERTY("font_size", m_font->presentation_size, set_font_size);
+    REGISTER_FONT_WEIGHT_PROPERTY("font_weight", m_font->weight, set_font_weight);
+
+    register_property(
+        "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },
+        [this](auto& value) {
+            if (value.to_string() == "FixedWidth") {
+                set_font_fixed_width(true);
+                return true;
+            }
+            if (value.to_string() == "Normal") {
+                set_font_fixed_width(false);
+                return true;
+            }
+            return false;
+        });
 
     register_property(
         "focus_policy", [this]() -> JsonValue {
@@ -260,7 +258,7 @@ void Widget::event(Core::Event& event)
     case Event::Hide:
         return hide_event(static_cast<HideEvent&>(event));
     case Event::KeyDown:
-        return keydown_event(static_cast<KeyEvent&>(event));
+        return handle_keydown_event(static_cast<KeyEvent&>(event));
     case Event::KeyUp:
         return keyup_event(static_cast<KeyEvent&>(event));
     case Event::MouseMove:
@@ -294,9 +292,18 @@ void Widget::event(Core::Event& event)
     }
 }
 
+void Widget::handle_keydown_event(KeyEvent& event)
+{
+    keydown_event(event);
+    if (event.key() == KeyCode::Key_Menu) {
+        ContextMenuEvent c_event(window_relative_rect().bottom_right(), screen_relative_rect().bottom_right());
+        context_menu_event(c_event);
+    }
+}
+
 void Widget::handle_paint_event(PaintEvent& event)
 {
-    ASSERT(is_visible());
+    VERIFY(is_visible());
     if (fill_with_background_color()) {
         Painter painter(*this);
         painter.fill_rect(event.rect(), palette().color(background_role()));
@@ -380,7 +387,7 @@ void Widget::handle_mouseup_event(MouseEvent& event)
 
 void Widget::handle_mousedown_event(MouseEvent& event)
 {
-    if (((unsigned)focus_policy() & (unsigned)FocusPolicy::ClickFocus))
+    if (has_flag(focus_policy(), FocusPolicy::ClickFocus))
         set_focus(true, FocusSource::Mouse);
     mousedown_event(event);
     if (event.button() == MouseButton::Right) {
@@ -436,7 +443,7 @@ void Widget::hide_event(HideEvent&)
 
 void Widget::keydown_event(KeyEvent& event)
 {
-    if (!event.alt() && !event.ctrl() && !event.logo()) {
+    if (!event.alt() && !event.ctrl() && !event.super()) {
         if (event.key() == KeyCode::Key_Tab) {
             if (event.shift())
                 focus_previous_widget(FocusSource::Keyboard, false);
@@ -529,6 +536,10 @@ void Widget::theme_change_event(ThemeChangeEvent&)
 {
 }
 
+void Widget::screen_rect_change_event(ScreenRectChangeEvent&)
+{
+}
+
 void Widget::update()
 {
     if (rect().is_empty())
@@ -544,6 +555,10 @@ void Widget::update(const Gfx::IntRect& rect)
     if (!updates_enabled())
         return;
 
+    auto bound_by_widget = rect.intersected(this->rect());
+    if (bound_by_widget.is_empty())
+        return;
+
     Window* window = m_window;
     Widget* parent = parent_widget();
     while (parent) {
@@ -553,7 +568,7 @@ void Widget::update(const Gfx::IntRect& rect)
         parent = parent->parent_widget();
     }
     if (window)
-        window->update(rect.translated(window_relative_rect().location()));
+        window->update(bound_by_widget.translated(window_relative_rect().location()));
 }
 
 Gfx::IntRect Widget::window_relative_rect() const
@@ -567,8 +582,8 @@ Gfx::IntRect Widget::window_relative_rect() const
 
 Gfx::IntRect Widget::screen_relative_rect() const
 {
-    auto window_position = window()->window_type() == WindowType::MenuApplet
-        ? window()->rect_in_menubar().location()
+    auto window_position = window()->window_type() == WindowType::Applet
+        ? window()->applet_rect_on_screen().location()
         : window()->rect().location();
     return window_relative_rect().translated(window_position);
 }
@@ -671,6 +686,29 @@ void Widget::set_font(const Gfx::Font* font)
     update();
 }
 
+void Widget::set_font_family(const String& family)
+{
+    set_font(Gfx::FontDatabase::the().get(family, m_font->presentation_size(), m_font->weight()));
+}
+
+void Widget::set_font_size(unsigned size)
+{
+    set_font(Gfx::FontDatabase::the().get(m_font->family(), size, m_font->weight()));
+}
+
+void Widget::set_font_weight(unsigned weight)
+{
+    set_font(Gfx::FontDatabase::the().get(m_font->family(), m_font->presentation_size(), weight));
+}
+
+void Widget::set_font_fixed_width(bool fixed_width)
+{
+    if (fixed_width)
+        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_fixed_width_font().family(), m_font->presentation_size(), m_font->weight()));
+    else
+        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_font().family(), m_font->presentation_size(), m_font->weight()));
+}
+
 void Widget::set_global_cursor_tracking(bool enabled)
 {
     auto* win = window();
@@ -756,6 +794,9 @@ void Widget::set_enabled(bool enabled)
     if (!m_enabled && window() && window()->focused_widget() == this) {
         window()->did_disable_focused_widget({});
     }
+
+    if (!m_enabled)
+        set_override_cursor(Gfx::StandardCursor::None);
 
     Event e(Event::EnabledChange);
     event(e);
@@ -922,9 +963,9 @@ Gfx::IntRect Widget::content_rect() const
     return rect;
 }
 
-void Widget::set_tooltip(const StringView& tooltip)
+void Widget::set_tooltip(String tooltip)
 {
-    m_tooltip = tooltip;
+    m_tooltip = move(tooltip);
     if (Application::the()->tooltip_source_widget() == this)
         show_or_hide_tooltip();
 }

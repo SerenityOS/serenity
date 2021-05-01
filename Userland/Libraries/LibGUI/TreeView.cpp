@@ -1,34 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/TreeView.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
@@ -43,7 +23,7 @@ struct TreeView::MetadataForIndex {
 
 TreeView::MetadataForIndex& TreeView::ensure_metadata_for_index(const ModelIndex& index) const
 {
-    ASSERT(index.is_valid());
+    VERIFY(index.is_valid());
     auto it = m_view_metadata.find(index.internal_data());
     if (it != m_view_metadata.end())
         return *it->value;
@@ -165,7 +145,7 @@ void TreeView::collapse_tree(const ModelIndex& root)
 
 void TreeView::toggle_index(const ModelIndex& index)
 {
-    ASSERT(model()->row_count(index));
+    VERIFY(model()->row_count(index));
     auto& metadata = ensure_metadata_for_index(index);
     metadata.open = !metadata.open;
     if (on_toggle)
@@ -178,7 +158,7 @@ void TreeView::toggle_index(const ModelIndex& index)
 template<typename Callback>
 void TreeView::traverse_in_paint_order(Callback callback) const
 {
-    ASSERT(model());
+    VERIFY(model());
     auto& model = *this->model();
     int indent_level = 1;
     int y_offset = 0;
@@ -418,19 +398,7 @@ void TreeView::did_update_selection()
     auto index = selection().first();
     if (!index.is_valid())
         return;
-#if 0
-    bool opened_any = false;
-    for (auto current = index; current.is_valid(); current = current.parent()) {
-        auto& metadata_for_ancestor = ensure_metadata_for_index(current);
-        if (!metadata_for_ancestor.open) {
-            metadata_for_ancestor.open = true;
-            opened_any = true;
-        }
-    }
-    if (opened_any)
-        update_content_size();
-    update();
-#endif
+
     if (activates_on_selection())
         activate(index);
 }
@@ -570,6 +538,47 @@ int TreeView::item_count() const
     return count;
 }
 
+void TreeView::auto_resize_column(int column)
+{
+    if (!model())
+        return;
+
+    if (!column_header().is_section_visible(column))
+        return;
+
+    auto& model = *this->model();
+
+    int header_width = column_header().font().width(model.column_name(column));
+    if (column == m_key_column && model.is_column_sortable(column))
+        header_width += font().width(" \xE2\xAC\x86");
+    int column_width = header_width;
+
+    bool is_empty = true;
+    traverse_in_paint_order([&](const ModelIndex& index, const Gfx::IntRect&, const Gfx::IntRect&, int indent_level) {
+        auto cell_data = model.index(index.row(), column, index.parent()).data();
+        int cell_width = 0;
+        if (cell_data.is_icon()) {
+            cell_width = cell_data.as_icon().bitmap_for_size(16)->width();
+        } else if (cell_data.is_bitmap()) {
+            cell_width = cell_data.as_bitmap().width();
+        } else if (cell_data.is_valid()) {
+            cell_width = font().width(cell_data.to_string());
+        }
+        if (is_empty && cell_width > 0)
+            is_empty = false;
+        if (column == model.tree_column())
+            cell_width += horizontal_padding() * 2 + indent_level * indent_width_in_pixels() + icon_size() / 2;
+        column_width = max(column_width, cell_width);
+        return IterationDecision::Continue;
+    });
+
+    auto default_column_width = column_header().default_section_size(column);
+    if (is_empty && column_header().is_default_section_size_initialized(column))
+        column_header().set_section_size(column, default_column_width);
+    else
+        column_header().set_section_size(column, column_width);
+}
+
 void TreeView::update_column_sizes()
 {
     if (!model())
@@ -577,9 +586,7 @@ void TreeView::update_column_sizes()
 
     auto& model = *this->model();
     int column_count = model.column_count();
-    int row_count = model.row_count();
     int tree_column = model.tree_column();
-    int tree_column_x_offset = 0;
 
     for (int column = 0; column < column_count; ++column) {
         if (column == tree_column)
@@ -587,33 +594,42 @@ void TreeView::update_column_sizes()
         if (!column_header().is_section_visible(column))
             continue;
         int header_width = column_header().font().width(model.column_name(column));
+        if (column == m_key_column && model.is_column_sortable(column))
+            header_width += font().width(" \xE2\xAC\x86");
         int column_width = header_width;
-
-        for (int row = 0; row < row_count; ++row) {
-            auto cell_data = model.index(row, column).data();
+        traverse_in_paint_order([&](const ModelIndex& index, const Gfx::IntRect&, const Gfx::IntRect&, int) {
+            auto cell_data = model.index(index.row(), column, index.parent()).data();
             int cell_width = 0;
-            if (cell_data.is_bitmap()) {
+            if (cell_data.is_icon()) {
+                cell_width = cell_data.as_icon().bitmap_for_size(16)->width();
+            } else if (cell_data.is_bitmap()) {
                 cell_width = cell_data.as_bitmap().width();
-            } else {
+            } else if (cell_data.is_valid()) {
                 cell_width = font().width(cell_data.to_string());
             }
             column_width = max(column_width, cell_width);
-        }
+            return IterationDecision::Continue;
+        });
 
         set_column_width(column, max(this->column_width(column), column_width));
-
-        if (column < tree_column)
-            tree_column_x_offset += column_width;
     }
 
     int tree_column_header_width = column_header().font().width(model.column_name(tree_column));
+    if (tree_column == m_key_column && model.is_column_sortable(tree_column))
+        tree_column_header_width += font().width(" \xE2\xAC\x86");
     int tree_column_width = tree_column_header_width;
-    traverse_in_paint_order([&](const ModelIndex&, const Gfx::IntRect& rect, const Gfx::IntRect&, int) {
-        tree_column_width = max(rect.right() - tree_column_x_offset, tree_column_width);
+    traverse_in_paint_order([&](const ModelIndex& index, const Gfx::IntRect&, const Gfx::IntRect&, int indent_level) {
+        auto cell_data = model.index(index.row(), tree_column, index.parent()).data();
+        int cell_width = 0;
+        if (cell_data.is_valid()) {
+            cell_width = font().width(cell_data.to_string());
+            cell_width += horizontal_padding() * 2 + indent_level * indent_width_in_pixels() + icon_size() / 2;
+        }
+        tree_column_width = max(tree_column_width, cell_width);
         return IterationDecision::Continue;
     });
 
-    set_column_width(tree_column, max(this->column_width(tree_column), tree_column_width));
+    set_column_width(tree_column, tree_column_width);
 }
 
 int TreeView::tree_column_x_offset() const
@@ -623,7 +639,7 @@ int TreeView::tree_column_x_offset() const
     for (int i = 0; i < tree_column; ++i) {
         if (column_header().is_section_visible(i)) {
             offset += column_width(i);
-            offset += horizontal_padding();
+            offset += horizontal_padding() * 2;
         }
     }
     return offset;

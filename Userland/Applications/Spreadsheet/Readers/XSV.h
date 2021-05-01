@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -41,6 +21,10 @@ enum class ParserBehaviour : u32 {
     TrimLeadingFieldSpaces = ReadHeaders << 2,
     TrimTrailingFieldSpaces = ReadHeaders << 3,
     QuoteOnlyInFieldStart = ReadHeaders << 4,
+    Lenient = ReadHeaders << 5, // This is the typical "spreadsheet import" behavior
+                                // Currently, it:
+                                // - fills in missing fields with empty values
+                                // - updates previous rows with extra columns
 };
 
 ParserBehaviour operator&(ParserBehaviour left, ParserBehaviour right);
@@ -49,7 +33,7 @@ ParserBehaviour operator|(ParserBehaviour left, ParserBehaviour right);
 struct ParserTraits {
     String separator;
     String quote { "\"" };
-    enum {
+    enum QuoteEscape {
         Repeat,
         Backslash,
     } quote_escape { Repeat };
@@ -68,7 +52,7 @@ enum class ReadError {
 #undef E
 };
 
-inline constexpr ParserBehaviour default_behaviours()
+constexpr ParserBehaviour default_behaviours()
 {
     return ParserBehaviour::QuoteOnlyInFieldStart;
 }
@@ -98,11 +82,12 @@ public:
             ENUMERATE_READ_ERRORS();
 #undef E
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     size_t size() const { return m_rows.size(); }
     Vector<String> headers() const;
+    [[nodiscard]] bool has_explicit_headers() const { return (static_cast<u32>(m_behaviours) & static_cast<u32>(ParserBehaviour::ReadHeaders)) != 0; }
 
     class Row {
     public:
@@ -115,7 +100,11 @@ public:
         StringView operator[](StringView name) const;
         StringView operator[](size_t column) const;
 
+        template<typename T>
+        StringView at(T column) const { return this->operator[](column); }
+
         size_t index() const { return m_index; }
+        size_t size() const { return m_xsv.headers().size(); }
 
         // FIXME: Implement begin() and end(), keeping `Field' out of the API.
 
@@ -165,6 +154,8 @@ public:
 
     const Row operator[](size_t index) const;
     Row operator[](size_t index);
+
+    Row at(size_t index) const;
 
     auto begin() { return RowIterator<false>(*this); }
     auto end() { return RowIterator<false>(*this, m_rows.size()); }

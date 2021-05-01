@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Lexer.h"
@@ -46,7 +26,7 @@ char Lexer::peek(size_t offset) const
 
 char Lexer::consume()
 {
-    ASSERT(m_index < m_input.length());
+    VERIFY(m_index < m_input.length());
     char ch = m_input[m_index++];
     m_previous_position = m_position;
     if (ch == '\n') {
@@ -231,12 +211,8 @@ Vector<Token> Lexer::lex()
     size_t token_start_index = 0;
     Position token_start_position;
 
-    auto emit_token = [&](auto type) {
-        Token token;
-        token.m_type = type;
-        token.m_start = m_position;
-        token.m_end = m_position;
-        tokens.append(token);
+    auto emit_single_char_token = [&](auto type) {
+        tokens.empend(type, m_position, m_position, m_input.substring_view(m_index, 1));
         consume();
     };
 
@@ -245,11 +221,7 @@ Vector<Token> Lexer::lex()
         token_start_position = m_position;
     };
     auto commit_token = [&](auto type) {
-        Token token;
-        token.m_type = type;
-        token.m_start = token_start_position;
-        token.m_end = m_previous_position;
-        tokens.append(token);
+        tokens.empend(type, token_start_position, m_previous_position, m_input.substring_view(token_start_index, m_index - token_start_index));
     };
 
     auto emit_token_equals = [&](auto type, auto equals_type) {
@@ -260,7 +232,7 @@ Vector<Token> Lexer::lex()
             commit_token(equals_type);
             return;
         }
-        emit_token(type);
+        emit_single_char_token(type);
     };
 
     auto match_escape_sequence = [&]() -> size_t {
@@ -343,27 +315,27 @@ Vector<Token> Lexer::lex()
             continue;
         }
         if (ch == '(') {
-            emit_token(Token::Type::LeftParen);
+            emit_single_char_token(Token::Type::LeftParen);
             continue;
         }
         if (ch == ')') {
-            emit_token(Token::Type::RightParen);
+            emit_single_char_token(Token::Type::RightParen);
             continue;
         }
         if (ch == '{') {
-            emit_token(Token::Type::LeftCurly);
+            emit_single_char_token(Token::Type::LeftCurly);
             continue;
         }
         if (ch == '}') {
-            emit_token(Token::Type::RightCurly);
+            emit_single_char_token(Token::Type::RightCurly);
             continue;
         }
         if (ch == '[') {
-            emit_token(Token::Type::LeftBracket);
+            emit_single_char_token(Token::Type::LeftBracket);
             continue;
         }
         if (ch == ']') {
-            emit_token(Token::Type::RightBracket);
+            emit_single_char_token(Token::Type::RightBracket);
             continue;
         }
         if (ch == '<') {
@@ -414,7 +386,7 @@ Vector<Token> Lexer::lex()
             continue;
         }
         if (ch == ',') {
-            emit_token(Token::Type::Comma);
+            emit_single_char_token(Token::Type::Comma);
             continue;
         }
         if (ch == '+') {
@@ -512,11 +484,11 @@ Vector<Token> Lexer::lex()
             continue;
         }
         if (ch == '~') {
-            emit_token(Token::Type::Tilde);
+            emit_single_char_token(Token::Type::Tilde);
             continue;
         }
         if (ch == '?') {
-            emit_token(Token::Type::QuestionMark);
+            emit_single_char_token(Token::Type::QuestionMark);
             continue;
         }
         if (ch == ':') {
@@ -536,7 +508,7 @@ Vector<Token> Lexer::lex()
             continue;
         }
         if (ch == ';') {
-            emit_token(Token::Type::Semicolon);
+            emit_single_char_token(Token::Type::Semicolon);
             continue;
         }
         if (ch == '.') {
@@ -640,6 +612,10 @@ Vector<Token> Lexer::lex()
                     }
                 }
 
+                // If string is not terminated - stop before EOF
+                if (!peek(1))
+                    break;
+
                 if (consume() == '"')
                     break;
             }
@@ -656,8 +632,8 @@ Vector<Token> Lexer::lex()
             StringView prefix_string = m_input.substring_view(prefix_start, m_index - prefix_start);
             while (peek()) {
                 if (consume() == '"') {
-                    ASSERT(m_index >= prefix_string.length() + 2);
-                    ASSERT(m_input[m_index - 1] == '"');
+                    VERIFY(m_index >= prefix_string.length() + 2);
+                    VERIFY(m_input[m_index - 1] == '"');
                     if (m_input[m_index - 1 - prefix_string.length() - 1] == ')') {
                         StringView suffix_string = m_input.substring_view(m_index - 1 - prefix_string.length(), prefix_string.length());
                         if (prefix_string == suffix_string)
@@ -782,22 +758,9 @@ Vector<Token> Lexer::lex()
             continue;
         }
         dbgln("Unimplemented token character: {}", ch);
-        emit_token(Token::Type::Unknown);
+        emit_single_char_token(Token::Type::Unknown);
     }
     return tokens;
-}
-
-bool Position::operator<(const Position& other) const
-{
-    return line < other.line || (line == other.line && column < other.column);
-}
-bool Position::operator>(const Position& other) const
-{
-    return !(*this < other) && !(*this == other);
-}
-bool Position::operator==(const Position& other) const
-{
-    return line == other.line && column == other.column;
 }
 
 }

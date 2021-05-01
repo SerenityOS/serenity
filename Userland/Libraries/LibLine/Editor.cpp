@@ -1,34 +1,16 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Editor.h"
+#include <AK/Debug.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
 #include <AK/ScopeGuard.h>
+#include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
@@ -38,6 +20,7 @@
 #include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <ctype.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
@@ -59,6 +42,7 @@ Configuration Configuration::from_config(const StringView& libname)
     // Read behaviour options.
     auto refresh = config_file->read_entry("behaviour", "refresh", "lazy");
     auto operation = config_file->read_entry("behaviour", "operation_mode");
+    auto default_text_editor = config_file->read_entry("behaviour", "default_text_editor");
 
     if (refresh.equals_ignoring_case("lazy"))
         configuration.set(Configuration::Lazy);
@@ -73,6 +57,11 @@ Configuration Configuration::from_config(const StringView& libname)
         configuration.set(Configuration::OperationMode::NonInteractive);
     else
         configuration.set(Configuration::OperationMode::Unset);
+
+    if (!default_text_editor.is_empty())
+        configuration.set(DefaultTextEditor { move(default_text_editor) });
+    else
+        configuration.set(DefaultTextEditor { "/bin/TextEditor" });
 
     // Read keybinds.
 
@@ -156,12 +145,17 @@ void Editor::set_default_keybinds()
     register_key_input_callback(ctrl('F'), EDITOR_INTERNAL_FUNCTION(cursor_right_character));
     // ^H: ctrl('H') == '\b'
     register_key_input_callback(ctrl('H'), EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
+    // DEL - Some terminals send this instead of ^H.
+    register_key_input_callback((char)127, EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
     register_key_input_callback(m_termios.c_cc[VERASE], EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
     register_key_input_callback(ctrl('K'), EDITOR_INTERNAL_FUNCTION(erase_to_end));
     register_key_input_callback(ctrl('L'), EDITOR_INTERNAL_FUNCTION(clear_screen));
     register_key_input_callback(ctrl('R'), EDITOR_INTERNAL_FUNCTION(enter_search));
     register_key_input_callback(ctrl('T'), EDITOR_INTERNAL_FUNCTION(transpose_characters));
     register_key_input_callback('\n', EDITOR_INTERNAL_FUNCTION(finish));
+
+    // ^X^E: Edit in external editor
+    register_key_input_callback(Vector<Key> { ctrl('X'), ctrl('E') }, EDITOR_INTERNAL_FUNCTION(edit_in_external_editor));
 
     // ^[.: alt-.: insert last arg of previous command (similar to `!$`)
     register_key_input_callback(Key { '.', Key::Alt }, EDITOR_INTERNAL_FUNCTION(insert_last_words));
@@ -194,6 +188,7 @@ Editor::~Editor()
 void Editor::get_terminal_size()
 {
     struct winsize ws;
+
     if (ioctl(STDERR_FILENO, TIOCGWINSZ, &ws) < 0) {
         m_num_columns = 80;
         m_num_lines = 25;
@@ -315,6 +310,7 @@ void Editor::clear_line()
         fputc(0x8, stderr);
     fputs("\033[K", stderr);
     fflush(stderr);
+    m_chars_touched_in_the_middle = buffer().size();
     m_buffer.clear();
     m_cursor = 0;
     m_inline_search_cursor = m_cursor;
@@ -355,7 +351,7 @@ void Editor::insert(const u32 cp)
     }
 
     m_buffer.insert(m_cursor, cp);
-    ++m_chars_inserted_in_the_middle;
+    ++m_chars_touched_in_the_middle;
     ++m_cursor;
     m_inline_search_cursor = m_cursor;
 }
@@ -443,8 +439,8 @@ void Editor::stylize(const Span& span, const Style& style)
         end = offsets.end;
     }
 
-    auto& spans_starting = style.is_anchored() ? m_anchored_spans_starting : m_spans_starting;
-    auto& spans_ending = style.is_anchored() ? m_anchored_spans_ending : m_spans_ending;
+    auto& spans_starting = style.is_anchored() ? m_current_spans.m_anchored_spans_starting : m_current_spans.m_spans_starting;
+    auto& spans_ending = style.is_anchored() ? m_current_spans.m_anchored_spans_ending : m_current_spans.m_spans_ending;
 
     auto starting_map = spans_starting.get(start).value_or({});
 
@@ -487,8 +483,8 @@ void Editor::initialize()
     struct termios termios;
     tcgetattr(0, &termios);
     m_default_termios = termios; // grab a copy to restore
-    if (m_was_resized)
-        get_terminal_size();
+
+    get_terminal_size();
 
     if (m_configuration.operation_mode == Configuration::Unset) {
         auto istty = isatty(STDIN_FILENO) && isatty(STDERR_FILENO);
@@ -539,7 +535,7 @@ void Editor::interrupted()
 
     m_was_interrupted = true;
     handle_interrupt_event();
-    if (!m_finish)
+    if (!m_finish || !m_previous_interrupt_was_handled_as_interrupt)
         return;
 
     m_finish = false;
@@ -549,6 +545,7 @@ void Editor::interrupted()
     fprintf(stderr, "\n");
     fflush(stderr);
     m_buffer.clear();
+    m_chars_touched_in_the_middle = buffer().size();
     m_is_editing = false;
     restore();
     m_notifier->set_enabled(false);
@@ -559,6 +556,20 @@ void Editor::interrupted()
     });
 }
 
+void Editor::resized()
+{
+    m_was_resized = true;
+    m_previous_num_columns = m_num_columns;
+    get_terminal_size();
+
+    reposition_cursor(true);
+    m_suggestion_display->redisplay(m_suggestion_manager, m_num_lines, m_num_columns);
+    reposition_cursor();
+
+    if (m_is_searching)
+        m_search_editor->resized();
+}
+
 void Editor::really_quit_event_loop()
 {
     m_finish = false;
@@ -567,8 +578,11 @@ void Editor::really_quit_event_loop()
     fflush(stderr);
     auto string = line();
     m_buffer.clear();
+    m_chars_touched_in_the_middle = buffer().size();
     m_is_editing = false;
-    restore();
+
+    if (m_initialized)
+        restore();
 
     m_returned_line = string;
 
@@ -611,6 +625,13 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
 
         return Error::ReadFailure;
     }
+
+    auto old_cols = m_num_columns;
+    auto old_lines = m_num_lines;
+    get_terminal_size();
+
+    if (m_num_columns != old_cols || m_num_lines != old_lines)
+        m_refresh_needed = true;
 
     set_prompt(prompt);
     reset();
@@ -681,10 +702,13 @@ void Editor::try_update_once()
 void Editor::handle_interrupt_event()
 {
     m_was_interrupted = false;
+    m_previous_interrupt_was_handled_as_interrupt = false;
 
     m_callback_machine.interrupted(*this);
     if (!m_callback_machine.should_process_last_pressed_key())
         return;
+
+    m_previous_interrupt_was_handled_as_interrupt = true;
 
     fprintf(stderr, "^C");
     fflush(stderr);
@@ -693,6 +717,7 @@ void Editor::handle_interrupt_event()
         on_interrupt_handled();
 
     m_buffer.clear();
+    m_chars_touched_in_the_middle = buffer().size();
     m_cursor = 0;
 
     finish();
@@ -969,9 +994,12 @@ void Editor::handle_read_event()
             m_cursor = new_cursor;
             m_inline_search_cursor = new_cursor;
             m_refresh_needed = true;
+            m_chars_touched_in_the_middle++;
 
             for (auto& view : completion_result.insert)
                 insert(view);
+
+            reposition_cursor();
 
             if (completion_result.style_to_apply.has_value()) {
                 // Apply the style of the last suggestion.
@@ -1022,6 +1050,9 @@ void Editor::handle_read_event()
             continue;
         }
 
+        // If we got here, manually cleanup the suggestions and then insert the new code point.
+        suggestion_cleanup.disarm();
+        cleanup_suggestions();
         insert(code_point);
     }
 
@@ -1057,7 +1088,6 @@ void Editor::cleanup_suggestions()
 
 bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginning)
 {
-
     int last_matching_offset = -1;
     bool found = false;
 
@@ -1084,6 +1114,8 @@ bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginn
     }
 
     if (found) {
+        // We plan to clear the buffer, so mark the entire thing touched.
+        m_chars_touched_in_the_middle = m_buffer.size();
         m_buffer.clear();
         m_cursor = 0;
         insert(m_history[last_matching_offset].entry);
@@ -1165,6 +1197,7 @@ void Editor::refresh_display()
         // Probably just moving around.
         reposition_cursor();
         m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+        m_drawn_end_of_line_offset = m_buffer.size();
         return;
     }
 
@@ -1180,32 +1213,20 @@ void Editor::refresh_display()
             fputs((char*)m_pending_chars.data(), stderr);
             m_pending_chars.clear();
             m_drawn_cursor = m_cursor;
+            m_drawn_end_of_line_offset = m_buffer.size();
             m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+            m_drawn_spans = m_current_spans;
             fflush(stderr);
             return;
         }
     }
 
-    // Ouch, reflow entire line.
-    if (!has_cleaned_up) {
-        cleanup();
-    }
-    VT::move_absolute(m_origin_row, m_origin_column);
+    auto apply_styles = [&, empty_styles = HashMap<u32, Style> {}](size_t i) {
+        auto ends = m_current_spans.m_spans_ending.get(i).value_or(empty_styles);
+        auto starts = m_current_spans.m_spans_starting.get(i).value_or(empty_styles);
 
-    fputs(m_new_prompt.characters(), stderr);
-
-    VT::clear_to_end_of_line();
-    HashMap<u32, Style> empty_styles {};
-    StringBuilder builder;
-    for (size_t i = 0; i < m_buffer.size(); ++i) {
-        auto ends = m_spans_ending.get(i).value_or(empty_styles);
-        auto starts = m_spans_starting.get(i).value_or(empty_styles);
-
-        auto anchored_ends = m_anchored_spans_ending.get(i).value_or(empty_styles);
-        auto anchored_starts = m_anchored_spans_starting.get(i).value_or(empty_styles);
-
-        auto c = m_buffer[i];
-        bool should_print_caret = iscntrl(c) && c != '\n';
+        auto anchored_ends = m_current_spans.m_anchored_spans_ending.get(i).value_or(empty_styles);
+        auto anchored_starts = m_current_spans.m_anchored_spans_starting.get(i).value_or(empty_styles);
 
         if (ends.size() || anchored_ends.size()) {
             Style style;
@@ -1235,20 +1256,85 @@ void Editor::refresh_display()
             // Set new styles.
             VT::apply_style(style, true);
         }
+    };
 
-        builder.clear();
+    auto print_character_at = [this](size_t i) {
+        StringBuilder builder;
+        auto c = m_buffer[i];
+        bool should_print_masked = isascii(c) && iscntrl(c) && c != '\n';
+        bool should_print_caret = c < 64 && should_print_masked;
         if (should_print_caret)
             builder.appendff("^{:c}", c + 64);
+        else if (should_print_masked)
+            builder.appendff("\\x{:0>2x}", c);
         else
             builder.append(Utf32View { &c, 1 });
 
-        if (should_print_caret)
+        if (should_print_masked)
             fputs("\033[7m", stderr);
 
         fputs(builder.to_string().characters(), stderr);
 
-        if (should_print_caret)
+        if (should_print_masked)
             fputs("\033[27m", stderr);
+    };
+
+    // If there have been no changes to previous sections of the line (style or text)
+    // just append the new text with the appropriate styles.
+    if (!m_always_refresh && m_cached_prompt_valid && m_chars_touched_in_the_middle == 0 && m_drawn_spans.contains_up_to_offset(m_current_spans, m_drawn_cursor)) {
+        auto initial_style = find_applicable_style(m_drawn_end_of_line_offset);
+        VT::apply_style(initial_style);
+
+        for (size_t i = m_drawn_end_of_line_offset; i < m_buffer.size(); ++i) {
+            apply_styles(i);
+            print_character_at(i);
+        }
+
+        VT::apply_style(Style::reset_style());
+        m_pending_chars.clear();
+        m_refresh_needed = false;
+        m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
+        m_chars_touched_in_the_middle = 0;
+        m_drawn_cursor = m_cursor;
+        m_drawn_end_of_line_offset = m_buffer.size();
+
+        // No need to reposition the cursor, the cursor is already where it needs to be.
+        return;
+    }
+
+    if constexpr (LINE_EDITOR_DEBUG) {
+        if (m_cached_prompt_valid && m_chars_touched_in_the_middle == 0) {
+            auto x = m_drawn_spans.contains_up_to_offset(m_current_spans, m_drawn_cursor);
+            dbgln("Contains: {} At offset: {}", x, m_drawn_cursor);
+            dbgln("Drawn Spans:");
+            for (auto& sentry : m_drawn_spans.m_spans_starting) {
+                for (auto& entry : sentry.value) {
+                    dbgln("{}-{}: {}", sentry.key, entry.key, entry.value.to_string());
+                }
+            }
+            dbgln("==========================================================================");
+            dbgln("Current Spans:");
+            for (auto& sentry : m_current_spans.m_spans_starting) {
+                for (auto& entry : sentry.value) {
+                    dbgln("{}-{}: {}", sentry.key, entry.key, entry.value.to_string());
+                }
+            }
+        }
+    }
+
+    // Ouch, reflow entire line.
+    if (!has_cleaned_up) {
+        cleanup();
+    }
+    VT::move_absolute(m_origin_row, m_origin_column);
+
+    fputs(m_new_prompt.characters(), stderr);
+
+    VT::clear_to_end_of_line();
+    StringBuilder builder;
+    for (size_t i = 0; i < m_buffer.size(); ++i) {
+        apply_styles(i);
+        print_character_at(i);
     }
 
     VT::apply_style(Style::reset_style()); // don't bleed to EOL
@@ -1256,10 +1342,10 @@ void Editor::refresh_display()
     m_pending_chars.clear();
     m_refresh_needed = false;
     m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
-    m_chars_inserted_in_the_middle = 0;
-    if (!m_cached_prompt_valid) {
-        m_cached_prompt_valid = true;
-    }
+    m_chars_touched_in_the_middle = 0;
+    m_drawn_spans = m_current_spans;
+    m_drawn_end_of_line_offset = m_buffer.size();
+    m_cached_prompt_valid = true;
 
     reposition_cursor();
     fflush(stderr);
@@ -1267,12 +1353,12 @@ void Editor::refresh_display()
 
 void Editor::strip_styles(bool strip_anchored)
 {
-    m_spans_starting.clear();
-    m_spans_ending.clear();
+    m_current_spans.m_spans_starting.clear();
+    m_current_spans.m_spans_ending.clear();
 
     if (strip_anchored) {
-        m_anchored_spans_starting.clear();
-        m_anchored_spans_ending.clear();
+        m_current_spans.m_anchored_spans_starting.clear();
+        m_current_spans.m_anchored_spans_ending.clear();
     }
 
     m_refresh_needed = true;
@@ -1291,7 +1377,7 @@ void Editor::reposition_cursor(bool to_end)
     auto line = cursor_line() - 1;
     auto column = offset_in_line();
 
-    ASSERT(column + m_origin_column <= m_num_columns);
+    VERIFY(column + m_origin_column <= m_num_columns);
     VT::move_absolute(line + m_origin_row, column + m_origin_column);
 
     if (line + m_origin_row > m_num_lines) {
@@ -1343,11 +1429,11 @@ Style Editor::find_applicable_style(size_t offset) const
         }
     };
 
-    for (auto& entry : m_spans_starting) {
+    for (auto& entry : m_current_spans.m_spans_starting) {
         unify(entry);
     }
 
-    for (auto& entry : m_anchored_spans_starting) {
+    for (auto& entry : m_current_spans.m_anchored_spans_starting) {
         unify(entry);
     }
 
@@ -1360,9 +1446,9 @@ String Style::Background::to_vt_escape() const
         return "";
 
     if (m_is_rgb) {
-        return String::format("\033[48;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
+        return String::formatted("\e[48;2;{};{};{}m", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
     } else {
-        return String::format("\033[%dm", (u8)m_xterm_color + 40);
+        return String::formatted("\e[{}m", (u8)m_xterm_color + 40);
     }
 }
 
@@ -1372,9 +1458,9 @@ String Style::Foreground::to_vt_escape() const
         return "";
 
     if (m_is_rgb) {
-        return String::format("\033[38;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
+        return String::formatted("\e[38;2;{};{};{}m", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
     } else {
-        return String::format("\033[%dm", (u8)m_xterm_color + 30);
+        return String::formatted("\e[{}m", (u8)m_xterm_color + 30);
     }
 }
 
@@ -1383,7 +1469,7 @@ String Style::Hyperlink::to_vt_escape(bool starting) const
     if (is_empty())
         return "";
 
-    return String::format("\033]8;;%s\033\\", starting ? m_link.characters() : "");
+    return String::formatted("\e]8;;{}\e\\", starting ? m_link : String::empty());
 }
 
 void Style::unify_with(const Style& other, bool prefer_other)
@@ -1470,12 +1556,16 @@ void VT::apply_style(const Style& style, bool is_starting)
 
 void VT::clear_lines(size_t count_above, size_t count_below)
 {
-    // Go down count_below lines.
-    if (count_below > 0)
-        fprintf(stderr, "\033[%dB", (int)count_below);
-    // Then clear lines going upwards.
-    for (size_t i = count_below + count_above; i > 0; --i)
-        fputs(i == 1 ? "\033[2K" : "\033[2K\033[A", stderr);
+    if (count_below + count_above == 0) {
+        fputs("\033[2K", stderr);
+    } else {
+        // Go down count_below lines.
+        if (count_below > 0)
+            fprintf(stderr, "\033[%dB", (int)count_below);
+        // Then clear lines going upwards.
+        for (size_t i = count_below + count_above; i > 0; --i)
+            fputs(i == 1 ? "\033[2K" : "\033[2K\033[A", stderr);
+    }
 }
 
 void VT::save_cursor()
@@ -1560,8 +1650,8 @@ Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metric
             current_line.length = 0;
             return state;
         }
-        if (iscntrl(c) && c != '\n')
-            current_line.masked_chars.append({ index, 1, 2 });
+        if (isascii(c) && iscntrl(c) && c != '\n')
+            current_line.masked_chars.append({ index, 1, c < 64 ? 2u : 4u }); // if the character cannot be represented as ^c, represent it as \xbb.
         // FIXME: This will not support anything sophisticated
         ++current_line.length;
         ++metrics.total_length;
@@ -1600,7 +1690,6 @@ Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metric
 Vector<size_t, 2> Editor::vt_dsr()
 {
     char buf[16];
-    u32 length { 0 };
 
     // Read whatever junk there is before talking to the terminal
     // and insert them later when we're reading user input.
@@ -1635,8 +1724,25 @@ Vector<size_t, 2> Editor::vt_dsr()
     fputs("\033[6n", stderr);
     fflush(stderr);
 
+    // Parse the DSR response
+    // it should be of the form .*\e[\d+;\d+R.*
+    // Anything not part of the response is just added to the incomplete data.
+    enum {
+        Free,
+        SawEsc,
+        SawBracket,
+        InFirstCoordinate,
+        SawSemicolon,
+        InSecondCoordinate,
+        SawR,
+    } state { Free };
+    auto has_error = false;
+    Vector<char, 4> coordinate_buffer;
+    size_t row { 1 }, col { 1 };
+
     do {
-        auto nread = read(0, buf + length, 16 - length);
+        char c;
+        auto nread = read(0, &c, 1);
         if (nread < 0) {
             if (errno == 0 || errno == EINTR) {
                 // ????
@@ -1653,25 +1759,80 @@ Vector<size_t, 2> Editor::vt_dsr()
             dbgln("Terminal DSR issue; received no response");
             return { 1, 1 };
         }
-        length += nread;
-    } while (buf[length - 1] != 'R' && length < 16);
-    size_t row { 1 }, col { 1 };
 
-    if (buf[0] == '\033' && buf[1] == '[') {
-        auto parts = StringView(buf + 2, length - 3).split_view(';');
-        auto row_opt = parts[0].to_int();
-        if (!row_opt.has_value()) {
-            dbgln("Terminal DSR issue; received garbage row");
-        } else {
-            row = row_opt.value();
+        switch (state) {
+        case Free:
+            if (c == '\x1b') {
+                state = SawEsc;
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case SawEsc:
+            if (c == '[') {
+                state = SawBracket;
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case SawBracket:
+            if (isdigit(c)) {
+                state = InFirstCoordinate;
+                coordinate_buffer.append(c);
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case InFirstCoordinate:
+            if (isdigit(c)) {
+                coordinate_buffer.append(c);
+                continue;
+            }
+            if (c == ';') {
+                auto maybe_row = StringView { coordinate_buffer.data(), coordinate_buffer.size() }.to_uint();
+                if (!maybe_row.has_value())
+                    has_error = true;
+                row = maybe_row.value_or(1u);
+                coordinate_buffer.clear_with_capacity();
+                state = SawSemicolon;
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case SawSemicolon:
+            if (isdigit(c)) {
+                state = InSecondCoordinate;
+                coordinate_buffer.append(c);
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case InSecondCoordinate:
+            if (isdigit(c)) {
+                coordinate_buffer.append(c);
+                continue;
+            }
+            if (c == 'R') {
+                auto maybe_column = StringView { coordinate_buffer.data(), coordinate_buffer.size() }.to_uint();
+                if (!maybe_column.has_value())
+                    has_error = true;
+                col = maybe_column.value_or(1u);
+                coordinate_buffer.clear_with_capacity();
+                state = SawR;
+                continue;
+            }
+            m_incomplete_data.append(c);
+            continue;
+        case SawR:
+            m_incomplete_data.append(c);
+            continue;
+        default:
+            VERIFY_NOT_REACHED();
         }
-        auto col_opt = parts[1].to_int();
-        if (!col_opt.has_value()) {
-            dbgln("Terminal DSR issue; received garbage col");
-        } else {
-            col = col_opt.value();
-        }
-    }
+    } while (state != SawR);
+
+    if (has_error)
+        dbgln("Terminal DSR issue, couldn't parse DSR response");
     return { row, col };
 }
 
@@ -1690,6 +1851,7 @@ void Editor::remove_at_index(size_t index)
     m_buffer.remove(index);
     if (cp == '\n')
         ++m_extra_forward_lines;
+    ++m_chars_touched_in_the_middle;
 }
 
 void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modification)
@@ -1703,7 +1865,7 @@ void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modifi
     auto index_shift = modification == ModificationKind::Insertion ? 1 : -1;
     auto forced_removal = modification == ModificationKind::ForcedOverlapRemoval;
 
-    for (auto& start_entry : m_anchored_spans_starting) {
+    for (auto& start_entry : m_current_spans.m_anchored_spans_starting) {
         for (auto& end_entry : start_entry.value) {
             if (forced_removal) {
                 if (start_entry.key <= hint_index && end_entry.key > hint_index) {
@@ -1729,8 +1891,8 @@ void Editor::readjust_anchored_styles(size_t hint_index, ModificationKind modifi
         }
     }
 
-    m_anchored_spans_ending.clear();
-    m_anchored_spans_starting.clear();
+    m_current_spans.m_anchored_spans_ending.clear();
+    m_current_spans.m_anchored_spans_starting.clear();
     // Pass over the relocations and update the stale entries.
     for (auto& relocation : anchors_to_relocate) {
         stylize(relocation.new_span, relocation.style);
@@ -1762,6 +1924,49 @@ size_t StringMetrics::offset_with_addition(const StringMetrics& offset, size_t c
     auto last = line_metrics.last().total_length();
     last += offset.line_metrics.first().total_length();
     return last % column_width;
+}
+
+bool Editor::Spans::contains_up_to_offset(const Spans& other, size_t offset) const
+{
+    auto compare = [&]<typename K, typename V>(const HashMap<K, HashMap<K, V>>& left, const HashMap<K, HashMap<K, V>>& right) -> bool {
+        for (auto& entry : right) {
+            if (entry.key > offset + 1)
+                continue;
+
+            auto left_map = left.get(entry.key);
+            if (!left_map.has_value())
+                return false;
+
+            for (auto& left_entry : left_map.value()) {
+                if (auto value = entry.value.get(left_entry.key); !value.has_value()) {
+                    // Might have the same thing with a longer span
+                    bool found = false;
+                    for (auto& possibly_longer_span_entry : entry.value) {
+                        if (possibly_longer_span_entry.key > left_entry.key && possibly_longer_span_entry.key > offset && left_entry.value == possibly_longer_span_entry.value) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found)
+                        continue;
+                    if constexpr (LINE_EDITOR_DEBUG) {
+                        dbgln("Compare for {}-{} failed, no entry", entry.key, left_entry.key);
+                        for (auto& x : entry.value)
+                            dbgln("Have: {}-{} = {}", entry.key, x.key, x.value.to_string());
+                    }
+                    return false;
+                } else if (value.value() != left_entry.value) {
+                    dbgln_if(LINE_EDITOR_DEBUG, "Compare for {}-{} failed, different values: {} != {}", entry.key, left_entry.key, value.value().to_string(), left_entry.value.to_string());
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    };
+
+    return compare(m_spans_starting, other.m_spans_starting)
+        && compare(m_anchored_spans_starting, other.m_anchored_spans_starting);
 }
 
 }

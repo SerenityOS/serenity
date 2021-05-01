@@ -1,40 +1,21 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
-#include <Kernel/API/Syscall.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/times.h>
+#include <syscall.h>
 #include <time.h>
+#include <utime.h>
 
 extern "C" {
 
@@ -68,9 +49,25 @@ int settimeofday(struct timeval* __restrict__ tv, void* __restrict__)
     return clock_settime(CLOCK_REALTIME, &ts);
 }
 
+int utimes(const char* pathname, const struct timeval times[2])
+{
+    if (!times) {
+        return utime(pathname, nullptr);
+    }
+    // FIXME: implement support for tv_usec in the utime (or a new) syscall
+    utimbuf buf = { times[0].tv_sec, times[1].tv_sec };
+    return utime(pathname, &buf);
+}
+
 char* ctime(const time_t* t)
 {
     return asctime(localtime(t));
+}
+
+char* ctime_r(const time_t* t, char* buf)
+{
+    struct tm tm_buf;
+    return asctime_r(localtime_r(t, &tm_buf), buf);
 }
 
 static const int __seconds_per_day = 60 * 60 * 24;
@@ -84,7 +81,7 @@ static void time_to_tm(struct tm* tm, time_t t)
         t += days_in_year(year - 1) * __seconds_per_day;
     tm->tm_year = year - 1900;
 
-    ASSERT(t >= 0);
+    VERIFY(t >= 0);
     int days = t / __seconds_per_day;
     tm->tm_yday = days;
     int remaining = t % __seconds_per_day;
@@ -169,7 +166,18 @@ struct tm* gmtime_r(const time_t* t, struct tm* tm)
 char* asctime(const struct tm* tm)
 {
     static char buffer[69];
-    strftime(buffer, sizeof buffer, "%a %b %e %T %Y", tm);
+    return asctime_r(tm, buffer);
+}
+
+char* asctime_r(const struct tm* tm, char* buffer)
+{
+    // Spec states buffer must be at least 26 bytes.
+    constexpr size_t assumed_len = 26;
+    size_t filled_size = strftime(buffer, assumed_len, "%a %b %e %T %Y\n", tm);
+
+    // Verify that the buffer was large enough.
+    VERIFY(filled_size != 0);
+
     return buffer;
 }
 

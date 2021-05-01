@@ -1,37 +1,19 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/EventWrapper.h>
-#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
+#include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventListener.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -104,29 +86,27 @@ static String normalize_header_value(const String& header_value)
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
-void XMLHttpRequest::set_request_header(const String& header, const String& value)
+DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(const String& header, const String& value)
 {
-    if (m_ready_state != ReadyState::Opened) {
-        // FIXME: throw an "InvalidStateError" DOMException.
-        return;
-    }
+    if (m_ready_state != ReadyState::Opened)
+        return DOM::InvalidStateError::create("XHR readyState is not OPENED");
 
-    if (m_send) {
-        // FIXME: throw an "InvalidStateError" DOMException.
-        return;
-    }
+    if (m_send)
+        return DOM::InvalidStateError::create("XHR send() flag is already set");
 
     // FIXME: Check if name matches the name production.
     // FIXME: Check if value matches the value production.
 
     if (is_forbidden_header_name(header))
-        return;
+        return {};
 
     // FIXME: Combine
     m_request_headers.set(header, normalize_header_value(value));
+    return {};
 }
 
-void XMLHttpRequest::open(const String& method, const String& url)
+// https://xhr.spec.whatwg.org/#dom-xmlhttprequest-open
+DOM::ExceptionOr<void> XMLHttpRequest::open(const String& method, const String& url)
 {
     // FIXME: Let settingsObject be this’s relevant settings object.
 
@@ -134,19 +114,14 @@ void XMLHttpRequest::open(const String& method, const String& url)
 
     // FIXME: Check that the method matches the method token production. https://tools.ietf.org/html/rfc7230#section-3.1.1
 
-    if (is_forbidden_method(method)) {
-        // FIXME: Throw a "SecurityError" DOMException.
-        return;
-    }
+    if (is_forbidden_method(method))
+        return DOM::SecurityError::create("Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
 
-    String normalized_method = normalize_method(method);
+    auto normalized_method = normalize_method(method);
 
-    // FIXME: Pass in settingObject's API base URL and API URL character encoding.
-    URL parsed_url(url);
-    if (!parsed_url.is_valid()) {
-        // FIXME: Throw a "SyntaxError" DOMException.
-        return;
-    }
+    auto parsed_url = m_window->document().complete_url(url);
+    if (!parsed_url.is_valid())
+        return DOM::SyntaxError::create("Invalid URL");
 
     if (!parsed_url.host().is_null()) {
         // FIXME: If the username argument is not null, set the username given parsedURL and username.
@@ -175,20 +150,17 @@ void XMLHttpRequest::open(const String& method, const String& url)
 
     if (m_ready_state != ReadyState::Opened)
         set_ready_state(ReadyState::Opened);
+    return {};
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send
-void XMLHttpRequest::send()
+DOM::ExceptionOr<void> XMLHttpRequest::send()
 {
-    if (m_ready_state != ReadyState::Opened) {
-        // FIXME: throw an "InvalidStateError" DOMException.
-        return;
-    }
+    if (m_ready_state != ReadyState::Opened)
+        return DOM::InvalidStateError::create("XHR readyState is not OPENED");
 
-    if (m_send) {
-        // FIXME: throw an "InvalidStateError" DOMException.
-        return;
-    }
+    if (m_send)
+        return DOM::InvalidStateError::create("XHR send() flag is already set");
 
     // FIXME: If this’s request method is `GET` or `HEAD`, then set body to null.
 
@@ -204,15 +176,14 @@ void XMLHttpRequest::send()
         dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->document().url(), request_url);
         auto weak_this = make_weak_ptr();
         if (!weak_this)
-            return;
+            return {};
         const_cast<XMLHttpRequest&>(*weak_this).set_ready_state(ReadyState::Done);
         const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(DOM::Event::create(HTML::EventNames::error));
-        return;
+        return {};
     }
 
-    LoadRequest request;
+    auto request = LoadRequest::create_for_url_on_page(request_url, m_window->document().page());
     request.set_method(m_method);
-    request.set_url(request_url);
     for (auto& it : m_request_headers)
         request.set_header(it.key, it.value);
 
@@ -231,13 +202,13 @@ void XMLHttpRequest::send()
         //        then fire a progress event named loadstart at this’s upload object with 0 and req’s body’s total bytes.
 
         if (m_ready_state != ReadyState::Opened || !m_send)
-            return;
+            return {};
 
         // FIXME: in order to properly set ReadyState::HeadersReceived and ReadyState::Loading,
         // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
         ResourceLoader::the().load(
             request,
-            [weak_this = make_weak_ptr()](auto data, auto&) {
+            [weak_this = make_weak_ptr()](auto data, auto& response_headers, auto status_code) {
                 if (!weak_this)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*weak_this);
@@ -252,21 +223,25 @@ void XMLHttpRequest::send()
                 }
 
                 xhr.m_ready_state = ReadyState::Done;
+                xhr.m_status = status_code.value_or(0);
+                xhr.m_response_headers = move(response_headers);
                 xhr.m_send = false;
                 xhr.dispatch_event(DOM::Event::create(EventNames::readystatechange));
                 xhr.fire_progress_event(EventNames::load, transmitted, length);
                 xhr.fire_progress_event(EventNames::loadend, transmitted, length);
             },
-            [weak_this = make_weak_ptr()](auto& error) {
+            [weak_this = make_weak_ptr()](auto& error, auto status_code) {
                 if (!weak_this)
                     return;
                 dbgln("XHR failed to load: {}", error);
                 const_cast<XMLHttpRequest&>(*weak_this).set_ready_state(ReadyState::Done);
+                const_cast<XMLHttpRequest&>(*weak_this).set_status(status_code.value_or(0));
                 const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(DOM::Event::create(HTML::EventNames::error));
             });
     } else {
         TODO();
     }
+    return {};
 }
 
 bool XMLHttpRequest::dispatch_event(NonnullRefPtr<DOM::Event> event)

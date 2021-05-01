@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2020, Emanuele Torre <torreemanuele6@gmail.com>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibJS/Console.h>
@@ -35,8 +15,16 @@ Console::Console(GlobalObject& global_object)
 {
 }
 
+VM& Console::vm()
+{
+    return m_global_object.vm();
+}
+
 Value Console::debug()
 {
+#ifdef __serenity__
+    dbgln("\033[32;1m(js debug)\033[0m {}", vm().join_arguments());
+#endif
     if (m_client)
         return m_client->debug();
     return js_undefined();
@@ -44,6 +32,9 @@ Value Console::debug()
 
 Value Console::error()
 {
+#ifdef __serenity__
+    dbgln("\033[32;1m(js error)\033[0m {}", vm().join_arguments());
+#endif
     if (m_client)
         return m_client->error();
     return js_undefined();
@@ -51,6 +42,9 @@ Value Console::error()
 
 Value Console::info()
 {
+#ifdef __serenity__
+    dbgln("\033[32;1m(js info)\033[0m {}", vm().join_arguments());
+#endif
     if (m_client)
         return m_client->info();
     return js_undefined();
@@ -58,6 +52,9 @@ Value Console::info()
 
 Value Console::log()
 {
+#ifdef __serenity__
+    dbgln("\033[32;1m(js log)\033[0m {}", vm().join_arguments());
+#endif
     if (m_client)
         return m_client->log();
     return js_undefined();
@@ -65,6 +62,9 @@ Value Console::log()
 
 Value Console::warn()
 {
+#ifdef __serenity__
+    dbgln("\033[32;1m(js warn)\033[0m {}", vm().join_arguments());
+#endif
     if (m_client)
         return m_client->warn();
     return js_undefined();
@@ -95,6 +95,13 @@ Value Console::count_reset()
 {
     if (m_client)
         return m_client->count_reset();
+    return js_undefined();
+}
+
+Value Console::assert_()
+{
+    if (m_client)
+        return m_client->assert_();
     return js_undefined();
 }
 

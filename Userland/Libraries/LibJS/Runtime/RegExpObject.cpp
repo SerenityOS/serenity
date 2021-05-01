@@ -1,31 +1,10 @@
 /*
- * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
-#include <AK/StringBuilder.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -38,8 +17,10 @@ static Flags options_from(const String& flags, VM& vm, GlobalObject& global_obje
 {
     bool g = false, i = false, m = false, s = false, u = false, y = false;
     Flags options {
-        { (regex::ECMAScriptFlags)regex::AllFlags::Global }, // JS regexps are all 'global' by default as per our definition, but the "global" flag enables "stateful".
-        {},
+        // JS regexps are all 'global' by default as per our definition, but the "global" flag enables "stateful".
+        // FIXME: Enable 'BrowserExtended' only if in a browser context.
+        .effective_flags = { (regex::ECMAScriptFlags)regex::AllFlags::Global | (regex::ECMAScriptFlags)regex::AllFlags::SkipTrimEmptyMatches | regex::ECMAScriptFlags::BrowserExtended },
+        .declared_flags = {},
     };
 
     for (auto ch : flags) {
@@ -165,6 +146,32 @@ JS_DEFINE_NATIVE_SETTER(RegExpObject::set_last_index)
         index = 0;
 
     regexp_object->regex().start_offset = index;
+}
+
+RegExpObject* regexp_create(GlobalObject& global_object, Value pattern, Value flags)
+{
+    // https://tc39.es/ecma262/#sec-regexpcreate
+    String p;
+    if (pattern.is_undefined()) {
+        p = String::empty();
+    } else {
+        p = pattern.to_string(global_object);
+        if (p.is_null())
+            return nullptr;
+    }
+    String f;
+    if (flags.is_undefined()) {
+        f = String::empty();
+    } else {
+        f = flags.to_string(global_object);
+        if (f.is_null())
+            return nullptr;
+    }
+    // FIXME: This is awkward: the RegExpObject C++ constructor may throw a VM exception.
+    auto* obj = RegExpObject::create(global_object, move(p), move(f));
+    if (global_object.vm().exception())
+        return nullptr;
+    return obj;
 }
 
 }

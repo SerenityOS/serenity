@@ -1,39 +1,19 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/Atomic.h>
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
 #ifdef KERNEL
-#    include <Kernel/Arch/i386/CPU.h>
+#    include <Kernel/Arch/x86/CPU.h>
 #endif
 
 namespace AK {
@@ -50,7 +30,7 @@ struct RefPtrTraits {
 
     ALWAYS_INLINE static FlatPtr as_bits(T* ptr)
     {
-        ASSERT(!((FlatPtr)ptr & 1));
+        VERIFY(!((FlatPtr)ptr & 1));
         return (FlatPtr)ptr;
     }
 
@@ -70,7 +50,7 @@ struct RefPtrTraits {
     ALWAYS_INLINE static FlatPtr exchange(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
     {
         // Only exchange when lock is not held
-        ASSERT(!(new_value & 1));
+        VERIFY(!(new_value & 1));
         FlatPtr expected = atomic_var.load(AK::MemoryOrder::memory_order_relaxed);
         for (;;) {
             expected &= ~(FlatPtr)1; // only if lock bit is not set
@@ -86,7 +66,7 @@ struct RefPtrTraits {
     ALWAYS_INLINE static bool exchange_if_null(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
     {
         // Only exchange when lock is not held
-        ASSERT(!(new_value & 1));
+        VERIFY(!(new_value & 1));
         for (;;) {
             FlatPtr expected = default_null_value; // only if lock bit is not set
             if (atomic_var.compare_exchange_strong(expected, new_value, AK::MemoryOrder::memory_order_acq_rel))
@@ -116,13 +96,13 @@ struct RefPtrTraits {
             Kernel::Processor::wait_check();
 #endif
         }
-        ASSERT(!(bits & 1));
+        VERIFY(!(bits & 1));
         return bits;
     }
 
     ALWAYS_INLINE static void unlock(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
     {
-        ASSERT(!(new_value & 1));
+        VERIFY(!(new_value & 1));
         atomic_var.store(new_value, AK::MemoryOrder::memory_order_release);
     }
 
@@ -153,14 +133,14 @@ public:
         : m_bits(PtrTraits::as_bits(const_cast<T*>(&object)))
     {
         T* ptr = const_cast<T*>(&object);
-        ASSERT(ptr);
-        ASSERT(!is_null());
+        VERIFY(ptr);
+        VERIFY(!is_null());
         ptr->ref();
     }
     RefPtr(AdoptTag, T& object)
         : m_bits(PtrTraits::as_bits(&object))
     {
-        ASSERT(!is_null());
+        VERIFY(!is_null());
     }
     RefPtr(RefPtr&& other)
         : m_bits(other.leak_ref_raw())
@@ -179,7 +159,7 @@ public:
     ALWAYS_INLINE RefPtr(NonnullRefPtr<U>&& other)
         : m_bits(PtrTraits::as_bits(&other.leak_ref()))
     {
-        ASSERT(!is_null());
+        VERIFY(!is_null());
     }
     template<typename U, typename P = RefPtrTraits<U>>
     RefPtr(RefPtr<U, P>&& other)
@@ -330,7 +310,7 @@ public:
     NonnullRefPtr<T> release_nonnull()
     {
         FlatPtr bits = PtrTraits::exchange(m_bits, PtrTraits::default_null_value);
-        ASSERT(!PtrTraits::is_null(bits));
+        VERIFY(!PtrTraits::is_null(bits));
         return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *PtrTraits::as_ptr(bits));
     }
 
@@ -379,20 +359,20 @@ public:
 
     ALWAYS_INLINE bool is_null() const { return PtrTraits::is_null(m_bits.load(AK::MemoryOrder::memory_order_relaxed)); }
 
-    template<typename U = T, typename EnableIf<IsSame<U, T>::value && !IsNullPointer<typename PtrTraits::NullType>::value>::Type* = nullptr>
+    template<typename U = T, typename EnableIf<IsSame<U, T> && !IsNullPointer<typename PtrTraits::NullType>>::Type* = nullptr>
     typename PtrTraits::NullType null_value() const
     {
         // make sure we are holding a null value
         FlatPtr bits = m_bits.load(AK::MemoryOrder::memory_order_relaxed);
-        ASSERT(PtrTraits::is_null(bits));
+        VERIFY(PtrTraits::is_null(bits));
         return PtrTraits::to_null_value(bits);
     }
-    template<typename U = T, typename EnableIf<IsSame<U, T>::value && !IsNullPointer<typename PtrTraits::NullType>::value>::Type* = nullptr>
+    template<typename U = T, typename EnableIf<IsSame<U, T> && !IsNullPointer<typename PtrTraits::NullType>>::Type* = nullptr>
     void set_null_value(typename PtrTraits::NullType value)
     {
         // make sure that new null value would be interpreted as a null value
         FlatPtr bits = PtrTraits::from_null_value(value);
-        ASSERT(PtrTraits::is_null(bits));
+        VERIFY(PtrTraits::is_null(bits));
         assign_raw(bits);
     }
 
@@ -454,18 +434,20 @@ private:
 
     ALWAYS_INLINE T* as_nonnull_ptr(FlatPtr bits) const
     {
-        ASSERT(!PtrTraits::is_null(bits));
+        VERIFY(!PtrTraits::is_null(bits));
         return PtrTraits::as_ptr(bits);
     }
 
     mutable Atomic<FlatPtr> m_bits { PtrTraits::default_null_value };
 };
 
-template<typename T, typename PtrTraits = RefPtrTraits<T>>
-inline const LogStream& operator<<(const LogStream& stream, const RefPtr<T, PtrTraits>& value)
-{
-    return stream << value.ptr();
-}
+template<typename T>
+struct Formatter<RefPtr<T>> : Formatter<const T*> {
+    void format(FormatBuilder& builder, const RefPtr<T>& value)
+    {
+        Formatter<const T*>::format(builder, value.ptr());
+    }
+};
 
 template<typename T>
 struct Traits<RefPtr<T>> : public GenericTraits<RefPtr<T>> {

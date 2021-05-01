@@ -1,30 +1,11 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -33,13 +14,12 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 struct Result {
-    u64 write_bps;
-    u64 read_bps;
+    u64 write_bps {};
+    u64 read_bps {};
 };
 
 static Result average_result(const Vector<Result>& results)
@@ -59,18 +39,18 @@ static Result average_result(const Vector<Result>& results)
 
 static void exit_with_usage(int rc)
 {
-    fprintf(stderr, "Usage: disk_benchmark [-h] [-d directory] [-t time_per_benchmark] [-f file_size1,file_size2,...] [-b block_size1,block_size2,...]\n");
+    warnln("Usage: disk_benchmark [-h] [-d directory] [-t time_per_benchmark] [-f file_size1,file_size2,...] [-b block_size1,block_size2,...]");
     exit(rc);
 }
 
-static Result benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache);
+static Optional<Result> benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache);
 
 int main(int argc, char** argv)
 {
-    char* directory = strdup(".");
+    String directory = ".";
     int time_per_benchmark = 10;
-    Vector<int> file_sizes;
-    Vector<int> block_sizes;
+    Vector<size_t> file_sizes;
+    Vector<size_t> block_sizes;
     bool allow_cache = false;
 
     int opt;
@@ -83,17 +63,17 @@ int main(int argc, char** argv)
             allow_cache = true;
             break;
         case 'd':
-            directory = strdup(optarg);
+            directory = optarg;
             break;
         case 't':
             time_per_benchmark = atoi(optarg);
             break;
         case 'f':
-            for (auto size : String(optarg).split(','))
+            for (const auto& size : String(optarg).split(','))
                 file_sizes.append(atoi(size.characters()));
             break;
         case 'b':
-            for (auto size : String(optarg).split(','))
+            for (const auto& size : String(optarg).split(','))
                 block_sizes.append(atoi(size.characters()));
             break;
         }
@@ -116,32 +96,31 @@ int main(int argc, char** argv)
                 continue;
 
             auto buffer = ByteBuffer::create_uninitialized(block_size);
-
             Vector<Result> results;
 
-            printf("Running: file_size=%d block_size=%d\n", file_size, block_size);
+            outln("Running: file_size={} block_size={}", file_size, block_size);
             Core::ElapsedTimer timer;
             timer.start();
             while (timer.elapsed() < time_per_benchmark * 1000) {
-                printf(".");
+                out(".");
                 fflush(stdout);
-                results.append(benchmark(filename, file_size, block_size, buffer, allow_cache));
+                auto result = benchmark(filename, file_size, block_size, buffer, allow_cache);
+                if (!result.has_value())
+                    return 1;
+                results.append(result.release_value());
                 usleep(100);
             }
             auto average = average_result(results);
-            printf("\nFinished: runs=%zu time=%dms write_bps=%llu read_bps=%llu\n", results.size(), timer.elapsed(), average.write_bps, average.read_bps);
+            outln("Finished: runs={} time={}ms write_bps={} read_bps={}", results.size(), timer.elapsed(), average.write_bps, average.read_bps);
 
             sleep(1);
         }
     }
 
-    if (isatty(0)) {
-        printf("Press any key to exit...\n");
-        fgetc(stdin);
-    }
+    return 0;
 }
 
-Result benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache)
+Optional<Result> benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache)
 {
     int flags = O_CREAT | O_TRUNC | O_RDWR;
     if (!allow_cache)
@@ -153,56 +132,46 @@ Result benchmark(const String& filename, int file_size, int block_size, ByteBuff
         exit(1);
     }
 
-    auto cleanup_and_exit = [fd, filename]() {
-        close(fd);
-        unlink(filename.characters());
-        exit(1);
-    };
+    auto fd_cleanup = ScopeGuard([fd, filename] {
+        if (close(fd) < 0)
+            perror("close");
+        if (unlink(filename.characters()) < 0)
+            perror("unlink");
+    });
 
-    Result res;
+    Result result;
 
     Core::ElapsedTimer timer;
-
     timer.start();
-    int nwrote = 0;
-    for (int j = 0; j < file_size; j += block_size) {
-        int n = write(fd, buffer.data(), block_size);
-        if (n < 0) {
+
+    ssize_t total_written = 0;
+    for (ssize_t j = 0; j < file_size; j += block_size) {
+        auto nwritten = write(fd, buffer.data(), block_size);
+        if (nwritten < 0) {
             perror("write");
-            cleanup_and_exit();
+            return {};
         }
-        nwrote += n;
+        total_written += nwritten;
     }
 
-    res.write_bps = (u64)(timer.elapsed() ? (file_size / timer.elapsed()) : file_size) * 1000;
+    result.write_bps = (u64)(timer.elapsed() ? (file_size / timer.elapsed()) : file_size) * 1000;
 
     if (lseek(fd, 0, SEEK_SET) < 0) {
         perror("lseek");
-        cleanup_and_exit();
+        return {};
     }
 
     timer.start();
-    int nread = 0;
-    while (nread < file_size) {
-        int n = read(fd, buffer.data(), block_size);
-        if (n < 0) {
+    ssize_t total_read = 0;
+    while (total_read < file_size) {
+        auto nread = read(fd, buffer.data(), block_size);
+        if (nread < 0) {
             perror("read");
-            cleanup_and_exit();
+            return {};
         }
-        nread += n;
+        total_read += nread;
     }
 
-    res.read_bps = (u64)(timer.elapsed() ? (file_size / timer.elapsed()) : file_size) * 1000;
-
-    if (close(fd) != 0) {
-        perror("close");
-        cleanup_and_exit();
-    }
-
-    if (unlink(filename.characters()) != 0) {
-        perror("unlink");
-        cleanup_and_exit();
-    }
-
-    return res;
+    result.read_bps = (u64)(timer.elapsed() ? (file_size / timer.elapsed()) : file_size) * 1000;
+    return result;
 }

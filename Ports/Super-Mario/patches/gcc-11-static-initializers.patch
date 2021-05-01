@@ -1,0 +1,46 @@
+diff -Naur Super-Mario-Clone-Cpp-master/src/CFG.cpp Super-Mario-Clone-Cpp-master.serenity/src/CFG.cpp
+--- Super-Mario-Clone-Cpp-master/src/CFG.cpp	2021-04-29 07:39:18.688987494 +0200
++++ Super-Mario-Clone-Cpp-master.serenity/src/CFG.cpp	2021-04-29 07:41:19.464330908 +0200
+@@ -14,11 +13,11 @@
+ int CCFG::GAME_HEIGHT = 448;
+ int CCFG::GAME_WIDTH = 800;
+ 
+-Text* CCFG::oText = new Text();
+-CIMG* CCFG::tSMBLOGO = new CIMG();
++Text* CCFG::oText = NULL;
++CIMG* CCFG::tSMBLOGO = NULL;
+ 
+-MenuManager* CCFG::oMM = new MenuManager();
+-Music* CCFG::oMusic = new Music();
++MenuManager* CCFG::oMM = NULL;
++Music* CCFG::oMusic = NULL;
+ 
+ bool CCFG::keySpace = false;
+ int CCFG::keyIDA = 0;
+@@ -30,18 +29,26 @@
+ bool CCFG::canMoveBackward = true;
+ 
+ Text* CCFG::getText() {
++	if (!oText)
++		oText = new Text();
+ 	return oText;
+ }
+ 
+ MenuManager* CCFG::getMM() {
++	if (!oMM)
++		oMM = new MenuManager();
+ 	return oMM;
+ }
+ 
+ Music* CCFG::getMusic() {
++	if (!oMusic)
++		oMusic = new Music();
+ 	return oMusic;
+ }
+ 
+ CIMG* CCFG::getSMBLOGO() {
++	if (!tSMBLOGO)
++		tSMBLOGO = new CIMG();
+ 	return tSMBLOGO;
+ }
+ 

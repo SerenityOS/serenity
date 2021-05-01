@@ -1,39 +1,19 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Field.h"
 #include <AK/HashTable.h>
 #include <AK/Queue.h>
 #include <LibCore/ConfigFile.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 #include <time.h>
-#include <unistd.h>
 
 class SquareButton final : public GUI::Button {
     C_OBJECT(SquareButton);
@@ -56,7 +36,10 @@ public:
     }
 
 private:
-    SquareButton() { }
+    SquareButton()
+    {
+        set_focus_policy(GUI::FocusPolicy::TabFocus);
+    }
 };
 
 class SquareLabel final : public GUI::Label {
@@ -122,7 +105,8 @@ private:
 };
 
 Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed)
-    : m_face_button(face_button)
+    : m_mine_palette(GUI::Application::the()->palette().impl().clone())
+    , m_face_button(face_button)
     , m_flag_label(flag_label)
     , m_time_label(time_label)
     , m_on_size_changed(move(on_size_changed))
@@ -143,6 +127,8 @@ Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_b
     m_bad_face_bitmap = Gfx::Bitmap::load_from_file("/res/icons/minesweeper/face-bad.png");
     for (int i = 0; i < 8; ++i)
         m_number_bitmap[i] = Gfx::Bitmap::load_from_file(String::formatted("/res/icons/minesweeper/{}.png", i + 1));
+    // Square with mine will be filled with background color later, i.e. red
+    m_mine_palette.set_color(Gfx::ColorRole::Base, Color::from_rgb(0xff4040));
 
     set_fill_with_background_color(true);
     reset();
@@ -252,10 +238,7 @@ void Field::reset()
             square.is_swept = false;
             if (!square.label) {
                 square.label = add<SquareLabel>(square);
-                // Square with mine will be filled with background color later, i.e. red
-                auto palette = square.label->palette();
-                palette.set_color(Gfx::ColorRole::Base, Color::from_rgb(0xff4040));
-                square.label->set_palette(palette);
+                square.label->set_palette(m_mine_palette);
                 square.label->set_background_role(Gfx::ColorRole::Base);
             }
             square.label->set_fill_with_background_color(false);
@@ -416,7 +399,7 @@ void Field::on_square_right_clicked(Square& square)
 
 void Field::set_flag(Square& square, bool flag)
 {
-    ASSERT(!square.is_swept);
+    VERIFY(!square.is_swept);
     if (square.has_flag == flag)
         return;
     square.is_considering = false;
@@ -425,7 +408,7 @@ void Field::set_flag(Square& square, bool flag)
         ++m_flags_left;
     } else {
 
-        ASSERT(m_flags_left);
+        VERIFY(m_flags_left);
         --m_flags_left;
     }
     square.has_flag = flag;

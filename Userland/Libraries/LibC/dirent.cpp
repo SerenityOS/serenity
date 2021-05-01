@@ -1,32 +1,11 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
-#include <Kernel/API/Syscall.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -34,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <syscall.h>
 #include <unistd.h>
 
 extern "C" {
@@ -55,13 +35,21 @@ int closedir(DIR* dirp)
 {
     if (!dirp || dirp->fd == -1)
         return -EBADF;
-    if (dirp->buffer)
-        free(dirp->buffer);
+    free(dirp->buffer);
     int rc = close(dirp->fd);
     if (rc == 0)
         dirp->fd = -1;
     free(dirp);
     return rc;
+}
+
+void rewinddir(DIR* dirp)
+{
+    free(dirp->buffer);
+    dirp->buffer = nullptr;
+    dirp->buffer_size = 0;
+    dirp->nextptr = nullptr;
+    lseek(dirp->fd, 0, SEEK_SET);
 }
 
 struct [[gnu::packed]] sys_dirent {
@@ -194,7 +182,7 @@ int readdir_r(DIR* dirp, struct dirent* entry, struct dirent** result)
 
 int dirfd(DIR* dirp)
 {
-    ASSERT(dirp);
+    VERIFY(dirp);
     return dirp->fd;
 }
 }

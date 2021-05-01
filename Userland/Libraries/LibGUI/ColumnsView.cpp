@@ -1,33 +1,13 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGUI/ColumnsView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Palette.h>
 
@@ -69,7 +49,7 @@ void ColumnsView::select_all()
                 return;
             }
         }
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     });
 
     for (Column& column : columns_for_selection) {
@@ -102,12 +82,12 @@ void ColumnsView::paint_event(PaintEvent& event)
         auto& column = m_columns[i];
         auto* next_column = i + 1 == m_columns.size() ? nullptr : &m_columns[i + 1];
 
-        ASSERT(column.width > 0);
+        VERIFY(column.width > 0);
 
         int row_count = model()->row_count(column.parent_index);
         for (int row = 0; row < row_count; row++) {
             ModelIndex index = model()->index(row, m_model_column, column.parent_index);
-            ASSERT(index.is_valid());
+            VERIFY(index.is_valid());
 
             bool is_selected_row = selection().contains(index);
 
@@ -180,7 +160,7 @@ void ColumnsView::paint_event(PaintEvent& event)
 
 void ColumnsView::push_column(const ModelIndex& parent_index)
 {
-    ASSERT(model());
+    VERIFY(model());
 
     // Drop columns at the end.
     ModelIndex grandparent = model()->parent_index(parent_index);
@@ -216,7 +196,7 @@ void ColumnsView::update_column_sizes()
         column.width = 10;
         for (int row = 0; row < row_count; row++) {
             ModelIndex index = model()->index(row, m_model_column, column.parent_index);
-            ASSERT(index.is_valid());
+            VERIFY(index.is_valid());
             auto text = index.data().to_string();
             int row_width = icon_spacing() + icon_size() + icon_spacing() + font().width(text) + icon_spacing() + s_arrow_bitmap_width + icon_spacing();
             if (row_width > column.width)

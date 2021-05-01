@@ -1,34 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020 Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "VirtualConsole.h"
 #include <AK/String.h>
-#include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/IO.h>
 #include <Kernel/StdLib.h>
@@ -49,7 +29,7 @@ void VirtualConsole::flush_vga_cursor()
     IO::out8(0x3d5, LSB(value));
 }
 
-void VirtualConsole::initialize()
+UNMAP_AFTER_INIT void VirtualConsole::initialize()
 {
     s_vga_buffer = (u8*)0xc00b8000;
     s_active_console = -1;
@@ -63,12 +43,12 @@ void VirtualConsole::set_graphical(bool graphical)
     m_graphical = graphical;
 }
 
-VirtualConsole::VirtualConsole(const unsigned index)
+UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
     : TTY(4, index)
     , m_index(index)
     , m_terminal(*this)
 {
-    ASSERT(index < s_max_virtual_consoles);
+    VERIFY(index < s_max_virtual_consoles);
 
     m_tty_name = String::formatted("/dev/tty{}", m_index);
     m_terminal.set_size(80, 25);
@@ -76,17 +56,17 @@ VirtualConsole::VirtualConsole(const unsigned index)
     s_consoles[index] = this;
 }
 
-VirtualConsole::~VirtualConsole()
+UNMAP_AFTER_INIT VirtualConsole::~VirtualConsole()
 {
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void VirtualConsole::switch_to(unsigned index)
 {
     if ((int)index == s_active_console)
         return;
-    ASSERT(index < s_max_virtual_consoles);
-    ASSERT(s_consoles[index]);
+    VERIFY(index < s_max_virtual_consoles);
+    VERIFY(s_consoles[index]);
 
     ScopedSpinLock lock(s_lock);
     if (s_active_console != -1) {
@@ -116,12 +96,12 @@ void VirtualConsole::set_active(bool active)
 
     if (active) {
         set_vga_start_row(0);
-        KeyboardDevice::the().set_client(this);
+        HIDManagement::the().set_client(this);
 
         m_terminal.m_need_full_flush = true;
         flush_dirty_lines();
     } else {
-        KeyboardDevice::the().set_client(nullptr);
+        HIDManagement::the().set_client(nullptr);
     }
 }
 
@@ -200,7 +180,7 @@ static inline VGAColor ansi_color_to_vga(ANSIColor color)
     case ANSIColor::White:
         return VGAColor::White;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -220,7 +200,7 @@ void VirtualConsole::clear_vga_row(u16 row)
         linemem[i] = 0x0720;
 }
 
-void VirtualConsole::on_key_pressed(KeyboardDevice::Event event)
+void VirtualConsole::on_key_pressed(KeyEvent event)
 {
     // Ignore keyboard in graphical mode.
     if (m_graphical)
@@ -293,7 +273,7 @@ void VirtualConsole::flush_dirty_lines()
             continue;
         for (size_t column = 0; column < line.length(); ++column) {
             u32 code_point = line.code_point(column);
-            auto attribute = line.attributes()[column];
+            auto attribute = line.attribute_at(column);
             u16 vga_index = (visual_row * 160) + (column * 2);
             m_current_vga_window[vga_index] = code_point < 128 ? code_point : '?';
             m_current_vga_window[vga_index + 1] = attribute_to_vga(attribute);
@@ -322,8 +302,8 @@ void VirtualConsole::set_window_progress(int, int)
 
 void VirtualConsole::terminal_did_resize(u16 columns, u16 rows)
 {
-    ASSERT(columns == 80);
-    ASSERT(rows == 25);
+    VERIFY(columns == 80);
+    VERIFY(rows == 25);
     set_size(columns, rows);
 }
 

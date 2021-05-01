@@ -1,41 +1,21 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/API/Syscall.h>
 #include <errno.h>
 #include <mman.h>
 #include <stdio.h>
 #include <string.h>
+#include <syscall.h>
 
 extern "C" {
 
 void* serenity_mmap(void* addr, size_t size, int prot, int flags, int fd, off_t offset, size_t alignment, const char* name)
 {
     Syscall::SC_mmap_params params { (uintptr_t)addr, size, alignment, prot, flags, fd, offset, { name, name ? strlen(name) : 0 } };
-    ssize_t rc = syscall(SC_mmap, &params);
+    ptrdiff_t rc = syscall(SC_mmap, &params);
     if (rc < 0 && -rc < EMAXERRNO) {
         errno = -rc;
         return MAP_FAILED;
@@ -56,7 +36,7 @@ void* mmap_with_name(void* addr, size_t size, int prot, int flags, int fd, off_t
 void* mremap(void* old_address, size_t old_size, size_t new_size, int flags)
 {
     Syscall::SC_mremap_params params { (uintptr_t)old_address, old_size, new_size, flags };
-    ssize_t rc = syscall(SC_mremap, &params);
+    ptrdiff_t rc = syscall(SC_mremap, &params);
     if (rc < 0 && -rc < EMAXERRNO) {
         errno = -rc;
         return MAP_FAILED;
@@ -93,9 +73,9 @@ int madvise(void* address, size_t size, int advice)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-void* allocate_tls(size_t size)
+void* allocate_tls(const char* initial_data, size_t size)
 {
-    int rc = syscall(SC_allocate_tls, size);
+    ptrdiff_t rc = syscall(SC_allocate_tls, initial_data, size);
     if (rc < 0 && -rc < EMAXERRNO) {
         errno = -rc;
         return MAP_FAILED;

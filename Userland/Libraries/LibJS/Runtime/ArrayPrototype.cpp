@@ -1,29 +1,9 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2020, Marcin Gasperowicz <xnooga@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
@@ -44,14 +24,14 @@ namespace JS {
 static HashTable<Object*> s_array_join_seen_objects;
 
 ArrayPrototype::ArrayPrototype(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : Array(*global_object.object_prototype())
 {
 }
 
 void ArrayPrototype::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
-    Object::initialize(global_object);
+    Array::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(vm.names.filter, filter, 1, attr);
@@ -80,7 +60,8 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.splice, splice, 2, attr);
     define_native_function(vm.names.fill, fill, 1, attr);
     define_native_function(vm.names.values, values, 0, attr);
-    define_property(vm.names.length, Value(0), Attribute::Configurable);
+    define_native_function(vm.names.flat, flat, 0, attr);
+    define_native_function(vm.names.at, at, 1, attr);
 
     // Use define_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
@@ -309,7 +290,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
         auto* value_object = value.to_object(global_object);
         if (!value_object)
             return {};
-        auto locale_string_result = value_object->invoke("toLocaleString");
+        auto locale_string_result = value_object->invoke(vm.names.toLocaleString);
         if (vm.exception())
             return {};
         auto string = locale_string_result.to_string(global_object);
@@ -669,9 +650,9 @@ static void array_merge_sort(VM& vm, GlobalObject& global_object, Function* comp
             // Because they are called with primitive strings, these abstract_relation calls
             // should never result in a VM exception.
             auto x_lt_y_relation = abstract_relation(global_object, true, x_string_value, y_string_value);
-            ASSERT(x_lt_y_relation != TriState::Unknown);
+            VERIFY(x_lt_y_relation != TriState::Unknown);
             auto y_lt_x_relation = abstract_relation(global_object, true, y_string_value, x_string_value);
-            ASSERT(y_lt_x_relation != TriState::Unknown);
+            VERIFY(y_lt_x_relation != TriState::Unknown);
 
             if (x_lt_y_relation == TriState::True) {
                 comparison_result = -1;
@@ -1032,6 +1013,79 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
         return {};
 
     return ArrayIterator::create(global_object, this_object, Object::PropertyKind::Value);
+}
+
+static void recursive_array_flat(VM& vm, GlobalObject& global_object, Array& new_array, Object& array, double depth)
+{
+    auto array_length = length_of_array_like(global_object, array);
+    if (vm.exception())
+        return;
+
+    for (size_t j = 0; j < array_length; ++j) {
+        auto value = array.get(j);
+        if (vm.exception())
+            return;
+
+        if (depth > 0 && value.is_array()) {
+            recursive_array_flat(vm, global_object, new_array, value.as_array(), depth - 1);
+            continue;
+        }
+        if (!value.is_empty()) {
+            new_array.indexed_properties().append(value);
+            if (vm.exception())
+                return;
+        }
+    }
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+
+    auto* new_array = Array::create(global_object);
+
+    double depth = 1;
+    if (vm.argument_count() > 0) {
+        auto depth_argument = vm.argument(0);
+        if (!depth_argument.is_undefined()) {
+            auto depth_num = depth_argument.to_integer_or_infinity(global_object);
+            if (vm.exception())
+                return {};
+            depth = max(depth_num, 0.0);
+        }
+    }
+
+    recursive_array_flat(vm, global_object, *new_array, *this_object, depth);
+    if (vm.exception())
+        return {};
+    return new_array;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::at)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+    auto length = length_of_array_like(global_object, *this_object);
+    if (vm.exception())
+        return {};
+    auto relative_index = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+    if (Value(relative_index).is_infinity())
+        return js_undefined();
+    Checked<size_t> index { 0 };
+    if (relative_index >= 0) {
+        index += relative_index;
+    } else {
+        index += length;
+        index -= -relative_index;
+    }
+    if (index.has_overflow() || index.value() >= length)
+        return js_undefined();
+    return this_object->get(index.value());
 }
 
 }

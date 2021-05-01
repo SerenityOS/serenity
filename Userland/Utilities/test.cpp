@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/LexicalPath.h>
@@ -158,7 +138,7 @@ private:
         case SymbolicLink:
             return S_ISLNK(statbuf.st_mode);
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -193,7 +173,7 @@ private:
         case Any:
             return access(m_path.characters(), F_OK) == 0;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -272,7 +252,7 @@ private:
         case NotEqual:
             return m_lhs != m_rhs;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -325,7 +305,7 @@ private:
         case ModificationTimestampGreater:
             return statbuf_l.st_mtime > statbuf_r.st_mtime;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -354,15 +334,6 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
         if (command && argv[optind] && StringView(argv[++optind]) == ")")
             return command;
         fatal_error("Unmatched \033[1m(");
-    }
-
-    if (arg == "!") {
-        if (should_treat_expression_as_single_string(argv[optind]))
-            return make<StringCompare>(move(arg), "", StringCompare::NotEqual);
-        auto command = parse_complex_expression(argv);
-        if (!command)
-            fatal_error("Expected an expression after \033[1m!");
-        return make<Not>(command.release_nonnull());
     }
 
     // Try to read a unary op.
@@ -464,6 +435,17 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
         --optind;
         return make<StringCompare>("", lhs, StringCompare::NotEqual);
     } else {
+        // Now that we know it's not a well-formed expression, see if it's actually a negation
+        if (lhs == "!") {
+            if (should_treat_expression_as_single_string(arg))
+                return make<StringCompare>(move(lhs), "", StringCompare::NotEqual);
+
+            auto command = parse_complex_expression(argv);
+            if (!command)
+                fatal_error("Expected an expression after \x1b[1m!");
+
+            return make<Not>(command.release_nonnull());
+        }
         --optind;
         return make<StringCompare>("", lhs, StringCompare::NotEqual);
     }

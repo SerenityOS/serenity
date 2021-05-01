@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGUI/AutocompleteProvider.h>
@@ -65,7 +45,6 @@ public:
                 return suggestion.completion;
             }
             if (index.column() == Column::Icon) {
-                // TODO
                 if (suggestion.language == GUI::AutocompleteProvider::Language::Cpp) {
                     if (!s_cpp_identifier_icon) {
                         s_cpp_identifier_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/completion/cpp-identifier.png");
@@ -119,7 +98,7 @@ void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& s
         auto& model = *static_cast<AutocompleteSuggestionModel*>(m_suggestion_view->model());
         model.set_suggestions(move(suggestions));
     } else {
-        m_suggestion_view->set_model(adopt(*new AutocompleteSuggestionModel(move(suggestions))));
+        m_suggestion_view->set_model(adopt_ref(*new AutocompleteSuggestionModel(move(suggestions))));
         m_suggestion_view->update();
         if (has_suggestions)
             m_suggestion_view->set_cursor(m_suggestion_view->model()->index(0), GUI::AbstractView::SelectionUpdate::Set);
@@ -136,12 +115,12 @@ bool AutocompleteBox::is_visible() const
     return m_popup_window->is_visible();
 }
 
-void AutocompleteBox::show(Gfx::IntPoint suggstion_box_location)
+void AutocompleteBox::show(Gfx::IntPoint suggestion_box_location)
 {
     if (!m_suggestion_view->model() || m_suggestion_view->model()->row_count() == 0)
         return;
 
-    m_popup_window->move_to(suggstion_box_location);
+    m_popup_window->move_to(suggestion_box_location);
     if (!is_visible())
         m_suggestion_view->move_cursor(GUI::AbstractView::CursorMovement::Home, GUI::AbstractTableView::SelectionUpdate::Set);
     m_popup_window->show();
@@ -196,9 +175,19 @@ void AutocompleteBox::apply_suggestion()
     auto suggestion = suggestion_index.data().to_string();
     size_t partial_length = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::PartialInputLength).to_i64();
 
-    ASSERT(suggestion.length() >= partial_length);
+    VERIFY(suggestion.length() >= partial_length);
     auto completion = suggestion.substring_view(partial_length, suggestion.length() - partial_length);
     m_editor->insert_at_cursor_or_replace_selection(completion);
+}
+
+bool AutocompleteProvider::Declaration::operator==(const AutocompleteProvider::Declaration& other) const
+{
+    return name == other.name && position == other.position && type == other.type && scope == other.scope;
+}
+
+bool AutocompleteProvider::ProjectLocation::operator==(const ProjectLocation& other) const
+{
+    return file == other.file && line == other.line && column == other.column;
 }
 
 }

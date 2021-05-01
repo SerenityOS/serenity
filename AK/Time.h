@@ -1,32 +1,19 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/Platform.h>
+#include <AK/Types.h>
+
+// Kernel and Userspace pull in the definitions from different places.
+// Avoid trying to figure out which one.
+struct timeval;
+struct timespec;
 
 namespace AK {
 
@@ -66,6 +53,125 @@ inline int years_to_days_since_epoch(int year)
     return days;
 }
 
+/*
+ * Represents a time amount in a "safe" way.
+ * Minimum: 0 seconds, 0 nanoseconds
+ * Maximum: 2**63-1 seconds, 999'999'999 nanoseconds
+ * If any operation (e.g. 'from_timeval' or operator-) would over- or underflow, the closest legal value is returned instead.
+ * Inputs (e.g. to 'from_timespec') are allowed to be in non-normal form (e.g. "1 second, 2'012'345'678 nanoseconds" or "1 second, -2 microseconds").
+ * Outputs (e.g. from 'to_timeval') are always in normal form.
+ */
+class Time {
+public:
+    Time() = default;
+    Time(const Time&) = default;
+    Time& operator=(const Time&) = default;
+
+    Time(Time&& other)
+        : m_seconds(exchange(other.m_seconds, 0))
+        , m_nanoseconds(exchange(other.m_nanoseconds, 0))
+    {
+    }
+    Time& operator=(Time&& other)
+    {
+        if (this != &other) {
+            m_seconds = exchange(other.m_seconds, 0);
+            m_nanoseconds = exchange(other.m_nanoseconds, 0);
+        }
+        return *this;
+    }
+
+private:
+    // This must be part of the header in order to make the various 'from_*' functions constexpr.
+    // However, sane_mod can only deal with a limited range of values for 'denominator', so this can't be made public.
+    ALWAYS_INLINE static constexpr i64 sane_mod(i64& numerator, i64 denominator)
+    {
+        VERIFY(2 <= denominator && denominator <= 1'000'000'000);
+        // '%' in C/C++ does not work in the obvious way:
+        // For example, -9 % 7 is -2, not +5.
+        // However, we want a representation like "(-2)*7 + (+5)".
+        i64 dividend = numerator / denominator;
+        numerator %= denominator;
+        if (numerator < 0) {
+            // Does not overflow: different signs.
+            numerator += denominator;
+            // Does not underflow: denominator >= 2.
+            dividend -= 1;
+        }
+        return dividend;
+    }
+    ALWAYS_INLINE static constexpr i32 sane_mod(i32& numerator, i32 denominator)
+    {
+        i64 numerator_64 = numerator;
+        i64 dividend = sane_mod(numerator_64, denominator);
+        // Does not underflow: numerator can only become smaller.
+        numerator = numerator_64;
+        // Does not overflow: Will be smaller than original value of 'numerator'.
+        return dividend;
+    }
+
+public:
+    constexpr static Time from_seconds(i64 seconds) { return Time(seconds, 0); }
+    constexpr static Time from_nanoseconds(i64 nanoseconds)
+    {
+        i64 seconds = sane_mod(nanoseconds, 1'000'000'000);
+        return Time(seconds, nanoseconds);
+    }
+    constexpr static Time from_microseconds(i64 microseconds)
+    {
+        i64 seconds = sane_mod(microseconds, 1'000'000);
+        return Time(seconds, microseconds * 1'000);
+    }
+    constexpr static Time from_milliseconds(i64 milliseconds)
+    {
+        i64 seconds = sane_mod(milliseconds, 1'000);
+        return Time(seconds, milliseconds * 1'000'000);
+    }
+    static Time from_timespec(const struct timespec&);
+    static Time from_timeval(const struct timeval&);
+    static Time min() { return Time(-0x8000'0000'0000'0000LL, 0); };
+    static Time zero() { return Time(0, 0); };
+    static Time max() { return Time(0x7fff'ffff'ffff'ffffLL, 999'999'999); };
+
+    // Truncates towards zero (2.8s to 2s, -2.8s to -2s).
+    i64 to_truncated_seconds() const;
+    i64 to_truncated_milliseconds() const;
+    i64 to_truncated_microseconds() const;
+    // Rounds away from zero (2.3s to 3s, -2.3s to -3s).
+    i64 to_seconds() const;
+    i64 to_milliseconds() const;
+    i64 to_microseconds() const;
+    i64 to_nanoseconds() const;
+    timespec to_timespec() const;
+    // Rounds towards -inf (it was the easiest to implement).
+    timeval to_timeval() const;
+
+    bool is_zero() const { return !m_seconds && !m_nanoseconds; }
+
+    bool operator==(const Time& other) const { return this->m_seconds == other.m_seconds && this->m_nanoseconds == other.m_nanoseconds; }
+    bool operator!=(const Time& other) const { return !(*this == other); }
+    Time operator+(const Time& other) const;
+    Time& operator+=(const Time& other);
+    Time operator-(const Time& other) const;
+    Time& operator-=(const Time& other);
+    bool operator<(const Time& other) const;
+    bool operator<=(const Time& other) const;
+    bool operator>(const Time& other) const;
+    bool operator>=(const Time& other) const;
+
+private:
+    constexpr explicit Time(i64 seconds, u32 nanoseconds)
+        : m_seconds(seconds)
+        , m_nanoseconds(nanoseconds)
+    {
+    }
+
+    static Time from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds);
+
+    i64 m_seconds { 0 };
+    u32 m_nanoseconds { 0 }; // Always less than 1'000'000'000
+};
+
 template<typename TimevalType>
 inline void timeval_sub(const TimevalType& a, const TimevalType& b, TimevalType& result)
 {
@@ -93,17 +199,6 @@ inline void timespec_sub(const TimespecType& a, const TimespecType& b, TimespecT
 {
     result.tv_sec = a.tv_sec - b.tv_sec;
     result.tv_nsec = a.tv_nsec - b.tv_nsec;
-    if (result.tv_nsec < 0) {
-        --result.tv_sec;
-        result.tv_nsec += 1'000'000'000;
-    }
-}
-
-template<typename TimespecType, typename TimevalType>
-inline void timespec_sub_timeval(const TimespecType& a, const TimevalType& b, TimespecType& result)
-{
-    result.tv_sec = a.tv_sec - b.tv_sec;
-    result.tv_nsec = a.tv_nsec - b.tv_usec * 1000;
     if (result.tv_nsec < 0) {
         --result.tv_sec;
         result.tv_nsec += 1'000'000'000;
@@ -189,10 +284,10 @@ using AK::day_of_year;
 using AK::days_in_month;
 using AK::days_in_year;
 using AK::is_leap_year;
+using AK::Time;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
 using AK::timespec_sub;
-using AK::timespec_sub_timeval;
 using AK::timespec_to_timeval;
 using AK::timeval_add;
 using AK::timeval_sub;

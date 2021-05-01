@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGUI/AbstractTableView.h>
@@ -117,8 +97,25 @@ int HeaderView::section_count() const
     return m_orientation == Gfx::Orientation::Horizontal ? model()->column_count() : model()->row_count();
 }
 
+void HeaderView::doubleclick_event(MouseEvent& event)
+{
+    if (!model())
+        return;
+
+    int section_count = this->section_count();
+    for (int i = 0; i < section_count; ++i) {
+        if (section_resize_grabbable_rect(i).contains(event.position())) {
+            if (on_resize_doubleclick)
+                on_resize_doubleclick(i);
+        }
+    }
+}
+
 void HeaderView::mousedown_event(MouseEvent& event)
 {
+    if (event.button() != GUI::MouseButton::Left)
+        return;
+
     if (!model())
         return;
 
@@ -153,7 +150,7 @@ void HeaderView::mousemove_event(MouseEvent& event)
         int new_size = m_section_resize_original_width + delta.primary_offset_for_orientation(m_orientation);
         if (new_size <= minimum_column_size)
             new_size = minimum_column_size;
-        ASSERT(m_resizing_section >= 0 && m_resizing_section < model()->column_count());
+        VERIFY(m_resizing_section >= 0 && m_resizing_section < model()->column_count());
         set_section_size(m_resizing_section, new_size);
         return;
     }
@@ -317,7 +314,7 @@ Menu& HeaderView::ensure_context_menu()
     // FIXME: This menu needs to be rebuilt if the model is swapped out,
     //        or if the column count/names change.
     if (!m_context_menu) {
-        ASSERT(model());
+        VERIFY(model());
         m_context_menu = Menu::construct();
 
         if (m_orientation == Gfx::Orientation::Vertical) {
@@ -359,6 +356,28 @@ Gfx::TextAlignment HeaderView::section_alignment(int section) const
 void HeaderView::set_section_alignment(int section, Gfx::TextAlignment alignment)
 {
     section_data(section).alignment = alignment;
+}
+
+void HeaderView::set_default_section_size(int section, int size)
+{
+    if (orientation() == Gfx::Orientation::Horizontal && size < minimum_column_size)
+        size = minimum_column_size;
+
+    auto& data = section_data(section);
+    if (data.default_size == size)
+        return;
+    data.default_size = size;
+    data.has_initialized_default_size = true;
+}
+
+int HeaderView::default_section_size(int section) const
+{
+    return section_data(section).default_size;
+}
+
+bool HeaderView::is_default_section_size_initialized(int section) const
+{
+    return section_data(section).has_initialized_default_size;
 }
 
 bool HeaderView::is_section_visible(int section) const

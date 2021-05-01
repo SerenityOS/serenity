@@ -1,33 +1,12 @@
 /*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "RegexLexer.h"
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
-#include <AK/LogStream.h>
 #include <stdio.h>
 
 namespace regex {
@@ -41,7 +20,7 @@ const char* Token::name(const TokenType type)
         ENUMERATE_REGEX_TOKENS
 #undef __ENUMERATE_REGEX_TOKEN
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
         return "<Unknown>";
     }
 }
@@ -68,7 +47,7 @@ void Lexer::back(size_t offset)
     if (offset == m_position + 1)
         offset = m_position; // 'position == 0' occurs twice.
 
-    ASSERT(offset <= m_position);
+    VERIFY(offset <= m_position);
     if (!offset)
         return;
     m_position -= offset;
@@ -122,7 +101,7 @@ Token Lexer::next()
     };
 
     auto commit_token = [&](auto type) -> Token& {
-        ASSERT(token_start_position + m_previous_position - token_start_position + 1 <= m_source.length());
+        VERIFY(token_start_position + m_previous_position - token_start_position + 1 <= m_source.length());
         auto substring = m_source.substring_view(token_start_position, m_previous_position - token_start_position + 1);
         m_current_token = Token(type, token_start_position, substring);
         return m_current_token;

@@ -1,38 +1,17 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
-#include <AK/LogStream.h>
-#include <AK/StdLibExtras.h>
+#include <AK/Format.h>
 #include <AK/Types.h>
 #ifdef KERNEL
-#    include <Kernel/Arch/i386/CPU.h>
+#    include <Kernel/Arch/x86/CPU.h>
 #endif
 
 namespace AK {
@@ -73,42 +52,42 @@ public:
     ALWAYS_INLINE NonnullRefPtr(const T& object)
         : m_bits((FlatPtr)&object)
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
         const_cast<T&>(object).ref();
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(const U& object)
         : m_bits((FlatPtr) static_cast<const T*>(&object))
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
         const_cast<T&>(static_cast<const T&>(object)).ref();
     }
     ALWAYS_INLINE NonnullRefPtr(AdoptTag, T& object)
         : m_bits((FlatPtr)&object)
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
     }
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr&& other)
         : m_bits((FlatPtr)&other.leak_ref())
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other)
         : m_bits((FlatPtr)&other.leak_ref())
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
     }
     ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr& other)
         : m_bits((FlatPtr)other.add_ref())
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
     }
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr<U>& other)
         : m_bits((FlatPtr)other.add_ref())
     {
-        ASSERT(!(m_bits & 1));
+        VERIFY(!(m_bits & 1));
     }
     ALWAYS_INLINE ~NonnullRefPtr()
     {
@@ -171,7 +150,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE T& leak_ref()
     {
         T* ptr = exchange(nullptr);
-        ASSERT(ptr);
+        VERIFY(ptr);
         return *ptr;
     }
 
@@ -254,7 +233,7 @@ private:
     ALWAYS_INLINE T* as_nonnull_ptr() const
     {
         T* ptr = (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
-        ASSERT(ptr);
+        VERIFY(ptr);
         return ptr;
     }
 
@@ -274,7 +253,7 @@ private:
             Kernel::Processor::wait_check();
 #endif
         }
-        ASSERT(!(bits & 1));
+        VERIFY(!(bits & 1));
         f((T*)bits);
         m_bits.store(bits, AK::MemoryOrder::memory_order_release);
     }
@@ -287,7 +266,7 @@ private:
 
     ALWAYS_INLINE T* exchange(T* new_ptr)
     {
-        ASSERT(!((FlatPtr)new_ptr & 1));
+        VERIFY(!((FlatPtr)new_ptr & 1));
 #ifdef KERNEL
         // We don't want to be pre-empted while we have the lock bit set
         Kernel::ScopedCritical critical;
@@ -302,7 +281,7 @@ private:
             Kernel::Processor::wait_check();
 #endif
         }
-        ASSERT(!(expected & 1));
+        VERIFY(!(expected & 1));
         return (T*)expected;
     }
 
@@ -335,15 +314,9 @@ private:
 };
 
 template<typename T>
-inline NonnullRefPtr<T> adopt(T& object)
+inline NonnullRefPtr<T> adopt_ref(T& object)
 {
     return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, object);
-}
-
-template<typename T>
-inline const LogStream& operator<<(const LogStream& stream, const NonnullRefPtr<T>& value)
-{
-    return stream << value.ptr();
 }
 
 template<typename T>
@@ -362,5 +335,5 @@ inline void swap(NonnullRefPtr<T>& a, NonnullRefPtr<U>& b)
 
 }
 
-using AK::adopt;
+using AK::adopt_ref;
 using AK::NonnullRefPtr;

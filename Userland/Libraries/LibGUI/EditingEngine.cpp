@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGUI/EditingEngine.h>
@@ -36,13 +16,13 @@ EditingEngine::~EditingEngine()
 
 void EditingEngine::attach(TextEditor& editor)
 {
-    ASSERT(!m_editor);
+    VERIFY(!m_editor);
     m_editor = editor;
 }
 
 void EditingEngine::detach()
 {
-    ASSERT(m_editor);
+    VERIFY(m_editor);
     m_editor = nullptr;
 }
 
@@ -59,14 +39,16 @@ bool EditingEngine::on_key(const KeyEvent& event)
             }
         }
         if (event.ctrl()) {
-            move_to_previous_span(event);
+            m_editor->update_selection(event.shift());
+            move_to_previous_span();
             if (event.shift() && m_editor->selection()->start().is_valid()) {
                 m_editor->selection()->set_end(m_editor->cursor());
                 m_editor->did_update_selection();
             }
             return true;
         }
-        move_one_left(event);
+        m_editor->update_selection(event.shift());
+        move_one_left();
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
             m_editor->did_update_selection();
@@ -88,7 +70,8 @@ bool EditingEngine::on_key(const KeyEvent& event)
             move_to_next_span(event);
             return true;
         }
-        move_one_right(event);
+        m_editor->update_selection(event.shift());
+        move_one_right();
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
             m_editor->did_update_selection();
@@ -97,6 +80,9 @@ bool EditingEngine::on_key(const KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Up) {
+        if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
+            m_editor->update_selection(event.shift());
+        }
         move_one_up(event);
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
@@ -106,6 +92,9 @@ bool EditingEngine::on_key(const KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Down) {
+        if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
+            m_editor->update_selection(event.shift());
+        }
         move_one_down(event);
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
@@ -116,14 +105,14 @@ bool EditingEngine::on_key(const KeyEvent& event)
 
     if (event.key() == KeyCode::Key_Home) {
         if (event.ctrl()) {
-            m_editor->toggle_selection_if_needed_for_event(event.shift());
             move_to_first_line();
             if (event.shift() && m_editor->selection()->start().is_valid()) {
                 m_editor->selection()->set_end(m_editor->cursor());
                 m_editor->did_update_selection();
             }
         } else {
-            move_to_line_beginning(event);
+            m_editor->update_selection(event.shift());
+            move_to_line_beginning();
             if (event.shift() && m_editor->selection()->start().is_valid()) {
                 m_editor->selection()->set_end(m_editor->cursor());
                 m_editor->did_update_selection();
@@ -134,14 +123,14 @@ bool EditingEngine::on_key(const KeyEvent& event)
 
     if (event.key() == KeyCode::Key_End) {
         if (event.ctrl()) {
-            m_editor->toggle_selection_if_needed_for_event(event.shift());
             move_to_last_line();
             if (event.shift() && m_editor->selection()->start().is_valid()) {
                 m_editor->selection()->set_end(m_editor->cursor());
                 m_editor->did_update_selection();
             }
         } else {
-            move_to_line_end(event);
+            m_editor->update_selection(event.shift());
+            move_to_line_end();
             if (event.shift() && m_editor->selection()->start().is_valid()) {
                 m_editor->selection()->set_end(m_editor->cursor());
                 m_editor->did_update_selection();
@@ -151,7 +140,10 @@ bool EditingEngine::on_key(const KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_PageUp) {
-        move_page_up(event);
+        if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
+            m_editor->update_selection(event.shift());
+        }
+        move_page_up();
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
             m_editor->did_update_selection();
@@ -160,7 +152,10 @@ bool EditingEngine::on_key(const KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_PageDown) {
-        move_page_down(event);
+        if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
+            m_editor->update_selection(event.shift());
+        }
+        move_page_down();
         if (event.shift() && m_editor->selection()->start().is_valid()) {
             m_editor->selection()->set_end(m_editor->cursor());
             m_editor->did_update_selection();
@@ -171,21 +166,19 @@ bool EditingEngine::on_key(const KeyEvent& event)
     return false;
 }
 
-void EditingEngine::move_one_left(const KeyEvent& event)
+void EditingEngine::move_one_left()
 {
     if (m_editor->cursor().column() > 0) {
         int new_column = m_editor->cursor().column() - 1;
-        m_editor->toggle_selection_if_needed_for_event(event.shift());
         m_editor->set_cursor(m_editor->cursor().line(), new_column);
     } else if (m_editor->cursor().line() > 0) {
         int new_line = m_editor->cursor().line() - 1;
         int new_column = m_editor->lines()[new_line].length();
-        m_editor->toggle_selection_if_needed_for_event(event.shift());
         m_editor->set_cursor(new_line, new_column);
     }
 }
 
-void EditingEngine::move_one_right(const KeyEvent& event)
+void EditingEngine::move_one_right()
 {
     int new_line = m_editor->cursor().line();
     int new_column = m_editor->cursor().column();
@@ -196,11 +189,10 @@ void EditingEngine::move_one_right(const KeyEvent& event)
         new_line = m_editor->cursor().line() + 1;
         new_column = 0;
     }
-    m_editor->toggle_selection_if_needed_for_event(event.shift());
     m_editor->set_cursor(new_line, new_column);
 }
 
-void EditingEngine::move_to_previous_span(const KeyEvent& event)
+void EditingEngine::move_to_previous_span()
 {
     TextPosition new_cursor;
     if (m_editor->document().has_spans()) {
@@ -214,7 +206,6 @@ void EditingEngine::move_to_previous_span(const KeyEvent& event)
     } else {
         new_cursor = m_editor->document().first_word_break_before(m_editor->cursor(), true);
     }
-    m_editor->toggle_selection_if_needed_for_event(event.shift());
     m_editor->set_cursor(new_cursor);
 }
 
@@ -232,7 +223,6 @@ void EditingEngine::move_to_next_span(const KeyEvent& event)
     } else {
         new_cursor = m_editor->document().first_word_break_after(m_editor->cursor());
     }
-    m_editor->toggle_selection_if_needed_for_event(event.shift());
     m_editor->set_cursor(new_cursor);
     if (event.shift() && m_editor->selection()->start().is_valid()) {
         m_editor->selection()->set_end(m_editor->cursor());
@@ -240,11 +230,10 @@ void EditingEngine::move_to_next_span(const KeyEvent& event)
     }
 }
 
-void EditingEngine::move_to_line_beginning(const KeyEvent& event)
+void EditingEngine::move_to_line_beginning()
 {
     TextPosition new_cursor;
-    m_editor->toggle_selection_if_needed_for_event(event.shift());
-    if (m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->is_wrapping_enabled()) {
         // FIXME: Replicate the first_nonspace_column behavior in wrapping mode.
         auto home_position = m_editor->cursor_content_rect().location().translated(-m_editor->width(), 0);
         new_cursor = m_editor->text_position_at_content_position(home_position);
@@ -259,28 +248,27 @@ void EditingEngine::move_to_line_beginning(const KeyEvent& event)
     m_editor->set_cursor(new_cursor);
 }
 
-void EditingEngine::move_to_line_end(const KeyEvent& event)
+void EditingEngine::move_to_line_end()
 {
     TextPosition new_cursor;
-    if (m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->is_wrapping_enabled()) {
         auto end_position = m_editor->cursor_content_rect().location().translated(m_editor->width(), 0);
         new_cursor = m_editor->text_position_at_content_position(end_position);
     } else {
         new_cursor = { m_editor->cursor().line(), m_editor->current_line().length() };
     }
-    m_editor->toggle_selection_if_needed_for_event(event.shift());
     m_editor->set_cursor(new_cursor);
 }
 
 void EditingEngine::move_one_up(const KeyEvent& event)
 {
-    if (m_editor->cursor().line() > 0 || m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
         if (event.ctrl() && event.shift()) {
             move_selected_lines_up();
             return;
         }
         TextPosition new_cursor;
-        if (m_editor->is_line_wrapping_enabled()) {
+        if (m_editor->is_wrapping_enabled()) {
             auto position_above = m_editor->cursor_content_rect().location().translated(0, -m_editor->line_height());
             new_cursor = m_editor->text_position_at_content_position(position_above);
         } else {
@@ -288,21 +276,19 @@ void EditingEngine::move_one_up(const KeyEvent& event)
             size_t new_column = min(m_editor->cursor().column(), m_editor->line(new_line).length());
             new_cursor = { new_line, new_column };
         }
-        m_editor->toggle_selection_if_needed_for_event(event.shift());
         m_editor->set_cursor(new_cursor);
     }
 };
 
 void EditingEngine::move_one_down(const KeyEvent& event)
 {
-    if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
         if (event.ctrl() && event.shift()) {
             move_selected_lines_down();
             return;
         }
         TextPosition new_cursor;
-        if (m_editor->is_line_wrapping_enabled()) {
-            new_cursor = m_editor->text_position_at_content_position(m_editor->cursor_content_rect().location().translated(0, m_editor->line_height()));
+        if (m_editor->is_wrapping_enabled()) {
             auto position_below = m_editor->cursor_content_rect().location().translated(0, m_editor->line_height());
             new_cursor = m_editor->text_position_at_content_position(position_below);
         } else {
@@ -310,18 +296,17 @@ void EditingEngine::move_one_down(const KeyEvent& event)
             size_t new_column = min(m_editor->cursor().column(), m_editor->line(new_line).length());
             new_cursor = { new_line, new_column };
         }
-        m_editor->toggle_selection_if_needed_for_event(event.shift());
         m_editor->set_cursor(new_cursor);
     }
 };
 
-void EditingEngine::move_up(const KeyEvent& event, double page_height_factor)
+void EditingEngine::move_up(double page_height_factor)
 {
-    if (m_editor->cursor().line() > 0 || m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
         int pixels = (int)(m_editor->visible_content_rect().height() * page_height_factor);
 
         TextPosition new_cursor;
-        if (m_editor->is_line_wrapping_enabled()) {
+        if (m_editor->is_wrapping_enabled()) {
             auto position_above = m_editor->cursor_content_rect().location().translated(0, -pixels);
             new_cursor = m_editor->text_position_at_content_position(position_above);
         } else {
@@ -330,17 +315,16 @@ void EditingEngine::move_up(const KeyEvent& event, double page_height_factor)
             size_t new_column = min(m_editor->cursor().column(), m_editor->line(new_line).length());
             new_cursor = { new_line, new_column };
         }
-        m_editor->toggle_selection_if_needed_for_event(event.shift());
         m_editor->set_cursor(new_cursor);
     }
 };
 
-void EditingEngine::move_down(const KeyEvent& event, double page_height_factor)
+void EditingEngine::move_down(double page_height_factor)
 {
-    if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_line_wrapping_enabled()) {
+    if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
         int pixels = (int)(m_editor->visible_content_rect().height() * page_height_factor);
         TextPosition new_cursor;
-        if (m_editor->is_line_wrapping_enabled()) {
+        if (m_editor->is_wrapping_enabled()) {
             auto position_below = m_editor->cursor_content_rect().location().translated(0, pixels);
             new_cursor = m_editor->text_position_at_content_position(position_below);
         } else {
@@ -348,19 +332,18 @@ void EditingEngine::move_down(const KeyEvent& event, double page_height_factor)
             size_t new_column = min(m_editor->cursor().column(), m_editor->lines()[new_line].length());
             new_cursor = { new_line, new_column };
         }
-        m_editor->toggle_selection_if_needed_for_event(event.shift());
         m_editor->set_cursor(new_cursor);
     };
 }
 
-void EditingEngine::move_page_up(const KeyEvent& event)
+void EditingEngine::move_page_up()
 {
-    move_up(event, 1);
+    move_up(1);
 };
 
-void EditingEngine::move_page_down(const KeyEvent& event)
+void EditingEngine::move_page_down()
 {
-    move_down(event, 1);
+    move_down(1);
 };
 
 void EditingEngine::move_to_first_line()
@@ -450,7 +433,7 @@ TextPosition EditingEngine::find_beginning_of_next_word()
                 has_seen_whitespace = true;
         }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void EditingEngine::move_to_beginning_of_next_word()
@@ -478,6 +461,10 @@ TextPosition EditingEngine::find_end_of_next_word()
     bool is_first_iteration = true;
     auto& lines = m_editor->lines();
     auto cursor = m_editor->cursor();
+
+    if ((lines.at(cursor.line()).length() - cursor.column()) <= 1)
+        return { cursor.line(), cursor.column() };
+
     for (size_t line_index = cursor.line(); line_index < lines.size(); line_index++) {
         auto& line = lines.at(line_index);
 
@@ -516,12 +503,11 @@ TextPosition EditingEngine::find_end_of_next_word()
             is_first_iteration = false;
         }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void EditingEngine::move_to_end_of_next_word()
 {
-
     m_editor->set_cursor(find_end_of_next_word());
 }
 
@@ -584,7 +570,7 @@ TextPosition EditingEngine::find_end_of_previous_word()
                 has_seen_whitespace = true;
         }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void EditingEngine::move_to_end_of_previous_word()
@@ -606,6 +592,10 @@ TextPosition EditingEngine::find_beginning_of_previous_word()
     bool is_first_iteration = true;
     auto& lines = m_editor->lines();
     auto cursor = m_editor->cursor();
+
+    if ((lines.at(cursor.line()).length() - cursor.column()) <= 1)
+        return { cursor.line(), cursor.column() };
+
     for (size_t line_index = cursor.line(); (int)line_index >= 0; line_index--) {
         auto& line = lines.at(line_index);
 
@@ -648,7 +638,7 @@ TextPosition EditingEngine::find_beginning_of_previous_word()
             is_first_iteration = false;
         }
     }
-    ASSERT_NOT_REACHED();
+    VERIFY_NOT_REACHED();
 }
 
 void EditingEngine::move_to_beginning_of_previous_word()
@@ -689,7 +679,7 @@ void EditingEngine::move_selected_lines_down()
     get_selection_line_boundaries(first_line, last_line);
 
     auto& lines = m_editor->document().lines();
-    ASSERT(lines.size() != 0);
+    VERIFY(lines.size() != 0);
     if (last_line >= lines.size() - 1)
         return;
 

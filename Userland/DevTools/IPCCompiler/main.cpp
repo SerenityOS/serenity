@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -57,7 +37,7 @@ struct Message {
 
 struct Endpoint {
     String name;
-    int magic;
+    u32 magic;
     Vector<Message> messages;
 };
 
@@ -83,7 +63,7 @@ int main(int argc, char** argv)
         if (lexer.peek() != ch)
             warnln("assert_specific: wanted '{}', but got '{}' at index {}", ch, lexer.peek(), lexer.tell());
         bool saw_expected = lexer.consume_specific(ch);
-        ASSERT(saw_expected);
+        VERIFY(saw_expected);
     };
 
     auto consume_whitespace = [&] {
@@ -153,7 +133,7 @@ int main(int argc, char** argv)
         else if (type == '|')
             message.is_synchronous = false;
         else
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
 
         consume_whitespace();
 
@@ -184,12 +164,32 @@ int main(int argc, char** argv)
         lexer.consume_specific("endpoint");
         consume_whitespace();
         endpoints.last().name = lexer.consume_while([](char ch) { return !isspace(ch); });
+        endpoints.last().magic = Traits<String>::hash(endpoints.last().name);
         consume_whitespace();
-        assert_specific('=');
-        consume_whitespace();
-        auto magic_string = lexer.consume_while([](char ch) { return !isspace(ch) && ch != '{'; });
-        endpoints.last().magic = magic_string.to_int().value();
-        consume_whitespace();
+        if (lexer.peek() == '[') {
+            // This only supports a single parameter for now, and adding multiple
+            // endpoint parameter support is left as an exercise for the reader. :^)
+
+            lexer.consume_specific('[');
+            consume_whitespace();
+
+            auto parameter = lexer.consume_while([](char ch) { return !isspace(ch) && ch != '='; });
+            consume_whitespace();
+            assert_specific('=');
+            consume_whitespace();
+
+            if (parameter == "magic") {
+                // "magic" overwrites the default magic with a hardcoded one.
+                auto magic_string = lexer.consume_while([](char ch) { return !isspace(ch) && ch != ']'; });
+                endpoints.last().magic = magic_string.to_uint().value();
+            } else {
+                warnln("parse_endpoint: unknown parameter '{}' passed", parameter);
+                VERIFY_NOT_REACHED();
+            }
+
+            assert_specific(']');
+            consume_whitespace();
+        }
         assert_specific('{');
         parse_messages();
         assert_specific('}');
@@ -312,7 +312,7 @@ public:
     @message.constructor@
     virtual ~@message.name@() override {}
 
-    virtual i32 endpoint_magic() const override { return @endpoint.magic@; }
+    virtual u32 endpoint_magic() const override { return @endpoint.magic@; }
     virtual i32 message_id() const override { return (int)MessageID::@message.name@; }
     static i32 static_message_id() { return (int)MessageID::@message.name@; }
     virtual const char* message_name() const override { return "@endpoint.name@::@message.name@"; }
@@ -432,15 +432,15 @@ public:
     @endpoint.name@Endpoint() { }
     virtual ~@endpoint.name@Endpoint() override { }
 
-    static int static_magic() { return @endpoint.magic@; }
-    virtual int magic() const override { return @endpoint.magic@; }
+    static u32 static_magic() { return @endpoint.magic@; }
+    virtual u32 magic() const override { return @endpoint.magic@; }
     static String static_name() { return "@endpoint.name@"; }
     virtual String name() const override { return "@endpoint.name@"; }
 
     static OwnPtr<IPC::Message> decode_message(ReadonlyBytes buffer, int sockfd)
     {
         InputMemoryStream stream { buffer };
-        i32 message_endpoint_magic = 0;
+        u32 message_endpoint_magic = 0;
         stream >> message_endpoint_magic;
         if (stream.handle_any_error()) {
 )~~~");
@@ -457,7 +457,7 @@ public:
 )~~~");
 #if GENERATE_DEBUG_CODE
         endpoint_generator.append(R"~~~(
-            dbgln("Endpoint magic number message_endpoint_magic != @endpoint.magic@");
+            dbgln("@endpoint.name@: Endpoint magic number message_endpoint_magic != @endpoint.magic@, not my message! (the other endpoint may have handled it)");
 )~~~");
 #endif
         endpoint_generator.append(R"~~~(

@@ -1,13 +1,10 @@
-diff --git a/src/renderer/renderer.c b/src/renderer/renderer.c
-index 90cfee9..4e36ed2 100644
---- a/src/renderer/renderer.c
-+++ b/src/renderer/renderer.c
-@@ -104,7 +104,7 @@ struct texture *renderFrame(struct renderer *r) {
++++ c-ray-master/src/renderer/renderer.c	2021-04-16 13:21:09.364524790 -0700
+@@ -138,7 +138,7 @@
+ 			float sps = (1000000.0f / usPerRay) * (r->prefs.threadCount + remoteThreads);
  			char rem[64];
- 			smartTime((msecTillFinished) / r->prefs.threadCount, rem);
- 			float completion = ((float)completedSamples / totalTileSamples) * 100;
+ 			smartTime((msecTillFinished) / (r->prefs.threadCount + remoteThreads), rem);
 -			logr(info, "[%s%.0f%%%s] μs/path: %.02f, etf: %s, %.02lfMs/s %s        \r",
 +			logr(info, "[%s%.0f%%%s] us/path: %.02f, etf: %s, %.02lfMs/s %s        \r",
  				 KBLU,
- 				 completion,
- 				 KNRM,
+ 				 interactive ? ((float)r->state.finishedPasses / (float)r->prefs.sampleCount) * 100.0f :
+ 							   ((float)r->state.finishedTileCount / (float)r->state.tileCount) * 100.0f,

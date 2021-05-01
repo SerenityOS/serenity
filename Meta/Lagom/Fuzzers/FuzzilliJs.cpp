@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
@@ -32,12 +12,11 @@
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <signal.h>
+#include <errno.h>
 
 #include <stddef.h>
 #include <stdint.h>
 
-#include <string>
 #include <sys/mman.h>
 
 #include <fcntl.h>
@@ -136,16 +115,16 @@ extern "C" void __sanitizer_cov_trace_pc_guard(uint32_t* guard)
 // END FUZZING CODE
 //
 
-class TestRunnerGlobalObject : public JS::GlobalObject {
+class TestRunnerGlobalObject final : public JS::GlobalObject {
+    JS_OBJECT(TestRunnerGlobalObject, JS::GlobalObject);
+
 public:
     TestRunnerGlobalObject();
     virtual ~TestRunnerGlobalObject() override;
 
-    virtual void initialize() override;
+    virtual void initialize_global_object() override;
 
 private:
-    virtual const char* class_name() const override { return "TestRunnerGlobalObject"; }
-
     JS_DECLARE_NATIVE_FUNCTION(fuzzilli);
 };
 
@@ -175,7 +154,7 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
             *((int*)0x41414141) = 0x1337;
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     } else if (operation == "FUZZILLI_PRINT") {
@@ -195,9 +174,9 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
     return JS::js_undefined();
 }
 
-void TestRunnerGlobalObject::initialize()
+void TestRunnerGlobalObject::initialize_global_object()
 {
-    JS::GlobalObject::initialize();
+    Base::initialize_global_object();
     define_property("global", this, JS::Attribute::Enumerable);
     define_native_function("fuzzilli", fuzzilli, 2);
 }
@@ -208,33 +187,33 @@ int main(int, char**)
 
     char helo[] = "HELO";
     if (write(REPRL_CWFD, helo, 4) != 4 || read(REPRL_CRFD, helo, 4) != 4) {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
-    ASSERT(memcmp(helo, "HELO", 4) == 0);
+    VERIFY(memcmp(helo, "HELO", 4) == 0);
     reprl_input = (char*)mmap(0, REPRL_MAX_DATA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, REPRL_DRFD, 0);
-    ASSERT(reprl_input != MAP_FAILED);
+    VERIFY(reprl_input != MAP_FAILED);
 
     auto vm = JS::VM::create();
     auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>(*vm);
 
     while (true) {
         unsigned action;
-        ASSERT(read(REPRL_CRFD, &action, 4) == 4);
-        ASSERT(action == 'cexe');
+        VERIFY(read(REPRL_CRFD, &action, 4) == 4);
+        VERIFY(action == 'cexe');
 
         size_t script_size;
-        ASSERT(read(REPRL_CRFD, &script_size, 8) == 8);
-        ASSERT(script_size < REPRL_MAX_DATA_SIZE);
+        VERIFY(read(REPRL_CRFD, &script_size, 8) == 8);
+        VERIFY(script_size < REPRL_MAX_DATA_SIZE);
         ByteBuffer data_buffer;
         if (data_buffer.size() < script_size)
             data_buffer.grow(script_size - data_buffer.size());
-        ASSERT(data_buffer.size() >= script_size);
+        VERIFY(data_buffer.size() >= script_size);
         memcpy(data_buffer.data(), reprl_input, script_size);
 
         int result = 0;
 
-        auto js = AK::StringView(static_cast<const unsigned char*>(data_buffer.data()), script_size);
+        auto js = StringView(static_cast<const unsigned char*>(data_buffer.data()), script_size);
 
         auto lexer = JS::Lexer(js);
         auto parser = JS::Parser(lexer);
@@ -253,7 +232,7 @@ int main(int, char**)
         fflush(stderr);
 
         int status = (result & 0xff) << 8;
-        ASSERT(write(REPRL_CWFD, &status, 4) == 4);
+        VERIFY(write(REPRL_CWFD, &status, 4) == 4);
         __sanitizer_cov_reset_edgeguards();
     }
 

@@ -8,7 +8,9 @@
 # remote on localhost:1234. So point our debugger there, and inform
 # the debugger which binary to load symbols, etc from.
 #
-$SERENITY_KERNEL_DEBUGGER \
-    -ex "file $(pwd)/kernel" \
+exec $SERENITY_KERNEL_DEBUGGER \
+    -ex "file $(dirname "$0")/../Build/${SERENITY_ARCH:-i686}/Kernel/Kernel" \
     -ex 'set arch i386:intel' \
-    -ex 'target remote localhost:1234'
+    -ex 'target remote localhost:1234' \
+    -ex "source $(dirname "$0")/serenity_gdb.py" \
+    "$@"

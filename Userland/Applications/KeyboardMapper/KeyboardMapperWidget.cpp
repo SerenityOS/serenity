@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "KeyboardMapperWidget.h"
@@ -31,6 +11,7 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RadioButton.h>
+#include <LibKeyboard/CharacterMap.h>
 #include <LibKeyboard/CharacterMapFile.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -66,12 +47,12 @@ void KeyboardMapperWidget::create_frame()
 
         tmp_button.on_click = [this, &tmp_button]() {
             String value;
-            if (GUI::InputBox::show(value, window(), "New Character:", "Select Character") == GUI::InputBox::ExecOK) {
+            if (GUI::InputBox::show(window(), value, "New Character:", "Select Character") == GUI::InputBox::ExecOK) {
                 int i = m_keys.find_first_index(&tmp_button).value_or(0);
-                ASSERT(i > 0);
+                VERIFY(i > 0);
 
                 auto index = keys[i].map_index;
-                ASSERT(index > 0);
+                VERIFY(index > 0);
 
                 tmp_button.set_text(value);
                 u32* map;
@@ -87,7 +68,7 @@ void KeyboardMapperWidget::create_frame()
                 } else if (m_current_map_name == "shift_altgr_map") {
                     map = m_character_map.shift_altgr_map;
                 } else {
-                    ASSERT_NOT_REACHED();
+                    VERIFY_NOT_REACHED();
                 }
 
                 if (value.length() == 0)
@@ -111,7 +92,7 @@ void KeyboardMapperWidget::create_frame()
     // Map Selection
     m_map_group = bottom_widget.add<GUI::Widget>();
     m_map_group->set_layout<GUI::HorizontalBoxLayout>();
-    m_map_group->set_fixed_width(250);
+    m_map_group->set_fixed_width(450);
 
     auto& radio_map = m_map_group->add<GUI::RadioButton>("Default");
     radio_map.set_name("map");
@@ -140,24 +121,32 @@ void KeyboardMapperWidget::create_frame()
     };
 
     bottom_widget.layout()->add_spacer();
-
-    auto& ok_button = bottom_widget.add<GUI::Button>();
-    ok_button.set_text("Save");
-    ok_button.set_fixed_width(80);
-    ok_button.on_click = [this](auto) {
-        save();
-    };
 }
 
-void KeyboardMapperWidget::load_from_file(String file_name)
+void KeyboardMapperWidget::load_from_file(String filename)
 {
-    auto result = Keyboard::CharacterMapFile::load_from_file(file_name);
-    if (!result.has_value()) {
-        ASSERT_NOT_REACHED();
+    auto result = Keyboard::CharacterMapFile::load_from_file(filename);
+    VERIFY(result.has_value());
+
+    m_filename = filename;
+    m_character_map = result.value();
+    set_current_map("map");
+
+    for (Widget* widget : m_map_group->child_widgets()) {
+        auto radio_button = (GUI::RadioButton*)widget;
+        radio_button->set_checked(radio_button->name() == "map");
     }
 
-    m_file_name = file_name;
-    m_character_map = result.value();
+    update_window_title();
+}
+
+void KeyboardMapperWidget::load_from_system()
+{
+    auto result = Keyboard::CharacterMap::fetch_system_map();
+    VERIFY(!result.is_error());
+
+    m_filename = String::formatted("/res/keymaps/{}.json", result.value().character_map_name());
+    m_character_map = result.value().character_map_data();
     set_current_map("map");
 
     for (Widget* widget : m_map_group->child_widgets()) {
@@ -170,18 +159,19 @@ void KeyboardMapperWidget::load_from_file(String file_name)
 
 void KeyboardMapperWidget::save()
 {
-    save_to_file(m_file_name);
+    save_to_file(m_filename);
 }
 
-void KeyboardMapperWidget::save_to_file(const StringView& file_name)
+void KeyboardMapperWidget::save_to_file(const StringView& filename)
 {
     JsonObject map_json;
 
     auto add_array = [&](String name, u32* values) {
         JsonArray items;
         for (int i = 0; i < 90; i++) {
-            AK::StringBuilder sb;
-            sb.append(values[i]);
+            StringBuilder sb;
+            if (values[i])
+                sb.append_code_point(values[i]);
 
             JsonValue val(sb.to_string());
             items.append(move(val));
@@ -198,12 +188,12 @@ void KeyboardMapperWidget::save_to_file(const StringView& file_name)
     // Write to file.
     String file_content = map_json.to_string();
 
-    auto file = Core::File::construct(file_name);
+    auto file = Core::File::construct(filename);
     file->open(Core::IODevice::WriteOnly);
     if (!file->is_open()) {
         StringBuilder sb;
         sb.append("Failed to open ");
-        sb.append(file_name);
+        sb.append(filename);
         sb.append(" for write. Error: ");
         sb.append(file->error_string());
 
@@ -223,7 +213,7 @@ void KeyboardMapperWidget::save_to_file(const StringView& file_name)
     }
 
     m_modified = false;
-    m_file_name = file_name;
+    m_filename = filename;
     update_window_title();
 }
 
@@ -264,7 +254,7 @@ void KeyboardMapperWidget::set_current_map(const String current_map)
     } else if (m_current_map_name == "shift_altgr_map") {
         map = m_character_map.shift_altgr_map;
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     for (unsigned k = 0; k < KEY_COUNT; k++) {
@@ -272,7 +262,7 @@ void KeyboardMapperWidget::set_current_map(const String current_map)
         if (index == 0)
             continue;
 
-        AK::StringBuilder sb;
+        StringBuilder sb;
         sb.append_code_point(map[index]);
 
         m_keys.at(k)->set_text(sb.to_string());
@@ -284,7 +274,7 @@ void KeyboardMapperWidget::set_current_map(const String current_map)
 void KeyboardMapperWidget::update_window_title()
 {
     StringBuilder sb;
-    sb.append(m_file_name);
+    sb.append(m_filename);
     if (m_modified)
         sb.append(" (*)");
     sb.append(" - KeyboardMapper");

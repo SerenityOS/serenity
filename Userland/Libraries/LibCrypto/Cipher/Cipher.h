@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -59,7 +39,7 @@ public:
     {
     }
 
-    static size_t block_size() { ASSERT_NOT_REACHED(); }
+    static size_t block_size() { VERIFY_NOT_REACHED(); }
 
     virtual ReadonlyBytes bytes() const = 0;
 
@@ -74,11 +54,11 @@ public:
     template<typename T>
     void put(size_t offset, T value)
     {
-        ASSERT(offset + sizeof(T) <= bytes().size());
+        VERIFY(offset + sizeof(T) <= bytes().size());
         auto* ptr = bytes().offset_pointer(offset);
         auto index { 0 };
 
-        ASSERT(sizeof(T) <= 4);
+        VERIFY(sizeof(T) <= 4);
 
         if constexpr (sizeof(T) > 3)
             ptr[index++] = (u8)(value >> 24);
@@ -91,6 +71,9 @@ public:
 
         ptr[index] = (u8)value;
     }
+
+protected:
+    virtual ~CipherBlock() = default;
 
 private:
     virtual Bytes bytes() = 0;
@@ -131,6 +114,9 @@ public:
     virtual void decrypt_block(const BlockType& in, BlockType& out) = 0;
 
     virtual String class_name() const = 0;
+
+protected:
+    virtual ~Cipher() = default;
 
 private:
     PaddingMode m_padding_mode;

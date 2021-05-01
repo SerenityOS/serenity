@@ -1,32 +1,11 @@
 /*
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "AK/ByteBuffer.h"
 #include <AK/Checked.h>
-#include <AK/LogStream.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/File.h>
@@ -34,6 +13,7 @@
 #include <LibTTF/Font.h>
 #include <LibTTF/Glyf.h>
 #include <LibTTF/Tables.h>
+#include <LibTextCodec/Decoder.h>
 #include <math.h>
 
 namespace TTF {
@@ -116,7 +96,7 @@ IndexToLocFormat Head::index_to_loc_format() const
     case 1:
         return IndexToLocFormat::Offset32;
     default:
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -174,9 +154,39 @@ Optional<Hmtx> Hmtx::from_slice(const ReadonlyBytes& slice, u32 num_glyphs, u32 
     return Hmtx(slice, num_glyphs, number_of_h_metrics);
 }
 
+Optional<Name> Name::from_slice(const ReadonlyBytes& slice)
+{
+    return Name(slice);
+}
+
+String Name::string_for_id(NameId id) const
+{
+    auto num_entries = be_u16(m_slice.offset_pointer(2));
+    auto string_offset = be_u16(m_slice.offset_pointer(4));
+
+    for (int i = 0; i < num_entries; ++i) {
+        auto this_id = be_u16(m_slice.offset_pointer(6 + i * 12 + 6));
+        if (this_id != (u16)id)
+            continue;
+
+        auto platform = be_u16(m_slice.offset_pointer(6 + i * 12 + 0));
+        auto length = be_u16(m_slice.offset_pointer(6 + i * 12 + 8));
+        auto offset = be_u16(m_slice.offset_pointer(6 + i * 12 + 10));
+
+        if (platform == (u16)Platform::Windows) {
+            static auto& decoder = *TextCodec::decoder_for("utf-16be");
+            return decoder.to_utf8(StringView { (const char*)m_slice.offset_pointer(string_offset + offset), length });
+        }
+
+        return String((const char*)m_slice.offset_pointer(string_offset + offset), length);
+    }
+
+    return String::empty();
+}
+
 GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 {
-    ASSERT(glyph_id < m_num_glyphs);
+    VERIFY(glyph_id < m_num_glyphs);
     if (glyph_id < m_number_of_h_metrics) {
         auto offset = glyph_id * (u32)Sizes::LongHorMetric;
         u16 advance_width = be_u16(m_slice.offset_pointer(offset));
@@ -195,9 +205,9 @@ GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
     };
 }
 
-RefPtr<Font> Font::load_from_file(const StringView& path, unsigned index)
+RefPtr<Font> Font::load_from_file(String path, unsigned index)
 {
-    auto file_or_error = Core::File::open(String(path), Core::IODevice::ReadOnly);
+    auto file_or_error = Core::File::open(move(path), Core::IODevice::ReadOnly);
     if (file_or_error.is_error()) {
         dbgln("Could not open file: {}", file_or_error.error());
         return nullptr;
@@ -241,12 +251,18 @@ RefPtr<Font> Font::load_from_memory(ByteBuffer& buffer, unsigned index)
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
 RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
 {
+    if (Checked<u32>::addition_would_overflow(offset, (u32)Sizes::OffsetTable)) {
+        dbgln("Invalid offset in font header");
+        return nullptr;
+    }
+
     if (buffer.size() < offset + (u32)Sizes::OffsetTable) {
         dbgln("Font file too small");
         return nullptr;
     }
 
     Optional<ReadonlyBytes> opt_head_slice = {};
+    Optional<ReadonlyBytes> opt_name_slice = {};
     Optional<ReadonlyBytes> opt_hhea_slice = {};
     Optional<ReadonlyBytes> opt_maxp_slice = {};
     Optional<ReadonlyBytes> opt_hmtx_slice = {};
@@ -255,6 +271,7 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
     Optional<ReadonlyBytes> opt_glyf_slice = {};
 
     Optional<Head> opt_head = {};
+    Optional<Name> opt_name = {};
     Optional<Hhea> opt_hhea = {};
     Optional<Maxp> opt_maxp = {};
     Optional<Hmtx> opt_hmtx = {};
@@ -287,6 +304,8 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
         // Get the table offsets we need.
         if (tag == tag_from_str("head")) {
             opt_head_slice = buffer_here;
+        } else if (tag == tag_from_str("name")) {
+            opt_name_slice = buffer_here;
         } else if (tag == tag_from_str("hhea")) {
             opt_hhea_slice = buffer_here;
         } else if (tag == tag_from_str("maxp")) {
@@ -307,6 +326,12 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
         return nullptr;
     }
     auto head = opt_head.value();
+
+    if (!opt_name_slice.has_value() || !(opt_name = Name::from_slice(opt_name_slice.value())).has_value()) {
+        dbgln("Could not load Name");
+        return nullptr;
+    }
+    auto name = opt_name.value();
 
     if (!opt_hhea_slice.has_value() || !(opt_hhea = Hhea::from_slice(opt_hhea_slice.value())).has_value()) {
         dbgln("Could not load Hhea");
@@ -364,7 +389,7 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
         }
     }
 
-    return adopt(*new Font(move(buffer), move(head), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf)));
+    return adopt_ref(*new Font(move(buffer), move(head), move(name), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf)));
 }
 
 ScaledFontMetrics Font::metrics(float x_scale, float y_scale) const
@@ -427,6 +452,58 @@ u16 Font::units_per_em() const
     return m_head.units_per_em();
 }
 
+String Font::family() const
+{
+    auto string = m_name.typographic_family_name();
+    if (!string.is_empty())
+        return string;
+    return m_name.family_name();
+}
+
+String Font::variant() const
+{
+    auto string = m_name.typographic_subfamily_name();
+    if (!string.is_empty())
+        return string;
+    return m_name.subfamily_name();
+}
+
+u16 Font::weight() const
+{
+    // FIXME: This is pretty naive, read weight from the actual font table(s)
+    auto variant_name = variant();
+
+    if (variant_name == "Thin")
+        return 100;
+    if (variant_name == "Extra Light")
+        return 200;
+    if (variant_name == "Light")
+        return 300;
+    if (variant_name == "Regular")
+        return 400;
+    if (variant_name == "Medium")
+        return 500;
+    if (variant_name == "Semi Bold")
+        return 600;
+    if (variant_name == "Bold")
+        return 700;
+    if (variant_name == "Extra Bold")
+        return 800;
+    if (variant_name == "Black")
+        return 900;
+    if (variant_name == "Extra Black")
+        return 950;
+
+    return 400;
+}
+
+bool Font::is_fixed_width() const
+{
+    // FIXME: Read this information from the font file itself.
+    // FIXME: Although, it appears some application do similar hacks
+    return glyph_metrics(glyph_id_for_codepoint('.'), 1, 1).advance_width == glyph_metrics(glyph_id_for_codepoint('X'), 1, 1).advance_width;
+}
+
 int ScaledFont::width(const StringView& string) const
 {
     Utf8View utf8 { string };
@@ -464,6 +541,33 @@ RefPtr<Gfx::Bitmap> ScaledFont::raster_glyph(u32 glyph_id) const
     auto glyph_bitmap = m_font->raster_glyph(glyph_id, m_x_scale, m_y_scale);
     m_cached_glyph_bitmaps.set(glyph_id, glyph_bitmap);
     return glyph_bitmap;
+}
+
+Gfx::Glyph ScaledFont::glyph(u32 code_point) const
+{
+    auto id = glyph_id_for_codepoint(code_point);
+    auto bitmap = raster_glyph(id);
+    auto metrics = glyph_metrics(id);
+    return Gfx::Glyph(bitmap, metrics.left_side_bearing, metrics.advance_width, metrics.ascender);
+}
+
+u8 ScaledFont::glyph_width(size_t code_point) const
+{
+    auto id = glyph_id_for_codepoint(code_point);
+    auto metrics = glyph_metrics(id);
+    return metrics.advance_width;
+}
+
+int ScaledFont::glyph_or_emoji_width(u32 code_point) const
+{
+    auto id = glyph_id_for_codepoint(code_point);
+    auto metrics = glyph_metrics(id);
+    return metrics.advance_width;
+}
+
+u8 ScaledFont::glyph_fixed_width() const
+{
+    return glyph_metrics(glyph_id_for_codepoint(' ')).advance_width;
 }
 
 }

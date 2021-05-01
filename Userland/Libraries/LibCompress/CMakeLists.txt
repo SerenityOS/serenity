@@ -4,5 +4,7 @@ set(SOURCES
     Gzip.cpp
 )
 
-serenity_lib(LibCompress compression)
+serenity_lib(LibCompress compress)
 target_link_libraries(LibCompress LibC LibCrypto)
+
+add_subdirectory(Tests)

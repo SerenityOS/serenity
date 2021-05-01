@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGUI/GMLLexer.h>
@@ -32,7 +12,7 @@
 
 namespace GUI {
 
-static TextStyle style_for_token_type(Gfx::Palette palette, GMLToken::Type type)
+static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, GMLToken::Type type)
 {
     switch (type) {
     case GMLToken::Type::LeftCurly:
@@ -59,10 +39,9 @@ bool GMLSyntaxHighlighter::is_identifier(void* token) const
     return ini_token == GUI::GMLToken::Type::Identifier;
 }
 
-void GMLSyntaxHighlighter::rehighlight(Gfx::Palette palette)
+void GMLSyntaxHighlighter::rehighlight(const Palette& palette)
 {
-    ASSERT(m_editor);
-    auto text = m_editor->text();
+    auto text = m_client->get_text();
     GMLLexer lexer(text);
     auto tokens = lexer.lex();
 
@@ -78,17 +57,17 @@ void GMLSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         span.data = reinterpret_cast<void*>(token.m_type);
         spans.append(span);
     }
-    m_editor->document().set_spans(spans);
+    m_client->do_set_spans(move(spans));
 
     m_has_brace_buddies = false;
     highlight_matching_token_pair();
 
-    m_editor->update();
+    m_client->do_update();
 }
 
 Vector<GMLSyntaxHighlighter::MatchingTokenPair> GMLSyntaxHighlighter::matching_token_pairs() const
 {
-    static Vector<SyntaxHighlighter::MatchingTokenPair> pairs;
+    static Vector<MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
         pairs.append({ reinterpret_cast<void*>(GMLToken::Type::LeftCurly), reinterpret_cast<void*>(GMLToken::Type::RightCurly) });
     }

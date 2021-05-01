@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/HashTable.h>
@@ -48,16 +28,16 @@ static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 
 void NetworkAdapter::for_each(Function<void(NetworkAdapter&)> callback)
 {
-    LOCKER(all_adapters().lock());
+    Locker locker(all_adapters().lock());
     for (auto& it : all_adapters().resource())
         callback(*it);
 }
 
 RefPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& address)
 {
-    LOCKER(all_adapters().lock());
+    Locker locker(all_adapters().lock());
     for (auto* adapter : all_adapters().resource()) {
-        if (adapter->ipv4_address() == address)
+        if (adapter->ipv4_address() == address || adapter->ipv4_broadcast() == address)
             return adapter;
     }
     if (address[0] == 127)
@@ -101,7 +81,7 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     send_raw({ (const u8*)eth, size_in_bytes });
 }
 
-int NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
+KResult NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
 {
     size_t ipv4_packet_size = sizeof(IPv4Packet) + payload_size;
     if (ipv4_packet_size > mtu())
@@ -127,12 +107,12 @@ int NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addre
     m_bytes_out += ethernet_frame_size;
 
     if (!payload.read(ipv4.payload(), payload_size))
-        return -EFAULT;
+        return EFAULT;
     send_raw({ (const u8*)&eth, ethernet_frame_size });
-    return 0;
+    return KSuccess;
 }
 
-int NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
+KResult NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
 {
     // packets must be split on the 64-bit boundary
     auto packet_boundary_size = (mtu() - sizeof(IPv4Packet) - sizeof(EthernetFrameHeader)) & 0xfffffff8;
@@ -166,10 +146,10 @@ int NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, cons
         m_packets_out++;
         m_bytes_out += ethernet_frame_size;
         if (!payload.read(ipv4.payload(), packet_index * packet_boundary_size, packet_payload_size))
-            return -EFAULT;
+            return EFAULT;
         send_raw({ (const u8*)&eth, ethernet_frame_size });
     }
-    return 0;
+    return KSuccess;
 }
 
 void NetworkAdapter::did_receive(ReadonlyBytes payload)
@@ -185,7 +165,7 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
     } else {
         buffer = m_unused_packet_buffers.take_first();
         --m_unused_packet_buffers_count;
-        if (payload.size() <= buffer.value().size()) {
+        if (payload.size() <= buffer.value().capacity()) {
             memcpy(buffer.value().data(), payload.data(), payload.size());
             buffer.value().set_size(payload.size());
         } else {
@@ -199,7 +179,7 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
         on_receive();
 }
 
-size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, timeval& packet_timestamp)
+size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, Time& packet_timestamp)
 {
     InterruptDisabler disabler;
     if (m_packet_queue.is_empty())
@@ -208,7 +188,7 @@ size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, timeval& p
     packet_timestamp = packet_with_timestamp.timestamp;
     auto packet = move(packet_with_timestamp.packet);
     size_t packet_size = packet.size();
-    ASSERT(packet_size <= buffer_size);
+    VERIFY(packet_size <= buffer_size);
     memcpy(buffer, packet.data(), packet_size);
     if (m_unused_packet_buffers_count < 100) {
         m_unused_packet_buffers.append(packet);

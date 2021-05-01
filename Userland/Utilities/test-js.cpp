@@ -1,35 +1,14 @@
 /*
- * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
-#include <AK/LogStream.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
@@ -40,9 +19,11 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JSONObject.h>
+#include <LibTest/Results.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
 
@@ -50,26 +31,6 @@ RefPtr<JS::VM> vm;
 
 static bool collect_on_every_allocation = false;
 static String currently_running_test;
-
-enum class TestResult {
-    Pass,
-    Fail,
-    Skip,
-};
-
-struct JSTest {
-    String name;
-    TestResult result;
-    String details;
-};
-
-struct JSSuite {
-    String name;
-    // A failed test takes precedence over a skipped test, which both have
-    // precedence over a passed test
-    TestResult most_severe_test_result { TestResult::Pass };
-    Vector<JSTest> tests {};
-};
 
 struct ParserError {
     JS::Parser::Error error;
@@ -82,32 +43,24 @@ struct JSFileResult {
     double time_taken { 0 };
     // A failed test takes precedence over a skipped test, which both have
     // precedence over a passed test
-    TestResult most_severe_test_result { TestResult::Pass };
-    Vector<JSSuite> suites {};
+    Test::Result most_severe_test_result { Test::Result::Pass };
+    Vector<Test::Suite> suites {};
     Vector<String> logged_messages {};
 };
 
-struct JSTestRunnerCounts {
-    int tests_failed { 0 };
-    int tests_passed { 0 };
-    int tests_skipped { 0 };
-    int suites_failed { 0 };
-    int suites_passed { 0 };
-    int files_total { 0 };
-};
+class TestRunnerGlobalObject final : public JS::GlobalObject {
+    JS_OBJECT(TestRunnerGlobalObject, JS::GlobalObject);
 
-class TestRunnerGlobalObject : public JS::GlobalObject {
 public:
     TestRunnerGlobalObject();
     virtual ~TestRunnerGlobalObject() override;
 
-    virtual void initialize() override;
+    virtual void initialize_global_object() override;
 
 private:
-    virtual const char* class_name() const override { return "TestRunnerGlobalObject"; }
-
     JS_DECLARE_NATIVE_FUNCTION(is_strict_mode);
     JS_DECLARE_NATIVE_FUNCTION(can_parse_source);
+    JS_DECLARE_NATIVE_FUNCTION(run_queued_promise_jobs);
 };
 
 class TestRunner {
@@ -117,17 +70,22 @@ public:
         return s_the;
     }
 
-    TestRunner(String test_root, bool print_times)
+    TestRunner(String test_root, bool print_times, bool print_progress)
         : m_test_root(move(test_root))
         , m_print_times(print_times)
+        , m_print_progress(print_progress)
     {
-        ASSERT(!s_the);
+        VERIFY(!s_the);
         s_the = this;
     }
 
+    virtual ~TestRunner() = default;
+
     void run();
 
-    const JSTestRunnerCounts& counts() const { return m_counts; }
+    const Test::Counts& counts() const { return m_counts; }
+
+    bool is_printing_progress() const { return m_print_progress; }
 
 protected:
     static TestRunner* s_the;
@@ -139,9 +97,10 @@ protected:
 
     String m_test_root;
     bool m_print_times;
+    bool m_print_progress;
 
     double m_total_elapsed_time_in_ms { 0 };
-    JSTestRunnerCounts m_counts;
+    Test::Counts m_counts;
 
     RefPtr<JS::Program> m_test_program;
 };
@@ -156,15 +115,17 @@ TestRunnerGlobalObject::~TestRunnerGlobalObject()
 {
 }
 
-void TestRunnerGlobalObject::initialize()
+void TestRunnerGlobalObject::initialize_global_object()
 {
-    JS::GlobalObject::initialize();
+    Base::initialize_global_object();
     static FlyString global_property_name { "global" };
     static FlyString is_strict_mode_property_name { "isStrictMode" };
     static FlyString can_parse_source_property_name { "canParseSource" };
+    static FlyString run_queued_promise_jobs_property_name { "runQueuedPromiseJobs" };
     define_property(global_property_name, this, JS::Attribute::Enumerable);
     define_native_function(is_strict_mode_property_name, is_strict_mode);
     define_native_function(can_parse_source_property_name, can_parse_source);
+    define_native_function(run_queued_promise_jobs_property_name, run_queued_promise_jobs);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::is_strict_mode)
@@ -182,12 +143,17 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::can_parse_source)
     return JS::Value(!parser.has_errors());
 }
 
+JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::run_queued_promise_jobs)
+{
+    vm.run_queued_promise_jobs();
+    return JS::js_undefined();
+}
+
 static void cleanup_and_exit()
 {
     // Clear the taskbar progress.
-#ifdef __serenity__
-    warn("\033]9;-1;\033\\");
-#endif
+    if (TestRunner::the() && TestRunner::the()->is_printing_progress())
+        warn("\033]9;-1;\033\\");
     exit(1);
 }
 
@@ -201,7 +167,7 @@ static double get_time_in_ms()
 {
     struct timeval tv1;
     auto return_code = gettimeofday(&tv1, nullptr);
-    ASSERT(return_code >= 0);
+    VERIFY(return_code >= 0);
     return static_cast<double>(tv1.tv_sec) * 1000.0 + static_cast<double>(tv1.tv_usec) / 1000.0;
 }
 
@@ -211,7 +177,7 @@ static void iterate_directory_recursively(const String& directory_path, Callback
     Core::DirIterator directory_iterator(directory_path, Core::DirIterator::Flags::SkipDots);
 
     while (directory_iterator.has_next()) {
-        auto file_path = String::formatted("{}/{}", directory_path, directory_iterator.next_path());
+        auto file_path = directory_iterator.next_full_path();
         if (Core::File::is_directory(file_path)) {
             iterate_directory_recursively(file_path, callback);
         } else {
@@ -238,14 +204,12 @@ void TestRunner::run()
     for (auto& path : test_paths) {
         ++progress_counter;
         print_file_result(run_file_test(path));
-#ifdef __serenity__
-        warn("\033]9;{};{};\033\\", progress_counter, test_paths.size());
-#endif
+        if (m_print_progress)
+            warn("\033]9;{};{};\033\\", progress_counter, test_paths.size());
     }
 
-#ifdef __serenity__
-    warn("\033]9;-1;\033\\");
-#endif
+    if (m_print_progress)
+        warn("\033]9;-1;\033\\");
 
     print_test_results();
 }
@@ -332,46 +296,46 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     }
 
     test_json.value().as_object().for_each_member([&](const String& suite_name, const JsonValue& suite_value) {
-        JSSuite suite { suite_name };
+        Test::Suite suite { suite_name };
 
-        ASSERT(suite_value.is_object());
+        VERIFY(suite_value.is_object());
 
         suite_value.as_object().for_each_member([&](const String& test_name, const JsonValue& test_value) {
-            JSTest test { test_name, TestResult::Fail, "" };
+            Test::Case test { test_name, Test::Result::Fail, "" };
 
-            ASSERT(test_value.is_object());
-            ASSERT(test_value.as_object().has("result"));
+            VERIFY(test_value.is_object());
+            VERIFY(test_value.as_object().has("result"));
 
             auto result = test_value.as_object().get("result");
-            ASSERT(result.is_string());
+            VERIFY(result.is_string());
             auto result_string = result.as_string();
             if (result_string == "pass") {
-                test.result = TestResult::Pass;
+                test.result = Test::Result::Pass;
                 m_counts.tests_passed++;
             } else if (result_string == "fail") {
-                test.result = TestResult::Fail;
+                test.result = Test::Result::Fail;
                 m_counts.tests_failed++;
-                suite.most_severe_test_result = TestResult::Fail;
-                ASSERT(test_value.as_object().has("details"));
+                suite.most_severe_test_result = Test::Result::Fail;
+                VERIFY(test_value.as_object().has("details"));
                 auto details = test_value.as_object().get("details");
-                ASSERT(result.is_string());
+                VERIFY(result.is_string());
                 test.details = details.as_string();
             } else {
-                test.result = TestResult::Skip;
-                if (suite.most_severe_test_result == TestResult::Pass)
-                    suite.most_severe_test_result = TestResult::Skip;
+                test.result = Test::Result::Skip;
+                if (suite.most_severe_test_result == Test::Result::Pass)
+                    suite.most_severe_test_result = Test::Result::Skip;
                 m_counts.tests_skipped++;
             }
 
             suite.tests.append(test);
         });
 
-        if (suite.most_severe_test_result == TestResult::Fail) {
+        if (suite.most_severe_test_result == Test::Result::Fail) {
             m_counts.suites_failed++;
-            file_result.most_severe_test_result = TestResult::Fail;
+            file_result.most_severe_test_result = Test::Result::Fail;
         } else {
-            if (suite.most_severe_test_result == TestResult::Skip && file_result.most_severe_test_result == TestResult::Pass)
-                file_result.most_severe_test_result = TestResult::Skip;
+            if (suite.most_severe_test_result == Test::Result::Skip && file_result.most_severe_test_result == Test::Result::Pass)
+                file_result.most_severe_test_result = Test::Result::Skip;
             m_counts.suites_passed++;
         }
 
@@ -425,7 +389,7 @@ static void print_modifiers(Vector<Modifier> modifiers)
             case CLEAR:
                 return "\033[0m";
             }
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
         }();
         out("{}", code);
     }
@@ -433,12 +397,12 @@ static void print_modifiers(Vector<Modifier> modifiers)
 
 void TestRunner::print_file_result(const JSFileResult& file_result) const
 {
-    if (file_result.most_severe_test_result == TestResult::Fail || file_result.error.has_value()) {
+    if (file_result.most_severe_test_result == Test::Result::Fail || file_result.error.has_value()) {
         print_modifiers({ BG_RED, FG_BLACK, FG_BOLD });
         out(" FAIL ");
         print_modifiers({ CLEAR });
     } else {
-        if (m_print_times || file_result.most_severe_test_result != TestResult::Pass) {
+        if (m_print_times || file_result.most_severe_test_result != Test::Result::Pass) {
             print_modifiers({ BG_GREEN, FG_BLACK, FG_BOLD });
             out(" PASS ");
             print_modifiers({ CLEAR });
@@ -495,12 +459,12 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
         return;
     }
 
-    if (file_result.most_severe_test_result != TestResult::Pass) {
+    if (file_result.most_severe_test_result != Test::Result::Pass) {
         for (auto& suite : file_result.suites) {
-            if (suite.most_severe_test_result == TestResult::Pass)
+            if (suite.most_severe_test_result == Test::Result::Pass)
                 continue;
 
-            bool failed = suite.most_severe_test_result == TestResult::Fail;
+            bool failed = suite.most_severe_test_result == Test::Result::Fail;
 
             print_modifiers({ FG_GRAY, FG_BOLD });
 
@@ -530,12 +494,12 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
             print_modifiers({ CLEAR });
 
             for (auto& test : suite.tests) {
-                if (test.result == TestResult::Pass)
+                if (test.result == Test::Result::Pass)
                     continue;
 
                 print_modifiers({ FG_GRAY, FG_BOLD });
                 out("         Test:   ");
-                if (test.result == TestResult::Fail) {
+                if (test.result == Test::Result::Fail) {
                     print_modifiers({ CLEAR, FG_RED });
                     outln("{} (failed):", test.name);
                     outln("                 {}", test.details);
@@ -625,30 +589,30 @@ JSFileResult Test262ParserTestRunner::run_file_test(const String& test_path)
     } else if (dirname.ends_with("pass") || dirname.ends_with("pass-explicit")) {
         expecting_file_to_parse = true;
     } else {
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 
     auto start_time = get_time_in_ms();
     String details = "";
-    TestResult test_result;
+    Test::Result test_result;
     if (test_path.ends_with(".module.js")) {
-        test_result = TestResult::Skip;
+        test_result = Test::Result::Skip;
         m_counts.tests_skipped++;
         m_counts.suites_passed++;
     } else {
         auto parse_result = parse_file(test_path);
         if (expecting_file_to_parse) {
             if (!parse_result.is_error()) {
-                test_result = TestResult::Pass;
+                test_result = Test::Result::Pass;
             } else {
-                test_result = TestResult::Fail;
+                test_result = Test::Result::Fail;
                 details = parse_result.error().error.to_string();
             }
         } else {
             if (parse_result.is_error()) {
-                test_result = TestResult::Pass;
+                test_result = Test::Result::Pass;
             } else {
-                test_result = TestResult::Fail;
+                test_result = Test::Result::Fail;
                 details = "File was expected to produce a parser error but didn't";
             }
         }
@@ -661,8 +625,8 @@ JSFileResult Test262ParserTestRunner::run_file_test(const String& test_path)
     // - That way we can show additional information such as "file parsed but shouldn't have" or
     //   parser errors for files that should parse respectively
 
-    JSTest test { expecting_file_to_parse ? "file should parse" : "file should not parse", test_result, details };
-    JSSuite suite { "Parse file", test_result, { test } };
+    Test::Case test { expecting_file_to_parse ? "file should parse" : "file should not parse", test_result, details };
+    Test::Suite suite { "Parse file", test_result, { test } };
     JSFileResult file_result {
         test_path.substring(m_test_root.length() + 1, test_path.length() - m_test_root.length() - 1),
         {},
@@ -671,7 +635,7 @@ JSFileResult Test262ParserTestRunner::run_file_test(const String& test_path)
         { suite }
     };
 
-    if (test_result == TestResult::Fail) {
+    if (test_result == Test::Result::Fail) {
         m_counts.tests_failed++;
         m_counts.suites_failed++;
     } else {
@@ -706,11 +670,32 @@ int main(int argc, char** argv)
 #endif
 
     bool print_times = false;
+    bool print_progress =
+#ifdef __serenity__
+        true; // Use OSC 9 to print progress
+#else
+        false;
+#endif
     bool test262_parser_tests = false;
     const char* specified_test_root = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
+    args_parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Show progress with OSC 9 (true, false)",
+        .long_name = "show-progress",
+        .short_name = 'p',
+        .accept_value = [&](auto* str) {
+            if (StringView { "true" } == str)
+                print_progress = true;
+            else if (StringView { "false" } == str)
+                print_progress = false;
+            else
+                return false;
+            return true;
+        },
+    });
     args_parser.add_option(collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
     args_parser.add_option(test262_parser_tests, "Run test262 parser tests", "test262-parser-tests", 0);
     args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
@@ -739,12 +724,12 @@ int main(int argc, char** argv)
 #ifdef __serenity__
         test_root = "/home/anon/js-tests";
 #else
-        char* serenity_root = getenv("SERENITY_ROOT");
-        if (!serenity_root) {
-            warnln("No test root given, test-js requires the SERENITY_ROOT environment variable to be set");
+        char* serenity_source_dir = getenv("SERENITY_SOURCE_DIR");
+        if (!serenity_source_dir) {
+            warnln("No test root given, test-js requires the SERENITY_SOURCE_DIR environment variable to be set");
             return 1;
         }
-        test_root = String::formatted("{}/Userland/Libraries/LibJS/Tests", serenity_root);
+        test_root = String::formatted("{}/Userland/Libraries/LibJS/Tests", serenity_source_dir);
 #endif
     }
     if (!Core::File::is_directory(test_root)) {
@@ -755,9 +740,9 @@ int main(int argc, char** argv)
     vm = JS::VM::create();
 
     if (test262_parser_tests)
-        Test262ParserTestRunner(test_root, print_times).run();
+        Test262ParserTestRunner(test_root, print_times, print_progress).run();
     else
-        TestRunner(test_root, print_times).run();
+        TestRunner(test_root, print_times, print_progress).run();
 
     vm = nullptr;
 

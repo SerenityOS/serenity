@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -83,13 +63,13 @@ public:
     NonnullRefPtr<WithStatement> parse_with_statement();
     NonnullRefPtr<DebuggerStatement> parse_debugger_statement();
     NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test);
-    NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, Vector<TokenType> forbidden = {});
+    NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, const Vector<TokenType>& forbidden = {});
     NonnullRefPtr<Expression> parse_primary_expression();
     NonnullRefPtr<Expression> parse_unary_prefixed_expression();
     NonnullRefPtr<RegExpLiteral> parse_regexp_literal();
     NonnullRefPtr<ObjectExpression> parse_object_expression();
     NonnullRefPtr<ArrayExpression> parse_array_expression();
-    NonnullRefPtr<StringLiteral> parse_string_literal(Token token, bool in_template_literal = false);
+    NonnullRefPtr<StringLiteral> parse_string_literal(const Token& token, bool in_template_literal = false);
     NonnullRefPtr<TemplateLiteral> parse_template_literal(bool is_tagged);
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
     NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
@@ -147,13 +127,17 @@ public:
         }
     }
 
+    struct TokenMemoization {
+        bool try_parse_arrow_function_expression_failed;
+    };
+
 private:
     friend class ScopePusher;
 
     Associativity operator_associativity(TokenType) const;
     bool match_expression() const;
     bool match_unary_prefixed_expression() const;
-    bool match_secondary_expression(Vector<TokenType> forbidden = {}) const;
+    bool match_secondary_expression(const Vector<TokenType>& forbidden = {}) const;
     bool match_statement() const;
     bool match_declaration() const;
     bool match_variable_declaration() const;
@@ -172,6 +156,9 @@ private:
     void discard_saved_state();
     Position position() const;
 
+    bool try_parse_arrow_function_expression_failed_at_position(const Position&) const;
+    void set_try_parse_arrow_function_expression_failed_at_position(const Position&, bool);
+
     struct RulePosition {
         AK_MAKE_NONCOPYABLE(RulePosition);
         AK_MAKE_NONMOVABLE(RulePosition);
@@ -187,8 +174,8 @@ private:
         ~RulePosition()
         {
             auto last = m_parser.m_rule_starts.take_last();
-            ASSERT(last.line == m_position.line);
-            ASSERT(last.column == m_position.column);
+            VERIFY(last.line == m_position.line);
+            VERIFY(last.column == m_position.column);
         }
 
         const Position& position() const { return m_position; }
@@ -220,8 +207,23 @@ private:
         explicit ParserState(Lexer);
     };
 
+    class PositionKeyTraits {
+    public:
+        static int hash(const Position& position)
+        {
+            return int_hash(position.line) ^ int_hash(position.column);
+        }
+
+        static bool equals(const Position& a, const Position& b)
+        {
+            return a.column == b.column && a.line == b.line;
+        }
+    };
+
     Vector<Position> m_rule_starts;
     ParserState m_parser_state;
+    FlyString m_filename;
     Vector<ParserState> m_saved_state;
+    HashMap<Position, TokenMemoization, PositionKeyTraits> m_token_memoizations;
 };
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGfx/Bitmap.h>
@@ -39,7 +19,7 @@ static WindowSwitcher* s_the;
 
 WindowSwitcher& WindowSwitcher::the()
 {
-    ASSERT(s_the);
+    VERIFY(s_the);
     return *s_the;
 }
 
@@ -106,7 +86,7 @@ void WindowSwitcher::event(Core::Event& event)
 void WindowSwitcher::on_key_event(const KeyEvent& event)
 {
     if (event.type() == Event::KeyUp) {
-        if (event.key() == Key_Logo) {
+        if (event.key() == Key_Super) {
             if (auto* window = selected_window()) {
                 window->set_minimized(false);
                 WindowManager::the().move_to_front_and_make_active(*window);
@@ -124,7 +104,7 @@ void WindowSwitcher::on_key_event(const KeyEvent& event)
         hide();
         return;
     }
-    ASSERT(!m_windows.is_empty());
+    VERIFY(!m_windows.is_empty());
 
     int new_selected_index;
 
@@ -135,7 +115,7 @@ void WindowSwitcher::on_key_event(const KeyEvent& event)
         if (new_selected_index < 0)
             new_selected_index = static_cast<int>(m_windows.size()) - 1;
     }
-    ASSERT(new_selected_index < static_cast<int>(m_windows.size()));
+    VERIFY(new_selected_index < static_cast<int>(m_windows.size()));
 
     select_window_at_index(new_selected_index);
 }
@@ -154,7 +134,7 @@ void WindowSwitcher::select_window_at_index(int index)
 {
     m_selected_index = index;
     auto* highlight_window = m_windows.at(index).ptr();
-    ASSERT(highlight_window);
+    VERIFY(highlight_window);
     WindowManager::the().set_highlight_window(highlight_window);
     redraw();
 }
@@ -192,7 +172,7 @@ void WindowSwitcher::draw()
             rect_text_color = palette.threed_shadow1();
         } else {
             if (static_cast<int>(index) == m_hovered_index)
-                Gfx::StylePainter::paint_button(painter, item_rect, palette, Gfx::ButtonStyle::CoolBar, false, true);
+                Gfx::StylePainter::paint_button(painter, item_rect, palette, Gfx::ButtonStyle::Coolbar, false, true);
             text_color = palette.window_text();
             rect_text_color = palette.threed_shadow2();
         }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -41,13 +21,16 @@ typedef void (Interpreter::*InstructionHandler)(const Instruction&);
 class SymbolProvider {
 public:
     virtual String symbolicate(FlatPtr, u32* offset = nullptr) const = 0;
+
+protected:
+    virtual ~SymbolProvider() = default;
 };
 
 template<typename T>
 struct TypeTrivia {
     static const size_t bits = sizeof(T) * 8;
     static const T sign_bit = 1 << (bits - 1);
-    static const T mask = typename MakeUnsigned<T>::Type(-1);
+    static const T mask = MakeUnsigned<T>(-1);
 };
 
 template<typename T, typename U>
@@ -121,6 +104,8 @@ enum InstructionFormat {
     OP_RM16_reg16_CL,
     OP_RM32_reg32_CL,
     OP_mm1_mm2m64,
+    OP_mm1_mm2m32,
+    OP_mm1_imm8,
     OP_mm1m64_mm2,
     __EndFormatsWithRMByte,
 
@@ -316,6 +301,9 @@ public:
     virtual u16 read16() = 0;
     virtual u32 read32() = 0;
     virtual u64 read64() = 0;
+
+protected:
+    virtual ~InstructionStream() = default;
 };
 
 class SimpleInstructionStream final : public InstructionStream {
@@ -394,6 +382,10 @@ public:
     void write32(CPU&, const Instruction&, T);
     template<typename CPU, typename T>
     void write64(CPU&, const Instruction&, T);
+    template<typename CPU, typename T>
+    void write128(CPU&, const Instruction&, T);
+    template<typename CPU, typename T>
+    void write256(CPU&, const Instruction&, T);
 
     template<typename CPU>
     typename CPU::ValueWithShadowType8 read8(CPU&, const Instruction&);
@@ -403,6 +395,10 @@ public:
     typename CPU::ValueWithShadowType32 read32(CPU&, const Instruction&);
     template<typename CPU>
     typename CPU::ValueWithShadowType64 read64(CPU&, const Instruction&);
+    template<typename CPU>
+    typename CPU::ValueWithShadowType128 read128(CPU&, const Instruction&);
+    template<typename CPU>
+    typename CPU::ValueWithShadowType256 read256(CPU&, const Instruction&);
 
     template<typename CPU>
     LogicalAddress resolve(const CPU&, const Instruction&);
@@ -641,7 +637,7 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, Segmen
             base += cpu.ebp().value();
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
         break;
@@ -689,9 +685,25 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, const Instructio
 template<typename CPU, typename T>
 ALWAYS_INLINE void MemoryOrRegisterReference::write64(CPU& cpu, const Instruction& insn, T value)
 {
-    ASSERT(!is_register());
+    VERIFY(!is_register());
     auto address = resolve(cpu, insn);
     cpu.write_memory64(address, value);
+}
+
+template<typename CPU, typename T>
+ALWAYS_INLINE void MemoryOrRegisterReference::write128(CPU& cpu, const Instruction& insn, T value)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    cpu.write_memory128(address, value);
+}
+
+template<typename CPU, typename T>
+ALWAYS_INLINE void MemoryOrRegisterReference::write256(CPU& cpu, const Instruction& insn, T value)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    cpu.write_memory256(address, value);
 }
 
 template<typename CPU>
@@ -727,9 +739,25 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType32 MemoryOrRegisterReference::rea
 template<typename CPU>
 ALWAYS_INLINE typename CPU::ValueWithShadowType64 MemoryOrRegisterReference::read64(CPU& cpu, const Instruction& insn)
 {
-    ASSERT(!is_register());
+    VERIFY(!is_register());
     auto address = resolve(cpu, insn);
     return cpu.read_memory64(address);
+}
+
+template<typename CPU>
+ALWAYS_INLINE typename CPU::ValueWithShadowType128 MemoryOrRegisterReference::read128(CPU& cpu, const Instruction& insn)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    return cpu.read_memory128(address);
+}
+
+template<typename CPU>
+ALWAYS_INLINE typename CPU::ValueWithShadowType256 MemoryOrRegisterReference::read256(CPU& cpu, const Instruction& insn)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    return cpu.read_memory256(address);
 }
 
 template<typename InstructionStreamType>
@@ -863,6 +891,9 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
     case 4:
         m_imm2 = stream.read32();
         break;
+    default:
+        VERIFY(imm2_bytes == 0);
+        break;
     }
 
     switch (imm1_bytes) {
@@ -874,6 +905,9 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         break;
     case 4:
         m_imm1 = stream.read32();
+        break;
+    default:
+        VERIFY(imm1_bytes == 0);
         break;
     }
 
@@ -904,7 +938,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stre
             m_displacement32 = stream.read32();
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     } else {
@@ -919,7 +953,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stre
             m_displacement16 = stream.read16();
             break;
         default:
-            ASSERT_NOT_REACHED();
+            VERIFY_NOT_REACHED();
             break;
         }
     }
@@ -933,7 +967,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStreamType&)
         if ((m_rm & 0x07) == 6)
             m_displacement_bytes = 2;
         else
-            ASSERT(m_displacement_bytes == 0);
+            VERIFY(m_displacement_bytes == 0);
         break;
     case 0x40:
         m_displacement_bytes = 1;
@@ -981,7 +1015,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& st
                 m_displacement_bytes = 4;
                 break;
             default:
-                ASSERT_NOT_REACHED();
+                VERIFY_NOT_REACHED();
                 break;
             }
         }

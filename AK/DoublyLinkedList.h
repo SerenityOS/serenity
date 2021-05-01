@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -29,7 +9,6 @@
 #include <AK/Assertions.h>
 #include <AK/Find.h>
 #include <AK/StdLibExtras.h>
-#include <AK/Traits.h>
 
 namespace AK {
 
@@ -45,7 +24,7 @@ public:
     }
     ElementType& operator*() { return m_node->value; }
     ElementType* operator->() { return &m_node->value; }
-    bool is_end() const { return !m_node; }
+    [[nodiscard]] bool is_end() const { return !m_node; }
     static DoublyLinkedListIterator universal_end() { return DoublyLinkedListIterator(nullptr); }
 
 private:
@@ -77,7 +56,7 @@ public:
     DoublyLinkedList() = default;
     ~DoublyLinkedList() { clear(); }
 
-    bool is_empty() const { return !m_head; }
+    [[nodiscard]] bool is_empty() const { return !m_head; }
 
     void clear()
     {
@@ -90,24 +69,24 @@ public:
         m_tail = nullptr;
     }
 
-    T& first()
+    [[nodiscard]] T& first()
     {
-        ASSERT(m_head);
+        VERIFY(m_head);
         return m_head->value;
     }
-    const T& first() const
+    [[nodiscard]] const T& first() const
     {
-        ASSERT(m_head);
+        VERIFY(m_head);
         return m_head->value;
     }
-    T& last()
+    [[nodiscard]] T& last()
     {
-        ASSERT(m_head);
+        VERIFY(m_head);
         return m_tail->value;
     }
-    const T& last() const
+    [[nodiscard]] const T& last() const
     {
-        ASSERT(m_head);
+        VERIFY(m_head);
         return m_tail->value;
     }
 
@@ -118,13 +97,13 @@ public:
             requires { T(value); }, "Conversion operator is missing.");
         auto* node = new Node(forward<U>(value));
         if (!m_head) {
-            ASSERT(!m_tail);
+            VERIFY(!m_tail);
             m_head = node;
             m_tail = node;
             return;
         }
-        ASSERT(m_tail);
-        ASSERT(!node->next);
+        VERIFY(m_tail);
+        VERIFY(!node->next);
         m_tail->next = node;
         node->prev = m_tail;
         m_tail = node;
@@ -133,22 +112,22 @@ public:
     template<typename U>
     void prepend(U&& value)
     {
-        static_assert(IsSame<T, U>::value);
+        static_assert(IsSame<T, U>);
         auto* node = new Node(forward<U>(value));
         if (!m_head) {
-            ASSERT(!m_tail);
+            VERIFY(!m_tail);
             m_head = node;
             m_tail = node;
             return;
         }
-        ASSERT(m_tail);
-        ASSERT(!node->prev);
+        VERIFY(m_tail);
+        VERIFY(!node->prev);
         m_head->prev = node;
         node->next = m_head;
         m_head = node;
     }
 
-    bool contains_slow(const T& value) const
+    [[nodiscard]] bool contains_slow(const T& value) const
     {
         return find(value) != end();
     }
@@ -175,20 +154,20 @@ public:
 
     void remove(Iterator it)
     {
-        ASSERT(it.m_node);
+        VERIFY(it.m_node);
         auto* node = it.m_node;
         if (node->prev) {
-            ASSERT(node != m_head);
+            VERIFY(node != m_head);
             node->prev->next = node->next;
         } else {
-            ASSERT(node == m_head);
+            VERIFY(node == m_head);
             m_head = node->next;
         }
         if (node->next) {
-            ASSERT(node != m_tail);
+            VERIFY(node != m_tail);
             node->next->prev = node->prev;
         } else {
-            ASSERT(node == m_tail);
+            VERIFY(node == m_tail);
             m_tail = node->prev;
         }
         delete node;

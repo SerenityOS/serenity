@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -55,7 +35,7 @@ public:
     }
 
     template<typename T>
-    void print_bytecode(Regex<T>& regex) const
+    void print_bytecode(const Regex<T>& regex) const
     {
         MatchState state;
         auto& bytecode = regex.parser_result.bytecode;
@@ -87,7 +67,7 @@ public:
             recursion,
             opcode.to_string().characters(),
             opcode.arguments_string().characters(),
-            String::format("ip: %3lu,   sp: %3lu", state.instruction_position, state.string_position).characters(),
+            String::formatted("ip: {:3},   sp: {:3}", state.instruction_position, state.string_position).characters(),
             newline ? "\n" : "");
 
         if (newline && is<OpCode_Compare>(opcode)) {
@@ -129,8 +109,10 @@ public:
         for (size_t i = 0; i < length; ++i) {
             builder.append('=');
         }
+        auto str = builder.to_string();
+        VERIFY(!str.is_empty());
 
-        fprintf(m_file, "%s\n", builder.to_string().characters());
+        fprintf(m_file, "%s\n", str.characters());
         fflush(m_file);
 
         builder.clear();

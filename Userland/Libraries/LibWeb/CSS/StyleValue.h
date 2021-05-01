@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -121,6 +101,45 @@ enum class Clear {
     Both,
 };
 
+enum class Cursor {
+    Auto,
+    Default,
+    None,
+    ContextMenu,
+    Help,
+    Pointer,
+    Progress,
+    Wait,
+    Cell,
+    Crosshair,
+    Text,
+    VerticalText,
+    Alias,
+    Copy,
+    Move,
+    NoDrop,
+    NotAllowed,
+    Grab,
+    Grabbing,
+    EResize,
+    NResize,
+    NeResize,
+    NwResize,
+    SResize,
+    SeResize,
+    SwResize,
+    WResize,
+    EwResize,
+    NsResize,
+    NeswResize,
+    NwseResize,
+    ColResize,
+    RowResize,
+    AllScroll,
+    ZoomIn,
+    ZoomOut,
+};
+
 enum class LineStyle {
     None,
     Hidden,
@@ -140,6 +159,26 @@ enum class ListStyleType {
     Circle,
     Square,
     Decimal,
+    DecimalLeadingZero,
+    LowerAlpha,
+    LowerLatin,
+    UpperAlpha,
+    UpperLatin,
+};
+
+enum class Overflow : u8 {
+    Auto,
+    Clip,
+    Hidden,
+    Scroll,
+    Visible,
+};
+
+enum class Repeat : u8 {
+    NoRepeat,
+    Repeat,
+    Round,
+    Space,
 };
 
 class StyleValue : public RefCounted<StyleValue> {
@@ -198,7 +237,7 @@ class StringStyleValue : public StyleValue {
 public:
     static NonnullRefPtr<StringStyleValue> create(const String& string)
     {
-        return adopt(*new StringStyleValue(string));
+        return adopt_ref(*new StringStyleValue(string));
     }
     virtual ~StringStyleValue() override { }
 
@@ -218,7 +257,7 @@ class LengthStyleValue : public StyleValue {
 public:
     static NonnullRefPtr<LengthStyleValue> create(const Length& length)
     {
-        return adopt(*new LengthStyleValue(length));
+        return adopt_ref(*new LengthStyleValue(length));
     }
     virtual ~LengthStyleValue() override { }
 
@@ -248,7 +287,7 @@ private:
 
 class InitialStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<InitialStyleValue> create() { return adopt(*new InitialStyleValue); }
+    static NonnullRefPtr<InitialStyleValue> create() { return adopt_ref(*new InitialStyleValue); }
     virtual ~InitialStyleValue() override { }
 
     String to_string() const override { return "initial"; }
@@ -262,7 +301,7 @@ private:
 
 class InheritStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<InheritStyleValue> create() { return adopt(*new InheritStyleValue); }
+    static NonnullRefPtr<InheritStyleValue> create() { return adopt_ref(*new InheritStyleValue); }
     virtual ~InheritStyleValue() override { }
 
     String to_string() const override { return "inherit"; }
@@ -278,7 +317,7 @@ class ColorStyleValue : public StyleValue {
 public:
     static NonnullRefPtr<ColorStyleValue> create(Color color)
     {
-        return adopt(*new ColorStyleValue(color));
+        return adopt_ref(*new ColorStyleValue(color));
     }
     virtual ~ColorStyleValue() override { }
 
@@ -307,7 +346,7 @@ class IdentifierStyleValue final : public StyleValue {
 public:
     static NonnullRefPtr<IdentifierStyleValue> create(CSS::ValueID id)
     {
-        return adopt(*new IdentifierStyleValue(id));
+        return adopt_ref(*new IdentifierStyleValue(id));
     }
     virtual ~IdentifierStyleValue() override { }
 
@@ -337,7 +376,7 @@ class ImageStyleValue final
     : public StyleValue
     , public ImageResourceClient {
 public:
-    static NonnullRefPtr<ImageStyleValue> create(const URL& url, DOM::Document& document) { return adopt(*new ImageStyleValue(url, document)); }
+    static NonnullRefPtr<ImageStyleValue> create(const URL& url, DOM::Document& document) { return adopt_ref(*new ImageStyleValue(url, document)); }
     virtual ~ImageStyleValue() override { }
 
     String to_string() const override { return String::formatted("Image({})", m_url.to_string()); }

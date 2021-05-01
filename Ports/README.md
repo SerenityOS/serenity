@@ -18,9 +18,18 @@ its dependencies, the required files that will be downloaded as well as
 configuration/compilation options, and some other things (see
 [Writing ports scripts](#writing-ports-scripts) for details).
 
-To install a certain port, `cd` into its directory and run `./package.sh`
+- To install a certain port, `cd` into its directory and run `./package.sh`
+- To install all available ports, run the `build_all.sh` script in this
+  directory. Pass `clean` as first argument to remove old build files
+  beforehand.
+- To reinstall all currently installed ports, run the `build_installed.sh`
+  script in this directory. This is sometimes required when LibC changes, for
+  example. Pass `clean` as first argument to remove old build files beforehand.
 
-Installed ports are being tracked in `Ports/packages.db` (a simple text file).
+Installed ports are being tracked in `Build/packages.db` (a simple text file).
+You can delete this file at any time, in fact it must be edited or removed
+when clearing the build directory as port dependencies may not be installed
+again otherwise.
 
 Not giving an option is equivalent to `installdepends`, `fetch`, `patch`,
 `configure`, `build` and `install`, in that order. This is recommended for a
@@ -91,7 +100,6 @@ script simply defines some well-known variables and looks like this:
 
 port="foo"
 version="1.2.3"
-workdir="foo-${version}"
 useconfigure="true"
 files="https://example.com/foo-${version}.tar.gz foo-${version}.tar.gz"
 depends="bar baz"
@@ -182,8 +190,8 @@ keyring and can later be used for verification using [`auth_opts`](#auth_opts).
 
 Options passed to `make install` in the default `install` function.
 
-`DESTDIR="$SERENITY_ROOT"/Build/Root` is always passed, override the `install`
-function if that's undesirable.
+`DESTDIR="${SERENITY_INSTALL_ROOT}"` (`"${SERENITY_SOURCE_DIR}/Build/${SERENITY_ARCH}/Root"`)
+is always passed, override the `install` function if that's undesirable.
 
 #### `makeopts`
 
@@ -207,7 +215,7 @@ is placed in.
 The location of the ports directory, only used for the `package.db` file for
 now. Don't override this in ports contributed to Serenity.
 
-Defaults to `$SERENITY_ROOT/Ports`.
+Defaults to `$SERENITY_SOURCE_DIR/Ports`.
 
 #### `useconfigure`
 

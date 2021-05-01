@@ -1,35 +1,15 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "TerminalWidget.h"
-#include "XtermColors.h"
 #include <AK/LexicalPath.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/ConfigFile.h>
@@ -40,11 +20,10 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/DragOperation.h>
-#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
@@ -58,6 +37,8 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+
+namespace VT {
 
 void TerminalWidget::set_pty_master_fd(int fd)
 {
@@ -106,13 +87,13 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     m_visual_beep_timer = add<Core::Timer>();
     m_auto_scroll_timer = add<Core::Timer>();
 
-    m_scrollbar = add<GUI::ScrollBar>(Orientation::Vertical);
+    m_scrollbar = add<GUI::Scrollbar>(Orientation::Vertical);
     m_scrollbar->set_relative_rect(0, 0, 16, 0);
     m_scrollbar->on_change = [this](int) {
-        force_repaint();
+        update();
     };
 
-    dbgln("Load config file from {}", m_config->file_name());
+    dbgln("Load config file from {}", m_config->filename());
     m_cursor_blink_timer->set_interval(m_config->read_num_entry("Text",
         "CursorBlinkInterval",
         500));
@@ -140,17 +121,17 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
 
     m_terminal.set_size(m_config->read_num_entry("Window", "Width", 80), m_config->read_num_entry("Window", "Height", 25));
 
-    m_copy_action = GUI::Action::create("Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [this](auto&) {
+    m_copy_action = GUI::Action::create("&Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [this](auto&) {
         copy();
     });
     m_copy_action->set_swallow_key_event_when_disabled(true);
 
-    m_paste_action = GUI::Action::create("Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"), [this](auto&) {
+    m_paste_action = GUI::Action::create("&Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"), [this](auto&) {
         paste();
     });
     m_paste_action->set_swallow_key_event_when_disabled(true);
 
-    m_clear_including_history_action = GUI::Action::create("Clear including history", { Mod_Ctrl | Mod_Shift, Key_K }, [this](auto&) {
+    m_clear_including_history_action = GUI::Action::create("&Clear Including History", { Mod_Ctrl | Mod_Shift, Key_K }, [this](auto&) {
         clear_including_history();
     });
 
@@ -265,7 +246,7 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
 
     m_terminal.handle_key_press(event.key(), event.code_point(), event.modifiers());
 
-    if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_LeftShift && event.key() != Key_RightShift && event.key() != Key_Logo)
+    if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_LeftShift && event.key() != Key_RightShift && event.key() != Key_Super)
         scroll_to_bottom();
 }
 
@@ -314,7 +295,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         for (u16 visual_row = 0; visual_row < m_terminal.rows(); ++visual_row) {
             auto& line = m_terminal.line(first_row_from_history + visual_row);
             for (size_t column = 0; column < line.length(); ++column) {
-                if (m_hovered_href_id == line.attributes()[column].href_id) {
+                if (m_hovered_href_id == line.attribute_at(column).href_id) {
                     bool merged_with_existing_rect = false;
                     auto glyph_rect = this->glyph_rect(visual_row, column);
                     for (auto& rect : hovered_href_rects) {
@@ -341,7 +322,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         if (visual_beep_active)
             painter.clear_rect(row_rect, Color::Red);
         else if (has_only_one_background_color)
-            painter.clear_rect(row_rect, color_from_rgb(line.attributes()[0].effective_background_color()).with_alpha(m_opacity));
+            painter.clear_rect(row_rect, color_from_rgb(line.attribute_at(0).effective_background_color()).with_alpha(m_opacity));
 
         for (size_t column = 0; column < line.length(); ++column) {
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
@@ -349,13 +330,12 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
             should_reverse_fill_for_cursor_or_selection |= selection_contains({ first_row_from_history + visual_row, (int)column });
-            auto attribute = line.attributes()[column];
+            auto attribute = line.attribute_at(column);
             auto character_rect = glyph_rect(visual_row, column);
             auto cell_rect = character_rect.inflated(0, m_line_spacing);
             auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color());
-            if ((!visual_beep_active && !has_only_one_background_color) || should_reverse_fill_for_cursor_or_selection) {
-                painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_foreground_color() : attribute.effective_background_color()).with_alpha(m_opacity));
-            }
+            if ((!visual_beep_active && !has_only_one_background_color) || should_reverse_fill_for_cursor_or_selection)
+                painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_foreground_color() : attribute.effective_background_color()));
 
             enum class UnderlineStyle {
                 None,
@@ -407,7 +387,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             continue;
         auto& line = m_terminal.line(first_row_from_history + visual_row);
         for (size_t column = 0; column < line.length(); ++column) {
-            auto attribute = line.attributes()[column];
+            auto attribute = line.attribute_at(column);
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
@@ -438,7 +418,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         auto& cursor_line = m_terminal.line(first_row_from_history + row_with_cursor);
         if (m_terminal.cursor_row() < (m_terminal.rows() - rows_from_history)) {
             auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
-            painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attributes()[m_terminal.cursor_column()].effective_foreground_color()));
+            painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attribute_at(m_terminal.cursor_column()).effective_foreground_color()));
         }
     }
 }
@@ -485,12 +465,6 @@ void TerminalWidget::flush_dirty_lines()
     update(rect);
 }
 
-void TerminalWidget::force_repaint()
-{
-    m_needs_background_fill = true;
-    update();
-}
-
 void TerminalWidget::resize_event(GUI::ResizeEvent& event)
 {
     relayout(event.size());
@@ -500,6 +474,8 @@ void TerminalWidget::relayout(const Gfx::IntSize& size)
 {
     if (!m_scrollbar)
         return;
+
+    TemporaryChange change(m_in_relayout, true);
 
     auto base_size = compute_base_size();
     int new_columns = (size.width() - base_size.width()) / font().glyph_width('x');
@@ -542,7 +518,7 @@ void TerminalWidget::set_opacity(u8 new_opacity)
 
     window()->set_has_alpha_channel(new_opacity < 255);
     m_opacity = new_opacity;
-    force_repaint();
+    update();
 }
 
 bool TerminalWidget::has_selection() const
@@ -596,18 +572,20 @@ VT::Position TerminalWidget::buffer_position_at(const Gfx::IntPoint& position) c
 
 u32 TerminalWidget::code_point_at(const VT::Position& position) const
 {
-    ASSERT(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
+    VERIFY(position.is_valid());
+    VERIFY(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
     auto& line = m_terminal.line(position.row());
-    if (position.column() == line.length())
+    if (static_cast<size_t>(position.column()) == line.length())
         return '\n';
     return line.code_point(position.column());
 }
 
 VT::Position TerminalWidget::next_position_after(const VT::Position& position, bool should_wrap) const
 {
-    ASSERT(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
+    VERIFY(position.is_valid());
+    VERIFY(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
     auto& line = m_terminal.line(position.row());
-    if (position.column() == line.length()) {
+    if (static_cast<size_t>(position.column()) == line.length()) {
         if (static_cast<size_t>(position.row()) == m_terminal.line_count() - 1) {
             if (should_wrap)
                 return { 0, 0 };
@@ -620,17 +598,17 @@ VT::Position TerminalWidget::next_position_after(const VT::Position& position, b
 
 VT::Position TerminalWidget::previous_position_before(const VT::Position& position, bool should_wrap) const
 {
-    ASSERT(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
+    VERIFY(position.row() >= 0 && static_cast<size_t>(position.row()) < m_terminal.line_count());
     if (position.column() == 0) {
         if (position.row() == 0) {
             if (should_wrap) {
                 auto& last_line = m_terminal.line(m_terminal.line_count() - 1);
-                return { static_cast<int>(m_terminal.line_count() - 1), last_line.length() };
+                return { static_cast<int>(m_terminal.line_count() - 1), static_cast<int>(last_line.length()) };
             }
             return {};
         }
         auto& prev_line = m_terminal.line(position.row() - 1);
-        return { position.row() - 1, prev_line.length() };
+        return { position.row() - 1, static_cast<int>(prev_line.length()) };
     }
     return { position.row(), position.column() - 1 };
 }
@@ -736,6 +714,7 @@ void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 
         m_selection.set({ position.row(), start_column }, { position.row(), end_column });
         update_copy_action();
+        update();
     }
     GUI::Frame::doubleclick_event(event);
 }
@@ -753,7 +732,7 @@ void TerminalWidget::paste()
     int nwritten = write(m_ptm_fd, text.data(), text.size());
     if (nwritten < 0) {
         perror("write");
-        ASSERT_NOT_REACHED();
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -915,18 +894,14 @@ String TerminalWidget::selected_text() const
         int last_column = last_selection_column_on_row(row);
         for (int column = first_column; column <= last_column; ++column) {
             auto& line = m_terminal.line(row);
-            if (line.attributes()[column].is_untouched()) {
+            if (line.attribute_at(column).is_untouched()) {
                 builder.append('\n');
                 break;
             }
             // FIXME: This is a bit hackish.
-            if (line.is_utf32()) {
-                u32 code_point = line.code_point(column);
-                builder.append(Utf32View(&code_point, 1));
-            } else {
-                builder.append(line.code_point(column));
-            }
-            if (column == line.length() - 1 || (m_rectangle_selection && column == last_column)) {
+            u32 code_point = line.code_point(column);
+            builder.append(Utf32View(&code_point, 1));
+            if (column == static_cast<int>(line.length()) - 1 || (m_rectangle_selection && column == last_column)) {
                 builder.append('\n');
             }
         }
@@ -962,12 +937,16 @@ void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
     m_pixel_width = pixel_size.width();
     m_pixel_height = pixel_size.height();
 
+    if (!m_in_relayout) {
+        if (on_terminal_size_change)
+            on_terminal_size_change(Gfx::IntSize { m_pixel_width, m_pixel_height });
+    }
+
     if (m_automatic_size_policy) {
         set_fixed_size(m_pixel_width, m_pixel_height);
     }
 
-    m_needs_background_fill = true;
-    force_repaint();
+    update();
 
     winsize ws;
     ws.ws_row = rows;
@@ -992,9 +971,9 @@ void TerminalWidget::beep()
     m_visual_beep_timer->restart(200);
     m_visual_beep_timer->set_single_shot(true);
     m_visual_beep_timer->on_timeout = [this] {
-        force_repaint();
+        update();
     };
-    force_repaint();
+    update();
 }
 
 void TerminalWidget::emit(const u8* data, size_t size)
@@ -1028,7 +1007,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
             auto af = Desktop::AppFile::get_for_app(LexicalPath(handler).basename());
             if (!af->is_valid())
                 continue;
-            auto action = GUI::Action::create(String::formatted("Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
+            auto action = GUI::Action::create(String::formatted("&Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
                 Desktop::Launcher::open(m_context_menu_href, handler);
             });
 
@@ -1038,10 +1017,10 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
             m_context_menu_for_hyperlink->add_action(action);
         }
-        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy URL", [this](auto&) {
+        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy &URL", [this](auto&) {
             GUI::Clipboard::the().set_plain_text(m_context_menu_href);
         }));
-        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy name", [&](auto&) {
+        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy &Name", [&](auto&) {
             // file://courage/home/anon/something -> /home/anon/something
             auto path = URL(m_context_menu_href).path();
             // /home/anon/something -> something
@@ -1133,4 +1112,6 @@ void TerminalWidget::set_font_and_resize_to_fit(const Gfx::Font& font)
 {
     set_font(font);
     resize(widget_size_for_font(font));
+}
+
 }

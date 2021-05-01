@@ -1,29 +1,11 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "IndividualSampleModel.h"
+#include "ProcessPickerWidget.h"
 #include "Profile.h"
 #include "ProfileTimelineWidget.h"
 #include <LibCore/ArgsParser.h>
@@ -31,47 +13,54 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/Timer.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/MenuBar.h>
+#include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ProcessChooser.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <serenity.h>
-#include <stdio.h>
 #include <string.h>
 
 static bool generate_profile(pid_t& pid);
 
 int main(int argc, char** argv)
 {
-    Core::ArgsParser args_parser;
     int pid = 0;
+    const char* perfcore_file_arg = nullptr;
+    Core::ArgsParser args_parser;
     args_parser.add_option(pid, "PID to profile", "pid", 'p', "PID");
-    args_parser.parse(argc, argv, false);
+    args_parser.add_positional_argument(perfcore_file_arg, "Path of perfcore file", "perfcore-file", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    if (pid && perfcore_file_arg) {
+        warnln("-p/--pid option and perfcore-file argument must not be used together!");
+        return 1;
+    }
 
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-profiler");
 
-    String path;
-    if (argc != 2) {
+    String perfcore_file;
+    if (!perfcore_file_arg) {
         if (!generate_profile(pid))
             return 0;
-        path = String::formatted("/proc/{}/perf_events", pid);
+        perfcore_file = String::formatted("/proc/{}/perf_events", pid);
     } else {
-        path = argv[1];
+        perfcore_file = perfcore_file_arg;
     }
 
-    auto profile_or_error = Profile::load_from_perfcore_file(path);
+    auto profile_or_error = Profile::load_from_perfcore_file(perfcore_file);
     if (profile_or_error.is_error()) {
         GUI::MessageBox::show(nullptr, profile_or_error.error(), "Profiler", GUI::MessageBox::Type::Error);
         return 0;
@@ -80,6 +69,15 @@ int main(int argc, char** argv)
     auto& profile = profile_or_error.value();
 
     auto window = GUI::Window::construct();
+
+    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
+            "/bin/Help",
+            { URL::create_with_file_protocol("/usr/share/man/man1/Profiler.md") })
+        || !Desktop::Launcher::seal_allowlist()) {
+        warnln("Failed to set up allowed launch URLs");
+        return 1;
+    }
+
     window->set_title("Profiler");
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(800, 600);
@@ -89,8 +87,14 @@ int main(int argc, char** argv)
     main_widget.set_layout<GUI::VerticalBoxLayout>();
 
     main_widget.add<ProfileTimelineWidget>(*profile);
+    main_widget.add<ProcessPickerWidget>(*profile);
 
-    auto& bottom_splitter = main_widget.add<GUI::VerticalSplitter>();
+    auto& tab_widget = main_widget.add<GUI::TabWidget>();
+
+    auto& tree_tab = tab_widget.add_tab<GUI::Widget>("Call Tree");
+    tree_tab.set_layout<GUI::VerticalBoxLayout>();
+    tree_tab.layout()->set_margins({ 4, 4, 4, 4 });
+    auto& bottom_splitter = tree_tab.add<GUI::VerticalSplitter>();
 
     auto& tree_view = bottom_splitter.add<GUI::TreeView>();
     tree_view.set_should_fill_selected_rows(true);
@@ -104,50 +108,53 @@ int main(int argc, char** argv)
         disassembly_view.set_model(profile->disassembly_model());
     };
 
-    auto menubar = GUI::MenuBar::construct();
-    auto& app_menu = menubar->add_menu("Profiler");
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    auto& samples_tab = tab_widget.add_tab<GUI::Widget>("Samples");
+    samples_tab.set_layout<GUI::VerticalBoxLayout>();
+    samples_tab.layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto& view_menu = menubar->add_menu("View");
+    auto& samples_splitter = samples_tab.add<GUI::HorizontalSplitter>();
+    auto& samples_table_view = samples_splitter.add<GUI::TableView>();
+    samples_table_view.set_model(profile->samples_model());
 
-    auto update_window_title = [&](auto title, bool is_checked) {
-        StringBuilder name;
-        name.append("Profiler");
-        if (is_checked) {
-            name.append(" - ");
-            name.append(title);
-        }
-        window->set_title(name.to_string());
+    auto& individual_sample_view = samples_splitter.add<GUI::TableView>();
+    samples_table_view.on_selection = [&](const GUI::ModelIndex& index) {
+        auto model = IndividualSampleModel::create(*profile, index.data(GUI::ModelRole::Custom).to_integer<size_t>());
+        individual_sample_view.set_model(move(model));
     };
 
-    auto invert_action = GUI::Action::create_checkable("Invert tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
+    auto menubar = GUI::Menubar::construct();
+    auto& app_menu = menubar->add_menu("&File");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+
+    auto& view_menu = menubar->add_menu("&View");
+
+    auto invert_action = GUI::Action::create_checkable("&Invert Tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
         profile->set_inverted(action.is_checked());
-        update_window_title("Invert tree", action.is_checked());
     });
     invert_action->set_checked(false);
     view_menu.add_action(invert_action);
 
-    auto top_functions_action = GUI::Action::create_checkable("Top functions", { Mod_Ctrl, Key_T }, [&](auto& action) {
+    auto top_functions_action = GUI::Action::create_checkable("&Top Functions", { Mod_Ctrl, Key_T }, [&](auto& action) {
         profile->set_show_top_functions(action.is_checked());
-        update_window_title("Top functions", action.is_checked());
     });
     top_functions_action->set_checked(false);
     view_menu.add_action(top_functions_action);
 
-    auto percent_action = GUI::Action::create_checkable("Show percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
+    auto percent_action = GUI::Action::create_checkable("Show &Percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
         profile->set_show_percentages(action.is_checked());
         tree_view.update();
         disassembly_view.update();
-        update_window_title("Show percentages", action.is_checked());
     });
     percent_action->set_checked(false);
     view_menu.add_action(percent_action);
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Profiler.md"), "/bin/Help");
+    }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Profiler", app_icon, window));
 
-    app->set_menubar(move(menubar));
-
+    window->set_menubar(move(menubar));
     window->show();
     return app->exec();
 }
@@ -169,7 +176,7 @@ static bool prompt_to_stop_profiling(pid_t pid, const String& process_name)
     Core::ElapsedTimer clock;
     clock.start();
     auto update_timer = Core::Timer::construct(100, [&] {
-        timer_label.set_text(String::format("%.1f seconds", (float)clock.elapsed() / 1000.0f));
+        timer_label.set_text(String::formatted("{:.1} seconds", clock.elapsed() / 1000.0f));
     });
 
     auto& stop_button = widget.add<GUI::Button>("Stop");

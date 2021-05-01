@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringBuilder.h>
@@ -31,11 +11,13 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ScrollBar.h>
+#include <LibGUI/Scrollbar.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
+
+REGISTER_WIDGET(GUI, TableView)
 
 namespace GUI {
 
@@ -73,8 +55,8 @@ void TableView::paint_event(PaintEvent& event)
     int y_offset = column_header().is_visible() ? column_header().height() : 0;
 
     bool dummy;
-    int first_visible_row = index_at_event_position(frame_inner_rect().top_left(), dummy).row();
-    int last_visible_row = index_at_event_position(frame_inner_rect().bottom_right(), dummy).row();
+    int first_visible_row = index_at_event_position(frame_inner_rect().top_left().translated(x_offset, y_offset), dummy).row();
+    int last_visible_row = index_at_event_position(frame_inner_rect().bottom_right().translated(x_offset, y_offset), dummy).row();
 
     if (first_visible_row == -1)
         first_visible_row = 0;
@@ -113,7 +95,7 @@ void TableView::paint_event(PaintEvent& event)
             bool is_key_column = m_key_column == column_index;
             Gfx::IntRect cell_rect(horizontal_padding() + x, y, column_width, row_height());
             auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
-            if (is_key_column)
+            if (is_key_column && is_key_column_highlighted())
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
             auto cell_index = model()->index(row_index, column_index);
 
@@ -122,9 +104,17 @@ void TableView::paint_event(PaintEvent& event)
             } else {
                 auto data = cell_index.data();
                 if (data.is_bitmap()) {
-                    painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
+                    auto cell_constrained_bitmap_rect = data.as_bitmap().rect();
+                    if (data.as_bitmap().rect().width() > column_width)
+                        cell_constrained_bitmap_rect.set_width(column_width);
+                    if (data.as_bitmap().rect().height() > row_height())
+                        cell_constrained_bitmap_rect.set_height(row_height());
+                    cell_rect.set_y(cell_rect.y() + (row_height() - cell_constrained_bitmap_rect.height()) / 2);
+                    cell_rect.set_x(cell_rect.x() + (column_width - cell_constrained_bitmap_rect.width()) / 2);
+                    painter.blit(cell_rect.location(), data.as_bitmap(), cell_constrained_bitmap_rect);
                 } else if (data.is_icon()) {
                     if (auto bitmap = data.as_icon().bitmap_for_size(16)) {
+                        cell_rect.set_y(cell_rect.y() + (row_height() - bitmap->height()) / 2);
                         if (is_selected_row) {
                             auto tint = selection_color.with_alpha(100);
                             painter.blit_filtered(cell_rect.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });

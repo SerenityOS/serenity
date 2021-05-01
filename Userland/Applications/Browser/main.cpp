@@ -1,32 +1,12 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "BookmarksBarWidget.h"
 #include "Browser.h"
-#include "InspectorWidget.h"
+#include "CookieJar.h"
 #include "Tab.h"
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
@@ -40,18 +20,21 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/HTML/WebSocket.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 namespace Browser {
 
 String g_home_url;
-bool g_multi_process = false;
+static bool s_single_process = false;
 
 static String bookmarks_file_path()
 {
@@ -78,14 +61,15 @@ int main(int argc, char** argv)
     const char* specified_url = nullptr;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(Browser::g_multi_process, "Multi-process mode", "multi-process", 'm');
+    args_parser.add_option(Browser::s_single_process, "Single-process mode", "single-process", 's');
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     auto app = GUI::Application::construct(argc, argv);
 
-    // Connect to the ProtocolServer immediately so we can drop the "unix" pledge.
+    // Connect to the RequestServer and the WebSocket service immediately so we can drop the "unix" pledge.
     Web::ResourceLoader::the();
+    Web::HTML::WebSocketClientManager::the();
 
     // Connect to LaunchServer immediately and let it know that we won't ask for anything other than opening
     // the user's downloads directory.
@@ -132,6 +116,7 @@ int main(int argc, char** argv)
 
     auto m_config = Core::ConfigFile::get_for_app("Browser");
     Browser::g_home_url = m_config->read_entry("Preferences", "Home", "about:blank");
+    Browser::g_search_engine = m_config->read_entry("Preferences", "SearchEngine", {});
 
     auto ad_filter_list_or_error = Core::File::open(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::IODevice::ReadOnly);
     if (!ad_filter_list_or_error.is_error()) {
@@ -147,6 +132,8 @@ int main(int argc, char** argv)
     bool bookmarksbar_enabled = true;
     auto bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), bookmarksbar_enabled);
 
+    Browser::CookieJar cookie_jar;
+
     auto window = GUI::Window::construct();
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
@@ -155,10 +142,16 @@ int main(int argc, char** argv)
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.load_from_gml(browser_window_gml);
 
+    auto& top_line = *widget.find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
+
     auto& tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
+    tab_widget.on_tab_count_change = [&](size_t tab_count) {
+        top_line.set_visible(tab_count > 1);
+    };
+
     auto default_favicon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png");
-    ASSERT(default_favicon);
+    VERIFY(default_favicon);
 
     tab_widget.on_change = [&](auto& active_widget) {
         auto& tab = static_cast<Browser::Tab&>(active_widget);
@@ -180,7 +173,7 @@ int main(int argc, char** argv)
 
     Function<void(URL url, bool activate)> create_new_tab;
     create_new_tab = [&](auto url, auto activate) {
-        auto type = Browser::g_multi_process ? Browser::Tab::Type::OutOfProcessWebView : Browser::Tab::Type::InProcessWebView;
+        auto type = Browser::s_single_process ? Browser::Tab::Type::InProcessWebView : Browser::Tab::Type::OutOfProcessWebView;
         auto& new_tab = tab_widget.add_tab<Browser::Tab>("New tab", type);
 
         tab_widget.set_bar_visible(!window->is_fullscreen() && tab_widget.children().size() > 1);
@@ -209,6 +202,18 @@ int main(int argc, char** argv)
             });
         };
 
+        new_tab.on_get_cookie = [&](auto& url, auto source) -> String {
+            return cookie_jar.get_cookie(url, source);
+        };
+
+        new_tab.on_set_cookie = [&](auto& url, auto& cookie, auto source) {
+            cookie_jar.set_cookie(url, cookie, source);
+        };
+
+        new_tab.on_dump_cookies = [&]() {
+            cookie_jar.dump_cookies();
+        };
+
         new_tab.load(url);
 
         dbgln("Added new tab {:p}, loading {}", &new_tab, url);
@@ -225,6 +230,20 @@ int main(int argc, char** argv)
             first_url = Browser::url_from_user_input(specified_url);
         }
     }
+
+    app->on_action_enter = [&](GUI::Action& action) {
+        auto* tab = static_cast<Browser::Tab*>(tab_widget.active_widget());
+        if (!tab)
+            return;
+        tab->action_entered(action);
+    };
+
+    app->on_action_leave = [&](auto& action) {
+        auto* tab = static_cast<Browser::Tab*>(tab_widget.active_widget());
+        if (!tab)
+            return;
+        tab->action_left(action);
+    };
 
     window_actions.on_create_new_tab = [&] {
         create_new_tab(Browser::g_home_url, true);

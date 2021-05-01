@@ -23,12 +23,14 @@ describe("normal behavior", () => {
     });
 
     test("regular object with some properties has own keys", () => {
-        var objectOwnKeys = Reflect.ownKeys({ foo: "bar", bar: "baz", 0: 42 });
+        var symbol = Symbol("symbol");
+        var objectOwnKeys = Reflect.ownKeys({ foo: "bar", [symbol]: "qux", bar: "baz", 0: 42 });
         expect(objectOwnKeys instanceof Array).toBeTrue();
-        expect(objectOwnKeys).toHaveLength(3);
+        expect(objectOwnKeys).toHaveLength(4);
         expect(objectOwnKeys[0]).toBe("0");
         expect(objectOwnKeys[1]).toBe("foo");
         expect(objectOwnKeys[2]).toBe("bar");
+        expect(objectOwnKeys[3]).toBe(symbol);
     });
 
     test("empty array has only 'length' own key", () => {
@@ -38,7 +40,7 @@ describe("normal behavior", () => {
         expect(arrayOwnKeys[0]).toBe("length");
     });
 
-    test("array with some values has 'lenght' and indices own keys", () => {
+    test("array with some values has 'length' and indices own keys", () => {
         var arrayOwnKeys = Reflect.ownKeys(["foo", [], 123, undefined]);
         expect(arrayOwnKeys instanceof Array).toBeTrue();
         expect(arrayOwnKeys).toHaveLength(5);
