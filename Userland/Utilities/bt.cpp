@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 
             // See if we can find the sources in /usr/src
             // FIXME: I'm sure this can be improved!
-            auto full_path = LexicalPath::canonicalized_path(String::formatted("/usr/src/serenity/dummy/{}", symbol.filename));
+            auto full_path = LexicalPath::canonicalized_path(String::formatted("/usr/src/serenity/dummy/dummy/{}", symbol.filename));
             if (access(full_path.characters(), F_OK) == 0) {
                 linked = true;
                 out("\033]8;;file://{}{}?line_number={}\033\\", hostname, full_path, symbol.line_number);
