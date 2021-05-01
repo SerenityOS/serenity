@@ -552,7 +552,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_action()
         if (active_file().is_empty())
             return;
 
-        current_editor().write_to_file(active_file());
+        current_editor_wrapper().save();
 
         if (m_git_widget->initialized())
             m_git_widget->refresh();
