@@ -11,6 +11,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <pwd.h>
+#include <shadow.h>
 #include <sys/types.h>
 
 namespace Core {
@@ -46,10 +47,9 @@ public:
     bool sync();
 
 private:
-    static Result<Account, String> from_passwd(const passwd&);
+    static Result<Account, String> from_passwd(const passwd&, const spwd&);
 
-    Account(const passwd& pwd, Vector<gid_t> extra_gids);
-    void load_shadow_file();
+    Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids);
 
     String generate_passwd_file() const;
     String generate_shadow_file() const;
@@ -63,12 +63,6 @@ private:
     String m_home_directory;
     String m_shell;
     Vector<gid_t> m_extra_gids;
-
-    struct ShadowEntry {
-        String username;
-        String password_hash;
-    };
-    Vector<ShadowEntry> m_shadow_entries;
 };
 
 }
