@@ -8,6 +8,8 @@ depends="zlib openssl"
 useconfigure=true
 configopts="--prefix=/usr/local --disable-utmp --disable-strip --sysconfdir=/etc/ssh --with-ssl-dir=${SERENITY_INSTALL_ROOT}/usr/local/lib"
 
+export LDFLAGS="-lcrypt -lcore"
+
 pre_configure() {
     run autoreconf
 }
