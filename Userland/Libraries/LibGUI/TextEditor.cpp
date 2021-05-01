@@ -169,7 +169,7 @@ TextPosition TextEditor::text_position_at_content_position(const Gfx::IntPoint& 
                 int glyph_x = 0;
                 size_t i = 0;
                 for (; i < view.length(); ++i) {
-                    int advance = width_of_view(view.substring_view(i, 1));
+                    int advance = width_of_view(view.substring_view(i, 1), editor_column_to_display_column(view, i));
                     if ((glyph_x + (advance / 2)) >= position.x())
                         break;
                     glyph_x += advance;
@@ -392,7 +392,7 @@ void TextEditor::draw_text_with_tabs_helper(const Utf32View& visual_line_text, D
             });
         }
         auto chars_to_next_tab_stop = hard_tab_width() - (length % hard_tab_width());
-        move_rect.move_by(font().glyph_width(' ') * chars_to_next_tab_stop, 0);
+        move_rect.translate_by(font().glyph_width(' ') * chars_to_next_tab_stop, 0);
 
         start_offset += length + 1;
         length = 0;
@@ -518,10 +518,11 @@ void TextEditor::paint_event(PaintEvent& event)
                 size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
                 if (physical_column < end_of_visual_line) {
                     size_t visual_column = physical_column > start_of_visual_line ? (physical_column - start_of_visual_line) : 0;
+                    size_t display_column = editor_column_to_display_column(visual_line_text, visual_column);
                     Gfx::IntRect whitespace_rect {
                         content_x_for_position({ line_index, visual_column }),
                         visual_line_rect.y(),
-                        width_of_view(visual_line_text.substring_view(visual_column, visual_line_text.length() - visual_column)),
+                        width_of_view(visual_line_text.substring_view(visual_column, visual_line_text.length() - visual_column), display_column),
                         visual_line_rect.height()
                     };
                     painter.fill_rect_with_dither_pattern(whitespace_rect, Color(), Color(255, 192, 192));
@@ -558,7 +559,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     visual_line_text,
                     [&](size_t start_offset, size_t length) {
                         painter.draw_text(line_rect, visual_line_text.substring_view(start_offset, length), m_text_alignment, color);
-                        line_rect.move_by(font().width(visual_line_text.substring_view(start_offset, length)), 0);
+                        line_rect.translate_by(font().width(visual_line_text.substring_view(start_offset, length)), 0);
                     },
                     line_rect,
                     painter,
@@ -585,7 +586,7 @@ void TextEditor::paint_event(PaintEvent& event)
                             if (underline) {
                                 painter.draw_line(span_rect.bottom_left().translated(0, 1), span_rect.bottom_right().translated(0, 1), color);
                             }
-                            span_rect.move_by(width_of_view(text), 0);
+                            span_rect.translate_by(width_of_view(text, start + start_offset), 0);
                         },
                         span_rect,
                         painter,
@@ -725,7 +726,7 @@ void TextEditor::paint_event(PaintEvent& event)
                             visual_selected_text,
                             [&](size_t start_offset, size_t length) {
                                 painter.draw_text(selection_rect, visual_selected_text.substring_view(start_offset, length), Gfx::TextAlignment::CenterLeft, text_color);
-                                selection_rect.move_by(font().width(visual_selected_text.substring_view(start_offset, length)), 0);
+                                selection_rect.translate_by(font().width(visual_selected_text.substring_view(start_offset, length)), 0);
                             },
                             selection_rect,
                             painter,
@@ -874,12 +875,13 @@ void TextEditor::keydown_event(KeyEvent& event)
                 erase_count = m_cursor.column() - word_break_pos.column();
             } else if (current_line().first_non_whitespace_column() >= m_cursor.column()) {
                 int new_column;
-                if (cursor_column_with_tabs() % m_soft_tab_width == 0)
-                    new_column = cursor_column_with_tabs() - m_soft_tab_width;
+                int cursor_column_with_tabs = editor_column_to_display_column(current_line().view(), m_cursor.column());
+                if (cursor_column_with_tabs % m_soft_tab_width == 0)
+                    new_column = cursor_column_with_tabs - m_soft_tab_width;
                 else
-                    new_column = (cursor_column_with_tabs() / m_soft_tab_width) * m_soft_tab_width;
+                    new_column = (cursor_column_with_tabs / m_soft_tab_width) * m_soft_tab_width;
                 bool all_spaces = true;
-                for (int display_col = cursor_column_with_tabs() - 1; display_col >= new_column; display_col--) {
+                for (int display_col = cursor_column_with_tabs - 1; display_col >= new_column; display_col--) {
                     // Indentation needs to be calculated with display columns. To delete characters,
                     // we need to convert it back into the index of the actual code point
                     auto cursor_line = line(m_cursor.line());
@@ -898,7 +900,7 @@ void TextEditor::keydown_event(KeyEvent& event)
                     }
                 }
                 if (all_spaces) {
-                    erase_count = cursor_column_with_tabs() - new_column;
+                    erase_count = cursor_column_with_tabs - new_column;
                 }
             }
 
@@ -1592,7 +1594,7 @@ void TextEditor::recompute_visual_lines(size_t line_index)
                 last_whitespace_index = i;
                 line_width_since_last_whitespace = 0;
             }
-            auto glyph_width = width_of_view(Utf32View(&code_point, 1));
+            auto glyph_width = width_of_view(Utf32View(&code_point, 1), editor_column_to_display_column(line.view(), i));
             line_width_since_last_whitespace += glyph_width + glyph_spacing;
             if ((line_width_so_far + glyph_width + glyph_spacing) > available_width) {
                 if (m_wrapping_mode == WrappingMode::WrapAtWords && last_whitespace_index != 0) {
@@ -1620,10 +1622,9 @@ void TextEditor::recompute_visual_lines(size_t line_index)
 }
 
 // Width of a Utf32View, adjusted with the appropriate tab size
-int TextEditor::width_of_view(Utf32View view) const
+int TextEditor::width_of_view(Utf32View view, int column) const
 {
     int width = 0;
-    int column = 0;
     for (auto code_point : view) {
         if (code_point == '\t') {
             auto chars_to_next_tab_stop = hard_tab_width() - (column % hard_tab_width());

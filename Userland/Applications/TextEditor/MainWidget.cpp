@@ -788,7 +788,9 @@ void MainWidget::update_html_preview()
 void MainWidget::update_statusbar()
 {
     StringBuilder builder;
-    builder.appendff("Line: {}, Column: {}", m_editor->cursor().line() + 1, m_editor->cursor_column_with_tabs());
+    unsigned int column = m_editor->editor_column_to_display_column(m_editor->current_line().view(),
+        m_editor->cursor().column());
+    builder.appendff("Line: {}, Column: {}", m_editor->cursor().line() + 1, column);
 
     if (m_editor->has_selection()) {
         int word_count = 0;

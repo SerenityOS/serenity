@@ -118,16 +118,22 @@ public:
     int line_spacing() const { return m_line_spacing; }
     int line_height() const;
     TextPosition cursor() const { return m_cursor; }
-    unsigned long cursor_column_with_tabs() const
+
+    unsigned editor_column_to_display_column(Utf32View view, unsigned editor_column) const
     {
-        auto& cursor_line = line(m_cursor.line());
-        auto num_tabs = 0;
-        for (size_t i = 0; i < m_cursor.column(); i++) {
-            if (cursor_line.code_points()[i] == '\t')
-                num_tabs += 1;
+        unsigned column = 0;
+        for (auto code_point : view.substring_view(0, editor_column)) {
+            if (code_point == '\t') {
+                auto chars_to_next_tab_stop = hard_tab_width() - (column % hard_tab_width());
+                column += chars_to_next_tab_stop;
+            } else {
+                column++;
+            }
         }
-        return m_cursor.column() - num_tabs + num_tabs * hard_tab_width();
+
+        return column;
     }
+
     TextRange normalized_selection() const { return m_selection.normalized(); }
 
     void insert_at_cursor_or_replace_selection(const StringView&);
@@ -268,7 +274,7 @@ private:
     int icon_size() const { return 16; }
     int icon_padding() const { return 2; }
 
-    int width_of_view(Utf32View) const;
+    int width_of_view(Utf32View view, int column = 0) const;
 
     class ReflowDeferrer {
     public:
