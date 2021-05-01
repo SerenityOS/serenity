@@ -34,9 +34,7 @@ public:
     // ^Device
     virtual mode_t required_mode() const override { return 0440; }
 
-    //FIXME: It should be something like String::formatted("mouse{}", minor())
-    // instead of a fixed string like this
-    virtual String device_name() const override { return "mouse"; }
+    virtual String device_name() const override { return String::formatted("mouse{}", minor()); }
 
 protected:
     MouseDevice();
