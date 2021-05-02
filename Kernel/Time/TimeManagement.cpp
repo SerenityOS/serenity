@@ -30,6 +30,11 @@ TimeManagement& TimeManagement::the()
     return *s_the;
 }
 
+bool TimeManagement::is_initialized()
+{
+    return s_the.is_initialized();
+}
+
 bool TimeManagement::is_valid_clock_id(clockid_t clock_id)
 {
     switch (clock_id) {

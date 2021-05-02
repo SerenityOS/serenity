@@ -628,11 +628,20 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams params)
 
 #ifdef __serenity__
 #    ifdef KERNEL
-    if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
-        auto& thread = *Kernel::Thread::current();
-        builder.appendff("\033[34;1m[#{} {}({}:{})]\033[0m: ", Kernel::Processor::id(), thread.process().name(), thread.pid().value(), thread.tid().value());
+    if (Kernel::TimeManagement::is_initialized()) {
+        if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
+            auto& thread = *Kernel::Thread::current();
+            builder.appendff("\033[34;1m[#{} {} {}({}:{})]\033[0m: ", Kernel::Processor::id(), Kernel::TimeManagement::the().monotonic_time(TimePrecision::Precise), thread.process().name(), thread.pid().value(), thread.tid().value());
+        } else {
+            builder.appendff("\033[34;1m[#{} {} Kernel]\033[0m: ", Kernel::Processor::id(), Kernel::TimeManagement::the().monotonic_time(TimePrecision::Precise));
+        }
     } else {
-        builder.appendff("\033[34;1m[#{} Kernel]\033[0m: ", Kernel::Processor::id());
+        if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
+            auto& thread = *Kernel::Thread::current();
+            builder.appendff("\033[34;1m[#{} {}({}:{})]\033[0m: ", Kernel::Processor::id(), thread.process().name(), thread.pid().value(), thread.tid().value());
+        } else {
+            builder.appendff("\033[34;1m[#{} Kernel]\033[0m: ", Kernel::Processor::id());
+        }
     }
 #    else
     static TriState got_process_name = TriState::Unknown;
