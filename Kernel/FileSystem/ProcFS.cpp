@@ -1045,7 +1045,11 @@ ProcFSInode::~ProcFSInode()
 
 RefPtr<Process> ProcFSInode::process() const
 {
-    return Process::from_pid(to_pid(identifier()));
+    auto parent = to_proc_parent_directory(identifier());
+    if (parent == PDI_PID || parent == PDI_PID_fd || parent == PDI_PID_stacks)
+        return Process::from_pid(to_pid(identifier()));
+
+    return nullptr;
 }
 
 KResult ProcFSInode::refresh_data(FileDescription& description) const
