@@ -16,8 +16,8 @@ class Matrix {
 public:
     static constexpr size_t Size = N;
 
-    Matrix() = default;
-    Matrix(std::initializer_list<T> elements)
+    constexpr Matrix() = default;
+    constexpr Matrix(std::initializer_list<T> elements)
     {
         VERIFY(elements.size() == N * N);
         size_t i = 0;
@@ -28,7 +28,7 @@ public:
     }
 
     template<typename... Args>
-    Matrix(Args... args)
+    constexpr Matrix(Args... args)
         : Matrix({ (T)args... })
     {
     }
@@ -38,10 +38,10 @@ public:
         __builtin_memcpy(m_elements, other.elements(), sizeof(T) * N * N);
     }
 
-    auto elements() const { return m_elements; }
-    auto elements() { return m_elements; }
+    constexpr auto elements() const { return m_elements; }
+    constexpr auto elements() { return m_elements; }
 
-    Matrix operator*(const Matrix& other) const
+    constexpr Matrix operator*(const Matrix& other) const
     {
         Matrix product;
         for (int i = 0; i < N; ++i) {
