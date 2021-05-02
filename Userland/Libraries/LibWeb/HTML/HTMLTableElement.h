@@ -8,6 +8,7 @@
 
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/HTMLTableCaptionElement.h>
 #include <LibWeb/HTML/HTMLTableRowElement.h>
 
 namespace Web::HTML {
@@ -18,6 +19,11 @@ public:
 
     HTMLTableElement(DOM::Document&, QualifiedName);
     virtual ~HTMLTableElement() override;
+
+    RefPtr<HTMLTableCaptionElement> caption();
+    void set_caption(HTMLTableCaptionElement&);
+    NonnullRefPtr<HTMLTableCaptionElement> create_caption();
+    void delete_caption();
 
     NonnullRefPtr<DOM::HTMLCollection> rows();
     DOM::ExceptionOr<NonnullRefPtr<HTMLTableRowElement>> insert_row(long index);
