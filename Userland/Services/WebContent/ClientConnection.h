@@ -33,24 +33,24 @@ private:
     Web::Page& page();
     const Web::Page& page() const;
 
-    virtual void handle(const Messages::WebContentServer::Greet&) override;
-    virtual void handle(const Messages::WebContentServer::UpdateSystemTheme&) override;
-    virtual void handle(const Messages::WebContentServer::UpdateScreenRect&) override;
-    virtual void handle(const Messages::WebContentServer::LoadURL&) override;
-    virtual void handle(const Messages::WebContentServer::LoadHTML&) override;
-    virtual void handle(const Messages::WebContentServer::Paint&) override;
-    virtual void handle(const Messages::WebContentServer::SetViewportRect&) override;
-    virtual void handle(const Messages::WebContentServer::MouseDown&) override;
-    virtual void handle(const Messages::WebContentServer::MouseMove&) override;
-    virtual void handle(const Messages::WebContentServer::MouseUp&) override;
-    virtual void handle(const Messages::WebContentServer::MouseWheel&) override;
-    virtual void handle(const Messages::WebContentServer::KeyDown&) override;
-    virtual void handle(const Messages::WebContentServer::AddBackingStore&) override;
-    virtual void handle(const Messages::WebContentServer::RemoveBackingStore&) override;
-    virtual void handle(const Messages::WebContentServer::DebugRequest&) override;
-    virtual void handle(const Messages::WebContentServer::GetSource&) override;
-    virtual void handle(const Messages::WebContentServer::JSConsoleInitialize&) override;
-    virtual void handle(const Messages::WebContentServer::JSConsoleInput&) override;
+    virtual void greet() override;
+    virtual void update_system_theme(Core::AnonymousBuffer const&) override;
+    virtual void update_screen_rect(Gfx::IntRect const&) override;
+    virtual void load_url(URL const&) override;
+    virtual void load_html(String const&, URL const&) override;
+    virtual void paint(Gfx::IntRect const&, i32) override;
+    virtual void set_viewport_rect(Gfx::IntRect const&) override;
+    virtual void mouse_down(Gfx::IntPoint const&, unsigned, unsigned, unsigned) override;
+    virtual void mouse_move(Gfx::IntPoint const&, unsigned, unsigned, unsigned) override;
+    virtual void mouse_up(Gfx::IntPoint const&, unsigned, unsigned, unsigned) override;
+    virtual void mouse_wheel(Gfx::IntPoint const&, unsigned, unsigned, unsigned, i32) override;
+    virtual void key_down(i32, unsigned, u32) override;
+    virtual void add_backing_store(i32, Gfx::ShareableBitmap const&) override;
+    virtual void remove_backing_store(i32) override;
+    virtual void debug_request(String const&, String const&) override;
+    virtual void get_source() override;
+    virtual void jsconsole_initialize() override;
+    virtual void jsconsole_input(String const&) override;
 
     void flush_pending_paint_requests();
 

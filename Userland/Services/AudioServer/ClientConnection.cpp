@@ -59,21 +59,21 @@ void ClientConnection::did_change_main_mix_volume(Badge<Mixer>, int volume)
     post_message(Messages::AudioClient::MainMixVolumeChanged(volume));
 }
 
-void ClientConnection::handle(const Messages::AudioServer::Greet&)
+void ClientConnection::greet()
 {
 }
 
-Messages::AudioServer::GetMainMixVolumeResponse ClientConnection::handle(const Messages::AudioServer::GetMainMixVolume&)
+Messages::AudioServer::GetMainMixVolumeResponse ClientConnection::get_main_mix_volume()
 {
     return m_mixer.main_volume();
 }
 
-void ClientConnection::handle(const Messages::AudioServer::SetMainMixVolume& message)
+void ClientConnection::set_main_mix_volume(i32 volume)
 {
-    m_mixer.set_main_volume(message.volume());
+    m_mixer.set_main_volume(volume);
 }
 
-Messages::AudioServer::EnqueueBufferResponse ClientConnection::handle(const Messages::AudioServer::EnqueueBuffer& message)
+Messages::AudioServer::EnqueueBufferResponse ClientConnection::enqueue_buffer(Core::AnonymousBuffer const& buffer, i32 buffer_id, int sample_count)
 {
     if (!m_queue)
         m_queue = m_mixer.create_queue(*this);
@@ -81,11 +81,11 @@ Messages::AudioServer::EnqueueBufferResponse ClientConnection::handle(const Mess
     if (m_queue->is_full())
         return false;
 
-    m_queue->enqueue(Audio::Buffer::create_with_anonymous_buffer(message.buffer(), message.buffer_id(), message.sample_count()));
+    m_queue->enqueue(Audio::Buffer::create_with_anonymous_buffer(buffer, buffer_id, sample_count));
     return true;
 }
 
-Messages::AudioServer::GetRemainingSamplesResponse ClientConnection::handle(const Messages::AudioServer::GetRemainingSamples&)
+Messages::AudioServer::GetRemainingSamplesResponse ClientConnection::get_remaining_samples()
 {
     int remaining = 0;
     if (m_queue)
@@ -94,7 +94,7 @@ Messages::AudioServer::GetRemainingSamplesResponse ClientConnection::handle(cons
     return remaining;
 }
 
-Messages::AudioServer::GetPlayedSamplesResponse ClientConnection::handle(const Messages::AudioServer::GetPlayedSamples&)
+Messages::AudioServer::GetPlayedSamplesResponse ClientConnection::get_played_samples()
 {
     int played = 0;
     if (m_queue)
@@ -103,19 +103,19 @@ Messages::AudioServer::GetPlayedSamplesResponse ClientConnection::handle(const M
     return played;
 }
 
-void ClientConnection::handle(const Messages::AudioServer::SetPaused& message)
+void ClientConnection::set_paused(bool paused)
 {
     if (m_queue)
-        m_queue->set_paused(message.paused());
+        m_queue->set_paused(paused);
 }
 
-void ClientConnection::handle(const Messages::AudioServer::ClearBuffer& message)
+void ClientConnection::clear_buffer(bool paused)
 {
     if (m_queue)
-        m_queue->clear(message.paused());
+        m_queue->clear(paused);
 }
 
-Messages::AudioServer::GetPlayingBufferResponse ClientConnection::handle(const Messages::AudioServer::GetPlayingBuffer&)
+Messages::AudioServer::GetPlayingBufferResponse ClientConnection::get_playing_buffer()
 {
     int id = -1;
     if (m_queue)
@@ -123,13 +123,13 @@ Messages::AudioServer::GetPlayingBufferResponse ClientConnection::handle(const M
     return id;
 }
 
-Messages::AudioServer::GetMutedResponse ClientConnection::handle(const Messages::AudioServer::GetMuted&)
+Messages::AudioServer::GetMutedResponse ClientConnection::get_muted()
 {
     return m_mixer.is_muted();
 }
 
-void ClientConnection::handle(const Messages::AudioServer::SetMuted& message)
+void ClientConnection::set_muted(bool muted)
 {
-    m_mixer.set_muted(message.muted());
+    m_mixer.set_muted(muted);
 }
 }

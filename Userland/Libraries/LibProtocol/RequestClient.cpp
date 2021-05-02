@@ -58,34 +58,34 @@ bool RequestClient::set_certificate(Badge<Request>, Request& request, String cer
     return send_sync<Messages::RequestServer::SetCertificate>(request.id(), move(certificate), move(key))->success();
 }
 
-void RequestClient::handle(const Messages::RequestClient::RequestFinished& message)
+void RequestClient::request_finished(i32 request_id, bool success, u32 total_size)
 {
     RefPtr<Request> request;
-    if ((request = m_requests.get(message.request_id()).value_or(nullptr))) {
-        request->did_finish({}, message.success(), message.total_size());
+    if ((request = m_requests.get(request_id).value_or(nullptr))) {
+        request->did_finish({}, success, total_size);
     }
-    m_requests.remove(message.request_id());
+    m_requests.remove(request_id);
 }
 
-void RequestClient::handle(const Messages::RequestClient::RequestProgress& message)
+void RequestClient::request_progress(i32 request_id, const Optional<u32>& total_size, u32 downloaded_size)
 {
-    if (auto request = const_cast<Request*>(m_requests.get(message.request_id()).value_or(nullptr))) {
-        request->did_progress({}, message.total_size(), message.downloaded_size());
+    if (auto request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr))) {
+        request->did_progress({}, total_size, downloaded_size);
     }
 }
 
-void RequestClient::handle(const Messages::RequestClient::HeadersBecameAvailable& message)
+void RequestClient::headers_became_available(i32 request_id, const IPC::Dictionary& response_headers, const Optional<u32>& status_code)
 {
-    if (auto request = const_cast<Request*>(m_requests.get(message.request_id()).value_or(nullptr))) {
+    if (auto request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr))) {
         HashMap<String, String, CaseInsensitiveStringTraits> headers;
-        message.response_headers().for_each_entry([&](auto& name, auto& value) { headers.set(name, value); });
-        request->did_receive_headers({}, headers, message.status_code());
+        response_headers.for_each_entry([&](auto& name, auto& value) { headers.set(name, value); });
+        request->did_receive_headers({}, headers, status_code);
     }
 }
 
-void RequestClient::handle(const Messages::RequestClient::CertificateRequested& message)
+void RequestClient::certificate_requested(i32 request_id)
 {
-    if (auto request = const_cast<Request*>(m_requests.get(message.request_id()).value_or(nullptr))) {
+    if (auto request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr))) {
         request->did_request_certificates({});
     }
 }

@@ -24,40 +24,42 @@ void WindowManagerServerConnection::handshake()
     // :^)
 }
 
-void WindowManagerServerConnection::handle(const Messages::WindowManagerClient::WindowStateChanged& message)
+void WindowManagerServerConnection::window_state_changed(i32 wm_id, i32 client_id, i32 window_id,
+    i32 parent_client_id, i32 parent_window_id, bool is_active, bool is_minimized, bool is_modal,
+    bool is_frameless, i32 window_type, String const& title, Gfx::IntRect const& rect, Optional<i32> const& progress)
 {
-    if (auto* window = Window::from_window_id(message.wm_id()))
-        Core::EventLoop::current().post_event(*window, make<WMWindowStateChangedEvent>(message.client_id(), message.window_id(), message.parent_client_id(), message.parent_window_id(), message.title(), message.rect(), message.is_active(), message.is_modal(), static_cast<WindowType>(message.window_type()), message.is_minimized(), message.is_frameless(), message.progress()));
+    if (auto* window = Window::from_window_id(wm_id))
+        Core::EventLoop::current().post_event(*window, make<WMWindowStateChangedEvent>(client_id, window_id, parent_client_id, parent_window_id, title, rect, is_active, is_modal, static_cast<WindowType>(window_type), is_minimized, is_frameless, progress));
 }
 
-void WindowManagerServerConnection::handle(const Messages::WindowManagerClient::AppletAreaSizeChanged& message)
+void WindowManagerServerConnection::applet_area_size_changed(i32 wm_id, const Gfx::IntSize& size)
 {
-    if (auto* window = Window::from_window_id(message.wm_id()))
-        Core::EventLoop::current().post_event(*window, make<WMAppletAreaSizeChangedEvent>(message.size()));
+    if (auto* window = Window::from_window_id(wm_id))
+        Core::EventLoop::current().post_event(*window, make<WMAppletAreaSizeChangedEvent>(size));
 }
 
-void WindowManagerServerConnection::handle(const Messages::WindowManagerClient::WindowRectChanged& message)
+void WindowManagerServerConnection::window_rect_changed(i32 wm_id, i32 client_id, i32 window_id, Gfx::IntRect const& rect)
 {
-    if (auto* window = Window::from_window_id(message.wm_id()))
-        Core::EventLoop::current().post_event(*window, make<WMWindowRectChangedEvent>(message.client_id(), message.window_id(), message.rect()));
+    if (auto* window = Window::from_window_id(wm_id))
+        Core::EventLoop::current().post_event(*window, make<WMWindowRectChangedEvent>(client_id, window_id, rect));
 }
 
-void WindowManagerServerConnection::handle(const Messages::WindowManagerClient::WindowIconBitmapChanged& message)
+void WindowManagerServerConnection::window_icon_bitmap_changed(i32 wm_id, i32 client_id, i32 window_id, Gfx::ShareableBitmap const& bitmap)
 {
-    if (auto* window = Window::from_window_id(message.wm_id())) {
-        Core::EventLoop::current().post_event(*window, make<WMWindowIconBitmapChangedEvent>(message.client_id(), message.window_id(), message.bitmap().bitmap()));
+    if (auto* window = Window::from_window_id(wm_id)) {
+        Core::EventLoop::current().post_event(*window, make<WMWindowIconBitmapChangedEvent>(client_id, window_id, bitmap.bitmap()));
     }
 }
 
-void WindowManagerServerConnection::handle(const Messages::WindowManagerClient::WindowRemoved& message)
+void WindowManagerServerConnection::window_removed(i32 wm_id, i32 client_id, i32 window_id)
 {
-    if (auto* window = Window::from_window_id(message.wm_id()))
-        Core::EventLoop::current().post_event(*window, make<WMWindowRemovedEvent>(message.client_id(), message.window_id()));
+    if (auto* window = Window::from_window_id(wm_id))
+        Core::EventLoop::current().post_event(*window, make<WMWindowRemovedEvent>(client_id, window_id));
 }
 
-void WindowManagerServerConnection::handle(const Messages::WindowManagerClient::SuperKeyPressed& message)
+void WindowManagerServerConnection::super_key_pressed(i32 wm_id)
 {
-    if (auto* window = Window::from_window_id(message.wm_id()))
-        Core::EventLoop::current().post_event(*window, make<WMSuperKeyPressedEvent>(message.wm_id()));
+    if (auto* window = Window::from_window_id(wm_id))
+        Core::EventLoop::current().post_event(*window, make<WMSuperKeyPressedEvent>(wm_id));
 }
 }

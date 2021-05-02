@@ -14,22 +14,22 @@
 
 namespace HackStudio {
 
-void ServerConnection::handle(const Messages::LanguageClient::AutoCompleteSuggestions& message)
+void ServerConnection::auto_complete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>& suggestions)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
         return;
     }
-    m_current_language_client->provide_autocomplete_suggestions(message.suggestions());
+    m_current_language_client->provide_autocomplete_suggestions(suggestions);
 }
 
-void ServerConnection::handle(const Messages::LanguageClient::DeclarationLocation& message)
+void ServerConnection::declaration_location(const GUI::AutocompleteProvider::ProjectLocation& location)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
         return;
     }
-    m_current_language_client->declaration_found(message.location().file, message.location().line, message.location().column);
+    m_current_language_client->declaration_found(location.file, location.line, location.column);
 }
 
 void ServerConnection::die()
@@ -100,9 +100,9 @@ void LanguageClient::set_active_client()
 
 HashMap<String, NonnullOwnPtr<ServerConnectionWrapper>> ServerConnectionInstances::s_instance_for_language;
 
-void ServerConnection::handle(const Messages::LanguageClient::DeclarationsInDocument& message)
+void ServerConnection::declarations_in_document(const String& filename, const Vector<GUI::AutocompleteProvider::Declaration>& declarations)
 {
-    ProjectDeclarations::the().set_declared_symbols(message.filename(), message.declarations());
+    ProjectDeclarations::the().set_declared_symbols(filename, declarations);
 }
 
 void LanguageClient::search_declaration(const String& path, size_t line, size_t column)

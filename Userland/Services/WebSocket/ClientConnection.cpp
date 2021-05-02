@@ -31,25 +31,25 @@ void ClientConnection::die()
         Core::EventLoop::current().quit(0);
 }
 
-void ClientConnection::handle(const Messages::WebSocketServer::Greet&)
+void ClientConnection::greet()
 {
 }
 
-Messages::WebSocketServer::ConnectResponse ClientConnection::handle(const Messages::WebSocketServer::Connect& message)
+Messages::WebSocketServer::ConnectResponse ClientConnection::connect(URL const& url, String const& origin,
+    Vector<String> const& protocols, Vector<String> const& extensions, IPC::Dictionary const& additional_request_headers)
 {
-    const auto& url = message.url();
     if (!url.is_valid()) {
         dbgln("WebSocket::Connect: Invalid URL requested: '{}'", url);
         return -1;
     }
 
     ConnectionInfo connection_info(url);
-    connection_info.set_origin(message.origin());
-    connection_info.set_protocols(message.protocols());
-    connection_info.set_extensions(message.extensions());
+    connection_info.set_origin(origin);
+    connection_info.set_protocols(protocols);
+    connection_info.set_extensions(extensions);
 
     Vector<ConnectionInfo::Header> headers;
-    for (const auto& header : message.additional_request_headers().entries()) {
+    for (auto const& header : additional_request_headers.entries()) {
         headers.append({ header.key, header.value });
     }
     connection_info.set_headers(headers);
@@ -75,38 +75,39 @@ Messages::WebSocketServer::ConnectResponse ClientConnection::handle(const Messag
     return id;
 }
 
-Messages::WebSocketServer::ReadyStateResponse ClientConnection::handle(const Messages::WebSocketServer::ReadyState& message)
+Messages::WebSocketServer::ReadyStateResponse ClientConnection::ready_state(i32 connection_id)
 {
-    RefPtr<WebSocket> connection = m_connections.get(message.connection_id()).value_or({});
+    RefPtr<WebSocket> connection = m_connections.get(connection_id).value_or({});
     if (connection) {
         return (u32)connection->ready_state();
     }
     return (u32)ReadyState::Closed;
 }
 
-void ClientConnection::handle(const Messages::WebSocketServer::Send& message)
+void ClientConnection::send(i32 connection_id, bool is_text, ByteBuffer const& data)
 {
-    RefPtr<WebSocket> connection = m_connections.get(message.connection_id()).value_or({});
+    RefPtr<WebSocket> connection = m_connections.get(connection_id).value_or({});
     if (connection && connection->ready_state() == ReadyState::Open) {
-        Message websocket_message(message.data(), message.is_text());
+        Message websocket_message(data, is_text);
         connection->send(websocket_message);
     }
 }
 
-void ClientConnection::handle(const Messages::WebSocketServer::Close& message)
+void ClientConnection::close(i32 connection_id, u16 code, String const& reason)
 {
-    RefPtr<WebSocket> connection = m_connections.get(message.connection_id()).value_or({});
+    RefPtr<WebSocket> connection = m_connections.get(connection_id).value_or({});
     if (connection && connection->ready_state() == ReadyState::Open)
-        connection->close(message.code(), message.reason());
+        connection->close(code, reason);
 }
 
-Messages::WebSocketServer::SetCertificateResponse ClientConnection::handle(const Messages::WebSocketServer::SetCertificate& message)
+Messages::WebSocketServer::SetCertificateResponse ClientConnection::set_certificate(i32 connection_id,
+    [[maybe_unused]] String const& certificate, [[maybe_unused]] String const& key)
 {
-    RefPtr<WebSocket> connection = m_connections.get(message.connection_id()).value_or({});
+    RefPtr<WebSocket> connection = m_connections.get(connection_id).value_or({});
     bool success = false;
     if (connection) {
         // NO OP here
-        // connection->set_certificate(message.certificate(), message.key());
+        // connection->set_certificate(certificate, key);
         success = true;
     }
     return success;
