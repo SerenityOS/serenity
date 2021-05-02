@@ -55,4 +55,8 @@ struct dirent* readdir(DIR*);
 int readdir_r(DIR*, struct dirent*, struct dirent**);
 int dirfd(DIR*);
 
+int scandir(const char* dirp, struct dirent*** namelist,
+    int (*filter)(const struct dirent*),
+    int (*compar)(const struct dirent**, const struct dirent**));
+
 __END_DECLS
