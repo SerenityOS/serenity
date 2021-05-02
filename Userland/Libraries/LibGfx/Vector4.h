@@ -12,8 +12,8 @@ namespace Gfx {
 template<typename T>
 class Vector4 final {
 public:
-    Vector4() = default;
-    Vector4(T x, T y, T z, T w)
+    constexpr Vector4() = default;
+    constexpr Vector4(T x, T y, T z, T w)
         : m_x(x)
         , m_y(y)
         , m_z(z)
@@ -21,17 +21,17 @@ public:
     {
     }
 
-    T x() const { return m_x; }
-    T y() const { return m_y; }
-    T z() const { return m_z; }
-    T w() const { return m_w; }
+    constexpr T x() const { return m_x; }
+    constexpr T y() const { return m_y; }
+    constexpr T z() const { return m_z; }
+    constexpr T w() const { return m_w; }
 
-    void set_x(T value) { m_x = value; }
-    void set_y(T value) { m_y = value; }
-    void set_z(T value) { m_z = value; }
-    void set_w(T value) { m_w = value; }
+    constexpr void set_x(T value) { m_x = value; }
+    constexpr void set_y(T value) { m_y = value; }
+    constexpr void set_z(T value) { m_z = value; }
+    constexpr void set_w(T value) { m_w = value; }
 
-    Vector4& operator+=(const Vector4& other)
+    constexpr Vector4& operator+=(const Vector4& other)
     {
         m_x += other.m_x;
         m_y += other.m_y;
@@ -40,7 +40,7 @@ public:
         return *this;
     }
 
-    Vector4& operator-=(const Vector4& other)
+    constexpr Vector4& operator-=(const Vector4& other)
     {
         m_x -= other.m_x;
         m_y -= other.m_y;
@@ -49,45 +49,45 @@ public:
         return *this;
     }
 
-    Vector4 operator+(const Vector4& other) const
+    constexpr Vector4 operator+(const Vector4& other) const
     {
         return Vector4(m_x + other.m_x, m_y + other.m_y, m_z + other.m_z, m_w + other.m_w);
     }
 
-    Vector4 operator-(const Vector4& other) const
+    constexpr Vector4 operator-(const Vector4& other) const
     {
         return Vector4(m_x - other.m_x, m_y - other.m_y, m_z - other.m_z, m_w - other.m_w);
     }
 
-    Vector4 operator*(T f) const
+    constexpr Vector4 operator*(T f) const
     {
         return Vector4(m_x * f, m_y * f, m_z * f, m_w * f);
     }
 
-    Vector4 operator/(T f) const
+    constexpr Vector4 operator/(T f) const
     {
         return Vector4(m_x / f, m_y / f, m_z / f, m_w / f);
     }
 
-    T dot(const Vector4& other) const
+    constexpr T dot(const Vector4& other) const
     {
         return m_x * other.m_x + m_y * other.m_y + m_z * other.m_z + m_w * other.m_w;
     }
 
-    Vector4 normalized() const
+    constexpr Vector4 normalized() const
     {
         T inv_length = 1 / length();
         return *this * inv_length;
     }
 
-    Vector4 clamped(T m, T x) const
+    constexpr Vector4 clamped(T m, T x) const
     {
         Vector4 copy { *this };
         copy.clamp(m, x);
         return copy;
     }
 
-    void clamp(T min_value, T max_value)
+    constexpr void clamp(T min_value, T max_value)
     {
         m_x = max(min_value, m_x);
         m_y = max(min_value, m_y);
@@ -99,7 +99,7 @@ public:
         m_w = min(max_value, m_w);
     }
 
-    void normalize()
+    constexpr void normalize()
     {
         T inv_length = 1 / length();
         m_x *= inv_length;
@@ -108,7 +108,7 @@ public:
         m_w *= inv_length;
     }
 
-    T length() const
+    constexpr T length() const
     {
         return sqrt(m_x * m_x + m_y * m_y + m_z * m_z + m_w * m_w);
     }
