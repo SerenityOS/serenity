@@ -28,10 +28,9 @@ TextDocument::TextDocument(Client* client)
     append_line(make<TextDocumentLine>(*this));
     set_modified(false);
 
-    // FIXME: Instead of a repeating timer, we should punt a deferred single-shot 2-sec timer on user input.
-    m_undo_timer = Core::Timer::construct(
+    m_undo_timer = Core::Timer::create_single_shot(
         2000, [this] {
-            update_undo_timer();
+            update_undo();
         });
 }
 
@@ -310,6 +309,9 @@ void TextDocument::update_views(Badge<TextDocumentLine>)
 void TextDocument::notify_did_change()
 {
     set_modified(true);
+
+    if (m_undo_timer)
+        m_undo_timer->restart();
 
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
@@ -791,7 +793,7 @@ void RemoveTextCommand::undo()
     m_document.set_all_cursors(new_cursor);
 }
 
-void TextDocument::update_undo_timer()
+void TextDocument::update_undo()
 {
     m_undo_stack.finalize_current_combo();
 }
