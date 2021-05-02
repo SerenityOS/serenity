@@ -5,7 +5,9 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Vector.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -183,5 +185,65 @@ int dirfd(DIR* dirp)
 {
     VERIFY(dirp);
     return dirp->fd;
+}
+
+int scandir(const char* dir_name,
+    struct dirent*** namelist,
+    int (*select)(const struct dirent*),
+    int (*compare)(const struct dirent**, const struct dirent**))
+{
+    auto dir = opendir(dir_name);
+    if (dir == nullptr)
+        return -1;
+    ScopeGuard guard = [&] {
+        closedir(dir);
+    };
+
+    Vector<struct dirent*> tmp_names;
+    ScopeGuard names_guard = [&] {
+        tmp_names.remove_all_matching([&](auto& entry) {
+            free(entry);
+            return true;
+        });
+    };
+
+    while (true) {
+        errno = 0;
+        auto entry = readdir(dir);
+        if (!entry)
+            break;
+
+        // Omit entries the caller chooses to ignore.
+        if (select && !select(entry))
+            continue;
+
+        auto entry_copy = (struct dirent*)malloc(entry->d_reclen);
+        if (!entry_copy)
+            break;
+        memcpy(entry_copy, entry, entry->d_reclen);
+        tmp_names.append(entry_copy);
+    }
+
+    // Propagate any errors encountered while accumulating back to the user.
+    if (errno) {
+        return -1;
+    }
+
+    // Sort the entries if the user provided a comparator.
+    if (compare) {
+        qsort(tmp_names.data(), tmp_names.size(), sizeof(struct dirent*), (int (*)(const void*, const void*))compare);
+    }
+
+    const int size = tmp_names.size();
+    auto names = (struct dirent**)malloc(size * sizeof(struct dirent*));
+    for (auto i = 0; i < size; i++) {
+        names[i] = tmp_names[i];
+    }
+
+    // Disable the scope guard which free's names on error.
+    tmp_names.clear();
+
+    *namelist = names;
+    return size;
 }
 }
