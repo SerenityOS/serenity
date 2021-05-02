@@ -370,8 +370,12 @@ public:
 )~~~");
 
             message_generator.append(R"~~~(
+    virtual bool valid() const { return m_ipc_message_valid; }
+
     virtual IPC::MessageBuffer encode() const override
     {
+        VERIFY(valid());
+
         IPC::MessageBuffer buffer;
         IPC::Encoder stream(buffer);
         stream << endpoint_magic();
@@ -536,30 +540,42 @@ public:
         switch (message.message_id()) {
 )~~~");
         for (auto& message : endpoint.messages) {
-            auto do_decode_message = [&](const String& name, bool returns_something) {
+            auto do_handle_message = [&](const String& name, bool returns_something) {
                 auto message_generator = endpoint_generator.fork();
 
                 message_generator.set("message.name", name);
+                message_generator.set("message.response_type", message.response_name());
                 message_generator.append(R"~~~(
         case (int)Messages::@endpoint.name@::MessageID::@message.name@: {
 )~~~");
                 if (returns_something) {
-                    message_generator.append(R"~~~(
-            auto response = handle(static_cast<const Messages::@endpoint.name@::@message.name@&>(message));
+                    if (message.outputs.is_empty()) {
+                        message_generator.append(R"~~~(
+            handle(static_cast<const Messages::@endpoint.name@::@message.name@&>(message));
+            auto response = Messages::@endpoint.name@::@message.response_type@ { };
             return make<IPC::MessageBuffer>(response.encode());
-        }
 )~~~");
+                    } else {
+                        message_generator.append(R"~~~(
+            auto response = handle(static_cast<const Messages::@endpoint.name@::@message.name@&>(message));
+            if (!response.valid())
+                return {};
+            return make<IPC::MessageBuffer>(response.encode());
+)~~~");
+                    }
                 } else {
                     message_generator.append(R"~~~(
             handle(static_cast<const Messages::@endpoint.name@::@message.name@&>(message));
             return {};
-        }
 )~~~");
                 }
+                message_generator.append(R"~~~(
+        }
+)~~~");
             };
-            do_decode_message(message.name, message.is_synchronous);
+            do_handle_message(message.name, message.is_synchronous);
             if (message.is_synchronous)
-                do_decode_message(message.response_name(), false);
+                do_handle_message(message.response_name(), false);
         }
         endpoint_generator.append(R"~~~(
         default:
@@ -574,7 +590,7 @@ public:
             message_generator.set("message.name", message.name);
 
             String return_type = "void";
-            if (message.is_synchronous) {
+            if (message.is_synchronous && !message.outputs.is_empty()) {
                 StringBuilder builder;
                 builder.append("Messages::");
                 builder.append(endpoint.name);

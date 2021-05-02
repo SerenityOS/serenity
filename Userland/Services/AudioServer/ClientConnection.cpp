@@ -59,9 +59,8 @@ void ClientConnection::did_change_main_mix_volume(Badge<Mixer>, int volume)
     post_message(Messages::AudioClient::MainMixVolumeChanged(volume));
 }
 
-Messages::AudioServer::GreetResponse ClientConnection::handle(const Messages::AudioServer::Greet&)
+void ClientConnection::handle(const Messages::AudioServer::Greet&)
 {
-    return {};
 }
 
 Messages::AudioServer::GetMainMixVolumeResponse ClientConnection::handle(const Messages::AudioServer::GetMainMixVolume&)
@@ -69,10 +68,9 @@ Messages::AudioServer::GetMainMixVolumeResponse ClientConnection::handle(const M
     return m_mixer.main_volume();
 }
 
-Messages::AudioServer::SetMainMixVolumeResponse ClientConnection::handle(const Messages::AudioServer::SetMainMixVolume& message)
+void ClientConnection::handle(const Messages::AudioServer::SetMainMixVolume& message)
 {
     m_mixer.set_main_volume(message.volume());
-    return {};
 }
 
 Messages::AudioServer::EnqueueBufferResponse ClientConnection::handle(const Messages::AudioServer::EnqueueBuffer& message)
@@ -105,18 +103,16 @@ Messages::AudioServer::GetPlayedSamplesResponse ClientConnection::handle(const M
     return played;
 }
 
-Messages::AudioServer::SetPausedResponse ClientConnection::handle(const Messages::AudioServer::SetPaused& message)
+void ClientConnection::handle(const Messages::AudioServer::SetPaused& message)
 {
     if (m_queue)
         m_queue->set_paused(message.paused());
-    return {};
 }
 
-Messages::AudioServer::ClearBufferResponse ClientConnection::handle(const Messages::AudioServer::ClearBuffer& message)
+void ClientConnection::handle(const Messages::AudioServer::ClearBuffer& message)
 {
     if (m_queue)
         m_queue->clear(message.paused());
-    return {};
 }
 
 Messages::AudioServer::GetPlayingBufferResponse ClientConnection::handle(const Messages::AudioServer::GetPlayingBuffer&)
@@ -132,9 +128,8 @@ Messages::AudioServer::GetMutedResponse ClientConnection::handle(const Messages:
     return m_mixer.is_muted();
 }
 
-Messages::AudioServer::SetMutedResponse ClientConnection::handle(const Messages::AudioServer::SetMuted& message)
+void ClientConnection::handle(const Messages::AudioServer::SetMuted& message)
 {
     m_mixer.set_muted(message.muted());
-    return {};
 }
 }

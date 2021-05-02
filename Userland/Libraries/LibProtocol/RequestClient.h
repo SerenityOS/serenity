@@ -35,7 +35,7 @@ private:
 
     virtual void handle(const Messages::RequestClient::RequestProgress&) override;
     virtual void handle(const Messages::RequestClient::RequestFinished&) override;
-    virtual Messages::RequestClient::CertificateRequestedResponse handle(const Messages::RequestClient::CertificateRequested&) override;
+    virtual void handle(const Messages::RequestClient::CertificateRequested&) override;
     virtual void handle(const Messages::RequestClient::HeadersBecameAvailable&) override;
 
     HashMap<i32, RefPtr<Request>> m_requests;

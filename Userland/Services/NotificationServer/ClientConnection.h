@@ -23,9 +23,9 @@ public:
 private:
     explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
 
-    virtual Messages::NotificationServer::GreetResponse handle(const Messages::NotificationServer::Greet&) override;
-    virtual Messages::NotificationServer::ShowNotificationResponse handle(const Messages::NotificationServer::ShowNotification&) override;
-    virtual Messages::NotificationServer::CloseNotificationResponse handle(const Messages::NotificationServer::CloseNotification& message) override;
+    virtual void handle(const Messages::NotificationServer::Greet&) override;
+    virtual void handle(const Messages::NotificationServer::ShowNotification&) override;
+    virtual void handle(const Messages::NotificationServer::CloseNotification& message) override;
     virtual Messages::NotificationServer::UpdateNotificationIconResponse handle(const Messages::NotificationServer::UpdateNotificationIcon& message) override;
     virtual Messages::NotificationServer::UpdateNotificationTextResponse handle(const Messages::NotificationServer::UpdateNotificationText& message) override;
     virtual Messages::NotificationServer::IsShowingResponse handle(const Messages::NotificationServer::IsShowing& message) override;

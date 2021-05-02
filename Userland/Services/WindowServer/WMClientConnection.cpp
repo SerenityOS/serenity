@@ -33,16 +33,15 @@ void WMClientConnection::die()
     });
 }
 
-Messages::WindowManagerServer::SetAppletAreaPositionResponse WMClientConnection::handle(const Messages::WindowManagerServer::SetAppletAreaPosition& message)
+void WMClientConnection::handle(const Messages::WindowManagerServer::SetAppletAreaPosition& message)
 {
     if (m_window_id < 0) {
         did_misbehave("SetAppletAreaPosition: WM didn't assign window as manager yet");
         // FIXME: return ok boolean?
-        return {};
+        return;
     }
 
     AppletManager::the().set_position(message.position());
-    return {};
 }
 
 void WMClientConnection::handle(const Messages::WindowManagerServer::SetActiveWindow& message)
@@ -116,21 +115,18 @@ void WMClientConnection::handle(const Messages::WindowManagerServer::SetWindowMi
     WindowManager::the().minimize_windows(window, message.minimized());
 }
 
-Messages::WindowManagerServer::SetEventMaskResponse WMClientConnection::handle(const Messages::WindowManagerServer::SetEventMask& message)
+void WMClientConnection::handle(const Messages::WindowManagerServer::SetEventMask& message)
 {
     m_event_mask = message.event_mask();
-    return {};
 }
 
-Messages::WindowManagerServer::SetManagerWindowResponse WMClientConnection::handle(const Messages::WindowManagerServer::SetManagerWindow& message)
+void WMClientConnection::handle(const Messages::WindowManagerServer::SetManagerWindow& message)
 {
     m_window_id = message.window_id();
 
     // Let the window manager know that we obtained a manager window, and should
     // receive information about other windows.
     WindowManager::the().greet_window_manager(*this);
-
-    return {};
 }
 
 void WMClientConnection::handle(const Messages::WindowManagerServer::SetWindowTaskbarRect& message)

@@ -31,9 +31,8 @@ void ClientConnection::die()
         Core::EventLoop::current().quit(0);
 }
 
-Messages::WebSocketServer::GreetResponse ClientConnection::handle(const Messages::WebSocketServer::Greet&)
+void ClientConnection::handle(const Messages::WebSocketServer::Greet&)
 {
-    return {};
 }
 
 Messages::WebSocketServer::ConnectResponse ClientConnection::handle(const Messages::WebSocketServer::Connect& message)

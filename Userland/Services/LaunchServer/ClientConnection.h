@@ -23,14 +23,14 @@ public:
 private:
     explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
 
-    virtual Messages::LaunchServer::GreetResponse handle(const Messages::LaunchServer::Greet&) override;
+    virtual void handle(const Messages::LaunchServer::Greet&) override;
     virtual Messages::LaunchServer::OpenURLResponse handle(const Messages::LaunchServer::OpenURL&) override;
     virtual Messages::LaunchServer::GetHandlersForURLResponse handle(const Messages::LaunchServer::GetHandlersForURL&) override;
     virtual Messages::LaunchServer::GetHandlersWithDetailsForURLResponse handle(const Messages::LaunchServer::GetHandlersWithDetailsForURL&) override;
-    virtual Messages::LaunchServer::AddAllowedURLResponse handle(const Messages::LaunchServer::AddAllowedURL&) override;
-    virtual Messages::LaunchServer::AddAllowedHandlerWithAnyURLResponse handle(const Messages::LaunchServer::AddAllowedHandlerWithAnyURL&) override;
-    virtual Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLsResponse handle(const Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLs&) override;
-    virtual Messages::LaunchServer::SealAllowlistResponse handle(const Messages::LaunchServer::SealAllowlist&) override;
+    virtual void handle(const Messages::LaunchServer::AddAllowedURL&) override;
+    virtual void handle(const Messages::LaunchServer::AddAllowedHandlerWithAnyURL&) override;
+    virtual void handle(const Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLs&) override;
+    virtual void handle(const Messages::LaunchServer::SealAllowlist&) override;
 
     struct AllowlistEntry {
         String handler_name;

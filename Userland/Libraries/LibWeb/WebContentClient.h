@@ -53,7 +53,7 @@ private:
     virtual void handle(const Messages::WebContentClient::DidGetSource&) override;
     virtual void handle(const Messages::WebContentClient::DidJSConsoleOutput&) override;
     virtual void handle(const Messages::WebContentClient::DidChangeFavicon&) override;
-    virtual Messages::WebContentClient::DidRequestAlertResponse handle(const Messages::WebContentClient::DidRequestAlert&) override;
+    virtual void handle(const Messages::WebContentClient::DidRequestAlert&) override;
     virtual Messages::WebContentClient::DidRequestConfirmResponse handle(const Messages::WebContentClient::DidRequestConfirm&) override;
     virtual Messages::WebContentClient::DidRequestPromptResponse handle(const Messages::WebContentClient::DidRequestPrompt&) override;
     virtual Messages::WebContentClient::DidRequestCookieResponse handle(const Messages::WebContentClient::DidRequestCookie&) override;
