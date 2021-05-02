@@ -26,8 +26,8 @@ public:
     virtual void die() override;
 
 private:
-    virtual OwnPtr<Messages::LookupServer::LookupNameResponse> handle(const Messages::LookupServer::LookupName&) override;
-    virtual OwnPtr<Messages::LookupServer::LookupAddressResponse> handle(const Messages::LookupServer::LookupAddress&) override;
+    virtual Messages::LookupServer::LookupNameResponse handle(const Messages::LookupServer::LookupName&) override;
+    virtual Messages::LookupServer::LookupAddressResponse handle(const Messages::LookupServer::LookupAddress&) override;
 };
 
 }
