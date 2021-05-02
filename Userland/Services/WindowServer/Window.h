@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -68,9 +68,11 @@ enum class WindowMenuDefaultAction {
     Restore
 };
 
-class Window final : public Core::Object
+class Window final
+    : public Core::Object
     , public InlineLinkedListNode<Window> {
-    C_OBJECT(Window)
+    C_OBJECT(Window);
+
 public:
     virtual ~Window() override;
 
@@ -265,7 +267,6 @@ public:
     void recalculate_rect();
 
     // For InlineLinkedList.
-    // FIXME: Maybe make a ListHashSet and then WindowManager can just use that.
     Window* m_next { nullptr };
     Window* m_prev { nullptr };
 
@@ -301,8 +302,6 @@ public:
 
     bool default_positioned() const { return m_default_positioned; }
     void set_default_positioned(bool p) { m_default_positioned = p; }
-
-    bool is_invalidated() const { return m_invalidated; }
 
     bool is_opaque() const
     {
