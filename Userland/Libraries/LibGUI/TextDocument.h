@@ -206,7 +206,6 @@ public:
     virtual void perform_formatting(const TextDocument::Client&) override;
     virtual void undo() override;
     virtual void redo() override;
-    virtual bool is_insert_text() const override { return true; }
     const String& text() const { return m_text; }
     const TextRange& range() const { return m_range; }
 
@@ -220,7 +219,6 @@ public:
     RemoveTextCommand(TextDocument&, const String&, const TextRange&);
     virtual void undo() override;
     virtual void redo() override;
-    virtual bool is_remove_text() const override { return true; }
     const TextRange& range() const { return m_range; }
 
 private:

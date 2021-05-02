@@ -493,8 +493,8 @@ void Editor::on_edit_action(const GUI::Command& command)
     if (!m_language_client)
         return;
 
-    if (command.is_insert_text()) {
-        const GUI::InsertTextCommand& insert_command = static_cast<const GUI::InsertTextCommand&>(command);
+    if (is<GUI::InsertTextCommand>(command)) {
+        auto const& insert_command = static_cast<GUI::InsertTextCommand const&>(command);
         m_language_client->insert_text(
             code_document().file_path(),
             insert_command.text(),
@@ -503,8 +503,8 @@ void Editor::on_edit_action(const GUI::Command& command)
         return;
     }
 
-    if (command.is_remove_text()) {
-        const GUI::RemoveTextCommand& remove_command = static_cast<const GUI::RemoveTextCommand&>(command);
+    if (is<GUI::RemoveTextCommand>(command)) {
+        auto const& remove_command = static_cast<GUI::RemoveTextCommand const&>(command);
         m_language_client->remove_text(
             code_document().file_path(),
             remove_command.range().start().line(),
