@@ -208,7 +208,7 @@ $ ninja run
 ```
 
 Note that the `anon` user is able to become `root` without password by default, as a development convenience.
-To prevent this, remove `anon` from the `wheel` group and he will no longer be able to run `/bin/su`.
+To prevent this, remove `anon` from the `wheel` group and they will no longer be able to run `/bin/su`.
 
 On Linux, QEMU is significantly faster if it's able to use KVM. The run script will automatically enable KVM if `/dev/kvm` exists and is readable+writable by the current user.
 
