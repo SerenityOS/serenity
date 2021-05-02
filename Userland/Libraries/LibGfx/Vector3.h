@@ -12,23 +12,23 @@ namespace Gfx {
 template<typename T>
 class Vector3 final {
 public:
-    Vector3() = default;
-    Vector3(T x, T y, T z)
+    constexpr Vector3() = default;
+    constexpr Vector3(T x, T y, T z)
         : m_x(x)
         , m_y(y)
         , m_z(z)
     {
     }
 
-    T x() const { return m_x; }
-    T y() const { return m_y; }
-    T z() const { return m_z; }
+    constexpr T x() const { return m_x; }
+    constexpr T y() const { return m_y; }
+    constexpr T z() const { return m_z; }
 
-    void set_x(T value) { m_x = value; }
-    void set_y(T value) { m_y = value; }
-    void set_z(T value) { m_z = value; }
+    constexpr void set_x(T value) { m_x = value; }
+    constexpr void set_y(T value) { m_y = value; }
+    constexpr void set_z(T value) { m_z = value; }
 
-    Vector3& operator+=(const Vector3& other)
+    constexpr Vector3& operator+=(const Vector3& other)
     {
         m_x += other.m_x;
         m_y += other.m_y;
@@ -36,7 +36,7 @@ public:
         return *this;
     }
 
-    Vector3& operator-=(const Vector3& other)
+    constexpr Vector3& operator-=(const Vector3& other)
     {
         m_x -= other.m_x;
         m_y -= other.m_y;
@@ -44,32 +44,32 @@ public:
         return *this;
     }
 
-    Vector3 operator+(const Vector3& other) const
+    constexpr Vector3 operator+(const Vector3& other) const
     {
         return Vector3(m_x + other.m_x, m_y + other.m_y, m_z + other.m_z);
     }
 
-    Vector3 operator-(const Vector3& other) const
+    constexpr Vector3 operator-(const Vector3& other) const
     {
         return Vector3(m_x - other.m_x, m_y - other.m_y, m_z - other.m_z);
     }
 
-    Vector3 operator*(T f) const
+    constexpr Vector3 operator*(T f) const
     {
         return Vector3(m_x * f, m_y * f, m_z * f);
     }
 
-    Vector3 operator/(T f) const
+    constexpr Vector3 operator/(T f) const
     {
         return Vector3(m_x / f, m_y / f, m_z / f);
     }
 
-    T dot(const Vector3& other) const
+    constexpr T dot(const Vector3& other) const
     {
         return m_x * other.m_x + m_y * other.m_y + m_z * other.m_z;
     }
 
-    Vector3 cross(const Vector3& other) const
+    constexpr Vector3 cross(const Vector3& other) const
     {
         return Vector3(
             m_y * other.m_z - m_z * other.m_y,
@@ -77,20 +77,20 @@ public:
             m_x * other.m_y - m_y * other.m_x);
     }
 
-    Vector3 normalized() const
+    constexpr Vector3 normalized() const
     {
         T inv_length = 1 / length();
         return *this * inv_length;
     }
 
-    Vector3 clamped(T m, T x) const
+    constexpr Vector3 clamped(T m, T x) const
     {
         Vector3 copy { *this };
         copy.clamp(m, x);
         return copy;
     }
 
-    void clamp(T min_value, T max_value)
+    constexpr void clamp(T min_value, T max_value)
     {
         m_x = max(min_value, m_x);
         m_y = max(min_value, m_y);
@@ -100,7 +100,7 @@ public:
         m_z = min(max_value, m_z);
     }
 
-    void normalize()
+    constexpr void normalize()
     {
         T inv_length = 1 / length();
         m_x *= inv_length;
@@ -108,7 +108,7 @@ public:
         m_z *= inv_length;
     }
 
-    T length() const
+    constexpr T length() const
     {
         return sqrt(m_x * m_x + m_y * m_y + m_z * m_z);
     }
