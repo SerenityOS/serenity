@@ -163,6 +163,53 @@ void HTMLTableElement::delete_t_head()
     }
 }
 
+RefPtr<HTMLTableSectionElement> HTMLTableElement::t_foot()
+{
+    for (auto* child = first_child(); child; child = child->next_sibling()) {
+        if (is<HTMLTableSectionElement>(*child)) {
+            auto table_section_element = &downcast<HTMLTableSectionElement>(*child);
+            if (table_section_element->tag_name() == TagNames::tfoot)
+                return table_section_element;
+        }
+    }
+
+    return nullptr;
+}
+
+DOM::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement& tfoot)
+{
+    if (tfoot.tag_name() != TagNames::tfoot)
+        return DOM::HierarchyRequestError::create("Element is not tfoot");
+
+    // FIXME: The spec requires deleting the current tfoot if tfoot is null
+    //        Currently the wrapper generator doesn't send us a nullable value
+    delete_t_foot();
+
+    // We insert the new tfoot at the end of the table
+    append_child(tfoot);
+
+    return {};
+}
+
+NonnullRefPtr<HTMLTableSectionElement> HTMLTableElement::create_t_foot()
+{
+    auto maybe_tfoot = t_foot();
+    if (maybe_tfoot)
+        return *maybe_tfoot;
+
+    auto tfoot = DOM::create_element(document(), TagNames::tfoot, Namespace::HTML);
+    append_child(tfoot);
+    return tfoot;
+}
+
+void HTMLTableElement::delete_t_foot()
+{
+    auto maybe_tfoot = t_foot();
+    if (maybe_tfoot) {
+        maybe_tfoot->remove(false);
+    }
+}
+
 NonnullRefPtr<DOM::HTMLCollection> HTMLTableElement::rows()
 {
     HTMLTableElement* table_node = this;
