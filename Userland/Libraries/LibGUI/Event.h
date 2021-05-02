@@ -126,7 +126,7 @@ public:
 
 class WMWindowStateChangedEvent : public WMEvent {
 public:
-    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, const StringView& title, const Gfx::IntRect& rect, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, int progress)
+    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, const StringView& title, const Gfx::IntRect& rect, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
         : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
         , m_parent_client_id(parent_client_id)
         , m_parent_window_id(parent_window_id)
@@ -150,7 +150,7 @@ public:
     WindowType window_type() const { return m_window_type; }
     bool is_minimized() const { return m_minimized; }
     bool is_frameless() const { return m_frameless; }
-    int progress() const { return m_progress; }
+    Optional<int> progress() const { return m_progress; }
 
 private:
     int m_parent_client_id;
@@ -162,7 +162,7 @@ private:
     bool m_modal;
     bool m_minimized;
     bool m_frameless;
-    int m_progress;
+    Optional<int> m_progress;
 };
 
 class WMWindowRectChangedEvent : public WMEvent {

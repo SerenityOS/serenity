@@ -48,7 +48,7 @@ public:
     void set_modal(bool modal) { m_modal = modal; }
     bool is_modal() const { return m_modal; }
 
-    void set_progress(int progress)
+    void set_progress(Optional<int> progress)
     {
         if (m_progress == progress)
             return;
@@ -57,7 +57,7 @@ public:
             m_button->update();
     }
 
-    int progress() const { return m_progress; }
+    Optional<int> progress() const { return m_progress; }
 
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
 
@@ -71,7 +71,7 @@ private:
     bool m_active { false };
     bool m_minimized { false };
     bool m_modal { false };
-    int m_progress { -1 };
+    Optional<int> m_progress;
 };
 
 class WindowList {

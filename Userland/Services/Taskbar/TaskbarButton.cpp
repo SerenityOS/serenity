@@ -103,8 +103,6 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
     if (text().is_empty())
         return;
 
-    bool has_progress = window.progress() >= 0 && window.progress() <= 100;
-
     auto content_rect = rect().shrunken(8, 2);
     auto icon_location = content_rect.center().translated(-(icon.width() / 2), -(icon.height() / 2));
     if (!text().is_empty())
@@ -125,12 +123,12 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
         icon_location.move_by(1, 1);
     }
 
-    if (has_progress) {
+    if (window.progress().has_value()) {
         auto adjusted_rect = rect().shrunken(4, 4);
         if (is_being_pressed() || is_checked()) {
             adjusted_rect.set_height(adjusted_rect.height() + 1);
         }
-        paint_custom_progressbar(painter, adjusted_rect, text_rect, palette(), 0, 100, window.progress(), text(), font, text_alignment());
+        paint_custom_progressbar(painter, adjusted_rect, text_rect, palette(), 0, 100, window.progress().value(), text(), font, text_alignment());
     }
 
     if (is_enabled()) {
@@ -142,6 +140,6 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
         painter.blit_disabled(icon_location, icon, icon.rect(), palette());
     }
 
-    if (!has_progress)
+    if (!window.progress().has_value())
         paint_text(painter, text_rect, font, text_alignment());
 }
