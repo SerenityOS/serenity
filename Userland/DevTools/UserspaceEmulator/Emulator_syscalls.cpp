@@ -231,7 +231,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_ptsname:
         return virt$ptsname(arg1, arg2, arg3);
     case SC_allocate_tls:
-        return virt$allocate_tls(arg1);
+        return virt$allocate_tls(arg1, arg2);
     case SC_beep:
         return virt$beep();
     case SC_ftruncate:
@@ -1430,12 +1430,20 @@ int Emulator::virt$readlink(FlatPtr params_addr)
     return rc;
 }
 
-u32 Emulator::virt$allocate_tls(size_t size)
+u32 Emulator::virt$allocate_tls(FlatPtr initial_data, size_t size)
 {
     // TODO: Why is this needed? without this, the loader overflows the bounds of the TLS region.
     constexpr size_t TLS_SIZE_HACK = 8;
     auto tcb_region = make<SimpleRegion>(0x20000000, size + TLS_SIZE_HACK);
-    bzero(tcb_region->data(), size);
+
+    size_t offset = 0;
+    while (size - offset > 0) {
+        u8 buffer[512];
+        size_t read_bytes = min(sizeof(buffer), size - offset);
+        mmu().copy_from_vm(buffer, initial_data + offset, read_bytes);
+        memcpy(tcb_region->data() + offset, buffer, read_bytes);
+        offset += read_bytes;
+    }
     memset(tcb_region->shadow_data(), 0x01, size);
 
     auto tls_region = make<SimpleRegion>(0, 4);

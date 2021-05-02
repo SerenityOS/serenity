@@ -160,7 +160,7 @@ private:
     pid_t virt$setsid();
     int virt$watch_file(FlatPtr, size_t);
     int virt$readlink(FlatPtr);
-    u32 virt$allocate_tls(size_t);
+    u32 virt$allocate_tls(FlatPtr, size_t);
     int virt$ptsname(int fd, FlatPtr buffer, size_t buffer_size);
     int virt$beep();
     int virt$ftruncate(int fd, FlatPtr length_addr);
