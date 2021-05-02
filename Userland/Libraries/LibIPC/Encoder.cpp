@@ -148,7 +148,16 @@ Encoder& Encoder::operator<<(const Dictionary& dictionary)
 
 Encoder& Encoder::operator<<(const File& file)
 {
-    m_buffer.fds.append(file.fd());
+    int fd = file.fd();
+    if (fd != -1) {
+        auto result = dup(fd);
+        if (result < 0) {
+            perror("dup");
+            VERIFY_NOT_REACHED();
+        }
+        fd = result;
+    }
+    m_buffer.fds.append(adopt_ref(*new AutoCloseFileDescriptor(fd)));
     return *this;
 }
 
