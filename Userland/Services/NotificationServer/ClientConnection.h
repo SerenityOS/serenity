@@ -23,12 +23,12 @@ public:
 private:
     explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
 
-    virtual void handle(const Messages::NotificationServer::Greet&) override;
-    virtual void handle(const Messages::NotificationServer::ShowNotification&) override;
-    virtual void handle(const Messages::NotificationServer::CloseNotification& message) override;
-    virtual Messages::NotificationServer::UpdateNotificationIconResponse handle(const Messages::NotificationServer::UpdateNotificationIcon& message) override;
-    virtual Messages::NotificationServer::UpdateNotificationTextResponse handle(const Messages::NotificationServer::UpdateNotificationText& message) override;
-    virtual Messages::NotificationServer::IsShowingResponse handle(const Messages::NotificationServer::IsShowing& message) override;
+    virtual void greet() override;
+    virtual void show_notification(String const&, String const&, Gfx::ShareableBitmap const&) override;
+    virtual void close_notification() override;
+    virtual Messages::NotificationServer::UpdateNotificationIconResponse update_notification_icon(Gfx::ShareableBitmap const&) override;
+    virtual Messages::NotificationServer::UpdateNotificationTextResponse update_notification_text(String const&, String const&) override;
+    virtual Messages::NotificationServer::IsShowingResponse is_showing() override;
 };
 
 }

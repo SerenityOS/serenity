@@ -27,8 +27,8 @@ public:
     virtual void die() override;
 
 private:
-    virtual void handle(const Messages::SymbolServer::Greet&) override;
-    virtual Messages::SymbolServer::SymbolicateResponse handle(const Messages::SymbolServer::Symbolicate&) override;
+    virtual void greet() override;
+    virtual Messages::SymbolServer::SymbolicateResponse symbolicate(String const&, u32) override;
 };
 
 }

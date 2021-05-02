@@ -58,76 +58,76 @@ const Web::Page& ClientConnection::page() const
     return m_page_host->page();
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::Greet&)
+void ClientConnection::greet()
 {
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemTheme& message)
+void ClientConnection::update_system_theme(const Core::AnonymousBuffer& theme_buffer)
 {
-    Gfx::set_system_theme(message.theme_buffer());
-    auto impl = Gfx::PaletteImpl::create_with_anonymous_buffer(message.theme_buffer());
+    Gfx::set_system_theme(theme_buffer);
+    auto impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme_buffer);
     m_page_host->set_palette_impl(*impl);
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::UpdateScreenRect& message)
+void ClientConnection::update_screen_rect(const Gfx::IntRect& rect)
 {
-    m_page_host->set_screen_rect(message.rect());
+    m_page_host->set_screen_rect(rect);
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::LoadURL& message)
+void ClientConnection::load_url(const URL& url)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", message.url());
+    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadURL: url={}", url);
 
     String process_name;
-    if (message.url().host().is_empty())
+    if (url.host().is_empty())
         process_name = "WebContent";
     else
-        process_name = String::formatted("WebContent: {}", message.url().host());
+        process_name = String::formatted("WebContent: {}", url.host());
 
     pthread_setname_np(pthread_self(), process_name.characters());
 
-    page().load(message.url());
+    page().load(url);
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::LoadHTML& message)
+void ClientConnection::load_html(const String& html, const URL& url)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}, url={}", message.html(), message.url());
-    page().load_html(message.html(), message.url());
+    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::LoadHTML: html={}, url={}", html, url);
+    page().load_html(html, url);
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::SetViewportRect& message)
+void ClientConnection::set_viewport_rect(const Gfx::IntRect& rect)
 {
-    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::SetViewportRect: rect={}", message.rect());
-    m_page_host->set_viewport_rect(message.rect());
+    dbgln_if(SPAM_DEBUG, "handle: WebContentServer::SetViewportRect: rect={}", rect);
+    m_page_host->set_viewport_rect(rect);
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::AddBackingStore& message)
+void ClientConnection::add_backing_store(i32 backing_store_id, const Gfx::ShareableBitmap& bitmap)
 {
-    m_backing_stores.set(message.backing_store_id(), *message.bitmap().bitmap());
+    m_backing_stores.set(backing_store_id, *bitmap.bitmap());
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::RemoveBackingStore& message)
+void ClientConnection::remove_backing_store(i32 backing_store_id)
 {
-    m_backing_stores.remove(message.backing_store_id());
+    m_backing_stores.remove(backing_store_id);
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::Paint& message)
+void ClientConnection::paint(const Gfx::IntRect& content_rect, i32 backing_store_id)
 {
     for (auto& pending_paint : m_pending_paint_requests) {
-        if (pending_paint.bitmap_id == message.backing_store_id()) {
-            pending_paint.content_rect = message.content_rect();
+        if (pending_paint.bitmap_id == backing_store_id) {
+            pending_paint.content_rect = content_rect;
             return;
         }
     }
 
-    auto it = m_backing_stores.find(message.backing_store_id());
+    auto it = m_backing_stores.find(backing_store_id);
     if (it == m_backing_stores.end()) {
         did_misbehave("Client requested paint with backing store ID");
         return;
     }
 
     auto& bitmap = *it->value;
-    m_pending_paint_requests.append({ message.content_rect(), bitmap, message.backing_store_id() });
+    m_pending_paint_requests.append({ content_rect, bitmap, backing_store_id });
     m_paint_flush_timer->start();
 }
 
@@ -140,46 +140,46 @@ void ClientConnection::flush_pending_paint_requests()
     m_pending_paint_requests.clear();
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::MouseDown& message)
+void ClientConnection::mouse_down(const Gfx::IntPoint& position, unsigned int button, [[maybe_unused]] unsigned int buttons, unsigned int modifiers)
 {
-    page().handle_mousedown(message.position(), message.button(), message.modifiers());
+    page().handle_mousedown(position, button, modifiers);
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::MouseMove& message)
+void ClientConnection::mouse_move(const Gfx::IntPoint& position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    page().handle_mousemove(message.position(), message.buttons(), message.modifiers());
+    page().handle_mousemove(position, buttons, modifiers);
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::MouseUp& message)
+void ClientConnection::mouse_up(const Gfx::IntPoint& position, unsigned int button, [[maybe_unused]] unsigned int buttons, unsigned int modifiers)
 {
-    page().handle_mouseup(message.position(), message.button(), message.modifiers());
+    page().handle_mouseup(position, button, modifiers);
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::MouseWheel& message)
+void ClientConnection::mouse_wheel(const Gfx::IntPoint& position, unsigned int button, [[maybe_unused]] unsigned int buttons, unsigned int modifiers, i32 wheel_delta)
 {
-    page().handle_mousewheel(message.position(), message.button(), message.modifiers(), message.wheel_delta());
+    page().handle_mousewheel(position, button, modifiers, wheel_delta);
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::KeyDown& message)
+void ClientConnection::key_down(i32 key, unsigned int modifiers, u32 code_point)
 {
-    page().handle_keydown((KeyCode)message.key(), message.modifiers(), message.code_point());
+    page().handle_keydown((KeyCode)key, modifiers, code_point);
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::DebugRequest& message)
+void ClientConnection::debug_request(const String& request, const String& argument)
 {
-    if (message.request() == "dump-dom-tree") {
+    if (request == "dump-dom-tree") {
         if (auto* doc = page().main_frame().document())
             Web::dump_tree(*doc);
     }
 
-    if (message.request() == "dump-layout-tree") {
+    if (request == "dump-layout-tree") {
         if (auto* doc = page().main_frame().document()) {
             if (auto* icb = doc->layout_node())
                 Web::dump_tree(*icb);
         }
     }
 
-    if (message.request() == "dump-style-sheets") {
+    if (request == "dump-style-sheets") {
         if (auto* doc = page().main_frame().document()) {
             for (auto& sheet : doc->style_sheets().sheets()) {
                 Web::dump_sheet(sheet);
@@ -187,33 +187,33 @@ void ClientConnection::handle(const Messages::WebContentServer::DebugRequest& me
         }
     }
 
-    if (message.request() == "collect-garbage") {
+    if (request == "collect-garbage") {
         Web::Bindings::main_thread_vm().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
     }
 
-    if (message.request() == "set-line-box-borders") {
-        bool state = message.argument() == "on";
+    if (request == "set-line-box-borders") {
+        bool state = argument == "on";
         m_page_host->set_should_show_line_box_borders(state);
         page().main_frame().set_needs_display(page().main_frame().viewport_rect());
     }
 
-    if (message.request() == "clear-cache") {
+    if (request == "clear-cache") {
         Web::ResourceLoader::the().clear_cache();
     }
 
-    if (message.request() == "spoof-user-agent") {
-        Web::ResourceLoader::the().set_user_agent(message.argument());
+    if (request == "spoof-user-agent") {
+        Web::ResourceLoader::the().set_user_agent(argument);
     }
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::GetSource&)
+void ClientConnection::get_source()
 {
     if (auto* doc = page().main_frame().document()) {
         post_message(Messages::WebContentClient::DidGetSource(doc->url(), doc->source()));
     }
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::JSConsoleInitialize&)
+void ClientConnection::jsconsole_initialize()
 {
     if (auto* document = page().main_frame().document()) {
         auto interpreter = document->interpreter().make_weak_ptr();
@@ -226,10 +226,10 @@ void ClientConnection::handle(const Messages::WebContentServer::JSConsoleInitial
     }
 }
 
-void ClientConnection::handle(const Messages::WebContentServer::JSConsoleInput& message)
+void ClientConnection::jsconsole_input(const String& js_source)
 {
     if (m_console_client)
-        m_console_client->handle_input(message.js_source());
+        m_console_client->handle_input(js_source);
 }
 
 }

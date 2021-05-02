@@ -31,15 +31,14 @@ void ClientConnection::die()
         Core::EventLoop::current().quit(0);
 }
 
-Messages::RequestServer::IsSupportedProtocolResponse ClientConnection::handle(const Messages::RequestServer::IsSupportedProtocol& message)
+Messages::RequestServer::IsSupportedProtocolResponse ClientConnection::is_supported_protocol(String const& protocol)
 {
-    bool supported = Protocol::find_by_name(message.protocol().to_lowercase());
+    bool supported = Protocol::find_by_name(protocol.to_lowercase());
     return supported;
 }
 
-Messages::RequestServer::StartRequestResponse ClientConnection::handle(const Messages::RequestServer::StartRequest& message)
+Messages::RequestServer::StartRequestResponse ClientConnection::start_request(String const& method, URL const& url, IPC::Dictionary const& request_headers, ByteBuffer const& request_body)
 {
-    const auto& url = message.url();
     if (!url.is_valid()) {
         dbgln("StartRequest: Invalid URL requested: '{}'", url);
         return { -1, Optional<IPC::File> {} };
@@ -49,7 +48,7 @@ Messages::RequestServer::StartRequestResponse ClientConnection::handle(const Mes
         dbgln("StartRequest: No protocol handler for URL: '{}'", url);
         return { -1, Optional<IPC::File> {} };
     }
-    auto request = protocol->start_request(*this, message.method(), url, message.request_headers().entries(), message.request_body());
+    auto request = protocol->start_request(*this, method, url, request_headers.entries(), request_body);
     if (!request) {
         dbgln("StartRequest: Protocol handler failed to start request: '{}'", url);
         return { -1, Optional<IPC::File> {} };
@@ -60,13 +59,13 @@ Messages::RequestServer::StartRequestResponse ClientConnection::handle(const Mes
     return { id, IPC::File(fd, IPC::File::CloseAfterSending) };
 }
 
-Messages::RequestServer::StopRequestResponse ClientConnection::handle(const Messages::RequestServer::StopRequest& message)
+Messages::RequestServer::StopRequestResponse ClientConnection::stop_request(i32 request_id)
 {
-    auto* request = const_cast<Request*>(m_requests.get(message.request_id()).value_or(nullptr));
+    auto* request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr));
     bool success = false;
     if (request) {
         request->stop();
-        m_requests.remove(message.request_id());
+        m_requests.remove(request_id);
         success = true;
     }
     return success;
@@ -100,16 +99,16 @@ void ClientConnection::did_request_certificates(Badge<Request>, Request& request
     post_message(Messages::RequestClient::CertificateRequested(request.id()));
 }
 
-void ClientConnection::handle(const Messages::RequestServer::Greet&)
+void ClientConnection::greet()
 {
 }
 
-Messages::RequestServer::SetCertificateResponse ClientConnection::handle(const Messages::RequestServer::SetCertificate& message)
+Messages::RequestServer::SetCertificateResponse ClientConnection::set_certificate(i32 request_id, String const& certificate, String const& key)
 {
-    auto* request = const_cast<Request*>(m_requests.get(message.request_id()).value_or(nullptr));
+    auto* request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr));
     bool success = false;
     if (request) {
-        request->set_certificate(message.certificate(), message.key());
+        request->set_certificate(certificate, key);
         success = true;
     }
     return success;

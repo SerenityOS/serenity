@@ -28,18 +28,18 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-void ClientConnection::handle(const Messages::LaunchServer::Greet&)
+void ClientConnection::greet()
 {
 }
 
-Messages::LaunchServer::OpenURLResponse ClientConnection::handle(const Messages::LaunchServer::OpenURL& request)
+Messages::LaunchServer::OpenURLResponse ClientConnection::open_url(URL const& url, String const& handler_name)
 {
     if (!m_allowlist.is_empty()) {
         bool allowed = false;
-        auto request_url_without_fragment = request.url();
+        auto request_url_without_fragment = url;
         request_url_without_fragment.set_fragment({});
         for (auto& allowed_handler : m_allowlist) {
-            if (allowed_handler.handler_name == request.handler_name()
+            if (allowed_handler.handler_name == handler_name
                 && (allowed_handler.any_url || allowed_handler.urls.contains_slow(request_url_without_fragment))) {
                 allowed = true;
                 break;
@@ -47,78 +47,75 @@ Messages::LaunchServer::OpenURLResponse ClientConnection::handle(const Messages:
         }
         if (!allowed) {
             // You are not on the list, go home!
-            did_misbehave(String::formatted("Client requested a combination of handler/URL that was not on the list: '{}' with '{}'", request.handler_name(), request.url()).characters());
+            did_misbehave(String::formatted("Client requested a combination of handler/URL that was not on the list: '{}' with '{}'", handler_name, url).characters());
             return nullptr;
         }
     }
 
-    URL url(request.url());
-    return Launcher::the().open_url(url, request.handler_name());
+    return Launcher::the().open_url(url, handler_name);
 }
 
-Messages::LaunchServer::GetHandlersForURLResponse ClientConnection::handle(const Messages::LaunchServer::GetHandlersForURL& request)
+Messages::LaunchServer::GetHandlersForURLResponse ClientConnection::get_handlers_for_url(URL const& url)
 {
-    URL url(request.url());
     return Launcher::the().handlers_for_url(url);
 }
 
-Messages::LaunchServer::GetHandlersWithDetailsForURLResponse ClientConnection::handle(const Messages::LaunchServer::GetHandlersWithDetailsForURL& request)
+Messages::LaunchServer::GetHandlersWithDetailsForURLResponse ClientConnection::get_handlers_with_details_for_url(URL const& url)
 {
-    URL url(request.url());
     return Launcher::the().handlers_with_details_for_url(url);
 }
 
-void ClientConnection::handle(const Messages::LaunchServer::AddAllowedURL& request)
+void ClientConnection::add_allowed_url(URL const& url)
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");
         return;
     }
 
-    if (!request.url().is_valid()) {
+    if (!url.is_valid()) {
         did_misbehave("Got request to allow invalid URL");
         return;
     }
 
-    m_allowlist.empend(String(), false, Vector<URL> { request.url() });
+    m_allowlist.empend(String(), false, Vector<URL> { url });
 }
 
-void ClientConnection::handle(const Messages::LaunchServer::AddAllowedHandlerWithAnyURL& request)
+void ClientConnection::add_allowed_handler_with_any_url(String const& handler_name)
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");
         return;
     }
 
-    if (request.handler_name().is_empty()) {
+    if (handler_name.is_empty()) {
         did_misbehave("Got request to allow empty handler name");
         return;
     }
 
-    m_allowlist.empend(request.handler_name(), true, Vector<URL>());
+    m_allowlist.empend(handler_name, true, Vector<URL>());
 }
 
-void ClientConnection::handle(const Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLs& request)
+void ClientConnection::add_allowed_handler_with_only_specific_urls(String const& handler_name, Vector<URL> const& urls)
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got request to add more allowed handlers after list was sealed");
         return;
     }
 
-    if (request.handler_name().is_empty()) {
+    if (handler_name.is_empty()) {
         did_misbehave("Got request to allow empty handler name");
         return;
     }
 
-    if (request.urls().is_empty()) {
+    if (urls.is_empty()) {
         did_misbehave("Got request to allow empty URL list");
         return;
     }
 
-    m_allowlist.empend(request.handler_name(), false, request.urls());
+    m_allowlist.empend(handler_name, false, urls);
 }
 
-void ClientConnection::handle(const Messages::LaunchServer::SealAllowlist&)
+void ClientConnection::seal_allowlist()
 {
     if (m_allowlist_is_sealed) {
         did_misbehave("Got more than one request to seal the allowed handlers list");

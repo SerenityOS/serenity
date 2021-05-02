@@ -30,10 +30,10 @@ void ClientConnection::die()
     exit(0);
 }
 
-void ClientConnection::handle(const Messages::LanguageServer::Greet& message)
+void ClientConnection::greet(String const& project_root)
 {
-    m_filedb.set_project_root(message.project_root());
-    if (unveil(message.project_root().characters(), "r") < 0) {
+    m_filedb.set_project_root(project_root);
+    if (unveil(project_root.characters(), "r") < 0) {
         perror("unveil");
         exit(1);
     }
@@ -43,80 +43,79 @@ void ClientConnection::handle(const Messages::LanguageServer::Greet& message)
     }
 }
 
-void ClientConnection::handle(const Messages::LanguageServer::FileOpened& message)
+void ClientConnection::file_opened(String const& filename, IPC::File const& file)
 {
-    if (m_filedb.is_open(message.filename())) {
+    if (m_filedb.is_open(filename)) {
         return;
     }
-    m_filedb.add(message.filename(), message.file().take_fd());
-    m_autocomplete_engine->file_opened(message.filename());
+    m_filedb.add(filename, file.take_fd());
+    m_autocomplete_engine->file_opened(filename);
 }
 
-void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText& message)
+void ClientConnection::file_edit_insert_text(String const& filename, String const& text, i32 start_line, i32 start_column)
 {
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "InsertText for file: {}", message.filename());
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "Text: {}", message.text());
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "[{}:{}]", message.start_line(), message.start_column());
-    m_filedb.on_file_edit_insert_text(message.filename(), message.text(), message.start_line(), message.start_column());
-    m_autocomplete_engine->on_edit(message.filename());
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "InsertText for file: {}", filename);
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "Text: {}", text);
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "[{}:{}]", start_line, start_column);
+    m_filedb.on_file_edit_insert_text(filename, text, start_line, start_column);
+    m_autocomplete_engine->on_edit(filename);
 }
 
-void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText& message)
+void ClientConnection::file_edit_remove_text(String const& filename, i32 start_line, i32 start_column, i32 end_line, i32 end_column)
 {
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "RemoveText for file: {}", message.filename());
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "[{}:{} - {}:{}]", message.start_line(), message.start_column(), message.end_line(), message.end_column());
-    m_filedb.on_file_edit_remove_text(message.filename(), message.start_line(), message.start_column(), message.end_line(), message.end_column());
-    m_autocomplete_engine->on_edit(message.filename());
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "RemoveText for file: {}", filename);
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "[{}:{} - {}:{}]", start_line, start_column, end_line, end_column);
+    m_filedb.on_file_edit_remove_text(filename, start_line, start_column, end_line, end_column);
+    m_autocomplete_engine->on_edit(filename);
 }
 
-void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSuggestions& message)
+void ClientConnection::auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation const& location)
 {
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "AutoCompleteSuggestions for: {} {}:{}", message.location().file, message.location().line, message.location().column);
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "AutoCompleteSuggestions for: {} {}:{}", location.file, location.line, location.column);
 
-    auto document = m_filedb.get(message.location().file);
+    auto document = m_filedb.get(location.file);
     if (!document) {
-        dbgln("file {} has not been opened", message.location().file);
+        dbgln("file {} has not been opened", location.file);
         return;
     }
 
-    GUI::TextPosition autocomplete_position = { (size_t)message.location().line, (size_t)max(message.location().column, message.location().column - 1) };
-    Vector<GUI::AutocompleteProvider::Entry> suggestions = m_autocomplete_engine->get_suggestions(message.location().file, autocomplete_position);
+    GUI::TextPosition autocomplete_position = { (size_t)location.line, (size_t)max(location.column, location.column - 1) };
+    Vector<GUI::AutocompleteProvider::Entry> suggestions = m_autocomplete_engine->get_suggestions(location.file, autocomplete_position);
     post_message(Messages::LanguageClient::AutoCompleteSuggestions(move(suggestions)));
 }
 
-void ClientConnection::handle(const Messages::LanguageServer::SetFileContent& message)
+void ClientConnection::set_file_content(String const& filename, String const& content)
 {
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "SetFileContent: {}", message.filename());
-    auto document = m_filedb.get(message.filename());
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "SetFileContent: {}", filename);
+    auto document = m_filedb.get(filename);
     if (!document) {
-        m_filedb.add(message.filename(), message.content());
-        VERIFY(m_filedb.is_open(message.filename()));
+        m_filedb.add(filename, content);
+        VERIFY(m_filedb.is_open(filename));
     } else {
-        const auto& content = message.content();
         document->set_text(content.view());
     }
-    VERIFY(m_filedb.is_open(message.filename()));
-    m_autocomplete_engine->on_edit(message.filename());
+    VERIFY(m_filedb.is_open(filename));
+    m_autocomplete_engine->on_edit(filename);
 }
 
-void ClientConnection::handle(const Messages::LanguageServer::FindDeclaration& message)
+void ClientConnection::find_declaration(GUI::AutocompleteProvider::ProjectLocation const& location)
 {
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "FindDeclaration: {} {}:{}", message.location().file, message.location().line, message.location().column);
-    auto document = m_filedb.get(message.location().file);
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "FindDeclaration: {} {}:{}", location.file, location.line, location.column);
+    auto document = m_filedb.get(location.file);
     if (!document) {
-        dbgln("file {} has not been opened", message.location().file);
+        dbgln("file {} has not been opened", location.file);
         return;
     }
 
-    GUI::TextPosition identifier_position = { (size_t)message.location().line, (size_t)message.location().column };
-    auto location = m_autocomplete_engine->find_declaration_of(message.location().file, identifier_position);
-    if (!location.has_value()) {
+    GUI::TextPosition identifier_position = { (size_t)location.line, (size_t)location.column };
+    auto decl_location = m_autocomplete_engine->find_declaration_of(location.file, identifier_position);
+    if (!decl_location.has_value()) {
         dbgln("could not find declaration");
         return;
     }
 
-    dbgln_if(LANGUAGE_SERVER_DEBUG, "declaration location: {} {}:{}", location.value().file, location.value().line, location.value().column);
-    post_message(Messages::LanguageClient::DeclarationLocation(GUI::AutocompleteProvider::ProjectLocation { location.value().file, location.value().line, location.value().column }));
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "declaration location: {} {}:{}", decl_location.value().file, decl_location.value().line, decl_location.value().column);
+    post_message(Messages::LanguageClient::DeclarationLocation(GUI::AutocompleteProvider::ProjectLocation { decl_location.value().file, decl_location.value().line, decl_location.value().column }));
 }
 
 void ClientConnection::set_declarations_of_document_callback(ClientConnection& instance, const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)

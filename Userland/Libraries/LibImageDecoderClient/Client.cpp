@@ -26,7 +26,7 @@ void Client::handshake()
     send_sync<Messages::ImageDecoderServer::Greet>();
 }
 
-void Client::handle(const Messages::ImageDecoderClient::Dummy&)
+void Client::dummy()
 {
 }
 

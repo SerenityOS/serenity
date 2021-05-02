@@ -34,7 +34,7 @@ private:
         , m_notification(notification)
     {
     }
-    virtual void handle(const Messages::NotificationClient::Dummy&) override { }
+    virtual void dummy() override { }
     Notification* m_notification;
 };
 

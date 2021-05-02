@@ -29,14 +29,14 @@ public:
     virtual void die() override;
 
 protected:
-    virtual void handle(const Messages::LanguageServer::Greet&) override;
-    virtual void handle(const Messages::LanguageServer::FileOpened&) override;
-    virtual void handle(const Messages::LanguageServer::FileEditInsertText&) override;
-    virtual void handle(const Messages::LanguageServer::FileEditRemoveText&) override;
-    virtual void handle(const Messages::LanguageServer::SetFileContent&) override;
-    virtual void handle(const Messages::LanguageServer::AutoCompleteSuggestions&) override;
-    virtual void handle(const Messages::LanguageServer::FindDeclaration&) override;
-    virtual void handle(const Messages::LanguageServer::SetAutoCompleteMode&) override = 0;
+    virtual void greet(String const&) override;
+    virtual void file_opened(String const&, IPC::File const&) override;
+    virtual void file_edit_insert_text(String const&, String const&, i32, i32) override;
+    virtual void file_edit_remove_text(String const&, i32, i32, i32, i32) override;
+    virtual void set_file_content(String const&, String const&) override;
+    virtual void auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation const&) override;
+    virtual void find_declaration(GUI::AutocompleteProvider::ProjectLocation const&) override;
+    virtual void set_auto_complete_mode(String const&) override = 0;
 
     static void set_declarations_of_document_callback(ClientConnection&, const String&, Vector<GUI::AutocompleteProvider::Declaration>&&);
 

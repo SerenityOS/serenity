@@ -27,12 +27,12 @@ public:
     static WindowManagerServerConnection& the();
 
 private:
-    virtual void handle(const Messages::WindowManagerClient::WindowRemoved&) override;
-    virtual void handle(const Messages::WindowManagerClient::WindowStateChanged&) override;
-    virtual void handle(const Messages::WindowManagerClient::WindowIconBitmapChanged&) override;
-    virtual void handle(const Messages::WindowManagerClient::WindowRectChanged&) override;
-    virtual void handle(const Messages::WindowManagerClient::AppletAreaSizeChanged&) override;
-    virtual void handle(const Messages::WindowManagerClient::SuperKeyPressed&) override;
+    virtual void window_removed(i32, i32, i32) override;
+    virtual void window_state_changed(i32, i32, i32, i32, i32, bool, bool, bool, bool, i32, String const&, Gfx::IntRect const&, Optional<i32> const&) override;
+    virtual void window_icon_bitmap_changed(i32, i32, i32, Gfx::ShareableBitmap const&) override;
+    virtual void window_rect_changed(i32, i32, i32, Gfx::IntRect const&) override;
+    virtual void applet_area_size_changed(i32, Gfx::IntSize const&) override;
+    virtual void super_key_pressed(i32) override;
 };
 
 }

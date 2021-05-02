@@ -48,7 +48,7 @@ private:
         : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, "/tmp/portal/launch")
     {
     }
-    virtual void handle(const Messages::LaunchClient::Dummy&) override { }
+    virtual void dummy() override { }
 };
 
 static LaunchServerConnection& connection()

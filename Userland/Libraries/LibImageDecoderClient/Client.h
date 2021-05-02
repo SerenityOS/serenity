@@ -41,7 +41,7 @@ private:
 
     virtual void die() override;
 
-    virtual void handle(const Messages::ImageDecoderClient::Dummy&) override;
+    virtual void dummy() override;
 };
 
 }
