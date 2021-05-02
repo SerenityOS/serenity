@@ -559,29 +559,62 @@ int pthread_setcanceltype([[maybe_unused]] int type, [[maybe_unused]] int* oldty
     TODO();
 }
 
-int pthread_spin_destroy([[maybe_unused]] pthread_spinlock_t* lock)
+constexpr static pid_t spinlock_unlock_sentinel = 0;
+int pthread_spin_destroy(pthread_spinlock_t* lock)
 {
-    TODO();
+    auto current = AK::atomic_load(&lock->m_lock);
+
+    if (current != spinlock_unlock_sentinel)
+        return EBUSY;
+
+    return 0;
 }
 
-int pthread_spin_init([[maybe_unused]] pthread_spinlock_t* lock, [[maybe_unused]] int shared)
+int pthread_spin_init(pthread_spinlock_t* lock, [[maybe_unused]] int shared)
 {
-    TODO();
+    lock->m_lock = spinlock_unlock_sentinel;
+    return 0;
 }
 
-int pthread_spin_lock([[maybe_unused]] pthread_spinlock_t* lock)
+int pthread_spin_lock(pthread_spinlock_t* lock)
 {
-    TODO();
+    const auto desired = gettid();
+    while (true) {
+        auto current = AK::atomic_load(&lock->m_lock);
+
+        if (current == desired)
+            return EDEADLK;
+
+        if (AK::atomic_compare_exchange_strong(&lock->m_lock, current, desired, AK::MemoryOrder::memory_order_acquire))
+            break;
+    }
+
+    return 0;
 }
 
-int pthread_spin_trylock([[maybe_unused]] pthread_spinlock_t* lock)
+int pthread_spin_trylock(pthread_spinlock_t* lock)
 {
-    TODO();
+    // We expect the current value to be unlocked, as the specification
+    // states that trylock should lock ony if it is not held by ANY thread.
+    auto current = spinlock_unlock_sentinel;
+    auto desired = gettid();
+
+    if (AK::atomic_compare_exchange_strong(&lock->m_lock, current, desired, AK::MemoryOrder::memory_order_acquire)) {
+        return 0;
+    } else {
+        return EBUSY;
+    }
 }
 
-int pthread_spin_unlock([[maybe_unused]] pthread_spinlock_t* lock)
+int pthread_spin_unlock(pthread_spinlock_t* lock)
 {
-    TODO();
+    auto current = AK::atomic_load(&lock->m_lock);
+
+    if (gettid() != current)
+        return EPERM;
+
+    AK::atomic_store(&lock->m_lock, spinlock_unlock_sentinel);
+    return 0;
 }
 
 int pthread_equal(pthread_t t1, pthread_t t2)

@@ -84,7 +84,9 @@ typedef struct __pthread_cond_t {
 
 typedef uint64_t pthread_rwlock_t;
 typedef void* pthread_rwlockattr_t;
-typedef void* pthread_spinlock_t;
+typedef struct __pthread_spinlock_t {
+    int m_lock;
+} pthread_spinlock_t;
 typedef struct __pthread_condattr_t {
     int clockid; // clockid_t
 } pthread_condattr_t;
