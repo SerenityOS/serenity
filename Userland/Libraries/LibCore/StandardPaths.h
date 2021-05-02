@@ -17,6 +17,7 @@ public:
     static String downloads_directory();
     static String tempfile_directory();
     static String config_directory();
+    static String trash_directory();
 };
 
 }

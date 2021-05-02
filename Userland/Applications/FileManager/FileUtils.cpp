@@ -6,8 +6,11 @@
 
 #include "FileUtils.h"
 #include <AK/LexicalPath.h>
+#include <LibCore/ConfigFile.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/MessageBox.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -65,6 +68,105 @@ void delete_paths(const Vector<String>& paths, bool should_confirm, GUI::Window*
     for (auto& path : paths) {
         delete_path(path, parent_window);
     }
+}
+
+void create_trash_bin()
+{
+    auto trash_bin_path = Core::StandardPaths::trash_directory();
+    auto trash_bin_files = String::formatted("{}/files", trash_bin_path);
+    auto trash_bin_info = String::formatted("{}/info", trash_bin_path);
+
+    if (!Core::File::is_directory(trash_bin_path)) {
+        if (mkdir(trash_bin_path.characters(), 0755) < 0) {
+            auto saved_errno = errno;
+            warnln("Failed to create directory {}: {}", trash_bin_path, strerror(saved_errno));
+        }
+    }
+
+    if (!Core::File::is_directory(trash_bin_files)) {
+        if (mkdir(trash_bin_files.characters(), 0755) < 0) {
+            auto saved_errno = errno;
+            warnln("Failed to create directory {}: {}", trash_bin_files, strerror(saved_errno));
+        }
+    }
+
+    if (!Core::File::is_directory(trash_bin_info)) {
+        if (mkdir(trash_bin_info.characters(), 0755) < 0) {
+            auto saved_errno = errno;
+            warnln("Failed to create directory {}: {}", trash_bin_info, strerror(saved_errno));
+        }
+    }
+}
+
+[[maybe_unused]] bool move_to_trash(String const& path)
+{
+    auto file_name = LexicalPath(path).basename();
+    auto file_info_name = String::formatted("{}.trashinfo", file_name);
+    auto deletion_date = Core::DateTime::now().to_string("%Y-%m-%dT%H:%M:%S");
+    auto trash_bin_files = String::formatted("{}/files", Core::StandardPaths::trash_directory());
+    auto trash_bin_info = String::formatted("{}/info", Core::StandardPaths::trash_directory());
+
+    create_trash_bin();
+
+    auto trash_info_path = String::formatted("{}/{}", trash_bin_info, file_info_name);
+
+    auto file_or_error = Core::File::open(trash_info_path, Core::IODevice::WriteOnly);
+
+    if (file_or_error.is_error()) {
+        warnln("Cannot write trash info for file '{}'", path);
+        return false;
+    }
+
+    auto file = file_or_error.release_value();
+    file->close();
+
+    auto trash_info = Core::ConfigFile::open(trash_info_path);
+
+    trash_info->write_entry("Trash Info", "Path", path);
+    trash_info->write_entry("Trash Info", "DeletionDate", deletion_date);
+    trash_info->sync();
+
+    auto trash_file_path = String::formatted("{}/{}", trash_bin_files, file_name);
+
+    auto rc = rename(path.characters(), trash_file_path.characters());
+
+    if (rc < 0) {
+        if (errno == EXDEV) {
+            auto result = Core::File::copy_file_or_directory(
+                trash_file_path,
+                path,
+                Core::File::RecursionMode::Allowed,
+                Core::File::LinkMode::Disallowed,
+                Core::File::AddDuplicateFileMarker::No);
+
+            if (result.is_error()) {
+                dbgln("Could not move '{}' to trash: {}", path, result.error().error_code);
+                return false;
+            }
+
+            rc = unlink(path.characters());
+
+            if (rc < 0)
+                dbgln("Could not unlink '{}': {}", path, strerror(errno));
+        }
+    } else {
+        dbgln("Could not rename '{}': {}", path, strerror(errno));
+        return false;
+    }
+
+    return true;
+}
+
+// FIXME: I'm not sure this is a good practice
+[[maybe_unused]] bool move_to_trash(Vector<String> const& paths)
+{
+    auto rv = false;
+
+    for (auto& path : paths) {
+        rv = move_to_trash(path);
+    }
+
+    return rv;
 }
 
 }

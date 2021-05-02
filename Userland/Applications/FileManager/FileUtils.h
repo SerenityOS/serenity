@@ -20,4 +20,8 @@ enum class FileOperation {
 
 void delete_path(const String&, GUI::Window*);
 void delete_paths(const Vector<String>&, bool should_confirm, GUI::Window*);
+void create_trash_bin();
+[[maybe_unused]] bool move_to_trash(String const&);
+[[maybe_unused]] bool move_to_trash(Vector<String> const&);
+
 }

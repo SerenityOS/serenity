@@ -374,6 +374,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
     desktop_context_menu->add_action(cut_action);
     desktop_context_menu->add_action(paste_action);
     desktop_context_menu->add_action(directory_view.delete_action());
+    desktop_context_menu->add_action(directory_view.trash_action());
     desktop_context_menu->add_separator();
     desktop_context_menu->add_action(properties_action);
 
@@ -392,6 +393,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
                 file_context_menu->add_action(cut_action);
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view.delete_action());
+                file_context_menu->add_action(directory_view.trash_action());
                 file_context_menu->add_separator();
 
                 if (node.full_path().ends_with(".zip", AK::CaseSensitivity::CaseInsensitive)) {
@@ -779,13 +781,23 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         },
         &tree_view);
 
+    auto tree_view_trash_action = GUI::Action::create(
+        "Move to &Trash", Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"), [&](auto&) {
+            if (FileUtils::move_to_trash(tree_view_selected_file_paths()))
+                refresh_tree_view();
+        },
+        &tree_view);
+
     // This is a little awkward. The menu action does something different depending on which view has focus.
     // It would be nice to find a good abstraction for this instead of creating a branching action like this.
     auto focus_dependent_delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
-        if (tree_view.is_focused())
+        if (tree_view.is_focused()) {
             tree_view_delete_action->activate();
-        else
+            tree_view_trash_action->activate();
+        } else {
             directory_view.delete_action().activate();
+            directory_view.trash_action().activate();
+        }
         refresh_tree_view();
     });
     focus_dependent_delete_action->set_enabled(false);
@@ -979,6 +991,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_context_menu->add_action(cut_action);
     directory_context_menu->add_action(folder_specific_paste_action);
     directory_context_menu->add_action(directory_view.delete_action());
+    directory_context_menu->add_action(directory_view.trash_action());
     directory_context_menu->add_action(shortcut_action);
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
@@ -996,6 +1009,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view_directory_context_menu->add_action(cut_action);
     tree_view_directory_context_menu->add_action(paste_action);
     tree_view_directory_context_menu->add_action(tree_view_delete_action);
+    tree_view_directory_context_menu->add_action(tree_view_trash_action);
     tree_view_directory_context_menu->add_separator();
     tree_view_directory_context_menu->add_action(properties_action);
     tree_view_directory_context_menu->add_separator();
@@ -1020,6 +1034,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 file_context_menu->add_action(cut_action);
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view.delete_action());
+                file_context_menu->add_action(directory_view.trash_action());
                 file_context_menu->add_action(shortcut_action);
                 file_context_menu->add_separator();
 
@@ -1062,6 +1077,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         copy_action->set_enabled(!tree_view.selection().is_empty());
         cut_action->set_enabled(!tree_view.selection().is_empty());
         directory_view.delete_action().set_enabled(!tree_view.selection().is_empty());
+        directory_view.trash_action().set_enabled(!tree_view.selection().is_empty());
     };
 
     tree_view.on_focus_change = [&]([[maybe_unused]] const bool has_focus, [[maybe_unused]] const GUI::FocusSource source) {

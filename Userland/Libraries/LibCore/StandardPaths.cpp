@@ -54,4 +54,12 @@ String StandardPaths::tempfile_directory()
     return "/tmp";
 }
 
+String StandardPaths::trash_directory()
+{
+    StringBuilder builder;
+    builder.append(home_directory());
+    builder.append("/.trash");
+    return LexicalPath::canonicalized_path(builder.to_string());
+}
+
 }

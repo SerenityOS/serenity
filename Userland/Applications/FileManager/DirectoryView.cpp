@@ -512,6 +512,14 @@ void DirectoryView::do_delete(bool should_confirm)
     FileUtils::delete_paths(paths, should_confirm, window());
 }
 
+void DirectoryView::do_trash()
+{
+    auto paths = selected_file_paths();
+    VERIFY(!paths.is_empty());
+    if (!FileUtils::move_to_trash(paths))
+        dbgln("Could not trash the selected files/directories");
+}
+
 void DirectoryView::handle_selection_change()
 {
     update_statusbar();
@@ -519,6 +527,7 @@ void DirectoryView::handle_selection_change()
     bool can_delete = !current_view().selection().is_empty() && access(path().characters(), W_OK) == 0;
     m_delete_action->set_enabled(can_delete);
     m_force_delete_action->set_enabled(can_delete);
+    m_trash_action->set_enabled(can_delete);
 
     if (on_selection_change)
         on_selection_change(current_view());
@@ -585,6 +594,10 @@ void DirectoryView::setup_actions()
         "Delete Without Confirmation", { Mod_Shift, Key_Delete },
         [this](auto&) { do_delete(false); },
         window());
+
+    m_trash_action = GUI::Action::create("Move to &Trash", Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"), [&](auto&) {
+        do_trash();
+    });
 }
 
 void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEvent& event)

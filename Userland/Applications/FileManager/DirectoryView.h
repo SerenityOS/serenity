@@ -121,6 +121,7 @@ public:
     GUI::Action& open_terminal_action() { return *m_open_terminal_action; }
     GUI::Action& delete_action() { return *m_delete_action; }
     GUI::Action& force_delete_action() { return *m_force_delete_action; }
+    GUI::Action& trash_action() { return *m_trash_action; }
 
 private:
     explicit DirectoryView(Mode);
@@ -131,6 +132,7 @@ private:
     void handle_selection_change();
     void handle_drop(const GUI::ModelIndex&, const GUI::DropEvent&);
     void do_delete(bool should_confirm);
+    void do_trash();
 
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
@@ -166,6 +168,7 @@ private:
     RefPtr<GUI::Action> m_open_terminal_action;
     RefPtr<GUI::Action> m_delete_action;
     RefPtr<GUI::Action> m_force_delete_action;
+    RefPtr<GUI::Action> m_trash_action;
 };
 
 }
