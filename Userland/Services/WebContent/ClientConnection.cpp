@@ -58,9 +58,8 @@ const Web::Page& ClientConnection::page() const
     return m_page_host->page();
 }
 
-Messages::WebContentServer::GreetResponse ClientConnection::handle(const Messages::WebContentServer::Greet&)
+void ClientConnection::handle(const Messages::WebContentServer::Greet&)
 {
-    return {};
 }
 
 void ClientConnection::handle(const Messages::WebContentServer::UpdateSystemTheme& message)

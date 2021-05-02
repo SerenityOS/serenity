@@ -27,7 +27,7 @@ public:
     virtual void die() override;
 
 private:
-    virtual Messages::ImageDecoderServer::GreetResponse handle(const Messages::ImageDecoderServer::Greet&) override;
+    virtual void handle(const Messages::ImageDecoderServer::Greet&) override;
     virtual Messages::ImageDecoderServer::DecodeImageResponse handle(const Messages::ImageDecoderServer::DecodeImage&) override;
 };
 

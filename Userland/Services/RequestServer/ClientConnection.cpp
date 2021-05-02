@@ -100,9 +100,8 @@ void ClientConnection::did_request_certificates(Badge<Request>, Request& request
     post_message(Messages::RequestClient::CertificateRequested(request.id()));
 }
 
-Messages::RequestServer::GreetResponse ClientConnection::handle(const Messages::RequestServer::Greet&)
+void ClientConnection::handle(const Messages::RequestServer::Greet&)
 {
-    return {};
 }
 
 Messages::RequestServer::SetCertificateResponse ClientConnection::handle(const Messages::RequestServer::SetCertificate& message)

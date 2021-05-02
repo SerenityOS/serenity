@@ -35,9 +35,8 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-Messages::SymbolServer::GreetResponse ClientConnection::handle(const Messages::SymbolServer::Greet&)
+void ClientConnection::handle(const Messages::SymbolServer::Greet&)
 {
-    return {};
 }
 
 Messages::SymbolServer::SymbolicateResponse ClientConnection::handle(const Messages::SymbolServer::Symbolicate& message)

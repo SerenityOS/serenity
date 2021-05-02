@@ -26,7 +26,7 @@ public:
     virtual void die() override;
 
 private:
-    virtual Messages::WebSocketServer::GreetResponse handle(const Messages::WebSocketServer::Greet&) override;
+    virtual void handle(const Messages::WebSocketServer::Greet&) override;
     virtual Messages::WebSocketServer::ConnectResponse handle(const Messages::WebSocketServer::Connect&) override;
     virtual Messages::WebSocketServer::ReadyStateResponse handle(const Messages::WebSocketServer::ReadyState&) override;
     virtual void handle(const Messages::WebSocketServer::Send&) override;

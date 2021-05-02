@@ -30,7 +30,7 @@ void ClientConnection::die()
     exit(0);
 }
 
-Messages::LanguageServer::GreetResponse ClientConnection::handle(const Messages::LanguageServer::Greet& message)
+void ClientConnection::handle(const Messages::LanguageServer::Greet& message)
 {
     m_filedb.set_project_root(message.project_root());
     if (unveil(message.project_root().characters(), "r") < 0) {
@@ -41,7 +41,6 @@ Messages::LanguageServer::GreetResponse ClientConnection::handle(const Messages:
         perror("unveil");
         exit(1);
     }
-    return {};
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FileOpened& message)

@@ -28,25 +28,22 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-Messages::NotificationServer::GreetResponse ClientConnection::handle(const Messages::NotificationServer::Greet&)
+void ClientConnection::handle(const Messages::NotificationServer::Greet&)
 {
-    return {};
 }
 
-Messages::NotificationServer::ShowNotificationResponse ClientConnection::handle(const Messages::NotificationServer::ShowNotification& message)
+void ClientConnection::handle(const Messages::NotificationServer::ShowNotification& message)
 {
     auto window = NotificationWindow::construct(client_id(), message.text(), message.title(), message.icon());
     window->show();
-    return {};
 }
 
-Messages::NotificationServer::CloseNotificationResponse ClientConnection::handle([[maybe_unused]] const Messages::NotificationServer::CloseNotification& message)
+void ClientConnection::handle([[maybe_unused]] const Messages::NotificationServer::CloseNotification& message)
 {
     auto window = NotificationWindow::get_window_by_id(client_id());
     if (window) {
         window->close();
     }
-    return {};
 }
 
 Messages::NotificationServer::UpdateNotificationIconResponse ClientConnection::handle(const Messages::NotificationServer::UpdateNotificationIcon& message)

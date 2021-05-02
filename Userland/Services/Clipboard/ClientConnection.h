@@ -30,9 +30,9 @@ public:
     void notify_about_clipboard_change();
 
 private:
-    virtual Messages::ClipboardServer::GreetResponse handle(const Messages::ClipboardServer::Greet&) override;
+    virtual void handle(const Messages::ClipboardServer::Greet&) override;
     virtual Messages::ClipboardServer::GetClipboardDataResponse handle(const Messages::ClipboardServer::GetClipboardData&) override;
-    virtual Messages::ClipboardServer::SetClipboardDataResponse handle(const Messages::ClipboardServer::SetClipboardData&) override;
+    virtual void handle(const Messages::ClipboardServer::SetClipboardData&) override;
 };
 
 }
