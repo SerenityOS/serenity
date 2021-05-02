@@ -169,6 +169,7 @@ private:
     int virt$recvfd(int, int);
     int virt$sendfd(int, int);
     int virt$msyscall(FlatPtr);
+    int virt$futex(FlatPtr);
 
     bool find_malloc_symbols(const MmapRegion& libc_text);
 

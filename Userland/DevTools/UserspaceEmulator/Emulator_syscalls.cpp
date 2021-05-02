@@ -242,6 +242,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$chown(arg1);
     case SC_msyscall:
         return virt$msyscall(arg1);
+    case SC_futex:
+        return virt$futex(arg1);
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -1463,4 +1465,12 @@ int Emulator::virt$msyscall(FlatPtr)
     return 0;
 }
 
+int Emulator::virt$futex(FlatPtr params_addr)
+{
+    Syscall::SC_futex_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    // FIXME: Implement this.
+    return 0;
+}
 }
