@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Format.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
@@ -278,6 +279,11 @@ inline bool operator!=(const TimespecType& a, const TimespecType& b)
 }
 
 }
+
+template<>
+struct AK::Formatter<Time> : Formatter<FormatString> {
+    void format(FormatBuilder&, const Time&);
+};
 
 using AK::day_of_week;
 using AK::day_of_year;

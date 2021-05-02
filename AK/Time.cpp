@@ -287,4 +287,10 @@ Time Time::from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds)
     return Time { seconds + extra_seconds, nanoseconds };
 }
 
+void AK::Formatter<Time>::format(FormatBuilder& builder, const Time& value)
+{
+    auto ts = value.to_timespec();
+    Formatter<FormatString>::format(builder, "{}.{:09}", ts.tv_sec, ts.tv_nsec);
+}
+
 }
