@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Adam Hodgen <ant1441@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -208,6 +209,37 @@ void HTMLTableElement::delete_t_foot()
     if (maybe_tfoot) {
         maybe_tfoot->remove(false);
     }
+}
+
+NonnullRefPtr<DOM::HTMLCollection> HTMLTableElement::t_bodies()
+{
+    return DOM::HTMLCollection::create(*this, [](DOM::Element const& element) {
+        return element.tag_name() == TagNames::tbody;
+    });
+}
+
+NonnullRefPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
+{
+    auto tbody = DOM::create_element(document(), TagNames::tbody, Namespace::HTML);
+
+    // We insert the new tbody after the last <tbody> element
+    DOM::Node* child_to_append_after = nullptr;
+    for (auto* child = last_child(); child; child = child->previous_sibling()) {
+        if (!is<HTMLElement>(*child))
+            continue;
+        if (is<HTMLTableSectionElement>(*child)) {
+            auto table_section_element = &downcast<HTMLTableSectionElement>(*child);
+            if (table_section_element->tag_name() == TagNames::tbody) {
+                // We have found an element which is a <tbody> we'll insert after this
+                child_to_append_after = child->next_sibling();
+                break;
+            }
+        }
+    }
+
+    pre_insert(tbody, child_to_append_after);
+
+    return tbody;
 }
 
 NonnullRefPtr<DOM::HTMLCollection> HTMLTableElement::rows()
