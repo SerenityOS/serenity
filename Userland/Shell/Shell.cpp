@@ -869,20 +869,24 @@ void Shell::execute_process(Vector<const char*>&& argv)
             _exit(126);
         }
         if (saved_errno == ENOENT) {
-            int shebang_fd = open(argv[0], O_RDONLY);
-            auto close_argv = ScopeGuard([shebang_fd]() { if (shebang_fd >= 0)  close(shebang_fd); });
-            char shebang[256] {};
-            ssize_t num_read = -1;
-            if ((shebang_fd >= 0) && ((num_read = read(shebang_fd, shebang, sizeof(shebang))) >= 2) && (StringView(shebang).starts_with("#!"))) {
-                StringView shebang_path_view(&shebang[2], num_read - 2);
-                Optional<size_t> newline_pos = shebang_path_view.find_first_of("\n\r");
-                shebang[newline_pos.has_value() ? (newline_pos.value() + 2) : num_read] = '\0';
-                argv[0] = shebang;
+            do {
+                auto file_result = Core::File::open(argv[0], Core::IODevice::OpenMode::ReadOnly);
+                if (file_result.is_error())
+                    break;
+                auto& file = file_result.value();
+                auto line = file->read_line();
+                if (!line.starts_with("#!"))
+                    break;
+                GenericLexer shebang_lexer { line.substring_view(2) };
+                auto shebang = shebang_lexer.consume_until(is_any_of("\n\r")).to_string();
+                argv.prepend(shebang.characters());
                 int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
-                if (rc < 0)
-                    fprintf(stderr, "%s: Invalid interpreter \"%s\": %s\n", argv[0], &shebang[2], strerror(errno));
-            } else
-                fprintf(stderr, "%s: Command not found.\n", argv[0]);
+                if (rc < 0) {
+                    fprintf(stderr, "%s: Invalid interpreter \"%s\": %s\n", argv[0], shebang.characters(), strerror(errno));
+                    _exit(126);
+                }
+            } while (false);
+            fprintf(stderr, "%s: Command not found.\n", argv[0]);
         } else {
             if (S_ISDIR(st.st_mode)) {
                 fprintf(stderr, "Shell: %s: Is a directory\n", argv[0]);
