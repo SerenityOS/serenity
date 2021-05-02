@@ -918,7 +918,7 @@ bool Window::is_modal() const
     return true;
 }
 
-void Window::set_progress(int progress)
+void Window::set_progress(Optional<int> progress)
 {
     if (m_progress == progress)
         return;

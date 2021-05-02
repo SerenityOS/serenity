@@ -54,7 +54,7 @@ endpoint WindowServer
     SetWindowTitle(i32 window_id, [UTF8] String title) => ()
     GetWindowTitle(i32 window_id) => ([UTF8] String title)
 
-    SetWindowProgress(i32 window_id, i32 progress) =|
+    SetWindowProgress(i32 window_id, Optional<i32> progress) =|
 
     SetWindowModified(i32 window_id, bool modified) =|
     IsWindowModified(i32 window_id) => (bool modified)

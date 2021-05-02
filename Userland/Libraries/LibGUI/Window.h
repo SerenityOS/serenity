@@ -190,7 +190,7 @@ public:
 
     Window* find_parent_window();
 
-    void set_progress(int);
+    void set_progress(Optional<int>);
 
     void update_cursor(Badge<Widget>) { update_cursor(); }
 

@@ -1021,7 +1021,7 @@ void Window::did_remove_widget(Badge<Widget>, Widget& widget)
         m_automatic_cursor_tracking_widget = nullptr;
 }
 
-void Window::set_progress(int progress)
+void Window::set_progress(Optional<int> progress)
 {
     VERIFY(m_window_id);
     WindowServerConnection::the().post_message(Messages::WindowServer::SetWindowProgress(m_window_id, progress));

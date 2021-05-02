@@ -72,8 +72,6 @@ class Window final : public Core::Object
     , public InlineLinkedListNode<Window> {
     C_OBJECT(Window)
 public:
-    Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
-    Window(Core::Object&, WindowType);
     virtual ~Window() override;
 
     bool is_modified() const { return m_modified; }
@@ -295,8 +293,8 @@ public:
 
     bool should_show_menubar() const { return m_should_show_menubar; }
 
-    int progress() const { return m_progress; }
-    void set_progress(int);
+    Optional<int> progress() const { return m_progress; }
+    void set_progress(Optional<int>);
 
     bool is_destroyed() const { return m_destroyed; }
     void destroy();
@@ -324,6 +322,9 @@ public:
     void set_menubar(Menubar*);
 
 private:
+    Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
+    Window(Core::Object&, WindowType);
+
     virtual void event(Core::Event&) override;
     void handle_mouse_event(const MouseEvent&);
     void handle_keydown_event(const KeyEvent&);
@@ -398,7 +399,7 @@ private:
     MenuItem* m_window_menu_close_item { nullptr };
     MenuItem* m_window_menu_menubar_visibility_item { nullptr };
     int m_minimize_animation_step { -1 };
-    int m_progress { -1 };
+    Optional<int> m_progress;
     bool m_should_show_menubar { true };
     bool m_modified { false };
 };
