@@ -30,13 +30,12 @@ void ClientConnection::die()
     exit(0);
 }
 
-void ClientConnection::handle(const Messages::ImageDecoderServer::Greet&)
+void ClientConnection::greet()
 {
 }
 
-Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::handle(const Messages::ImageDecoderServer::DecodeImage& message)
+Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::decode_image(Core::AnonymousBuffer const& encoded_buffer)
 {
-    auto encoded_buffer = message.data();
     if (!encoded_buffer.is_valid()) {
         dbgln_if(IMAGE_DECODER_DEBUG, "Encoded data is invalid");
         return nullptr;

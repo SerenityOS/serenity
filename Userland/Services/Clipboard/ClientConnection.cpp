@@ -35,16 +35,16 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-void ClientConnection::handle(const Messages::ClipboardServer::Greet&)
+void ClientConnection::greet()
 {
 }
 
-void ClientConnection::handle(const Messages::ClipboardServer::SetClipboardData& message)
+void ClientConnection::set_clipboard_data(Core::AnonymousBuffer const& data, String const& mime_type, IPC::Dictionary const& metadata)
 {
-    Storage::the().set_data(message.data(), message.mime_type(), message.metadata().entries());
+    Storage::the().set_data(data, mime_type, metadata.entries());
 }
 
-Messages::ClipboardServer::GetClipboardDataResponse ClientConnection::handle(const Messages::ClipboardServer::GetClipboardData&)
+Messages::ClipboardServer::GetClipboardDataResponse ClientConnection::get_clipboard_data()
 {
     auto& storage = Storage::the();
     return { storage.buffer(), storage.mime_type(), storage.metadata() };

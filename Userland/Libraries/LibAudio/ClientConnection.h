@@ -42,9 +42,9 @@ public:
     Function<void(int volume)> on_main_mix_volume_change;
 
 private:
-    virtual void handle(const Messages::AudioClient::FinishedPlayingBuffer&) override;
-    virtual void handle(const Messages::AudioClient::MutedStateChanged&) override;
-    virtual void handle(const Messages::AudioClient::MainMixVolumeChanged&) override;
+    virtual void finished_playing_buffer(i32) override;
+    virtual void muted_state_changed(bool) override;
+    virtual void main_mix_volume_changed(i32) override;
 };
 
 }

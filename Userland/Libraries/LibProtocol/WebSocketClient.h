@@ -33,11 +33,11 @@ public:
 private:
     WebSocketClient();
 
-    virtual void handle(const Messages::WebSocketClient::Connected&) override;
-    virtual void handle(const Messages::WebSocketClient::Received&) override;
-    virtual void handle(const Messages::WebSocketClient::Errored&) override;
-    virtual void handle(const Messages::WebSocketClient::Closed&) override;
-    virtual void handle(const Messages::WebSocketClient::CertificateRequested&) override;
+    virtual void connected(i32) override;
+    virtual void received(i32, bool, ByteBuffer const&) override;
+    virtual void errored(i32, i32) override;
+    virtual void closed(i32, u16, String const&, bool) override;
+    virtual void certificate_requested(i32) override;
 
     HashMap<i32, NonnullRefPtr<WebSocket>> m_connections;
 };

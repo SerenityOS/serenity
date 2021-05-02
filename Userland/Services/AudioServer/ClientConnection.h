@@ -36,17 +36,17 @@ public:
     static void for_each(Function<void(ClientConnection&)>);
 
 private:
-    virtual void handle(const Messages::AudioServer::Greet&) override;
-    virtual Messages::AudioServer::GetMainMixVolumeResponse handle(const Messages::AudioServer::GetMainMixVolume&) override;
-    virtual void handle(const Messages::AudioServer::SetMainMixVolume&) override;
-    virtual Messages::AudioServer::EnqueueBufferResponse handle(const Messages::AudioServer::EnqueueBuffer&) override;
-    virtual Messages::AudioServer::GetRemainingSamplesResponse handle(const Messages::AudioServer::GetRemainingSamples&) override;
-    virtual Messages::AudioServer::GetPlayedSamplesResponse handle(const Messages::AudioServer::GetPlayedSamples&) override;
-    virtual void handle(const Messages::AudioServer::SetPaused&) override;
-    virtual void handle(const Messages::AudioServer::ClearBuffer&) override;
-    virtual Messages::AudioServer::GetPlayingBufferResponse handle(const Messages::AudioServer::GetPlayingBuffer&) override;
-    virtual Messages::AudioServer::GetMutedResponse handle(const Messages::AudioServer::GetMuted&) override;
-    virtual void handle(const Messages::AudioServer::SetMuted&) override;
+    virtual void greet() override;
+    virtual Messages::AudioServer::GetMainMixVolumeResponse get_main_mix_volume() override;
+    virtual void set_main_mix_volume(i32) override;
+    virtual Messages::AudioServer::EnqueueBufferResponse enqueue_buffer(Core::AnonymousBuffer const&, i32, int) override;
+    virtual Messages::AudioServer::GetRemainingSamplesResponse get_remaining_samples() override;
+    virtual Messages::AudioServer::GetPlayedSamplesResponse get_played_samples() override;
+    virtual void set_paused(bool) override;
+    virtual void clear_buffer(bool) override;
+    virtual Messages::AudioServer::GetPlayingBufferResponse get_playing_buffer() override;
+    virtual Messages::AudioServer::GetMutedResponse get_muted() override;
+    virtual void set_muted(bool) override;
 
     Mixer& m_mixer;
     RefPtr<BufferQueue> m_queue;

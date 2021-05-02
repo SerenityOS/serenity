@@ -23,7 +23,7 @@ void Client::handshake()
     send_sync<Messages::SymbolServer::Greet>();
 }
 
-void Client::handle(const Messages::SymbolClient::Dummy&)
+void Client::dummy()
 {
 }
 

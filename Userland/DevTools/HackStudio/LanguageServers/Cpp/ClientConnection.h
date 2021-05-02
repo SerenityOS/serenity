@@ -26,10 +26,10 @@ public:
     virtual ~ClientConnection() override = default;
 
 private:
-    virtual void handle(const Messages::LanguageServer::SetAutoCompleteMode& message) override
+    virtual void set_auto_complete_mode(String const& mode) override
     {
-        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "SetAutoCompleteMode: {}", message.mode());
-        if (message.mode() == "Parser")
+        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "SetAutoCompleteMode: {}", mode);
+        if (mode == "Parser")
             m_autocomplete_engine = make<ParserAutoComplete>(*this, m_filedb);
         else
             m_autocomplete_engine = make<LexerAutoComplete>(*this, m_filedb);

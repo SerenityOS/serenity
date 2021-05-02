@@ -62,37 +62,37 @@ bool WebSocketClient::set_certificate(Badge<WebSocket>, WebSocket& connection, S
     return send_sync<Messages::WebSocketServer::SetCertificate>(connection.id(), move(certificate), move(key))->success();
 }
 
-void WebSocketClient::handle(const Messages::WebSocketClient::Connected& message)
+void WebSocketClient::connected(i32 connection_id)
 {
-    auto maybe_connection = m_connections.get(message.connection_id());
+    auto maybe_connection = m_connections.get(connection_id);
     if (maybe_connection.has_value())
         maybe_connection.value()->did_open({});
 }
 
-void WebSocketClient::handle(const Messages::WebSocketClient::Received& message)
+void WebSocketClient::received(i32 connection_id, bool is_text, ByteBuffer const& data)
 {
-    auto maybe_connection = m_connections.get(message.connection_id());
+    auto maybe_connection = m_connections.get(connection_id);
     if (maybe_connection.has_value())
-        maybe_connection.value()->did_receive({}, message.data(), message.is_text());
+        maybe_connection.value()->did_receive({}, data, is_text);
 }
 
-void WebSocketClient::handle(const Messages::WebSocketClient::Errored& message)
+void WebSocketClient::errored(i32 connection_id, i32 message)
 {
-    auto maybe_connection = m_connections.get(message.connection_id());
+    auto maybe_connection = m_connections.get(connection_id);
     if (maybe_connection.has_value())
-        maybe_connection.value()->did_error({}, message.message());
+        maybe_connection.value()->did_error({}, message);
 }
 
-void WebSocketClient::handle(const Messages::WebSocketClient::Closed& message)
+void WebSocketClient::closed(i32 connection_id, u16 code, String const& reason, bool clean)
 {
-    auto maybe_connection = m_connections.get(message.connection_id());
+    auto maybe_connection = m_connections.get(connection_id);
     if (maybe_connection.has_value())
-        maybe_connection.value()->did_close({}, message.code(), message.reason(), message.clean());
+        maybe_connection.value()->did_close({}, code, reason, clean);
 }
 
-void WebSocketClient::handle(const Messages::WebSocketClient::CertificateRequested& message)
+void WebSocketClient::certificate_requested(i32 connection_id)
 {
-    auto maybe_connection = m_connections.get(message.connection_id());
+    auto maybe_connection = m_connections.get(connection_id);
     if (maybe_connection.has_value())
         maybe_connection.value()->did_request_certificates({});
 }

@@ -33,10 +33,10 @@ public:
 private:
     RequestClient();
 
-    virtual void handle(const Messages::RequestClient::RequestProgress&) override;
-    virtual void handle(const Messages::RequestClient::RequestFinished&) override;
-    virtual void handle(const Messages::RequestClient::CertificateRequested&) override;
-    virtual void handle(const Messages::RequestClient::HeadersBecameAvailable&) override;
+    virtual void request_progress(i32, Optional<u32> const&, u32) override;
+    virtual void request_finished(i32, bool, u32) override;
+    virtual void certificate_requested(i32) override;
+    virtual void headers_became_available(i32, IPC::Dictionary const&, Optional<u32> const&) override;
 
     HashMap<i32, RefPtr<Request>> m_requests;
 };

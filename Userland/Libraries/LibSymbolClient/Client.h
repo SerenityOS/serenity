@@ -35,7 +35,7 @@ public:
 private:
     Client();
 
-    virtual void handle(const Messages::SymbolClient::Dummy&) override;
+    virtual void dummy() override;
 };
 
 }

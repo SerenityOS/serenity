@@ -45,6 +45,21 @@ struct Endpoint {
     Vector<Message> messages;
 };
 
+static String snake_case(String const& identifier)
+{
+    StringBuilder builder;
+    bool was_new_word = true;
+    for (auto ch : identifier) {
+        if (!builder.is_empty() && isupper(ch) && !was_new_word) {
+            builder.append('_');
+            was_new_word = true;
+        } else if (!isupper(ch))
+            was_new_word = false;
+        builder.append(tolower(ch));
+    }
+    return builder.to_string();
+}
+
 int main(int argc, char** argv)
 {
     if (argc != 2) {
@@ -540,24 +555,38 @@ public:
         switch (message.message_id()) {
 )~~~");
         for (auto& message : endpoint.messages) {
-            auto do_handle_message = [&](const String& name, bool returns_something) {
+            auto do_handle_message = [&](String const& name, Vector<Parameter> const& parameters, bool returns_something) {
                 auto message_generator = endpoint_generator.fork();
+
+                StringBuilder argument_generator;
+                for (size_t i = 0; i < parameters.size(); ++i) {
+                    auto& parameter = parameters[i];
+                    argument_generator.append("request.");
+                    argument_generator.append(parameter.name);
+                    argument_generator.append("()");
+                    if (i != parameters.size() - 1)
+                        argument_generator.append(", ");
+                }
 
                 message_generator.set("message.name", name);
                 message_generator.set("message.response_type", message.response_name());
+                message_generator.set("handler_name", snake_case(name));
+                message_generator.set("arguments", argument_generator.to_string());
                 message_generator.append(R"~~~(
         case (int)Messages::@endpoint.name@::MessageID::@message.name@: {
 )~~~");
                 if (returns_something) {
                     if (message.outputs.is_empty()) {
                         message_generator.append(R"~~~(
-            handle(static_cast<const Messages::@endpoint.name@::@message.name@&>(message));
+            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.name@&>(message);
+            @handler_name@(@arguments@);
             auto response = Messages::@endpoint.name@::@message.response_type@ { };
             return make<IPC::MessageBuffer>(response.encode());
 )~~~");
                     } else {
                         message_generator.append(R"~~~(
-            auto response = handle(static_cast<const Messages::@endpoint.name@::@message.name@&>(message));
+            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.name@&>(message);
+            auto response = @handler_name@(@arguments@);
             if (!response.valid())
                 return {};
             return make<IPC::MessageBuffer>(response.encode());
@@ -565,7 +594,8 @@ public:
                     }
                 } else {
                     message_generator.append(R"~~~(
-            handle(static_cast<const Messages::@endpoint.name@::@message.name@&>(message));
+            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.name@&>(message);
+            @handler_name@(@arguments@);
             return {};
 )~~~");
                 }
@@ -573,9 +603,9 @@ public:
         }
 )~~~");
             };
-            do_handle_message(message.name, message.is_synchronous);
+            do_handle_message(message.name, message.inputs, message.is_synchronous);
             if (message.is_synchronous)
-                do_handle_message(message.response_name(), false);
+                do_handle_message(message.response_name(), message.outputs, false);
         }
         endpoint_generator.append(R"~~~(
         default:
@@ -587,23 +617,61 @@ public:
         for (auto& message : endpoint.messages) {
             auto message_generator = endpoint_generator.fork();
 
-            message_generator.set("message.name", message.name);
+            auto do_handle_message_decl = [&](String const& name, Vector<Parameter> const& parameters, bool is_response) {
+                String return_type = "void";
+                if (message.is_synchronous && !message.outputs.is_empty() && !is_response) {
+                    StringBuilder builder;
+                    builder.append("Messages::");
+                    builder.append(endpoint.name);
+                    builder.append("::");
+                    builder.append(message.name);
+                    builder.append("Response");
+                    return_type = builder.to_string();
+                }
+                message_generator.set("message.complex_return_type", return_type);
 
-            String return_type = "void";
-            if (message.is_synchronous && !message.outputs.is_empty()) {
-                StringBuilder builder;
-                builder.append("Messages::");
-                builder.append(endpoint.name);
-                builder.append("::");
-                builder.append(message.name);
-                builder.append("Response");
-                return_type = builder.to_string();
-            }
-            message_generator.set("message.complex_return_type", return_type);
+                message_generator.set("handler_name", snake_case(name));
+                message_generator.append(R"~~~(
+    virtual @message.complex_return_type@ @handler_name@()~~~");
 
-            message_generator.append(R"~~~(
-    virtual @message.complex_return_type@ handle(const Messages::@endpoint.name@::@message.name@&) = 0;
+                auto make_argument_type = [](String const& type) {
+                    StringBuilder builder;
+
+                    bool const_ref = true;
+                    if (type == "u8" || type == "i8" || type == "u16" || type == "i16"
+                        || type == "u32" || type == "i32" || type == "bool" || type == "double"
+                        || type == "float" || type == "int" || type == "unsigned" || type == "unsigned int")
+                        const_ref = false;
+
+                    builder.append(type);
+                    if (const_ref)
+                        builder.append(" const&");
+
+                    return builder.to_string();
+                };
+
+                for (size_t i = 0; i < parameters.size(); ++i) {
+                    auto& parameter = parameters[i];
+                    auto argument_generator = message_generator.fork();
+                    argument_generator.set("argument.type", make_argument_type(parameter.type));
+                    argument_generator.set("argument.name", parameter.name);
+                    argument_generator.append("[[maybe_unused]] @argument.type@ @argument.name@");
+                    if (i != parameters.size() - 1)
+                        argument_generator.append(", ");
+                }
+
+                if (is_response) {
+                    message_generator.append(R"~~~() { };
 )~~~");
+                } else {
+                    message_generator.append(R"~~~() = 0;
+)~~~");
+                }
+            };
+
+            do_handle_message_decl(message.name, message.inputs, false);
+            if (message.is_synchronous)
+                do_handle_message_decl(message.response_name(), message.outputs, true);
         }
 
         endpoint_generator.append(R"~~~(

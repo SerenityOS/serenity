@@ -31,11 +31,11 @@ public:
     void did_request_certificates(Badge<Request>, Request&);
 
 private:
-    virtual void handle(const Messages::RequestServer::Greet&) override;
-    virtual Messages::RequestServer::IsSupportedProtocolResponse handle(const Messages::RequestServer::IsSupportedProtocol&) override;
-    virtual Messages::RequestServer::StartRequestResponse handle(const Messages::RequestServer::StartRequest&) override;
-    virtual Messages::RequestServer::StopRequestResponse handle(const Messages::RequestServer::StopRequest&) override;
-    virtual Messages::RequestServer::SetCertificateResponse handle(const Messages::RequestServer::SetCertificate&) override;
+    virtual void greet() override;
+    virtual Messages::RequestServer::IsSupportedProtocolResponse is_supported_protocol(String const&) override;
+    virtual Messages::RequestServer::StartRequestResponse start_request(String const&, URL const&, IPC::Dictionary const&, ByteBuffer const&) override;
+    virtual Messages::RequestServer::StopRequestResponse stop_request(i32) override;
+    virtual Messages::RequestServer::SetCertificateResponse set_certificate(i32, String const&, String const&) override;
 
     HashMap<i32, OwnPtr<Request>> m_requests;
 };

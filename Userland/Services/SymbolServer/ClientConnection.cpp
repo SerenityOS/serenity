@@ -35,13 +35,12 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-void ClientConnection::handle(const Messages::SymbolServer::Greet&)
+void ClientConnection::greet()
 {
 }
 
-Messages::SymbolServer::SymbolicateResponse ClientConnection::handle(const Messages::SymbolServer::Symbolicate& message)
+Messages::SymbolServer::SymbolicateResponse ClientConnection::symbolicate(String const& path, u32 address)
 {
-    auto path = message.path();
     if (!s_cache.contains(path)) {
         auto mapped_file = MappedFile::map(path);
         if (mapped_file.is_error()) {
@@ -68,8 +67,8 @@ Messages::SymbolServer::SymbolicateResponse ClientConnection::handle(const Messa
         return { false, String {}, 0, String {}, 0 };
 
     u32 offset = 0;
-    auto symbol = cached_elf->debug_info.elf().symbolicate(message.address(), &offset);
-    auto source_position = cached_elf->debug_info.get_source_position(message.address());
+    auto symbol = cached_elf->debug_info.elf().symbolicate(address, &offset);
+    auto source_position = cached_elf->debug_info.get_source_position(address);
     String filename;
     u32 line_number = 0;
     if (source_position.has_value()) {
