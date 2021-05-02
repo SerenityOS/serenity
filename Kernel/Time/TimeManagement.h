@@ -61,8 +61,7 @@ public:
         InPast
     };
     void tickless_cancel_system_timer();
-    TicklessTimerResult tickless_start_system_timer_from_now(Time, bool force = false);
-    TicklessTimerResult tickless_start_system_timer(Time, bool force = false);
+    TicklessTimerResult tickless_start_system_timer(Time, Time&, bool force = false);
 
     bool is_system_timer(const HardwareTimerBase&) const;
 

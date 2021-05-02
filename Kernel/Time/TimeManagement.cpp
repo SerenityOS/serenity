@@ -270,32 +270,26 @@ void TimeManagement::tickless_cancel_system_timer()
     m_system_timer->disable();
 }
 
-auto TimeManagement::tickless_start_system_timer_from_now(Time relative_time, bool force) -> TicklessTimerResult
-{
-    VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(m_tickless);
-    auto now = monotonic_time(TimePrecision::Precise);
-    return tickless_start_system_timer(now + relative_time, force);
-}
-
-auto TimeManagement::tickless_start_system_timer(Time deadline, bool force) -> TicklessTimerResult
+auto TimeManagement::tickless_start_system_timer(Time deadline, Time& now, bool force) -> TicklessTimerResult
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(m_tickless);
     auto current_thread_due = Processor::current_thread_due();
     if (current_thread_due.is_zero()) {
         dbgln_if(1, "Tickless: current thread {} has no due time, new deadline: {}", *Thread::current(), deadline);
+        VERIFY(Thread::current()->is_idle_thread());
     } else {
+        VERIFY(!Thread::current()->is_idle_thread());
         if (current_thread_due < deadline) {
             dbgln_if(1, "Tickless: current thread {} due at {}, new deadline: {}", *Thread::current(), current_thread_due, deadline);
             deadline = current_thread_due;
         }
     }
-    auto now = monotonic_time(TimePrecision::Precise);
+    now = monotonic_time(TimePrecision::Precise);
     if (deadline <= now) {
         dbgln_if(1, "Tickless: timer due at {} (now: {}), already passed, force: {}", deadline, now, force);
         if (force) {
-            dbgln_if(TICKLESS_DEBUG, "Tickless: hack to start timers!");
+            dbgln_if(1, "Tickless: hack to start timers!");
             // TODO: remove this somehow
             m_system_timer->start_non_periodic(1);
             return TicklessTimerResult::Started;
@@ -312,7 +306,7 @@ auto TimeManagement::tickless_start_system_timer(Time deadline, bool force) -> T
         m_system_timer->start_non_periodic(ticks);
         return TicklessTimerResult::Started;
     }
-    dbgln_if(TICKLESS_DEBUG, "Tickless: NOT Scheduling timer for {} (now: {}), for {}ns, already have timer due at {}", deadline, now, (deadline - now).to_nanoseconds(), local_deadline);
+    dbgln_if(1, "Tickless: NOT Scheduling timer for {} (now: {}), for {}ns, already have timer due at {}", deadline, now, (deadline - now).to_nanoseconds(), local_deadline);
     return TicklessTimerResult::AlreadyStarted;
 }
 

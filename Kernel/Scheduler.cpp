@@ -258,7 +258,7 @@ bool Scheduler::pick_next()
             thread_to_schedule.set_ticks_left(1);
         else
             thread_to_schedule.set_ticks_left(time_slice_for(thread_to_schedule));
-        dbgln_if(TICKLESS_DEBUG, "pick_next: current thread {}, scheduling {} with {} ticks", *current_thread, thread_to_schedule, thread_to_schedule.ticks_left());
+        dbgln_if(1, "pick_next: current thread {}, scheduling {} with {} ticks", *current_thread, thread_to_schedule, thread_to_schedule.ticks_left());
     } else {
         thread_to_schedule.set_ticks_left(time_slice_for(thread_to_schedule));
     }
@@ -369,7 +369,7 @@ bool Scheduler::context_switch(Thread* thread)
         if (thread->is_idle_thread()) {
             Processor::clear_current_thread_due();
 
-            dbgln_if(TICKLESS_DEBUG, "Scheduler: scheduling idle thread");
+            dbgln_if(1, "Scheduler: scheduling idle thread");
             // If we're scheduling the idle thread and we are in tickless mode
             // stop the timer unless we are on the main core and we have a timer queued
             if (Processor::id() == 0)
@@ -379,15 +379,18 @@ bool Scheduler::context_switch(Thread* thread)
         } else {
             // Schedule a timer for when the timeslice ends (unless we're on the
             // main core and a timer is scheduled to expire before that
-            auto now = tm.monotonic_time(TimePrecision::Precise);
+            dbgln("Scheduler: scheduling {}", *thread);
+            auto timeslice_begin = tm.monotonic_time(TimePrecision::Precise);
             auto duration = tm.ticks_to_time(thread->ticks_left()); // ticks should have been set before calling this function!
-            auto due = now + duration;
-            Processor::set_current_thread_due(now, due);
-            if (Processor::id() == 0)
+            auto timeslice_end = timeslice_begin + duration;
+            Processor::set_current_thread_due(timeslice_begin, timeslice_end);
+            dbgln_if(1, "Scheduler: Thread {} timeslice begins at {} end: {} for {}ns", *thread, timeslice_begin, timeslice_end, duration.to_nanoseconds());
+            if (Processor::id() == 0) {
                 TimerQueue::the().tickless_update_system_timer();
-            else
-                TimeManagement::the().tickless_start_system_timer(due, true);
-            dbgln_if(TICKLESS_DEBUG, "Scheduler: Thread {} timeslice begins at {} end: {} for {}ns", *thread, now, due, duration.to_nanoseconds());
+            } else {
+                Time now;
+                TimeManagement::the().tickless_start_system_timer(timeslice_end, now, true);
+            }
         }
     }
 

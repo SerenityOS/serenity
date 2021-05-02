@@ -284,11 +284,13 @@ bool TimerQueue::fire(bool from_interrupt)
         fire_timers(m_timer_queue_realtime);
         still_have_timers = true;
     }
-    if (still_have_timers || (!expired_any && from_interrupt && had_any_timers)) {
-        // In tickless mode we may have triggered an interrupt too early,
-        // especially with non-monotonic clocks. Check if we need to
-        // schedule another timer
-        next_timer_was_updated_locked();
+    if (from_interrupt) {
+        if (still_have_timers || (!expired_any && had_any_timers)) {
+            // In tickless mode we may have triggered an interrupt too early,
+            // especially with non-monotonic clocks. Check if we need to
+            // schedule another timer
+            next_timer_was_updated_locked();
+        }
     }
     return expired_any;
 }
@@ -344,10 +346,11 @@ void TimerQueue::tickless_update_system_timer_locked()
 
     auto check_update_timer = [&] {
         if (next_expiration.has_value()) {
-            auto result = TimeManagement::the().tickless_start_system_timer(next_expiration.value());
+            Time now;
+            auto result = TimeManagement::the().tickless_start_system_timer(next_expiration.value(), now);
             if (result == TimeManagement::TicklessTimerResult::InPast) {
                 // Timer wasn't scheduled, deadline was in the past
-                dbgln("Next expiration {} in the past, fire as soon as possible", next_expiration.value());
+                dbgln("Next expiration {} in the past (now: {}), fire as soon as possible", next_expiration.value(), now);
                 Processor::current().deferred_call_queue([] {
                     dbgln("Timer in the past, fire now");
                     if (!TimerQueue::the().fire(false))
