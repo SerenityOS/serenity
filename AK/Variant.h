@@ -119,6 +119,9 @@ template<typename... Ts>
 struct Variant
     : public Detail::VariantConstructors<Ts, Variant<Ts...>>... {
 
+    template<typename... NewTs>
+    friend struct Variant;
+
     Variant(const Variant& old)
         : Detail::VariantConstructors<Ts, Variant<Ts...>>()...
         , m_type_info(old.m_type_info)
@@ -219,10 +222,40 @@ struct Variant
         Helper::visit_(*m_type_info, m_data, visitor);
     }
 
+    template<typename... NewTs>
+    Variant<NewTs...> downcast() &&
+    {
+        VERIFY(covers<NewTs...>());
+        Variant<NewTs...> instance { m_type_info };
+        Helper::move_(*m_type_info, m_data, instance.m_data);
+        return instance;
+    }
+
+    template<typename... NewTs>
+    Variant<NewTs...> downcast() &
+    {
+        VERIFY(covers<NewTs...>());
+        Variant<NewTs...> instance { m_type_info };
+        Helper::copy_(*m_type_info, m_data, instance.m_data);
+        return instance;
+    }
+
 private:
     static constexpr auto data_size = integer_sequence_generate_array<size_t>(0, IntegerSequence<size_t, sizeof(Ts)...>()).max();
     static constexpr auto data_alignment = integer_sequence_generate_array<size_t>(0, IntegerSequence<size_t, alignof(Ts)...>()).max();
     using Helper = Detail::Variant<Ts...>;
+
+    template<typename... NewTs>
+    bool covers() const
+    {
+        return ((typeid(NewTs) == *m_type_info) || ...);
+    }
+
+    explicit Variant(const std::type_info* type_info)
+        : Detail::VariantConstructors<Ts, Variant<Ts...>>()...
+        , m_type_info(type_info)
+    {
+    }
 
     template<typename... Fs>
     struct Visitor : Fs... {
