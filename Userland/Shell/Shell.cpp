@@ -595,7 +595,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         auto rewiring_result = redirection.apply();
         if (rewiring_result.is_error()) {
             if (!rewiring_result.error().is_empty())
-                fprintf(stderr, "error: %s\n", rewiring_result.error().characters());
+                warnln("error: {}", rewiring_result.error());
             return IterationDecision::Break;
         }
         auto& rewiring = rewiring_result.value();
@@ -837,9 +837,9 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             return;
 
         if (job->is_running_in_background() && job->should_announce_exit())
-            warnln("Shell: Job {} ({}) exited\n", job->job_id(), job->cmd().characters());
+            warnln("Shell: Job {} ({}) exited\n", job->job_id(), job->cmd());
         else if (job->signaled() && job->should_announce_signal())
-            warnln("Shell: Job {} ({}) {}\n", job->job_id(), job->cmd().characters(), strsignal(job->termination_signal()));
+            warnln("Shell: Job {} ({}) {}\n", job->job_id(), job->cmd(), strsignal(job->termination_signal()));
 
         last_return_code = job->exit_code();
         job->disown();
@@ -859,12 +859,12 @@ void Shell::execute_process(Vector<const char*>&& argv)
         int saved_errno = errno;
         struct stat st;
         if (stat(argv[0], &st)) {
-            fprintf(stderr, "stat(%s): %s\n", argv[0], strerror(errno));
+            warnln("stat({}): {}", argv[0], strerror(errno));
             // Return code 127 on command not found.
             _exit(127);
         }
         if (!(st.st_mode & S_IXUSR)) {
-            fprintf(stderr, "%s: Not executable\n", argv[0]);
+            warnln("{}: Not executable", argv[0]);
             // Return code 126 when file is not executable.
             _exit(126);
         }
@@ -882,17 +882,17 @@ void Shell::execute_process(Vector<const char*>&& argv)
                 argv.prepend(shebang.characters());
                 int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
                 if (rc < 0) {
-                    fprintf(stderr, "%s: Invalid interpreter \"%s\": %s\n", argv[0], shebang.characters(), strerror(errno));
+                    warnln("{}: Invalid interpreter \"{}\": {}", argv[0], shebang.characters(), strerror(errno));
                     _exit(126);
                 }
             } while (false);
-            fprintf(stderr, "%s: Command not found.\n", argv[0]);
+            warnln("{}: Command not found.", argv[0]);
         } else {
             if (S_ISDIR(st.st_mode)) {
-                fprintf(stderr, "Shell: %s: Is a directory\n", argv[0]);
+                warnln("Shell: {}: Is a directory", argv[0]);
                 _exit(126);
             }
-            fprintf(stderr, "execvp(%s): %s\n", argv[0], strerror(saved_errno));
+            warnln("execvp({}): {}", argv[0], strerror(saved_errno));
         }
         _exit(126);
     }

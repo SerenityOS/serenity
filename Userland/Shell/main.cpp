@@ -107,7 +107,7 @@ int main(int argc, char** argv)
     if (format) {
         auto file = Core::File::open(format, Core::IODevice::ReadOnly);
         if (file.is_error()) {
-            fprintf(stderr, "Error: %s", file.error().characters());
+            warnln("Error: {}", file.error());
             return 1;
         }
 

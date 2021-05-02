@@ -118,7 +118,7 @@ int Shell::builtin_bg(int argc, const char** argv)
     job->set_shell_did_continue(true);
 
     dbgln("Resuming {} ({})", job->pid(), job->cmd());
-    warnln("Resuming job {} - {}", job->job_id(), job->cmd().characters());
+    warnln("Resuming job {} - {}", job->job_id(), job->cmd());
 
     // Try using the PGID, but if that fails, just use the PID.
     if (killpg(job->pgid(), SIGCONT) < 0) {
@@ -227,7 +227,7 @@ int Shell::builtin_cd(int argc, const char** argv)
 
     auto real_path = Core::File::real_path_for(new_path);
     if (real_path.is_empty()) {
-        fprintf(stderr, "Invalid path '%s'\n", new_path.characters());
+        warnln("Invalid path '{}'", new_path);
         return 1;
     }
 
@@ -239,9 +239,9 @@ int Shell::builtin_cd(int argc, const char** argv)
     int rc = chdir(path);
     if (rc < 0) {
         if (errno == ENOTDIR) {
-            fprintf(stderr, "Not a directory: %s\n", path);
+            warnln("Not a directory: {}", path);
         } else {
-            fprintf(stderr, "chdir(%s) failed: %s\n", path, strerror(errno));
+            warnln("chdir({}) failed: {}", path, strerror(errno));
         }
         return 1;
     }
@@ -263,7 +263,7 @@ int Shell::builtin_cdh(int argc, const char** argv)
 
     if (index == -1) {
         if (cd_history.is_empty()) {
-            fprintf(stderr, "cdh: no history available\n");
+            warnln("cdh: no history available");
             return 0;
         }
 
@@ -273,7 +273,7 @@ int Shell::builtin_cdh(int argc, const char** argv)
     }
 
     if (index < 1 || (size_t)index > cd_history.size()) {
-        fprintf(stderr, "cdh: history index out of bounds: %d not in (0, %zu)\n", index, cd_history.size());
+        warnln("cdh: history index out of bounds: {} not in (0, {})", index, cd_history.size());
         return 1;
     }
 
@@ -308,7 +308,7 @@ int Shell::builtin_dirs(int argc, const char** argv)
 
     if (print) {
         if (!paths.is_empty()) {
-            fprintf(stderr, "dirs: 'print' and 'number' are not allowed when any path is specified");
+            warnln("dirs: 'print' and 'number' are not allowed when any path is specified");
             return 1;
         }
         separator = '\n';
@@ -338,7 +338,7 @@ int Shell::builtin_dirs(int argc, const char** argv)
 int Shell::builtin_exec(int argc, const char** argv)
 {
     if (argc < 2) {
-        fprintf(stderr, "Shell: No command given to exec\n");
+        warnln("Shell: No command given to exec");
         return 1;
     }
 
@@ -360,7 +360,7 @@ int Shell::builtin_exit(int argc, const char** argv)
     if (m_is_interactive) {
         if (!jobs.is_empty()) {
             if (!m_should_ignore_jobs_on_next_exit) {
-                fprintf(stderr, "Shell: You have %zu active job%s, run 'exit' again to really exit.\n", jobs.size(), jobs.size() > 1 ? "s" : "");
+                warnln("Shell: You have {} active job{}, run 'exit' again to really exit.", jobs.size(), jobs.size() > 1 ? "s" : "");
                 m_should_ignore_jobs_on_next_exit = true;
                 return 1;
             }
@@ -488,7 +488,7 @@ int Shell::builtin_fg(int argc, const char** argv)
     job->set_shell_did_continue(true);
 
     dbgln("Resuming {} ({})", job->pid(), job->cmd());
-    warnln("Resuming job {} - {}", job->job_id(), job->cmd().characters());
+    warnln("Resuming job {} - {}", job->job_id(), job->cmd());
 
     tcsetpgrp(STDOUT_FILENO, job->pgid());
     tcsetpgrp(STDIN_FILENO, job->pgid());
@@ -615,7 +615,7 @@ int Shell::builtin_jobs(int argc, const char** argv)
 int Shell::builtin_popd(int argc, const char** argv)
 {
     if (directory_stack.size() <= 1) {
-        fprintf(stderr, "Shell: popd: directory stack empty\n");
+        warnln("Shell: popd: directory stack empty");
         return 1;
     }
 
@@ -634,7 +634,7 @@ int Shell::builtin_popd(int argc, const char** argv)
     if (argc == 1) {
         int rc = chdir(path.characters());
         if (rc < 0) {
-            fprintf(stderr, "chdir(%s) failed: %s\n", path.characters(), strerror(errno));
+            warnln("chdir({}) failed: {}", path, strerror(errno));
             return 1;
         }
 
@@ -644,7 +644,7 @@ int Shell::builtin_popd(int argc, const char** argv)
 
     LexicalPath lexical_path(path.characters());
     if (!lexical_path.is_valid()) {
-        fprintf(stderr, "LexicalPath failed to canonicalize '%s'\n", path.characters());
+        warnln("LexicalPath failed to canonicalize '{}'", path);
         return 1;
     }
 
@@ -653,19 +653,19 @@ int Shell::builtin_popd(int argc, const char** argv)
     struct stat st;
     int rc = stat(real_path, &st);
     if (rc < 0) {
-        fprintf(stderr, "stat(%s) failed: %s\n", real_path, strerror(errno));
+        warnln("stat({}) failed: {}", real_path, strerror(errno));
         return 1;
     }
 
     if (!S_ISDIR(st.st_mode)) {
-        fprintf(stderr, "Not a directory: %s\n", real_path);
+        warnln("Not a directory: {}", real_path);
         return 1;
     }
 
     if (should_switch) {
         int rc = chdir(real_path);
         if (rc < 0) {
-            fprintf(stderr, "chdir(%s) failed: %s\n", real_path, strerror(errno));
+            warnln("chdir({}) failed: {}", real_path, strerror(errno));
             return 1;
         }
 
@@ -684,7 +684,7 @@ int Shell::builtin_pushd(int argc, const char** argv)
     // With no arguments, pushd exchanges the top two directories and makes the new top the current directory.
     if (argc == 1) {
         if (directory_stack.size() < 2) {
-            fprintf(stderr, "pushd: no other directory\n");
+            warnln("pushd: no other directory");
             return 1;
         }
 
@@ -695,7 +695,7 @@ int Shell::builtin_pushd(int argc, const char** argv)
 
         int rc = chdir(dir2.characters());
         if (rc < 0) {
-            fprintf(stderr, "chdir(%s) failed: %s\n", dir2.characters(), strerror(errno));
+            warnln("chdir({}) failed: {}", dir2, strerror(errno));
             return 1;
         }
 
@@ -731,7 +731,7 @@ int Shell::builtin_pushd(int argc, const char** argv)
 
     LexicalPath lexical_path(path_builder.to_string());
     if (!lexical_path.is_valid()) {
-        fprintf(stderr, "LexicalPath failed to canonicalize '%s'\n", path_builder.to_string().characters());
+        warnln("LexicalPath failed to canonicalize '{}'", path_builder.string_view());
         return 1;
     }
 
@@ -740,19 +740,19 @@ int Shell::builtin_pushd(int argc, const char** argv)
     struct stat st;
     int rc = stat(real_path, &st);
     if (rc < 0) {
-        fprintf(stderr, "stat(%s) failed: %s\n", real_path, strerror(errno));
+        warnln("stat({}) failed: {}", real_path, strerror(errno));
         return 1;
     }
 
     if (!S_ISDIR(st.st_mode)) {
-        fprintf(stderr, "Not a directory: %s\n", real_path);
+        warnln("Not a directory: {}", real_path);
         return 1;
     }
 
     if (should_switch) {
         int rc = chdir(real_path);
         if (rc < 0) {
-            fprintf(stderr, "chdir(%s) failed: %s\n", real_path, strerror(errno));
+            warnln("chdir({}) failed: {}", real_path, strerror(errno));
             return 1;
         }
 
@@ -774,7 +774,7 @@ int Shell::builtin_setopt(int argc, const char** argv)
     if (argc == 1) {
 #define __ENUMERATE_SHELL_OPTION(name, default_, description) \
     if (options.name)                                         \
-        fprintf(stderr, #name "\n");
+        warnln("{}", #name);
 
         ENUMERATE_SHELL_OPTIONS();
 
@@ -823,7 +823,7 @@ int Shell::builtin_shift(int argc, const char** argv)
 
     auto argv_ = lookup_local_variable("ARGV");
     if (!argv_) {
-        fprintf(stderr, "shift: ARGV is unset\n");
+        warnln("shift: ARGV is unset");
         return 1;
     }
 
@@ -832,7 +832,7 @@ int Shell::builtin_shift(int argc, const char** argv)
 
     auto& values = static_cast<AST::ListValue*>(argv_.ptr())->values();
     if ((size_t)count > values.size()) {
-        fprintf(stderr, "shift: shift count must not be greater than %zu\n", values.size());
+        warnln("shift: shift count must not be greater than {}", values.size());
         return 1;
     }
 
@@ -896,7 +896,7 @@ int Shell::builtin_time(int argc, const char** argv)
         block_on_job(job);
         exit_code = job.exit_code();
     }
-    fprintf(stderr, "Time: %d ms\n", timer.elapsed());
+    warnln("Time: {} ms", timer.elapsed());
     return exit_code;
 }
 
@@ -924,7 +924,7 @@ int Shell::builtin_umask(int argc, const char** argv)
         return 0;
     }
 
-    fprintf(stderr, "umask: Invalid mask '%s'\n", mask_text);
+    warnln("umask: Invalid mask '{}'", mask_text);
     return 1;
 }
 
