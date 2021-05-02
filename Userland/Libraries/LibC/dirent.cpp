@@ -68,11 +68,10 @@ static void create_struct_dirent(sys_dirent* sys_ent, struct dirent* str_ent)
     str_ent->d_ino = sys_ent->ino;
     str_ent->d_type = sys_ent->file_type;
     str_ent->d_off = 0;
-    str_ent->d_reclen = sys_ent->total_size();
-    for (size_t i = 0; i < sys_ent->namelen; ++i)
-        str_ent->d_name[i] = sys_ent->name[i];
-    // FIXME: I think this null termination behavior is not supposed to be here.
-    str_ent->d_name[sys_ent->namelen] = '\0';
+    str_ent->d_reclen = sizeof(struct dirent);
+
+    int size = min((sys_ent->namelen + 1) * sizeof(char), sizeof(str_ent->d_name));
+    [[maybe_unused]] auto n = strlcpy(str_ent->d_name, sys_ent->name, size);
 }
 
 static int allocate_dirp_buffer(DIR* dirp)
