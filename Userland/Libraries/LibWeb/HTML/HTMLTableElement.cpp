@@ -44,6 +44,40 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
     });
 }
 
+RefPtr<HTMLTableCaptionElement> HTMLTableElement::caption()
+{
+    return first_child_of_type<HTMLTableCaptionElement>();
+}
+
+void HTMLTableElement::set_caption(HTMLTableCaptionElement& caption)
+{
+    // FIXME: The spec requires deleting the current caption if caption is null
+    //        Currently the wrapper generator doesn't send us a nullable value
+    delete_caption();
+
+    pre_insert(caption, first_child());
+}
+
+NonnullRefPtr<HTMLTableCaptionElement> HTMLTableElement::create_caption()
+{
+    auto maybe_caption = caption();
+    if (maybe_caption) {
+        return *maybe_caption;
+    }
+
+    auto caption = DOM::create_element(document(), TagNames::caption, Namespace::HTML);
+    pre_insert(caption, first_child());
+    return caption;
+}
+
+void HTMLTableElement::delete_caption()
+{
+    auto maybe_caption = caption();
+    if (maybe_caption) {
+        maybe_caption->remove(false);
+    }
+}
+
 NonnullRefPtr<DOM::HTMLCollection> HTMLTableElement::rows()
 {
     HTMLTableElement* table_node = this;
