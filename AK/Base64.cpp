@@ -87,7 +87,10 @@ ByteBuffer decode_base64(const StringView& input)
             output.append(out2);
     }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
     return ByteBuffer::copy(output.data(), output.size());
+#pragma GCC diagnostic pop
 }
 
 String encode_base64(ReadonlyBytes input)
