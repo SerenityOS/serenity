@@ -1432,9 +1432,10 @@ int Emulator::virt$readlink(FlatPtr params_addr)
 
 u32 Emulator::virt$allocate_tls(FlatPtr initial_data, size_t size)
 {
-    // TODO: Why is this needed? without this, the loader overflows the bounds of the TLS region.
-    constexpr size_t TLS_SIZE_HACK = 8;
-    auto tcb_region = make<SimpleRegion>(0x20000000, size + TLS_SIZE_HACK);
+    // TODO: This matches what Thread::make_thread_specific_region does. The kernel
+    // ends up allocating one more page. Figure out if this is intentional.
+    auto region_size = align_up_to(size, PAGE_SIZE) + PAGE_SIZE;
+    auto tcb_region = make<SimpleRegion>(0x20000000, region_size);
 
     size_t offset = 0;
     while (size - offset > 0) {
