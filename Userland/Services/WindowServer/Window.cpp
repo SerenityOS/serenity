@@ -998,6 +998,7 @@ void Window::set_modified(bool modified)
         return;
 
     m_modified = modified;
+    frame().set_button_icons();
     frame().invalidate_titlebar();
 }
 

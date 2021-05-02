@@ -38,6 +38,7 @@ static Gfx::Bitmap* s_minimize_icon;
 static Gfx::Bitmap* s_maximize_icon;
 static Gfx::Bitmap* s_restore_icon;
 static Gfx::Bitmap* s_close_icon;
+static Gfx::Bitmap* s_close_modified_icon;
 
 static String s_last_title_button_icons_path;
 static int s_last_title_button_icons_scale;
@@ -102,7 +103,7 @@ void WindowFrame::set_button_icons()
     if (m_window.is_frameless())
         return;
 
-    m_close_button->set_icon(*s_close_icon);
+    m_close_button->set_icon(m_window.is_modified() ? *s_close_modified_icon : *s_close_icon);
     if (m_window.is_minimizable())
         m_minimize_button->set_icon(*s_minimize_icon);
     if (m_window.is_resizable())
@@ -149,6 +150,15 @@ void WindowFrame::reload_config()
             s_close_icon->unref();
         if (!(s_close_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
             s_close_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png", icons_scale).leak_ref();
+        full_path.clear();
+    }
+    if (!s_close_modified_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
+        full_path.append(icons_path);
+        full_path.append("window-close-modified.png");
+        if (s_close_modified_icon)
+            s_close_modified_icon->unref();
+        if (!(s_close_modified_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
+            s_close_modified_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close-modified.png", icons_scale).leak_ref();
         full_path.clear();
     }
 
