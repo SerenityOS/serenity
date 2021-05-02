@@ -129,7 +129,7 @@ protected:
     explicit TextDocument(Client* client);
 
 private:
-    void update_undo_timer();
+    void update_undo();
 
     NonnullOwnPtrVector<TextDocumentLine> m_lines;
     Vector<TextDocumentSpan> m_spans;
