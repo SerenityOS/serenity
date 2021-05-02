@@ -30,9 +30,8 @@ void ClientConnection::die()
     exit(0);
 }
 
-Messages::ImageDecoderServer::GreetResponse ClientConnection::handle(const Messages::ImageDecoderServer::Greet&)
+void ClientConnection::handle(const Messages::ImageDecoderServer::Greet&)
 {
-    return {};
 }
 
 Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::handle(const Messages::ImageDecoderServer::DecodeImage& message)

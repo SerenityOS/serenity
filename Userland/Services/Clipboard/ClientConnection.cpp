@@ -35,15 +35,13 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-Messages::ClipboardServer::GreetResponse ClientConnection::handle(const Messages::ClipboardServer::Greet&)
+void ClientConnection::handle(const Messages::ClipboardServer::Greet&)
 {
-    return {};
 }
 
-Messages::ClipboardServer::SetClipboardDataResponse ClientConnection::handle(const Messages::ClipboardServer::SetClipboardData& message)
+void ClientConnection::handle(const Messages::ClipboardServer::SetClipboardData& message)
 {
     Storage::the().set_data(message.data(), message.mime_type(), message.metadata().entries());
-    return {};
 }
 
 Messages::ClipboardServer::GetClipboardDataResponse ClientConnection::handle(const Messages::ClipboardServer::GetClipboardData&)

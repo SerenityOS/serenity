@@ -147,10 +147,9 @@ void WebContentClient::handle(const Messages::WebContentClient::DidJSConsoleOutp
     m_view.notify_server_did_js_console_output(message.method(), message.line());
 }
 
-Messages::WebContentClient::DidRequestAlertResponse WebContentClient::handle(const Messages::WebContentClient::DidRequestAlert& message)
+void WebContentClient::handle(const Messages::WebContentClient::DidRequestAlert& message)
 {
     m_view.notify_server_did_request_alert({}, message.message());
-    return {};
 }
 
 Messages::WebContentClient::DidRequestConfirmResponse WebContentClient::handle(const Messages::WebContentClient::DidRequestConfirm& message)
