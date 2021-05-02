@@ -511,12 +511,14 @@ String Shell::resolve_alias(const String& name) const
 
 bool Shell::is_runnable(const StringView& name)
 {
-    if (access(name.to_string().characters(), X_OK) == 0)
+    auto parts = name.split_view('/');
+    auto path = name.to_string();
+    if (parts.size() > 1 && access(path.characters(), X_OK) == 0)
         return true;
 
     return binary_search(
         cached_path.span(),
-        name.to_string(),
+        path,
         nullptr,
         [](auto& name, auto& program) { return strcmp(name.characters(), program.characters()); });
 }
@@ -856,6 +858,13 @@ void Shell::execute_process(Vector<const char*>&& argv)
 {
     int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
     if (rc < 0) {
+        auto parts = StringView { argv[0] }.split_view('/');
+        if (parts.size() == 1) {
+            // If this is a path in the current directory and it caused execvp() to fail,
+            // simply don't attempt to execute it, see #6774.
+            warnln("{}: Command not found.", argv[0]);
+            _exit(127);
+        }
         int saved_errno = errno;
         struct stat st;
         if (stat(argv[0], &st)) {
@@ -1323,6 +1332,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base,
     auto init_slash_part = token.substring_view(0, last_slash + 1);
     auto last_slash_part = token.substring_view(last_slash + 1, token.length() - last_slash - 1);
 
+    bool allow_direct_children = true;
+
     // Depending on the base, we will have to prepend cwd.
     if (base.is_empty()) {
         // '' /foo -> absolute
@@ -1331,6 +1342,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base,
             path_builder.append(cwd);
         path_builder.append('/');
         path_builder.append(init_slash_part);
+        if (executable_only == ExecutableOnly::Yes && init_slash_part.is_empty())
+            allow_direct_children = false;
     } else {
         // /foo * -> absolute
         // foo * -> relative
@@ -1368,6 +1381,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base,
                 if (S_ISDIR(program_status.st_mode)) {
                     suggestions.append({ escape_token(file), "/" });
                 } else {
+                    if (!allow_direct_children && !file.contains("/"))
+                        continue;
                     suggestions.append({ escape_token(file), " " });
                 }
                 suggestions.last().input_offset = token_length;
