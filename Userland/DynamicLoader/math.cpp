@@ -163,7 +163,7 @@ int64_t __moddi3(int64_t a, int64_t b)
     b = (b ^ s) - s;                   // negate if s == -1
     s = a >> bits_in_dword_m1;         // s = a < 0 ? -1 : 0
     a = (a ^ s) - s;                   // negate if s == -1
-    uint64_t r;
+    uint64_t r = 0;
     __udivmoddi4(a, b, &r);
     return ((int64_t)r ^ s) - s; // negate if s == -1
 }
