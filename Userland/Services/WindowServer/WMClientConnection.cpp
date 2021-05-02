@@ -33,16 +33,16 @@ void WMClientConnection::die()
     });
 }
 
-OwnPtr<Messages::WindowManagerServer::SetAppletAreaPositionResponse> WMClientConnection::handle(const Messages::WindowManagerServer::SetAppletAreaPosition& message)
+Messages::WindowManagerServer::SetAppletAreaPositionResponse WMClientConnection::handle(const Messages::WindowManagerServer::SetAppletAreaPosition& message)
 {
     if (m_window_id < 0) {
         did_misbehave("SetAppletAreaPosition: WM didn't assign window as manager yet");
         // FIXME: return ok boolean?
-        return make<Messages::WindowManagerServer::SetAppletAreaPositionResponse>();
+        return {};
     }
 
     AppletManager::the().set_position(message.position());
-    return make<Messages::WindowManagerServer::SetAppletAreaPositionResponse>();
+    return {};
 }
 
 void WMClientConnection::handle(const Messages::WindowManagerServer::SetActiveWindow& message)
@@ -116,13 +116,13 @@ void WMClientConnection::handle(const Messages::WindowManagerServer::SetWindowMi
     WindowManager::the().minimize_windows(window, message.minimized());
 }
 
-OwnPtr<Messages::WindowManagerServer::SetEventMaskResponse> WMClientConnection::handle(const Messages::WindowManagerServer::SetEventMask& message)
+Messages::WindowManagerServer::SetEventMaskResponse WMClientConnection::handle(const Messages::WindowManagerServer::SetEventMask& message)
 {
     m_event_mask = message.event_mask();
-    return make<Messages::WindowManagerServer::SetEventMaskResponse>();
+    return {};
 }
 
-OwnPtr<Messages::WindowManagerServer::SetManagerWindowResponse> WMClientConnection::handle(const Messages::WindowManagerServer::SetManagerWindow& message)
+Messages::WindowManagerServer::SetManagerWindowResponse WMClientConnection::handle(const Messages::WindowManagerServer::SetManagerWindow& message)
 {
     m_window_id = message.window_id();
 
@@ -130,7 +130,7 @@ OwnPtr<Messages::WindowManagerServer::SetManagerWindowResponse> WMClientConnecti
     // receive information about other windows.
     WindowManager::the().greet_window_manager(*this);
 
-    return make<Messages::WindowManagerServer::SetManagerWindowResponse>();
+    return {};
 }
 
 void WMClientConnection::handle(const Messages::WindowManagerServer::SetWindowTaskbarRect& message)

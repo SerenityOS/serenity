@@ -36,17 +36,17 @@ public:
     static void for_each(Function<void(ClientConnection&)>);
 
 private:
-    virtual OwnPtr<Messages::AudioServer::GreetResponse> handle(const Messages::AudioServer::Greet&) override;
-    virtual OwnPtr<Messages::AudioServer::GetMainMixVolumeResponse> handle(const Messages::AudioServer::GetMainMixVolume&) override;
-    virtual OwnPtr<Messages::AudioServer::SetMainMixVolumeResponse> handle(const Messages::AudioServer::SetMainMixVolume&) override;
-    virtual OwnPtr<Messages::AudioServer::EnqueueBufferResponse> handle(const Messages::AudioServer::EnqueueBuffer&) override;
-    virtual OwnPtr<Messages::AudioServer::GetRemainingSamplesResponse> handle(const Messages::AudioServer::GetRemainingSamples&) override;
-    virtual OwnPtr<Messages::AudioServer::GetPlayedSamplesResponse> handle(const Messages::AudioServer::GetPlayedSamples&) override;
-    virtual OwnPtr<Messages::AudioServer::SetPausedResponse> handle(const Messages::AudioServer::SetPaused&) override;
-    virtual OwnPtr<Messages::AudioServer::ClearBufferResponse> handle(const Messages::AudioServer::ClearBuffer&) override;
-    virtual OwnPtr<Messages::AudioServer::GetPlayingBufferResponse> handle(const Messages::AudioServer::GetPlayingBuffer&) override;
-    virtual OwnPtr<Messages::AudioServer::GetMutedResponse> handle(const Messages::AudioServer::GetMuted&) override;
-    virtual OwnPtr<Messages::AudioServer::SetMutedResponse> handle(const Messages::AudioServer::SetMuted&) override;
+    virtual Messages::AudioServer::GreetResponse handle(const Messages::AudioServer::Greet&) override;
+    virtual Messages::AudioServer::GetMainMixVolumeResponse handle(const Messages::AudioServer::GetMainMixVolume&) override;
+    virtual Messages::AudioServer::SetMainMixVolumeResponse handle(const Messages::AudioServer::SetMainMixVolume&) override;
+    virtual Messages::AudioServer::EnqueueBufferResponse handle(const Messages::AudioServer::EnqueueBuffer&) override;
+    virtual Messages::AudioServer::GetRemainingSamplesResponse handle(const Messages::AudioServer::GetRemainingSamples&) override;
+    virtual Messages::AudioServer::GetPlayedSamplesResponse handle(const Messages::AudioServer::GetPlayedSamples&) override;
+    virtual Messages::AudioServer::SetPausedResponse handle(const Messages::AudioServer::SetPaused&) override;
+    virtual Messages::AudioServer::ClearBufferResponse handle(const Messages::AudioServer::ClearBuffer&) override;
+    virtual Messages::AudioServer::GetPlayingBufferResponse handle(const Messages::AudioServer::GetPlayingBuffer&) override;
+    virtual Messages::AudioServer::GetMutedResponse handle(const Messages::AudioServer::GetMuted&) override;
+    virtual Messages::AudioServer::SetMutedResponse handle(const Messages::AudioServer::SetMuted&) override;
 
     Mixer& m_mixer;
     RefPtr<BufferQueue> m_queue;

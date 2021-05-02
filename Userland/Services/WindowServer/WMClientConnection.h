@@ -27,9 +27,9 @@ public:
     virtual void handle(const Messages::WindowManagerServer::StartWindowResize&) override;
     virtual void handle(const Messages::WindowManagerServer::PopupWindowMenu&) override;
     virtual void handle(const Messages::WindowManagerServer::SetWindowTaskbarRect&) override;
-    virtual OwnPtr<Messages::WindowManagerServer::SetAppletAreaPositionResponse> handle(const Messages::WindowManagerServer::SetAppletAreaPosition&) override;
-    virtual OwnPtr<Messages::WindowManagerServer::SetEventMaskResponse> handle(const Messages::WindowManagerServer::SetEventMask&) override;
-    virtual OwnPtr<Messages::WindowManagerServer::SetManagerWindowResponse> handle(const Messages::WindowManagerServer::SetManagerWindow&) override;
+    virtual Messages::WindowManagerServer::SetAppletAreaPositionResponse handle(const Messages::WindowManagerServer::SetAppletAreaPosition&) override;
+    virtual Messages::WindowManagerServer::SetEventMaskResponse handle(const Messages::WindowManagerServer::SetEventMask&) override;
+    virtual Messages::WindowManagerServer::SetManagerWindowResponse handle(const Messages::WindowManagerServer::SetManagerWindow&) override;
 
     unsigned event_mask() const { return m_event_mask; }
     int window_id() const { return m_window_id; }

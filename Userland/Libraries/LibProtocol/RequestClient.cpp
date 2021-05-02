@@ -83,13 +83,13 @@ void RequestClient::handle(const Messages::RequestClient::HeadersBecameAvailable
     }
 }
 
-OwnPtr<Messages::RequestClient::CertificateRequestedResponse> RequestClient::handle(const Messages::RequestClient::CertificateRequested& message)
+Messages::RequestClient::CertificateRequestedResponse RequestClient::handle(const Messages::RequestClient::CertificateRequested& message)
 {
     if (auto request = const_cast<Request*>(m_requests.get(message.request_id()).value_or(nullptr))) {
         request->did_request_certificates({});
     }
 
-    return make<Messages::RequestClient::CertificateRequestedResponse>();
+    return {};
 }
 
 }

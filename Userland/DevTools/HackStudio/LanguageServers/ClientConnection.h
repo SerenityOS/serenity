@@ -29,7 +29,7 @@ public:
     virtual void die() override;
 
 protected:
-    virtual OwnPtr<Messages::LanguageServer::GreetResponse> handle(const Messages::LanguageServer::Greet&) override;
+    virtual Messages::LanguageServer::GreetResponse handle(const Messages::LanguageServer::Greet&) override;
     virtual void handle(const Messages::LanguageServer::FileOpened&) override;
     virtual void handle(const Messages::LanguageServer::FileEditInsertText&) override;
     virtual void handle(const Messages::LanguageServer::FileEditRemoveText&) override;

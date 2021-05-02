@@ -35,21 +35,21 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-OwnPtr<Messages::ClipboardServer::GreetResponse> ClientConnection::handle(const Messages::ClipboardServer::Greet&)
+Messages::ClipboardServer::GreetResponse ClientConnection::handle(const Messages::ClipboardServer::Greet&)
 {
-    return make<Messages::ClipboardServer::GreetResponse>();
+    return {};
 }
 
-OwnPtr<Messages::ClipboardServer::SetClipboardDataResponse> ClientConnection::handle(const Messages::ClipboardServer::SetClipboardData& message)
+Messages::ClipboardServer::SetClipboardDataResponse ClientConnection::handle(const Messages::ClipboardServer::SetClipboardData& message)
 {
     Storage::the().set_data(message.data(), message.mime_type(), message.metadata().entries());
-    return make<Messages::ClipboardServer::SetClipboardDataResponse>();
+    return {};
 }
 
-OwnPtr<Messages::ClipboardServer::GetClipboardDataResponse> ClientConnection::handle(const Messages::ClipboardServer::GetClipboardData&)
+Messages::ClipboardServer::GetClipboardDataResponse ClientConnection::handle(const Messages::ClipboardServer::GetClipboardData&)
 {
     auto& storage = Storage::the();
-    return make<Messages::ClipboardServer::GetClipboardDataResponse>(storage.buffer(), storage.mime_type(), storage.metadata());
+    return { storage.buffer(), storage.mime_type(), storage.metadata() };
 }
 
 void ClientConnection::notify_about_clipboard_change()

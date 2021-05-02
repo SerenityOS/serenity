@@ -26,12 +26,12 @@ public:
     virtual void die() override;
 
 private:
-    virtual OwnPtr<Messages::WebSocketServer::GreetResponse> handle(const Messages::WebSocketServer::Greet&) override;
-    virtual OwnPtr<Messages::WebSocketServer::ConnectResponse> handle(const Messages::WebSocketServer::Connect&) override;
-    virtual OwnPtr<Messages::WebSocketServer::ReadyStateResponse> handle(const Messages::WebSocketServer::ReadyState&) override;
+    virtual Messages::WebSocketServer::GreetResponse handle(const Messages::WebSocketServer::Greet&) override;
+    virtual Messages::WebSocketServer::ConnectResponse handle(const Messages::WebSocketServer::Connect&) override;
+    virtual Messages::WebSocketServer::ReadyStateResponse handle(const Messages::WebSocketServer::ReadyState&) override;
     virtual void handle(const Messages::WebSocketServer::Send&) override;
     virtual void handle(const Messages::WebSocketServer::Close&) override;
-    virtual OwnPtr<Messages::WebSocketServer::SetCertificateResponse> handle(const Messages::WebSocketServer::SetCertificate&) override;
+    virtual Messages::WebSocketServer::SetCertificateResponse handle(const Messages::WebSocketServer::SetCertificate&) override;
 
     void did_connect(i32);
     void did_receive_message(i32, Message);
