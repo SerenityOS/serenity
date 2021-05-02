@@ -1220,8 +1220,9 @@ String TextEditor::selected_text() const
 void TextEditor::delete_selection()
 {
     auto selection = normalized_selection();
-    execute<RemoveTextCommand>(selected_text(), selection);
+    auto selected = selected_text();
     m_selection.clear();
+    execute<RemoveTextCommand>(selected, selection);
     did_update_selection();
     did_change();
     set_cursor(selection.start());
