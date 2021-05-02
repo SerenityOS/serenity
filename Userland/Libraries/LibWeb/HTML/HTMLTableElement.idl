@@ -1,5 +1,9 @@
 interface HTMLTableElement : HTMLElement {
 
+    attribute HTMLTableCaptionElement? caption;
+    HTMLTableCaptionElement createCaption();
+    undefined deleteCaption();
+
     readonly attribute HTMLCollection rows;
     HTMLTableRowElement insertRow(optional long index = -1);
     undefined deleteRow(long index);
