@@ -313,6 +313,7 @@ public:
 )~~~");
 
             message_generator.append(R"~~~(
+    @message.name@(decltype(nullptr)) : m_ipc_message_valid(false) { }
     @message.constructor@
     virtual ~@message.name@() override {}
 
@@ -402,6 +403,7 @@ public:
 
             message_generator.append(R"~~~(
 private:
+    bool m_ipc_message_valid { true };
             )~~~");
 
             for (auto& parameter : parameters) {
@@ -529,7 +531,7 @@ public:
         return message;
     }
 
-    virtual OwnPtr<IPC::Message> handle(const IPC::Message& message) override
+    virtual OwnPtr<IPC::MessageBuffer> handle(const IPC::Message& message) override
     {
         switch (message.message_id()) {
 )~~~");
@@ -539,16 +541,19 @@ public:
 
                 message_generator.set("message.name", name);
                 message_generator.append(R"~~~(
-        case (int)Messages::@endpoint.name@::MessageID::@message.name@:
+        case (int)Messages::@endpoint.name@::MessageID::@message.name@: {
 )~~~");
                 if (returns_something) {
                     message_generator.append(R"~~~(
-            return handle(static_cast<const Messages::@endpoint.name@::@message.name@&>(message));
+            auto response = handle(static_cast<const Messages::@endpoint.name@::@message.name@&>(message));
+            return make<IPC::MessageBuffer>(response.encode());
+        }
 )~~~");
                 } else {
                     message_generator.append(R"~~~(
             handle(static_cast<const Messages::@endpoint.name@::@message.name@&>(message));
             return {};
+        }
 )~~~");
                 }
             };
@@ -571,12 +576,11 @@ public:
             String return_type = "void";
             if (message.is_synchronous) {
                 StringBuilder builder;
-                builder.append("OwnPtr<Messages::");
+                builder.append("Messages::");
                 builder.append(endpoint.name);
                 builder.append("::");
                 builder.append(message.name);
                 builder.append("Response");
-                builder.append(">");
                 return_type = builder.to_string();
             }
             message_generator.set("message.complex_return_type", return_type);

@@ -147,22 +147,20 @@ void WebContentClient::handle(const Messages::WebContentClient::DidJSConsoleOutp
     m_view.notify_server_did_js_console_output(message.method(), message.line());
 }
 
-OwnPtr<Messages::WebContentClient::DidRequestAlertResponse> WebContentClient::handle(const Messages::WebContentClient::DidRequestAlert& message)
+Messages::WebContentClient::DidRequestAlertResponse WebContentClient::handle(const Messages::WebContentClient::DidRequestAlert& message)
 {
     m_view.notify_server_did_request_alert({}, message.message());
-    return make<Messages::WebContentClient::DidRequestAlertResponse>();
+    return {};
 }
 
-OwnPtr<Messages::WebContentClient::DidRequestConfirmResponse> WebContentClient::handle(const Messages::WebContentClient::DidRequestConfirm& message)
+Messages::WebContentClient::DidRequestConfirmResponse WebContentClient::handle(const Messages::WebContentClient::DidRequestConfirm& message)
 {
-    auto result = m_view.notify_server_did_request_confirm({}, message.message());
-    return make<Messages::WebContentClient::DidRequestConfirmResponse>(result);
+    return m_view.notify_server_did_request_confirm({}, message.message());
 }
 
-OwnPtr<Messages::WebContentClient::DidRequestPromptResponse> WebContentClient::handle(const Messages::WebContentClient::DidRequestPrompt& message)
+Messages::WebContentClient::DidRequestPromptResponse WebContentClient::handle(const Messages::WebContentClient::DidRequestPrompt& message)
 {
-    auto result = m_view.notify_server_did_request_prompt({}, message.message(), message.default_());
-    return make<Messages::WebContentClient::DidRequestPromptResponse>(result);
+    return m_view.notify_server_did_request_prompt({}, message.message(), message.default_());
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidChangeFavicon& message)
@@ -174,10 +172,9 @@ void WebContentClient::handle(const Messages::WebContentClient::DidChangeFavicon
     m_view.notify_server_did_change_favicon(*message.favicon().bitmap());
 }
 
-OwnPtr<Messages::WebContentClient::DidRequestCookieResponse> WebContentClient::handle(const Messages::WebContentClient::DidRequestCookie& message)
+Messages::WebContentClient::DidRequestCookieResponse WebContentClient::handle(const Messages::WebContentClient::DidRequestCookie& message)
 {
-    auto result = m_view.notify_server_did_request_cookie({}, message.url(), static_cast<Cookie::Source>(message.source()));
-    return make<Messages::WebContentClient::DidRequestCookieResponse>(result);
+    return m_view.notify_server_did_request_cookie({}, message.url(), static_cast<Cookie::Source>(message.source()));
 }
 
 void WebContentClient::handle(const Messages::WebContentClient::DidSetCookie& message)

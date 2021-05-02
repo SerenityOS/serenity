@@ -49,12 +49,17 @@ public:
 
     void post_message(const Message& message)
     {
+        post_message(message.encode());
+    }
+
+    // FIXME: unnecessary copy
+    void post_message(MessageBuffer buffer)
+    {
         // NOTE: If this connection is being shut down, but has not yet been destroyed,
         //       the socket will be closed. Don't try to send more messages.
         if (!m_socket->is_open())
             return;
 
-        auto buffer = message.encode();
         // Prepend the message size.
         uint32_t message_size = buffer.data.size();
         buffer.data.prepend(reinterpret_cast<const u8*>(&message_size), sizeof(message_size));

@@ -27,8 +27,8 @@ public:
     virtual void die() override;
 
 private:
-    virtual OwnPtr<Messages::SymbolServer::GreetResponse> handle(const Messages::SymbolServer::Greet&) override;
-    virtual OwnPtr<Messages::SymbolServer::SymbolicateResponse> handle(const Messages::SymbolServer::Symbolicate&) override;
+    virtual Messages::SymbolServer::GreetResponse handle(const Messages::SymbolServer::Greet&) override;
+    virtual Messages::SymbolServer::SymbolicateResponse handle(const Messages::SymbolServer::Symbolicate&) override;
 };
 
 }

@@ -31,17 +31,17 @@ void ClientConnection::die()
         Core::EventLoop::current().quit(0);
 }
 
-OwnPtr<Messages::WebSocketServer::GreetResponse> ClientConnection::handle(const Messages::WebSocketServer::Greet&)
+Messages::WebSocketServer::GreetResponse ClientConnection::handle(const Messages::WebSocketServer::Greet&)
 {
-    return make<Messages::WebSocketServer::GreetResponse>();
+    return {};
 }
 
-OwnPtr<Messages::WebSocketServer::ConnectResponse> ClientConnection::handle(const Messages::WebSocketServer::Connect& message)
+Messages::WebSocketServer::ConnectResponse ClientConnection::handle(const Messages::WebSocketServer::Connect& message)
 {
     const auto& url = message.url();
     if (!url.is_valid()) {
         dbgln("WebSocket::Connect: Invalid URL requested: '{}'", url);
-        return make<Messages::WebSocketServer::ConnectResponse>(-1);
+        return -1;
     }
 
     ConnectionInfo connection_info(url);
@@ -73,16 +73,16 @@ OwnPtr<Messages::WebSocketServer::ConnectResponse> ClientConnection::handle(cons
 
     connection->start();
     m_connections.set(id, move(connection));
-    return make<Messages::WebSocketServer::ConnectResponse>(id);
+    return id;
 }
 
-OwnPtr<Messages::WebSocketServer::ReadyStateResponse> ClientConnection::handle(const Messages::WebSocketServer::ReadyState& message)
+Messages::WebSocketServer::ReadyStateResponse ClientConnection::handle(const Messages::WebSocketServer::ReadyState& message)
 {
     RefPtr<WebSocket> connection = m_connections.get(message.connection_id()).value_or({});
     if (connection) {
-        return make<Messages::WebSocketServer::ReadyStateResponse>((u32)connection->ready_state());
+        return (u32)connection->ready_state();
     }
-    return make<Messages::WebSocketServer::ReadyStateResponse>((u32)ReadyState::Closed);
+    return (u32)ReadyState::Closed;
 }
 
 void ClientConnection::handle(const Messages::WebSocketServer::Send& message)
@@ -101,7 +101,7 @@ void ClientConnection::handle(const Messages::WebSocketServer::Close& message)
         connection->close(message.code(), message.reason());
 }
 
-OwnPtr<Messages::WebSocketServer::SetCertificateResponse> ClientConnection::handle(const Messages::WebSocketServer::SetCertificate& message)
+Messages::WebSocketServer::SetCertificateResponse ClientConnection::handle(const Messages::WebSocketServer::SetCertificate& message)
 {
     RefPtr<WebSocket> connection = m_connections.get(message.connection_id()).value_or({});
     bool success = false;
@@ -110,7 +110,7 @@ OwnPtr<Messages::WebSocketServer::SetCertificateResponse> ClientConnection::hand
         // connection->set_certificate(message.certificate(), message.key());
         success = true;
     }
-    return make<Messages::WebSocketServer::SetCertificateResponse>(success);
+    return success;
 }
 
 void ClientConnection::did_connect(i32 connection_id)

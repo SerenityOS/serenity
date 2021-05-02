@@ -30,24 +30,24 @@ void ClientConnection::die()
     exit(0);
 }
 
-OwnPtr<Messages::ImageDecoderServer::GreetResponse> ClientConnection::handle(const Messages::ImageDecoderServer::Greet&)
+Messages::ImageDecoderServer::GreetResponse ClientConnection::handle(const Messages::ImageDecoderServer::Greet&)
 {
-    return make<Messages::ImageDecoderServer::GreetResponse>();
+    return {};
 }
 
-OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::handle(const Messages::ImageDecoderServer::DecodeImage& message)
+Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::handle(const Messages::ImageDecoderServer::DecodeImage& message)
 {
     auto encoded_buffer = message.data();
     if (!encoded_buffer.is_valid()) {
         dbgln_if(IMAGE_DECODER_DEBUG, "Encoded data is invalid");
-        return {};
+        return nullptr;
     }
 
     auto decoder = Gfx::ImageDecoder::create(encoded_buffer.data<u8>(), encoded_buffer.size());
 
     if (!decoder->frame_count()) {
         dbgln_if(IMAGE_DECODER_DEBUG, "Could not decode image from encoded data");
-        return make<Messages::ImageDecoderServer::DecodeImageResponse>(false, 0, Vector<Gfx::ShareableBitmap> {}, Vector<u32> {});
+        return { false, 0, Vector<Gfx::ShareableBitmap> {}, Vector<u32> {} };
     }
 
     Vector<Gfx::ShareableBitmap> bitmaps;
@@ -68,7 +68,7 @@ OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::hand
         durations.append(frame.duration);
     }
 
-    return make<Messages::ImageDecoderServer::DecodeImageResponse>(decoder->is_animated(), decoder->loop_count(), bitmaps, durations);
+    return { decoder->is_animated(), decoder->loop_count(), bitmaps, durations };
 }
 
 }

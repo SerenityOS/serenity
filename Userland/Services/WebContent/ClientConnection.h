@@ -33,7 +33,7 @@ private:
     Web::Page& page();
     const Web::Page& page() const;
 
-    virtual OwnPtr<Messages::WebContentServer::GreetResponse> handle(const Messages::WebContentServer::Greet&) override;
+    virtual Messages::WebContentServer::GreetResponse handle(const Messages::WebContentServer::Greet&) override;
     virtual void handle(const Messages::WebContentServer::UpdateSystemTheme&) override;
     virtual void handle(const Messages::WebContentServer::UpdateScreenRect&) override;
     virtual void handle(const Messages::WebContentServer::LoadURL&) override;
