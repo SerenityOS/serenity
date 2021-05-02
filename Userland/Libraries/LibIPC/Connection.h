@@ -65,8 +65,8 @@ public:
         buffer.data.prepend(reinterpret_cast<const u8*>(&message_size), sizeof(message_size));
 
 #ifdef __serenity__
-        for (int fd : buffer.fds) {
-            auto rc = sendfd(m_socket->fd(), fd);
+        for (auto& fd : buffer.fds) {
+            auto rc = sendfd(m_socket->fd(), fd->value());
             if (rc < 0) {
                 perror("sendfd");
                 shutdown();
