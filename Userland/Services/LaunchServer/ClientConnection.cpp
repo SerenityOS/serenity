@@ -36,9 +36,11 @@ Messages::LaunchServer::OpenURLResponse ClientConnection::handle(const Messages:
 {
     if (!m_allowlist.is_empty()) {
         bool allowed = false;
+        auto request_url_without_fragment = request.url();
+        request_url_without_fragment.set_fragment({});
         for (auto& allowed_handler : m_allowlist) {
             if (allowed_handler.handler_name == request.handler_name()
-                && (allowed_handler.any_url || allowed_handler.urls.contains_slow(request.url()))) {
+                && (allowed_handler.any_url || allowed_handler.urls.contains_slow(request_url_without_fragment))) {
                 allowed = true;
                 break;
             }
