@@ -154,7 +154,6 @@ void __ubsan_handle_type_mismatch_v1(const TypeMismatchData& data, ValueHandle p
     print_location(data.location);
 }
 
-// FIXME: Causes a triple fault on boot
 void __ubsan_handle_alignment_assumption(const AlignmentAssumptionData&, ValueHandle, ValueHandle, ValueHandle) __attribute__((used));
 void __ubsan_handle_alignment_assumption(const AlignmentAssumptionData& data, ValueHandle pointer, ValueHandle alignment, ValueHandle offset)
 {
@@ -168,7 +167,7 @@ void __ubsan_handle_alignment_assumption(const AlignmentAssumptionData& data, Va
               "of type {} failed",
             alignment, pointer, data.type.name());
     }
-    // dbgln("KUBSAN: Assumption of pointer alignment failed");
+
     print_location(data.location);
 }
 
@@ -203,7 +202,6 @@ void __ubsan_handle_invalid_builtin(const InvalidBuiltinData data)
     print_location(data.location);
 }
 
-// FIXME: Causes a triple fault on boot
 void __ubsan_handle_pointer_overflow(const PointerOverflowData&, ValueHandle, ValueHandle) __attribute__((used));
 void __ubsan_handle_pointer_overflow(const PointerOverflowData& data, ValueHandle base, ValueHandle result)
 {
