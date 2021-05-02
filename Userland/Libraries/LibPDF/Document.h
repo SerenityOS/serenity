@@ -24,8 +24,10 @@ struct Rectangle {
 
 struct Page {
     NonnullRefPtr<DictObject> resources;
-    Rectangle media_box;
     NonnullRefPtr<Object> contents;
+    Rectangle media_box;
+    Rectangle crop_box;
+    float user_unit;
 };
 
 class Document final : public RefCounted<Document> {
@@ -99,8 +101,13 @@ template<>
 struct Formatter<PDF::Page> : Formatter<StringView> {
     void format(FormatBuilder& builder, const PDF::Page& page)
     {
-        constexpr auto fmt_string = "Page {{\n  resources={}\n  contents={}\n  media_box={}\n}}";
-        auto str = String::formatted(fmt_string, page.resources->to_string(1), page.contents->to_string(1), page.media_box);
+        constexpr auto fmt_string = "Page {{\n  resources={}\n  contents={}\n  media_box={}\n  crop_box={}\n  user_unit={}\n}}";
+        auto str = String::formatted(fmt_string,
+            page.resources->to_string(1),
+            page.contents->to_string(1),
+            page.media_box,
+            page.crop_box,
+            page.user_unit);
         Formatter<StringView>::format(builder, str);
     }
 };
