@@ -171,6 +171,7 @@ private:
     size_t m_line { 0 };
     size_t m_file_index { 0 };
     bool m_is_statement { false };
+    bool m_basic_block { false };
 
     Vector<LineInfo> m_lines;
 };
