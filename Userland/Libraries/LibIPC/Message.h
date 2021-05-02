@@ -7,13 +7,34 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/RefPtr.h>
 #include <AK/Vector.h>
+#include <unistd.h>
 
 namespace IPC {
 
+class AutoCloseFileDescriptor : public RefCounted<AutoCloseFileDescriptor> {
+public:
+    AutoCloseFileDescriptor(int fd)
+        : m_fd(fd)
+    {
+    }
+
+    ~AutoCloseFileDescriptor()
+    {
+        if (m_fd != -1)
+            close(m_fd);
+    }
+
+    int value() const { return m_fd; }
+
+private:
+    int m_fd;
+};
+
 struct MessageBuffer {
     Vector<u8, 1024> data;
-    Vector<int> fds;
+    Vector<RefPtr<AutoCloseFileDescriptor>> fds;
 };
 
 class Message {
