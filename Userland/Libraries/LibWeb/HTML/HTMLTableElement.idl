@@ -4,6 +4,10 @@ interface HTMLTableElement : HTMLElement {
     HTMLTableCaptionElement createCaption();
     undefined deleteCaption();
 
+    attribute HTMLTableSectionElement? tHead;
+    HTMLTableSectionElement createTHead();
+    undefined deleteTHead();
+
     readonly attribute HTMLCollection rows;
     HTMLTableRowElement insertRow(optional long index = -1);
     undefined deleteRow(long index);

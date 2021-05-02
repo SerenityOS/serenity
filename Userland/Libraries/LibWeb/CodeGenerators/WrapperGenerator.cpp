@@ -873,6 +873,7 @@ void generate_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/Bindings/HTMLTableCaptionElementWrapper.h>
+#include <LibWeb/Bindings/HTMLTableSectionElementWrapper.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/TextWrapper.h>
@@ -1219,6 +1220,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/Bindings/HTMLTableCaptionElementWrapper.h>
+#include <LibWeb/Bindings/HTMLTableSectionElementWrapper.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceTimingWrapper.h>

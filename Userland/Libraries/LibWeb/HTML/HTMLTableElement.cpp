@@ -7,6 +7,7 @@
 #include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLCollection.h>
+#include <LibWeb/HTML/HTMLTableColElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTableRowElement.h>
 #include <LibWeb/Namespace.h>
@@ -75,6 +76,90 @@ void HTMLTableElement::delete_caption()
     auto maybe_caption = caption();
     if (maybe_caption) {
         maybe_caption->remove(false);
+    }
+}
+
+RefPtr<HTMLTableSectionElement> HTMLTableElement::t_head()
+{
+    for (auto* child = first_child(); child; child = child->next_sibling()) {
+        if (is<HTMLTableSectionElement>(*child)) {
+            auto table_section_element = &downcast<HTMLTableSectionElement>(*child);
+            if (table_section_element->tag_name() == TagNames::thead)
+                return table_section_element;
+        }
+    }
+
+    return nullptr;
+}
+
+DOM::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement& thead)
+{
+    if (thead.tag_name() != TagNames::thead)
+        return DOM::HierarchyRequestError::create("Element is not thead");
+
+    // FIXME: The spec requires deleting the current thead if thead is null
+    //        Currently the wrapper generator doesn't send us a nullable value
+    delete_t_head();
+
+    // We insert the new thead after any <caption> or <colgroup> elements
+    DOM::Node* child_to_append_after = nullptr;
+    for (auto* child = first_child(); child; child = child->next_sibling()) {
+        if (!is<HTMLElement>(*child))
+            continue;
+        if (is<HTMLTableCaptionElement>(*child))
+            continue;
+        if (is<HTMLTableColElement>(*child)) {
+            auto table_col_element = &downcast<HTMLTableColElement>(*child);
+            if (table_col_element->tag_name() == TagNames::colgroup)
+                continue;
+        }
+
+        // We have found an element which is not a <caption> or <colgroup>, we'll insert before this
+        child_to_append_after = child;
+        break;
+    }
+
+    pre_insert(thead, child_to_append_after);
+
+    return {};
+}
+
+NonnullRefPtr<HTMLTableSectionElement> HTMLTableElement::create_t_head()
+{
+    auto maybe_thead = t_head();
+    if (maybe_thead)
+        return *maybe_thead;
+
+    auto thead = DOM::create_element(document(), TagNames::thead, Namespace::HTML);
+
+    // We insert the new thead after any <caption> or <colgroup> elements
+    DOM::Node* child_to_append_after = nullptr;
+    for (auto* child = first_child(); child; child = child->next_sibling()) {
+        if (!is<HTMLElement>(*child))
+            continue;
+        if (is<HTMLTableCaptionElement>(*child))
+            continue;
+        if (is<HTMLTableColElement>(*child)) {
+            auto table_col_element = &downcast<HTMLTableColElement>(*child);
+            if (table_col_element->tag_name() == TagNames::colgroup)
+                continue;
+        }
+
+        // We have found an element which is not a <caption> or <colgroup>, we'll insert before this
+        child_to_append_after = child;
+        break;
+    }
+
+    pre_insert(thead, child_to_append_after);
+
+    return thead;
+}
+
+void HTMLTableElement::delete_t_head()
+{
+    auto maybe_thead = t_head();
+    if (maybe_thead) {
+        maybe_thead->remove(false);
     }
 }
 
