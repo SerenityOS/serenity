@@ -36,6 +36,9 @@ public:
     NonnullRefPtr<HTMLTableSectionElement> create_t_foot();
     void delete_t_foot();
 
+    NonnullRefPtr<DOM::HTMLCollection> t_bodies();
+    NonnullRefPtr<HTMLTableSectionElement> create_t_body();
+
     NonnullRefPtr<DOM::HTMLCollection> rows();
     DOM::ExceptionOr<NonnullRefPtr<HTMLTableRowElement>> insert_row(long index);
     DOM::ExceptionOr<void> delete_row(long index);
