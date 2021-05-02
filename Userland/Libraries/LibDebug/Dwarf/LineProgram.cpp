@@ -242,6 +242,10 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         m_address += delta;
         break;
     }
+    case StandardOpcodes::SetBasicBlock: {
+        m_basic_block = true;
+        break;
+    }
     default:
         dbgln("Unhandled LineProgram opcode {}", opcode);
         VERIFY_NOT_REACHED();
@@ -262,6 +266,8 @@ void LineProgram::handle_special_opcode(u8 opcode)
     }
 
     append_to_line_info();
+
+    m_basic_block = false;
 }
 
 void LineProgram::run_program()
