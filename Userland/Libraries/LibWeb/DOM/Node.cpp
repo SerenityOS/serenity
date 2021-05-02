@@ -539,4 +539,12 @@ bool Node::is_host_including_inclusive_ancestor_of(const Node& other) const
     return is_inclusive_ancestor_of(other) || (is<DocumentFragment>(other.root()) && downcast<DocumentFragment>(other.root())->host() && is_inclusive_ancestor_of(*downcast<DocumentFragment>(other.root())->host().ptr()));
 }
 
+// https://dom.spec.whatwg.org/#dom-node-ownerdocument
+RefPtr<Document> Node::owner_document() const
+{
+    if (is_document())
+        return nullptr;
+    return m_document;
+}
+
 }

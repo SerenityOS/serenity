@@ -99,6 +99,8 @@ public:
     Document& document() { return *m_document; }
     const Document& document() const { return *m_document; }
 
+    RefPtr<Document> owner_document() const;
+
     const HTML::HTMLAnchorElement* enclosing_link_element() const;
     const HTML::HTMLElement* enclosing_html_element() const;
     const HTML::HTMLElement* enclosing_html_element_with_attribute(const FlyString&) const;
