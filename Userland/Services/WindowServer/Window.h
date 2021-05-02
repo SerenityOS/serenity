@@ -371,6 +371,7 @@ private:
     bool m_invalidated_all { true };
     bool m_invalidated_frame { true };
     bool m_hit_testing_enabled { true };
+    bool m_modified { false };
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };
@@ -400,7 +401,6 @@ private:
     int m_minimize_animation_step { -1 };
     Optional<int> m_progress;
     bool m_should_show_menubar { true };
-    bool m_modified { false };
 };
 
 }
