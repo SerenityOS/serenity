@@ -122,6 +122,8 @@ void ClientConnection::handle(const Messages::LaunchServer::SealAllowlist&)
         did_misbehave("Got more than one request to seal the allowed handlers list");
         return;
     }
+
+    m_allowlist_is_sealed = true;
 }
 
 }
