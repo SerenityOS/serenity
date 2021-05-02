@@ -10,6 +10,7 @@
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/HTMLTableCaptionElement.h>
 #include <LibWeb/HTML/HTMLTableRowElement.h>
+#include <LibWeb/HTML/HTMLTableSectionElement.h>
 
 namespace Web::HTML {
 
@@ -24,6 +25,11 @@ public:
     void set_caption(HTMLTableCaptionElement&);
     NonnullRefPtr<HTMLTableCaptionElement> create_caption();
     void delete_caption();
+
+    RefPtr<HTMLTableSectionElement> t_head();
+    DOM::ExceptionOr<void> set_t_head(HTMLTableSectionElement& thead);
+    NonnullRefPtr<HTMLTableSectionElement> create_t_head();
+    void delete_t_head();
 
     NonnullRefPtr<DOM::HTMLCollection> rows();
     DOM::ExceptionOr<NonnullRefPtr<HTMLTableRowElement>> insert_row(long index);
