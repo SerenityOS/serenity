@@ -15,6 +15,7 @@
 #include <LibGfx/Palette.h>
 #include <LibPDF/Renderer.h>
 
+static constexpr int PAGE_PADDING = 25;
 
 PDFViewer::PDFViewer()
 {
@@ -91,15 +92,19 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
 
     if (event.wheel_delta() > 0) {
         if (vertical_scrollbar().value() == vertical_scrollbar().max()) {
-            if (m_current_page_index < m_document->get_page_count() - 1)
+            if (m_current_page_index < m_document->get_page_count() - 1) {
+                vertical_scrollbar().set_value(0);
                 m_current_page_index++;
+            }
         } else {
             vertical_scrollbar().set_value(vertical_scrollbar().value() + 20);
         }
     } else {
         if (vertical_scrollbar().value() == 0) {
-            if (m_current_page_index > 0)
+            if (m_current_page_index > 0) {
+                vertical_scrollbar().set_value(vertical_scrollbar().max());
                 m_current_page_index--;
+            }
         } else {
             vertical_scrollbar().set_value(vertical_scrollbar().value() - 20);
         }
@@ -123,14 +128,15 @@ void PDFViewer::zoom_out()
 
 RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
 {
-    float zoom_scale_factor = static_cast<float>(m_zoom_percent) / 100.0f;
+    auto zoom_scale_factor = static_cast<float>(m_zoom_percent) / 100.0f;
 
-    float page_width = page.media_box.upper_right_x - page.media_box.lower_left_x;
-    float page_height = page.media_box.upper_right_y - page.media_box.lower_left_y;
-    float page_scale_factor = page_height / page_width;
+    auto page_width = page.media_box.upper_right_x - page.media_box.lower_left_x;
+    auto page_height = page.media_box.upper_right_y - page.media_box.lower_left_y;
+    auto page_scale_factor = page_height / page_width;
 
-    float width = 300.0f * zoom_scale_factor;
-    float height = width * page_scale_factor;
+    auto height = static_cast<float>(this->height() - 2 * frame_thickness() - PAGE_PADDING * 2) * zoom_scale_factor;
+    auto width = height / page_scale_factor;
+
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height });
 
     PDF::Renderer::render(*m_document, page, bitmap);

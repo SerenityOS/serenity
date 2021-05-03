@@ -58,10 +58,13 @@ u32 Document::get_page_count() const
 Page Document::get_page(u32 index)
 {
     VERIFY(index < m_page_object_indices.size());
+
+    auto cached_page = m_pages.get(index);
+
+    if (cached_page.has_value())
+        return cached_page.value();
+
     auto page_object_index = m_page_object_indices[index];
-    auto page_object = m_pages.get(page_object_index);
-    if (page_object.has_value())
-        return page_object.value();
 
     auto obj = get_or_load_object(page_object_index);
     auto raw_page_object = object_cast<DictObject>(obj);

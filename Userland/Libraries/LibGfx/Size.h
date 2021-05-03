@@ -105,11 +105,21 @@ public:
         return !(*this == other);
     }
 
+    Size<T> operator-(const Size<T>& other)
+    {
+        return Size<T> { width() - other.width(), height() - other.height() };
+    }
+
     Size<T>& operator-=(const Size<T>& other)
     {
         m_width -= other.m_width;
         m_height -= other.m_height;
         return *this;
+    }
+
+    Size<T> operator+(const Size<T>& other)
+    {
+        return Size<T> { width() + other.width(), height() + other.height() };
     }
 
     Size<T>& operator+=(const Size<T>& other)

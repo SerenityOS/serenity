@@ -75,7 +75,7 @@ void Renderer::handle_command(const GraphicsCommand& command)
 
 void Renderer::handle_save_state(const Vector<Value>&)
 {
-    m_graphics_state_stack.append(state());
+    m_graphics_state_stack.append(GraphicsState(state()));
 }
 
 void Renderer::handle_restore_state(const Vector<Value>&)
@@ -276,7 +276,7 @@ void Renderer::handle_text_set_rise(const Vector<Value>& args)
 
 void Renderer::handle_text_begin(const Vector<Value>&)
 {
-    m_text_rendering_matrix = Gfx::AffineTransform();
+    m_text_matrix = Gfx::AffineTransform();
     m_text_line_matrix = Gfx::AffineTransform();
 }
 
