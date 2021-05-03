@@ -15,23 +15,6 @@
 #include <LibGfx/Palette.h>
 #include <LibPDF/Renderer.h>
 
-RefPtr<Gfx::Bitmap> ZoomablePage::bitmap_for_zoom(u16 zoom)
-{
-    // FIXME: Why doesn't this method's caching work?
-
-    if (zoom == 100)
-        return m_base_bitmap;
-
-    auto existing_bitmap = m_bitmaps.get(zoom);
-    if (existing_bitmap.has_value()) {
-        return existing_bitmap.value();
-    }
-
-    float scale_factor = static_cast<float>(zoom) / 100.0f;
-    auto new_bitmap = m_base_bitmap->scaled(scale_factor, scale_factor);
-    m_bitmaps.set(zoom, new_bitmap);
-    return new_bitmap;
-}
 
 PDFViewer::PDFViewer()
 {
@@ -49,18 +32,23 @@ void PDFViewer::set_document(RefPtr<PDF::Document> document)
     m_document = document;
     m_current_page_index = document->get_first_page_index();
     m_zoom_percent = 100;
+    m_rendered_page_map.clear();
+
+    for (u32 i = 0; i < document->get_page_count(); i++)
+        m_rendered_page_map.append(HashMap<u32, RefPtr<Gfx::Bitmap>>());
 
     update();
 }
 
 RefPtr<Gfx::Bitmap> PDFViewer::get_rendered_page(u32 index)
 {
-    auto existing_rendered_page = m_rendered_pages.get(index);
+    auto rendered_page_map = m_rendered_page_map[index];
+    auto existing_rendered_page = rendered_page_map.get(index);
     if (existing_rendered_page.has_value())
-        return existing_rendered_page.value().bitmap_for_zoom(m_zoom_percent);
+        return existing_rendered_page.value();
 
     auto rendered_page = render_page(m_document->get_page(index));
-    m_rendered_pages.set(index, ZoomablePage(rendered_page));
+    rendered_page_map.set(index, rendered_page);
     return rendered_page;
 }
 
@@ -135,9 +123,14 @@ void PDFViewer::zoom_out()
 
 RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
 {
-    // FIXME: Determine this size dynamically
-    float width = 300.0f;
-    float height = width * 11.0f / 8.5f;
+    float zoom_scale_factor = static_cast<float>(m_zoom_percent) / 100.0f;
+
+    float page_width = page.media_box.upper_right_x - page.media_box.lower_left_x;
+    float page_height = page.media_box.upper_right_y - page.media_box.lower_left_y;
+    float page_scale_factor = page_height / page_width;
+
+    float width = 300.0f * zoom_scale_factor;
+    float height = width * page_scale_factor;
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height });
 
     PDF::Renderer::render(*m_document, page, bitmap);

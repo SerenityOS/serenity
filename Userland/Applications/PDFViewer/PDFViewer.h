@@ -11,21 +11,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibPDF/Document.h>
 
-// Cached zoomed pages
-class ZoomablePage {
-public:
-    explicit ZoomablePage(const RefPtr<Gfx::Bitmap>& base_bitmap)
-        : m_base_bitmap(base_bitmap)
-    {
-    }
-
-    RefPtr<Gfx::Bitmap> bitmap_for_zoom(u16 zoom);
-
-private:
-    RefPtr<Gfx::Bitmap> m_base_bitmap;
-    HashMap<u16, RefPtr<Gfx::Bitmap>> m_bitmaps;
-};
-
 class PDFViewer : public GUI::AbstractScrollableWidget {
     C_OBJECT(PDFViewer)
 
@@ -49,7 +34,7 @@ private:
 
     RefPtr<PDF::Document> m_document;
     u32 m_current_page_index { 0 };
-    HashMap<u32, ZoomablePage> m_rendered_pages;
+    Vector<HashMap<u32, RefPtr<Gfx::Bitmap>>> m_rendered_page_map;
 
     // 100% is normal, ranges from 10% to 1000%
     u16 m_zoom_percent { 100 };

@@ -7,6 +7,7 @@
 #include <AK/Utf8View.h>
 #include <LibPDF/Renderer.h>
 #include <ctype.h>
+#include <math.h>
 
 namespace PDF {
 
@@ -30,8 +31,6 @@ Renderer::Renderer(RefPtr<Document> document, const Page& page, RefPtr<Gfx::Bitm
     float scale_x = static_cast<float>(bitmap->width()) / width;
     float scale_y = static_cast<float>(bitmap->height()) / height;
     m_userspace_matrix.scale(scale_x, scale_y);
-
-    Gfx::IntPoint test_point { 500, 800 };
 
     m_graphics_state_stack.append(GraphicsState { m_userspace_matrix });
 
@@ -255,9 +254,11 @@ void Renderer::handle_text_set_font(const Vector<Value>& args)
         font_variant = "Regular";
     }
 
-    // FIXME: Make the font the correct size by actually calculating the size, either here or at glyph draw time,
-    // instead of just dividing the size argument by a completely arbitrary number :^)
-    text_state().font = Gfx::FontDatabase::the().get("Liberation Serif", font_variant, args[1].to_int() / 3);
+    auto specified_font_size = args[1].to_float();
+    VERIFY(fabsf(state().ctm.x_scale() - state().ctm.y_scale()) < 0.01f);
+    specified_font_size *= state().ctm.x_scale();
+
+    text_state().font = Gfx::FontDatabase::the().get("Liberation Serif", font_variant, static_cast<int>(specified_font_size));
     VERIFY(text_state().font);
     m_text_rendering_matrix_is_dirty = true;
 }
