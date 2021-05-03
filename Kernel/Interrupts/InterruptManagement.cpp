@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/CPU.h>
@@ -16,7 +15,6 @@
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
 
 #define PCAT_COMPAT_FLAG 0x1

@@ -7,7 +7,6 @@
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
-#include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Arch/x86/CPU.h>
