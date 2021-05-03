@@ -19,7 +19,6 @@ TEST_CASE(scandir_basic_scenario)
     for (auto i = 0; i < entries; i++) {
         if (strcmp(namelist[i]->d_name, "passwd") == 0) {
             found_passwd = true;
-            break;
         }
         free(namelist[i]);
     }

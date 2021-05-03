@@ -72,8 +72,13 @@ static void create_struct_dirent(sys_dirent* sys_ent, struct dirent* str_ent)
     str_ent->d_off = 0;
     str_ent->d_reclen = sizeof(struct dirent);
 
-    int size = min((sys_ent->namelen + 1) * sizeof(char), sizeof(str_ent->d_name));
-    [[maybe_unused]] auto n = strlcpy(str_ent->d_name, sys_ent->name, size);
+    VERIFY(sizeof(str_ent->d_name) > sys_ent->namelen);
+
+    // Note: We can't use any normal string function as sys_ent->name is
+    // not null terminated. All string copy functions will attempt to read
+    // the non-existent null terminator past the end of the source string.
+    memcpy(str_ent->d_name, sys_ent->name, sys_ent->namelen);
+    str_ent->d_name[sys_ent->namelen] = '\0';
 }
 
 static int allocate_dirp_buffer(DIR* dirp)
