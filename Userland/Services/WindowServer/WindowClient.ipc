@@ -25,7 +25,7 @@ endpoint WindowClient
 
     ScreenRectChanged(Gfx::IntRect rect) =|
 
-    AsyncSetWallpaperFinished(bool success) =|
+    SetWallpaperFinished(bool success) =|
 
     DragAccepted() =|
     DragCancelled() =|

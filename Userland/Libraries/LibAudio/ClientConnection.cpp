@@ -16,14 +16,14 @@ ClientConnection::ClientConnection()
 
 void ClientConnection::handshake()
 {
-    send_sync<Messages::AudioServer::Greet>();
+    greet();
 }
 
 void ClientConnection::enqueue(const Buffer& buffer)
 {
     for (;;) {
-        auto response = send_sync<Messages::AudioServer::EnqueueBuffer>(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
-        if (response->success())
+        auto response = enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
+        if (response.success())
             break;
         sleep(1);
     }
@@ -31,53 +31,53 @@ void ClientConnection::enqueue(const Buffer& buffer)
 
 bool ClientConnection::try_enqueue(const Buffer& buffer)
 {
-    auto response = send_sync<Messages::AudioServer::EnqueueBuffer>(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
-    return response->success();
+    auto response = enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
+    return response.success();
 }
 
 bool ClientConnection::get_muted()
 {
-    return send_sync<Messages::AudioServer::GetMuted>()->muted();
+    return IPCProxy::get_muted().muted();
 }
 
 void ClientConnection::set_muted(bool muted)
 {
-    send_sync<Messages::AudioServer::SetMuted>(muted);
+    IPCProxy::set_muted(muted);
 }
 
 int ClientConnection::get_main_mix_volume()
 {
-    return send_sync<Messages::AudioServer::GetMainMixVolume>()->volume();
+    return IPCProxy::get_main_mix_volume().volume();
 }
 
 void ClientConnection::set_main_mix_volume(int volume)
 {
-    send_sync<Messages::AudioServer::SetMainMixVolume>(volume);
+    IPCProxy::set_main_mix_volume(volume);
 }
 
 int ClientConnection::get_remaining_samples()
 {
-    return send_sync<Messages::AudioServer::GetRemainingSamples>()->remaining_samples();
+    return IPCProxy::get_remaining_samples().remaining_samples();
 }
 
 int ClientConnection::get_played_samples()
 {
-    return send_sync<Messages::AudioServer::GetPlayedSamples>()->played_samples();
+    return IPCProxy::get_played_samples().played_samples();
 }
 
 void ClientConnection::set_paused(bool paused)
 {
-    send_sync<Messages::AudioServer::SetPaused>(paused);
+    IPCProxy::set_paused(paused);
 }
 
 void ClientConnection::clear_buffer(bool paused)
 {
-    send_sync<Messages::AudioServer::ClearBuffer>(paused);
+    IPCProxy::clear_buffer(paused);
 }
 
 int ClientConnection::get_playing_buffer()
 {
-    return send_sync<Messages::AudioServer::GetPlayingBuffer>()->buffer_id();
+    return IPCProxy::get_playing_buffer().buffer_id();
 }
 
 void ClientConnection::finished_playing_buffer(i32 buffer_id)

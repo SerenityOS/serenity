@@ -68,26 +68,26 @@ void OutOfProcessWebView::create_client()
         });
     };
 
-    client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
-    client().post_message(Messages::WebContentServer::UpdateScreenRect(GUI::Desktop::the().rect()));
+    client().async_update_system_theme(Gfx::current_system_theme_buffer());
+    client().async_update_screen_rect(GUI::Desktop::the().rect());
 }
 
 void OutOfProcessWebView::load(const URL& url)
 {
     m_url = url;
-    client().post_message(Messages::WebContentServer::LoadURL(url));
+    client().async_load_url(url);
 }
 
 void OutOfProcessWebView::load_html(const StringView& html, const URL& url)
 {
     m_url = url;
-    client().post_message(Messages::WebContentServer::LoadHTML(html, url));
+    client().async_load_html(html, url);
 }
 
 void OutOfProcessWebView::load_empty_document()
 {
     m_url = {};
-    client().post_message(Messages::WebContentServer::LoadHTML("", {}));
+    client().async_load_html("", {});
 }
 
 void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
@@ -119,7 +119,7 @@ void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 
 void OutOfProcessWebView::handle_resize()
 {
-    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size())));
+    client().async_set_viewport_rect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size()));
 
     if (m_client_state.has_usable_bitmap) {
         // NOTE: We keep the outgoing front bitmap as a backup so we have something to paint until we get a new one.
@@ -128,12 +128,12 @@ void OutOfProcessWebView::handle_resize()
 
     if (m_client_state.front_bitmap) {
         m_client_state.front_bitmap = nullptr;
-        client().post_message(Messages::WebContentServer::RemoveBackingStore(m_client_state.front_bitmap_id));
+        client().async_remove_backing_store(m_client_state.front_bitmap_id);
     }
 
     if (m_client_state.back_bitmap) {
         m_client_state.back_bitmap = nullptr;
-        client().post_message(Messages::WebContentServer::RemoveBackingStore(m_client_state.back_bitmap_id));
+        client().async_remove_backing_store(m_client_state.back_bitmap_id);
     }
 
     m_client_state.front_bitmap_id = -1;
@@ -146,13 +146,13 @@ void OutOfProcessWebView::handle_resize()
     if (auto new_bitmap = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size())) {
         m_client_state.front_bitmap = move(new_bitmap);
         m_client_state.front_bitmap_id = m_client_state.next_bitmap_id++;
-        client().post_message(Messages::WebContentServer::AddBackingStore(m_client_state.front_bitmap_id, m_client_state.front_bitmap->to_shareable_bitmap()));
+        client().async_add_backing_store(m_client_state.front_bitmap_id, m_client_state.front_bitmap->to_shareable_bitmap());
     }
 
     if (auto new_bitmap = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size())) {
         m_client_state.back_bitmap = move(new_bitmap);
         m_client_state.back_bitmap_id = m_client_state.next_bitmap_id++;
-        client().post_message(Messages::WebContentServer::AddBackingStore(m_client_state.back_bitmap_id, m_client_state.back_bitmap->to_shareable_bitmap()));
+        client().async_add_backing_store(m_client_state.back_bitmap_id, m_client_state.back_bitmap->to_shareable_bitmap());
     }
 
     request_repaint();
@@ -160,39 +160,39 @@ void OutOfProcessWebView::handle_resize()
 
 void OutOfProcessWebView::keydown_event(GUI::KeyEvent& event)
 {
-    client().post_message(Messages::WebContentServer::KeyDown(event.key(), event.modifiers(), event.code_point()));
+    client().async_key_down(event.key(), event.modifiers(), event.code_point());
 }
 
 void OutOfProcessWebView::mousedown_event(GUI::MouseEvent& event)
 {
-    client().post_message(Messages::WebContentServer::MouseDown(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
+    client().async_mouse_down(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
 }
 
 void OutOfProcessWebView::mouseup_event(GUI::MouseEvent& event)
 {
-    client().post_message(Messages::WebContentServer::MouseUp(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
+    client().async_mouse_up(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
 }
 
 void OutOfProcessWebView::mousemove_event(GUI::MouseEvent& event)
 {
-    client().post_message(Messages::WebContentServer::MouseMove(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
+    client().async_mouse_move(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers());
 }
 
 void OutOfProcessWebView::mousewheel_event(GUI::MouseEvent& event)
 {
-    client().post_message(Messages::WebContentServer::MouseWheel(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
+    client().async_mouse_wheel(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers(), event.wheel_delta());
 }
 
 void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 {
     GUI::AbstractScrollableWidget::theme_change_event(event);
-    client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
+    client().async_update_system_theme(Gfx::current_system_theme_buffer());
     request_repaint();
 }
 
 void OutOfProcessWebView::screen_rect_change_event(GUI::ScreenRectChangeEvent& event)
 {
-    client().post_message(Messages::WebContentServer::UpdateScreenRect(event.rect()));
+    client().async_update_screen_rect(event.rect());
 }
 
 void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id)
@@ -360,7 +360,7 @@ void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, 
 
 void OutOfProcessWebView::did_scroll()
 {
-    client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));
+    client().async_set_viewport_rect(visible_content_rect());
     request_repaint();
 }
 
@@ -370,7 +370,7 @@ void OutOfProcessWebView::request_repaint()
     // it won't have a back bitmap yet, so we can just skip repaint requests.
     if (!m_client_state.back_bitmap)
         return;
-    client().post_message(Messages::WebContentServer::Paint(m_client_state.back_bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_client_state.back_bitmap_id));
+    client().async_paint(m_client_state.back_bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_client_state.back_bitmap_id);
 }
 
 WebContentClient& OutOfProcessWebView::client()
@@ -381,22 +381,22 @@ WebContentClient& OutOfProcessWebView::client()
 
 void OutOfProcessWebView::debug_request(const String& request, const String& argument)
 {
-    client().post_message(Messages::WebContentServer::DebugRequest(request, argument));
+    client().async_debug_request(request, argument);
 }
 
 void OutOfProcessWebView::get_source()
 {
-    client().post_message(Messages::WebContentServer::GetSource());
+    client().async_get_source();
 }
 
 void OutOfProcessWebView::js_console_initialize()
 {
-    client().post_message(Messages::WebContentServer::JSConsoleInitialize());
+    client().async_jsconsole_initialize();
 }
 
 void OutOfProcessWebView::js_console_input(const String& js_source)
 {
-    client().post_message(Messages::WebContentServer::JSConsoleInput(js_source));
+    client().async_jsconsole_input(js_source);
 }
 
 }

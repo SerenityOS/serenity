@@ -178,7 +178,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         quick_sort(g_themes, [](auto& a, auto& b) { return a.name < b.name; });
     }
 
-    auto current_theme_name = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetSystemTheme>()->theme_name();
+    auto current_theme_name = GUI::WindowServerConnection::the().get_system_theme().theme_name();
 
     {
         int theme_identifier = 0;
@@ -186,8 +186,8 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             auto action = GUI::Action::create_checkable(theme.name, [theme_identifier](auto&) {
                 auto& theme = g_themes[theme_identifier];
                 dbgln("Theme switched to {} at path {}", theme.name, theme.path);
-                auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetSystemTheme>(theme.path, theme.name);
-                VERIFY(response->success());
+                auto response = GUI::WindowServerConnection::the().set_system_theme(theme.path, theme.name);
+                VERIFY(response.success());
             });
             if (theme.name == current_theme_name)
                 action->set_checked(true);

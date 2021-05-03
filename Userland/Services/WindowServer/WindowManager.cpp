@@ -269,7 +269,7 @@ void WindowManager::remove_window(Window& window)
         if (conn.window_id() < 0 || !(conn.event_mask() & WMEventMask::WindowRemovals))
             return IterationDecision::Continue;
         if (!window.is_internal() && !window.is_modal())
-            conn.post_message(Messages::WindowManagerClient::WindowRemoved(conn.window_id(), window.client_id(), window.window_id()));
+            conn.async_window_removed(conn.window_id(), window.client_id(), window.window_id());
         return IterationDecision::Continue;
     });
 }
@@ -299,7 +299,7 @@ void WindowManager::tell_wm_about_window(WMClientConnection& conn, Window& windo
     if (window.is_internal())
         return;
     auto* parent = window.parent_window();
-    conn.post_message(Messages::WindowManagerClient::WindowStateChanged(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.title(), window.rect(), window.progress()));
+    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.title(), window.rect(), window.progress());
 }
 
 void WindowManager::tell_wm_about_window_rect(WMClientConnection& conn, Window& window)
@@ -310,7 +310,7 @@ void WindowManager::tell_wm_about_window_rect(WMClientConnection& conn, Window& 
         return;
     if (window.is_internal())
         return;
-    conn.post_message(Messages::WindowManagerClient::WindowRectChanged(conn.window_id(), window.client_id(), window.window_id(), window.rect()));
+    conn.async_window_rect_changed(conn.window_id(), window.client_id(), window.window_id(), window.rect());
 }
 
 void WindowManager::tell_wm_about_window_icon(WMClientConnection& conn, Window& window)
@@ -321,7 +321,7 @@ void WindowManager::tell_wm_about_window_icon(WMClientConnection& conn, Window& 
         return;
     if (window.is_internal())
         return;
-    conn.post_message(Messages::WindowManagerClient::WindowIconBitmapChanged(conn.window_id(), window.client_id(), window.window_id(), window.icon().to_shareable_bitmap()));
+    conn.async_window_icon_bitmap_changed(conn.window_id(), window.client_id(), window.window_id(), window.icon().to_shareable_bitmap());
 }
 
 void WindowManager::tell_wms_window_state_changed(Window& window)
@@ -354,7 +354,7 @@ void WindowManager::tell_wms_applet_area_size_changed(const Gfx::IntSize& size)
         if (conn.window_id() < 0)
             return IterationDecision::Continue;
 
-        conn.post_message(Messages::WindowManagerClient::AppletAreaSizeChanged(conn.window_id(), size));
+        conn.async_applet_area_size_changed(conn.window_id(), size);
         return IterationDecision::Continue;
     });
 }
@@ -365,7 +365,7 @@ void WindowManager::tell_wms_super_key_pressed()
         if (conn.window_id() < 0)
             return IterationDecision::Continue;
 
-        conn.post_message(Messages::WindowManagerClient::SuperKeyPressed(conn.window_id()));
+        conn.async_super_key_pressed(conn.window_id());
         return IterationDecision::Continue;
     });
 }
@@ -427,7 +427,7 @@ void WindowManager::notify_minimization_state_changed(Window& window)
     tell_wms_window_state_changed(window);
 
     if (window.client())
-        window.client()->post_message(Messages::WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
+        window.client()->async_window_state_changed(window.window_id(), window.is_minimized(), window.is_occluded());
 
     if (window.is_active() && window.is_minimized())
         pick_new_active_window(&window);
@@ -436,7 +436,7 @@ void WindowManager::notify_minimization_state_changed(Window& window)
 void WindowManager::notify_occlusion_state_changed(Window& window)
 {
     if (window.client())
-        window.client()->post_message(Messages::WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
+        window.client()->async_window_state_changed(window.window_id(), window.is_minimized(), window.is_occluded());
 }
 
 void WindowManager::notify_progress_changed(Window& window)
@@ -769,13 +769,13 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
     });
 
     if (hovered_window) {
-        m_dnd_client->post_message(Messages::WindowClient::DragAccepted());
+        m_dnd_client->async_drag_accepted();
         if (hovered_window->client()) {
             auto translated_event = event.translated(-hovered_window->position());
-            hovered_window->client()->post_message(Messages::WindowClient::DragDropped(hovered_window->window_id(), translated_event.position(), m_dnd_text, m_dnd_mime_data->all_data()));
+            hovered_window->client()->async_drag_dropped(hovered_window->window_id(), translated_event.position(), m_dnd_text, m_dnd_mime_data->all_data());
         }
     } else {
-        m_dnd_client->post_message(Messages::WindowClient::DragCancelled());
+        m_dnd_client->async_drag_cancelled();
     }
 
     end_dnd_drag();
@@ -1190,11 +1190,11 @@ void WindowManager::event(Core::Event& event)
         // Escape key cancels an ongoing drag.
         if (key_event.type() == Event::KeyDown && key_event.key() == Key_Escape && m_dnd_client) {
             // Notify the drag-n-drop client that the drag was cancelled.
-            m_dnd_client->post_message(Messages::WindowClient::DragCancelled());
+            m_dnd_client->async_drag_cancelled();
 
             // Also notify the currently hovered window (if any) that the ongoing drag was cancelled.
             if (m_hovered_window && m_hovered_window->client() && m_hovered_window->client() != m_dnd_client)
-                m_hovered_window->client()->post_message(Messages::WindowClient::DragCancelled());
+                m_hovered_window->client()->async_drag_cancelled();
 
             end_dnd_drag();
             return;
@@ -1538,7 +1538,7 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
     for_each_window([&](Window& window) {
         if (window.client()) {
             if (!notified_clients.contains(window.client())) {
-                window.client()->post_message(Messages::WindowClient::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
+                window.client()->async_update_system_theme(Gfx::current_system_theme_buffer());
                 notified_clients.set(window.client());
             }
         }

@@ -507,7 +507,7 @@ void Menu::did_activate(MenuItem& item, bool leave_menu_open)
         MenuManager::the().close_everyone();
 
     if (m_client)
-        m_client->post_message(Messages::WindowClient::MenuItemActivated(m_menu_id, item.identifier()));
+        m_client->async_menu_item_activated(m_menu_id, item.identifier());
 }
 
 bool Menu::activate_default()
@@ -612,7 +612,7 @@ void Menu::set_visible(bool visible)
         return;
     menu_window()->set_visible(visible);
     if (m_client)
-        m_client->post_message(Messages::WindowClient::MenuVisibilityDidChange(m_menu_id, visible));
+        m_client->async_menu_visibility_did_change(m_menu_id, visible);
 }
 
 void Menu::add_item(NonnullOwnPtr<MenuItem> item)
@@ -637,13 +637,13 @@ void Menu::set_hovered_index(int index, bool make_input)
         return;
     if (auto* old_hovered_item = hovered_item()) {
         if (client())
-            client()->post_message(Messages::WindowClient::MenuItemLeft(m_menu_id, old_hovered_item->identifier()));
+            client()->async_menu_item_left(m_menu_id, old_hovered_item->identifier());
     }
     m_hovered_item_index = index;
     update_for_new_hovered_item(make_input);
     if (auto* new_hovered_item = hovered_item()) {
         if (client())
-            client()->post_message(Messages::WindowClient::MenuItemEntered(m_menu_id, new_hovered_item->identifier()));
+            client()->async_menu_item_entered(m_menu_id, new_hovered_item->identifier());
     }
 }
 

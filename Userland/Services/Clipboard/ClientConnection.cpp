@@ -52,7 +52,7 @@ Messages::ClipboardServer::GetClipboardDataResponse ClientConnection::get_clipbo
 
 void ClientConnection::notify_about_clipboard_change()
 {
-    post_message(Messages::ClipboardClient::ClipboardDataChanged(Storage::the().mime_type()));
+    async_clipboard_data_changed(Storage::the().mime_type());
 }
 
 }

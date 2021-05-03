@@ -78,17 +78,17 @@ void PageHost::set_viewport_rect(const Gfx::IntRect& rect)
 
 void PageHost::page_did_invalidate(const Gfx::IntRect& content_rect)
 {
-    m_client.post_message(Messages::WebContentClient::DidInvalidateContentRect(content_rect));
+    m_client.async_did_invalidate_content_rect(content_rect);
 }
 
 void PageHost::page_did_change_selection()
 {
-    m_client.post_message(Messages::WebContentClient::DidChangeSelection());
+    m_client.async_did_change_selection();
 }
 
 void PageHost::page_did_request_cursor_change(Gfx::StandardCursor cursor)
 {
-    m_client.post_message(Messages::WebContentClient::DidRequestCursorChange((u32)cursor));
+    m_client.async_did_request_cursor_change((u32)cursor);
 }
 
 void PageHost::page_did_layout()
@@ -96,107 +96,107 @@ void PageHost::page_did_layout()
     auto* layout_root = this->layout_root();
     VERIFY(layout_root);
     auto content_size = enclosing_int_rect(layout_root->absolute_rect()).size();
-    m_client.post_message(Messages::WebContentClient::DidLayout(content_size));
+    m_client.async_did_layout(content_size);
 }
 
 void PageHost::page_did_change_title(const String& title)
 {
-    m_client.post_message(Messages::WebContentClient::DidChangeTitle(title));
+    m_client.async_did_change_title(title);
 }
 
 void PageHost::page_did_request_scroll(int wheel_delta)
 {
-    m_client.post_message(Messages::WebContentClient::DidRequestScroll(wheel_delta));
+    m_client.async_did_request_scroll(wheel_delta);
 }
 
 void PageHost::page_did_request_scroll_into_view(const Gfx::IntRect& rect)
 {
-    m_client.post_message(Messages::WebContentClient::DidRequestScrollIntoView(rect));
+    m_client.async_did_request_scroll_into_view(rect);
 }
 
 void PageHost::page_did_enter_tooltip_area(const Gfx::IntPoint& content_position, const String& title)
 {
-    m_client.post_message(Messages::WebContentClient::DidEnterTooltipArea(content_position, title));
+    m_client.async_did_enter_tooltip_area(content_position, title);
 }
 
 void PageHost::page_did_leave_tooltip_area()
 {
-    m_client.post_message(Messages::WebContentClient::DidLeaveTooltipArea());
+    m_client.async_did_leave_tooltip_area();
 }
 
 void PageHost::page_did_hover_link(const URL& url)
 {
-    m_client.post_message(Messages::WebContentClient::DidHoverLink(url));
+    m_client.async_did_hover_link(url);
 }
 
 void PageHost::page_did_unhover_link()
 {
-    m_client.post_message(Messages::WebContentClient::DidUnhoverLink());
+    m_client.async_did_unhover_link();
 }
 
 void PageHost::page_did_click_link(const URL& url, const String& target, unsigned modifiers)
 {
-    m_client.post_message(Messages::WebContentClient::DidClickLink(url, target, modifiers));
+    m_client.async_did_click_link(url, target, modifiers);
 }
 
 void PageHost::page_did_middle_click_link(const URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
 {
-    m_client.post_message(Messages::WebContentClient::DidMiddleClickLink(url, target, modifiers));
+    m_client.async_did_middle_click_link(url, target, modifiers);
 }
 
 void PageHost::page_did_start_loading(const URL& url)
 {
-    m_client.post_message(Messages::WebContentClient::DidStartLoading(url));
+    m_client.async_did_start_loading(url);
 }
 
 void PageHost::page_did_finish_loading(const URL& url)
 {
-    m_client.post_message(Messages::WebContentClient::DidFinishLoading(url));
+    m_client.async_did_finish_loading(url);
 }
 
 void PageHost::page_did_request_context_menu(const Gfx::IntPoint& content_position)
 {
-    m_client.post_message(Messages::WebContentClient::DidRequestContextMenu(content_position));
+    m_client.async_did_request_context_menu(content_position);
 }
 
 void PageHost::page_did_request_link_context_menu(const Gfx::IntPoint& content_position, const URL& url, const String& target, unsigned modifiers)
 {
-    m_client.post_message(Messages::WebContentClient::DidRequestLinkContextMenu(content_position, url, target, modifiers));
+    m_client.async_did_request_link_context_menu(content_position, url, target, modifiers);
 }
 
 void PageHost::page_did_request_alert(const String& message)
 {
-    m_client.send_sync<Messages::WebContentClient::DidRequestAlert>(message);
+    m_client.did_request_alert(message);
 }
 
 bool PageHost::page_did_request_confirm(const String& message)
 {
-    return m_client.send_sync<Messages::WebContentClient::DidRequestConfirm>(message)->result();
+    return m_client.did_request_confirm(message).result();
 }
 
 String PageHost::page_did_request_prompt(const String& message, const String& default_)
 {
-    return m_client.send_sync<Messages::WebContentClient::DidRequestPrompt>(message, default_)->response();
+    return m_client.did_request_prompt(message, default_).response();
 }
 
 void PageHost::page_did_change_favicon(const Gfx::Bitmap& favicon)
 {
-    m_client.post_message(Messages::WebContentClient::DidChangeFavicon(favicon.to_shareable_bitmap()));
+    m_client.async_did_change_favicon(favicon.to_shareable_bitmap());
 }
 
 void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, const URL& url, const String& target, unsigned modifiers, const Gfx::Bitmap* bitmap)
 {
-    m_client.post_message(Messages::WebContentClient::DidRequestImageContextMenu(content_position, url, target, modifiers, bitmap->to_shareable_bitmap()));
+    m_client.async_did_request_image_context_menu(content_position, url, target, modifiers, bitmap->to_shareable_bitmap());
 }
 
 String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
 {
-    return m_client.send_sync<Messages::WebContentClient::DidRequestCookie>(url, static_cast<u8>(source))->cookie();
+    return m_client.did_request_cookie(url, static_cast<u8>(source)).cookie();
 }
 
 void PageHost::page_did_set_cookie(const URL& url, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)
 {
-    m_client.post_message(Messages::WebContentClient::DidSetCookie(url, cookie, static_cast<u8>(source)));
+    m_client.async_did_set_cookie(url, cookie, static_cast<u8>(source));
 }
 
 }

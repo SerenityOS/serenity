@@ -34,18 +34,18 @@ void Desktop::did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::
 
 void Desktop::set_background_color(const StringView& background_color)
 {
-    WindowServerConnection::the().post_message(Messages::WindowServer::SetBackgroundColor(background_color));
+    WindowServerConnection::the().async_set_background_color(background_color);
 }
 
 void Desktop::set_wallpaper_mode(const StringView& mode)
 {
-    WindowServerConnection::the().post_message(Messages::WindowServer::SetWallpaperMode(mode));
+    WindowServerConnection::the().async_set_wallpaper_mode(mode);
 }
 
 bool Desktop::set_wallpaper(const StringView& path, bool save_config)
 {
-    WindowServerConnection::the().post_message(Messages::WindowServer::AsyncSetWallpaper(path));
-    auto ret_val = WindowServerConnection::the().wait_for_specific_message<Messages::WindowClient::AsyncSetWallpaperFinished>()->success();
+    WindowServerConnection::the().async_set_wallpaper(path);
+    auto ret_val = WindowServerConnection::the().wait_for_specific_message<Messages::WindowClient::SetWallpaperFinished>()->success();
 
     if (ret_val && save_config) {
         RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("WindowManager");
@@ -59,7 +59,7 @@ bool Desktop::set_wallpaper(const StringView& path, bool save_config)
 
 String Desktop::wallpaper() const
 {
-    return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWallpaper>()->path();
+    return WindowServerConnection::the().get_wallpaper().path();
 }
 
 }

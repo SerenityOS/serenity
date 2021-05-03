@@ -20,7 +20,7 @@ class NotificationServerConnection : public IPC::ServerConnection<NotificationCl
 public:
     virtual void handshake() override
     {
-        send_sync<Messages::NotificationServer::Greet>();
+        greet();
     }
 
     virtual void die() override
@@ -51,7 +51,7 @@ void Notification::show()
     VERIFY(!m_shown && !m_destroyed);
     auto icon = m_icon ? m_icon->to_shareable_bitmap() : Gfx::ShareableBitmap();
     m_connection = NotificationServerConnection::construct(this);
-    m_connection->send_sync<Messages::NotificationServer::ShowNotification>(m_text, m_title, icon);
+    m_connection->show_notification(m_text, m_title, icon);
     m_shown = true;
 }
 
@@ -59,7 +59,7 @@ void Notification::close()
 {
     VERIFY(m_shown);
     if (!m_destroyed) {
-        m_connection->send_sync<Messages::NotificationServer::CloseNotification>();
+        m_connection->close_notification();
         connection_closed();
         return;
     }
@@ -73,13 +73,13 @@ bool Notification::update()
     }
 
     if (m_text_dirty || m_title_dirty) {
-        m_connection->send_sync<Messages::NotificationServer::UpdateNotificationText>(m_text, m_title);
+        m_connection->update_notification_text(m_text, m_title);
         m_text_dirty = false;
         m_title_dirty = false;
     }
 
     if (m_icon_dirty) {
-        m_connection->send_sync<Messages::NotificationServer::UpdateNotificationIcon>(m_icon ? m_icon->to_shareable_bitmap() : Gfx::ShareableBitmap());
+        m_connection->update_notification_icon(m_icon ? m_icon->to_shareable_bitmap() : Gfx::ShareableBitmap());
         m_icon_dirty = false;
     }
 

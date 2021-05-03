@@ -20,8 +20,7 @@ namespace AudioServer {
 class BufferQueue;
 class Mixer;
 
-class ClientConnection final : public IPC::ClientConnection<AudioClientEndpoint, AudioServerEndpoint>
-{
+class ClientConnection final : public IPC::ClientConnection<AudioClientEndpoint, AudioServerEndpoint> {
     C_OBJECT(ClientConnection)
 public:
     explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id, Mixer& mixer);

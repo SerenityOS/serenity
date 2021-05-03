@@ -109,7 +109,7 @@ void Window::move_to_front()
     if (!is_visible())
         return;
 
-    WindowServerConnection::the().send_sync<Messages::WindowServer::MoveWindowToFront>(m_window_id);
+    WindowServerConnection::the().move_window_to_front(m_window_id);
 }
 
 void Window::show()
@@ -119,7 +119,7 @@ void Window::show()
 
     auto* parent_window = find_parent_window();
 
-    auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateWindow>(
+    auto response = WindowServerConnection::the().create_window(
         m_rect_when_windowless,
         !m_moved_by_client,
         m_has_alpha_channel,
@@ -138,7 +138,7 @@ void Window::show()
         (i32)m_window_type,
         m_title_when_windowless,
         parent_window ? parent_window->window_id() : 0);
-    m_window_id = response->window_id();
+    m_window_id = response.window_id();
     m_visible = true;
 
     apply_icon();
@@ -178,10 +178,10 @@ void Window::hide()
 {
     if (!is_visible())
         return;
-    auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyWindow>(m_window_id);
+    auto response = WindowServerConnection::the().destroy_window(m_window_id);
     server_did_destroy();
 
-    for (auto child_window_id : response->destroyed_window_ids()) {
+    for (auto child_window_id : response.destroyed_window_ids()) {
         if (auto* window = Window::from_window_id(child_window_id)) {
             window->server_did_destroy();
         }
@@ -205,27 +205,27 @@ void Window::set_title(String title)
     m_title_when_windowless = move(title);
     if (!is_visible())
         return;
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowTitle>(m_window_id, m_title_when_windowless);
+    WindowServerConnection::the().set_window_title(m_window_id, m_title_when_windowless);
 }
 
 String Window::title() const
 {
     if (!is_visible())
         return m_title_when_windowless;
-    return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowTitle>(m_window_id)->title();
+    return WindowServerConnection::the().get_window_title(m_window_id).title();
 }
 
 Gfx::IntRect Window::applet_rect_on_screen() const
 {
     VERIFY(m_window_type == WindowType::Applet);
-    return WindowServerConnection::the().send_sync<Messages::WindowServer::GetAppletRectOnScreen>(m_window_id)->rect();
+    return WindowServerConnection::the().get_applet_rect_on_screen(m_window_id).rect();
 }
 
 Gfx::IntRect Window::rect() const
 {
     if (!is_visible())
         return m_rect_when_windowless;
-    return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowRect>(m_window_id)->rect();
+    return WindowServerConnection::the().get_window_rect(m_window_id).rect();
 }
 
 void Window::set_rect(const Gfx::IntRect& a_rect)
@@ -240,7 +240,7 @@ void Window::set_rect(const Gfx::IntRect& a_rect)
             m_main_widget->resize(m_rect_when_windowless.size());
         return;
     }
-    auto window_rect = WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowRect>(m_window_id, a_rect)->rect();
+    auto window_rect = WindowServerConnection::the().set_window_rect(m_window_id, a_rect).rect();
     if (m_back_store && m_back_store->size() != window_rect.size())
         m_back_store = nullptr;
     if (m_front_store && m_front_store->size() != window_rect.size())
@@ -254,7 +254,7 @@ Gfx::IntSize Window::minimum_size() const
     if (!is_visible())
         return m_minimum_size_when_windowless;
 
-    return WindowServerConnection::the().send_sync<Messages::WindowServer::GetWindowMinimumSize>(m_window_id)->size();
+    return WindowServerConnection::the().get_window_minimum_size(m_window_id).size();
 }
 
 void Window::set_minimum_size(const Gfx::IntSize& size)
@@ -263,7 +263,7 @@ void Window::set_minimum_size(const Gfx::IntSize& size)
     m_minimum_size_when_windowless = size;
 
     if (is_visible())
-        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowMinimumSize>(m_window_id, size);
+        WindowServerConnection::the().set_window_minimum_size(m_window_id, size);
 }
 
 void Window::center_on_screen()
@@ -297,10 +297,8 @@ void Window::set_window_type(WindowType window_type)
 
 void Window::make_window_manager(unsigned event_mask)
 {
-    GUI::WindowManagerServerConnection::the()
-        .post_message(Messages::WindowManagerServer::SetEventMask(event_mask));
-    GUI::WindowManagerServerConnection::the()
-        .post_message(Messages::WindowManagerServer::SetManagerWindow(m_window_id));
+    GUI::WindowManagerServerConnection::the().async_set_event_mask(event_mask);
+    GUI::WindowManagerServerConnection::the().async_set_manager_window(m_window_id);
 }
 
 void Window::set_cursor(Gfx::StandardCursor cursor)
@@ -418,7 +416,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         set_current_backing_store(*m_back_store, true);
 
     if (is_visible())
-        WindowServerConnection::the().post_message(Messages::WindowServer::DidFinishPainting(m_window_id, rects));
+        WindowServerConnection::the().async_did_finish_painting(m_window_id, rects);
 }
 
 void Window::handle_key_event(KeyEvent& event)
@@ -599,7 +597,7 @@ void Window::force_update()
     if (!is_visible())
         return;
     auto rect = this->rect();
-    WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, { { 0, 0, rect.width(), rect.height() } }, true));
+    WindowServerConnection::the().async_invalidate_rect(m_window_id, { { 0, 0, rect.width(), rect.height() } }, true);
 }
 
 void Window::update(const Gfx::IntRect& a_rect)
@@ -619,7 +617,7 @@ void Window::update(const Gfx::IntRect& a_rect)
             auto rects = move(m_pending_paint_event_rects);
             if (rects.is_empty())
                 return;
-            WindowServerConnection::the().post_message(Messages::WindowServer::InvalidateRect(m_window_id, rects, false));
+            WindowServerConnection::the().async_invalidate_rect(m_window_id, rects, false);
         });
     }
     m_pending_paint_event_rects.append(a_rect);
@@ -698,7 +696,7 @@ void Window::set_has_alpha_channel(bool value)
     m_back_store = nullptr;
     m_front_store = nullptr;
 
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowHasAlphaChannel>(m_window_id, value);
+    WindowServerConnection::the().set_window_has_alpha_channel(m_window_id, value);
     update();
 }
 
@@ -713,7 +711,7 @@ void Window::set_opacity(float opacity)
     m_opacity_when_windowless = opacity;
     if (!is_visible())
         return;
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowOpacity>(m_window_id, opacity);
+    WindowServerConnection::the().set_window_opacity(m_window_id, opacity);
 }
 
 void Window::set_alpha_hit_threshold(float threshold)
@@ -727,7 +725,7 @@ void Window::set_alpha_hit_threshold(float threshold)
     m_alpha_hit_threshold = threshold;
     if (!is_visible())
         return;
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowAlphaHitThreshold>(m_window_id, threshold);
+    WindowServerConnection::the().set_window_alpha_hit_threshold(m_window_id, threshold);
 }
 
 void Window::set_hovered_widget(Widget* widget)
@@ -747,7 +745,7 @@ void Window::set_hovered_widget(Widget* widget)
 void Window::set_current_backing_store(WindowBackingStore& backing_store, bool flush_immediately)
 {
     auto& bitmap = backing_store.bitmap();
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.anon_fd(), backing_store.serial(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
+    WindowServerConnection::the().set_window_backing_store(m_window_id, 32, bitmap.pitch(), bitmap.anon_fd(), backing_store.serial(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
 
 void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
@@ -832,12 +830,12 @@ void Window::apply_icon()
     if (!is_visible())
         return;
 
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->to_shareable_bitmap());
+    WindowServerConnection::the().set_window_icon_bitmap(m_window_id, m_icon->to_shareable_bitmap());
 }
 
 void Window::start_interactive_resize()
 {
-    WindowServerConnection::the().post_message(Messages::WindowServer::StartWindowResize(m_window_id));
+    WindowServerConnection::the().async_start_window_resize(m_window_id);
 }
 
 Vector<Widget*> Window::focusable_widgets(FocusSource source) const
@@ -888,7 +886,7 @@ void Window::set_fullscreen(bool fullscreen)
     m_fullscreen = fullscreen;
     if (!is_visible())
         return;
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetFullscreen>(m_window_id, fullscreen);
+    WindowServerConnection::the().set_fullscreen(m_window_id, fullscreen);
 }
 
 void Window::set_frameless(bool frameless)
@@ -898,7 +896,7 @@ void Window::set_frameless(bool frameless)
     m_frameless = frameless;
     if (!is_visible())
         return;
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetFrameless>(m_window_id, frameless);
+    WindowServerConnection::the().set_frameless(m_window_id, frameless);
 }
 
 bool Window::is_maximized() const
@@ -906,7 +904,7 @@ bool Window::is_maximized() const
     if (!is_visible())
         return false;
 
-    return WindowServerConnection::the().send_sync<Messages::WindowServer::IsMaximized>(m_window_id)->maximized();
+    return WindowServerConnection::the().is_maximized(m_window_id).maximized();
 }
 
 void Window::schedule_relayout()
@@ -924,7 +922,7 @@ void Window::schedule_relayout()
 
 void Window::refresh_system_theme()
 {
-    WindowServerConnection::the().post_message(Messages::WindowServer::RefreshSystemTheme());
+    WindowServerConnection::the().async_refresh_system_theme();
 }
 
 void Window::for_each_window(Badge<WindowServerConnection>, Function<void(Window&)> callback)
@@ -981,7 +979,7 @@ void Window::set_base_size(const Gfx::IntSize& base_size)
         return;
     m_base_size = base_size;
     if (is_visible())
-        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
+        WindowServerConnection::the().set_window_base_size_and_size_increment(m_window_id, m_base_size, m_size_increment);
 }
 
 void Window::set_size_increment(const Gfx::IntSize& size_increment)
@@ -990,7 +988,7 @@ void Window::set_size_increment(const Gfx::IntSize& size_increment)
         return;
     m_size_increment = size_increment;
     if (is_visible())
-        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
+        WindowServerConnection::the().set_window_base_size_and_size_increment(m_window_id, m_base_size, m_size_increment);
 }
 
 void Window::set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
@@ -1000,7 +998,7 @@ void Window::set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
 
     m_resize_aspect_ratio = ratio;
     if (is_visible())
-        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowResizeAspectRatio>(m_window_id, m_resize_aspect_ratio);
+        WindowServerConnection::the().set_window_resize_aspect_ratio(m_window_id, m_resize_aspect_ratio);
 }
 
 void Window::did_add_widget(Badge<Widget>, Widget&)
@@ -1024,7 +1022,7 @@ void Window::did_remove_widget(Badge<Widget>, Widget& widget)
 void Window::set_progress(Optional<int> progress)
 {
     VERIFY(m_window_id);
-    WindowServerConnection::the().post_message(Messages::WindowServer::SetWindowProgress(m_window_id, progress));
+    WindowServerConnection::the().async_set_window_progress(m_window_id, progress);
 }
 
 void Window::update_cursor()
@@ -1041,9 +1039,9 @@ void Window::update_cursor()
     m_effective_cursor = new_cursor;
 
     if (m_custom_cursor)
-        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCustomCursor>(m_window_id, m_custom_cursor->to_shareable_bitmap());
+        WindowServerConnection::the().set_window_custom_cursor(m_window_id, m_custom_cursor->to_shareable_bitmap());
     else
-        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCursor>(m_window_id, (u32)m_effective_cursor);
+        WindowServerConnection::the().set_window_cursor(m_window_id, (u32)m_effective_cursor);
 }
 
 void Window::focus_a_widget_if_possible(FocusSource source)
@@ -1078,7 +1076,7 @@ void Window::set_menubar(RefPtr<Menubar> menubar)
     m_menubar = move(menubar);
     if (m_window_id && m_menubar) {
         m_menubar->notify_added_to_window({});
-        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowMenubar>(m_window_id, m_menubar->menubar_id());
+        WindowServerConnection::the().set_window_menubar(m_window_id, m_menubar->menubar_id());
     }
 }
 
@@ -1086,14 +1084,14 @@ bool Window::is_modified() const
 {
     if (!m_window_id)
         return false;
-    return WindowServerConnection::the().send_sync<Messages::WindowServer::IsWindowModified>(m_window_id)->modified();
+    return WindowServerConnection::the().is_window_modified(m_window_id).modified();
 }
 
 void Window::set_modified(bool modified)
 {
     if (!m_window_id)
         return;
-    WindowServerConnection::the().post_message(Messages::WindowServer::SetWindowModified(m_window_id, modified));
+    WindowServerConnection::the().async_set_window_modified(m_window_id, modified);
 }
 
 }

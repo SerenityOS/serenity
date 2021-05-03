@@ -134,7 +134,7 @@ public:
         VERIFY(window_id >= 0);
 
         set_global_cursor_tracking(true);
-        GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetGlobalCursorTracking>(window_id, true);
+        GUI::WindowServerConnection::the().set_global_cursor_tracking(window_id, true);
     }
 
     void start_the_timer() { m_timer.start(); }

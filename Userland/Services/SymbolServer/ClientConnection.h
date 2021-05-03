@@ -16,8 +16,7 @@
 namespace SymbolServer {
 
 class ClientConnection final
-    : public IPC::ClientConnection<SymbolClientEndpoint, SymbolServerEndpoint>
-{
+    : public IPC::ClientConnection<SymbolClientEndpoint, SymbolServerEndpoint> {
     C_OBJECT(ClientConnection);
 
 public:

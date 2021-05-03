@@ -18,12 +18,12 @@ RequestClient::RequestClient()
 
 void RequestClient::handshake()
 {
-    send_sync<Messages::RequestServer::Greet>();
+    greet();
 }
 
 bool RequestClient::is_supported_protocol(const String& protocol)
 {
-    return send_sync<Messages::RequestServer::IsSupportedProtocol>(protocol)->supported();
+    return IPCProxy::is_supported_protocol(protocol).supported();
 }
 
 template<typename RequestHashMapTraits>
@@ -33,29 +33,30 @@ RefPtr<Request> RequestClient::start_request(const String& method, const String&
     for (auto& it : request_headers)
         header_dictionary.add(it.key, it.value);
 
-    auto response = send_sync<Messages::RequestServer::StartRequest>(method, url, header_dictionary, ByteBuffer::copy(request_body));
-    auto request_id = response->request_id();
-    if (request_id < 0 || !response->response_fd().has_value())
+    auto response = IPCProxy::start_request(method, url, header_dictionary, ByteBuffer::copy(request_body));
+    auto request_id = response.request_id();
+    if (request_id < 0 || !response.response_fd().has_value())
         return nullptr;
-    auto response_fd = response->response_fd().value().take_fd();
+    auto response_fd = response.response_fd().value().take_fd();
     auto request = Request::create_from_id({}, *this, request_id);
     request->set_request_fd({}, response_fd);
     m_requests.set(request_id, request);
     return request;
+    return nullptr;
 }
 
 bool RequestClient::stop_request(Badge<Request>, Request& request)
 {
     if (!m_requests.contains(request.id()))
         return false;
-    return send_sync<Messages::RequestServer::StopRequest>(request.id())->success();
+    return IPCProxy::stop_request(request.id()).success();
 }
 
 bool RequestClient::set_certificate(Badge<Request>, Request& request, String certificate, String key)
 {
     if (!m_requests.contains(request.id()))
         return false;
-    return send_sync<Messages::RequestServer::SetCertificate>(request.id(), move(certificate), move(key))->success();
+    return IPCProxy::set_certificate(request.id(), move(certificate), move(key)).success();
 }
 
 void RequestClient::request_finished(i32 request_id, bool success, u32 total_size)
