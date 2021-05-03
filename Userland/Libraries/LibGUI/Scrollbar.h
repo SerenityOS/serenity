@@ -47,8 +47,6 @@ private:
     int button_height() const { return orientation() == Orientation::Horizontal ? height() : button_size(); }
     Gfx::IntRect decrement_button_rect() const;
     Gfx::IntRect increment_button_rect() const;
-    Gfx::IntRect decrement_gutter_rect() const;
-    Gfx::IntRect increment_gutter_rect() const;
     Gfx::IntRect scrubber_rect() const;
     int unclamped_scrubber_size() const;
     int visible_scrubber_size() const;

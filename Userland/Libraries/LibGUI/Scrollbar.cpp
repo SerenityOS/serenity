@@ -110,23 +110,6 @@ Gfx::IntRect Scrollbar::increment_button_rect() const
         return { width() - button_width(), 0, button_width(), button_height() };
 }
 
-Gfx::IntRect Scrollbar::decrement_gutter_rect() const
-{
-    if (orientation() == Orientation::Vertical)
-        return { 0, button_height(), button_width(), scrubber_rect().top() - button_height() };
-    else
-        return { button_width(), 0, scrubber_rect().x() - button_width(), button_height() };
-}
-
-Gfx::IntRect Scrollbar::increment_gutter_rect() const
-{
-    auto scrubber_rect = this->scrubber_rect();
-    if (orientation() == Orientation::Vertical)
-        return { 0, scrubber_rect.bottom() + 1, button_width(), height() - button_height() - scrubber_rect.bottom() - 1 };
-    else
-        return { scrubber_rect.right() + 1, 0, width() - button_width() - scrubber_rect.right() - 1, button_width() };
-}
-
 int Scrollbar::scrubbable_range_in_pixels() const
 {
     if (orientation() == Orientation::Vertical)
