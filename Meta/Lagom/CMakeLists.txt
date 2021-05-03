@@ -11,6 +11,10 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang$")
     # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overloaded-virtual -Wno-user-defined-literals -fconstexpr-steps=16777216")
 
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-constexpr")
+    endif()
+
     if (ENABLE_ADDRESS_SANITIZER)
         add_definitions(-fsanitize=address -fno-omit-frame-pointer)
         set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=address")
