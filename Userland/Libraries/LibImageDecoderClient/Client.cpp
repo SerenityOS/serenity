@@ -23,7 +23,7 @@ void Client::die()
 
 void Client::handshake()
 {
-    send_sync<Messages::ImageDecoderServer::Greet>();
+    greet();
 }
 
 void Client::dummy()

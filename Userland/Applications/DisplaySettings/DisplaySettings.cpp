@@ -264,9 +264,9 @@ void DisplaySettingsWidget::send_settings_to_window_server()
     }
 
     if (current_resolution != m_monitor_widget->desktop_resolution() || current_scale_factor != m_monitor_widget->desktop_scale_factor()) {
-        auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_monitor_widget->desktop_resolution(), m_monitor_widget->desktop_scale_factor());
-        if (!result->success()) {
-            GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result->resolution().width(), result->resolution().height(), result->scale_factor()),
+        auto result = GUI::WindowServerConnection::the().set_resolution(m_monitor_widget->desktop_resolution(), m_monitor_widget->desktop_scale_factor());
+        if (!result.success()) {
+            GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result.resolution().width(), result.resolution().height(), result.scale_factor()),
                 "Unable to set resolution", GUI::MessageBox::Type::Error);
         } else {
             auto box = GUI::MessageBox::construct(window(), String::formatted("Do you want to keep the new settings? They will be reverted after 10 seconds."),
@@ -282,9 +282,9 @@ void DisplaySettingsWidget::send_settings_to_window_server()
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.
             if (box->exec() != GUI::MessageBox::ExecYes) {
-                result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(current_resolution, current_scale_factor);
-                if (!result->success()) {
-                    GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result->resolution().width(), result->resolution().height(), result->scale_factor()),
+                result = GUI::WindowServerConnection::the().set_resolution(current_resolution, current_scale_factor);
+                if (!result.success()) {
+                    GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result.resolution().width(), result.resolution().height(), result.scale_factor()),
                         "Unable to set resolution", GUI::MessageBox::Type::Error);
                 }
             }

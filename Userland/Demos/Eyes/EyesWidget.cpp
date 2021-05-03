@@ -22,7 +22,7 @@ void EyesWidget::track_cursor_globally()
     VERIFY(window_id >= 0);
 
     set_global_cursor_tracking(true);
-    GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetGlobalCursorTracking>(window_id, true);
+    GUI::WindowServerConnection::the().set_global_cursor_tracking(window_id, true);
 }
 
 void EyesWidget::mousemove_event(GUI::MouseEvent& event)

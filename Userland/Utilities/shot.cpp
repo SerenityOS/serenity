@@ -34,9 +34,9 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
     sleep(delay);
-    auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetScreenBitmap>();
+    auto response = GUI::WindowServerConnection::the().get_screen_bitmap();
 
-    auto* bitmap = response->bitmap().bitmap();
+    auto* bitmap = response.bitmap().bitmap();
     if (!bitmap) {
         warnln("Failed to grab screenshot");
         return 1;

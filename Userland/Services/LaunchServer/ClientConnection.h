@@ -12,8 +12,7 @@
 
 namespace LaunchServer {
 
-class ClientConnection final : public IPC::ClientConnection<LaunchClientEndpoint, LaunchServerEndpoint>
-{
+class ClientConnection final : public IPC::ClientConnection<LaunchClientEndpoint, LaunchServerEndpoint> {
     C_OBJECT(ClientConnection)
 public:
     ~ClientConnection() override;

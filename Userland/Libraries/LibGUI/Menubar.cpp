@@ -30,14 +30,14 @@ Menu& Menubar::add_menu(String name)
 
 int Menubar::realize_menubar()
 {
-    return WindowServerConnection::the().send_sync<Messages::WindowServer::CreateMenubar>()->menubar_id();
+    return WindowServerConnection::the().create_menubar().menubar_id();
 }
 
 void Menubar::unrealize_menubar()
 {
     if (m_menubar_id == -1)
         return;
-    WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyMenubar>(m_menubar_id);
+    WindowServerConnection::the().destroy_menubar(m_menubar_id);
     m_menubar_id = -1;
 }
 
@@ -49,7 +49,7 @@ void Menubar::notify_added_to_window(Badge<Window>)
     for (auto& menu : m_menus) {
         int menu_id = menu.realize_menu();
         VERIFY(menu_id != -1);
-        WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuToMenubar>(m_menubar_id, menu_id);
+        WindowServerConnection::the().add_menu_to_menubar(m_menubar_id, menu_id);
     }
 }
 

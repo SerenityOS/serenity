@@ -135,7 +135,7 @@ void ClientConnection::flush_pending_paint_requests()
 {
     for (auto& pending_paint : m_pending_paint_requests) {
         m_page_host->paint(pending_paint.content_rect, *pending_paint.bitmap);
-        post_message(Messages::WebContentClient::DidPaint(pending_paint.content_rect, pending_paint.bitmap_id));
+        async_did_paint(pending_paint.content_rect, pending_paint.bitmap_id);
     }
     m_pending_paint_requests.clear();
 }
@@ -209,7 +209,7 @@ void ClientConnection::debug_request(const String& request, const String& argume
 void ClientConnection::get_source()
 {
     if (auto* doc = page().main_frame().document()) {
-        post_message(Messages::WebContentClient::DidGetSource(doc->url(), doc->source()));
+        async_did_get_source(doc->url(), doc->source());
     }
 }
 

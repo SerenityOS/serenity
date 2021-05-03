@@ -43,7 +43,7 @@ static i32 s_next_callback_id = 1;
 i32 DisplayLink::register_callback(Function<void(i32)> callback)
 {
     if (callbacks().is_empty())
-        WindowServerConnection::the().post_message(Messages::WindowServer::EnableDisplayLink());
+        WindowServerConnection::the().async_enable_display_link();
 
     i32 callback_id = s_next_callback_id++;
     callbacks().set(callback_id, adopt_ref(*new DisplayLinkCallback(callback_id, move(callback))));
@@ -57,7 +57,7 @@ bool DisplayLink::unregister_callback(i32 callback_id)
     callbacks().remove(callback_id);
 
     if (callbacks().is_empty())
-        WindowServerConnection::the().post_message(Messages::WindowServer::DisableDisplayLink());
+        WindowServerConnection::the().async_disable_display_link();
 
     return true;
 }

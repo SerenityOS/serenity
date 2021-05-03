@@ -77,26 +77,26 @@ void ClientConnection::did_receive_headers(Badge<Request>, Request& request)
     for (auto& it : request.response_headers())
         response_headers.add(it.key, it.value);
 
-    post_message(Messages::RequestClient::HeadersBecameAvailable(request.id(), move(response_headers), request.status_code()));
+    async_headers_became_available(request.id(), move(response_headers), request.status_code());
 }
 
 void ClientConnection::did_finish_request(Badge<Request>, Request& request, bool success)
 {
     VERIFY(request.total_size().has_value());
 
-    post_message(Messages::RequestClient::RequestFinished(request.id(), success, request.total_size().value()));
+    async_request_finished(request.id(), success, request.total_size().value());
 
     m_requests.remove(request.id());
 }
 
 void ClientConnection::did_progress_request(Badge<Request>, Request& request)
 {
-    post_message(Messages::RequestClient::RequestProgress(request.id(), request.total_size(), request.downloaded_size()));
+    async_request_progress(request.id(), request.total_size(), request.downloaded_size());
 }
 
 void ClientConnection::did_request_certificates(Badge<Request>, Request& request)
 {
-    post_message(Messages::RequestClient::CertificateRequested(request.id()));
+    async_certificate_requested(request.id());
 }
 
 void ClientConnection::greet()

@@ -16,8 +16,7 @@
 namespace ImageDecoder {
 
 class ClientConnection final
-    : public IPC::ClientConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>
-{
+    : public IPC::ClientConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint> {
     C_OBJECT(ClientConnection);
 
 public:

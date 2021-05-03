@@ -29,7 +29,6 @@ template<typename LocalEndpoint, typename PeerEndpoint>
 class Connection : public Core::Object {
 public:
     using LocalStub = typename LocalEndpoint::Stub;
-    using PeerProxy = typename PeerEndpoint::Proxy;
 
     Connection(LocalStub& local_stub, NonnullRefPtr<Core::LocalSocket> socket)
         : m_local_stub(local_stub)

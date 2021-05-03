@@ -24,8 +24,8 @@ int main(int argc, char** argv)
     // A Core::EventLoop is all we need, but WindowServerConnection needs a full Application object.
     char* dummy_argv[] = { argv[0] };
     auto app = GUI::Application::construct(1, dummy_argv);
-    auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(Gfx::IntSize { width, height }, scale);
-    if (!result->success()) {
+    auto result = GUI::WindowServerConnection::the().set_resolution(Gfx::IntSize { width, height }, scale);
+    if (!result.success()) {
         warnln("failed to set resolution");
         return 1;
     }
