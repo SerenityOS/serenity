@@ -83,8 +83,8 @@ static StorageFormat determine_storage_format(BitmapFormat format)
 struct BackingStore;
 
 enum RotationDirection {
-    Left,
-    Right
+    CounterClockwise,
+    Clockwise
 };
 
 class Bitmap : public RefCounted<Bitmap> {
