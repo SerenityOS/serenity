@@ -471,6 +471,8 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
 
 void WindowManager::start_window_move(Window& window, const MouseEvent& event)
 {
+    MenuManager::the().close_everyone();
+
     dbgln_if(MOVE_DEBUG, "[WM] Begin moving Window({})", &window);
 
     move_to_front_and_make_active(window);
@@ -483,6 +485,8 @@ void WindowManager::start_window_move(Window& window, const MouseEvent& event)
 
 void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& position, MouseButton button)
 {
+    MenuManager::the().close_everyone();
+
     move_to_front_and_make_active(window);
     constexpr ResizeDirection direction_for_hot_area[3][3] = {
         { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
