@@ -232,9 +232,9 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
         document().adopt_node(node_to_insert);
 
         if (!child)
-            TreeNode<Node>::append_child(node);
+            TreeNode<Node>::append_child(node_to_insert);
         else
-            TreeNode<Node>::insert_before(node, child);
+            TreeNode<Node>::insert_before(node_to_insert, child);
 
         // FIXME: If parent is a shadow host and node is a slottable, then assign a slot for node.
         // FIXME: If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run signal a slot change for parent.
