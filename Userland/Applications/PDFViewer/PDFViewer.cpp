@@ -135,5 +135,16 @@ RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height });
 
     PDF::Renderer::render(*m_document, page, bitmap);
+
+    if (page.rotate != 0) {
+        int rotation_count = (page.rotate / 90) % 4;
+        if (rotation_count == 3) {
+            bitmap = bitmap->rotated(Gfx::RotationDirection::CounterClockwise);
+        } else {
+            for (int i = 0; i < rotation_count; i++)
+                bitmap = bitmap->rotated(Gfx::RotationDirection::Clockwise);
+        }
+    }
+
     return bitmap;
 }

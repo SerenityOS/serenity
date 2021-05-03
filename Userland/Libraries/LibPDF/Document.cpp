@@ -92,7 +92,13 @@ Page Document::get_page(u32 index)
     if (raw_page_object->contains("UserUnit"))
         user_unit = raw_page_object->get_value("UserUnit").to_float();
 
-    Page page { resources, contents, media_box, crop_box, user_unit };
+    int rotate = 0;
+    if (raw_page_object->contains("Rotate")) {
+        rotate = raw_page_object->get_value("Rotate").as_int();
+        VERIFY(rotate % 90 == 0);
+    }
+
+    Page page { resources, contents, media_box, crop_box, user_unit, rotate };
     m_pages.set(index, page);
     return page;
 }
