@@ -18,16 +18,16 @@ namespace IPC {
 class Message;
 class MessageBuffer;
 
-class Endpoint {
+class Stub {
 public:
-    virtual ~Endpoint();
+    virtual ~Stub();
 
     virtual u32 magic() const = 0;
     virtual String name() const = 0;
     virtual OwnPtr<MessageBuffer> handle(const Message&) = 0;
 
 protected:
-    Endpoint();
+    Stub();
 
 private:
     String m_name;

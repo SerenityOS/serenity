@@ -15,8 +15,7 @@ namespace Clipboard {
 
 class ClientConnection final
     : public IPC::ClientConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>
-    , public ClipboardServerEndpoint {
-
+{
     C_OBJECT(ClientConnection);
 
 public:

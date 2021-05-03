@@ -15,8 +15,7 @@ namespace LookupServer {
 
 class ClientConnection final
     : public IPC::ClientConnection<LookupClientEndpoint, LookupServerEndpoint>
-    , public LookupServerEndpoint {
-
+{
     C_OBJECT(ClientConnection);
 
 public:
