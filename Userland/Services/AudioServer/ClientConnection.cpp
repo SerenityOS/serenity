@@ -46,17 +46,17 @@ void ClientConnection::die()
 
 void ClientConnection::did_finish_playing_buffer(Badge<BufferQueue>, int buffer_id)
 {
-    post_message(Messages::AudioClient::FinishedPlayingBuffer(buffer_id));
+    async_finished_playing_buffer(buffer_id);
 }
 
 void ClientConnection::did_change_muted_state(Badge<Mixer>, bool muted)
 {
-    post_message(Messages::AudioClient::MutedStateChanged(muted));
+    async_muted_state_changed(muted);
 }
 
 void ClientConnection::did_change_main_mix_volume(Badge<Mixer>, int volume)
 {
-    post_message(Messages::AudioClient::MainMixVolumeChanged(volume));
+    async_main_mix_volume_changed(volume);
 }
 
 void ClientConnection::greet()

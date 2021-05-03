@@ -26,29 +26,26 @@ TaskbarButton::~TaskbarButton()
 
 void TaskbarButton::context_menu_event(GUI::ContextMenuEvent&)
 {
-    GUI::WindowManagerServerConnection::the().post_message(
-        Messages::WindowManagerServer::PopupWindowMenu(
-            m_identifier.client_id(),
-            m_identifier.window_id(),
-            screen_relative_rect().location()));
+    GUI::WindowManagerServerConnection::the().async_popup_window_menu(
+        m_identifier.client_id(),
+        m_identifier.window_id(),
+        screen_relative_rect().location());
 }
 
 void TaskbarButton::update_taskbar_rect()
 {
-    GUI::WindowManagerServerConnection::the().post_message(
-        Messages::WindowManagerServer::SetWindowTaskbarRect(
-            m_identifier.client_id(),
-            m_identifier.window_id(),
-            screen_relative_rect()));
+    GUI::WindowManagerServerConnection::the().async_set_window_taskbar_rect(
+        m_identifier.client_id(),
+        m_identifier.window_id(),
+        screen_relative_rect());
 }
 
 void TaskbarButton::clear_taskbar_rect()
 {
-    GUI::WindowManagerServerConnection::the().post_message(
-        Messages::WindowManagerServer::SetWindowTaskbarRect(
-            m_identifier.client_id(),
-            m_identifier.window_id(),
-            {}));
+    GUI::WindowManagerServerConnection::the().async_set_window_taskbar_rect(
+        m_identifier.client_id(),
+        m_identifier.window_id(),
+        {});
 }
 
 void TaskbarButton::resize_event(GUI::ResizeEvent& event)

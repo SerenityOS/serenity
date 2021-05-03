@@ -254,9 +254,9 @@ int main(int argc, char** argv)
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/Encoder.h>
-#include <LibIPC/Stub.h>
 #include <LibIPC/File.h>
 #include <LibIPC/Message.h>
+#include <LibIPC/Stub.h>
 )~~~");
 
     for (auto& endpoint : endpoints) {

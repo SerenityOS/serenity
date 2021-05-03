@@ -316,7 +316,7 @@ void TreeMapWidget::mousewheel_event(GUI::MouseEvent& event)
 {
     int delta = event.wheel_delta();
     // FIXME: The wheel_delta is premultiplied in the window server, we actually want a raw value here.
-    int step_size = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetScrollStepSize>()->step_size();
+    int step_size = GUI::WindowServerConnection::the().get_scroll_step_size().step_size();
     if (delta > 0) {
         size_t step_back = delta / step_size;
         if (step_back > m_viewpoint)

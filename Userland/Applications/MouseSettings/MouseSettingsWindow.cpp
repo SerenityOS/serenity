@@ -24,9 +24,9 @@ constexpr int double_click_speed_default = 250;
 void MouseSettingsWindow::update_window_server()
 {
     const float factor = m_speed_slider->value() / speed_slider_scale;
-    GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetMouseAcceleration>(factor);
-    GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetScrollStepSize>(m_scroll_length_spinbox->value());
-    GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetDoubleClickSpeed>(m_double_click_speed_slider->value());
+    GUI::WindowServerConnection::the().set_mouse_acceleration(factor);
+    GUI::WindowServerConnection::the().set_scroll_step_size(m_scroll_length_spinbox->value());
+    GUI::WindowServerConnection::the().set_double_click_speed(m_double_click_speed_slider->value());
 }
 
 void MouseSettingsWindow::reset_default_values()
@@ -48,12 +48,12 @@ MouseSettingsWindow::MouseSettingsWindow()
     m_speed_slider->on_change = [&](const int value) {
         m_speed_label->set_text(String::formatted("{} %", value));
     };
-    const int slider_value = float { speed_slider_scale } * GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetMouseAcceleration>()->factor();
+    const int slider_value = float { speed_slider_scale } * GUI::WindowServerConnection::the().get_mouse_acceleration().factor();
     m_speed_slider->set_value(slider_value);
 
     m_scroll_length_spinbox = *main_widget.find_descendant_of_type_named<GUI::SpinBox>("scroll_length_spinbox");
     m_scroll_length_spinbox->set_min(WindowServer::scroll_step_size_min);
-    m_scroll_length_spinbox->set_value(GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetScrollStepSize>()->step_size());
+    m_scroll_length_spinbox->set_value(GUI::WindowServerConnection::the().get_scroll_step_size().step_size());
 
     m_double_click_speed_label = *main_widget.find_descendant_of_type_named<GUI::Label>("double_click_speed_label");
     m_double_click_speed_slider = *main_widget.find_descendant_of_type_named<GUI::HorizontalSlider>("double_click_speed_slider");
@@ -62,7 +62,7 @@ MouseSettingsWindow::MouseSettingsWindow()
     m_double_click_speed_slider->on_change = [&](const int value) {
         m_double_click_speed_label->set_text(String::formatted("{} ms", value));
     };
-    m_double_click_speed_slider->set_value(GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetDoubleClickSpeed>()->speed());
+    m_double_click_speed_slider->set_value(GUI::WindowServerConnection::the().get_double_click_speed().speed());
 
     m_ok_button = *main_widget.find_descendant_of_type_named<GUI::Button>("ok_button");
     m_ok_button->on_click = [this](auto) {

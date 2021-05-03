@@ -43,14 +43,14 @@ void LanguageClient::open_file(const String& path, int fd)
 {
     if (!m_connection_wrapper.connection())
         return;
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::FileOpened(path, fd));
+    m_connection_wrapper.connection()->async_file_opened(path, fd);
 }
 
 void LanguageClient::set_file_content(const String& path, const String& content)
 {
     if (!m_connection_wrapper.connection())
         return;
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::SetFileContent(path, content));
+    m_connection_wrapper.connection()->async_set_file_content(path, content);
 }
 
 void LanguageClient::insert_text(const String& path, const String& text, size_t line, size_t column)
@@ -58,14 +58,14 @@ void LanguageClient::insert_text(const String& path, const String& text, size_t 
     if (!m_connection_wrapper.connection())
         return;
     //    set_active_client();
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::FileEditInsertText(path, text, line, column));
+    m_connection_wrapper.connection()->async_file_edit_insert_text(path, text, line, column);
 }
 
 void LanguageClient::remove_text(const String& path, size_t from_line, size_t from_column, size_t to_line, size_t to_column)
 {
     if (!m_connection_wrapper.connection())
         return;
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::FileEditRemoveText(path, from_line, from_column, to_line, to_column));
+    m_connection_wrapper.connection()->async_file_edit_remove_text(path, from_line, from_column, to_line, to_column);
 }
 
 void LanguageClient::request_autocomplete(const String& path, size_t cursor_line, size_t cursor_column)
@@ -73,7 +73,7 @@ void LanguageClient::request_autocomplete(const String& path, size_t cursor_line
     if (!m_connection_wrapper.connection())
         return;
     set_active_client();
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::AutoCompleteSuggestions(GUI::AutocompleteProvider::ProjectLocation { path, cursor_line, cursor_column }));
+    m_connection_wrapper.connection()->async_auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation { path, cursor_line, cursor_column });
 }
 
 void LanguageClient::provide_autocomplete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>& suggestions) const
@@ -88,7 +88,7 @@ void LanguageClient::set_autocomplete_mode(const String& mode)
 {
     if (!m_connection_wrapper.connection())
         return;
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::SetAutoCompleteMode(mode));
+    m_connection_wrapper.connection()->async_set_auto_complete_mode(mode);
 }
 
 void LanguageClient::set_active_client()
@@ -110,7 +110,7 @@ void LanguageClient::search_declaration(const String& path, size_t line, size_t 
     if (!m_connection_wrapper.connection())
         return;
     set_active_client();
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::FindDeclaration(GUI::AutocompleteProvider::ProjectLocation { path, line, column }));
+    m_connection_wrapper.connection()->async_find_declaration(GUI::AutocompleteProvider::ProjectLocation { path, line, column });
 }
 
 void LanguageClient::declaration_found(const String& file, size_t line, size_t column) const
@@ -221,7 +221,7 @@ void ServerConnectionWrapper::try_respawn_connection()
     project().for_each_text_file([this](const ProjectFile& file) {
         if (file.code_document().language() != m_language)
             return;
-        m_connection->post_message(Messages::LanguageServer::SetFileContent(file.code_document().file_path(), file.document().text()));
+        m_connection->async_set_file_content(file.code_document().file_path(), file.document().text());
     });
 }
 

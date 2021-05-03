@@ -74,7 +74,7 @@ void MenuItem::update_window_server()
         return;
     auto& action = *m_action;
     auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_string() : String();
-    WindowServerConnection::the().send_sync<Messages::WindowServer::UpdateMenuItem>(m_menu_id, m_identifier, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, m_default, shortcut_text);
+    WindowServerConnection::the().update_menu_item(m_menu_id, m_identifier, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, m_default, shortcut_text);
 }
 
 void MenuItem::set_menu_id(Badge<Menu>, unsigned int menu_id)

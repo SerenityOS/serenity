@@ -38,7 +38,7 @@ public:
 
     virtual void handshake() override
     {
-        send_sync<Messages::LanguageServer::Greet>(m_project_path);
+        greet(m_project_path);
     }
 
     WeakPtr<LanguageClient> language_client() { return m_current_language_client; }

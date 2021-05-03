@@ -78,7 +78,7 @@ void ClientConnection::die()
 
 void ClientConnection::notify_about_new_screen_rect(Gfx::IntRect const& rect)
 {
-    post_message(Messages::WindowClient::ScreenRectChanged(rect));
+    async_screen_rect_changed(rect);
 }
 
 Messages::WindowServer::CreateMenubarResponse ClientConnection::create_menubar()
@@ -278,10 +278,10 @@ void ClientConnection::set_window_opacity(i32 window_id, float opacity)
     it->value->set_opacity(opacity);
 }
 
-void ClientConnection::async_set_wallpaper(String const& path)
+void ClientConnection::set_wallpaper(String const& path)
 {
     Compositor::the().set_wallpaper(path, [&](bool success) {
-        post_message(Messages::WindowClient::AsyncSetWallpaperFinished(success));
+        async_set_wallpaper_finished(success);
     });
 }
 
@@ -544,7 +544,7 @@ void ClientConnection::post_paint_message(Window& window, bool ignore_occlusion)
     if (window.is_minimized() || (!ignore_occlusion && window.is_occluded()))
         return;
 
-    post_message(Messages::WindowClient::Paint(window.window_id(), window.size(), rect_set.rects()));
+    async_paint(window.window_id(), window.size(), rect_set.rects());
 }
 
 void ClientConnection::invalidate_rect(i32 window_id, Vector<Gfx::IntRect> const& rects, bool ignore_occlusion)
@@ -755,7 +755,7 @@ void ClientConnection::notify_display_link(Badge<Compositor>)
     if (!m_has_display_link)
         return;
 
-    post_message(Messages::WindowClient::DisplayLinkNotification());
+    async_display_link_notification();
 }
 
 void ClientConnection::set_window_progress(i32 window_id, Optional<i32> const& progress)
@@ -771,7 +771,7 @@ void ClientConnection::set_window_progress(i32 window_id, Optional<i32> const& p
 void ClientConnection::refresh_system_theme()
 {
     // Post the client an UpdateSystemTheme message to refresh its theme.
-    post_message(Messages::WindowClient::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
+    async_update_system_theme(Gfx::current_system_theme_buffer());
 }
 
 void ClientConnection::pong()
@@ -847,7 +847,7 @@ void ClientConnection::set_unresponsive(bool unresponsive)
 
 void ClientConnection::may_have_become_unresponsive()
 {
-    post_message(Messages::WindowClient::Ping());
+    async_ping();
     m_ping_timer = Core::Timer::create_single_shot(1000, [this] {
         set_unresponsive(true);
     });

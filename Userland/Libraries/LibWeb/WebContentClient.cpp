@@ -26,7 +26,7 @@ void WebContentClient::die()
 
 void WebContentClient::handshake()
 {
-    send_sync<Messages::WebContentServer::Greet>();
+    greet();
 }
 
 void WebContentClient::did_paint(const Gfx::IntRect&, i32 bitmap_id)

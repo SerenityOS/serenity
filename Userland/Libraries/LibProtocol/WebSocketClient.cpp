@@ -17,7 +17,7 @@ WebSocketClient::WebSocketClient()
 
 void WebSocketClient::handshake()
 {
-    send_sync<Messages::WebSocketServer::Greet>();
+    greet();
 }
 
 RefPtr<WebSocket> WebSocketClient::connect(const URL& url, const String& origin, const Vector<String>& protocols, const Vector<String>& extensions, const HashMap<String, String>& request_headers)
@@ -25,8 +25,8 @@ RefPtr<WebSocket> WebSocketClient::connect(const URL& url, const String& origin,
     IPC::Dictionary header_dictionary;
     for (auto& it : request_headers)
         header_dictionary.add(it.key, it.value);
-    auto response = send_sync<Messages::WebSocketServer::Connect>(url, origin, protocols, extensions, header_dictionary);
-    auto connection_id = response->connection_id();
+    auto response = IPCProxy::connect(url, origin, protocols, extensions, header_dictionary);
+    auto connection_id = response.connection_id();
     if (connection_id < 0)
         return nullptr;
     auto connection = WebSocket::create_from_id({}, *this, connection_id);
@@ -38,28 +38,28 @@ u32 WebSocketClient::ready_state(Badge<WebSocket>, WebSocket& connection)
 {
     if (!m_connections.contains(connection.id()))
         return (u32)WebSocket::ReadyState::Closed;
-    return send_sync<Messages::WebSocketServer::ReadyState>(connection.id())->ready_state();
+    return IPCProxy::ready_state(connection.id()).ready_state();
 }
 
 void WebSocketClient::send(Badge<WebSocket>, WebSocket& connection, ByteBuffer data, bool is_text)
 {
     if (!m_connections.contains(connection.id()))
         return;
-    post_message(Messages::WebSocketServer::Send(connection.id(), is_text, move(data)));
+    async_send(connection.id(), is_text, move(data));
 }
 
 void WebSocketClient::close(Badge<WebSocket>, WebSocket& connection, u16 code, String message)
 {
     if (!m_connections.contains(connection.id()))
         return;
-    post_message(Messages::WebSocketServer::Close(connection.id(), code, move(message)));
+    async_close(connection.id(), code, move(message));
 }
 
 bool WebSocketClient::set_certificate(Badge<WebSocket>, WebSocket& connection, String certificate, String key)
 {
     if (!m_connections.contains(connection.id()))
         return false;
-    return send_sync<Messages::WebSocketServer::SetCertificate>(connection.id(), move(certificate), move(key))->success();
+    return IPCProxy::set_certificate(connection.id(), move(certificate), move(key)).success();
 }
 
 void WebSocketClient::connected(i32 connection_id)

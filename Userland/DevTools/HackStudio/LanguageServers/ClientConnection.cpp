@@ -81,7 +81,7 @@ void ClientConnection::auto_complete_suggestions(GUI::AutocompleteProvider::Proj
 
     GUI::TextPosition autocomplete_position = { (size_t)location.line, (size_t)max(location.column, location.column - 1) };
     Vector<GUI::AutocompleteProvider::Entry> suggestions = m_autocomplete_engine->get_suggestions(location.file, autocomplete_position);
-    post_message(Messages::LanguageClient::AutoCompleteSuggestions(move(suggestions)));
+    async_auto_complete_suggestions(move(suggestions));
 }
 
 void ClientConnection::set_file_content(String const& filename, String const& content)
@@ -115,12 +115,12 @@ void ClientConnection::find_declaration(GUI::AutocompleteProvider::ProjectLocati
     }
 
     dbgln_if(LANGUAGE_SERVER_DEBUG, "declaration location: {} {}:{}", decl_location.value().file, decl_location.value().line, decl_location.value().column);
-    post_message(Messages::LanguageClient::DeclarationLocation(GUI::AutocompleteProvider::ProjectLocation { decl_location.value().file, decl_location.value().line, decl_location.value().column }));
+    async_declaration_location(GUI::AutocompleteProvider::ProjectLocation { decl_location.value().file, decl_location.value().line, decl_location.value().column });
 }
 
 void ClientConnection::set_declarations_of_document_callback(ClientConnection& instance, const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
 {
-    instance.post_message(Messages::LanguageClient::DeclarationsInDocument(filename, move(declarations)));
+    instance.async_declarations_in_document(filename, move(declarations));
 }
 
 }

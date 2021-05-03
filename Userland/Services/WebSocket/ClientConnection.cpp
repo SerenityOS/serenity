@@ -115,22 +115,22 @@ Messages::WebSocketServer::SetCertificateResponse ClientConnection::set_certific
 
 void ClientConnection::did_connect(i32 connection_id)
 {
-    post_message(Messages::WebSocketClient::Connected(connection_id));
+    async_connected(connection_id);
 }
 
 void ClientConnection::did_receive_message(i32 connection_id, Message message)
 {
-    post_message(Messages::WebSocketClient::Received(connection_id, message.is_text(), message.data()));
+    async_received(connection_id, message.is_text(), message.data());
 }
 
 void ClientConnection::did_error(i32 connection_id, i32 message)
 {
-    post_message(Messages::WebSocketClient::Errored(connection_id, message));
+    async_errored(connection_id, message);
 }
 
 void ClientConnection::did_close(i32 connection_id, u16 code, String reason, bool was_clean)
 {
-    post_message(Messages::WebSocketClient::Closed(connection_id, code, reason, was_clean));
+    async_closed(connection_id, code, reason, was_clean);
     deferred_invoke([this, connection_id] {
         m_connections.remove(connection_id);
     });
@@ -138,7 +138,7 @@ void ClientConnection::did_close(i32 connection_id, u16 code, String reason, boo
 
 void ClientConnection::did_request_certificates(i32 connection_id)
 {
-    post_message(Messages::WebSocketClient::CertificateRequested(connection_id));
+    async_certificate_requested(connection_id);
 }
 
 }

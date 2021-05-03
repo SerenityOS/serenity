@@ -42,9 +42,9 @@ static void set_system_theme_from_anonymous_buffer(Core::AnonymousBuffer buffer)
 
 void WindowServerConnection::handshake()
 {
-    auto response = send_sync<Messages::WindowServer::Greet>();
-    set_system_theme_from_anonymous_buffer(response->theme_buffer());
-    Desktop::the().did_receive_screen_rect({}, response->screen_rect());
+    auto response = greet();
+    set_system_theme_from_anonymous_buffer(response.theme_buffer());
+    Desktop::the().did_receive_screen_rect({}, response.screen_rect());
 }
 
 void WindowServerConnection::update_system_theme(Core::AnonymousBuffer const& theme_buffer)
@@ -293,7 +293,7 @@ void WindowServerConnection::screen_rect_changed(Gfx::IntRect const& rect)
     });
 }
 
-void WindowServerConnection::async_set_wallpaper_finished(bool)
+void WindowServerConnection::set_wallpaper_finished(bool)
 {
     // This is handled manually by Desktop::set_wallpaper().
 }
@@ -337,7 +337,7 @@ void WindowServerConnection::display_link_notification()
 
 void WindowServerConnection::ping()
 {
-    post_message(Messages::WindowServer::Pong());
+    async_pong();
 }
 
 }

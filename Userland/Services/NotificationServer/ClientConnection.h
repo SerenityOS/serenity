@@ -12,8 +12,7 @@
 
 namespace NotificationServer {
 
-class ClientConnection final : public IPC::ClientConnection<NotificationClientEndpoint, NotificationServerEndpoint>
-{
+class ClientConnection final : public IPC::ClientConnection<NotificationClientEndpoint, NotificationServerEndpoint> {
     C_OBJECT(ClientConnection)
 public:
     ~ClientConnection() override;

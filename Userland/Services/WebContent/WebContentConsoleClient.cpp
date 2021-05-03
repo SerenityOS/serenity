@@ -51,12 +51,12 @@ void WebContentConsoleClient::handle_input(const String& js_source)
 
 void WebContentConsoleClient::print_html(const String& line)
 {
-    m_client.post_message(Messages::WebContentClient::DidJSConsoleOutput("html", line));
+    m_client.async_did_jsconsole_output("html", line);
 }
 
 void WebContentConsoleClient::clear_output()
 {
-    m_client.post_message(Messages::WebContentClient::DidJSConsoleOutput("clear_output", {}));
+    m_client.async_did_jsconsole_output("clear_output", {});
 }
 
 JS::Value WebContentConsoleClient::log()
