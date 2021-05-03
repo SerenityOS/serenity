@@ -60,7 +60,14 @@ public:
 private:
     explicit Document(Parser&& parser);
 
+    // FIXME: Currently, to improve performance, we don't load any pages at Document
+    // construction, rather we just load the page structure and populate
+    // m_page_object_indices. However, we can be even lazier and defer page tree node
+    // parsing, as good PDF writers will layout the page tree in a balanced tree to
+    // improve lookup time. This would reduce the initial overhead by not loading
+    // every page tree node of, say, a 1000+ page PDF file.
     void build_page_tree();
+    void add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tree);
 
     Parser m_parser;
     XRefTable m_xref_table;

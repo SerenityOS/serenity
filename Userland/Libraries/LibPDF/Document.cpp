@@ -63,14 +63,15 @@ Page Document::get_page(u32 index)
     if (page_object.has_value())
         return page_object.value();
 
-    auto raw_page_object = object_cast<DictObject>(get_or_load_object(page_object_index));
+    auto obj = get_or_load_object(page_object_index);
+    auto raw_page_object = object_cast<DictObject>(obj);
     auto resources = raw_page_object->get_dict(this, "Resources");
     auto media_box_array = raw_page_object->get_array(this, "MediaBox");
     auto media_box = Rectangle {
-        static_cast<float>(media_box_array->at(0).as_int()),
-        static_cast<float>(media_box_array->at(1).as_int()),
-        static_cast<float>(media_box_array->at(2).as_int()),
-        static_cast<float>(media_box_array->at(3).as_int()),
+        media_box_array->at(0).to_float(),
+        media_box_array->at(1).to_float(),
+        media_box_array->at(2).to_float(),
+        media_box_array->at(3).to_float(),
     };
     auto contents = raw_page_object->get_object("Contents");
 
@@ -82,14 +83,33 @@ Page Document::get_page(u32 index)
 void Document::build_page_tree()
 {
     auto page_tree = m_catalog->get_dict(this, "Pages");
-    auto kids_array = page_tree->get_array(this, "Kids");
+    add_page_tree_node_to_page_tree(page_tree);
+}
 
+void Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tree)
+{
+    auto kids_array = page_tree->get_array(this, "Kids");
     auto page_count = page_tree->get("Count").value().as_int();
+
     if (static_cast<size_t>(page_count) != kids_array->elements().size()) {
-        // FIXME: Support recursive PDF page tree structures
-        VERIFY_NOT_REACHED();
+        // This page tree contains child page trees, so we recursively add
+        // these pages to the overall page tree
+
+        for (auto& value : *kids_array) {
+            auto reference = object_cast<IndirectObjectRef>(value.as_object());
+            auto byte_offset = m_xref_table.byte_offset_for_object(reference->index());
+            auto maybe_page_tree_node = m_parser.conditionally_parse_page_tree_node_at_offset(byte_offset);
+            if (maybe_page_tree_node) {
+                add_page_tree_node_to_page_tree(maybe_page_tree_node.release_nonnull());
+            } else {
+                m_page_object_indices.append(reference->index());
+            }
+        }
+
+        return;
     }
 
+    // We know all of the kids are leaf nodes
     for (auto& value : *kids_array) {
         auto reference = object_cast<IndirectObjectRef>(value.as_object());
         m_page_object_indices.append(reference->index());

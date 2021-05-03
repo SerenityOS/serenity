@@ -83,10 +83,26 @@ public:
         return m_as_int;
     }
 
+    [[nodiscard]] ALWAYS_INLINE int to_int() const
+    {
+        if (is_int())
+            return as_int();
+        VERIFY(is_float());
+        return static_cast<int>(as_float());
+    }
+
     [[nodiscard]] ALWAYS_INLINE float as_float() const
     {
         VERIFY(is_float());
         return m_as_float;
+    }
+
+    [[nodiscard]] ALWAYS_INLINE float to_float() const
+    {
+        if (is_float())
+            return as_float();
+        VERIFY(is_int());
+        return static_cast<float>(as_int());
     }
 
     [[nodiscard]] ALWAYS_INLINE NonnullRefPtr<Object> as_object() const { return *m_as_object; }
