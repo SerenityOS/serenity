@@ -16,7 +16,7 @@ namespace RequestServer {
 
 class ClientConnection final
     : public IPC::ClientConnection<RequestClientEndpoint, RequestServerEndpoint>
-    , public RequestServerEndpoint {
+{
     C_OBJECT(ClientConnection);
 
 public:

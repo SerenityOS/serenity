@@ -28,8 +28,11 @@ namespace IPC {
 template<typename LocalEndpoint, typename PeerEndpoint>
 class Connection : public Core::Object {
 public:
-    Connection(LocalEndpoint& local_endpoint, NonnullRefPtr<Core::LocalSocket> socket)
-        : m_local_endpoint(local_endpoint)
+    using LocalStub = typename LocalEndpoint::Stub;
+    using PeerProxy = typename PeerEndpoint::Proxy;
+
+    Connection(LocalStub& local_stub, NonnullRefPtr<Core::LocalSocket> socket)
+        : m_local_stub(local_stub)
         , m_socket(move(socket))
         , m_notifier(Core::Notifier::construct(m_socket->fd(), Core::Notifier::Read, this))
     {
@@ -248,13 +251,13 @@ protected:
         auto messages = move(m_unprocessed_messages);
         for (auto& message : messages) {
             if (message.endpoint_magic() == LocalEndpoint::static_magic())
-                if (auto response = m_local_endpoint.handle(message))
+                if (auto response = m_local_stub.handle(message))
                     post_message(*response);
         }
     }
 
 protected:
-    LocalEndpoint& m_local_endpoint;
+    LocalStub& m_local_stub;
     NonnullRefPtr<Core::LocalSocket> m_socket;
     RefPtr<Core::Timer> m_responsiveness_timer;
 

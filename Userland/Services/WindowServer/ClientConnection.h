@@ -29,7 +29,7 @@ class WMClientConnection;
 
 class ClientConnection final
     : public IPC::ClientConnection<WindowClientEndpoint, WindowServerEndpoint>
-    , public WindowServerEndpoint {
+{
     C_OBJECT(ClientConnection)
 public:
     ~ClientConnection() override;
