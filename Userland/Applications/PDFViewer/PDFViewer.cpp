@@ -76,19 +76,16 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
     if (!m_document)
         return;
 
+    auto page = get_rendered_page(m_current_page_index);
+    set_content_size(page->size());
+
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
-    auto page = get_rendered_page(m_current_page_index);
+    int x = max(0, (width() - page->width()) / 2);
+    int y = max(0, (height() - page->height()) / 2);
 
-    auto total_width = width() - frame_thickness() * 2;
-    auto total_height = height() - frame_thickness() * 2;
-    auto bitmap_width = page->width();
-    auto bitmap_height = page->height();
-
-    Gfx::IntPoint p { (total_width - bitmap_width) / 2, (total_height - bitmap_height) / 2 };
-
-    painter.blit(p, *page, page->rect());
+    painter.blit({ x, y }, *page, page->rect());
 }
 
 void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
@@ -105,10 +102,19 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
     }
 
     if (event.wheel_delta() > 0) {
-        if (m_current_page_index < m_document->get_page_count() - 1)
-            m_current_page_index++;
-    } else if (m_current_page_index > 0) {
-        m_current_page_index--;
+        if (vertical_scrollbar().value() == vertical_scrollbar().max()) {
+            if (m_current_page_index < m_document->get_page_count() - 1)
+                m_current_page_index++;
+        } else {
+            vertical_scrollbar().set_value(vertical_scrollbar().value() + 20);
+        }
+    } else {
+        if (vertical_scrollbar().value() == 0) {
+            if (m_current_page_index > 0)
+                m_current_page_index--;
+        } else {
+            vertical_scrollbar().set_value(vertical_scrollbar().value() - 20);
+        }
     }
     update();
 }

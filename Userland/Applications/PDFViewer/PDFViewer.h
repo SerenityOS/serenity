@@ -14,7 +14,7 @@
 // Cached zoomed pages
 class ZoomablePage {
 public:
-    explicit ZoomablePage(RefPtr<Gfx::Bitmap> base_bitmap)
+    explicit ZoomablePage(const RefPtr<Gfx::Bitmap>& base_bitmap)
         : m_base_bitmap(base_bitmap)
     {
     }
