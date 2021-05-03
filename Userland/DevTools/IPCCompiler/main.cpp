@@ -754,8 +754,6 @@ public:
 )~~~");
             };
             do_handle_message(message.name, message.inputs, message.is_synchronous);
-            if (message.is_synchronous)
-                do_handle_message(message.response_name(), message.outputs, false);
         }
         endpoint_generator.append(R"~~~(
         default:
@@ -809,8 +807,6 @@ public:
             };
 
             do_handle_message_decl(message.name, message.inputs, false);
-            if (message.is_synchronous)
-                do_handle_message_decl(message.response_name(), message.outputs, true);
         }
 
         endpoint_generator.append(R"~~~(
