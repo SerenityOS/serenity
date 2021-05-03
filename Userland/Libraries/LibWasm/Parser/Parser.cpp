@@ -800,7 +800,7 @@ ParseResult<FunctionSection> FunctionSection::parse(InputStream& stream)
         return indices.error();
 
     Vector<TypeIndex> typed_indices;
-    typed_indices.resize(indices.value().size());
+    typed_indices.ensure_capacity(indices.value().size());
     for (auto entry : indices.value())
         typed_indices.append(entry);
 
