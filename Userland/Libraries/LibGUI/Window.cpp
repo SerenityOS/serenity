@@ -204,7 +204,7 @@ void Window::set_title(String title)
     m_title_when_windowless = move(title);
     if (!is_visible())
         return;
-    WindowServerConnection::the().set_window_title(m_window_id, m_title_when_windowless);
+    WindowServerConnection::the().async_set_window_title(m_window_id, m_title_when_windowless);
 }
 
 String Window::title() const
@@ -262,7 +262,7 @@ void Window::set_minimum_size(const Gfx::IntSize& size)
     m_minimum_size_when_windowless = size;
 
     if (is_visible())
-        WindowServerConnection::the().set_window_minimum_size(m_window_id, size);
+        WindowServerConnection::the().async_set_window_minimum_size(m_window_id, size);
 }
 
 void Window::center_on_screen()
@@ -695,7 +695,7 @@ void Window::set_has_alpha_channel(bool value)
     m_back_store = nullptr;
     m_front_store = nullptr;
 
-    WindowServerConnection::the().set_window_has_alpha_channel(m_window_id, value);
+    WindowServerConnection::the().async_set_window_has_alpha_channel(m_window_id, value);
     update();
 }
 
@@ -710,7 +710,7 @@ void Window::set_opacity(float opacity)
     m_opacity_when_windowless = opacity;
     if (!is_visible())
         return;
-    WindowServerConnection::the().set_window_opacity(m_window_id, opacity);
+    WindowServerConnection::the().async_set_window_opacity(m_window_id, opacity);
 }
 
 void Window::set_alpha_hit_threshold(float threshold)
@@ -724,7 +724,7 @@ void Window::set_alpha_hit_threshold(float threshold)
     m_alpha_hit_threshold = threshold;
     if (!is_visible())
         return;
-    WindowServerConnection::the().set_window_alpha_hit_threshold(m_window_id, threshold);
+    WindowServerConnection::the().async_set_window_alpha_hit_threshold(m_window_id, threshold);
 }
 
 void Window::set_hovered_widget(Widget* widget)
@@ -829,7 +829,7 @@ void Window::apply_icon()
     if (!is_visible())
         return;
 
-    WindowServerConnection::the().set_window_icon_bitmap(m_window_id, m_icon->to_shareable_bitmap());
+    WindowServerConnection::the().async_set_window_icon_bitmap(m_window_id, m_icon->to_shareable_bitmap());
 }
 
 void Window::start_interactive_resize()
@@ -978,7 +978,7 @@ void Window::set_base_size(const Gfx::IntSize& base_size)
         return;
     m_base_size = base_size;
     if (is_visible())
-        WindowServerConnection::the().set_window_base_size_and_size_increment(m_window_id, m_base_size, m_size_increment);
+        WindowServerConnection::the().async_set_window_base_size_and_size_increment(m_window_id, m_base_size, m_size_increment);
 }
 
 void Window::set_size_increment(const Gfx::IntSize& size_increment)
@@ -987,7 +987,7 @@ void Window::set_size_increment(const Gfx::IntSize& size_increment)
         return;
     m_size_increment = size_increment;
     if (is_visible())
-        WindowServerConnection::the().set_window_base_size_and_size_increment(m_window_id, m_base_size, m_size_increment);
+        WindowServerConnection::the().async_set_window_base_size_and_size_increment(m_window_id, m_base_size, m_size_increment);
 }
 
 void Window::set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
@@ -997,7 +997,7 @@ void Window::set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
 
     m_resize_aspect_ratio = ratio;
     if (is_visible())
-        WindowServerConnection::the().set_window_resize_aspect_ratio(m_window_id, m_resize_aspect_ratio);
+        WindowServerConnection::the().async_set_window_resize_aspect_ratio(m_window_id, m_resize_aspect_ratio);
 }
 
 void Window::did_add_widget(Badge<Widget>, Widget&)
@@ -1038,9 +1038,9 @@ void Window::update_cursor()
     m_effective_cursor = new_cursor;
 
     if (m_custom_cursor)
-        WindowServerConnection::the().set_window_custom_cursor(m_window_id, m_custom_cursor->to_shareable_bitmap());
+        WindowServerConnection::the().async_set_window_custom_cursor(m_window_id, m_custom_cursor->to_shareable_bitmap());
     else
-        WindowServerConnection::the().set_window_cursor(m_window_id, (u32)m_effective_cursor);
+        WindowServerConnection::the().async_set_window_cursor(m_window_id, (u32)m_effective_cursor);
 }
 
 void Window::focus_a_widget_if_possible(FocusSource source)
