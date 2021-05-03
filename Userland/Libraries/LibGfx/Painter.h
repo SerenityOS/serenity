@@ -154,6 +154,7 @@ protected:
     void fill_rect_with_draw_op(const IntRect&, Color);
     void blit_with_opacity(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity, bool apply_alpha = true);
     void draw_physical_pixel(const IntPoint&, Color, IntSize thickness = { 1, 1 });
+    void draw_physical_line(IntPoint, IntPoint, Color, IntSize thickness, LineStyle style);
     void fill_physical_rect(const IntRect&, Color);
 
     ALWAYS_INLINE bool has_integer_scale() const { return float_scale().x() == float_scale().y() && float_scale().x() == floorf(float_scale().x()); }
