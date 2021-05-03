@@ -40,6 +40,25 @@ void Button::paint(Gfx::Painter& painter)
 
 void Button::on_mouse_event(const MouseEvent& event)
 {
+    auto interesting_button = false;
+
+    switch (event.button()) {
+    case MouseButton::Left:
+        interesting_button = !!on_click;
+        break;
+    case MouseButton::Middle:
+        interesting_button = !!on_middle_click;
+        break;
+    case MouseButton::Right:
+        interesting_button = !!on_right_click;
+        break;
+    default:
+        break;
+    }
+
+    if (!interesting_button)
+        return;
+
     auto& wm = WindowManager::the();
 
     if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right || event.button() == MouseButton::Middle)) {
