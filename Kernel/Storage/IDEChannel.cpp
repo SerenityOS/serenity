@@ -334,6 +334,13 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
             if (milliseconds_elapsed > 2000)
                 break;
             u8 status = m_io_group.control_base().in<u8>();
+
+            if (status == 0 || status == 0xFF) {
+                dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device presence - none.", channel_type_string(), channel_string(i));
+                device_presence = false;
+                break;
+            }
+
             if (status & ATA_SR_ERR) {
                 dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device is not ATA. Will check for ATAPI.", channel_type_string(), channel_string(i));
                 check_for_atapi = true;
@@ -343,12 +350,6 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
             if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRQ)) {
                 dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device appears to be ATA.", channel_type_string(), channel_string(i));
                 interface_type = PATADiskDevice::InterfaceType::ATA;
-                break;
-            }
-
-            if (status == 0 || status == 0xFF) {
-                dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device presence - none.", channel_type_string(), channel_string(i));
-                device_presence = false;
                 break;
             }
 
