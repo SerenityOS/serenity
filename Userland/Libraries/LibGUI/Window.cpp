@@ -1075,7 +1075,7 @@ void Window::set_menubar(RefPtr<Menubar> menubar)
     m_menubar = move(menubar);
     if (m_window_id && m_menubar) {
         m_menubar->notify_added_to_window({});
-        WindowServerConnection::the().set_window_menubar(m_window_id, m_menubar->menubar_id());
+        WindowServerConnection::the().async_set_window_menubar(m_window_id, m_menubar->menubar_id());
     }
 }
 

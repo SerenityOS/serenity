@@ -94,14 +94,14 @@ int Menu::realize_menu(RefPtr<Action> default_action)
         item.set_menu_id({}, m_menu_id);
         item.set_identifier({}, i);
         if (item.type() == MenuItem::Type::Separator) {
-            WindowServerConnection::the().add_menu_separator(m_menu_id);
+            WindowServerConnection::the().async_add_menu_separator(m_menu_id);
             continue;
         }
         if (item.type() == MenuItem::Type::Submenu) {
             auto& submenu = *item.submenu();
             submenu.realize_if_needed(default_action);
             auto icon = submenu.icon() ? submenu.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
-            WindowServerConnection::the().add_menu_item(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, false, "", icon, false);
+            WindowServerConnection::the().async_add_menu_item(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, false, "", icon, false);
             continue;
         }
         if (item.type() == MenuItem::Type::Action) {
@@ -110,7 +110,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
             bool exclusive = action.group() && action.group()->is_exclusive() && action.is_checkable();
             bool is_default = (default_action.ptr() == &action);
             auto icon = action.icon() ? action.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
-            WindowServerConnection::the().add_menu_item(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, is_default, shortcut_text, icon, exclusive);
+            WindowServerConnection::the().async_add_menu_item(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, is_default, shortcut_text, icon, exclusive);
         }
     }
     all_menus().set(m_menu_id, this);

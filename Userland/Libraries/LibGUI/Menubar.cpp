@@ -49,7 +49,7 @@ void Menubar::notify_added_to_window(Badge<Window>)
     for (auto& menu : m_menus) {
         int menu_id = menu.realize_menu();
         VERIFY(menu_id != -1);
-        WindowServerConnection::the().add_menu_to_menubar(m_menubar_id, menu_id);
+        WindowServerConnection::the().async_add_menu_to_menubar(m_menubar_id, menu_id);
     }
 }
 

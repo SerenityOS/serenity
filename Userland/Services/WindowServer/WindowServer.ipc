@@ -8,7 +8,7 @@ endpoint WindowServer
     create_menu([UTF8] String menu_title) => (i32 menu_id)
     destroy_menu(i32 menu_id) => ()
 
-    add_menu_to_menubar(i32 menubar_id, i32 menu_id) => ()
+    add_menu_to_menubar(i32 menubar_id, i32 menu_id) =|
 
     add_menu_item(
         i32 menu_id,
@@ -21,11 +21,11 @@ endpoint WindowServer
         bool is_default,
         [UTF8] String shortcut,
         Gfx::ShareableBitmap icon,
-        bool exclusive) => ()
+        bool exclusive) =|
 
-    add_menu_separator(i32 menu_id) => ()
+    add_menu_separator(i32 menu_id) =|
 
-    update_menu_item(i32 menu_id, i32 identifier, i32 submenu_id, [UTF8] String text, bool enabled, bool checkable, bool checked, bool is_default, [UTF8] String shortcut) => ()
+    update_menu_item(i32 menu_id, i32 identifier, i32 submenu_id, [UTF8] String text, bool enabled, bool checkable, bool checked, bool is_default, [UTF8] String shortcut) =|
 
     create_window(
         Gfx::IntRect rect,
@@ -49,7 +49,7 @@ endpoint WindowServer
 
     destroy_window(i32 window_id) => (Vector<i32> destroyed_window_ids)
 
-    set_window_menubar(i32 window_id, i32 menubar_id) => ()
+    set_window_menubar(i32 window_id, i32 menubar_id) =|
 
     set_window_title(i32 window_id, [UTF8] String title) => ()
     get_window_title(i32 window_id) => ([UTF8] String title)
