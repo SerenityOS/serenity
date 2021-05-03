@@ -12,7 +12,7 @@ namespace Kernel {
 
 class BlockDevice;
 
-class AsyncBlockDeviceRequest : public AsyncDeviceRequest {
+class AsyncBlockDeviceRequest final : public AsyncDeviceRequest {
 public:
     enum RequestType {
         Read,
