@@ -297,7 +297,14 @@ public:
     auto& data() const { return m_data; }
     auto& data() { return m_data; }
 
-    void grow(size_t new_size) { m_data.grow(new_size); }
+    bool grow(size_t new_size)
+    {
+        if (m_type.limits().max().value_or(new_size) < new_size)
+            return false;
+        m_data.grow(new_size);
+        m_size = new_size;
+        return true;
+    }
 
 private:
     const MemoryType& m_type;

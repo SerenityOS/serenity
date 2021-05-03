@@ -449,15 +449,33 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         global->set_value(move(value));
         return;
     }
-    case Instructions::memory_size.value():
-    case Instructions::memory_grow.value():
+    case Instructions::memory_size.value(): {
+        auto address = configuration.frame()->module().memories()[0];
+        auto instance = configuration.store().get(address);
+        configuration.stack().push(make<Value>((i32)(instance->size() / Constants::page_size)));
+        return;
+    }
+    case Instructions::memory_grow.value(): {
+        auto address = configuration.frame()->module().memories()[0];
+        auto instance = configuration.store().get(address);
+        i32 old_pages = instance->size() / Constants::page_size;
+        auto new_pages = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>();
+        VERIFY(new_pages.has_value());
+        if (instance->grow(new_pages.value() * Constants::page_size))
+            configuration.stack().push(make<Value>((i32)old_pages));
+        else
+            configuration.stack().push(make<Value>((i32)-1));
+        return;
+    }
     case Instructions::table_get.value():
     case Instructions::table_set.value():
     case Instructions::ref_null.value():
     case Instructions::ref_func.value():
     case Instructions::ref_is_null.value():
-    case Instructions::drop.value():
         goto unimplemented;
+    case Instructions::drop.value():
+        configuration.stack().pop();
+        return;
     case Instructions::select.value():
     case Instructions::select_typed.value(): {
         // Note: The type seems to only be used for validation.
