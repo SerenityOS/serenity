@@ -61,6 +61,7 @@ public:
         InPast
     };
     void tickless_cancel_system_timer();
+    void tickless_start_scheduler_timer(Time);
     TicklessTimerResult tickless_start_system_timer(Time, Time&, bool force = false);
 
     bool is_system_timer(const HardwareTimerBase&) const;
@@ -105,7 +106,12 @@ private:
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
     bool m_can_query_precise_time { false };
     bool m_tickless { false };
-    Vector<Time, 8> m_tickless_due_per_cpu;
+
+    struct TicklessPerProcessorInfo {
+        Time timer_due;
+        Time scheduler_due;
+    };
+    Vector<TicklessPerProcessorInfo, 8> m_tickless_per_processor_info;
 
     RefPtr<HardwareTimerBase> m_system_timer;
     RefPtr<HardwareTimerBase> m_time_keeper_timer;

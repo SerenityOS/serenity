@@ -270,21 +270,29 @@ void TimeManagement::tickless_cancel_system_timer()
     m_system_timer->disable();
 }
 
+void TimeManagement::tickless_start_scheduler_timer(Time due)
+{
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(m_tickless);
+    auto& info = m_tickless_per_processor_info[Processor::id()];
+    info.scheduler_due = due;
+    if (Processor::id() == 0) {
+        if (info.scheduler_due < info.timer_due)
+    }
+}
+
 auto TimeManagement::tickless_start_system_timer(Time deadline, Time& now, bool force) -> TicklessTimerResult
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(m_tickless);
-    auto current_thread_due = Processor::current_thread_due();
-    if (current_thread_due.is_zero()) {
-        dbgln_if(1, "Tickless: current thread {} has no due time, new deadline: {}", *Thread::current(), deadline);
-        VERIFY(Thread::current()->is_idle_thread());
+    auto& info = m_tickless_per_processor_info[Processor::id()];
+
+    if (Processor::id() == 0) {
+        if (!info.scheduler_due.is_zero() && info.scheduler_due < info.timer_due)
+            deadline = info.scheduler_due;
     } else {
-        VERIFY(!Thread::current()->is_idle_thread());
-        if (current_thread_due < deadline) {
-            dbgln_if(1, "Tickless: current thread {} due at {}, new deadline: {}", *Thread::current(), current_thread_due, deadline);
-            deadline = current_thread_due;
-        }
     }
+
     now = monotonic_time(TimePrecision::Precise);
     if (deadline <= now) {
         dbgln_if(1, "Tickless: timer due at {} (now: {}), already passed, force: {}", deadline, now, force);
@@ -297,7 +305,6 @@ auto TimeManagement::tickless_start_system_timer(Time deadline, Time& now, bool 
         return TicklessTimerResult::InPast;
     }
 
-    auto& local_deadline = m_tickless_due_per_cpu[Processor::id()];
     if (local_deadline.is_zero() || deadline < local_deadline) {
         local_deadline = deadline;
         auto ns_per_tick = 1'000'000'000ull / m_system_timer->ticks_per_second();
@@ -536,8 +543,8 @@ void TimeManagement::system_timer_tick(const RegisterState& regs)
     auto& tm = TimeManagement::the();
     if (tm.is_tickless()) {
         TimeManagement::the().m_tickless_due_per_cpu[Processor::id()] = {};
-        if (auto thread_due = Processor::current_thread_due(); !thread_due.is_zero() && thread_due < tm.monotonic_time(TimePrecision::Coarse)) {
-            Processor::clear_current_thread_due();
+        auto* current_thread = Thread::current();
+        if (auto thread_due = current_thread->tickless_timeslice_end(); !thread_due.is_zero() && thread_due < tm.monotonic_time(TimePrecision::Coarse)) {
             dbgln("<-- system_timer_tick");
             Scheduler::timer_tick(regs);
         } else {

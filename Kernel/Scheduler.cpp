@@ -367,8 +367,6 @@ bool Scheduler::context_switch(Thread* thread)
     auto& tm = TimeManagement::the();
     if (tm.is_tickless()) {
         if (thread->is_idle_thread()) {
-            Processor::clear_current_thread_due();
-
             dbgln_if(1, "Scheduler: scheduling idle thread");
             // If we're scheduling the idle thread and we are in tickless mode
             // stop the timer unless we are on the main core and we have a timer queued
@@ -383,14 +381,9 @@ bool Scheduler::context_switch(Thread* thread)
             auto timeslice_begin = tm.monotonic_time(TimePrecision::Precise);
             auto duration = tm.ticks_to_time(thread->ticks_left()); // ticks should have been set before calling this function!
             auto timeslice_end = timeslice_begin + duration;
-            Processor::set_current_thread_due(timeslice_begin, timeslice_end);
+            thread->tickless_set_timeslice(timeslice_begin, timeslice_end);
             dbgln_if(1, "Scheduler: Thread {} timeslice begins at {} end: {} for {}ns", *thread, timeslice_begin, timeslice_end, duration.to_nanoseconds());
-            if (Processor::id() == 0) {
-                TimerQueue::the().tickless_update_system_timer();
-            } else {
-                Time now;
-                TimeManagement::the().tickless_start_system_timer(timeslice_end, now, true);
-            }
+            TimeManagement::the().tickless_start_scheduler_timer(timeslice_end);
         }
     }
 
@@ -537,7 +530,7 @@ u32 Scheduler::tickless_update_ticks_left()
     auto& current_thread = *Processor::current_thread();
     auto& tm = TimeManagement::the();
     VERIFY(tm.is_tickless());
-    auto timeslice_end = Processor::current_thread_due();
+    auto timeslice_end = current_thread.tickless_timeslice_end();
     auto now = tm.monotonic_time(TimePrecision::Coarse);
     if (now < timeslice_end) {
         u32 ticks_left = tm.time_to_ticks(timeslice_end - now);

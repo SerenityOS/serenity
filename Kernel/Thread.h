@@ -1115,6 +1115,14 @@ public:
     void set_idle_thread() { m_is_idle_thread = true; }
     bool is_idle_thread() const { return m_is_idle_thread; }
 
+    ALWAYS_INLINE void tickless_set_timeslice(Time begin, Time end)
+    {
+        VERIFY(!is_idle_thread());
+        m_tickless_timeslice_begin = begin;
+        m_tickless_timeslice_end = end;
+    }
+    ALWAYS_INLINE Time tickless_timeslice_end() const { return m_tickless_timeslice_end; }
+
 private:
     Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region> kernel_stack_region);
 
@@ -1243,6 +1251,9 @@ private:
     State m_state { Invalid };
     String m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
+
+    Time m_tickless_timeslice_begin;
+    Time m_tickless_timeslice_end;
 
     State m_stop_state { Invalid };
 
