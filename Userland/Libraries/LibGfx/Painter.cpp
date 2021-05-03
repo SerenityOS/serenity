@@ -303,48 +303,12 @@ void Painter::draw_focus_rect(const IntRect& a_rect, Color color)
 
 void Painter::draw_rect(const IntRect& rect, Color color, bool without_corners)
 {
-    auto transformed_rect = rect.transformed(transform());
-    auto clipped_rect = transformed_rect.intersected(clip_rect());
-    if (clipped_rect.is_empty())
-        return;
-
     int shift = without_corners ? 1 : 0;
-    IntSize thickness = {
-        static_cast<float>(float_scale().x()),
-        static_cast<float>(float_scale().y()),
-    };
 
-    if (transformed_rect.top() >= clipped_rect.top()) {
-        draw_physical_line(to_physical(rect.top_left().moved_right(shift)),
-            to_physical(rect.top_right().moved_left(shift)),
-            color,
-            thickness,
-            LineStyle::Solid);
-    }
-
-    if (transformed_rect.bottom() <= clipped_rect.bottom()) {
-        draw_physical_line(to_physical(rect.bottom_left().moved_right(shift)),
-            to_physical(rect.bottom_right().moved_left(shift)),
-            color,
-            thickness,
-            LineStyle::Solid);
-    }
-
-    if (transformed_rect.left() >= clipped_rect.left()) {
-        draw_physical_line(to_physical(rect.top_left().moved_down(shift)),
-            to_physical(rect.bottom_left().moved_up(shift)),
-            color,
-            thickness,
-            LineStyle::Solid);
-    }
-
-    if (transformed_rect.right() <= clipped_rect.right()) {
-        draw_physical_line(to_physical(rect.top_right().moved_down(shift)),
-            to_physical(rect.bottom_right().moved_up(shift)),
-            color,
-            thickness,
-            LineStyle::Solid);
-    }
+    draw_line(rect.top_left().moved_right(shift), rect.top_right().moved_left(shift), color);
+    draw_line(rect.bottom_left().moved_right(shift), rect.bottom_right().moved_left(shift), color);
+    draw_line(rect.top_left().moved_down(shift), rect.bottom_left().moved_up(shift), color);
+    draw_line(rect.top_right().moved_down(shift), rect.bottom_right().moved_up(shift), color);
 }
 
 void Painter::draw_bitmap(const IntPoint& p, const CharacterBitmap& bitmap, Color color)
@@ -1457,29 +1421,33 @@ void Painter::draw_physical_pixel(const IntPoint& physical_position, Color color
     fill_physical_rect(rect, color);
 }
 
-void Painter::draw_physical_line(IntPoint p1, IntPoint p2, Color color, IntSize thickness, LineStyle style)
+void Painter::draw_line(const IntPoint& p1, const IntPoint& p2, Color color, int thickness_, LineStyle style)
 {
-    auto horizontal_thickness = thickness.width();
-    auto vertical_thickness = thickness.height();
+    auto horizontal_thickness = static_cast<int>(thickness_ * float_scale().x());
+    auto vertical_thickness = static_cast<int>(thickness_ * float_scale().y());
+    IntSize thickness { horizontal_thickness, vertical_thickness };
 
     if (color.alpha() == 0)
         return;
 
     auto clip_rect = this->clip_rect();
 
+    auto point1 = to_physical(p1);
+    auto point2 = to_physical(p2);
+
     // Special case: vertical line.
-    if (p1.x() == p2.x()) {
-        const int x = p1.x();
+    if (point1.x() == point2.x()) {
+        const int x = point1.x();
         if (x < clip_rect.left() || x > clip_rect.right())
             return;
-        if (p1.y() > p2.y())
-            swap(p1, p2);
-        if (p1.y() > clip_rect.bottom())
+        if (point1.y() > point2.y())
+            swap(point1, point2);
+        if (point1.y() > clip_rect.bottom())
             return;
-        if (p2.y() < clip_rect.top())
+        if (point2.y() < clip_rect.top())
             return;
-        int min_y = max(p1.y(), clip_rect.top());
-        int max_y = min(p2.y(), clip_rect.bottom());
+        int min_y = max(point1.y(), clip_rect.top());
+        int max_y = min(point2.y(), clip_rect.bottom());
         if (style == LineStyle::Dotted) {
             for (int y = min_y; y <= max_y; y += vertical_thickness * 2)
                 draw_physical_pixel({ x, y }, color, thickness);
@@ -1497,18 +1465,18 @@ void Painter::draw_physical_line(IntPoint p1, IntPoint p2, Color color, IntSize 
     }
 
     // Special case: horizontal line.
-    if (p1.y() == p2.y()) {
-        const int y = p1.y();
+    if (point1.y() == point2.y()) {
+        const int y = point1.y();
         if (y < clip_rect.top() || y > clip_rect.bottom())
             return;
-        if (p1.x() > p2.x())
-            swap(p1, p2);
-        if (p1.x() > clip_rect.right())
+        if (point1.x() > point2.x())
+            swap(point1, point2);
+        if (point1.x() > clip_rect.right())
             return;
-        if (p2.x() < clip_rect.left())
+        if (point2.x() < clip_rect.left())
             return;
-        int min_x = max(p1.x(), clip_rect.left());
-        int max_x = min(p2.x(), clip_rect.right());
+        int min_x = max(point1.x(), clip_rect.left());
+        int max_x = min(point2.x(), clip_rect.right());
         if (style == LineStyle::Dotted) {
             for (int x = min_x; x <= max_x; x += horizontal_thickness * 2)
                 draw_physical_pixel({ x, y }, color, thickness);
@@ -1528,27 +1496,27 @@ void Painter::draw_physical_line(IntPoint p1, IntPoint p2, Color color, IntSize 
     // FIXME: Implement dotted/dashed diagonal lines.
     VERIFY(style == LineStyle::Solid);
 
-    const int adx = abs(p2.x() - p1.x());
-    const int ady = abs(p2.y() - p1.y());
+    const int adx = abs(point2.x() - point1.x());
+    const int ady = abs(point2.y() - point1.y());
 
     if (adx > ady) {
-        if (p1.x() > p2.x())
-            swap(p1, p2);
+        if (point1.x() > point2.x())
+            swap(point1, point2);
     } else {
-        if (p1.y() > p2.y())
-            swap(p1, p2);
+        if (point1.y() > point2.y())
+            swap(point1, point2);
     }
 
     // FIXME: Implement clipping below.
-    const int dx = p2.x() - p1.x();
-    const int dy = p2.y() - p1.y();
+    const int dx = point2.x() - point1.x();
+    const int dy = point2.y() - point1.y();
     int error = 0;
 
     if (dx > dy) {
         const int y_step = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
         const int delta_error = 2 * abs(dy);
-        int y = p1.y();
-        for (int x = p1.x(); x <= p2.x(); ++x) {
+        int y = point1.y();
+        for (int x = point1.x(); x <= point2.x(); ++x) {
             if (clip_rect.contains(x, y))
                 draw_physical_pixel({ x, y }, color, thickness);
             error += delta_error;
@@ -1560,8 +1528,8 @@ void Painter::draw_physical_line(IntPoint p1, IntPoint p2, Color color, IntSize 
     } else {
         const int x_step = dx == 0 ? 0 : (dx > 0 ? 1 : -1);
         const int delta_error = 2 * abs(dx);
-        int x = p1.x();
-        for (int y = p1.y(); y <= p2.y(); ++y) {
+        int x = point1.x();
+        for (int y = point1.y(); y <= point2.y(); ++y) {
             if (clip_rect.contains(x, y))
                 draw_physical_pixel({ x, y }, color, thickness);
             error += delta_error;
@@ -1571,16 +1539,6 @@ void Painter::draw_physical_line(IntPoint p1, IntPoint p2, Color color, IntSize 
             }
         }
     }
-}
-
-void Painter::draw_line(const IntPoint& p1, const IntPoint& p2, Color color, int thickness_, LineStyle style)
-{
-    IntSize thickness {
-        static_cast<int>(thickness_ * float_scale().x()),
-        static_cast<int>(thickness_ * float_scale().y())
-    };
-
-    draw_physical_line(to_physical(p1), to_physical(p2), color, thickness, style);
 }
 
 static bool can_approximate_bezier_curve(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& control)
