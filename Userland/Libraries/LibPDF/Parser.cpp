@@ -19,9 +19,20 @@ static NonnullRefPtr<T> make_object(Args... args) requires(IsBaseOf<Object, T>)
     return adopt_ref(*new T(forward<Args>(args)...));
 }
 
+Parser::Parser(const ReadonlyBytes& bytes)
+    : m_reader(bytes)
+{
+}
+
 Parser::Parser(Badge<Document>, const ReadonlyBytes& bytes)
     : m_reader(bytes)
 {
+}
+
+Vector<GraphicsCommand> Parser::parse_graphics_commands(const ReadonlyBytes& bytes)
+{
+    Parser parser(bytes);
+    return parser.parse_graphics_commands();
 }
 
 bool Parser::perform_validation()
@@ -617,14 +628,69 @@ NonnullRefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
     m_reader.move_by(6);
     consume_eol();
 
-    auto length_value = dict->map().get("Length");
-    VERIFY(length_value.has_value());
-    auto length = length_value.value();
-    VERIFY(length.is_int());
+    ReadonlyBytes bytes;
 
-    auto bytes = m_reader.bytes().slice(m_reader.offset(), length.as_int());
+    auto length_value = dict->map().get("Length");
+    if (length_value.has_value()) {
+        // The PDF writer has kindly provided us with the direct length of the stream
+        auto length = length_value.value();
+        VERIFY(length.is_int());
+
+        bytes = m_reader.bytes().slice(m_reader.offset(), length.as_int());
+    } else {
+        // We have to look for the endstream keyword
+        auto stream_start = m_reader.offset();
+
+        while (true) {
+            m_reader.move_until([&] { return matches_eol(); });
+            auto potential_stream_end = m_reader.offset();
+            consume_eol();
+            if (!m_reader.matches("endstream"))
+                continue;
+
+            m_reader.move_by(9);
+            consume_whitespace();
+            bytes = m_reader.bytes().slice(stream_start, potential_stream_end - stream_start);
+            break;
+        }
+    }
 
     return make_object<StreamObject>(dict, bytes);
+}
+
+Vector<GraphicsCommand> Parser::parse_graphics_commands()
+{
+    Vector<GraphicsCommand> commands;
+    Vector<Value> command_args;
+
+    constexpr static auto is_command_char = [](char ch) {
+        return isalpha(ch) || ch == '*' || ch == '\'';
+    };
+
+    while (!m_reader.done()) {
+        auto ch = m_reader.peek();
+        if (is_command_char(ch)) {
+            auto command_start = m_reader.offset();
+            while (is_command_char(ch)) {
+                consume();
+                if (m_reader.done())
+                    break;
+                ch = m_reader.peek();
+            }
+
+            auto command_string = String(m_reader.bytes().slice(command_start, m_reader.offset() - command_start));
+            auto command = GraphicsCommand::command_from_string(command_string);
+            commands.append(GraphicsCommand(command, move(command_args)));
+            command_args = Vector<Value>();
+            consume_whitespace();
+
+            continue;
+        }
+
+        command_args.append(parse_value());
+    }
+
+    return commands;
 }
 
 bool Parser::matches_eol() const
