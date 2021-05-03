@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-class AnonymousVMObject : public VMObject {
+class AnonymousVMObject final : public VMObject {
     friend class PurgeablePageRanges;
 
 public:
