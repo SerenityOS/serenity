@@ -102,7 +102,7 @@ public:
         Optional<T> result;
         m_value.visit(
             [&](auto value) {
-                if constexpr (!IsSame<T, FunctionAddress> && !IsSame<T, ExternAddress>)
+                if constexpr (IsSame<T, decltype(value)>)
                     result = value;
             },
             [&](const FunctionAddress& address) {
