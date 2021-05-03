@@ -9,6 +9,16 @@ and set the following fields: (Assuming you use `Ninja` as the build system and 
 
 `Build Directory`: `Build/i686`
 
+## Excluding Build Artifacts
+
+Source files are copied to the `Build` directory during the build, if you do not exclude them from CLion indexing they will show up
+in search results. This is often confusing, unintuitive, and can result in your loosing changes you have made to files. To exclude
+these files navigate to the `Project` tool window, right-click the `Build` folder and select `Mark Directory as | Excluded`. If you
+want exclude Toolchain files as well, follow the same procedure with the following paths:
+- `Toolchain/Local`
+- `Toolchain/Tarballs`
+- `Toolchain/Build`
+
 ## Notes for WSL Users
 
 It is possible to set the embedded terminal in CLion to the one that your WSL distribution provides.
