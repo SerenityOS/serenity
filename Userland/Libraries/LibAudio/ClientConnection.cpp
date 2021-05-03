@@ -22,8 +22,8 @@ void ClientConnection::handshake()
 void ClientConnection::enqueue(const Buffer& buffer)
 {
     for (;;) {
-        auto response = enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
-        if (response.success())
+        auto success = enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
+        if (success)
             break;
         sleep(1);
     }
@@ -31,53 +31,7 @@ void ClientConnection::enqueue(const Buffer& buffer)
 
 bool ClientConnection::try_enqueue(const Buffer& buffer)
 {
-    auto response = enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
-    return response.success();
-}
-
-bool ClientConnection::get_muted()
-{
-    return IPCProxy::get_muted().muted();
-}
-
-void ClientConnection::set_muted(bool muted)
-{
-    IPCProxy::set_muted(muted);
-}
-
-int ClientConnection::get_main_mix_volume()
-{
-    return IPCProxy::get_main_mix_volume().volume();
-}
-
-void ClientConnection::set_main_mix_volume(int volume)
-{
-    IPCProxy::set_main_mix_volume(volume);
-}
-
-int ClientConnection::get_remaining_samples()
-{
-    return IPCProxy::get_remaining_samples().remaining_samples();
-}
-
-int ClientConnection::get_played_samples()
-{
-    return IPCProxy::get_played_samples().played_samples();
-}
-
-void ClientConnection::set_paused(bool paused)
-{
-    IPCProxy::set_paused(paused);
-}
-
-void ClientConnection::clear_buffer(bool paused)
-{
-    IPCProxy::clear_buffer(paused);
-}
-
-int ClientConnection::get_playing_buffer()
-{
-    return IPCProxy::get_playing_buffer().buffer_id();
+    return enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
 }
 
 void ClientConnection::finished_playing_buffer(i32 buffer_id)

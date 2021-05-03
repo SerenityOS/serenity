@@ -99,7 +99,7 @@ bool Launcher::seal_allowlist()
 
 bool Launcher::open(const URL& url, const String& handler_name)
 {
-    return connection().open_url(url, handler_name).response();
+    return connection().open_url(url, handler_name);
 }
 
 bool Launcher::open(const URL& url, const Details& details)
@@ -110,12 +110,12 @@ bool Launcher::open(const URL& url, const Details& details)
 
 Vector<String> Launcher::get_handlers_for_url(const URL& url)
 {
-    return connection().get_handlers_for_url(url.to_string()).handlers();
+    return connection().get_handlers_for_url(url.to_string());
 }
 
 auto Launcher::get_handlers_with_details_for_url(const URL& url) -> NonnullRefPtrVector<Details>
 {
-    auto details = connection().get_handlers_with_details_for_url(url.to_string()).handlers_details();
+    auto details = connection().get_handlers_with_details_for_url(url.to_string());
     NonnullRefPtrVector<Details> handlers_with_details;
     for (auto& value : details) {
         handlers_with_details.append(Details::from_details_str(value));

@@ -119,7 +119,7 @@ void Window::show()
 
     auto* parent_window = find_parent_window();
 
-    auto response = WindowServerConnection::the().create_window(
+    m_window_id = WindowServerConnection::the().create_window(
         m_rect_when_windowless,
         !m_moved_by_client,
         m_has_alpha_channel,
@@ -138,7 +138,6 @@ void Window::show()
         (i32)m_window_type,
         m_title_when_windowless,
         parent_window ? parent_window->window_id() : 0);
-    m_window_id = response.window_id();
     m_visible = true;
 
     apply_icon();
@@ -178,10 +177,10 @@ void Window::hide()
 {
     if (!is_visible())
         return;
-    auto response = WindowServerConnection::the().destroy_window(m_window_id);
+    auto destroyed_window_ids = WindowServerConnection::the().destroy_window(m_window_id);
     server_did_destroy();
 
-    for (auto child_window_id : response.destroyed_window_ids()) {
+    for (auto child_window_id : destroyed_window_ids) {
         if (auto* window = Window::from_window_id(child_window_id)) {
             window->server_did_destroy();
         }
@@ -212,20 +211,20 @@ String Window::title() const
 {
     if (!is_visible())
         return m_title_when_windowless;
-    return WindowServerConnection::the().get_window_title(m_window_id).title();
+    return WindowServerConnection::the().get_window_title(m_window_id);
 }
 
 Gfx::IntRect Window::applet_rect_on_screen() const
 {
     VERIFY(m_window_type == WindowType::Applet);
-    return WindowServerConnection::the().get_applet_rect_on_screen(m_window_id).rect();
+    return WindowServerConnection::the().get_applet_rect_on_screen(m_window_id);
 }
 
 Gfx::IntRect Window::rect() const
 {
     if (!is_visible())
         return m_rect_when_windowless;
-    return WindowServerConnection::the().get_window_rect(m_window_id).rect();
+    return WindowServerConnection::the().get_window_rect(m_window_id);
 }
 
 void Window::set_rect(const Gfx::IntRect& a_rect)
@@ -240,7 +239,7 @@ void Window::set_rect(const Gfx::IntRect& a_rect)
             m_main_widget->resize(m_rect_when_windowless.size());
         return;
     }
-    auto window_rect = WindowServerConnection::the().set_window_rect(m_window_id, a_rect).rect();
+    auto window_rect = WindowServerConnection::the().set_window_rect(m_window_id, a_rect);
     if (m_back_store && m_back_store->size() != window_rect.size())
         m_back_store = nullptr;
     if (m_front_store && m_front_store->size() != window_rect.size())
@@ -254,7 +253,7 @@ Gfx::IntSize Window::minimum_size() const
     if (!is_visible())
         return m_minimum_size_when_windowless;
 
-    return WindowServerConnection::the().get_window_minimum_size(m_window_id).size();
+    return WindowServerConnection::the().get_window_minimum_size(m_window_id);
 }
 
 void Window::set_minimum_size(const Gfx::IntSize& size)
@@ -904,7 +903,7 @@ bool Window::is_maximized() const
     if (!is_visible())
         return false;
 
-    return WindowServerConnection::the().is_maximized(m_window_id).maximized();
+    return WindowServerConnection::the().is_maximized(m_window_id);
 }
 
 void Window::schedule_relayout()
@@ -1084,7 +1083,7 @@ bool Window::is_modified() const
 {
     if (!m_window_id)
         return false;
-    return WindowServerConnection::the().is_window_modified(m_window_id).modified();
+    return WindowServerConnection::the().is_window_modified(m_window_id);
 }
 
 void Window::set_modified(bool modified)

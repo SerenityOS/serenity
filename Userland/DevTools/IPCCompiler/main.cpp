@@ -491,8 +491,12 @@ public:
 
             auto do_implement_proxy = [&](String const& name, Vector<Parameter> const& parameters, bool is_synchronous) {
                 String return_type = "void";
-                if (is_synchronous && !message.outputs.is_empty())
-                    return_type = message_name(endpoint.name, message.name, true);
+                if (is_synchronous) {
+                    if (message.outputs.size() == 1)
+                        return_type = message.outputs[0].type;
+                    else if (!message.outputs.is_empty())
+                        return_type = message_name(endpoint.name, message.name, true);
+                }
                 message_generator.set("message.name", message.name);
                 message_generator.set("message.complex_return_type", return_type);
                 message_generator.set("async_prefix_maybe", is_synchronous ? "" : "async_");
@@ -516,8 +520,10 @@ public:
                 if (is_synchronous) {
                     if (return_type != "void") {
                         message_generator.append(R"~~~(
-        return move(*)~~~");
-                    } else{
+        return )~~~");
+                        if (message.outputs.size() != 1)
+                            message_generator.append(" move(*");
+                    } else {
                         message_generator.append(R"~~~(
         )~~~");
                     }
@@ -545,9 +551,17 @@ public:
                         message_generator.append(")");
                     }
 
-                    message_generator.append(R"~~~();
+                    if (message.outputs.size() == 1) {
+                        message_generator.append("->");
+                        message_generator.append(message.outputs[0].name);
+                        message_generator.append("()");
+                    } else
+                        message_generator.append(")");
+
+                    message_generator.append(R"~~~(;
     }
 )~~~");
+
                 } else {
                     message_generator.append(R"~~~( });
     }
