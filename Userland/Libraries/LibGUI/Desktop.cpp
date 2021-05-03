@@ -59,7 +59,7 @@ bool Desktop::set_wallpaper(const StringView& path, bool save_config)
 
 String Desktop::wallpaper() const
 {
-    return WindowServerConnection::the().get_wallpaper().path();
+    return WindowServerConnection::the().get_wallpaper();
 }
 
 }

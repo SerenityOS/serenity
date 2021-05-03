@@ -21,11 +21,6 @@ void RequestClient::handshake()
     greet();
 }
 
-bool RequestClient::is_supported_protocol(const String& protocol)
-{
-    return IPCProxy::is_supported_protocol(protocol).supported();
-}
-
 template<typename RequestHashMapTraits>
 RefPtr<Request> RequestClient::start_request(const String& method, const String& url, const HashMap<String, String, RequestHashMapTraits>& request_headers, ReadonlyBytes request_body)
 {
@@ -49,14 +44,14 @@ bool RequestClient::stop_request(Badge<Request>, Request& request)
 {
     if (!m_requests.contains(request.id()))
         return false;
-    return IPCProxy::stop_request(request.id()).success();
+    return IPCProxy::stop_request(request.id());
 }
 
 bool RequestClient::set_certificate(Badge<Request>, Request& request, String certificate, String key)
 {
     if (!m_requests.contains(request.id()))
         return false;
-    return IPCProxy::set_certificate(request.id(), move(certificate), move(key)).success();
+    return IPCProxy::set_certificate(request.id(), move(certificate), move(key));
 }
 
 void RequestClient::request_finished(i32 request_id, bool success, u32 total_size)

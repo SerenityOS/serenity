@@ -85,7 +85,7 @@ void Menu::dismiss()
 int Menu::realize_menu(RefPtr<Action> default_action)
 {
     unrealize_menu();
-    m_menu_id = WindowServerConnection::the().create_menu(m_name).menu_id();
+    m_menu_id = WindowServerConnection::the().create_menu(m_name);
 
     dbgln_if(MENU_DEBUG, "GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
     VERIFY(m_menu_id > 0);

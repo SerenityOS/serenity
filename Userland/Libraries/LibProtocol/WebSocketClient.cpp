@@ -25,8 +25,7 @@ RefPtr<WebSocket> WebSocketClient::connect(const URL& url, const String& origin,
     IPC::Dictionary header_dictionary;
     for (auto& it : request_headers)
         header_dictionary.add(it.key, it.value);
-    auto response = IPCProxy::connect(url, origin, protocols, extensions, header_dictionary);
-    auto connection_id = response.connection_id();
+    auto connection_id = IPCProxy::connect(url, origin, protocols, extensions, header_dictionary);
     if (connection_id < 0)
         return nullptr;
     auto connection = WebSocket::create_from_id({}, *this, connection_id);
@@ -38,7 +37,7 @@ u32 WebSocketClient::ready_state(Badge<WebSocket>, WebSocket& connection)
 {
     if (!m_connections.contains(connection.id()))
         return (u32)WebSocket::ReadyState::Closed;
-    return IPCProxy::ready_state(connection.id()).ready_state();
+    return IPCProxy::ready_state(connection.id());
 }
 
 void WebSocketClient::send(Badge<WebSocket>, WebSocket& connection, ByteBuffer data, bool is_text)
@@ -59,7 +58,7 @@ bool WebSocketClient::set_certificate(Badge<WebSocket>, WebSocket& connection, S
 {
     if (!m_connections.contains(connection.id()))
         return false;
-    return IPCProxy::set_certificate(connection.id(), move(certificate), move(key)).success();
+    return IPCProxy::set_certificate(connection.id(), move(certificate), move(key));
 }
 
 void WebSocketClient::connected(i32 connection_id)

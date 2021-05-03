@@ -171,12 +171,12 @@ void PageHost::page_did_request_alert(const String& message)
 
 bool PageHost::page_did_request_confirm(const String& message)
 {
-    return m_client.did_request_confirm(message).result();
+    return m_client.did_request_confirm(message);
 }
 
 String PageHost::page_did_request_prompt(const String& message, const String& default_)
 {
-    return m_client.did_request_prompt(message, default_).response();
+    return m_client.did_request_prompt(message, default_);
 }
 
 void PageHost::page_did_change_favicon(const Gfx::Bitmap& favicon)
@@ -191,7 +191,7 @@ void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_
 
 String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source source)
 {
-    return m_client.did_request_cookie(url, static_cast<u8>(source)).cookie();
+    return m_client.did_request_cookie(url, static_cast<u8>(source));
 }
 
 void PageHost::page_did_set_cookie(const URL& url, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)
