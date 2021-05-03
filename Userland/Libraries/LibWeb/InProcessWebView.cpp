@@ -225,7 +225,7 @@ void InProcessWebView::layout_and_sync_size()
 
 void InProcessWebView::resize_event(GUI::ResizeEvent& event)
 {
-    GUI::ScrollableWidget::resize_event(event);
+    GUI::AbstractScrollableWidget::resize_event(event);
     layout_and_sync_size();
 }
 
@@ -254,25 +254,25 @@ void InProcessWebView::paint_event(GUI::PaintEvent& event)
 void InProcessWebView::mousemove_event(GUI::MouseEvent& event)
 {
     page().handle_mousemove(to_content_position(event.position()), event.buttons(), event.modifiers());
-    GUI::ScrollableWidget::mousemove_event(event);
+    GUI::AbstractScrollableWidget::mousemove_event(event);
 }
 
 void InProcessWebView::mousedown_event(GUI::MouseEvent& event)
 {
     page().handle_mousedown(to_content_position(event.position()), event.button(), event.modifiers());
-    GUI::ScrollableWidget::mousedown_event(event);
+    GUI::AbstractScrollableWidget::mousedown_event(event);
 }
 
 void InProcessWebView::mouseup_event(GUI::MouseEvent& event)
 {
     page().handle_mouseup(to_content_position(event.position()), event.button(), event.modifiers());
-    GUI::ScrollableWidget::mouseup_event(event);
+    GUI::AbstractScrollableWidget::mouseup_event(event);
 }
 
 void InProcessWebView::mousewheel_event(GUI::MouseEvent& event)
 {
     page().handle_mousewheel(to_content_position(event.position()), event.button(), event.modifiers(), event.wheel_delta());
-    GUI::ScrollableWidget::mousewheel_event(event);
+    GUI::AbstractScrollableWidget::mousewheel_event(event);
 }
 
 void InProcessWebView::keydown_event(GUI::KeyEvent& event)
@@ -307,7 +307,7 @@ void InProcessWebView::keydown_event(GUI::KeyEvent& event)
             break;
         default:
             if (!page_accepted_event) {
-                ScrollableWidget::keydown_event(event);
+                AbstractScrollableWidget::keydown_event(event);
                 return;
             }
             break;
@@ -391,7 +391,7 @@ void InProcessWebView::drop_event(GUI::DropEvent& event)
             return;
         }
     }
-    ScrollableWidget::drop_event(event);
+    AbstractScrollableWidget::drop_event(event);
 }
 
 void InProcessWebView::page_did_request_alert(const String& message)

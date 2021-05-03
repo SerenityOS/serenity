@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/URL.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Desktop.h>
-#include <LibGUI/ScrollableWidget.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/WebViewHooks.h>
@@ -16,7 +16,7 @@
 namespace Web {
 
 class InProcessWebView final
-    : public GUI::ScrollableWidget
+    : public GUI::AbstractScrollableWidget
     , public WebViewHooks
     , public PageClient {
     C_OBJECT(InProcessWebView);
@@ -67,7 +67,7 @@ private:
 
     // ^Web::PageClient
     virtual bool is_multi_process() const override { return false; }
-    virtual Gfx::Palette palette() const override { return GUI::ScrollableWidget::palette(); }
+    virtual Gfx::Palette palette() const override { return GUI::AbstractScrollableWidget::palette(); }
     virtual Gfx::IntRect screen_rect() const override { return GUI::Desktop::the().rect(); }
     virtual void page_did_change_title(const String&) override;
     virtual void page_did_set_document_in_main_frame(DOM::Document*) override;

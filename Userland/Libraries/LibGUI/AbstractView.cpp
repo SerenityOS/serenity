@@ -212,7 +212,7 @@ NonnullRefPtr<Gfx::Font> AbstractView::font_for_index(const ModelIndex& index) c
 
 void AbstractView::mousedown_event(MouseEvent& event)
 {
-    ScrollableWidget::mousedown_event(event);
+    AbstractScrollableWidget::mousedown_event(event);
 
     if (!model())
         return;
@@ -254,28 +254,28 @@ void AbstractView::set_hovered_index(const ModelIndex& index)
 
 void AbstractView::leave_event(Core::Event& event)
 {
-    ScrollableWidget::leave_event(event);
+    AbstractScrollableWidget::leave_event(event);
     set_hovered_index({});
 }
 
 void AbstractView::mousemove_event(MouseEvent& event)
 {
     if (!model())
-        return ScrollableWidget::mousemove_event(event);
+        return AbstractScrollableWidget::mousemove_event(event);
 
     auto hovered_index = index_at_event_position(event.position());
     set_hovered_index(hovered_index);
 
     auto data_type = m_model->drag_data_type();
     if (data_type.is_null())
-        return ScrollableWidget::mousemove_event(event);
+        return AbstractScrollableWidget::mousemove_event(event);
 
     if (!m_might_drag)
-        return ScrollableWidget::mousemove_event(event);
+        return AbstractScrollableWidget::mousemove_event(event);
 
     if (!(event.buttons() & MouseButton::Left) || m_selection.is_empty()) {
         m_might_drag = false;
-        return ScrollableWidget::mousemove_event(event);
+        return AbstractScrollableWidget::mousemove_event(event);
     }
 
     auto diff = event.position() - m_left_mousedown_position;
@@ -283,7 +283,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
     constexpr int drag_distance_threshold = 5;
 
     if (distance_travelled_squared <= drag_distance_threshold)
-        return ScrollableWidget::mousemove_event(event);
+        return AbstractScrollableWidget::mousemove_event(event);
 
     VERIFY(!data_type.is_null());
 
@@ -317,7 +317,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
 
 void AbstractView::mouseup_event(MouseEvent& event)
 {
-    ScrollableWidget::mouseup_event(event);
+    AbstractScrollableWidget::mouseup_event(event);
 
     if (!model())
         return;
@@ -481,7 +481,7 @@ void AbstractView::set_edit_triggers(unsigned triggers)
 void AbstractView::hide_event(HideEvent& event)
 {
     stop_editing();
-    ScrollableWidget::hide_event(event);
+    AbstractScrollableWidget::hide_event(event);
 }
 
 void AbstractView::keydown_event(KeyEvent& event)
@@ -596,7 +596,7 @@ void AbstractView::keydown_event(KeyEvent& event)
         }
     }
 
-    ScrollableWidget::keydown_event(event);
+    AbstractScrollableWidget::keydown_event(event);
 }
 
 void AbstractView::cancel_searching()
@@ -706,7 +706,7 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index
 
 void AbstractView::focusin_event(FocusEvent& event)
 {
-    ScrollableWidget::focusin_event(event);
+    AbstractScrollableWidget::focusin_event(event);
 
     if (model() && !cursor_index().is_valid()) {
         move_cursor(CursorMovement::Home, SelectionUpdate::None);

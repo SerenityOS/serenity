@@ -7,15 +7,15 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ModelSelection.h>
-#include <LibGUI/ScrollableWidget.h>
 #include <LibGfx/TextElision.h>
 
 namespace GUI {
 
 class AbstractView
-    : public ScrollableWidget
+    : public AbstractScrollableWidget
     , public ModelClient {
 
     C_OBJECT_ABSTRACT(AbstractView);

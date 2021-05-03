@@ -262,7 +262,7 @@ void ListView::scroll_into_view(const ModelIndex& index, bool scroll_horizontall
 {
     if (!model())
         return;
-    ScrollableWidget::scroll_into_view(content_rect(index.row()), scroll_horizontally, scroll_vertically);
+    AbstractScrollableWidget::scroll_into_view(content_rect(index.row()), scroll_horizontally, scroll_vertically);
 }
 
 }

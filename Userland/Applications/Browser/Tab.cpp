@@ -680,7 +680,7 @@ void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)
     m_tab_context_menu->popup(screen_position);
 }
 
-GUI::ScrollableWidget& Tab::view()
+GUI::AbstractScrollableWidget& Tab::view()
 {
     if (m_type == Type::InProcessWebView)
         return *m_page_view;

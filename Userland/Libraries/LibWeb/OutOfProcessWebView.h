@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/URL.h>
-#include <LibGUI/ScrollableWidget.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Widget.h>
 #include <LibWeb/WebViewHooks.h>
 
@@ -16,7 +16,7 @@ namespace Web {
 class WebContentClient;
 
 class OutOfProcessWebView final
-    : public GUI::ScrollableWidget
+    : public GUI::AbstractScrollableWidget
     , public Web::WebViewHooks {
     C_OBJECT(OutOfProcessWebView);
 
@@ -76,7 +76,7 @@ private:
     virtual void theme_change_event(GUI::ThemeChangeEvent&) override;
     virtual void screen_rect_change_event(GUI::ScreenRectChangeEvent&) override;
 
-    // ^ScrollableWidget
+    // ^AbstractScrollableWidget
     virtual void did_scroll() override;
 
     void request_repaint();

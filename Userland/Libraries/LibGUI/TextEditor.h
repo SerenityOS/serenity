@@ -11,8 +11,8 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Timer.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Forward.h>
-#include <LibGUI/ScrollableWidget.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextRange.h>
 #include <LibGfx/TextAlignment.h>
@@ -22,7 +22,7 @@
 namespace GUI {
 
 class TextEditor
-    : public ScrollableWidget
+    : public AbstractScrollableWidget
     , public TextDocument::Client
     , public Syntax::HighlighterClient {
     C_OBJECT(TextEditor);

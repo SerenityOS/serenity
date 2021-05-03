@@ -43,7 +43,7 @@ void IconView::scroll_into_view(const ModelIndex& index, bool scroll_horizontall
 {
     if (!index.is_valid())
         return;
-    ScrollableWidget::scroll_into_view(item_rect(index.row()), scroll_horizontally, scroll_vertically);
+    AbstractScrollableWidget::scroll_into_view(item_rect(index.row()), scroll_horizontally, scroll_vertically);
 }
 
 void IconView::resize_event(ResizeEvent& event)
@@ -373,7 +373,7 @@ void IconView::scroll_out_of_view_timer_fired()
     else if (m_out_of_view_position.x() < in_view_rect.left())
         adjust_x = -(SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + max(-SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.x() - in_view_rect.left());
 
-    ScrollableWidget::scroll_into_view({ scroll_to.translated(adjust_x, adjust_y), { 1, 1 } }, true, true);
+    AbstractScrollableWidget::scroll_into_view({ scroll_to.translated(adjust_x, adjust_y), { 1, 1 } }, true, true);
     update_rubber_banding(m_out_of_view_position);
 }
 

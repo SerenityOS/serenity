@@ -248,7 +248,7 @@ void RollWidget::mousewheel_event(GUI::MouseEvent& event)
     }
 
     if (!(event.modifiers() & KeyModifier::Mod_Ctrl)) {
-        GUI::ScrollableWidget::mousewheel_event(event);
+        GUI::AbstractScrollableWidget::mousewheel_event(event);
         return;
     }
 

@@ -54,7 +54,7 @@ class ResizeCorner;
 class ResizeEvent;
 class ScreenRectChangeEvent;
 class Scrollbar;
-class ScrollableWidget;
+class AbstractScrollableWidget;
 class Slider;
 class SortingProxyModel;
 class SpinBox;

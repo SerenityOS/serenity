@@ -12,11 +12,11 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StdLibExtras.h>
-#include <LibGUI/ScrollableWidget.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/TextAlignment.h>
 
-class HexEditor : public GUI::ScrollableWidget {
+class HexEditor : public GUI::AbstractScrollableWidget {
     C_OBJECT(HexEditor)
 public:
     enum EditMode {
