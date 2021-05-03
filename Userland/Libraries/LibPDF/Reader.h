@@ -123,7 +123,8 @@ public:
     ALWAYS_INLINE void load() { m_offset = m_saved_offsets.take_last(); }
     ALWAYS_INLINE void discard() { m_saved_offsets.take_last(); }
 
-    void dump_state()
+#ifdef PDF_DEBUG
+    void dump_state() const
     {
         StringBuilder builder;
         builder.append("Reader State Dump\n\n");
@@ -143,6 +144,7 @@ public:
         auto str = builder.to_string();
         dbgputstr(str.characters(), str.length());
     }
+#endif
 
 private:
     ReadonlyBytes m_bytes;

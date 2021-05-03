@@ -38,6 +38,15 @@ public:
     }
 
     template<typename T>
+    Value(RefPtr<T> obj) requires(IsBaseOf<Object, T>)
+        : m_type(Type::Object)
+    {
+        VERIFY(obj);
+        obj->ref();
+        m_as_object = obj;
+    }
+
+    template<typename T>
     Value(NonnullRefPtr<T> obj) requires(IsBaseOf<Object, T>)
         : m_type(Type::Object)
     {

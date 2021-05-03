@@ -5,9 +5,37 @@
  */
 
 #include <AK/Hex.h>
+#include <LibPDF/Document.h>
 #include <LibPDF/Object.h>
 
 namespace PDF {
+
+template<typename T>
+NonnullRefPtr<T> Object::resolved_to(Document* document) const
+{
+    if (is_indirect_object_ref()) {
+        auto target = document->get_or_load_object(static_cast<const IndirectObjectRef*>(this)->index());
+        return object_cast<T>(target);
+    }
+    if (is_indirect_object()) {
+        auto target = static_cast<const IndirectObject*>(this)->object();
+        return object_cast<T>(target);
+    }
+    return *this;
+}
+
+#define DEFINE_ACCESSORS(class_name, snake_name)                                                           \
+    NonnullRefPtr<class_name> ArrayObject::get_##snake_name##_at(Document* document, size_t index) const   \
+    {                                                                                                      \
+        return m_elements[index].as_object()->resolved_to<class_name>(document);                           \
+    }                                                                                                      \
+                                                                                                           \
+    NonnullRefPtr<class_name> DictObject::get_##snake_name(Document* document, const FlyString& key) const \
+    {                                                                                                      \
+        return get_object(key)->resolved_to<class_name>(document);                                         \
+    }
+ENUMERATE_DIRECT_OBJECT_TYPES(DEFINE_ACCESSORS)
+#undef DEFINE_INDEXER
 
 static void append_indent(StringBuilder& builder, int indent)
 {

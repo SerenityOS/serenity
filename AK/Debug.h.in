@@ -286,6 +286,10 @@
 #cmakedefine01 PATH_DEBUG
 #endif
 
+#ifndef PDF_DEBUG
+#cmakedefine01 PDF_DEBUG
+#endif
+
 #ifndef PNG_DEBUG
 #cmakedefine01 PNG_DEBUG
 #endif
