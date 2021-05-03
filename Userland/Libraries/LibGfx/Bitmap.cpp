@@ -357,7 +357,7 @@ RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) c
     for (int i = 0; i < w; i++) {
         for (int j = 0; j < h; j++) {
             Color color;
-            if (rotation_direction == Gfx::RotationDirection::Left)
+            if (rotation_direction == Gfx::RotationDirection::CounterClockwise)
                 color = this->get_pixel(w - i - 1, j);
             else
                 color = this->get_pixel(i, h - j - 1);
