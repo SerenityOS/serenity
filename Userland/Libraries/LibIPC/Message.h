@@ -37,6 +37,10 @@ struct MessageBuffer {
     Vector<RefPtr<AutoCloseFileDescriptor>> fds;
 };
 
+enum class ErrorCode : u32 {
+    PeerDisconnected
+};
+
 class Message {
 public:
     virtual ~Message();

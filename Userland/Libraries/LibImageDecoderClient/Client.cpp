@@ -42,21 +42,23 @@ Optional<DecodedImage> Client::decode_image(const ByteBuffer& encoded_data)
     }
 
     memcpy(encoded_buffer.data<void>(), encoded_data.data(), encoded_data.size());
-    auto response = send_sync_but_allow_failure<Messages::ImageDecoderServer::DecodeImage>(move(encoded_buffer));
+    auto response_or_error = try_decode_image(move(encoded_buffer));
 
-    if (!response) {
+    if (response_or_error.is_error()) {
         dbgln("ImageDecoder died heroically");
         return {};
     }
 
+    auto& response = response_or_error.value();
+
     DecodedImage image;
-    image.is_animated = response->is_animated();
-    image.loop_count = response->loop_count();
-    image.frames.resize(response->bitmaps().size());
+    image.is_animated = response.is_animated();
+    image.loop_count = response.loop_count();
+    image.frames.resize(response.bitmaps().size());
     for (size_t i = 0; i < image.frames.size(); ++i) {
         auto& frame = image.frames[i];
-        frame.bitmap = response->bitmaps()[i].bitmap();
-        frame.duration = response->durations()[i];
+        frame.bitmap = response.bitmaps()[i].bitmap();
+        frame.duration = response.durations()[i];
     }
     return image;
 }
