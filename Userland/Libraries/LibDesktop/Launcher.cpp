@@ -59,7 +59,7 @@ static LaunchServerConnection& connection()
 
 bool Launcher::add_allowed_url(const URL& url)
 {
-    auto response = connection().send_sync_but_allow_failure<Messages::LaunchServer::AddAllowedURL>(url);
+    auto response = connection().send_sync_but_allow_failure<Messages::LaunchServer::AddAllowedUrl>(url);
     if (!response) {
         dbgln("Launcher::add_allowed_url: Failed");
         return false;
@@ -69,7 +69,7 @@ bool Launcher::add_allowed_url(const URL& url)
 
 bool Launcher::add_allowed_handler_with_any_url(const String& handler)
 {
-    auto response = connection().send_sync_but_allow_failure<Messages::LaunchServer::AddAllowedHandlerWithAnyURL>(handler);
+    auto response = connection().send_sync_but_allow_failure<Messages::LaunchServer::AddAllowedHandlerWithAnyUrl>(handler);
     if (!response) {
         dbgln("Launcher::add_allowed_handler_with_any_url: Failed");
         return false;
@@ -79,7 +79,7 @@ bool Launcher::add_allowed_handler_with_any_url(const String& handler)
 
 bool Launcher::add_allowed_handler_with_only_specific_urls(const String& handler, const Vector<URL>& urls)
 {
-    auto response = connection().send_sync_but_allow_failure<Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificURLs>(handler, urls);
+    auto response = connection().send_sync_but_allow_failure<Messages::LaunchServer::AddAllowedHandlerWithOnlySpecificUrls>(handler, urls);
     if (!response) {
         dbgln("Launcher::add_allowed_handler_with_only_specific_urls: Failed");
         return false;

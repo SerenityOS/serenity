@@ -48,8 +48,8 @@ private:
     virtual void remove_backing_store(i32) override;
     virtual void debug_request(String const&, String const&) override;
     virtual void get_source() override;
-    virtual void jsconsole_initialize() override;
-    virtual void jsconsole_input(String const&) override;
+    virtual void js_console_initialize() override;
+    virtual void js_console_input(String const&) override;
 
     void flush_pending_paint_requests();
 
