@@ -6,7 +6,7 @@
 
 Ensure your CMake version is >= 3.16 with `cmake --version`. If your system doesn't provide a suitable version of CMake, you can download a binary release from the [CMake website](https://cmake.org/download).
 
-Ensure your gcc version is >= 10 with `gcc --version`. Otherwise, install it.
+Ensure your gcc version is >= 11 with `gcc --version`. Otherwise, install it.
 
 On Ubuntu it's in the repositories of 20.04 (Focal) and later - add the `ubuntu-toolchain-r/test` PPA if you're running an older version:
 
@@ -21,11 +21,11 @@ sudo echo "deb http://http.us.debian.org/debian/ testing non-free contrib main" 
 sudo apt update
 ```
 
-Now on Ubuntu or Debian you can install gcc-10 with apt like this:
+Now on Ubuntu or Debian you can install gcc-11 with apt like this:
 
 ```console
-sudo apt install gcc-10 g++-10
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 900 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+sudo apt install gcc-11 g++-11
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 900 --slave /usr/bin/g++ g++ /usr/bin/g++-11
 ```
 
 If you don't want to stay on the Debian testing branch you can switch back by running:
@@ -79,7 +79,7 @@ with import <nixpkgs> {};
 stdenv.mkDerivation {
   name = "cpp-env";
   nativeBuildInputs = [
-    gcc10
+    gcc11
     curl
     cmake
     mpfr
@@ -112,7 +112,7 @@ Make sure you have all the dependencies installed:
 
 ```console
 # core
-brew install coreutils qemu bash gcc@10 ninja cmake
+brew install coreutils qemu bash gcc@11 ninja cmake
 
 # Fuse + ext2
 brew install e2fsprogs m4 autoconf automake libtool
@@ -130,7 +130,7 @@ Notes:
 - Installing osxfuse for the first time requires enabling its system extension in System Preferences and then restarting your machine. The output from installing osxfuse with brew says this, but it's easy to miss.
 - bash is needed because the default version installed on macOS doesn't support globstar
 - If you install some commercial EXT2 macOS fs handler instead of osxfuse and fuse-ext2, you will need to `brew install e2fsprogs` to obtain `mke2fs` anyway.
-- As of 2020-08-06, you might need to tell the build system about your newer host compiler. Once you've built the toolchain, navigate to `Build/i686/`, `rm -rf *`, then run `cmake ../.. -G Ninja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10`, then continue with `ninja install` as usual.
+- As of 2020-08-06, you might need to tell the build system about your newer host compiler. Once you've built the toolchain, navigate to `Build/i686/`, `rm -rf *`, then run `cmake ../.. -G Ninja -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_COMPILER=g++-11`, then continue with `ninja install` as usual.
 - If you are on macOS Big Sur, you will need to manually enable QEMU's acceleration before running Serenity, by creating a new file called `entitlements.xml` in the `Build/` folder, with the content below, and then run the command: `codesign -s - --entitlements entitlements.xml --force /usr/local/bin/qemu-system-x86_64`; otherwise the run command will fail.
 
 <details>
