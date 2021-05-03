@@ -1,8 +1,8 @@
 set(SOURCES
     Decoder.cpp
     Encoder.cpp
-    Endpoint.cpp
     Message.cpp
+    Stub.cpp
 )
 
 serenity_lib(LibIPC ipc)

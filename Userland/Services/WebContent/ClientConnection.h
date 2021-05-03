@@ -20,7 +20,7 @@ namespace WebContent {
 
 class ClientConnection final
     : public IPC::ClientConnection<WebContentClientEndpoint, WebContentServerEndpoint>
-    , public WebContentServerEndpoint {
+{
     C_OBJECT(ClientConnection);
 
 public:

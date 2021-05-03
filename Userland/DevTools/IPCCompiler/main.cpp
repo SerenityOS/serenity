@@ -60,6 +60,25 @@ static String snake_case(String const& identifier)
     return builder.to_string();
 }
 
+bool is_primitive_type(String const& type)
+{
+    return (type == "u8" || type == "i8" || type == "u16" || type == "i16"
+        || type == "u32" || type == "i32" || type == "bool" || type == "double"
+        || type == "float" || type == "int" || type == "unsigned" || type == "unsigned int");
+}
+
+String message_name(String const& endpoint, String& message, bool is_response)
+{
+    StringBuilder builder;
+    builder.append("Messages::");
+    builder.append(endpoint);
+    builder.append("::");
+    builder.append(message);
+    if (is_response)
+        builder.append("Response");
+    return builder.to_string();
+}
+
 int main(int argc, char** argv)
 {
     if (argc != 2) {
@@ -231,10 +250,11 @@ int main(int argc, char** argv)
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibIPC/Connection.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/Encoder.h>
-#include <LibIPC/Endpoint.h>
+#include <LibIPC/Stub.h>
 #include <LibIPC/File.h>
 #include <LibIPC/Message.h>
 )~~~");
@@ -329,6 +349,9 @@ public:
 
             message_generator.append(R"~~~(
     @message.name@(decltype(nullptr)) : m_ipc_message_valid(false) { }
+    @message.name@(@message.name@ const&) = default;
+    @message.name@(@message.name@&&) = default;
+    @message.name@& operator=(@message.name@ const&) = default;
     @message.constructor@
     virtual ~@message.name@() override {}
 
@@ -452,15 +475,109 @@ private:
         )~~~");
 
         endpoint_generator.append(R"~~~(
-class @endpoint.name@Endpoint : public IPC::Endpoint {
+template<typename LocalEndpoint, typename PeerEndpoint>
+class @endpoint.name@Proxy {
 public:
-    @endpoint.name@Endpoint() { }
-    virtual ~@endpoint.name@Endpoint() override { }
+    // Used to disambiguate the constructor call.
+    struct Tag { };
+
+    @endpoint.name@Proxy(IPC::Connection<LocalEndpoint, PeerEndpoint>& connection, Tag)
+        : m_connection(connection)
+    { }
+)~~~");
+
+        for (auto& message : endpoint.messages) {
+            auto message_generator = endpoint_generator.fork();
+
+            auto do_implement_proxy = [&](String const& name, Vector<Parameter> const& parameters, bool is_synchronous) {
+                String return_type = "void";
+                if (is_synchronous && !message.outputs.is_empty())
+                    return_type = message_name(endpoint.name, message.name, true);
+                message_generator.set("message.name", message.name);
+                message_generator.set("message.complex_return_type", return_type);
+                message_generator.set("async_prefix_maybe", is_synchronous ? "" : "async_");
+
+                message_generator.set("handler_name", snake_case(name));
+                message_generator.append(R"~~~(
+    @message.complex_return_type@ @async_prefix_maybe@@handler_name@()~~~");
+
+                for (size_t i = 0; i < parameters.size(); ++i) {
+                    auto& parameter = parameters[i];
+                    auto argument_generator = message_generator.fork();
+                    argument_generator.set("argument.type", parameter.type);
+                    argument_generator.set("argument.name", parameter.name);
+                    argument_generator.append("@argument.type@ @argument.name@");
+                    if (i != parameters.size() - 1)
+                        argument_generator.append(", ");
+                }
+
+                message_generator.append(") {");
+
+                if (is_synchronous) {
+                    if (return_type != "void") {
+                        message_generator.append(R"~~~(
+        return move(*)~~~");
+                    } else{
+                        message_generator.append(R"~~~(
+        )~~~");
+                    }
+
+                    message_generator.append("m_connection.template send_sync<Messages::@endpoint.name@::@message.name@>(");
+                } else {
+                    message_generator.append(R"~~~(
+        m_connection.post_message(Messages::@endpoint.name@::@message.name@ { )~~~");
+                }
+
+                for (size_t i = 0; i < parameters.size(); ++i) {
+                    auto& parameter = parameters[i];
+                    auto argument_generator = message_generator.fork();
+                    argument_generator.set("argument.name", parameter.name);
+                    if (is_primitive_type(parameters[i].type))
+                        argument_generator.append("@argument.name@");
+                    else
+                        argument_generator.append("move(@argument.name@)");
+                    if (i != parameters.size() - 1)
+                        argument_generator.append(", ");
+                }
+
+                if (is_synchronous) {
+                    if (return_type != "void") {
+                        message_generator.append(")");
+                    }
+
+                    message_generator.append(R"~~~();
+    }
+)~~~");
+                } else {
+                    message_generator.append(R"~~~( });
+    }
+)~~~");
+                }
+            };
+
+            do_implement_proxy(message.name, message.inputs, message.is_synchronous);
+            if (message.is_synchronous)
+                do_implement_proxy(message.name, message.inputs, false);
+        }
+
+        endpoint_generator.append(R"~~~(
+private:
+    IPC::Connection<LocalEndpoint, PeerEndpoint>& m_connection;
+};
+)~~~");
+
+        endpoint_generator.append(R"~~~(
+template<typename LocalEndpoint, typename PeerEndpoint>
+class @endpoint.name@Proxy;
+class @endpoint.name@Stub;
+
+class @endpoint.name@Endpoint {
+public:
+    template<typename LocalEndpoint>
+    using Proxy = @endpoint.name@Proxy<LocalEndpoint, @endpoint.name@Endpoint>;
+    using Stub = @endpoint.name@Stub;
 
     static u32 static_magic() { return @endpoint.magic@; }
-    virtual u32 magic() const override { return @endpoint.magic@; }
-    static String static_name() { return "@endpoint.name@"; }
-    virtual String name() const override { return "@endpoint.name@"; }
 
     static OwnPtr<IPC::Message> decode_message(ReadonlyBytes buffer, int sockfd)
     {
@@ -550,6 +667,16 @@ public:
         return message;
     }
 
+};
+
+class @endpoint.name@Stub : public IPC::Stub {
+public:
+    @endpoint.name@Stub() { }
+    virtual ~@endpoint.name@Stub() override { }
+
+    virtual u32 magic() const override { return @endpoint.magic@; }
+    virtual String name() const override { return "@endpoint.name@"; }
+
     virtual OwnPtr<IPC::MessageBuffer> handle(const IPC::Message& message) override
     {
         switch (message.message_id()) {
@@ -619,15 +746,8 @@ public:
 
             auto do_handle_message_decl = [&](String const& name, Vector<Parameter> const& parameters, bool is_response) {
                 String return_type = "void";
-                if (message.is_synchronous && !message.outputs.is_empty() && !is_response) {
-                    StringBuilder builder;
-                    builder.append("Messages::");
-                    builder.append(endpoint.name);
-                    builder.append("::");
-                    builder.append(message.name);
-                    builder.append("Response");
-                    return_type = builder.to_string();
-                }
+                if (message.is_synchronous && !message.outputs.is_empty() && !is_response)
+                    return_type = message_name(endpoint.name, message.name, true);
                 message_generator.set("message.complex_return_type", return_type);
 
                 message_generator.set("handler_name", snake_case(name));
@@ -637,11 +757,7 @@ public:
                 auto make_argument_type = [](String const& type) {
                     StringBuilder builder;
 
-                    bool const_ref = true;
-                    if (type == "u8" || type == "i8" || type == "u16" || type == "i16"
-                        || type == "u32" || type == "i32" || type == "bool" || type == "double"
-                        || type == "float" || type == "int" || type == "unsigned" || type == "unsigned int")
-                        const_ref = false;
+                    bool const_ref = !is_primitive_type(type);
 
                     builder.append(type);
                     if (const_ref)

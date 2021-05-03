@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibIPC/Endpoint.h>
+#include <LibIPC/Stub.h>
 
 namespace IPC {
 
-Endpoint::Endpoint()
+Stub::Stub()
 {
 }
 
-Endpoint::~Endpoint()
+Stub::~Stub()
 {
 }
 

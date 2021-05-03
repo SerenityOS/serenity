@@ -16,7 +16,7 @@ namespace WindowServer {
 
 class WMClientConnection final
     : public IPC::ClientConnection<WindowManagerClientEndpoint, WindowManagerServerEndpoint>
-    , public WindowManagerServerEndpoint {
+{
     C_OBJECT(WMClientConnection)
 
 public:

@@ -16,7 +16,7 @@ namespace WebSocket {
 
 class ClientConnection final
     : public IPC::ClientConnection<WebSocketClientEndpoint, WebSocketServerEndpoint>
-    , public WebSocketServerEndpoint {
+{
     C_OBJECT(ClientConnection);
 
 public:
