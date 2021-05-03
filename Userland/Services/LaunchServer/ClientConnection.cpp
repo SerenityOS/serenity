@@ -32,7 +32,7 @@ void ClientConnection::greet()
 {
 }
 
-Messages::LaunchServer::OpenURLResponse ClientConnection::open_url(URL const& url, String const& handler_name)
+Messages::LaunchServer::OpenUrlResponse ClientConnection::open_url(URL const& url, String const& handler_name)
 {
     if (!m_allowlist.is_empty()) {
         bool allowed = false;
@@ -55,12 +55,12 @@ Messages::LaunchServer::OpenURLResponse ClientConnection::open_url(URL const& ur
     return Launcher::the().open_url(url, handler_name);
 }
 
-Messages::LaunchServer::GetHandlersForURLResponse ClientConnection::get_handlers_for_url(URL const& url)
+Messages::LaunchServer::GetHandlersForUrlResponse ClientConnection::get_handlers_for_url(URL const& url)
 {
     return Launcher::the().handlers_for_url(url);
 }
 
-Messages::LaunchServer::GetHandlersWithDetailsForURLResponse ClientConnection::get_handlers_with_details_for_url(URL const& url)
+Messages::LaunchServer::GetHandlersWithDetailsForUrlResponse ClientConnection::get_handlers_with_details_for_url(URL const& url)
 {
     return Launcher::the().handlers_with_details_for_url(url);
 }

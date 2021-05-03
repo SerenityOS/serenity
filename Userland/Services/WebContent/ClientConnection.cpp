@@ -213,7 +213,7 @@ void ClientConnection::get_source()
     }
 }
 
-void ClientConnection::jsconsole_initialize()
+void ClientConnection::js_console_initialize()
 {
     if (auto* document = page().main_frame().document()) {
         auto interpreter = document->interpreter().make_weak_ptr();
@@ -226,7 +226,7 @@ void ClientConnection::jsconsole_initialize()
     }
 }
 
-void ClientConnection::jsconsole_input(const String& js_source)
+void ClientConnection::js_console_input(const String& js_source)
 {
     if (m_console_client)
         m_console_client->handle_input(js_source);

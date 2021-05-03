@@ -51,7 +51,7 @@ private:
     virtual void did_request_link_context_menu(Gfx::IntPoint const&, URL const&, String const&, unsigned) override;
     virtual void did_request_image_context_menu(Gfx::IntPoint const&, URL const&, String const&, unsigned, Gfx::ShareableBitmap const&) override;
     virtual void did_get_source(URL const&, String const&) override;
-    virtual void did_jsconsole_output(String const&, String const&) override;
+    virtual void did_js_console_output(String const&, String const&) override;
     virtual void did_change_favicon(Gfx::ShareableBitmap const&) override;
     virtual void did_request_alert(String const&) override;
     virtual Messages::WebContentClient::DidRequestConfirmResponse did_request_confirm(String const&) override;
