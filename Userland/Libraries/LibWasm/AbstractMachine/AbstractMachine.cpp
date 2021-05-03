@@ -164,9 +164,14 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
         }
     });
 
-    module.for_each_section_of_type<StartSection>([&](auto&) {
-        instantiation_result = InstantiationError { "Start section not yet implemented" };
-        // FIXME: Invoke the start function.
+    module.for_each_section_of_type<StartSection>([&](const StartSection& section) {
+        auto& functions = m_module_instance.functions();
+        auto index = section.function().index();
+        if (functions.size() <= index.value()) {
+            instantiation_result = InstantiationError { String::formatted("Start section function referenced invalid index {} of max {} entries", index.value(), functions.size()) };
+            return;
+        }
+        invoke(functions[index.value()], {});
     });
 
     return instantiation_result.value_or({});
