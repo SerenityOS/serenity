@@ -150,7 +150,7 @@ Gfx::IntRect Scrollbar::scrubber_rect() const
     if (value() == min())
         x_or_y = button_size();
     else if (value() == max())
-        x_or_y = (length(orientation()) - button_size() - visible_scrubber_size()) + 1;
+        x_or_y = length(orientation()) - button_size() - visible_scrubber_size();
     else {
         float range_size = max() - min();
         float available = scrubbable_range_in_pixels();
