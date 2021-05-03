@@ -29,6 +29,8 @@ public:
 
     NonnullRefPtr<IndirectValue> parse_indirect_value_at_offset(size_t offset);
 
+    RefPtr<DictObject> conditionally_parse_page_tree_node_at_offset(size_t offset);
+
 private:
     bool parse_header();
     XRefTable parse_xref_table();

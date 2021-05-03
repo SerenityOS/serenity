@@ -363,14 +363,14 @@ Value Parser::parse_number()
         }
     }
 
+    consume_whitespace();
+
     auto string = String(m_reader.bytes().slice(start_offset, m_reader.offset() - start_offset));
     float f = strtof(string.characters(), nullptr);
     if (is_float)
         return Value(f);
 
     VERIFY(floorf(f) == f);
-    consume_whitespace();
-
     return Value(static_cast<int>(f));
 }
 
@@ -557,6 +557,50 @@ NonnullRefPtr<DictObject> Parser::parse_dict()
             break;
         auto name = parse_name();
         auto value = parse_value();
+        map.set(name->name(), value);
+    }
+
+    consume('>');
+    consume('>');
+    consume_whitespace();
+
+    return make_object<DictObject>(map);
+}
+
+RefPtr<DictObject> Parser::conditionally_parse_page_tree_node_at_offset(size_t offset)
+{
+    m_reader.move_to(offset);
+    parse_number();
+    parse_number();
+    VERIFY(m_reader.matches("obj"));
+    m_reader.move_by(3);
+    consume_whitespace();
+
+    consume('<');
+    consume('<');
+    consume_whitespace();
+    HashMap<FlyString, Value> map;
+
+    while (true) {
+        if (m_reader.matches(">>"))
+            break;
+        auto name = parse_name();
+        auto name_string = name->name();
+        if (!name_string.is_one_of("Type", "Parent", "Kids", "Count")) {
+            // This is a page, not a page tree node
+            return {};
+        }
+        auto value = parse_value();
+        if (name_string == "Type") {
+            if (!value.is_object())
+                return {};
+            auto type_object = value.as_object();
+            if (!type_object->is_name())
+                return {};
+            auto type_name = object_cast<NameObject>(type_object);
+            if (type_name->name() != "Pages")
+                return {};
+        }
         map.set(name->name(), value);
     }
 

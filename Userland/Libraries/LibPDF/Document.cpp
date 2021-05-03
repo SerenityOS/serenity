@@ -117,14 +117,33 @@ UnwrappedValueType<T> Document::resolve_to(const Value& value)
 void Document::build_page_tree()
 {
     auto page_tree = m_catalog->get_dict(this, "Pages");
-    auto kids_array = page_tree->get_array(this, "Kids");
+    add_page_tree_node_to_page_tree(page_tree);
+}
 
+void Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tree)
+{
+    auto kids_array = page_tree->get_array(this, "Kids");
     auto page_count = page_tree->get("Count").value().as_int();
+
     if (static_cast<size_t>(page_count) != kids_array->elements().size()) {
-        // FIXME: Support recursive PDF page tree structures
-        VERIFY_NOT_REACHED();
+        // This page tree contains child page trees, so we recursively add
+        // these pages to the overall page tree
+
+        for (auto& value : *kids_array) {
+            auto reference = resolve_to<IndirectValueRef>(value);
+            auto byte_offset = m_xref_table.byte_offset_for_object(reference->index());
+            auto maybe_page_tree_node = m_parser.conditionally_parse_page_tree_node_at_offset(byte_offset);
+            if (maybe_page_tree_node) {
+                add_page_tree_node_to_page_tree(maybe_page_tree_node.release_nonnull());
+            } else {
+                m_page_object_indices.append(reference->index());
+            }
+        }
+
+        return;
     }
 
+    // We know all of the kids are leaf nodes
     for (auto& value : *kids_array) {
         auto reference = resolve_to<IndirectValueRef>(value);
         m_page_object_indices.append(reference->index());
