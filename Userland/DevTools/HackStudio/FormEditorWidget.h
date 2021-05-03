@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/HashTable.h>
-#include <LibGUI/ScrollableWidget.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 
 namespace HackStudio {
 
@@ -15,7 +15,7 @@ class FormWidget;
 class Tool;
 class WidgetTreeModel;
 
-class FormEditorWidget final : public GUI::ScrollableWidget {
+class FormEditorWidget final : public GUI::AbstractScrollableWidget {
     C_OBJECT(FormEditorWidget)
 public:
     virtual ~FormEditorWidget() override;

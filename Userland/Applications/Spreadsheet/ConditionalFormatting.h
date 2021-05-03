@@ -8,7 +8,7 @@
 
 #include "Forward.h"
 #include <AK/String.h>
-#include <LibGUI/ScrollableWidget.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGfx/Color.h>
 
 namespace Spreadsheet {

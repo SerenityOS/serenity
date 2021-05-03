@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,10 +11,11 @@
 
 namespace GUI {
 
-class ScrollableWidget : public Frame {
-    C_OBJECT(ScrollableWidget)
+class AbstractScrollableWidget : public Frame {
+    C_OBJECT_ABSTRACT(AbstractScrollableWidget);
+
 public:
-    virtual ~ScrollableWidget() override;
+    virtual ~AbstractScrollableWidget() override;
 
     Gfx::IntSize content_size() const { return m_content_size; }
     int content_width() const { return m_content_size.width(); }
@@ -63,7 +64,7 @@ public:
     Gfx::IntRect to_widget_rect(const Gfx::IntRect& content_rect) const { return { to_widget_position(content_rect.location()), content_rect.size() }; }
 
 protected:
-    ScrollableWidget();
+    AbstractScrollableWidget();
     virtual void custom_layout() override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void mousewheel_event(MouseEvent&) override;
@@ -72,11 +73,11 @@ protected:
     void set_size_occupied_by_fixed_elements(const Gfx::IntSize&);
 
 private:
-    class ScrollableWidgetScrollbar final : public Scrollbar {
-        C_OBJECT(ScrollableWidgetScrollbar);
+    class AbstractScrollableWidgetScrollbar final : public Scrollbar {
+        C_OBJECT(AbstractScrollableWidgetScrollbar);
 
     protected:
-        explicit ScrollableWidgetScrollbar(ScrollableWidget& owner, Gfx::Orientation orientation)
+        explicit AbstractScrollableWidgetScrollbar(AbstractScrollableWidget& owner, Gfx::Orientation orientation)
             : Scrollbar(orientation)
             , m_owner(owner)
         {
@@ -88,15 +89,15 @@ private:
         }
 
     private:
-        ScrollableWidget& m_owner;
+        AbstractScrollableWidget& m_owner;
     };
     friend class ScrollableWidgetScrollbar;
 
     void update_scrollbar_ranges();
     void handle_wheel_event(MouseEvent&, Widget&);
 
-    RefPtr<ScrollableWidgetScrollbar> m_vertical_scrollbar;
-    RefPtr<ScrollableWidgetScrollbar> m_horizontal_scrollbar;
+    RefPtr<AbstractScrollableWidgetScrollbar> m_vertical_scrollbar;
+    RefPtr<AbstractScrollableWidgetScrollbar> m_horizontal_scrollbar;
     RefPtr<Widget> m_corner_widget;
     Gfx::IntSize m_content_size;
     Gfx::IntSize m_size_occupied_by_fixed_elements;

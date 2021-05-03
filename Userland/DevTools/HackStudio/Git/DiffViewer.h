@@ -9,10 +9,10 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibDiff/Hunks.h>
-#include <LibGUI/ScrollableWidget.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 
 namespace HackStudio {
-class DiffViewer final : public GUI::ScrollableWidget {
+class DiffViewer final : public GUI::AbstractScrollableWidget {
     C_OBJECT(DiffViewer)
 public:
     virtual ~DiffViewer() override;

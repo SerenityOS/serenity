@@ -61,7 +61,7 @@ public:
     const String& title() const { return m_title; }
     const Gfx::Bitmap* icon() const { return m_icon; }
 
-    GUI::ScrollableWidget& view();
+    GUI::AbstractScrollableWidget& view();
 
 private:
     explicit Tab(Type);

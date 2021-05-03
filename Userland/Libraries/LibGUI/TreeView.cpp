@@ -380,7 +380,7 @@ void TreeView::scroll_into_view(const ModelIndex& a_index, bool scroll_horizonta
         }
         return IterationDecision::Continue;
     });
-    ScrollableWidget::scroll_into_view(found_rect, scroll_horizontally, scroll_vertically);
+    AbstractScrollableWidget::scroll_into_view(found_rect, scroll_horizontally, scroll_vertically);
 }
 
 void TreeView::model_did_update(unsigned flags)

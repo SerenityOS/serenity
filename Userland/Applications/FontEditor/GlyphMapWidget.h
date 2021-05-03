@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <LibGUI/ScrollableWidget.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGfx/BitmapFont.h>
 
-class GlyphMapWidget final : public GUI::ScrollableWidget {
+class GlyphMapWidget final : public GUI::AbstractScrollableWidget {
     C_OBJECT(GlyphMapWidget)
 public:
     virtual ~GlyphMapWidget() override;

@@ -10,11 +10,11 @@
 
 #include "KeysWidget.h"
 #include "Music.h"
-#include <LibGUI/ScrollableWidget.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 
 class TrackManager;
 
-class RollWidget final : public GUI::ScrollableWidget {
+class RollWidget final : public GUI::AbstractScrollableWidget {
     C_OBJECT(RollWidget)
 public:
     virtual ~RollWidget() override;

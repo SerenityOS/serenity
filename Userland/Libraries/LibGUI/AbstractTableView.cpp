@@ -272,7 +272,7 @@ void AbstractTableView::scroll_into_view(const ModelIndex& index, bool scroll_ho
         rect = row_rect(index.row());
         break;
     }
-    ScrollableWidget::scroll_into_view(rect, scroll_horizontally, scroll_vertically);
+    AbstractScrollableWidget::scroll_into_view(rect, scroll_horizontally, scroll_vertically);
 }
 
 void AbstractTableView::context_menu_event(ContextMenuEvent& event)

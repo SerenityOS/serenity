@@ -225,7 +225,7 @@ void DiffViewer::update_content_size()
 
 void DiffViewer::resize_event(GUI::ResizeEvent& event)
 {
-    ScrollableWidget::resize_event(event);
+    AbstractScrollableWidget::resize_event(event);
     update_content_size();
 }
 

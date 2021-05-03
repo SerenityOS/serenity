@@ -729,7 +729,7 @@ void TextEditor::keydown_event(KeyEvent& event)
 
     if (is_single_line()) {
         if (event.key() == KeyCode::Key_Tab)
-            return ScrollableWidget::keydown_event(event);
+            return AbstractScrollableWidget::keydown_event(event);
 
         if (event.key() == KeyCode::Key_Return) {
             if (on_return_pressed)
@@ -1425,14 +1425,14 @@ void TextEditor::set_text_alignment(Gfx::TextAlignment alignment)
 
 void TextEditor::resize_event(ResizeEvent& event)
 {
-    ScrollableWidget::resize_event(event);
+    AbstractScrollableWidget::resize_event(event);
     update_content_size();
     recompute_all_visual_lines();
 }
 
 void TextEditor::theme_change_event(ThemeChangeEvent& event)
 {
-    ScrollableWidget::theme_change_event(event);
+    AbstractScrollableWidget::theme_change_event(event);
     if (m_highlighter)
         m_highlighter->rehighlight(palette());
 }
@@ -1599,7 +1599,7 @@ void TextEditor::did_change_font()
     vertical_scrollbar().set_step(line_height());
     recompute_all_visual_lines();
     update();
-    ScrollableWidget::did_change_font();
+    AbstractScrollableWidget::did_change_font();
 }
 
 void TextEditor::document_did_append_line()
