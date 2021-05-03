@@ -5,14 +5,12 @@
  */
 
 #include <AK/Optional.h>
-#include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
-#include <Kernel/VM/MemoryManager.h>
 
 #define IOAPIC_REDIRECTION_ENTRY_OFFSET 0x10
 namespace Kernel {

@@ -4,16 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
 #include <AK/OwnPtr.h>
 #include <AK/Singleton.h>
-#include <AK/String.h>
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
-#include <Kernel/IO.h>
 
 namespace Kernel {
 
