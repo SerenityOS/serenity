@@ -5,11 +5,8 @@
  */
 
 #include "PDFViewer.h"
-#include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
-#include <LibGUI/Clipboard.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/TextEditor.h>
@@ -17,10 +14,24 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibPDF/Renderer.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
+
+RefPtr<Gfx::Bitmap> ZoomablePage::bitmap_for_zoom(u16 zoom)
+{
+    // FIXME: Why doesn't this method's caching work?
+
+    if (zoom == 100)
+        return m_base_bitmap;
+
+    auto existing_bitmap = m_bitmaps.get(zoom);
+    if (existing_bitmap.has_value()) {
+        return existing_bitmap.value();
+    }
+
+    float scale_factor = static_cast<float>(zoom) / 100.0f;
+    auto new_bitmap = m_base_bitmap->scaled(scale_factor, scale_factor);
+    m_bitmaps.set(zoom, new_bitmap);
+    return new_bitmap;
+}
 
 PDFViewer::PDFViewer()
 {
@@ -37,6 +48,8 @@ void PDFViewer::set_document(RefPtr<PDF::Document> document)
 {
     m_document = document;
     m_current_page_index = document->get_first_page_index();
+    m_zoom_percent = 100;
+
     update();
 }
 
@@ -44,10 +57,10 @@ RefPtr<Gfx::Bitmap> PDFViewer::get_rendered_page(u32 index)
 {
     auto existing_rendered_page = m_rendered_pages.get(index);
     if (existing_rendered_page.has_value())
-        return existing_rendered_page.value();
+        return existing_rendered_page.value().bitmap_for_zoom(m_zoom_percent);
 
     auto rendered_page = render_page(m_document->get_page(index));
-    m_rendered_pages.set(index, rendered_page);
+    m_rendered_pages.set(index, ZoomablePage(rendered_page));
     return rendered_page;
 }
 
@@ -58,7 +71,7 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(event.rect(), palette().color(background_role()));
+    painter.fill_rect(event.rect(), Color(0x80, 0x80, 0x80));
 
     if (!m_document)
         return;
@@ -73,9 +86,6 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
     auto bitmap_width = page->width();
     auto bitmap_height = page->height();
 
-    VERIFY(bitmap_width < total_width);
-    VERIFY(bitmap_height < total_height);
-
     Gfx::IntPoint p { (total_width - bitmap_width) / 2, (total_height - bitmap_height) / 2 };
 
     painter.blit(p, *page, page->rect());
@@ -83,6 +93,17 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
 
 void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
 {
+    if (event.ctrl()) {
+        if (event.wheel_delta() > 0) {
+            zoom_out();
+        } else {
+            zoom_in();
+        }
+        update();
+
+        return;
+    }
+
     if (event.wheel_delta() > 0) {
         if (m_current_page_index < m_document->get_page_count() - 1)
             m_current_page_index++;
@@ -90,6 +111,20 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
         m_current_page_index--;
     }
     update();
+}
+
+void PDFViewer::zoom_in()
+{
+    m_zoom_percent *= 1.2f;
+    if (m_zoom_percent > 1000)
+        m_zoom_percent = 1000;
+}
+
+void PDFViewer::zoom_out()
+{
+    m_zoom_percent *= 0.8f;
+    if (m_zoom_percent < 10)
+        m_zoom_percent = 10;
 }
 
 RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
