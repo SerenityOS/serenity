@@ -165,12 +165,12 @@ int main(int argc, char** argv)
 
     auto rotate_left_action = GUI::Action::create("Rotate &Left", { Mod_None, Key_L },
         [&](auto&) {
-            widget.rotate(Gfx::RotationDirection::Left);
+            widget.rotate(Gfx::RotationDirection::CounterClockwise);
         });
 
     auto rotate_right_action = GUI::Action::create("Rotate &Right", { Mod_None, Key_R },
         [&](auto&) {
-            widget.rotate(Gfx::RotationDirection::Right);
+            widget.rotate(Gfx::RotationDirection::Clockwise);
         });
 
     auto vertical_flip_action = GUI::Action::create("Flip &Vertically", { Mod_None, Key_V },
