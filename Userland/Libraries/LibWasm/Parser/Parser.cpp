@@ -99,7 +99,9 @@ static ParseResult<ParseUntilAnyOfResult<T>> parse_until_any_of(InputStream& str
         if (new_stream.has_any_error())
             return with_eof_check(stream, ParseError::ExpectedValueOrTerminator);
 
-        if ((... || (byte == terminators))) {
+        constexpr auto equals = [](auto&& a, auto&& b) { return a == b; };
+
+        if ((... || equals(byte, terminators))) {
             result.terminator = byte;
             return result;
         }
