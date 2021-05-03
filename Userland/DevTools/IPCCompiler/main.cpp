@@ -247,6 +247,7 @@ int main(int argc, char** argv)
 #pragma once
 #include <AK/MemoryStream.h>
 #include <AK/OwnPtr.h>
+#include <AK/Result.h>
 #include <AK/URL.h>
 #include <AK/Utf8View.h>
 #include <LibCore/AnonymousBuffer.h>
@@ -496,7 +497,7 @@ public:
         for (auto& message : endpoint.messages) {
             auto message_generator = endpoint_generator.fork();
 
-            auto do_implement_proxy = [&](String const& name, Vector<Parameter> const& parameters, bool is_synchronous) {
+            auto do_implement_proxy = [&](String const& name, Vector<Parameter> const& parameters, bool is_synchronous, bool is_try) {
                 String return_type = "void";
                 if (is_synchronous) {
                     if (message.outputs.size() == 1)
@@ -504,14 +505,23 @@ public:
                     else if (!message.outputs.is_empty())
                         return_type = message_name(endpoint.name, message.name, true);
                 }
+                String inner_return_type = return_type;
+                if (is_try) {
+                    StringBuilder builder;
+                    builder.append("Result<");
+                    builder.append(return_type);
+                    builder.append(", IPC::ErrorCode>");
+                    return_type = builder.to_string();
+                }
                 message_generator.set("message.name", message.name);
                 message_generator.set("message.pascal_name", pascal_case(message.name));
                 message_generator.set("message.complex_return_type", return_type);
                 message_generator.set("async_prefix_maybe", is_synchronous ? "" : "async_");
+                message_generator.set("try_prefix_maybe", is_try ? "try_" : "");
 
                 message_generator.set("handler_name", name);
                 message_generator.append(R"~~~(
-    @message.complex_return_type@ @async_prefix_maybe@@handler_name@()~~~");
+    @message.complex_return_type@ @try_prefix_maybe@@async_prefix_maybe@@handler_name@()~~~");
 
                 for (size_t i = 0; i < parameters.size(); ++i) {
                     auto& parameter = parameters[i];
@@ -525,18 +535,21 @@ public:
 
                 message_generator.append(") {");
 
-                if (is_synchronous) {
+                if (is_synchronous && !is_try) {
                     if (return_type != "void") {
                         message_generator.append(R"~~~(
         return )~~~");
                         if (message.outputs.size() != 1)
-                            message_generator.append(" move(*");
+                            message_generator.append("move(*");
                     } else {
                         message_generator.append(R"~~~(
         )~~~");
                     }
 
                     message_generator.append("m_connection.template send_sync<Messages::@endpoint.name@::@message.pascal_name@>(");
+                } else if (is_try) {
+                    message_generator.append(R"~~~(
+        auto result = m_connection.template send_sync_but_allow_failure<Messages::@endpoint.name@::@message.pascal_name@>()~~~");
                 } else {
                     message_generator.append(R"~~~(
         m_connection.post_message(Messages::@endpoint.name@::@message.pascal_name@ { )~~~");
@@ -554,7 +567,7 @@ public:
                         argument_generator.append(", ");
                 }
 
-                if (is_synchronous) {
+                if (is_synchronous && !is_try) {
                     if (return_type != "void") {
                         message_generator.append(")");
                     }
@@ -566,20 +579,36 @@ public:
                     } else
                         message_generator.append(")");
 
-                    message_generator.append(R"~~~(;
-    }
+                    message_generator.append(";");
+                } else if (is_try) {
+                    message_generator.append(R"~~~();
+        if (!result)
+            return IPC::ErrorCode::PeerDisconnected;
 )~~~");
-
+                    if (inner_return_type != "void") {
+                        message_generator.append(R"~~~(
+        return move(*result);
+)~~~");
+                    } else {
+                        message_generator.append(R"~~~(
+        return { };
+)~~~");
+                    }
                 } else {
                     message_generator.append(R"~~~( });
-    }
 )~~~");
                 }
+
+                message_generator.append(R"~~~(
+    }
+)~~~");
             };
 
-            do_implement_proxy(message.name, message.inputs, message.is_synchronous);
-            if (message.is_synchronous)
-                do_implement_proxy(message.name, message.inputs, false);
+            do_implement_proxy(message.name, message.inputs, message.is_synchronous, false);
+            if (message.is_synchronous) {
+                do_implement_proxy(message.name, message.inputs, false, false);
+                do_implement_proxy(message.name, message.inputs, true, true);
+            }
         }
 
         endpoint_generator.append(R"~~~(
