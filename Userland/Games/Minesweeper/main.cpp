@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +15,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -60,6 +61,9 @@ int main(int argc, char** argv)
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_layout<GUI::VerticalBoxLayout>();
     widget.layout()->set_spacing(0);
+
+    auto& top_line = widget.add<GUI::SeparatorWidget>(Gfx::Orientation::Horizontal);
+    top_line.set_fixed_height(2);
 
     auto& container = widget.add<GUI::Widget>();
     container.set_fill_with_background_color(true);
