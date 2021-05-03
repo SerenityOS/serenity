@@ -391,12 +391,12 @@ void OutOfProcessWebView::get_source()
 
 void OutOfProcessWebView::js_console_initialize()
 {
-    client().async_jsconsole_initialize();
+    client().async_js_console_initialize();
 }
 
 void OutOfProcessWebView::js_console_input(const String& js_source)
 {
-    client().async_jsconsole_input(js_source);
+    client().async_js_console_input(js_source);
 }
 
 }

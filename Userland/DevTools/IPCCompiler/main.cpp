@@ -24,6 +24,24 @@ struct Parameter {
     String name;
 };
 
+static String pascal_case(String const& identifier)
+{
+    StringBuilder builder;
+    bool was_new_word = true;
+    for (auto ch : identifier) {
+        if (ch == '_') {
+            was_new_word = true;
+            continue;
+        }
+        if (was_new_word) {
+            builder.append(toupper(ch));
+            was_new_word = false;
+        } else
+            builder.append(ch);
+    }
+    return builder.to_string();
+}
+
 struct Message {
     String name;
     bool is_synchronous { false };
@@ -33,7 +51,7 @@ struct Message {
     String response_name() const
     {
         StringBuilder builder;
-        builder.append(name);
+        builder.append(pascal_case(name));
         builder.append("Response");
         return builder.to_string();
     }
@@ -44,21 +62,6 @@ struct Endpoint {
     u32 magic;
     Vector<Message> messages;
 };
-
-static String snake_case(String const& identifier)
-{
-    StringBuilder builder;
-    bool was_new_word = true;
-    for (auto ch : identifier) {
-        if (!builder.is_empty() && isupper(ch) && !was_new_word) {
-            builder.append('_');
-            was_new_word = true;
-        } else if (!isupper(ch))
-            was_new_word = false;
-        builder.append(tolower(ch));
-    }
-    return builder.to_string();
-}
 
 bool is_primitive_type(String const& type)
 {
@@ -73,7 +76,7 @@ String message_name(String const& endpoint, String& message, bool is_response)
     builder.append("Messages::");
     builder.append(endpoint);
     builder.append("::");
-    builder.append(message);
+    builder.append(pascal_case(message));
     if (is_response)
         builder.append("Response");
     return builder.to_string();
@@ -279,18 +282,20 @@ enum class MessageID : i32 {
 
             message_ids.set(message.name, message_ids.size() + 1);
             message_generator.set("message.name", message.name);
+            message_generator.set("message.pascal_name", pascal_case(message.name));
             message_generator.set("message.id", String::number(message_ids.size()));
 
             message_generator.append(R"~~~(
-    @message.name@ = @message.id@,
+    @message.pascal_name@ = @message.id@,
 )~~~");
             if (message.is_synchronous) {
                 message_ids.set(message.response_name(), message_ids.size() + 1);
                 message_generator.set("message.name", message.response_name());
+                message_generator.set("message.pascal_name", pascal_case(message.response_name()));
                 message_generator.set("message.id", String::number(message_ids.size()));
 
                 message_generator.append(R"~~~(
-    @message.name@ = @message.id@,
+    @message.pascal_name@ = @message.id@,
 )~~~");
             }
         }
@@ -333,12 +338,14 @@ enum class MessageID : i32 {
 
         auto do_message = [&](const String& name, const Vector<Parameter>& parameters, const String& response_type = {}) {
             auto message_generator = endpoint_generator.fork();
+            auto pascal_name = pascal_case(name);
             message_generator.set("message.name", name);
+            message_generator.set("message.pascal_name", pascal_name);
             message_generator.set("message.response_type", response_type);
-            message_generator.set("message.constructor", constructor_for_message(name, parameters));
+            message_generator.set("message.constructor", constructor_for_message(pascal_name, parameters));
 
             message_generator.append(R"~~~(
-class @message.name@ final : public IPC::Message {
+class @message.pascal_name@ final : public IPC::Message {
 public:
 )~~~");
 
@@ -348,19 +355,19 @@ public:
 )~~~");
 
             message_generator.append(R"~~~(
-    @message.name@(decltype(nullptr)) : m_ipc_message_valid(false) { }
-    @message.name@(@message.name@ const&) = default;
-    @message.name@(@message.name@&&) = default;
-    @message.name@& operator=(@message.name@ const&) = default;
+    @message.pascal_name@(decltype(nullptr)) : m_ipc_message_valid(false) { }
+    @message.pascal_name@(@message.pascal_name@ const&) = default;
+    @message.pascal_name@(@message.pascal_name@&&) = default;
+    @message.pascal_name@& operator=(@message.pascal_name@ const&) = default;
     @message.constructor@
-    virtual ~@message.name@() override {}
+    virtual ~@message.pascal_name@() override {}
 
     virtual u32 endpoint_magic() const override { return @endpoint.magic@; }
-    virtual i32 message_id() const override { return (int)MessageID::@message.name@; }
-    static i32 static_message_id() { return (int)MessageID::@message.name@; }
-    virtual const char* message_name() const override { return "@endpoint.name@::@message.name@"; }
+    virtual i32 message_id() const override { return (int)MessageID::@message.pascal_name@; }
+    static i32 static_message_id() { return (int)MessageID::@message.pascal_name@; }
+    virtual const char* message_name() const override { return "@endpoint.name@::@message.pascal_name@"; }
 
-    static OwnPtr<@message.name@> decode(InputMemoryStream& stream, int sockfd)
+    static OwnPtr<@message.pascal_name@> decode(InputMemoryStream& stream, int sockfd)
     {
         IPC::Decoder decoder { stream, sockfd };
 )~~~");
@@ -403,7 +410,7 @@ public:
             message_generator.set("message.constructor_call_parameters", builder.build());
 
             message_generator.append(R"~~~(
-        return make<@message.name@>(@message.constructor_call_parameters@);
+        return make<@message.pascal_name@>(@message.constructor_call_parameters@);
     }
 )~~~");
 
@@ -417,7 +424,7 @@ public:
         IPC::MessageBuffer buffer;
         IPC::Encoder stream(buffer);
         stream << endpoint_magic();
-        stream << (int)MessageID::@message.name@;
+        stream << (int)MessageID::@message.pascal_name@;
 )~~~");
 
             for (auto& parameter : parameters) {
@@ -498,10 +505,11 @@ public:
                         return_type = message_name(endpoint.name, message.name, true);
                 }
                 message_generator.set("message.name", message.name);
+                message_generator.set("message.pascal_name", pascal_case(message.name));
                 message_generator.set("message.complex_return_type", return_type);
                 message_generator.set("async_prefix_maybe", is_synchronous ? "" : "async_");
 
-                message_generator.set("handler_name", snake_case(name));
+                message_generator.set("handler_name", name);
                 message_generator.append(R"~~~(
     @message.complex_return_type@ @async_prefix_maybe@@handler_name@()~~~");
 
@@ -528,10 +536,10 @@ public:
         )~~~");
                     }
 
-                    message_generator.append("m_connection.template send_sync<Messages::@endpoint.name@::@message.name@>(");
+                    message_generator.append("m_connection.template send_sync<Messages::@endpoint.name@::@message.pascal_name@>(");
                 } else {
                     message_generator.append(R"~~~(
-        m_connection.post_message(Messages::@endpoint.name@::@message.name@ { )~~~");
+        m_connection.post_message(Messages::@endpoint.name@::@message.pascal_name@ { )~~~");
                 }
 
                 for (size_t i = 0; i < parameters.size(); ++i) {
@@ -642,10 +650,11 @@ public:
                 auto message_generator = endpoint_generator.fork();
 
                 message_generator.set("message.name", name);
+                message_generator.set("message.pascal_name", pascal_case(name));
 
                 message_generator.append(R"~~~(
-        case (int)Messages::@endpoint.name@::MessageID::@message.name@:
-            message = Messages::@endpoint.name@::@message.name@::decode(stream, sockfd);
+        case (int)Messages::@endpoint.name@::MessageID::@message.pascal_name@:
+            message = Messages::@endpoint.name@::@message.pascal_name@::decode(stream, sockfd);
             break;
 )~~~");
             };
@@ -709,24 +718,24 @@ public:
                         argument_generator.append(", ");
                 }
 
-                message_generator.set("message.name", name);
-                message_generator.set("message.response_type", message.response_name());
-                message_generator.set("handler_name", snake_case(name));
+                message_generator.set("message.pascal_name", pascal_case(name));
+                message_generator.set("message.response_type", pascal_case(message.response_name()));
+                message_generator.set("handler_name", name);
                 message_generator.set("arguments", argument_generator.to_string());
                 message_generator.append(R"~~~(
-        case (int)Messages::@endpoint.name@::MessageID::@message.name@: {
+        case (int)Messages::@endpoint.name@::MessageID::@message.pascal_name@: {
 )~~~");
                 if (returns_something) {
                     if (message.outputs.is_empty()) {
                         message_generator.append(R"~~~(
-            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.name@&>(message);
+            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.pascal_name@&>(message);
             @handler_name@(@arguments@);
             auto response = Messages::@endpoint.name@::@message.response_type@ { };
             return make<IPC::MessageBuffer>(response.encode());
 )~~~");
                     } else {
                         message_generator.append(R"~~~(
-            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.name@&>(message);
+            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.pascal_name@&>(message);
             auto response = @handler_name@(@arguments@);
             if (!response.valid())
                 return {};
@@ -735,7 +744,7 @@ public:
                     }
                 } else {
                     message_generator.append(R"~~~(
-            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.name@&>(message);
+            [[maybe_unused]] auto& request = static_cast<const Messages::@endpoint.name@::@message.pascal_name@&>(message);
             @handler_name@(@arguments@);
             return {};
 )~~~");
@@ -764,7 +773,7 @@ public:
                     return_type = message_name(endpoint.name, message.name, true);
                 message_generator.set("message.complex_return_type", return_type);
 
-                message_generator.set("handler_name", snake_case(name));
+                message_generator.set("handler_name", name);
                 message_generator.append(R"~~~(
     virtual @message.complex_return_type@ @handler_name@()~~~");
 

@@ -142,7 +142,7 @@ void WebContentClient::did_get_source(URL const& url, String const& source)
     m_view.notify_server_did_get_source(url, source);
 }
 
-void WebContentClient::did_jsconsole_output(String const& method, String const& line)
+void WebContentClient::did_js_console_output(String const& method, String const& line)
 {
     m_view.notify_server_did_js_console_output(method, line);
 }
