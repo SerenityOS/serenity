@@ -30,7 +30,7 @@ Menu& Menubar::add_menu(String name)
 
 int Menubar::realize_menubar()
 {
-    return WindowServerConnection::the().create_menubar().menubar_id();
+    return WindowServerConnection::the().create_menubar();
 }
 
 void Menubar::unrealize_menubar()

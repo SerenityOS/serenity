@@ -37,12 +37,12 @@ DragOperation::Outcome DragOperation::exec()
         drag_bitmap = bitmap->to_shareable_bitmap();
     }
 
-    auto response = WindowServerConnection::the().start_drag(
+    auto started = WindowServerConnection::the().start_drag(
         m_mime_data->text(),
         m_mime_data->all_data(),
         drag_bitmap);
 
-    if (!response.started()) {
+    if (!started) {
         m_outcome = Outcome::Cancelled;
         return m_outcome;
     }
