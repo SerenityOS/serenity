@@ -90,6 +90,7 @@ struct Parameter {
     String name;
     bool optional { false };
     String optional_default_value {};
+    HashMap<String, String> extended_attributes;
 };
 
 struct Function {
@@ -267,13 +268,16 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         for (;;) {
             if (lexer.next_is(')'))
                 break;
+            HashMap<String, String> extended_attributes;
+            if (lexer.consume_specific('['))
+                extended_attributes = parse_extended_attributes();
             bool optional = lexer.consume_specific("optional");
             if (optional)
                 consume_whitespace();
             auto type = parse_type();
             consume_whitespace();
             auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')' || ch == '='; });
-            Parameter parameter = { move(type), move(name), optional };
+            Parameter parameter = { move(type), move(name), optional, {}, extended_attributes };
             consume_whitespace();
             if (lexer.next_is(')')) {
                 parameters.append(parameter);
@@ -708,8 +712,8 @@ static void generate_arguments(SourceGenerator& generator, const Vector<IDL::Par
         arguments_generator.append(R"~~~(
     auto arg@argument.index@ = vm.argument(@argument.index@);
 )~~~");
-        // FIXME: Parameters can have [LegacyNullToEmptyString] attached.
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), return_void, false, parameter.optional, parameter.optional_default_value);
+        bool legacy_null_to_empty_string = parameter.extended_attributes.contains("LegacyNullToEmptyString");
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), return_void, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value);
         ++argument_index;
     }
 
