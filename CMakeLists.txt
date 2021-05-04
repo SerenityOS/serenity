@@ -27,6 +27,7 @@ option(ENABLE_COMPILETIME_FORMAT_CHECK "Enable compiletime format string checks"
 option(ENABLE_PCI_IDS_DOWNLOAD "Enable download of the pci.ids database at build time" ON)
 option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/testing" OFF)
 option(ENABLE_KERNEL_LTO "Build the kernel with link-time optimization" OFF)
+option(INCLUDE_WASM_SPEC_TESTS "Download and include the WebAssembly spec testsuite" OFF)
 
 add_custom_target(run
     COMMAND ${CMAKE_SOURCE_DIR}/Meta/run.sh
@@ -244,4 +245,34 @@ if(EXISTS ${PCI_IDS_GZ_PATH} AND NOT EXISTS ${PCI_IDS_INSTALL_PATH})
     execute_process(COMMAND gzip -k -d ${PCI_IDS_GZ_PATH})
     file(MAKE_DIRECTORY ${CMAKE_INSTALL_DATAROOTDIR})
     file(RENAME ${PCI_IDS_PATH} ${PCI_IDS_INSTALL_PATH})
+endif()
+
+if(INCLUDE_WASM_SPEC_TESTS)
+    set(WASM_SPEC_TEST_GZ_URL https://github.com/WebAssembly/testsuite/archive/refs/heads/master.tar.gz)
+    set(WASM_SPEC_TEST_GZ_PATH ${CMAKE_BINARY_DIR}/wasm-spec-testsuite.tar.gz)
+    set(WASM_SPEC_TEST_TAR_PATH ${CMAKE_BINARY_DIR}/wasm-spec-testsuite.tar)
+    set(WASM_SPEC_TEST_PATH ${CMAKE_SOURCE_DIR}/Userland/Libraries/LibWasm/Tests/Fixtures/SpecTests)
+
+    if(NOT EXISTS ${WASM_SPEC_TEST_GZ_PATH})
+        message(STATUS "Downloading the WebAssembly testsuite from ${WASM_SPEC_TEST_GZ_URL}...")
+        file(DOWNLOAD ${WASM_SPEC_TEST_GZ_URL} ${WASM_SPEC_TEST_GZ_PATH} INACTIVITY_TIMEOUT 10)
+    endif()
+
+    if(EXISTS ${WASM_SPEC_TEST_GZ_PATH} AND NOT EXISTS ${WASM_SPEC_TEST_PATH})
+        message(STATUS "Extracting the WebAssembly testsuite from ${WASM_SPEC_TEST_GZ_PATH}...")
+        file(MAKE_DIRECTORY ${WASM_SPEC_TEST_PATH})
+        execute_process(COMMAND gzip -k -d ${WASM_SPEC_TEST_GZ_PATH})
+        execute_process(COMMAND tar -xf ${WASM_SPEC_TEST_TAR_PATH})
+        execute_process(COMMAND rm ${WASM_SPEC_TEST_TAR_PATH})
+        file(GLOB WASM_TESTS "${CMAKE_BINARY_DIR}/testsuite-master/*.wast")
+        foreach(PATH ${WASM_TESTS})
+            get_filename_component(NAME ${PATH} NAME_WLE)
+            message(STATUS "Compiling WebAssembly test ${NAME}...")
+            execute_process(
+                COMMAND wasm-as -n ${PATH} -o "${WASM_SPEC_TEST_PATH}/${NAME}.wasm"
+                OUTPUT_QUIET
+                ERROR_QUIET)
+        endforeach()
+        file(REMOVE testsuite-master)
+    endif()
 endif()
