@@ -39,10 +39,13 @@ static String get_salt()
     return builder.build();
 }
 
-static Vector<gid_t> get_gids(const StringView& username)
+static Vector<gid_t> get_extra_gids(const passwd& pwd)
 {
+    StringView username { pwd.pw_name };
     Vector<gid_t> extra_gids;
     for (auto* group = getgrent(); group; group = getgrent()) {
+        if (group->gr_gid == pwd.pw_gid)
+            continue;
         for (size_t i = 0; group->gr_mem[i]; ++i) {
             if (username == group->gr_mem[i]) {
                 extra_gids.append(group->gr_gid);
@@ -56,7 +59,7 @@ static Vector<gid_t> get_gids(const StringView& username)
 
 Result<Account, String> Account::from_passwd(const passwd& pwd, const spwd& spwd)
 {
-    Account account(pwd, spwd, get_gids(pwd.pw_name));
+    Account account(pwd, spwd, get_extra_gids(pwd));
     endpwent();
 #ifndef AK_OS_MACOS
     endspent();
