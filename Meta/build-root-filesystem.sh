@@ -104,6 +104,7 @@ mkdir -p mnt/home/anon
 mkdir -p mnt/home/anon/Desktop
 mkdir -p mnt/home/anon/Downloads
 mkdir -p mnt/home/nona
+rm -fr mnt/home/anon/js-tests mnt/home/anon/web-tests
 cp "$SERENITY_SOURCE_DIR"/README.md mnt/home/anon/
 cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibJS/Tests mnt/home/anon/js-tests
 cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibWeb/Tests mnt/home/anon/web-tests
