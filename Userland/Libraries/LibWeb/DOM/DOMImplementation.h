@@ -25,7 +25,10 @@ public:
         return adopt_ref(*new DOMImplementation(document));
     }
 
-    const NonnullRefPtr<Document> create_html_document(const String& title) const;
+    // FIXME: Add optional DocumentType once supported by IDL
+    NonnullRefPtr<Document> create_document(const String&, const String&) const;
+    NonnullRefPtr<Document> create_html_document(const String& title) const;
+    NonnullRefPtr<DocumentType> create_document_type(const String&, const String&, const String&) const;
 
     // https://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
     bool has_feature() const { return true; }

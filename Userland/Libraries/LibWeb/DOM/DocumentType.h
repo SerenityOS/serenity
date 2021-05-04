@@ -15,6 +15,11 @@ class DocumentType final : public Node {
 public:
     using WrapperType = Bindings::DocumentTypeWrapper;
 
+    static NonnullRefPtr<DocumentType> create(Document& document)
+    {
+        return adopt_ref(*new DocumentType(document));
+    }
+
     explicit DocumentType(Document&);
     virtual ~DocumentType() override;
 
