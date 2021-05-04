@@ -8,10 +8,11 @@
 
 #include <AK/CircularQueue.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <LibGUI/Widget.h>
+#include <LibGUI/Frame.h>
 
-class SnakeGame : public GUI::Widget {
-    C_OBJECT(SnakeGame)
+class SnakeGame : public GUI::Frame {
+    C_OBJECT(SnakeGame);
+
 public:
     virtual ~SnakeGame() override;
 

@@ -75,13 +75,13 @@ void SnakeGame::spawn_fruit()
 Gfx::IntRect SnakeGame::score_rect() const
 {
     int score_width = font().width(m_score_text);
-    return { width() - score_width - 2, height() - font().glyph_height() - 2, score_width, font().glyph_height() };
+    return { frame_inner_rect().width() - score_width - 2, frame_inner_rect().height() - font().glyph_height() - 2, score_width, font().glyph_height() };
 }
 
 Gfx::IntRect SnakeGame::high_score_rect() const
 {
     int high_score_width = font().width(m_high_score_text);
-    return { 2, height() - font().glyph_height() - 2, high_score_width, font().glyph_height() };
+    return { frame_thickness() + 2, frame_inner_rect().height() - font().glyph_height() - 2, high_score_width, font().glyph_height() };
 }
 
 void SnakeGame::timer_event(Core::TimerEvent&)
@@ -179,11 +179,11 @@ void SnakeGame::keydown_event(GUI::KeyEvent& event)
 
 Gfx::IntRect SnakeGame::cell_rect(const Coordinate& coord) const
 {
-    auto game_rect = rect();
+    auto game_rect = frame_inner_rect();
     auto cell_size = Gfx::IntSize(game_rect.width() / m_columns, game_rect.height() / m_rows);
     return {
-        coord.column * cell_size.width(),
-        coord.row * cell_size.height(),
+        game_rect.x() + coord.column * cell_size.width(),
+        game_rect.y() + coord.row * cell_size.height(),
         cell_size.width(),
         cell_size.height()
     };
@@ -191,7 +191,9 @@ Gfx::IntRect SnakeGame::cell_rect(const Coordinate& coord) const
 
 void SnakeGame::paint_event(GUI::PaintEvent& event)
 {
+    GUI::Frame::paint_event(event);
     GUI::Painter painter(*this);
+    painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::Black);
 
