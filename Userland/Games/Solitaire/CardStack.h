@@ -57,7 +57,7 @@ private:
         case Foundation:
             return { 2, 1, 4, 1 };
         case Normal:
-            return { 0, 15, 1, 3 };
+            return { 0, 20, 1, 3 };
         case Stock:
         case Waste:
             return { 2, 1, 8, 1 };
