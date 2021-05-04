@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "Base/usr/share/man/**"
+      - "Meta/Websites/man.serenityos.org/**"
 
 env:
   MAN_DIR: ${{ github.workspace }}/Base/usr/share/man/
