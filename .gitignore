@@ -25,3 +25,5 @@ compile_commands.json
 cmake-build-debug/
 sync-local.sh
 .vim/
+
+Userland/Libraries/LibWasm/Tests/Fixtures/SpecTests
