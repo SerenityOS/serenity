@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
     window->set_double_buffering_enabled(false);
     window->set_title("Snake");
-    window->resize(320, 320);
+    window->resize(324, 344);
 
     auto& game = window->set_main_widget<SnakeGame>();
 
@@ -70,7 +70,7 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     }));
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Snake", app_icon, window));
 
     window->set_menubar(move(menubar));
