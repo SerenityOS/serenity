@@ -466,6 +466,42 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
         m_ttl = value;
         return KSuccess;
     }
+    case IP_MULTICAST_LOOP: {
+        if (user_value_size != 1)
+            return EINVAL;
+        u8 value;
+        if (!copy_from_user(&value, static_ptr_cast<const u8*>(user_value)))
+            return EFAULT;
+        if (value != 0 && value != 1)
+            return EINVAL;
+        m_multicast_loop = value;
+        return KSuccess;
+    }
+    case IP_ADD_MEMBERSHIP: {
+        if (user_value_size != sizeof(ip_mreq))
+            return EINVAL;
+        ip_mreq mreq;
+        if (!copy_from_user(&mreq, static_ptr_cast<const ip_mreq*>(user_value)))
+            return EFAULT;
+        if (mreq.imr_interface.s_addr != INADDR_ANY)
+            return ENOTSUP;
+        IPv4Address address { (const u8*)&mreq.imr_multiaddr.s_addr };
+        if (!m_multicast_memberships.contains_slow(address))
+            m_multicast_memberships.append(address);
+        return KSuccess;
+    }
+    case IP_DROP_MEMBERSHIP: {
+        if (user_value_size != sizeof(ip_mreq))
+            return EINVAL;
+        ip_mreq mreq;
+        if (!copy_from_user(&mreq, static_ptr_cast<const ip_mreq*>(user_value)))
+            return EFAULT;
+        if (mreq.imr_interface.s_addr != INADDR_ANY)
+            return ENOTSUP;
+        IPv4Address address { (const u8*)&mreq.imr_multiaddr.s_addr };
+        m_multicast_memberships.remove_first_matching([&address](auto& a) { return a == address; });
+        return KSuccess;
+    }
     default:
         return ENOPROTOOPT;
     }
@@ -490,6 +526,16 @@ KResult IPv4Socket::getsockopt(FileDescription& description, int level, int opti
         if (!copy_to_user(value_size, &size))
             return EFAULT;
         return KSuccess;
+    case IP_MULTICAST_LOOP: {
+        if (size < 1)
+            return EINVAL;
+        if (!copy_to_user(static_ptr_cast<u8*>(value), (const u8*)&m_multicast_loop))
+            return EFAULT;
+        size = 1;
+        if (!copy_to_user(value_size, &size))
+            return EFAULT;
+        return KSuccess;
+    }
     default:
         return ENOPROTOOPT;
     }
