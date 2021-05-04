@@ -499,6 +499,8 @@ static bool is_wrappable_type(const IDL::Type& type)
         return true;
     if (type.name.ends_with("Element"))
         return true;
+    if (type.name.ends_with("Event"))
+        return true;
     if (type.name == "ImageData")
         return true;
     return false;
