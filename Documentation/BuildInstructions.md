@@ -252,6 +252,7 @@ There are some optional features that can be enabled during compilation that are
 - `BUILD_LAGOM`: builds [Lagom](../Meta/Lagom/ReadMe.md), which makes various SerenityOS libraries and programs available on the host system.
 - `PRECOMPILE_COMMON_HEADERS`: precompiles some common headers to speedup compilation.
 - `ENABLE_KERNEL_LTO`: builds the kernel with link-time optimization.
+- `INCLUDE_WASM_SPEC_TESTS`: downloads and includes the WebAssembly spec testsuite tests
 
 Many parts of the SerenityOS codebase have debug functionality, mostly consisting of additional messages printed to the debug console. This is done via the `<component_name>_DEBUG` macros, which can be enabled individually at build time. They are listed in [this file](../Meta/CMake/all_the_debug_macros.cmake).
 

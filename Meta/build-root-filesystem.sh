@@ -104,13 +104,15 @@ mkdir -p mnt/home/anon
 mkdir -p mnt/home/anon/Desktop
 mkdir -p mnt/home/anon/Downloads
 mkdir -p mnt/home/nona
-rm -fr mnt/home/anon/js-tests mnt/home/anon/web-tests mnt/home/anon/cpp-tests
+rm -fr mnt/home/anon/js-tests mnt/home/anon/web-tests mnt/home/anon/cpp-tests mnt/home/anon/wasm-tests
 mkdir -p mnt/home/anon/cpp-tests/
 cp "$SERENITY_SOURCE_DIR"/README.md mnt/home/anon/
 cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibJS/Tests mnt/home/anon/js-tests
 cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibWeb/Tests mnt/home/anon/web-tests
 cp -r "$SERENITY_SOURCE_DIR"/Userland/DevTools/HackStudio/LanguageServers/Cpp/Tests mnt/home/anon/cpp-tests/comprehension
 cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibCpp/Tests mnt/home/anon/cpp-tests/parser
+cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibWasm/Tests mnt/home/anon/wasm-tests
+cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibJS/Tests/test-common.js mnt/home/anon/wasm-tests
 chmod 700 mnt/root
 chmod 700 mnt/home/anon
 chmod 700 mnt/home/nona
