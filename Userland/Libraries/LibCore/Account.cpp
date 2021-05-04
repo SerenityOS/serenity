@@ -172,7 +172,7 @@ Account::Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids)
     , m_gecos(pwd.pw_gecos)
     , m_home_directory(pwd.pw_dir)
     , m_shell(pwd.pw_shell)
-    , m_extra_gids(extra_gids)
+    , m_extra_gids(move(extra_gids))
 {
 }
 
