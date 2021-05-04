@@ -599,9 +599,14 @@ static bool procfs$tid_stack(InodeIdentifier identifier, KBufferBuilder& builder
 
     JsonArraySerializer array { builder };
     bool show_kernel_addresses = Process::current()->is_superuser();
+    bool kernel_address_added = false;
     for (auto address : Processor::capture_stack_trace(*thread, 1024)) {
-        if (!show_kernel_addresses && !is_user_address(VirtualAddress { address }))
+        if (!show_kernel_addresses && !is_user_address(VirtualAddress { address })) {
+            if (kernel_address_added)
+                continue;
             address = 0xdeadc0de;
+            kernel_address_added = true;
+        }
         array.add(JsonValue(address));
     }
 
