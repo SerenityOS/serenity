@@ -74,18 +74,14 @@ Result<Account, String> Account::from_name(const char* username)
 
         return String(strerror(errno));
     }
-#ifndef AK_OS_MACOS
-    auto* spwd = getspnam(username);
-    if (!spwd) {
-        if (errno == 0)
-            return String("No such user");
-
-        return String(strerror(errno));
-    }
-#else
     spwd spwd_dummy = {};
     spwd_dummy.sp_namp = const_cast<char*>(username);
     spwd_dummy.sp_pwdp = const_cast<char*>("");
+#ifndef AK_OS_MACOS
+    auto* spwd = getspnam(username);
+    if (!spwd)
+        spwd = &spwd_dummy;
+#else
     auto* spwd = &spwd_dummy;
 #endif
     return from_passwd(*pwd, *spwd);
@@ -101,18 +97,14 @@ Result<Account, String> Account::from_uid(uid_t uid)
 
         return String(strerror(errno));
     }
-#ifndef AK_OS_MACOS
-    auto* spwd = getspnam(pwd->pw_name);
-    if (!spwd) {
-        if (errno == 0)
-            return String("No such user");
-
-        return String(strerror(errno));
-    }
-#else
     spwd spwd_dummy = {};
     spwd_dummy.sp_namp = pwd->pw_name;
     spwd_dummy.sp_pwdp = const_cast<char*>("");
+#ifndef AK_OS_MACOS
+    auto* spwd = getspnam(pwd->pw_name);
+    if (!spwd)
+        spwd = &spwd_dummy;
+#else
     auto* spwd = &spwd_dummy;
 #endif
     return from_passwd(*pwd, *spwd);
