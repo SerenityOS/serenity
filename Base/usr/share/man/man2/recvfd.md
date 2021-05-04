@@ -7,7 +7,7 @@ recvfd - receive a file descriptor from a local socket peer
 ```**c++
 #include <sys/socket.h>
 
-int recvfd(int sockfd);
+int recvfd(int sockfd, int options);
 ```
 
 ## Description
@@ -15,6 +15,10 @@ int recvfd(int sockfd);
 Receive an open file descriptor from a local socket peer connected via `sockfd`. This is a non-blocking call that will fail if there is no file descriptor waiting in the socket's queue.
 
 File descriptors are sent out-of-band and do not affect the regular data streams.
+
+The *options* argument accepts a bitmask of the following flags:
+
+* `O_CLOEXEC`: The opened fd shall be closed on [`exec`(2)](../man2/exec.md).
 
 ## Return value
 
