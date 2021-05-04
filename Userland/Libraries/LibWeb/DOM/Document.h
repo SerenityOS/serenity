@@ -142,6 +142,12 @@ public:
 
     NonnullRefPtr<HTMLCollection> applets();
     NonnullRefPtr<HTMLCollection> anchors();
+    NonnullRefPtr<HTMLCollection> images();
+    NonnullRefPtr<HTMLCollection> embeds();
+    NonnullRefPtr<HTMLCollection> plugins();
+    NonnullRefPtr<HTMLCollection> links();
+    NonnullRefPtr<HTMLCollection> forms();
+    NonnullRefPtr<HTMLCollection> scripts();
 
     const String& source() const { return m_source; }
     void set_source(const String& source) { m_source = source; }
