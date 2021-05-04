@@ -483,8 +483,9 @@ void Widget::mousemove_event(MouseEvent&)
 {
 }
 
-void Widget::mousewheel_event(MouseEvent&)
+void Widget::mousewheel_event(MouseEvent& event)
 {
+    event.ignore();
 }
 
 void Widget::context_menu_event(ContextMenuEvent&)
