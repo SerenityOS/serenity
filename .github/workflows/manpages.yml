@@ -1,0 +1,53 @@
+name: Generate man pages
+
+on:
+  push:
+    paths:
+      - "Base/usr/share/man/**"
+
+env:
+  MAN_DIR: ${{ github.workspace }}/Base/usr/share/man/
+
+jobs:
+  convert_using_pandoc:
+    runs-on: ubuntu-20.04
+    if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: r-lib/actions/setup-pandoc@v1
+        with:
+          pandoc-version: '2.13'
+      - name: Prepare output directories
+        run: |
+          for d in $MAN_DIR*/; do
+            mkdir -p output/$(basename "$d")
+          done
+      - name: Convert markdown to html
+        run: |
+          find $MAN_DIR -iname '*.md' -type f -exec sh -c 'relative=$(realpath --relative-to=$MAN_DIR $0) && pandoc -f gfm -t html5 -s -o output/${relative%.md}.html ${0}' {} \;
+      - name: Generate man page listings
+        run: |
+          for d in output/*/; do
+            dir_name=$(basename "$d")
+            echo "<!DOCTYPE html><html><head><title>$dir_name</title></head><body>" > "$d/index.html"
+            for f in $d/*; do
+              file_name=$(basename "$f")
+              if [[ "$file_name" == "index.html" ]]; then
+                 continue
+              fi
+              echo "<a href=\"$file_name\"><p>${file_name%.html}</p></a>" >> "$d/index.html"
+            done
+            echo "</body></html>" >> "$d/index.html"
+          done
+      - name: Copy pre-made files
+        run: |
+          cp -R Meta/Websites/man.serenityos.org/* output/
+      - name: Deploy to github pages
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        with:
+          git-config-name: BuggieBot
+          git-config-email: buggiebot@serenityos.org
+          branch: master
+          repository-name: SerenityOS/manpages-website
+          token: ${{ secrets.BUGGIEBOT }}
+          folder: output
