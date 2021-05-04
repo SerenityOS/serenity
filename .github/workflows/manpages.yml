@@ -21,11 +21,19 @@ jobs:
       - name: Prepare output directories
         run: |
           for d in $MAN_DIR*/; do
-            mkdir -p output/$(basename "$d")
+            dir_name=$(basename "$d")
+            mkdir -p output/${dir_name/man}
           done
       - name: Convert markdown to html
         run: |
-          find $MAN_DIR -iname '*.md' -type f -exec sh -c 'relative=$(realpath --relative-to=$MAN_DIR $0) && pandoc -f gfm -t html5 -s -o output/${relative%.md}.html ${0}' {} \;
+          cat << EOF > link-fixup.lua
+          function Link(el)
+            el.target = string.gsub(el.target, "%.md", ".html") -- fixup .md to .html links
+            el.target = string.gsub(el.target, "man", "", 1) -- fixup man1/???.html to 1/???.html links
+            return el
+          end
+          EOF
+          find $MAN_DIR -iname '*.md' -type f -exec sh -c 'relative_path=$(realpath --relative-to=$MAN_DIR $0) && stripped_path=${relative_path#man} && pandoc -f gfm -t html5 -s --lua-filter=link-fixup.lua -o output/${stripped_path%.md}.html ${0}' {} \;
       - name: Generate man page listings
         run: |
           for d in output/*/; do
