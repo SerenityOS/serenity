@@ -10,6 +10,7 @@ set(SOURCES
     LookupServerEndpoint.h
     LookupClientEndpoint.h
     ClientConnection.cpp
+    MulticastDNS.cpp
     main.cpp
 )
 

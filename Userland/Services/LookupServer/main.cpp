@@ -20,11 +20,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     Core::EventLoop event_loop;
     auto server = LookupServer::LookupServer::construct();
 
-    if (pledge("stdio accept inet", nullptr) < 0) {
+    if (pledge("stdio accept inet rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
+    unveil("/proc/net/adapters", "r");
     unveil(nullptr, nullptr);
 
     return event_loop.exec();

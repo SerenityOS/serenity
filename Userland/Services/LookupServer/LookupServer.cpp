@@ -46,6 +46,7 @@ LookupServer::LookupServer()
         m_dns_server = DNSServer::construct(this);
         // TODO: drop root privileges here.
     }
+    m_mdns = MulticastDNS::construct(this);
 
     m_local_server = Core::LocalServer::construct(this);
     m_local_server->on_ready_to_accept = [this]() {
@@ -148,6 +149,14 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short recor
         }
         if (!answers.is_empty())
             return answers;
+    }
+
+    // Look up .local names using mDNS instead of DNS nameservers.
+    if (name.as_string().ends_with(".local")) {
+        answers = m_mdns->lookup(name, record_type);
+        for (auto& answer : answers)
+            put_in_cache(answer);
+        return answers;
     }
 
     // Third, ask the upstream nameservers.
