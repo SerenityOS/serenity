@@ -22,6 +22,9 @@ in_addr_t inet_addr(const char*);
 #define IN_LOOPBACKNET 127
 
 #define IP_TTL 2
+#define IP_MULTICAST_LOOP 3
+#define IP_ADD_MEMBERSHIP 4
+#define IP_DROP_MEMBERSHIP 5
 
 #define IPPORT_RESERVED 1024
 #define IPPORT_USERRESERVED 5000
@@ -37,6 +40,11 @@ struct sockaddr_in {
     in_port_t sin_port;
     struct in_addr sin_addr;
     char sin_zero[8];
+};
+
+struct ip_mreq {
+    struct in_addr imr_multiaddr;
+    struct in_addr imr_interface;
 };
 
 struct in6_addr {

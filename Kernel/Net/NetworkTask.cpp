@@ -258,12 +258,6 @@ void handle_udp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
         return;
     }
 
-    auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
-    if (!adapter && ipv4_packet.destination() != IPv4Address(255, 255, 255, 255)) {
-        dbgln_if(UDP_DEBUG, "handle_udp: this packet is not for me, it's for {}", ipv4_packet.destination());
-        return;
-    }
-
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
     dbgln_if(UDP_DEBUG, "handle_udp: source={}:{}, destination={}:{}, length={}",
         ipv4_packet.source(), udp_packet.source_port(),
@@ -278,7 +272,11 @@ void handle_udp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 
     VERIFY(socket->type() == SOCK_DGRAM);
     VERIFY(socket->local_port() == udp_packet.destination_port());
-    socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
+
+    auto& destination = ipv4_packet.destination();
+
+    if (destination == IPv4Address(255, 255, 255, 255) || NetworkAdapter::from_ipv4_address(destination) || socket->multicast_memberships().contains_slow(destination))
+        socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
 }
 
 void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
