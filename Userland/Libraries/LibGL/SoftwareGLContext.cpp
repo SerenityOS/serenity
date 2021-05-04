@@ -22,116 +22,8 @@ using AK::dbgln;
 
 namespace GL {
 
-static constexpr size_t NUM_CLIP_PLANES = 6;
-
-static FloatVector4 clip_planes[] = {
-    { -1, 0, 0, 1 }, // Left Plane
-    { 1, 0, 0, 1 },  // Right Plane
-    { 0, 1, 0, 1 },  // Top Plane
-    { 0, -1, 0, 1 }, // Bottom plane
-    { 0, 0, 1, 1 },  // Near Plane
-    { 0, 0, -1, 1 }  // Far Plane
-};
-
-static FloatVector4 clip_plane_normals[] = {
-    { 1, 0, 0, 1 },  // Left Plane
-    { -1, 0, 0, 1 }, // Right Plane
-    { 0, -1, 0, 1 }, // Top Plane
-    { 0, 1, 0, 1 },  // Bottom plane
-    { 0, 0, -1, 1 }, // Near Plane
-    { 0, 0, 1, 1 }   // Far Plane
-};
-
-enum ClippingPlane {
-    LEFT = 0,
-    RIGHT = 1,
-    TOP = 2,
-    BOTTOM = 3,
-    NEAR = 4,
-    FAR = 5
-};
-
 // FIXME: We should set this up when we create the context!
 static constexpr size_t MATRIX_STACK_LIMIT = 1024;
-
-// FIXME: Change this to accept a vertex!
-// Determines whether or not a vertex is inside the frustum for a given plane
-static bool vert_inside_plane(const FloatVector4& vec, ClippingPlane plane)
-{
-    switch (plane) {
-    case ClippingPlane::LEFT:
-        return vec.x() > -vec.w();
-    case ClippingPlane::RIGHT:
-        return vec.x() < vec.w();
-    case ClippingPlane::TOP:
-        return vec.y() < vec.w();
-    case ClippingPlane::BOTTOM:
-        return vec.y() > -vec.w();
-    case ClippingPlane::NEAR:
-        return vec.z() > -vec.w();
-    case ClippingPlane::FAR:
-        return vec.z() < vec.w();
-    }
-
-    return false;
-}
-
-// FIXME: This needs to interpolate color/UV data as well!
-static FloatVector4 clip_intersection_point(const FloatVector4& vec, const FloatVector4& prev_vec, ClippingPlane plane_index)
-{
-    // https://github.com/fogleman/fauxgl/blob/master/clipping.go#L20
-    FloatVector4 u, w;
-    FloatVector4 ret = prev_vec;
-    FloatVector4 plane = clip_planes[plane_index];
-    FloatVector4 plane_normal = clip_plane_normals[plane_index];
-
-    u = vec;
-    u -= prev_vec;
-    w = prev_vec;
-    w -= plane;
-    float d = plane_normal.dot(u);
-    float n = -plane_normal.dot(w);
-
-    ret += (u * (n / d));
-    return ret;
-}
-
-// https://groups.csail.mit.edu/graphics/classes/6.837/F04/lectures/07_Pipeline_II.pdf
-// This is a really rough implementation of the Sutherland-Hodgman algorithm in clip-space
-static void clip_triangle_against_frustum(Vector<FloatVector4>& in_vec)
-{
-    Vector<FloatVector4> clipped_polygon = in_vec; // in_vec = subjectPolygon, clipped_polygon = outputList
-    for (size_t i = 0; i < NUM_CLIP_PLANES; i++)   // Test against each clip plane
-    {
-        ClippingPlane plane = static_cast<ClippingPlane>(i); // Hahaha, what the fuck
-        in_vec = clipped_polygon;
-        clipped_polygon.clear();
-
-        // Prevent a crash from .at() undeflow
-        if (in_vec.size() == 0)
-            return;
-
-        FloatVector4 prev_vec = in_vec.at(in_vec.size() - 1);
-
-        for (size_t j = 0; j < in_vec.size(); j++) // Perform this for each vertex
-        {
-            const FloatVector4& vec = in_vec.at(j);
-            if (vert_inside_plane(vec, plane)) {
-                if (!vert_inside_plane(prev_vec, plane)) {
-                    FloatVector4 intersect = clip_intersection_point(prev_vec, vec, plane);
-                    clipped_polygon.append(intersect);
-                }
-
-                clipped_polygon.append(vec);
-            } else if (vert_inside_plane(prev_vec, plane)) {
-                FloatVector4 intersect = clip_intersection_point(prev_vec, vec, plane);
-                clipped_polygon.append(intersect);
-            }
-
-            prev_vec = vec;
-        }
-    }
-}
 
 SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
     : m_frontbuffer(frontbuffer)
@@ -296,7 +188,7 @@ void SoftwareGLContext::gl_end()
         vecs.append(veca);
         vecs.append(vecb);
         vecs.append(vecc);
-        clip_triangle_against_frustum(vecs);
+        m_clipper.clip_triangle_against_frustum(vecs);
 
         // TODO: Copy color and UV information too!
         for (size_t vec_idx = 0; vec_idx < vecs.size(); vec_idx++) {

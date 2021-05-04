@@ -1,4 +1,5 @@
 set(SOURCES
+    Clipper.cpp
     GLColor.cpp
     GLMat.cpp
     GLContext.cpp
