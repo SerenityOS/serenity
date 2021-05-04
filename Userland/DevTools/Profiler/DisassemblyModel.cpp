@@ -50,12 +50,12 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     } else {
         auto process = node.process(profile, node.timestamp());
         if (!process) {
-            dbgln("no process for address {}", node.address());
+            dbgln("no process for address {:p}", node.address());
             return;
         }
         auto library_data = process->library_metadata.library_containing(node.address());
         if (!library_data) {
-            dbgln("no library data for address {}", node.address());
+            dbgln("no library data for address {:p}", node.address());
             return;
         }
         elf = &library_data->object->elf;
