@@ -20,6 +20,8 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/ModelIndex.h>
 
+namespace Profiler {
+
 class DisassemblyModel;
 class Profile;
 class ProfileModel;
@@ -229,3 +231,5 @@ private:
     bool m_show_top_functions { false };
     bool m_show_percentages { false };
 };
+
+}

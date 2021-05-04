@@ -10,6 +10,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+namespace Profiler {
+
 ProfileModel::ProfileModel(Profile& profile)
     : m_profile(profile)
 {
@@ -128,4 +130,6 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 void ProfileModel::update()
 {
     did_update(Model::InvalidateAllIndices);
+}
+
 }

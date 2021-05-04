@@ -6,6 +6,8 @@
 
 #include "Process.h"
 
+namespace Profiler {
+
 Thread* Process::find_thread(pid_t tid, u64 timestamp)
 {
     auto it = threads.find(tid);
@@ -114,4 +116,6 @@ const LibraryMetadata::Library* LibraryMetadata::library_containing(FlatPtr ptr)
             return &library;
     }
     return nullptr;
+}
+
 }

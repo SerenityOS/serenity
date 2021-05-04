@@ -12,6 +12,8 @@
 #include <AK/Vector.h>
 #include <LibELF/Image.h>
 
+namespace Profiler {
+
 struct MappedObject {
     NonnullRefPtr<MappedFile> file;
     ELF::Image elf;
@@ -66,3 +68,5 @@ struct Process {
         return timestamp >= start_valid && (end_valid == 0 || timestamp <= end_valid);
     }
 };
+
+}

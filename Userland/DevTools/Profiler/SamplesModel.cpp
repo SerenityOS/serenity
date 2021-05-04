@@ -9,6 +9,8 @@
 #include <AK/StringBuilder.h>
 #include <stdio.h>
 
+namespace Profiler {
+
 SamplesModel::SamplesModel(Profile& profile)
     : m_profile(profile)
 {
@@ -90,4 +92,6 @@ GUI::Variant SamplesModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 void SamplesModel::update()
 {
     did_update(Model::InvalidateAllIndices);
+}
+
 }
