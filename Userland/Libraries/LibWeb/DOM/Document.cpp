@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,10 +34,14 @@
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLEmbedElement.h>
+#include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/InProcessWebView.h>
@@ -511,6 +516,7 @@ NonnullRefPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString con
     });
 }
 
+// https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-applets
 NonnullRefPtr<HTMLCollection> Document::applets()
 {
     // FIXME: This should return the same HTMLCollection object every time,
@@ -518,12 +524,69 @@ NonnullRefPtr<HTMLCollection> Document::applets()
     return HTMLCollection::create(*this, [] { return false; });
 }
 
+// https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-anchors
 NonnullRefPtr<HTMLCollection> Document::anchors()
 {
     // FIXME: This should return the same HTMLCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.
     return HTMLCollection::create(*this, [](Element const& element) {
         return is<HTML::HTMLAnchorElement>(element) && element.has_attribute(HTML::AttributeNames::name);
+    });
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-images
+NonnullRefPtr<HTMLCollection> Document::images()
+{
+    // FIXME: This should return the same HTMLCollection object every time,
+    //        but that would cause a reference cycle since HTMLCollection refs the root.
+    return HTMLCollection::create(*this, [](Element const& element) {
+        return is<HTML::HTMLImageElement>(element);
+    });
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-embeds
+NonnullRefPtr<HTMLCollection> Document::embeds()
+{
+    // FIXME: This should return the same HTMLCollection object every time,
+    //        but that would cause a reference cycle since HTMLCollection refs the root.
+    return HTMLCollection::create(*this, [](Element const& element) {
+        return is<HTML::HTMLEmbedElement>(element);
+    });
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-plugins
+NonnullRefPtr<HTMLCollection> Document::plugins()
+{
+    return embeds();
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-links
+NonnullRefPtr<HTMLCollection> Document::links()
+{
+    // FIXME: This should return the same HTMLCollection object every time,
+    //        but that would cause a reference cycle since HTMLCollection refs the root.
+    return HTMLCollection::create(*this, [](Element const& element) {
+        return (is<HTML::HTMLAnchorElement>(element) || is<HTML::HTMLAreaElement>(element)) && element.has_attribute(HTML::AttributeNames::href);
+    });
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-forms
+NonnullRefPtr<HTMLCollection> Document::forms()
+{
+    // FIXME: This should return the same HTMLCollection object every time,
+    //        but that would cause a reference cycle since HTMLCollection refs the root.
+    return HTMLCollection::create(*this, [](Element const& element) {
+        return is<HTML::HTMLFormElement>(element);
+    });
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#dom-document-scripts
+NonnullRefPtr<HTMLCollection> Document::scripts()
+{
+    // FIXME: This should return the same HTMLCollection object every time,
+    //        but that would cause a reference cycle since HTMLCollection refs the root.
+    return HTMLCollection::create(*this, [](Element const& element) {
+        return is<HTML::HTMLScriptElement>(element);
     });
 }
 
