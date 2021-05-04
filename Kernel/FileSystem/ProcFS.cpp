@@ -961,19 +961,6 @@ void ProcFS::add_sys_bool(String&& name, Lockable<bool>& var, Function<void()>&&
     sys_variables().append(move(variable));
 }
 
-void ProcFS::add_sys_string(String&& name, Lockable<String>& var, Function<void()>&& notify_callback)
-{
-    InterruptDisabler disabler;
-
-    SysVariable variable;
-    variable.name = move(name);
-    variable.type = SysVariable::Type::String;
-    variable.notify_callback = move(notify_callback);
-    variable.address = &var;
-
-    sys_variables().append(move(variable));
-}
-
 bool ProcFS::initialize()
 {
     static Lockable<bool>* kmalloc_stack_helper;

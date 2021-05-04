@@ -32,7 +32,6 @@ public:
     virtual NonnullRefPtr<Inode> root_inode() const override;
 
     static void add_sys_bool(String&&, Lockable<bool>&, Function<void()>&& notify_callback = nullptr);
-    static void add_sys_string(String&&, Lockable<String>&, Function<void()>&& notify_callback = nullptr);
 
 private:
     ProcFS();
