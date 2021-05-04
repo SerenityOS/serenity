@@ -525,6 +525,9 @@ enum {
 #define IPPROTO_UDP 17
 
 #define IP_TTL 2
+#define IP_MULTICAST_LOOP 3
+#define IP_ADD_MEMBERSHIP 4
+#define IP_DROP_MEMBERSHIP 5
 
 struct ucred {
     pid_t pid;
@@ -548,6 +551,7 @@ struct sockaddr_un {
 struct in_addr {
     uint32_t s_addr;
 };
+typedef uint32_t in_addr_t;
 
 struct sockaddr_in {
     int16_t sin_family;
@@ -555,6 +559,15 @@ struct sockaddr_in {
     struct in_addr sin_addr;
     char sin_zero[8];
 };
+
+struct ip_mreq {
+    struct in_addr imr_multiaddr;
+    struct in_addr imr_interface;
+};
+
+#define INADDR_ANY ((in_addr_t)0)
+#define INADDR_NONE ((in_addr_t)-1)
+#define INADDR_LOOPBACK 0x7f000001
 
 typedef u32 __u32;
 typedef u16 __u16;
