@@ -10,6 +10,7 @@ interface HTMLInputElement : HTMLElement {
     [Reflect] attribute DOMString placeholder;
     [Reflect] attribute DOMString src;
     [Reflect] attribute DOMString step;
+    [Reflect] attribute DOMString name;
     [Reflect=dirname] attribute DOMString dirName;
     [Reflect=value] attribute DOMString defaultValue;
 
