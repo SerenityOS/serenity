@@ -32,7 +32,7 @@ void setspent()
     } else {
         s_stream = fopen("/etc/shadow", "r");
         if (!s_stream) {
-            perror("open /etc/shadow");
+            dbgln("open /etc/shadow failed: {}", strerror(errno));
         }
     }
 }
