@@ -32,6 +32,8 @@
 #include <serenity.h>
 #include <string.h>
 
+using namespace Profiler;
+
 static bool generate_profile(pid_t& pid);
 
 int main(int argc, char** argv)

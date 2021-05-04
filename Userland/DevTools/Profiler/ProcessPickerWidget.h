@@ -9,6 +9,8 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Frame.h>
 
+namespace Profiler {
+
 class Profile;
 
 class ProcessPickerWidget final : public GUI::Frame {
@@ -29,3 +31,5 @@ private:
 
     RefPtr<GUI::ComboBox> m_process_combo;
 };
+
+}

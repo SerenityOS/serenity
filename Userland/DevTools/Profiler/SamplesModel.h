@@ -8,6 +8,8 @@
 
 #include <LibGUI/Model.h>
 
+namespace Profiler {
+
 class Profile;
 
 class SamplesModel final : public GUI::Model {
@@ -43,3 +45,5 @@ private:
     GUI::Icon m_user_frame_icon;
     GUI::Icon m_kernel_frame_icon;
 };
+
+}

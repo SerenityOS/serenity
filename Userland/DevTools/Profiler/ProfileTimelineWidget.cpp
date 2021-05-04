@@ -9,6 +9,8 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
 
+namespace Profiler {
+
 ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile)
     : m_profile(profile)
 {
@@ -120,4 +122,6 @@ void ProfileTimelineWidget::mouseup_event(GUI::MouseEvent& event)
     m_selecting = false;
     if (m_select_start_time == m_select_end_time)
         m_profile.clear_timestamp_filter_range();
+}
+
 }

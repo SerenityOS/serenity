@@ -8,6 +8,8 @@
 
 #include <LibGUI/Model.h>
 
+namespace Profiler {
+
 class Profile;
 
 class IndividualSampleModel final : public GUI::Model {
@@ -38,3 +40,5 @@ private:
     Profile& m_profile;
     const size_t m_event_index { 0 };
 };
+
+}

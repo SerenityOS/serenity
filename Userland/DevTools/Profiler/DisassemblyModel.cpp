@@ -14,6 +14,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+namespace Profiler {
+
 static const Gfx::Bitmap& heat_gradient()
 {
     static RefPtr<Gfx::Bitmap> bitmap;
@@ -184,4 +186,6 @@ GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole
 void DisassemblyModel::update()
 {
     did_update();
+}
+
 }

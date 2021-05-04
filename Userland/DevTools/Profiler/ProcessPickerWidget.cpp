@@ -10,6 +10,8 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 
+namespace Profiler {
+
 ProcessPickerWidget::ProcessPickerWidget(Profile& profile)
     : m_profile(profile)
 {
@@ -45,4 +47,6 @@ ProcessPickerWidget::ProcessPickerWidget(Profile& profile)
 
 ProcessPickerWidget::~ProcessPickerWidget()
 {
+}
+
 }

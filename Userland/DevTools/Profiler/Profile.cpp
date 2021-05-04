@@ -18,6 +18,8 @@
 #include <LibELF/Image.h>
 #include <sys/stat.h>
 
+namespace Profiler {
+
 static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
 {
     quick_sort(nodes.begin(), nodes.end(), [](auto& a, auto& b) {
@@ -458,4 +460,6 @@ ProfileNode::ProfileNode(const String& object_name, String symbol, u32 address, 
 const Process* ProfileNode::process(Profile& profile, u64 timestamp) const
 {
     return profile.find_process(m_pid, timestamp);
+}
+
 }
