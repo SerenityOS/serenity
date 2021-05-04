@@ -11,6 +11,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::DOM {
@@ -31,6 +32,8 @@ public:
     void remove_from_event_listener_list(NonnullRefPtr<EventListener>);
 
     virtual bool dispatch_event(NonnullRefPtr<Event>) = 0;
+    ExceptionOr<bool> dispatch_event_binding(NonnullRefPtr<Event>);
+
     virtual JS::Object* create_wrapper(JS::GlobalObject&) = 0;
     Bindings::ScriptExecutionContext* script_execution_context() { return m_script_execution_context; }
 

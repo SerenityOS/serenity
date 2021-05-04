@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/ScriptExecutionContext.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/EventTarget.h>
 
@@ -51,6 +52,20 @@ void EventTarget::remove_from_event_listener_list(NonnullRefPtr<EventListener> l
     m_listeners.remove_first_matching([&](auto& entry) {
         return entry.listener->type() == listener->type() && &entry.listener->function() == &listener->function() && entry.listener->capture() == listener->capture();
     });
+}
+
+// https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
+ExceptionOr<bool> EventTarget::dispatch_event_binding(NonnullRefPtr<Event> event)
+{
+    if (event->dispatched())
+        return DOM::InvalidStateError::create("The event is already being dispatched.");
+
+    if (!event->initialized())
+        return DOM::InvalidStateError::create("Cannot dispatch an uninitialized event.");
+
+    event->set_is_trusted(false);
+
+    return dispatch_event(event);
 }
 
 }
