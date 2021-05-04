@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Clipper.h"
 #include "GLContext.h"
 #include "GLStruct.h"
 #include "SoftwareRasterizer.h"
@@ -61,9 +62,9 @@ private:
     FloatVector4 m_clear_color = { 0.0f, 0.0f, 0.0f, 0.0f };
     FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-    Vector<GLVertex> vertex_list;
-    Vector<GLTriangle> triangle_list;
-    Vector<GLTriangle> processed_triangles;
+    Vector<GLVertex, 96> vertex_list;
+    Vector<GLTriangle, 32> triangle_list;
+    Vector<GLTriangle, 32> processed_triangles;
 
     GLenum m_error = GL_NO_ERROR;
     bool m_in_draw_state = false;
@@ -73,6 +74,8 @@ private:
     GLenum m_culled_sides = GL_BACK;
 
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
+
+    Clipper m_clipper;
 
     SoftwareRasterizer m_rasterizer;
 };
