@@ -32,7 +32,7 @@ static void handle_sigint(int)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio proc exec ptrace sigaction", nullptr) < 0) {
+    if (pledge("stdio wpath cpath proc exec ptrace sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -58,6 +58,11 @@ int main(int argc, char** argv)
             return 1;
         }
         trace_file = open_result.value();
+    }
+
+    if (pledge("stdio proc exec ptrace sigaction", nullptr) < 0) {
+        perror("pledge");
+        return 1;
     }
 
     int status;
