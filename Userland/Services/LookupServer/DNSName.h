@@ -23,6 +23,8 @@ public:
 
     void randomize_case();
 
+    bool operator==(const DNSName&) const;
+
     class Traits : public AK::Traits<DNSName> {
     public:
         static unsigned hash(const DNSName& name);
