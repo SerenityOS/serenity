@@ -29,7 +29,9 @@ public:
     Element(Document&, QualifiedName);
     virtual ~Element() override;
 
-    virtual FlyString node_name() const final { return m_qualified_name.local_name(); }
+    const String& qualified_name() const { return m_qualified_name.as_string(); }
+    String html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
+    virtual FlyString node_name() const final { return html_uppercased_qualified_name(); }
     const FlyString& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
@@ -96,7 +98,10 @@ private:
     Attribute* find_attribute(const FlyString& name);
     const Attribute* find_attribute(const FlyString& name) const;
 
+    void make_html_uppercased_qualified_name();
+
     QualifiedName m_qualified_name;
+    String m_html_uppercased_qualified_name;
     Vector<Attribute> m_attributes;
 
     RefPtr<CSS::CSSStyleDeclaration> m_inline_style;

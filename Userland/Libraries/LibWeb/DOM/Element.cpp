@@ -34,6 +34,7 @@ Element::Element(Document& document, QualifiedName qualified_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
     , m_qualified_name(move(qualified_name))
 {
+    make_html_uppercased_qualified_name();
 }
 
 Element::~Element()
@@ -357,6 +358,16 @@ NonnullRefPtr<CSS::CSSStyleDeclaration> Element::style_for_bindings()
     if (!m_inline_style)
         m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this);
     return *m_inline_style;
+}
+
+// https://dom.spec.whatwg.org/#element-html-uppercased-qualified-name
+void Element::make_html_uppercased_qualified_name()
+{
+    // This is allowed by the spec: "User agents could optimize qualified name and HTML-uppercased qualified name by storing them in internal slots."
+    if (namespace_() == Namespace::HTML /* FIXME: and its node document is an HTML document */)
+        m_html_uppercased_qualified_name = qualified_name().to_uppercase();
+    else
+        m_html_uppercased_qualified_name = qualified_name();
 }
 
 }
