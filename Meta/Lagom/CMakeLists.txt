@@ -149,6 +149,19 @@ if (BUILD_LAGOM)
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
+        add_executable(test-wasm_lagom ../../Userland/Utilities/test-wasm.cpp)
+        set_target_properties(test-wasm_lagom PROPERTIES OUTPUT_NAME test-wasm)
+        target_link_libraries(test-wasm_lagom Lagom)
+        target_link_libraries(test-wasm_lagom stdc++)
+        target_link_libraries(test-wasm_lagom pthread)
+        add_test(
+            NAME WasmParser
+            COMMAND test-wasm_lagom --show-progress=false
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+        set_tests_properties(WasmParser PROPERTIES
+            ENVIRONMENT SERENITY_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/../..)
+
         add_executable(disasm_lagom ../../Userland/Utilities/disasm.cpp)
         set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
         target_link_libraries(disasm_lagom Lagom)
