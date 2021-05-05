@@ -75,8 +75,6 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
         if (!card.is_moving())
             card.clear_and_draw(painter, background_color);
     }
-
-    m_dirty = false;
 }
 
 void CardStack::rebound_cards()
