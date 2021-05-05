@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Atomic.h>
 #include <AK/CircularQueue.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
@@ -19,6 +20,8 @@
 #include <LibKeyboard/CharacterMap.h>
 
 namespace Kernel {
+
+extern Atomic<bool> g_caps_lock_remapped_to_ctrl;
 
 class HIDDevice;
 class I8042Controller;
