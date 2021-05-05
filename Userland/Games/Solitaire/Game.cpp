@@ -8,17 +8,16 @@
 #include <LibGUI/Painter.h>
 #include <time.h>
 
+REGISTER_WIDGET(Solitaire, Game);
+
 namespace Solitaire {
 
 static const Color s_background_color { Color::from_rgb(0x008000) };
 static constexpr uint8_t new_game_animation_delay = 5;
 static constexpr int s_timer_interval_ms = 1000 / 60;
 
-Game::Game(Function<void(uint32_t)>&& on_score_update)
-    : m_on_score_update(move(on_score_update))
+Game::Game()
 {
-    set_fill_with_background_color(false);
-
     m_stacks[Stock] = CardStack({ 10, 10 }, CardStack::Type::Stock);
     m_stacks[Waste] = CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste);
     m_stacks[Foundation4] = CardStack({ Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation);
@@ -120,7 +119,9 @@ void Game::setup()
 void Game::update_score(int to_add)
 {
     m_score = max(static_cast<int>(m_score) + to_add, 0);
-    m_on_score_update(m_score);
+
+    if (on_score_update)
+        on_score_update(m_score);
 }
 
 void Game::keydown_event(GUI::KeyEvent& event)
