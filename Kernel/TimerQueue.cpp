@@ -44,7 +44,7 @@ Time Timer::now(bool is_firing) const
             break;
         }
     }
-    return TimeManagement::the().current_time(clock_id).value();
+    return TimeManagement::the().current_time(clock_id);
 }
 
 TimerQueue& TimerQueue::the()
@@ -59,7 +59,7 @@ UNMAP_AFTER_INIT TimerQueue::TimerQueue()
 
 RefPtr<Timer> TimerQueue::add_timer_without_id(clockid_t clock_id, const Time& deadline, Function<void()>&& callback)
 {
-    if (deadline <= TimeManagement::the().current_time(clock_id).value())
+    if (deadline <= TimeManagement::the().current_time(clock_id))
         return {};
 
     // Because timer handlers can execute on any processor and there is
@@ -117,7 +117,7 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 
 TimerId TimerQueue::add_timer(clockid_t clock_id, const Time& deadline, Function<void()>&& callback)
 {
-    auto expires = TimeManagement::the().current_time(clock_id).value();
+    auto expires = TimeManagement::the().current_time(clock_id);
     expires = expires + deadline;
     return add_timer(adopt_ref(*new Timer(clock_id, expires, move(callback))));
 }

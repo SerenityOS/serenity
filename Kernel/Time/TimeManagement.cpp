@@ -44,7 +44,7 @@ bool TimeManagement::is_valid_clock_id(clockid_t clock_id)
     };
 }
 
-KResultOr<Time> TimeManagement::current_time(clockid_t clock_id) const
+Time TimeManagement::current_time(clockid_t clock_id) const
 {
     switch (clock_id) {
     case CLOCK_MONOTONIC:
@@ -58,7 +58,8 @@ KResultOr<Time> TimeManagement::current_time(clockid_t clock_id) const
     case CLOCK_REALTIME_COARSE:
         return epoch_time(TimePrecision::Coarse);
     default:
-        return KResult(EINVAL);
+        // Syscall entrypoint is missing a is_valid_clock_id(..) check?
+        VERIFY_NOT_REACHED();
     }
 }
 
