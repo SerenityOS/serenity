@@ -43,6 +43,7 @@ static Vector<gid_t> get_extra_gids(const passwd& pwd)
 {
     StringView username { pwd.pw_name };
     Vector<gid_t> extra_gids;
+    setgrent();
     for (auto* group = getgrent(); group; group = getgrent()) {
         if (group->gr_gid == pwd.pw_gid)
             continue;
