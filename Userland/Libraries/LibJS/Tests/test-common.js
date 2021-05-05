@@ -431,7 +431,7 @@ class ExpectationError extends Error {
         if (!__TestResults__[suiteMessage]) __TestResults__[suiteMessage] = {};
 
         const suite = __TestResults__[suiteMessage];
-        if (suite[message]) {
+        if (Object.prototype.hasOwnProperty.call(suite, message)) {
             suite[message] = {
                 result: "fail",
                 details: "Another test with the same message did already run",
@@ -459,7 +459,13 @@ class ExpectationError extends Error {
         if (!__TestResults__[suiteMessage]) __TestResults__[suiteMessage] = {};
 
         const suite = __TestResults__[suiteMessage];
-        if (suite[message]) throw new Error("Duplicate test name: " + message);
+        if (Object.prototype.hasOwnProperty.call(suite, message)) {
+            suite[message] = {
+                result: "fail",
+                details: "Another test with the same message did already run",
+            };
+            return;
+        }
 
         suite[message] = {
             result: "skip",
