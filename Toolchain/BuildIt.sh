@@ -258,8 +258,8 @@ pushd "$DIR/Build/$ARCH"
         perl -pi -e 's/-no-pie/-nopie/g' "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/configure"
     fi
 
-    if [ ! -f $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-userland.h ]; then
-        cp $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-kernel.h
+    if [ ! -f "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-userland.h" ]; then
+        cp "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h" "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-kernel.h"
     fi
 
     for STAGE in Userland Kernel; do
@@ -277,9 +277,9 @@ pushd "$DIR/Build/$ARCH"
                 REALTARGET="$PREFIX/Kernel"
             fi
 
-            cp $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-kernel.h $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h
+            cp "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-kernel.h" "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h"
             if [ "$STAGE" = "Userland" ]; then
-                sed -i='' 's@-fno-exceptions @@' $DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h
+                sed -i='' 's@-fno-exceptions @@' "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h"
             fi
 
             buildstep "gcc/configure/${STAGE,,}" "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
@@ -302,16 +302,16 @@ pushd "$DIR/Build/$ARCH"
                 fi
                 buildstep "libgcc/build" "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
                 echo "XXX install gcc and libgcc"
-                buildstep "gcc+libgcc/install" "$MAKE" DESTDIR=$TEMPTARGET install-gcc install-target-libgcc || exit 1
+                buildstep "gcc+libgcc/install" "$MAKE" DESTDIR="$TEMPTARGET" install-gcc install-target-libgcc || exit 1
             fi
 
             echo "XXX build libstdc++"
             buildstep "libstdc++/build/${STAGE,,}" "$MAKE" -j "$MAKEJOBS" all-target-libstdc++-v3 || exit 1
             echo "XXX install libstdc++"
-            buildstep "libstdc++/install/${STAGE,,}" "$MAKE" DESTDIR=$TEMPTARGET install-target-libstdc++-v3 || exit 1
+            buildstep "libstdc++/install/${STAGE,,}" "$MAKE" DESTDIR="$TEMPTARGET" install-target-libstdc++-v3 || exit 1
 
             mkdir -p "$REALTARGET"
-            cp -a $TEMPTARGET/$PREFIX/* "$REALTARGET/"
+            cp -a "$TEMPTARGET"/"$PREFIX"/* "$REALTARGET/"
             rm -rf "$TEMPTARGET"
         popd
 
