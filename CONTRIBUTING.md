@@ -22,6 +22,18 @@ That said, please do file any bugs you find, keeping the following in mind:
 * No build issues (or other support requests). If the GitHub Actions CI build succeeds, the build problem is most likely on your side. Work it out locally, or ask in the `#build-problems` channel on Discord.
 * Don't comment on issues just to add a joke or irrelevant commentary. Hundreds of people get notified about comments so let's keep them relevant.
 
+## Human language policy
+
+In SerenityOS, we treat human language as seriously as we do programming language.
+
+The following applies to all user-facing strings, code, comments, and commit messages:
+
+* The official project language is American English.
+* Use proper spelling, grammar, and punctuation.
+* Write in an authoritative and technical tone.
+
+Everyone is encouraged to make use of tooling (spell checkers, etc) to make this easier.
+
 ## Code submission policy
 
 Nobody is perfect, and sometimes we mess things up. That said, here are some good dos & dont's to try and stick to:
