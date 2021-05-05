@@ -6,6 +6,7 @@
 
 #include "Game.h"
 #include <Games/Solitaire/SolitaireGML.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -46,6 +47,8 @@ int main(int argc, char** argv)
     game.set_focus(true);
 
     auto& statusbar = *widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    statusbar.set_text(0, "Score: 0");
+    statusbar.set_text(1, "Time: 00:00:00");
 
     app->on_action_enter = [&](GUI::Action& action) {
         auto text = action.status_tip();
@@ -59,7 +62,28 @@ int main(int argc, char** argv)
     };
 
     game.on_score_update = [&](uint32_t score) {
-        statusbar.set_text(String::formatted("Score: {}", score));
+        statusbar.set_text(0, String::formatted("Score: {}", score));
+    };
+
+    uint64_t seconds_elapsed = 0;
+
+    auto timer = Core::Timer::create_repeating(1000, [&]() {
+        ++seconds_elapsed;
+
+        uint64_t hours = seconds_elapsed / 3600;
+        uint64_t minutes = (seconds_elapsed / 60) % 60;
+        uint64_t seconds = seconds_elapsed % 60;
+
+        statusbar.set_text(1, String::formatted("Time: {:02}:{:02}:{:02}", hours, minutes, seconds));
+    });
+
+    game.on_game_start = [&]() {
+        seconds_elapsed = 0;
+        timer->start();
+    };
+    game.on_game_end = [&]() {
+        if (timer->is_active())
+            timer->stop();
     };
 
     auto menubar = GUI::Menubar::construct();
