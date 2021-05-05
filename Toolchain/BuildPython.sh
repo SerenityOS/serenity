@@ -10,6 +10,7 @@ PREFIX_DIR="$DIR/Local/$ARCH"
 BUILD_DIR="$DIR/Build/$ARCH"
 TARBALLS_DIR="$DIR/Tarballs"
 
+# shellcheck source=/dev/null
 source "$DIR/../Ports/python3/version.sh"
 
 mkdir -p "${TARBALLS_DIR}"
