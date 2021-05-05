@@ -28,6 +28,8 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
 
 private:
+    size_t label_count() const { return m_segments.size(); }
+    void set_label_count(size_t label_count);
     NonnullRefPtr<Label> create_label();
     struct Segment {
         NonnullRefPtr<GUI::Label> label;
