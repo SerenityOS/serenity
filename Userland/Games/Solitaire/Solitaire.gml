@@ -12,5 +12,6 @@
 
     @GUI::Statusbar {
         name: "statusbar"
+        label_count: 2
     }
 }

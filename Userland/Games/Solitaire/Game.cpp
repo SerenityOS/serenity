@@ -76,6 +76,9 @@ void Game::start_game_over_animation()
     m_game_over_animation = true;
 
     start_timer(s_timer_interval_ms);
+
+    if (on_game_end)
+        on_game_end();
 }
 
 void Game::stop_game_over_animation()
@@ -92,6 +95,9 @@ void Game::stop_game_over_animation()
 void Game::setup()
 {
     stop_game_over_animation();
+
+    if (on_game_end)
+        on_game_end();
 
     for (auto& stack : m_stacks)
         stack.clear();
@@ -370,6 +376,9 @@ void Game::paint_event(GUI::PaintEvent& event)
                     stack(Stock).push(m_new_deck.take_last());
                 m_new_game_animation = false;
                 stop_timer();
+
+                if (on_game_start)
+                    on_game_start();
             }
         }
     }
