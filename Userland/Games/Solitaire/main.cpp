@@ -11,6 +11,7 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -36,9 +37,7 @@ int main(int argc, char** argv)
     }
 
     auto window = GUI::Window::construct();
-
-    window->set_resizable(false);
-    window->resize(Solitaire::Game::width, Solitaire::Game::height);
+    window->set_title("Solitaire");
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.load_from_gml(solitaire_gml);
@@ -46,8 +45,21 @@ int main(int argc, char** argv)
     auto& game = *widget.find_descendant_of_type_named<Solitaire::Game>("game");
     game.set_focus(true);
 
+    auto& statusbar = *widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+
+    app->on_action_enter = [&](GUI::Action& action) {
+        auto text = action.status_tip();
+        if (text.is_empty())
+            text = Gfx::parse_ampersand_string(action.text());
+        statusbar.set_override_text(move(text));
+    };
+
+    app->on_action_leave = [&](GUI::Action&) {
+        statusbar.set_override_text({});
+    };
+
     game.on_score_update = [&](uint32_t score) {
-        window->set_title(String::formatted("Score: {} - Solitaire", score));
+        statusbar.set_text(String::formatted("Score: {}", score));
     };
 
     auto menubar = GUI::Menubar::construct();
@@ -62,6 +74,8 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Solitaire", app_icon, window));
 
+    window->set_resizable(false);
+    window->resize(Solitaire::Game::width, Solitaire::Game::height + statusbar.max_height());
     window->set_menubar(move(menubar));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->show();
