@@ -485,7 +485,7 @@ UNMAP_AFTER_INIT APICTimer* APIC::initialize_timers(HardwareTimerBase& calibrati
         return nullptr;
 
     // We should only initialize and calibrate the APIC timer once on the BSP!
-    VERIFY(Processor::id() == 0);
+    VERIFY(Processor::is_bootstrap_processor());
     VERIFY(!m_apic_timer);
 
     m_apic_timer = APICTimer::initialize(IRQ_APIC_TIMER, calibration_timer);

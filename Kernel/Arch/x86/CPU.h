@@ -823,6 +823,11 @@ public:
         return read_fs_ptr(__builtin_offsetof(Processor, m_cpu));
     }
 
+    ALWAYS_INLINE static bool is_bootstrap_processor()
+    {
+        return Processor::id() == 0;
+    }
+
     ALWAYS_INLINE u32 raise_irq()
     {
         return m_in_irq++;
