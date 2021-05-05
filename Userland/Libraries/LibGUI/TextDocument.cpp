@@ -41,6 +41,7 @@ TextDocument::~TextDocument()
 bool TextDocument::set_text(const StringView& text)
 {
     m_client_notifications_enabled = false;
+    m_undo_stack.clear();
     m_spans.clear();
     remove_all_lines();
 

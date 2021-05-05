@@ -80,4 +80,10 @@ void UndoStack::finalize_current_combo()
     m_stack.prepend(move(undo_commands_container));
 }
 
+void UndoStack::clear()
+{
+    m_stack.clear();
+    m_stack_index = 0;
+}
+
 }
