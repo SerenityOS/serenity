@@ -264,7 +264,6 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
         {
             auto& static_formatting_container = colors_tab.add<GUI::Widget>();
             static_formatting_container.set_layout<GUI::VerticalBoxLayout>();
-            static_formatting_container.set_shrink_to_fit(true);
 
             // Foreground
             {
@@ -272,7 +271,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                 auto& foreground_container = static_formatting_container.add<GUI::Widget>();
                 foreground_container.set_layout<GUI::HorizontalBoxLayout>();
                 foreground_container.layout()->set_margins({ 0, 4, 0, 0 });
-                foreground_container.set_fixed_height(22);
+                foreground_container.set_shrink_to_fit(true);
 
                 auto& foreground_label = foreground_container.add<GUI::Label>();
                 foreground_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -292,7 +291,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                 auto& background_container = static_formatting_container.add<GUI::Widget>();
                 background_container.set_layout<GUI::HorizontalBoxLayout>();
                 background_container.layout()->set_margins({ 0, 4, 0, 0 });
-                background_container.set_fixed_height(22);
+                background_container.set_shrink_to_fit(true);
 
                 auto& background_label = background_container.add<GUI::Label>();
                 background_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
