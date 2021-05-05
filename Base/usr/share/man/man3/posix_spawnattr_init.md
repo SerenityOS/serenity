@@ -60,7 +60,7 @@ It is valid to alternatingly call `posix_spawnattr_init()` and `posix_spawnattr_
 
 * `POSIX_SPAWN_SETSIGMASK`: If set, `posix_spawn()` will set the signal mask of the child process to the signal mask configured with `posix_spawnattr_setsigmask()`, as if `sigprocmask()` was called in the child process.
 
-* `POSIX_SPAWN_SETSID`: If set, `posix_spawn()` will run the child process in a new session, as if `setsid()` was called in the child process. The behavior if bboth this an d`POSIX_SPAWN_SETPGROUP` is set is undefined.
+* `POSIX_SPAWN_SETSID`: If set, `posix_spawn()` will run the child process in a new session, as if `setsid()` was called in the child process. The behavior if both this and `POSIX_SPAWN_SETPGROUP` is set is undefined.
 
 The `posix_spawnattr_get*` functions return what's been set with the corresponding setters. The default `flags` and `pgroup` are 0, the default `sigdefault` set is `sigemptyset()`, all other fields have an unspecified default value.
 

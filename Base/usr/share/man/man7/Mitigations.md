@@ -132,7 +132,7 @@ Kernel: KUBSAN! (Kernel Undefined Behavior SANitizer) :^)
 
 ### Kernel unmap-after-init
 
-Umap-after-init allows the kernel to remove functions which contain potentially
+Unmap-after-init allows the kernel to remove functions which contain potentially
 dangerous [ROP gadgets](https://en.wikipedia.org/wiki/Return-oriented_programming)
 from kernel memory after we've booted up and they are no longer needed. Notably the
 `write_cr4(..)` function used to control processor features like the SMEP/SMAP bits
