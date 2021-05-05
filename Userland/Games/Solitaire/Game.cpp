@@ -135,7 +135,7 @@ void Game::keydown_event(GUI::KeyEvent& event)
 
 void Game::mousedown_event(GUI::MouseEvent& event)
 {
-    GUI::Widget::mousedown_event(event);
+    GUI::Frame::mousedown_event(event);
 
     if (m_new_game_animation || m_game_over_animation)
         return;
@@ -188,7 +188,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
 
 void Game::mouseup_event(GUI::MouseEvent& event)
 {
-    GUI::Widget::mouseup_event(event);
+    GUI::Frame::mouseup_event(event);
 
     if (!m_focused_stack || m_focused_cards.is_empty() || m_game_over_animation || m_new_game_animation)
         return;
@@ -241,7 +241,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
 
 void Game::mousemove_event(GUI::MouseEvent& event)
 {
-    GUI::Widget::mousemove_event(event);
+    GUI::Frame::mousemove_event(event);
 
     if (!m_mouse_down || m_game_over_animation || m_new_game_animation)
         return;
@@ -261,7 +261,7 @@ void Game::mousemove_event(GUI::MouseEvent& event)
 
 void Game::doubleclick_event(GUI::MouseEvent& event)
 {
-    GUI::Widget::doubleclick_event(event);
+    GUI::Frame::doubleclick_event(event);
 
     if (m_game_over_animation) {
         start_game_over_animation();
@@ -340,13 +340,15 @@ void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)
 
 void Game::paint_event(GUI::PaintEvent& event)
 {
-    GUI::Widget::paint_event(event);
+    GUI::Frame::paint_event(event);
 
     m_has_to_repaint = false;
     if (m_game_over_animation && m_repaint_all)
         return;
 
     GUI::Painter painter(*this);
+    painter.add_clip_rect(frame_inner_rect());
+    painter.add_clip_rect(event.rect());
 
     if (m_repaint_all) {
         painter.fill_rect(event.rect(), s_background_color);
