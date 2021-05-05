@@ -236,7 +236,7 @@ void FrameLoader::resource_did_load()
         return;
     }
 
-    dbgln("I believe this content has MIME type '{}', , encoding '{}'", resource()->mime_type(), resource()->encoding());
+    dbgln("I believe this content has MIME type '{}', encoding '{}'", resource()->mime_type(), resource()->encoding());
 
     auto document = DOM::Document::create();
     document->set_url(url);
