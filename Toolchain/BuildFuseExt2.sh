@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set -e
+# This file will need to be run in bash.
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export PATH="/usr/local/opt/m4/bin:$PATH"
 
