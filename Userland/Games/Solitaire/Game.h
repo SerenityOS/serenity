@@ -21,8 +21,10 @@ public:
     virtual ~Game() override;
     void setup();
 
+    Function<void(uint32_t)> on_score_update;
+
 private:
-    Game(Function<void(uint32_t)>&& on_score_update);
+    Game();
 
     class Animation {
     public:
@@ -119,7 +121,6 @@ private:
     uint8_t m_new_game_animation_delay { 0 };
 
     uint32_t m_score { 0 };
-    Function<void(uint32_t)> m_on_score_update;
 };
 
 }
