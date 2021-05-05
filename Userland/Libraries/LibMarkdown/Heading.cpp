@@ -11,11 +11,7 @@ namespace Markdown {
 
 String Heading::render_to_html() const
 {
-    StringBuilder builder;
-    builder.appendf("<h%zu>", m_level);
-    builder.append(m_text.render_to_html());
-    builder.appendf("</h%zu>\n", m_level);
-    return builder.build();
+    return String::formatted("<h{}>{}</h{}>\n", m_level, m_text.render_to_html(), m_level);
 }
 
 String Heading::render_for_terminal(size_t) const

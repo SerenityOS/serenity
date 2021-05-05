@@ -14,7 +14,7 @@ String List::render_to_html() const
     StringBuilder builder;
 
     const char* tag = m_is_ordered ? "ol" : "ul";
-    builder.appendf("<%s>", tag);
+    builder.appendff("<{}>", tag);
 
     for (auto& item : m_items) {
         builder.append("<li>");
@@ -22,7 +22,7 @@ String List::render_to_html() const
         builder.append("</li>\n");
     }
 
-    builder.appendf("</%s>\n", tag);
+    builder.appendff("</{}>\n", tag);
 
     return builder.build();
 }
@@ -35,7 +35,7 @@ String List::render_for_terminal(size_t) const
     for (auto& item : m_items) {
         builder.append("  ");
         if (m_is_ordered)
-            builder.appendf("%d. ", ++i);
+            builder.appendff("{}. ", ++i);
         else
             builder.append("* ");
         builder.append(item.render_for_terminal());

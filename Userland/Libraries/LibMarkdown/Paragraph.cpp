@@ -12,7 +12,7 @@ namespace Markdown {
 String Paragraph::render_to_html() const
 {
     StringBuilder builder;
-    builder.appendf("<p>");
+    builder.append("<p>");
     bool first = true;
     for (auto& line : m_lines) {
         if (!first)
@@ -20,7 +20,7 @@ String Paragraph::render_to_html() const
         first = false;
         builder.append(line.text().render_to_html());
     }
-    builder.appendf("</p>\n");
+    builder.append("</p>\n");
     return builder.build();
 }
 
@@ -34,7 +34,7 @@ String Paragraph::render_for_terminal(size_t) const
         first = false;
         builder.append(line.text().render_for_terminal());
     }
-    builder.appendf("\n\n");
+    builder.append("\n\n");
     return builder.build();
 }
 
