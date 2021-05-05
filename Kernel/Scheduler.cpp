@@ -227,7 +227,14 @@ bool Scheduler::pick_next()
         critical.leave();
 
         dbgln_if(SCHEDULER_DEBUG, "Processing pending donate to {} reason={}", *pending_beneficiary, reason);
-        return donate_to_and_switch(pending_beneficiary.ptr(), reason);
+        auto result = donate_to_and_switch(pending_beneficiary.ptr(), reason);
+        if (result)
+            return true;
+
+        critical.enter();
+
+        queue_runnable_thread(*pending_beneficiary);
+        pending_beneficiary.clear();
     }
 
     // Either we're not donating or the beneficiary disappeared.
@@ -336,7 +343,8 @@ bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
     // still hold the scheduler lock, we're not actually leaving it.
     // Processor::switch_context expects Processor::in_critical() to be 1
     critical.leave();
-    donate_to_and_switch(beneficiary, reason);
+    if (!donate_to_and_switch(beneficiary, reason))
+        yield();
     return false;
 }
 
