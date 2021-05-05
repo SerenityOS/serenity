@@ -244,6 +244,11 @@ const FileDescription& Thread::FileDescriptionBlocker::blocked_description() con
     return m_blocked_description;
 }
 
+RefPtr<Thread> Thread::FileDescriptionBlocker::pick_donate_target() const
+{
+    return m_blocked_description->file().likely_peer_thread();
+}
+
 Thread::AcceptBlocker::AcceptBlocker(FileDescription& description, BlockFlags& unblocked_flags)
     : FileDescriptionBlocker(description, BlockFlags::Accept | BlockFlags::Exception, unblocked_flags)
 {
@@ -434,6 +439,13 @@ void Thread::SelectBlocker::was_unblocked(bool did_timeout)
         // If we were blocked and didn't time out, we should have at least one unblocked fd!
         VERIFY(count > 0);
     }
+}
+
+RefPtr<Thread> Thread::SelectBlocker::pick_donate_target() const
+{
+    if (m_fds.is_empty())
+        return nullptr;
+    return m_fds[0].description->file().likely_peer_thread();
 }
 
 Thread::WaitBlockCondition::ProcessBlockInfo::ProcessBlockInfo(NonnullRefPtr<Process>&& process, WaitBlocker::UnblockFlags flags, u8 signal)

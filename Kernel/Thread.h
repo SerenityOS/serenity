@@ -228,6 +228,7 @@ public:
         virtual Type blocker_type() const = 0;
         virtual const BlockTimeout& override_timeout(const BlockTimeout& timeout) { return timeout; }
         virtual bool can_be_interrupted() const { return true; }
+        virtual RefPtr<Thread> pick_donate_target() const { return {}; }
         virtual void not_blocking(bool) = 0;
         virtual void was_unblocked(bool did_timeout)
         {
@@ -551,6 +552,8 @@ public:
         virtual bool unblock(bool, void*) override;
         virtual void not_blocking(bool) override;
 
+        virtual RefPtr<Thread> pick_donate_target() const override;
+
     protected:
         explicit FileDescriptionBlocker(FileDescription&, BlockFlags, BlockFlags&);
 
@@ -627,6 +630,7 @@ public:
         virtual void not_blocking(bool) override;
         virtual void was_unblocked(bool) override;
         virtual const char* state_string() const override { return "Selecting"; }
+        virtual RefPtr<Thread> pick_donate_target() const override;
 
     private:
         size_t collect_unblocked_flags();
@@ -847,12 +851,16 @@ public:
         dbgln_if(THREAD_DEBUG, "Thread {} blocking on {} ({}) -->", *this, &blocker, blocker.state_string());
         bool did_timeout = false;
         u32 lock_count_to_restore = 0;
+        auto other_thread = m_blocker ? m_blocker->pick_donate_target() : nullptr;
         auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
         for (;;) {
             // Yield to the scheduler, and wait for us to resume unblocked.
             VERIFY(!g_scheduler_lock.own_lock());
             VERIFY(Processor::current().in_critical());
-            yield_while_not_holding_big_lock();
+            if (other_thread.is_null())
+                yield_while_not_holding_big_lock();
+            else
+                donate_without_holding_big_lock(other_thread, "block");
             VERIFY(Processor::current().in_critical());
 
             ScopedSpinLock block_lock2(m_block_lock);

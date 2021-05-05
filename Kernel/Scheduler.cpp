@@ -290,13 +290,17 @@ bool Scheduler::yield()
 bool Scheduler::donate_to_and_switch(Thread* beneficiary, [[maybe_unused]] const char* reason)
 {
     VERIFY(g_scheduler_lock.own_lock());
+    auto current_thread = Thread::current();
+    VERIFY(current_thread != beneficiary);
 
     auto& proc = Processor::current();
     VERIFY(proc.in_critical() == 1);
 
-    unsigned ticks_left = Thread::current()->ticks_left();
-    if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
-        return Scheduler::yield();
+    unsigned ticks_left = current_thread->ticks_left();
+    if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1) {
+        dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Not switching to beneficiary, {}, state: {}, ticks_left: {}", proc.get_id(), beneficiary->name(), beneficiary->state_string(), ticks_left);
+        return false;
+    }
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
     dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Donating {} ticks to {}, reason={}", proc.get_id(), ticks_to_donate, *beneficiary, reason);
