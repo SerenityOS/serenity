@@ -34,7 +34,7 @@ public:
     static TimeManagement& the();
 
     static bool is_valid_clock_id(clockid_t);
-    KResultOr<Time> current_time(clockid_t) const;
+    Time current_time(clockid_t) const;
     Time monotonic_time(TimePrecision = TimePrecision::Coarse) const;
     Time monotonic_time_raw() const
     {

@@ -23,7 +23,7 @@ Thread::BlockTimeout::BlockTimeout(bool is_absolute, const Time* time, const Tim
         m_time = *time;
         m_should_block = true;
     }
-    m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id).value();
+    m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id);
     if (!is_absolute)
         m_time += m_start_time;
 }
@@ -326,7 +326,7 @@ void Thread::SleepBlocker::calculate_remaining()
 {
     if (!m_remaining)
         return;
-    auto time_now = TimeManagement::the().current_time(m_deadline.clock_id()).value();
+    auto time_now = TimeManagement::the().current_time(m_deadline.clock_id());
     if (time_now < m_deadline.absolute_time())
         *m_remaining = m_deadline.absolute_time() - time_now;
     else

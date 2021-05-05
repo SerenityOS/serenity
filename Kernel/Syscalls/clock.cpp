@@ -14,13 +14,13 @@ KResultOr<int> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec
 {
     REQUIRE_PROMISE(stdio);
 
-    auto time = TimeManagement::the().current_time(clock_id);
-    if (time.is_error())
-        return time.error();
+    if (!TimeManagement::is_valid_clock_id(clock_id))
+        return EINVAL;
 
-    auto ts = time.value().to_timespec();
+    auto ts = TimeManagement::the().current_time(clock_id).to_timespec();
     if (!copy_to_user(user_ts, &ts))
         return EFAULT;
+
     return 0;
 }
 

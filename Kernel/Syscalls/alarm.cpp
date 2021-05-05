@@ -25,7 +25,7 @@ KResultOr<unsigned> Process::sys$alarm(unsigned seconds)
     }
 
     if (seconds > 0) {
-        auto deadline = TimeManagement::the().current_time(CLOCK_REALTIME_COARSE).value();
+        auto deadline = TimeManagement::the().current_time(CLOCK_REALTIME_COARSE);
         deadline = deadline + Time::from_seconds(seconds);
         m_alarm_timer = TimerQueue::the().add_timer_without_id(CLOCK_REALTIME_COARSE, deadline, [this]() {
             [[maybe_unused]] auto rc = send_signal(SIGALRM, nullptr);
