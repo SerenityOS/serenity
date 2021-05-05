@@ -53,8 +53,7 @@ describe("ability to work with generic non-array objects", () => {
         );
     });
 
-    // FIXME: test-js asserts when this is just called "toString" ಠ_ಠ
-    test("toString (FIXME)", () => {
+    test("toString", () => {
         expect(Array.prototype.toString.call({})).toBe("[object Object]");
         expect(Array.prototype.toString.call({ join: "foo" })).toBe("[object Object]");
         expect(Array.prototype.toString.call({ join: () => "foo" })).toBe("foo");
