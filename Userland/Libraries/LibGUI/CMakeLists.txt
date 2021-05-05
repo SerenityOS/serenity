@@ -74,6 +74,7 @@ set(SOURCES
     RegularEditingEngine.cpp
     ResizeCorner.cpp
     RunningProcessesModel.cpp
+    ScrollableContainerWidget.cpp
     Scrollbar.cpp
     SeparatorWidget.cpp
     Shortcut.cpp
