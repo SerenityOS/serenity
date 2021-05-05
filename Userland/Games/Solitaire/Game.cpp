@@ -6,13 +6,13 @@
 
 #include "Game.h"
 #include <LibGUI/Painter.h>
+#include <LibGfx/Palette.h>
 #include <time.h>
 
 REGISTER_WIDGET(Solitaire, Game);
 
 namespace Solitaire {
 
-static const Color s_background_color { Color::from_rgb(0x008000) };
 static constexpr uint8_t new_game_animation_delay = 5;
 static constexpr int s_timer_interval_ms = 1000 / 60;
 
@@ -48,21 +48,18 @@ void Game::timer_event(Core::TimerEvent&)
 {
     if (m_game_over_animation) {
         VERIFY(!m_animation.card().is_null());
-        if (m_animation.card()->position().x() > Game::width || m_animation.card()->rect().right() < 0)
+        if (m_animation.card()->position().x() >= Game::width || m_animation.card()->rect().right() <= 0)
             create_new_animation_card();
 
-        m_animation.tick();
-    }
-
-    if (m_has_to_repaint || m_game_over_animation || m_new_game_animation) {
-        m_repaint_all = false;
+        if (m_animation.tick())
+            update(m_animation.card()->rect());
+    } else if (m_new_game_animation) {
         update();
     }
 }
 
 void Game::create_new_animation_card()
 {
-
     auto card = Card::construct(static_cast<Card::Type>(rand() % Card::Type::__Count), rand() % Card::card_count);
     card->set_position({ rand() % (Game::width - Card::width), rand() % (Game::height / 8) });
 
@@ -151,27 +148,27 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                     if (waste.is_empty())
                         return;
 
+                    update(waste.bounding_box());
+
                     while (!waste.is_empty()) {
                         auto card = waste.pop();
                         stock.push(card);
                     }
 
-                    stock.set_dirty();
-                    waste.set_dirty();
-                    m_has_to_repaint = true;
                     update_score(-100);
+                    update(stock.bounding_box());
                 } else {
                     move_card(stock, waste);
                 }
+
             } else if (!to_check.is_empty()) {
                 auto& top_card = to_check.peek();
 
                 if (top_card.is_upside_down()) {
                     if (top_card.rect().contains(click_location)) {
                         top_card.set_upside_down(false);
-                        to_check.set_dirty();
                         update_score(5);
-                        m_has_to_repaint = true;
+                        update(top_card.rect());
                     }
                 } else if (m_focused_cards.is_empty()) {
                     to_check.add_all_grabbed_cards(click_location, m_focused_cards);
@@ -207,8 +204,8 @@ void Game::mouseup_event(GUI::MouseEvent& event)
                         m_focused_stack->pop();
                     }
 
-                    m_focused_stack->set_dirty();
-                    stack.set_dirty();
+                    update(m_focused_stack->bounding_box());
+                    update(stack.bounding_box());
 
                     if (m_focused_stack->type() == CardStack::Type::Waste && stack.type() == CardStack::Type::Normal) {
                         update_score(5);
@@ -232,11 +229,10 @@ void Game::mouseup_event(GUI::MouseEvent& event)
             mark_intersecting_stacks_dirty(to_intersect);
 
         m_focused_stack->rebound_cards();
-        m_focused_stack->set_dirty();
+        update(m_focused_stack->bounding_box());
     }
 
     m_mouse_down = false;
-    m_has_to_repaint = true;
 }
 
 void Game::mousemove_event(GUI::MouseEvent& event)
@@ -253,10 +249,10 @@ void Game::mousemove_event(GUI::MouseEvent& event)
     for (auto& to_intersect : m_focused_cards) {
         mark_intersecting_stacks_dirty(to_intersect);
         to_intersect.rect().translate_by(dx, dy);
+        update(to_intersect.rect());
     }
 
     m_mouse_down_location = click_location;
-    m_has_to_repaint = true;
 }
 
 void Game::doubleclick_event(GUI::MouseEvent& event)
@@ -296,8 +292,6 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
             break;
         }
     }
-
-    m_has_to_repaint = true;
 }
 
 void Game::check_for_game_over()
@@ -314,6 +308,8 @@ void Game::check_for_game_over()
 
 void Game::move_card(CardStack& from, CardStack& to)
 {
+    update(from.bounding_box());
+
     auto card = from.pop();
 
     card->set_moving(true);
@@ -322,42 +318,35 @@ void Game::move_card(CardStack& from, CardStack& to)
     mark_intersecting_stacks_dirty(card);
     to.push(card);
 
-    from.set_dirty();
-    to.set_dirty();
-
-    m_has_to_repaint = true;
+    update(to.bounding_box());
 }
 
 void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)
 {
     for (auto& stack : m_stacks) {
-        if (intersecting_card.rect().intersects(stack.bounding_box())) {
-            stack.set_dirty();
-            m_has_to_repaint = true;
-        }
+        if (intersecting_card.rect().intersects(stack.bounding_box()))
+            update(stack.bounding_box());
     }
+
+    update(intersecting_card.rect());
 }
 
 void Game::paint_event(GUI::PaintEvent& event)
 {
-    GUI::Frame::paint_event(event);
+    static Gfx::Color s_background_color = palette().color(background_role());
 
-    m_has_to_repaint = false;
-    if (m_game_over_animation && m_repaint_all)
-        return;
+    GUI::Frame::paint_event(event);
 
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
 
-    if (m_repaint_all) {
-        painter.fill_rect(event.rect(), s_background_color);
+    if (m_game_over_animation) {
+        m_animation.draw(painter);
+        return;
+    }
 
-        for (auto& stack : m_stacks)
-            stack.draw(painter, s_background_color);
-    } else if (m_game_over_animation && !m_animation.card().is_null()) {
-        m_animation.card()->draw(painter);
-    } else if (m_new_game_animation) {
+    if (m_new_game_animation) {
         if (m_new_game_animation_delay < new_game_animation_delay) {
             ++m_new_game_animation_delay;
         } else {
@@ -372,37 +361,31 @@ void Game::paint_event(GUI::PaintEvent& event)
                 current_pile.push(m_new_deck.take_last());
                 ++m_new_game_animation_pile;
             }
-            current_pile.set_dirty();
 
             if (m_new_game_animation_pile == piles.size()) {
                 while (!m_new_deck.is_empty())
                     stack(Stock).push(m_new_deck.take_last());
-                stack(Stock).set_dirty();
                 m_new_game_animation = false;
             }
         }
     }
 
-    if (!m_game_over_animation && !m_repaint_all) {
-        if (!m_focused_cards.is_empty()) {
-            for (auto& focused_card : m_focused_cards)
-                focused_card.clear(painter, s_background_color);
-        }
+    if (!m_focused_cards.is_empty()) {
+        for (auto& focused_card : m_focused_cards)
+            focused_card.clear(painter, s_background_color);
+    }
 
-        for (auto& stack : m_stacks) {
-            if (stack.is_dirty())
-                stack.draw(painter, s_background_color);
-        }
+    for (auto& stack : m_stacks) {
+        stack.draw(painter, s_background_color);
+    }
 
-        if (!m_focused_cards.is_empty()) {
-            for (auto& focused_card : m_focused_cards) {
-                focused_card.draw(painter);
-                focused_card.save_old_position();
-            }
+    if (!m_focused_cards.is_empty()) {
+        for (auto& focused_card : m_focused_cards) {
+            focused_card.draw(painter);
+            focused_card.save_old_position();
         }
     }
 
-    m_repaint_all = true;
     if (!m_mouse_down) {
         if (!m_focused_cards.is_empty()) {
             check_for_game_over();

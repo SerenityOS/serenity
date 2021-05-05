@@ -42,8 +42,19 @@ private:
 
         RefPtr<Card> card() { return m_animation_card; }
 
-        void tick()
+        void draw(GUI::Painter& painter)
         {
+            VERIFY(!m_animation_card.is_null());
+            m_animation_card->draw(painter);
+            m_dirty = false;
+        }
+
+        bool tick()
+        {
+            // Don't move the animation card until the event loop has had a chance to paint its current location.
+            if (m_dirty)
+                return false;
+
             VERIFY(!m_animation_card.is_null());
             m_y_velocity += m_gravity;
 
@@ -54,6 +65,9 @@ private:
             } else {
                 m_animation_card->rect().translate_by(m_x_velocity, m_y_velocity);
             }
+
+            m_dirty = true;
+            return true;
         }
 
     private:
@@ -62,6 +76,7 @@ private:
         int m_x_velocity { 0 };
         float m_y_velocity { 0 };
         float m_bouncyness { 0 };
+        bool m_dirty { false };
     };
 
     enum StackLocation {
@@ -110,8 +125,6 @@ private:
     Gfx::IntPoint m_mouse_down_location;
 
     bool m_mouse_down { false };
-    bool m_repaint_all { true };
-    bool m_has_to_repaint { true };
 
     Animation m_animation;
     bool m_game_over_animation { false };
