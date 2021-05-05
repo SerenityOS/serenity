@@ -26,6 +26,8 @@ public:
 
     void finalize_current_combo();
 
+    void clear();
+
 private:
     struct UndoCommandsContainer {
         NonnullOwnPtrVector<Command> m_undo_vector;
