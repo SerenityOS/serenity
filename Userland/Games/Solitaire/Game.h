@@ -7,12 +7,12 @@
 #pragma once
 
 #include "CardStack.h"
+#include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Widget.h>
 
 namespace Solitaire {
 
-class Game final : public GUI::Widget {
+class Game final : public GUI::Frame {
     C_OBJECT(Game)
 public:
     static constexpr int width = 640;
