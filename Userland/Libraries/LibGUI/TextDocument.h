@@ -122,8 +122,8 @@ public:
     virtual bool is_code_document() const { return false; }
 
     bool is_empty() const;
-    bool is_modified() const { return m_modified; }
-    void set_modified(bool);
+    bool is_modified() const { return m_undo_stack.is_current_modified(); }
+    void set_unmodified();
 
 protected:
     explicit TextDocument(Client* client);
@@ -136,7 +136,6 @@ private:
 
     HashTable<Client*> m_clients;
     bool m_client_notifications_enabled { true };
-    bool m_modified { false };
 
     UndoStack m_undo_stack;
     RefPtr<Core::Timer> m_undo_timer;

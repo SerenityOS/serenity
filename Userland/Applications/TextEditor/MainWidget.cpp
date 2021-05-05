@@ -299,7 +299,7 @@ MainWidget::MainWidget()
             return;
         }
 
-        editor().document().set_modified(false);
+        editor().document().set_unmodified();
         // FIXME: It would be cool if this would propagate from GUI::TextDocument somehow.
         window()->set_modified(false);
 
@@ -312,7 +312,7 @@ MainWidget::MainWidget()
             if (!m_editor->write_to_file(m_path)) {
                 GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
             } else {
-                editor().document().set_modified(false);
+                editor().document().set_unmodified();
                 // FIXME: It would be cool if this would propagate from GUI::TextDocument somehow.
                 window()->set_modified(false);
 

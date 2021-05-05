@@ -26,7 +26,7 @@ TextDocument::TextDocument(Client* client)
     if (client)
         m_clients.set(client);
     append_line(make<TextDocumentLine>(*this));
-    set_modified(false);
+    set_unmodified();
 
     m_undo_timer = Core::Timer::create_single_shot(
         2000, [this] {
@@ -94,7 +94,7 @@ bool TextDocument::set_text(const StringView& text)
     clear_text_guard.disarm();
 
     // FIXME: Should the modified state be cleared on some of the earlier returns as well?
-    set_modified(false);
+    set_unmodified();
     return true;
 }
 
@@ -309,8 +309,6 @@ void TextDocument::update_views(Badge<TextDocumentLine>)
 
 void TextDocument::notify_did_change()
 {
-    set_modified(true);
-
     if (m_undo_timer)
         m_undo_timer->restart();
 
@@ -887,9 +885,9 @@ const TextDocumentSpan* TextDocument::span_at(const TextPosition& position) cons
     return nullptr;
 }
 
-void TextDocument::set_modified(bool modified)
+void TextDocument::set_unmodified()
 {
-    m_modified = modified;
+    m_undo_stack.set_current_unmodified();
 }
 
 }
