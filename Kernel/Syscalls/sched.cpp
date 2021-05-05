@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -26,6 +27,21 @@ KResultOr<int> Process::sys$donate(pid_t tid)
     if (!thread || thread->pid() != pid())
         return ESRCH;
     Thread::current()->donate_without_holding_big_lock(thread, "sys$donate");
+    return 0;
+}
+
+KResultOr<int> Process::sys$donate_peer(int fd)
+{
+    REQUIRE_PROMISE(stdio);
+    auto description = file_description(fd);
+    if (!description)
+        return EBADF;
+
+    ScopedCritical critical;
+    auto thread = description->file().likely_peer_thread();
+    if (!thread)
+        return ESRCH;
+    Thread::current()->donate_without_holding_big_lock(thread, "sys$donate_peer");
     return 0;
 }
 

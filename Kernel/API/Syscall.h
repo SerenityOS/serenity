@@ -113,6 +113,7 @@ namespace Kernel {
     S(create_thread)          \
     S(gettid)                 \
     S(donate)                 \
+    S(donate_peer)            \
     S(rename)                 \
     S(ftruncate)              \
     S(exit_thread)            \

@@ -42,6 +42,7 @@ int fsync(int fd);
 void sysbeep();
 int gettid();
 int donate(int tid);
+int donate_peer(int fd);
 int getpagesize();
 pid_t fork();
 pid_t vfork();

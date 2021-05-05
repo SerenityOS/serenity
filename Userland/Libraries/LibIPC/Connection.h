@@ -101,6 +101,10 @@ public:
             total_nwritten += nwritten;
         }
 
+#ifdef __serenity__
+        (void)donate_peer(m_socket->fd());
+#endif
+
         m_responsiveness_timer->start();
     }
 

@@ -257,6 +257,7 @@ public:
     KResultOr<int> sys$dump_backtrace();
     KResultOr<pid_t> sys$gettid();
     KResultOr<int> sys$donate(pid_t tid);
+    KResultOr<int> sys$donate_peer(int fd);
     KResultOr<pid_t> sys$setsid();
     KResultOr<pid_t> sys$getsid(pid_t);
     KResultOr<int> sys$setpgid(pid_t pid, pid_t pgid);

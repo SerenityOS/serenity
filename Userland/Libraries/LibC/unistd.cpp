@@ -681,6 +681,12 @@ int donate(int tid)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int donate_peer(int fd)
+{
+    int rc = syscall(SC_donate_peer, fd);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 void sysbeep()
 {
     syscall(SC_beep);
