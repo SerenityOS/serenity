@@ -71,3 +71,4 @@ The `pledge()` system call was first introduced by OpenBSD. The implementation i
 ## See also
 
 * [`unveil`(2)](unveil.md)
+* [`Mitigations`(7)](../man7/Mitigations.md)
