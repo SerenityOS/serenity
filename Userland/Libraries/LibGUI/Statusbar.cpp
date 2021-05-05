@@ -24,20 +24,11 @@ Statusbar::Statusbar(int label_count)
     layout()->set_margins({ 0, 0, 0, 0 });
     layout()->set_spacing(2);
 
-    if (label_count < 1)
-        label_count = 1;
-
-    for (auto i = 0; i < label_count; i++) {
-        m_segments.append(Segment {
-            .label = create_label(),
-            .text = {},
-            .override_text = {},
-        });
-    }
-
     m_corner = add<ResizeCorner>();
+    set_label_count(label_count);
 
     REGISTER_STRING_PROPERTY("text", text, set_text);
+    REGISTER_INT_PROPERTY("label_count", label_count, set_label_count);
 }
 
 Statusbar::~Statusbar()
@@ -46,11 +37,12 @@ Statusbar::~Statusbar()
 
 NonnullRefPtr<Label> Statusbar::create_label()
 {
-    auto& label = add<Label>();
-    label.set_frame_shadow(Gfx::FrameShadow::Sunken);
-    label.set_frame_shape(Gfx::FrameShape::Panel);
-    label.set_frame_thickness(1);
-    label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    auto label = Label::construct();
+    insert_child_before(*label, *m_corner);
+    label->set_frame_shadow(Gfx::FrameShadow::Sunken);
+    label->set_frame_shape(Gfx::FrameShape::Panel);
+    label->set_frame_thickness(1);
+    label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     return label;
 }
 
@@ -68,6 +60,20 @@ void Statusbar::set_text(size_t index, String text)
 {
     m_segments.at(index).text = move(text);
     update_label(index);
+}
+
+void Statusbar::set_label_count(size_t label_count)
+{
+    if (label_count <= 1)
+        label_count = 1;
+
+    for (auto i = m_segments.size(); i < label_count; i++) {
+        m_segments.append(Segment {
+            .label = create_label(),
+            .text = {},
+            .override_text = {},
+        });
+    }
 }
 
 void Statusbar::update_label(size_t index)
