@@ -5,6 +5,7 @@
  */
 
 #include "Game.h"
+#include <Games/Solitaire/SolitaireGML.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -39,15 +40,21 @@ int main(int argc, char** argv)
     window->set_resizable(false);
     window->resize(Solitaire::Game::width, Solitaire::Game::height);
 
-    auto widget = Solitaire::Game::construct([&](uint32_t score) {
+    auto& widget = window->set_main_widget<GUI::Widget>();
+    widget.load_from_gml(solitaire_gml);
+
+    auto& game = *widget.find_descendant_of_type_named<Solitaire::Game>("game");
+    game.set_focus(true);
+
+    game.on_score_update = [&](uint32_t score) {
         window->set_title(String::formatted("Score: {} - Solitaire", score));
-    });
+    };
 
     auto menubar = GUI::Menubar::construct();
     auto& game_menu = menubar->add_menu("&Game");
 
     game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
-        widget->setup();
+        game.setup();
     }));
     game_menu.add_separator();
     game_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
@@ -56,10 +63,9 @@ int main(int argc, char** argv)
     help_menu.add_action(GUI::CommonActions::make_about_action("Solitaire", app_icon, window));
 
     window->set_menubar(move(menubar));
-    window->set_main_widget(widget);
     window->set_icon(app_icon.bitmap_for_size(16));
     window->show();
-    widget->setup();
+    game.setup();
 
     return app->exec();
 }
