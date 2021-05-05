@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SolitaireWidget.h"
+#include "Game.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -37,9 +37,9 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
 
     window->set_resizable(false);
-    window->resize(SolitaireWidget::width, SolitaireWidget::height);
+    window->resize(Solitaire::Game::width, Solitaire::Game::height);
 
-    auto widget = SolitaireWidget::construct([&](uint32_t score) {
+    auto widget = Solitaire::Game::construct([&](uint32_t score) {
         window->set_title(String::formatted("Score: {} - Solitaire", score));
     });
 
