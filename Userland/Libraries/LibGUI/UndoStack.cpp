@@ -61,6 +61,14 @@ void UndoStack::push(NonnullOwnPtr<Command>&& command)
     if (m_stack_index > 0) {
         for (size_t i = 0; i < m_stack_index; i++)
             m_stack.remove(0);
+
+        if (m_clean_index.has_value()) {
+            if (m_clean_index.value() < m_stack_index)
+                m_clean_index.clear();
+            else
+                m_clean_index = m_clean_index.value() - m_stack_index;
+        }
+
         m_stack_index = 0;
         finalize_current_combo();
     }
@@ -78,12 +86,30 @@ void UndoStack::finalize_current_combo()
 
     auto undo_commands_container = make<UndoCommandsContainer>();
     m_stack.prepend(move(undo_commands_container));
+
+    if (m_clean_index.has_value())
+        m_clean_index = m_clean_index.value() + 1;
+}
+
+void UndoStack::set_current_unmodified()
+{
+    // Skip empty container
+    if (can_undo() && m_stack[m_stack_index].m_undo_vector.is_empty())
+        m_clean_index = m_stack_index + 1;
+    else
+        m_clean_index = m_stack_index;
+}
+
+bool UndoStack::is_current_modified() const
+{
+    return !m_clean_index.has_value() || m_stack_index != m_clean_index.value();
 }
 
 void UndoStack::clear()
 {
     m_stack.clear();
     m_stack_index = 0;
+    m_clean_index.clear();
 }
 
 }
