@@ -5,15 +5,14 @@
  */
 
 #include "SolitaireWidget.h"
-#include <LibCore/Timer.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Window.h>
 #include <time.h>
 
 static const Color s_background_color { Color::from_rgb(0x008000) };
 static constexpr uint8_t new_game_animation_delay = 5;
+static constexpr int s_timer_interval_ms = 1000 / 60;
 
-SolitaireWidget::SolitaireWidget(GUI::Window& window, Function<void(uint32_t)>&& on_score_update)
+SolitaireWidget::SolitaireWidget(Function<void(uint32_t)>&& on_score_update)
     : m_on_score_update(move(on_score_update))
 {
     set_fill_with_background_color(false);
@@ -31,9 +30,6 @@ SolitaireWidget::SolitaireWidget(GUI::Window& window, Function<void(uint32_t)>&&
     m_stacks[Pile5] = CardStack({ 10 + 4 * Card::width + 40, 10 + Card::height + 10 }, CardStack::Type::Normal);
     m_stacks[Pile6] = CardStack({ 10 + 5 * Card::width + 50, 10 + Card::height + 10 }, CardStack::Type::Normal);
     m_stacks[Pile7] = CardStack({ 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal);
-
-    m_timer = Core::Timer::construct(1000 / 60, [&]() { tick(window); });
-    m_timer->stop();
 }
 
 SolitaireWidget::~SolitaireWidget()
@@ -45,11 +41,8 @@ static float rand_float()
     return rand() / static_cast<float>(RAND_MAX);
 }
 
-void SolitaireWidget::tick(GUI::Window& window)
+void SolitaireWidget::timer_event(Core::TimerEvent&)
 {
-    if (!is_visible() || !updates_enabled() || !window.is_visible_for_timer_purposes())
-        return;
-
     if (m_game_over_animation) {
         VERIFY(!m_animation.card().is_null());
         if (m_animation.card()->position().x() > SolitaireWidget::width || m_animation.card()->rect().right() < 0)
@@ -96,7 +89,7 @@ void SolitaireWidget::stop_game_over_animation()
 void SolitaireWidget::setup()
 {
     stop_game_over_animation();
-    m_timer->stop();
+    stop_timer();
 
     for (auto& stack : m_stacks)
         stack.clear();
@@ -118,7 +111,7 @@ void SolitaireWidget::setup()
         m_new_deck.append(m_new_deck.take(rand() % m_new_deck.size()));
 
     m_new_game_animation = true;
-    m_timer->start();
+    start_timer(s_timer_interval_ms);
     update();
 }
 
@@ -353,11 +346,6 @@ void SolitaireWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
 
     if (m_repaint_all) {
-        /* Only start the timer when update() got called from the
-           window manager, or else we might end up with a blank screen */
-        if (!m_timer->is_active())
-            m_timer->start();
-
         painter.fill_rect(event.rect(), s_background_color);
 
         for (auto& stack : m_stacks)

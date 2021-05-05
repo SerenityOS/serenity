@@ -20,7 +20,7 @@ public:
     void setup();
 
 private:
-    SolitaireWidget(GUI::Window&, Function<void(uint32_t)>&& on_score_update);
+    SolitaireWidget(Function<void(uint32_t)>&& on_score_update);
 
     class Animation {
     public:
@@ -85,7 +85,6 @@ private:
     void stop_game_over_animation();
     void create_new_animation_card();
     void check_for_game_over();
-    void tick(GUI::Window&);
 
     ALWAYS_INLINE CardStack& stack(StackLocation location)
     {
@@ -98,8 +97,8 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void timer_event(Core::TimerEvent&) override;
 
-    RefPtr<Core::Timer> m_timer;
     NonnullRefPtrVector<Card> m_focused_cards;
     NonnullRefPtrVector<Card> m_new_deck;
     CardStack m_stacks[StackLocation::__Count];

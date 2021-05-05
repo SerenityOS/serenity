@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     window->set_resizable(false);
     window->resize(SolitaireWidget::width, SolitaireWidget::height);
 
-    auto widget = SolitaireWidget::construct(window, [&](uint32_t score) {
+    auto widget = SolitaireWidget::construct([&](uint32_t score) {
         window->set_title(String::formatted("Score: {} - Solitaire", score));
     });
 
