@@ -195,7 +195,7 @@ Commands can be either calls to Shell builtins, or external programs.
 The commands can be composed into semantic elements, producing composite commands:
 
 ### Sequences
-A sequence of commands, executed serially independent of each other: `Commanad ; Command ; Command ...`
+A sequence of commands, executed serially independent of each other: `Command ; Command ; Command ...`
 
 It should be noted that a newline (`\\n`) can be substituted for the semicolon (`;`).
 
@@ -263,7 +263,7 @@ The general syntax follows the form `for index index_name name in expr { sequenc
 It should be noted that the `index index_name` section is optional, but if supplied, will require an explicit iteration variable as well.
 In other words, `for index i in foo` is not valid syntax.
 
-A for-loop evaluates the _sequence_ once per every element in the _expr_, seetting the local variable _name_ to the element being processed, and the local variable _enum name_ to the enumeration index (if set).
+A for-loop evaluates the _sequence_ once per every element in the _expr_, setting the local variable _name_ to the element being processed, and the local variable _enum name_ to the enumeration index (if set).
 
 The Shell shall cancel the for loop if two consecutive commands are interrupted via SIGINT (\^C), and any other terminating signal aborts the loop entirely.
 
