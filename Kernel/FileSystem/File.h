@@ -114,6 +114,9 @@ public:
 
     size_t attach_count() const { return m_attach_count; }
 
+    void remember_thread_access();
+    RefPtr<Thread> likely_peer_thread() const;
+
 protected:
     File();
 
@@ -141,6 +144,7 @@ private:
 
     FileBlockCondition m_block_condition;
     size_t m_attach_count { 0 };
+    WeakPtr<Thread> m_accessing_threads[2];
 };
 
 }

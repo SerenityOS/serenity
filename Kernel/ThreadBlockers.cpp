@@ -351,6 +351,8 @@ Thread::SelectBlocker::SelectBlocker(FDVector& fds)
             continue;
         if (!fd_entry.description->block_condition().add_blocker(*this, &fd_entry))
             m_should_block = false;
+        else
+            fd_entry.description->file().remember_thread_access();
     }
 }
 

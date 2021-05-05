@@ -286,6 +286,7 @@ KResultOr<size_t> LocalSocket::sendto(FileDescription& description, const UserOr
     auto* socket_buffer = send_buffer_for(description);
     if (!socket_buffer)
         return EINVAL;
+    remember_thread_access();
     ssize_t nwritten = socket_buffer->write(data, data_size);
     if (nwritten > 0)
         Thread::current()->did_unix_socket_write(nwritten);
@@ -331,6 +332,7 @@ KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKern
     if (!has_attached_peer(description) && socket_buffer->is_empty())
         return 0;
     VERIFY(!socket_buffer->is_empty());
+    remember_thread_access();
     auto nread = socket_buffer->read(buffer, buffer_size);
     if (nread > 0)
         Thread::current()->did_unix_socket_read(nread);

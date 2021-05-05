@@ -55,6 +55,7 @@ RefPtr<Socket> Socket::accept()
     if (m_pending.is_empty())
         return nullptr;
     dbgln_if(SOCKET_DEBUG, "Socket({}) de-queueing connection", this);
+    remember_thread_access();
     auto client = m_pending.take_first();
     VERIFY(!client->is_connected());
     auto& process = *Process::current();
