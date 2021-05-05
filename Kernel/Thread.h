@@ -559,7 +559,6 @@ public:
         const BlockFlags m_flags;
         BlockFlags& m_unblocked_flags;
         bool m_did_unblock { false };
-        bool m_should_block { true };
     };
 
     class AcceptBlocker final : public FileDescriptionBlocker {
