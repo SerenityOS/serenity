@@ -475,7 +475,7 @@ UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
 {
     VERIFY(cpu != 0);
     // This function is called on the bsp, but creates an idle thread for another AP
-    VERIFY(Processor::id() == 0);
+    VERIFY(Processor::is_bootstrap_processor());
 
     VERIFY(s_colonel_process);
     Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, String::formatted("idle thread #{}", cpu), 1 << cpu, false);
@@ -497,8 +497,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
     VERIFY(current_thread->current_trap()->regs == &regs);
 
 #if !SCHEDULE_ON_ALL_PROCESSORS
-    bool is_bsp = Processor::id() == 0;
-    if (!is_bsp)
+    if (!Processor::is_bootstrap_processor())
         return; // TODO: This prevents scheduling on other CPUs!
 #endif
 
