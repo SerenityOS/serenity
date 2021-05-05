@@ -104,7 +104,7 @@ NonnullRefPtr<CreateTable> Parser::parse_create_table_statement()
     return create_ast_node<CreateTable>(move(schema_name), move(table_name), move(column_definitions), is_temporary, is_error_if_table_exists);
 }
 
-NonnullRefPtr<CreateTable> Parser::parse_alter_table_statement()
+NonnullRefPtr<AlterTable> Parser::parse_alter_table_statement()
 {
     // https://sqlite.org/lang_altertable.html
     consume(TokenType::Alter);
@@ -159,7 +159,7 @@ NonnullRefPtr<DropTable> Parser::parse_drop_table_statement()
     return create_ast_node<DropTable>(move(schema_name), move(table_name), is_error_if_table_does_not_exist);
 }
 
-NonnullRefPtr<Delete> Parser::parse_insert_statement(RefPtr<CommonTableExpressionList> common_table_expression_list)
+NonnullRefPtr<Insert> Parser::parse_insert_statement(RefPtr<CommonTableExpressionList> common_table_expression_list)
 {
     // https://sqlite.org/lang_insert.html
     consume(TokenType::Insert);
@@ -209,7 +209,7 @@ NonnullRefPtr<Delete> Parser::parse_insert_statement(RefPtr<CommonTableExpressio
     return create_ast_node<Insert>(move(common_table_expression_list), conflict_resolution, move(schema_name), move(table_name), move(alias), move(column_names));
 }
 
-NonnullRefPtr<Delete> Parser::parse_update_statement(RefPtr<CommonTableExpressionList> common_table_expression_list)
+NonnullRefPtr<Update> Parser::parse_update_statement(RefPtr<CommonTableExpressionList> common_table_expression_list)
 {
     // https://sqlite.org/lang_update.html
     consume(TokenType::Update);
