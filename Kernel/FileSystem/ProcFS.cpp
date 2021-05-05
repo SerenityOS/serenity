@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Spencer Dixon <spencercdixon@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -970,6 +971,7 @@ bool ProcFS::initialize()
 {
     static Lockable<bool>* kmalloc_stack_helper;
     static Lockable<bool>* ubsan_deadly_helper;
+    static Lockable<bool>* caps_lock_to_ctrl_helper;
 
     if (kmalloc_stack_helper == nullptr) {
         kmalloc_stack_helper = new Lockable<bool>();
@@ -981,6 +983,10 @@ bool ProcFS::initialize()
         ubsan_deadly_helper->resource() = UBSanitizer::g_ubsan_is_deadly;
         ProcFS::add_sys_bool("ubsan_is_deadly", *ubsan_deadly_helper, [] {
             UBSanitizer::g_ubsan_is_deadly = ubsan_deadly_helper->resource();
+        });
+        caps_lock_to_ctrl_helper = new Lockable<bool>();
+        ProcFS::add_sys_bool("caps_lock_to_ctrl", *caps_lock_to_ctrl_helper, [] {
+            Kernel::g_caps_lock_remapped_to_ctrl.exchange(caps_lock_to_ctrl_helper->resource());
         });
     }
     return true;

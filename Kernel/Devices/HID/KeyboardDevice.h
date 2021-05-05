@@ -53,6 +53,7 @@ protected:
     virtual const char* class_name() const override { return "KeyboardDevice"; }
 
     u8 m_modifiers { 0 };
+    bool m_caps_lock_to_ctrl_pressed { false };
     bool m_caps_lock_on { false };
     bool m_num_lock_on { false };
     bool m_has_e0_prefix { false };

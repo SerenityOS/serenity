@@ -234,8 +234,14 @@ void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
         }
     }
 
-    if (key == Key_CapsLock && pressed)
+    if (!g_caps_lock_remapped_to_ctrl && key == Key_CapsLock && pressed)
         m_caps_lock_on = !m_caps_lock_on;
+
+    if (g_caps_lock_remapped_to_ctrl && key == Key_CapsLock)
+        m_caps_lock_to_ctrl_pressed = pressed;
+
+    if (g_caps_lock_remapped_to_ctrl)
+        update_modifier(Mod_Ctrl, m_caps_lock_to_ctrl_pressed);
 
     Event event;
     event.key = key;
