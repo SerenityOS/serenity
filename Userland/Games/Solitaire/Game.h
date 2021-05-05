@@ -22,6 +22,8 @@ public:
     void setup();
 
     Function<void(uint32_t)> on_score_update;
+    Function<void()> on_game_start;
+    Function<void()> on_game_end;
 
 private:
     Game();
