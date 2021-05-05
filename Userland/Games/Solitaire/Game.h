@@ -10,17 +10,19 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 
-class SolitaireWidget final : public GUI::Widget {
-    C_OBJECT(SolitaireWidget)
+namespace Solitaire {
+
+class Game final : public GUI::Widget {
+    C_OBJECT(Game)
 public:
     static constexpr int width = 640;
     static constexpr int height = 480;
 
-    virtual ~SolitaireWidget() override;
+    virtual ~Game() override;
     void setup();
 
 private:
-    SolitaireWidget(Function<void(uint32_t)>&& on_score_update);
+    Game(Function<void(uint32_t)>&& on_score_update);
 
     class Animation {
     public:
@@ -43,9 +45,9 @@ private:
             VERIFY(!m_animation_card.is_null());
             m_y_velocity += m_gravity;
 
-            if (m_animation_card->position().y() + Card::height + m_y_velocity > SolitaireWidget::height + 1 && m_y_velocity > 0) {
+            if (m_animation_card->position().y() + Card::height + m_y_velocity > Game::height + 1 && m_y_velocity > 0) {
                 m_y_velocity = min((m_y_velocity * -m_bouncyness), -8.f);
-                m_animation_card->rect().set_y(SolitaireWidget::height - Card::height);
+                m_animation_card->rect().set_y(Game::height - Card::height);
                 m_animation_card->rect().translate_by(m_x_velocity, 0);
             } else {
                 m_animation_card->rect().translate_by(m_x_velocity, m_y_velocity);
@@ -119,3 +121,5 @@ private:
     uint32_t m_score { 0 };
     Function<void(uint32_t)> m_on_score_update;
 };
+
+}

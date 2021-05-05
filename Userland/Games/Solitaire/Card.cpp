@@ -9,6 +9,8 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 
+namespace Solitaire {
+
 static const NonnullRefPtr<Gfx::CharacterBitmap> s_diamond = Gfx::CharacterBitmap::create_from_ascii(
     "    #    "
     "   ###   "
@@ -154,4 +156,6 @@ void Card::clear_and_draw(GUI::Painter& painter, const Color& background_color)
 
     draw(painter);
     save_old_position();
+}
+
 }

@@ -13,6 +13,8 @@
 #include <LibGfx/Rect.h>
 #include <ctype.h>
 
+namespace Solitaire {
+
 class Card final : public Core::Object {
     C_OBJECT(Card)
 public:
@@ -63,3 +65,5 @@ private:
     bool m_moving { false };
     bool m_upside_down { false };
 };
+
+}
