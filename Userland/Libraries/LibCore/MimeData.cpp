@@ -72,6 +72,12 @@ String guess_mime_type_based_on_filename(const StringView& path)
         return "text/markdown";
     if (path.ends_with(".html", CaseSensitivity::CaseInsensitive) || path.ends_with(".htm", CaseSensitivity::CaseInsensitive))
         return "text/html";
+    if (path.ends_with(".js", CaseSensitivity::CaseInsensitive))
+        return "application/javascript";
+    if (path.ends_with(".json", CaseSensitivity::CaseInsensitive))
+        return "application/json";
+    if (path.ends_with(".md", CaseSensitivity::CaseInsensitive))
+        return "text/markdown";
     if (path.ends_with("/", CaseSensitivity::CaseInsensitive))
         return "text/html";
     if (path.ends_with(".csv", CaseSensitivity::CaseInsensitive))
@@ -93,7 +99,9 @@ String guess_mime_type_based_on_filename(const StringView& path)
     __ENUMERATE_MIME_TYPE_HEADER(pgm, "image/x-portable-graymap", 3, 0x50, 0x32, 0x0A)                                            \
     __ENUMERATE_MIME_TYPE_HEADER(png, "image/png", 8, 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A)                                \
     __ENUMERATE_MIME_TYPE_HEADER(ppm, "image/x-portable-pixmap", 3, 0x50, 0x33, 0x0A)                                             \
-    __ENUMERATE_MIME_TYPE_HEADER(shell, "text/x-shellscript", 10, '#', '!', '/', 'b', 'i', 'n', '/', 's', 'h', '\n')
+    __ENUMERATE_MIME_TYPE_HEADER(shell, "text/x-shellscript", 10, '#', '!', '/', 'b', 'i', 'n', '/', 's', 'h', '\n')              \
+    __ENUMERATE_MIME_TYPE_HEADER(tiff, "image/tiff", 4, 'I', 'I', '*', 0x00)                                                      \
+    __ENUMERATE_MIME_TYPE_HEADER(tiff_bigendian, "image/tiff", 4, 'M', 'M', 0x00, '*')
 
 #define __ENUMERATE_MIME_TYPE_HEADER(var_name, mime_type, pattern_size, ...) \
     static const u8 var_name##_arr[pattern_size] = { __VA_ARGS__ };          \
