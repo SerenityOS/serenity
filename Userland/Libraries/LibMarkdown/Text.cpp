@@ -72,7 +72,7 @@ String Text::render_to_html() const
                     current_style.img = {};
                     continue;
                 }
-                builder.appendf("</%s>", tag.characters());
+                builder.appendff("</{}>", tag);
                 if (tag == "a") {
                     current_style.href = {};
                     continue;
@@ -85,16 +85,16 @@ String Text::render_to_html() const
         }
         if (current_style.href.is_null() && !span.style.href.is_null()) {
             open_tags.append("a");
-            builder.appendf("<a href=\"%s\">", span.style.href.characters());
+            builder.appendff("<a href=\"{}\">", span.style.href);
         }
         if (current_style.img.is_null() && !span.style.img.is_null()) {
             open_tags.append("img");
-            builder.appendf("<img src=\"%s\" alt=\"", span.style.img.characters());
+            builder.appendff("<img src=\"{}\" alt=\"", span.style.img);
         }
         for (auto& tag_and_flag : tags_and_flags) {
             if (current_style.*tag_and_flag.flag != span.style.*tag_and_flag.flag) {
                 open_tags.append(tag_and_flag.tag);
-                builder.appendf("<%s>", tag_and_flag.tag.characters());
+                builder.appendff("<{}>", tag_and_flag.tag);
             }
         }
 
@@ -108,7 +108,7 @@ String Text::render_to_html() const
             builder.append("\" />");
             continue;
         }
-        builder.appendf("</%s>", tag.characters());
+        builder.appendff("</{}>", tag);
     }
 
     return builder.build();
@@ -153,13 +153,13 @@ String Text::render_for_terminal() const
             // non-absolute links, because the user has no
             // chance to follow them anyway.
             if (strstr(span.style.href.characters(), "://") != nullptr) {
-                builder.appendf(" <%s>", span.style.href.characters());
+                builder.appendff(" <{}>", span.style.href);
                 builder.append("\033]8;;\033\\");
             }
         }
         if (!span.style.img.is_null()) {
             if (strstr(span.style.img.characters(), "://") != nullptr) {
-                builder.appendf(" <%s>", span.style.img.characters());
+                builder.appendff(" <{}>", span.style.img);
             }
         }
     }
