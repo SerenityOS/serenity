@@ -12,7 +12,7 @@
 #include <AK/SIMD.h>
 #include <AK/StdLibExtras.h>
 #include <LibIPC/Forward.h>
-#include <math.h>
+
 
 namespace Gfx {
 
@@ -138,15 +138,6 @@ public:
         u8 a = d / 255;
         return Color(r, g, b, a);
 #endif
-    }
-
-    constexpr Color interpolate(const Color& other, float weight) const
-    {
-        u8 r = red() + roundf(static_cast<float>(other.red() - red()) * weight);
-        u8 g = green() + roundf(static_cast<float>(other.green() - green()) * weight);
-        u8 b = blue() + roundf(static_cast<float>(other.blue() - blue()) * weight);
-        u8 a = alpha() + roundf(static_cast<float>(other.alpha() - alpha()) * weight);
-        return Color(r, g, b, a);
     }
 
     constexpr Color multiply(const Color& other) const
