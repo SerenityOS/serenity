@@ -18,6 +18,8 @@ static constexpr int s_timer_interval_ms = 1000 / 60;
 
 Game::Game()
 {
+    srand(time(nullptr));
+
     m_stacks[Stock] = CardStack({ 10, 10 }, CardStack::Type::Stock);
     m_stacks[Waste] = CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste);
     m_stacks[Foundation4] = CardStack({ Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation);
@@ -60,7 +62,6 @@ void Game::timer_event(Core::TimerEvent&)
 
 void Game::create_new_animation_card()
 {
-    srand(time(nullptr));
 
     auto card = Card::construct(static_cast<Card::Type>(rand() % Card::Type::__Count), rand() % Card::card_count);
     card->set_position({ rand() % (Game::width - Card::width), rand() % (Game::height / 8) });
@@ -107,7 +108,6 @@ void Game::setup()
         m_new_deck.append(Card::construct(Card::Type::Diamonds, i));
     }
 
-    srand(time(nullptr));
     for (uint8_t i = 0; i < 200; ++i)
         m_new_deck.append(m_new_deck.take(rand() % m_new_deck.size()));
 
