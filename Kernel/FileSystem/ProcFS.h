@@ -90,6 +90,7 @@ private:
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0) const override;
+    virtual KResult set_mtime(time_t) override;
 
     KResult refresh_data(FileDescription&) const;
 

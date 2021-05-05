@@ -1562,6 +1562,11 @@ KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, Re
     return *res;
 }
 
+KResult ProcFSInode::set_mtime(time_t)
+{
+    return KSuccess;
+}
+
 ProcFSProxyInode::ProcFSProxyInode(ProcFS& fs, FileDescription& fd)
     : Inode(fs, 0)
     , m_fd(fd)
