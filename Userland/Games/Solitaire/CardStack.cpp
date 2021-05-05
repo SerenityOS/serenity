@@ -6,6 +6,8 @@
 
 #include "CardStack.h"
 
+namespace Solitaire {
+
 CardStack::CardStack()
     : m_position({ 0, 0 })
     , m_type(Invalid)
@@ -215,4 +217,6 @@ void CardStack::calculate_bounding_box()
     }
 
     m_bounding_box.set_size(Card::width + width, Card::height + height);
+}
+
 }

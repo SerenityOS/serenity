@@ -4,25 +4,27 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SolitaireWidget.h"
+#include "Game.h"
 #include <LibGUI/Painter.h>
 #include <time.h>
+
+namespace Solitaire {
 
 static const Color s_background_color { Color::from_rgb(0x008000) };
 static constexpr uint8_t new_game_animation_delay = 5;
 static constexpr int s_timer_interval_ms = 1000 / 60;
 
-SolitaireWidget::SolitaireWidget(Function<void(uint32_t)>&& on_score_update)
+Game::Game(Function<void(uint32_t)>&& on_score_update)
     : m_on_score_update(move(on_score_update))
 {
     set_fill_with_background_color(false);
 
     m_stacks[Stock] = CardStack({ 10, 10 }, CardStack::Type::Stock);
     m_stacks[Waste] = CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste);
-    m_stacks[Foundation4] = CardStack({ SolitaireWidget::width - Card::width - 10, 10 }, CardStack::Type::Foundation);
-    m_stacks[Foundation3] = CardStack({ SolitaireWidget::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation);
-    m_stacks[Foundation2] = CardStack({ SolitaireWidget::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation);
-    m_stacks[Foundation1] = CardStack({ SolitaireWidget::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation);
+    m_stacks[Foundation4] = CardStack({ Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation);
+    m_stacks[Foundation3] = CardStack({ Game::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation);
+    m_stacks[Foundation2] = CardStack({ Game::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation);
+    m_stacks[Foundation1] = CardStack({ Game::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation);
     m_stacks[Pile1] = CardStack({ 10, 10 + Card::height + 10 }, CardStack::Type::Normal);
     m_stacks[Pile2] = CardStack({ 10 + Card::width + 10, 10 + Card::height + 10 }, CardStack::Type::Normal);
     m_stacks[Pile3] = CardStack({ 10 + 2 * Card::width + 20, 10 + Card::height + 10 }, CardStack::Type::Normal);
@@ -32,7 +34,7 @@ SolitaireWidget::SolitaireWidget(Function<void(uint32_t)>&& on_score_update)
     m_stacks[Pile7] = CardStack({ 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal);
 }
 
-SolitaireWidget::~SolitaireWidget()
+Game::~Game()
 {
 }
 
@@ -41,11 +43,11 @@ static float rand_float()
     return rand() / static_cast<float>(RAND_MAX);
 }
 
-void SolitaireWidget::timer_event(Core::TimerEvent&)
+void Game::timer_event(Core::TimerEvent&)
 {
     if (m_game_over_animation) {
         VERIFY(!m_animation.card().is_null());
-        if (m_animation.card()->position().x() > SolitaireWidget::width || m_animation.card()->rect().right() < 0)
+        if (m_animation.card()->position().x() > Game::width || m_animation.card()->rect().right() < 0)
             create_new_animation_card();
 
         m_animation.tick();
@@ -57,18 +59,18 @@ void SolitaireWidget::timer_event(Core::TimerEvent&)
     }
 }
 
-void SolitaireWidget::create_new_animation_card()
+void Game::create_new_animation_card()
 {
     srand(time(nullptr));
 
     auto card = Card::construct(static_cast<Card::Type>(rand() % Card::Type::__Count), rand() % Card::card_count);
-    card->set_position({ rand() % (SolitaireWidget::width - Card::width), rand() % (SolitaireWidget::height / 8) });
+    card->set_position({ rand() % (Game::width - Card::width), rand() % (Game::height / 8) });
 
-    int x_sgn = card->position().x() > (SolitaireWidget::width / 2) ? -1 : 1;
+    int x_sgn = card->position().x() > (Game::width / 2) ? -1 : 1;
     m_animation = Animation(card, rand_float() + .4f, x_sgn * ((rand() % 3) + 2), .6f + rand_float() * .4f);
 }
 
-void SolitaireWidget::start_game_over_animation()
+void Game::start_game_over_animation()
 {
     if (m_game_over_animation)
         return;
@@ -77,7 +79,7 @@ void SolitaireWidget::start_game_over_animation()
     m_game_over_animation = true;
 }
 
-void SolitaireWidget::stop_game_over_animation()
+void Game::stop_game_over_animation()
 {
     if (!m_game_over_animation)
         return;
@@ -86,7 +88,7 @@ void SolitaireWidget::stop_game_over_animation()
     update();
 }
 
-void SolitaireWidget::setup()
+void Game::setup()
 {
     stop_game_over_animation();
     stop_timer();
@@ -115,13 +117,13 @@ void SolitaireWidget::setup()
     update();
 }
 
-void SolitaireWidget::update_score(int to_add)
+void Game::update_score(int to_add)
 {
     m_score = max(static_cast<int>(m_score) + to_add, 0);
     m_on_score_update(m_score);
 }
 
-void SolitaireWidget::keydown_event(GUI::KeyEvent& event)
+void Game::keydown_event(GUI::KeyEvent& event)
 {
     if (m_new_game_animation || m_game_over_animation)
         return;
@@ -130,7 +132,7 @@ void SolitaireWidget::keydown_event(GUI::KeyEvent& event)
         start_game_over_animation();
 }
 
-void SolitaireWidget::mousedown_event(GUI::MouseEvent& event)
+void Game::mousedown_event(GUI::MouseEvent& event)
 {
     GUI::Widget::mousedown_event(event);
 
@@ -183,7 +185,7 @@ void SolitaireWidget::mousedown_event(GUI::MouseEvent& event)
     }
 }
 
-void SolitaireWidget::mouseup_event(GUI::MouseEvent& event)
+void Game::mouseup_event(GUI::MouseEvent& event)
 {
     GUI::Widget::mouseup_event(event);
 
@@ -236,7 +238,7 @@ void SolitaireWidget::mouseup_event(GUI::MouseEvent& event)
     m_has_to_repaint = true;
 }
 
-void SolitaireWidget::mousemove_event(GUI::MouseEvent& event)
+void Game::mousemove_event(GUI::MouseEvent& event)
 {
     GUI::Widget::mousemove_event(event);
 
@@ -256,7 +258,7 @@ void SolitaireWidget::mousemove_event(GUI::MouseEvent& event)
     m_has_to_repaint = true;
 }
 
-void SolitaireWidget::doubleclick_event(GUI::MouseEvent& event)
+void Game::doubleclick_event(GUI::MouseEvent& event)
 {
     GUI::Widget::doubleclick_event(event);
 
@@ -297,7 +299,7 @@ void SolitaireWidget::doubleclick_event(GUI::MouseEvent& event)
     m_has_to_repaint = true;
 }
 
-void SolitaireWidget::check_for_game_over()
+void Game::check_for_game_over()
 {
     for (auto& stack : m_stacks) {
         if (stack.type() != CardStack::Type::Foundation)
@@ -309,7 +311,7 @@ void SolitaireWidget::check_for_game_over()
     start_game_over_animation();
 }
 
-void SolitaireWidget::move_card(CardStack& from, CardStack& to)
+void Game::move_card(CardStack& from, CardStack& to)
 {
     auto card = from.pop();
 
@@ -325,7 +327,7 @@ void SolitaireWidget::move_card(CardStack& from, CardStack& to)
     m_has_to_repaint = true;
 }
 
-void SolitaireWidget::mark_intersecting_stacks_dirty(Card& intersecting_card)
+void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)
 {
     for (auto& stack : m_stacks) {
         if (intersecting_card.rect().intersects(stack.bounding_box())) {
@@ -335,7 +337,7 @@ void SolitaireWidget::mark_intersecting_stacks_dirty(Card& intersecting_card)
     }
 }
 
-void SolitaireWidget::paint_event(GUI::PaintEvent& event)
+void Game::paint_event(GUI::PaintEvent& event)
 {
     GUI::Widget::paint_event(event);
 
@@ -411,4 +413,6 @@ void SolitaireWidget::paint_event(GUI::PaintEvent& event)
             m_focused_stack = nullptr;
         }
     }
+}
+
 }

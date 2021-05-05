@@ -9,6 +9,8 @@
 #include "Card.h"
 #include <AK/Vector.h>
 
+namespace Solitaire {
+
 class CardStack final {
 public:
     enum Type {
@@ -78,3 +80,5 @@ private:
     bool m_dirty { false };
     Gfx::IntRect m_base;
 };
+
+}

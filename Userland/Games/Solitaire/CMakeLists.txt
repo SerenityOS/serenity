@@ -1,8 +1,8 @@
 set(SOURCES
     Card.cpp
     CardStack.cpp
+    Game.cpp
     main.cpp
-    SolitaireWidget.cpp
 )
 
 serenity_app(Solitaire ICON app-solitaire)
