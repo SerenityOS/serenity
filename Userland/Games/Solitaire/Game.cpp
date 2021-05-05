@@ -74,6 +74,8 @@ void Game::start_game_over_animation()
 
     create_new_animation_card();
     m_game_over_animation = true;
+
+    start_timer(s_timer_interval_ms);
 }
 
 void Game::stop_game_over_animation()
@@ -83,12 +85,13 @@ void Game::stop_game_over_animation()
 
     m_game_over_animation = false;
     update();
+
+    stop_timer();
 }
 
 void Game::setup()
 {
     stop_game_over_animation();
-    stop_timer();
 
     for (auto& stack : m_stacks)
         stack.clear();
@@ -366,6 +369,7 @@ void Game::paint_event(GUI::PaintEvent& event)
                 while (!m_new_deck.is_empty())
                     stack(Stock).push(m_new_deck.take_last());
                 m_new_game_animation = false;
+                stop_timer();
             }
         }
     }
