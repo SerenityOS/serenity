@@ -22,7 +22,7 @@ Since SUID binaries are able to bypass access checks, only carefully selected bi
 
 In some instances, it is useful for a SUID binary to either temporarily or permanently drop its permissions and set the effective user ID to the real user ID.
 
-To make this possible, each process has *three* user (and group) IDs: The (real) user ID, the *effective* user ID, and the *saved* user ID. When a process executes a normal binary, all three IDs are set to the parent process's user ID. However, when a process executes a SUID binary, the process runs with the paren process's ID as its real ID, but it takes its effective ID and saved ID from the binary. (Analogously for the group ID for SGID binaries.)
+To make this possible, each process has *three* user (and group) IDs: The (real) user ID, the *effective* user ID, and the *saved* user ID. When a process executes a normal binary, all three IDs are set to the parent process's user ID. However, when a process executes a SUID binary, the process runs with the parent process's ID as its real ID, but it takes its effective ID and saved ID from the binary. (Analogously for the group ID for SGID binaries.)
 
 The function [`setresuid`(2)](../man2/getresuid.md) can change the real, effective, and saved user ID of a process -- but for non-root processes it is only valid to set each new ID to the current value of real, effective, or saved user ID. Since SUID binaries start with the binary's owner as effective and saved user ID and with the current user's ID as real user ID, this allows switching the effective user ID between the SUID owner's ID and the current user's ID.
 

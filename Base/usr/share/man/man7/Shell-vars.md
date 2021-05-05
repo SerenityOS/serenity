@@ -4,7 +4,7 @@ Shell Variables - Special local and environment variables used by the Shell
 
 ## Description
 
-The Shell uses various variables to allow for customisations of certain behavioral or visual things.
+The Shell uses various variables to allow for customizations of certain behavioral or visual things.
 Such variables can be changed or set by the user to tweak how the shell presents things.
 
 ## Behavioral
