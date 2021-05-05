@@ -97,12 +97,13 @@ See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/b
 
 Please see the [issue policy](https://github.com/SerenityOS/serenity/blob/master/CONTRIBUTING.md#issue-policy).
 
+FAQ: [Frequently Asked Questions](https://github.com/SerenityOS/serenity/blob/master/FAQ.md)
+
 ## Get in touch
 
 IRC: `#serenityos` on the Freenode IRC network.
 
 Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
-
 
 ## Author
 
