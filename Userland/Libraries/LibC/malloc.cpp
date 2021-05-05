@@ -244,8 +244,13 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
 
     --block->m_free_chunks;
     void* ptr = block->m_freelist;
+    if (ptr) {
+        block->m_freelist = block->m_freelist->next;
+    } else {
+        ptr = block->m_slot + block->m_next_lazy_freelist_index * block->m_size;
+        block->m_next_lazy_freelist_index++;
+    }
     VERIFY(ptr);
-    block->m_freelist = block->m_freelist->next;
     if (block->is_full()) {
         g_malloc_stats.number_of_blocks_full++;
         dbgln_if(MALLOC_DEBUG, "Block {:p} is now full in size class {}", block, good_size);

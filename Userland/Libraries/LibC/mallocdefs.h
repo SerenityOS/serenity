@@ -57,18 +57,11 @@ struct ChunkedBlock
         m_magic = MAGIC_PAGE_HEADER;
         m_size = bytes_per_chunk;
         m_free_chunks = chunk_capacity();
-        m_freelist = (FreelistEntry*)chunk(0);
-        for (size_t i = 0; i < chunk_capacity(); ++i) {
-            auto* entry = (FreelistEntry*)chunk(i);
-            if (i != chunk_capacity() - 1)
-                entry->next = (FreelistEntry*)chunk(i + 1);
-            else
-                entry->next = nullptr;
-        }
     }
 
     ChunkedBlock* m_prev { nullptr };
     ChunkedBlock* m_next { nullptr };
+    size_t m_next_lazy_freelist_index { 0 };
     FreelistEntry* m_freelist { nullptr };
     size_t m_free_chunks { 0 };
     [[gnu::aligned(8)]] unsigned char m_slot[0];
