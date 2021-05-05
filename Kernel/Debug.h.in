@@ -302,6 +302,10 @@
 #cmakedefine01 VRA_DEBUG
 #endif
 
+#ifndef VMWARESVGA_DEBUG
+#cmakedefine01 VMWARESVGA_DEBUG
+#endif
+
 #ifndef WAITBLOCK_DEBUG
 #cmakedefine01 WAITBLOCK_DEBUG
 #endif

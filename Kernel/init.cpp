@@ -23,6 +23,7 @@
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/USB/UHCIController.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
+#include <Kernel/Devices/VMWareSVGADevice.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -39,6 +40,7 @@
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
+#include <Kernel/PCI/IDs.h>
 #include <Kernel/PCI/Initializer.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
@@ -238,14 +240,19 @@ void init_stage2(void*)
         dbgln("Text mode enabled");
     } else {
         bool bxvga_found = false;
-        PCI::enumerate([&](const PCI::Address&, PCI::ID id) {
+        bool vmwaresvga_found = false;
+        PCI::enumerate([&](const PCI::Address& adr, PCI::ID id) {
             if ((id.vendor_id == 0x1234 && id.device_id == 0x1111) || (id.vendor_id == 0x80ee && id.device_id == 0xbeef))
                 bxvga_found = true;
+            if (id.vendor_id == static_cast<u16>(PCIVendorID::VMWare) && id.device_id == static_cast<u16>(PCIDeviceID::VMWareSVGA) && !vmwaresvga_found) {
+                [[maybe_unused]] auto& unused_vmwaresvga = adopt_ref(*new VMWareSVGADevice(adr)).leak_ref();
+                vmwaresvga_found = true;
+            }
         });
 
         if (bxvga_found) {
             BXVGADevice::initialize();
-        } else {
+        } else if (!vmwaresvga_found) {
             if (multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB || multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT) {
                 new MBVGADevice(
                     PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),

@@ -11,11 +11,13 @@ namespace Kernel {
 enum class PCIVendorID {
     VirtIO = 0x1af4,
     Intel = 0x8086,
+    VMWare = 0x15AD,
 };
 
 enum class PCIDeviceID {
     VirtIOConsole = 0x1003,
     VirtIOEntropy = 0x1005,
+    VMWareSVGA = 0x0405,
 };
 
 }
