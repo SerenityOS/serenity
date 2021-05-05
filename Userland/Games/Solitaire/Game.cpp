@@ -13,7 +13,7 @@ REGISTER_WIDGET(Solitaire, Game);
 
 namespace Solitaire {
 
-static constexpr uint8_t new_game_animation_delay = 5;
+static constexpr uint8_t new_game_animation_delay = 2;
 static constexpr int s_timer_interval_ms = 1000 / 60;
 
 Game::Game()
