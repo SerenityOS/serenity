@@ -22,6 +22,8 @@ struct ThreadStatistics {
     unsigned inode_faults;
     unsigned zero_faults;
     unsigned cow_faults;
+    unsigned time_slices_donated;
+    unsigned time_slices_received;
     unsigned unix_socket_read_bytes;
     unsigned unix_socket_write_bytes;
     unsigned ipv4_socket_read_bytes;

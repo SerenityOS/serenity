@@ -819,6 +819,8 @@ static bool procfs$all(InodeIdentifier, KBufferBuilder& builder)
             thread_object.add("inode_faults", thread.inode_faults());
             thread_object.add("zero_faults", thread.zero_faults());
             thread_object.add("cow_faults", thread.cow_faults());
+            thread_object.add("time_slices_donated", thread.time_slices_donated());
+            thread_object.add("time_slices_received", thread.time_slices_received());
             thread_object.add("file_read_bytes", thread.file_read_bytes());
             thread_object.add("file_write_bytes", thread.file_write_bytes());
             thread_object.add("unix_socket_read_bytes", thread.unix_socket_read_bytes());

@@ -988,6 +988,10 @@ public:
     void did_zero_fault() { ++m_zero_faults; }
     unsigned cow_faults() const { return m_cow_faults; }
     void did_cow_fault() { ++m_cow_faults; }
+    unsigned time_slices_donated() const { return m_time_slices_donated; }
+    void did_donate_time_slices(unsigned slices) { m_time_slices_donated += slices; }
+    unsigned time_slices_received() const { return m_time_slices_received; }
+    void did_receive_time_slices(unsigned slices) { m_time_slices_received += slices; }
 
     unsigned file_read_bytes() const { return m_file_read_bytes; }
     unsigned file_write_bytes() const { return m_file_write_bytes; }
@@ -1237,6 +1241,8 @@ private:
     unsigned m_inode_faults { 0 };
     unsigned m_zero_faults { 0 };
     unsigned m_cow_faults { 0 };
+    unsigned m_time_slices_donated { 0 };
+    unsigned m_time_slices_received { 0 };
 
     unsigned m_file_read_bytes { 0 };
     unsigned m_file_write_bytes { 0 };

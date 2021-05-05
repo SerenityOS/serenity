@@ -306,6 +306,9 @@ bool Scheduler::donate_to_and_switch(Thread* beneficiary, [[maybe_unused]] const
     dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Donating {} ticks to {}, reason={}", proc.get_id(), ticks_to_donate, *beneficiary, reason);
     beneficiary->set_ticks_left(ticks_to_donate);
 
+    current_thread->did_donate_time_slices(ticks_to_donate);
+    beneficiary->did_receive_time_slices(ticks_to_donate);
+
     return Scheduler::context_switch(beneficiary);
 }
 

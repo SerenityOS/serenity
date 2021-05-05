@@ -102,6 +102,10 @@ String ProcessModel::column_name(int column) const
         return "F:Zero";
     case Column::CowFaults:
         return "F:CoW";
+    case Column::TimeSlicesDonated:
+        return "S:DonatedSlices";
+    case Column::TimeSlicesReceived:
+        return "S:ReceivedSlices";
     case Column::IPv4SocketReadBytes:
         return "IPv4 In";
     case Column::IPv4SocketWriteBytes:
@@ -159,6 +163,8 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Column::InodeFaults:
         case Column::ZeroFaults:
         case Column::CowFaults:
+        case Column::TimeSlicesDonated:
+        case Column::TimeSlicesReceived:
         case Column::FileReadBytes:
         case Column::FileWriteBytes:
         case Column::UnixSocketReadBytes:
@@ -220,6 +226,10 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             return thread.current_state.zero_faults;
         case Column::CowFaults:
             return thread.current_state.cow_faults;
+        case Column::TimeSlicesDonated:
+            return thread.current_state.time_slices_donated;
+        case Column::TimeSlicesReceived:
+            return thread.current_state.time_slices_received;
         case Column::IPv4SocketReadBytes:
             return thread.current_state.ipv4_socket_read_bytes;
         case Column::IPv4SocketWriteBytes:
@@ -291,6 +301,10 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             return thread.current_state.zero_faults;
         case Column::CowFaults:
             return thread.current_state.cow_faults;
+        case Column::TimeSlicesDonated:
+            return thread.current_state.time_slices_donated;
+        case Column::TimeSlicesReceived:
+            return thread.current_state.time_slices_received;
         case Column::IPv4SocketReadBytes:
             return thread.current_state.ipv4_socket_read_bytes;
         case Column::IPv4SocketWriteBytes:
@@ -340,6 +354,8 @@ void ProcessModel::update()
                 state.inode_faults = thread.inode_faults;
                 state.zero_faults = thread.zero_faults;
                 state.cow_faults = thread.cow_faults;
+                state.time_slices_donated = thread.time_slices_donated;
+                state.time_slices_received = thread.time_slices_received;
                 state.unix_socket_read_bytes = thread.unix_socket_read_bytes;
                 state.unix_socket_write_bytes = thread.unix_socket_write_bytes;
                 state.ipv4_socket_read_bytes = thread.ipv4_socket_read_bytes;
