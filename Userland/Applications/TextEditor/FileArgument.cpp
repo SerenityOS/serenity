@@ -17,7 +17,7 @@ FileArgument::FileArgument(String file_argument)
 
     if (Core::File::exists(file_argument)) {
         // A file exists with the full specified name, don't attempt to parse it.
-        m_file_name = file_argument;
+        m_filename = file_argument;
         return;
     }
 
@@ -32,28 +32,26 @@ FileArgument::FileArgument(String file_argument)
 
     if (groups.size() > 3) {
         // Both a line and column number were specified.
-        auto file_name = groups.at(0).view.to_string();
+        auto filename = groups.at(0).view.to_string();
         auto initial_line_number = groups.at(1).view.to_string().to_int();
         auto initial_column_number = groups.at(2).view.to_string().to_int();
 
-        m_file_name = file_name;
+        m_filename = filename;
         if (initial_line_number.has_value() && initial_line_number.value() > 0)
             m_line = initial_line_number.value();
         if (initial_column_number.has_value())
             m_column = initial_column_number.value();
     } else if (groups.size() == 3) {
         // Only a line number was specified.
-        auto file_name = groups.at(0).view.to_string();
+        auto filename = groups.at(0).view.to_string();
         auto initial_line_number = groups.at(1).view.to_string().to_int();
 
-        m_file_name = file_name;
+        m_filename = filename;
         if (initial_line_number.has_value() && initial_line_number.value() > 0)
             m_line = initial_line_number.value();
     } else {
         // A colon was found at the end of the file name but no values were found after it.
-        auto file_name = groups.at(0).view.to_string();
-
-        m_file_name = file_name;
+        m_filename = groups.at(0).view.to_string();
     }
 }
 
