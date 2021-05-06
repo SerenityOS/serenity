@@ -14,7 +14,7 @@ Disables check for `RLIMIT_CORE` and subsequent `setrlimit()` call. Would be ena
 
 ## `fix-autoconf.patch`
 
-As usual, make the `configure` script recognize Serenity.
+As usual, make the `configure` script recognize Serenity. Also set `MACHDEP` (which is used for `sys.platform`) to a version-less `serenityos`, even when not cross-compiling.
 
 ## `remove-setlocale-from-preconfig.patch`
 
