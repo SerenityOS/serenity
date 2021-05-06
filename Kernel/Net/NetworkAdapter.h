@@ -80,7 +80,11 @@ private:
         Time timestamp;
     };
 
+    // FIXME: Make this configurable
+    static constexpr size_t max_packet_buffers = 1024;
+
     SinglyLinkedList<PacketWithTimestamp> m_packet_queue;
+    size_t m_packet_queue_size { 0 };
     SinglyLinkedList<KBuffer> m_unused_packet_buffers;
     size_t m_unused_packet_buffers_count { 0 };
     String m_name;
