@@ -676,6 +676,10 @@ void ClientConnection::start_window_resize(i32 window_id)
         return;
     }
     auto& window = *(*it).value;
+    if (!window.is_resizable()) {
+        dbgln("Client wants to start resizing a non-resizable window");
+        return;
+    }
     // FIXME: We are cheating a bit here by using the current cursor location and hard-coding the left button.
     //        Maybe the client should be allowed to specify what initiated this request?
     WindowManager::the().start_window_resize(window, Screen::the().cursor_location(), MouseButton::Left);
