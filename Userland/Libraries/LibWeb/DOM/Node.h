@@ -82,6 +82,8 @@ public:
     void remove_all_children(bool suppress_observers = false);
     u16 compare_document_position(RefPtr<Node> other);
 
+    ExceptionOr<NonnullRefPtr<Node>> replace_child(NonnullRefPtr<Node> node, NonnullRefPtr<Node> child);
+
     NonnullRefPtr<Node> clone_node(Document* document = nullptr, bool clone_children = false) const;
     ExceptionOr<NonnullRefPtr<Node>> clone_node_binding(bool deep) const;
 
