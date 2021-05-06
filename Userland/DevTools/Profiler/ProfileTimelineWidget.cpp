@@ -6,14 +6,16 @@
 
 #include "ProfileTimelineWidget.h"
 #include "Profile.h"
+#include "TimelineView.h"
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
 namespace Profiler {
 
-ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile, Process const& process)
-    : m_profile(profile)
+ProfileTimelineWidget::ProfileTimelineWidget(TimelineView& view, Profile& profile, Process const& process)
+    : m_view(view)
+    , m_profile(profile)
     , m_process(process)
 {
     set_fill_with_background_color(true);
@@ -21,7 +23,6 @@ ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile, Process const& pr
     set_fixed_height(40);
     set_fixed_width(m_profile.length_in_ms() / 10);
     set_frame_thickness(1);
-    m_hover_time = m_profile.first_timestamp();
 }
 
 ProfileTimelineWidget::~ProfileTimelineWidget()
@@ -64,9 +65,9 @@ void ProfileTimelineWidget::paint_event(GUI::PaintEvent& event)
             painter.draw_line({ x + i, frame_thickness() + column_height }, { x + i, height() - frame_thickness() * 2 }, color);
     }
 
-    u64 normalized_start_time = clamp_timestamp(min(m_select_start_time, m_select_end_time));
-    u64 normalized_end_time = clamp_timestamp(max(m_select_start_time, m_select_end_time));
-    u64 normalized_hover_time = clamp_timestamp(m_hover_time);
+    u64 normalized_start_time = clamp_timestamp(min(m_view.select_start_time(), m_view.select_end_time()));
+    u64 normalized_end_time = clamp_timestamp(max(m_view.select_start_time(), m_view.select_end_time()));
+    u64 normalized_hover_time = clamp_timestamp(m_view.hover_time());
 
     int select_start_x = (int)((float)(normalized_start_time - start_of_trace) * column_width);
     int select_end_x = (int)((float)(normalized_end_time - start_of_trace) * column_width);
@@ -108,20 +109,20 @@ void ProfileTimelineWidget::mousedown_event(GUI::MouseEvent& event)
     if (event.button() != GUI::MouseButton::Left)
         return;
 
-    m_selecting = true;
-    m_select_start_time = timestamp_at_x(event.x());
-    m_select_end_time = m_select_start_time;
-    m_profile.set_timestamp_filter_range(m_select_start_time, m_select_end_time);
+    m_view.set_selecting({}, true);
+    m_view.set_select_start_time({}, timestamp_at_x(event.x()));
+    m_view.set_select_end_time({}, m_view.select_start_time());
+    m_profile.set_timestamp_filter_range(m_view.select_start_time(), m_view.select_end_time());
     update();
 }
 
 void ProfileTimelineWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    m_hover_time = timestamp_at_x(event.x());
+    m_view.set_hover_time({}, timestamp_at_x(event.x()));
 
-    if (m_selecting) {
-        m_select_end_time = m_hover_time;
-        m_profile.set_timestamp_filter_range(m_select_start_time, m_select_end_time);
+    if (m_view.is_selecting()) {
+        m_view.set_select_end_time({}, m_view.hover_time());
+        m_profile.set_timestamp_filter_range(m_view.select_start_time(), m_view.select_end_time());
     }
 
     update();
@@ -132,8 +133,8 @@ void ProfileTimelineWidget::mouseup_event(GUI::MouseEvent& event)
     if (event.button() != GUI::MouseButton::Left)
         return;
 
-    m_selecting = false;
-    if (m_select_start_time == m_select_end_time)
+    m_view.set_selecting({}, false);
+    if (m_view.select_start_time() == m_view.select_end_time())
         m_profile.clear_timestamp_filter_range();
 }
 

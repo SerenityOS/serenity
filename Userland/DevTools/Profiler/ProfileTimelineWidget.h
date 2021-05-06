@@ -12,6 +12,7 @@ namespace Profiler {
 
 class Process;
 class Profile;
+class TimelineView;
 
 class ProfileTimelineWidget final : public GUI::Frame {
     C_OBJECT(ProfileTimelineWidget)
@@ -24,17 +25,13 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
 
-    explicit ProfileTimelineWidget(Profile&, Process const&);
+    explicit ProfileTimelineWidget(TimelineView&, Profile&, Process const&);
 
     u64 timestamp_at_x(int x) const;
 
+    TimelineView& m_view;
     Profile& m_profile;
     Process const& m_process;
-
-    bool m_selecting { false };
-    u64 m_select_start_time { 0 };
-    u64 m_select_end_time { 0 };
-    u64 m_hover_time { 0 };
 };
 
 }

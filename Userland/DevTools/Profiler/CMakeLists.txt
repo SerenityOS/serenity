@@ -8,6 +8,7 @@ set(SOURCES
     ProfileModel.cpp
     ProfileTimelineWidget.cpp
     SamplesModel.cpp
+        TimelineView.cpp
 )
 
 serenity_app(Profiler ICON app-profiler)
