@@ -824,7 +824,33 @@ bool Decoder::intra_frame_mode_info()
     SAFE_CALL(intra_segment_id());
     SAFE_CALL(read_skip());
     SAFE_CALL(read_tx_size(true));
-    // FIXME: Finish implementing
+    m_ref_frame[0] = IntraFrame;
+    m_ref_frame[1] = None;
+    m_is_inter = false;
+    if (m_mi_size >= Block_8x8) {
+        m_default_intra_mode = static_cast<IntraMode>(m_tree_parser->parse_tree(SyntaxElementType::DefaultIntraMode));
+        m_y_mode = m_default_intra_mode;
+        for (auto b = 0; b < 4; b++)
+            m_sub_modes[b] = m_y_mode;
+    } else {
+        m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
+        m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
+        for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
+            for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
+                m_default_intra_mode = static_cast<IntraMode>(m_tree_parser->parse_tree(SyntaxElementType::DefaultIntraMode));
+                for (auto y = 0; y < m_num_4x4_h; y++) {
+                    for (auto x = 0; x < m_num_4x4_w; x++) {
+                        auto index = (idy + y) * 2 + idx + x;
+                        if (index > 3)
+                            dbgln("Trying to access index {} on m_sub_modes", index);
+                        m_sub_modes[index] = m_default_intra_mode;
+                    }
+                }
+            }
+        }
+        m_y_mode = m_default_intra_mode;
+    }
+    m_uv_mode = m_tree_parser->parse_tree(SyntaxElementType::DefaultUVMode);
     return true;
 }
 
@@ -855,13 +881,18 @@ bool Decoder::seg_feature_active(u8 feature)
 
 bool Decoder::read_tx_size(bool allow_select)
 {
-    // FIXME: Implement
-    (void)allow_select;
+    m_max_tx_size = max_txsize_lookup[m_mi_size];
+    if (allow_select && m_tx_mode == TXModeSelect && m_mi_size >= Block_8x8) {
+        m_tx_size = static_cast<TXSize>(m_tree_parser->parse_tree(SyntaxElementType::TXSize));
+    } else {
+        m_tx_size = min(m_max_tx_size, tx_mode_to_biggest_tx_size[m_tx_mode]);
+    }
     return true;
 }
 
 bool Decoder::inter_frame_mode_info()
 {
+    // FIXME: Implement
     return true;
 }
 
