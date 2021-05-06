@@ -23,24 +23,21 @@ MulticastDNS::MulticastDNS(Object* parent)
     , m_hostname("courage.local")
 {
     char buffer[HOST_NAME_MAX];
-    int rc = gethostname(buffer, sizeof(buffer));
-    if (rc < 0) {
+    if (gethostname(buffer, sizeof(buffer)) < 0) {
         perror("gethostname");
     } else {
         m_hostname = String::formatted("{}.local", buffer);
     }
 
     u8 zero = 0;
-    rc = setsockopt(fd(), IPPROTO_IP, IP_MULTICAST_LOOP, &zero, 1);
-    if (rc < 0)
+    if (setsockopt(fd(), IPPROTO_IP, IP_MULTICAST_LOOP, &zero, 1) < 0)
         perror("setsockopt(IP_MULTICAST_LOOP)");
     ip_mreq mreq = {
         mdns_addr.sin_addr,
         { htonl(INADDR_ANY) },
     };
-    rc = setsockopt(fd(), IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
-    if (rc < 0)
-        perror("setsockopt(IP_ADD_MEMBESHIP)");
+    if (setsockopt(fd(), IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0)
+        perror("setsockopt(IP_ADD_MEMBERSHIP)");
 
     bind(IPv4Address(), 5353);
 
@@ -98,8 +95,7 @@ void MulticastDNS::announce()
         response.add_answer(answer);
     }
 
-    int rc = emit_packet(response);
-    if (rc < 0)
+    if (emit_packet(response) < 0)
         perror("Failed to emit response packet");
 }
 
@@ -147,8 +143,7 @@ Vector<DNSAnswer> MulticastDNS::lookup(const DNSName& name, unsigned short recor
     request.set_is_query();
     request.add_question({ name, record_type, C_IN });
 
-    int rc = emit_packet(request);
-    if (rc < 0) {
+    if (emit_packet(request) < 0) {
         perror("failed to emit request packet");
         return {};
     }
@@ -159,7 +154,7 @@ Vector<DNSAnswer> MulticastDNS::lookup(const DNSName& name, unsigned short recor
     // the main loop while we wait for a response.
     while (true) {
         pollfd pfd { fd(), POLLIN, 0 };
-        rc = poll(&pfd, 1, 1000);
+        auto rc = poll(&pfd, 1, 1000);
         if (rc < 0) {
             perror("poll");
         } else if (rc == 0) {
