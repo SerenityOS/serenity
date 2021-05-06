@@ -1,5 +1,5 @@
---- Python-3.9.4/config.sub	2021-02-21 20:22:43.901024503 +0100
-+++ Python-3.9.4/config.sub	2021-02-21 20:24:35.079400552 +0100
+--- Python-3.9.5/config.sub	2021-02-21 20:22:43.901024503 +0100
++++ Python-3.9.5/config.sub	2021-02-21 20:24:35.079400552 +0100
 @@ -1485,6 +1485,8 @@
  	-oss*)
  		os=-sysv3
@@ -9,9 +9,9 @@
  	-svr4*)
  		os=-sysv4
  		;;
---- Python-3.9.4/configure.ac	2021-04-06 20:59:45.319060429 +0200
-+++ Python-3.9.4/configure.ac	2021-04-06 21:02:33.875267539 +0200
-@@ -389,6 +389,9 @@
+--- Python-3.9.5/configure.ac	2021-05-03 15:54:42.000000000 +0100
++++ Python-3.9.5/configure.ac	2021-05-06 12:46:42.579733794 +0100
+@@ -391,6 +391,9 @@
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
  	case "$host" in
@@ -21,7 +21,7 @@
  	*-*-linux-android*)
  		ac_sys_system=Linux-android
  		;;
-@@ -435,6 +438,9 @@
+@@ -437,6 +440,9 @@
  AC_SUBST(_PYTHON_HOST_PLATFORM)
  if test "$cross_compiling" = yes; then
  	case "$host" in
@@ -31,9 +31,9 @@
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
---- Python-3.9.4/configure	2021-02-21 20:22:43.898024520 +0100
-+++ Python-3.9.4/configure	2021-02-21 20:24:35.096400457 +0100
-@@ -3292,6 +3292,9 @@
+--- Python-3.9.5/configure	2021-05-03 15:54:42.000000000 +0100
++++ Python-3.9.5/configure	2021-05-06 12:48:56.875043814 +0100
+@@ -3295,6 +3295,9 @@
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
  	case "$host" in
@@ -43,8 +43,8 @@
  	*-*-linux-android*)
  		ac_sys_system=Linux-android
  		;;
-@@ -3339,6 +3342,9 @@
- 
+@@ -3342,6 +3345,9 @@
+
  if test "$cross_compiling" = yes; then
  	case "$host" in
 +	*-*-serenity*)
@@ -53,10 +53,7 @@
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
-diff -Naur Python-3.9.4/configure Python-3.9.4.serenity/configure
---- Python-3.9.4/configure	2021-04-24 14:50:59.083484421 +0200
-+++ Python-3.9.4.serenity/configure	2021-04-24 15:50:26.821359967 +0200
-@@ -9647,6 +9647,7 @@
+@@ -9646,6 +9652,7 @@
  #	    LINKFORSHARED="-Wl,-E -Wl,+s -Wl,+b\$(BINLIBDEST)/lib-dynload";;
  	Linux-android*) LINKFORSHARED="-pie -Xlinker -export-dynamic";;
  	Linux*|GNU*) LINKFORSHARED="-Xlinker -export-dynamic";;
