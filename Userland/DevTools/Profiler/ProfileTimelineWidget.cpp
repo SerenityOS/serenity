@@ -17,8 +17,10 @@ ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile, Process const& pr
     , m_process(process)
 {
     set_fill_with_background_color(true);
+    set_background_role(Gfx::ColorRole::Base);
     set_fixed_height(40);
     set_fixed_width(m_profile.length_in_ms() / 10);
+    set_frame_thickness(1);
     m_hover_time = m_profile.first_timestamp();
 }
 
