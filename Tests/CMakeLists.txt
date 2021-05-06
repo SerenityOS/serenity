@@ -1,6 +1,7 @@
 add_subdirectory(AK)
 add_subdirectory(Kernel)
 add_subdirectory(LibC)
+add_subdirectory(LibCompress)
 add_subdirectory(LibGfx)
 add_subdirectory(LibM)
 add_subdirectory(LibPthread)
