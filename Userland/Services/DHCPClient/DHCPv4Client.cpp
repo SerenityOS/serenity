@@ -287,7 +287,11 @@ void DHCPv4Client::process_incoming(const DHCPv4Packet& packet)
 
     dbgln_if(DHCPV4CLIENT_DEBUG, "Here are the options: {}", options.to_string());
 
-    auto value = options.get<DHCPMessageType>(DHCPOption::DHCPMessageType).value();
+    auto value_or_error = options.get<DHCPMessageType>(DHCPOption::DHCPMessageType);
+    if (!value_or_error.has_value())
+        return;
+
+    auto value = value_or_error.value();
     switch (value) {
     case DHCPMessageType::DHCPOffer:
         handle_offer(packet, options);
