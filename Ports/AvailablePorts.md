@@ -88,6 +88,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`openttd-opengfx`](openttd-opengfx/)  | OpenGFX graphics for OpenTTD                               | 0.6.1                    | https://www.openttd.org/                                                       |
 | [`openttd-opensfx`](openttd-opensfx/)  | OpenSFX audio files for OpenTTD                            | 1.0.1                    | https://www.openttd.org/                                                       |
 | [`oksh`](oksh/)                        | oksh                                                       | 6.8.1                    | https://github.com/ibara/oksh                                                  |
+| [`p7zip`](p7zip/)                      | p7zip                                                      | 17.04                    | https://github.com/jinfeihan57/p7zip                                           |
 | [`patch`](patch/)                      | patch (OpenBSD)                                            | 6.6                      | https://github.com/ibara/libpuffy                                              |
 | [`pcre`](pcre/)                        | Perl-compatible Regular Expressions (PCRE)                 | 8.44                     | https://www.pcre.org/                                                          |
 | [`pcre2`](pcre2/)                      | Perl-compatible Regular Expressions (PCRE2)                | 10.34                    | https://www.pcre.org/                                                          |
