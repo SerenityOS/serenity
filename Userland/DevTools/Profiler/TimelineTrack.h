@@ -14,10 +14,11 @@ class Process;
 class Profile;
 class TimelineView;
 
-class ProfileTimelineWidget final : public GUI::Frame {
-    C_OBJECT(ProfileTimelineWidget)
+class TimelineTrack final : public GUI::Frame {
+    C_OBJECT(TimelineTrack);
+
 public:
-    virtual ~ProfileTimelineWidget() override;
+    virtual ~TimelineTrack() override;
 
 private:
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -25,7 +26,7 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
 
-    explicit ProfileTimelineWidget(TimelineView&, Profile&, Process const&);
+    explicit TimelineTrack(TimelineView&, Profile&, Process const&);
 
     u64 timestamp_at_x(int x) const;
 

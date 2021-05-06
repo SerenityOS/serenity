@@ -7,7 +7,7 @@
 #include "IndividualSampleModel.h"
 #include "ProcessPickerWidget.h"
 #include "Profile.h"
-#include "ProfileTimelineWidget.h"
+#include "TimelineTrack.h"
 #include "TimelineView.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
         }
         if (!event_count)
             continue;
-        timeline_view->add<ProfileTimelineWidget>(*timeline_view, *profile, process);
+        timeline_view->add<TimelineTrack>(*timeline_view, *profile, process);
     }
 
     auto& scrollable_container = main_widget.add<GUI::ScrollableContainerWidget>();

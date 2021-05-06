@@ -6,8 +6,8 @@ set(SOURCES
     ProcessPickerWidget.cpp
     Profile.cpp
     ProfileModel.cpp
-    ProfileTimelineWidget.cpp
-    SamplesModel.cpp
+        TimelineTrack.cpp
+        SamplesModel.cpp
         TimelineView.cpp
 )
 

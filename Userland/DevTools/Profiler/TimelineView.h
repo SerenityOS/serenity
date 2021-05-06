@@ -10,7 +10,7 @@
 
 namespace Profiler {
 
-class ProfileTimelineWidget;
+class TimelineTrack;
 
 class TimelineView final : public GUI::Widget {
     C_OBJECT(TimelineView);
@@ -23,22 +23,22 @@ public:
     u64 select_end_time() const { return m_select_end_time; }
     u64 hover_time() const { return m_hover_time; }
 
-    void set_selecting(Badge<ProfileTimelineWidget>, bool value)
+    void set_selecting(Badge<TimelineTrack>, bool value)
     {
         m_selecting = value;
         update();
     }
-    void set_select_start_time(Badge<ProfileTimelineWidget>, u64 value)
+    void set_select_start_time(Badge<TimelineTrack>, u64 value)
     {
         m_select_start_time = value;
         update();
     }
-    void set_select_end_time(Badge<ProfileTimelineWidget>, u64 value)
+    void set_select_end_time(Badge<TimelineTrack>, u64 value)
     {
         m_select_end_time = value;
         update();
     }
-    void set_hover_time(Badge<ProfileTimelineWidget>, u64 value)
+    void set_hover_time(Badge<TimelineTrack>, u64 value)
     {
         m_hover_time = value;
         update();
