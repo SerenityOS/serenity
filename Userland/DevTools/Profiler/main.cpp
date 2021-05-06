@@ -24,6 +24,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ProcessChooser.h>
+#include <LibGUI/ScrollableContainerWidget.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
@@ -88,7 +89,24 @@ int main(int argc, char** argv)
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
 
-    main_widget.add<ProfileTimelineWidget>(*profile);
+    auto timelines_widget = GUI::Widget::construct();
+    timelines_widget->set_layout<GUI::VerticalBoxLayout>();
+    timelines_widget->set_shrink_to_fit(true);
+
+    for (auto& process : profile->processes()) {
+        size_t event_count = 0;
+        for (auto& event : profile->events()) {
+            if (event.pid == process.pid && process.valid_at(event.timestamp))
+                ++event_count;
+        }
+        if (!event_count)
+            continue;
+        timelines_widget->add<ProfileTimelineWidget>(*profile, process);
+    }
+
+    auto& scrollable_container = main_widget.add<GUI::ScrollableContainerWidget>();
+    scrollable_container.set_widget(timelines_widget.ptr());
+
     main_widget.add<ProcessPickerWidget>(*profile);
 
     auto& tab_widget = main_widget.add<GUI::TabWidget>();

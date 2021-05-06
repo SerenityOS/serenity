@@ -8,14 +8,17 @@
 #include "Profile.h"
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/Palette.h>
 
 namespace Profiler {
 
-ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile)
+ProfileTimelineWidget::ProfileTimelineWidget(Profile& profile, Process const& process)
     : m_profile(profile)
+    , m_process(process)
 {
     set_fill_with_background_color(true);
-    set_fixed_height(80);
+    set_fixed_height(40);
+    set_fixed_width(m_profile.length_in_ms() / 10);
     m_hover_time = m_profile.first_timestamp();
 }
 
@@ -41,6 +44,12 @@ void ProfileTimelineWidget::paint_event(GUI::PaintEvent& event)
     float frame_height = (float)frame_inner_rect().height() / (float)m_profile.deepest_stack_depth();
 
     for (auto& event : m_profile.events()) {
+        if (event.pid != m_process.pid)
+            continue;
+
+        if (!m_process.valid_at(event.timestamp))
+            continue;
+
         u64 t = clamp_timestamp(event.timestamp) - start_of_trace;
         int x = (int)((float)t * column_width);
         int cw = max(1, (int)column_width);
@@ -65,6 +74,8 @@ void ProfileTimelineWidget::paint_event(GUI::PaintEvent& event)
 
     {
         StringBuilder timeline_desc_builder;
+
+        timeline_desc_builder.appendff("{} ({}), ", m_process.executable, m_process.pid);
 
         timeline_desc_builder.appendff("Time: {} ms", normalized_hover_time - start_of_trace);
         if (normalized_start_time != normalized_end_time) {
