@@ -8,6 +8,7 @@
 #include "ProcessPickerWidget.h"
 #include "Profile.h"
 #include "ProfileTimelineWidget.h"
+#include "TimelineView.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventLoop.h>
@@ -89,10 +90,7 @@ int main(int argc, char** argv)
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto timelines_widget = GUI::Widget::construct();
-    timelines_widget->set_layout<GUI::VerticalBoxLayout>();
-    timelines_widget->set_shrink_to_fit(true);
-
+    auto timeline_view = TimelineView::construct();
     for (auto& process : profile->processes()) {
         size_t event_count = 0;
         for (auto& event : profile->events()) {
@@ -101,11 +99,11 @@ int main(int argc, char** argv)
         }
         if (!event_count)
             continue;
-        timelines_widget->add<ProfileTimelineWidget>(*profile, process);
+        timeline_view->add<ProfileTimelineWidget>(*timeline_view, *profile, process);
     }
 
     auto& scrollable_container = main_widget.add<GUI::ScrollableContainerWidget>();
-    scrollable_container.set_widget(timelines_widget.ptr());
+    scrollable_container.set_widget(timeline_view.ptr());
 
     main_widget.add<ProcessPickerWidget>(*profile);
 
