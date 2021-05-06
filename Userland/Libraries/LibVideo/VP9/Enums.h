@@ -41,6 +41,8 @@ enum InterpolationFilter {
 };
 
 enum ReferenceFrame {
+    // 0 is both INTRA_FRAME and NONE because the value's meaning changes depending on which index they're in on the ref_frame array
+    None = 0,
     IntraFrame = 0,
     LastFrame = 1,
     GoldenFrame = 2,
