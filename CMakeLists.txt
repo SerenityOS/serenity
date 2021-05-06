@@ -222,6 +222,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland)
 add_subdirectory(AK)
 add_subdirectory(Kernel)
 add_subdirectory(Userland)
+add_subdirectory(Tests)
 
 set(PCI_IDS_GZ_URL https://pci-ids.ucw.cz/v2.2/pci.ids.gz)
 set(PCI_IDS_GZ_PATH ${CMAKE_BINARY_DIR}/pci.ids.gz)
