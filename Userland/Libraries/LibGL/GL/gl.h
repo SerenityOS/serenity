@@ -31,9 +31,11 @@ extern "C" {
 
 // Buffer bits
 #define GL_COLOR_BUFFER_BIT 0x0200
+#define GL_DEPTH_BUFFER_BIT 0x0400
 
 // Enable capabilities
 #define GL_CULL_FACE 0x0B44
+#define GL_DEPTH_TEST 0x0B71
 
 // Utility
 #define GL_VENDOR 0x1F00
@@ -85,6 +87,7 @@ typedef unsigned int GLbitfield;
 GLAPI void glBegin(GLenum mode);
 GLAPI void glClear(GLbitfield mask);
 GLAPI void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+GLAPI void glClearDepth(GLdouble depth);
 GLAPI void glColor3f(GLfloat r, GLfloat g, GLfloat b);
 GLAPI void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
 GLAPI void glColor4fv(const GLfloat* v);
