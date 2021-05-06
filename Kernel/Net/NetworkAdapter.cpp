@@ -160,6 +160,11 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
 
     Optional<KBuffer> buffer;
 
+    if (m_packet_queue_size == max_packet_buffers) {
+        // FIXME: Keep track of the number of dropped packets
+        return;
+    }
+
     if (m_unused_packet_buffers.is_empty()) {
         buffer = KBuffer::copy(payload.data(), payload.size());
     } else {
@@ -174,6 +179,7 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
     }
 
     m_packet_queue.append({ buffer.value(), kgettimeofday() });
+    m_packet_queue_size++;
 
     if (on_receive)
         on_receive();
@@ -185,6 +191,7 @@ size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, Time& pack
     if (m_packet_queue.is_empty())
         return 0;
     auto packet_with_timestamp = m_packet_queue.take_first();
+    m_packet_queue_size--;
     packet_timestamp = packet_with_timestamp.timestamp;
     auto packet = move(packet_with_timestamp.packet);
     size_t packet_size = packet.size();
