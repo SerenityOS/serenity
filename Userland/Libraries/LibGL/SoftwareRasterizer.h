@@ -14,6 +14,7 @@ namespace GL {
 
 struct RasterizerOptions {
     bool shade_smooth { false };
+    bool enable_depth_test { false };
 };
 
 class SoftwareRasterizer final {

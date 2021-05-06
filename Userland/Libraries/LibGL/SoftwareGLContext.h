@@ -25,6 +25,7 @@ public:
     virtual void gl_begin(GLenum mode) override;
     virtual void gl_clear(GLbitfield mask) override;
     virtual void gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) override;
+    virtual void gl_clear_depth(GLdouble depth) override;
     virtual void gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a) override;
     virtual void gl_end() override;
     virtual void gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) override;
@@ -60,6 +61,7 @@ private:
     Vector<FloatMatrix4x4> m_model_view_matrix_stack;
 
     FloatVector4 m_clear_color = { 0.0f, 0.0f, 0.0f, 0.0f };
+    double m_clear_depth = { 1.0 };
     FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
     Vector<GLVertex, 96> vertex_list;
@@ -68,6 +70,8 @@ private:
 
     GLenum m_error = GL_NO_ERROR;
     bool m_in_draw_state = false;
+
+    bool m_depth_test_enabled = false;
 
     bool m_cull_faces = false;
     GLenum m_front_face = GL_CCW;

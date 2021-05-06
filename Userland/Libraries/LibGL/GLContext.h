@@ -21,6 +21,7 @@ public:
     virtual void gl_begin(GLenum mode) = 0;
     virtual void gl_clear(GLbitfield mask) = 0;
     virtual void gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) = 0;
+    virtual void gl_clear_depth(GLdouble depth) = 0;
     virtual void gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a) = 0;
     virtual void gl_end() = 0;
     virtual void gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) = 0;
