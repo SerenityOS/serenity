@@ -18,6 +18,8 @@ class TimelineView final : public GUI::Widget {
 public:
     virtual ~TimelineView() override;
 
+    Function<void()> on_selection_change;
+
     bool is_selecting() const { return m_selecting; }
     u64 select_start_time() const { return m_select_start_time; }
     u64 select_end_time() const { return m_select_end_time; }
@@ -25,23 +27,37 @@ public:
 
     void set_selecting(Badge<TimelineTrack>, bool value)
     {
+        if (m_selecting == value)
+            return;
         m_selecting = value;
-        update();
     }
+
     void set_select_start_time(Badge<TimelineTrack>, u64 value)
     {
+        if (m_select_start_time == value)
+            return;
         m_select_start_time = value;
         update();
+        if (on_selection_change)
+            on_selection_change();
     }
     void set_select_end_time(Badge<TimelineTrack>, u64 value)
     {
+        if (m_select_end_time == value)
+            return;
         m_select_end_time = value;
         update();
+        if (on_selection_change)
+            on_selection_change();
     }
     void set_hover_time(Badge<TimelineTrack>, u64 value)
     {
+        if (m_hover_time == value)
+            return;
         m_hover_time = value;
         update();
+        if (on_selection_change)
+            on_selection_change();
     }
 
 private:

@@ -27,6 +27,7 @@
 #include <LibGUI/ProcessChooser.h>
 #include <LibGUI/ScrollableContainerWidget.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
@@ -138,6 +139,28 @@ int main(int argc, char** argv)
     samples_table_view.on_selection = [&](const GUI::ModelIndex& index) {
         auto model = IndividualSampleModel::create(*profile, index.data(GUI::ModelRole::Custom).to_integer<size_t>());
         individual_sample_view.set_model(move(model));
+    };
+
+    const u64 start_of_trace = profile->first_timestamp();
+    const u64 end_of_trace = start_of_trace + profile->length_in_ms();
+    const auto clamp_timestamp = [start_of_trace, end_of_trace](u64 timestamp) -> u64 {
+        return min(end_of_trace, max(timestamp, start_of_trace));
+    };
+
+    auto& statusbar = main_widget.add<GUI::Statusbar>();
+    timeline_view->on_selection_change = [&] {
+        auto& view = *timeline_view;
+        StringBuilder builder;
+        u64 normalized_start_time = clamp_timestamp(min(view.select_start_time(), view.select_end_time()));
+        u64 normalized_end_time = clamp_timestamp(max(view.select_start_time(), view.select_end_time()));
+        u64 normalized_hover_time = clamp_timestamp(view.hover_time());
+        builder.appendff("Time: {} ms", normalized_hover_time - start_of_trace);
+        if (normalized_start_time != normalized_end_time) {
+            auto start = normalized_start_time - start_of_trace;
+            auto end = normalized_end_time - start_of_trace;
+            builder.appendff(", Selection: {} - {} ms", start, end);
+        }
+        statusbar.set_text(builder.to_string());
     };
 
     auto menubar = GUI::Menubar::construct();
