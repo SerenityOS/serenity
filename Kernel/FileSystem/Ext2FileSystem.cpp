@@ -1112,6 +1112,9 @@ KResult Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries
 
     stream.fill_to_end(0);
 
+    if (auto result = resize(stream.size()); result.is_error())
+        return result;
+
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
     auto result = write_bytes(0, stream.size(), buffer, nullptr);
     if (result.is_error())
