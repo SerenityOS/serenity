@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <AK/Optional.h>
 #include <AK/String.h>
+
+namespace TextEditor {
 
 class FileArgument final {
 public:
-    FileArgument(String);
+    explicit FileArgument(String);
     ~FileArgument();
 
     String filename() { return m_filename; }
@@ -23,3 +24,5 @@ private:
     Optional<size_t> m_line;
     Optional<size_t> m_column;
 };
+
+}

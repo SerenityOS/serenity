@@ -5,10 +5,10 @@
  */
 
 #include "FileArgument.h"
-#include <AK/Optional.h>
-#include <AK/String.h>
 #include <LibCore/File.h>
 #include <LibRegex/Regex.h>
+
+namespace TextEditor {
 
 FileArgument::FileArgument(String file_argument)
 {
@@ -17,7 +17,7 @@ FileArgument::FileArgument(String file_argument)
 
     if (Core::File::exists(file_argument)) {
         // A file exists with the full specified name, don't attempt to parse it.
-        m_filename = file_argument;
+        m_filename = move(file_argument);
         return;
     }
 
@@ -57,4 +57,6 @@ FileArgument::FileArgument(String file_argument)
 
 FileArgument::~FileArgument()
 {
+}
+
 }
