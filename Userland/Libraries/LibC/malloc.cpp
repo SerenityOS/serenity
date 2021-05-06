@@ -162,8 +162,11 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
     if (s_log_malloc)
         dbgln("LibC: malloc({})", size);
 
-    if (!size)
-        return nullptr;
+    if (!size) {
+        // Legally we could just return a null pointer here, but this is more
+        // compatible with existing software.
+        size = 1;
+    }
 
     g_malloc_stats.number_of_malloc_calls++;
 
