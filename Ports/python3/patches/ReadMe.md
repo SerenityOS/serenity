@@ -23,3 +23,7 @@ Our stub implementation of `setlocale()` always returns `nullptr`, which the int
 ## `tweak-unsupported-printf-format-specifiers.patch`
 
 Replace uses of `%.Ns` with `%s` as the former is not supported by our `printf` implementation yet and would result in empty strings. It uses `snprintf` already, so this is safe.
+
+## `webbrowser.patch`
+
+Register the SerenityOS Browser in the [`webbrowser`](https://docs.python.org/3/library/webbrowser.html) module.
