@@ -498,6 +498,10 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
             return new_custody_or_error.error();
     }
 
+    if (!old_parent_custody || !new_parent_custody) {
+        return EPERM;
+    }
+
     auto& old_parent_inode = old_parent_custody->inode();
     auto& new_parent_inode = new_parent_custody->inode();
 
