@@ -75,26 +75,14 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
     painter.fill_rect({ select_start_x, frame_thickness(), select_end_x - select_start_x, height() - frame_thickness() * 2 }, Color(0, 0, 0, 60));
     painter.fill_rect({ select_hover_x, frame_thickness(), 1, height() - frame_thickness() * 2 }, Color::NamedColor::Black);
 
-    {
-        StringBuilder timeline_desc_builder;
-
-        timeline_desc_builder.appendff("{} ({}), ", m_process.executable, m_process.pid);
-
-        timeline_desc_builder.appendff("Time: {} ms", normalized_hover_time - start_of_trace);
-        if (normalized_start_time != normalized_end_time) {
-            auto start = normalized_start_time - start_of_trace;
-            auto end = normalized_end_time - start_of_trace;
-            timeline_desc_builder.appendff(", Selection: {} - {} ms", start, end);
-        }
-        const auto text = timeline_desc_builder.build();
-        Gfx::IntRect rect {
-            frame_thickness() + 3,
-            frame_thickness() + 3,
-            font().width(text),
-            font().glyph_height()
-        };
-        painter.draw_text(rect, text, font());
-    }
+    auto text = String::formatted("{} ({})", m_process.executable, m_process.pid);
+    Gfx::IntRect text_rect {
+        frame_thickness() + 3,
+        frame_thickness() + 3,
+        font().width(text),
+        font().glyph_height()
+    };
+    painter.draw_text(text_rect, text, font());
 }
 
 u64 TimelineTrack::timestamp_at_x(int x) const
