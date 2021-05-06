@@ -25,8 +25,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         return 1;
     }
 
-    unveil("/proc/net/adapters", "r");
-    unveil(nullptr, nullptr);
+    if (unveil("/proc/net/adapters", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
 
     return event_loop.exec();
 }
