@@ -14,12 +14,12 @@ public:
     FileArgument(String);
     ~FileArgument();
 
-    String file_name() { return m_file_name; }
+    String filename() { return m_filename; }
     Optional<size_t> line() { return m_line; }
     Optional<size_t> column() { return m_column; }
 
 private:
-    String m_file_name;
+    String m_filename;
     Optional<size_t> m_line;
     Optional<size_t> m_column;
 };
