@@ -8,5 +8,3 @@ set(SOURCES
 
 serenity_lib(LibRegex regex)
 target_link_libraries(LibRegex LibC LibCore)
-
-add_subdirectory(Tests)
