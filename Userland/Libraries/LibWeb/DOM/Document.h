@@ -91,9 +91,25 @@ public:
     Element* document_element();
     const Element* document_element() const;
 
-    const HTML::HTMLHtmlElement* html_element() const;
-    const HTML::HTMLHeadElement* head() const;
-    const HTML::HTMLElement* body() const;
+    HTML::HTMLHtmlElement* html_element();
+    HTML::HTMLHeadElement* head();
+    HTML::HTMLElement* body();
+
+    const HTML::HTMLHtmlElement* html_element() const
+    {
+        return const_cast<Document*>(this)->html_element();
+    }
+
+    const HTML::HTMLHeadElement* head() const
+    {
+        return const_cast<Document*>(this)->head();
+    }
+
+    const HTML::HTMLElement* body() const
+    {
+        return const_cast<Document*>(this)->body();
+    }
+
     ExceptionOr<void> set_body(HTML::HTMLElement& new_body);
 
     String title() const;
