@@ -116,8 +116,9 @@ void Statusbar::paint_event(PaintEvent& event)
 
 void Statusbar::resize_event(ResizeEvent& event)
 {
-    if (window())
-        m_corner->set_visible(window()->is_maximized() ? false : true);
+    if (auto* window = this->window()) {
+        m_corner->set_visible(window->is_resizable() && !window->is_maximized());
+    }
 
     Widget::resize_event(event);
 }
