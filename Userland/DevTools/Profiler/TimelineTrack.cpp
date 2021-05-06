@@ -74,15 +74,6 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
     int select_hover_x = (int)((float)(normalized_hover_time - start_of_trace) * column_width);
     painter.fill_rect({ select_start_x, frame_thickness(), select_end_x - select_start_x, height() - frame_thickness() * 2 }, Color(0, 0, 0, 60));
     painter.fill_rect({ select_hover_x, frame_thickness(), 1, height() - frame_thickness() * 2 }, Color::NamedColor::Black);
-
-    auto text = String::formatted("{} ({})", m_process.executable, m_process.pid);
-    Gfx::IntRect text_rect {
-        frame_thickness() + 3,
-        frame_thickness() + 3,
-        font().width(text),
-        font().glyph_height()
-    };
-    painter.draw_text(text_rect, text, font());
 }
 
 u64 TimelineTrack::timestamp_at_x(int x) const

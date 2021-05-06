@@ -7,6 +7,8 @@
 #include "IndividualSampleModel.h"
 #include "ProcessPickerWidget.h"
 #include "Profile.h"
+#include "TimelineContainer.h"
+#include "TimelineHeader.h"
 #include "TimelineTrack.h"
 #include "TimelineView.h"
 #include <LibCore/ArgsParser.h>
@@ -25,7 +27,6 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ProcessChooser.h>
-#include <LibGUI/ScrollableContainerWidget.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
@@ -91,6 +92,11 @@ int main(int argc, char** argv)
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
 
+    auto timeline_header_container = GUI::Widget::construct();
+    timeline_header_container->set_layout<GUI::VerticalBoxLayout>();
+    timeline_header_container->set_fill_with_background_color(true);
+    timeline_header_container->set_shrink_to_fit(true);
+
     auto timeline_view = TimelineView::construct();
     for (auto& process : profile->processes()) {
         size_t event_count = 0;
@@ -100,11 +106,11 @@ int main(int argc, char** argv)
         }
         if (!event_count)
             continue;
+        timeline_header_container->add<TimelineHeader>(process);
         timeline_view->add<TimelineTrack>(*timeline_view, *profile, process);
     }
 
-    auto& scrollable_container = main_widget.add<GUI::ScrollableContainerWidget>();
-    scrollable_container.set_widget(timeline_view.ptr());
+    [[maybe_unused]] auto& timeline_container = main_widget.add<TimelineContainer>(*timeline_header_container, *timeline_view);
 
     main_widget.add<ProcessPickerWidget>(*profile);
 
