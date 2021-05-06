@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Solitaire", app_icon, window));
 
-    window->set_resizable(false);
+    window->set_resizable(true);
     window->resize(Solitaire::Game::width, Solitaire::Game::height + statusbar.max_height());
     window->set_menubar(move(menubar));
     window->set_icon(app_icon.bitmap_for_size(16));
