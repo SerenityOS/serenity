@@ -64,10 +64,10 @@ KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     auto& ipv4_packet = *(const IPv4Packet*)(raw_ipv4_packet.data());
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
     VERIFY(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
-    VERIFY(buffer_size >= (udp_packet.length() - sizeof(UDPPacket)));
-    if (!buffer.write(udp_packet.payload(), udp_packet.length() - sizeof(UDPPacket)))
+    size_t read_size = min(buffer_size, udp_packet.length() - sizeof(UDPPacket));
+    if (!buffer.write(udp_packet.payload(), read_size))
         return EFAULT;
-    return udp_packet.length() - sizeof(UDPPacket);
+    return read_size;
 }
 
 KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_t data_length)
