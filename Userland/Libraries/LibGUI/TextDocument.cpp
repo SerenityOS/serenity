@@ -343,7 +343,7 @@ String TextDocument::text() const
 String TextDocument::text_in_range(const TextRange& a_range) const
 {
     auto range = a_range.normalized();
-    if (is_empty() || line_count() < range.end().line() - range.start().line() || line(range.start().line()).is_empty())
+    if (is_empty() || line_count() < range.end().line() - range.start().line())
         return String("");
 
     StringBuilder builder;
