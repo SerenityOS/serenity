@@ -612,7 +612,6 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
                 auto* ptr = va_arg(ap, int*);
                 *ptr = input_lexer.tell();
             }
-            ++elements_matched;
             break;
         }
         }
