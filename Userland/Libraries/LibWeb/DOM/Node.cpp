@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -343,6 +344,64 @@ void Node::remove(bool suppress_observers)
     }
 
     parent->children_changed();
+}
+
+// https://dom.spec.whatwg.org/#concept-node-replace
+ExceptionOr<NonnullRefPtr<Node>> Node::replace_child(NonnullRefPtr<Node> node, NonnullRefPtr<Node> child)
+{
+    // NOTE: This differs slightly from ensure_pre_insertion_validity.
+    if (!is<Document>(this) && !is<DocumentFragment>(this) && !is<Element>(this))
+        return DOM::HierarchyRequestError::create("Can only insert into a document, document fragment or element");
+
+    if (node->is_host_including_inclusive_ancestor_of(*this))
+        return DOM::HierarchyRequestError::create("New node is an ancestor of this node");
+
+    if (child->parent() != this)
+        return DOM::NotFoundError::create("This node is not the parent of the given child");
+
+    // FIXME: All the following "Invalid node type for insertion" messages could be more descriptive.
+
+    if (!is<DocumentFragment>(*node) && !is<DocumentType>(*node) && !is<Element>(*node) && !is<Text>(*node) && !is<Comment>(*node) && !is<ProcessingInstruction>(*node))
+        return DOM::HierarchyRequestError::create("Invalid node type for insertion");
+
+    if ((is<Text>(*node) && is<Document>(this)) || (is<DocumentType>(*node) && !is<Document>(this)))
+        return DOM::HierarchyRequestError::create("Invalid node type for insertion");
+
+    if (is<Document>(this)) {
+        if (is<DocumentFragment>(*node)) {
+            auto node_element_child_count = downcast<DocumentFragment>(*node).child_element_count();
+            if ((node_element_child_count > 1 || node->has_child_of_type<Text>())
+                || (node_element_child_count == 1 && (first_child_of_type<Element>() != child /* FIXME: or a doctype is following child. */))) {
+                return DOM::HierarchyRequestError::create("Invalid node type for insertion");
+            }
+        } else if (is<Element>(*node)) {
+            if (first_child_of_type<Element>() != child /* FIXME: or a doctype is following child. */)
+                return DOM::HierarchyRequestError::create("Invalid node type for insertion");
+        } else if (is<DocumentType>(*node)) {
+            if (first_child_of_type<DocumentType>() != node /* FIXME: or an element is preceding child */)
+                return DOM::HierarchyRequestError::create("Invalid node type for insertion");
+        }
+    }
+
+    auto reference_child = child->next_sibling();
+    if (reference_child == node)
+        reference_child = node->next_sibling();
+
+    // FIXME: Let previousSibling be child’s previous sibling. (Currently unused so not included)
+    // FIXME: Let removedNodes be the empty set. (Currently unused so not included)
+
+    if (child->parent()) {
+        // FIXME: Set removedNodes to « child ».
+        child->remove(true);
+    }
+
+    // FIXME: Let nodes be node’s children if node is a DocumentFragment node; otherwise « node ». (Currently unused so not included)
+
+    insert_before(node, reference_child, true);
+
+    // FIXME: Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
+
+    return child;
 }
 
 // https://dom.spec.whatwg.org/#concept-node-clone
