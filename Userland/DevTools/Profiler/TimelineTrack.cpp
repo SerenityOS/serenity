@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ProfileTimelineWidget.h"
+#include "TimelineTrack.h"
 #include "Profile.h"
 #include "TimelineView.h"
 #include <LibGUI/Painter.h>
@@ -13,7 +13,7 @@
 
 namespace Profiler {
 
-ProfileTimelineWidget::ProfileTimelineWidget(TimelineView& view, Profile& profile, Process const& process)
+TimelineTrack::TimelineTrack(TimelineView& view, Profile& profile, Process const& process)
     : m_view(view)
     , m_profile(profile)
     , m_process(process)
@@ -25,11 +25,11 @@ ProfileTimelineWidget::ProfileTimelineWidget(TimelineView& view, Profile& profil
     set_frame_thickness(1);
 }
 
-ProfileTimelineWidget::~ProfileTimelineWidget()
+TimelineTrack::~TimelineTrack()
 {
 }
 
-void ProfileTimelineWidget::paint_event(GUI::PaintEvent& event)
+void TimelineTrack::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
 
@@ -97,14 +97,14 @@ void ProfileTimelineWidget::paint_event(GUI::PaintEvent& event)
     }
 }
 
-u64 ProfileTimelineWidget::timestamp_at_x(int x) const
+u64 TimelineTrack::timestamp_at_x(int x) const
 {
     float column_width = (float)frame_inner_rect().width() / (float)m_profile.length_in_ms();
     float ms_into_profile = (float)x / column_width;
     return m_profile.first_timestamp() + (u64)ms_into_profile;
 }
 
-void ProfileTimelineWidget::mousedown_event(GUI::MouseEvent& event)
+void TimelineTrack::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Left)
         return;
@@ -116,7 +116,7 @@ void ProfileTimelineWidget::mousedown_event(GUI::MouseEvent& event)
     update();
 }
 
-void ProfileTimelineWidget::mousemove_event(GUI::MouseEvent& event)
+void TimelineTrack::mousemove_event(GUI::MouseEvent& event)
 {
     m_view.set_hover_time({}, timestamp_at_x(event.x()));
 
@@ -128,7 +128,7 @@ void ProfileTimelineWidget::mousemove_event(GUI::MouseEvent& event)
     update();
 }
 
-void ProfileTimelineWidget::mouseup_event(GUI::MouseEvent& event)
+void TimelineTrack::mouseup_event(GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Left)
         return;
