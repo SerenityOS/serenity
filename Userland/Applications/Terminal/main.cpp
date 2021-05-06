@@ -261,8 +261,8 @@ int main(int argc, char** argv)
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
     Core::File::ensure_parent_directories(config->filename());
 
-    int ptm_fd, pts_fd;
-    pid_t shell_pid = forkpty(&ptm_fd, &pts_fd, nullptr, nullptr, nullptr);
+    int ptm_fd;
+    pid_t shell_pid = forkpty(&ptm_fd, nullptr, nullptr, nullptr);
     if (shell_pid < 0) {
         perror("forkpty");
         return 1;
@@ -275,8 +275,6 @@ int main(int argc, char** argv)
             run_command(config->read_entry("Startup", "Command", ""));
         VERIFY_NOT_REACHED();
     }
-
-    close(pts_fd);
 
     auto* pts_name = ptsname(ptm_fd);
     utmp_update(pts_name, shell_pid, true);
