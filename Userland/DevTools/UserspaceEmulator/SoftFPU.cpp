@@ -82,8 +82,13 @@ mmx SoftFPU::mmx_get(u8 index) const
 
 void SoftFPU::mmx_set(u8 index, mmx value)
 {
-    m_reg_is_mmx[index] = true;
     m_mmx[index].value = value;
+    // The high bytes are set to 0b11... to make the floatingpoint value NaN.
+    // This way we are technically able to find out if we are reading the wrong
+    //type, but this is still difficult, so we use our own lookup for that
+    // We set the alignment bytes to all 1's, too, just in case
+    m_mmx[index].__high = (decltype(m_mmx[index].__high))0xFFFF'FFFF'FFFF'FFFF;
+    m_reg_is_mmx[index] = true;
 }
 
 void SoftFPU::fpu_push(long double value)
@@ -963,50 +968,50 @@ void SoftFPU::FTST(const X86::Instruction&)
 }
 void SoftFPU::FXAM(const X86::Instruction&)
 {
-    // noexcept!
-
-    switch (fpu_get_tag(0)) {
-    case FPU_Tag::Valid:
+    if (m_reg_is_mmx[m_fpu_stack_top]) {
+        // technically a subset of NaN, but the detection of MMX fields is
+        // difficult though, so we use our own helper field for this
         set_c0(0);
-        set_c2(1);
-        set_c3(0);
-        break;
-    case FPU_Tag::Zero:
-        set_c0(1);
         set_c2(0);
         set_c3(0);
-        break;
-    case FPU_Tag::Special:
-        if (isinf(fpu_get(0))) {
-            set_c0(1);
+    } else {
+        switch (fpu_get_tag(0)) {
+        case FPU_Tag::Valid:
+            set_c0(0);
             set_c2(1);
             set_c3(0);
-        } else if (isnan(fpu_get(0))) {
+            break;
+        case FPU_Tag::Zero:
             set_c0(1);
             set_c2(0);
             set_c3(0);
-        } else {
-            // denormalized
-            set_c0(0);
-            set_c2(1);
+            break;
+        case FPU_Tag::Special:
+            if (isinf(fpu_get(0))) {
+                set_c0(1);
+                set_c2(1);
+                set_c3(0);
+            } else if (isnan(fpu_get(0))) {
+                set_c0(1);
+                set_c2(0);
+                set_c3(0);
+            } else {
+                // denormalized
+                set_c0(0);
+                set_c2(1);
+                set_c3(1);
+            }
+            break;
+        case FPU_Tag::Empty:
+            set_c0(1);
+            set_c2(0);
             set_c3(1);
+            return;
+        default:
+            VERIFY_NOT_REACHED();
         }
-        break;
-    case FPU_Tag::Empty:
-        set_c0(1);
-        set_c2(0);
-        set_c3(1);
-        return;
-    default:
-        // "unsupported", I guess
-        // maybe this is supposed to fire on MMX usage,
-        // but the spec does not give a way to detect this
-        // this should be unreachable then
-        set_c0(0);
-        set_c2(0);
-        set_c3(0);
     }
-    set_c1(signbit(fpu_get(0))); // do this last to not read "uninitialized" memory
+    set_c1(signbit(fpu_get(0)));
 }
 
 // TRANSCENDENTAL
@@ -1848,5 +1853,4 @@ void SoftFPU::EMMS(const X86::Instruction&)
     m_fpu_tw = 0xFFFF;
 }
 #pragma GCC diagnostic pop
-
 }
