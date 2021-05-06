@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Denis Campredon <deni_@hotmail.fr>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,9 +11,9 @@
 #include <AK/StringBuilder.h>
 
 namespace AK {
+template<bool = true>
 class ScopeLogger {
 public:
-#ifdef DEBUG_SPAM
     ScopeLogger(StringView extra, const SourceLocation& location = SourceLocation::current())
         : m_location(location)
         , m_extra(extra)
@@ -49,10 +50,15 @@ private:
     static inline size_t m_depth = 0;
     SourceLocation m_location;
     StringView m_extra;
-#else
-    ScopeLogger() = default;
-#endif
 };
+
+template<>
+class ScopeLogger<false> {
+public:
+    template<typename... Args>
+    ScopeLogger(Args...) { }
+};
+
 }
 
 using AK::ScopeLogger;
