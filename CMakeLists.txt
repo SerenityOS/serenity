@@ -267,11 +267,9 @@ if(INCLUDE_WASM_SPEC_TESTS)
         file(GLOB WASM_TESTS "${CMAKE_BINARY_DIR}/testsuite-master/*.wast")
         foreach(PATH ${WASM_TESTS})
             get_filename_component(NAME ${PATH} NAME_WLE)
-            message(STATUS "Compiling WebAssembly test ${NAME}...")
+            message(STATUS "Generating test cases for WebAssembly test ${NAME}...")
             execute_process(
-                COMMAND wasm-as -n ${PATH} -o "${WASM_SPEC_TEST_PATH}/${NAME}.wasm"
-                OUTPUT_QUIET
-                ERROR_QUIET)
+                COMMAND bash ${CMAKE_SOURCE_DIR}/Meta/generate-libwasm-spec-test.sh "${PATH}" "${CMAKE_SOURCE_DIR}/Userland/Libraries/LibWasm/Tests/Spec" "${NAME}" "${WASM_SPEC_TEST_PATH}")
         endforeach()
         file(REMOVE testsuite-master)
     endif()
