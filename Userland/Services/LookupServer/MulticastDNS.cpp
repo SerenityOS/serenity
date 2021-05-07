@@ -82,6 +82,9 @@ void MulticastDNS::announce()
     DNSPacket response;
     response.set_is_response();
     response.set_code(DNSPacket::Code::NOERROR);
+    response.set_authoritative_answer(true);
+    response.set_recursion_desired(false);
+    response.set_recursion_available(false);
 
     for (auto& address : local_addresses()) {
         auto raw_addr = address.to_in_addr_t();
@@ -142,6 +145,7 @@ Vector<DNSAnswer> MulticastDNS::lookup(const DNSName& name, DNSRecordType record
 {
     DNSPacket request;
     request.set_is_query();
+    request.set_recursion_desired(false);
     request.add_question({ name, record_type, DNSRecordClass::IN, false });
 
     if (emit_packet(request) < 0) {
