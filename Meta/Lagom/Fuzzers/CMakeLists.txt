@@ -6,11 +6,11 @@ function(add_simple_fuzzer name)
           PUBLIC Lagom)
   else()
     target_compile_options(${name}
-      PRIVATE $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
+      PRIVATE $<$<CXX_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
       )
     target_link_libraries(${name}
       PUBLIC Lagom
-      PRIVATE $<$<C_COMPILER_ID:Clang>:-fsanitize=fuzzer>
+      PRIVATE $<$<CXX_COMPILER_ID:Clang>:-fsanitize=fuzzer>
       )
   endif()
 endfunction()
@@ -53,10 +53,10 @@ set(CMAKE_SHARED_LINKER_FLAGS "${ORIGINAL_CMAKE_SHARED_LINKER_FLAGS} -fsanitize=
 set(CMAKE_MODULE_LINKER_FLAGS "${ORIGINAL_CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address")
 add_executable(FuzzilliJs FuzzilliJs.cpp)
 target_compile_options(FuzzilliJs
-    PRIVATE $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize-coverage=trace-pc-guard>
+    PRIVATE $<$<CXX_COMPILER_ID:Clang>:-g -O1 -fsanitize-coverage=trace-pc-guard>
     )
 target_link_libraries(FuzzilliJs
     PUBLIC Lagom
-    PRIVATE $<$<C_COMPILER_ID:Clang>:-fsanitize-coverage=trace-pc-guard>
+    PRIVATE $<$<CXX_COMPILER_ID:Clang>:-fsanitize-coverage=trace-pc-guard>
     )
 endif()

@@ -18,7 +18,7 @@ Lagom can be used to fuzz parts of SerenityOS's code base. This requires buildli
 
     # From the root of the SerenityOS checkout:
     mkdir BuildLagom && cd BuildLagom
-    cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_UNDEFINED_SANITIZER=ON -DCMAKE_CXX_COMPILER=clang++ ..
+    cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_UNDEFINED_SANITIZER=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang ..
     ninja Meta/Lagom/all
     # Or as a handy rebuild-rerun line:
     ninja FuzzJs && Meta/Lagom/Fuzzers/FuzzJs
