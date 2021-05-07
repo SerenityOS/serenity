@@ -426,6 +426,15 @@ KResult Ext2FSInode::flush_block_list()
         ++output_block_index;
         --remaining_blocks;
     }
+    // e2fsck considers all blocks reachable through any of the pointers in
+    // m_raw_inode.i_block as part of this inode regardless of the value in
+    // m_raw_inode.i_size. When it finds more blocks than the amount that
+    // is indicated by i_size or i_blocks it offers to repair the filesystem
+    // by changing those values. That will actually cause further corruption.
+    // So we must zero all pointers to blocks that are now unused.
+    for (unsigned i = new_shape.direct_blocks; i < EXT2_NDIR_BLOCKS; ++i) {
+        m_raw_inode.i_block[i] = 0;
+    }
     if (inode_dirty) {
         if constexpr (EXT2_DEBUG) {
             dbgln("Ext2FSInode[{}]::flush_block_list(): Writing {} direct block(s) to i_block array of inode {}", identifier(), min((size_t)EXT2_NDIR_BLOCKS, m_block_list.size()), index());
@@ -454,6 +463,7 @@ KResult Ext2FSInode::flush_block_list()
             if (auto result = fs().set_block_allocation_state(m_raw_inode.i_block[EXT2_IND_BLOCK], false); result.is_error())
                 return result;
             old_shape.meta_blocks--;
+            m_raw_inode.i_block[EXT2_IND_BLOCK] = 0;
         }
     }
 
@@ -475,6 +485,8 @@ KResult Ext2FSInode::flush_block_list()
         } else {
             if (auto result = shrink_doubly_indirect_block(m_raw_inode.i_block[EXT2_DIND_BLOCK], old_shape.doubly_indirect_blocks, new_shape.doubly_indirect_blocks, old_shape.meta_blocks); result.is_error())
                 return result;
+            if (new_shape.doubly_indirect_blocks == 0)
+                m_raw_inode.i_block[EXT2_DIND_BLOCK] = 0;
         }
     }
 
@@ -496,6 +508,8 @@ KResult Ext2FSInode::flush_block_list()
         } else {
             if (auto result = shrink_triply_indirect_block(m_raw_inode.i_block[EXT2_TIND_BLOCK], old_shape.triply_indirect_blocks, new_shape.triply_indirect_blocks, old_shape.meta_blocks); result.is_error())
                 return result;
+            if (new_shape.triply_indirect_blocks == 0)
+                m_raw_inode.i_block[EXT2_TIND_BLOCK] = 0;
         }
     }
 
