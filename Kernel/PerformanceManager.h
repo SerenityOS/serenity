@@ -29,6 +29,15 @@ public:
         }
     }
 
+    inline static void add_process_exit_event(Process& process)
+    {
+        if (g_profiling_all_threads) {
+            VERIFY(g_global_perf_events);
+            [[maybe_unused]] auto rc = g_global_perf_events->append_with_eip_and_ebp(
+                process.pid(), 0, 0, 0, PERF_EVENT_PROCESS_EXIT, 0, 0, nullptr);
+        }
+    }
+
     inline static void add_thread_created_event(Thread& thread)
     {
         if (auto* event_buffer = thread.process().current_perf_events_buffer()) {
