@@ -56,12 +56,12 @@ ByteBuffer DNSPacket::to_byte_buffer() const
     for (auto& question : m_questions) {
         stream << question.name();
         stream << htons(question.record_type());
-        stream << htons(question.class_code());
+        stream << htons(question.raw_class_code());
     }
     for (auto& answer : m_answers) {
         stream << answer.name();
         stream << htons(answer.type());
-        stream << htons(answer.class_code());
+        stream << htons(answer.raw_class_code());
         stream << htonl(answer.ttl());
         if (answer.type() == T_PTR) {
             DNSName name { answer.record_data() };
@@ -129,7 +129,9 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
             NetworkOrdered<u16> class_code;
         };
         auto& record_and_class = *(const RawDNSAnswerQuestion*)&raw_data[offset];
-        packet.m_questions.empend(name, record_and_class.record_type, record_and_class.class_code);
+        u16 class_code = record_and_class.class_code & ~MDNS_WANTS_UNICAST_RESPONSE;
+        bool mdns_wants_unicast_response = record_and_class.class_code & MDNS_WANTS_UNICAST_RESPONSE;
+        packet.m_questions.empend(name, record_and_class.record_type, class_code, mdns_wants_unicast_response);
         offset += 4;
         auto& question = packet.m_questions.last();
         dbgln_if(LOOKUPSERVER_DEBUG, "Question #{}: name=_{}_, type={}, class={}", i, question.name(), question.record_type(), question.class_code());
@@ -154,7 +156,9 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
             dbgln("data=(unimplemented record type {})", record.type());
         }
         dbgln_if(LOOKUPSERVER_DEBUG, "Answer   #{}: name=_{}_, type={}, ttl={}, length={}, data=_{}_", i, name, record.type(), record.ttl(), record.data_length(), data);
-        packet.m_answers.empend(name, record.type(), record.record_class(), record.ttl(), data);
+        u16 class_code = record.record_class() & ~MDNS_CACHE_FLUSH;
+        bool mdns_cache_flush = record.record_class() & MDNS_CACHE_FLUSH;
+        packet.m_answers.empend(name, record.type(), class_code, record.ttl(), data, mdns_cache_flush);
         offset += record.data_length();
     }
 
