@@ -11,7 +11,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
-#include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Time/TimeManagement.h>
@@ -636,9 +636,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     tss.cr3 = space().page_directory().cr3();
     tss.ss2 = pid().value();
 
-    if (auto* event_buffer = current_perf_events_buffer()) {
-        event_buffer->add_process(*this, ProcessEventType::Exec);
-    }
+    PerformanceManager::add_process_exec_event(*this);
 
     {
         ScopedSpinLock lock(g_scheduler_lock);
