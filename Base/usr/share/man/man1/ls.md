@@ -34,7 +34,7 @@ If no *path* argument is provided the current working directory is used.
 
 ## Arguments
 
-* path: Directory to list
+* `path`: Directory to list
 
 ## Examples
 

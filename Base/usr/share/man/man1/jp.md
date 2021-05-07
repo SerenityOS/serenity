@@ -21,7 +21,7 @@ If no *path* argument is provided stdin is used.
 
 ## Arguments
 
-* path: file to pretty-print
+* `path`: file to pretty-print
 
 ## Examples
 
