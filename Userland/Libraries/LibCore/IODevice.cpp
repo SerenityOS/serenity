@@ -5,7 +5,6 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <AK/PrintfImplementation.h>
 #include <LibCore/IODevice.h>
 #include <errno.h>
 #include <stdio.h>
@@ -269,19 +268,6 @@ bool IODevice::write(const u8* data, int size)
         return false;
     }
     return rc == size;
-}
-
-int IODevice::printf(const char* format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-    // FIXME: We're not propagating write() failures to client here!
-    int ret = printf_internal([this](char*&, char ch) {
-        write((const u8*)&ch, 1);
-    },
-        nullptr, format, ap);
-    va_end(ap);
-    return ret;
 }
 
 void IODevice::set_fd(int fd)
