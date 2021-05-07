@@ -259,9 +259,7 @@ GalleryWidget::GalleryWidget()
         " _||_-\n"
     };
 
-    StringBuilder sb;
-    sb.appendf("%s%s", serenityos_ascii, wizard_ascii);
-    m_wizard_output->set_text(sb.to_string());
+    m_wizard_output->set_text(String::formatted("{}{}", serenityos_ascii, wizard_ascii));
 
     m_wizard_button->on_click = [&]() {
         StringBuilder sb;
