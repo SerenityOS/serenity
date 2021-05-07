@@ -376,26 +376,39 @@ void Profile::clear_timestamp_filter_range()
     m_samples_model->update();
 }
 
-void Profile::set_process_filter(pid_t pid, u64 start_valid, u64 end_valid)
+void Profile::add_process_filter(pid_t pid, u64 start_valid, u64 end_valid)
 {
-    if (m_has_process_filter && m_process_filter_pid == pid && m_process_filter_start_valid == start_valid && m_process_filter_end_valid == end_valid)
+    auto filter = ProcessFilter { pid, start_valid, end_valid };
+    if (m_process_filters.contains_slow(filter))
         return;
-    m_has_process_filter = true;
-
-    m_process_filter_pid = pid;
-    m_process_filter_start_valid = start_valid;
-    m_process_filter_end_valid = end_valid;
+    m_process_filters.append(move(filter));
 
     rebuild_tree();
     if (m_disassembly_model)
         m_disassembly_model->update();
     m_samples_model->update();
 }
+
+void Profile::remove_process_filter(pid_t pid, u64 start_valid, u64 end_valid)
+{
+    auto filter = ProcessFilter { pid, start_valid, end_valid };
+    if (!m_process_filters.contains_slow(filter))
+        return;
+    m_process_filters.remove_first_matching([&filter](ProcessFilter const& other_filter) {
+        return other_filter == filter;
+    });
+
+    rebuild_tree();
+    if (m_disassembly_model)
+        m_disassembly_model->update();
+    m_samples_model->update();
+}
+
 void Profile::clear_process_filter()
 {
-    if (!m_has_process_filter)
+    if (m_process_filters.is_empty())
         return;
-    m_has_process_filter = false;
+    m_process_filters.clear();
     rebuild_tree();
     if (m_disassembly_model)
         m_disassembly_model->update();
@@ -407,7 +420,11 @@ bool Profile::process_filter_contains(pid_t pid, u32 timestamp)
     if (!has_process_filter())
         return true;
 
-    return (pid == m_process_filter_pid && timestamp >= m_process_filter_start_valid && timestamp <= m_process_filter_end_valid);
+    for (auto const& process_filter : m_process_filters)
+        if (pid == process_filter.pid && timestamp >= process_filter.start_valid && timestamp <= process_filter.end_valid)
+            return true;
+
+    return false;
 }
 
 void Profile::set_inverted(bool inverted)

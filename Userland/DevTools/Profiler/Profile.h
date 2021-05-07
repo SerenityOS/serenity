@@ -116,6 +116,17 @@ private:
     Bitmap m_seen_events;
 };
 
+struct ProcessFilter {
+    pid_t pid { 0 };
+    u64 start_valid { 0 };
+    u64 end_valid { 0 };
+
+    bool operator==(ProcessFilter const& rhs) const
+    {
+        return pid == rhs.pid && start_valid == rhs.start_valid && end_valid == rhs.end_valid;
+    }
+};
+
 class Profile {
 public:
     static Result<NonnullOwnPtr<Profile>, String> load_from_perfcore_file(const StringView& path);
@@ -171,9 +182,10 @@ public:
     void clear_timestamp_filter_range();
     bool has_timestamp_filter_range() const { return m_has_timestamp_filter_range; }
 
-    void set_process_filter(pid_t pid, u64 start_valid, u64 end_valid);
+    void add_process_filter(pid_t pid, u64 start_valid, u64 end_valid);
+    void remove_process_filter(pid_t pid, u64 start_valid, u64 end_valid);
     void clear_process_filter();
-    bool has_process_filter() const { return m_has_process_filter; }
+    bool has_process_filter() const { return !m_process_filters.is_empty(); }
     bool process_filter_contains(pid_t pid, u32 timestamp);
 
     bool is_inverted() const { return m_inverted; }
@@ -222,10 +234,7 @@ private:
     u64 m_timestamp_filter_range_start { 0 };
     u64 m_timestamp_filter_range_end { 0 };
 
-    bool m_has_process_filter { false };
-    pid_t m_process_filter_pid { 0 };
-    u64 m_process_filter_start_valid { 0 };
-    u64 m_process_filter_end_valid { 0 };
+    Vector<ProcessFilter> m_process_filters;
 
     u32 m_deepest_stack_depth { 0 };
     bool m_inverted { false };
