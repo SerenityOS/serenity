@@ -126,10 +126,10 @@ diff -Naur gcc-11.1.0-RC-20210420/gcc/config/serenity.h gcc-11.1.0-RC-20210420.s
 +#define ENDFILE_SPEC "%{shared|pie:crtendS.o%s; :crtend.o%s} crtn.o%s"
 +
 +#undef LINK_SPEC
-+#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!static: %{rdynamic:-export-dynamic} %{!fbuilding-libgcc:-lgcc_s -dynamic-linker /usr/lib/Loader.so}}"
++#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!static: %{rdynamic:-export-dynamic} %{!fbuilding-libgcc:%{!nodefaultlibs:-lgcc_s} -dynamic-linker /usr/lib/Loader.so}}"
 +
 +#undef CC1_SPEC
-+#define CC1_SPEC "-fno-exceptions -ftls-model=initial-exec"
++#define CC1_SPEC "-fno-exceptions -ftls-model=initial-exec %{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fPIC}}}} -fno-semantic-interposition"
 +
 +#undef CC1PLUS_SPEC
 +#define CC1PLUS_SPEC "-fno-exceptions -ftls-model=initial-exec"
