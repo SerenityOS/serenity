@@ -63,12 +63,12 @@ struct Endpoint {
     Vector<Message> messages;
 };
 
-bool is_primitive_type(String const& type)
+static bool is_primitive_type(String const& type)
 {
     return type.is_one_of("u8", "i8", "u16", "i16", "u32", "i32", "u64", "i64", "bool", "double", "float", "int", "unsigned", "unsigned int");
 }
 
-String message_name(String const& endpoint, String& message, bool is_response)
+static String message_name(String const& endpoint, String& message, bool is_response)
 {
     StringBuilder builder;
     builder.append("Messages::");
