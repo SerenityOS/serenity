@@ -88,9 +88,10 @@ void MulticastDNS::announce()
         DNSAnswer answer {
             m_hostname,
             T_A,
-            C_IN | 0x8000,
+            C_IN,
             120,
-            String { (const char*)&raw_addr, sizeof(raw_addr) }
+            String { (const char*)&raw_addr, sizeof(raw_addr) },
+            true,
         };
         response.add_answer(answer);
     }
@@ -141,7 +142,7 @@ Vector<DNSAnswer> MulticastDNS::lookup(const DNSName& name, unsigned short recor
 {
     DNSPacket request;
     request.set_is_query();
-    request.add_question({ name, record_type, C_IN });
+    request.add_question({ name, record_type, C_IN, false });
 
     if (emit_packet(request) < 0) {
         perror("failed to emit request packet");
