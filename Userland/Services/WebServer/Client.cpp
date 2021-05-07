@@ -214,14 +214,14 @@ void Client::handle_directory_listing(const String& requested_path, const String
         bool is_directory = S_ISDIR(st.st_mode) || name.is_one_of(".", "..");
 
         builder.append("<tr>");
-        builder.appendf("<td><div class=\"%s\"></div></td>", is_directory ? "folder" : "file");
+        builder.appendff("<td><div class=\"{}\"></div></td>", is_directory ? "folder" : "file");
         builder.append("<td><a href=\"");
         builder.append(urlencode(name));
         builder.append("\">");
         builder.append(escape_html_entities(name));
         builder.append("</a></td><td>&nbsp;</td>");
 
-        builder.appendf("<td>%10" PRIi64 "</td><td>&nbsp;</td>", st.st_size);
+        builder.appendff("<td>{:10}</td><td>&nbsp;</td>", st.st_size);
         builder.append("<td>");
         builder.append(Core::DateTime::from_timestamp(st.st_mtime).to_string());
         builder.append("</td>");
@@ -242,11 +242,11 @@ void Client::handle_directory_listing(const String& requested_path, const String
 void Client::send_error_response(unsigned code, const StringView& message, const HTTP::HttpRequest& request)
 {
     StringBuilder builder;
-    builder.appendf("HTTP/1.0 %u ", code);
+    builder.appendff("HTTP/1.0 {} ", code);
     builder.append(message);
     builder.append("\r\n\r\n");
     builder.append("<!DOCTYPE html><html><body><h1>");
-    builder.appendf("%u ", code);
+    builder.appendff("{} ", code);
     builder.append(message);
     builder.append("</h1></body></html>");
     m_socket->write(builder.to_string());
