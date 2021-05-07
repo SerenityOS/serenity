@@ -757,6 +757,13 @@ Vector<Token> Lexer::lex()
                 commit_token(Token::Type::Identifier);
             continue;
         }
+
+        if (ch == '\\' && peek(1) == '\n') {
+            consume();
+            consume();
+            continue;
+        }
+
         dbgln("Unimplemented token character: {}", ch);
         emit_single_char_token(Token::Type::Unknown);
     }
