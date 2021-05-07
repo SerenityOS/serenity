@@ -75,7 +75,7 @@ class PerformanceEventBuffer {
 public:
     static OwnPtr<PerformanceEventBuffer> try_create_with_size(size_t buffer_size);
 
-    KResult append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3);
+    KResult append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3, Thread* current_thread = Thread::current());
     KResult append_with_eip_and_ebp(ProcessID pid, ThreadID tid, u32 eip, u32 ebp,
         int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3);
 

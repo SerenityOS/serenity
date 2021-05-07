@@ -20,12 +20,11 @@ PerformanceEventBuffer::PerformanceEventBuffer(NonnullOwnPtr<KBuffer> buffer)
 {
 }
 
-NEVER_INLINE KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3)
+NEVER_INLINE KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3, Thread* current_thread)
 {
     FlatPtr ebp;
     asm volatile("movl %%ebp, %%eax"
                  : "=a"(ebp));
-    auto current_thread = Thread::current();
     return append_with_eip_and_ebp(current_thread->pid(), current_thread->tid(), 0, ebp, type, arg1, arg2, arg3);
 }
 

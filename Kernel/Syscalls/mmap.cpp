@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/WeakPtr.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
@@ -248,11 +248,6 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
     if (!region)
         return ENOMEM;
 
-    if (auto* event_buffer = current_perf_events_buffer()) {
-        [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MMAP, region->vaddr().get(),
-            region->size(), name.is_null() ? region->name() : name);
-    }
-
     region->set_mmap(true);
     if (map_shared)
         region->set_shared(true);
@@ -260,6 +255,9 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
         region->set_stack(true);
     if (!name.is_null())
         region->set_name(name);
+
+    PerformanceManager::add_mmap_perf_event(*this, *region);
+
     return region->vaddr().get();
 }
 
@@ -437,10 +435,10 @@ KResultOr<int> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_n
         return EINVAL;
     if (!region->is_mmap())
         return EPERM;
-    if (auto* event_buffer = current_perf_events_buffer()) {
-        [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MMAP, region->vaddr().get(), region->size(), name.characters());
-    }
+
     region->set_name(move(name));
+    PerformanceManager::add_mmap_perf_event(*this, *region);
+
     return 0;
 }
 
@@ -463,13 +461,11 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
     if (auto* whole_region = space().find_region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
             return EPERM;
-        auto base = whole_region->vaddr();
-        auto size = whole_region->size();
+
+        PerformanceManager::add_unmap_perf_event(*this, whole_region->range());
+
         bool success = space().deallocate_region(*whole_region);
         VERIFY(success);
-        if (auto* event_buffer = current_perf_events_buffer()) {
-            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MUNMAP, base.get(), size, nullptr);
-        }
         return 0;
     }
 
@@ -542,9 +538,7 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
         new_region->map(space().page_directory());
     }
 
-    if (auto* event_buffer = current_perf_events_buffer()) {
-        [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MUNMAP, range_to_unmap.base().get(), range_to_unmap.size(), nullptr);
-    }
+    PerformanceManager::add_unmap_perf_event(*this, range_to_unmap);
 
     return 0;
 }

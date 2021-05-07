@@ -492,6 +492,7 @@ private:
     friend class MemoryManager;
     friend class Scheduler;
     friend class Region;
+    friend class PerformanceManager;
 
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
