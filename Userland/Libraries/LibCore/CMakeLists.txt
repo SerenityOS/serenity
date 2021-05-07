@@ -31,5 +31,11 @@ set(SOURCES
     UDPSocket.cpp
 )
 
+if(BUILD_LAGOM)
+    file(GLOB AK_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/AK/*.cpp")
+    file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/Userland/Libraries/LibELF/*.cpp")
+    list(APPEND SOURCES ${AK_SOURCES} ${LIBELF_SOURCES})
+endif()
+
 serenity_lib(LibCore core)
 target_link_libraries(LibCore LibC LibCrypt)
