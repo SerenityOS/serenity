@@ -971,6 +971,9 @@ KResultOr<ssize_t> Ext2FSInode::write_bytes(off_t offset, ssize_t count, const U
     VERIFY(offset >= 0);
     VERIFY(count >= 0);
 
+    if (count == 0)
+        return 0;
+
     Locker inode_locker(m_lock);
 
     if (auto result = prepare_to_write_data(); result.is_error())
