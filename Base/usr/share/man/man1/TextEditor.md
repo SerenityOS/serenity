@@ -17,9 +17,9 @@ which allows automatic live rendering of HTML and Markdown documents.
 
 * `--preview-mode mode`: Preview mode, one of 'none', 'html', 'markdown', 'auto'
 
-## Arguments:
+## Arguments
 
-* file: File to edit
+* `file`: File to edit
 
 ## Examples
 

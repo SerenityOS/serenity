@@ -29,7 +29,7 @@ Profiler can also load performance information from previously created
 
 ## Arguments
 
-* perfcore-file: Path of perfcore file to load
+* `perfcore-file`: Path of perfcore file to load
 
 ## Examples
 

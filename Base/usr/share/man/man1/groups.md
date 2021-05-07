@@ -16,7 +16,7 @@ If no username is provided group memberships are listed for current user.
 
 ## Arguments
 
-* username: username to list group memberships for
+* `username`: username to list group memberships for
 
 ## Examples
 
