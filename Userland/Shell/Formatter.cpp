@@ -242,7 +242,7 @@ void Formatter::visit(const AST::CloseFdRedirection* node)
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
-    current_builder().appendf("%d>&-", node->fd());
+    current_builder().appendff("{}>&-", node->fd());
     visited(node);
 }
 
@@ -307,7 +307,7 @@ void Formatter::visit(const AST::Fd2FdRedirection* node)
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
-    current_builder().appendf("%d>&%d", node->source_fd(), node->dest_fd());
+    current_builder().appendff("{}>&{}", node->source_fd(), node->dest_fd());
     if (m_hit_node == node)
         ++m_output_cursor;
     visited(node);
@@ -673,7 +673,7 @@ void Formatter::visit(const AST::ReadRedirection* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     if (node->fd() != 0)
-        current_builder().appendf(" %d<", node->fd());
+        current_builder().appendff(" {}<", node->fd());
     else
         current_builder().append(" <");
     NodeVisitor::visit(node);
@@ -687,7 +687,7 @@ void Formatter::visit(const AST::ReadWriteRedirection* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     if (node->fd() != 0)
-        current_builder().appendf(" %d<>", node->fd());
+        current_builder().appendff(" {}<>", node->fd());
     else
         current_builder().append(" <>");
     NodeVisitor::visit(node);
@@ -878,7 +878,7 @@ void Formatter::visit(const AST::WriteAppendRedirection* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     if (node->fd() != 1)
-        current_builder().appendf(" %d>>", node->fd());
+        current_builder().appendff(" {}>>", node->fd());
     else
         current_builder().append(" >>");
     NodeVisitor::visit(node);
@@ -892,7 +892,7 @@ void Formatter::visit(const AST::WriteRedirection* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     if (node->fd() != 1)
-        current_builder().appendf(" %d>", node->fd());
+        current_builder().appendff(" {}>", node->fd());
     else
         current_builder().append(" >");
     NodeVisitor::visit(node);

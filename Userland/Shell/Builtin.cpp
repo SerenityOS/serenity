@@ -710,7 +710,7 @@ int Shell::builtin_pushd(int argc, const char** argv)
         if (argv[1][0] == '/') {
             path_builder.append(argv[1]);
         } else {
-            path_builder.appendf("%s/%s", cwd.characters(), argv[1]);
+            path_builder.appendff("{}/{}", cwd, argv[1]);
         }
     } else if (argc == 3) {
         directory_stack.append(cwd.characters());
@@ -721,7 +721,7 @@ int Shell::builtin_pushd(int argc, const char** argv)
                 if (arg[0] == '/') {
                     path_builder.append(arg);
                 } else
-                    path_builder.appendf("%s/%s", cwd.characters(), arg);
+                    path_builder.appendff("{}/{}", cwd, arg);
             }
 
             if (!strcmp(arg, "-n"))
