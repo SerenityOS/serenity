@@ -56,18 +56,7 @@ void InitialContainingBlockBox::paint_document_background(PaintContext& context)
 void InitialContainingBlockBox::paint_all_phases(PaintContext& context)
 {
     paint_document_background(context);
-
-    paint(context, PaintPhase::Background);
-    paint(context, PaintPhase::Border);
-    paint(context, PaintPhase::Foreground);
-    if (context.has_focus())
-        paint(context, PaintPhase::FocusOutline);
-    paint(context, PaintPhase::Overlay);
-}
-
-void InitialContainingBlockBox::paint(PaintContext& context, PaintPhase phase)
-{
-    stacking_context()->paint(context, phase);
+    stacking_context()->paint(context);
 }
 
 HitTestResult InitialContainingBlockBox::hit_test(const Gfx::IntPoint& position, HitTestType type) const
