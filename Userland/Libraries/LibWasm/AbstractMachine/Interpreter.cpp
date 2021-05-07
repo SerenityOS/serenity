@@ -14,6 +14,12 @@
 
 namespace Wasm {
 
+#define TRAP_IF_NOT(x)      \
+    do {                    \
+        if (trap_if_not(x)) \
+            return;         \
+    } while (false)
+
 void Interpreter::interpret(Configuration& configuration)
 {
     auto& instructions = configuration.frame()->expression().instructions();
@@ -23,22 +29,21 @@ void Interpreter::interpret(Configuration& configuration)
     while (current_ip_value < max_ip_value) {
         auto& instruction = instructions[current_ip_value.value()];
         interpret(configuration, current_ip_value, instruction);
+        if (m_do_trap)
+            return;
         ++current_ip_value;
     }
 }
 
 void Interpreter::branch_to_label(Configuration& configuration, LabelIndex index)
 {
+    dbgln_if(WASM_TRACE_DEBUG, "Branch to label with index {}...", index.value());
     auto label = configuration.nth_label(index.value());
-    VERIFY(label.has_value());
-    NonnullOwnPtrVector<Value> results;
-    // Pop results in order
-    for (size_t i = 0; i < label->arity(); ++i)
-        results.append(move(configuration.stack().pop().get<NonnullOwnPtr<Value>>()));
+    TRAP_IF_NOT(label.has_value());
+    dbgln_if(WASM_TRACE_DEBUG, "...which is actually IP {}, and has {} result(s)", label->continuation().value(), label->arity());
+    auto results = pop_values(configuration, label->arity());
 
     size_t drop_count = index.value() + 1;
-    if (label->continuation() < configuration.ip())
-        --drop_count;
 
     for (; !configuration.stack().is_empty();) {
         auto entry = configuration.stack().pop();
@@ -59,12 +64,19 @@ ReadonlyBytes Interpreter::load_from_memory(Configuration& configuration, const 
 {
     auto& address = configuration.frame()->module().memories().first();
     auto memory = configuration.store().get(address);
-    VERIFY(memory);
+    if (!memory) {
+        m_do_trap = true;
+        return {};
+    }
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     auto base = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>();
-    VERIFY(base.has_value());
+    if (!base.has_value()) {
+        m_do_trap = true;
+        return {};
+    }
     auto instance_address = base.value() + static_cast<i64>(arg.offset);
     if (instance_address < 0 || static_cast<u64>(instance_address + size) > memory->size()) {
+        m_do_trap = true;
         dbgln("LibWasm: Memory access out of bounds (expected 0 > {} and {} > {})", instance_address, instance_address + size, memory->size());
         return {};
     }
@@ -76,12 +88,13 @@ void Interpreter::store_to_memory(Configuration& configuration, const Instructio
 {
     auto& address = configuration.frame()->module().memories().first();
     auto memory = configuration.store().get(address);
-    VERIFY(memory);
+    TRAP_IF_NOT(memory);
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
     auto base = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>();
-    VERIFY(base.has_value());
+    TRAP_IF_NOT(base.has_value());
     auto instance_address = base.value() + static_cast<i64>(arg.offset);
     if (instance_address < 0 || static_cast<u64>(instance_address + data.size()) > memory->size()) {
+        m_do_trap = true;
         dbgln("LibWasm: Memory access out of bounds (expected 0 > {} and {} > {})", instance_address, instance_address + data.size(), memory->size());
         return;
     }
@@ -92,10 +105,10 @@ void Interpreter::store_to_memory(Configuration& configuration, const Instructio
 void Interpreter::call_address(Configuration& configuration, FunctionAddress address)
 {
     auto instance = configuration.store().get(address);
-    VERIFY(instance);
+    TRAP_IF_NOT(instance);
     const FunctionType* type { nullptr };
     instance->visit([&](const auto& function) { type = &function.type(); });
-    VERIFY(type);
+    TRAP_IF_NOT(type);
     Vector<Value> args;
     args.ensure_capacity(type->parameters().size());
     for (size_t i = 0; i < type->parameters().size(); ++i) {
@@ -104,40 +117,60 @@ void Interpreter::call_address(Configuration& configuration, FunctionAddress add
     Configuration function_configuration { configuration.store() };
     function_configuration.depth() = configuration.depth() + 1;
     auto result = function_configuration.call(address, move(args));
-    if (result.is_trap())
-        TODO();
+    if (result.is_trap()) {
+        m_do_trap = true;
+        return;
+    }
     for (auto& entry : result.values())
         configuration.stack().push(make<Value>(move(entry)));
 }
 
-#define BINARY_NUMERIC_OPERATION(type, operator, ...)                                             \
+#define BINARY_NUMERIC_OPERATION(type, operator, cast, ...)                                       \
     do {                                                                                          \
         auto rhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();           \
         auto lhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();           \
-        VERIFY(lhs.has_value());                                                                  \
-        VERIFY(rhs.has_value());                                                                  \
+        TRAP_IF_NOT(lhs.has_value());                                                             \
+        TRAP_IF_NOT(rhs.has_value());                                                             \
+        __VA_ARGS__;                                                                              \
         auto result = lhs.value() operator rhs.value();                                           \
         dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = {}", lhs.value(), #operator, rhs.value(), result); \
-        configuration.stack().push(make<Value>(__VA_ARGS__(result)));                             \
+        configuration.stack().push(make<Value>(cast(result)));                                    \
         return;                                                                                   \
     } while (false)
 
-#define BINARY_PREFIX_NUMERIC_OPERATION(type, operation, ...)                                       \
+#define OVF_CHECKED_BINARY_NUMERIC_OPERATION(type, operator, cast, ...)                            \
+    do {                                                                                           \
+        auto rhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();            \
+        auto ulhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();           \
+        TRAP_IF_NOT(ulhs.has_value());                                                             \
+        TRAP_IF_NOT(rhs.has_value());                                                              \
+        dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = ??", ulhs.value(), #operator, rhs.value());         \
+        __VA_ARGS__;                                                                               \
+        Checked lhs = ulhs.value();                                                                \
+        lhs operator##= rhs.value();                                                               \
+        TRAP_IF_NOT(!lhs.has_overflow());                                                          \
+        auto result = lhs.value();                                                                 \
+        dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = {}", ulhs.value(), #operator, rhs.value(), result); \
+        configuration.stack().push(make<Value>(cast(result)));                                     \
+        return;                                                                                    \
+    } while (false)
+
+#define BINARY_PREFIX_NUMERIC_OPERATION(type, operation, cast, ...)                                 \
     do {                                                                                            \
         auto rhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();             \
         auto lhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();             \
-        VERIFY(lhs.has_value());                                                                    \
-        VERIFY(rhs.has_value());                                                                    \
+        TRAP_IF_NOT(lhs.has_value());                                                               \
+        TRAP_IF_NOT(rhs.has_value());                                                               \
         auto result = operation(lhs.value(), rhs.value());                                          \
         dbgln_if(WASM_TRACE_DEBUG, "{}({} {}) = {}", #operation, lhs.value(), rhs.value(), result); \
-        configuration.stack().push(make<Value>(__VA_ARGS__(result)));                               \
+        configuration.stack().push(make<Value>(cast(result)));                                      \
         return;                                                                                     \
     } while (false)
 
 #define UNARY_MAP(pop_type, operation, ...)                                                   \
     do {                                                                                      \
         auto value = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<pop_type>(); \
-        VERIFY(value.has_value());                                                            \
+        TRAP_IF_NOT(value.has_value());                                                       \
         auto result = operation(value.value());                                               \
         dbgln_if(WASM_TRACE_DEBUG, "map({}) {} = {}", #operation, value.value(), result);     \
         configuration.stack().push(make<Value>(__VA_ARGS__(result)));                         \
@@ -150,7 +183,7 @@ void Interpreter::call_address(Configuration& configuration, FunctionAddress add
 #define LOAD_AND_PUSH(read_type, push_type)                                            \
     do {                                                                               \
         auto slice = load_from_memory(configuration, instruction, sizeof(read_type));  \
-        VERIFY(slice.size() == sizeof(read_type));                                     \
+        TRAP_IF_NOT(slice.size() == sizeof(read_type));                                \
         if constexpr (sizeof(read_type) == 1)                                          \
             configuration.stack().push(make<Value>(static_cast<push_type>(slice[0]))); \
         else                                                                           \
@@ -230,6 +263,20 @@ struct ConvertToRaw<double> {
     }
 };
 
+Vector<NonnullOwnPtr<Value>> Interpreter::pop_values(Configuration& configuration, size_t count)
+{
+    Vector<NonnullOwnPtr<Value>> results;
+    // Pop results in order
+    for (size_t i = 0; i < count; ++i) {
+        auto top_of_stack = configuration.stack().pop();
+        if (auto value = top_of_stack.get_pointer<NonnullOwnPtr<Value>>())
+            results.append(move(*value));
+        else
+            trap_if_not(value);
+    }
+    return results;
+}
+
 void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip, const Instruction& instruction)
 {
     dbgln_if(WASM_TRACE_DEBUG, "Executing instruction {} at ip {}", instruction_name(instruction.opcode()), ip.value());
@@ -237,7 +284,8 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         configuration.dump_stack();
     switch (instruction.opcode().value()) {
     case Instructions::unreachable.value():
-        VERIFY_NOT_REACHED(); // FIXME: This is definitely not right :)
+        m_do_trap = true;
+        return;
     case Instructions::nop.value():
         return;
     case Instructions::local_get.value():
@@ -284,7 +332,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
 
         auto entry = configuration.stack().pop();
         auto value = entry.get<NonnullOwnPtr<Value>>()->to<i32>();
-        VERIFY(value.has_value());
+        TRAP_IF_NOT(value.has_value());
         configuration.stack().push(make<Label>(arity, args.end_ip));
         if (value.value() == 0) {
             if (args.else_ip.has_value()) {
@@ -300,11 +348,8 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         return;
     case Instructions::structured_else.value(): {
         auto label = configuration.nth_label(0);
-        VERIFY(label.has_value());
-        NonnullOwnPtrVector<Value> results;
-        // Pop results in order
-        for (size_t i = 0; i < label->arity(); ++i)
-            results.append(move(configuration.stack().pop().get<NonnullOwnPtr<Value>>()));
+        TRAP_IF_NOT(label.has_value());
+        auto results = pop_values(configuration, label->arity());
 
         // drop all locals
         for (; !configuration.stack().is_empty();) {
@@ -377,14 +422,16 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         auto table_address = configuration.frame()->module().tables()[args.table.value()];
         auto table_instance = configuration.store().get(table_address);
         auto index = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>();
-        VERIFY(index.has_value());
+        TRAP_IF_NOT(index.has_value());
         if (index.value() < 0 || static_cast<size_t>(index.value()) >= table_instance->elements().size()) {
             dbgln("LibWasm: Element access out of bounds, expected {0} > 0 and {0} < {1}", index.value(), table_instance->elements().size());
+            m_do_trap = true;
             return;
         }
         auto element = table_instance->elements()[index.value()];
         if (!element.has_value() || !element->ref().has<FunctionAddress>()) {
             dbgln("LibWasm: call_indirect attempted with invalid address element (not a function)");
+            m_do_trap = true;
             return;
         }
         auto address = element->ref().get<FunctionAddress>();
@@ -441,12 +488,14 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     case Instructions::local_tee.value(): {
         auto value = *configuration.stack().peek().get<NonnullOwnPtr<Value>>();
         auto local_index = instruction.arguments().get<LocalIndex>();
+        TRAP_IF_NOT(configuration.frame()->locals().size() > local_index.value());
         dbgln_if(WASM_TRACE_DEBUG, "stack:peek -> locals({})", local_index.value());
         configuration.frame()->locals()[local_index.value()] = move(value);
         return;
     }
     case Instructions::global_get.value(): {
         auto global_index = instruction.arguments().get<GlobalIndex>();
+        TRAP_IF_NOT(configuration.frame()->module().globals().size() > global_index.value());
         auto address = configuration.frame()->module().globals()[global_index.value()];
         dbgln_if(WASM_TRACE_DEBUG, "global({}) -> stack", address.value());
         auto global = configuration.store().get(address);
@@ -455,6 +504,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     }
     case Instructions::global_set.value(): {
         auto global_index = instruction.arguments().get<GlobalIndex>();
+        TRAP_IF_NOT(configuration.frame()->module().globals().size() > global_index.value());
         auto address = configuration.frame()->module().globals()[global_index.value()];
         auto value = *configuration.stack().pop().get<NonnullOwnPtr<Value>>();
         dbgln_if(WASM_TRACE_DEBUG, "stack -> global({})", address.value());
@@ -475,7 +525,8 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         auto instance = configuration.store().get(address);
         i32 old_pages = instance->size() / Constants::page_size;
         auto new_pages = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>();
-        VERIFY(new_pages.has_value());
+        TRAP_IF_NOT(new_pages.has_value());
+        dbgln_if(WASM_TRACE_DEBUG, "memory.grow({}), previously {} pages...", *new_pages, old_pages);
         if (instance->grow(new_pages.value() * Constants::page_size))
             configuration.stack().push(make<Value>((i32)old_pages));
         else
@@ -495,7 +546,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     case Instructions::select_typed.value(): {
         // Note: The type seems to only be used for validation.
         auto value = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>();
-        VERIFY(value.has_value());
+        TRAP_IF_NOT(value.has_value());
         dbgln_if(WASM_TRACE_DEBUG, "select({})", value.value());
         auto rhs = move(configuration.stack().pop().get<NonnullOwnPtr<Value>>());
         auto lhs = move(configuration.stack().pop().get<NonnullOwnPtr<Value>>());
@@ -505,89 +556,89 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     case Instructions::i32_eqz.value():
         UNARY_NUMERIC_OPERATION(i32, 0 ==);
     case Instructions::i32_eq.value():
-        BINARY_NUMERIC_OPERATION(i32, ==);
+        BINARY_NUMERIC_OPERATION(i32, ==, i32);
     case Instructions::i32_ne.value():
-        BINARY_NUMERIC_OPERATION(i32, !=);
+        BINARY_NUMERIC_OPERATION(i32, !=, i32);
     case Instructions::i32_lts.value():
-        BINARY_NUMERIC_OPERATION(i32, <);
+        BINARY_NUMERIC_OPERATION(i32, <, i32);
     case Instructions::i32_ltu.value():
-        BINARY_NUMERIC_OPERATION(u32, <);
+        BINARY_NUMERIC_OPERATION(u32, <, i32);
     case Instructions::i32_gts.value():
-        BINARY_NUMERIC_OPERATION(i32, >);
+        BINARY_NUMERIC_OPERATION(i32, >, i32);
     case Instructions::i32_gtu.value():
-        BINARY_NUMERIC_OPERATION(u32, >);
+        BINARY_NUMERIC_OPERATION(u32, >, i32);
     case Instructions::i32_les.value():
-        BINARY_NUMERIC_OPERATION(i32, <=);
+        BINARY_NUMERIC_OPERATION(i32, <=, i32);
     case Instructions::i32_leu.value():
-        BINARY_NUMERIC_OPERATION(u32, <=);
+        BINARY_NUMERIC_OPERATION(u32, <=, i32);
     case Instructions::i32_ges.value():
-        BINARY_NUMERIC_OPERATION(i32, >=);
+        BINARY_NUMERIC_OPERATION(i32, >=, i32);
     case Instructions::i32_geu.value():
-        BINARY_NUMERIC_OPERATION(u32, >=);
+        BINARY_NUMERIC_OPERATION(u32, >=, i32);
     case Instructions::i64_eqz.value():
         UNARY_NUMERIC_OPERATION(i64, 0ull ==);
     case Instructions::i64_eq.value():
-        BINARY_NUMERIC_OPERATION(i64, ==);
+        BINARY_NUMERIC_OPERATION(i64, ==, i32);
     case Instructions::i64_ne.value():
-        BINARY_NUMERIC_OPERATION(i64, !=);
+        BINARY_NUMERIC_OPERATION(i64, !=, i32);
     case Instructions::i64_lts.value():
-        BINARY_NUMERIC_OPERATION(i64, <);
+        BINARY_NUMERIC_OPERATION(i64, <, i32);
     case Instructions::i64_ltu.value():
-        BINARY_NUMERIC_OPERATION(u64, <);
+        BINARY_NUMERIC_OPERATION(u64, <, i32);
     case Instructions::i64_gts.value():
-        BINARY_NUMERIC_OPERATION(i64, >);
+        BINARY_NUMERIC_OPERATION(i64, >, i32);
     case Instructions::i64_gtu.value():
-        BINARY_NUMERIC_OPERATION(u64, >);
+        BINARY_NUMERIC_OPERATION(u64, >, i32);
     case Instructions::i64_les.value():
-        BINARY_NUMERIC_OPERATION(i64, <=);
+        BINARY_NUMERIC_OPERATION(i64, <=, i32);
     case Instructions::i64_leu.value():
-        BINARY_NUMERIC_OPERATION(u64, <=);
+        BINARY_NUMERIC_OPERATION(u64, <=, i32);
     case Instructions::i64_ges.value():
-        BINARY_NUMERIC_OPERATION(i64, >=);
+        BINARY_NUMERIC_OPERATION(i64, >=, i32);
     case Instructions::i64_geu.value():
-        BINARY_NUMERIC_OPERATION(u64, >=);
+        BINARY_NUMERIC_OPERATION(u64, >=, i32);
     case Instructions::f32_eq.value():
-        BINARY_NUMERIC_OPERATION(float, ==);
+        BINARY_NUMERIC_OPERATION(float, ==, i32);
     case Instructions::f32_ne.value():
-        BINARY_NUMERIC_OPERATION(float, !=);
+        BINARY_NUMERIC_OPERATION(float, !=, i32);
     case Instructions::f32_lt.value():
-        BINARY_NUMERIC_OPERATION(float, <);
+        BINARY_NUMERIC_OPERATION(float, <, i32);
     case Instructions::f32_gt.value():
-        BINARY_NUMERIC_OPERATION(float, >);
+        BINARY_NUMERIC_OPERATION(float, >, i32);
     case Instructions::f32_le.value():
-        BINARY_NUMERIC_OPERATION(float, <=);
+        BINARY_NUMERIC_OPERATION(float, <=, i32);
     case Instructions::f32_ge.value():
-        BINARY_NUMERIC_OPERATION(float, >=);
+        BINARY_NUMERIC_OPERATION(float, >=, i32);
     case Instructions::f64_eq.value():
-        BINARY_NUMERIC_OPERATION(double, ==);
+        BINARY_NUMERIC_OPERATION(double, ==, i32);
     case Instructions::f64_ne.value():
-        BINARY_NUMERIC_OPERATION(double, !=);
+        BINARY_NUMERIC_OPERATION(double, !=, i32);
     case Instructions::f64_lt.value():
-        BINARY_NUMERIC_OPERATION(double, <);
+        BINARY_NUMERIC_OPERATION(double, <, i32);
     case Instructions::f64_gt.value():
-        BINARY_NUMERIC_OPERATION(double, >);
+        BINARY_NUMERIC_OPERATION(double, >, i32);
     case Instructions::f64_le.value():
-        BINARY_NUMERIC_OPERATION(double, <=);
+        BINARY_NUMERIC_OPERATION(double, <=, i32);
     case Instructions::f64_ge.value():
-        BINARY_NUMERIC_OPERATION(double, >);
+        BINARY_NUMERIC_OPERATION(double, >, i32);
     case Instructions::i32_clz.value():
     case Instructions::i32_ctz.value():
     case Instructions::i32_popcnt.value():
         goto unimplemented;
     case Instructions::i32_add.value():
-        BINARY_NUMERIC_OPERATION(i32, +, i32);
+        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i32, +, i32);
     case Instructions::i32_sub.value():
-        BINARY_NUMERIC_OPERATION(i32, -, i32);
+        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i32, -, i32);
     case Instructions::i32_mul.value():
-        BINARY_NUMERIC_OPERATION(i32, *, i32);
+        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i32, *, i32);
     case Instructions::i32_divs.value():
-        BINARY_NUMERIC_OPERATION(i32, /, i32);
+        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i32, /, i32, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i32_divu.value():
-        BINARY_NUMERIC_OPERATION(u32, /, i32);
+        OVF_CHECKED_BINARY_NUMERIC_OPERATION(u32, /, i32, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i32_rems.value():
-        BINARY_NUMERIC_OPERATION(i32, %, i32);
+        BINARY_NUMERIC_OPERATION(i32, %, i32, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i32_remu.value():
-        BINARY_NUMERIC_OPERATION(u32, %, i32);
+        BINARY_NUMERIC_OPERATION(u32, %, i32, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i32_and.value():
         BINARY_NUMERIC_OPERATION(i32, &, i32);
     case Instructions::i32_or.value():
@@ -607,19 +658,19 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     case Instructions::i64_popcnt.value():
         goto unimplemented;
     case Instructions::i64_add.value():
-        BINARY_NUMERIC_OPERATION(i64, +, i64);
+        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i64, +, i64);
     case Instructions::i64_sub.value():
-        BINARY_NUMERIC_OPERATION(i64, -, i64);
+        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i64, -, i64);
     case Instructions::i64_mul.value():
-        BINARY_NUMERIC_OPERATION(i64, *, i64);
+        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i64, *, i64);
     case Instructions::i64_divs.value():
-        BINARY_NUMERIC_OPERATION(i64, /, i64);
+        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i64, /, i64, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i64_divu.value():
-        BINARY_NUMERIC_OPERATION(u64, /, i64);
+        OVF_CHECKED_BINARY_NUMERIC_OPERATION(u64, /, i64, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i64_rems.value():
-        BINARY_NUMERIC_OPERATION(i64, %, i64);
+        BINARY_NUMERIC_OPERATION(i64, %, i64, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i64_remu.value():
-        BINARY_NUMERIC_OPERATION(u64, %, i64);
+        BINARY_NUMERIC_OPERATION(u64, %, i64, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i64_and.value():
         BINARY_NUMERIC_OPERATION(i64, &, i64);
     case Instructions::i64_or.value():
@@ -756,6 +807,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     default:
     unimplemented:;
         dbgln("Instruction '{}' not implemented", instruction_name(instruction.opcode()));
+        m_do_trap = true;
         return;
     }
 }

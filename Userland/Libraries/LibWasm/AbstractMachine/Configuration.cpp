@@ -59,6 +59,8 @@ Result Configuration::execute()
 {
     Interpreter interpreter;
     interpreter.interpret(*this);
+    if (interpreter.did_trap())
+        return Trap {};
 
     Vector<NonnullOwnPtr<Value>> results;
     for (size_t i = 0; i < m_current_frame->arity(); ++i)
