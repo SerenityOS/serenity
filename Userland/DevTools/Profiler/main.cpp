@@ -124,9 +124,11 @@ int main(int argc, char** argv)
         timeline_view->add<TimelineTrack>(*timeline_view, *profile, process);
     }
 
-    [[maybe_unused]] auto& timeline_container = main_widget.add<TimelineContainer>(*timeline_header_container, *timeline_view);
+    auto& main_splitter = main_widget.add<GUI::VerticalSplitter>();
 
-    auto& tab_widget = main_widget.add<GUI::TabWidget>();
+    [[maybe_unused]] auto& timeline_container = main_splitter.add<TimelineContainer>(*timeline_header_container, *timeline_view);
+
+    auto& tab_widget = main_splitter.add<GUI::TabWidget>();
 
     auto& tree_tab = tab_widget.add_tab<GUI::Widget>("Call Tree");
     tree_tab.set_layout<GUI::VerticalBoxLayout>();
