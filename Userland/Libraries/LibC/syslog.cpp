@@ -119,9 +119,9 @@ void vsyslog_r(int priority, struct syslog_data* data, const char* message, va_l
 
     // Some metadata would be consumed by a syslog daemon, if we had one.
     if (data->logopt & LOG_PID)
-        combined.appendf("%s[%d]: ", get_syslog_ident(data), getpid());
+        combined.appendff("{}[{}]: ", get_syslog_ident(data), getpid());
     else
-        combined.appendf("%s: ", get_syslog_ident(data));
+        combined.appendff("{}: ", get_syslog_ident(data));
 
     combined.appendvf(message, args);
     String combined_string = combined.build();
