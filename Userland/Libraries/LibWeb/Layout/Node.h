@@ -112,6 +112,8 @@ public:
     const BlockBox* containing_block() const;
     BlockBox* containing_block() { return const_cast<BlockBox*>(const_cast<const Node*>(this)->containing_block()); }
 
+    bool establishes_stacking_context() const;
+
     bool can_contain_boxes_with_position_absolute() const;
 
     const Gfx::Font& font() const;

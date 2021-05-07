@@ -19,7 +19,6 @@ public:
     const DOM::Document& dom_node() const { return static_cast<const DOM::Document&>(*Node::dom_node()); }
 
     void paint_all_phases(PaintContext&);
-    virtual void paint(PaintContext&, PaintPhase) override;
 
     void paint_document_background(PaintContext&);
 

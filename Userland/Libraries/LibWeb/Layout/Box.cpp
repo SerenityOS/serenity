@@ -42,8 +42,6 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         Painting::paint_border(context, Painting::BorderEdge::Bottom, bordered_rect, computed_values());
     }
 
-    Layout::NodeWithStyleAndBoxModelMetrics::paint(context, phase);
-
     if (phase == PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
         auto content_rect = absolute_rect();
 
@@ -177,23 +175,6 @@ StackingContext* Box::enclosing_stacking_context()
     }
     // We should always reach the Layout::InitialContainingBlockBox stacking context.
     VERIFY_NOT_REACHED();
-}
-
-bool Box::establishes_stacking_context() const
-{
-    if (!has_style())
-        return false;
-    if (dom_node() == document().root())
-        return true;
-    auto position = computed_values().position();
-    auto z_index = computed_values().z_index();
-    if (position == CSS::Position::Absolute || position == CSS::Position::Relative) {
-        if (z_index.has_value())
-            return true;
-    }
-    if (position == CSS::Position::Fixed || position == CSS::Position::Sticky)
-        return true;
-    return false;
 }
 
 LineBox& Box::ensure_last_line_box()
