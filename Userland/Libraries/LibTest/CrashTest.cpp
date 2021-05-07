@@ -20,19 +20,19 @@ Crash::Crash(String test_type, Function<Crash::Failure()> crash_function)
 
 bool Crash::run(RunType run_type)
 {
-    printf("\x1B[33mTesting\x1B[0m: \"%s\"\n", m_type.characters());
+    outln("\x1B[33mTesting\x1B[0m: \"{}\"", m_type);
 
     auto run_crash_and_print_if_error = [this]() -> bool {
         auto failure = m_crash_function();
 
         // If we got here something went wrong
-        printf("\x1B[31mFAIL\x1B[0m: ");
+        out("\x1B[31mFAIL\x1B[0m: ");
         switch (failure) {
         case Failure::DidNotCrash:
-            printf("Did not crash!\n");
+            outln("Did not crash!");
             break;
         case Failure::UnexpectedError:
-            printf("Unexpected error!\n");
+            outln("Unexpected error!");
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -43,7 +43,6 @@ bool Crash::run(RunType run_type)
     if (run_type == RunType::UsingCurrentProcess) {
         return run_crash_and_print_if_error();
     } else {
-
         // Run the test in a child process so that we do not crash the crash program :^)
         pid_t pid = fork();
         if (pid < 0) {
@@ -57,7 +56,7 @@ bool Crash::run(RunType run_type)
         int status;
         waitpid(pid, &status, 0);
         if (WIFSIGNALED(status)) {
-            printf("\x1B[32mPASS\x1B[0m: Terminated with signal %d\n", WTERMSIG(status));
+            outln("\x1B[32mPASS\x1B[0m: Terminated with signal {}", WTERMSIG(status));
             return true;
         }
         return false;
