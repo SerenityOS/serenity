@@ -100,11 +100,9 @@ public:
 
     virtual String class_name() const override
     {
-        StringBuilder builder;
-        builder.append("SHA");
-        builder.appendf("%zu", this->DigestSize * 8);
-        return builder.build();
-    };
+        return String::formatted("SHA{}", DigestSize * 8);
+    }
+
     inline virtual void reset() override
     {
         m_data_length = 0;
@@ -152,11 +150,9 @@ public:
 
     virtual String class_name() const override
     {
-        StringBuilder builder;
-        builder.append("SHA");
-        builder.appendf("%zu", this->DigestSize * 8);
-        return builder.build();
-    };
+        return String::formatted("SHA{%zu}", DigestSize * 8);
+    }
+
     inline virtual void reset() override
     {
         m_data_length = 0;

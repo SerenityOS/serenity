@@ -26,8 +26,8 @@ constexpr void swap_keys(u32* keys, size_t i, size_t j)
 String AESCipherBlock::to_string() const
 {
     StringBuilder builder;
-    for (size_t i = 0; i < BlockSizeInBits / 8; ++i)
-        builder.appendf("%02x", m_data[i]);
+    for (auto value : m_data)
+        builder.appendff("{:02x}", value);
     return builder.build();
 }
 
@@ -35,7 +35,7 @@ String AESCipherKey::to_string() const
 {
     StringBuilder builder;
     for (size_t i = 0; i < (rounds() + 1) * 4; ++i)
-        builder.appendf("%02x", m_rd_keys[i]);
+        builder.appendff("{:02x}", m_rd_keys[i]);
     return builder.build();
 }
 
