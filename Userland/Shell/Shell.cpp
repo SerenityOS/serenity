@@ -77,8 +77,8 @@ String Shell::prompt() const
                 return "# ";
 
             StringBuilder builder;
-            builder.appendf("\033]0;%s@%s:%s\007", username.characters(), hostname, cwd.characters());
-            builder.appendf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", username.characters(), hostname, cwd.characters());
+            builder.appendff("\033]0;{}@{}:{}\007", username, hostname, cwd);
+            builder.appendff("\033[31;1m{}\033[0m@\033[37;1m{}\033[0m:\033[32;1m{}\033[0m$> ", username, hostname, cwd);
             return builder.to_string();
         }
 
