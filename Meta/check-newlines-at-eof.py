@@ -21,7 +21,6 @@ def run():
             "*.json",
             "CMake*.txt",
             "**/CMake*.txt",
-            ":!:AK/Tests/*.json",
             ":!:Kernel/FileSystem/ext2_fs.h"
         ],
         check=True,
