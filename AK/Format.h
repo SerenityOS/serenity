@@ -185,6 +185,16 @@ public:
         SignMode sign_mode = SignMode::OnlyIfNeeded);
 
 #ifndef KERNEL
+    void put_f80(
+        long double value,
+        u8 base = 10,
+        bool upper_case = false,
+        Align align = Align::Right,
+        size_t min_width = 0,
+        size_t precision = 6,
+        char fill = ' ',
+        SignMode sign_mode = SignMode::OnlyIfNeeded);
+
     void put_f64(
         double value,
         u8 base = 10,
@@ -396,6 +406,17 @@ struct Formatter<double> : StandardFormatter {
     }
 
     void format(FormatBuilder&, double value);
+};
+
+template<>
+struct Formatter<long double> : StandardFormatter {
+    Formatter() = default;
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+
+    void format(FormatBuilder&, long double value);
 };
 #endif
 
