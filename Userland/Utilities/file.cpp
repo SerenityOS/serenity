@@ -19,7 +19,7 @@ static Optional<String> description_only(String description, [[maybe_unused]] co
 }
 
 // FIXME: Ideally Gfx::ImageDecoder could tell us the image type directly.
-static Optional<String> image_details(const String description, const String& path)
+static Optional<String> image_details(const String& description, const String& path)
 {
     auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
@@ -55,7 +55,7 @@ static Optional<String> image_details(const String description, const String& pa
 ENUMERATE_DESCRIPTION_CONTENTS(V)
 #undef V
 
-static Optional<String> get_description_from_mime_type(String& mime, String path)
+static Optional<String> get_description_from_mime_type(const String& mime, const String& path)
 {
 #define V(var_name, mime_type, description, details) \
     if (String(mime_type) == mime)                   \
