@@ -40,7 +40,7 @@ private:
     {
         // FIXME: Help! Make this GUI less ugly.
         StringBuilder builder;
-        builder.appendf("%zux%zu", N, N);
+        builder.appendff("{}x{}", N, N);
         builder.append(" Convolution");
         set_title(builder.string_view());
 
