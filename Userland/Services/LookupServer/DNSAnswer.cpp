@@ -9,12 +9,13 @@
 
 namespace LookupServer {
 
-DNSAnswer::DNSAnswer(const DNSName& name, u16 type, u16 class_code, u32 ttl, const String& record_data)
+DNSAnswer::DNSAnswer(const DNSName& name, u16 type, u16 class_code, u32 ttl, const String& record_data, bool mdns_cache_flush)
     : m_name(name)
     , m_type(type)
     , m_class_code(class_code)
     , m_ttl(ttl)
     , m_record_data(record_data)
+    , m_mdns_cache_flush(mdns_cache_flush)
 {
     auto now = time(nullptr);
     m_expiration_time = now + m_ttl;

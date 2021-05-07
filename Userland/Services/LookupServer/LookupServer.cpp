@@ -75,7 +75,7 @@ void LookupServer::load_etc_hosts()
             m_etc_hosts.set(name, {});
             it = m_etc_hosts.find(name);
         }
-        it->value.empend(name, record_type, (u16)C_IN, static_ttl, data);
+        it->value.empend(name, record_type, (u16)C_IN, static_ttl, data, false);
     };
 
     auto file = Core::File::construct("/etc/hosts");
@@ -123,7 +123,8 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short recor
             answer.type(),
             answer.class_code(),
             answer.ttl(),
-            answer.record_data()
+            answer.record_data(),
+            answer.mdns_cache_flush(),
         };
         answers.append(answer_with_original_case);
     };
@@ -197,7 +198,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& namese
     DNSName name_in_question = name;
     if (should_randomize_case == ShouldRandomizeCase::Yes)
         name_in_question.randomize_case();
-    request.add_question({ name_in_question, record_type, C_IN });
+    request.add_question({ name_in_question, record_type, C_IN, false });
 
     auto buffer = request.to_byte_buffer();
 
