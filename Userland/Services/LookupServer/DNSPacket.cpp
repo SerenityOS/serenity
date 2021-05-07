@@ -40,13 +40,14 @@ ByteBuffer DNSPacket::to_byte_buffer() const
         header.set_is_query();
     else
         header.set_is_response();
+    header.set_authoritative_answer(m_authoritative_answer);
     // FIXME: What should this be?
     header.set_opcode(0);
     header.set_response_code(m_code);
     header.set_truncated(false); // hopefully...
-    header.set_recursion_desired(true);
+    header.set_recursion_desired(m_recursion_desired);
     // FIXME: what should the be for requests?
-    header.set_recursion_available(true);
+    header.set_recursion_available(m_recursion_available);
     header.set_question_count(m_questions.size());
     header.set_answer_count(m_answers.size());
 
