@@ -21,6 +21,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Module.h>
 #include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <Kernel/StdLib.h>
@@ -245,11 +246,7 @@ Process::~Process()
     VERIFY(thread_count() == 0); // all threads should have been finalized
     VERIFY(!m_alarm_timer);
 
-    if (g_profiling_all_threads) {
-        VERIFY(g_global_perf_events);
-        [[maybe_unused]] auto rc = g_global_perf_events->append_with_eip_and_ebp(
-            pid(), 0, 0, 0, PERF_EVENT_PROCESS_EXIT, 0, 0, nullptr);
-    }
+    PerformanceManager::add_process_exit_event(*this);
 
     {
         ScopedSpinLock processes_lock(g_processes_lock);
