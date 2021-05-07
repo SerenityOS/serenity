@@ -69,15 +69,6 @@ void StringBuilder::appendvf(const char* fmt, va_list ap)
         nullptr, fmt, ap);
 }
 
-void StringBuilder::appendf(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    will_append(strlen(fmt));
-    appendvf(fmt, ap);
-    va_end(ap);
-}
-
 ByteBuffer StringBuilder::to_byte_buffer() const
 {
     return ByteBuffer::copy(data(), length());
