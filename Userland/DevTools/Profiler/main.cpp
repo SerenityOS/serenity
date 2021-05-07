@@ -5,7 +5,6 @@
  */
 
 #include "IndividualSampleModel.h"
-#include "ProcessPickerWidget.h"
 #include "Profile.h"
 #include "TimelineContainer.h"
 #include "TimelineHeader.h"
@@ -111,8 +110,6 @@ int main(int argc, char** argv)
     }
 
     [[maybe_unused]] auto& timeline_container = main_widget.add<TimelineContainer>(*timeline_header_container, *timeline_view);
-
-    main_widget.add<ProcessPickerWidget>(*profile);
 
     auto& tab_widget = main_widget.add<GUI::TabWidget>();
 
