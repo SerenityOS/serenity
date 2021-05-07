@@ -67,6 +67,18 @@ const BlockBox* Node::containing_block() const
     return nearest_block_ancestor();
 }
 
+bool Node::establishes_stacking_context() const
+{
+    if (!has_style())
+        return false;
+    if (dom_node() == document().root())
+        return true;
+    auto position = computed_values().position();
+    if (position == CSS::Position::Absolute || position == CSS::Position::Relative || position == CSS::Position::Fixed || position == CSS::Position::Sticky)
+        return true;
+    return false;
+}
+
 void Node::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
