@@ -81,11 +81,11 @@ public:
         builder.append(execution_result_name(result));
         builder.appendff(", fc: {}, ss: {}", input.fail_counter, input.saved_positions.size());
         if (result == ExecutionResult::Succeeded) {
-            builder.appendf(", ip: %lu/%lu, sp: %lu/%lu", state.instruction_position, bytecode.size() - 1, state.string_position, input.view.length() - 1);
+            builder.appendff(", ip: {}/{}, sp: {}/{}", state.instruction_position, bytecode.size() - 1, state.string_position, input.view.length() - 1);
         } else if (result == ExecutionResult::Fork_PrioHigh) {
-            builder.appendf(", next ip: %lu", state.fork_at_position + opcode.size());
+            builder.appendff(", next ip: {}", state.fork_at_position + opcode.size());
         } else if (result != ExecutionResult::Failed) {
-            builder.appendf(", next ip: %lu", state.instruction_position + opcode.size());
+            builder.appendff(", next ip: {}", state.instruction_position + opcode.size());
         }
 
         fprintf(m_file, " | %-20s\n", builder.to_string().characters());
@@ -102,7 +102,7 @@ public:
     void print_header()
     {
         StringBuilder builder;
-        builder.appendf("%-15s | %-5s | %-9s | %-35s | %-30s | %-20s | %-20s\n", "System", "Index", "Recursion", "OpCode", "Arguments", "State", "Result");
+        builder.appendff("{:15} | {:5} | {:9} | {:35} | {:30} | {:20} | {:20}\n", "System", "Index", "Recursion", "OpCode", "Arguments", "State", "Result");
         auto length = builder.length();
         for (size_t i = 0; i < length; ++i) {
             builder.append('=');

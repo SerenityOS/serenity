@@ -44,12 +44,12 @@ template<class Parser>
 String Regex<Parser>::error_string(Optional<String> message) const
 {
     StringBuilder eb;
-    eb.appendf("Error during parsing of regular expression:\n");
-    eb.appendf("    %s\n    ", pattern_value.characters());
+    eb.append("Error during parsing of regular expression:\n");
+    eb.appendff("    {}\n    ", pattern_value);
     for (size_t i = 0; i < parser_result.error_token.position(); ++i)
-        eb.append(" ");
+        eb.append(' ');
 
-    eb.appendf("^---- %s", message.value_or(get_error_string(parser_result.error)).characters());
+    eb.appendff("^---- {}", message.value_or(get_error_string(parser_result.error)));
     return eb.build();
 }
 
