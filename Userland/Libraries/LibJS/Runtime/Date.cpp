@@ -87,23 +87,23 @@ String Date::iso_date_string() const
 
     StringBuilder builder;
     if (year < 0)
-        builder.appendf("-%06d", -year);
+        builder.appendff("-{:06}", -year);
     else if (year > 9999)
-        builder.appendf("+%06d", year);
+        builder.appendff("+{:06}", year);
     else
-        builder.appendf("%04d", year);
+        builder.appendff("{:04}", year);
     builder.append('-');
-    builder.appendf("%02d", month);
+    builder.appendff("{:02}", month);
     builder.append('-');
-    builder.appendf("%02d", tm.tm_mday);
+    builder.appendff("{:02}", tm.tm_mday);
     builder.append('T');
-    builder.appendf("%02d", tm.tm_hour);
+    builder.appendff("{:02}", tm.tm_hour);
     builder.append(':');
-    builder.appendf("%02d", tm.tm_min);
+    builder.appendff("{:02}", tm.tm_min);
     builder.append(':');
-    builder.appendf("%02d", tm.tm_sec);
+    builder.appendff("{:02}", tm.tm_sec);
     builder.append('.');
-    builder.appendf("%03d", m_milliseconds);
+    builder.appendff("{:03}", m_milliseconds);
     builder.append('Z');
 
     return builder.build();
