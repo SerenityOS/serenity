@@ -10,6 +10,7 @@
 
 namespace Profiler {
 
+class Profile;
 class Process;
 
 class TimelineHeader final : public GUI::Frame {
@@ -18,14 +19,21 @@ class TimelineHeader final : public GUI::Frame {
 public:
     virtual ~TimelineHeader();
 
+    Function<void(bool)> on_selection_change;
+
+    void update_selection();
+
 private:
-    TimelineHeader(Process const&);
+    TimelineHeader(Profile& profile, Process const&);
 
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
 
+    Profile& m_profile;
     Process const& m_process;
     RefPtr<Gfx::Bitmap> m_icon;
     String m_text;
+    bool m_selected;
 };
 
 }
