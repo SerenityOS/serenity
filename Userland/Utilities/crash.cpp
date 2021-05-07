@@ -9,6 +9,7 @@
 #include <AK/String.h>
 #include <Kernel/IO.h>
 #include <LibCore/ArgsParser.h>
+#include <LibTest/CrashTest.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -16,72 +17,9 @@
 #include <syscall.h>
 #include <unistd.h>
 
+using Test::Crash;
+
 #pragma GCC optimize("O0")
-
-class Crash {
-public:
-    enum class RunType {
-        UsingChildProcess,
-        UsingCurrentProcess,
-    };
-
-    enum class Failure {
-        DidNotCrash,
-        UnexpectedError,
-    };
-
-    Crash(String test_type, Function<Crash::Failure()> crash_function)
-        : m_type(test_type)
-        , m_crash_function(move(crash_function))
-    {
-    }
-
-    void run(RunType run_type)
-    {
-        printf("\x1B[33mTesting\x1B[0m: \"%s\"\n", m_type.characters());
-
-        auto run_crash_and_print_if_error = [this]() {
-            auto failure = m_crash_function();
-
-            // If we got here something went wrong
-            printf("\x1B[31mFAIL\x1B[0m: ");
-            switch (failure) {
-            case Failure::DidNotCrash:
-                printf("Did not crash!\n");
-                break;
-            case Failure::UnexpectedError:
-                printf("Unexpected error!\n");
-                break;
-            default:
-                VERIFY_NOT_REACHED();
-            }
-        };
-
-        if (run_type == RunType::UsingCurrentProcess) {
-            run_crash_and_print_if_error();
-        } else {
-
-            // Run the test in a child process so that we do not crash the crash program :^)
-            pid_t pid = fork();
-            if (pid < 0) {
-                perror("fork");
-                VERIFY_NOT_REACHED();
-            } else if (pid == 0) {
-                run_crash_and_print_if_error();
-                exit(0);
-            }
-
-            int status;
-            waitpid(pid, &status, 0);
-            if (WIFSIGNALED(status))
-                printf("\x1B[32mPASS\x1B[0m: Terminated with signal %d\n", WTERMSIG(status));
-        }
-    }
-
-private:
-    String m_type;
-    Function<Crash::Failure()> m_crash_function;
-};
 
 int main(int argc, char** argv)
 {
