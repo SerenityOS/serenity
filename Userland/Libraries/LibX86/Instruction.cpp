@@ -1247,7 +1247,7 @@ String Instruction::to_string(u32 origin, const SymbolProvider* symbol_provider,
 {
     StringBuilder builder;
     if (has_segment_prefix())
-        builder.appendf("%s: ", register_name(segment_prefix().value()));
+        builder.appendff("{}: ", register_name(segment_prefix().value()));
     if (has_address_size_override_prefix())
         builder.append(m_a32 ? "a32 " : "a16 ");
     if (has_operand_size_override_prefix())
@@ -1263,7 +1263,7 @@ String Instruction::to_string(u32 origin, const SymbolProvider* symbol_provider,
 void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const SymbolProvider* symbol_provider, bool x32) const
 {
     if (!m_descriptor) {
-        builder.appendf("db %#02x", m_op);
+        builder.appendff("db {:02x}", m_op);
         return;
     }
 
@@ -1283,7 +1283,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
             builder.append(" <");
             builder.append(symbol);
             if (symbol_offset)
-                builder.appendf("+%u", symbol_offset);
+                builder.appendff("+{}", symbol_offset);
             builder.append('>');
         }
     };
@@ -1298,25 +1298,25 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
     auto append_fpu_rm32 = [&] { builder.append(m_modrm.to_string_fpu32(*this)); };
     auto append_fpu_rm64 = [&] { builder.append(m_modrm.to_string_fpu64(*this)); };
     auto append_fpu_rm80 = [&] { builder.append(m_modrm.to_string_fpu80(*this)); };
-    auto append_imm8 = [&] { builder.appendf("%#02x", imm8()); };
-    auto append_imm8_2 = [&] { builder.appendf("%#02x", imm8_2()); };
-    auto append_imm16 = [&] { builder.appendf("%#04x", imm16()); };
-    auto append_imm16_1 = [&] { builder.appendf("%#04x", imm16_1()); };
-    auto append_imm16_2 = [&] { builder.appendf("%#04x", imm16_2()); };
-    auto append_imm32 = [&] { builder.appendf("%#08x", imm32()); };
-    auto append_imm32_2 = [&] { builder.appendf("%#08x", imm32_2()); };
+    auto append_imm8 = [&] { builder.appendff("{:#02x}", imm8()); };
+    auto append_imm8_2 = [&] { builder.appendff("{:#02x}", imm8_2()); };
+    auto append_imm16 = [&] { builder.appendff("{:#04x}", imm16()); };
+    auto append_imm16_1 = [&] { builder.appendff("{:#04x}", imm16_1()); };
+    auto append_imm16_2 = [&] { builder.appendff("{:#04x}", imm16_2()); };
+    auto append_imm32 = [&] { builder.appendff("{:#08x}", imm32()); };
+    auto append_imm32_2 = [&] { builder.appendff("{:#08x}", imm32_2()); };
     auto append_reg8 = [&] { builder.append(reg8_name()); };
     auto append_reg16 = [&] { builder.append(reg16_name()); };
     auto append_reg32 = [&] { builder.append(reg32_name()); };
     auto append_seg = [&] { builder.append(register_name(segment_register())); };
-    auto append_creg = [&] { builder.appendf("cr%u", register_index()); };
-    auto append_dreg = [&] { builder.appendf("dr%u", register_index()); };
+    auto append_creg = [&] { builder.appendff("cr{}", register_index()); };
+    auto append_dreg = [&] { builder.appendff("dr{}", register_index()); };
     auto append_relative_addr = [&] { formatted_address(origin + (m_a32 ? 6 : 4), x32, i32(m_a32 ? imm32() : imm16())); };
     auto append_relative_imm8 = [&] { formatted_address(origin + 2, x32, i8(imm8())); };
     auto append_relative_imm16 = [&] { formatted_address(origin + 3, x32, i16(imm16())); };
     auto append_relative_imm32 = [&] { formatted_address(origin + 5, x32, i32(imm32())); };
 
-    auto append_mm = [&] { builder.appendf("mm%u", register_index()); };
+    auto append_mm = [&] { builder.appendff("mm{}", register_index()); };
     auto append_mmrm64 = [&] { builder.append(m_modrm.to_string_mm(*this)); };
 
     auto append = [&](auto& content) { builder.append(content); };
