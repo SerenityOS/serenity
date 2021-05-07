@@ -52,6 +52,29 @@ public:
         }
     }
 
+    inline static void add_cpu_sample_event(Thread& current_thread, const RegisterState& regs)
+    {
+        PerformanceEventBuffer* perf_events = nullptr;
+
+        if (g_profiling_all_threads) {
+            VERIFY(g_global_perf_events);
+            // FIXME: We currently don't collect samples while idle.
+            //        That will be an interesting mode to add in the future. :^)
+            if (&current_thread != Processor::current().idle_thread()) {
+                perf_events = g_global_perf_events;
+            }
+        } else if (current_thread.process().is_profiling()) {
+            VERIFY(current_thread.process().perf_events());
+            perf_events = current_thread.process().perf_events();
+        }
+
+        if (perf_events) {
+            [[maybe_unused]] auto rc = perf_events->append_with_eip_and_ebp(
+                current_thread.pid(), current_thread.tid(),
+                regs.eip, regs.ebp, PERF_EVENT_SAMPLE, 0, 0, nullptr);
+        }
+    }
+
     inline static void add_mmap_perf_event(Process& current_process, Region const& region)
     {
         if (auto* event_buffer = current_process.current_perf_events_buffer()) {

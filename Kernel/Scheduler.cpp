@@ -10,7 +10,7 @@
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Panic.h>
-#include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
@@ -501,25 +501,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
         return; // TODO: This prevents scheduling on other CPUs!
 #endif
 
-    PerformanceEventBuffer* perf_events = nullptr;
-
-    if (g_profiling_all_threads) {
-        VERIFY(g_global_perf_events);
-        // FIXME: We currently don't collect samples while idle.
-        //        That will be an interesting mode to add in the future. :^)
-        if (current_thread != Processor::current().idle_thread()) {
-            perf_events = g_global_perf_events;
-        }
-    } else if (current_thread->process().is_profiling()) {
-        VERIFY(current_thread->process().perf_events());
-        perf_events = current_thread->process().perf_events();
-    }
-
-    if (perf_events) {
-        [[maybe_unused]] auto rc = perf_events->append_with_eip_and_ebp(
-            current_thread->pid(), current_thread->tid(),
-            regs.eip, regs.ebp, PERF_EVENT_SAMPLE, 0, 0, nullptr);
-    }
+    PerformanceManager::add_cpu_sample_event(*current_thread, regs);
 
     if (current_thread->tick())
         return;
