@@ -96,6 +96,9 @@ TEST_CASE(detects_signed_overflow)
     EXPECT((Checked<i64>(0x4000000000000000) - Checked<i64>(-0x4000000000000000)).has_overflow());
     EXPECT(!(Checked<i64>(-0x4000000000000000) - Checked<i64>(0x4000000000000000)).has_overflow());
     EXPECT((Checked<i64>(-0x4000000000000000) - Checked<i64>(0x4000000000000001)).has_overflow());
+
+    EXPECT((Checked<i32>(0x80000000) / Checked<i32>(-1)).has_overflow());
+    EXPECT((Checked<i64>(0x8000000000000000) / Checked<i64>(-1)).has_overflow());
 }
 
 TEST_CASE(detects_unsigned_overflow)
