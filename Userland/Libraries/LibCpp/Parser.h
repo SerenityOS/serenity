@@ -34,7 +34,7 @@ public:
     StringView text_of_token(const Cpp::Token& token) const;
     void print_tokens() const;
     const Vector<String>& errors() const { return m_state.errors; }
-    const Preprocessor::Definitions& definitions() const { return m_definitions; }
+    const Preprocessor::Definitions& preprocessor_definitions() const { return m_preprocessor_definitions; }
 
     struct TokenAndPreprocessorDefinition {
         Token token;
@@ -169,7 +169,7 @@ private:
     Vector<StringView> parse_type_qualifiers();
     Vector<StringView> parse_function_qualifiers();
 
-    Preprocessor::Definitions m_definitions;
+    Preprocessor::Definitions m_preprocessor_definitions;
     String m_filename;
     Vector<Token> m_tokens;
     State m_state;
