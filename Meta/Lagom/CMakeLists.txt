@@ -43,13 +43,13 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
-file(GLOB AK_TEST_SOURCES CONFIGURE_DEPENDS "../../AK/Tests/*.cpp")
+file(GLOB AK_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/AK/*.cpp")
 file(GLOB LIBARCHIVE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibArchive/*.cpp")
 file(GLOB LIBAUDIO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibAudio/*.cpp")
 list(REMOVE_ITEM LIBAUDIO_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibAudio/ClientConnection.cpp")
 file(GLOB LIBREGEX_LIBC_SOURCES "../../Userland/Libraries/LibRegex/C/Regex.cpp")
 file(GLOB LIBREGEX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibRegex/*.cpp")
-file(GLOB LIBREGEX_TESTS CONFIGURE_DEPENDS "../../Userland/Libraries/LibRegex/Tests/*.cpp")
+file(GLOB LIBREGEX_TESTS CONFIGURE_DEPENDS "../../Tests/LibRegex/*.cpp")
 file(GLOB LIBCORE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCore/*.cpp")
 file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
 # There's no way we can reliably make this cross platform
@@ -66,7 +66,7 @@ file(GLOB LIBX86_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibX86/*.cp
 file(GLOB LIBJS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*.cpp")
 file(GLOB LIBJS_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*/*.cpp")
 file(GLOB LIBCOMPRESS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCompress/*.cpp")
-file(GLOB LIBCOMPRESS_TESTS CONFIGURE_DEPENDS "../../Userland/Libraries/LibCompress/Tests/*.cpp")
+file(GLOB LIBCOMPRESS_TESTS CONFIGURE_DEPENDS "../../Tests/LibCompress/*.cpp")
 file(GLOB LIBCRYPTO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*.cpp")
 file(GLOB LIBCRYPTO_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*/*.cpp")
 file(GLOB LIBTLS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTLS/*.cpp")
@@ -76,7 +76,7 @@ file(GLOB SHELL_SOURCES CONFIGURE_DEPENDS "../../Userland/Shell/*.cpp")
 file(GLOB SHELL_TESTS CONFIGURE_DEPENDS "../../Userland/Shell/Tests/*.sh")
 list(FILTER SHELL_SOURCES EXCLUDE REGEX ".*main.cpp$")
 file(GLOB LIBSQL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/*.cpp")
-file(GLOB LIBSQL_TEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/Tests/*.cpp")
+file(GLOB LIBSQL_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibSQL/*.cpp")
 
 file(GLOB LIBTEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/*.cpp")
 list(FILTER LIBTEST_SOURCES EXCLUDE REGEX ".*Main.cpp$")
@@ -191,7 +191,7 @@ if (BUILD_LAGOM)
                 NAME ${name}_lagom
                 COMMAND ${name}_lagom
                 # FIXME: Only TestJSON needs this property
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../AK/Tests
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/AK
             )
         endforeach()
 
