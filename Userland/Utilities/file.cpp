@@ -81,11 +81,14 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(paths, "Files to identify", "files", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
+    bool all_ok = true;
+
     for (auto path : paths) {
         auto file = Core::File::construct(path);
         if (!file->open(Core::File::ReadOnly)) {
             perror(path);
-            return 1;
+            all_ok = false;
+            continue;
         }
         auto bytes = file->read(25);
         auto file_name_guess = Core::guess_mime_type_based_on_filename(path);
@@ -94,5 +97,5 @@ int main(int argc, char** argv)
         outln("{}: {}", path, flag_mime_only ? mime_type : human_readable_description);
     }
 
-    return 0;
+    return all_ok ? 0 : 1;
 }
