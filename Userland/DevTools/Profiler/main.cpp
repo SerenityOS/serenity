@@ -98,12 +98,14 @@ int main(int argc, char** argv)
 
     auto timeline_view = TimelineView::construct();
     for (auto& process : profile->processes()) {
-        size_t event_count = 0;
+        bool matching_event_found = false;
         for (auto& event : profile->events()) {
-            if (event.pid == process.pid && process.valid_at(event.timestamp))
-                ++event_count;
+            if (event.pid == process.pid && process.valid_at(event.timestamp)) {
+                matching_event_found = true;
+                break;
+            }
         }
-        if (!event_count)
+        if (!matching_event_found)
             continue;
         auto& timeline_header = timeline_header_container->add<TimelineHeader>(*profile, process);
         timeline_header.set_shrink_to_fit(true);
