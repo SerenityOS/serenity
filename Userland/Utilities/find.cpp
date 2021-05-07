@@ -363,9 +363,10 @@ static OwnPtr<Command> parse_complex_command(char* argv[])
     while (command && argv[optind] && argv[optind + 1]) {
         StringView arg = argv[++optind];
 
-        enum { And,
-            Or } binary_operation
-            = And;
+        enum {
+            And,
+            Or,
+        } binary_operation { And };
 
         if (arg == "-a") {
             optind++;
