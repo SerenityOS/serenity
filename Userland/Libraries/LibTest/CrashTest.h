@@ -27,7 +27,7 @@ public:
 
     Crash(String test_type, Function<Crash::Failure()> crash_function);
 
-    void run(RunType run_type);
+    bool run(RunType run_type = RunType::UsingChildProcess);
 
 private:
     String m_type;
