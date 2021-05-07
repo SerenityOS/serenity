@@ -34,31 +34,26 @@ static Optional<String> image_details(const String& description, const String& p
     return String::formatted("{}, {} x {}", description, image_decoder->width(), image_decoder->height());
 }
 
-#define ENUMERATE_DESCRIPTION_CONTENTS(V)                                                  \
-    V(pbm, "image/x-portable-bitmap", "PBM image data", image_details)                     \
-    V(pgm, "image/x-portable-graymap", "PGM image data", image_details)                    \
-    V(png, "image/png", "PNG image data", image_details)                                   \
-    V(ppm, "image/x-portable-pixmap", "PPM image data", image_details)                     \
-    V(gif_87, "image/gif", "GIF image data", image_details)                                \
-    V(gif_89, "image/gif", "GIF image data", image_details)                                \
-    V(bmp, "image/bmp", "BMP image data", image_details)                                   \
-    V(jpeg, "image/jpeg", "JPEG image data", image_details)                                \
-    V(jpeg_jfif, "image/jpeg", "JFIF image data", image_details)                           \
-    V(jpeg_huh, "image/jpeg", "JPEG image data", image_details)                            \
-    V(shell, "text/x-shellscript", "POSIX shell script text executable", description_only) \
-    V(json, "application/json", "JSON data", description_only)                             \
-    V(javascript, "application/javascript", "JavaScript source", description_only)         \
-    V(markdown, "text/markdown", "Markdown document", description_only)
-
-#define V(var_name, mime_type, description, details) \
-    static const String var_name = description;
-ENUMERATE_DESCRIPTION_CONTENTS(V)
-#undef V
+#define ENUMERATE_DESCRIPTION_CONTENTS(V)                                           \
+    V("image/x-portable-bitmap", "PBM image data", image_details)                   \
+    V("image/x-portable-graymap", "PGM image data", image_details)                  \
+    V("image/png", "PNG image data", image_details)                                 \
+    V("image/x-portable-pixmap", "PPM image data", image_details)                   \
+    V("image/gif", "GIF image data", image_details)                                 \
+    V("image/gif", "GIF image data", image_details)                                 \
+    V("image/bmp", "BMP image data", image_details)                                 \
+    V("image/jpeg", "JPEG image data", image_details)                               \
+    V("image/jpeg", "JFIF image data", image_details)                               \
+    V("image/jpeg", "JPEG image data", image_details)                               \
+    V("text/x-shellscript", "POSIX shell script text executable", description_only) \
+    V("application/json", "JSON data", description_only)                            \
+    V("application/javascript", "JavaScript source", description_only)              \
+    V("text/markdown", "Markdown document", description_only)
 
 static Optional<String> get_description_from_mime_type(const String& mime, const String& path)
 {
-#define V(var_name, mime_type, description, details) \
-    if (String(mime_type) == mime)                   \
+#define V(mime_type, description, details) \
+    if (String(mime_type) == mime)         \
         return details(String(description), path);
     ENUMERATE_DESCRIPTION_CONTENTS(V);
 #undef V
