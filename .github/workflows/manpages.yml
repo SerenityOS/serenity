@@ -22,7 +22,8 @@ jobs:
         run: |
           for d in $MAN_DIR*/; do
             dir_name=$(basename "$d")
-            mkdir -p output/${dir_name/man}
+            section="${dir_name/man}"
+            mkdir -p "output/${section}"
           done
       - name: Convert markdown to html
         run: |
@@ -33,18 +34,26 @@ jobs:
             return el
           end
           EOF
-          find $MAN_DIR -iname '*.md' -type f -exec sh -c 'relative_path=$(realpath --relative-to=$MAN_DIR $0) && stripped_path=${relative_path#man} && pandoc -f gfm -t html5 -s --lua-filter=link-fixup.lua -o output/${stripped_path%.md}.html ${0}' {} \;
+          find $MAN_DIR -iname '*.md' -type f -exec sh -c '\
+            relative_path="$(realpath --relative-to=$MAN_DIR $0)" \
+            && stripped_path="${relative_path#man}" \
+            && section="${stripped_path%%/*}" \
+            && filename="${stripped_path#*/}" \
+            && name="${filename%.md}" \
+            && pandoc -f gfm -t html5 -s --lua-filter=link-fixup.lua --metadata title="${name}(${section}) - SerenityOS man pages" -o "output/${section}/${name}.html" "${0}" \
+          ' {} \;
       - name: Generate man page listings
         run: |
           for d in output/*/; do
-            dir_name=$(basename "$d")
-            echo "<!DOCTYPE html><html><head><title>$dir_name</title></head><body>" > "$d/index.html"
+            section=$(basename "$d")
+            echo "<!DOCTYPE html><html><head><title>Section ${section} - SerenityOS man pages</title></head><body>" > "${d}/index.html"
             for f in $d/*; do
-              file_name=$(basename "$f")
-              if [[ "$file_name" == "index.html" ]]; then
+              filename=$(basename "$f")
+              name="${filename%.html}"
+              if [[ "$filename" == "index.html" ]]; then
                  continue
               fi
-              echo "<a href=\"$file_name\"><p>${file_name%.html}</p></a>" >> "$d/index.html"
+              echo "<a href=\"${filename}\"><p>${name}(${section})</p></a>" >> "${d}/index.html"
             done
             echo "</body></html>" >> "$d/index.html"
           done
