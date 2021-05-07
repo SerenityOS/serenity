@@ -129,9 +129,9 @@ RefPtr<Bitmap> Bitmap::load_from_file(String const& path, int scale_factor)
         LexicalPath lexical_path { path };
         StringBuilder highdpi_icon_path;
         highdpi_icon_path.append(lexical_path.dirname());
-        highdpi_icon_path.append("/");
+        highdpi_icon_path.append('/');
         highdpi_icon_path.append(lexical_path.title());
-        highdpi_icon_path.appendf("-%dx.", scale_factor);
+        highdpi_icon_path.appendff("-{}x.", scale_factor);
         highdpi_icon_path.append(lexical_path.extension());
 
         RefPtr<Bitmap> bmp;
