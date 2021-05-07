@@ -8,7 +8,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
-#include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
@@ -70,9 +70,7 @@ KResultOr<int> Process::sys$create_thread(void* (*entry)(void*), Userspace<const
     if (tsr_result.is_error())
         return tsr_result.error();
 
-    if (m_perf_event_buffer) {
-        [[maybe_unused]] auto rc = m_perf_event_buffer->append(PERF_EVENT_THREAD_CREATE, thread->tid().value(), 0, nullptr);
-    }
+    PerformanceManager::add_thread_created_event(*thread);
 
     ScopedSpinLock lock(g_scheduler_lock);
     thread->set_priority(requested_thread_priority);
@@ -89,11 +87,10 @@ void Process::sys$exit_thread(Userspace<void*> exit_value)
         this->sys$exit(0);
     }
 
-    if (auto* event_buffer = current_perf_events_buffer()) {
-        [[maybe_unused]] auto rc = event_buffer->append(PERF_EVENT_THREAD_EXIT, 0, 0, nullptr);
-    }
+    auto current_thread = Thread::current();
+    PerformanceManager::add_thread_exit_event(*current_thread);
 
-    Thread::current()->exit(reinterpret_cast<void*>(exit_value.ptr()));
+    current_thread->exit(reinterpret_cast<void*>(exit_value.ptr()));
     VERIFY_NOT_REACHED();
 }
 
