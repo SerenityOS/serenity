@@ -44,12 +44,7 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     auto document = filedb().get_or_create_from_filesystem(file);
     if (!document)
         return {};
-    auto content = document->text();
-    auto document_data = create_document_data(document->text(), file);
-
-    update_declared_symbols(*document_data);
-
-    return document_data;
+    return create_document_data(document->text(), file);
 }
 
 void ParserAutoComplete::set_document_data(const String& file, OwnPtr<DocumentData>&& data)
@@ -260,13 +255,8 @@ Vector<ParserAutoComplete::PropertyInfo> ParserAutoComplete::properties_of_type(
 NonnullRefPtrVector<Declaration> ParserAutoComplete::get_global_declarations_including_headers(const DocumentData& document) const
 {
     NonnullRefPtrVector<Declaration> declarations;
-    for (auto& include : document.preprocessor().included_paths()) {
-        document_path_from_include_path(include);
-        auto included_document = get_document_data(document_path_from_include_path(include));
-        if (!included_document)
-            continue;
-        declarations.append(get_global_declarations_including_headers(*included_document));
-    }
+    for (auto& decl : document.m_declarations_from_headers)
+        declarations.append(*decl);
 
     declarations.append(get_global_declarations(*document.parser().root_node()));
 
@@ -434,8 +424,16 @@ RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& 
     return {};
 }
 
-void ParserAutoComplete::update_declared_symbols(const DocumentData& document)
+void ParserAutoComplete::update_declared_symbols(DocumentData& document)
 {
+    for (auto& include : document.preprocessor().included_paths()) {
+        auto included_document = get_or_create_document_data(document_path_from_include_path(include));
+        if (!included_document)
+            continue;
+        for (auto&& decl : get_global_declarations_including_headers(*included_document))
+            document.m_declarations_from_headers.set(move(decl));
+    }
+
     Vector<GUI::AutocompleteProvider::Declaration> declarations;
 
     for (auto& decl : get_global_declarations(*document.parser().root_node())) {
@@ -493,6 +491,8 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
 
     if constexpr (CPP_LANGUAGE_SERVER_DEBUG)
         root->dump(0);
+
+    update_declared_symbols(*document_data);
 
     return document_data;
 }

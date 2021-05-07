@@ -59,6 +59,9 @@ private:
         String m_text;
         OwnPtr<Preprocessor> m_preprocessor;
         OwnPtr<Parser> m_parser;
+
+        // FIXME: This HashTable must be re-computed if a declaration from a header file is modified
+        HashTable<NonnullRefPtr<Declaration>> m_declarations_from_headers;
     };
 
     Vector<GUI::AutocompleteProvider::Entry> autocomplete_property(const DocumentData&, const MemberExpression&, const String partial_text) const;
@@ -85,7 +88,7 @@ private:
 
     OwnPtr<DocumentData> create_document_data_for(const String& file);
     String document_path_from_include_path(const StringView& include_path) const;
-    void update_declared_symbols(const DocumentData&);
+    void update_declared_symbols(DocumentData&);
     GUI::AutocompleteProvider::DeclarationType type_of_declaration(const Declaration&);
     String scope_of_declaration(const Declaration&);
     Optional<GUI::AutocompleteProvider::ProjectLocation> find_preprocessor_definition(const DocumentData&, const GUI::TextPosition&);
