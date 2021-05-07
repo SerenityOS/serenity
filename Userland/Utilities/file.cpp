@@ -59,7 +59,7 @@ static Optional<String> get_description_from_mime_type(const String& mime, const
 {
 #define V(var_name, mime_type, description, details) \
     if (String(mime_type) == mime)                   \
-        return details(String(description), path).value_or({});
+        return details(String(description), path);
     ENUMERATE_DESCRIPTION_CONTENTS(V);
 #undef V
     return {};
