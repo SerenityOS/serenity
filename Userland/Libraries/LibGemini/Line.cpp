@@ -23,12 +23,9 @@ Text::~Text()
 
 String Heading::render_to_html() const
 {
-    StringBuilder builder;
-    builder.appendf("<h%d>", m_level);
-    builder.append(escape_html_entities(m_text.substring_view(m_level, m_text.length() - m_level)));
-    builder.appendf("</h%d>", m_level);
-    return builder.build();
+    return String::formatted("<h{}>{}</h{}>", m_level, escape_html_entities(m_text.substring_view(m_level, m_text.length() - m_level)), m_level);
 }
+
 Heading::~Heading()
 {
 }
