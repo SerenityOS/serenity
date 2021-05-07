@@ -211,7 +211,7 @@ int main(int argc, char** argv)
     }
 
     auto& help_menu = menubar->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("&Chess", app_icon, window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Chess", app_icon, window));
 
     window->set_menubar(move(menubar));
 
