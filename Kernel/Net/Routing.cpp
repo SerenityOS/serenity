@@ -122,6 +122,11 @@ bool RoutingDecision::is_zero() const
     return adapter.is_null() || next_hop.is_zero();
 }
 
+static MACAddress multicast_ethernet_address(IPv4Address const& address)
+{
+    return MACAddress { 0x01, 0x00, 0x5e, (u8)(address[1] & 0x7f), address[2], address[3] };
+}
+
 RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, const RefPtr<NetworkAdapter> through)
 {
     auto matches = [&](auto& adapter) {
@@ -197,6 +202,9 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     //        a broadcast to a subnet rather than a full broadcast.
     if (target_addr == 0xffffffff && matches(adapter))
         return { adapter, { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
+
+    if ((target_addr & IPv4Address { 240, 0, 0, 0 }.to_u32()) == IPv4Address { 224, 0, 0, 0 }.to_u32())
+        return { adapter, multicast_ethernet_address(target) };
 
     {
         Locker locker(arp_table().lock());
