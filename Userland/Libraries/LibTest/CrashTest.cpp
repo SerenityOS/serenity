@@ -13,16 +13,16 @@
 namespace Test {
 
 Crash::Crash(String test_type, Function<Crash::Failure()> crash_function)
-    : m_type(test_type)
+    : m_type(move(test_type))
     , m_crash_function(move(crash_function))
 {
 }
 
-void Crash::run(RunType run_type = RunType::UsingChildProcess)
+bool Crash::run(RunType run_type)
 {
     printf("\x1B[33mTesting\x1B[0m: \"%s\"\n", m_type.characters());
 
-    auto run_crash_and_print_if_error = [this]() {
+    auto run_crash_and_print_if_error = [this]() -> bool {
         auto failure = m_crash_function();
 
         // If we got here something went wrong
@@ -37,10 +37,11 @@ void Crash::run(RunType run_type = RunType::UsingChildProcess)
         default:
             VERIFY_NOT_REACHED();
         }
+        return false;
     };
 
     if (run_type == RunType::UsingCurrentProcess) {
-        run_crash_and_print_if_error();
+        return run_crash_and_print_if_error();
     } else {
 
         // Run the test in a child process so that we do not crash the crash program :^)
@@ -55,8 +56,11 @@ void Crash::run(RunType run_type = RunType::UsingChildProcess)
 
         int status;
         waitpid(pid, &status, 0);
-        if (WIFSIGNALED(status))
+        if (WIFSIGNALED(status)) {
             printf("\x1B[32mPASS\x1B[0m: Terminated with signal %d\n", WTERMSIG(status));
+            return true;
+        }
+        return false;
     }
 }
 
