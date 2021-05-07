@@ -9,6 +9,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/CheckedFormatString.h>
+#include <LibTest/CrashTest.h>
 
 namespace AK {
 template<typename... Parameters>
@@ -100,4 +101,15 @@ void current_test_case_did_fail();
     do {                                                                               \
         ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: {}", __FILE__, __LINE__, message); \
         ::Test::current_test_case_did_fail();                                          \
+    } while (false)
+
+// To use, specify the lambda to execute in a sub process and verify it exits:
+//  EXPECT_CRASH("This should fail", []{
+//      return Test::Crash::Failure::DidNotCrash;
+//  });
+#define EXPECT_CRASH(test_message, test_func)       \
+    do {                                            \
+        Test::Crash crash(test_message, test_func); \
+        if (!crash.run())                           \
+            ::Test::current_test_case_did_fail();   \
     } while (false)
