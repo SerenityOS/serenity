@@ -47,7 +47,7 @@ void DynamicObject::dump() const
 
     for_each_dynamic_entry([&](const DynamicObject::DynamicEntry& entry) {
         String name_field = String::formatted("({})", name_for_dtag(entry.tag()));
-        builder.appendf("0x%08X %-17s0x%X\n", entry.tag(), name_field.characters(), entry.val());
+        builder.appendff("{:#08x} {:17} {:#08x}\n", entry.tag(), name_field, entry.val());
         num_dynamic_sections++;
         return IterationDecision::Continue;
     });
