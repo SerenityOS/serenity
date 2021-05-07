@@ -6,6 +6,7 @@
 
 #include <AK/MappedFile.h>
 #include <AK/Vector.h>
+#include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileStream.h>
 #include <LibCore/MimeData.h>
@@ -34,9 +35,27 @@ static Optional<String> image_details(const String& description, const String& p
     return String::formatted("{}, {} x {}", description, image_decoder->width(), image_decoder->height());
 }
 
+static Optional<String> gzip_details(String description, const String& path)
+{
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error())
+        return {};
+
+    auto& mapped_file = *file_or_error.value();
+    if (!Compress::GzipDecompressor::is_likely_compressed(mapped_file.bytes()))
+        return {};
+
+    auto gzip_details = Compress::GzipDecompressor::describe_header(mapped_file.bytes());
+    if (!gzip_details.has_value())
+        return {};
+
+    return String::formatted("{}, {}", description, gzip_details.value());
+}
+
 #define ENUMERATE_MIME_TYPE_DESCRIPTIONS                                                               \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/javascript", "JavaScript source", description_only) \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/json", "JSON data", description_only)               \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/gzip", "gzip compressed data", gzip_details)              \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/bmp", "BMP image data", image_details)                    \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/gif", "GIF image data", image_details)                    \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/jpeg", "JPEG image data", image_details)                  \
