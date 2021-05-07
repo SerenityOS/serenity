@@ -150,7 +150,7 @@ public:
 
     virtual String class_name() const override
     {
-        return String::formatted("SHA{%zu}", DigestSize * 8);
+        return String::formatted("SHA{}", DigestSize * 8);
     }
 
     inline virtual void reset() override
