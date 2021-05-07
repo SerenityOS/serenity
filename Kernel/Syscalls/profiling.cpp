@@ -7,7 +7,7 @@
 #include <Kernel/CoreDump.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -27,12 +27,13 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
             g_global_perf_events->clear();
         else
             g_global_perf_events = PerformanceEventBuffer::try_create_with_size(32 * MiB).leak_ptr();
+
         ScopedSpinLock lock(g_processes_lock);
+        g_profiling_all_threads = true;
         Process::for_each([](auto& process) {
-            g_global_perf_events->add_process(process, ProcessEventType::Create);
+            PerformanceManager::add_process_created_event(process);
             return IterationDecision::Continue;
         });
-        g_profiling_all_threads = true;
         return 0;
     }
 

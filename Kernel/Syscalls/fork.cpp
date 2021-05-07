@@ -7,7 +7,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
-#include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/Region.h>
 
@@ -85,10 +85,7 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
         g_processes->prepend(child);
     }
 
-    if (g_profiling_all_threads) {
-        VERIFY(g_global_perf_events);
-        g_global_perf_events->add_process(*child, ProcessEventType::Create);
-    }
+    PerformanceManager::add_process_created_event(*child);
 
     ScopedSpinLock lock(g_scheduler_lock);
     child_first_thread->set_affinity(Thread::current()->affinity());
