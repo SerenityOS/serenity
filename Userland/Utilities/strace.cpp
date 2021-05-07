@@ -148,13 +148,17 @@ int main(int argc, char** argv)
 
         u32 res = regs.eax;
 
-        trace_file->printf("%s(0x%x, 0x%x, 0x%x)\t=%d\n",
-            Syscall::to_string(
-                (Syscall::Function)syscall_index),
+        auto string = String::formatted("{}({:#08x}, {:#08x}, {:#08x})\t={}\n",
+            Syscall::to_string((Syscall::Function)syscall_index),
             arg1,
             arg2,
             arg3,
             res);
+
+        if (!trace_file->write(string)) {
+            warnln("write: {}", trace_file->error_string());
+            return 1;
+        }
     }
 
     return 0;
