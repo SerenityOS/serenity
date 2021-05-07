@@ -27,10 +27,10 @@ void UndoStack::undo()
             if (m_stack_index >= m_stack.size())
                 break;
 
-            auto& container = m_stack[m_stack_index++];
-            if (container.m_undo_vector.size() == 0)
+            auto& combo = m_stack[m_stack_index++];
+            if (combo.commands.size() == 0)
                 continue;
-            for (auto& command : container.m_undo_vector)
+            for (auto& command : combo.commands)
                 command.undo();
             break;
         }
@@ -48,9 +48,9 @@ void UndoStack::redo()
         return;
 
     m_stack_index -= 1;
-    auto& vector = m_stack[m_stack_index].m_undo_vector;
-    for (int i = vector.size() - 1; i >= 0; i--)
-        vector[i].redo();
+    auto& commands = m_stack[m_stack_index].commands;
+    for (int i = commands.size() - 1; i >= 0; i--)
+        commands[i].redo();
 }
 
 void UndoStack::push(NonnullOwnPtr<Command>&& command)
@@ -73,18 +73,17 @@ void UndoStack::push(NonnullOwnPtr<Command>&& command)
         finalize_current_combo();
     }
 
-    auto& current_vector = m_stack.first().m_undo_vector;
-    current_vector.prepend(move(command));
+    m_stack.first().commands.prepend(move(command));
 }
 
 void UndoStack::finalize_current_combo()
 {
     if (m_stack_index > 0)
         return;
-    if (m_stack.size() != 0 && m_stack.first().m_undo_vector.size() == 0)
+    if (m_stack.size() != 0 && m_stack.first().commands.size() == 0)
         return;
 
-    auto undo_commands_container = make<UndoCommandsContainer>();
+    auto undo_commands_container = make<Combo>();
     m_stack.prepend(move(undo_commands_container));
 
     if (m_clean_index.has_value())
@@ -94,7 +93,7 @@ void UndoStack::finalize_current_combo()
 void UndoStack::set_current_unmodified()
 {
     // Skip empty container
-    if (can_undo() && m_stack[m_stack_index].m_undo_vector.is_empty())
+    if (can_undo() && m_stack[m_stack_index].commands.is_empty())
         m_clean_index = m_stack_index + 1;
     else
         m_clean_index = m_stack_index;
