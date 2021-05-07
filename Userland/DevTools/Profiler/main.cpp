@@ -105,7 +105,20 @@ int main(int argc, char** argv)
         }
         if (!event_count)
             continue;
-        timeline_header_container->add<TimelineHeader>(process);
+        auto& timeline_header = timeline_header_container->add<TimelineHeader>(*profile, process);
+        timeline_header.set_shrink_to_fit(true);
+        timeline_header.on_selection_change = [&](bool selected) {
+            if (selected) {
+                auto end_valid = process.end_valid == 0 ? profile->last_timestamp() : process.end_valid;
+                profile->set_process_filter(process.pid, process.start_valid, end_valid);
+            } else
+                profile->clear_process_filter();
+
+            timeline_header_container->for_each_child_widget([](auto& other_timeline_header) {
+                static_cast<TimelineHeader&>(other_timeline_header).update_selection();
+                return IterationDecision::Continue;
+            });
+        };
         timeline_view->add<TimelineTrack>(*timeline_view, *profile, process);
     }
 
