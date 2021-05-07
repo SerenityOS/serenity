@@ -10,7 +10,7 @@ $ Playground [file]
 
 ## Arguments
 
-* file: Path of GML file to load
+* `file`: Path of GML file to load
 
 ## Description
 

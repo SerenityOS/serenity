@@ -10,7 +10,7 @@ $ Inspector [pid]
 
 ## Arguments
 
-* pid: Process ID to inspect
+* `pid`: Process ID to inspect
 
 ## Description
 
