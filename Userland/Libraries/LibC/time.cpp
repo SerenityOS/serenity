@@ -223,34 +223,34 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                 builder.append(mon_long_names[tm->tm_mon]);
                 break;
             case 'C':
-                builder.appendf("%02d", (tm->tm_year + 1900) / 100);
+                builder.appendff("{:02}", (tm->tm_year + 1900) / 100);
                 break;
             case 'd':
-                builder.appendf("%02d", tm->tm_mday);
+                builder.appendff("{:02}", tm->tm_mday);
                 break;
             case 'D':
-                builder.appendf("%02d/%02d/%02d", tm->tm_mon + 1, tm->tm_mday, (tm->tm_year + 1900) % 100);
+                builder.appendff("{:02}/{:02}/{:02}", tm->tm_mon + 1, tm->tm_mday, (tm->tm_year + 1900) % 100);
                 break;
             case 'e':
-                builder.appendf("%2d", tm->tm_mday);
+                builder.appendff("{:2}", tm->tm_mday);
                 break;
             case 'h':
                 builder.append(mon_short_names[tm->tm_mon]);
                 break;
             case 'H':
-                builder.appendf("%02d", tm->tm_hour);
+                builder.appendff("{:02}", tm->tm_hour);
                 break;
             case 'I':
-                builder.appendf("%02d", tm->tm_hour % 12);
+                builder.appendff("{:02}", tm->tm_hour % 12);
                 break;
             case 'j':
-                builder.appendf("%03d", tm->tm_yday + 1);
+                builder.appendff("{:03}", tm->tm_yday + 1);
                 break;
             case 'm':
-                builder.appendf("%02d", tm->tm_mon + 1);
+                builder.appendff("{:02}", tm->tm_mon + 1);
                 break;
             case 'M':
-                builder.appendf("%02d", tm->tm_min);
+                builder.appendff("{:02}", tm->tm_min);
                 break;
             case 'n':
                 builder.append('\n');
@@ -259,27 +259,27 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                 builder.append(tm->tm_hour < 12 ? "a.m." : "p.m.");
                 break;
             case 'r':
-                builder.appendf("%02d:%02d:%02d %s", tm->tm_hour % 12, tm->tm_min, tm->tm_sec, tm->tm_hour < 12 ? "a.m." : "p.m.");
+                builder.appendff("{:02}:{:02}:{:02} {}", tm->tm_hour % 12, tm->tm_min, tm->tm_sec, tm->tm_hour < 12 ? "a.m." : "p.m.");
                 break;
             case 'R':
-                builder.appendf("%02d:%02d", tm->tm_hour, tm->tm_min);
+                builder.appendff("{:02}:{:02}", tm->tm_hour, tm->tm_min);
                 break;
             case 'S':
-                builder.appendf("%02d", tm->tm_sec);
+                builder.appendff("{:02}", tm->tm_sec);
                 break;
             case 't':
                 builder.append('\t');
                 break;
             case 'T':
-                builder.appendf("%02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
+                builder.appendff("{:02}:{:02}:{:02}", tm->tm_hour, tm->tm_min, tm->tm_sec);
                 break;
             case 'u':
-                builder.appendf("%d", tm->tm_wday ? tm->tm_wday : 7);
+                builder.appendff("{}", tm->tm_wday ? tm->tm_wday : 7);
                 break;
             case 'U': {
                 const int wday_of_year_beginning = (tm->tm_wday + 6 * tm->tm_yday) % 7;
                 const int week_number = (tm->tm_yday + wday_of_year_beginning) / 7;
-                builder.appendf("%02d", week_number);
+                builder.appendff("{:02}", week_number);
                 break;
             }
             case 'V': {
@@ -296,23 +296,23 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                             --week_number;
                     }
                 }
-                builder.appendf("%02d", week_number);
+                builder.appendff("{:02}", week_number);
                 break;
             }
             case 'w':
-                builder.appendf("%d", tm->tm_wday);
+                builder.appendff("{}", tm->tm_wday);
                 break;
             case 'W': {
                 const int wday_of_year_beginning = (tm->tm_wday + 6 + 6 * tm->tm_yday) % 7;
                 const int week_number = (tm->tm_yday + wday_of_year_beginning) / 7;
-                builder.appendf("%02d", week_number);
+                builder.appendff("{:02}", week_number);
                 break;
             }
             case 'y':
-                builder.appendf("%02d", (tm->tm_year + 1900) % 100);
+                builder.appendff("{:02}", (tm->tm_year + 1900) % 100);
                 break;
             case 'Y':
-                builder.appendf("%d", tm->tm_year + 1900);
+                builder.appendff("{}", tm->tm_year + 1900);
                 break;
             case '%':
                 builder.append('%');
