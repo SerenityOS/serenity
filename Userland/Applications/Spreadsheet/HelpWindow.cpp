@@ -164,7 +164,7 @@ String HelpWindow::render(const StringView& key)
     if (argc > 0)
         markdown_builder.appendff("{} required argument(s):\n", argc);
     else
-        markdown_builder.appendf("No required arguments.\n");
+        markdown_builder.append("No required arguments.\n");
 
     for (size_t i = 0; i < argc; ++i)
         markdown_builder.appendff("- `{}`\n", argnames.at(i).to_string());
