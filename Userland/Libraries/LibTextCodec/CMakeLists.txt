@@ -3,4 +3,4 @@ set(SOURCES
 )
 
 serenity_lib(LibTextCodec textcodec)
-target_link_libraries(LibTextCodec LibC)
+target_link_libraries(LibTextCodec ${LIBRARY_LIBC})

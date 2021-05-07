@@ -25,4 +25,8 @@ set(SOURCES
 )
 
 serenity_lib(LibCrypto crypto)
-target_link_libraries(LibCrypto LibC)
+target_link_libraries(LibCrypto ${LIBRARY_LIBC})
+
+if(BUILD_LAGOM)
+    target_link_libraries(LibCrypto LibCore)
+endif()

@@ -4,4 +4,4 @@ set(SOURCES
 )
 
 serenity_lib(LibCards cards)
-target_link_libraries(LibCards LibC LibCore)
+target_link_libraries(LibCards ${LIBRARY_LIBC} LibCore)

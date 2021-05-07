@@ -6,4 +6,4 @@ set(SOURCES
 )
 
 serenity_lib(LibTest test)
-target_link_libraries(LibTest LibC)
+target_link_libraries(LibTest ${LIBRARY_LIBC})

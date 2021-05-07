@@ -5,4 +5,4 @@ set(SOURCES
 )
 
 serenity_lib(LibTTF ttf)
-target_link_libraries(LibTTF LibM LibCore LibTextCodec)
+target_link_libraries(LibTTF ${LIBRARY_LIBM} LibCore LibTextCodec)
