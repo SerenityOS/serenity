@@ -320,7 +320,7 @@ static FloatT internal_gamma(FloatT x) NOEXCEPT
     }
 
     // Stirling approximation
-    return sqrtl(2.0 * M_PI / static_cast<long double>(x)) * powl(static_cast<long double>(x) / M_E, static_cast<long double>(x));
+    return sqrtl(2.0 * M_PIl / static_cast<long double>(x)) * powl(static_cast<long double>(x) / M_El, static_cast<long double>(x));
 }
 
 extern "C" {
