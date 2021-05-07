@@ -127,7 +127,7 @@ if (BUILD_LAGOM)
         set_target_properties(ntpquery_lagom PROPERTIES OUTPUT_NAME ntpquery)
         target_link_libraries(ntpquery_lagom Lagom)
 
-        add_executable(test-js_lagom ../../Userland/Utilities/test-js.cpp)
+        add_executable(test-js_lagom ../../Tests/LibJS/test-js.cpp)
         set_target_properties(test-js_lagom PROPERTIES OUTPUT_NAME test-js)
         target_link_libraries(test-js_lagom Lagom)
         target_link_libraries(test-js_lagom stdc++)
