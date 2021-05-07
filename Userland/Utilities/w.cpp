@@ -88,7 +88,7 @@ int main()
         if (stat(tty.characters(), &st) == 0) {
             auto idle_time = now - st.st_mtime;
             if (idle_time >= 0) {
-                builder.appendf("%" PRIi64 "s", idle_time);
+                builder.appendff("{}s", idle_time);
                 idle_string = builder.to_string();
             }
         }

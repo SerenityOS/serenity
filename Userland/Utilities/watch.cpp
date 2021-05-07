@@ -26,7 +26,7 @@ static String build_header_string(const Vector<const char*>& command, const stru
 {
     StringBuilder builder;
     builder.appendff("Every {}", interval.tv_sec);
-    builder.appendf(".%ds: \x1b[1m", interval.tv_usec / 100000);
+    builder.appendff(".{}s: \x1b[1m", interval.tv_usec / 100000);
     builder.join(' ', command);
     builder.append("\x1b[0m");
     return builder.build();
