@@ -257,8 +257,6 @@ int main(int argc, char* argv[])
     auto menubar = GUI::Menubar::construct();
 
     auto& file_menu = menubar->add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_about_action("Help", app_icon, window));
-    file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
@@ -267,6 +265,9 @@ int main(int argc, char* argv[])
     go_menu.add_action(*go_back_action);
     go_menu.add_action(*go_forward_action);
     go_menu.add_action(*go_home_action);
+
+    auto& help_menu = menubar->add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_about_action("Help", app_icon, window));
 
     window->set_menubar(move(menubar));
 
