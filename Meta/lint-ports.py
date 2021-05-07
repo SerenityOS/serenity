@@ -193,7 +193,7 @@ def run():
     if from_table_set - ports_set:
         all_good = False
         print('AvailablePorts.md lists ports that do not appear in the file system:')
-        for port in sorted(from_table - ports):
+        for port in sorted(from_table_set - ports_set):
             print(f"    {port}")
 
     if ports_set - from_table_set:
