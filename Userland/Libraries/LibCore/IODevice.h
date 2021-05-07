@@ -84,8 +84,6 @@ public:
     virtual bool open(IODevice::OpenMode) = 0;
     virtual bool close();
 
-    int printf(const char*, ...);
-
     LineIterator line_begin() & { return LineIterator(*this); }
     LineIterator line_end() { return LineIterator(*this, true); }
 
