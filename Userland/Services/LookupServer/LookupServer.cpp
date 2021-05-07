@@ -69,13 +69,13 @@ void LookupServer::load_etc_hosts()
     // The value here is 1 day.
     static constexpr u32 static_ttl = 86400;
 
-    auto add_answer = [this](const DNSName& name, unsigned short record_type, String data) {
+    auto add_answer = [this](const DNSName& name, DNSRecordType record_type, String data) {
         auto it = m_etc_hosts.find(name);
         if (it == m_etc_hosts.end()) {
             m_etc_hosts.set(name, {});
             it = m_etc_hosts.find(name);
         }
-        it->value.empend(name, record_type, (u16)C_IN, static_ttl, data, false);
+        it->value.empend(name, record_type, DNSRecordClass::IN, static_ttl, data, false);
     };
 
     auto file = Core::File::construct("/etc/hosts");
@@ -97,7 +97,7 @@ void LookupServer::load_etc_hosts()
         auto raw_addr = addr.to_in_addr_t();
 
         DNSName name = fields[1];
-        add_answer(name, T_A, String { (const char*)&raw_addr, sizeof(raw_addr) });
+        add_answer(name, DNSRecordType::A, String { (const char*)&raw_addr, sizeof(raw_addr) });
 
         IPv4Address reverse_addr {
             (u8)atoi(sections[3].characters()),
@@ -108,11 +108,11 @@ void LookupServer::load_etc_hosts()
         StringBuilder builder;
         builder.append(reverse_addr.to_string());
         builder.append(".in-addr.arpa");
-        add_answer(builder.to_string(), T_PTR, name.as_string());
+        add_answer(builder.to_string(), DNSRecordType::PTR, name.as_string());
     }
 }
 
-Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short record_type)
+Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record_type)
 {
     dbgln_if(LOOKUPSERVER_DEBUG, "Got request for '{}'", name.as_string());
 
@@ -190,7 +190,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short recor
     return answers;
 }
 
-Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
+Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& nameserver, bool& did_get_response, DNSRecordType record_type, ShouldRandomizeCase should_randomize_case)
 {
     DNSPacket request;
     request.set_is_query();
@@ -198,7 +198,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& namese
     DNSName name_in_question = name;
     if (should_randomize_case == ShouldRandomizeCase::Yes)
         name_in_question.randomize_case();
-    request.add_question({ name_in_question, record_type, C_IN, false });
+    request.add_question({ name_in_question, record_type, DNSRecordClass::IN, false });
 
     auto buffer = request.to_byte_buffer();
 

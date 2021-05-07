@@ -15,7 +15,7 @@ namespace LookupServer {
 
 class DNSQuestion {
 public:
-    DNSQuestion(const DNSName& name, u16 record_type, u16 class_code, bool mdns_wants_unicast_response)
+    DNSQuestion(const DNSName& name, DNSRecordType record_type, DNSRecordClass class_code, bool mdns_wants_unicast_response)
         : m_name(name)
         , m_record_type(record_type)
         , m_class_code(class_code)
@@ -23,16 +23,16 @@ public:
     {
     }
 
-    u16 record_type() const { return m_record_type; }
-    u16 class_code() const { return m_class_code; }
+    DNSRecordType record_type() const { return m_record_type; }
+    DNSRecordClass class_code() const { return m_class_code; }
     u16 raw_class_code() const { return (u16)m_class_code | (m_mdns_wants_unicast_response ? MDNS_WANTS_UNICAST_RESPONSE : 0); }
     const DNSName& name() const { return m_name; }
     bool mdns_wants_unicast_response() const { return m_mdns_wants_unicast_response; }
 
 private:
     DNSName m_name;
-    u16 m_record_type { 0 };
-    u16 m_class_code { 0 };
+    DNSRecordType m_record_type { 0 };
+    DNSRecordClass m_class_code { 0 };
     bool m_mdns_wants_unicast_response { false };
 };
 
