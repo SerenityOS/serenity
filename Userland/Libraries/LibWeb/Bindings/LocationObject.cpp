@@ -74,11 +74,7 @@ JS_DEFINE_NATIVE_GETTER(LocationObject::host_getter)
 {
     auto& window = static_cast<WindowObject&>(global_object);
     auto url = window.impl().document().url();
-    StringBuilder builder;
-    builder.append(url.host());
-    builder.append(':');
-    builder.appendf("%u", url.port());
-    return JS::js_string(vm, builder.to_string());
+    return JS::js_string(vm, String::formatted("{}:{}", url.host(), url.port()));
 }
 
 JS_DEFINE_NATIVE_GETTER(LocationObject::hash_getter)
