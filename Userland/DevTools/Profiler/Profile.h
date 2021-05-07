@@ -174,6 +174,7 @@ public:
     void set_process_filter(pid_t pid, u64 start_valid, u64 end_valid);
     void clear_process_filter();
     bool has_process_filter() const { return m_has_process_filter; }
+    bool process_filter_contains(pid_t pid, u32 timestamp);
 
     bool is_inverted() const { return m_inverted; }
     void set_inverted(bool);
