@@ -3,7 +3,6 @@ set(SOURCES
         main.cpp
         IndividualSampleModel.cpp
         Process.cpp
-        ProcessPickerWidget.cpp
         Profile.cpp
         ProfileModel.cpp
         SamplesModel.cpp
