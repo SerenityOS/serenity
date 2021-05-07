@@ -152,7 +152,15 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
             data = DNSName::parse(raw_data, dummy_offset, raw_size).as_string();
             break;
         }
+        case DNSRecordType::CNAME:
+            // Fall through
         case DNSRecordType::A:
+            // Fall through
+        case DNSRecordType::TXT:
+            // Fall through
+        case DNSRecordType::AAAA:
+            // Fall through
+        case DNSRecordType::SRV:
             data = { record.data(), record.data_length() };
             break;
         default:

@@ -52,6 +52,15 @@ void AK::Formatter<LookupServer::DNSRecordType>::format(AK::FormatBuilder& build
     case LookupServer::DNSRecordType::MX:
         builder.put_string("MX");
         return;
+    case LookupServer::DNSRecordType::TXT:
+        builder.put_string("TXT");
+        return;
+    case LookupServer::DNSRecordType::AAAA:
+        builder.put_string("AAAA");
+        return;
+    case LookupServer::DNSRecordType::SRV:
+        builder.put_string("SRV");
+        return;
     }
 
     builder.put_string("DNS record type ");
