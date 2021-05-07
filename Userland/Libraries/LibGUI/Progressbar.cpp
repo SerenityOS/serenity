@@ -66,9 +66,9 @@ void Progressbar::paint_event(PaintEvent& event)
         if (m_format == Format::Percentage) {
             float range_size = m_max - m_min;
             float progress = (m_value - m_min) / range_size;
-            builder.appendf("%d%%", (int)(progress * 100));
+            builder.appendff("{}%", (int)(progress * 100));
         } else if (m_format == Format::ValueSlashMax) {
-            builder.appendf("%d/%d", m_value, m_max);
+            builder.appendff("{}/{}", m_value, m_max);
         }
         progress_text = builder.to_string();
     }
