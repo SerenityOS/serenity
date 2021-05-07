@@ -96,10 +96,8 @@ void Profile::rebuild_tree()
                 continue;
         }
 
-        if (has_process_filter()) {
-            if (event.pid != m_process_filter_pid || event.timestamp < m_process_filter_start_valid || event.timestamp > m_process_filter_end_valid)
-                continue;
-        }
+        if (!process_filter_contains(event.pid, event.timestamp))
+            continue;
 
         m_filtered_event_indices.append(event_index);
 
@@ -402,6 +400,14 @@ void Profile::clear_process_filter()
     if (m_disassembly_model)
         m_disassembly_model->update();
     m_samples_model->update();
+}
+
+bool Profile::process_filter_contains(pid_t pid, u32 timestamp)
+{
+    if (!has_process_filter())
+        return true;
+
+    return (pid == m_process_filter_pid && timestamp >= m_process_filter_start_valid && timestamp <= m_process_filter_end_valid);
 }
 
 void Profile::set_inverted(bool inverted)
