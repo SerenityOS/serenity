@@ -196,7 +196,7 @@ void Service::spawn(int socket_fd)
             VERIFY(m_sockets.size() == 1);
 
             int fd = dup(socket_fd);
-            builder.appendf("%s:%d", m_sockets[0].path.characters(), fd);
+            builder.appendff("{}:{}", m_sockets[0].path, fd);
         } else {
             // We were spawned as a regular process, so dup every socket for this
             // service and let the service know via SOCKET_TAKEOVER.
@@ -205,8 +205,8 @@ void Service::spawn(int socket_fd)
 
                 int new_fd = dup(socket.fd);
                 if (i != 0)
-                    builder.append(" ");
-                builder.appendf("%s:%d", socket.path.characters(), new_fd);
+                    builder.append(' ');
+                builder.appendff("{}:{}", socket.path, new_fd);
             }
         }
 

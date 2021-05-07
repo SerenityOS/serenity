@@ -153,12 +153,12 @@ struct ParsedDHCPv4Options {
     {
         StringBuilder builder;
         builder.append("DHCP Options (");
-        builder.appendf("%zu", options.size());
+        builder.appendff("{}", options.size());
         builder.append(" entries)\n");
         for (auto& opt : options) {
-            builder.appendf("\toption %d (%d bytes):", (u8)opt.key, (u8)opt.value.length);
+            builder.appendff("\toption {} ({} bytes):", (u8)opt.key, (u8)opt.value.length);
             for (auto i = 0; i < opt.value.length; ++i)
-                builder.appendf(" %u ", ((const u8*)opt.value.value)[i]);
+                builder.appendff(" {} ", ((const u8*)opt.value.value)[i]);
             builder.append('\n');
         }
         return builder.build();
