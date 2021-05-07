@@ -58,7 +58,7 @@ private:
     virtual KResult truncate(u64) override;
     virtual KResultOr<int> get_block_address(int) override;
 
-    KResult write_directory(const Vector<Ext2FSDirectoryEntry>&);
+    KResult write_directory(Vector<Ext2FSDirectoryEntry>&);
     bool populate_lookup_cache() const;
     KResult resize(u64);
     KResult write_indirect_block(BlockBasedFS::BlockIndex, Span<BlockBasedFS::BlockIndex>);

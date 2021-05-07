@@ -27,6 +27,7 @@ struct Ext2FSDirectoryEntry {
     String name;
     InodeIndex inode_index { 0 };
     u8 file_type { 0 };
+    u16 record_length { 0 };
 };
 
 static u8 to_ext2_file_type(mode_t mode)
@@ -1089,45 +1090,52 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
     return KSuccess;
 }
 
-KResult Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries)
+KResult Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries)
 {
     Locker locker(m_lock);
-
-    int directory_size = 0;
-    for (auto& entry : entries)
-        directory_size += EXT2_DIR_REC_LEN(entry.name.length());
-
     auto block_size = fs().block_size();
 
-    int blocks_needed = ceil_div(static_cast<size_t>(directory_size), block_size);
-    int occupied_size = blocks_needed * block_size;
-
-    dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): New directory contents to write (size {}, occupied {}):", identifier(), directory_size, occupied_size);
-
-    auto directory_data = ByteBuffer::create_uninitialized(occupied_size);
-    OutputMemoryStream stream { directory_data };
-
+    // Calculate directory size and record length of entries so that
+    // the following constraints are met:
+    // - All used blocks must be entirely filled.
+    // - Entries are aligned on a 4-byte boundary.
+    // - No entry may span multiple blocks.
+    size_t directory_size = 0;
+    size_t space_in_block = block_size;
     for (size_t i = 0; i < entries.size(); ++i) {
         auto& entry = entries[i];
+        entry.record_length = EXT2_DIR_REC_LEN(entry.name.length());
+        space_in_block -= entry.record_length;
+        if (i + 1 < entries.size()) {
+            if (EXT2_DIR_REC_LEN(entries[i + 1].name.length()) > space_in_block) {
+                entry.record_length += space_in_block;
+                space_in_block = block_size;
+            }
+        } else {
+            entry.record_length += space_in_block;
+        }
+        directory_size += entry.record_length;
+    }
 
-        int record_length = EXT2_DIR_REC_LEN(entry.name.length());
-        if (i == entries.size() - 1)
-            record_length += occupied_size - directory_size;
+    dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): New directory contents to write (size {}):", identifier(), directory_size);
 
-        dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): Writing inode: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", identifier(), entry.inode_index, u16(entry.name.length()), u16(record_length), u8(entry.file_type), entry.name);
+    auto directory_data = ByteBuffer::create_uninitialized(directory_size);
+    OutputMemoryStream stream { directory_data };
+
+    for (auto& entry : entries) {
+        dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): Writing inode: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", identifier(), entry.inode_index, u16(entry.name.length()), u16(entry.record_length), u8(entry.file_type), entry.name);
 
         stream << u32(entry.inode_index.value());
-        stream << u16(record_length);
+        stream << u16(entry.record_length);
         stream << u8(entry.name.length());
         stream << u8(entry.file_type);
         stream << entry.name.bytes();
-
-        int padding = record_length - entry.name.length() - 8;
+        int padding = entry.record_length - entry.name.length() - 8;
         for (int j = 0; j < padding; ++j)
             stream << u8(0);
     }
 
-    stream.fill_to_end(0);
+    VERIFY(stream.is_end());
 
     if (auto result = resize(stream.size()); result.is_error())
         return result;
