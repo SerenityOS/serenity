@@ -183,6 +183,13 @@ public:
 
     constexpr void div(T other)
     {
+        if constexpr (IsSigned<T>) {
+            // Ensure that the resulting value won't be out of range, this can only happen when dividing by -1.
+            if (other == -1 && m_value == NumericLimits<T>::min()) {
+                m_overflow = true;
+                return;
+            }
+        }
         m_value /= other;
     }
 
