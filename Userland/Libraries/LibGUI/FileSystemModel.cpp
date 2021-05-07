@@ -268,20 +268,19 @@ static String permission_string(mode_t mode)
     else
         builder.append("?");
 
-    builder.appendf("%c%c%c%c%c%c%c%c",
-        mode & S_IRUSR ? 'r' : '-',
-        mode & S_IWUSR ? 'w' : '-',
-        mode & S_ISUID ? 's' : (mode & S_IXUSR ? 'x' : '-'),
-        mode & S_IRGRP ? 'r' : '-',
-        mode & S_IWGRP ? 'w' : '-',
-        mode & S_ISGID ? 's' : (mode & S_IXGRP ? 'x' : '-'),
-        mode & S_IROTH ? 'r' : '-',
-        mode & S_IWOTH ? 'w' : '-');
+    builder.append(mode & S_IRUSR ? 'r' : '-');
+    builder.append(mode & S_IWUSR ? 'w' : '-');
+    builder.append(mode & S_ISUID ? 's' : (mode & S_IXUSR ? 'x' : '-'));
+    builder.append(mode & S_IRGRP ? 'r' : '-');
+    builder.append(mode & S_IWGRP ? 'w' : '-');
+    builder.append(mode & S_ISGID ? 's' : (mode & S_IXGRP ? 'x' : '-'));
+    builder.append(mode & S_IROTH ? 'r' : '-');
+    builder.append(mode & S_IWOTH ? 'w' : '-');
 
     if (mode & S_ISVTX)
-        builder.append("t");
+        builder.append('t');
     else
-        builder.appendf("%c", mode & S_IXOTH ? 'x' : '-');
+        builder.append(mode & S_IXOTH ? 'x' : '-');
     return builder.to_string();
 }
 
