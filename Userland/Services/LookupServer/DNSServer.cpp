@@ -43,7 +43,7 @@ void DNSServer::handle_client()
     response.set_id(request.id());
 
     for (auto& question : request.questions()) {
-        if (question.class_code() != C_IN)
+        if (question.class_code() != DNSRecordClass::IN)
             continue;
         response.add_question(question);
         auto answers = lookup_server.lookup(question.name(), question.record_type());

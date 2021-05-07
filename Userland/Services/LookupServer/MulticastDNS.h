@@ -18,7 +18,7 @@ namespace LookupServer {
 class MulticastDNS : public Core::UDPServer {
     C_OBJECT(MulticastDNS)
 public:
-    Vector<DNSAnswer> lookup(const DNSName&, unsigned short record_type);
+    Vector<DNSAnswer> lookup(const DNSName&, DNSRecordType record_type);
 
 private:
     explicit MulticastDNS(Object* parent = nullptr);

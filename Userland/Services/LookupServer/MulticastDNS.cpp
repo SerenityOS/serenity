@@ -87,8 +87,8 @@ void MulticastDNS::announce()
         auto raw_addr = address.to_in_addr_t();
         DNSAnswer answer {
             m_hostname,
-            T_A,
-            C_IN,
+            DNSRecordType::A,
+            DNSRecordClass::IN,
             120,
             String { (const char*)&raw_addr, sizeof(raw_addr) },
             true,
@@ -138,11 +138,11 @@ Vector<IPv4Address> MulticastDNS::local_addresses() const
     return addresses;
 }
 
-Vector<DNSAnswer> MulticastDNS::lookup(const DNSName& name, unsigned short record_type)
+Vector<DNSAnswer> MulticastDNS::lookup(const DNSName& name, DNSRecordType record_type)
 {
     DNSPacket request;
     request.set_is_query();
-    request.add_question({ name, record_type, C_IN, false });
+    request.add_question({ name, record_type, DNSRecordClass::IN, false });
 
     if (emit_packet(request) < 0) {
         perror("failed to emit request packet");

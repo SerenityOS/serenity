@@ -30,7 +30,7 @@ void ClientConnection::die()
 
 Messages::LookupServer::LookupNameResponse ClientConnection::lookup_name(String const& name)
 {
-    auto answers = LookupServer::the().lookup(name, T_A);
+    auto answers = LookupServer::the().lookup(name, DNSRecordType::A);
     if (answers.is_empty())
         return { 1, Vector<String>() };
     Vector<String> addresses;
@@ -50,7 +50,7 @@ Messages::LookupServer::LookupAddressResponse ClientConnection::lookup_address(S
         ip_address[2],
         ip_address[1],
         ip_address[0]);
-    auto answers = LookupServer::the().lookup(name, T_PTR);
+    auto answers = LookupServer::the().lookup(name, DNSRecordType::PTR);
     if (answers.is_empty())
         return { 1, String() };
     return { 0, answers[0].record_data() };
