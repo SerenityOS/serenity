@@ -146,7 +146,7 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(c
         }
     }
 
-    for (auto& preprocessor_name : document.parser().definitions().keys()) {
+    for (auto& preprocessor_name : document.parser().preprocessor_definitions().keys()) {
         if (preprocessor_name.starts_with(partial_text)) {
             suggestions.append({ preprocessor_name.to_string(), partial_text.length(), GUI::AutocompleteProvider::CompletionKind::PreprocessorDefinition });
         }
@@ -489,7 +489,7 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
         auto included_document = get_or_create_document_data(document_path_from_include_path(include));
         if (!included_document)
             continue;
-        for (auto item : included_document->parser().definitions())
+        for (auto item : included_document->parser().preprocessor_definitions())
             all_definitions.set(move(item.key), move(item.value));
     }
 
