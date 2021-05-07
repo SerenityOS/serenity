@@ -46,12 +46,6 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
         return {};
     auto content = document->text();
     auto document_data = create_document_data(document->text(), file);
-    auto root = document_data->parser().parse();
-    for (auto& path : document_data->preprocessor().included_paths()) {
-        get_or_create_document_data(document_path_from_include_path(path));
-    }
-    if constexpr (CPP_LANGUAGE_SERVER_DEBUG)
-        root->dump(0);
 
     update_declared_symbols(*document_data);
 
@@ -494,6 +488,12 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     }
 
     document_data->m_parser = make<Parser>(document_data->preprocessor().processed_text(), filename, move(all_definitions));
+
+    auto root = document_data->parser().parse();
+
+    if constexpr (CPP_LANGUAGE_SERVER_DEBUG)
+        root->dump(0);
+
     return document_data;
 }
 
