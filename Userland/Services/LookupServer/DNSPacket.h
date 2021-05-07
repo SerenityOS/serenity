@@ -13,15 +13,6 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
-#define T_A 1
-#define T_NS 2
-#define T_CNAME 5
-#define T_SOA 6
-#define T_PTR 12
-#define T_MX 15
-
-#define C_IN 1
-
 namespace LookupServer {
 
 enum class ShouldRandomizeCase {
