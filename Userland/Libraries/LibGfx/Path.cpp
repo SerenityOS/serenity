@@ -197,7 +197,7 @@ String Path::to_string() const
             builder.append("Invalid");
             break;
         }
-        builder.appendf("(%s", segment.point().to_string().characters());
+        builder.appendff("({}", segment.point());
 
         switch (segment.type()) {
         case Segment::Type::QuadraticBezierCurveTo:
