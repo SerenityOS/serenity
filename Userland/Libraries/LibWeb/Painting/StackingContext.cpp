@@ -22,24 +22,80 @@ StackingContext::StackingContext(Box& box, StackingContext* parent)
         m_parent->m_children.append(this);
 
         // FIXME: Don't sort on every append..
+        // FIXME: Apparently this also breaks tree order inside layers
         quick_sort(m_parent->m_children, [](auto& a, auto& b) {
             return a->m_box.computed_values().z_index().value_or(0) < b->m_box.computed_values().z_index().value_or(0);
         });
     }
 }
 
-void StackingContext::paint(PaintContext& context, PaintPhase phase)
+void StackingContext::paint_descendants(PaintContext& context, Node& box, StackingContextPaintPhase phase)
 {
-    if (!is<InitialContainingBlockBox>(m_box)) {
-        m_box.paint(context, phase);
-    } else {
-        // NOTE: InitialContainingBlockBox::paint() merely calls StackingContext::paint()
-        //       so we call its base class instead.
-        downcast<InitialContainingBlockBox>(m_box).BlockBox::paint(context, phase);
-    }
+    box.for_each_child([&](auto& child) {
+        switch (phase) {
+        case StackingContextPaintPhase::BackgroundAndBorders:
+            if (!child.is_floating() && !child.is_positioned()) {
+                child.paint(context, PaintPhase::Background);
+                child.paint(context, PaintPhase::Border);
+                paint_descendants(context, child, phase);
+            }
+            break;
+        case StackingContextPaintPhase::Floats:
+            if (!child.is_positioned()) {
+                if (child.is_floating()) {
+                    child.paint(context, PaintPhase::Background);
+                    child.paint(context, PaintPhase::Border);
+                    paint_descendants(context, child, StackingContextPaintPhase::BackgroundAndBorders);
+                }
+                paint_descendants(context, child, phase);
+            }
+            break;
+        case StackingContextPaintPhase::Foreground:
+            if (!child.is_positioned()) {
+                child.paint(context, PaintPhase::Foreground);
+                child.before_children_paint(context, PaintPhase::Foreground);
+                paint_descendants(context, child, phase);
+                child.after_children_paint(context, PaintPhase::Foreground);
+            }
+            break;
+        case StackingContextPaintPhase::FocusAndOverlay:
+            if (context.has_focus()) {
+                child.paint(context, PaintPhase::FocusOutline);
+            }
+            child.paint(context, PaintPhase::Overlay);
+            paint_descendants(context, child, phase);
+            break;
+        }
+    });
+}
+
+void StackingContext::paint(PaintContext& context)
+{
+    // For a more elaborate description of the algorithm, see CSS 2.1 Appendix E
+    // Draw the background and borders for the context root (steps 1, 2)
+    m_box.paint(context, PaintPhase::Background);
+    m_box.paint(context, PaintPhase::Border);
+    // Draw positioned descendants with negative z-indices (step 3)
     for (auto* child : m_children) {
-        child->paint(context, phase);
+        if (child->m_box.computed_values().z_index().has_value() && child->m_box.computed_values().z_index().value() < 0)
+            child->paint(context);
     }
+    // Draw the background and borders for block-level children (step 4)
+    paint_descendants(context, m_box, StackingContextPaintPhase::BackgroundAndBorders);
+    // Draw the non-positioned floats (step 5)
+    paint_descendants(context, m_box, StackingContextPaintPhase::Floats);
+    // Draw inline content, replaced content, etc. (steps 6, 7)
+    paint_descendants(context, m_box, StackingContextPaintPhase::Foreground);
+    // Draw other positioned descendants (steps 8, 9)
+    for (auto* child : m_children) {
+        if (child->m_box.computed_values().z_index().has_value() && child->m_box.computed_values().z_index().value() < 0)
+            continue;
+        child->paint(context);
+    }
+
+    m_box.paint(context, PaintPhase::FocusOutline);
+    m_box.paint(context, PaintPhase::Overlay);
+    paint_descendants(context, m_box, StackingContextPaintPhase::FocusAndOverlay);
 }
 
 HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, HitTestType type) const

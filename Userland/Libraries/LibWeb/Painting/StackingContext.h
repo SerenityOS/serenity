@@ -18,7 +18,15 @@ public:
     StackingContext* parent() { return m_parent; }
     const StackingContext* parent() const { return m_parent; }
 
-    void paint(PaintContext&, PaintPhase);
+    enum class StackingContextPaintPhase {
+        BackgroundAndBorders,
+        Floats,
+        Foreground,
+        FocusAndOverlay,
+    };
+
+    void paint_descendants(PaintContext&, Node&, StackingContextPaintPhase);
+    void paint(PaintContext&);
     HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const;
 
     void dump(int indent = 0) const;
