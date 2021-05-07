@@ -19,7 +19,7 @@ public:
     void push(NonnullOwnPtr<Command>&&);
 
     bool can_undo() const { return m_stack_index < m_stack.size() && !m_stack.is_empty(); }
-    bool can_redo() const { return m_stack_index > 0 && !m_stack.is_empty() && m_stack[m_stack_index - 1].m_undo_vector.size() > 0; }
+    bool can_redo() const { return m_stack_index > 0 && !m_stack.is_empty() && m_stack[m_stack_index - 1].commands.size() > 0; }
 
     void undo();
     void redo();
@@ -32,11 +32,11 @@ public:
     void clear();
 
 private:
-    struct UndoCommandsContainer {
-        NonnullOwnPtrVector<Command> m_undo_vector;
+    struct Combo {
+        NonnullOwnPtrVector<Command> commands;
     };
 
-    NonnullOwnPtrVector<UndoCommandsContainer> m_stack;
+    NonnullOwnPtrVector<Combo> m_stack;
     size_t m_stack_index { 0 };
     Optional<size_t> m_clean_index;
 };
