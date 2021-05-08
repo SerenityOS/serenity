@@ -96,9 +96,16 @@ private:
     bool inter_segment_id();
     u8 get_segment_id();
     bool read_is_inter();
-    bool inter_block_mode_info();
-
     bool intra_block_mode_info();
+    bool inter_block_mode_info();
+    bool read_ref_frames();
+    bool assign_mv(bool is_compound);
+    bool read_mv(u8 ref);
+
+    /* (6.5) Motion Vector Prediction */
+    bool find_mv_refs(ReferenceFrame, int block);
+    bool find_best_ref_mvs(int ref_list);
+    bool append_sub8x8_mvs(u8 block, u8 ref_list);
 
     u8 m_profile { 0 };
     u8 m_frame_to_show_map_index { 0 };
@@ -189,6 +196,10 @@ private:
     bool m_left_single { false };
     bool m_above_single { false };
     Vector<Vector<u8>> m_prev_segment_ids;
+    InterpolationFilter m_interp_filter { EightTap };
+    InterMode m_mv[2];
+    InterMode m_near_mv[2];
+    InterMode m_nearest_mv[2];
 
     bool m_use_hp { false };
 
