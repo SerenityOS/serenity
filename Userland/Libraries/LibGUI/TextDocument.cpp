@@ -719,6 +719,21 @@ InsertTextCommand::InsertTextCommand(TextDocument& document, const String& text,
 {
 }
 
+bool InsertTextCommand::merge_with(GUI::Command const& other)
+{
+    if (!is<InsertTextCommand>(other))
+        return false;
+    auto& typed_other = static_cast<InsertTextCommand const&>(other);
+    if (m_range.end() != typed_other.m_range.start())
+        return false;
+    StringBuilder builder(m_text.length() + typed_other.m_text.length());
+    builder.append(m_text);
+    builder.append(typed_other.m_text);
+    m_text = builder.to_string();
+    m_range.set_end(typed_other.m_range.end());
+    return true;
+}
+
 void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
 {
     const size_t tab_width = client.soft_tab_width();
