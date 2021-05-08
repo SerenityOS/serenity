@@ -370,15 +370,26 @@ void Menu::event(Core::Event& event)
         VERIFY(menu_window());
         VERIFY(menu_window()->is_visible());
 
-        // Default to the first enabled, non-separator item on key press if one has not been selected yet
         if (!hovered_item()) {
-            int counter = 0;
-            for (const auto& item : m_items) {
-                if (item.type() != MenuItem::Separator && item.is_enabled()) {
-                    set_hovered_index(counter, key == Key_Right);
-                    break;
+            if (key == Key_Up) {
+                // Default to the last enabled, non-separator item on key press if one has not been selected yet
+                for (auto i = static_cast<int>(m_items.size()) - 1; i >= 0; i--) {
+                    auto& item = m_items.at(i);
+                    if (item.type() != MenuItem::Separator && item.is_enabled()) {
+                        set_hovered_index(i, key == Key_Right);
+                        break;
+                    }
                 }
-                counter++;
+            } else {
+                // Default to the first enabled, non-separator item on key press if one has not been selected yet
+                int counter = 0;
+                for (const auto& item : m_items) {
+                    if (item.type() != MenuItem::Separator && item.is_enabled()) {
+                        set_hovered_index(counter, key == Key_Right);
+                        break;
+                    }
+                    counter++;
+                }
             }
             return;
         }
