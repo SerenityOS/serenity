@@ -82,6 +82,53 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
                 return false;
         }
         break;
+    case CSS::Selector::SimpleSelector::PseudoClass::NthChild:
+        const auto step_size = component.nth_child_pattern.step_size;
+        const auto offset = component.nth_child_pattern.offset;
+        if (step_size == 0 && offset == 0)
+            return false; // "If both a and b are equal to zero, the pseudo-class represents no element in the document tree."
+
+        const auto* parent = element.parent_element();
+        if (!parent)
+            return false;
+
+        int index = 1;
+        for (auto* child = parent->first_child_of_type<DOM::Element>(); child && child != &element; child = child->next_element_sibling()) {
+            ++index;
+        }
+
+        if (step_size < 0) {
+            // When "step_size" is negative, selector represents first "offset" elements in document tree.
+            if (offset <= 0 || index > offset)
+                return false;
+            else
+                break;
+        } else if (step_size == 1) {
+            // When "step_size == 1", selector represents last "offset" elements in document tree.
+            if (offset < 0 || index < offset)
+                return false;
+            else
+                break;
+        }
+
+        // Like "a % b", but handles negative integers correctly.
+        const auto canonical_modulo = [](int a, int b) -> int {
+            int c = a % b;
+            if ((c < 0 && b > 0) || (c > 0 && b < 0)) {
+                c += b;
+            }
+            return c;
+        };
+
+        if (step_size == 0) {
+            // Avoid divide by zero.
+            if (index != offset) {
+                return false;
+            }
+        } else if (canonical_modulo(index - offset, step_size) != 0) {
+            return false;
+        }
+        break;
     }
 
     switch (component.attribute_match_type) {

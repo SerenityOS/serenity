@@ -104,15 +104,9 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> pa
         if (currentToken == "*") {
             type = CSS::Selector::SimpleSelector::Type::Universal;
             index++;
-            return CSS::Selector::SimpleSelector {
-                type,
-                CSS::Selector::SimpleSelector::PseudoClass::None,
-                CSS::Selector::SimpleSelector::PseudoElement::None,
-                String(),
-                CSS::Selector::SimpleSelector::AttributeMatchType::None,
-                String(),
-                String()
-            };
+            CSS::Selector::SimpleSelector result;
+            result.type = type;
+            return result;
         }
 
         if (currentToken == ".") {
@@ -132,15 +126,9 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> pa
             value = value.to_lowercase();
         }
 
-        CSS::Selector::SimpleSelector simple_selector {
-            type,
-            CSS::Selector::SimpleSelector::PseudoClass::None,
-            CSS::Selector::SimpleSelector::PseudoElement::None,
-            value,
-            CSS::Selector::SimpleSelector::AttributeMatchType::None,
-            String(),
-            String()
-        };
+        CSS::Selector::SimpleSelector simple_selector;
+        simple_selector.type = type;
+        simple_selector.value = value;
 
         if (index >= parts.size()) {
             return simple_selector;

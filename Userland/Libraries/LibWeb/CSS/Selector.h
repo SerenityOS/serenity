@@ -36,6 +36,7 @@ public:
             Root,
             FirstOfType,
             LastOfType,
+            NthChild,
         };
         PseudoClass pseudo_class { PseudoClass::None };
 
@@ -59,6 +60,17 @@ public:
         AttributeMatchType attribute_match_type { AttributeMatchType::None };
         FlyString attribute_name;
         String attribute_value;
+
+        struct NthChildPattern {
+            int step_size = 0;
+            int offset = 0;
+
+            static NthChildPattern parse(const StringView& args);
+        };
+
+        // FIXME: We don't need this field on every single SimpleSelector, but it's also annoying to malloc it somewhere.
+        // Only used when "pseudo_class" == PseudoClass::NthChild.
+        NthChildPattern nth_child_pattern;
     };
 
     struct ComplexSelector {
