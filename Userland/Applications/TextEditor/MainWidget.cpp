@@ -59,7 +59,10 @@ MainWidget::MainWidget()
 
     m_editor->on_change = [this] {
         update_preview();
-        window()->set_modified(editor().document().is_modified());
+    };
+
+    m_editor->on_modified_change = [this](bool modified) {
+        window()->set_modified(modified);
     };
 
     m_page_view = *find_descendant_of_type_named<Web::OutOfProcessWebView>("webview");
