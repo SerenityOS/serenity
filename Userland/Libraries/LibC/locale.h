@@ -17,6 +17,7 @@ enum {
     LC_COLLATE,
     LC_TIME,
     LC_MONETARY,
+    LC_MESSAGES,
 };
 
 struct lconv {
