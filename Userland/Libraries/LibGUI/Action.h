@@ -66,7 +66,7 @@ public:
     virtual ~Action() override;
 
     String text() const { return m_text; }
-    void set_text(String text) { m_text = move(text); }
+    void set_text(String);
 
     String const& status_tip() const { return m_status_tip; }
     void set_status_tip(String status_tip) { m_status_tip = move(status_tip); }
