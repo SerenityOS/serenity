@@ -71,11 +71,13 @@ UNMAP_AFTER_INIT void Parser::init_fadt()
     m_fadt = find_table("FACP");
     VERIFY(!m_fadt.is_null());
 
-    auto sdt = map_typed<Structures::FADT>(m_fadt);
+    // FIXME: We need at least two pages for mapping, since we can be on the "edge" of one page...
+    auto sdt = map_typed<const volatile Structures::FADT>(m_fadt, PAGE_SIZE * 2);
 
     dbgln_if(ACPI_DEBUG, "ACPI: FADT @ V{}, {}", &sdt, m_fadt);
 
-    dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", sdt->h.revision, sdt->h.length);
+    auto* header = &sdt.ptr()->h;
+    dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", (size_t)header->revision, (size_t)header->length);
     dmesgln("ACPI: DSDT {}", PhysicalAddress(sdt->dsdt_ptr));
     m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
 
