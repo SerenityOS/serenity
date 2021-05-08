@@ -1,0 +1,24 @@
+diff -Naur gettext-0.21/build-aux/config.sub gettext-0.21.serenity/build-aux/config.sub
+--- gettext-0.21/build-aux/config.sub	2020-07-17 22:25:52.000000000 +0200
++++ gettext-0.21.serenity/build-aux/config.sub	2021-05-08 04:40:29.446280648 +0200
+@@ -1692,7 +1692,7 @@
+ 	# Now accept the basic system types.
+ 	# The portable systems comes first.
+ 	# Each alternative MUST end in a * to match a version number.
+-	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* | serenity* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
+diff -Naur gettext-0.21/libtextstyle/build-aux/config.sub gettext-0.21.serenity/libtextstyle/build-aux/config.sub
+--- gettext-0.21/libtextstyle/build-aux/config.sub	2020-07-17 22:26:48.000000000 +0200
++++ gettext-0.21.serenity/libtextstyle/build-aux/config.sub	2021-05-08 04:40:43.673225314 +0200
+@@ -1692,7 +1692,7 @@
+ 	# Now accept the basic system types.
+ 	# The portable systems comes first.
+ 	# Each alternative MUST end in a * to match a version number.
+-	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* | serenity* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
