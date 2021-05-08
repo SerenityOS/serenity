@@ -206,6 +206,7 @@ public:
     virtual void perform_formatting(const TextDocument::Client&) override;
     virtual void undo() override;
     virtual void redo() override;
+    virtual bool merge_with(GUI::Command const&) override;
     const String& text() const { return m_text; }
     const TextRange& range() const { return m_range; }
 
