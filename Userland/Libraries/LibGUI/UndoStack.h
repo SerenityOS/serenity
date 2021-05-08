@@ -30,6 +30,9 @@ public:
 
     void clear();
 
+    Optional<String> undo_action_text() const;
+    Optional<String> redo_action_text() const;
+
     Function<void()> on_state_change;
 
 private:
