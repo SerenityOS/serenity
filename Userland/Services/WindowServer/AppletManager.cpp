@@ -101,7 +101,7 @@ void AppletManager::add_applet(Window& applet)
 void AppletManager::relayout()
 {
     constexpr int applet_spacing = 4;
-    constexpr int applet_window_height = 20;
+    constexpr int applet_window_height = 19;
     int total_width = 0;
     for (auto& existing_applet : m_applets) {
         total_width += max(0, existing_applet->size().width()) + applet_spacing;

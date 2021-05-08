@@ -67,7 +67,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     m_start_button = GUI::Button::construct("Serenity");
     m_start_button->set_font(Gfx::FontDatabase::default_bold_font());
     m_start_button->set_icon_spacing(0);
-    m_start_button->set_fixed_size(80, 22);
+    m_start_button->set_fixed_size(80, 21);
     auto app_icon = GUI::Icon::default_icon("ladyball");
     m_start_button->set_icon(app_icon.bitmap_for_size(16));
     m_start_button->set_menu(m_start_menu);
@@ -170,8 +170,8 @@ void TaskbarWindow::update_applet_area()
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
     auto& button = m_task_button_container->add<TaskbarButton>(identifier);
-    button.set_min_size(20, 22);
-    button.set_max_size(140, 22);
+    button.set_min_size(20, 21);
+    button.set_max_size(140, 21);
     button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     button.set_icon(*m_default_icon);
     return button;
@@ -315,7 +315,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     case GUI::Event::WM_AppletAreaSizeChanged: {
         auto& changed_event = static_cast<GUI::WMAppletAreaSizeChangedEvent&>(event);
         m_applet_area_size = changed_event.size();
-        m_applet_area_container->set_fixed_size(changed_event.size().width() + 8, 22);
+        m_applet_area_container->set_fixed_size(changed_event.size().width() + 8, 21);
         update_applet_area();
         break;
     }

@@ -23,7 +23,7 @@ ClockWidget::ClockWidget()
 
     m_time_width = font().width("22:22:22");
 
-    set_fixed_size(m_time_width + 20, 22);
+    set_fixed_size(m_time_width + 20, 21);
 
     m_timer = add<Core::Timer>(1000, [this] {
         static time_t last_update_time;
@@ -179,7 +179,7 @@ void ClockWidget::paint_event(GUI::PaintEvent& event)
     auto time_text = Core::DateTime::now().to_string("%T");
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
-    painter.draw_text(event.rect(), time_text, Gfx::FontDatabase::default_font(), Gfx::TextAlignment::Center, palette().window_text());
+    painter.draw_text(frame_inner_rect().translated(0, 1), time_text, Gfx::FontDatabase::default_font(), Gfx::TextAlignment::Center, palette().window_text());
 }
 
 void ClockWidget::mousedown_event(GUI::MouseEvent& event)
