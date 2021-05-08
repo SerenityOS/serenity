@@ -10,7 +10,8 @@
 
 namespace Video::VP9 {
 
-int TreeParser::parse_tree(SyntaxElementType type)
+template<typename T>
+T TreeParser::parse_tree(SyntaxElementType type)
 {
     auto tree_selection = select_tree(type);
     int value;
@@ -25,8 +26,14 @@ int TreeParser::parse_tree(SyntaxElementType type)
         value = -n;
     }
     count_syntax_element(type, value);
-    return value;
+    return static_cast<T>(value);
 }
+
+template int TreeParser::parse_tree(SyntaxElementType);
+template bool TreeParser::parse_tree(SyntaxElementType);
+template u8 TreeParser::parse_tree(SyntaxElementType);
+template IntraMode TreeParser::parse_tree(SyntaxElementType);
+template TXSize TreeParser::parse_tree(SyntaxElementType);
 
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
