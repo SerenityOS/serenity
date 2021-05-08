@@ -1,0 +1,14 @@
+diff -Naur gettext-0.21/gettext-tools/gnulib-lib/fnmatch_loop.c gettext-0.21.serenity/gettext-tools/gnulib-lib/fnmatch_loop.c
+--- gettext-0.21/gettext-tools/gnulib-lib/fnmatch_loop.c	2020-06-26 21:57:10.000000000 +0200
++++ gettext-0.21.serenity/gettext-tools/gnulib-lib/fnmatch_loop.c	2021-05-08 05:06:59.944736766 +0200
+@@ -19,6 +19,10 @@
+ # include <stdint.h>
+ #endif
+ 
++#ifdef __serenity__
++# define FNM_EXTMATCH 9000
++#endif
++
+ struct STRUCT
+ {
+   const CHAR *pattern;

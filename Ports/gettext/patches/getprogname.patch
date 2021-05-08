@@ -1,0 +1,48 @@
+diff -Naur gettext-0.21/gettext-runtime/gnulib-lib/getprogname.c gettext-0.21.serenity/gettext-runtime/gnulib-lib/getprogname.c
+--- gettext-0.21/gettext-runtime/gnulib-lib/getprogname.c	2020-07-05 22:09:26.000000000 +0200
++++ gettext-0.21.serenity/gettext-runtime/gnulib-lib/getprogname.c	2021-05-08 05:04:37.755260750 +0200
+@@ -245,6 +245,8 @@
+         }
+     }
+   return NULL;
++# elif defined(__serenity__)
++  return NULL;
+ # else
+ #  error "getprogname module not ported to this OS"
+ # endif
+diff -Naur gettext-0.21/gettext-tools/gnulib-lib/getprogname.c gettext-0.21.serenity/gettext-tools/gnulib-lib/getprogname.c
+--- gettext-0.21/gettext-tools/gnulib-lib/getprogname.c	2020-07-05 22:10:31.000000000 +0200
++++ gettext-0.21.serenity/gettext-tools/gnulib-lib/getprogname.c	2021-05-08 05:04:30.225111896 +0200
+@@ -245,6 +245,8 @@
+         }
+     }
+   return NULL;
++# elif defined(__serenity__)
++  return NULL;
+ # else
+ #  error "getprogname module not ported to this OS"
+ # endif
+diff -Naur gettext-0.21/gettext-tools/libgettextpo/getprogname.c gettext-0.21.serenity/gettext-tools/libgettextpo/getprogname.c
+--- gettext-0.21/gettext-tools/libgettextpo/getprogname.c	2020-07-05 22:11:43.000000000 +0200
++++ gettext-0.21.serenity/gettext-tools/libgettextpo/getprogname.c	2021-05-08 05:04:16.591509028 +0200
+@@ -245,6 +245,8 @@
+         }
+     }
+   return NULL;
++# elif defined(__serenity__)
++  return NULL;
+ # else
+ #  error "getprogname module not ported to this OS"
+ # endif
+diff -Naur gettext-0.21/libtextstyle/lib/getprogname.c gettext-0.21.serenity/libtextstyle/lib/getprogname.c
+--- gettext-0.21/libtextstyle/lib/getprogname.c	2020-07-05 22:12:31.000000000 +0200
++++ gettext-0.21.serenity/libtextstyle/lib/getprogname.c	2021-05-08 05:04:34.065187807 +0200
+@@ -245,6 +245,8 @@
+         }
+     }
+   return NULL;
++# elif defined(__serenity__)
++  return NULL;
+ # else
+ #  error "getprogname module not ported to this OS"
+ # endif
