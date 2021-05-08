@@ -13,7 +13,7 @@
 
 namespace Profiler {
 
-TimelineTrack::TimelineTrack(TimelineView& view, Profile& profile, Process const& process)
+TimelineTrack::TimelineTrack(TimelineView const& view, Profile const& profile, Process const& process)
     : m_view(view)
     , m_profile(profile)
     , m_process(process)
@@ -27,6 +27,19 @@ TimelineTrack::TimelineTrack(TimelineView& view, Profile& profile, Process const
 
 TimelineTrack::~TimelineTrack()
 {
+}
+
+void TimelineTrack::event(Core::Event& event)
+{
+    switch (event.type()) {
+    case GUI::Event::MouseUp:
+    case GUI::Event::MouseDown:
+    case GUI::Event::MouseMove:
+        event.ignore();
+    default:
+        break;
+    }
+    GUI::Frame::event(event);
 }
 
 void TimelineTrack::paint_event(GUI::PaintEvent& event)
@@ -74,47 +87,6 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
     int select_hover_x = (int)((float)(normalized_hover_time - start_of_trace) * column_width);
     painter.fill_rect({ select_start_x, frame_thickness(), select_end_x - select_start_x, height() - frame_thickness() * 2 }, Color(0, 0, 0, 60));
     painter.fill_rect({ select_hover_x, frame_thickness(), 1, height() - frame_thickness() * 2 }, Color::NamedColor::Black);
-}
-
-u64 TimelineTrack::timestamp_at_x(int x) const
-{
-    float column_width = (float)frame_inner_rect().width() / (float)m_profile.length_in_ms();
-    float ms_into_profile = (float)x / column_width;
-    return m_profile.first_timestamp() + (u64)ms_into_profile;
-}
-
-void TimelineTrack::mousedown_event(GUI::MouseEvent& event)
-{
-    if (event.button() != GUI::MouseButton::Left)
-        return;
-
-    m_view.set_selecting({}, true);
-    m_view.set_select_start_time({}, timestamp_at_x(event.x()));
-    m_view.set_select_end_time({}, m_view.select_start_time());
-    m_profile.set_timestamp_filter_range(m_view.select_start_time(), m_view.select_end_time());
-    update();
-}
-
-void TimelineTrack::mousemove_event(GUI::MouseEvent& event)
-{
-    m_view.set_hover_time({}, timestamp_at_x(event.x()));
-
-    if (m_view.is_selecting()) {
-        m_view.set_select_end_time({}, m_view.hover_time());
-        m_profile.set_timestamp_filter_range(m_view.select_start_time(), m_view.select_end_time());
-    }
-
-    update();
-}
-
-void TimelineTrack::mouseup_event(GUI::MouseEvent& event)
-{
-    if (event.button() != GUI::MouseButton::Left)
-        return;
-
-    m_view.set_selecting({}, false);
-    if (m_view.select_start_time() == m_view.select_end_time())
-        m_profile.clear_timestamp_filter_range();
 }
 
 }
