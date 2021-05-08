@@ -6,10 +6,12 @@
 
 #pragma once
 
+#include <AK/Debug.h>
 #include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
+#include <AK/SourceLocation.h>
 #include <LibPDF/Forward.h>
 #include <LibPDF/Value.h>
 
@@ -27,6 +29,10 @@ public:
     ENUMERATE_OBJECT_TYPES(DEFINE_ID)
 #undef DEFINE_ID
 
+    template<typename T>
+    NonnullRefPtr<T> resolved_to(Document*) const;
+
+    virtual const char* type_name() const = 0;
     virtual String to_string(int indent) const = 0;
 
 private:
@@ -47,6 +53,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE bool is_binary() const { return m_is_binary; }
 
     ALWAYS_INLINE bool is_string() const override { return true; }
+    ALWAYS_INLINE const char* type_name() const override { return "string"; }
     String to_string(int indent) const override;
 
 private:
@@ -66,6 +73,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE FlyString name() const { return m_name; }
 
     ALWAYS_INLINE bool is_name() const override { return true; }
+    ALWAYS_INLINE const char* type_name() const override { return "name"; }
     String to_string(int indent) const override;
 
 private:
@@ -83,7 +91,24 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE Vector<Value> elements() const { return m_elements; }
 
-    ALWAYS_INLINE bool is_array() const override { return true; }
+    ALWAYS_INLINE auto begin() const { return m_elements.begin(); }
+    ALWAYS_INLINE auto end() const { return m_elements.end(); }
+
+    ALWAYS_INLINE const Value& operator[](size_t index) const { return at(index); }
+    ALWAYS_INLINE const Value& at(size_t index) const { return m_elements[index]; }
+
+    NonnullRefPtr<Object> get_object_at(Document*, size_t index) const;
+
+#define DEFINE_INDEXER(class_name, snake_name) \
+    NonnullRefPtr<class_name> get_##snake_name##_at(Document*, size_t index) const;
+    ENUMERATE_OBJECT_TYPES(DEFINE_INDEXER)
+#undef DEFINE_INDEXER
+
+    ALWAYS_INLINE bool is_array() const override
+    {
+        return true;
+    }
+    ALWAYS_INLINE const char* type_name() const override { return "array"; }
     String to_string(int indent) const override;
 
 private:
@@ -99,9 +124,26 @@ public:
 
     ~DictObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE HashMap<FlyString, Value> map() const { return m_map; }
+    [[nodiscard]] ALWAYS_INLINE const HashMap<FlyString, Value>& map() const { return m_map; }
 
-    ALWAYS_INLINE bool is_dict() const override { return true; }
+    ALWAYS_INLINE bool contains(const FlyString& key) const { return m_map.contains(key); }
+
+    ALWAYS_INLINE Optional<Value> get(const FlyString& key) const { return m_map.get(key); }
+
+    Value get_value(const FlyString& key) const { return get(key).value(); }
+
+    NonnullRefPtr<Object> get_object(Document*, const FlyString& key) const;
+
+#define DEFINE_GETTER(class_name, snake_name) \
+    NonnullRefPtr<class_name> get_##snake_name(Document*, const FlyString& key) const;
+    ENUMERATE_OBJECT_TYPES(DEFINE_GETTER)
+#undef DEFINE_GETTER
+
+    ALWAYS_INLINE bool is_dict() const override
+    {
+        return true;
+    }
+    ALWAYS_INLINE const char* type_name() const override { return "dict"; }
     String to_string(int indent) const override;
 
 private:
@@ -122,6 +164,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE const ReadonlyBytes& bytes() const { return m_bytes; }
 
     ALWAYS_INLINE bool is_stream() const override { return true; }
+    ALWAYS_INLINE const char* type_name() const override { return "stream"; }
     String to_string(int indent) const override;
 
 private:
@@ -144,6 +187,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE const Value& value() const { return m_value; }
 
     ALWAYS_INLINE bool is_indirect_value() const override { return true; }
+    ALWAYS_INLINE const char* type_name() const override { return "indirect_object"; }
     String to_string(int indent) const override;
 
 private:
@@ -164,11 +208,34 @@ public:
     [[nodiscard]] ALWAYS_INLINE u32 index() const { return m_index; }
 
     ALWAYS_INLINE bool is_indirect_value_ref() const override { return true; }
+    ALWAYS_INLINE const char* type_name() const override { return "indirect_object_ref"; }
     String to_string(int indent) const override;
 
 private:
     u32 m_index;
 };
+
+template<IsObject To, IsObject From>
+[[nodiscard]] ALWAYS_INLINE static NonnullRefPtr<To> object_cast(NonnullRefPtr<From> obj
+#ifdef PDF_DEBUG
+    ,
+    SourceLocation loc = SourceLocation::current()
+#endif
+)
+{
+#ifdef PDF_DEBUG
+#    define ENUMERATE_TYPES(class_name, snake_name)                                                \
+        if constexpr (IsSame<To, class_name>) {                                                    \
+            if (!obj->is_##snake_name()) {                                                         \
+                dbgln("{} invalid cast from type {} to type " #snake_name, loc, obj->type_name()); \
+            }                                                                                      \
+        }
+    ENUMERATE_OBJECT_TYPES(ENUMERATE_TYPES)
+#    undef ENUMERATE_TYPES
+#endif
+
+    return static_cast<NonnullRefPtr<To>>(obj);
+}
 
 }
 
