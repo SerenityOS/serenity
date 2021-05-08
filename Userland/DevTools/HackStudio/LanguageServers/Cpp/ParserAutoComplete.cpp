@@ -7,6 +7,7 @@
 #include "ParserAutoComplete.h"
 #include <AK/Assertions.h>
 #include <AK/HashTable.h>
+#include <AK/OwnPtr.h>
 #include <LibCpp/AST.h>
 #include <LibCpp/Lexer.h>
 #include <LibCpp/Parser.h>
