@@ -47,6 +47,7 @@ public:
         virtual void document_did_change() = 0;
         virtual void document_did_set_text() = 0;
         virtual void document_did_set_cursor(const TextPosition&) = 0;
+        virtual void document_did_update_undo_stack() = 0;
 
         virtual bool is_automatic_indentation_enabled() const = 0;
         virtual int soft_tab_width() const = 0;
