@@ -34,11 +34,6 @@ TextDocument::TextDocument(Client* client)
                 client->document_did_update_undo_stack();
         }
     };
-
-    m_undo_timer = Core::Timer::create_single_shot(
-        2000, [this] {
-            update_undo();
-        });
 }
 
 TextDocument::~TextDocument()
@@ -316,9 +311,6 @@ void TextDocument::update_views(Badge<TextDocumentLine>)
 
 void TextDocument::notify_did_change()
 {
-    if (m_undo_timer)
-        m_undo_timer->restart();
-
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
             client->document_did_change();
@@ -844,11 +836,6 @@ void RemoveTextCommand::undo()
 {
     auto new_cursor = m_document.insert_at(m_range.start(), m_text);
     m_document.set_all_cursors(new_cursor);
-}
-
-void TextDocument::update_undo()
-{
-    // FIXME: Maybe seal the last command somehow?
 }
 
 TextPosition TextDocument::insert_at(const TextPosition& position, const StringView& text, const Client* client)
