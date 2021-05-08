@@ -92,16 +92,12 @@ void UndoStack::finalize_current_combo()
 
 void UndoStack::set_current_unmodified()
 {
-    // Skip empty container
-    if (can_undo() && m_stack[m_stack_index].commands.is_empty())
-        m_clean_index = m_stack_index + 1;
-    else
-        m_clean_index = m_stack_index;
+    m_clean_index = non_empty_stack_index();
 }
 
 bool UndoStack::is_current_modified() const
 {
-    return !m_clean_index.has_value() || m_stack_index != m_clean_index.value();
+    return !m_clean_index.has_value() || non_empty_stack_index() != m_clean_index.value();
 }
 
 void UndoStack::clear()
@@ -109,6 +105,14 @@ void UndoStack::clear()
     m_stack.clear();
     m_stack_index = 0;
     m_clean_index.clear();
+}
+
+size_t UndoStack::non_empty_stack_index() const
+{
+    if (can_undo() && m_stack[m_stack_index].commands.is_empty())
+        return m_stack_index + 1;
+    else
+        return m_stack_index;
 }
 
 }
