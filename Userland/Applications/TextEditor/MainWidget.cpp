@@ -641,6 +641,8 @@ bool MainWidget::request_close()
 {
     if (!editor().document().is_modified())
         return true;
+    if (!window()->is_modified())
+        return true;
     auto result = GUI::MessageBox::show(window(), "The document has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
 
     if (result == GUI::MessageBox::ExecYes) {
