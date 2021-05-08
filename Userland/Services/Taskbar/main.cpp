@@ -144,7 +144,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
                 dbgln("App {} has icon with size {}", app.name, icon->size());
         }
 
-        auto parent_menu = app_category_menus.get(app.category).value_or(*system_menu);
+        auto parent_menu = app_category_menus.get(app.category).value_or(system_menu.ptr());
         parent_menu->add_action(GUI::Action::create(app.name, icon, [app_identifier](auto&) {
             dbgln("Activated app with ID {}", app_identifier);
             const auto& bin = g_apps[app_identifier].executable;
