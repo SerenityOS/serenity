@@ -542,7 +542,7 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu
     auto default_segment = SegmentRegister::DS;
     u16 offset = 0;
 
-    switch (m_rm_byte & 7) {
+    switch (rm()) {
     case 0:
         offset = cpu.bx().value() + cpu.si().value() + m_displacement16;
         break;
@@ -564,7 +564,7 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu
         offset = cpu.di().value() + m_displacement16;
         break;
     case 6:
-        if ((m_rm_byte & 0xc0) == 0)
+        if (mod() == 0)
             offset = m_displacement16;
         else {
             default_segment = SegmentRegister::SS;
@@ -586,16 +586,16 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu
     auto default_segment = SegmentRegister::DS;
     u32 offset = 0;
 
-    switch (m_rm_byte & 0x07) {
+    switch (rm()) {
     case 0 ... 3:
     case 6 ... 7:
-        offset = cpu.const_gpr32((RegisterIndex32)(m_rm_byte & 0x07)).value() + m_displacement32;
+        offset = cpu.const_gpr32((RegisterIndex32)(rm())).value() + m_displacement32;
         break;
     case 4:
         offset = evaluate_sib(cpu, default_segment);
         break;
     default: // 5
-        if ((m_rm_byte & 0xc0) == 0x00) {
+        if (mod() == 0x00) {
             offset = m_displacement32;
             break;
         } else {
@@ -635,7 +635,7 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, Segmen
         base += cpu.esp().value();
         break;
     default: // 5
-        switch ((m_rm_byte >> 6) & 3) {
+        switch (mod()) {
         case 0:
             break;
         case 1:
@@ -853,7 +853,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
     if (m_descriptor->has_rm) {
         // Consume ModR/M (may include SIB and displacement.)
         m_modrm.decode(stream, m_a32);
-        m_register_index = (m_modrm.m_rm_byte >> 3) & 7;
+        m_register_index = m_modrm.reg();
     } else {
         if (has_sub_op())
             m_register_index = m_sub_op & 7;
@@ -969,21 +969,21 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stre
 template<typename InstructionStreamType>
 ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStreamType&)
 {
-    switch (m_rm_byte & 0xc0) {
+    switch (mod()) {
     case 0:
-        if ((m_rm_byte & 0x07) == 6)
+        if ((rm()) == 6)
             m_displacement_bytes = 2;
         else
             VERIFY(m_displacement_bytes == 0);
         break;
-    case 0x40:
+    case 0b01:
         m_displacement_bytes = 1;
         break;
-    case 0x80:
+    case 0b10:
         m_displacement_bytes = 2;
         break;
-    case 0xc0:
-        m_register_index = m_rm_byte & 7;
+    case 0b11:
+        m_register_index = rm();
         break;
     }
 }
@@ -991,34 +991,34 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStreamType&)
 template<typename InstructionStreamType>
 ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& stream)
 {
-    switch (m_rm_byte & 0xc0) {
+    switch (mod()) {
     case 0:
-        if ((m_rm_byte & 0x07) == 5)
+        if (rm() == 5)
             m_displacement_bytes = 4;
         break;
-    case 0x40:
+    case 0b01:
         m_displacement_bytes = 1;
         break;
-    case 0x80:
+    case 0b10:
         m_displacement_bytes = 4;
         break;
-    case 0xc0:
-        m_register_index = m_rm_byte & 7;
+    case 0b11:
+        m_register_index = rm();
         return;
     }
 
-    m_has_sib = (m_rm_byte & 0x07) == 4;
+    m_has_sib = (rm()) == 4;
     if (m_has_sib) {
         m_sib = stream.read8();
         if ((m_sib & 0x07) == 5) {
-            switch ((m_rm_byte >> 6) & 0x03) {
-            case 0:
+            switch (mod()) {
+            case 0b00:
                 m_displacement_bytes = 4;
                 break;
-            case 1:
+            case 0b01:
                 m_displacement_bytes = 1;
                 break;
-            case 2:
+            case 0b10:
                 m_displacement_bytes = 4;
                 break;
             default:

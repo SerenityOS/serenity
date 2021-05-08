@@ -1039,7 +1039,7 @@ String MemoryOrRegisterReference::to_string_a16() const
     String base;
     bool hasDisplacement = false;
 
-    switch (m_rm_byte & 7) {
+    switch (rm()) {
     case 0:
         base = "bx+si";
         break;
@@ -1062,16 +1062,16 @@ String MemoryOrRegisterReference::to_string_a16() const
         base = "bx";
         break;
     case 6:
-        if ((m_rm_byte & 0xc0) == 0)
+        if (mod() == 0)
             base = String::formatted("{:#04x}", m_displacement16);
         else
             base = "bp";
         break;
     }
 
-    switch (m_rm_byte & 0xc0) {
-    case 0x40:
-    case 0x80:
+    switch (mod()) {
+    case 0b01:
+    case 0b10:
         hasDisplacement = true;
     }
 
@@ -1180,16 +1180,16 @@ String MemoryOrRegisterReference::to_string_a32() const
         return register_name(static_cast<RegisterIndex32>(m_register_index));
 
     bool has_displacement = false;
-    switch (m_rm_byte & 0xc0) {
-    case 0x40:
-    case 0x80:
+    switch (mod()) {
+    case 0b01:
+    case 0b10:
         has_displacement = true;
     }
     if (m_has_sib && (m_sib & 7) == 5)
         has_displacement = true;
 
     String base;
-    switch (m_rm_byte & 7) {
+    switch (rm()) {
     case 0:
         base = "eax";
         break;
@@ -1209,7 +1209,7 @@ String MemoryOrRegisterReference::to_string_a32() const
         base = "edi";
         break;
     case 5:
-        if ((m_rm_byte & 0xc0) == 0)
+        if (mod() == 0)
             base = String::formatted("{:#08x}", m_displacement32);
         else
             base = "ebp";
@@ -1320,7 +1320,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
     auto append_relative_imm16 = [&] { formatted_address(origin + 3, x32, i16(imm16())); };
     auto append_relative_imm32 = [&] { formatted_address(origin + 5, x32, i32(imm32())); };
 
-    auto append_mm = [&] { builder.appendff("mm%u", register_index()); };
+    auto append_mm = [&] { builder.appendff("mm{}", register_index()); };
     auto append_mmrm32 = [&] { builder.append(m_modrm.to_string_mm(*this)); };
     auto append_mmrm64 = [&] { builder.append(m_modrm.to_string_mm(*this)); };
 
@@ -1769,7 +1769,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
         break;
     case OP_reg32_CR:
         append_mnemonic_space();
-        builder.append(register_name(static_cast<RegisterIndex32>(modrm_byte() & 7)));
+        builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
         append(", ");
         append_creg();
         break;
@@ -1777,11 +1777,11 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
         append_mnemonic_space();
         append_creg();
         append(", ");
-        builder.append(register_name(static_cast<RegisterIndex32>(modrm_byte() & 7)));
+        builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
         break;
     case OP_reg32_DR:
         append_mnemonic_space();
-        builder.append(register_name(static_cast<RegisterIndex32>(modrm_byte() & 7)));
+        builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
         append(", ");
         append_dreg();
         break;
@@ -1789,7 +1789,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
         append_mnemonic_space();
         append_dreg();
         append(", ");
-        builder.append(register_name(static_cast<RegisterIndex32>(modrm_byte() & 7)));
+        builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
         break;
     case OP_short_imm8:
         append_mnemonic_space();
@@ -1932,5 +1932,4 @@ const char* register_name(MMXRegisterIndex register_index)
     static constexpr const char* names[] = { "mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7" };
     return names[register_index & 7];
 }
-
 }
