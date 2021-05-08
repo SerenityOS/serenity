@@ -285,12 +285,12 @@ private:
     {
         auto command = make<T>(*m_document, forward<Args>(args)...);
         command->perform_formatting(*this);
-        on_edit_action(*command);
+        will_execute(*command);
         command->execute_from(*this);
         m_document->add_to_undo_stack(move(command));
     }
 
-    virtual void on_edit_action(const Command&) { }
+    virtual void will_execute(TextDocumentUndoCommand const&) { }
 
     Type m_type { MultiLine };
     Mode m_mode { Editable };
