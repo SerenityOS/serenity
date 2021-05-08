@@ -19,6 +19,8 @@ public:
 
     String action_text() const { return m_action_text; }
 
+    virtual bool merge_with(Command const&) { return false; }
+
 protected:
     Command() { }
     void set_action_text(const String& text) { m_action_text = text; }
