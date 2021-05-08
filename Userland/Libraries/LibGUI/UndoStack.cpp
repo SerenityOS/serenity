@@ -77,6 +77,12 @@ void UndoStack::push(NonnullOwnPtr<Command>&& command)
         finalize_current_combo();
     }
 
+    if (!m_stack.last().commands.is_empty()) {
+        bool merged = m_stack.last().commands.last().merge_with(*command);
+        if (merged)
+            return;
+    }
+
     m_stack.last().commands.append(move(command));
 
     if (on_state_change)
