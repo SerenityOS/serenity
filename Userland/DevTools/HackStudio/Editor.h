@@ -41,8 +41,7 @@ public:
     CodeDocument& code_document();
 
     virtual void set_document(GUI::TextDocument&) override;
-
-    virtual void on_edit_action(const GUI::Command&) override;
+    virtual void will_execute(GUI::TextDocumentUndoCommand const&) override;
 
     virtual void undo() override;
     virtual void redo() override;
