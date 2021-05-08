@@ -1071,20 +1071,32 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
     Locker locker(m_lock);
     VERIFY(is_directory());
 
-    auto buffer_or = read_entire();
-    if (buffer_or.is_error())
-        return buffer_or.error();
+    u8 buffer[max_block_size];
+    auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
 
-    auto& buffer = *buffer_or.value();
-    auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer.data());
+    auto block_size = fs().block_size();
+    bool allow_cache = true;
 
-    while (entry < buffer.end_pointer()) {
-        if (entry->inode != 0) {
-            dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::traverse_as_directory(): inode {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", identifier(), entry->inode, entry->name_len, entry->rec_len, entry->file_type, StringView(entry->name, entry->name_len));
-            if (!callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, entry->file_type }))
-                break;
+    if (m_block_list.is_empty())
+        m_block_list = compute_block_list();
+
+    // Directory entries are guaranteed not to span multiple blocks,
+    // so we can iterate over blocks separately.
+    for (auto& block_index : m_block_list) {
+        VERIFY(block_index.value() != 0);
+        if (auto result = fs().read_block(block_index, &buf, block_size, 0, allow_cache); result.is_error()) {
+            return result;
         }
-        entry = (ext2_dir_entry_2*)((char*)entry + entry->rec_len);
+        auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer);
+        auto* entries_end = reinterpret_cast<ext2_dir_entry_2*>(buffer + block_size);
+        while (entry < entries_end) {
+            if (entry->inode != 0) {
+                dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::traverse_as_directory(): inode {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", identifier(), entry->inode, entry->name_len, entry->rec_len, entry->file_type, StringView(entry->name, entry->name_len));
+                if (!callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, entry->file_type }))
+                    return KSuccess;
+            }
+            entry = (ext2_dir_entry_2*)((char*)entry + entry->rec_len);
+        }
     }
 
     return KSuccess;
