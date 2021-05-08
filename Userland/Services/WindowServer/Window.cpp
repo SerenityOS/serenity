@@ -454,6 +454,11 @@ void Window::event(Core::Event& event)
 
 void Window::handle_keydown_event(const KeyEvent& event)
 {
+    if (event.modifiers() == Mod_Alt && event.key() == Key_Space && type() == WindowType::Normal && !is_frameless()) {
+        auto position = frame().titlebar_rect().bottom_left().translated(frame().rect().location());
+        popup_window_menu(position, WindowMenuDefaultAction::Close);
+        return;
+    }
     if (event.modifiers() == Mod_Alt && event.code_point() && menubar()) {
         Menu* menu_to_open = nullptr;
         menubar()->for_each_menu([&](Menu& menu) {
