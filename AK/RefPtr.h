@@ -451,7 +451,8 @@ struct Formatter<RefPtr<T>> : Formatter<const T*> {
 
 template<typename T>
 struct Traits<RefPtr<T>> : public GenericTraits<RefPtr<T>> {
-    using PeekType = const T*;
+    using PeekType = T*;
+    using ConstPeekType = const T*;
     static unsigned hash(const RefPtr<T>& p) { return ptr_hash(p.ptr()); }
     static bool equals(const RefPtr<T>& a, const RefPtr<T>& b) { return a.ptr() == b.ptr(); }
 };
