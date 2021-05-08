@@ -56,6 +56,21 @@ public:
         }
     }
 
+    ALWAYS_INLINE Optional(Optional& other)
+        : m_has_value(other.m_has_value)
+    {
+        if (m_has_value) {
+            new (&m_storage) T(other.value());
+        }
+    }
+
+    template<typename U>
+    ALWAYS_INLINE Optional(U& value)
+        : m_has_value(true)
+    {
+        new (&m_storage) T(value);
+    }
+
     ALWAYS_INLINE Optional& operator=(const Optional& other)
     {
         if (this != &other) {
