@@ -15,5 +15,5 @@ configure() {
     run ./configure --host="${SERENITY_ARCH}-pc-serenity" $configopts
 }
 
-export CFLAGS="-DU_HAVE_NL_LANGINFO_CODESET=0 -DLC_MESSAGES=1"
-export CXXFLAGS="-DU_HAVE_NL_LANGINFO_CODESET=0 -DLC_MESSAGES=1"
+export CFLAGS="-DU_HAVE_NL_LANGINFO_CODESET=0"
+export CXXFLAGS="-DU_HAVE_NL_LANGINFO_CODESET=0"
