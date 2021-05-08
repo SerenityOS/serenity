@@ -27,6 +27,8 @@ public:
     };
     XRefTableAndTrailer parse_last_xref_table_and_trailer();
 
+    NonnullRefPtr<IndirectValue> parse_indirect_value_at_offset(size_t offset);
+
 private:
     bool parse_header();
     XRefTable parse_xref_table();
@@ -48,6 +50,7 @@ private:
     Value parse_value();
     Value parse_possible_indirect_value_or_ref();
     NonnullRefPtr<IndirectValue> parse_indirect_value(int index, int generation);
+    NonnullRefPtr<IndirectValue> parse_indirect_value();
     Value parse_number();
     NonnullRefPtr<NameObject> parse_name();
     NonnullRefPtr<StringObject> parse_string();
@@ -60,6 +63,8 @@ private:
     bool matches_eol() const;
     bool matches_whitespace() const;
     bool matches_number() const;
+    bool matches_delimiter() const;
+    bool matches_regular_character() const;
 
     void consume_eol();
     bool consume_whitespace();

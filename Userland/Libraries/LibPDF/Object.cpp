@@ -5,9 +5,33 @@
  */
 
 #include <AK/Hex.h>
+#include <LibPDF/Document.h>
 #include <LibPDF/Object.h>
 
 namespace PDF {
+
+NonnullRefPtr<Object> ArrayObject::get_object_at(Document* document, size_t index) const
+{
+    return document->resolve_to<Object>(m_elements[index]);
+}
+
+NonnullRefPtr<Object> DictObject::get_object(Document* document, const FlyString& key) const
+{
+    return document->resolve_to<Object>(get_value(key));
+}
+
+#define DEFINE_ACCESSORS(class_name, snake_name)                                                           \
+    NonnullRefPtr<class_name> ArrayObject::get_##snake_name##_at(Document* document, size_t index) const   \
+    {                                                                                                      \
+        return document->resolve_to<class_name>(m_elements[index]);                                        \
+    }                                                                                                      \
+                                                                                                           \
+    NonnullRefPtr<class_name> DictObject::get_##snake_name(Document* document, const FlyString& key) const \
+    {                                                                                                      \
+        return document->resolve_to<class_name>(get(key).value());                                         \
+    }
+ENUMERATE_DIRECT_OBJECT_TYPES(DEFINE_ACCESSORS)
+#undef DEFINE_INDEXER
 
 static void append_indent(StringBuilder& builder, int indent)
 {
