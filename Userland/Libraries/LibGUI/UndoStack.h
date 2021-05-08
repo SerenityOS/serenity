@@ -17,15 +17,13 @@ public:
     UndoStack();
     ~UndoStack();
 
-    void push(NonnullOwnPtr<Command>&&);
+    void push(NonnullOwnPtr<Command>);
 
     bool can_undo() const;
     bool can_redo() const;
 
     void undo();
     void redo();
-
-    void finalize_current_combo();
 
     void set_current_unmodified();
     bool is_current_modified() const;
@@ -35,13 +33,7 @@ public:
     Function<void()> on_state_change;
 
 private:
-    struct Combo {
-        NonnullOwnPtrVector<Command> commands;
-    };
-
-    void pop();
-
-    NonnullOwnPtrVector<Combo> m_stack;
+    NonnullOwnPtrVector<Command> m_stack;
     size_t m_stack_index { 0 };
     Optional<size_t> m_clean_index;
 };
