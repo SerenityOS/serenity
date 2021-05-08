@@ -221,6 +221,7 @@ public:
     virtual void undo() override;
     virtual void redo() override;
     const TextRange& range() const { return m_range; }
+    virtual bool merge_with(GUI::Command const&) override;
 
 private:
     String m_text;

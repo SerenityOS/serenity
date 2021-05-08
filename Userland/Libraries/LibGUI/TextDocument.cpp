@@ -802,6 +802,24 @@ RemoveTextCommand::RemoveTextCommand(TextDocument& document, const String& text,
 {
 }
 
+bool RemoveTextCommand::merge_with(GUI::Command const& other)
+{
+    if (!is<RemoveTextCommand>(other))
+        return false;
+    auto& typed_other = static_cast<RemoveTextCommand const&>(other);
+    if (m_range.start() == typed_other.m_range.end()) {
+        // Merge backspaces
+        StringBuilder builder(m_text.length() + typed_other.m_text.length());
+        builder.append(typed_other.m_text);
+        builder.append(m_text);
+        m_text = builder.to_string();
+        m_range.set_start(typed_other.m_range.start());
+        return true;
+    }
+    // FIXME: Merge forward-deletes
+    return false;
+}
+
 void RemoveTextCommand::redo()
 {
     m_document.remove(m_range);
