@@ -28,6 +28,13 @@ TextDocument::TextDocument(Client* client)
     append_line(make<TextDocumentLine>(*this));
     set_unmodified();
 
+    m_undo_stack.on_state_change = [this] {
+        if (m_client_notifications_enabled) {
+            for (auto* client : m_clients)
+                client->document_did_update_undo_stack();
+        }
+    };
+
     m_undo_timer = Core::Timer::create_single_shot(
         2000, [this] {
             update_undo();
@@ -694,6 +701,7 @@ void TextDocument::redo()
 void TextDocument::add_to_undo_stack(NonnullOwnPtr<TextDocumentUndoCommand> undo_command)
 {
     m_undo_stack.push(move(undo_command));
+    notify_did_change();
 }
 
 TextDocumentUndoCommand::TextDocumentUndoCommand(TextDocument& document)

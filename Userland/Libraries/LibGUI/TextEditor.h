@@ -223,6 +223,7 @@ private:
     virtual void document_did_change() override;
     virtual void document_did_set_text() override;
     virtual void document_did_set_cursor(const TextPosition&) override;
+    virtual void document_did_update_undo_stack() override;
 
     // ^Syntax::HighlighterClient
     virtual Vector<TextDocumentSpan>& spans() final { return document().spans(); }

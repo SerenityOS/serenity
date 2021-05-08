@@ -1324,8 +1324,6 @@ void TextEditor::did_change()
 {
     update_content_size();
     recompute_all_visual_lines();
-    m_undo_action->set_enabled(can_undo());
-    m_redo_action->set_enabled(can_redo());
     if (m_autocomplete_box && !m_should_keep_autocomplete_box) {
         m_autocomplete_box->close();
         if (m_autocomplete_timer)
@@ -1634,6 +1632,12 @@ void TextEditor::document_did_change()
 {
     did_change();
     update();
+}
+
+void TextEditor::document_did_update_undo_stack()
+{
+    m_undo_action->set_enabled(can_undo());
+    m_redo_action->set_enabled(can_redo());
 }
 
 void TextEditor::document_did_set_text()
