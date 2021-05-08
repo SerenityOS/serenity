@@ -32,8 +32,6 @@ public:
     void clear();
 
 private:
-    size_t non_empty_stack_index() const;
-
     struct Combo {
         NonnullOwnPtrVector<Command> commands;
     };
