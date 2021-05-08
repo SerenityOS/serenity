@@ -701,7 +701,6 @@ void TextDocument::redo()
 void TextDocument::add_to_undo_stack(NonnullOwnPtr<TextDocumentUndoCommand> undo_command)
 {
     m_undo_stack.push(move(undo_command));
-    notify_did_change();
 }
 
 TextDocumentUndoCommand::TextDocumentUndoCommand(TextDocument& document)
