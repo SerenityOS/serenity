@@ -1638,6 +1638,11 @@ void TextEditor::document_did_update_undo_stack()
 {
     m_undo_action->set_enabled(can_undo());
     m_redo_action->set_enabled(can_redo());
+
+    // FIXME: This is currently firing more often than it should.
+    //        Ideally we'd only send this out when the undo stack modified state actually changes.
+    if (on_modified_change)
+        on_modified_change(document().is_modified());
 }
 
 void TextEditor::document_did_set_text()

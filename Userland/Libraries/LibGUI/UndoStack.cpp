@@ -19,7 +19,7 @@ UndoStack::~UndoStack()
 
 bool UndoStack::can_undo() const
 {
-    return m_stack_index > 0;
+    return m_stack_index > 0 || (m_stack.size() == 1 && m_stack[0].commands.size() > 0);
 }
 
 bool UndoStack::can_redo() const
@@ -67,7 +67,7 @@ void UndoStack::pop()
 void UndoStack::push(NonnullOwnPtr<Command>&& command)
 {
     if (m_stack.is_empty())
-        m_stack.append(make<Combo>());
+        finalize_current_combo();
 
     // If the stack cursor is behind the top of the stack, nuke everything from here to the top.
     if (m_stack_index != m_stack.size() - 1) {
@@ -101,6 +101,8 @@ void UndoStack::finalize_current_combo()
 
 void UndoStack::set_current_unmodified()
 {
+    finalize_current_combo();
+
     if (m_clean_index.has_value() && m_clean_index.value() == m_stack_index)
         return;
     m_clean_index = m_stack_index;
@@ -111,7 +113,15 @@ void UndoStack::set_current_unmodified()
 
 bool UndoStack::is_current_modified() const
 {
-    return !(m_clean_index.has_value() && m_clean_index.value() == m_stack_index);
+    if (!m_clean_index.has_value())
+        return true;
+    if (m_stack_index != m_clean_index.value())
+        return true;
+    if (m_stack.is_empty())
+        return false;
+    if (m_stack_index == m_stack.size() - 1 && !m_stack[m_stack_index].commands.is_empty())
+        return true;
+    return false;
 }
 
 void UndoStack::clear()

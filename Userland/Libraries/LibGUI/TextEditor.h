@@ -134,6 +134,7 @@ public:
     virtual void redo() { document().redo(); }
 
     Function<void()> on_change;
+    Function<void(bool modified)> on_modified_change;
     Function<void()> on_mousedown;
     Function<void()> on_return_pressed;
     Function<void()> on_escape_pressed;
