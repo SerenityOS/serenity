@@ -964,13 +964,154 @@ bool Decoder::read_is_inter()
     return true;
 }
 
+bool Decoder::intra_block_mode_info()
+{
+    m_ref_frame[0] = IntraFrame;
+    m_ref_frame[1] = None;
+    if (m_mi_size >= Block_8x8) {
+        m_y_mode = m_tree_parser->parse_tree<u8>(SyntaxElementType::IntraMode);
+        for (auto b = 0; b < 4; b++)
+            m_sub_modes[b] = m_y_mode;
+    } else {
+        m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
+        m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
+        u8 sub_intra_mode;
+        for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
+            for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
+                sub_intra_mode = m_tree_parser->parse_tree<u8>(SyntaxElementType::SubIntraMode);
+                for (auto y = 0; y < m_num_4x4_h; y++) {
+                    for (auto x = 0; x < m_num_4x4_w; x++) {
+                        m_sub_modes[(idy + y) * 2 + idx + x] = sub_intra_mode;
+                    }
+                }
+            }
+        }
+        m_y_mode = sub_intra_mode;
+    }
+    m_uv_mode = m_tree_parser->parse_tree<u8>(SyntaxElementType::UVMode);
+    return true;
+}
+
 bool Decoder::inter_block_mode_info()
+{
+    SAFE_CALL(read_ref_frames());
+    for (auto j = 0; j < 2; j++) {
+        if (m_ref_frame[j] > IntraFrame) {
+            SAFE_CALL(find_mv_refs(m_ref_frame[j], -1));
+            SAFE_CALL(find_best_ref_mvs(j));
+        }
+    }
+    auto is_compound = m_ref_frame[1] > IntraFrame;
+    if (seg_feature_active(SEG_LVL_SKIP)) {
+        m_y_mode = ZeroMv;
+    } else if (m_mi_size >= Block_8x8) {
+        auto inter_mode = m_tree_parser->parse_tree(SyntaxElementType::InterMode);
+        m_y_mode = NearestMv + inter_mode;
+    }
+    if (m_interpolation_filter == Switchable)
+        m_interp_filter = m_tree_parser->parse_tree<InterpolationFilter>(SyntaxElementType::InterpFilter);
+    else
+        m_interp_filter = m_interpolation_filter;
+    if (m_mi_size < Block_8x8) {
+        m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
+        m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
+        for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
+            for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
+                auto inter_mode = m_tree_parser->parse_tree(SyntaxElementType::InterMode);
+                m_y_mode = NearestMv + inter_mode;
+                if (m_y_mode == NearestMv || m_y_mode == NearMv) {
+                    for (auto j = 0; j < 1 + is_compound; j++)
+                        SAFE_CALL(append_sub8x8_mvs(idy * 2 + idx, j));
+                }
+                SAFE_CALL(assign_mv(is_compound));
+                for (auto y = 0; y < m_num_4x4_h; y++) {
+                    for (auto x = 0; x < m_num_4x4_w; x++) {
+                        auto block = (idy + y) * 2 + idx + x;
+                        for (auto ref_list = 0; ref_list < 1 + is_compound; ref_list++) {
+                            (void)block;
+                            // TODO: m_block_mvs[ref_list][block] = m_mv[ref_list];
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    SAFE_CALL(assign_mv(is_compound));
+    for (auto ref_list = 0; ref_list < 1 + is_compound; ref_list++) {
+        for (auto block = 0; block < 4; block++) {
+            // TODO: m_block_mvs[ref_list][block] = m_mv[ref_list];
+        }
+    }
+    return true;
+}
+
+bool Decoder::read_ref_frames()
+{
+    if (seg_feature_active(SEG_LVL_REF_FRAME)) {
+        m_ref_frame[0] = static_cast<ReferenceFrame>(m_feature_data[m_segment_id][SEG_LVL_REF_FRAME]);
+        m_ref_frame[1] = None;
+        return true;
+    }
+    ReferenceMode comp_mode;
+    if (m_reference_mode == ReferenceModeSelect)
+        comp_mode = m_tree_parser->parse_tree<ReferenceMode>(SyntaxElementType::CompMode);
+    else
+        comp_mode = m_reference_mode;
+    if (comp_mode == CompoundReference) {
+        auto idx = m_ref_frame_sign_bias[m_comp_fixed_ref];
+        auto comp_ref = m_tree_parser->parse_tree(SyntaxElementType::CompRef);
+        m_ref_frame[idx] = m_comp_fixed_ref;
+        m_ref_frame[!idx] = m_comp_var_ref[comp_ref];
+        return true;
+    }
+    auto single_ref_p1 = m_tree_parser->parse_tree<bool>(SyntaxElementType::SingleRefP1);
+    if (single_ref_p1) {
+        auto single_ref_p2 = m_tree_parser->parse_tree<bool>(SyntaxElementType::SingleRefP2);
+        m_ref_frame[0] = single_ref_p2 ? AltRefFrame : GoldenFrame;
+    } else {
+        m_ref_frame[0] = LastFrame;
+    }
+    m_ref_frame[1] = None;
+    return true;
+}
+
+bool Decoder::assign_mv(bool is_compound)
+{
+    m_mv[1] = ZeroMv;
+    for (auto i = 0; i < 1 + is_compound; i++) {
+        if (m_y_mode == NewMv) {
+            SAFE_CALL(read_mv(i));
+        } else if (m_y_mode == NearestMv) {
+            m_mv[i] = m_nearest_mv[i];
+        } else if (m_y_mode == NearMv) {
+            m_mv[i] = m_near_mv[i];
+        } else {
+            m_mv[i] = ZeroMv;
+        }
+    }
+    return true;
+}
+
+bool Decoder::read_mv(u8)
 {
     // TODO: Implement
     return true;
 }
 
-bool Decoder::intra_block_mode_info()
+bool Decoder::find_mv_refs(ReferenceFrame, int)
+{
+    // TODO: Implement
+    return true;
+}
+
+bool Decoder::find_best_ref_mvs(int)
+{
+    // TODO: Implement
+    return true;
+}
+
+bool Decoder::append_sub8x8_mvs(u8, u8)
 {
     // TODO: Implement
     return true;
