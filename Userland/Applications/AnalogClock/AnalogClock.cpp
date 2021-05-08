@@ -7,6 +7,7 @@
 #include "AnalogClock.h"
 #include <LibCore/DateTime.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
 
@@ -18,8 +19,8 @@ void AnalogClock::draw_graduations(GUI::Painter& painter, Gfx::IntRect& rect, in
     painter.fill_rect(rect, palette().active_window_border2());
 
     painter.draw_line(rect.top_left(), rect.top_right(), palette().threed_highlight());
-    painter.draw_line(rect.bottom_left(), rect.bottom_right(), palette().active_window_border1().darkened(0.9f));
-    painter.draw_line(rect.bottom_right(), rect.top_right(), palette().active_window_border1().darkened(0.9f));
+    painter.draw_line(rect.bottom_left(), rect.bottom_right(), palette().active_window_border1().darkened(0.7f));
+    painter.draw_line(rect.bottom_right(), rect.top_right(), palette().active_window_border1().darkened(0.7f));
     painter.draw_line(rect.top_left(), rect.bottom_left(), palette().threed_highlight());
 }
 
@@ -122,4 +123,12 @@ void AnalogClock::paint_event(GUI::PaintEvent& event)
     draw_hand(painter, minute - angle_offset, m_minute_hand_length, palette().active_window_border2());
     draw_hand(painter, hour - angle_offset, m_hour_hand_length, palette().active_window_border1());
     draw_seconds_hand(painter, seconds - angle_offset);
+
+    if (time.hour() == 0)
+        update_title_date();
+}
+
+void AnalogClock::update_title_date()
+{
+    window()->set_title(Core::DateTime::now().to_string("Clock %d-%m-%Y"));
 }
