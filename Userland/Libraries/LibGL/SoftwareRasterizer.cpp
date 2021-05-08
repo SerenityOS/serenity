@@ -22,6 +22,12 @@ constexpr static float triangle_area(const FloatVector2& a, const FloatVector2& 
     return ((c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x)) / 2;
 }
 
+template<typename T>
+constexpr static T interpolate(const T& v0, const T& v1, const T& v2, const FloatVector4& barycentric_coords)
+{
+    return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
+}
+
 static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
 {
     auto clamped = v.clamped(0, 1);
@@ -33,7 +39,7 @@ static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
 }
 
 template<typename PS>
-static void rasterize_triangle(Gfx::Bitmap& render_target, const GLTriangle& triangle, PS pixel_shader)
+static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& render_target, DepthBuffer& depth_buffer, const GLTriangle& triangle, PS pixel_shader)
 {
     // Since the algorithm is based on blocks of uniform size, we need
     // to ensure that our render_target size is actually a multiple of the block size
@@ -125,7 +131,7 @@ static void rasterize_triangle(Gfx::Bitmap& render_target, const GLTriangle& tri
                 || (a.z() < zero.z() && b.z() < zero.z() && c.z() < zero.z() && d.z() < zero.z()))
                 continue;
 
-            // barycentric coordinate derrivatives
+            // barycentric coordinate derivatives
             auto dcdx = (b - a) / RASTERIZER_BLOCK_SIZE;
             auto dcdy = (c - a) / RASTERIZER_BLOCK_SIZE;
 
@@ -134,9 +140,20 @@ static void rasterize_triangle(Gfx::Bitmap& render_target, const GLTriangle& tri
                 // Fill the block without further coverage tests
                 for (int y = y0; y < y1; y++) {
                     auto coords = a;
-                    auto* pixels = &render_target.scanline(y)[x0];
+                    auto* pixel = &render_target.scanline(y)[x0];
+                    auto* depth = &depth_buffer.scanline(y)[x0];
                     for (int x = x0; x < x1; x++) {
-                        *pixels++ = to_rgba32(pixel_shader(coords, triangle));
+                        if (options.enable_depth_test) {
+                            float z = interpolate(triangle.vertices[0].z, triangle.vertices[1].z, triangle.vertices[2].z, coords);
+                            if (z < *depth) {
+                                *pixel = to_rgba32(pixel_shader(coords, triangle));
+                                *depth = z;
+                            }
+                        } else {
+                            *pixel = to_rgba32(pixel_shader(coords, triangle));
+                        }
+                        pixel++;
+                        depth++;
                         coords = coords + dcdx;
                     }
                     a = a + dcdy;
@@ -146,12 +163,22 @@ static void rasterize_triangle(Gfx::Bitmap& render_target, const GLTriangle& tri
                 // We need to test coverage of every pixel within the block
                 for (int y = y0; y < y1; y++) {
                     auto coords = a;
-                    auto* pixels = &render_target.scanline(y)[x0];
+                    auto* pixel = &render_target.scanline(y)[x0];
+                    auto* depth = &depth_buffer.scanline(y)[x0];
                     for (int x = x0; x < x1; x++) {
                         if (test_point(coords)) {
-                            *pixels = to_rgba32(pixel_shader(coords, triangle));
+                            if (options.enable_depth_test) {
+                                float z = interpolate(triangle.vertices[0].z, triangle.vertices[1].z, triangle.vertices[2].z, coords);
+                                if (z < *depth) {
+                                    *pixel = to_rgba32(pixel_shader(coords, triangle));
+                                    *depth = z;
+                                }
+                            } else {
+                                *pixel = to_rgba32(pixel_shader(coords, triangle));
+                            }
                         }
-                        pixels++;
+                        pixel++;
+                        depth++;
                         coords = coords + dcdx;
                     }
                     a = a + dcdy;
@@ -170,13 +197,14 @@ static Gfx::IntSize closest_multiple(const Gfx::IntSize& min_size, size_t step)
 
 SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
     : m_render_target { Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, RASTERIZER_BLOCK_SIZE)) }
+    , m_depth_buffer { adopt_own(*new DepthBuffer(closest_multiple(min_size, RASTERIZER_BLOCK_SIZE))) }
 {
 }
 
 void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle)
 {
     if (m_options.shade_smooth) {
-        rasterize_triangle(*m_render_target, triangle, [](const FloatVector4& v, const GLTriangle& t) -> FloatVector4 {
+        rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [](const FloatVector4& v, const GLTriangle& t) -> FloatVector4 {
             const float r = t.vertices[0].r * v.x() + t.vertices[1].r * v.y() + t.vertices[2].r * v.z();
             const float g = t.vertices[0].g * v.x() + t.vertices[1].g * v.y() + t.vertices[2].g * v.z();
             const float b = t.vertices[0].b * v.x() + t.vertices[1].b * v.y() + t.vertices[2].b * v.z();
@@ -184,7 +212,7 @@ void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle)
             return { r, g, b, a };
         });
     } else {
-        rasterize_triangle(*m_render_target, triangle, [](const FloatVector4&, const GLTriangle& t) -> FloatVector4 {
+        rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [](const FloatVector4&, const GLTriangle& t) -> FloatVector4 {
             return { t.vertices[0].r, t.vertices[0].g, t.vertices[0].b, t.vertices[0].a };
         });
     }
@@ -195,6 +223,7 @@ void SoftwareRasterizer::resize(const Gfx::IntSize& min_size)
     wait_for_all_threads();
 
     m_render_target = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, closest_multiple(min_size, RASTERIZER_BLOCK_SIZE));
+    m_depth_buffer = adopt_own(*new DepthBuffer(m_render_target->size()));
 }
 
 void SoftwareRasterizer::clear_color(const FloatVector4& color)
@@ -209,11 +238,11 @@ void SoftwareRasterizer::clear_color(const FloatVector4& color)
     m_render_target->fill(Gfx::Color(r, g, b, a));
 }
 
-void SoftwareRasterizer::clear_depth(float)
+void SoftwareRasterizer::clear_depth(float depth)
 {
     wait_for_all_threads();
 
-    // FIXME: implement this
+    m_depth_buffer->clear(depth);
 }
 
 void SoftwareRasterizer::blit_to(Gfx::Bitmap& target)
