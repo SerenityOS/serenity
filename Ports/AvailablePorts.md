@@ -38,6 +38,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`gnupg`](gnupg/)                      | GnuPG                                                      | 2.3.0                    | https://gnupg.org/software/index.html                                          |
 | [`gnuplot`](gnuplot/)                  | Gnuplot                                                    | 5.2.8                    | http://www.gnuplot.info/                                                       |
 | [`grep`](grep/)                        | GNU Grep                                                   | 2.5.4                    | https://www.gnu.org/software/grep/                                             |
+| [`harfbuzz`](harfbuzz/)                | HarfBuzz                                                   | 2.8.1                    | https://github.com/harfbuzz/harfbuzz                                           |
 | [`hatari`](hatari/)                    | Atari ST/STE/TT/Falcon emulator                            | 2.4.0-devel              | https://hatari.tuxfamily.org/                                                  |
 | [`imgcat`](imgcat/)                    | imgcat                                                     | 2.5.0                    | https://github.com/eddieantonio/imgcat                                         |
 | [`indent`](indent/)                    | GNU indent                                                 | 2.2.11                   | https://www.gnu.org/software/indent/                                           |
