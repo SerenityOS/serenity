@@ -38,49 +38,61 @@ ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* messag
 
 namespace UserspaceEmulator {
 
-long double SoftFPU::fpu_get(u8 index) const
+ALWAYS_INLINE void SoftFPU::warn_if_fpu_not_set_absolute(u8 index) const
+{
+    if (!fpu_is_set(index)) [[unlikely]] {
+        // FIXME: Are we supposed to set a flag here?
+        reportln("\033[31;1mWarning! Read of uninitialized value on the FPU Stack ({} abs)\033[0m\n", index);
+        m_emulator.dump_backtrace();
+    }
+}
+ALWAYS_INLINE void SoftFPU::warn_if_mmx_absolute(u8 index) const
+{
+    if (m_reg_is_mmx[index]) [[unlikely]] {
+        reportln("\033[31;1mWarning! Use of an MMX register as an FPU value ({} abs)\033[0m\n", index);
+        m_emulator.dump_backtrace();
+    }
+}
+ALWAYS_INLINE void SoftFPU::warn_if_fpu_absolute(u8 index) const
+{
+    if (!m_reg_is_mmx[index]) [[unlikely]] {
+        reportln("\033[31;1mWarning! Use of an FPU value ({} abs)  as an MMX register\033[0m\n", index);
+        m_emulator.dump_backtrace();
+    }
+}
+
+__attribute__((pure)) ALWAYS_INLINE long double SoftFPU::fpu_get(u8 index) const
 {
     VERIFY(index < 8);
+    warn_if_fpu_not_set_absolute(index);
+    warn_if_mmx_absolute(index);
 
     u8 effective_index = (m_fpu_stack_top + index) % 8;
-
-    if (!fpu_is_set(index)) {
-        // FIXME: Are we supposed to set a flag here?
-        reportln("\033[31;1mWarning! Read of uninitialized value on the FPU Stack ({})\033[0m\n", effective_index);
-        m_emulator.dump_backtrace();
-    }
-    if (m_reg_is_mmx[effective_index]) {
-        reportln("\033[31;1mWarning! Use of an MMX register as an FPU value ({}) register\033[0m\n", effective_index);
-        m_emulator.dump_backtrace();
-    }
 
     return m_st[effective_index];
 }
 
-void SoftFPU::fpu_set_absolute(u8 index, long double value)
+ALWAYS_INLINE void SoftFPU::fpu_set_absolute(u8 index, long double value)
 {
     VERIFY(index < 8);
     set_tag_from_value_absolute(index, value);
     m_st[index] = value;
     m_reg_is_mmx[index] = false;
 }
-void SoftFPU::fpu_set(u8 index, long double value)
+ALWAYS_INLINE void SoftFPU::fpu_set(u8 index, long double value)
 {
     VERIFY(index < 8);
     fpu_set_absolute((m_fpu_stack_top + index) % 8, value);
 }
 
-mmx SoftFPU::mmx_get(u8 index) const
+__attribute__((pure)) ALWAYS_INLINE mmx SoftFPU::mmx_get(u8 index) const
 {
     VERIFY(index < 8);
-    if (!m_reg_is_mmx[index]) {
-        reportln("\033[31;1mWarning! Use of an FPU value as MM{} register\033[0m\n", index);
-        m_emulator.dump_backtrace();
-    }
+    warn_if_fpu_absolute(index);
     return m_mmx[index].value;
 }
 
-void SoftFPU::mmx_set(u8 index, mmx value)
+ALWAYS_INLINE void SoftFPU::mmx_set(u8 index, mmx value)
 {
     m_mmx[index].value = value;
     // The high bytes are set to 0b11... to make the floatingpoint value NaN.
@@ -91,7 +103,7 @@ void SoftFPU::mmx_set(u8 index, mmx value)
     m_reg_is_mmx[index] = true;
 }
 
-void SoftFPU::fpu_push(long double value)
+ALWAYS_INLINE void SoftFPU::fpu_push(long double value)
 {
     if (fpu_is_set(7))
         fpu_set_stack_overflow();
@@ -100,12 +112,10 @@ void SoftFPU::fpu_push(long double value)
     fpu_set(0, value);
 }
 
-long double SoftFPU::fpu_pop()
+ALWAYS_INLINE long double SoftFPU::fpu_pop()
 {
-    if (m_reg_is_mmx[m_fpu_stack_top]) {
-        reportln("\033[31;1mWarning! Use of an MMX register as an FPU value (0) register\033[0m\n");
-        m_emulator.dump_backtrace();
-    }
+    warn_if_mmx_absolute(m_fpu_stack_top);
+
     if (!fpu_is_set(0))
         fpu_set_stack_underflow();
 
@@ -115,7 +125,7 @@ long double SoftFPU::fpu_pop()
     return ret;
 }
 
-void SoftFPU::fpu_set_exception(FPU_Exception ex)
+ALWAYS_INLINE void SoftFPU::fpu_set_exception(FPU_Exception ex)
 {
     switch (ex) {
     case FPU_Exception::StackFault:
@@ -169,7 +179,7 @@ void SoftFPU::fpu_set_exception(FPU_Exception ex)
 }
 
 template<Arithmetic T>
-T SoftFPU::fpu_round(long double value) const
+__attribute__((pure)) ALWAYS_INLINE T SoftFPU::fpu_round(long double value) const
 {
     // FIXME: may need to set indefinite values manually
     switch (fpu_get_round_mode()) {
@@ -187,7 +197,7 @@ T SoftFPU::fpu_round(long double value) const
 }
 
 template<Arithmetic T>
-T SoftFPU::fpu_round_checked(long double value)
+__attribute__((pure)) ALWAYS_INLINE T SoftFPU::fpu_round_checked(long double value)
 {
     T result = fpu_round<T>(value);
     if (i8 rnd = value - result) {
@@ -201,13 +211,13 @@ T SoftFPU::fpu_round_checked(long double value)
 }
 
 template<FloatingPoint T>
-T SoftFPU::fpu_convert(long double value) const
+__attribute__((pure)) ALWAYS_INLINE T SoftFPU::fpu_convert(long double value) const
 {
     // FIXME: actually round right
     return static_cast<T>(value);
 }
 template<FloatingPoint T>
-T SoftFPU::fpu_convert_checked(long double value)
+__attribute__((pure)) ALWAYS_INLINE T SoftFPU::fpu_convert_checked(long double value)
 {
     T result = fpu_convert<T>(value);
     if (i8 rnd = value - result) {
@@ -221,7 +231,7 @@ T SoftFPU::fpu_convert_checked(long double value)
 }
 
 template<Signed R, Signed I>
-R signed_saturate(I input)
+__attribute__((const)) ALWAYS_INLINE R signed_saturate(I input)
 {
     if (input > NumericLimits<R>::max())
         return NumericLimits<R>::max();
@@ -230,7 +240,7 @@ R signed_saturate(I input)
     return static_cast<R>(input);
 }
 template<Unsigned R, Unsigned I>
-R unsigned_saturate(I input)
+__attribute__((const)) ALWAYS_INLINE R unsigned_saturate(I input)
 {
     if (input > NumericLimits<R>::max())
         return NumericLimits<R>::max();
