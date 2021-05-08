@@ -92,8 +92,13 @@ private:
     bool read_skip();
     bool seg_feature_active(u8 feature);
     bool read_tx_size(bool allow_select);
-
     bool inter_frame_mode_info();
+    bool inter_segment_id();
+    u8 get_segment_id();
+    bool read_is_inter();
+    bool inter_block_mode_info();
+
+    bool intra_block_mode_info();
 
     u8 m_profile { 0 };
     u8 m_frame_to_show_map_index { 0 };
@@ -158,8 +163,8 @@ private:
     u32 m_mi_size { 0 };
     bool m_available_u { false };
     bool m_available_l { false };
-    int m_segment_id { 0 };
-    int m_skip { false };
+    u8 m_segment_id { 0 };
+    bool m_skip { false };
     u8 m_num_8x8 { 0 };
     bool m_has_rows { false };
     bool m_has_cols { false };
@@ -176,6 +181,14 @@ private:
     u8 m_num_4x4_w { 0 };
     u8 m_num_4x4_h { 0 };
     u8 m_uv_mode { 0 }; // FIXME: Is u8 the right size?
+    ReferenceFrame m_left_ref_frame[2];
+    ReferenceFrame m_above_ref_frame[2];
+    Vector<Vector<Vector<ReferenceFrame>>> m_ref_frames; // TODO: Can we make these fixed sized allocations?
+    bool m_left_intra { false };
+    bool m_above_intra { false };
+    bool m_left_single { false };
+    bool m_above_single { false };
+    Vector<Vector<u8>> m_prev_segment_ids;
 
     bool m_use_hp { false };
 
