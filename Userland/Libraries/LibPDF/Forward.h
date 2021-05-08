@@ -30,4 +30,13 @@ ENUMERATE_OBJECT_TYPES(FORWARD_DECL)
 template<typename T>
 concept IsObject = IsBaseOf<Object, T>;
 
+template<typename T>
+concept IsValuePrimitive = IsSame<T, bool> || IsSame<T, int> || IsSame<T, float>;
+
+template<typename T>
+concept IsValueType = IsValuePrimitive<T> || IsObject<T>;
+
+template<IsValueType T>
+using UnwrappedValueType = Conditional<IsObject<T>, NonnullRefPtr<T>, T>;
+
 }

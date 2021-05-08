@@ -48,6 +48,13 @@ Parser::XRefTableAndTrailer Parser::parse_last_xref_table_and_trailer()
     return { xref_table, trailer };
 }
 
+NonnullRefPtr<IndirectValue> Parser::parse_indirect_value_at_offset(size_t offset)
+{
+    m_reader.set_reading_forwards();
+    m_reader.move_to(offset);
+    return parse_indirect_value();
+}
+
 bool Parser::parse_header()
 {
     // FIXME: Do something with the version?
@@ -323,9 +330,16 @@ NonnullRefPtr<IndirectValue> Parser::parse_indirect_value(int index, int generat
     auto value = parse_value();
     VERIFY(value.is_object());
     VERIFY(m_reader.matches("endobj"));
-    VERIFY(consume_whitespace());
 
     return make_object<IndirectValue>(index, generation, value.as_object());
+}
+
+NonnullRefPtr<IndirectValue> Parser::parse_indirect_value()
+{
+    auto first_number = parse_number();
+    auto second_number = parse_number();
+    VERIFY(first_number.is_int() && second_number.is_int());
+    return parse_indirect_value(first_number.as_int(), second_number.as_int());
 }
 
 Value Parser::parse_number()
@@ -366,7 +380,7 @@ NonnullRefPtr<NameObject> Parser::parse_name()
     StringBuilder builder;
 
     while (true) {
-        if (matches_whitespace())
+        if (!matches_regular_character())
             break;
 
         if (m_reader.matches('#')) {
@@ -585,6 +599,16 @@ bool Parser::matches_number() const
         return false;
     auto ch = m_reader.peek();
     return isdigit(ch) || ch == '-' || ch == '+';
+}
+
+bool Parser::matches_delimiter() const
+{
+    return m_reader.matches_any('(', ')', '<', '>', '[', ']', '{', '}', '/', '%');
+}
+
+bool Parser::matches_regular_character() const
+{
+    return !matches_delimiter() && !matches_whitespace();
 }
 
 void Parser::consume_eol()
