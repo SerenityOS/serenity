@@ -132,8 +132,6 @@ protected:
     explicit TextDocument(Client* client);
 
 private:
-    void update_undo();
-
     NonnullOwnPtrVector<TextDocumentLine> m_lines;
     Vector<TextDocumentSpan> m_spans;
 
@@ -141,7 +139,6 @@ private:
     bool m_client_notifications_enabled { true };
 
     UndoStack m_undo_stack;
-    RefPtr<Core::Timer> m_undo_timer;
 
     RegexResult m_regex_result;
     size_t m_regex_result_match_index { 0 };
