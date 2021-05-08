@@ -1257,6 +1257,11 @@ int vfscanf(FILE* stream, const char* fmt, va_list ap)
     return vsscanf(buffer, fmt, ap);
 }
 
+int vscanf(const char* fmt, va_list ap)
+{
+    return vfscanf(stdin, fmt, ap);
+}
+
 void flockfile([[maybe_unused]] FILE* filehandle)
 {
     dbgln("FIXME: Implement flockfile()");
