@@ -38,6 +38,9 @@ void UndoStack::undo()
     auto& combo = m_stack[--m_stack_index];
     for (auto i = static_cast<ssize_t>(combo.commands.size()) - 1; i >= 0; i--)
         combo.commands[i].undo();
+
+    if (on_state_change)
+        on_state_change();
 }
 
 void UndoStack::redo()
@@ -48,6 +51,9 @@ void UndoStack::redo()
     auto& commands = m_stack[m_stack_index++].commands;
     for (auto& command : commands)
         command.redo();
+
+    if (on_state_change)
+        on_state_change();
 }
 
 void UndoStack::pop()
@@ -72,6 +78,9 @@ void UndoStack::push(NonnullOwnPtr<Command>&& command)
     }
 
     m_stack.last().commands.append(move(command));
+
+    if (on_state_change)
+        on_state_change();
 }
 
 void UndoStack::finalize_current_combo()
@@ -84,12 +93,20 @@ void UndoStack::finalize_current_combo()
     if (!m_stack.last().commands.is_empty()) {
         m_stack.append(make<Combo>());
         m_stack_index = m_stack.size() - 1;
+
+        if (on_state_change)
+            on_state_change();
     }
 }
 
 void UndoStack::set_current_unmodified()
 {
+    if (m_clean_index.has_value() && m_clean_index.value() == m_stack_index)
+        return;
     m_clean_index = m_stack_index;
+
+    if (on_state_change)
+        on_state_change();
 }
 
 bool UndoStack::is_current_modified() const
@@ -99,9 +116,15 @@ bool UndoStack::is_current_modified() const
 
 void UndoStack::clear()
 {
+    if (m_stack.is_empty() && m_stack_index == 0 && !m_clean_index.has_value())
+        return;
+
     m_stack.clear();
     m_stack_index = 0;
     m_clean_index.clear();
+
+    if (on_state_change)
+        on_state_change();
 }
 
 }
