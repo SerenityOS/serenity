@@ -130,8 +130,8 @@ public:
     void do_delete();
     void delete_current_line();
     void select_all();
-    virtual void undo() { document().undo(); }
-    virtual void redo() { document().redo(); }
+    virtual void undo();
+    virtual void redo();
 
     Function<void()> on_change;
     Function<void(bool modified)> on_modified_change;
