@@ -255,14 +255,10 @@ void Painter::fill_ellipse(const IntRect& a_rect, Color color)
 
     VERIFY(m_target->rect().contains(rect));
 
-    RGBA32* dst = m_target->scanline(rect.top()) + rect.left() + rect.width() / 2;
-    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
-
-    for (int i = 0; i < rect.height(); i++) {
-        double y = rect.height() * 0.5 - i;
-        double x = rect.width() * sqrt(0.25 - y * y / rect.height() / rect.height());
-        fast_u32_fill(dst - (int)x, color.value(), 2 * (int)x);
-        dst += dst_skip;
+    for (int i = 1; i < a_rect.height(); i++) {
+        double y = a_rect.height() * 0.5 - i;
+        double x = a_rect.width() * sqrt(0.25 - y * y / a_rect.height() / a_rect.height());
+        draw_line({ a_rect.x() + a_rect.width() / 2 - (int)x, a_rect.y() + i }, { a_rect.x() + a_rect.width() / 2 + (int)x - 1, a_rect.y() + i }, color);
     }
 }
 
