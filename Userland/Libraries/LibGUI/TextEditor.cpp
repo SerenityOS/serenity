@@ -1820,4 +1820,16 @@ void TextEditor::set_ruler_visible(bool visible)
     update();
 }
 
+void TextEditor::undo()
+{
+    clear_selection();
+    document().undo();
+}
+
+void TextEditor::redo()
+{
+    clear_selection();
+    document().redo();
+}
+
 }
