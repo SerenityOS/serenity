@@ -726,6 +726,8 @@ bool InsertTextCommand::merge_with(GUI::Command const& other)
     auto& typed_other = static_cast<InsertTextCommand const&>(other);
     if (m_range.end() != typed_other.m_range.start())
         return false;
+    if (m_range.start().line() != m_range.end().line())
+        return false;
     StringBuilder builder(m_text.length() + typed_other.m_text.length());
     builder.append(m_text);
     builder.append(typed_other.m_text);
@@ -807,16 +809,18 @@ bool RemoveTextCommand::merge_with(GUI::Command const& other)
     if (!is<RemoveTextCommand>(other))
         return false;
     auto& typed_other = static_cast<RemoveTextCommand const&>(other);
-    if (m_range.start() == typed_other.m_range.end()) {
-        // Merge backspaces
-        StringBuilder builder(m_text.length() + typed_other.m_text.length());
-        builder.append(typed_other.m_text);
-        builder.append(m_text);
-        m_text = builder.to_string();
-        m_range.set_start(typed_other.m_range.start());
-        return true;
-    }
-    // FIXME: Merge forward-deletes
+    if (m_range.start() != typed_other.m_range.end())
+        return false;
+    if (m_range.start().line() != m_range.end().line())
+        return false;
+    // Merge backspaces
+    StringBuilder builder(m_text.length() + typed_other.m_text.length());
+    builder.append(typed_other.m_text);
+    builder.append(m_text);
+    m_text = builder.to_string();
+    m_range.set_start(typed_other.m_range.start());
+    return true;
+
     return false;
 }
 
@@ -834,7 +838,7 @@ void RemoveTextCommand::undo()
 
 void TextDocument::update_undo()
 {
-    m_undo_stack.finalize_current_combo();
+    // FIXME: Maybe seal the last command somehow?
 }
 
 TextPosition TextDocument::insert_at(const TextPosition& position, const StringView& text, const Client* client)

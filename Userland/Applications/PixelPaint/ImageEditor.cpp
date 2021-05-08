@@ -48,7 +48,6 @@ void ImageEditor::did_complete_action()
 {
     if (!m_image)
         return;
-    m_undo_stack->finalize_current_combo();
     m_undo_stack->push(make<ImageUndoCommand>(*m_image));
 }
 
