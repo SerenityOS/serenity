@@ -488,7 +488,7 @@ void Editor::LanguageServerAidedAutocompleteProvider::provide_completions(Functi
         data.value().position.column());
 }
 
-void Editor::on_edit_action(const GUI::Command& command)
+void Editor::will_execute(GUI::TextDocumentUndoCommand const& command)
 {
     if (!m_language_client)
         return;
