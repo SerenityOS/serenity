@@ -1180,3 +1180,8 @@ int unlockpt([[maybe_unused]] int fd)
     return 0;
 }
 }
+
+void _Exit(int status)
+{
+    _exit(status);
+}
