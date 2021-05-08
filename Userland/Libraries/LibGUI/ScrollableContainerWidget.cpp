@@ -50,6 +50,7 @@ void ScrollableContainerWidget::update_widget_size()
 void ScrollableContainerWidget::resize_event(GUI::ResizeEvent& event)
 {
     AbstractScrollableWidget::resize_event(event);
+    update_widget_position();
     update_widget_size();
 }
 
