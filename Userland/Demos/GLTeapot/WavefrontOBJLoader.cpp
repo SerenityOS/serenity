@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2021, Mathieu Gaillard <gaillard.mathieu.39@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -47,13 +48,13 @@ RefPtr<Mesh> WavefrontOBJLoader::load(const String& fname)
             // Create a new triangle
             triangles.append(
                 {
-                    vertices.at(face_line.at(1).to_uint().value() - 1),
-                    vertices.at(face_line.at(2).to_uint().value() - 1),
-                    vertices.at(face_line.at(3).to_uint().value() - 1),
+                    face_line.at(1).to_uint().value() - 1,
+                    face_line.at(2).to_uint().value() - 1,
+                    face_line.at(3).to_uint().value() - 1,
                 });
         }
     }
 
     dbgln("Wavefront: Done.");
-    return adopt_ref(*new Mesh(triangles));
+    return adopt_ref(*new Mesh(vertices, triangles));
 }
