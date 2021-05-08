@@ -369,9 +369,14 @@ public:
         return original_index != index;
     }
 
-    bool is_valid_selector_char(char ch) const
+    static bool is_valid_selector_char(char ch)
     {
-        return isalnum(ch) || ch == '-' || ch == '_' || ch == '(' || ch == ')' || ch == '@';
+        return isalnum(ch) || ch == '-' || ch == '+' || ch == '_' || ch == '(' || ch == ')' || ch == '@';
+    }
+
+    static bool is_valid_selector_args_char(char ch)
+    {
+        return is_valid_selector_char(ch) || ch == ' ' || ch == '\t';
     }
 
     bool is_combinator(char ch) const
@@ -513,8 +518,19 @@ public:
                     return {};
                 buffer.append(')');
             } else {
-                while (is_valid_selector_char(peek()))
-                    buffer.append(consume_one());
+                int nesting_level = 0;
+                while (true) {
+                    const auto ch = peek();
+                    if (ch == '(')
+                        ++nesting_level;
+                    else if (ch == ')' && nesting_level > 0)
+                        --nesting_level;
+
+                    if (nesting_level > 0 ? is_valid_selector_args_char(ch) : is_valid_selector_char(ch))
+                        buffer.append(consume_one());
+                    else
+                        break;
+                };
             }
 
             auto pseudo_name = String::copy(buffer);
