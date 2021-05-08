@@ -196,6 +196,12 @@ int pthread_mutexattr_settype(pthread_mutexattr_t* attr, int type)
     return 0;
 }
 
+int pthread_mutexattr_gettype(pthread_mutexattr_t* attr, int* type)
+{
+    *type = attr->type;
+    return 0;
+}
+
 int pthread_attr_init(pthread_attr_t* attributes)
 {
     auto* impl = new PthreadAttrImpl {};
