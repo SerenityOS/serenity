@@ -343,4 +343,14 @@ void Action::set_icon(const Gfx::Bitmap* icon)
     m_icon = icon;
 }
 
+void Action::set_text(String text)
+{
+    if (m_text == text)
+        return;
+    m_text = move(text);
+    for_each_menu_item([&](auto& menu_item) {
+        menu_item.update_from_action({});
+    });
+}
+
 }
