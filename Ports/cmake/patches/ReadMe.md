@@ -11,46 +11,6 @@ This patch is a big hack to wipe wide strings out of the codebase; naturally, it
 - [X] Resolves issue(s) with our side of things
 - [X] Hack
 
-## `0002-stoi-atoi.patch` and `0003-stoi-atoi-2.patch`
-
-For some reason, our libstdc++ does not define `std::stoi`, these two patches change different overloads of this function to the equivalent C functions.
-
-### Status
-- [X] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [ ] Hack
-
-## `0004-snprintf.patch`
-
-Our libstdc++ does not define `std::printf` and `std::snprintf`, this patch simply removes the `std` namespace.
-
-### Status
-- [X] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [ ] Hack
-
-## `0005-stod.patch` and `0006-stoll.patch`
-
-Our libstdc++ does not define `std::stod` and `std::stoll`, this patch swaps them with the equivalent C functions.
-
-### Status
-- [X] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [ ] Hack
-
-## `0007-utimes-utime.patch`
-
-`utimes` is a deprecated POSIX API, and we do not support it, this patch uses the equivalent `utime` function instead.
-
-### Status
-- [ ] Local?
-- [X] Should be merged to upstream? (Once cleaned up)
-- [ ] Resolves issue(s) with our side of things
-- [ ] Hack
-
 ## `0008-unix-stuff.patch`
 
 This patch removes the use of `{get,set}priority()` as we do not support it.
@@ -121,16 +81,6 @@ Everyone gets this wrong. most platforms are very lax with these includes, but w
 - [ ] Resolves issue(s) with our side of things
 - [ ] Hack
 
-## `0015-atoll.patch`
-
-Our libstdc++ does not define `std::atoll`, this patch uses the equivalent C function instead.
-
-### Status
-- [ ] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [ ] Hack
-
 ## `0016-conflicting-0.patch` and `0017-conflicting-1.patch`
 
 These two defines make GCC very sad. reasons are unknown at this time.
@@ -141,41 +91,9 @@ These two defines make GCC very sad. reasons are unknown at this time.
 - [X] Resolves issue(s) with our side of things
 - [X] Hack
 
-## `0018-isfinite.patch`
-
-Our `math.h` already defines `isfinite`.
-
-### Status
-- [ ] Local?
-- [X] Should be merged to upstream? If we want to have cmake support serenity out of the box.
-- [ ] Resolves issue(s) with our side of things
-- [ ] Hack
-
 ## `0019-libuv-so_linger.patch`
 
 We don't have `SO_LINGER` or its associated struct. This patch removes them.
-
-### Status
-- [X] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
-
-## `0022-remove-mutex.patch` and `0024-shared-mutex.patch`
-
-We don't have mutexes, and out libstdc++ does not define `std::mutex`.
-This patch removes all uses of `std::mutex`, `std::condition_variable`, and anything that depends on them; and replaces them with single-threaded equivalents.
-This will break horribly with smp.
-
-### Status
-- [X] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
-
-## `0023-lround.patch`
-
-Our libstdc++ (and stdlib) does not have `lround`, this patch replaces that with somewhat equivalent C stdlib functions.
 
 ### Status
 - [X] Local?
