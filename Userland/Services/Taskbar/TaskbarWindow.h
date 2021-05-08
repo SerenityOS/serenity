@@ -16,7 +16,7 @@ class TaskbarWindow final : public GUI::Window {
 public:
     virtual ~TaskbarWindow() override;
 
-    static int taskbar_height() { return 28; }
+    static int taskbar_height() { return 27; }
 
 private:
     explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu);
