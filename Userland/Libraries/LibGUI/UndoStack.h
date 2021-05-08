@@ -31,6 +31,8 @@ public:
 
     void clear();
 
+    Function<void()> on_state_change;
+
 private:
     struct Combo {
         NonnullOwnPtrVector<Command> commands;
