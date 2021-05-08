@@ -22,7 +22,7 @@ const char* usage = "usage:\n"
                     "options:\n"
                     "\tif=<file>\tinput file (default: stdin)\n"
                     "\tof=<file>\toutput file (default: stdout)\n"
-                    "\tbs=<size>\tblocks size (default: 512)\n"
+                    "\tbs=<size>\tblocks size may be followed by multiplicate suffixes: k=1024, M=1024*1024, G=1024*1024*1024 (default: 512)\n"
                     "\tcount=<size>\t<size> blocks to copy (default: 0 (until end-of-file))\n"
                     "\tseek=<size>\tskip <size> blocks at start of output (default: 0)\n"
                     "\tskip=<size>\tskip <size> blocks at start of input (default: 0)\n"
@@ -74,13 +74,29 @@ static int handle_size_arguments(size_t& numeric_value, const char* argument)
         return -1;
     }
 
+    unsigned suffix_multiplier = 1;
+    switch (value.to_lowercase()[value.length() - 1]) {
+    case 'k':
+        suffix_multiplier = KiB;
+        value = value.substring(0, value.length() - 1);
+        break;
+    case 'm':
+        suffix_multiplier = MiB;
+        value = value.substring(0, value.length() - 1);
+        break;
+    case 'g':
+        suffix_multiplier = GiB;
+        value = value.substring(0, value.length() - 1);
+        break;
+    }
+
     Optional<unsigned> numeric_optional = value.to_uint();
     if (!numeric_optional.has_value()) {
         fprintf(stderr, "Invalid size-value: %s\n", value.characters());
         return -1;
     }
 
-    numeric_value = numeric_optional.value();
+    numeric_value = numeric_optional.value() * suffix_multiplier;
     if (numeric_value < 1) {
         fprintf(stderr, "Invalid size-value: %lu\n", numeric_value);
         return -1;
