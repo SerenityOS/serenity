@@ -3,7 +3,7 @@
 // The description of the state machine is taken from https://vt100.net/emu/dec_ansi_parser
 // with added support for UTF-8 parsing
 
-@name VTParserStateMachine
+@name EscapeSequenceStateMachine
 @namespace VT
 @begin Ground
 

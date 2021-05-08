@@ -278,9 +278,13 @@ set(ELF_SOURCES
     ../Userland/Libraries/LibELF/Validation.cpp
 )
 
+generate_state_machine(../Userland/Libraries/LibVT/StateMachine.txt ../Userland/Libraries/LibVT/EscapeSequenceStateMachine.h)
+
 set(VT_SOURCES
     ../Userland/Libraries/LibVT/Terminal.cpp
     ../Userland/Libraries/LibVT/Line.cpp
+    ../Userland/Libraries/LibVT/EscapeSequenceStateMachine.h
+    ../Userland/Libraries/LibVT/EscapeSequenceParser.cpp
 )
 
 set(KEYBOARD_SOURCES

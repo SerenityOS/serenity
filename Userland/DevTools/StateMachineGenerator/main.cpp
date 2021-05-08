@@ -211,18 +211,15 @@ parse_state_machine(StringView input)
 }
 
 void output_header(const StateMachine&, SourceGenerator&);
-void output_cpp(const StateMachine&, SourceGenerator&);
 
 int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
     const char* path = nullptr;
-    bool header_mode = false;
-    args_parser.add_option(header_mode, "Generate .h file", "header", 'H');
     args_parser.add_positional_argument(path, "Path to parser description", "input", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
-    auto file_or_error = Core::File::open(path, Core::IODevice::ReadOnly);
+    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
         fprintf(stderr, "Cannot open %s\n", path);
     }
@@ -232,10 +229,7 @@ int main(int argc, char** argv)
 
     StringBuilder builder;
     SourceGenerator generator { builder };
-    if (header_mode)
-        output_header(*state_machine, generator);
-    else
-        output_cpp(*state_machine, generator);
+    output_header(*state_machine, generator);
     outln("{}", generator.as_string_view());
     return 0;
 }
@@ -340,9 +334,66 @@ public:
 
     typedef Function<void(Action, u8)> Handler;
 
-    @class_name@(Handler);
+    @class_name@(Handler handler)
+    : m_handler(move(handler))
+    {
+    }
 
-    void advance(u8);
+    void advance(u8 byte)
+    {
+        auto next_state = lookup_state_transition(byte);
+        bool state_will_change = next_state.new_state != m_state && next_state.new_state != State::_Anywhere;
+
+        // only run exit directive if state is being changed
+        if (state_will_change) {
+            switch (m_state) {
+)~~~");
+    for (auto s : machine.states) {
+        auto state_generator = generator.fork();
+        if (s.exit_action.has_value()) {
+            state_generator.set("state_name", s.name);
+            state_generator.set("action", s.exit_action.value());
+            state_generator.append(R"~~~(
+            case State::@state_name@:
+                m_handler(Action::@action@, byte);
+                break;
+)~~~");
+        }
+    }
+    generator.append(R"~~~(
+            default:
+                break;
+            }
+        }
+
+        if (next_state.action != Action::_Ignore)
+            m_handler(next_state.action, byte);
+        m_state = next_state.new_state;
+
+        // only run entry directive if state is being changed
+        if (state_will_change)
+        {
+            switch (next_state.new_state)
+            {
+)~~~");
+    for (auto state : machine.states) {
+        auto state_generator = generator.fork();
+        if (state.entry_action.has_value()) {
+            state_generator.set("state_name", state.name);
+            state_generator.set("action", state.entry_action.value());
+            state_generator.append(R"~~~(
+            case State::@state_name@:
+                m_handler(Action::@action@, byte);
+                break;
+)~~~");
+        }
+    }
+    generator.append(R"~~~(
+            default:
+                break;
+            }
+        }
+    }
 
 private:
     enum class State : u8 {
@@ -370,121 +421,27 @@ private:
 
     Handler m_handler;
 
-    StateTransition lookup_state_transition(u8);
+    ALWAYS_INLINE StateTransition lookup_state_transition(u8 byte)
+    {
+        VERIFY((u8)m_state < @state_count@);
+)~~~");
+    if (machine.anywhere.has_value()) {
+        generator.append(R"~~~(
+        auto anywhere_state = STATE_TRANSITION_TABLE[0][byte];
+        if (anywhere_state.new_state != State::_Anywhere || anywhere_state.action != Action::_Ignore)
+            return anywhere_state;
+        else
+)~~~");
+    }
+    generator.append(R"~~~(
+            return STATE_TRANSITION_TABLE[(u8)m_state][byte];
+    }
 )~~~");
 
     auto table_generator = generator.fork();
     generate_lookup_table(machine, table_generator);
     generator.append(R"~~~(
 }; // end @class_name@
-)~~~");
-
-    if (machine.namespaces.has_value()) {
-        generator.append(R"~~~(
-} // end namespace
-)~~~");
-    }
-}
-
-void output_cpp(const StateMachine& machine, SourceGenerator& generator)
-{
-    VERIFY(!machine.name.is_empty());
-    generator.set("class_name", machine.name);
-    generator.set("state_count", String::number(machine.states.size() + 1));
-
-    generator.append(R"~~~(
-#include "@class_name@.h"
-#include <AK/Function.h>
-#include <AK/Types.h>
-)~~~");
-    if (machine.namespaces.has_value()) {
-        generator.set("namespace", machine.namespaces.value());
-        generator.append(R"~~~(
-namespace @namespace@ {
-)~~~");
-    }
-    generator.append(R"~~~(
-@class_name@::@class_name@(Handler handler)
-    : m_handler(move(handler))
-{
-}
-
-ALWAYS_INLINE @class_name@::StateTransition @class_name@::lookup_state_transition(u8 byte)
-{
-    VERIFY((u8)m_state < @state_count@);
-    )~~~");
-    if (machine.anywhere.has_value()) {
-        generator.append(R"~~~(
-    auto anywhere_state = STATE_TRANSITION_TABLE[0][byte];
-    if (anywhere_state.new_state != @class_name@::State::_Anywhere || anywhere_state.action != @class_name@::Action::_Ignore)
-        return anywhere_state;
-    else
-)~~~");
-    }
-    generator.append(R"~~~(
-        return STATE_TRANSITION_TABLE[(u8)m_state][byte];
-}
-)~~~");
-
-    generator.append(R"~~~(
-
-void @class_name@::advance(u8 byte)
-{
-    auto next_state = lookup_state_transition(byte);
-    bool state_will_change = next_state.new_state != m_state && next_state.new_state != @class_name@::State::_Anywhere;
-
-    // only run exit directive if state is being changed
-    if (state_will_change)
-    {
-        switch (m_state)
-        {
-)~~~");
-    for (auto s : machine.states) {
-        auto state_generator = generator.fork();
-        if (s.exit_action.has_value()) {
-            state_generator.set("state_name", s.name);
-            state_generator.set("action", s.exit_action.value());
-            state_generator.append(R"~~~(
-        case @class_name@::State::@state_name@:
-            m_handler(Action::@action@, byte);
-            break;
-)~~~");
-        }
-    }
-    generator.append(R"~~~(
-        default:
-            break;
-        }
-    }
-
-    if (next_state.action != @class_name@::Action::_Ignore)
-        m_handler(next_state.action, byte);
-    m_state = next_state.new_state;
-
-    // only run entry directive if state is being changed
-    if (state_will_change)
-    {
-        switch (next_state.new_state)
-        {
-)~~~");
-    for (auto state : machine.states) {
-        auto state_generator = generator.fork();
-        if (state.entry_action.has_value()) {
-            state_generator.set("state_name", state.name);
-            state_generator.set("action", state.entry_action.value());
-            state_generator.append(R"~~~(
-        case @class_name@::State::@state_name@:
-            m_handler(Action::@action@, byte);
-            break;
-)~~~");
-        }
-    }
-    generator.append(R"~~~(
-        default:
-            break;
-        }
-    }
-}
 )~~~");
 
     if (machine.namespaces.has_value()) {

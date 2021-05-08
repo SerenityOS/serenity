@@ -11,6 +11,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/API/KeyCode.h>
+#include <LibVT/EscapeSequenceParser.h>
 #include <LibVT/Line.h>
 #include <LibVT/Position.h>
 
@@ -28,7 +29,7 @@ public:
     virtual void emit(const u8*, size_t) = 0;
 };
 
-class Terminal {
+class Terminal : public EscapeSequenceExecutor {
 public:
     explicit Terminal(TerminalClient&);
     ~Terminal();
@@ -106,68 +107,78 @@ public:
     Attribute attribute_at(const Position&) const;
 
 private:
-    typedef Vector<unsigned, 4> ParamVector;
-
-    void on_code_point(u32);
+    // ^EscapeSequenceExecutor
+    virtual void emit_code_point(u32) override;
+    virtual void execute_control_code(u8) override;
+    virtual void execute_escape_sequence(Intermediates intermediates, bool ignore, u8 last_byte) override;
+    virtual void execute_csi_sequence(Parameters parameters, Intermediates intermediates, bool ignore, u8 last_byte) override;
+    virtual void execute_osc_sequence(OscParameters parameters, u8 last_byte) override;
+    virtual void dcs_hook(Parameters parameters, Intermediates intermediates, bool ignore, u8 last_byte) override;
+    virtual void receive_dcs_char(u8 byte) override;
+    virtual void execute_dcs_sequence() override;
 
     void scroll_up();
     void scroll_down();
     void newline();
+    void carriage_return();
+
     void set_cursor(unsigned row, unsigned column);
     void put_character_at(unsigned row, unsigned column, u32 ch);
     void set_window_title(const String&);
 
-    void unimplemented_escape();
-    void unimplemented_xterm_escape();
+    void unimplemented_control_code(u8);
+    void unimplemented_escape_sequence(Intermediates, u8 last_byte);
+    void unimplemented_csi_sequence(Parameters, Intermediates, u8 last_byte);
+    void unimplemented_osc_sequence(OscParameters, u8 last_byte);
 
     void emit_string(const StringView&);
 
-    void alter_mode(bool should_set, bool question_param, const ParamVector&);
+    void alter_mode(bool should_set, bool question_param, Parameters);
 
     // CUU – Cursor Up
-    void CUU(const ParamVector&);
+    void CUU(Parameters);
 
     // CUD – Cursor Down
-    void CUD(const ParamVector&);
+    void CUD(Parameters);
 
     // CUF – Cursor Forward
-    void CUF(const ParamVector&);
+    void CUF(Parameters);
 
     // CUB – Cursor Backward
-    void CUB(const ParamVector&);
+    void CUB(Parameters);
 
     // CUP - Cursor Position
-    void CUP(const ParamVector&);
+    void CUP(Parameters);
 
     // ED - Erase in Display
-    void ED(const ParamVector&);
+    void ED(Parameters);
 
     // EL - Erase in Line
-    void EL(const ParamVector&);
+    void EL(Parameters);
 
     // SGR – Select Graphic Rendition
-    void SGR(const ParamVector&);
+    void SGR(Parameters);
 
     // Save Current Cursor Position
-    void SCOSC(const ParamVector&);
+    void SCOSC();
 
     // Restore Saved Cursor Position
-    void SCORC(const ParamVector&);
+    void SCORC(Parameters);
 
     // DECSTBM – Set Top and Bottom Margins ("Scrolling Region")
-    void DECSTBM(const ParamVector&);
+    void DECSTBM(Parameters);
 
     // RM – Reset Mode
-    void RM(bool question_param, const ParamVector&);
+    void RM(Parameters);
 
     // SM – Set Mode
-    void SM(bool question_param, const ParamVector&);
+    void SM(Parameters);
 
     // DA - Device Attributes
-    void DA(const ParamVector&);
+    void DA(Parameters);
 
     // HVP – Horizontal and Vertical Position
-    void HVP(const ParamVector&);
+    void HVP(Parameters);
 
     // NEL - Next Line
     void NEL();
@@ -179,42 +190,44 @@ private:
     void RI();
 
     // DSR - Device Status Reports
-    void DSR(const ParamVector&);
+    void DSR(Parameters);
 
     // ICH - Insert Character
-    void ICH(const ParamVector&);
+    void ICH(Parameters);
 
     // SU - Scroll Up (called "Pan Down" in VT510)
-    void SU(const ParamVector&);
+    void SU(Parameters);
 
     // SD - Scroll Down (called "Pan Up" in VT510)
-    void SD(const ParamVector&);
+    void SD(Parameters);
 
     // IL - Insert Line
-    void IL(const ParamVector&);
+    void IL(Parameters);
 
     // DCH - Delete Character
-    void DCH(const ParamVector&);
+    void DCH(Parameters);
 
     // DL - Delete Line
-    void DL(const ParamVector&);
+    void DL(Parameters);
 
     // CHA - Cursor Horizontal Absolute
-    void CHA(const ParamVector&);
+    void CHA(Parameters);
 
     // REP - Repeat
-    void REP(const ParamVector&);
+    void REP(Parameters);
 
     // VPA - Vertical Line Position Absolute
-    void VPA(const ParamVector&);
+    void VPA(Parameters);
 
     // ECH - Erase Character
-    void ECH(const ParamVector&);
+    void ECH(Parameters);
 
     // FIXME: Find the right names for these.
-    void XTERM_WM(const ParamVector&);
+    void XTERM_WM(Parameters);
 
     TerminalClient& m_client;
+
+    EscapeSequenceParser m_parser;
 
     size_t m_history_start = 0;
     NonnullOwnPtrVector<Line> m_history;
@@ -248,34 +261,11 @@ private:
     bool m_stomp { false };
 
     Attribute m_current_attribute;
+    Attribute m_saved_attribute;
 
     u32 m_next_href_id { 0 };
 
-    void execute_escape_sequence(u8 final);
-    void execute_xterm_command();
-    void execute_hashtag(u8);
-
-    enum ParserState {
-        Normal,
-        GotEscape,
-        ExpectParameter,
-        ExpectIntermediate,
-        ExpectFinal,
-        ExpectHashtagDigit,
-        ExpectXtermParameter,
-        ExpectStringTerminator,
-        UTF8Needs3Bytes,
-        UTF8Needs2Bytes,
-        UTF8Needs1Byte,
-    };
-
-    ParserState m_parser_state { Normal };
-    u32 m_parser_code_point { 0 };
-    Vector<u8> m_parameters;
-    Vector<u8> m_intermediates;
-    Vector<u8> m_xterm_parameters;
     Vector<bool> m_horizontal_tabs;
-    u8 m_final { 0 };
     u32 m_last_code_point { 0 };
     size_t m_max_history_lines { 1024 };
 };
