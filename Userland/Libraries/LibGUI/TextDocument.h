@@ -113,6 +113,8 @@ public:
     void undo();
     void redo();
 
+    UndoStack const& undo_stack() const { return m_undo_stack; }
+
     void notify_did_change();
     void set_all_cursors(const TextPosition&);
 
@@ -207,6 +209,7 @@ public:
     virtual void undo() override;
     virtual void redo() override;
     virtual bool merge_with(GUI::Command const&) override;
+    virtual String action_text() const override;
     const String& text() const { return m_text; }
     const TextRange& range() const { return m_range; }
 
@@ -222,6 +225,7 @@ public:
     virtual void redo() override;
     const TextRange& range() const { return m_range; }
     virtual bool merge_with(GUI::Command const&) override;
+    virtual String action_text() const override;
 
 private:
     String m_text;

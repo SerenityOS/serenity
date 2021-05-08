@@ -1636,8 +1636,21 @@ void TextEditor::document_did_change()
 
 void TextEditor::document_did_update_undo_stack()
 {
+    auto make_action_text = [](auto prefix, auto suffix) {
+        StringBuilder builder;
+        builder.append(prefix);
+        if (suffix.has_value()) {
+            builder.append(' ');
+            builder.append(suffix.value());
+        }
+        return builder.to_string();
+    };
+
     m_undo_action->set_enabled(can_undo());
     m_redo_action->set_enabled(can_redo());
+
+    m_undo_action->set_text(make_action_text("&Undo", document().undo_stack().undo_action_text()));
+    m_redo_action->set_text(make_action_text("&Redo", document().undo_stack().redo_action_text()));
 
     // FIXME: This is currently firing more often than it should.
     //        Ideally we'd only send this out when the undo stack modified state actually changes.

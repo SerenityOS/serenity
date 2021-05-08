@@ -719,6 +719,11 @@ InsertTextCommand::InsertTextCommand(TextDocument& document, const String& text,
 {
 }
 
+String InsertTextCommand::action_text() const
+{
+    return "Insert Text";
+}
+
 bool InsertTextCommand::merge_with(GUI::Command const& other)
 {
     if (!is<InsertTextCommand>(other))
@@ -802,6 +807,11 @@ RemoveTextCommand::RemoveTextCommand(TextDocument& document, const String& text,
     , m_text(text)
     , m_range(range)
 {
+}
+
+String RemoveTextCommand::action_text() const
+{
+    return "Remove Text";
 }
 
 bool RemoveTextCommand::merge_with(GUI::Command const& other)
