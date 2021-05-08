@@ -56,6 +56,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`libksba`](libksba/)                  | libksba                                                    | 1.5.1                    | https://gnupg.org/software/libksba/index.html                                  |
 | [`libjpeg`](libjpeg/)                  | libjpeg                                                    | 9d                       | https://ijg.org/                                                               |
 | [`libogg`](libogg/)                    | libogg                                                     | 1.3.4                    | https://github.com/xiph/ogg                                                    |
+| [`libphysfs`](libphysfs/)              | PhysicsFS                                                  | 3.0.2                    | https://icculus.org/physfs/                                                    |
 | [`libpng`](libpng/)                    | libpng                                                     | 1.6.37                   | https://libpng.org/                                                            |
 | [`libpuffy`](libpuffy/)                | libpuffy                                                   | 1.0                      | https://github.com/ibara/libpuffy                                              |
 | [`libtheora`](libtheora/)              | libtheora                                                  | 1.1.1                    | https://www.theora.org/                                                        |
