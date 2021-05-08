@@ -223,7 +223,6 @@ bool HackStudioWidget::open_file(const String& full_filename)
         // Update the scrollbar values of the previous_open_project_file and save them to m_open_files.
         previous_open_project_file->vertical_scroll_value(current_editor().vertical_scrollbar().value());
         previous_open_project_file->horizontal_scroll_value(current_editor().horizontal_scrollbar().value());
-        m_open_files.set(active_file(), previous_open_project_file);
     }
 
     RefPtr<ProjectFile> new_project_file = nullptr;
