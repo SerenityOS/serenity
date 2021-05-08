@@ -58,7 +58,7 @@ static int handle_io_file_arguments(int& fd, int flags, const char* argument)
         return -1;
     }
 
-    fd = open(value.characters(), flags);
+    fd = open(value.characters(), flags, 0666);
     if (fd == -1) {
         fprintf(stderr, "Unable to open: %s\n", value.characters());
         return -1;
