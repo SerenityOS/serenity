@@ -61,6 +61,7 @@ int mbtowc(wchar_t*, const char*, size_t);
 int wctomb(char*, wchar_t);
 size_t wcstombs(char*, const wchar_t*, size_t);
 char* realpath(const char* pathname, char* buffer);
+__attribute__((noreturn)) void _Exit(int status);
 
 #define RAND_MAX 32767
 int rand();
