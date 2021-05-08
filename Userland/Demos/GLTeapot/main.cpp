@@ -36,6 +36,7 @@ private:
         GL::make_context_current(m_context);
         glFrontFace(GL_CW);
         glEnable(GL_CULL_FACE);
+        glEnable(GL_DEPTH_TEST);
 
         // Set projection matrix
         glMatrixMode(GL_PROJECTION);
@@ -74,7 +75,8 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     angle -= 0.01f;
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClearDepth(1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     auto matrix = FloatMatrix4x4::translate(FloatVector3(0, 0, -8.5))
         * FloatMatrix4x4::rotate(FloatVector3(1, 0, 0), angle)
