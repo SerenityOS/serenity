@@ -18,6 +18,8 @@ TimelineContainer::TimelineContainer(GUI::Widget& header_container, TimelineView
     add_child(timeline_view);
     header_container.move_to_back();
     timeline_view.move_to_back();
+    update_widget_sizes();
+    update_widget_positions();
 }
 
 TimelineContainer::~TimelineContainer()
