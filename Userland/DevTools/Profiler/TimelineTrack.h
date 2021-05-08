@@ -21,17 +21,13 @@ public:
     virtual ~TimelineTrack() override;
 
 private:
+    virtual void event(Core::Event&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
-    virtual void mousedown_event(GUI::MouseEvent&) override;
-    virtual void mousemove_event(GUI::MouseEvent&) override;
-    virtual void mouseup_event(GUI::MouseEvent&) override;
 
-    explicit TimelineTrack(TimelineView&, Profile&, Process const&);
+    explicit TimelineTrack(TimelineView const&, Profile const&, Process const&);
 
-    u64 timestamp_at_x(int x) const;
-
-    TimelineView& m_view;
-    Profile& m_profile;
+    TimelineView const& m_view;
+    Profile const& m_profile;
     Process const& m_process;
 };
 

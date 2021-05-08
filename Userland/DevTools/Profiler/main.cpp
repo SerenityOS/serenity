@@ -96,7 +96,7 @@ int main(int argc, char** argv)
     timeline_header_container->set_fill_with_background_color(true);
     timeline_header_container->set_shrink_to_fit(true);
 
-    auto timeline_view = TimelineView::construct();
+    auto timeline_view = TimelineView::construct(*profile);
     for (auto& process : profile->processes()) {
         bool matching_event_found = false;
         for (auto& event : profile->events()) {

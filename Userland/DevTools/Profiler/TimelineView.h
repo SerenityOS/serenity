@@ -10,6 +10,7 @@
 
 namespace Profiler {
 
+class Profile;
 class TimelineTrack;
 
 class TimelineView final : public GUI::Widget {
@@ -25,14 +26,14 @@ public:
     u64 select_end_time() const { return m_select_end_time; }
     u64 hover_time() const { return m_hover_time; }
 
-    void set_selecting(Badge<TimelineTrack>, bool value)
+    void set_selecting(bool value)
     {
         if (m_selecting == value)
             return;
         m_selecting = value;
     }
 
-    void set_select_start_time(Badge<TimelineTrack>, u64 value)
+    void set_select_start_time(u64 value)
     {
         if (m_select_start_time == value)
             return;
@@ -41,7 +42,7 @@ public:
         if (on_selection_change)
             on_selection_change();
     }
-    void set_select_end_time(Badge<TimelineTrack>, u64 value)
+    void set_select_end_time(u64 value)
     {
         if (m_select_end_time == value)
             return;
@@ -50,7 +51,7 @@ public:
         if (on_selection_change)
             on_selection_change();
     }
-    void set_hover_time(Badge<TimelineTrack>, u64 value)
+    void set_hover_time(u64 value)
     {
         if (m_hover_time == value)
             return;
@@ -61,8 +62,15 @@ public:
     }
 
 private:
-    TimelineView();
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
 
+    explicit TimelineView(Profile&);
+
+    u64 timestamp_at_x(int x) const;
+
+    Profile& m_profile;
     bool m_selecting { false };
     u64 m_select_start_time { 0 };
     u64 m_select_end_time { 0 };
