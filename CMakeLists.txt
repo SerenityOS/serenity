@@ -59,6 +59,11 @@ add_custom_target(grub-image
     BYPRODUCTS ${CMAKE_BINARY_DIR}/grub_disk_image
     USES_TERMINAL
 )
+add_custom_target(extlinux-image
+    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_SOURCE_DIR=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" ${CMAKE_SOURCE_DIR}/Meta/build-image-extlinux.sh
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/extlinux_disk_image
+    USES_TERMINAL
+)
 
 add_custom_target(lint-shell-scripts
     COMMAND ${CMAKE_SOURCE_DIR}/Meta/lint-shell-scripts.sh
