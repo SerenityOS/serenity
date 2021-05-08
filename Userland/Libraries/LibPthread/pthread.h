@@ -112,6 +112,7 @@ int pthread_detach(pthread_t);
 int pthread_equal(pthread_t, pthread_t);
 int pthread_mutexattr_init(pthread_mutexattr_t*);
 int pthread_mutexattr_settype(pthread_mutexattr_t*, int);
+int pthread_mutexattr_gettype(pthread_mutexattr_t*, int*);
 int pthread_mutexattr_destroy(pthread_mutexattr_t*);
 
 int pthread_setname_np(pthread_t, const char*);
