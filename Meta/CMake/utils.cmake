@@ -154,3 +154,15 @@ function(embed_resource target section file)
     )
     target_sources("${target}" PRIVATE "${asm_file}")
 endfunction()
+
+function(generate_state_machine source header)
+    set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
+    add_custom_command(
+        OUTPUT ${header}
+	COMMAND ${write_if_different} ${header} ${CMAKE_BINARY_DIR}/Userland/DevTools/StateMachineGenerator/StateMachineGenerator ${source} > ${header}
+        VERBATIM
+        DEPENDS StateMachineGenerator
+        MAIN_DEPENDENCY ${source}
+    )
+    get_filename_component(output_name ${header} NAME)
+endfunction()
