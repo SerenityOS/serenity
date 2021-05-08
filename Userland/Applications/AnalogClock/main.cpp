@@ -13,15 +13,14 @@
 
 int main(int argc, char** argv)
 {
-
-    if (pledge("stdio recvfd sendfd accept rpath unix cpath wpath fattr thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept rpath unix cpath wpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd accept rpath cpath wpath thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept rpath cpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -44,7 +43,6 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(170, 170);
     window->set_resizable(false);
-    window->set_double_buffering_enabled(true);
 
     window->show();
     return app->exec();

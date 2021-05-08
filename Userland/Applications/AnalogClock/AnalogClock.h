@@ -20,17 +20,17 @@ private:
         , m_big_graduation_square(Gfx::IntRect({}, { 5, 5 }))
     {
         start_timer(1000);
-    };
+    }
 
-    unsigned m_clock_face_radius = 70;
+    unsigned m_clock_face_radius { 70 };
     Gfx::IntRect m_small_graduation_square;
     Gfx::IntRect m_big_graduation_square;
 
-    unsigned m_minute_hand_length = 58;
-    unsigned m_hour_hand_length = 42;
+    unsigned m_minute_hand_length { 58 };
+    unsigned m_hour_hand_length { 42 };
 
-    double m_hand_tail_length = 22;
-    double m_hand_wing_span = 5;
+    double m_hand_tail_length { 22 };
+    double m_hand_wing_span { 5 };
 
 protected:
     void paint_event(GUI::PaintEvent&) override;

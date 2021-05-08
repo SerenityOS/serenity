@@ -45,7 +45,6 @@ void AnalogClock::draw_face(GUI::Painter& painter)
     double angle = 2 * M_PI / 60;
 
     for (int i = 0; i <= 7; ++i) {
-
         x = sin(angle * static_cast<double>(i)) * m_clock_face_radius;
         y = cos(angle * static_cast<double>(i)) * m_clock_face_radius;
 
