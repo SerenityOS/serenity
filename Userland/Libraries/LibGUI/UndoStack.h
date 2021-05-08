@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/Forward.h>
 
