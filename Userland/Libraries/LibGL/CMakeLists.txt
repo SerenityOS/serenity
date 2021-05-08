@@ -7,6 +7,7 @@ set(SOURCES
     GLVert.cpp
     SoftwareGLContext.cpp
     SoftwareRasterizer.cpp
+    DepthBuffer.cpp
 )
 
 serenity_lib(LibGL gl)
