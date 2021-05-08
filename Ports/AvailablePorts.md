@@ -32,6 +32,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`frotz`](frotz/)                      | Frotz                                                      | 2.53                     | https://gitlab.com/DavidGriffith/frotz                                         |
 | [`gcc`](gcc/)                          | GNU Compiler Collection                                    | 11.1.0                   | https://gcc.gnu.org/                                                           |
 | [`genemu`](genemu/)                    | Genesis / MegaDrive Emulator                               | 3bf6f7c                  | https://github.com/rasky/genemu                                                |
+| [`gettext`](gettext/)                  | GNU gettext                                                | 0.21                     | https://www.gnu.org/software/gettext/                                          |
 | [`git`](git/)                          | Git                                                        | 2.31.1                   | https://git-scm.com/                                                           |
 | [`gmp`](gmp/)                          | GNU Multiple Precision Arithmetic Library (GMP)            | 6.2.1                    | https://gmplib.org/                                                            |
 | [`gnucobol`](gnucobol/)                | GnuCOBOL                                                   | 3.1.2                    | https://gnucobol.sourceforge.io/                                               |
