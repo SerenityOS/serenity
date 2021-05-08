@@ -49,6 +49,9 @@ public:
     virtual void present() override;
 
 private:
+    [[nodiscard]] bool validate_currently_in_draw_state();
+
+private:
     GLenum m_current_draw_mode;
     GLenum m_current_matrix_mode;
     FloatMatrix4x4 m_projection_matrix;

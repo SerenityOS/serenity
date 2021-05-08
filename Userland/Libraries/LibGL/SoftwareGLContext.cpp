@@ -33,8 +33,7 @@ SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
 
 void SoftwareGLContext::gl_begin(GLenum mode)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -50,8 +49,7 @@ void SoftwareGLContext::gl_begin(GLenum mode)
 
 void SoftwareGLContext::gl_clear(GLbitfield mask)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -65,8 +63,7 @@ void SoftwareGLContext::gl_clear(GLbitfield mask)
 
 void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -96,8 +93,7 @@ void SoftwareGLContext::gl_end()
     float scr_height = m_frontbuffer->height();
 
     // Make sure we had a `glBegin` before this call...
-    if (!m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (!validate_currently_in_draw_state()) {
         return;
     }
 
@@ -296,8 +292,7 @@ void SoftwareGLContext::gl_end()
 
 void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -327,8 +322,7 @@ void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble botto
 
 void SoftwareGLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -371,8 +365,7 @@ GLenum SoftwareGLContext::gl_get_error()
 
 GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return nullptr;
     }
 
@@ -394,8 +387,7 @@ GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
 
 void SoftwareGLContext::gl_load_identity()
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -411,8 +403,7 @@ void SoftwareGLContext::gl_load_identity()
 
 void SoftwareGLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -428,8 +419,7 @@ void SoftwareGLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
 
 void SoftwareGLContext::gl_matrix_mode(GLenum mode)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -444,8 +434,7 @@ void SoftwareGLContext::gl_matrix_mode(GLenum mode)
 
 void SoftwareGLContext::gl_push_matrix()
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -476,8 +465,7 @@ void SoftwareGLContext::gl_push_matrix()
 
 void SoftwareGLContext::gl_pop_matrix()
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -509,8 +497,7 @@ void SoftwareGLContext::gl_pop_matrix()
 
 void SoftwareGLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdouble z)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -528,8 +515,7 @@ void SoftwareGLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdoub
 
 void SoftwareGLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -544,8 +530,7 @@ void SoftwareGLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
 
 void SoftwareGLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -582,7 +567,7 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
 
 void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    if (m_in_draw_state) {
+    if (validate_currently_in_draw_state()) {
         m_error = GL_INVALID_OPERATION;
         return;
     }
@@ -596,8 +581,7 @@ void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei hei
 
 void SoftwareGLContext::gl_enable(GLenum capability)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -613,8 +597,7 @@ void SoftwareGLContext::gl_enable(GLenum capability)
 
 void SoftwareGLContext::gl_disable(GLenum capability)
 {
-    if (m_in_draw_state) {
-        m_error = GL_INVALID_OPERATION;
+    if (validate_currently_in_draw_state()) {
         return;
     }
 
@@ -651,6 +634,16 @@ void SoftwareGLContext::gl_cull_face(GLenum cull_mode)
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
+}
+
+bool SoftwareGLContext::validate_currently_in_draw_state()
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return true;
+    }
+
+    return false;
 }
 
 }
