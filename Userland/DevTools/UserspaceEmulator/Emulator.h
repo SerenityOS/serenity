@@ -173,6 +173,7 @@ private:
     int virt$sendfd(int, int);
     int virt$msyscall(FlatPtr);
     int virt$futex(FlatPtr);
+    clock_t virt$times(FlatPtr user_times);
 
     bool find_malloc_symbols(const MmapRegion& libc_text);
 

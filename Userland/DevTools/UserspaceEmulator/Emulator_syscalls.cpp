@@ -19,6 +19,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/times.h>
 #include <sys/uio.h>
 #include <syscall.h>
 #include <termios.h>
@@ -248,6 +249,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$msyscall(arg1);
     case SC_futex:
         return virt$futex(arg1);
+    case SC_times:
+        return virt$times(arg1);
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -1511,4 +1514,13 @@ int Emulator::virt$futex(FlatPtr params_addr)
     // FIXME: Implement this.
     return 0;
 }
+
+clock_t Emulator::virt$times(FlatPtr user_times)
+{
+    tms sys_times;
+    clock_t ret = times(&sys_times);
+    mmu().copy_to_vm(user_times, &sys_times, sizeof(tms));
+    return ret;
+}
+
 }
