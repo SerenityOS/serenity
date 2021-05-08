@@ -17,29 +17,27 @@ UndoStack::~UndoStack()
 {
 }
 
+bool UndoStack::can_undo() const
+{
+    return m_stack_index > 0;
+}
+
+bool UndoStack::can_redo() const
+{
+    if (m_stack.is_empty())
+        return false;
+    return m_stack_index != m_stack.size() - 1;
+}
+
 void UndoStack::undo()
 {
     if (!can_undo())
         return;
 
-    auto pop_container_and_undo = [this]() {
-        for (;;) {
-            if (m_stack_index >= m_stack.size())
-                break;
-
-            auto& combo = m_stack[m_stack_index++];
-            if (combo.commands.size() == 0)
-                continue;
-            for (auto& command : combo.commands)
-                command.undo();
-            break;
-        }
-    };
-
-    // If this is the first undo, finish off our current combo
-    if (m_stack_index == 0)
-        finalize_current_combo();
-    pop_container_and_undo();
+    finalize_current_combo();
+    auto& combo = m_stack[--m_stack_index];
+    for (auto i = static_cast<ssize_t>(combo.commands.size()) - 1; i >= 0; i--)
+        combo.commands[i].undo();
 }
 
 void UndoStack::redo()
@@ -47,61 +45,56 @@ void UndoStack::redo()
     if (!can_redo())
         return;
 
-    m_stack_index -= 1;
-    auto& commands = m_stack[m_stack_index].commands;
-    for (int i = commands.size() - 1; i >= 0; i--)
-        commands[i].redo();
+    auto& commands = m_stack[m_stack_index++].commands;
+    for (auto& command : commands)
+        command.redo();
+}
+
+void UndoStack::pop()
+{
+    VERIFY(!m_stack.is_empty());
+    m_stack.take_last();
+    if (m_clean_index.has_value() && m_clean_index.value() > m_stack.size())
+        m_clean_index = {};
 }
 
 void UndoStack::push(NonnullOwnPtr<Command>&& command)
 {
     if (m_stack.is_empty())
-        finalize_current_combo();
+        m_stack.append(make<Combo>());
 
-    if (m_stack_index > 0) {
-        for (size_t i = 0; i < m_stack_index; i++)
-            m_stack.remove(0);
-
-        if (m_clean_index.has_value()) {
-            if (m_clean_index.value() < m_stack_index)
-                m_clean_index.clear();
-            else
-                m_clean_index = m_clean_index.value() - m_stack_index;
+    // If the stack cursor is behind the top of the stack, nuke everything from here to the top.
+    if (m_stack_index != m_stack.size() - 1) {
+        while (m_stack.size() != m_stack_index) {
+            pop();
         }
-
-        m_stack_index = 0;
         finalize_current_combo();
     }
 
-    m_stack.first().commands.prepend(move(command));
+    m_stack.last().commands.append(move(command));
 }
 
 void UndoStack::finalize_current_combo()
 {
-    if (m_stack_index > 0)
+    if (m_stack.is_empty()) {
+        m_stack.append(make<Combo>());
         return;
-    if (m_stack.size() != 0 && m_stack.first().commands.size() == 0)
-        return;
+    }
 
-    auto undo_commands_container = make<Combo>();
-    m_stack.prepend(move(undo_commands_container));
-
-    if (m_clean_index.has_value())
-        m_clean_index = m_clean_index.value() + 1;
+    if (!m_stack.last().commands.is_empty()) {
+        m_stack.append(make<Combo>());
+        m_stack_index = m_stack.size() - 1;
+    }
 }
 
 void UndoStack::set_current_unmodified()
 {
-    // Skip empty container
-    if (can_undo() && m_stack[m_stack_index].commands.is_empty())
-        m_clean_index = m_stack_index + 1;
-    else
-        m_clean_index = m_stack_index;
+    m_clean_index = m_stack_index;
 }
 
 bool UndoStack::is_current_modified() const
 {
-    return !m_clean_index.has_value() || m_stack_index != m_clean_index.value();
+    return !(m_clean_index.has_value() && m_clean_index.value() == m_stack_index);
 }
 
 void UndoStack::clear()
