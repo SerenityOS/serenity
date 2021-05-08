@@ -7,6 +7,7 @@
 #include "FileDB.h"
 
 #include <AK/LexicalPath.h>
+#include <AK/NonnullRefPtr.h>
 #include <LibCore/File.h>
 
 namespace LanguageServers {
@@ -18,7 +19,7 @@ RefPtr<const GUI::TextDocument> FileDB::get(const String& filename) const
     if (!document_optional.has_value())
         return nullptr;
 
-    return document_optional.value();
+    return adopt_ref(*document_optional.value());
 }
 
 RefPtr<GUI::TextDocument> FileDB::get(const String& filename)

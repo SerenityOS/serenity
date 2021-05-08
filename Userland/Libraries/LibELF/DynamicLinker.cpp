@@ -311,7 +311,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(co
         loader.load_stage_4();
     }
 
-    return main_library_loader;
+    return NonnullRefPtr<DynamicLoader>(*main_library_loader);
 }
 
 static Result<void, DlErrorMessage> __dlclose(void* handle)
@@ -377,7 +377,8 @@ static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
     auto existing_elf_object = s_global_objects.get(library_name);
     if (existing_elf_object.has_value()) {
         // It's up to the caller to release the ref with dlclose().
-        return &existing_elf_object->leak_ref();
+        existing_elf_object.value()->ref();
+        return *existing_elf_object;
     }
 
     VERIFY(!library_name.is_empty());
@@ -406,7 +407,8 @@ static Result<void*, DlErrorMessage> __dlopen(const char* filename, int flags)
         return DlErrorMessage { "Could not load ELF object." };
 
     // It's up to the caller to release the ref with dlclose().
-    return &object->leak_ref();
+    object.value()->ref();
+    return *object;
 }
 
 static Result<void*, DlErrorMessage> __dlsym(void* handle, const char* symbol_name)
