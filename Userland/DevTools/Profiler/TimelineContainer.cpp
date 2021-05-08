@@ -55,6 +55,7 @@ void TimelineContainer::update_widget_sizes()
 void TimelineContainer::resize_event(GUI::ResizeEvent& event)
 {
     AbstractScrollableWidget::resize_event(event);
+    update_widget_positions();
     update_widget_sizes();
 }
 
