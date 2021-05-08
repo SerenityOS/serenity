@@ -6297,3 +6297,23 @@ diff -Naur gcc-11.1.0-RC-20210420/libstdc++-v3/crossconfig.m4 gcc-11.1.0-RC-2021
    arm*-*-symbianelf*)
      # This is a freestanding configuration; there is nothing to do here.
      ;;
+diff -Naur gcc-11.1.0/libstdc++-v3/configure gcc-11.1.0.serenity/libstdc++-v3/configure
+--- gcc-11.1.0/libstdc++-v3/configure	2021-05-08 23:33:02.665399548 +0200
++++ gcc-11.1.0.serenity/libstdc++-v3/configure	2021-05-09 08:49:22.325309643 +0200
+@@ -4219,15 +4219,7 @@
+ }
+ _ACEOF
+ # FIXME: Cleanup?
+-if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_link\""; } >&5
+-  (eval $ac_link) 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then :
+-  gcc_no_link=no
+-else
+-  gcc_no_link=yes
+-fi
++gcc_no_link=yes
+ if test x$gcc_no_link = xyes; then
+   # Setting cross_compile will disable run tests; it will
+   # also disable AC_CHECK_FILE but that's generally
