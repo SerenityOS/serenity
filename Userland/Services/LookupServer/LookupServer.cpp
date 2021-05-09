@@ -296,8 +296,23 @@ void LookupServer::put_in_cache(const DNSAnswer& answer)
     auto it = m_lookup_cache.find(answer.name());
     if (it == m_lookup_cache.end())
         m_lookup_cache.set(answer.name(), { answer });
-    else
+    else {
+        if (answer.mdns_cache_flush()) {
+            auto now = time(nullptr);
+
+            it->value.remove_all_matching([&](DNSAnswer const& other_answer) {
+                if (other_answer.type() != answer.type() || other_answer.class_code() != answer.class_code())
+                    return false;
+
+                if (other_answer.received_time() >= now - 1)
+                    return false;
+
+                dbgln_if(LOOKUPSERVER_DEBUG, "Removing cache entry: {}", other_answer.name());
+                return true;
+            });
+        }
         it->value.append(answer);
+    }
 }
 
 }
