@@ -78,9 +78,7 @@ void Cube::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
-
-    /* Blit it! */
-    painter.draw_scaled_bitmap(event.rect(), *m_bitmap, m_bitmap->rect());
+    painter.draw_scaled_bitmap(rect(), *m_bitmap, m_bitmap->rect());
 }
 
 void Cube::timer_event(Core::TimerEvent&)

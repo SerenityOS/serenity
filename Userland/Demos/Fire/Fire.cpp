@@ -118,9 +118,7 @@ void Fire::paint_event(GUI::PaintEvent& event)
 
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
-
-    /* Blit it! */
-    painter.draw_scaled_bitmap(event.rect(), *bitmap, bitmap->rect());
+    painter.draw_scaled_bitmap(rect(), *bitmap, bitmap->rect());
 
     timeAvg += timer.elapsed();
     cycles++;

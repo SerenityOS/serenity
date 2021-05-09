@@ -90,11 +90,9 @@ void Starfield::keydown_event(GUI::KeyEvent&)
 
 void Starfield::paint_event(GUI::PaintEvent& event)
 {
-
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
-
-    painter.draw_scaled_bitmap(event.rect(), *m_bitmap, m_bitmap->rect());
+    painter.draw_scaled_bitmap(rect(), *m_bitmap, m_bitmap->rect());
 }
 
 void Starfield::timer_event(Core::TimerEvent&)
