@@ -11,6 +11,8 @@
 
 void CatDog::timer_event(Core::TimerEvent&)
 {
+    if (!m_roaming)
+        return;
     if (m_temp_pos.x() > 48) {
         m_left = false;
         m_right = true;
@@ -105,6 +107,8 @@ void CatDog::paint_event(GUI::PaintEvent& event)
 
 void CatDog::mousemove_event(GUI::MouseEvent& event)
 {
+    if (!m_roaming)
+        return;
     if (m_temp_pos == event.position())
         return;
     m_temp_pos = event.position();
@@ -115,6 +119,15 @@ void CatDog::mousemove_event(GUI::MouseEvent& event)
     }
     m_sleeping = false;
 }
+
+void CatDog::mousedown_event(GUI::MouseEvent& event)
+{
+    if (event.button() != GUI::MouseButton::Left)
+        return;
+    if (on_click)
+        on_click();
+}
+
 void CatDog::track_cursor_globally()
 {
     VERIFY(window());
