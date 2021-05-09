@@ -78,6 +78,7 @@ public:
     void notify_opacity_changed(Window&);
     void notify_occlusion_state_changed(Window&);
     void notify_progress_changed(Window&);
+    void notify_modified_changed(Window&);
 
     Gfx::IntRect maximized_window_rect(const Window&) const;
 
