@@ -46,11 +46,6 @@ enum class WindowTileType {
     BottomRight
 };
 
-enum class PopupMenuItem {
-    Minimize = 0,
-    Maximize,
-};
-
 enum class WindowMenuAction {
     MinimizeOrUnminimize = 0,
     MaximizeOrRestore,
@@ -327,11 +322,10 @@ private:
     virtual void event(Core::Event&) override;
     void handle_mouse_event(const MouseEvent&);
     void handle_keydown_event(const KeyEvent&);
-    void update_menu_item_text(PopupMenuItem item);
-    void update_menu_item_enabled(PopupMenuItem item);
     void add_child_window(Window&);
     void add_accessory_window(Window&);
     void ensure_window_menu();
+    void update_window_menu_items();
     void modal_unparented();
 
     ClientConnection* m_client { nullptr };

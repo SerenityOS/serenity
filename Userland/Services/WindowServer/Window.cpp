@@ -245,20 +245,16 @@ void Window::handle_mouse_event(const MouseEvent& event)
     }
 }
 
-void Window::update_menu_item_text(PopupMenuItem item)
+void Window::update_window_menu_items()
 {
-    if (m_window_menu) {
-        m_window_menu->item((int)item).set_text(item == PopupMenuItem::Minimize ? (m_minimized ? "Unminimize" : "Minimize") : (m_maximized ? "Restore" : "Maximize"));
-        m_window_menu->redraw();
-    }
-}
+    if (!m_window_menu)
+        return;
 
-void Window::update_menu_item_enabled(PopupMenuItem item)
-{
-    if (m_window_menu) {
-        m_window_menu->item((int)item).set_enabled(item == PopupMenuItem::Minimize ? m_minimizable : m_resizable);
-        m_window_menu->redraw();
-    }
+    m_window_menu_minimize_item->set_text(m_minimized ? "&Unminimize" : "Mi&nimize");
+    m_window_menu_minimize_item->set_enabled(m_minimizable);
+
+    m_window_menu_maximize_item->set_text(m_maximized ? "&Restore" : "Ma&ximize");
+    m_window_menu_maximize_item->set_enabled(m_resizable);
 }
 
 void Window::set_minimized(bool minimized)
@@ -268,7 +264,7 @@ void Window::set_minimized(bool minimized)
     if (minimized && !m_minimizable)
         return;
     m_minimized = minimized;
-    update_menu_item_text(PopupMenuItem::Minimize);
+    update_window_menu_items();
     Compositor::the().invalidate_occlusions();
     Compositor::the().invalidate_screen(frame().render_rect());
     if (!blocking_modal_window())
@@ -283,7 +279,7 @@ void Window::set_minimizable(bool minimizable)
     if (m_minimizable == minimizable)
         return;
     m_minimizable = minimizable;
-    update_menu_item_enabled(PopupMenuItem::Minimize);
+    update_window_menu_items();
     // TODO: Hide/show (or alternatively change enabled state of) window minimize button dynamically depending on value of m_minimizable
 }
 
@@ -353,7 +349,7 @@ void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
         return;
     m_tiled = WindowTileType::None;
     m_maximized = maximized;
-    update_menu_item_text(PopupMenuItem::Maximize);
+    update_window_menu_items();
     if (maximized) {
         m_unmaximized_rect = m_rect;
         set_rect(WindowManager::the().maximized_window_rect(*this));
@@ -390,7 +386,7 @@ void Window::set_resizable(bool resizable)
     if (m_resizable == resizable)
         return;
     m_resizable = resizable;
-    update_menu_item_enabled(PopupMenuItem::Maximize);
+    update_window_menu_items();
     // TODO: Hide/show (or alternatively change enabled state of) window maximize button dynamically depending on value of is_resizable()
 }
 
@@ -635,11 +631,11 @@ void Window::ensure_window_menu()
         m_window_menu = Menu::construct(nullptr, -1, "(Window Menu)");
         m_window_menu->set_window_menu_of(*this);
 
-        auto minimize_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::MinimizeOrUnminimize, m_minimized ? "&Unminimize" : "Mi&nimize");
+        auto minimize_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::MinimizeOrUnminimize, "");
         m_window_menu_minimize_item = minimize_item.ptr();
         m_window_menu->add_item(move(minimize_item));
 
-        auto maximize_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::MaximizeOrRestore, m_maximized ? "&Restore" : "Ma&ximize");
+        auto maximize_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::MaximizeOrRestore, "");
         m_window_menu_maximize_item = maximize_item.ptr();
         m_window_menu->add_item(move(maximize_item));
 
@@ -656,12 +652,11 @@ void Window::ensure_window_menu()
         m_window_menu_close_item->set_default(true);
         m_window_menu->add_item(move(close_item));
 
-        m_window_menu->item((int)PopupMenuItem::Minimize).set_enabled(m_minimizable);
-        m_window_menu->item((int)PopupMenuItem::Maximize).set_enabled(m_resizable);
-
         m_window_menu->on_item_activation = [&](auto& item) {
             handle_window_menu_action(static_cast<WindowMenuAction>(item.identifier()));
         };
+
+        update_window_menu_items();
     }
 }
 
