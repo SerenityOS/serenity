@@ -12,6 +12,8 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/QuickSort.h>
+#include <AK/TemporaryChange.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
@@ -25,6 +27,13 @@ namespace GL {
 // FIXME: We should set this up when we create the context!
 static constexpr size_t MATRIX_STACK_LIMIT = 1024;
 
+#define APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(name, ...)       \
+    if (should_append_to_listing()) {                             \
+        append_to_listing<&SoftwareGLContext::name>(__VA_ARGS__); \
+        if (!should_execute_after_appending_to_listing())         \
+            return;                                               \
+    }
+
 SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
     : m_frontbuffer(frontbuffer)
     , m_rasterizer(frontbuffer.size())
@@ -33,6 +42,8 @@ SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
 
 void SoftwareGLContext::gl_begin(GLenum mode)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_begin, mode);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -50,6 +61,8 @@ void SoftwareGLContext::gl_begin(GLenum mode)
 
 void SoftwareGLContext::gl_clear(GLbitfield mask)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_clear, mask);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -71,6 +84,8 @@ void SoftwareGLContext::gl_clear(GLbitfield mask)
 
 void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_clear_color, red, green, blue, alpha);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -82,6 +97,8 @@ void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf bl
 
 void SoftwareGLContext::gl_clear_depth(GLdouble depth)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_clear_depth, depth);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -93,12 +110,16 @@ void SoftwareGLContext::gl_clear_depth(GLdouble depth)
 
 void SoftwareGLContext::gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_color, r, g, b, a);
+
     m_current_vertex_color = { (float)r, (float)g, (float)b, (float)a };
     m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_end()
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_end);
+
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
     //
@@ -313,6 +334,8 @@ void SoftwareGLContext::gl_end()
 
 void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_frustum, left, right, bottom, top, near_val, far_val);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -344,6 +367,8 @@ void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble botto
 
 void SoftwareGLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_ortho, left, right, bottom, top, near_val, far_val);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -411,6 +436,8 @@ GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
 
 void SoftwareGLContext::gl_load_identity()
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_load_identity);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -428,6 +455,13 @@ void SoftwareGLContext::gl_load_identity()
 
 void SoftwareGLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
 {
+    if (should_append_to_listing()) {
+        auto ptr = store_in_listing(matrix);
+        append_to_listing<&SoftwareGLContext::gl_load_matrix>(*ptr);
+        if (!should_execute_after_appending_to_listing())
+            return;
+    }
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -445,6 +479,8 @@ void SoftwareGLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
 
 void SoftwareGLContext::gl_matrix_mode(GLenum mode)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_matrix_mode, mode);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -461,6 +497,8 @@ void SoftwareGLContext::gl_matrix_mode(GLenum mode)
 
 void SoftwareGLContext::gl_push_matrix()
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_push_matrix);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -493,6 +531,8 @@ void SoftwareGLContext::gl_push_matrix()
 
 void SoftwareGLContext::gl_pop_matrix()
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_pop_matrix);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -526,6 +566,8 @@ void SoftwareGLContext::gl_pop_matrix()
 
 void SoftwareGLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdouble z)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_rotate, angle, x, y, z);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -545,6 +587,8 @@ void SoftwareGLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdoub
 
 void SoftwareGLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_scale, x, y, z);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -561,6 +605,8 @@ void SoftwareGLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
 
 void SoftwareGLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_translate, x, y, z);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -577,6 +623,8 @@ void SoftwareGLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
 
 void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_vertex, x, y, z, w);
+
     GLVertex vertex;
 
     vertex.x = x;
@@ -599,6 +647,8 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
 
 void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_viewport, x, y, width, height);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -613,6 +663,8 @@ void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei hei
 
 void SoftwareGLContext::gl_enable(GLenum capability)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_enable, capability);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -641,6 +693,8 @@ void SoftwareGLContext::gl_enable(GLenum capability)
 
 void SoftwareGLContext::gl_disable(GLenum capability)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_disable, capability);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -669,6 +723,8 @@ void SoftwareGLContext::gl_disable(GLenum capability)
 
 void SoftwareGLContext::gl_front_face(GLenum face)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_front_face, face);
+
     if (face < GL_CW || face > GL_CCW) {
         m_error = GL_INVALID_ENUM;
         return;
@@ -679,6 +735,8 @@ void SoftwareGLContext::gl_front_face(GLenum face)
 
 void SoftwareGLContext::gl_cull_face(GLenum cull_mode)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_cull_face, cull_mode);
+
     if (cull_mode < GL_FRONT || cull_mode > GL_FRONT_AND_BACK) {
         m_error = GL_INVALID_ENUM;
         return;
@@ -687,9 +745,101 @@ void SoftwareGLContext::gl_cull_face(GLenum cull_mode)
     m_culled_sides = cull_mode;
 }
 
+GLuint SoftwareGLContext::gl_gen_lists(GLsizei range)
+{
+    if (range <= 0) {
+        m_error = GL_INVALID_VALUE;
+        return 0;
+    }
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return 0;
+    }
+
+    auto initial_entry = m_listings.size();
+    m_listings.resize(range + initial_entry);
+    return initial_entry + 1;
+}
+
+void SoftwareGLContext::gl_call_list(GLuint list)
+{
+    if (m_gl_call_depth > max_allowed_gl_call_depth)
+        return;
+
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_call_list, list);
+
+    if (m_listings.size() < list)
+        return;
+
+    TemporaryChange change { m_gl_call_depth, m_gl_call_depth + 1 };
+
+    auto& listing = m_listings[list - 1];
+    for (auto& entry : listing.entries) {
+        entry.function.visit([&](auto& function) {
+            entry.arguments.visit([&](auto& arguments) {
+                auto apply = [&]<typename... Args>(Args && ... args)
+                {
+                    if constexpr (requires { (this->*function)(forward<Args>(args)...); })
+                        (this->*function)(forward<Args>(args)...);
+                };
+
+                arguments.apply_as_args(apply);
+            });
+        });
+    }
+}
+
+void SoftwareGLContext::gl_delete_lists(GLuint list, GLsizei range)
+{
+    if (m_listings.size() < list || m_listings.size() <= list + range)
+        return;
+
+    for (auto& entry : m_listings.span().slice(list - 1, range))
+        entry.entries.clear();
+}
+
+void SoftwareGLContext::gl_end_list()
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+    if (!m_current_listing_index.has_value()) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    m_listings[m_current_listing_index->index] = move(m_current_listing_index->listing);
+    m_current_listing_index.clear();
+}
+
+void SoftwareGLContext::gl_new_list(GLuint list, GLenum mode)
+{
+    if (list == 0) {
+        m_error = GL_INVALID_VALUE;
+        return;
+    }
+    if (mode != GL_COMPILE && mode != GL_COMPILE_AND_EXECUTE) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+    if (m_current_listing_index.has_value()) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    if (m_listings.size() < list)
+        return;
+
+    m_current_listing_index = CurrentListing { {}, static_cast<size_t>(list - 1), mode };
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
 }
-
 }
