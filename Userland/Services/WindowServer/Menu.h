@@ -37,9 +37,9 @@ public:
     u32 alt_shortcut_character() const { return m_alt_shortcut_character; }
 
     bool is_empty() const { return m_items.is_empty(); }
-    int item_count() const { return m_items.size(); }
-    const MenuItem& item(int index) const { return m_items.at(index); }
-    MenuItem& item(int index) { return m_items.at(index); }
+    size_t item_count() const { return m_items.size(); }
+    const MenuItem& item(size_t index) const { return m_items.at(index); }
+    MenuItem& item(size_t index) { return m_items.at(index); }
 
     MenuItem* item_by_identifier(unsigned identifier)
     {
@@ -56,7 +56,7 @@ public:
 
     void add_item(NonnullOwnPtr<MenuItem>);
 
-    String name() const { return m_name; }
+    String const& name() const { return m_name; }
 
     template<typename Callback>
     IterationDecision for_each_item(Callback callback)
@@ -77,18 +77,18 @@ public:
 
     Window* window_menu_of() { return m_window_menu_of; }
     void set_window_menu_of(Window& window) { m_window_menu_of = window; }
-    bool is_window_menu_open() { return m_is_window_menu_open; }
+    bool is_window_menu_open() const { return m_is_window_menu_open; }
     void set_window_menu_open(bool is_open) { m_is_window_menu_open = is_open; }
 
     bool activate_default();
 
     int content_width() const;
 
-    int item_height() const { return 22; }
-    int frame_thickness() const { return 2; }
-    int horizontal_padding() const { return left_padding() + right_padding(); }
-    int left_padding() const { return 14; }
-    int right_padding() const { return 14; }
+    static constexpr int item_height() { return 22; }
+    static constexpr int frame_thickness() { return 2; }
+    static constexpr int horizontal_padding() { return left_padding() + right_padding(); }
+    static constexpr int left_padding() { return 14; }
+    static constexpr int right_padding() { return 14; }
 
     void draw();
     const Gfx::Font& font() const;
@@ -127,10 +127,10 @@ private:
     virtual void event(Core::Event&) override;
 
     void handle_mouse_move_event(const MouseEvent&);
-    int visible_item_count() const;
+    size_t visible_item_count() const;
 
     int item_index_at(const Gfx::IntPoint&);
-    int padding_between_text_and_shortcut() const { return 50; }
+    static constexpr int padding_between_text_and_shortcut() { return 50; }
     void did_activate(MenuItem&, bool leave_menu_open);
     void update_for_new_hovered_item(bool make_input = false);
 
