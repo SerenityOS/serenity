@@ -19,3 +19,5 @@ Our stub implementation of `setlocale()` always returns `nullptr`, which the int
 ## `webbrowser.patch`
 
 Register the SerenityOS Browser in the [`webbrowser`](https://docs.python.org/3/library/webbrowser.html) module.
+
+Note: This change [has been added to upstream CPython](https://github.com/python/cpython/pull/25947) and will be included in the Python 3.10 release :^)
