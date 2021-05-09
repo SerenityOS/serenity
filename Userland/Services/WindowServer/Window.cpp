@@ -997,6 +997,7 @@ void Window::set_modified(bool modified)
         return;
 
     m_modified = modified;
+    WindowManager::the().notify_modified_changed(*this);
     frame().set_button_icons();
     frame().invalidate_titlebar();
 }

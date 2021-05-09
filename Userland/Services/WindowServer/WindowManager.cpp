@@ -375,6 +375,14 @@ static bool window_type_has_title(WindowType type)
     return type == WindowType::Normal || type == WindowType::ToolWindow;
 }
 
+void WindowManager::notify_modified_changed(Window& window)
+{
+    if (m_switcher.is_visible())
+        m_switcher.refresh();
+
+    tell_wms_window_state_changed(window);
+}
+
 void WindowManager::notify_title_changed(Window& window)
 {
     if (!window_type_has_title(window.type()))
