@@ -114,6 +114,7 @@ private:
     RefPtr<GUI::Action> m_gml_highlight;
     RefPtr<GUI::Action> m_ini_highlight;
     RefPtr<GUI::Action> m_shell_highlight;
+    RefPtr<GUI::Action> m_sql_highlight;
 
     RefPtr<Web::OutOfProcessWebView> m_page_view;
     RefPtr<Core::ConfigFile> m_config;
