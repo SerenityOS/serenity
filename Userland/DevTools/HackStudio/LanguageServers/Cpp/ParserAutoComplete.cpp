@@ -126,6 +126,9 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(c
         if (decl.is_function()) {
             add_name(((Cpp::FunctionDeclaration&)decl).m_name);
         }
+        if (decl.is_namespace()) {
+            add_name(((Cpp::NamespaceDeclaration&)decl).m_name);
+        }
     }
 
     Vector<GUI::AutocompleteProvider::Entry> suggestions;
