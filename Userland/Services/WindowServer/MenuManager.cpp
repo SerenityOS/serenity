@@ -255,7 +255,7 @@ void MenuManager::close_menus(const Vector<Menu*>& menus)
 static void collect_menu_subtree(Menu& menu, Vector<Menu*>& menus)
 {
     menus.append(&menu);
-    for (int i = 0; i < menu.item_count(); ++i) {
+    for (size_t i = 0; i < menu.item_count(); ++i) {
         auto& item = menu.item(i);
         if (!item.is_submenu())
             continue;
