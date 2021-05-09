@@ -18,9 +18,24 @@ public:
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void paint_event(GUI::PaintEvent& event) override;
     virtual void mousemove_event(GUI::MouseEvent& event) override;
+    virtual void mousedown_event(GUI::MouseEvent& event) override;
 
     void track_cursor_globally();
     void start_the_timer() { m_timer.start(); }
+
+    Function<void()> on_click;
+
+    bool roaming() const { return m_roaming; }
+    void set_roaming(bool roaming)
+    {
+        m_roaming = roaming;
+        if (!roaming) {
+            m_sleeping = false;
+            m_curr_frame = 0;
+            m_curr_bmp = m_alert;
+            update();
+        }
+    }
 
 private:
     Gfx::IntPoint m_temp_pos;
@@ -28,6 +43,7 @@ private:
     int m_curr_frame = 1;
     int m_moveX, m_moveY = 0;
     bool m_up, m_down, m_left, m_right, m_sleeping = false;
+    bool m_roaming { true };
 
     AK::NonnullRefPtr<Gfx::Bitmap> m_alert = *Gfx::Bitmap::load_from_file("/res/icons/catdog/alert.png");
     AK::NonnullRefPtr<Gfx::Bitmap> m_erun1 = *Gfx::Bitmap::load_from_file("/res/icons/catdog/erun1.png");
