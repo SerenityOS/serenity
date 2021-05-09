@@ -97,7 +97,7 @@ See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/b
 
 Please see the [issue policy](https://github.com/SerenityOS/serenity/blob/master/CONTRIBUTING.md#issue-policy).
 
-FAQ: [Frequently Asked Questions](https://github.com/SerenityOS/serenity/blob/master/FAQ.md)
+FAQ: [Frequently Asked Questions](https://github.com/SerenityOS/serenity/blob/master/Documentation/FAQ.md)
 
 ## Get in touch
 
