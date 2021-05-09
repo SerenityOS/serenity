@@ -18,15 +18,12 @@ DNSAnswer::DNSAnswer(const DNSName& name, DNSRecordType type, DNSRecordClass cla
     , m_record_data(record_data)
     , m_mdns_cache_flush(mdns_cache_flush)
 {
-    auto now = time(nullptr);
-    m_expiration_time = now + m_ttl;
-    if (m_expiration_time < now)
-        m_expiration_time = 0;
+    time(&m_received_time);
 }
 
 bool DNSAnswer::has_expired() const
 {
-    return time(nullptr) >= m_expiration_time;
+    return time(nullptr) >= m_received_time + m_ttl;
 }
 
 }
