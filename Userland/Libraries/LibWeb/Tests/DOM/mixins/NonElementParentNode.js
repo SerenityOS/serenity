@@ -4,7 +4,7 @@ afterInitialPageLoad(() => {
     test("getElementById basics", () => {
         const unique = document.getElementById("unique");
         expect(unique).not.toBeNull();
-        expect(unique.nodeName).toBe("div");
+        expect(unique.nodeName).toBe("DIV");
         expect(unique.id).toBe("unique");
 
         const caseSensitive = document.getElementById("Unique");
@@ -12,7 +12,7 @@ afterInitialPageLoad(() => {
 
         const firstDuplicate = document.getElementById("dupeId");
         expect(firstDuplicate).not.toBeNull();
-        expect(firstDuplicate.nodeName).toBe("div");
+        expect(firstDuplicate.nodeName).toBe("DIV");
         expect(firstDuplicate.id).toBe("dupeId");
         expect(firstDuplicate.innerHTML).toBe("First ID");
     });
