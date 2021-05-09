@@ -47,9 +47,9 @@ int main(int argc, char** argv)
     window->set_alpha_hit_threshold(1.0f);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& root_widget = window->set_main_widget<CatDog>();
-    root_widget.set_layout<GUI::VerticalBoxLayout>();
-    root_widget.layout()->set_spacing(0);
+    auto& catdog_widget = window->set_main_widget<CatDog>();
+    catdog_widget.set_layout<GUI::VerticalBoxLayout>();
+    catdog_widget.layout()->set_spacing(0);
 
     auto menubar = GUI::Menubar::construct();
     auto& file_menu = menubar->add_menu("File");
@@ -59,9 +59,9 @@ int main(int argc, char** argv)
     window->set_menubar(move(menubar));
 
     window->show();
-    root_widget.track_cursor_globally();
-    root_widget.start_timer(250, Core::TimerShouldFireWhenNotVisible::Yes);
-    root_widget.start_the_timer(); // timer for "mouse sleep detection"
+    catdog_widget.track_cursor_globally();
+    catdog_widget.start_timer(250, Core::TimerShouldFireWhenNotVisible::Yes);
+    catdog_widget.start_the_timer(); // timer for "mouse sleep detection"
 
     return app->exec();
 }
