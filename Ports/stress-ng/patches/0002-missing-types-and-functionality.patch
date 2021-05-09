@@ -49,17 +49,6 @@ diff -ur stress-ng-master/core-job.c stress-ng-master-2/core-job.c
  
  /*
   *  stress_chop()
-diff -ur stress-ng-master/core-net.c stress-ng-master-2/core-net.c
---- stress-ng-master/core-net.c	2020-11-07 10:52:22.000000000 -0800
-+++ stress-ng-master-2/core-net.c	2020-11-08 22:33:09.007668500 -0800
-@@ -32,7 +32,6 @@
- 
- static const stress_domain_t domains[] = {
- 	{ "ipv4",	AF_INET,	DOMAIN_INET },
--	{ "ipv6",	AF_INET6,	DOMAIN_INET6 },
- 	{ "unix",	AF_UNIX,	DOMAIN_UNIX },
- };
- 
 diff -ur stress-ng-master/core-sched.c stress-ng-master-2/core-sched.c
 --- stress-ng-master/core-sched.c	2020-11-07 10:52:22.000000000 -0800
 +++ stress-ng-master-2/core-sched.c	2020-11-08 23:21:44.497668500 -0800
@@ -100,15 +89,3 @@ diff -ur stress-ng-master/stress-chown.c stress-ng-master-2/stress-chown.c
  		inc_counter(args);
  	} while (keep_stressing());
  
-diff -ur stress-ng-master/stress-epoll.c stress-ng-master-2/stress-epoll.c
---- stress-ng-master/stress-epoll.c	2020-11-07 10:52:22.000000000 -0800
-+++ stress-ng-master-2/stress-epoll.c	2020-11-08 22:39:49.607668500 -0800
-@@ -85,7 +85,6 @@
- 
- 	switch (epoll_domain) {
- 	case AF_INET:
--	case AF_INET6:
- 		max_servers = 4;
- 		break;
- 	case AF_UNIX:
-
