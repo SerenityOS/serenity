@@ -62,19 +62,19 @@ static bool read_image_data(PPMLoadingContext& context, Streamer& streamer)
             if (!read_number(streamer, &red))
                 break;
 
-            if (!read_white_space(context, streamer))
+            if (!read_whitespace(context, streamer))
                 break;
 
             if (!read_number(streamer, &green))
                 break;
 
-            if (!read_white_space(context, streamer))
+            if (!read_whitespace(context, streamer))
                 break;
 
             if (!read_number(streamer, &blue))
                 break;
 
-            if (!read_white_space(context, streamer))
+            if (!read_whitespace(context, streamer))
                 break;
 
             Color color { (u8)red, (u8)green, (u8)blue };

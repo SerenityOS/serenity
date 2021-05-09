@@ -73,7 +73,7 @@ static bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
             if (!read_number(streamer, &value))
                 break;
 
-            if (!read_white_space(context, streamer))
+            if (!read_whitespace(context, streamer))
                 break;
 
             color_data.append({ (u8)value, (u8)value, (u8)value });
