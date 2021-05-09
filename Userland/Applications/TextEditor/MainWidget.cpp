@@ -38,6 +38,7 @@
 #include <LibGfx/Painter.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
+#include <LibSQL/SyntaxHighlighter.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <Shell/SyntaxHighlighter.h>
 
@@ -570,6 +571,13 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
     syntax_actions.add_action(*m_shell_highlight);
     syntax_menu.add_action(*m_shell_highlight);
 
+    m_sql_highlight = GUI::Action::create_checkable("S&QL File", [&](auto&) {
+        m_editor->set_syntax_highlighter(make<SQL::SyntaxHighlighter>());
+        m_editor->update();
+    });
+    syntax_actions.add_action(*m_sql_highlight);
+    syntax_menu.add_action(*m_sql_highlight);
+
     auto& help_menu = menubar.add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/TextEditor.md"), "/bin/Help");
@@ -591,6 +599,8 @@ void MainWidget::set_path(const LexicalPath& lexical_path)
         m_gml_highlight->activate();
     } else if (m_extension == "ini") {
         m_ini_highlight->activate();
+    } else if (m_extension == "sql") {
+        m_sql_highlight->activate();
     } else {
         m_plain_text_highlight->activate();
     }
