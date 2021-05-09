@@ -91,7 +91,7 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
     return autocomplete_name(document, *node, partial_text.view());
 }
 
-NonnullRefPtrVector<Declaration> ParserAutoComplete::get_available_declarations(const DocumentData& document, const ASTNode& node) const
+NonnullRefPtrVector<Declaration> ParserAutoComplete::get_available_declarations(const DocumentData& document, const ASTNode& node, RecurseIntoScopes recurse_into_scopes) const
 {
     const Cpp::ASTNode* current = &node;
     NonnullRefPtrVector<Declaration> available_declarations;
@@ -100,13 +100,13 @@ NonnullRefPtrVector<Declaration> ParserAutoComplete::get_available_declarations(
         current = current->parent();
     }
 
-    available_declarations.append(get_global_declarations_including_headers(document));
+    available_declarations.append(get_global_declarations_including_headers(document, recurse_into_scopes));
     return available_declarations;
 }
 
 Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(const DocumentData& document, const ASTNode& node, const String& partial_text) const
 {
-    auto available_declarations = get_available_declarations(document, node);
+    auto available_declarations = get_available_declarations(document, node, RecurseIntoScopes::No);
     Vector<StringView> available_names;
     auto add_name = [&available_names](auto& name) {
         if (name.is_null() || name.is_empty())
@@ -237,7 +237,7 @@ String ParserAutoComplete::type_of(const DocumentData& document, const Expressio
 
 Vector<ParserAutoComplete::PropertyInfo> ParserAutoComplete::properties_of_type(const DocumentData& document, const String& type) const
 {
-    auto declarations = get_global_declarations_including_headers(document);
+    auto declarations = get_global_declarations_including_headers(document, RecurseIntoScopes::Yes);
     Vector<PropertyInfo> properties;
     for (auto& decl : declarations) {
         if (!decl.is_struct_or_class())
@@ -252,25 +252,32 @@ Vector<ParserAutoComplete::PropertyInfo> ParserAutoComplete::properties_of_type(
     return properties;
 }
 
-NonnullRefPtrVector<Declaration> ParserAutoComplete::get_global_declarations_including_headers(const DocumentData& document) const
+NonnullRefPtrVector<Declaration> ParserAutoComplete::get_global_declarations_including_headers(const DocumentData& document, RecurseIntoScopes recurse_into_scopes) const
 {
     NonnullRefPtrVector<Declaration> declarations;
     for (auto& decl : document.m_declarations_from_headers)
         declarations.append(*decl);
 
-    declarations.append(get_global_declarations(*document.parser().root_node()));
+    declarations.append(get_global_declarations(document, recurse_into_scopes));
 
     return declarations;
 }
 
-NonnullRefPtrVector<Declaration> ParserAutoComplete::get_global_declarations(const ASTNode& node) const
+NonnullRefPtrVector<Declaration> ParserAutoComplete::get_global_declarations(const DocumentData& document, RecurseIntoScopes recurse_into_scopes) const
+{
+    if (recurse_into_scopes == RecurseIntoScopes::Yes)
+        return get_declarations_recursive(*document.parser().root_node());
+    return document.parser().root_node()->declarations();
+}
+
+NonnullRefPtrVector<Declaration> ParserAutoComplete::get_declarations_recursive(const ASTNode& node) const
 {
     NonnullRefPtrVector<Declaration> declarations;
 
     for (auto& decl : node.declarations()) {
         declarations.append(decl);
         if (decl.is_namespace()) {
-            declarations.append(get_global_declarations(decl));
+            declarations.append(get_declarations_recursive(decl));
         }
         if (decl.is_struct_or_class()) {
             for (auto& member_decl : static_cast<StructOrClassDeclaration&>(decl).declarations()) {
@@ -395,7 +402,7 @@ RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& 
     if (!target_decl.has_value())
         return {};
 
-    auto declarations = get_available_declarations(document_data, node);
+    auto declarations = get_available_declarations(document_data, node, RecurseIntoScopes::Yes);
     for (auto& decl : declarations) {
         if (decl.is_function() && target_decl.value().type == TargetDeclaration::Function) {
             if (((Cpp::FunctionDeclaration&)decl).m_name == target_decl.value().name)
@@ -430,13 +437,13 @@ void ParserAutoComplete::update_declared_symbols(DocumentData& document)
         auto included_document = get_or_create_document_data(document_path_from_include_path(include));
         if (!included_document)
             continue;
-        for (auto&& decl : get_global_declarations_including_headers(*included_document))
+        for (auto&& decl : get_global_declarations_including_headers(*included_document, RecurseIntoScopes::Yes))
             document.m_declarations_from_headers.set(move(decl));
     }
 
     Vector<GUI::AutocompleteProvider::Declaration> declarations;
 
-    for (auto& decl : get_global_declarations(*document.parser().root_node())) {
+    for (auto& decl : get_declarations_recursive(*document.parser().root_node())) {
         declarations.append({ decl.name(), { document.filename(), decl.start().line, decl.start().column }, type_of_declaration(decl), scope_of_declaration(decl) });
     }
 
