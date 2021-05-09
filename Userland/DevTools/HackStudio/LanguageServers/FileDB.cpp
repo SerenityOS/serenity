@@ -19,7 +19,7 @@ RefPtr<const GUI::TextDocument> FileDB::get(const String& filename) const
     if (!document_optional.has_value())
         return nullptr;
 
-    return adopt_ref(*document_optional.value());
+    return *document_optional.value();
 }
 
 RefPtr<GUI::TextDocument> FileDB::get(const String& filename)
