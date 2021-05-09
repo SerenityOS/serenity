@@ -10,6 +10,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <pthread.h>
 #include <serenity.h>
 #include <string.h>
@@ -27,8 +28,11 @@ int main(int argc, char** argv, char** env)
 
     auto executable_path = Core::find_executable_in_path(command[0]);
     if (executable_path.is_empty()) {
-        reportln("Cannot find executable for '{}'.", command[0]);
-        return 1;
+        executable_path = Core::File::real_path_for(command[0]);
+        if (executable_path.is_empty()) {
+            reportln("Cannot find executable for '{}'.", executable_path);
+            return 1;
+        }
     }
 
     Vector<String> arguments;
